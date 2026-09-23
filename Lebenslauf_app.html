@@ -1,0 +1,1585 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD Bewerbungsstudio</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Lebenslauf-, Anschreiben- und Kündigungs-App">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --ink: #172a3a;
+            --muted: #647482;
+            --accent: #2f7d72;
+            --accent-soft: #dcece7;
+            --paper: #fffdf8;
+            --canvas: #e9eee9;
+            --line: #d8e0dc;
+        }
+
+        * {
+            letter-spacing: 0;
+        }
+
+        body {
+            font-family: 'Trebuchet MS', Verdana, sans-serif;
+            background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            color: var(--ink);
+        }
+
+        .editor-sidebar {
+            width: 430px;
+            background: rgba(255, 255, 255, 0.94);
+            padding: 26px;
+            border-right: 1px solid var(--line);
+            box-shadow: 8px 0 30px rgba(23, 42, 58, 0.06);
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .preview-area {
+            flex: 1;
+            padding: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: var(--paper);
+            padding: 22mm;
+            box-shadow: 0 20px 55px rgba(23, 42, 58, 0.13);
+            box-sizing: border-box;
+            position: relative;
+            border-top: 7px solid var(--accent);
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+
+        h2 {
+            font-size: 1.05rem;
+            color: var(--ink);
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 8px;
+            margin-top: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: #fbfcfa;
+            color: var(--ink);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: 2px solid var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        .template-btns {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tpl-btn {
+            flex: 1;
+            padding: 8px 6px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            background: #eef2ef;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .tpl-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .mode-tabs .mode-tab {
+            font-size: 0.75rem;
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 10px 6px;
+            border: 1px solid var(--line);
+            background: #f7faf7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--muted);
+        }
+
+        .mode-tab.active {
+            background: var(--ink);
+            color: white;
+            border-color: var(--ink);
+        }
+
+        .mode-panel {
+            display: none;
+        }
+
+        .mode-panel.active {
+            display: block;
+        }
+
+        .template-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .template-list .tpl-btn {
+            min-height: 34px;
+        }
+
+        .action-btn {
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+
+        .print-btn {
+            background: var(--ink);
+        }
+
+        .save-btn {
+            background: var(--accent);
+        }
+
+        .success {
+            color: #15803d;
+            font-size: 0.75rem;
+            min-height: 1rem;
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        .secondary-btn {
+            background: #475569;
+        }
+
+        .ai-btn {
+            background: #7c3aed;
+        }
+
+        .photo-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-upload input {
+            flex: 1;
+        }
+
+        .preview-photo {
+            width: 92px;
+            height: 112px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .header-content {
+            position: relative;
+            padding-right: 110px;
+        }
+
+        .install-btn {
+            background: #16a34a;
+            display: none;
+        }
+
+        .online-ai {
+            background: #0f766e;
+        }
+
+        .privacy-note {
+            color: #64748b;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            margin: 4px 0 8px;
+        }
+
+        .cover-preview {
+            text-align: center;
+            padding-top: 55mm;
+        }
+
+        .cover-preview h1 {
+            font-size: 2.4rem;
+            color: #0f172a;
+            margin: 22px 0 8px;
+        }
+
+        .cover-preview h2 {
+            border: 0;
+            color: #0284c7;
+            font-size: 1.35rem;
+        }
+
+        .cover-photo {
+            width: 130px;
+            height: 158px;
+            object-fit: cover;
+            border-radius: 6px;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .cover-contact {
+            color: #64748b;
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+
+        .header-content {
+            border-color: var(--accent) !important;
+        }
+
+        #prev-name {
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: 0.03em;
+        }
+
+        #prev-position {
+            color: var(--accent) !important;
+            letter-spacing: 0.04em;
+        }
+
+        .letter-page h1 {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: normal;
+        }
+
+        .letter-page p {
+            color: #344955;
+        }
+
+        .cover-preview h1 {
+            color: var(--ink);
+        }
+
+        .cover-preview h2 {
+            color: var(--accent);
+        }
+
+        .mappe-page {
+            display: none;
+        }
+
+        .mappe-page.active {
+            display: block;
+        }
+
+        .mappe-note {
+            color: #475569;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .document-footer {
+            position: absolute;
+            right: 22mm;
+            bottom: 12mm;
+            left: 22mm;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--line);
+            padding-top: 7px;
+            color: var(--muted);
+            font-size: 0.68rem;
+        }
+
+        body.theme-modern {
+            --ink: #172a3a;
+            --accent: #2f7d72;
+            --accent-soft: #dcece7;
+            --paper: #fffdf8;
+            --line: #d8e0dc;
+        }
+
+        body.theme-klassisch {
+            --ink: #263238;
+            --accent: #8b6f47;
+            --accent-soft: #eee4d4;
+            --paper: #fffdf9;
+            --line: #ded6ca;
+        }
+
+        body.theme-sozial {
+            --ink: #263b35;
+            --accent: #c2674a;
+            --accent-soft: #f5ded5;
+            --paper: #fffaf5;
+            --line: #ead8d0;
+        }
+
+        body.theme-buero {
+            --ink: #1f3347;
+            --accent: #3d6f9e;
+            --accent-soft: #dce8f3;
+            --paper: #ffffff;
+            --line: #d4dfe9;
+        }
+
+        body.theme-it {
+            --ink: #18232d;
+            --accent: #0f9d8a;
+            --accent-soft: #d5f0eb;
+            --paper: #f9fffd;
+            --line: #cfe5e0;
+        }
+
+        body.theme-fuehrung {
+            --ink: #24212b;
+            --accent: #8a5c9e;
+            --accent-soft: #eadff0;
+            --paper: #fffaff;
+            --line: #e0d5e5;
+        }
+
+        body.theme-pflege {
+            --ink: #203c46;
+            --accent: #4c91a3;
+            --accent-soft: #d9edf1;
+            --paper: #f8ffff;
+            --line: #d1e5e8;
+        }
+
+        body.theme-erziehung {
+            --ink: #3d3326;
+            --accent: #d38b3e;
+            --accent-soft: #f7e7d1;
+            --paper: #fffdf6;
+            --line: #ebdcc7;
+        }
+
+        body.theme-verkauf {
+            --ink: #33252c;
+            --accent: #c44e72;
+            --accent-soft: #f4dce5;
+            --paper: #fffafd;
+            --line: #ead3dd;
+        }
+
+        body.theme-marketing {
+            --ink: #252244;
+            --accent: #5963bb;
+            --accent-soft: #e1e3f5;
+            --paper: #fbfbff;
+            --line: #d9dbef;
+        }
+
+        body.theme-design {
+            --ink: #292929;
+            --accent: #d35f45;
+            --accent-soft: #f5ded8;
+            --paper: #fffdfb;
+            --line: #ead8d2;
+        }
+
+        body.theme-logistik {
+            --ink: #29372c;
+            --accent: #6c8d4d;
+            --accent-soft: #e3edd9;
+            --paper: #fbfdf8;
+            --line: #d9e5cf;
+        }
+
+        body.theme-fahrer {
+            --ink: #24343b;
+            --accent: #4d8292;
+            --accent-soft: #dcebee;
+            --paper: #fbfefe;
+            --line: #d6e5e8;
+        }
+
+        body.theme-gastronomie {
+            --ink: #382b25;
+            --accent: #b96d39;
+            --accent-soft: #f2dfd0;
+            --paper: #fffaf5;
+            --line: #ead7c8;
+        }
+
+        body.theme-handwerk {
+            --ink: #2e332b;
+            --accent: #9b7b35;
+            --accent-soft: #eee6cb;
+            --paper: #fffef8;
+            --line: #e6ddc2;
+        }
+
+        body.theme-reinigung {
+            --ink: #263a43;
+            --accent: #59a7a0;
+            --accent-soft: #d9efed;
+            --paper: #faffff;
+            --line: #d1e7e5;
+        }
+
+        body.theme-medizin {
+            --ink: #303844;
+            --accent: #9b6075;
+            --accent-soft: #f0dfe5;
+            --paper: #fffafd;
+            --line: #e8d7de;
+        }
+
+        body.theme-verwaltung {
+            --ink: #273346;
+            --accent: #52719c;
+            --accent-soft: #dde7f2;
+            --paper: #fbfdff;
+            --line: #d4dfeb;
+        }
+
+        body.theme-bau {
+            --ink: #33302a;
+            --accent: #b47a2c;
+            --accent-soft: #f3e2c5;
+            --paper: #fffdf8;
+            --line: #ead9bd;
+        }
+
+        body.theme-ausbildung {
+            --ink: #293b38;
+            --accent: #4f9b74;
+            --accent-soft: #dcf0e4;
+            --paper: #fbfffc;
+            --line: #d4e7da;
+        }
+
+        body.theme-schlicht {
+            --ink: #242424;
+            --accent: #676767;
+            --accent-soft: #e9e9e9;
+            --paper: #ffffff;
+            --line: #dddddd;
+        }
+
+        body.theme-farbe {
+            --ink: #263238;
+            --accent: #d05b56;
+            --accent-soft: #f4d9d7;
+            --paper: #fffdfb;
+            --line: #ead3d1;
+        }
+
+        body.theme-kompakt {
+            --ink: #213744;
+            --accent: #397d91;
+            --accent-soft: #d9e9ed;
+            --paper: #fbffff;
+            --line: #d0e2e6;
+        }
+
+        body {
+            background: linear-gradient(135deg, color-mix(in srgb, var(--canvas) 88%, var(--accent-soft)) 0%, #f7f4ee 100%);
+        }
+
+        .tpl-btn.active {
+            box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 22%, transparent);
+        }
+
+        .design-panel {
+            margin: 18px 0 22px;
+            padding: 14px;
+            background: var(--accent-soft);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+        }
+
+        .design-panel h2 {
+            margin: 0 0 12px;
+            border: 0;
+            padding: 0;
+        }
+
+        .color-row {
+            display: grid;
+            grid-template-columns: 1fr 48px;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .color-row label {
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .color-row input[type="color"] {
+            width: 48px;
+            height: 32px;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        .reset-design {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: transparent;
+            color: var(--ink);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .download-dialog {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+            background: rgba(23, 42, 58, 0.42);
+            padding: 20px;
+        }
+
+        .download-dialog.open {
+            display: flex;
+        }
+
+        .download-box {
+            width: min(420px, 100%);
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(23, 42, 58, 0.22);
+        }
+
+        .download-box h2 {
+            margin-top: 0;
+        }
+
+        .download-choice {
+            display: block;
+            width: 100%;
+            margin-top: 9px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--accent-soft);
+            color: var(--ink);
+            cursor: pointer;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .download-close {
+            background: transparent;
+            color: var(--muted);
+            border: 0;
+            cursor: pointer;
+            margin-top: 14px;
+            padding: 6px 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-bottom: 24px;
+        }
+
+        .sd-logo {
+            width: 46px;
+            height: 46px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex: 0 0 auto;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #111;
+            font: bold 0.82rem Georgia, serif;
+            letter-spacing: 0.02em;
+            line-height: 1;
+            box-shadow: 0 7px 16px rgba(22, 128, 60, 0.2);
+        }
+
+        .sd-logo::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(#111 0 33%, #d62828 33% 66%, #16803c 66% 100%);
+            animation: sdRingSpin 8s linear infinite;
+            z-index: 0;
+        }
+
+        .sd-logo::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: #ffffff;
+            z-index: 1;
+        }
+
+        .sd-logo span,
+        .sd-logo small {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sd-logo span {
+            order: 2;
+        }
+
+        .sd-logo small {
+            order: 1;
+            font: bold 0.42rem Arial, sans-serif;
+            margin-bottom: 2px;
+        }
+
+        @keyframes sdRingSpin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .brand strong {
+            display: block;
+            font: bold 1.05rem Georgia, serif;
+            color: var(--ink);
+        }
+
+        .brand small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.68rem;
+            margin-top: 2px;
+        }
+
+        .office-btn {
+            background: #2563eb;
+        }
+
+        .cv-section {
+            margin-top: 22px;
+        }
+
+        .cv-section h3 {
+            font-size: 0.8rem;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 7px;
+            margin-bottom: 10px;
+        }
+
+        .cv-section p {
+            line-height: 1.7;
+            color: #344955;
+            font-size: 0.9rem;
+            white-space: pre-line;
+            margin: 0;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                display: block;
+            }
+
+            .editor-sidebar {
+                width: 100%;
+                padding: 18px;
+            }
+
+            .preview-area {
+                padding: 18px;
+            }
+
+            .a4-page {
+                width: 100%;
+                min-height: auto;
+                padding: 14mm;
+            }
+
+            .mode-tabs {
+                flex-wrap: wrap;
+            }
+
+            .mode-tab {
+                min-width: 30%;
+            }
+        }
+
+        @media print {
+            .editor-sidebar {
+                display: none;
+            }
+
+            .preview-area {
+                padding: 0;
+            }
+
+            .a4-page {
+                box-shadow: none;
+                width: 210mm;
+                min-height: auto;
+            }
+
+            .cv-section {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="editor-sidebar">
+        <div class="brand">
+            <div class="sd-logo" aria-label="SD Logo mit Nummer 786"><span>SD</span><small>786</small></div>
+            <div><strong>SD Bewerbungsstudio</strong><small>Deine Unterlagen. Dein Auftritt.</small></div>
+        </div>
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="zeigeModus('lebenslauf')">Lebenslauf</button>
+            <button class="mode-tab" onclick="zeigeModus('anschreiben')">Anschreiben</button>
+            <button class="mode-tab" onclick="zeigeModus('kuendigung')">Kündigung</button>
+            <button class="mode-tab" onclick="zeigeModus('deckblatt')">Deckblatt</button>
+            <button class="mode-tab" onclick="zeigeModus('mappe')">Bewerbungsmappe</button>
+        </div>
+        <div class="design-panel">
+            <h2>Design anpassen</h2>
+            <div class="color-row"><label for="akzentfarbe">Akzentfarbe</label><input id="akzentfarbe" type="color"
+                    value="#2f7d72" oninput="manuelleFarben()"></div>
+            <div class="color-row"><label for="papierfarbe">Papierfarbe</label><input id="papierfarbe" type="color"
+                    value="#fffdf8" oninput="manuelleFarben()"></div>
+            <button class="reset-design" onclick="designZuruecksetzen()">↺ Muster-Design zurücksetzen</button>
+        </div>
+
+        <div id="lebenslauf-panel" class="mode-panel active">
+            <h2>Lebenslauf-Muster</h2>
+            <div class="template-list">
+                <button class="tpl-btn active" onclick="ladeLebenslaufMuster('klassisch')">Klassisch</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('modern')">Modern</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('sozial')">Sozial</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('buero')">Büro</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('it')">IT</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('fuehrung')">Führungskraft</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('pflege')">Pflege</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('erziehung')">Erziehung</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('verkauf')">Verkauf</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('marketing')">Marketing</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('design')">Design</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('logistik')">Logistik</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('fahrer')">Fahrer</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('gastronomie')">Gastronomie</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('handwerk')">Handwerk</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('reinigung')">Reinigung</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('medizin')">Medizin</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('verwaltung')">Verwaltung</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('bau')">Bau</button>
+                <button class="tpl-btn" onclick="ladeLebenslaufMuster('ausbildung')">Ausbildung</button>
+            </div>
+            <h2>Lebenslauf-Daten</h2>
+            <div class="form-group">
+                <label>Vorname</label>
+                <input type="text" id="vorname" value="" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Nachname</label>
+                <input type="text" id="nachname" value="" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" id="position" value="" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>E-Mail</label>
+                <input type="email" id="email" value="" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Adresse</label>
+                <input type="text" id="adresse" placeholder="Straße, PLZ Ort" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Telefon</label>
+                <input type="tel" id="telefon" placeholder="z. B. 0176 12345678" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Geburtsdatum</label>
+                <input type="text" id="geburtsdatum" placeholder="TT.MM.JJJJ" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Familienstand</label>
+                <select id="familienstand" onchange="updateVorschau()">
+                    <option value="">Bitte auswählen</option>
+                    <option value="ledig">Ledig</option>
+                    <option value="verheiratet">Verheiratet</option>
+                    <option value="geschieden">Geschieden</option>
+                    <option value="verwitwet">Verwitwet</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Kinder</label>
+                <select id="kinder" onchange="updateVorschau()">
+                    <option value="">Bitte auswählen</option>
+                    <option value="keine Kinder">Keine Kinder</option>
+                    <option value="1 Kind">1 Kind</option>
+                    <option value="2 Kinder">2 Kinder</option>
+                    <option value="3 oder mehr Kinder">3 oder mehr Kinder</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Staatsangehörigkeit</label>
+                <input type="text" id="staatsangehoerigkeit" placeholder="z. B. deutsch" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Führerschein</label>
+                <input type="text" id="fuehrerschein" placeholder="z. B. Klasse B" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Verfügbarkeit</label>
+                <input type="text" id="verfuegbarkeit" placeholder="z. B. ab sofort" oninput="updateVorschau()">
+            </div>
+            <div class="form-group photo-upload">
+                <label for="foto">Foto</label>
+                <input type="file" id="foto" accept="image/*" onchange="ladeFoto(event)">
+            </div>
+            <div class="form-group">
+                <label>Berufserfahrung</label>
+                <textarea id="erfahrung" rows="4" placeholder="2022 - heute: Familienhilfe bei ..."
+                    oninput="updateVorschau()"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Ausbildung</label>
+                <textarea id="ausbildung" rows="3" placeholder="2018 - 2021: Ausbildung zum ..."
+                    oninput="updateVorschau()"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Kenntnisse</label>
+                <textarea id="kenntnisse" rows="3" placeholder="Organisation, MS Office, Teamarbeit ..."
+                    oninput="updateVorschau()"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Sprachen</label>
+                <textarea id="sprachen" rows="2" placeholder="Deutsch: sehr gut, Englisch: gut ..."
+                    oninput="updateVorschau()"></textarea>
+            </div>
+        </div>
+
+        <div id="anschreiben-panel" class="mode-panel">
+            <h2>Anschreiben-Muster</h2>
+            <div class="template-list">
+                <button class="tpl-btn active" onclick="ladeAnschreibenMuster('klassisch')">Klassisch</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('motiviert')">Motiviert</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('sozial')">Sozial</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('buero')">Büro</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('it')">IT</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('fuehrung')">Führungskraft</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('pflege')">Pflege</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('erziehung')">Erziehung</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('verkauf')">Verkauf</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('marketing')">Marketing</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('design')">Design</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('logistik')">Logistik</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('fahrer')">Fahrer</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('gastronomie')">Gastronomie</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('handwerk')">Handwerk</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('reinigung')">Reinigung</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('medizin')">Medizin</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('verwaltung')">Verwaltung</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('bau')">Bau</button>
+                <button class="tpl-btn" onclick="ladeAnschreibenMuster('ausbildung')">Ausbildung</button>
+            </div>
+
+            <h2>Anschreiben</h2>
+            <div class="form-group">
+                <label>Unternehmen</label>
+                <input type="text" id="unternehmen" placeholder="Unternehmen GmbH" oninput="updateVorschau()">
+            </div>
+
+            <div class="form-group">
+                <label>Ansprechperson</label>
+                <input type="text" id="ansprechperson" placeholder="Frau oder Herr ..." oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Anrede</label>
+                <select id="anrede" onchange="updateVorschau()">
+                    <option value="auto">Automatisch (aus Ansprechperson)</option>
+                    <option value="damen-herren">Sehr geehrte Damen und Herren,</option>
+                    <option value="herr">Sehr geehrter Herr ...</option>
+                    <option value="frau">Sehr geehrte Frau ...</option>
+                    <option value="team">Liebes Team,</option>
+                    <option value="custom">Eigene Anrede eingeben</option>
+                </select>
+            </div>
+            <div class="form-group" id="custom-anrede-group" style="display:none;">
+                <label>Eigene Anrede</label>
+                <input type="text" id="custom-anrede" placeholder="z. B. Sehr geehrter Herr Müller,"
+                    oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Text des Anschreibens</label>
+                <textarea id="anschreiben" style="height: 120px;"
+                    oninput="updateVorschau()">Sehr geehrte Damen und Herren, mit großem Interesse bewerbe ich mich hiermit.</textarea>
+            </div>
+        </div>
+
+        <div id="kuendigung-panel" class="mode-panel">
+            <h2>Kündigungs-Muster</h2>
+            <div class="template-list">
+                <button class="tpl-btn active" onclick="ladeKuendigungMuster('arbeit')">Arbeitsvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('wohnung')">Wohnung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('versicherung')">Versicherung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('fitness')">Fitnessstudio</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('vertrag')">Allgemein</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('internet')">Internet</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('handy')">Handyvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('zeitung')">Zeitung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('strom')">Stromvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('bank')">Bankkonto</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('verein')">Verein</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('streaming')">Streaming</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('abo')">Abo</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('leasing')">Leasing</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('dienstleistung')">Dienstleistung</button>
+            </div>
+
+            <h2>Kündigungsdaten</h2>
+            <div class="form-group">
+                <label>Empfänger</label>
+                <textarea id="kuendigung-empfaenger" rows="2" placeholder="Firma oder Vermieter, Adresse"
+                    oninput="updateVorschau()"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Vertragsnummer</label>
+                <input type="text" id="vertragsnummer" placeholder="Optional" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Kündigungstext</label>
+                <textarea id="kuendigung-text" rows="9" oninput="updateVorschau()"></textarea>
+            </div>
+        </div>
+
+        <div id="deckblatt-panel" class="mode-panel">
+            <h2>Deckblatt-Muster</h2>
+            <div class="template-list">
+                <button class="tpl-btn active" onclick="ladeDeckblattMuster('klassisch')">Klassisch</button>
+                <button class="tpl-btn" onclick="ladeDeckblattMuster('modern')">Modern</button>
+                <button class="tpl-btn" onclick="ladeDeckblattMuster('schlicht')">Schlicht</button>
+                <button class="tpl-btn" onclick="ladeDeckblattMuster('farbe')">Akzent</button>
+                <button class="tpl-btn" onclick="ladeDeckblattMuster('kompakt')">Kompakt</button>
+            </div>
+            <h2>Deckblatt</h2>
+            <p class="mappe-note">Das Deckblatt übernimmt automatisch deine Daten aus dem Lebenslauf.</p>
+            <label class="privacy-note"><input type="checkbox" id="foto-auf-deckblatt" checked
+                    onchange="updateVorschau()"> Foto auch auf dem Deckblatt verwenden</label>
+        </div>
+
+        <div id="mappe-panel" class="mode-panel">
+            <h2>Komplette Bewerbungsmappe</h2>
+            <p class="mappe-note">Die Mappe enthält Deckblatt, Lebenslauf und Anschreiben. Wähle zuerst deine Muster und
+                persönlichen Daten aus.</p>
+            <label class="privacy-note"><input type="checkbox" id="mappe-mit-foto" checked onchange="updateVorschau()">
+                Foto auf dem Deckblatt verwenden</label>
+            <button class="action-btn print-btn" onclick="druckeMappe()">🗂️ Komplette Mappe als PDF</button>
+        </div>
+
+        <button id="install-button" class="action-btn install-btn" onclick="installiereApp()">📲 App
+            installieren</button>
+        <button class="action-btn secondary-btn" onclick="oeffneDownloadMenu()">⬇️ Speichern / Herunterladen</button>
+        <button class="action-btn print-btn" onclick="window.print()">🖨️ Druckvorschau / Als PDF speichern</button>
+        <button class="action-btn" style="background:#d66b45;margin-top:12px;"
+            onclick="window.open('./pdf-studio/index.html', '_blank')">📑 PDF & Anlagen Studio (Zeugnisse bearbeiten &
+            bündeln)</button>
+        <div id="speicher-status" class="success" aria-live="polite"></div>
+    </div>
+
+    <div id="download-dialog" class="download-dialog" role="dialog" aria-modal="true" aria-labelledby="download-title">
+        <div class="download-box">
+            <h2 id="download-title">Was möchtest du herunterladen?</h2>
+            <button class="download-choice" onclick="waehleDownload('docx')">📄 Word / OpenOffice (.docx)</button>
+            <button class="download-choice" onclick="waehleDownload('doc')">📝 Word 97-2003 (.doc)</button>
+            <button class="download-choice" onclick="waehleDownload('pdf')">🖨️ PDF / Druckvorschau</button>
+            <button class="download-choice" style="background:#f7e5dc;color:#173b3f;border:1px solid #d66b45;"
+                onclick="window.open('./pdf-studio/index.html', '_blank')">📑 PDF Studio (Scans, Zeugnisse & Formulare
+                bearbeiten)</button>
+            <button class="download-close" onclick="schliesseDownloadMenu()">Abbrechen</button>
+        </div>
+    </div>
+
+    <div class="preview-area">
+        <div id="lebenslauf-vorschau" class="a4-page">
+            <div class="header-content"
+                style="border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px;">
+                <img id="prev-foto" class="preview-photo" alt="Bewerbungsfoto">
+                <h1 id="prev-name" style="margin: 0; font-size: 2rem; color: #0f172a; text-transform: uppercase;">
+                </h1>
+                <p id="prev-position" style="color: #0284c7; font-weight: bold; font-size: 1.1rem; margin-top: 5px;">
+                </p>
+                <p id="prev-kontakt" style="color: #64748b; font-size: 0.85rem; margin-top: 5px;">
+                </p>
+                <p id="prev-persoenlich" style="color: #64748b; font-size: 0.8rem; margin-top: 5px;"></p>
+            </div>
+
+            <div class="cv-section">
+                <h3>Berufserfahrung</h3>
+                <p id="prev-erfahrung"></p>
+            </div>
+            <div class="cv-section">
+                <h3>Ausbildung</h3>
+                <p id="prev-ausbildung"></p>
+            </div>
+            <div class="cv-section">
+                <h3>Kenntnisse</h3>
+                <p id="prev-kenntnisse"></p>
+            </div>
+            <div class="cv-section">
+                <h3>Sprachen</h3>
+                <p id="prev-sprachen"></p>
+            </div>
+            <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
+        </div>
+        <div id="anschreiben-vorschau" class="a4-page letter-page" style="display: none;">
+            <p id="prev-letter-date" style="text-align: right; color: #64748b;"></p>
+            <h1 style="font-size: 1.5rem; color: #0f172a;">Bewerbung als <span id="prev-letter-position"></span></h1>
+            <p id="prev-letter-address" style="line-height: 1.6; white-space: pre-line;"></p>
+            <p id="prev-letter-greeting"></p>
+            <p id="prev-text" style="line-height: 1.8; color: #334155; white-space: pre-line;"></p>
+            <p style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-letter-name"></span></p>
+            <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
+        </div>
+        <div id="kuendigung-vorschau" class="a4-page letter-page" style="display: none;">
+            <p id="prev-kuendigung-date" style="text-align: right; color: #64748b;"></p>
+            <p id="prev-kuendigung-absender" style="white-space: pre-line; line-height: 1.6;"></p>
+            <p id="prev-kuendigung-empfaenger" style="white-space: pre-line; line-height: 1.6;"></p>
+            <h1 style="font-size: 1.5rem; color: #0f172a;">Kündigung</h1>
+            <p id="prev-kuendigung-betreff" style="font-weight: bold;"></p>
+            <p id="prev-kuendigung-text" style="line-height: 1.8; white-space: pre-line;"></p>
+            <p style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-kuendigung-name"></span></p>
+            <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
+        </div>
+        <div id="deckblatt-vorschau" class="a4-page letter-page" style="display: none;">
+            <div class="cover-preview">
+                <div class="sd-logo" style="margin: 0 auto;"><span>SD</span><small>786</small></div>
+                <img id="prev-deckblatt-foto" class="cover-photo" alt="Bewerbungsfoto auf dem Deckblatt">
+                <h1 id="prev-deckblatt-name"></h1>
+                <h2 id="prev-deckblatt-title"></h2>
+                <p class="cover-contact" id="prev-deckblatt-kontakt"></p>
+            </div>
+            <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
+        </div>
+        <div id="mappe-vorschau" class="mappe-page">
+            <div id="mappe-deckblatt" class="a4-page"></div>
+            <div id="mappe-lebenslauf" class="a4-page"></div>
+            <div id="mappe-anschreiben" class="a4-page"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateVorschau() {
+            const v = document.getElementById('vorname').value;
+            const n = document.getElementById('nachname').value;
+            document.getElementById('prev-name').innerText = v + ' ' + n;
+            document.getElementById('prev-position').innerText = document.getElementById('position').value;
+            const kontakt = [document.getElementById('email').value, document.getElementById('telefon').value].filter(Boolean).join(' | ');
+            document.getElementById('prev-kontakt').innerText = kontakt;
+            const persoenlich = [
+                document.getElementById('adresse').value,
+                document.getElementById('geburtsdatum').value,
+                document.getElementById('familienstand').value,
+                document.getElementById('kinder').value,
+                document.getElementById('staatsangehoerigkeit').value,
+                document.getElementById('fuehrerschein').value,
+                document.getElementById('verfuegbarkeit').value
+            ].filter(Boolean).join(' | ');
+            document.getElementById('prev-persoenlich').innerText = persoenlich;
+            document.getElementById('prev-erfahrung').innerText = document.getElementById('erfahrung').value;
+            document.getElementById('prev-ausbildung').innerText = document.getElementById('ausbildung').value;
+            document.getElementById('prev-kenntnisse').innerText = document.getElementById('kenntnisse').value;
+            document.getElementById('prev-sprachen').innerText = document.getElementById('sprachen').value;
+            document.getElementById('prev-letter-position').innerText = document.getElementById('position').value;
+            document.getElementById('prev-letter-address').innerText = [document.getElementById('unternehmen').value, document.getElementById('ansprechperson').value].filter(Boolean).join('\n');
+            const anredeEl = document.getElementById('anrede');
+            const anredeVal = anredeEl ? anredeEl.value : 'auto';
+            const ansprechpersonVal = document.getElementById('ansprechperson').value.trim();
+            let grussText = '';
+            if (anredeVal === 'auto') {
+                grussText = ansprechpersonVal ? 'Sehr geehrte ' + ansprechpersonVal + ',' : 'Sehr geehrte Damen und Herren,';
+            } else if (anredeVal === 'damen-herren') {
+                grussText = 'Sehr geehrte Damen und Herren,';
+            } else if (anredeVal === 'herr') {
+                grussText = 'Sehr geehrter Herr ' + (ansprechpersonVal || '...') + ',';
+            } else if (anredeVal === 'frau') {
+                grussText = 'Sehr geehrte Frau ' + (ansprechpersonVal || '...') + ',';
+            } else if (anredeVal === 'team') {
+                grussText = 'Liebes Team,';
+            } else if (anredeVal === 'custom') {
+                grussText = document.getElementById('custom-anrede').value || 'Sehr geehrte Damen und Herren,';
+            }
+            document.getElementById('prev-letter-greeting').innerText = grussText;
+            const customGroup = document.getElementById('custom-anrede-group');
+            if (customGroup) customGroup.style.display = anredeVal === 'custom' ? 'block' : 'none';
+            document.getElementById('prev-letter-name').innerText = v + ' ' + n;
+            document.getElementById('prev-text').innerText = document.getElementById('anschreiben').value;
+            document.getElementById('prev-kuendigung-empfaenger').innerText = document.getElementById('kuendigung-empfaenger').value;
+            document.getElementById('prev-kuendigung-absender').innerText = [
+                v + ' ' + n,
+                document.getElementById('adresse').value,
+                document.getElementById('telefon').value,
+                document.getElementById('email').value
+            ].filter(Boolean).join('\n');
+            document.getElementById('prev-kuendigung-betreff').innerText = document.getElementById('vertragsnummer').value ? 'Vertragsnummer: ' + document.getElementById('vertragsnummer').value : 'Hiermit kündige ich den Vertrag.';
+            document.getElementById('prev-kuendigung-text').innerText = document.getElementById('kuendigung-text').value;
+            document.getElementById('prev-kuendigung-name').innerText = v + ' ' + n;
+            document.getElementById('prev-deckblatt-name').innerText = v + ' ' + n;
+            document.getElementById('prev-deckblatt-title').innerText = document.getElementById('position').value;
+            document.getElementById('prev-deckblatt-kontakt').innerText = [
+                document.getElementById('email').value,
+                document.getElementById('telefon').value,
+                document.getElementById('adresse').value
+            ].filter(Boolean).join('\n');
+            const deckblattFotoAktiv = document.getElementById('foto-auf-deckblatt').checked || document.getElementById('mappe-mit-foto').checked;
+            aktualisiereDeckblattFoto(deckblattFotoAktiv);
+            aktualisiereFusszeilen();
+            document.getElementById('mappe-deckblatt').innerHTML = document.getElementById('deckblatt-vorschau').innerHTML;
+            document.getElementById('mappe-lebenslauf').innerHTML = document.getElementById('lebenslauf-vorschau').innerHTML;
+            document.getElementById('mappe-anschreiben').innerHTML = document.getElementById('anschreiben-vorschau').innerHTML;
+            document.querySelectorAll('#mappe-vorschau .sd-logo').forEach(logo => logo.remove());
+            document.querySelectorAll('#mappe-vorschau .a4-page').forEach((seite, index, seiten) => {
+                seite.querySelector('.document-date').innerText = new Date().toLocaleDateString('de-DE');
+                seite.querySelector('.document-page').innerText = `Seite ${index + 1} von ${seiten.length}`;
+            });
+        }
+
+        function aktualisiereFusszeilen() {
+            const datum = new Date().toLocaleDateString('de-DE');
+            ['lebenslauf-vorschau', 'anschreiben-vorschau', 'kuendigung-vorschau', 'deckblatt-vorschau'].forEach(id => {
+                const seite = document.getElementById(id);
+                seite.querySelector('.document-date').innerText = datum;
+                seite.querySelector('.document-page').innerText = 'Seite 1';
+            });
+        }
+
+        function ladeFoto(event) {
+            const datei = event.target.files[0];
+            if (!datei) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                const foto = document.getElementById('prev-foto');
+                foto.src = reader.result;
+                foto.style.display = 'block';
+                localStorage.setItem('lebenslaufFoto', reader.result);
+                aktualisiereDeckblattFoto(true);
+                updateVorschau();
+            };
+            reader.readAsDataURL(datei);
+        }
+
+        function aktualisiereDeckblattFoto(aktiv) {
+            const lebenslaufFoto = document.getElementById('prev-foto');
+            const deckblattFoto = document.getElementById('prev-deckblatt-foto');
+            const gespeichertesFoto = localStorage.getItem('lebenslaufFoto');
+            const fotoQuelle = lebenslaufFoto.src && lebenslaufFoto.src !== window.location.href ? lebenslaufFoto.src : gespeichertesFoto;
+            if (aktiv && fotoQuelle) {
+                deckblattFoto.src = fotoQuelle;
+                deckblattFoto.style.display = 'block';
+            } else {
+                deckblattFoto.removeAttribute('src');
+                deckblattFoto.style.display = 'none';
+            }
+        }
+
+        function speichereDaten() {
+            const daten = {};
+            document.querySelectorAll('input, textarea, select').forEach(feld => daten[feld.id] = feld.value);
+            localStorage.setItem('lebenslaufDaten', JSON.stringify(daten));
+            document.getElementById('speicher-status').innerText = 'Gespeichert';
+        }
+
+        function downloadDaten() {
+            const daten = {};
+            document.querySelectorAll('input:not([type="file"]), textarea, select').forEach(feld => daten[feld.id] = feld.value);
+            const datei = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(datei);
+            link.download = 'lebenslauf-daten.json';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function oeffneDownloadMenu() {
+            document.getElementById('download-dialog').classList.add('open');
+        }
+
+        function schliesseDownloadMenu() {
+            document.getElementById('download-dialog').classList.remove('open');
+        }
+
+        function waehleDownload(format) {
+            schliesseDownloadMenu();
+            if (format === 'docx') speichereAlsDocx();
+            if (format === 'doc') speichereFuerOffice();
+            if (format === 'json') downloadDaten();
+            if (format === 'pdf') {
+                if (aktuellerModus === 'mappe') druckeMappe();
+                else window.print();
+            }
+        }
+
+        function speichereFuerOffice() {
+            const vorschau = aktuellerModus === 'mappe'
+                ? document.getElementById('mappe-vorschau')
+                : document.getElementById(aktuellerModus + '-vorschau');
+            const titel = aktuellerModus === 'mappe' ? 'Bewerbungsmappe' : aktuellerModus.charAt(0).toUpperCase() + aktuellerModus.slice(1);
+            const officeDokument = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>${titel}</title><style>body{font-family:Arial,sans-serif;color:#172a3a}h1,h2,h3{font-family:Georgia,serif}p{line-height:1.6}.a4-page{page-break-after:always;padding:35px;min-height:900px}.a4-page:last-child{page-break-after:auto}.cover-preview{text-align:center;padding-top:180px}.cover-photo{width:130px;height:158px;object-fit:cover}.cv-section{margin-top:22px}.cv-section h3{color:#2f7d72;border-bottom:1px solid #d8e0dc;padding-bottom:6px}</style></head><body>${vorschau.innerHTML}</body></html>`;
+            const datei = new Blob([officeDokument], { type: 'application/msword' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(datei);
+            link.download = titel.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.doc';
+            link.click();
+            URL.revokeObjectURL(link.href);
+            document.getElementById('speicher-status').innerText = 'Word-/OpenOffice-Datei gespeichert';
+        }
+
+        function xmlSicher(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        }
+
+        function docxParagraph(text, style) {
+            const teile = text.split('\n');
+            const inhalt = teile.map((teil, index) => `${index ? '<w:br/>' : ''}<w:t xml:space="preserve">${xmlSicher(teil)}</w:t>`).join('');
+            return `<w:p>${style ? `<w:pPr><w:pStyle w:val="${style}"/></w:pPr>` : ''}<w:r>${inhalt}</w:r></w:p>`;
+        }
+
+        function crc32(bytes) {
+            let crc = 0xffffffff;
+            for (const byte of bytes) {
+                crc ^= byte;
+                for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+            }
+            return (crc ^ 0xffffffff) >>> 0;
+        }
+
+        function u32(value) {
+            return new Uint8Array([value & 255, (value >>> 8) & 255, (value >>> 16) & 255, (value >>> 24) & 255]);
+        }
+
+        function zipDateien(dateien) {
+            const teile = [];
+            const zentraleEintraege = [];
+            let position = 0;
+            dateien.forEach(datei => {
+                const name = new TextEncoder().encode(datei.name);
+                const daten = new TextEncoder().encode(datei.inhalt);
+                const crc = crc32(daten);
+                const lokal = new Uint8Array(30 + name.length + daten.length);
+                lokal.set([80, 75, 3, 4, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0);
+                lokal.set(u32(crc), 14); lokal.set(u32(daten.length), 18); lokal.set(u32(daten.length), 22);
+                lokal.set(new Uint8Array([name.length, 0, 0, 0]), 26); lokal.set(name, 30); lokal.set(daten, 30 + name.length);
+                teile.push(lokal);
+                const zentral = new Uint8Array(46 + name.length);
+                zentral.set([80, 75, 1, 2, 20, 0, 20, 0, 0, 0, 0, 0, 0, 0], 0);
+                zentral.set(u32(crc), 16); zentral.set(u32(daten.length), 20); zentral.set(u32(daten.length), 24);
+                zentral.set(new Uint8Array([name.length, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 28);
+                zentral.set(u32(position), 42); zentral.set(name, 46);
+                zentraleEintraege.push(zentral); position += lokal.length;
+            });
+            const zentralStart = position;
+            const ende = new Uint8Array(22);
+            ende.set([80, 75, 5, 6, 0, 0, 0, 0], 0); ende.set(new Uint8Array([dateien.length, 0, dateien.length, 0]), 8);
+            ende.set(u32(zentraleEintraege.reduce((summe, item) => summe + item.length, 0)), 12); ende.set(u32(zentralStart), 16);
+            return new Blob([...teile, ...zentraleEintraege, ende], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        }
+
+        function speichereAlsDocx() {
+            const vorschau = aktuellerModus === 'mappe' ? document.getElementById('mappe-vorschau') : document.getElementById(aktuellerModus + '-vorschau');
+            const seiten = aktuellerModus === 'mappe' ? [...vorschau.querySelectorAll('.a4-page')] : [vorschau];
+            const abschnitte = seiten.map((seite, index) => `${index ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : ''}${seite.innerText.split('\n').filter(Boolean).map((zeile, zeilenIndex) => docxParagraph(zeile, zeilenIndex === 0 ? 'Title' : '')).join('')}`).join('');
+            const dokument = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${abschnitte}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000"/></w:sectPr></w:body></w:document>`;
+            const dateien = [
+                { name: '[Content_Types].xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>' },
+                { name: '_rels/.rels', inhalt: '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+                { name: 'word/document.xml', inhalt: dokument },
+                { name: 'word/styles.xml', inhalt: '<?xml version="1.0" encoding="UTF-8"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/></w:rPr></w:style><w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:sz w:val="34"/></w:rPr></w:style></w:styles>' }
+            ];
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(zipDateien(dateien));
+            link.download = (aktuellerModus === 'mappe' ? 'Bewerbungsmappe' : aktuellerModus).toLowerCase() + '.docx';
+            link.click();
+            URL.revokeObjectURL(link.href);
+            document.getElementById('speicher-status').innerText = 'Aktuelle Word-Datei gespeichert';
+        }
+
+        let installPrompt;
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault();
+            installPrompt = event;
+            document.getElementById('install-button').style.display = 'block';
+        });
+
+        async function installiereApp() {
+            if (!installPrompt) return;
+            installPrompt.prompt();
+            await installPrompt.userChoice;
+            installPrompt = null;
+            document.getElementById('install-button').style.display = 'none';
+        }
+
+        function ladeDaten() {
+            const daten = JSON.parse(localStorage.getItem('lebenslaufDaten') || 'null');
+            if (!daten) return;
+            const alteStartwerte = {
+                vorname: 'Suleiman',
+                nachname: 'Dorani',
+                position: 'Ambulante Familienhilfe',
+                email: 'suleiman.dorani@example.com'
+            };
+            Object.keys(alteStartwerte).forEach(id => {
+                if (daten[id] === alteStartwerte[id]) daten[id] = '';
+            });
+            Object.keys(daten).forEach(id => {
+                const feld = document.getElementById(id);
+                if (feld) feld.value = daten[id];
+            });
+            const foto = localStorage.getItem('lebenslaufFoto');
+            if (foto) {
+                document.getElementById('prev-foto').src = foto;
+                document.getElementById('prev-foto').style.display = 'block';
+            }
+        }
+
+        let aktuellerModus = 'lebenslauf';
+
+        function zeigeModus(modus) {
+            aktuellerModus = modus;
+            const lebenslaufAktiv = modus === 'lebenslauf';
+            const anschreibenAktiv = modus === 'anschreiben';
+            const kuendigungAktiv = modus === 'kuendigung';
+            const deckblattAktiv = modus === 'deckblatt';
+            const mappeAktiv = modus === 'mappe';
+            document.getElementById('lebenslauf-panel').classList.toggle('active', lebenslaufAktiv);
+            document.getElementById('anschreiben-panel').classList.toggle('active', anschreibenAktiv);
+            document.getElementById('kuendigung-panel').classList.toggle('active', kuendigungAktiv);
+            document.getElementById('deckblatt-panel').classList.toggle('active', deckblattAktiv);
+            document.getElementById('mappe-panel').classList.toggle('active', mappeAktiv);
+            document.getElementById('lebenslauf-vorschau').style.display = lebenslaufAktiv ? 'block' : 'none';
+            document.getElementById('anschreiben-vorschau').style.display = anschreibenAktiv ? 'block' : 'none';
+            document.getElementById('kuendigung-vorschau').style.display = kuendigungAktiv ? 'block' : 'none';
+            document.getElementById('deckblatt-vorschau').style.display = deckblattAktiv ? 'block' : 'none';
+            document.getElementById('mappe-vorschau').classList.toggle('active', mappeAktiv);
+            document.querySelectorAll('.mode-tab').forEach(button => button.classList.remove('active'));
+            document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`).classList.add('active');
+        }
+
+        function ladeDeckblattMuster(art) {
+            aktiviereMuster(event.currentTarget);
+            wechsleDesign(art);
+            document.getElementById('foto-auf-deckblatt').checked = art !== 'schlicht';
+            updateVorschau();
+        }
+
+        function druckeMappe() {
+            zeigeModus('mappe');
+            window.print();
+        }
+
+        function aktiviereMuster(button) {
+            button.parentElement.querySelectorAll('.tpl-btn').forEach(item => item.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        let aktuellesDesign = 'klassisch';
+
+        function wechsleDesign(name) {
+            document.body.className = document.body.className.replace(/theme-[a-z-]+/g, '').trim();
+            document.body.classList.add('theme-' + name);
+            aktuellesDesign = name;
+            document.body.style.removeProperty('--accent');
+            document.body.style.removeProperty('--paper');
+            const styles = getComputedStyle(document.body);
+            document.getElementById('akzentfarbe').value = styles.getPropertyValue('--accent').trim();
+            document.getElementById('papierfarbe').value = styles.getPropertyValue('--paper').trim();
+        }
+
+        function manuelleFarben() {
+            document.body.style.setProperty('--accent', document.getElementById('akzentfarbe').value);
+            document.body.style.setProperty('--paper', document.getElementById('papierfarbe').value);
+        }
+
+        function designZuruecksetzen() {
+            wechsleDesign(aktuellesDesign);
+            updateVorschau();
+        }
+
+        function ladeLebenslaufMuster(art) {
+            if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
+            wechsleDesign(art);
+            const muster = {
+                klassisch: ['Sachbearbeiter', '2022 - heute: Sachbearbeitung und Kundenbetreuung', '2019 - 2022: Ausbildung zum Kaufmann für Büromanagement', 'MS Office, Organisation, Kundenkontakt', 'Deutsch: sehr gut, Englisch: gut'],
+                modern: ['Projektkoordinator', '2021 - heute: Planung und Koordination von Projekten', '2018 - 2021: Studium Betriebswirtschaft', 'Projektplanung, Kommunikation, Präsentationen', 'Deutsch: sehr gut, Englisch: sehr gut'],
+                sozial: ['Ambulante Familienhilfe', '2022 - heute: Unterstützung von Familien im Alltag', '2017 - 2020: Ausbildung im sozialen Bereich', 'Beratung, Empathie, Teamarbeit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
+                buero: ['Bürokaufmann', '2021 - heute: Sachbearbeitung und Kundenkontakt', '2016 - 2019: Ausbildung zum Bürokaufmann', 'MS Office, Terminplanung, Buchhaltung', 'Deutsch: sehr gut, Englisch: gut'],
+                it: ['Softwareentwickler', '2022 - heute: Entwicklung von Web-Anwendungen', '2018 - 2021: Ausbildung zum Fachinformatiker', 'JavaScript, Python, HTML, CSS, Git', 'Deutsch: sehr gut, Englisch: sehr gut'],
+                fuehrung: ['Teamleiter', '2020 - heute: Leitung eines Teams mit 12 Mitarbeitenden', '2015 - 2018: Studium Management', 'Führung, Planung, Konfliktlösung', 'Deutsch: sehr gut, Englisch: gut'],
+                pflege: ['Pflegefachkraft', '2021 - heute: Betreuung und Pflege von Patientinnen und Patienten', '2018 - 2021: Ausbildung zur Pflegefachkraft', 'Grundpflege, Dokumentation, Teamarbeit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
+                erziehung: ['Erzieher', '2020 - heute: Pädagogische Betreuung von Kindern', '2017 - 2020: Ausbildung zum Erzieher', 'Pädagogik, Kreativität, Elternarbeit', 'Deutsch: sehr gut, Englisch: gut'],
+                verkauf: ['Verkäufer', '2022 - heute: Beratung und Verkauf im Einzelhandel', '2019 - 2021: Ausbildung im Einzelhandel', 'Kundenberatung, Kasse, Warenpflege', 'Deutsch: sehr gut, Englisch: gut'],
+                marketing: ['Marketingmanager', '2021 - heute: Planung digitaler Marketingkampagnen', '2016 - 2019: Studium Marketing', 'Social Media, Analyse, Content-Erstellung', 'Deutsch: sehr gut, Englisch: sehr gut'],
+                design: ['Grafikdesigner', '2020 - heute: Gestaltung von Print- und Digitalmedien', '2017 - 2020: Ausbildung Grafikdesign', 'Adobe Creative Cloud, Layout, Fotografie', 'Deutsch: sehr gut, Englisch: gut'],
+                logistik: ['Fachkraft für Lagerlogistik', '2021 - heute: Warenannahme und Versand', '2018 - 2021: Ausbildung Lagerlogistik', 'Warenwirtschaft, Kommissionierung, SAP', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
+                fahrer: ['Berufskraftfahrer', '2019 - heute: Sicherer Transport im Nah- und Fernverkehr', '2016 - 2018: Ausbildung Berufskraftfahrer', 'Führerschein Klasse CE, Routenplanung, Fahrzeugpflege', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
+                gastronomie: ['Koch', '2020 - heute: Zubereitung von Speisen und Küchenorganisation', '2017 - 2020: Ausbildung zum Koch', 'Lebensmittelhygiene, Planung, Teamarbeit', 'Deutsch: gut, Englisch: gut'],
+                handwerk: ['Elektroniker', '2021 - heute: Installation und Wartung elektrischer Anlagen', '2018 - 2021: Ausbildung zum Elektroniker', 'Elektroinstallation, Fehlersuche, Sicherheit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
+                reinigung: ['Reinigungskraft', '2022 - heute: Reinigung von Büro- und Gebäudeflächen', '2020 - 2022: Gebäudereinigung', 'Sorgfalt, Hygiene, Zeitplanung', 'Deutsch: gut, Englisch: Grundkenntnisse'],
+                medizin: ['Medizinische Fachangestellte', '2021 - heute: Anmeldung und Assistenz in einer Arztpraxis', '2018 - 2021: Ausbildung zur MFA', 'Patientenbetreuung, Abrechnung, Organisation', 'Deutsch: sehr gut, Englisch: gut'],
+                verwaltung: ['Verwaltungsfachangestellte', '2020 - heute: Bearbeitung von Anträgen und Bürgeranfragen', '2017 - 2020: Ausbildung Verwaltung', 'Recht, Aktenführung, MS Office', 'Deutsch: sehr gut, Englisch: gut'],
+                bau: ['Bauleiter', '2019 - heute: Koordination von Baustellen und Gewerken', '2015 - 2018: Ausbildung im Bauwesen', 'Baustellenplanung, Sicherheit, Teamleitung', 'Deutsch: sehr gut, Englisch: gut'],
+                ausbildung: ['Auszubildender im Büromanagement', '2024 - heute: Unterstützung im Büro und Kundenservice', '2024 - heute: Ausbildung zum Kaufmann für Büromanagement', 'MS Office, Kommunikation, Organisation', 'Deutsch: sehr gut, Englisch: gut']
+            };
+            document.getElementById('position').value = muster[art][0];
+            document.getElementById('erfahrung').value = muster[art][1];
+            document.getElementById('ausbildung').value = muster[art][2];
+            document.getElementById('kenntnisse').value = muster[art][3];
+            document.getElementById('sprachen').value = muster[art][4];
+            updateVorschau();
+        }
+
+        function ladeAnschreibenMuster(art) {
+            if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
+            wechsleDesign(art);
+            const muster = {
+                klassisch: ['Sachbearbeiter', 'Musterfirma GmbH', 'Frau Müller', 'mit großem Interesse bewerbe ich mich um die ausgeschriebene Position. Meine zuverlässige Arbeitsweise und meine schnelle Auffassungsgabe möchte ich gerne in Ihr Unternehmen einbringen.\n\nÜber eine Einladung zu einem persönlichen Gespräch freue ich mich sehr.'],
+                motiviert: ['Projektkoordinator', 'Innovativ AG', 'Herr Schneider', 'Ihre Stelle hat sofort mein Interesse geweckt. Ich bringe hohe Motivation, Engagement und Freude an neuen Aufgaben mit. Gerne möchte ich Ihr Team aktiv unterstützen und gemeinsam gute Ergebnisse erreichen.\n\nIch freue mich darauf, Sie persönlich kennenzulernen.'],
+                sozial: ['Ambulante Familienhilfe', 'Sozialwerk Beispiel e. V.', 'Frau Kaya', 'als engagierter Mitarbeiter unterstütze ich Menschen strukturiert, geduldig und lösungsorientiert. Der respektvolle Umgang mit Familien und die gemeinsame Entwicklung praktischer Lösungen sind mir besonders wichtig.\n\nGerne erläutere ich Ihnen meine Motivation in einem persönlichen Gespräch.'],
+                buero: ['Bürokaufmann', 'Büroservice Beispiel GmbH', 'Herr Weber', 'mit meinem Organisationstalent und meiner sorgfältigen Arbeitsweise möchte ich Ihre administrativen Abläufe zuverlässig unterstützen. Kundenkontakt, Terminplanung und die Bearbeitung von Vorgängen erledige ich verantwortungsbewusst und präzise.\n\nÜber Ihre Einladung freue ich mich.'],
+                it: ['Softwareentwickler', 'TechStart Solutions GmbH', 'Frau Hoffmann', 'mit Begeisterung für digitale Lösungen und moderne Web-Anwendungen möchte ich meine Kenntnisse in Ihr Team einbringen. Ich arbeite mich schnell in neue Technologien ein und entwickle gerne praktische, verständliche Lösungen.\n\nGerne überzeuge ich Sie in einem persönlichen Gespräch.'],
+                fuehrung: ['Teamleiter', 'Muster Unternehmensgruppe', 'Herr Becker', 'mit meiner Erfahrung in der Teamleitung und meiner klaren, wertschätzenden Kommunikation möchte ich Verantwortung in Ihrem Unternehmen übernehmen. Ich motiviere Mitarbeitende, strukturiere Abläufe und behalte gemeinsame Ziele im Blick.'],
+                pflege: ['Pflegefachkraft', 'Seniorenzentrum am Park', 'Frau Roth', 'die Betreuung und Pflege von Menschen ist für mich eine verantwortungsvolle und sinnvolle Aufgabe. Mit Einfühlungsvermögen, Sorgfalt und Teamgeist möchte ich Ihr Pflegeteam unterstützen.'],
+                erziehung: ['Erzieher', 'Kindergarten Sonnenschein', 'Frau Yilmaz', 'Kinder in ihrer Entwicklung zu begleiten, bereitet mir große Freude. Mit Kreativität, Geduld und einem offenen Ohr möchte ich den pädagogischen Alltag Ihrer Einrichtung bereichern.'],
+                verkauf: ['Verkäufer', 'Muster Markt GmbH', 'Herr Lange', 'der direkte Kontakt mit Kundinnen und Kunden sowie die Beratung zu passenden Produkten machen mir Freude. Ich arbeite freundlich, zuverlässig und serviceorientiert.'],
+                marketing: ['Marketingmanager', 'MarketingPlus AG', 'Frau König', 'ich möchte meine Erfahrung in digitalem Marketing und meine Begeisterung für kreative Kampagnen in Ihr Team einbringen. Datenbasierte Planung und gute Inhalte verbinde ich dabei mit einem Blick für die Zielgruppe.'],
+                design: ['Grafikdesigner', 'Kreativstudio Beispiel', 'Herr Wolf', 'Ihre visuellen Projekte sprechen mich sehr an. Mit sicherem Gespür für Gestaltung, Layout und Markenwirkung möchte ich überzeugende Print- und Digitalmedien für Ihre Kundschaft entwickeln.'],
+                logistik: ['Fachkraft für Lagerlogistik', 'Logistik Beispiel GmbH', 'Frau Neumann', 'durch meine sorgfältige und strukturierte Arbeitsweise unterstütze ich Warenannahme, Kommissionierung und Versand zuverlässig. Ich arbeite gerne im Team und behalte auch bei hohem Tempo den Überblick.'],
+                fahrer: ['Berufskraftfahrer', 'Transport Beispiel GmbH', 'Herr Peters', 'ich bringe Erfahrung im sicheren und pünktlichen Transport sowie einen verantwortungsvollen Umgang mit Fahrzeugen und Waren mit. Ihre Touren möchte ich zuverlässig unterstützen.'],
+                gastronomie: ['Koch', 'Restaurant am Markt', 'Frau Schmitt', 'gutes Essen, saubere Abläufe und ein starkes Küchenteam sind meine Motivation. Mit Erfahrung in Vorbereitung, Zubereitung und Hygiene möchte ich Ihre Küche engagiert unterstützen.'],
+                handwerk: ['Elektroniker', 'Elektro Muster GmbH', 'Herr Fischer', 'ich arbeite sorgfältig, lösungsorientiert und sicher an elektrischen Anlagen. Meine Kenntnisse in Installation und Fehlersuche möchte ich gerne in Ihre Projekte einbringen.'],
+                reinigung: ['Reinigungskraft', 'Gebäudeservice Muster', 'Frau Bauer', 'Zuverlässigkeit, Sorgfalt und ein Auge für Sauberkeit zeichnen meine Arbeit aus. Gerne unterstütze ich Ihr Team bei der professionellen Reinigung Ihrer Gebäude.'],
+                medizin: ['Medizinische Fachangestellte', 'Praxis am Rathaus', 'Frau Dr. Weber', 'der freundliche Umgang mit Patientinnen und Patienten sowie eine sorgfältige Praxisorganisation sind mir besonders wichtig. Meine Erfahrung in Anmeldung und Assistenz möchte ich gerne einbringen.'],
+                verwaltung: ['Verwaltungsfachangestellte', 'Stadtverwaltung Musterstadt', 'Herr Hoffmann', 'mit meiner strukturierten Arbeitsweise und Freude am Kontakt mit Menschen möchte ich Ihre Verwaltung unterstützen. Sorgfältige Aktenführung und zuverlässige Bearbeitung sind für mich selbstverständlich.'],
+                bau: ['Bauleiter', 'Bauprojekt Muster GmbH', 'Herr Richter', 'ich bringe Erfahrung in der Koordination von Baustellen, Gewerken und Terminen mit. Verantwortungsbewusstes Arbeiten und klare Kommunikation sind für erfolgreiche Projekte entscheidend.'],
+                ausbildung: ['Ausbildung im Büromanagement', 'Muster Büro GmbH', 'Frau Wagner', 'ich möchte meine Ausbildung mit Engagement, Lernbereitschaft und Freude an Organisation und Kundenkontakt absolvieren. Ihr Unternehmen bietet dafür ein vielseitiges Umfeld.']
+            };
+            document.getElementById('position').value = muster[art][0];
+            document.getElementById('unternehmen').value = muster[art][1];
+            document.getElementById('ansprechperson').value = muster[art][2];
+            document.getElementById('anschreiben').value = muster[art][3];
+            updateVorschau();
+        }
+
+        function ladeKuendigungMuster(art) {
+            if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
+            wechsleDesign(art === 'vertrag' ? 'klassisch' : art);
+            const muster = {
+                arbeit: ['Personalabteilung Musterfirma GmbH\nMusterstraße 1\n12345 Musterstadt', 'ARB-2026-001', 'Hiermit kündige ich meinen Arbeitsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir den Beendigungszeitpunkt schriftlich und stellen Sie mir ein qualifiziertes Arbeitszeugnis aus.'],
+                wohnung: ['Hausverwaltung Beispiel\nWohnweg 12\n12345 Musterstadt', 'MIET-2026-045', 'Hiermit kündige ich den Mietvertrag für die oben genannte Wohnung fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir den Beendigungszeitpunkt schriftlich und teilen Sie mir einen Termin für die Wohnungsübergabe mit.'],
+                versicherung: ['Beispiel Versicherung AG\nVersicherungsweg 5\n12345 Musterstadt', 'VERS-778899', 'Hiermit kündige ich den Versicherungsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und den Vertragsendtermin schriftlich.'],
+                fitness: ['Fit & Aktiv GmbH\nSportstraße 8\n12345 Musterstadt', 'FIT-2026-123', 'Hiermit kündige ich meine Mitgliedschaft fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.'],
+                vertrag: ['Vertragspartner Beispiel GmbH\nHauptstraße 20\n12345 Musterstadt', 'VER-2026-999', 'Hiermit kündige ich den Vertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte senden Sie mir eine schriftliche Bestätigung der Kündigung mit dem Beendigungsdatum.'],
+                internet: ['MusterNet GmbH\nInternetweg 4\n12345 Musterstadt', 'NET-2026-456', 'Hiermit kündige ich meinen Internetvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir schriftlich den Vertragsendtermin.'],
+                handy: ['Mobilfunk Beispiel AG\nTelefonstraße 10\n12345 Musterstadt', 'MOB-2026-789', 'Hiermit kündige ich meinen Mobilfunkvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                zeitung: ['Musterzeitung Verlag\nPresseweg 2\n12345 Musterstadt', 'ABO-2026-111', 'Hiermit kündige ich mein Zeitungsabonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                strom: ['MusterEnergie GmbH\nEnergieweg 7\n12345 Musterstadt', 'STROM-2026-222', 'Hiermit kündige ich meinen Stromvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Vertragsende schriftlich.'],
+                bank: ['Musterbank\nBankplatz 1\n12345 Musterstadt', 'KONTO-2026-333', 'Hiermit kündige ich mein Konto zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und teilen Sie mir mit, welche Schritte noch erforderlich sind.'],
+                verein: ['Sportverein Musterstadt e. V.\nVereinsweg 3\n12345 Musterstadt', 'VEREIN-2026-444', 'Hiermit kündige ich meine Vereinsmitgliedschaft fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Ende der Mitgliedschaft schriftlich.'],
+                streaming: ['MusterStream GmbH\nMedienweg 9\n12345 Musterstadt', 'STREAM-2026-555', 'Hiermit kündige ich mein Streaming-Abonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                abo: ['Abo-Service Beispiel\nAboweg 6\n12345 Musterstadt', 'ABO-2026-666', 'Hiermit kündige ich mein Abonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.'],
+                leasing: ['Muster Leasing GmbH\nFahrzeugweg 8\n12345 Musterstadt', 'LEAS-2026-777', 'Hiermit kündige ich den Leasingvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und den Rückgabetermin schriftlich.'],
+                dienstleistung: ['Dienstleistung Beispiel GmbH\nServiceweg 11\n12345 Musterstadt', 'SERV-2026-888', 'Hiermit kündige ich den Dienstleistungsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Vertragsende schriftlich.']
+            };
+            document.getElementById('kuendigung-empfaenger').value = muster[art][0];
+            document.getElementById('vertragsnummer').value = muster[art][1];
+            document.getElementById('kuendigung-text').value = muster[art][2];
+            updateVorschau();
+        }
+
+        ladeDaten();
+        wechsleDesign('klassisch');
+        zeigeModus('lebenslauf');
+        updateVorschau();
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
+</body>
+
+</html>
