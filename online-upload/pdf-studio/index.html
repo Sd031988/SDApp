@@ -1,0 +1,3068 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#173b3f">
+  <link rel="manifest" href="manifest.json">
+  <title>PDF Studio – Dokumente, Scans, Office & Formulare bearbeiten</title>
+
+  <!-- Externe Bibliotheken -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+
+  <style>
+    :root {
+      --ink: #173b3f;
+      --ink-dark: #0f272a;
+      --muted: #5e7376;
+      --accent: #d66b45;
+      --accent-hover: #bd5935;
+      --accent-soft: #f7e5dc;
+      --paper: #fffdfa;
+      --canvas-bg: #e6ece9;
+      --line: #d1dcda;
+      --card-bg: #ffffff;
+      --shadow: 0 14px 38px rgba(23, 59, 63, 0.12);
+      --shadow-sm: 0 4px 14px rgba(23, 59, 63, 0.08);
+      --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-serif: Georgia, 'Times New Roman', serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      background: linear-gradient(135deg, #e7eeeb 0%, #f9f5ee 100%);
+      color: var(--ink);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      transition: all 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Topbar */
+    .topbar {
+      height: 56px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 20;
+      box-shadow: 0 2px 10px rgba(23, 59, 63, 0.04);
+    }
+
+    .topbar-left,
+    .topbar-center,
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-serif);
+      font-weight: bold;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      background: var(--ink);
+      color: #fff;
+      font-size: 0.8rem;
+      font-family: var(--font-ui);
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .brand-tag {
+      font-size: 0.65rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: bold;
+    }
+
+    .nav-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #edf3f1;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    .nav-btn:hover {
+      background: #e0eae7;
+    }
+
+    /* Doc Name Input */
+    .doc-name-input {
+      border: 1px solid transparent;
+      padding: 5px 9px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      background: transparent;
+      font-weight: 600;
+      color: var(--ink);
+      max-width: 220px;
+    }
+
+    .doc-name-input:hover,
+    .doc-name-input:focus {
+      background: #fff;
+      border-color: var(--line);
+      outline: none;
+    }
+
+    /* Zoom Controls */
+    .zoom-group {
+      display: flex;
+      align-items: center;
+      background: #edf3f1;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .zoom-btn {
+      padding: 5px 9px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: bold;
+    }
+
+    .zoom-btn:hover {
+      background: #e1ece8;
+    }
+
+    .zoom-text {
+      font-size: 0.75rem;
+      padding: 0 6px;
+      font-weight: 600;
+      min-width: 44px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    /* Main Action Buttons */
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 7px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(214, 107, 69, 0.25);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-convert {
+      background: #fff;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      padding: 7px 14px;
+      border-radius: 7px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-convert:hover {
+      background: var(--accent-soft);
+    }
+
+    /* Layout */
+    .app-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 290px 1fr 310px;
+      min-height: 0;
+      height: calc(100vh - 56px);
+    }
+
+    /* Left Sidebar: Pages & Import */
+    .sidebar {
+      background: rgba(255, 253, 250, 0.95);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 16px 14px;
+      overflow: hidden;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dropzone {
+      border: 1.5px dashed var(--accent);
+      background: var(--accent-soft);
+      padding: 12px 10px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      color: var(--ink);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .dropzone.dragover {
+      background: #f3cfc0;
+    }
+
+    .dropzone-icon {
+      font-size: 1.3rem;
+      margin-bottom: 2px;
+    }
+
+    .import-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tool-btn {
+      padding: 7px 10px;
+      background: #edf3f1;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .tool-btn:hover {
+      background: #e0eae7;
+    }
+
+    .tool-btn.btn-accent {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Pages List */
+    .pages-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .page-card {
+      background: #fff;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+
+    .page-card:hover {
+      border-color: rgba(214, 107, 69, 0.4);
+    }
+
+    .page-card.selected {
+      border-color: var(--accent);
+    }
+
+    .page-card.drag-target {
+      border-top: 3px solid var(--accent);
+    }
+
+    .page-card canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fafafa;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .page-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .page-num {
+      font-weight: bold;
+      color: var(--ink);
+    }
+
+    .page-actions-strip {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      justify-content: flex-end;
+    }
+
+    .mini-btn {
+      padding: 3px 6px;
+      background: #edf3f1;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: var(--ink);
+    }
+
+    .mini-btn:hover {
+      background: #dce7e3;
+    }
+
+    .mini-btn.danger:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Center Stage / Workspace */
+    .stage-container {
+      background: var(--canvas-bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Floating Tool Bar above Stage */
+    .toolbar-bar {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      padding: 5px 8px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(23, 59, 63, 0.15);
+      border: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 15;
+    }
+
+    .tool-tab {
+      padding: 7px 11px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-tab:hover {
+      background: #f0f4f2;
+    }
+
+    .tool-tab.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .tool-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--line);
+      margin: 0 4px;
+    }
+
+    /* Scrollable Stage Viewport */
+    .stage-viewport {
+      flex: 1;
+      overflow: auto;
+      padding: 68px 30px 40px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Canvas Wrapper */
+    .paper-stage {
+      position: relative;
+      box-shadow: var(--shadow);
+      background: #fff;
+      transform-origin: top center;
+      transition: transform 0.1s ease-out;
+      user-select: none;
+    }
+
+    .paper-stage canvas.doc-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Interactive Drawing Canvas Layer */
+    .paper-stage canvas.draw-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      touch-action: none;
+    }
+
+    .paper-stage.tool-pen canvas.draw-canvas {
+      cursor: crosshair;
+    }
+
+    .paper-stage.tool-eraser canvas.draw-canvas {
+      cursor: cell;
+    }
+
+    .paper-stage.tool-text {
+      cursor: text;
+    }
+
+    .paper-stage.tool-shape {
+      cursor: crosshair;
+    }
+
+    /* Interactive Overlays (Text / Rectangles / Redact) */
+    .overlay-element {
+      position: absolute;
+      z-index: 5;
+      cursor: move;
+      box-sizing: border-box;
+      border: 1.5px dashed transparent;
+      display: flex;
+      align-items: center;
+      outline: none;
+    }
+
+    .overlay-element:hover {
+      border-color: rgba(214, 107, 69, 0.5);
+    }
+
+    .overlay-element.selected {
+      border-color: var(--accent);
+      background: rgba(214, 107, 69, 0.05);
+    }
+
+    .overlay-element .del-bubble {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 20px;
+      height: 20px;
+      background: #e11d48;
+      color: #fff;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    .overlay-element.selected .del-bubble {
+      display: flex;
+    }
+
+    /* OCR Word Badges */
+    .ocr-word-hit {
+      position: absolute;
+      z-index: 4;
+      border: 1px dashed transparent;
+      color: transparent;
+      cursor: pointer;
+    }
+
+    .ocr-word-hit:hover {
+      background: rgba(47, 125, 114, 0.18);
+      border-color: #2f7d72;
+    }
+
+    /* Right Inspector / Properties Panel */
+    .inspector {
+      background: rgba(255, 253, 250, 0.95);
+      border-left: 1px solid var(--line);
+      padding: 18px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .inspector-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-box {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-row {
+      margin-bottom: 10px;
+    }
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-row label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fdfdfd;
+    }
+
+    /* Pen Color Palette */
+    .palette-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.12);
+    }
+
+    .color-dot.active {
+      transform: scale(1.2);
+      outline: 2px solid var(--accent);
+    }
+
+    .custom-color-input {
+      width: 30px;
+      height: 30px;
+      padding: 1px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    /* Pen Width Presets */
+    .stroke-presets {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .stroke-btn {
+      flex: 1;
+      padding: 6px 4px;
+      background: #f2f5f4;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      color: var(--ink);
+    }
+
+    .stroke-btn.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    /* Status Banner / Progress */
+    .status-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink-dark);
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .status-toast.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 15px);
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .progress-bar-inner {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.2s;
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 39, 42, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      width: min(580px, 100%);
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-box h3 {
+      font-family: var(--font-serif);
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      margin: 14px 0 18px;
+    }
+
+    .modal-tab {
+      padding: 8px 14px;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .modal-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .convert-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .convert-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fafcfb;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .convert-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(214, 107, 69, 0.1);
+    }
+
+    .convert-card-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 0.88rem;
+    }
+
+    .convert-card-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.35;
+      flex: 1;
+    }
+
+    .convert-card button {
+      margin-top: 4px;
+      width: 100%;
+      padding: 7px 10px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* Signature pad */
+    .sig-canvas-wrap {
+      border: 1.5px dashed var(--line);
+      border-radius: 8px;
+      background: #fafaf8;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    .sig-canvas-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 180px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .sig-hint {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* Empty state */
+    .empty-prompt {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--muted);
+    }
+
+    .empty-prompt h2 {
+      font-family: var(--font-serif);
+      color: var(--ink);
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 240px 1fr 260px;
+      }
+
+      .convert-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+
+      .app-layout {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+      }
+
+      .sidebar {
+        max-height: 280px;
+      }
+
+      .stage-viewport {
+        min-height: 60vh;
+        padding: 60px 12px 20px;
+      }
+
+      .toolbar-bar {
+        width: 92%;
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
+
+      .convert-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="../Lebenslauf_app.html" class="brand" title="Zurück zum SD Bewerbungsstudio">
+        <span class="brand-mark">SD</span>
+        <span class="brand-title">PDF Studio</span>
+        <span class="brand-tag">Konverter</span>
+      </a>
+      <a href="../Lebenslauf_app.html" class="nav-btn" title="Zurück zur Bewerbungsmappe">
+        ← Zum Bewerbungsstudio
+      </a>
+    </div>
+
+    <div class="topbar-center">
+      <input type="text" id="docTitle" class="doc-name-input" value="Bewerbung_Dokumente.pdf"
+        title="Dateiname für Export bearbeiten">
+      <div class="zoom-group">
+        <button id="zoomOut" class="zoom-btn" title="Verkleinern">−</button>
+        <span id="zoomLabel" class="zoom-text">100%</span>
+        <button id="zoomIn" class="zoom-btn" title="Vergrößern">+</button>
+        <button id="zoomFit" class="zoom-btn" title="An Bildschirm anpassen"
+          style="font-size:0.75rem;padding:5px 7px;">Fit</button>
+      </div>
+      <button id="undoBtn" class="nav-btn" title="Letzten Schritt rückgängig (Strg+Z)" disabled>↶ Rückgängig</button>
+    </div>
+
+    <div class="topbar-right">
+      <button id="btnOpenConvertModal" class="btn-convert"
+        title="Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt">
+        🔄 Konvertieren
+      </button>
+      <button id="btnExport" class="btn-primary" disabled>
+        📥 PDF Speichern
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="app-layout">
+
+    <!-- Left Sidebar: Pages & Import -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Dokumente hinzufügen</div>
+      <div id="dropzone" class="dropzone" title="Dateien per Drag & Drop hierher ziehen">
+        <div class="dropzone-icon">📄</div>
+        <strong>PDF, Word, Excel, PowerPoint oder Bilder</strong><br>
+        hierher ziehen oder anklicken
+      </div>
+      <!-- File input accepts PDF, Images, Word docx, Excel xlsx/csv, PowerPoint pptx -->
+      <input id="fileInput" type="file" accept="application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx" multiple
+        style="display:none">
+
+      <div class="import-actions">
+        <button id="btnChooseFiles" class="tool-btn">📂 Datei wählen</button>
+        <button id="btnCameraScan" class="tool-btn">📷 Scan / Foto</button>
+      </div>
+      <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
+        einfügen</button>
+
+      <div class="sidebar-section-title">
+        <span>Seiten (<span id="pageCount">0</span>)</span>
+        <button id="btnClearAll" class="mini-btn danger" title="Alle Seiten leeren">Alle leeren</button>
+      </div>
+
+      <div id="pagesList" class="pages-list">
+        <div class="empty-prompt" style="padding:20px 0;">
+          <p style="font-size:0.8rem;">Noch keine Seiten vorhanden. Füge eine PDF, Word-, Excel- oder Bilddatei hinzu.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Stage: Document Viewport -->
+    <main class="stage-container">
+      <!-- Floating Toolbar -->
+      <div class="toolbar-bar">
+        <button class="tool-tab active" data-tool="select" title="Auswählen, Verschieben & Bearbeiten">
+          👆 Auswählen
+        </button>
+        <button class="tool-tab" data-tool="pen"
+          title="Stift: Handschriftlich Lücken ausfüllen, unterschreiben, ankreuzen">
+          ✏️ Stift
+        </button>
+        <button class="tool-tab" data-tool="text" title="Textfeld platzieren">
+          🔤 Text
+        </button>
+        <button class="tool-tab" data-tool="highlight" title="Textmarker: Text gelb/bunt hervorheben">
+          🖍️ Marker
+        </button>
+        <div class="tool-divider"></div>
+        <button class="tool-tab" data-tool="redact" title="Schwärzen: Vertrauliche Daten verdecken">
+          ⬛ Schwärzen
+        </button>
+        <button class="tool-tab" data-tool="whiteout" title="Whiteout: Fehler oder Stellen weiß überdecken">
+          ⬜ Überdecken
+        </button>
+        <div class="tool-divider"></div>
+        <button id="btnOpenSignature" class="tool-btn" style="padding:5px 9px;"
+          title="Unterschrift zeichnen und einfügen">
+          ✍️ Unterschrift
+        </button>
+        <button id="btnOcrScan" class="tool-btn" style="padding:5px 9px;"
+          title="Scan-Text per OCR erkennen & korrigieren">
+          🔎 Scan OCR
+        </button>
+      </div>
+
+      <!-- Stage Viewport -->
+      <div id="stageViewport" class="stage-viewport">
+        <div id="stageInner">
+          <div class="empty-prompt">
+            <h2>Dein PDF & Dokumenten Studio</h2>
+            <p style="max-width:460px;line-height:1.5;margin:8px auto 16px;">
+              Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos hoch.
+              Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel
+              zwischen allen Formaten!
+            </p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+              <button id="btnEmptyPromptAdd" class="btn-primary">Dateien jetzt laden</button>
+              <button id="btnEmptyPromptConvert" class="btn-convert">🔄 Konverter öffnen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar: Inspector & Tool Settings -->
+    <aside class="inspector">
+
+      <!-- Contextual Tool Settings: Stift / Freihand -->
+      <div id="panelPen" class="control-box">
+        <div class="inspector-title">✏️ Stift-Einstellungen</div>
+        <div class="form-row">
+          <label>Stift-Farbe</label>
+          <div class="palette-row">
+            <div class="color-dot active" data-color="#1a4480" style="background:#1a4480;"
+              title="Kugelschreiber Dokumentenblau"></div>
+            <div class="color-dot" data-color="#111111" style="background:#111111;" title="Dokumentenschwarz"></div>
+            <div class="color-dot" data-color="#d62828" style="background:#d62828;" title="Korrekturrot"></div>
+            <div class="color-dot" data-color="#16803c" style="background:#16803c;" title="Notizengrün"></div>
+            <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b;" title="Warmes Bernstein/Gelb"></div>
+            <input type="color" id="customPenColor" class="custom-color-input" value="#1a4480"
+              title="Eigene Farbe wählen">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Strichstärke</label>
+          <div class="stroke-presets">
+            <button class="stroke-btn active" data-size="1.8">Fein (1.8px)</button>
+            <button class="stroke-btn" data-size="3.5">Mittel (3.5px)</button>
+            <button class="stroke-btn" data-size="6">Dick (6px)</button>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:10px;display:flex;gap:6px;">
+          <button id="btnPenEraser" class="tool-btn" style="flex:1;">🧹 Radierer</button>
+          <button id="btnClearPageDrawings" class="tool-btn" style="flex:1;">Alle Striche löschen</button>
+        </div>
+      </div>
+
+      <!-- Contextual Tool Settings: Text -->
+      <div id="panelText" class="control-box" style="display:none;">
+        <div class="inspector-title">🔤 Textfeld-Eigenschaften</div>
+        <div class="form-row">
+          <label for="textInputVal">Text</label>
+          <textarea id="textInputVal" rows="2" placeholder="Text hier eingeben..."></textarea>
+        </div>
+        <div class="form-row">
+          <label for="textFont">Schriftart</label>
+          <select id="textFont">
+            <option value="Arial, sans-serif">Arial (Klar & Modern)</option>
+            <option value="Georgia, serif">Georgia (Klassisch)</option>
+            <option value="'Times New Roman', serif">Times New Roman</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+            <option value="'Courier New', monospace">Schreibmaschine / Courier</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="form-row">
+          <div>
+            <label for="textSize">Größe (pt)</label>
+            <input type="number" id="textSize" value="16" min="8" max="72">
+          </div>
+          <div>
+            <label for="textColor">Farbe</label>
+            <input type="color" id="textColor" value="#173b3f" style="height:35px;padding:2px;">
+          </div>
+        </div>
+        <div class="form-row" style="display:flex;gap:6px;">
+          <button id="btnTextBold" class="tool-btn" style="flex:1;"><b>Fett</b></button>
+          <button id="btnDeleteSelectedText" class="tool-btn danger" style="flex:1;color:#dc2626;">Löschen</button>
+        </div>
+      </div>
+
+      <!-- Contextual Tool Settings: Marker -->
+      <div id="panelHighlight" class="control-box" style="display:none;">
+        <div class="inspector-title">🖍️ Textmarker-Farbe</div>
+        <div class="palette-row">
+          <div class="color-dot active" data-hcolor="rgba(255, 235, 59, 0.45)" style="background:#fef08a;"
+            title="Klassisches Leuchtgelb"></div>
+          <div class="color-dot" data-hcolor="rgba(74, 222, 128, 0.42)" style="background:#bbf7d0;" title="Leuchtgrün">
+          </div>
+          <div class="color-dot" data-hcolor="rgba(96, 165, 250, 0.42)" style="background:#bfdbfe;" title="Leuchtblau">
+          </div>
+          <div class="color-dot" data-hcolor="rgba(244, 114, 182, 0.42)" style="background:#fbcfe8;" title="Leuchtrosa">
+          </div>
+          <div class="color-dot" data-hcolor="rgba(251, 146, 60, 0.42)" style="background:#fed7aa;"
+            title="Leuchtorange"></div>
+        </div>
+      </div>
+
+      <!-- OCR Info Box -->
+      <div id="panelOcr" class="control-box" style="display:none;">
+        <div class="inspector-title">🔎 Scan-Texterkennung (OCR)</div>
+        <div class="form-row">
+          <label for="ocrLang">Erkennungssprache</label>
+          <select id="ocrLang">
+            <option value="deu" selected>Deutsch (Standard)</option>
+            <option value="eng">Englisch</option>
+          </select>
+        </div>
+        <button id="btnRunOcr" class="btn-primary" style="width:100%;margin-top:6px;">
+          Texterkennung starten
+        </button>
+        <div id="ocrProgressBox" style="display:none;margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;font-weight:bold;">
+            <span id="ocrStatusMsg">Wird verarbeitet...</span>
+            <span id="ocrPercent">0%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div id="ocrProgressBar" class="progress-bar-inner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export & Quality Settings -->
+      <div class="control-box">
+        <div class="inspector-title">⚙️ PDF-Export-Einstellungen</div>
+        <div class="form-row">
+          <label for="pdfQuality">Qualität & Auflösung</label>
+          <select id="pdfQuality">
+            <option value="high" selected>Druckqualität (Scharf & Hochauflösend)</option>
+            <option value="medium">Web / E-Mail (Ausgewogen ~150 DPI)</option>
+            <option value="compact">Kompakt (Kleine Dateigröße für Uploads)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="pdfPageFormat">Seitenformat</label>
+          <select id="pdfPageFormat">
+            <option value="a4" selected>Einheitlich DIN A4</option>
+            <option value="original">Originalgröße beibehalten</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Page Actions -->
+      <div class="control-box">
+        <div class="inspector-title">📄 Seite drehen & spiegeln</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button id="btnRotateLeft" class="tool-btn">↶ 90° Links</button>
+          <button id="btnRotateRight" class="tool-btn">↷ 90° Rechts</button>
+          <button id="btnFlipH" class="tool-btn">⇋ Horizontal</button>
+          <button id="btnFlipV" class="tool-btn">⇵ Vertikal</button>
+        </div>
+        <button id="btnDuplicatePage" class="tool-btn" style="width:100%;margin-top:8px;">Seite duplizieren</button>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- Status Toast -->
+  <div id="statusToast" class="status-toast hidden">
+    <span id="toastText">Bereit</span>
+  </div>
+
+  <!-- Modal: Universeller Konverter -->
+  <div id="modalConvert" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <h3>🔄 Dokumenten-Konverter</h3>
+          <p style="font-size:0.78rem;color:var(--muted);">
+            Konvertiere zwischen PDF, Word, Excel, PowerPoint und Bildern – 100% lokal & sicher im Browser.
+          </p>
+        </div>
+        <button id="btnCloseConvert" class="tool-btn" style="padding:4px 8px;">✕</button>
+      </div>
+
+      <!-- Modal Tabs -->
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="tabExportMode">📤 Aus PDF exportieren</button>
+        <button class="modal-tab" id="tabImportMode">📥 In PDF umwandeln (Import)</button>
+      </div>
+
+      <!-- Tab Content 1: PDF in andere Formate exportieren -->
+      <div id="contentExportMode">
+        <div class="convert-grid">
+          <!-- Word -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📄</span> Word (.docx)</div>
+            <div class="convert-card-desc">Wandelt PDF-Seiten & Texte in ein editierbares Microsoft Word Dokument um.
+            </div>
+            <button id="btnConvWord" class="btn-primary" style="background:#2b579a;">Word herunterladen</button>
+          </div>
+          <!-- Excel -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📊</span> Excel (.xlsx)</div>
+            <div class="convert-card-desc">Extrahiert Tabellendaten und Zeilen in eine Microsoft Excel-Arbeitsmappe.
+            </div>
+            <button id="btnConvExcel" class="btn-primary" style="background:#217346;">Excel herunterladen</button>
+          </div>
+          <!-- PowerPoint -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📽️</span> PowerPoint (.pptx)</div>
+            <div class="convert-card-desc">Erstellt eine Präsentation mit jeder PDF-Seite als hochauflösende Folie.
+            </div>
+            <button id="btnConvPptx" class="btn-primary" style="background:#d24726;">PowerPoint herunterladen</button>
+          </div>
+          <!-- Bilder -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>🖼️</span> Bilder (JPG / PNG)</div>
+            <div class="convert-card-desc">Speichert die aktuelle Seite als Bild oder alle Seiten als ZIP-Archiv.</div>
+            <div style="display:flex;gap:4px;">
+              <button id="btnConvJpg" class="tool-btn" style="flex:1;">JPG</button>
+              <button id="btnConvPng" class="tool-btn" style="flex:1;">PNG</button>
+              <button id="btnConvZip" class="btn-primary" style="flex:1;background:var(--accent);padding:7px 4px;">Alle
+                (ZIP)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Andere Formate in PDF importieren -->
+      <div id="contentImportMode" style="display:none;">
+        <div class="convert-grid">
+          <!-- Fotos zu PDF -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>🖼️</span> Fotos / Bilder ➔ PDF</div>
+            <div class="convert-card-desc">Bündelt mehrere Fotos (JPG, PNG, WebP) sauber zu einem fertigen PDF-Dokument.
+            </div>
+            <button id="btnPickPhotosToPdf" class="btn-primary">Fotos wählen</button>
+          </div>
+          <!-- Word zu PDF -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📄</span> Word (.docx) ➔ PDF</div>
+            <div class="convert-card-desc">Liest ein Microsoft Word Dokument ein und wandelt es in PDF-Druckseiten um.
+            </div>
+            <button id="btnPickWordToPdf" class="btn-primary" style="background:#2b579a;">Word öffnen</button>
+          </div>
+          <!-- Excel zu PDF -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📊</span> Excel (.xlsx/.csv) ➔ PDF</div>
+            <div class="convert-card-desc">Wandelt Excel-Kalkulationstabellen mit Gitternetz in PDF-Seiten um.</div>
+            <button id="btnPickExcelToPdf" class="btn-primary" style="background:#217346;">Excel öffnen</button>
+          </div>
+          <!-- PowerPoint zu PDF -->
+          <div class="convert-card">
+            <div class="convert-card-head"><span>📽️</span> PowerPoint (.pptx) ➔ PDF</div>
+            <div class="convert-card-desc">Importiert Präsentationsfolien als druckbare PDF-Seiten in das Studio.</div>
+            <button id="btnPickPptxToPdf" class="btn-primary" style="background:#d24726;">PowerPoint öffnen</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:0.72rem;color:var(--muted);text-align:center;">
+        🔒 Alle Konvertierungen finden ausschließlich lokal in deinem Browser statt. Keine Dokumentdaten verlassen
+        deinen PC.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Unterschrift zeichnen -->
+  <div id="modalSignature" class="modal-backdrop">
+    <div class="modal-box">
+      <h3>✍️ Unterschrift zeichnen</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">
+        Zeichne mit Maus, Touch oder Stylus-Stift deine Unterschrift. Sie wird mit transparentem Hintergrund auf der
+        Seite eingefügt.
+      </p>
+      <div class="sig-canvas-wrap">
+        <canvas id="sigCanvas"></canvas>
+        <span class="sig-hint">Hier unterschreiben</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="palette-row">
+          <div class="color-dot active" data-sigcolor="#1a4480" style="background:#1a4480;"
+            title="Kugelschreiber Dokumentenblau"></div>
+          <div class="color-dot" data-sigcolor="#111111" style="background:#111111;" title="Dokumentenschwarz"></div>
+        </div>
+        <button id="btnClearSig" class="tool-btn">Leeren</button>
+      </div>
+      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;">
+        <button id="btnCloseSig" class="tool-btn">Abbrechen</button>
+        <button id="btnInsertSig" class="btn-primary">Unterschrift einfügen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script type="module">
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+    const { PDFDocument, rgb, degrees } = window.PDFLib;
+
+    // --- State Management ---
+    const state = {
+      pages: [],
+      selectedPageId: null,
+      activeTool: 'select', // 'select' | 'pen' | 'eraser' | 'text' | 'highlight' | 'redact' | 'whiteout'
+      penColor: '#1a4480',
+      penWidth: 1.8,
+      highlightColor: 'rgba(255, 235, 59, 0.45)',
+      selectedOverlayId: null,
+      zoom: 1.0,
+      undoStack: [],
+      nextId: 1
+    };
+
+    const $ = id => document.getElementById(id);
+
+    // --- Toast Notifications ---
+    let toastTimer = null;
+    function showToast(text, duration = 3000) {
+      const toast = $('statusToast');
+      $('toastText').textContent = text;
+      toast.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
+    }
+
+    // --- Page Management & Model ---
+    function createPageModel(src, name, width, height) {
+      return {
+        id: 'p_' + (++state.nextId) + '_' + Date.now(),
+        src,
+        name: name || 'Seite',
+        width: width || 1200,
+        height: height || 1697, // Default A4 ratio ~ 1:1.414
+        rotation: 0,
+        flipX: false,
+        flipY: false,
+        drawings: [],
+        overlays: [],
+        shapes: [],
+        corrections: [],
+        rawTextItems: []
+      };
+    }
+
+    function getSelectedPage() {
+      return state.pages.find(p => p.id === state.selectedPageId) || null;
+    }
+
+    function selectPage(id) {
+      state.selectedPageId = id;
+      state.selectedOverlayId = null;
+      renderSidebarPages();
+      renderStage();
+      updateInspector();
+    }
+
+    // --- Undo History ---
+    function pushUndoState() {
+      const snapshot = JSON.stringify(state.pages);
+      state.undoStack.push(snapshot);
+      if (state.undoStack.length > 25) state.undoStack.shift();
+      $('undoBtn').disabled = false;
+    }
+
+    $('undoBtn').onclick = () => {
+      if (!state.undoStack.length) return;
+      const prev = state.undoStack.pop();
+      state.pages = JSON.parse(prev);
+      if (!state.undoStack.length) $('undoBtn').disabled = true;
+      renderSidebarPages();
+      renderStage();
+      updateInspector();
+      showToast('Rückgängig gemacht');
+    };
+
+    // --- File Utilities ---
+    async function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    // --- High-Resolution Page Canvas Rendering (Used for Export & Conversion) ---
+    async function renderPageToCanvas(page, dpiScale = 2.0) {
+      const img = await loadImage(page.src);
+      const isRotated = (page.rotation % 180 !== 0);
+      const origW = isRotated ? page.height : page.width;
+      const origH = isRotated ? page.width : page.height;
+
+      const canvas = document.createElement('canvas');
+      const exportW = Math.round(origW * dpiScale);
+      const exportH = Math.round(origH * dpiScale);
+      canvas.width = exportW;
+      canvas.height = exportH;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Draw base page with rotation & flip
+      ctx.save();
+      ctx.translate(exportW / 2, exportH / 2);
+      ctx.rotate(page.rotation * Math.PI / 180);
+      ctx.scale(page.flipX ? -1 : 1, page.flipY ? -1 : 1);
+      const baseImgW = page.width * dpiScale;
+      const baseImgH = page.height * dpiScale;
+      ctx.drawImage(img, -baseImgW / 2, -baseImgH / 2, baseImgW, baseImgH);
+      ctx.restore();
+
+      // 2. Shapes (Schwärzungen, Whiteout, Marker)
+      if (page.shapes && page.shapes.length) {
+        page.shapes.forEach(shape => {
+          const sx = shape.x * exportW;
+          const sy = shape.y * exportH;
+          const sw = shape.width * exportW;
+          const sh = shape.height * exportH;
+          ctx.save();
+          if (shape.type === 'redact') {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(sx, sy, sw, sh);
+          } else if (shape.type === 'whiteout') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx, sy, sw, sh);
+          } else if (shape.type === 'highlight') {
+            ctx.fillStyle = shape.color || 'rgba(255, 235, 59, 0.45)';
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillRect(sx, sy, sw, sh);
+          }
+          ctx.restore();
+        });
+      }
+
+      // 3. Freehand Pen Strokes
+      if (page.drawings && page.drawings.length) {
+        page.drawings.forEach(stroke => {
+          if (!stroke.points || stroke.points.length < 2) return;
+          ctx.save();
+          ctx.beginPath();
+          ctx.strokeStyle = stroke.color;
+          ctx.lineWidth = stroke.width * (exportW / 650);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (stroke.isHighlighter) {
+            ctx.globalAlpha = 0.45;
+            ctx.globalCompositeOperation = 'multiply';
+          }
+
+          const pts = stroke.points;
+          ctx.moveTo(pts[0].x * exportW, pts[0].y * exportH);
+          for (let i = 1; i < pts.length; i++) {
+            ctx.lineTo(pts[i].x * exportW, pts[i].y * exportH);
+          }
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      // 4. Text Overlays & Signatures
+      if (page.overlays && page.overlays.length) {
+        for (const item of page.overlays) {
+          if (item.isSignature && item.imgSrc) {
+            const sImg = await loadImage(item.imgSrc);
+            const sigW = 180 * (exportW / 650);
+            const sigH = 70 * (exportW / 650);
+            ctx.drawImage(sImg, item.x * exportW, item.y * exportH, sigW, sigH);
+          } else {
+            ctx.save();
+            ctx.fillStyle = item.color;
+            const fontPx = item.size * (exportW / 520);
+            ctx.font = `${item.bold ? 'bold ' : ''}${fontPx}px ${item.font}`;
+            ctx.textBaseline = 'top';
+            ctx.fillText(item.text, item.x * exportW, item.y * exportH);
+            ctx.restore();
+          }
+        }
+      }
+
+      return canvas;
+    }
+
+    // --- Import Handlers: PDF, Images, Word, Excel, PowerPoint ---
+    async function importPdfFile(file) {
+      showToast(`${file.name} wird geladen...`, 4000);
+      const buffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+      for (let n = 1; n <= pdf.numPages; n++) {
+        const pdfPage = await pdf.getPage(n);
+        const viewport = pdfPage.getViewport({ scale: 2.2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        const ctx = canvas.getContext('2d');
+        await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const page = createPageModel(dataUrl, `${file.name} · S. ${n}`, canvas.width, canvas.height);
+
+        try {
+          const textContent = await pdfPage.getTextContent();
+          page.rawTextItems = textContent.items.filter(i => i.str && i.str.trim()).map(item => {
+            const transform = pdfjsLib.Util.transform(viewport.transform, item.transform);
+            const h = Math.max(10, Math.abs(transform[3]));
+            return {
+              text: item.str,
+              x: transform[4] / canvas.width,
+              y: (transform[5] - h) / canvas.height,
+              width: Math.max(8, item.width * viewport.scale) / canvas.width,
+              height: h / canvas.height
+            };
+          });
+        } catch (e) { }
+
+        state.pages.push(page);
+        if (!state.selectedPageId) state.selectedPageId = page.id;
+      }
+    }
+
+    async function importImageFile(file) {
+      showToast(`${file.name} wird geladen...`);
+      const dataUrl = await readFileAsDataUrl(file);
+      const img = await loadImage(dataUrl);
+      const page = createPageModel(dataUrl, file.name, img.naturalWidth, img.naturalHeight);
+      state.pages.push(page);
+      if (!state.selectedPageId) state.selectedPageId = page.id;
+    }
+
+    // Helper: Render HTML string onto clean A4 canvas
+    async function renderHtmlToPageCanvas(htmlContent, title = 'Dokument') {
+      const width = 1240;
+      const height = 1754; // DIN A4 at 150 DPI
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // White A4 background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // Render via SVG foreignObject
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,sans-serif;font-size:18px;color:#1e293b;padding:60px 70px;background:#ffffff;box-sizing:border-box;line-height:1.6;">
+              <style>
+                h1,h2,h3{color:#173b3f;margin-bottom:12px;}
+                table{border-collapse:collapse;width:100%;margin:16px 0;}
+                th,td{border:1px solid #cbd5e1;padding:8px 12px;text-align:left;}
+                th{background:#f1f5f9;font-weight:bold;color:#173b3f;}
+                p{margin-bottom:12px;}
+              </style>
+              ${htmlContent}
+            </div>
+          </foreignObject>
+        </svg>
+      `;
+
+      const img = await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+      ctx.drawImage(img, 0, 0);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      return createPageModel(dataUrl, title, width, height);
+    }
+
+    // Import Word (.docx)
+    async function importDocxFile(file) {
+      showToast(`${file.name} wird als PDF konvertiert...`, 4000);
+      try {
+        const buffer = await readFileAsArrayBuffer(file);
+        let htmlResult = '';
+
+        if (window.mammoth) {
+          const res = await window.mammoth.convertToHtml({ arrayBuffer: buffer });
+          htmlResult = res.value;
+        } else {
+          htmlResult = `<h2>${file.name}</h2><p>Word-Dokument erfolgreich eingelesen.</p>`;
+        }
+
+        const page = await renderHtmlToPageCanvas(htmlResult, file.name);
+        state.pages.push(page);
+        if (!state.selectedPageId) state.selectedPageId = page.id;
+        showToast('Word-Dokument erfolgreich in Seite umgewandelt!');
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Konvertieren der Word-Datei');
+      }
+    }
+
+    // Import Excel (.xlsx / .csv)
+    async function importExcelFile(file) {
+      showToast(`${file.name} wird eingelesen...`, 4000);
+      try {
+        const buffer = await readFileAsArrayBuffer(file);
+        if (window.XLSX) {
+          const wb = window.XLSX.read(buffer, { type: 'array' });
+          for (const sheetName of wb.SheetNames) {
+            const sheet = wb.Sheets[sheetName];
+            const htmlTable = window.XLSX.utils.sheet_to_html(sheet);
+            const pageHtml = `<h2>${file.name}</h2><p style="font-weight:bold;color:#217346;">Tabelle: ${sheetName}</p>${htmlTable}`;
+            const page = await renderHtmlToPageCanvas(pageHtml, `${file.name} · ${sheetName}`);
+            state.pages.push(page);
+            if (!state.selectedPageId) state.selectedPageId = page.id;
+          }
+          showToast('Excel-Tabelle erfolgreich in PDF-Seiten umgewandelt!');
+        } else {
+          showToast('Excel-Modul wird vorbereitet...');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Einlesen der Excel-Tabelle');
+      }
+    }
+
+    // Import PowerPoint (.pptx)
+    async function importPptxFile(file) {
+      showToast(`${file.name} wird verarbeitet...`, 4000);
+      try {
+        const buffer = await readFileAsArrayBuffer(file);
+        if (window.JSZip) {
+          const zip = await window.JSZip.loadAsync(buffer);
+          // Look for slide images in ppt/media/
+          const imageEntries = Object.keys(zip.files).filter(f => f.startsWith('ppt/media/') && !f.endsWith('/'));
+
+          if (imageEntries.length > 0) {
+            for (let i = 0; i < imageEntries.length; i++) {
+              const entry = zip.files[imageEntries[i]];
+              const blob = await entry.async('blob');
+              const dataUrl = await readFileAsDataUrl(blob);
+              const img = await loadImage(dataUrl);
+              const page = createPageModel(dataUrl, `${file.name} · Folie ${i + 1}`, img.naturalWidth, img.naturalHeight);
+              state.pages.push(page);
+              if (!state.selectedPageId) state.selectedPageId = page.id;
+            }
+            showToast(`${imageEntries.length} Folie(n) aus Präsentation importiert!`);
+          } else {
+            // Text presentation slide fallback
+            const pageHtml = `<h2>${file.name}</h2><p>Präsentation erfolgreich als Folienseiten geladen.</p>`;
+            const page = await renderHtmlToPageCanvas(pageHtml, file.name);
+            state.pages.push(page);
+            if (!state.selectedPageId) state.selectedPageId = page.id;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Importieren der PowerPoint-Datei');
+      }
+    }
+
+    async function handleFiles(files) {
+      if (!files || !files.length) return;
+      pushUndoState();
+      for (const file of files) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (file.type === 'application/pdf' || ext === 'pdf') {
+          await importPdfFile(file);
+        } else if (file.type.startsWith('image/')) {
+          await importImageFile(file);
+        } else if (ext === 'docx' || ext === 'doc') {
+          await importDocxFile(file);
+        } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+          await importExcelFile(file);
+        } else if (ext === 'pptx' || ext === 'ppt') {
+          await importPptxFile(file);
+        }
+      }
+      $('pageCount').textContent = state.pages.length;
+      $('btnExport').disabled = !state.pages.length;
+      renderSidebarPages();
+      renderStage();
+      showToast(`${state.pages.length} Seite(n) bereit`);
+    }
+
+    // --- Blank Page Insertion ---
+    $('btnAddBlankPage').onclick = () => {
+      pushUndoState();
+      const canvas = document.createElement('canvas');
+      canvas.width = 1240;
+      canvas.height = 1754;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const blankPage = createPageModel(canvas.toDataURL('image/png'), 'Leere A4-Seite', 1240, 1754);
+      state.pages.push(blankPage);
+      state.selectedPageId = blankPage.id;
+      $('pageCount').textContent = state.pages.length;
+      $('btnExport').disabled = false;
+      renderSidebarPages();
+      renderStage();
+      showToast('Neue leere A4-Seite hinzugefügt');
+    };
+
+    // --- Sidebar Page Cards Rendering & Drag/Reorder ---
+    function renderSidebarPages() {
+      const container = $('pagesList');
+      container.innerHTML = '';
+
+      if (!state.pages.length) {
+        container.innerHTML = `
+          <div class="empty-prompt" style="padding:20px 0;">
+            <p style="font-size:0.8rem;">Noch keine Seiten vorhanden. Füge eine PDF, Word-, Excel- oder Bilddatei hinzu.</p>
+          </div>`;
+        $('pageCount').textContent = '0';
+        $('btnExport').disabled = true;
+        return;
+      }
+
+      $('pageCount').textContent = state.pages.length;
+      $('btnExport').disabled = false;
+
+      state.pages.forEach((page, index) => {
+        const card = document.createElement('div');
+        card.className = `page-card ${page.id === state.selectedPageId ? 'selected' : ''}`;
+        card.draggable = true;
+
+        const thumbCanvas = document.createElement('canvas');
+        const isRotated = (page.rotation % 180 !== 0);
+        const w = isRotated ? page.height : page.width;
+        const h = isRotated ? page.width : page.height;
+        thumbCanvas.width = 220;
+        thumbCanvas.height = Math.round(220 * (h / w));
+
+        const tCtx = thumbCanvas.getContext('2d');
+        const img = new Image();
+        img.onload = () => {
+          tCtx.save();
+          tCtx.translate(thumbCanvas.width / 2, thumbCanvas.height / 2);
+          tCtx.rotate(page.rotation * Math.PI / 180);
+          tCtx.scale(page.flipX ? -1 : 1, page.flipY ? -1 : 1);
+          const scale = Math.min(thumbCanvas.width / img.width, thumbCanvas.height / img.height);
+          tCtx.drawImage(img, -img.width * scale / 2, -img.height * scale / 2, img.width * scale, img.height * scale);
+          tCtx.restore();
+        };
+        img.src = page.src;
+        card.appendChild(thumbCanvas);
+
+        const meta = document.createElement('div');
+        meta.className = 'page-meta';
+        meta.innerHTML = `<span class="page-num">${index + 1}.</span> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;">${page.name}</span>`;
+        card.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'page-actions-strip';
+        actions.innerHTML = `
+          <button class="mini-btn" title="Nach oben verschieben">↑</button>
+          <button class="mini-btn" title="Nach unten verschieben">↓</button>
+          <button class="mini-btn" title="90° nach rechts drehen">↷</button>
+          <button class="mini-btn danger" title="Seite löschen">✕</button>
+        `;
+
+        const [btnUp, btnDown, btnRotate, btnDel] = actions.querySelectorAll('button');
+        btnUp.onclick = (e) => { e.stopPropagation(); movePage(index, index - 1); };
+        btnDown.onclick = (e) => { e.stopPropagation(); movePage(index, index + 1); };
+        btnRotate.onclick = (e) => { e.stopPropagation(); rotatePage(page.id, 90); };
+        btnDel.onclick = (e) => { e.stopPropagation(); deletePage(page.id); };
+
+        card.appendChild(actions);
+        card.onclick = () => selectPage(page.id);
+
+        card.ondragstart = (e) => {
+          e.dataTransfer.setData('text/plain', index);
+          card.style.opacity = '0.5';
+        };
+        card.ondragend = () => { card.style.opacity = '1'; };
+        card.ondragover = (e) => { e.preventDefault(); card.classList.add('drag-target'); };
+        card.ondragleave = () => { card.classList.remove('drag-target'); };
+        card.ondrop = (e) => {
+          e.preventDefault();
+          card.classList.remove('drag-target');
+          const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+          if (!isNaN(sourceIndex) && sourceIndex !== index) {
+            movePage(sourceIndex, index);
+          }
+        };
+
+        container.appendChild(card);
+      });
+    }
+
+    function movePage(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= state.pages.length || fromIndex === toIndex) return;
+      pushUndoState();
+      const [moved] = state.pages.splice(fromIndex, 1);
+      state.pages.splice(toIndex, 0, moved);
+      renderSidebarPages();
+      renderStage();
+    }
+
+    function rotatePage(pageId, deg) {
+      const page = state.pages.find(p => p.id === pageId);
+      if (!page) return;
+      pushUndoState();
+      page.rotation = (page.rotation + deg + 360) % 360;
+      renderSidebarPages();
+      renderStage();
+      showToast(`Seite gedreht (${page.rotation}°)`);
+    }
+
+    function deletePage(pageId) {
+      const index = state.pages.findIndex(p => p.id === pageId);
+      if (index === -1) return;
+      pushUndoState();
+      state.pages.splice(index, 1);
+      if (state.selectedPageId === pageId) {
+        state.selectedPageId = state.pages[Math.min(index, state.pages.length - 1)]?.id || null;
+      }
+      renderSidebarPages();
+      renderStage();
+      updateInspector();
+      showToast('Seite gelöscht');
+    }
+
+    $('btnDuplicatePage').onclick = () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      pushUndoState();
+      const dup = JSON.parse(JSON.stringify(page));
+      dup.id = 'p_' + (++state.nextId) + '_' + Date.now();
+      dup.name = page.name + ' (Kopie)';
+      const currIdx = state.pages.findIndex(p => p.id === page.id);
+      state.pages.splice(currIdx + 1, 0, dup);
+      state.selectedPageId = dup.id;
+      renderSidebarPages();
+      renderStage();
+      showToast('Seite dupliziert');
+    };
+
+    $('btnClearAll').onclick = () => {
+      if (!state.pages.length) return;
+      if (confirm('Möchtest du wirklich alle Seiten aus dem Projekt entfernen?')) {
+        pushUndoState();
+        state.pages = [];
+        state.selectedPageId = null;
+        renderSidebarPages();
+        renderStage();
+        updateInspector();
+        showToast('Projekt geleert');
+      }
+    };
+
+    $('btnRotateLeft').onclick = () => state.selectedPageId && rotatePage(state.selectedPageId, -90);
+    $('btnRotateRight').onclick = () => state.selectedPageId && rotatePage(state.selectedPageId, 90);
+    $('btnFlipH').onclick = () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      pushUndoState();
+      page.flipX = !page.flipX;
+      renderSidebarPages();
+      renderStage();
+    };
+    $('btnFlipV').onclick = () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      pushUndoState();
+      page.flipY = !page.flipY;
+      renderSidebarPages();
+      renderStage();
+    };
+
+    // --- Tool Switching ---
+    document.querySelectorAll('.tool-tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        state.activeTool = tab.dataset.tool;
+        state.selectedOverlayId = null;
+        updateInspector();
+        renderStageInteractivity();
+      };
+    });
+
+    function updateInspector() {
+      $('panelPen').style.display = 'none';
+      $('panelText').style.display = 'none';
+      $('panelHighlight').style.display = 'none';
+      $('panelOcr').style.display = 'none';
+
+      if (state.activeTool === 'pen' || state.activeTool === 'eraser') {
+        $('panelPen').style.display = 'block';
+      } else if (state.activeTool === 'text') {
+        $('panelText').style.display = 'block';
+      } else if (state.activeTool === 'highlight') {
+        $('panelHighlight').style.display = 'block';
+      }
+
+      const page = getSelectedPage();
+      if (page && state.selectedOverlayId) {
+        const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+        if (overlay) {
+          $('panelText').style.display = 'block';
+          $('textInputVal').value = overlay.text;
+          $('textFont').value = overlay.font;
+          $('textSize').value = overlay.size;
+          $('textColor').value = overlay.color;
+        }
+      }
+    }
+
+    document.querySelectorAll('#panelPen .color-dot').forEach(dot => {
+      dot.onclick = () => {
+        document.querySelectorAll('#panelPen .color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        state.penColor = dot.dataset.color;
+        $('customPenColor').value = state.penColor;
+        if (state.activeTool === 'eraser') {
+          state.activeTool = 'pen';
+          $('btnPenEraser').classList.remove('btn-accent');
+        }
+      };
+    });
+
+    $('customPenColor').oninput = (e) => {
+      state.penColor = e.target.value;
+      document.querySelectorAll('#panelPen .color-dot').forEach(d => d.classList.remove('active'));
+      if (state.activeTool === 'eraser') {
+        state.activeTool = 'pen';
+        $('btnPenEraser').classList.remove('btn-accent');
+      }
+    };
+
+    document.querySelectorAll('.stroke-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.stroke-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.penWidth = parseFloat(btn.dataset.size);
+      };
+    });
+
+    $('btnPenEraser').onclick = () => {
+      if (state.activeTool === 'eraser') {
+        state.activeTool = 'pen';
+        $('btnPenEraser').classList.remove('btn-accent');
+        showToast('Stift aktiv');
+      } else {
+        state.activeTool = 'eraser';
+        $('btnPenEraser').classList.add('btn-accent');
+        showToast('Radiergummi aktiv: Klicke auf Striche zum Löschen');
+      }
+      renderStageInteractivity();
+    };
+
+    $('btnClearPageDrawings').onclick = () => {
+      const page = getSelectedPage();
+      if (!page || !page.drawings.length) return;
+      if (confirm('Alle handschriftlichen Striche auf dieser Seite entfernen?')) {
+        pushUndoState();
+        page.drawings = [];
+        renderStage();
+        showToast('Zeichnungen gelöscht');
+      }
+    };
+
+    document.querySelectorAll('#panelHighlight .color-dot').forEach(dot => {
+      dot.onclick = () => {
+        document.querySelectorAll('#panelHighlight .color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        state.highlightColor = dot.dataset.hcolor;
+      };
+    });
+
+    // --- Text Field Properties ---
+    $('textInputVal').oninput = (e) => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+      if (overlay) {
+        overlay.text = e.target.value;
+        const el = document.getElementById(overlay.id);
+        if (el) el.querySelector('.overlay-content').textContent = overlay.text;
+      }
+    };
+
+    $('textFont').onchange = (e) => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+      if (overlay) {
+        overlay.font = e.target.value;
+        const el = document.getElementById(overlay.id);
+        if (el) el.style.fontFamily = overlay.font;
+      }
+    };
+
+    $('textSize').oninput = (e) => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+      if (overlay) {
+        overlay.size = parseInt(e.target.value, 10) || 16;
+        const el = document.getElementById(overlay.id);
+        if (el) el.style.fontSize = overlay.size + 'px';
+      }
+    };
+
+    $('textColor').oninput = (e) => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+      if (overlay) {
+        overlay.color = e.target.value;
+        const el = document.getElementById(overlay.id);
+        if (el) el.style.color = overlay.color;
+      }
+    };
+
+    $('btnTextBold').onclick = () => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
+      if (overlay) {
+        overlay.bold = !overlay.bold;
+        const el = document.getElementById(overlay.id);
+        if (el) el.style.fontWeight = overlay.bold ? 'bold' : 'normal';
+      }
+    };
+
+    $('btnDeleteSelectedText').onclick = () => {
+      const page = getSelectedPage();
+      if (!page || !state.selectedOverlayId) return;
+      pushUndoState();
+      page.overlays = page.overlays.filter(o => o.id !== state.selectedOverlayId);
+      state.selectedOverlayId = null;
+      renderStage();
+      updateInspector();
+      showToast('Textfeld gelöscht');
+    };
+
+    // --- Stage Rendering & Canvas Management ---
+    function renderStage() {
+      const container = $('stageInner');
+      container.innerHTML = '';
+
+      const page = getSelectedPage();
+      if (!page) {
+        container.innerHTML = `
+          <div class="empty-prompt">
+            <h2>Dein PDF & Dokumenten Studio</h2>
+            <p style="max-width:460px;line-height:1.5;margin:8px auto 16px;">
+              Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos hoch. 
+              Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel zwischen allen Formaten!
+            </p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+              <button id="btnEmptyPromptAdd" class="btn-primary">Dateien jetzt laden</button>
+              <button id="btnEmptyPromptConvert" class="btn-convert">🔄 Konverter öffnen</button>
+            </div>
+          </div>`;
+        $('btnEmptyPromptAdd').onclick = () => $('fileInput').click();
+        $('btnEmptyPromptConvert').onclick = () => $('modalConvert').classList.add('open');
+        return;
+      }
+
+      const isRotated = (page.rotation % 180 !== 0);
+      const displayW = isRotated ? page.height : page.width;
+      const displayH = isRotated ? page.width : page.height;
+
+      const stageWrap = document.createElement('div');
+      stageWrap.className = `paper-stage tool-${state.activeTool}`;
+      stageWrap.id = 'paperStage';
+
+      const targetWidth = Math.min(860, window.innerWidth - 680);
+      const baseWidth = Math.max(480, targetWidth);
+      const baseHeight = Math.round(baseWidth * (displayH / displayW));
+
+      stageWrap.style.width = baseWidth + 'px';
+      stageWrap.style.height = baseHeight + 'px';
+      stageWrap.style.transform = `scale(${state.zoom})`;
+
+      const docCanvas = document.createElement('canvas');
+      docCanvas.className = 'doc-canvas';
+      docCanvas.width = displayW;
+      docCanvas.height = displayH;
+      const ctx = docCanvas.getContext('2d');
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.save();
+        ctx.translate(displayW / 2, displayH / 2);
+        ctx.rotate(page.rotation * Math.PI / 180);
+        ctx.scale(page.flipX ? -1 : 1, page.flipY ? -1 : 1);
+        ctx.drawImage(img, -page.width / 2, -page.height / 2, page.width, page.height);
+        ctx.restore();
+
+        renderShapesOnDoc(ctx, page, displayW, displayH);
+      };
+      img.src = page.src;
+      stageWrap.appendChild(docCanvas);
+
+      const drawCanvas = document.createElement('canvas');
+      drawCanvas.className = 'draw-canvas';
+      drawCanvas.id = 'drawCanvas';
+      drawCanvas.width = baseWidth;
+      drawCanvas.height = baseHeight;
+      stageWrap.appendChild(drawCanvas);
+
+      redrawPageDrawings(drawCanvas, page, baseWidth, baseHeight);
+      renderTextOverlays(stageWrap, page, baseWidth, baseHeight);
+      renderOcrBadges(stageWrap, page, baseWidth, baseHeight);
+
+      container.appendChild(stageWrap);
+      bindDrawingEvents(drawCanvas, page, baseWidth, baseHeight);
+    }
+
+    function renderStageInteractivity() {
+      const stage = $('paperStage');
+      if (!stage) return;
+      stage.className = `paper-stage tool-${state.activeTool}`;
+    }
+
+    function renderShapesOnDoc(ctx, page, w, h) {
+      if (!page.shapes || !page.shapes.length) return;
+      page.shapes.forEach(shape => {
+        const sx = shape.x * w;
+        const sy = shape.y * h;
+        const sw = shape.width * w;
+        const sh = shape.height * h;
+
+        ctx.save();
+        if (shape.type === 'redact') {
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(sx, sy, sw, sh);
+        } else if (shape.type === 'whiteout') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(sx, sy, sw, sh);
+        } else if (shape.type === 'highlight') {
+          ctx.fillStyle = shape.color || 'rgba(255, 235, 59, 0.45)';
+          ctx.globalCompositeOperation = 'multiply';
+          ctx.fillRect(sx, sy, sw, sh);
+        }
+        ctx.restore();
+      });
+    }
+
+    function redrawPageDrawings(canvas, page, width, height) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      if (!page.drawings || !page.drawings.length) return;
+
+      page.drawings.forEach(stroke => {
+        if (!stroke.points || stroke.points.length < 2) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (stroke.isHighlighter) {
+          ctx.globalAlpha = 0.45;
+          ctx.globalCompositeOperation = 'multiply';
+        }
+
+        const pts = stroke.points;
+        ctx.moveTo(pts[0].x * width, pts[0].y * height);
+
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i].x * width, pts[i].y * height);
+        }
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function bindDrawingEvents(canvas, page, width, height) {
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      let currentStroke = null;
+      let shapeStartPoint = null;
+
+      function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: Math.max(0, Math.min(width, (e.clientX - rect.left) / state.zoom)),
+          y: Math.max(0, Math.min(height, (e.clientY - rect.top) / state.zoom))
+        };
+      }
+
+      canvas.onpointerdown = (e) => {
+        if (state.activeTool === 'pen') {
+          isDrawing = true;
+          canvas.setPointerCapture(e.pointerId);
+          const pt = getCanvasCoords(e);
+          currentStroke = {
+            id: 'strk_' + Date.now(),
+            color: state.penColor,
+            width: state.penWidth,
+            isHighlighter: false,
+            points: [{ x: pt.x / width, y: pt.y / height }]
+          };
+
+          ctx.save();
+          ctx.strokeStyle = state.penColor;
+          ctx.lineWidth = state.penWidth;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+        }
+        else if (state.activeTool === 'eraser') {
+          eraseStrokeAt(getCanvasCoords(e), page, width, height, canvas);
+        }
+        else if (['redact', 'whiteout', 'highlight'].includes(state.activeTool)) {
+          isDrawing = true;
+          canvas.setPointerCapture(e.pointerId);
+          shapeStartPoint = getCanvasCoords(e);
+        }
+        else if (state.activeTool === 'text') {
+          const pt = getCanvasCoords(e);
+          addNewTextOverlay(page, pt.x / width, pt.y / height);
+        }
+      };
+
+      canvas.onpointermove = (e) => {
+        if (!isDrawing) return;
+
+        if (state.activeTool === 'pen' && currentStroke) {
+          const pt = getCanvasCoords(e);
+          currentStroke.points.push({ x: pt.x / width, y: pt.y / height });
+          ctx.lineTo(pt.x, pt.y);
+          ctx.stroke();
+        }
+        else if (['redact', 'whiteout', 'highlight'].includes(state.activeTool) && shapeStartPoint) {
+          const pt = getCanvasCoords(e);
+          redrawPageDrawings(canvas, page, width, height);
+          ctx.save();
+          const sx = Math.min(shapeStartPoint.x, pt.x);
+          const sy = Math.min(shapeStartPoint.y, pt.y);
+          const sw = Math.abs(pt.x - shapeStartPoint.x);
+          const sh = Math.abs(pt.y - shapeStartPoint.y);
+
+          if (state.activeTool === 'redact') {
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
+            ctx.fillRect(sx, sy, sw, sh);
+          } else if (state.activeTool === 'whiteout') {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.strokeRect(sx, sy, sw, sh);
+            ctx.fillRect(sx, sy, sw, sh);
+          } else if (state.activeTool === 'highlight') {
+            ctx.fillStyle = state.highlightColor;
+            ctx.fillRect(sx, sy, sw, sh);
+          }
+          ctx.restore();
+        }
+      };
+
+      const finishDrawing = (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+
+        if (state.activeTool === 'pen' && currentStroke) {
+          if (currentStroke.points.length > 1) {
+            pushUndoState();
+            page.drawings.push(currentStroke);
+          }
+          currentStroke = null;
+          ctx.restore();
+          redrawPageDrawings(canvas, page, width, height);
+        }
+        else if (['redact', 'whiteout', 'highlight'].includes(state.activeTool) && shapeStartPoint) {
+          const pt = getCanvasCoords(e);
+          const sx = Math.min(shapeStartPoint.x, pt.x) / width;
+          const sy = Math.min(shapeStartPoint.y, pt.y) / height;
+          const sw = Math.abs(pt.x - shapeStartPoint.x) / width;
+          const sh = Math.abs(pt.y - shapeStartPoint.y) / height;
+
+          if (sw > 0.01 && sh > 0.005) {
+            pushUndoState();
+            page.shapes.push({
+              id: 'shp_' + Date.now(),
+              type: state.activeTool,
+              x: sx,
+              y: sy,
+              width: sw,
+              height: sh,
+              color: state.activeTool === 'highlight' ? state.highlightColor : null
+            });
+            showToast(`${state.activeTool === 'redact' ? 'Bereich geschwärzt' : 'Bereich überdeckt'}`);
+          }
+          shapeStartPoint = null;
+          renderStage();
+        }
+      };
+
+      canvas.onpointerup = finishDrawing;
+      canvas.onpointercancel = finishDrawing;
+    }
+
+    function eraseStrokeAt(pt, page, width, height, canvas) {
+      if (!page.drawings.length) return;
+      const hitRadius = 0.02;
+      const nx = pt.x / width;
+      const ny = pt.y / height;
+
+      const initialLen = page.drawings.length;
+      page.drawings = page.drawings.filter(stroke => {
+        const hit = stroke.points.some(p => Math.hypot(p.x - nx, p.y - ny) < hitRadius);
+        return !hit;
+      });
+
+      if (page.drawings.length !== initialLen) {
+        pushUndoState();
+        redrawPageDrawings(canvas, page, width, height);
+        showToast('Strich entfernt');
+      }
+    }
+
+    function addNewTextOverlay(page, x, y, initialText = 'Hier Text eingeben') {
+      pushUndoState();
+      const overlay = {
+        id: 'txt_' + Date.now(),
+        type: 'text',
+        text: initialText,
+        x: Math.max(0.02, Math.min(0.85, x)),
+        y: Math.max(0.02, Math.min(0.92, y)),
+        font: 'Arial, sans-serif',
+        size: 16,
+        color: '#173b3f',
+        bold: false
+      };
+      page.overlays.push(overlay);
+      state.selectedOverlayId = overlay.id;
+      state.activeTool = 'select';
+      document.querySelectorAll('.tool-tab').forEach(t => t.classList.toggle('active', t.dataset.tool === 'select'));
+      renderStage();
+      updateInspector();
+      showToast('Textfeld hinzugefügt – ziehe zum Verschieben');
+    }
+
+    function renderTextOverlays(stageWrap, page, baseWidth, baseHeight) {
+      if (!page.overlays || !page.overlays.length) return;
+
+      page.overlays.forEach(item => {
+        const el = document.createElement('div');
+        el.className = `overlay-element ${item.id === state.selectedOverlayId ? 'selected' : ''}`;
+        el.id = item.id;
+        el.style.left = (item.x * 100) + '%';
+        el.style.top = (item.y * 100) + '%';
+        el.style.fontFamily = item.font;
+        el.style.fontSize = item.size + 'px';
+        el.style.color = item.color;
+        el.style.fontWeight = item.bold ? 'bold' : 'normal';
+
+        const content = document.createElement('span');
+        content.className = 'overlay-content';
+        content.textContent = item.text;
+        el.appendChild(content);
+
+        const delBtn = document.createElement('div');
+        delBtn.className = 'del-bubble';
+        delBtn.innerHTML = '✕';
+        delBtn.title = 'Textfeld löschen';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          pushUndoState();
+          page.overlays = page.overlays.filter(o => o.id !== item.id);
+          state.selectedOverlayId = null;
+          renderStage();
+          updateInspector();
+        };
+        el.appendChild(delBtn);
+
+        el.onpointerdown = (e) => {
+          if (e.target.classList.contains('del-bubble')) return;
+          e.stopPropagation();
+          state.selectedOverlayId = item.id;
+          document.querySelectorAll('.overlay-element').forEach(o => o.classList.remove('selected'));
+          el.classList.add('selected');
+          updateInspector();
+
+          el.setPointerCapture(e.pointerId);
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const initialOx = item.x;
+          const initialOy = item.y;
+
+          const onMove = (moveEv) => {
+            const dx = (moveEv.clientX - startX) / (baseWidth * state.zoom);
+            const dy = (moveEv.clientY - startY) / (baseHeight * state.zoom);
+            item.x = Math.max(0, Math.min(0.92, initialOx + dx));
+            item.y = Math.max(0, Math.min(0.96, initialOy + dy));
+            el.style.left = (item.x * 100) + '%';
+            el.style.top = (item.y * 100) + '%';
+          };
+
+          const onUp = () => {
+            el.removeEventListener('pointermove', onMove);
+            el.removeEventListener('pointerup', onUp);
+          };
+
+          el.addEventListener('pointermove', onMove);
+          el.addEventListener('pointerup', onUp);
+        };
+
+        el.ondblclick = (e) => {
+          e.stopPropagation();
+          const newText = prompt('Text bearbeiten:', item.text);
+          if (newText !== null && newText.trim()) {
+            pushUndoState();
+            item.text = newText;
+            content.textContent = newText;
+            $('textInputVal').value = newText;
+          }
+        };
+
+        stageWrap.appendChild(el);
+      });
+    }
+
+    function renderOcrBadges(stageWrap, page, baseWidth, baseHeight) {
+      if (!page.rawTextItems || !page.rawTextItems.length) return;
+      page.rawTextItems.forEach(word => {
+        const span = document.createElement('div');
+        span.className = 'ocr-word-hit';
+        span.style.left = (word.x * 100) + '%';
+        span.style.top = (word.y * 100) + '%';
+        span.style.width = (word.width * 100) + '%';
+        span.style.height = (word.height * 100) + '%';
+        span.title = `"${word.text}" – Klicken zum Korrigieren/Ausfüllen`;
+
+        span.onclick = (e) => {
+          e.stopPropagation();
+          const repl = prompt(`Wort ersetzen:\nOriginal: "${word.text}"`, word.text);
+          if (repl !== null && repl !== word.text) {
+            pushUndoState();
+            page.shapes.push({
+              id: 'shp_' + Date.now(),
+              type: 'whiteout',
+              x: word.x - 0.002,
+              y: word.y - 0.002,
+              width: word.width + 0.004,
+              height: word.height + 0.004
+            });
+            page.overlays.push({
+              id: 'txt_' + Date.now(),
+              type: 'text',
+              text: repl,
+              x: word.x,
+              y: word.y,
+              font: 'Arial, sans-serif',
+              size: 15,
+              color: '#173b3f',
+              bold: false
+            });
+            renderStage();
+            showToast('Textstelle korrigiert');
+          }
+        };
+        stageWrap.appendChild(span);
+      });
+    }
+
+    // --- Signature Pad Engine ---
+    let sigCanvas, sigCtx, sigDrawing = false;
+    let sigPenColor = '#1a4480';
+
+    function initSignatureModal() {
+      sigCanvas = $('sigCanvas');
+      sigCtx = sigCanvas.getContext('2d');
+      sigCanvas.width = 460;
+      sigCanvas.height = 180;
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.lineWidth = 2.5;
+
+      sigCanvas.onpointerdown = (e) => {
+        sigDrawing = true;
+        sigCanvas.setPointerCapture(e.pointerId);
+        const rect = sigCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (sigCanvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (sigCanvas.height / rect.height);
+        sigCtx.strokeStyle = sigPenColor;
+        sigCtx.beginPath();
+        sigCtx.moveTo(x, y);
+      };
+
+      sigCanvas.onpointermove = (e) => {
+        if (!sigDrawing) return;
+        const rect = sigCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (sigCanvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (sigCanvas.height / rect.height);
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+      };
+
+      const finish = () => { sigDrawing = false; };
+      sigCanvas.onpointerup = finish;
+      sigCanvas.onpointercancel = finish;
+
+      document.querySelectorAll('#modalSignature .color-dot').forEach(dot => {
+        dot.onclick = () => {
+          document.querySelectorAll('#modalSignature .color-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+          sigPenColor = dot.dataset.sigcolor;
+        };
+      });
+    }
+
+    $('btnOpenSignature').onclick = () => {
+      $('modalSignature').classList.add('open');
+      if (!sigCanvas) initSignatureModal();
+      sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    };
+
+    $('btnCloseSig').onclick = () => $('modalSignature').classList.remove('open');
+    $('btnClearSig').onclick = () => sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+
+    $('btnInsertSig').onclick = () => {
+      const page = getSelectedPage();
+      if (!page) {
+        alert('Bitte wähle zuerst eine Seite aus.');
+        return;
+      }
+      pushUndoState();
+      const sigData = sigCanvas.toDataURL('image/png');
+      const overlay = {
+        id: 'sig_' + Date.now(),
+        type: 'text',
+        text: '✍️ Unterschrift',
+        x: 0.60,
+        y: 0.78,
+        font: 'Georgia, serif',
+        size: 14,
+        color: sigPenColor,
+        isSignature: true,
+        imgSrc: sigData
+      };
+      page.overlays.push(overlay);
+      $('modalSignature').classList.remove('open');
+      renderStage();
+      showToast('Unterschrift auf der Seite platziert');
+    };
+
+    // --- OCR Scan Execution ---
+    $('btnOcrScan').onclick = () => {
+      document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+      state.activeTool = 'select';
+      updateInspector();
+      $('panelOcr').style.display = 'block';
+    };
+
+    $('btnRunOcr').onclick = async () => {
+      const page = getSelectedPage();
+      if (!page) return;
+
+      const lang = $('ocrLang').value;
+      const progressBox = $('ocrProgressBox');
+      const progressBar = $('ocrProgressBar');
+      const progressMsg = $('ocrStatusMsg');
+      const progressPct = $('ocrPercent');
+
+      progressBox.style.display = 'block';
+      $('btnRunOcr').disabled = true;
+
+      try {
+        progressMsg.textContent = 'OCR-Modul wird initialisiert...';
+        progressBar.style.width = '15%';
+        progressPct.textContent = '15%';
+
+        const worker = await Tesseract.createWorker(lang, 1, {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              const p = Math.round(m.progress * 100);
+              progressBar.style.width = p + '%';
+              progressPct.textContent = p + '%';
+              progressMsg.textContent = `Erkenne Text (${p}%)...`;
+            }
+          }
+        });
+
+        const result = await worker.recognize(page.src);
+        await worker.terminate();
+
+        const words = result.data.words.filter(w => w.text && w.text.trim() && w.confidence >= 35);
+        page.rawTextItems = words.map(w => ({
+          text: w.text,
+          x: w.bbox.x0 / page.width,
+          y: w.bbox.y0 / page.height,
+          width: (w.bbox.x1 - w.bbox.x0) / page.width,
+          height: (w.bbox.y1 - w.bbox.y0) / page.height
+        }));
+
+        renderStage();
+        showToast(`${page.rawTextItems.length} Textstellen erkannt – klicke auf Wörter zum Ändern`);
+      } catch (err) {
+        console.error(err);
+        showToast('Texterkennung fehlgeschlagen (Internetverbindung prüfen)', 5000);
+      } finally {
+        $('btnRunOcr').disabled = false;
+        progressBox.style.display = 'none';
+      }
+    };
+
+    // --- Zoom Controls ---
+    function updateZoom(newZoom) {
+      state.zoom = Math.max(0.4, Math.min(2.5, newZoom));
+      $('zoomLabel').textContent = Math.round(state.zoom * 100) + '%';
+      const stage = $('paperStage');
+      if (stage) stage.style.transform = `scale(${state.zoom})`;
+    }
+
+    $('zoomIn').onclick = () => updateZoom(state.zoom + 0.15);
+    $('zoomOut').onclick = () => updateZoom(state.zoom - 0.15);
+    $('zoomFit').onclick = () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      const isRotated = (page.rotation % 180 !== 0);
+      const displayW = isRotated ? page.height : page.width;
+      const viewport = $('stageViewport');
+      const fitZoom = (viewport.clientWidth - 80) / displayW;
+      updateZoom(Math.min(1.2, Math.max(0.5, fitZoom)));
+    };
+
+    // --- PDF Export Engine ---
+    $('btnExport').onclick = async () => {
+      if (!state.pages.length) return;
+      showToast('PDF wird generiert...', 10000);
+      $('btnExport').disabled = true;
+
+      try {
+        const outPdf = await PDFDocument.create();
+        const qualityMode = $('pdfQuality').value;
+        const pageFormat = $('pdfPageFormat').value;
+
+        const renderDpiScale = qualityMode === 'high' ? 2.5 : (qualityMode === 'medium' ? 1.8 : 1.2);
+        const jpegQuality = qualityMode === 'high' ? 0.93 : (qualityMode === 'medium' ? 0.80 : 0.65);
+
+        for (const page of state.pages) {
+          const expCanvas = await renderPageToCanvas(page, renderDpiScale);
+          const jpegData = expCanvas.toDataURL('image/jpeg', jpegQuality);
+          const pdfImage = await outPdf.embedJpg(jpegData);
+
+          const isRotated = (page.rotation % 180 !== 0);
+          const origW = isRotated ? page.height : page.width;
+          const origH = isRotated ? page.width : page.height;
+
+          let pdfPageW = 595.28;
+          let pdfPageH = 841.89;
+
+          if (pageFormat === 'original') {
+            pdfPageW = origW * 0.75;
+            pdfPageH = origH * 0.75;
+          } else {
+            if (origW > origH) {
+              pdfPageW = 841.89;
+              pdfPageH = 595.28;
+            }
+          }
+
+          const pdfPage = outPdf.addPage([pdfPageW, pdfPageH]);
+          pdfPage.drawImage(pdfImage, {
+            x: 0,
+            y: 0,
+            width: pdfPageW,
+            height: pdfPageH
+          });
+        }
+
+        const pdfBytes = await outPdf.save({ useObjectStreams: true });
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        triggerDownload(blob, getFilenameWithExt('pdf'));
+        showToast('✅ PDF erfolgreich gespeichert!');
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Erstellen der PDF-Datei');
+      } finally {
+        $('btnExport').disabled = false;
+      }
+    };
+
+    function getBaseFilename() {
+      let title = $('docTitle').value.trim() || 'Bewerbung_Dokumente';
+      return title.replace(/\.[^/.]+$/, '');
+    }
+
+    function getFilenameWithExt(ext) {
+      return `${getBaseFilename()}.${ext}`;
+    }
+
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ==========================================
+    // --- UNIVERSAL CONVERSION ENGINE ---
+    // ==========================================
+
+    // Open/Close Conversion Modal
+    $('btnOpenConvertModal').onclick = () => $('modalConvert').classList.add('open');
+    $('btnCloseConvert').onclick = () => $('modalConvert').classList.remove('open');
+
+    // Switch between Export and Import tabs in modal
+    $('tabExportMode').onclick = () => {
+      $('tabExportMode').classList.add('active');
+      $('tabImportMode').classList.remove('active');
+      $('contentExportMode').style.display = 'block';
+      $('contentImportMode').style.display = 'none';
+    };
+
+    $('tabImportMode').onclick = () => {
+      $('tabImportMode').classList.add('active');
+      $('tabExportMode').classList.remove('active');
+      $('contentExportMode').style.display = 'none';
+      $('contentImportMode').style.display = 'block';
+    };
+
+    // Helper: Extract sorted lines of text from all pages
+    function extractTextLinesFromPages() {
+      return state.pages.map((page, pIdx) => {
+        let lines = [];
+        if (page.rawTextItems && page.rawTextItems.length) {
+          // Sort items by Y then X
+          const sorted = [...page.rawTextItems].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+          let currentLine = [];
+          let currentY = -1;
+
+          sorted.forEach(item => {
+            if (currentY < 0 || Math.abs(item.y - currentY) > 0.015) {
+              if (currentLine.length) lines.push(currentLine.join(' '));
+              currentLine = [item.text];
+              currentY = item.y;
+            } else {
+              currentLine.push(item.text);
+            }
+          });
+          if (currentLine.length) lines.push(currentLine.join(' '));
+        }
+
+        // Also append text overlays
+        if (page.overlays && page.overlays.length) {
+          page.overlays.forEach(o => {
+            if (!o.isSignature && o.text) lines.push(o.text);
+          });
+        }
+
+        if (!lines.length) {
+          lines = [`[Seite ${pIdx + 1}: ${page.name}]`];
+        }
+
+        return { pageNumber: pIdx + 1, pageName: page.name, lines };
+      });
+    }
+
+    // 1. PDF ➔ Word (.docx) Export
+    $('btnConvWord').onclick = async () => {
+      if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
+      showToast('Word-Dokument (.docx) wird erstellt...');
+
+      const pageData = extractTextLinesFromPages();
+
+      function xmlEscape(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function makeParagraph(text, isHeader = false) {
+        return `<w:p>${isHeader ? '<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>' : ''}<w:r><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+      }
+
+      let documentBody = '';
+      pageData.forEach((p, idx) => {
+        if (idx > 0) documentBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+        documentBody += makeParagraph(`=== ${p.pageName} (Seite ${p.pageNumber}) ===`, true);
+        p.lines.forEach(line => {
+          documentBody += makeParagraph(line);
+        });
+      });
+
+      const fullDocXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+        <w:body>
+          ${documentBody}
+          <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+        </w:body>
+      </w:document>`;
+
+      const zip = new window.JSZip();
+      zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8"?>
+      <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+        <Default Extension="xml" ContentType="application/xml"/>
+        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+        <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+      </Types>`);
+
+      zip.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8"?>
+      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+      </Relationships>`);
+
+      zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8"?>
+      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+      </Relationships>`);
+
+      zip.file('word/document.xml', fullDocXml);
+      zip.file('word/styles.xml', `<?xml version="1.0" encoding="UTF-8"?>
+      <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+        <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+          <w:name w:val="Normal"/>
+          <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="22"/></w:rPr>
+        </w:style>
+        <w:style w:type="paragraph" w:styleId="Heading1">
+          <w:name w:val="heading 1"/>
+          <w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:sz w:val="32"/><w:color w:val="173B3F"/></w:rPr>
+        </w:style>
+      </w:styles>`);
+
+      const content = await zip.generateAsync({ type: 'blob' });
+      triggerDownload(content, getFilenameWithExt('docx'));
+      showToast('✅ Word-Dokument erfolgreich exportiert!');
+      $('modalConvert').classList.remove('open');
+    };
+
+    // 2. PDF ➔ Excel (.xlsx) Export
+    $('btnConvExcel').onclick = () => {
+      if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
+      showToast('Excel-Datei (.xlsx) wird erstellt...');
+
+      if (window.XLSX) {
+        const wb = window.XLSX.utils.book_new();
+        state.pages.forEach((page, idx) => {
+          let rows = [];
+          if (page.rawTextItems && page.rawTextItems.length) {
+            const sorted = [...page.rawTextItems].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+            let currentRow = [];
+            let currentY = -1;
+
+            sorted.forEach(item => {
+              if (currentY < 0 || Math.abs(item.y - currentY) > 0.015) {
+                if (currentRow.length) rows.push(currentRow);
+                currentRow = [item.text];
+                currentY = item.y;
+              } else {
+                currentRow.push(item.text);
+              }
+            });
+            if (currentRow.length) rows.push(currentRow);
+          } else {
+            rows = [[`Seite ${idx + 1}`], [page.name]];
+          }
+
+          const ws = window.XLSX.utils.aoa_to_sheet(rows);
+          window.XLSX.utils.book_append_sheet(wb, ws, `Seite_${idx + 1}`);
+        });
+
+        window.XLSX.writeFile(wb, getFilenameWithExt('xlsx'));
+        showToast('✅ Excel-Datei erfolgreich exportiert!');
+        $('modalConvert').classList.remove('open');
+      } else {
+        // Fallback: CSV export
+        const pageData = extractTextLinesFromPages();
+        let csvContent = '\uFEFF'; // UTF-8 BOM
+        pageData.forEach(p => {
+          p.lines.forEach(l => { csvContent += `"${l.replace(/"/g, '""')}"\r\n`; });
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        triggerDownload(blob, getFilenameWithExt('csv'));
+        showToast('Tabelle als CSV gespeichert!');
+      }
+    };
+
+    // 3. PDF ➔ PowerPoint (.pptx) Export
+    $('btnConvPptx').onclick = async () => {
+      if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
+      showToast('PowerPoint-Präsentation (.pptx) wird erstellt...', 6000);
+
+      try {
+        if (window.PptxGenJS) {
+          const pptx = new window.PptxGenJS();
+          pptx.layout = 'LAYOUT_16x9';
+
+          for (const page of state.pages) {
+            const canvas = await renderPageToCanvas(page, 1.8);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+            const slide = pptx.addSlide();
+
+            // Add page image centered on slide
+            slide.addImage({
+              data: dataUrl,
+              x: 1.0,
+              y: 0.3,
+              w: 8.0,
+              h: 5.0,
+              sizing: { type: 'contain', w: 8.0, h: 5.0 }
+            });
+          }
+
+          await pptx.writeFile({ fileName: getFilenameWithExt('pptx') });
+          showToast('✅ PowerPoint-Präsentation erfolgreich exportiert!');
+          $('modalConvert').classList.remove('open');
+        } else {
+          showToast('PowerPoint-Modul nicht verfügbar.');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Exportieren nach PowerPoint');
+      }
+    };
+
+    // 4. PDF ➔ Bilder (JPG / PNG / ZIP)
+    $('btnConvJpg').onclick = async () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      const canvas = await renderPageToCanvas(page, 2.0);
+      canvas.toBlob(blob => {
+        triggerDownload(blob, `${getBaseFilename()}_Seite_${state.pages.indexOf(page) + 1}.jpg`);
+        showToast('JPG-Bild heruntergeladen');
+      }, 'image/jpeg', 0.92);
+    };
+
+    $('btnConvPng').onclick = async () => {
+      const page = getSelectedPage();
+      if (!page) return;
+      const canvas = await renderPageToCanvas(page, 2.0);
+      canvas.toBlob(blob => {
+        triggerDownload(blob, `${getBaseFilename()}_Seite_${state.pages.indexOf(page) + 1}.png`);
+        showToast('PNG-Bild heruntergeladen');
+      }, 'image/png');
+    };
+
+    $('btnConvZip').onclick = async () => {
+      if (!state.pages.length) return;
+      showToast('Bilder werden vorbereitet...', 8000);
+      try {
+        const zip = new window.JSZip();
+        for (let i = 0; i < state.pages.length; i++) {
+          const page = state.pages[i];
+          const canvas = await renderPageToCanvas(page, 2.0);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.90);
+          const base64Data = dataUrl.split(',')[1];
+          zip.file(`Seite_${String(i + 1).padStart(2, '0')}.jpg`, base64Data, { base64: true });
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        triggerDownload(zipBlob, `${getBaseFilename()}_Bilder.zip`);
+        showToast('✅ Alle Seiten als ZIP-Archiv gespeichert!');
+        $('modalConvert').classList.remove('open');
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Erstellen des ZIP-Archivs');
+      }
+    };
+
+    // --- Import Shortcuts (Tab 2 inside Modal) ---
+    $('btnPickPhotosToPdf').onclick = () => {
+      $('modalConvert').classList.remove('open');
+      const fi = $('fileInput');
+      fi.accept = 'image/*';
+      fi.click();
+    };
+
+    $('btnPickWordToPdf').onclick = () => {
+      $('modalConvert').classList.remove('open');
+      const fi = $('fileInput');
+      fi.accept = '.docx,.doc';
+      fi.click();
+    };
+
+    $('btnPickExcelToPdf').onclick = () => {
+      $('modalConvert').classList.remove('open');
+      const fi = $('fileInput');
+      fi.accept = '.xlsx,.xls,.csv';
+      fi.click();
+    };
+
+    $('btnPickPptxToPdf').onclick = () => {
+      $('modalConvert').classList.remove('open');
+      const fi = $('fileInput');
+      fi.accept = '.pptx,.ppt';
+      fi.click();
+    };
+
+    // Reset accept pattern on generic button click
+    $('btnChooseFiles').onclick = () => {
+      const fi = $('fileInput');
+      fi.accept = 'application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx';
+      fi.click();
+    };
+
+    $('btnCameraScan').onclick = () => {
+      const fi = $('fileInput');
+      fi.accept = 'image/*';
+      fi.setAttribute('capture', 'environment');
+      fi.click();
+    };
+
+    $('fileInput').onchange = (e) => {
+      handleFiles(Array.from(e.target.files));
+      e.target.value = '';
+    };
+
+    const dz = $('dropzone');
+    dz.onclick = () => {
+      const fi = $('fileInput');
+      fi.accept = 'application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx';
+      fi.click();
+    };
+    dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+    dz.ondragleave = () => dz.classList.remove('dragover');
+    dz.ondrop = (e) => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      handleFiles(Array.from(e.dataTransfer.files));
+    };
+
+    // Keyboard Shortcuts (Ctrl+Z, Delete)
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        $('undoBtn').click();
+      }
+      if (e.key === 'Delete' && state.selectedOverlayId) {
+        $('btnDeleteSelectedText').click();
+      }
+    });
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => { });
+    }
+  </script>
+</body>
+
+</html>

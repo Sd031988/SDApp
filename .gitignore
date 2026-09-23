@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.rar
+*.zip
+build/
+dist/
+paket/
+*.spec
+/.vscode/
+sd_bewerbungsstudio_desktop.py
+sd_bewerbungsstudio_installer.py

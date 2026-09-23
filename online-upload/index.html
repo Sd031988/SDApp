@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SD Bewerbungsstudio | Premium App</title>
+  <style>
+    :root {
+      --bg: #030b14;
+      --bg-2: #0f172a;
+      --panel: rgba(17, 24, 39, 0.84);
+      --panel-strong: rgba(15, 23, 42, 0.96);
+      --primary: #62f0d4;
+      --primary-2: #5bb8ff;
+      --gold: #f8d779;
+      --success: #4ade80;
+      --text: #edf6ff;
+      --muted: #bfd2e8;
+      --border: rgba(191, 210, 232, 0.18);
+      --shadow: rgba(0, 0, 0, 0.38);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(98, 240, 212, 0.16), transparent 22%),
+        radial-gradient(circle at bottom right, rgba(91, 184, 255, 0.15), transparent 28%),
+        linear-gradient(135deg, #020812 0%, #081827 30%, #0f172a 100%);
+      min-height: 100vh;
+    }
+
+    a { text-decoration: none; }
+
+    .container {
+      width: min(1200px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 0 12px;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--gold), var(--primary));
+      display: grid;
+      place-items: center;
+      color: #0b1625;
+      font-weight: 900;
+      box-shadow: 0 12px 26px rgba(98, 240, 212, 0.4);
+    }
+
+    .nav {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 34px;
+      align-items: center;
+      padding: 32px 0 18px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(98, 240, 212, 0.35);
+      background: rgba(98, 240, 212, 0.08);
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 18px 0 16px;
+      font-size: clamp(2.8rem, 6vw, 5.2rem);
+      line-height: 0.94;
+      letter-spacing: -0.07em;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.78;
+      max-width: 620px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 52px;
+      padding: 0 24px;
+      border-radius: 12px;
+      font-weight: 800;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: #041926;
+      box-shadow: 0 18px 30px rgba(91, 184, 255, 0.25);
+    }
+
+    .button.secondary {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .stat {
+      min-width: 142px;
+      border: 1px solid var(--border);
+      background: rgba(17,24,39,0.6);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.35rem;
+      margin-bottom: 4px;
+      color: var(--gold);
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .visual {
+      position: relative;
+      padding: 18px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(18, 29, 43, 0.94), rgba(2, 8, 18, 0.96));
+      border: 1px solid var(--border);
+      box-shadow: 0 28px 60px var(--shadow);
+    }
+
+    .visual:before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(135deg, rgba(98,240,212,0.25), rgba(91,184,255,0.12), transparent 75%);
+      border-radius: inherit;
+      z-index: 0;
+    }
+
+    .visual-inner {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(11,17,28,0.95), rgba(15,23,42,0.98));
+    }
+
+    .window-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11,17,28,0.7);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-dots span {
+      width: 10px;
+      height: 10px;
+      display: block;
+      border-radius: 50%;
+    }
+
+    .window-dots span:nth-child(1) { background: #ff6b6b; }
+    .window-dots span:nth-child(2) { background: #ffd166; }
+    .window-dots span:nth-child(3) { background: #4ade80; }
+
+    .screen {
+      padding: 22px;
+      min-height: 340px;
+      background: radial-gradient(circle at top left, rgba(98,240,212,0.15), transparent 25%), rgba(15,23,42,0.96);
+    }
+
+    .card-mini {
+      background: rgba(15,23,42,0.8);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 14px;
+      padding: 14px 16px;
+    }
+
+    .label {
+      display: block;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .progress {
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.15);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    .section {
+      padding: 80px 0 10px;
+    }
+
+    .section-head {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: -0.05em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 24px;
+    }
+
+    .feature {
+      background: rgba(15, 23, 42, 0.76);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 22px;
+      min-height: 220px;
+      box-shadow: 0 12px 25px rgba(2, 10, 17, 0.18);
+    }
+
+    .feature-badge {
+      display: inline-grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: rgba(98, 240, 212, 0.12);
+      color: var(--primary);
+      font-size: 1.3rem;
+      margin-bottom: 16px;
+    }
+
+    .feature h3 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.72;
+    }
+
+    .download-wrap {
+      margin-top: 26px;
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .download-card {
+      background: rgba(30, 41, 59, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 18px;
+    }
+
+    .download-card h3 {
+      margin: 0 0 10px;
+      color: var(--primary);
+      font-size: 1.15rem;
+    }
+
+    .download-card p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      min-height: 52px;
+    }
+
+    .download-card a {
+      display: block;
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--success), #22c55e);
+      color: #041f13;
+    }
+
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    .footer {
+      padding: 38px 0 52px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 880px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">SD</div>
+        <span>SD Bewerbungsstudio</span>
+      </div>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#downloads">Downloads</a>
+        <a href="#start">Start</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Premium • Lokal • Plattformübergreifend</span>
+          <h1>Starke Bewerbung. Moderne Präsentation.</h1>
+          <p class="lead">
+            SD Bewerbungsstudio ist eine elegante, portable Bewerbungs-App für digitale Profile, Lebenslauf, Projekte und professionelle Präsentationen. Die Lösung läuft lokal im Browser und ist für Windows, macOS und Linux verfügbar.
+          </p>
+
+          <div class="actions">
+            <a class="button primary" href="#downloads">Jetzt herunterladen</a>
+            <a class="button secondary" href="Lebenslauf_app.html">App öffnen</a>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <strong>3</strong>
+              <span>Systeme</span>
+            </div>
+            <div class="stat">
+              <strong>1</strong>
+              <span>Lokaler Start</span>
+            </div>
+            <div class="stat">
+              <strong>100%</strong>
+              <span>Browserfunktionen</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="visual" aria-label="App-Vorschau">
+          <div class="visual-inner">
+            <div class="window-bar">
+              <span>SD Bewerbungsstudio</span>
+              <div class="window-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="screen">
+              <div class="card-mini">
+                <span class="label">Profil</span>
+                <div>Lebenslauf &amp; Kompetenzen</div>
+                <div class="progress"><span style="width: 86%;"></span></div>
+              </div>
+              <div class="card-mini">
+                <span class="label">Portfolio</span>
+                <div>Projekte &amp; Referenzen</div>
+                <div class="progress"><span style="width: 72%;"></span></div>
+              </div>
+              <div class="card-mini">
+                <span class="label">Präsentation</span>
+                <div>Professioneller Aufbau</div>
+                <div class="progress"><span style="width: 92%;"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-head">
+          <h2>Warum SD Bewerbungsstudio?</h2>
+          <p>Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="feature-badge">⚡</div>
+            <h3>Schneller Einstieg</h3>
+            <p>Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-badge">🧩</div>
+            <h3>Für alle Geräte</h3>
+            <p>Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-badge">🛡️</div>
+            <h3>Lokale Sicherheit</h3>
+            <p>Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="downloads">
+        <div class="section-head">
+          <h2>Downloads</h2>
+          <p>Wähle die passende Version für dein System und starte sofort in die Bewerbung.</p>
+        </div>
+
+        <div class="download-wrap">
+          <div class="download-card">
+            <h3>Windows</h3>
+            <p>PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.</p>
+            <a href="SD-Bewerbungsstudio-Windows.zip">Windows ZIP</a>
+          </div>
+
+          <div class="download-card">
+            <h3>macOS</h3>
+            <p>Startskript für macOS mit Python 3 und Direktzugriff zur App.</p>
+            <a href="SD-Bewerbungsstudio-macOS.zip">macOS ZIP</a>
+          </div>
+
+          <div class="download-card">
+            <h3>Linux</h3>
+            <p>Linux-Startskript für die lokale App-Öffnung im Browser.</p>
+            <a href="SD-Bewerbungsstudio-Linux.zip">Linux ZIP</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="start">
+        <div class="section-head">
+          <h2>Direkt starten</h2>
+          <p>Öffne die App sofort oder nutze die passende Download-Version für dein System.</p>
+        </div>
+
+        <div class="cta-row">
+          <a class="button primary" href="Lebenslauf_app.html">App starten</a>
+          <a class="button secondary" href="README-STARTEN.md">Anleitung lesen</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux
+    </footer>
+  </div>
+</body>
+</html>

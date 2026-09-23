@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <circle cx="96" cy="96" r="78" fill="#111111"/>
+  <path d="M96 18a78 78 0 0 1 67.5 39L96 96Z" fill="#d62828"/>
+  <path d="M163.5 57A78 78 0 0 1 28.5 135L96 96Z" fill="#16803c"/>
+  <circle cx="96" cy="96" r="57" fill="#ffffff"/>
+  <text x="96" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#111111">786</text>
+  <text x="96" y="116" text-anchor="middle" font-family="Georgia,serif" font-size="31" font-weight="bold" fill="#111111">SD</text>
+</svg>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SD Suite – Bewerbungsstudio & PDF Studio</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --accent: #d66b45;
+      --accent-soft: #fbf0ea;
+      --primary: #2f7d72;
+      --primary-soft: #e2f0ec;
+      --paper: #fffdf9;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0b1520 0%, #172a3a 50%, #0f172a 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      width: min(840px, 100%);
+      text-align: center;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .brand-logo {
+      background: #fff;
+      color: #0b1520;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 900;
+    }
+
+    h1 {
+      font-family: Georgia, serif;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    p.lead {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      margin-bottom: 34px;
+      max-width: 580px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .app-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .app-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-icon {
+      font-size: 2.2rem;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      flex: 1;
+      margin-bottom: 20px;
+    }
+
+    .card-features {
+      list-style: none;
+      font-size: 0.76rem;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .card-features li::before {
+      content: "✓ ";
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    .card-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #fff;
+    }
+
+    .btn-cv {
+      background: var(--primary);
+    }
+
+    .btn-pdf {
+      background: var(--accent);
+    }
+
+    .footer-note {
+      color: #64748b;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 680px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="brand-badge">
+      <span class="brand-logo">SD</span>
+      <span>786 SUITE · PORTABLE EDITION</span>
+    </div>
+
+    <h1>Willkommen im Bewerbungs- & PDF Studio</h1>
+    <p class="lead">
+      Läuft direkt vom USB-Stick auf jedem <strong>Windows-, Mac- und Linux-Computer</strong> – 100% offline, privat und
+      ohne vorherige Installation.
+    </p>
+
+    <div class="cards-grid">
+      <!-- App 1: Bewerbungsstudio -->
+      <a href="Lebenslauf_app.html" class="app-card">
+        <div class="card-icon">💼</div>
+        <div class="card-title">SD Bewerbungsstudio</div>
+        <div class="card-desc">
+          Erstelle professionelle Lebensläufe, maßgeschneiderte Anschreiben, Kündigungen und komplette Bewerbungsmappen.
+        </div>
+        <ul class="card-features">
+          <li>20+ ansprechende Branchen-Designs</li>
+          <li>Export als PDF, Word (.docx) & Druck</li>
+          <li>Deckblatt mit Foto & automatischer Übernahme</li>
+        </ul>
+        <span class="card-btn btn-cv">Bewerbungsstudio starten →</span>
+      </a>
+
+      <!-- App 2: PDF Studio & Konverter -->
+      <a href="pdf-studio/index.html" class="app-card">
+        <div class="card-icon">📑</div>
+        <div class="card-title">PDF Studio & Konverter</div>
+        <div class="card-desc">
+          Bearbeite Zeugnisse, Scans und Verträge. Fülle Lücken handschriftlich mit dem Stift aus, schwärze Daten und
+          konvertiere Dokumente.
+        </div>
+        <ul class="card-features">
+          <li>Stift mit Farbwahl & Unterschriften-Pad</li>
+          <li>PDF ⟷ Word, Excel, PowerPoint & Fotos</li>
+          <li>Schwärzen (Zensur), Whiteout & Marker</li>
+        </ul>
+        <span class="card-btn btn-pdf">PDF Studio starten →</span>
+      </a>
+    </div>
+
+    <div class="footer-note">
+      💻 <strong>USB-Stick Nutzung:</strong> Doppelklick auf diese Datei (<code>STARTEN-HIER.html</code>) oder nutze
+      <code>USB-Starten-Windows.bat</code> (Windows), <code>USB-Starten-macOS.command</code> (Mac) bzw.
+      <code>USB-Starten-Linux.sh</code> (Linux).
+    </div>
+  </div>
+
+</body>
+
+</html>
