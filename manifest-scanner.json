@@ -1,0 +1,20 @@
+{
+  "id": "/?app=scanner",
+  "name": "SD Scanner",
+  "short_name": "SD Scanner",
+  "description": "Dokumente mit der Kamera scannen, zuschneiden und mit Filtern verbessern",
+  "start_url": "./scanner.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#030b14",
+  "theme_color": "#0f172a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
