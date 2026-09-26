@@ -92,6 +92,32 @@
   .format-card .ft{ font-weight:800; font-size:.95rem; }
   .format-card .fs{ color:var(--muted); font-size:.8rem; margin-top:2px; }
 
+  .audience-row{ margin-bottom: 14px; }
+  .audience-label{ display:block; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
+  .audience-options{ display:flex; gap:8px; flex-wrap:wrap; }
+  .audience-btn{
+    flex:1; min-width:110px; padding:9px 10px; border-radius:10px;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text);
+    font-size:.8rem; font-weight:700; cursor:pointer;
+  }
+  .audience-btn.selected{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+
+  .info-panel{
+    background:rgba(15,23,42,.55); border:1px solid var(--border); border-radius:14px;
+    padding:12px 14px; margin-bottom:16px; font-size:.82rem; line-height:1.55; color:var(--muted);
+  }
+  .info-panel dt{ color:var(--text); font-weight:700; display:inline; }
+  .info-panel dd{ display:inline; margin:0 0 0 4px; }
+  .info-panel .info-row{ margin-bottom:6px; }
+  .info-panel .info-audience{
+    margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);
+    color:var(--primary);
+  }
+  .info-panel .info-official{
+    margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);
+    color:var(--gold);
+  }
+
   .crop-stage{
     position:relative;
     margin:0 auto 14px;
@@ -173,6 +199,18 @@
     <h1>✂️ Zuschneiden &amp; ausrichten</h1>
     <p class="hint">Format wählen, dann Kopf in den Rahmen ziehen und mit dem Regler die Größe anpassen.</p>
     <div class="format-list" id="formatList"></div>
+
+    <div id="audienceRow" class="audience-row">
+      <span class="audience-label">Für wen ist das Foto?</span>
+      <div class="audience-options" id="audienceOptions">
+        <button type="button" class="audience-btn selected" data-audience="erwachsen">Erwachsener</button>
+        <button type="button" class="audience-btn" data-audience="kind">Kind (1–5 Jahre)</button>
+        <button type="button" class="audience-btn" data-audience="baby">Baby (unter 1 Jahr)</button>
+      </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel"></div>
+
     <div class="crop-stage" id="cropStage">
       <canvas id="cropCanvas"></canvas>
       <div class="crop-guide" id="cropGuide"></div>
@@ -198,6 +236,7 @@
       <div class="bg-swatch" data-bg="lightblue" title="Hellblau"></div>
       <div class="bg-swatch" data-bg="blue" title="Blau (klassisch)"></div>
     </div>
+    <div class="status-line" id="bgRecommend"></div>
     <div class="preview-box"><canvas id="previewCanvas"></canvas></div>
     <div class="status-line" id="bgStatus"></div>
     <div class="toggle-row">
@@ -245,9 +284,62 @@
   const $ = (id) => document.getElementById(id);
 
   const FORMATS = [
-    { id: 'bio', label: 'Biometrisches Passfoto', sub: '35 × 45 mm – Reisepass, Personalausweis, EU', wmm: 35, hmm: 45, headPct: 0.75 },
-    { id: 'bewerbung', label: 'Bewerbungsfoto', sub: '45 × 60 mm – klassisches Format für Lebenslauf', wmm: 45, hmm: 60, headPct: 0.60 },
-    { id: 'us', label: 'US-Passfoto / Visum', sub: '51 × 51 mm (2 × 2 Zoll)', wmm: 51, hmm: 51, headPct: 0.60 },
+    {
+      id: 'bio', label: 'Biometrisches Passfoto', sub: '35 × 45 mm – Reisepass, Personalausweis, Schengen-Visum',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: true,
+      info: {
+        'Maße': '35 × 45 mm, Kopfhöhe (Kinn bis Haaransatz) 32–36 mm',
+        'Hintergrund': 'Hellgrau empfohlen – reines Weiß wird von der Bundesdruckerei oft abgelehnt',
+        'Ausdruck': 'Mund geschlossen, neutraler Ausdruck, Blick direkt in die Kamera',
+        'Brille': 'Keine Brille erlaubt (auch keine durchsichtigen Gestelle) – Ausnahme nur mit ärztlichem Attest',
+        'Kopfbedeckung': 'Nur aus religiösen Gründen (z. B. Kopftuch, Turban, Kippa) – Gesicht muss von Stirn bis Kinn und Ohr zu Ohr frei sichtbar sein. Niqab/Burka nicht erlaubt.',
+        'Gültigkeit': 'Foto darf höchstens 6 Monate alt sein',
+        'Auflösung': 'Mindestens 600 dpi für den Druck',
+      },
+      audienceNotes: {
+        kind: 'Kinder bis 5 Jahre: Kopfhaltung, Blickrichtung und Mimik dürfen leicht abweichen – Hauptsache das Gesicht ist gut erkennbar.',
+        baby: 'Babys unter 1 Jahr: Augen müssen nicht offen sein, neutraler Ausdruck ist nicht nötig. Das Baby darf auf einer weißen Unterlage liegen. Hände der Eltern dürfen nicht im Bild zu sehen sein.',
+      },
+      officialNote: 'Für Ausweise/Reisepässe von Kindern verlangen viele Bürgerämter ein zertifiziertes Foto (BSI PointID) vom Fotografen oder Amt selbst – ein hier erstelltes Foto eignet sich als Vorbereitung/Vorschau, ersetzt das aber ggf. nicht.',
+    },
+    {
+      id: 'bewerbung', label: 'Bewerbungsfoto', sub: '45 × 60 mm – klassisches Format für Lebenslauf',
+      wmm: 45, hmm: 60, headPct: 0.60, hasAudience: false,
+      info: {
+        'Maße': '45 × 60 mm (kein amtlicher Standard, aber in Deutschland üblich für Bewerbungsunterlagen)',
+        'Hintergrund': 'Frei wählbar – neutral, hell oder passend zur Branche',
+        'Ausdruck': 'Freundlicher, natürlicher Ausdruck erlaubt – kein neutraler Zwang wie bei Ausweisfotos',
+        'Hinweis': 'Kein amtliches Dokument – hier darfst du gestalterisch freier sein.',
+      },
+    },
+    {
+      id: 'us', label: 'US-Passfoto / Visum', sub: '51 × 51 mm (2 × 2 Zoll) – USA',
+      wmm: 51, hmm: 51, headPct: 0.62, hasAudience: true,
+      info: {
+        'Maße': '51 × 51 mm / 2 × 2 Zoll, Kopfhöhe ca. 25–35 mm (1–1⅜ Zoll)',
+        'Hintergrund': 'Weiß oder cremefarben, einfarbig',
+        'Ausdruck': 'Neutral oder natürliches Lächeln, beide Augen geöffnet',
+        'Brille': 'Keine Brille erlaubt (seit 2016)',
+        'Kopfbedeckung': 'Nur aus religiösen Gründen, Gesicht muss komplett sichtbar sein',
+        'Gültigkeit': 'Foto darf höchstens 6 Monate alt sein',
+      },
+      audienceNotes: {
+        kind: 'Kinder: Keine andere Person darf mit im Bild zu sehen sein (auch keine Hände). Kind sollte möglichst allein und mit offenen Augen im Bild sein.',
+        baby: 'Babys: Liegend fotografieren ist erlaubt, wenn direkt von oben aufgenommen wird. Augen müssen nach US-Vorgabe möglichst offen sein – am besten mehrere Versuche machen.',
+      },
+    },
+    {
+      id: 'egk', label: 'Gesundheitskarte (eGK)', sub: '35 × 45 mm – ab 15 Jahren Pflicht',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: {
+        'Maße': '35 × 45 mm, digital mindestens 300 × 400 Pixel',
+        'Hintergrund': 'Neutral – muss nicht biometrisch/amtlich streng sein',
+        'Ausdruck': 'Kopf gerade, nicht geneigt oder gedreht',
+        'Kopfbedeckung': 'Keine Kopfbedeckung erlaubt',
+        'Pflicht ab': '15 Jahren – jüngere Versicherte erhalten die Karte auch ohne Foto',
+        'Hinweis': 'Es muss nicht biometrisch sein wie ein Passfoto – etwas mehr Spielraum bei Kopfhaltung/Ausdruck ist erlaubt.',
+      },
+    },
   ];
   const DPI = 600;
   const mmToPx = (mm) => Math.round(mm / 25.4 * DPI);
@@ -286,7 +378,10 @@
         zoom = 1;
         centerX = image.naturalWidth / 2;
         centerY = image.naturalHeight / 2;
+        selectedAudience = 'erwachsen';
+        document.querySelectorAll('.audience-btn').forEach(b => b.classList.toggle('selected', b.dataset.audience === 'erwachsen'));
         buildFormatList();
+        renderInfoPanel();
         showStep('stepCrop');
         setupCropStage();
       };
@@ -308,10 +403,40 @@
       card.onclick = () => {
         selectedFormat = f;
         buildFormatList();
+        renderInfoPanel();
         setupCropStage();
       };
       list.appendChild(card);
     });
+  }
+
+  let selectedAudience = 'erwachsen';
+  document.querySelectorAll('.audience-btn').forEach(btn => {
+    btn.onclick = () => {
+      selectedAudience = btn.dataset.audience;
+      document.querySelectorAll('.audience-btn').forEach(b => b.classList.toggle('selected', b === btn));
+      renderInfoPanel();
+    };
+  });
+
+  function renderInfoPanel() {
+    const panel = $('infoPanel');
+    const f = selectedFormat;
+    $('audienceRow').style.display = f.hasAudience ? '' : 'none';
+
+    let html = '<dl>';
+    Object.entries(f.info || {}).forEach(([label, value]) => {
+      html += `<div class="info-row"><dt>${label}:</dt><dd>${value}</dd></div>`;
+    });
+    html += '</dl>';
+
+    if (f.hasAudience && f.audienceNotes && selectedAudience !== 'erwachsen' && f.audienceNotes[selectedAudience]) {
+      html += `<div class="info-audience">👶 ${f.audienceNotes[selectedAudience]}</div>`;
+    }
+    if (f.officialNote) {
+      html += `<div class="info-official">ℹ️ ${f.officialNote}</div>`;
+    }
+    panel.innerHTML = html;
   }
 
   const cropStage = $('cropStage');
@@ -417,6 +542,16 @@
     croppedCanvas.getContext('2d').drawImage(img, rect.sx, rect.sy, rect.sWidth, rect.sHeight, 0, 0, targetW, targetH);
     currentBg = 'original';
     document.querySelectorAll('.bg-swatch').forEach(s => s.classList.toggle('selected', s.dataset.bg === 'original'));
+
+    const recommend = $('bgRecommend');
+    if (selectedFormat.id === 'bio') {
+      recommend.textContent = '💡 Empfehlung für Deutschland: Hellgrau – reines Weiß wird von der Bundesdruckerei oft abgelehnt.';
+    } else if (selectedFormat.id === 'us' || selectedFormat.id === 'egk') {
+      recommend.textContent = '💡 Empfehlung: Weiß.';
+    } else {
+      recommend.textContent = '';
+    }
+
     showStep('stepBackground');
     renderBackgroundPreview();
   };
