@@ -1,0 +1,20 @@
+{
+  "id": "/?app=passfoto",
+  "name": "SD Passfoto Studio",
+  "short_name": "SD Passfoto",
+  "description": "Pass- und Bewerbungsfotos zuschneiden, Hintergrund ändern und druckfertig machen",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#030b14",
+  "theme_color": "#0f172a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

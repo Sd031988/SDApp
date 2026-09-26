@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest-passfoto.json">
+<title>SD Passfoto – Pass- &amp; Bewerbungsfotos</title>
+<script type="module">
+  // Lädt die KI-Hintergrundentfernung nur bei Bedarf (erst beim Klick auf eine Hintergrundfarbe),
+  // damit die Seite selbst schnell und klein bleibt. Läuft komplett im Browser, kein Upload an Server.
+  window.__loadBgRemoval = function () {
+    if (window.__bgRemovalPromise) return window.__bgRemovalPromise;
+    window.__bgRemovalPromise = import('https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm')
+      .then(mod => { window.__removeBackground = mod.removeBackground; return true; })
+      .catch(() => false);
+    return window.__bgRemovalPromise;
+  };
+</script>
+<style>
+  :root{
+    --bg:#030b14; --panel:#0f172a; --panel-2:#111c2e;
+    --primary:#62f0d4; --primary-2:#5bb8ff; --gold:#f8d779;
+    --text:#edf6ff; --muted:#bfd2e8; --border:rgba(191,210,232,.18);
+    --danger:#ff6b6b;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:linear-gradient(135deg,#020812 0%,#081827 30%,#0f172a 100%);
+    color:var(--text);
+    font-family:"Segoe UI",Inter,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    background:rgba(3,11,20,.75);
+    position:sticky; top:0; z-index:10;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.04em; text-decoration:none; color:var(--text); }
+  .brand-mark{
+    width:34px; height:34px; border-radius:10px;
+    background:linear-gradient(135deg,var(--gold),var(--primary));
+    display:grid; place-items:center; color:#0b1625; font-weight:900; font-size:.85rem;
+  }
+  header a.back{ color:var(--muted); font-size:.85rem; text-decoration:none; }
+  main{
+    flex:1;
+    width:min(560px, 100%);
+    margin:0 auto;
+    padding:18px 16px 40px;
+  }
+  h1{ font-size:1.4rem; margin:6px 0 4px; }
+  .hint{ color:var(--muted); font-size:.88rem; margin:0 0 18px; line-height:1.5; }
+
+  .step{ display:none; }
+  .step.active{ display:block; }
+
+  .capture-box{
+    border:2px dashed var(--border);
+    border-radius:20px;
+    padding:36px 20px;
+    text-align:center;
+    background:rgba(15,23,42,.5);
+  }
+  .capture-icon{ font-size:2.4rem; margin-bottom:10px; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    min-height:48px; padding:0 20px; border-radius:12px;
+    font-weight:800; font-size:.92rem; border:none; cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn.primary{ background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#041926; }
+  .btn.secondary{ background:rgba(15,23,42,.7); border:1px solid var(--border); color:var(--text); }
+  .btn.ghost{ background:transparent; border:1px solid var(--border); color:var(--muted); }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  input[type=file]{ display:none; }
+
+  .format-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+  .format-card{
+    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
+    background:var(--panel-2); cursor:pointer; text-align:left;
+  }
+  .format-card.selected{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+  .format-card .ft{ font-weight:800; font-size:.95rem; }
+  .format-card .fs{ color:var(--muted); font-size:.8rem; margin-top:2px; }
+
+  .crop-stage{
+    position:relative;
+    margin:0 auto 14px;
+    border-radius:14px;
+    overflow:hidden;
+    background:#000;
+    touch-action:none;
+    border:1px solid var(--border);
+  }
+  .crop-stage canvas{ display:block; width:100%; height:100%; }
+  .crop-guide{
+    position:absolute; inset:0; pointer-events:none;
+  }
+  .zoom-row{ display:flex; align-items:center; gap:10px; margin:6px 0 4px; }
+  .zoom-row input[type=range]{ flex:1; }
+  .zoom-row span{ font-size:1.2rem; }
+
+  .bg-list{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+  .bg-swatch{
+    width:56px; height:56px; border-radius:12px; border:2px solid var(--border);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.7rem; color:#0b1625;
+  }
+  .bg-swatch.selected{ border-color:var(--primary); box-shadow:0 0 0 2px var(--primary); }
+  .bg-swatch[data-bg="original"]{ background:repeating-conic-gradient(#dfe7ee 0% 25%, #b9c4cf 0% 50%) 0/16px 16px; color:#173b3f; font-size:.62rem; text-align:center; }
+  .bg-swatch[data-bg="white"]{ background:#ffffff; }
+  .bg-swatch[data-bg="lightgray"]{ background:#e3e7eb; }
+  .bg-swatch[data-bg="lightblue"]{ background:#cfe3f5; }
+  .bg-swatch[data-bg="blue"]{ background:#4f7cac; color:#fff; }
+
+  .preview-box{
+    border-radius:14px; overflow:hidden; border:1px solid var(--border);
+    margin-bottom:14px; background:#111c2e; display:flex; justify-content:center;
+  }
+  .preview-box canvas{ max-width:100%; display:block; }
+
+  .status-line{ font-size:.85rem; color:var(--muted); margin:8px 0; min-height:1.2em; }
+
+  .toggle-row{ display:flex; align-items:center; gap:10px; margin:10px 0 4px; font-size:.9rem; }
+
+  .export-list{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .export-card{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1px solid var(--border); border-radius:14px; padding:14px;
+    background:var(--panel-2);
+  }
+  .export-card .et{ font-weight:800; font-size:.92rem; }
+  .export-card .es{ color:var(--muted); font-size:.78rem; margin-top:2px; }
+
+  .note{ font-size:.78rem; color:var(--muted); margin-top:18px; line-height:1.5; border-top:1px dashed var(--border); padding-top:12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../index.html" class="brand">
+    <span class="brand-mark">SD</span>
+    <span>Passfoto Studio</span>
+  </a>
+</header>
+
+<main>
+  <!-- Schritt 1: Foto wählen -->
+  <section class="step active" id="stepCapture">
+    <h1>📸 Pass- &amp; Bewerbungsfoto</h1>
+    <p class="hint">Lade ein Foto hoch oder mach eins mit der Kamera. Danach richtest du es passend zu, entfernst bei Bedarf den Hintergrund und lädst es fertig herunter.</p>
+    <div class="capture-box">
+      <div class="capture-icon">🙂</div>
+      <div class="btn-row">
+        <button class="btn primary" id="btnTakePhoto">📷 Foto aufnehmen</button>
+        <button class="btn secondary" id="btnChoosePhoto">🖼️ Foto auswählen</button>
+      </div>
+    </div>
+    <input type="file" id="fileInputCamera" accept="image/*" capture="user">
+    <input type="file" id="fileInputChoose" accept="image/*">
+  </section>
+
+  <!-- Schritt 2: Format wählen + zuschneiden -->
+  <section class="step" id="stepCrop">
+    <h1>✂️ Zuschneiden &amp; ausrichten</h1>
+    <p class="hint">Format wählen, dann Kopf in den Rahmen ziehen und mit dem Regler die Größe anpassen.</p>
+    <div class="format-list" id="formatList"></div>
+    <div class="crop-stage" id="cropStage">
+      <canvas id="cropCanvas"></canvas>
+      <div class="crop-guide" id="cropGuide"></div>
+    </div>
+    <div class="zoom-row">
+      <span>🔍</span>
+      <input type="range" id="zoomRange" min="1" max="3" step="0.01" value="1">
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btnCropBack">← Neues Foto</button>
+      <button class="btn primary" id="btnCropNext">Weiter →</button>
+    </div>
+  </section>
+
+  <!-- Schritt 3: Hintergrund & Feinschliff -->
+  <section class="step" id="stepBackground">
+    <h1>🎨 Hintergrund &amp; Feinschliff</h1>
+    <p class="hint">Für amtliche Fotos wird meist ein einfarbiger, heller Hintergrund verlangt. Die Hintergrundentfernung läuft komplett auf deinem Gerät (KI lädt beim ersten Mal einmalig, ca. 30–80&nbsp;MB).</p>
+    <div class="bg-list" id="bgList">
+      <div class="bg-swatch selected" data-bg="original" title="Original behalten">Original</div>
+      <div class="bg-swatch" data-bg="white" title="Weiß"></div>
+      <div class="bg-swatch" data-bg="lightgray" title="Hellgrau"></div>
+      <div class="bg-swatch" data-bg="lightblue" title="Hellblau"></div>
+      <div class="bg-swatch" data-bg="blue" title="Blau (klassisch)"></div>
+    </div>
+    <div class="preview-box"><canvas id="previewCanvas"></canvas></div>
+    <div class="status-line" id="bgStatus"></div>
+    <div class="toggle-row">
+      <input type="checkbox" id="chkEnhance" checked>
+      <label for="chkEnhance">✨ Automatisch verbessern (Helligkeit &amp; Kontrast)</label>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btnBgBack">← Zuschnitt ändern</button>
+      <button class="btn primary" id="btnBgNext">Weiter →</button>
+    </div>
+  </section>
+
+  <!-- Schritt 4: Export -->
+  <section class="step" id="stepExport">
+    <h1>✅ Fertig</h1>
+    <p class="hint">Dein Foto ist bereit. Lade es einzeln herunter oder als druckfertigen Fotobogen für den Fotoautomaten / Drucker.</p>
+    <div class="preview-box"><canvas id="finalCanvas"></canvas></div>
+    <div class="export-list">
+      <div class="export-card">
+        <div>
+          <div class="et">📄 Einzelnes Foto</div>
+          <div class="es" id="singleInfo">–</div>
+        </div>
+        <button class="btn primary" id="btnDownloadSingle">Download</button>
+      </div>
+      <div class="export-card">
+        <div>
+          <div class="et">🖨️ Fotobogen (10 × 15 cm)</div>
+          <div class="es" id="sheetInfo">–</div>
+        </div>
+        <button class="btn secondary" id="btnDownloadSheet">Download</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="btnExportBack">← Zurück</button>
+      <button class="btn secondary" id="btnNewPhoto">Neues Foto</button>
+    </div>
+    <p class="note">Hinweis: Diese Vorlage hilft dir, ein gutes, professionell aussehendes Foto zu erstellen. Für amtliche Dokumente (Reisepass, Personalausweis) prüfe zusätzlich die genauen Vorgaben deiner Behörde – manche verlangen eine Prüfung vor Ort.</p>
+  </section>
+</main>
+
+<canvas id="workCanvas" style="display:none;"></canvas>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const FORMATS = [
+    { id: 'bio', label: 'Biometrisches Passfoto', sub: '35 × 45 mm – Reisepass, Personalausweis, EU', wmm: 35, hmm: 45, headPct: 0.75 },
+    { id: 'bewerbung', label: 'Bewerbungsfoto', sub: '45 × 60 mm – klassisches Format für Lebenslauf', wmm: 45, hmm: 60, headPct: 0.60 },
+    { id: 'us', label: 'US-Passfoto / Visum', sub: '51 × 51 mm (2 × 2 Zoll)', wmm: 51, hmm: 51, headPct: 0.60 },
+  ];
+  const DPI = 600;
+  const mmToPx = (mm) => Math.round(mm / 25.4 * DPI);
+
+  const BG_COLORS = {
+    white: '#ffffff',
+    lightgray: '#e3e7eb',
+    lightblue: '#cfe3f5',
+    blue: '#4f7cac',
+  };
+
+  let selectedFormat = FORMATS[0];
+  let img = null; // aktuell geladenes Foto (Image)
+  let zoom = 1;
+  let centerX = 0, centerY = 0; // Mittelpunkt des sichtbaren Ausschnitts, in Original-Pixeln
+  let croppedCanvas = null; // Ergebnis von Schritt 2 (Zuschnitt, volle Zielauflösung)
+  let currentBg = 'original';
+  let finalCanvasResult = null; // Ergebnis von Schritt 3 (mit Hintergrund + Feinschliff)
+
+  function showStep(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  // ---------- Schritt 1: Foto aufnehmen/auswählen ----------
+  $('btnTakePhoto').onclick = () => $('fileInputCamera').click();
+  $('btnChoosePhoto').onclick = () => $('fileInputChoose').click();
+
+  function handleFileChosen(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const image = new Image();
+      image.onload = () => {
+        img = image;
+        zoom = 1;
+        centerX = image.naturalWidth / 2;
+        centerY = image.naturalHeight / 2;
+        buildFormatList();
+        showStep('stepCrop');
+        setupCropStage();
+      };
+      image.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  $('fileInputCamera').onchange = (e) => { handleFileChosen(e.target.files[0]); e.target.value = ''; };
+  $('fileInputChoose').onchange = (e) => { handleFileChosen(e.target.files[0]); e.target.value = ''; };
+
+  // ---------- Schritt 2: Zuschneiden ----------
+  function buildFormatList() {
+    const list = $('formatList');
+    list.innerHTML = '';
+    FORMATS.forEach(f => {
+      const card = document.createElement('div');
+      card.className = 'format-card' + (f.id === selectedFormat.id ? ' selected' : '');
+      card.innerHTML = `<div class="ft">${f.label}</div><div class="fs">${f.sub}</div>`;
+      card.onclick = () => {
+        selectedFormat = f;
+        buildFormatList();
+        setupCropStage();
+      };
+      list.appendChild(card);
+    });
+  }
+
+  const cropStage = $('cropStage');
+  const cropCanvas = $('cropCanvas');
+  const cropGuide = $('cropGuide');
+  let cropDisplayW = 300, cropDisplayH = 300;
+
+  function setupCropStage() {
+    if (!img) return;
+    const ar = selectedFormat.hmm / selectedFormat.wmm;
+    cropDisplayW = Math.min(340, cropStage.parentElement ? cropStage.parentElement.clientWidth : 340);
+    cropDisplayH = Math.round(cropDisplayW * ar);
+    cropStage.style.width = cropDisplayW + 'px';
+    cropStage.style.height = cropDisplayH + 'px';
+    cropCanvas.width = cropDisplayW;
+    cropCanvas.height = cropDisplayH;
+
+    zoom = 1;
+    $('zoomRange').value = 1;
+    centerX = img.naturalWidth / 2;
+    centerY = img.naturalHeight / 2;
+
+    drawCropGuide();
+    drawCropPreview();
+  }
+
+  function baseScale() {
+    return Math.max(cropDisplayW / img.naturalWidth, cropDisplayH / img.naturalHeight);
+  }
+
+  function getSourceRect(frameW, frameH) {
+    const displayScale = zoom * (frameW / cropDisplayW) * baseScale();
+    const visW = frameW / displayScale;
+    const visH = frameH / displayScale;
+    let sx = centerX - visW / 2;
+    let sy = centerY - visH / 2;
+    sx = Math.max(0, Math.min(sx, img.naturalWidth - visW));
+    sy = Math.max(0, Math.min(sy, img.naturalHeight - visH));
+    return { sx, sy, sWidth: visW, sHeight: visH };
+  }
+
+  function drawCropPreview() {
+    if (!img) return;
+    const rect = getSourceRect(cropDisplayW, cropDisplayH);
+    const ctx = cropCanvas.getContext('2d');
+    ctx.clearRect(0, 0, cropDisplayW, cropDisplayH);
+    ctx.drawImage(img, rect.sx, rect.sy, rect.sWidth, rect.sHeight, 0, 0, cropDisplayW, cropDisplayH);
+  }
+
+  function drawCropGuide() {
+    const headH = cropDisplayH * selectedFormat.headPct;
+    const headW = headH * 0.72;
+    const top = cropDisplayH * 0.08;
+    cropGuide.innerHTML = `
+      <svg width="${cropDisplayW}" height="${cropDisplayH}" style="position:absolute;inset:0;">
+        <defs>
+          <mask id="m1">
+            <rect width="100%" height="100%" fill="white"/>
+            <ellipse cx="${cropDisplayW / 2}" cy="${top + headH / 2}" rx="${headW / 2}" ry="${headH / 2}" fill="black"/>
+          </mask>
+        </defs>
+        <rect width="100%" height="100%" fill="rgba(0,0,0,.35)" mask="url(#m1)"/>
+        <ellipse cx="${cropDisplayW / 2}" cy="${top + headH / 2}" rx="${headW / 2}" ry="${headH / 2}" fill="none" stroke="rgba(98,240,212,.9)" stroke-width="2" stroke-dasharray="6 5"/>
+      </svg>`;
+  }
+
+  // Ziehen zum Verschieben
+  let dragging = false, lastX = 0, lastY = 0;
+  cropStage.addEventListener('pointerdown', (e) => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    cropStage.setPointerCapture(e.pointerId);
+  });
+  cropStage.addEventListener('pointermove', (e) => {
+    if (!dragging || !img) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    const displayScale = zoom * (cropDisplayW / cropDisplayW) * baseScale();
+    centerX -= dx / displayScale;
+    centerY -= dy / displayScale;
+    const rectCheck = getSourceRect(cropDisplayW, cropDisplayH);
+    centerX = rectCheck.sx + rectCheck.sWidth / 2;
+    centerY = rectCheck.sy + rectCheck.sHeight / 2;
+    drawCropPreview();
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(evt => {
+    cropStage.addEventListener(evt, () => { dragging = false; });
+  });
+
+  $('zoomRange').oninput = (e) => {
+    zoom = parseFloat(e.target.value);
+    drawCropPreview();
+  };
+
+  $('btnCropBack').onclick = () => { showStep('stepCapture'); };
+
+  $('btnCropNext').onclick = () => {
+    const targetW = mmToPx(selectedFormat.wmm);
+    const targetH = mmToPx(selectedFormat.hmm);
+    const rect = getSourceRect(targetW, targetH);
+    croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = targetW;
+    croppedCanvas.height = targetH;
+    croppedCanvas.getContext('2d').drawImage(img, rect.sx, rect.sy, rect.sWidth, rect.sHeight, 0, 0, targetW, targetH);
+    currentBg = 'original';
+    document.querySelectorAll('.bg-swatch').forEach(s => s.classList.toggle('selected', s.dataset.bg === 'original'));
+    showStep('stepBackground');
+    renderBackgroundPreview();
+  };
+
+  // ---------- Schritt 3: Hintergrund & Feinschliff ----------
+  function enhanceCanvas(srcCanvas) {
+    const w = srcCanvas.width, h = srcCanvas.height;
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ictx = srcCanvas.getContext('2d');
+    const octx = out.getContext('2d');
+    const imgData = ictx.getImageData(0, 0, w, h);
+    const d = imgData.data;
+    let min = 255, max = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      if (lum < min) min = lum;
+      if (lum > max) max = lum;
+    }
+    const range = Math.max(1, max - min);
+    for (let i = 0; i < d.length; i += 4) {
+      for (let c = 0; c < 3; c++) {
+        let v = (d[i + c] - min) / range * 255;
+        v = (v - 128) * 1.12 + 128 + 6;
+        d[i + c] = Math.max(0, Math.min(255, v));
+      }
+    }
+    octx.putImageData(imgData, 0, 0);
+    return out;
+  }
+
+  async function renderBackgroundPreview() {
+    const statusEl = $('bgStatus');
+    const previewCanvas = $('previewCanvas');
+    let baseCanvas = croppedCanvas;
+
+    if (currentBg !== 'original') {
+      statusEl.textContent = 'KI entfernt den Hintergrund … (beim ersten Mal kann das etwas dauern)';
+      const ok = await window.__loadBgRemoval();
+      if (ok && window.__removeBackground) {
+        try {
+          const blob = await new Promise(res => croppedCanvas.toBlob(res, 'image/png'));
+          const cutoutBlob = await window.__removeBackground(blob);
+          const cutoutUrl = URL.createObjectURL(cutoutBlob);
+          const cutoutImg = await new Promise((resolve, reject) => {
+            const im = new Image();
+            im.onload = () => resolve(im);
+            im.onerror = reject;
+            im.src = cutoutUrl;
+          });
+          const composed = document.createElement('canvas');
+          composed.width = croppedCanvas.width;
+          composed.height = croppedCanvas.height;
+          const cctx = composed.getContext('2d');
+          cctx.fillStyle = BG_COLORS[currentBg] || '#ffffff';
+          cctx.fillRect(0, 0, composed.width, composed.height);
+          cctx.drawImage(cutoutImg, 0, 0, composed.width, composed.height);
+          baseCanvas = composed;
+          statusEl.textContent = 'Hintergrund ersetzt ✓';
+        } catch (err) {
+          statusEl.textContent = 'Hintergrundentfernung nicht möglich (keine Internetverbindung?). Original wird verwendet.';
+        }
+      } else {
+        statusEl.textContent = 'Hintergrundentfernung gerade nicht verfügbar (keine Internetverbindung). Original wird verwendet.';
+      }
+    } else {
+      statusEl.textContent = '';
+    }
+
+    let resultCanvas = baseCanvas;
+    if ($('chkEnhance').checked) {
+      resultCanvas = enhanceCanvas(baseCanvas);
+    }
+
+    finalCanvasResult = resultCanvas;
+    const pctx = previewCanvas.getContext('2d');
+    previewCanvas.width = resultCanvas.width;
+    previewCanvas.height = resultCanvas.height;
+    pctx.drawImage(resultCanvas, 0, 0);
+  }
+
+  document.querySelectorAll('.bg-swatch').forEach(sw => {
+    sw.onclick = () => {
+      document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      currentBg = sw.dataset.bg;
+      renderBackgroundPreview();
+    };
+  });
+  $('chkEnhance').onchange = () => renderBackgroundPreview();
+
+  $('btnBgBack').onclick = () => { showStep('stepCrop'); };
+
+  $('btnBgNext').onclick = () => {
+    const finalCanvas = $('finalCanvas');
+    finalCanvas.width = finalCanvasResult.width;
+    finalCanvas.height = finalCanvasResult.height;
+    finalCanvas.getContext('2d').drawImage(finalCanvasResult, 0, 0);
+
+    const wmm = selectedFormat.wmm, hmm = selectedFormat.hmm;
+    $('singleInfo').textContent = `${selectedFormat.label} · ${wmm}×${hmm} mm · ${finalCanvasResult.width}×${finalCanvasResult.height}px`;
+
+    const sheetInfo = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height);
+    $('sheetInfo').textContent = `${sheetInfo.cols * sheetInfo.rows} Kopien auf 10 × 15 cm`;
+
+    showStep('stepExport');
+  };
+
+  // ---------- Schritt 4: Export ----------
+  function downloadCanvas(canvas, filename) {
+    canvas.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }, 'image/jpeg', 0.95);
+  }
+
+  $('btnDownloadSingle').onclick = () => {
+    downloadCanvas(finalCanvasResult, 'Passfoto.jpg');
+  };
+
+  function computeSheetLayout(photoW, photoH) {
+    const sheetW = mmToPx(100), sheetH = mmToPx(150);
+    const gap = Math.round(DPI * 0.04); // ca. 1 mm Abstand
+    const cols = Math.max(1, Math.floor((sheetW + gap) / (photoW + gap)));
+    const rows = Math.max(1, Math.floor((sheetH + gap) / (photoH + gap)));
+    return { sheetW, sheetH, gap, cols, rows };
+  }
+
+  $('btnDownloadSheet').onclick = () => {
+    const { sheetW, sheetH, gap, cols, rows } = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height);
+    const sheet = document.createElement('canvas');
+    sheet.width = sheetW; sheet.height = sheetH;
+    const ctx = sheet.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, sheetW, sheetH);
+
+    const totalW = cols * finalCanvasResult.width + (cols - 1) * gap;
+    const totalH = rows * finalCanvasResult.height + (rows - 1) * gap;
+    const offsetX = (sheetW - totalW) / 2;
+    const offsetY = (sheetH - totalH) / 2;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = offsetX + c * (finalCanvasResult.width + gap);
+        const y = offsetY + r * (finalCanvasResult.height + gap);
+        ctx.drawImage(finalCanvasResult, x, y);
+      }
+    }
+    downloadCanvas(sheet, 'Fotobogen_10x15.jpg');
+  };
+
+  $('btnExportBack').onclick = () => { showStep('stepBackground'); };
+  $('btnNewPhoto').onclick = () => {
+    img = null; croppedCanvas = null; finalCanvasResult = null;
+    showStep('stepCapture');
+  };
+
+  window.addEventListener('resize', () => { if (img && $('stepCrop').classList.contains('active')) setupCropStage(); });
+
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw-passfoto.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
