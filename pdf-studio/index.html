@@ -808,6 +808,74 @@
       border-bottom-color: var(--accent);
     }
 
+    /* Scan-Optimieren Modal */
+    .scan-crop-wrap {
+      position: relative;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 60vh;
+      touch-action: none;
+    }
+
+    .scan-crop-wrap canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+    }
+
+    .scan-handle {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      margin: -12px 0 0 -12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(214, 107, 69, 0.4);
+      touch-action: none;
+      cursor: grab;
+    }
+
+    .scan-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .scan-filter-card {
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      text-align: center;
+      background: #f8f5f0;
+    }
+
+    .scan-filter-card.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .scan-filter-card canvas {
+      width: 100%;
+      display: block;
+      background: #222;
+    }
+
+    .scan-filter-card span {
+      display: block;
+      padding: 6px 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .scan-filter-card.selected span {
+      color: var(--accent);
+    }
+
     .convert-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1381,6 +1449,49 @@
       <div style="font-size:0.72rem;color:var(--muted);text-align:center;">
         🔒 Alle Konvertierungen finden ausschließlich lokal in deinem Browser statt. Keine Dokumentdaten verlassen
         deinen PC.
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Scan optimieren (Zuschnitt/Geraderichten + Filter) -->
+  <div id="modalScanEnhance" class="modal-backdrop">
+    <div class="modal-box" style="width:min(680px,100%);">
+      <h3>📷 Scan optimieren</h3>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;" id="scanEnhanceHint">
+        Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter“.
+      </p>
+
+      <div id="scanCropStage">
+        <div class="scan-crop-wrap" id="scanCropWrap">
+          <canvas id="scanCropCanvas"></canvas>
+          <div class="scan-handle" id="sh0"></div>
+          <div class="scan-handle" id="sh1"></div>
+          <div class="scan-handle" id="sh2"></div>
+          <div class="scan-handle" id="sh3"></div>
+        </div>
+        <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
+          <button id="btnScanCropReset" class="tool-btn">↺ Zurücksetzen</button>
+          <div style="display:flex;gap:8px;">
+            <button id="btnScanCancel1" class="tool-btn">Abbrechen</button>
+            <button id="btnScanCropNext" class="btn-primary">Weiter →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="scanFilterStage" style="display:none;">
+        <div class="scan-filter-grid" id="scanFilterGrid">
+          <div class="scan-filter-card" data-filter="original"><canvas></canvas><span>Original</span></div>
+          <div class="scan-filter-card" data-filter="auto"><canvas></canvas><span>Automatisch</span></div>
+          <div class="scan-filter-card" data-filter="gray"><canvas></canvas><span>Graustufen</span></div>
+          <div class="scan-filter-card" data-filter="bw"><canvas></canvas><span>Schwarz-Weiß</span></div>
+        </div>
+        <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
+          <button id="btnScanFilterBack" class="tool-btn">← Zurück</button>
+          <div style="display:flex;gap:8px;">
+            <button id="btnScanCancel2" class="tool-btn">Abbrechen</button>
+            <button id="btnScanFilterDone" class="btn-primary">Seite übernehmen ✓</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3479,6 +3590,8 @@
     $('btnChooseFiles').onclick = () => {
       const fi = $('fileInput');
       fi.accept = 'application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx';
+      fi.removeAttribute('capture');
+      state.scanCaptureMode = false;
       fi.click();
     };
 
@@ -3486,11 +3599,20 @@
       const fi = $('fileInput');
       fi.accept = 'image/*';
       fi.setAttribute('capture', 'environment');
+      state.scanCaptureMode = true;
       fi.click();
     };
 
     $('fileInput').onchange = (e) => {
-      handleFiles(Array.from(e.target.files));
+      const files = Array.from(e.target.files);
+      if (state.scanCaptureMode && files.some(f => f.type.startsWith('image/'))) {
+        startScanEnhanceQueue(files.filter(f => f.type.startsWith('image/')));
+        const rest = files.filter(f => !f.type.startsWith('image/'));
+        if (rest.length) handleFiles(rest);
+      } else {
+        handleFiles(files);
+      }
+      state.scanCaptureMode = false;
       e.target.value = '';
     };
 
@@ -3498,6 +3620,8 @@
     dz.onclick = () => {
       const fi = $('fileInput');
       fi.accept = 'application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx';
+      fi.removeAttribute('capture');
+      state.scanCaptureMode = false;
       fi.click();
     };
     dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
@@ -3518,6 +3642,299 @@
         $('btnDeleteSelectedText').click();
       }
     });
+
+    // ================= Scan optimieren (Zuschnitt/Geraderichten + Filter) =================
+    const scanQueue = { files: [], index: 0 };
+    let scanCorners = [];
+    let scanWarpedCache = null;
+    let scanSelectedFilter = 'auto';
+    const SCAN_MAX_DIM = 1600;
+
+    function startScanEnhanceQueue(files) {
+      if (!files.length) return;
+      scanQueue.files = files;
+      scanQueue.index = 0;
+      processNextScanFile();
+    }
+
+    function processNextScanFile() {
+      if (scanQueue.index >= scanQueue.files.length) return;
+      const file = scanQueue.files[scanQueue.index];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          openScanEnhanceModal(img, file.name);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function openScanEnhanceModal(img, fileName) {
+      $('modalScanEnhance').classList.add('open');
+      $('scanCropStage').style.display = '';
+      $('scanFilterStage').style.display = 'none';
+      $('scanEnhanceHint').textContent = `„${fileName}“ – ziehe die vier Punkte auf die Ecken des Dokuments.`;
+
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, SCAN_MAX_DIM / Math.max(w, h));
+      w = Math.round(w * scale);
+      h = Math.round(h * scale);
+
+      const canvas = $('scanCropCanvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      const margin = 0.06;
+      scanCorners = [
+        { x: w * margin, y: h * margin },
+        { x: w * (1 - margin), y: h * margin },
+        { x: w * (1 - margin), y: h * (1 - margin) },
+        { x: w * margin, y: h * (1 - margin) },
+      ];
+      renderScanHandles();
+    }
+
+    function renderScanHandles() {
+      const canvas = $('scanCropCanvas');
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / canvas.width;
+      const scaleY = rect.height / canvas.height;
+      ['sh0', 'sh1', 'sh2', 'sh3'].forEach((id, i) => {
+        const el = $(id);
+        el.style.left = (scanCorners[i].x * scaleX) + 'px';
+        el.style.top = (scanCorners[i].y * scaleY) + 'px';
+      });
+    }
+    window.addEventListener('resize', renderScanHandles);
+
+    function attachScanDrag(handleEl, index) {
+      let dragging = false;
+      function toCanvasCoords(clientX, clientY) {
+        const canvas = $('scanCropCanvas');
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: Math.max(0, Math.min(canvas.width, (clientX - rect.left) * scaleX)),
+          y: Math.max(0, Math.min(canvas.height, (clientY - rect.top) * scaleY)),
+        };
+      }
+      function start(e) { dragging = true; e.preventDefault(); }
+      function move(e) {
+        if (!dragging) return;
+        const point = e.touches ? e.touches[0] : e;
+        scanCorners[index] = toCanvasCoords(point.clientX, point.clientY);
+        renderScanHandles();
+        e.preventDefault();
+      }
+      function end() { dragging = false; }
+      handleEl.addEventListener('mousedown', start);
+      handleEl.addEventListener('touchstart', start, { passive: false });
+      window.addEventListener('mousemove', move);
+      window.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('mouseup', end);
+      window.addEventListener('touchend', end);
+    }
+    ['sh0', 'sh1', 'sh2', 'sh3'].forEach((id, i) => attachScanDrag($(id), i));
+
+    $('btnScanCropReset').onclick = () => {
+      const canvas = $('scanCropCanvas');
+      const w = canvas.width, h = canvas.height;
+      const margin = 0.06;
+      scanCorners = [
+        { x: w * margin, y: h * margin },
+        { x: w * (1 - margin), y: h * margin },
+        { x: w * (1 - margin), y: h * (1 - margin) },
+        { x: w * margin, y: h * (1 - margin) },
+      ];
+      renderScanHandles();
+    };
+
+    function scanSolveLinear(A, b) {
+      const n = A.length;
+      const M = A.map((row, i) => row.concat([b[i]]));
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        for (let r = col + 1; r < n; r++) { if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r; }
+        [M[col], M[pivot]] = [M[pivot], M[col]];
+        const pv = M[col][col] || 1e-12;
+        for (let c = col; c <= n; c++) M[col][c] /= pv;
+        for (let r = 0; r < n; r++) {
+          if (r === col) continue;
+          const factor = M[r][col];
+          for (let c = col; c <= n; c++) M[r][c] -= factor * M[col][c];
+        }
+      }
+      return M.map(row => row[n]);
+    }
+
+    function scanComputeHomography(src, dst) {
+      const A = [], b = [];
+      for (let i = 0; i < 4; i++) {
+        const { x: X, y: Y } = dst[i];
+        const { x: u, y: v } = src[i];
+        A.push([X, Y, 1, 0, 0, 0, -X * u, -Y * u]); b.push(u);
+        A.push([0, 0, 0, X, Y, 1, -X * v, -Y * v]); b.push(v);
+      }
+      return scanSolveLinear(A, b);
+    }
+
+    function scanWarpToRect(srcCanvas, srcCorners, outW, outH) {
+      const dstCorners = [{ x: 0, y: 0 }, { x: outW, y: 0 }, { x: outW, y: outH }, { x: 0, y: outH }];
+      const h = scanComputeHomography(srcCorners, dstCorners);
+      const [a, bb, c, d, e, f, g, hh] = h;
+
+      const sctx = srcCanvas.getContext('2d');
+      const srcData = sctx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+      const sw = srcCanvas.width, sh = srcCanvas.height;
+
+      const out = document.createElement('canvas');
+      out.width = outW; out.height = outH;
+      const octx = out.getContext('2d');
+      const outData = octx.createImageData(outW, outH);
+
+      function sampleBilinear(u, v) {
+        if (u < 0 || v < 0 || u > sw - 1 || v > sh - 1) return [255, 255, 255, 255];
+        const x0 = Math.floor(u), y0 = Math.floor(v);
+        const x1 = Math.min(x0 + 1, sw - 1), y1 = Math.min(y0 + 1, sh - 1);
+        const fx = u - x0, fy = v - y0;
+        const idx = (x, y) => (y * sw + x) * 4;
+        const p00 = idx(x0, y0), p10 = idx(x1, y0), p01 = idx(x0, y1), p11 = idx(x1, y1);
+        const out4 = [0, 0, 0, 0];
+        for (let k = 0; k < 4; k++) {
+          const top = srcData.data[p00 + k] * (1 - fx) + srcData.data[p10 + k] * fx;
+          const bot = srcData.data[p01 + k] * (1 - fx) + srcData.data[p11 + k] * fx;
+          out4[k] = top * (1 - fy) + bot * fy;
+        }
+        return out4;
+      }
+
+      for (let Y = 0; Y < outH; Y++) {
+        for (let X = 0; X < outW; X++) {
+          const denom = g * X + hh * Y + 1;
+          const u = (a * X + bb * Y + c) / denom;
+          const v = (d * X + e * Y + f) / denom;
+          const [r, gg, bl, al] = sampleBilinear(u, v);
+          const oi = (Y * outW + X) * 4;
+          outData.data[oi] = r; outData.data[oi + 1] = gg; outData.data[oi + 2] = bl; outData.data[oi + 3] = al;
+        }
+      }
+      octx.putImageData(outData, 0, 0);
+      return out;
+    }
+
+    function scanApplyFilter(srcCanvas, mode) {
+      const w = srcCanvas.width, h = srcCanvas.height;
+      const out = document.createElement('canvas');
+      out.width = w; out.height = h;
+      const octx = out.getContext('2d');
+      octx.drawImage(srcCanvas, 0, 0);
+      if (mode === 'original') return out;
+
+      const imgData = octx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      let min = 255, max = 0;
+      const gray = new Uint8ClampedArray(w * h);
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        gray[p] = g;
+        if (g < min) min = g;
+        if (g > max) max = g;
+      }
+      const range = Math.max(1, max - min);
+
+      if (mode === 'gray') {
+        for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+          const v = Math.min(255, Math.max(0, ((gray[p] - min) / range) * 255));
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+      } else if (mode === 'bw') {
+        const thresh = min + range * 0.55;
+        for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+          const v = gray[p] > thresh ? 255 : 0;
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+      } else if (mode === 'auto') {
+        const boost = 1.18, lift = 12;
+        for (let i = 0; i < d.length; i += 4) {
+          for (let k = 0; k < 3; k++) {
+            let v = (d[i + k] - min) / range * 255;
+            v = (v - 128) * boost + 128 + lift * 0.15;
+            d[i + k] = Math.min(255, Math.max(0, v));
+          }
+        }
+      }
+      octx.putImageData(imgData, 0, 0);
+      return out;
+    }
+
+    function buildScanFilterPreviews() {
+      const cards = document.querySelectorAll('#scanFilterGrid .scan-filter-card');
+      cards.forEach(card => {
+        const mode = card.dataset.filter;
+        const canvas = card.querySelector('canvas');
+        const resultCanvas = scanApplyFilter(scanWarpedCache, mode);
+        const previewW = 260;
+        const previewH = Math.round(resultCanvas.height * (previewW / resultCanvas.width));
+        canvas.width = previewW; canvas.height = previewH;
+        canvas.getContext('2d').drawImage(resultCanvas, 0, 0, previewW, previewH);
+        card.classList.toggle('selected', mode === scanSelectedFilter);
+        card.onclick = () => {
+          scanSelectedFilter = mode;
+          cards.forEach(c2 => c2.classList.toggle('selected', c2 === card));
+        };
+      });
+    }
+
+    $('btnScanCropNext').onclick = () => {
+      const c = scanCorners;
+      const wTop = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
+      const wBot = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
+      const hLeft = Math.hypot(c[3].x - c[0].x, c[3].y - c[0].y);
+      const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
+      const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
+      const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      scanWarpedCache = scanWarpToRect($('scanCropCanvas'), scanCorners, outW, outH);
+      buildScanFilterPreviews();
+      $('scanCropStage').style.display = 'none';
+      $('scanFilterStage').style.display = '';
+    };
+
+    $('btnScanFilterBack').onclick = () => {
+      $('scanCropStage').style.display = '';
+      $('scanFilterStage').style.display = 'none';
+    };
+
+    function closeScanModalAndAdvance() {
+      $('modalScanEnhance').classList.remove('open');
+      scanQueue.index++;
+      if (scanQueue.index < scanQueue.files.length) {
+        processNextScanFile();
+      } else {
+        renderSidebarPages();
+        renderStage();
+        showToast(`${state.pages.length} Seite(n) bereit`);
+      }
+    }
+
+    $('btnScanFilterDone').onclick = () => {
+      const finalCanvas = scanApplyFilter(scanWarpedCache, scanSelectedFilter);
+      const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
+      pushUndoState();
+      const page = createPageModel(dataUrl, 'Scan', finalCanvas.width, finalCanvas.height);
+      state.pages.push(page);
+      if (!state.selectedPageId) state.selectedPageId = page.id;
+      $('pageCount').textContent = state.pages.length;
+      $('btnExport').disabled = false;
+      $('btnPrint').disabled = false;
+      closeScanModalAndAdvance();
+    };
+
+    $('btnScanCancel1').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
+    $('btnScanCancel2').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
