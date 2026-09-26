@@ -42,6 +42,76 @@
       color: #9fb3c8;
     }
 
+    /* --- Modus-Auswahl --- */
+    #modeScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    #modeScreen .icon {
+      font-size: 2.4rem;
+      margin-bottom: 4px;
+    }
+
+    #modeScreen h2 {
+      font-size: 1.1rem;
+      margin: 0 0 2px;
+      text-align: center;
+    }
+
+    .mode-card {
+      width: 100%;
+      max-width: 340px;
+      background: #16233a;
+      border: 1px solid #2c3e5c;
+      border-radius: 14px;
+      padding: 16px 18px;
+      text-align: left;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .mode-card:active {
+      background: #1c2c48;
+    }
+
+    .mode-card .mode-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-card .mode-desc {
+      font-size: .85rem;
+      color: #9fb3c8;
+      line-height: 1.4;
+    }
+
+    .mode-card.recommended {
+      border-color: #d66b45;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #d66b45;
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+    }
+
+    /* --- Live-Kamera-Modus --- */
     #cameraWrap {
       position: relative;
       flex: 1;
@@ -123,6 +193,46 @@
       transform: scale(.94);
     }
 
+    /* --- Kamera-App-Modus --- */
+    #appModeScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      gap: 12px;
+    }
+
+    #appModeScreen .icon {
+      font-size: 2.4rem;
+    }
+
+    #appModeScreen p {
+      color: #9fb3c8;
+      font-size: .9rem;
+      max-width: 300px;
+    }
+
+    .btn {
+      background: #d66b45;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 18px 30px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .btn:disabled {
+      background: #445164;
+      opacity: .7;
+    }
+
     .btn-secondary {
       background: transparent;
       color: #9fb3c8;
@@ -134,7 +244,7 @@
       cursor: pointer;
     }
 
-    #count {
+    #count, #countApp {
       font-size: .85rem;
       color: #9fb3c8;
     }
@@ -160,6 +270,10 @@
       margin-bottom: 6px;
     }
 
+    input[type=file] {
+      display: none;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -172,7 +286,24 @@
     <div id="status">Verbinde …</div>
   </div>
 
-  <div id="permissionScreen">
+  <!-- Schritt 1: Modus wählen -->
+  <div id="modeScreen">
+    <div class="icon">📄</div>
+    <h2>Wie möchtest du scannen?</h2>
+    <div class="mode-card recommended" id="modeLive">
+      <div class="mode-title">🔒 Live-Scan <span class="badge">Empfohlen</span></div>
+      <div class="mode-desc">Kamera direkt hier in der Seite. Das Foto wird nie auf dem Handy gespeichert – ideal
+        wenn du fremde Dokumente scannst (z. B. bei der Arbeit).</div>
+    </div>
+    <div class="mode-card" id="modeApp">
+      <div class="mode-title">📷 Normale Kamera-App</div>
+      <div class="mode-desc">Öffnet die gewohnte Kamera deines Handys (oder ein vorhandenes Foto). Das Bild kann dabei
+        wie gewohnt zusätzlich in deiner Foto-Galerie gespeichert werden.</div>
+    </div>
+  </div>
+
+  <!-- Live-Kamera-Modus -->
+  <div id="permissionScreen" class="hidden">
     <div class="icon">📷</div>
     <p>Kamera wird angefragt – bitte im Browser erlauben.</p>
   </div>
@@ -190,12 +321,27 @@
     <button id="btnDone" class="btn-secondary">Fertig – Verbindung beenden</button>
   </div>
 
+  <!-- Kamera-App-Modus -->
+  <div id="appModeScreen" class="hidden">
+    <div class="icon">📷</div>
+    <p>Öffnet deine normale Kamera-App bzw. Fotoauswahl.</p>
+    <button id="btnAppCapture" class="btn" disabled>📸 Foto aufnehmen / wählen</button>
+    <div id="countApp"></div>
+    <button id="btnDoneApp" class="btn-secondary">Fertig – Verbindung beenden</button>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" capture="environment">
+
   <canvas id="captureCanvas" class="hidden"></canvas>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const targetId = params.get('p');
     const statusEl = document.getElementById('status');
+
+    const modeScreen = document.getElementById('modeScreen');
+    const modeLive = document.getElementById('modeLive');
+    const modeApp = document.getElementById('modeApp');
+
     const permissionScreen = document.getElementById('permissionScreen');
     const cameraWrap = document.getElementById('cameraWrap');
     const bottomBar = document.getElementById('bottomBar');
@@ -206,7 +352,14 @@
     const flashEl = document.getElementById('flash');
     const canvas = document.getElementById('captureCanvas');
 
+    const appModeScreen = document.getElementById('appModeScreen');
+    const btnAppCapture = document.getElementById('btnAppCapture');
+    const btnDoneApp = document.getElementById('btnDoneApp');
+    const countAppEl = document.getElementById('countApp');
+    const fileInput = document.getElementById('fileInput');
+
     let sent = 0;
+    let sentApp = 0;
     let conn = null;
     let peer = null;
     let stream = null;
@@ -215,9 +368,10 @@
 
     function updateCaptureEnabled() {
       btn.disabled = !(connReady && cameraReady);
+      btnAppCapture.disabled = !connReady;
     }
 
-    // --- PeerJS-Verbindung zum PC ---
+    // --- PeerJS-Verbindung zum PC (läuft unabhängig vom gewählten Modus) ---
     if (!targetId) {
       statusEl.textContent = 'Kein PC gefunden. Bitte QR-Code am PC neu scannen.';
     } else if (typeof Peer === 'undefined') {
@@ -252,7 +406,24 @@
       });
     }
 
-    // --- Live-Kamera starten (kein Foto wird im Handy gespeichert) ---
+    function sendPhoto(dataUrl, mime, name) {
+      if (!conn || !conn.open) return;
+      conn.send({ type: 'photo', name, mime, data: dataUrl });
+    }
+
+    // --- Modus-Auswahl ---
+    modeLive.onclick = () => {
+      modeScreen.classList.add('hidden');
+      permissionScreen.classList.remove('hidden');
+      startCamera();
+    };
+
+    modeApp.onclick = () => {
+      modeScreen.classList.add('hidden');
+      appModeScreen.classList.remove('hidden');
+    };
+
+    // --- Modus 1: Live-Kamera (kein Foto wird auf dem Handy gespeichert) ---
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -269,9 +440,7 @@
         permissionScreen.innerHTML = '<div class="icon">🚫</div><p>Kein Kamerazugriff. Bitte in den Browser-Einstellungen erlauben und die Seite neu laden.</p>';
       }
     }
-    startCamera();
 
-    // --- Aktuellen Kamera-Frame greifen und an PC senden (nur aus dem Live-Bild, keine eigene Fotodatei) ---
     btn.onclick = () => {
       if (!conn || !conn.open || !stream) return;
       const vw = video.videoWidth, vh = video.videoHeight;
@@ -285,20 +454,49 @@
       setTimeout(() => flashEl.classList.remove('active'), 200);
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      conn.send({ type: 'photo', name: 'Handyscan_' + (sent + 1) + '.jpg', mime: 'image/jpeg', data: dataUrl });
+      sendPhoto(dataUrl, 'image/jpeg', 'Handyscan_' + (sent + 1) + '.jpg');
       sent++;
       countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
     };
 
     btnDone.onclick = () => {
-      if (conn) { try { conn.close(); } catch (e) { } }
-      if (peer) { try { peer.destroy(); } catch (e) { } }
-      if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { } }
+      finishSession();
       cameraWrap.classList.add('hidden');
       bottomBar.classList.add('hidden');
       permissionScreen.classList.remove('hidden');
       permissionScreen.innerHTML = '<div class="icon">✅</div><p>Verbindung beendet. Du kannst das Fenster schließen.</p>';
     };
+
+    // --- Modus 2: normale Kamera-App / Fotoauswahl ---
+    btnAppCapture.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      fileInput.value = '';
+      if (!file || !conn || !conn.open) return;
+      btnAppCapture.disabled = true;
+      btnAppCapture.textContent = 'Wird gesendet …';
+      const reader = new FileReader();
+      reader.onload = () => {
+        sendPhoto(reader.result, file.type, file.name || ('Handyscan_' + (sentApp + 1) + '.jpg'));
+        sentApp++;
+        countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
+        btnAppCapture.disabled = false;
+        btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    btnDoneApp.onclick = () => {
+      finishSession();
+      appModeScreen.innerHTML = '<div class="icon">✅</div><p>Verbindung beendet. Du kannst das Fenster schließen.</p>';
+    };
+
+    function finishSession() {
+      if (conn) { try { conn.close(); } catch (e) { } }
+      if (peer) { try { peer.destroy(); } catch (e) { } }
+      if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { } }
+    }
   </script>
 </body>
 
