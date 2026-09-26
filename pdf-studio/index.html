@@ -16,6 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <style>
     :root {
@@ -1115,6 +1117,7 @@
         <button id="btnChooseFiles" class="tool-btn">📂 Datei wählen</button>
         <button id="btnCameraScan" class="tool-btn">📷 Scan / Foto</button>
       </div>
+      <button id="btnPhoneScan" class="tool-btn" style="width:100%;margin-bottom:8px;">📱 Mit Handy scannen</button>
       <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
         einfügen</button>
 
@@ -1492,6 +1495,22 @@
             <button id="btnScanFilterDone" class="btn-primary">Seite übernehmen ✓</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Mit Handy scannen -->
+  <div id="modalPhoneScan" class="modal-backdrop">
+    <div class="modal-box" style="width:min(420px,100%); text-align:center;">
+      <h3>📱 Mit Handy scannen</h3>
+      <p style="color:var(--muted); font-size:.9rem;">Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
+        sich eine Scan-Seite im Handy-Browser – keine App nötig.</p>
+      <div id="phoneScanQr" style="display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;">
+        <span style="color:var(--muted); font-size:.85rem;">QR-Code wird erstellt …</span>
+      </div>
+      <p id="phoneScanStatus" style="font-weight:600; color:var(--accent);">Verbindung wird vorbereitet …</p>
+      <div class="modal-actions" style="justify-content:center;">
+        <button id="btnPhoneScanClose" class="tool-btn">Schließen</button>
       </div>
     </div>
   </div>
@@ -3935,6 +3954,91 @@
 
     $('btnScanCancel1').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
     $('btnScanCancel2').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
+
+    // ================= Mit Handy scannen (PeerJS: Handy-Kamera -> PC) =================
+    let phonePeer = null;
+    let phoneConn = null;
+    let phoneScanCount = 0;
+
+    function buildRemoteScanUrl(peerId) {
+      const base = window.location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
+      return base + 'remote-scan.html?p=' + encodeURIComponent(peerId);
+    }
+
+    // Appends a photo (from phone or elsewhere) to the existing scan queue.
+    // If the queue is currently idle, starts processing it immediately;
+    // otherwise it will be picked up automatically once the current item finishes.
+    function addPhoneScanFile(file) {
+      const wasIdle = scanQueue.index >= scanQueue.files.length;
+      scanQueue.files.push(file);
+      if (wasIdle) {
+        scanQueue.index = scanQueue.files.length - 1;
+        $('modalPhoneScan').classList.remove('open');
+        processNextScanFile();
+      }
+    }
+
+    function closePhoneScanSession() {
+      if (phoneConn) { try { phoneConn.close(); } catch (e) { } phoneConn = null; }
+      if (phonePeer) { try { phonePeer.destroy(); } catch (e) { } phonePeer = null; }
+    }
+
+    $('btnPhoneScan').onclick = () => {
+      closePhoneScanSession();
+      phoneScanCount = 0;
+      $('modalPhoneScan').classList.add('open');
+      $('phoneScanQr').innerHTML = '<span style="color:var(--muted);font-size:.85rem;">QR-Code wird erstellt …</span>';
+      $('phoneScanStatus').textContent = 'Verbindung wird vorbereitet …';
+
+      if (typeof Peer === 'undefined' || typeof QRCode === 'undefined') {
+        $('phoneScanStatus').textContent = 'Diese Funktion ist gerade nicht verfügbar (keine Internetverbindung).';
+        return;
+      }
+
+      phonePeer = new Peer();
+
+      phonePeer.on('open', (id) => {
+        const url = buildRemoteScanUrl(id);
+        $('phoneScanQr').innerHTML = '';
+        const canvas = document.createElement('canvas');
+        $('phoneScanQr').appendChild(canvas);
+        QRCode.toCanvas(canvas, url, { width: 220, margin: 1 }, (err) => {
+          if (err) $('phoneScanQr').innerHTML = '<span style="color:var(--muted);font-size:.85rem;">QR-Code konnte nicht erstellt werden.</span>';
+        });
+        $('phoneScanStatus').textContent = 'Bereit – mit Handy-Kamera den QR-Code scannen …';
+      });
+
+      phonePeer.on('connection', (conn) => {
+        phoneConn = conn;
+        $('phoneScanStatus').textContent = 'Handy verbunden ✓ – jetzt auf dem Handy fotografieren.';
+
+        conn.on('data', (data) => {
+          if (!data || data.type !== 'photo' || !data.data) return;
+          phoneScanCount++;
+          $('phoneScanStatus').textContent = `Handy verbunden ✓ – ${phoneScanCount} Foto(s) empfangen.`;
+          fetch(data.data)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], data.name || ('Handyscan_' + phoneScanCount + '.jpg'), { type: data.mime || 'image/jpeg' });
+              addPhoneScanFile(file);
+            })
+            .catch(() => { });
+        });
+
+        conn.on('close', () => {
+          $('phoneScanStatus').textContent = 'Handy-Verbindung beendet.';
+        });
+      });
+
+      phonePeer.on('error', () => {
+        $('phoneScanStatus').textContent = 'Verbindungsfehler – bitte schließen und erneut versuchen.';
+      });
+    };
+
+    $('btnPhoneScanClose').onclick = () => {
+      $('modalPhoneScan').classList.remove('open');
+      closePhoneScanSession();
+    };
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {

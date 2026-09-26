@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>Handy-Scanner – SD PDF Studio</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 4px;
+    }
+
+    p {
+      color: #9fb3c8;
+      font-size: .95rem;
+      margin: 4px 0;
+      max-width: 320px;
+    }
+
+    #status {
+      margin: 18px 0 6px;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .btn {
+      background: #d66b45;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 18px 30px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 22px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .btn:disabled {
+      background: #445164;
+      opacity: .7;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #9fb3c8;
+      border: 1px solid #445164;
+      font-size: .95rem;
+      font-weight: 600;
+      padding: 12px 24px;
+    }
+
+    #count {
+      margin-top: 16px;
+      font-size: .9rem;
+      color: #9fb3c8;
+    }
+
+    .icon {
+      font-size: 2.4rem;
+      margin-bottom: 6px;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="icon">📱</div>
+  <h1>Handy-Scanner</h1>
+  <p>Verbindet sich automatisch mit deinem PC (SD PDF Studio).</p>
+  <div id="status">Verbinde …</div>
+  <button id="btnCapture" class="btn" disabled>📸 Foto aufnehmen</button>
+  <button id="btnDone" class="btn btn-secondary">Fertig – Verbindung beenden</button>
+  <input type="file" id="fileInput" accept="image/*" capture="environment">
+  <div id="count"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('p');
+    const statusEl = document.getElementById('status');
+    const btn = document.getElementById('btnCapture');
+    const btnDone = document.getElementById('btnDone');
+    const fileInput = document.getElementById('fileInput');
+    const countEl = document.getElementById('count');
+    let sent = 0;
+    let conn = null;
+    let peer = null;
+
+    if (!targetId) {
+      statusEl.textContent = 'Kein PC gefunden. Bitte QR-Code am PC neu scannen.';
+    } else if (typeof Peer === 'undefined') {
+      statusEl.textContent = 'Keine Internetverbindung.';
+    } else {
+      peer = new Peer();
+
+      peer.on('open', () => {
+        conn = peer.connect(targetId, { reliable: true });
+
+        conn.on('open', () => {
+          statusEl.textContent = 'Verbunden mit PC ✓';
+          btn.disabled = false;
+        });
+
+        conn.on('close', () => {
+          statusEl.textContent = 'Verbindung beendet.';
+          btn.disabled = true;
+        });
+
+        conn.on('error', () => {
+          statusEl.textContent = 'Verbindungsfehler.';
+          btn.disabled = true;
+        });
+      });
+
+      peer.on('error', () => {
+        statusEl.textContent = 'Verbindung fehlgeschlagen. Bitte QR-Code am PC neu scannen.';
+      });
+    }
+
+    btn.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      fileInput.value = '';
+      if (!file || !conn || !conn.open) return;
+      btn.disabled = true;
+      btn.textContent = 'Wird gesendet …';
+      const reader = new FileReader();
+      reader.onload = () => {
+        conn.send({ type: 'photo', name: file.name, mime: file.type, data: reader.result });
+        sent++;
+        countEl.textContent = sent + ' Foto(s) gesendet ✓';
+        btn.disabled = false;
+        btn.textContent = '📸 Noch ein Foto aufnehmen';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    btnDone.onclick = () => {
+      if (conn) { try { conn.close(); } catch (e) { } }
+      if (peer) { try { peer.destroy(); } catch (e) { } }
+      statusEl.textContent = 'Verbindung beendet. Du kannst das Fenster schließen.';
+      btn.disabled = true;
+      btnDone.disabled = true;
+    };
+  </script>
+</body>
+
+</html>
