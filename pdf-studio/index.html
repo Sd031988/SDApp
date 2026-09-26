@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#173b3f">
   <link rel="manifest" href="manifest.json">
   <title>PDF Studio – Dokumente, Scans, Office & Formulare bearbeiten</title>
@@ -459,6 +459,11 @@
       align-items: flex-start;
       justify-content: center;
       position: relative;
+      /* Erlaubt normales Scrollen mit einem Finger, aber verhindert, dass
+         der Browser selbst ein Zwei-Finger-Pinch als Seiten-Zoom deutet -
+         das Pinch-Gesture wird stattdessen per JS abgefangen und zoomt
+         gezielt nur das Papier/die Seite (siehe Pinch-Zoom weiter unten). */
+      touch-action: pan-x pan-y;
     }
 
     /* Canvas Wrapper */
@@ -548,18 +553,43 @@
       display: flex;
     }
 
-    /* OCR Word Badges */
+    /* OCR Word Badges - nur im Korrektur-Modus aktiv/klickbar,
+       damit beim normalen Arbeiten (Stift, Marker, Auswählen, ...)
+       kein Hover-Tooltip auf jedem Wort erscheint. */
     .ocr-word-hit {
       position: absolute;
       z-index: 4;
       border: 1px dashed transparent;
       color: transparent;
-      cursor: pointer;
+      cursor: default;
+      pointer-events: none;
     }
 
-    .ocr-word-hit:hover {
+    .tool-correct .ocr-word-hit {
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .tool-correct .ocr-word-hit:hover {
       background: rgba(47, 125, 114, 0.18);
       border-color: #2f7d72;
+    }
+
+    /* Schwebende Info-Anzeige: zeigt beim Hover im Korrektur-Modus
+       die erkannte Schriftgröße/-art an der Mausposition an. */
+    #fontHintBadge {
+      position: fixed;
+      z-index: 999;
+      display: none;
+      pointer-events: none;
+      background: #172a3a;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: bold;
+      padding: 5px 9px;
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(23, 42, 58, 0.3);
+      white-space: nowrap;
     }
 
     /* Right Inspector / Properties Panel */
@@ -908,10 +938,55 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Direkt drucken: Beim Klick auf "Drucken" wird jede Seite als fertiges
+       Bild in einen eigenen, sonst unsichtbaren Druckbereich gerendert
+       (inkl. aller Schwaerzungen/Whiteouts/Notizen/Unterschriften - also
+       exakt wie im Editor sichtbar). Beim Drucken wird ausschliesslich
+       dieser Bereich gezeigt - kein Werkzeugleisten-/Seitenleisten-Rand,
+       kein Browser-Papierrand, sauber pro Seite. */
+    #printContainer {
+      display: none;
+    }
+
+    @page {
+      size: auto;
+      margin: 0;
+    }
+
+    @media print {
+      body.printing-mode > *:not(#printContainer) {
+        display: none !important;
+      }
+
+      body.printing-mode {
+        margin: 0;
+        background: #ffffff;
+      }
+
+      body.printing-mode #printContainer {
+        display: block !important;
+      }
+
+      #printContainer img {
+        display: block;
+        width: 100%;
+        height: auto;
+        page-break-after: always;
+      }
+
+      #printContainer img:last-child {
+        page-break-after: auto;
+      }
+    }
   </style>
 </head>
 
 <body>
+  <script src="../zugang.js"></script>
+
+  <div id="fontHintBadge"></div>
+  <div id="printContainer"></div>
 
   <!-- Top Navigation Bar -->
   <header class="topbar">
@@ -943,6 +1018,9 @@
       <button id="btnOpenConvertModal" class="btn-convert"
         title="Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt">
         🔄 Konvertieren
+      </button>
+      <button id="btnPrint" class="nav-btn" title="Alle Seiten direkt drucken" disabled>
+        🖨️ Drucken
       </button>
       <button id="btnExport" class="btn-primary" disabled>
         📥 PDF Speichern
@@ -1001,6 +1079,10 @@
         </button>
         <button class="tool-tab" data-tool="highlight" title="Textmarker: Text gelb/bunt hervorheben">
           🖍️ Marker
+        </button>
+        <button class="tool-tab" data-tool="correct"
+          title="Korrektur: Erkannten Text im Dokument anklicken, um ihn zu ersetzen oder auszufüllen">
+          🩹 Korrektur
         </button>
         <div class="tool-divider"></div>
         <button class="tool-tab" data-tool="redact" title="Schwärzen: Vertrauliche Daten verdecken">
@@ -1121,6 +1203,25 @@
           </div>
           <div class="color-dot" data-hcolor="rgba(251, 146, 60, 0.42)" style="background:#fed7aa;"
             title="Leuchtorange"></div>
+        </div>
+      </div>
+
+      <!-- Korrektur Info Box -->
+      <div id="panelCorrect" class="control-box" style="display:none;">
+        <div class="inspector-title">🩹 Korrektur-Modus</div>
+        <p style="font-size:0.8rem;color:var(--muted);margin:0 0 10px;">
+          Klicke im Dokument direkt auf ein erkanntes Wort oder eine Stelle, um sie zu ersetzen
+          oder ein leeres Feld auszufüllen. Fahre mit der Maus über eine Stelle, um Schriftgröße,
+          Schriftart (sofern im Dokument ermittelbar) und Fettdruck angezeigt zu bekommen – diese
+          werden bei der Korrektur automatisch übernommen, damit der Ersatztext an derselben
+          Stelle und im gleichen Stil wie das Original erscheint.
+        </p>
+        <div class="form-row">
+          <label>Was möchtest du korrigieren?</label>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <button type="button" id="scopeWortBtn" class="tpl-btn active" style="flex:1;">Nur ein Wort</button>
+            <button type="button" id="scopeSatzBtn" class="tpl-btn" style="flex:1;">Ganzer Satz/Zeile</button>
+          </div>
         </div>
       </div>
 
@@ -1321,7 +1422,8 @@
     const state = {
       pages: [],
       selectedPageId: null,
-      activeTool: 'select', // 'select' | 'pen' | 'eraser' | 'text' | 'highlight' | 'redact' | 'whiteout'
+      activeTool: 'select', // 'select' | 'pen' | 'eraser' | 'text' | 'highlight' | 'redact' | 'whiteout' | 'correct'
+      correctionScope: 'wort', // 'wort' | 'satz' - im Korrektur-Modus: einzelnes Wort oder ganze Zeile/Satz
       penColor: '#1a4480',
       penWidth: 1.8,
       highlightColor: 'rgba(255, 235, 59, 0.45)',
@@ -1540,12 +1642,17 @@
           page.rawTextItems = textContent.items.filter(i => i.str && i.str.trim()).map(item => {
             const transform = pdfjsLib.Util.transform(viewport.transform, item.transform);
             const h = Math.max(10, Math.abs(transform[3]));
+            // Wenn das PDF selbst eine Schriftfamilie mitliefert (eingebettete
+            // Schriftinfo), wird sie fuer die Anzeige im Korrektur-Modus genutzt.
+            const stilInfo = textContent.styles && item.fontName ? textContent.styles[item.fontName] : null;
+            const erkannteSchrift = stilInfo && stilInfo.fontFamily ? stilInfo.fontFamily : null;
             return {
               text: item.str,
               x: transform[4] / canvas.width,
               y: (transform[5] - h) / canvas.height,
               width: Math.max(8, item.width * viewport.scale) / canvas.width,
-              height: h / canvas.height
+              height: h / canvas.height,
+              fontFamily: erkannteSchrift
             };
           });
         } catch (e) { }
@@ -1705,6 +1812,7 @@
       }
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = !state.pages.length;
+      $('btnPrint').disabled = !state.pages.length;
       renderSidebarPages();
       renderStage();
       showToast(`${state.pages.length} Seite(n) bereit`);
@@ -1725,6 +1833,7 @@
       state.selectedPageId = blankPage.id;
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = false;
+      $('btnPrint').disabled = false;
       renderSidebarPages();
       renderStage();
       showToast('Neue leere A4-Seite hinzugefügt');
@@ -1742,11 +1851,13 @@
           </div>`;
         $('pageCount').textContent = '0';
         $('btnExport').disabled = true;
+        $('btnPrint').disabled = true;
         return;
       }
 
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = false;
+      $('btnPrint').disabled = false;
 
       state.pages.forEach((page, index) => {
         const card = document.createElement('div');
@@ -1914,8 +2025,11 @@
       $('panelText').style.display = 'none';
       $('panelHighlight').style.display = 'none';
       $('panelOcr').style.display = 'none';
+      $('panelCorrect').style.display = 'none';
 
-      if (state.activeTool === 'pen' || state.activeTool === 'eraser') {
+      if (state.activeTool === 'correct') {
+        $('panelCorrect').style.display = 'block';
+      } else if (state.activeTool === 'pen' || state.activeTool === 'eraser') {
         $('panelPen').style.display = 'block';
       } else if (state.activeTool === 'text') {
         $('panelText').style.display = 'block';
@@ -2447,47 +2561,257 @@
       });
     }
 
+    function setzeKorrekturBereich(bereich) {
+      state.correctionScope = bereich;
+      const wortBtn = $('scopeWortBtn'), satzBtn = $('scopeSatzBtn');
+      if (wortBtn) wortBtn.classList.toggle('active', bereich === 'wort');
+      if (satzBtn) satzBtn.classList.toggle('active', bereich === 'satz');
+      renderStage();
+    }
+    // Hinweis: die Buttons werden bewusst per addEventListener verdrahtet
+    // (statt per inline onclick="..." im HTML) - innerhalb eines
+    // <script type="module"> sind Top-Level-Funktionen NICHT automatisch
+    // auf window verfuegbar, weshalb ein inline onclick sonst wirkungslos
+    // bleibt (das war die Ursache dafuer, dass "Ganzer Satz/Zeile" nicht
+    // reagierte).
+    if ($('scopeWortBtn')) $('scopeWortBtn').addEventListener('click', () => setzeKorrekturBereich('wort'));
+    if ($('scopeSatzBtn')) $('scopeSatzBtn').addEventListener('click', () => setzeKorrekturBereich('satz'));
+
+    // Gruppiert einzelne erkannte Woerter zu Zeilen/Saetzen, wenn sie auf
+    // etwa derselben Hoehe liegen (Toleranz relativ zur Wortgroesse).
+    // So kann im "Ganzer Satz"-Modus die komplette Zeile auf einmal
+    // ausgewaehlt und korrigiert werden statt nur ein einzelnes Wort.
+    function gruppiereZeilen(rawTextItems) {
+      const woerter = [...rawTextItems].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+      const zeilen = [];
+      woerter.forEach(w => {
+        const mitteY = w.y + w.height / 2;
+        let zeile = zeilen.find(z => Math.abs(z.mitteY - mitteY) < (w.height * 0.6));
+        if (!zeile) {
+          zeile = { mitteY, woerter: [] };
+          zeilen.push(zeile);
+        }
+        zeile.woerter.push(w);
+      });
+      return zeilen.map(z => {
+        const geordnet = z.woerter.sort((a, b) => a.x - b.x);
+        const x = Math.min(...geordnet.map(w => w.x));
+        const y = Math.min(...geordnet.map(w => w.y));
+        const rechts = Math.max(...geordnet.map(w => w.x + w.width));
+        const unten = Math.max(...geordnet.map(w => w.y + w.height));
+        return {
+          text: geordnet.map(w => w.text).join(' '),
+          x, y,
+          width: rechts - x,
+          height: unten - y,
+          fontFamily: geordnet[0].fontFamily
+        };
+      });
+    }
+
     function renderOcrBadges(stageWrap, page, baseWidth, baseHeight) {
       if (!page.rawTextItems || !page.rawTextItems.length) return;
-      page.rawTextItems.forEach(word => {
+      const bereiche = state.correctionScope === 'satz'
+        ? gruppiereZeilen(page.rawTextItems)
+        : page.rawTextItems;
+
+      bereiche.forEach(stueck => {
         const span = document.createElement('div');
         span.className = 'ocr-word-hit';
-        span.style.left = (word.x * 100) + '%';
-        span.style.top = (word.y * 100) + '%';
-        span.style.width = (word.width * 100) + '%';
-        span.style.height = (word.height * 100) + '%';
-        span.title = `"${word.text}" – Klicken zum Korrigieren/Ausfüllen`;
+        span.style.left = (stueck.x * 100) + '%';
+        span.style.top = (stueck.y * 100) + '%';
+        span.style.width = (stueck.width * 100) + '%';
+        span.style.height = (stueck.height * 100) + '%';
 
-        span.onclick = (e) => {
+        let hinweisInfo = null; // wird beim ersten Hover ermittelt und zwischengespeichert
+
+        span.onmousemove = async (e) => {
+          if (!hinweisInfo) {
+            hinweisInfo = await ermittleSchriftEigenschaften(page, stueck, baseHeight);
+          }
+          zeigeFontHinweis(e, stueck.text, hinweisInfo);
+        };
+        span.onmouseleave = () => verbergeFontHinweis();
+
+        span.onclick = async (e) => {
           e.stopPropagation();
-          const repl = prompt(`Wort ersetzen:\nOriginal: "${word.text}"`, word.text);
-          if (repl !== null && repl !== word.text) {
+          verbergeFontHinweis();
+          const beschriftung = state.correctionScope === 'satz'
+            ? `Satz/Zeile ersetzen oder ausfüllen:\nOriginal: "${stueck.text}"`
+            : `Wort ersetzen oder ausfüllen:\nOriginal: "${stueck.text}"`;
+          const repl = prompt(beschriftung, stueck.text);
+          if (repl !== null && repl !== stueck.text) {
             pushUndoState();
+            const info = hinweisInfo || await ermittleSchriftEigenschaften(page, stueck, baseHeight);
             page.shapes.push({
               id: 'shp_' + Date.now(),
               type: 'whiteout',
-              x: word.x - 0.002,
-              y: word.y - 0.002,
-              width: word.width + 0.004,
-              height: word.height + 0.004
+              x: stueck.x - 0.002,
+              y: stueck.y - 0.002,
+              width: stueck.width + 0.004,
+              height: stueck.height + 0.004
             });
             page.overlays.push({
               id: 'txt_' + Date.now(),
               type: 'text',
               text: repl,
-              x: word.x,
-              y: word.y,
-              font: 'Arial, sans-serif',
-              size: 15,
-              color: '#173b3f',
-              bold: false
+              x: stueck.x,
+              y: stueck.y,
+              // Schriftart fuer die Korrektur: Calibri wurde als die in
+              // diesem Dokumenttyp tatsaechlich verwendete Schrift optisch
+              // identifiziert (typische Firmen-/Behoerdenschrift, seit 2007
+              // Word-Standardschrift). Carlito ist die metrisch identische
+              // freie Alternative (falls Calibri auf dem Geraet fehlt),
+              // Arial/sans-serif greifen nur als letzter Ausweg.
+              font: 'Calibri, Carlito, Arial, sans-serif',
+              size: info.groesse,
+              color: info.farbe,
+              bold: !!info.fett
             });
             renderStage();
-            showToast('Textstelle korrigiert');
+            showToast(`Textstelle korrigiert (Schriftgröße, Farbe${info.fett ? ' & Fettdruck' : ''} automatisch übernommen)`);
           }
         };
         stageWrap.appendChild(span);
       });
+    }
+
+    function zeigeFontHinweis(e, text, info) {
+      const badge = $('fontHintBadge');
+      if (!badge) return;
+      const kurzText = text.length > 28 ? text.slice(0, 28) + '…' : text;
+      const fettTeil = info.fettUnsicher ? '' : (info.fett ? ' · Fett' : ' · nicht fett');
+      badge.textContent = `"${kurzText}" · ${info.groesse}px · ${info.schriftart}${fettTeil}`;
+      badge.style.display = 'block';
+      badge.style.left = (e.clientX + 14) + 'px';
+      badge.style.top = (e.clientY + 14) + 'px';
+    }
+
+    function verbergeFontHinweis() {
+      const badge = $('fontHintBadge');
+      if (badge) badge.style.display = 'none';
+    }
+
+    // Ermittelt fuer eine Textstelle einen dokumenteigenen "Normalwert" der
+    // Tinten-Dichte (Anteil dunkler Pixel im Textkasten), indem eine
+    // Stichprobe mehrerer Textstellen auf DERSELBEN Seite abgetastet wird.
+    // Dieser Wert dient als Vergleichs-Basislinie fuer die Fettdruck-
+    // Erkennung weiter unten: statt eines fixen globalen Schwellenwerts
+    // (der bei wechselnder Scan-Qualitaet/DPI zu haeufigen Fehlalarmen
+    // fuehrte), wird eine Textstelle nur dann als fett eingestuft, wenn
+    // ihre Tinten-Dichte deutlich UEBER dem Durchschnitt dieses konkreten
+    // Dokuments liegt. Das Ergebnis wird pro Seite zwischengespeichert.
+    async function ermittleTintenBasislinie(page) {
+      if (page._inkBaseline !== undefined) return page._inkBaseline;
+      page._inkBaseline = null;
+      try {
+        const items = page.rawTextItems || [];
+        if (items.length < 5) return null;
+        const img = await loadImage(page.src);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        // Bis zu 40 gleichmaessig ueber die Seite verteilte Textstellen
+        // abtasten, statt aller (Performance) - reicht fuer einen
+        // stabilen Durchschnittswert.
+        const schritt = Math.max(1, Math.floor(items.length / 40));
+        let summe = 0, anzahlProben = 0;
+        for (let idx = 0; idx < items.length; idx += schritt) {
+          const stk = items[idx];
+          const px = Math.max(0, Math.round(stk.x * canvas.width));
+          const py = Math.max(0, Math.round(stk.y * canvas.height));
+          const pw = Math.max(1, Math.min(canvas.width - px, Math.round(stk.width * canvas.width)));
+          const ph = Math.max(1, Math.min(canvas.height - py, Math.round(stk.height * canvas.height)));
+          if (pw < 2 || ph < 2) continue;
+          const data = ctx.getImageData(px, py, pw, ph).data;
+          let dunkel = 0, gueltig = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] < 200) continue;
+            gueltig++;
+            const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            if (lum < 170) dunkel++;
+          }
+          if (gueltig > 20) { summe += dunkel / gueltig; anzahlProben++; }
+        }
+        // Nur mit ausreichend vielen Proben eine Basislinie annehmen -
+        // sonst lieber gar keine Fettdruck-Aussage treffen (siehe unten).
+        page._inkBaseline = anzahlProben >= 5 ? (summe / anzahlProben) : null;
+      } catch (e) { page._inkBaseline = null; }
+      return page._inkBaseline;
+    }
+
+    // Ermittelt bestmoeglich Schriftgroesse, Textfarbe, Fettdruck und eine
+    // Schriftart-Angabe an der Original-Textstelle, damit eine Korrektur
+    // optisch zum Rest des Dokuments passt.
+    // Hinweise:
+    // - Die Schriftgroesse stammt aus der PDF-Textposition (bzw. bei
+    //   OCR-Scans aus der erkannten Zeichenhoehe).
+    // - Die Farbe wird durch Abtasten der Pixel an der Original-Textstelle
+    //   ermittelt (dunkelster undurchsichtiger Pixel im Wort-/Zeilenbereich).
+    // - Fettdruck wird relativ zur Tinten-Dichte-Basislinie DIESES
+    //   Dokuments erkannt (siehe ermittleTintenBasislinie oben), nicht ueber
+    //   einen fixen globalen Schwellenwert - das war die Ursache dafuer,
+    //   dass zuvor fast ueberall faelschlich "Fett" angezeigt wurde. Kann
+    //   keine verlaessliche Basislinie ermittelt werden (z.B. zu wenige
+    //   erkannte Textstellen), wird auf eine Fettdruck-Aussage verzichtet,
+    //   statt zu raten.
+    // - Die genaue Original-Schriftart kann nur angezeigt werden, wenn das
+    //   PDF selbst eine eingebettete Schriftfamilie mitliefert. Bei
+    //   OCR-erkanntem Text (aus einem gescannten Bild) gibt es grundsaetzlich
+    //   keine Schriftart-Information - das wird ehrlich als "nicht
+    //   ermittelbar" ausgewiesen, statt faelschlich "Arial" zu behaupten.
+    async function ermittleSchriftEigenschaften(page, stueck, baseHeight) {
+      const groesse = Math.max(9, Math.round(stueck.height * baseHeight));
+      let farbe = '#173b3f';
+      let fett = false;
+      let fettUnsicher = true;
+      const schriftart = stueck.fontFamily || 'nicht ermittelbar (Ersatzschrift: Calibri)';
+      try {
+        const img = await loadImage(page.src);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const px = Math.max(0, Math.round(stueck.x * canvas.width));
+        const py = Math.max(0, Math.round(stueck.y * canvas.height));
+        const pw = Math.max(1, Math.min(canvas.width - px, Math.round(stueck.width * canvas.width)));
+        const ph = Math.max(1, Math.min(canvas.height - py, Math.round(stueck.height * canvas.height)));
+        const data = ctx.getImageData(px, py, pw, ph).data;
+
+        // Den dunkelsten (undurchsichtigen) Pixel im Bereich suchen -
+        // das ist typischerweise die eigentliche Textfarbe, nicht der Hintergrund.
+        let minLum = 999, r0 = 23, g0 = 59, b0 = 63;
+        let dunklePixel = 0, gueltigePixel = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+          if (a < 200) continue;
+          gueltigePixel++;
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          if (lum < minLum) { minLum = lum; r0 = r; g0 = g; b0 = b; }
+          if (lum < 170) dunklePixel++;
+        }
+        if (minLum < 235) {
+          farbe = '#' + [r0, g0, b0].map(v => v.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Fettdruck nur einstufen, wenn genug Pixel UND eine verlaessliche
+        // dokumenteigene Basislinie vorhanden sind, und nur bei deutlichem
+        // (nicht nur knappem) Ueberschreiten dieser Basislinie.
+        if (gueltigePixel > 20) {
+          const basislinie = await ermittleTintenBasislinie(page);
+          if (basislinie !== null && basislinie > 0.01) {
+            const dichte = dunklePixel / gueltigePixel;
+            fett = dichte > basislinie * 1.35 && (dichte - basislinie) > 0.06;
+            fettUnsicher = false;
+          }
+        }
+      } catch (e) { /* Bei Fehler bleiben Standardwerte erhalten */ }
+      return { groesse, farbe, fett, fettUnsicher, schriftart };
     }
 
     // --- Signature Pad Engine ---
@@ -2651,6 +2975,49 @@
       updateZoom(Math.min(1.2, Math.max(0.5, fitZoom)));
     };
 
+    // --- Pinch-Zoom mit dem Finger (Touch) ---
+    // Vorher loeste ein Zwei-Finger-Pinch auf dem Papier den nativen
+    // Browser-Zoom der GESAMTEN Seite/Oberflaeche aus (Toolbar, Sidebar,
+    // alles wurde mitvergroessert). Gewuenscht ist, dass ein Pinch auf dem
+    // Dokument NUR das Papier selbst vergroessert - genau wie die
+    // "+"/"-"-Zoom-Buttons es bereits tun (state.zoom / updateZoom).
+    // Dazu wird der native Seiten-Zoom per Viewport-Meta unterbunden
+    // (maximum-scale=1, user-scalable=no) und stattdessen hier ein eigenes
+    // Pinch-Gesture erkannt, das denselben updateZoom()-Mechanismus nutzt.
+    (function initPinchZoom() {
+      const viewport = $('stageViewport');
+      if (!viewport) return;
+      let pinchStartDist = null;
+      let pinchStartZoom = 1;
+
+      function abstand(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.hypot(dx, dy);
+      }
+
+      viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          pinchStartDist = abstand(e.touches);
+          pinchStartZoom = state.zoom;
+        }
+      }, { passive: true });
+
+      viewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && pinchStartDist) {
+          e.preventDefault(); // verhindert den nativen Seiten-Zoom des Browsers
+          const neuerAbstand = abstand(e.touches);
+          const verhaeltnis = neuerAbstand / pinchStartDist;
+          updateZoom(pinchStartZoom * verhaeltnis);
+        }
+      }, { passive: false });
+
+      viewport.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) pinchStartDist = null;
+      });
+      viewport.addEventListener('touchcancel', () => { pinchStartDist = null; });
+    })();
+
     // --- PDF Export Engine ---
     $('btnExport').onclick = async () => {
       if (!state.pages.length) return;
@@ -2707,6 +3074,36 @@
         $('btnExport').disabled = false;
       }
     };
+
+    // Direkt drucken: rendert jede Seite (inkl. aller Bearbeitungen) als
+    // fertiges Bild in den versteckten Druckbereich und ruft dann den
+    // normalen Browser-Druckdialog auf - von dort kann direkt ein
+    // angeschlossener Drucker gewaehlt werden, ganz ohne Umweg ueber
+    // "PDF speichern" und das Oeffnen einer separaten Datei.
+    $('btnPrint').onclick = async () => {
+      if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
+      showToast('Druckvorschau wird vorbereitet ...', 4000);
+      try {
+        const container = $('printContainer');
+        container.innerHTML = '';
+        for (const page of state.pages) {
+          const canvas = await renderPageToCanvas(page, 2.0);
+          const img = document.createElement('img');
+          img.src = canvas.toDataURL('image/jpeg', 0.92);
+          container.appendChild(img);
+        }
+        document.body.classList.add('printing-mode');
+        window.print();
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler bei der Druckvorbereitung');
+        document.body.classList.remove('printing-mode');
+      }
+    };
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-mode');
+    });
 
     function getBaseFilename() {
       let title = $('docTitle').value.trim() || 'Bewerbung_Dokumente';
@@ -2787,9 +3184,15 @@
     }
 
     // 1. PDF ➔ Word (.docx) Export
+    // Jede Seite wird als vollstaendiges Bild eingebettet (inkl. Layout, Fotos,
+    // Schwaerzungen/Whiteout, handschriftlichen Ergaenzungen, Unterschriften
+    // und Korrekturen - also exakt so, wie man es im Editor sieht), und
+    // zusaetzlich als bearbeitbarer/durchsuchbarer Text darunter angehaengt.
+    // So gehen weder das Format noch Bilder verloren, wie es bei reiner
+    // Text-Extraktion vorher der Fall war.
     $('btnConvWord').onclick = async () => {
       if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
-      showToast('Word-Dokument (.docx) wird erstellt...');
+      showToast('Word-Dokument (.docx) wird erstellt (mit Bildern & Layout) ...', 6000);
 
       const pageData = extractTextLinesFromPages();
 
@@ -2801,28 +3204,85 @@
         return `<w:p>${isHeader ? '<w:pPr><w:pStyle w:val="Heading1"/></w:pPr>' : ''}<w:r><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
       }
 
+      // Nutzbare Breite bei A4 und 1 Zoll (1440 Twips) Rand auf jeder Seite:
+      // 8.27in Seitenbreite - 2in Raender = 6.27in => in EMU (1in = 914400 EMU).
+      const USABLE_WIDTH_EMU = 5734050;
+
+      const zip = new window.JSZip();
+      const mediaFolder = zip.folder('word/media');
       let documentBody = '';
-      pageData.forEach((p, idx) => {
+      let relEntries = '';
+      let relIdCounter = 3; // rId1 = (ungenutzt in dieser Datei), rId2 = styles.xml
+
+      for (let idx = 0; idx < state.pages.length; idx++) {
+        const page = state.pages[idx];
         if (idx > 0) documentBody += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
-        documentBody += makeParagraph(`=== ${p.pageName} (Seite ${p.pageNumber}) ===`, true);
-        p.lines.forEach(line => {
-          documentBody += makeParagraph(line);
-        });
-      });
+        documentBody += makeParagraph(`${page.name}`, true);
+
+        try {
+          const canvas = await renderPageToCanvas(page, 2.0);
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+          const buffer = await blob.arrayBuffer();
+          const imageName = `image${idx + 1}.jpg`;
+          mediaFolder.file(imageName, buffer);
+          const rId = 'rId' + (relIdCounter++);
+          relEntries += `<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${imageName}"/>`;
+
+          const emuWidth = USABLE_WIDTH_EMU;
+          const emuHeight = Math.round(emuWidth * (canvas.height / canvas.width));
+
+          documentBody += `<w:p><w:r><w:drawing>
+            <wp:inline distT="0" distB="0" distL="0" distR="0">
+              <wp:extent cx="${emuWidth}" cy="${emuHeight}"/>
+              <wp:docPr id="${idx + 1}" name="Seite${idx + 1}"/>
+              <a:graphic>
+                <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:pic>
+                    <pic:nvPicPr>
+                      <pic:cNvPr id="${idx + 1}" name="Seite${idx + 1}.jpg"/>
+                      <pic:cNvPicPr/>
+                    </pic:nvPicPr>
+                    <pic:blipFill>
+                      <a:blip r:embed="${rId}"/>
+                      <a:stretch><a:fillRect/></a:stretch>
+                    </pic:blipFill>
+                    <pic:spPr>
+                      <a:xfrm><a:off x="0" y="0"/><a:ext cx="${emuWidth}" cy="${emuHeight}"/></a:xfrm>
+                      <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                    </pic:spPr>
+                  </pic:pic>
+                </a:graphicData>
+              </a:graphic>
+            </wp:inline>
+          </w:drawing></w:r></w:p>`;
+        } catch (e) {
+          documentBody += makeParagraph('[Seitenbild konnte nicht eingebettet werden]');
+        }
+
+        if (pageData[idx] && pageData[idx].lines.length) {
+          documentBody += makeParagraph('Erkannter Text dieser Seite (bearbeitbar):', true);
+          pageData[idx].lines.forEach(line => { documentBody += makeParagraph(line); });
+        }
+      }
 
       const fullDocXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+                  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
+                  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
         <w:body>
           ${documentBody}
           <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
         </w:body>
       </w:document>`;
 
-      const zip = new window.JSZip();
       zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8"?>
       <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
         <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
         <Default Extension="xml" ContentType="application/xml"/>
+        <Default Extension="jpg" ContentType="image/jpeg"/>
+        <Default Extension="jpeg" ContentType="image/jpeg"/>
         <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
         <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
       </Types>`);
@@ -2835,6 +3295,7 @@
       zip.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8"?>
       <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
         <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+        ${relEntries}
       </Relationships>`);
 
       zip.file('word/document.xml', fullDocXml);
@@ -2852,7 +3313,7 @@
 
       const content = await zip.generateAsync({ type: 'blob' });
       triggerDownload(content, getFilenameWithExt('docx'));
-      showToast('✅ Word-Dokument erfolgreich exportiert!');
+      showToast('✅ Word-Dokument mit Bild, Layout & Text erfolgreich exportiert!');
       $('modalConvert').classList.remove('open');
     };
 
