@@ -18,6 +18,8 @@
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+  <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
 
   <style>
     :root {
@@ -878,6 +880,57 @@
       color: var(--accent);
     }
 
+    .doctype-row {
+      margin-bottom: 12px;
+    }
+
+    .doctype-label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .doctype-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .doctype-btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 9px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #f8f5f0;
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .doctype-btn.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    .ausweis-banner {
+      display: none;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--accent-hover);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .ausweis-banner.show {
+      display: block;
+    }
+
     .convert-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1460,6 +1513,16 @@
       <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;" id="scanEnhanceHint">
         Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter“.
       </p>
+
+      <div class="doctype-row" id="scanDoctypeRow">
+        <span class="doctype-label">Was scannst du?</span>
+        <div class="doctype-options">
+          <button type="button" class="doctype-btn selected" data-type="dokument">📄 Dokument</button>
+          <button type="button" class="doctype-btn" data-type="reisepass">🛂 Reisepass</button>
+          <button type="button" class="doctype-btn" data-type="ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
+        </div>
+      </div>
+      <div class="ausweis-banner" id="scanAusweisBanner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.</div>
 
       <div id="scanCropStage">
         <div class="scan-crop-wrap" id="scanCropWrap">
@@ -3666,6 +3729,66 @@
     let scanSelectedFilter = 'auto';
     const SCAN_MAX_DIM = 1600;
 
+    // ---- Dokumenttyp (Dokument / Reisepass / Ausweis mit Vorder- & Rückseite) ----
+    let scanDocType = 'dokument';
+    let scanAusweisSide = 'front';
+
+    document.querySelectorAll('#scanDoctypeRow .doctype-btn').forEach(btn => {
+      btn.onclick = () => {
+        scanDocType = btn.dataset.type;
+        scanAusweisSide = 'front';
+        document.querySelectorAll('#scanDoctypeRow .doctype-btn').forEach(b => b.classList.toggle('selected', b === btn));
+        $('scanAusweisBanner').classList.remove('show');
+      };
+    });
+
+    function scanCurrentLabel() {
+      if (scanDocType === 'ausweis') return scanAusweisSide === 'front' ? 'Ausweis Vorderseite' : 'Ausweis Rückseite';
+      if (scanDocType === 'reisepass') return 'Reisepass';
+      return 'Scan';
+    }
+
+    // ---- Automatische Kantenerkennung (jscanify + OpenCV.js), läuft komplett im Browser ----
+    let scanCvReady = false;
+    (function waitForScanCv() {
+      if (typeof cv !== 'undefined') {
+        cv['onRuntimeInitialized'] = () => { scanCvReady = true; };
+      } else {
+        setTimeout(waitForScanCv, 300);
+      }
+    })();
+
+    function scanPolygonArea(pts) {
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        area += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+      }
+      return Math.abs(area / 2);
+    }
+
+    function scanCornersLookValid(pts, w, h) {
+      if (!pts.every(p => isFinite(p.x) && isFinite(p.y))) return false;
+      const area = scanPolygonArea(pts);
+      const full = w * h;
+      return area > full * 0.15 && area < full * 0.98;
+    }
+
+    function scanTryAutoDetect(canvas) {
+      try {
+        if (!scanCvReady || typeof jscanify === 'undefined' || typeof cv === 'undefined' || !cv.Mat) return null;
+        const scanner = new jscanify();
+        const mat = cv.imread(canvas);
+        const contour = scanner.findPaperContour(mat);
+        const pts = scanner.getCornerPoints(contour);
+        mat.delete();
+        if (!pts || !pts.topLeftCorner) return null;
+        return [pts.topLeftCorner, pts.topRightCorner, pts.bottomRightCorner, pts.bottomLeftCorner];
+      } catch (e) {
+        return null;
+      }
+    }
+
     function startScanEnhanceQueue(files) {
       if (!files.length) return;
       scanQueue.files = files;
@@ -3704,13 +3827,22 @@
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
       const margin = 0.06;
-      scanCorners = [
+      const defaultCorners = [
         { x: w * margin, y: h * margin },
         { x: w * (1 - margin), y: h * margin },
         { x: w * (1 - margin), y: h * (1 - margin) },
         { x: w * margin, y: h * (1 - margin) },
       ];
+      scanCorners = defaultCorners;
       renderScanHandles();
+
+      setTimeout(() => {
+        const auto = scanTryAutoDetect(canvas);
+        if (auto && scanCornersLookValid(auto, w, h)) {
+          scanCorners = auto;
+          renderScanHandles();
+        }
+      }, 40);
     }
 
     function renderScanHandles() {
@@ -3940,13 +4072,28 @@
       const finalCanvas = scanApplyFilter(scanWarpedCache, scanSelectedFilter);
       const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
       pushUndoState();
-      const page = createPageModel(dataUrl, 'Scan', finalCanvas.width, finalCanvas.height);
+      const page = createPageModel(dataUrl, scanCurrentLabel(), finalCanvas.width, finalCanvas.height);
       state.pages.push(page);
       if (!state.selectedPageId) state.selectedPageId = page.id;
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = false;
       $('btnPrint').disabled = false;
-      closeScanModalAndAdvance();
+
+      if (scanDocType === 'ausweis' && scanAusweisSide === 'front') {
+        // Vorderseite fertig -> automatisch Rückseite anfordern
+        scanAusweisSide = 'back';
+        $('scanAusweisBanner').classList.add('show');
+        $('modalScanEnhance').classList.remove('open');
+        scanQueue.index = scanQueue.files.length; // laufende Queue abschließen
+        renderSidebarPages();
+        renderStage();
+        showToast('Vorderseite gespeichert ✓ – bitte jetzt die Rückseite scannen');
+        setTimeout(() => { $('btnCameraScan').click(); }, 350);
+      } else {
+        if (scanDocType === 'ausweis') scanAusweisSide = 'front';
+        $('scanAusweisBanner').classList.remove('show');
+        closeScanModalAndAdvance();
+      }
     };
 
     $('btnScanCancel1').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };

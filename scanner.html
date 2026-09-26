@@ -159,6 +159,31 @@
   @media (max-width:520px){
     .filter-grid{ grid-template-columns:repeat(2,1fr); }
   }
+
+  .doctype-row{ margin:0 0 18px; }
+  .doctype-label{ display:block; font-size:.85rem; color:var(--muted); margin-bottom:8px; }
+  .doctype-options{ display:flex; gap:10px; flex-wrap:wrap; }
+  .doctype-btn{
+    flex:1; min-width:150px; padding:12px 10px; border-radius:12px;
+    border:1px solid var(--border); background:rgba(15,23,42,.6); color:var(--text);
+    font-weight:700; font-size:.85rem; cursor:pointer;
+  }
+  .doctype-btn.selected{ border-color:var(--primary); box-shadow:0 0 0 2px rgba(98,240,212,.3); }
+
+  .ausweis-banner{
+    display:none;
+    background:rgba(248,215,121,.12); border:1px solid rgba(248,215,121,.4);
+    color:var(--gold); border-radius:14px; padding:14px 16px; margin-bottom:18px;
+    font-weight:700; font-size:.9rem;
+  }
+  .ausweis-banner.show{ display:block; }
+
+  .page-thumb .label{
+    position:absolute; bottom:0; left:0; right:0;
+    background:rgba(3,11,20,.8); color:var(--text);
+    font-size:.68rem; font-weight:700; text-align:center;
+    padding:3px 4px;
+  }
 </style>
 </head>
 <body>
@@ -172,6 +197,17 @@
     <section class="step active" id="stepCapture">
       <h1>Dokument scannen</h1>
       <p class="hint">Foto aufnehmen oder ein vorhandenes Bild auswählen. Danach kannst du zuschneiden und einen Filter wählen – oder das Original behalten.</p>
+
+      <div class="doctype-row" id="doctypeRow">
+        <span class="doctype-label">Was scannst du?</span>
+        <div class="doctype-options">
+          <button type="button" class="doctype-btn selected" data-type="dokument">📄 Dokument (allgemein)</button>
+          <button type="button" class="doctype-btn" data-type="reisepass">🛂 Reisepass</button>
+          <button type="button" class="doctype-btn" data-type="ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
+        </div>
+      </div>
+
+      <div class="ausweis-banner" id="ausweisBanner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite des Ausweises fotografieren.</div>
 
       <div class="capture-box">
         <div class="capture-icon">📷</div>
@@ -246,6 +282,8 @@
   <footer class="attrib">SD Scanner · Teil von SD Bewerbungsstudio</footer>
 
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+<script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
 <script>
 (function(){
   'use strict';
@@ -267,12 +305,72 @@
     exportStatus: document.getElementById('exportStatus'),
   };
 
-  let pages = []; // { dataUrl }
+  let pages = []; // { dataUrl, label }
   let currentImage = null; // HTMLImageElement of the raw captured photo
   let corners = []; // 4 points in canvas-natural coords {x,y}
   let cropScale = 1;
   let selectedFilter = 'auto';
   let warpedCanvasCache = null; // canvas after perspective warp, before filter
+
+  // ---------- Dokumenttyp (Dokument / Reisepass / Ausweis mit 2 Seiten) ----------
+  let docType = 'dokument';
+  let ausweisSide = 'front'; // 'front' | 'back' – nur relevant wenn docType === 'ausweis'
+
+  document.querySelectorAll('.doctype-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      docType = btn.dataset.type;
+      ausweisSide = 'front';
+      document.querySelectorAll('.doctype-btn').forEach(b => b.classList.toggle('selected', b === btn));
+      document.getElementById('ausweisBanner').classList.remove('show');
+    });
+  });
+
+  function currentPageLabel(){
+    if (docType === 'ausweis') return ausweisSide === 'front' ? 'Ausweis Vorderseite' : 'Ausweis Rückseite';
+    if (docType === 'reisepass') return 'Reisepass';
+    return 'Seite ' + (pages.length + 1);
+  }
+
+  // ---------- Automatische Kantenerkennung (jscanify + OpenCV.js) ----------
+  let cvReady = false;
+  (function waitForCv(){
+    if (typeof cv !== 'undefined') {
+      cv['onRuntimeInitialized'] = () => { cvReady = true; };
+    } else {
+      setTimeout(waitForCv, 300);
+    }
+  })();
+
+  function polygonArea(pts){
+    let area = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const j = (i + 1) % pts.length;
+      area += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+    }
+    return Math.abs(area / 2);
+  }
+
+  function cornersLookValid(pts, w, h){
+    if (!pts.every(p => isFinite(p.x) && isFinite(p.y))) return false;
+    const area = polygonArea(pts);
+    const full = w * h;
+    return area > full * 0.15 && area < full * 0.98;
+  }
+
+  function tryAutoDetect(canvas){
+    try {
+      if (!cvReady || typeof jscanify === 'undefined' || typeof cv === 'undefined' || !cv.Mat) return null;
+      const scanner = new jscanify();
+      const mat = cv.imread(canvas);
+      const contour = scanner.findPaperContour(mat);
+      const pts = scanner.getCornerPoints(contour);
+      mat.delete();
+      if (!pts || !pts.topLeftCorner) return null;
+      return [pts.topLeftCorner, pts.topRightCorner, pts.bottomRightCorner, pts.bottomLeftCorner];
+    } catch (e) {
+      return null;
+    }
+  }
 
   function showStep(name){
     ['stepCapture','stepCrop','stepFilter','stepExport'].forEach(k => {
@@ -325,13 +423,26 @@
     ctx.drawImage(img, 0, 0, w, h);
 
     const margin = 0.06;
-    corners = [
+    const defaultCorners = [
       {x: w*margin, y: h*margin},
       {x: w*(1-margin), y: h*margin},
       {x: w*(1-margin), y: h*(1-margin)},
       {x: w*margin, y: h*(1-margin)},
     ];
+
+    corners = defaultCorners;
     renderHandles();
+    setStatus('Kanten werden automatisch erkannt …');
+    setTimeout(() => {
+      const auto = tryAutoDetect(canvas);
+      if (auto && cornersLookValid(auto, w, h)) {
+        corners = auto;
+        setStatus('Kanten automatisch erkannt – bei Bedarf per Hand nachziehen.');
+      } else {
+        setStatus('');
+      }
+      renderHandles();
+    }, 40);
   }
 
   function renderHandles(){
@@ -550,10 +661,22 @@
   document.getElementById('btnFilterNext').addEventListener('click', () => {
     const finalCanvas = applyFilter(warpedCanvasCache, selectedFilter);
     const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
-    pages.push({ dataUrl });
+    pages.push({ dataUrl, label: currentPageLabel() });
     renderPagesGrid();
     els.pagesSummary.style.display = 'block';
-    showStep('stepCapture');
+
+    const banner = document.getElementById('ausweisBanner');
+    if (docType === 'ausweis' && ausweisSide === 'front') {
+      ausweisSide = 'back';
+      banner.classList.add('show');
+      showStep('stepCapture');
+      els.cameraInput.value = '';
+      els.cameraInput.click();
+    } else {
+      if (docType === 'ausweis') ausweisSide = 'front'; // Rückseite fertig -> zurücksetzen für nächstes Dokument
+      banner.classList.remove('show');
+      showStep('stepCapture');
+    }
   });
 
   function renderPagesGrid(){
@@ -561,7 +684,7 @@
     pages.forEach((p, i) => {
       const div = document.createElement('div');
       div.className = 'page-thumb';
-      div.innerHTML = `<img src="${p.dataUrl}"><span class="num">${i+1}</span><button class="del" data-i="${i}">×</button>`;
+      div.innerHTML = `<img src="${p.dataUrl}"><span class="num">${i+1}</span><button class="del" data-i="${i}">×</button><span class="label">${p.label || ''}</span>`;
       els.pagesGrid.appendChild(div);
     });
     els.pagesGrid.querySelectorAll('.del').forEach(btn => {
@@ -579,7 +702,7 @@
     pages.forEach((p, i) => {
       const div = document.createElement('div');
       div.className = 'page-thumb';
-      div.innerHTML = `<img src="${p.dataUrl}"><span class="num">${i+1}</span>`;
+      div.innerHTML = `<img src="${p.dataUrl}"><span class="num">${i+1}</span><span class="label">${p.label || ''}</span>`;
       els.exportPagesGrid.appendChild(div);
     });
     showStep('stepExport');
@@ -618,7 +741,8 @@
     pages.forEach((p, i) => {
       const a = document.createElement('a');
       a.href = p.dataUrl;
-      a.download = `gescannt_seite_${i+1}.jpg`;
+      const safeLabel = (p.label || ('Seite_' + (i + 1))).replace(/[^a-zA-Z0-9äöüÄÖÜß_-]+/g, '_');
+      a.download = `${safeLabel}.jpg`;
       document.body.appendChild(a);
       a.click();
       a.remove();
