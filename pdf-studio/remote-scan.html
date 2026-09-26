@@ -10,70 +10,149 @@
   <style>
     * { box-sizing: border-box; }
 
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
       font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: #0f172a;
+      background: #000;
       color: #fff;
       margin: 0;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 28px 20px;
+    }
+
+    #topBar {
+      padding: 10px 16px;
       text-align: center;
+      background: #0f172a;
+      flex-shrink: 0;
     }
 
-    h1 {
-      font-size: 1.35rem;
-      margin: 0 0 4px;
-    }
-
-    p {
-      color: #9fb3c8;
-      font-size: .95rem;
-      margin: 4px 0;
-      max-width: 320px;
+    #topBar h1 {
+      font-size: 1rem;
+      margin: 0 0 2px;
     }
 
     #status {
-      margin: 18px 0 6px;
-      font-weight: 700;
-      font-size: 1rem;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #9fb3c8;
     }
 
-    .btn {
-      background: #d66b45;
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      padding: 18px 30px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 22px;
+    #cameraWrap {
+      position: relative;
+      flex: 1;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #video {
       width: 100%;
-      max-width: 320px;
+      height: 100%;
+      object-fit: cover;
     }
 
-    .btn:disabled {
+    #guideFrame {
+      position: absolute;
+      top: 6%;
+      left: 6%;
+      right: 6%;
+      bottom: 6%;
+      border: 3px dashed rgba(255, 255, 255, .75);
+      border-radius: 12px;
+      pointer-events: none;
+      box-shadow: 0 0 0 2000px rgba(0, 0, 0, .25);
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 14px;
+      left: 12px;
+      right: 12px;
+      text-align: center;
+      font-size: .85rem;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+      pointer-events: none;
+    }
+
+    #flash {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #flash.active {
+      opacity: .85;
+      transition: opacity .25s ease-out;
+    }
+
+    #bottomBar {
+      flex-shrink: 0;
+      background: #0f172a;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #btnCapture {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: #d66b45;
+      border: 5px solid #fff;
+      cursor: pointer;
+    }
+
+    #btnCapture:disabled {
       background: #445164;
-      opacity: .7;
+      opacity: .6;
+    }
+
+    #btnCapture:active {
+      transform: scale(.94);
     }
 
     .btn-secondary {
       background: transparent;
       color: #9fb3c8;
       border: 1px solid #445164;
-      font-size: .95rem;
+      font-size: .9rem;
       font-weight: 600;
-      padding: 12px 24px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      cursor: pointer;
     }
 
     #count {
-      margin-top: 16px;
-      font-size: .9rem;
+      font-size: .85rem;
       color: #9fb3c8;
+    }
+
+    #permissionScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    #permissionScreen p {
+      color: #9fb3c8;
+      font-size: .95rem;
+      max-width: 300px;
     }
 
     .icon {
@@ -81,34 +160,64 @@
       margin-bottom: 6px;
     }
 
-    input[type=file] {
-      display: none;
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 
 <body>
-  <div class="icon">📱</div>
-  <h1>Handy-Scanner</h1>
-  <p>Verbindet sich automatisch mit deinem PC (SD PDF Studio).</p>
-  <div id="status">Verbinde …</div>
-  <button id="btnCapture" class="btn" disabled>📸 Foto aufnehmen</button>
-  <button id="btnDone" class="btn btn-secondary">Fertig – Verbindung beenden</button>
-  <input type="file" id="fileInput" accept="image/*" capture="environment">
-  <div id="count"></div>
+  <div id="topBar">
+    <h1>📱 Handy-Scanner</h1>
+    <div id="status">Verbinde …</div>
+  </div>
+
+  <div id="permissionScreen">
+    <div class="icon">📷</div>
+    <p>Kamera wird angefragt – bitte im Browser erlauben.</p>
+  </div>
+
+  <div id="cameraWrap" class="hidden">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="guideFrame"></div>
+    <div id="hint">Dokument in den Rahmen halten, dann unten scannen</div>
+    <div id="flash"></div>
+  </div>
+
+  <div id="bottomBar" class="hidden">
+    <button id="btnCapture" disabled title="Scannen"></button>
+    <div id="count"></div>
+    <button id="btnDone" class="btn-secondary">Fertig – Verbindung beenden</button>
+  </div>
+
+  <canvas id="captureCanvas" class="hidden"></canvas>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const targetId = params.get('p');
     const statusEl = document.getElementById('status');
+    const permissionScreen = document.getElementById('permissionScreen');
+    const cameraWrap = document.getElementById('cameraWrap');
+    const bottomBar = document.getElementById('bottomBar');
+    const video = document.getElementById('video');
     const btn = document.getElementById('btnCapture');
     const btnDone = document.getElementById('btnDone');
-    const fileInput = document.getElementById('fileInput');
     const countEl = document.getElementById('count');
+    const flashEl = document.getElementById('flash');
+    const canvas = document.getElementById('captureCanvas');
+
     let sent = 0;
     let conn = null;
     let peer = null;
+    let stream = null;
+    let connReady = false;
+    let cameraReady = false;
 
+    function updateCaptureEnabled() {
+      btn.disabled = !(connReady && cameraReady);
+    }
+
+    // --- PeerJS-Verbindung zum PC ---
     if (!targetId) {
       statusEl.textContent = 'Kein PC gefunden. Bitte QR-Code am PC neu scannen.';
     } else if (typeof Peer === 'undefined') {
@@ -120,18 +229,21 @@
         conn = peer.connect(targetId, { reliable: true });
 
         conn.on('open', () => {
+          connReady = true;
           statusEl.textContent = 'Verbunden mit PC ✓';
-          btn.disabled = false;
+          updateCaptureEnabled();
         });
 
         conn.on('close', () => {
+          connReady = false;
           statusEl.textContent = 'Verbindung beendet.';
-          btn.disabled = true;
+          updateCaptureEnabled();
         });
 
         conn.on('error', () => {
+          connReady = false;
           statusEl.textContent = 'Verbindungsfehler.';
-          btn.disabled = true;
+          updateCaptureEnabled();
         });
       });
 
@@ -140,31 +252,52 @@
       });
     }
 
-    btn.onclick = () => fileInput.click();
+    // --- Live-Kamera starten (kein Foto wird im Handy gespeichert) ---
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1600 }, height: { ideal: 2000 } },
+          audio: false
+        });
+        video.srcObject = stream;
+        permissionScreen.classList.add('hidden');
+        cameraWrap.classList.remove('hidden');
+        bottomBar.classList.remove('hidden');
+        cameraReady = true;
+        updateCaptureEnabled();
+      } catch (err) {
+        permissionScreen.innerHTML = '<div class="icon">🚫</div><p>Kein Kamerazugriff. Bitte in den Browser-Einstellungen erlauben und die Seite neu laden.</p>';
+      }
+    }
+    startCamera();
 
-    fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      fileInput.value = '';
-      if (!file || !conn || !conn.open) return;
-      btn.disabled = true;
-      btn.textContent = 'Wird gesendet …';
-      const reader = new FileReader();
-      reader.onload = () => {
-        conn.send({ type: 'photo', name: file.name, mime: file.type, data: reader.result });
-        sent++;
-        countEl.textContent = sent + ' Foto(s) gesendet ✓';
-        btn.disabled = false;
-        btn.textContent = '📸 Noch ein Foto aufnehmen';
-      };
-      reader.readAsDataURL(file);
+    // --- Aktuellen Kamera-Frame greifen und an PC senden (nur aus dem Live-Bild, keine eigene Fotodatei) ---
+    btn.onclick = () => {
+      if (!conn || !conn.open || !stream) return;
+      const vw = video.videoWidth, vh = video.videoHeight;
+      if (!vw || !vh) return;
+
+      canvas.width = vw;
+      canvas.height = vh;
+      canvas.getContext('2d').drawImage(video, 0, 0, vw, vh);
+
+      flashEl.classList.add('active');
+      setTimeout(() => flashEl.classList.remove('active'), 200);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      conn.send({ type: 'photo', name: 'Handyscan_' + (sent + 1) + '.jpg', mime: 'image/jpeg', data: dataUrl });
+      sent++;
+      countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
     };
 
     btnDone.onclick = () => {
       if (conn) { try { conn.close(); } catch (e) { } }
       if (peer) { try { peer.destroy(); } catch (e) { } }
-      statusEl.textContent = 'Verbindung beendet. Du kannst das Fenster schließen.';
-      btn.disabled = true;
-      btnDone.disabled = true;
+      if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { } }
+      cameraWrap.classList.add('hidden');
+      bottomBar.classList.add('hidden');
+      permissionScreen.classList.remove('hidden');
+      permissionScreen.innerHTML = '<div class="icon">✅</div><p>Verbindung beendet. Du kannst das Fenster schließen.</p>';
     };
   </script>
 </body>
