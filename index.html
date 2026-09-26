@@ -343,6 +343,74 @@
             line-height: 1.72;
         }
 
+        .dept-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+            margin-top: 24px;
+        }
+
+        .dept-card {
+            display: block;
+            background: rgba(15, 23, 42, 0.78);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 28px 24px;
+            color: var(--text);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 14px 30px rgba(2, 10, 17, 0.22);
+        }
+
+            .dept-card:hover {
+                transform: translateY(-4px);
+                border-color: rgba(98, 240, 212, 0.4);
+                box-shadow: 0 20px 40px rgba(2, 10, 17, 0.32);
+            }
+
+            .dept-card--soon {
+                opacity: 0.72;
+                cursor: default;
+            }
+
+                .dept-card--soon:hover {
+                    transform: none;
+                    border-color: var(--border);
+                    box-shadow: 0 14px 30px rgba(2, 10, 17, 0.22);
+                }
+
+        .dept-icon {
+            width: 56px;
+            height: 56px;
+            display: grid;
+            place-items: center;
+            border-radius: 16px;
+            background: rgba(98, 240, 212, 0.12);
+            font-size: 1.7rem;
+            margin-bottom: 18px;
+        }
+
+        .dept-card h3 {
+            margin: 0 0 10px;
+            font-size: 1.25rem;
+        }
+
+        .dept-card p {
+            margin: 0 0 18px;
+            color: var(--muted);
+            line-height: 1.65;
+            min-height: 76px;
+        }
+
+        .dept-link {
+            display: inline-block;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .dept-link--soon {
+            color: var(--gold);
+        }
+
         .download-wrap {
             margin-top: 26px;
             background: rgba(15, 23, 42, 0.78);
@@ -408,6 +476,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .dept-grid {
+                grid-template-columns: 1fr;
+            }
+
             .topbar {
                 flex-direction: column;
                 align-items: flex-start;
@@ -424,6 +496,7 @@
                 <span>SD Bewerbungsstudio</span>
             </div>
             <nav class="nav">
+                <a href="#bereiche">Bereiche</a>
                 <a href="#features">Features</a>
                 <a href="#downloads">Downloads</a>
                 <a href="#start">Start</a>
@@ -487,6 +560,36 @@
                                 <div class="progress"><span style="width: 92%;"></span></div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" id="bereiche">
+                <div class="section-head">
+                    <h2>Wähle deinen Bereich</h2>
+                    <p>Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.</p>
+                </div>
+
+                <div class="dept-grid">
+                    <a class="dept-card" href="Lebenslauf_app.html">
+                        <div class="dept-icon">📝</div>
+                        <h3>Bewerbung schreiben</h3>
+                        <p>Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe, Entschuldigung &amp; Kündigung – mit KI-Schreibhilfe und frei wählbarem Design.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="pdf-studio/index.html">
+                        <div class="dept-icon">📄</div>
+                        <h3>PDF-Werkzeuge</h3>
+                        <p>PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <div class="dept-card dept-card--soon">
+                        <div class="dept-icon">📷</div>
+                        <h3>Dokumenten-Scanner</h3>
+                        <p>Dokumente mit der Handykamera scannen, automatisch zuschneiden und geradeziehen – wie eine echte Scanner-App.</p>
+                        <span class="dept-link dept-link--soon">Bald verfügbar</span>
                     </div>
                 </div>
             </section>
