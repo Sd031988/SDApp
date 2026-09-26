@@ -1,12 +1,12 @@
 {
-  "id": "/?app=lebenslauf",
+  "id": "/?app=hub",
   "name": "SD Bewerbungsstudio",
   "short_name": "SD Studio",
-  "description": "SD Bewerbungsstudio für Lebenslauf, Anschreiben, Deckblatt und Bewerbungsmappe",
-  "start_url": "./Lebenslauf_app.html",
+  "description": "Übersicht: Bewerbung schreiben, PDF-Werkzeuge und mehr",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f1f5f9",
+  "background_color": "#030b14",
   "theme_color": "#0f172a",
   "lang": "de",
   "icons": [

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="manifest-hub.json" />
     <title>SD Bewerbungsstudio | Premium App</title>
     <style>
         :root {
@@ -665,5 +667,8 @@
             SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux
         </footer>
     </div>
+    <script>
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
 </body>
 </html>
