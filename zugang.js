@@ -152,8 +152,8 @@
             '<div class="sd-preise">' +
             '<strong>Preise:</strong>' +
             '<div class="sd-preis-zeile"><span>1 Monat</span><span>kostenlos</span></div>' +
-            '<div class="sd-preis-zeile"><span>6 Monate</span><span>20 €</span></div>' +
-            '<div class="sd-preis-zeile"><span>1 Jahr</span><span>30 €</span></div>' +
+            '<div class="sd-preis-zeile"><span>6 Monate</span><span>30 €</span></div>' +
+            '<div class="sd-preis-zeile"><span>1 Jahr</span><span>50 €</span></div>' +
             '<small>Zahlungsabwicklung befindet sich aktuell noch in der Testphase – schreib uns einfach per E-Mail, wir sagen dir, wie die Zahlung im Moment abläuft.</small>' +
             '</div>' +
             '<input type="text" id="sd-zugang-code" placeholder="z. B. K3F8A2-9B1C4D0E2A" autocomplete="off">' +
