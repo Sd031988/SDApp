@@ -417,7 +417,18 @@
     if (!pts.every(p => isFinite(p.x) && isFinite(p.y))) return false;
     const area = polygonArea(pts);
     const full = w * h;
-    return area > full * 0.15 && area < full * 0.98;
+    // Früher lag die Untergrenze bei 15% der Bildfläche – das hat echte, korrekt erkannte
+    // Dokumente verworfen, sobald das Foto aus etwas Abstand aufgenommen wurde (viel
+    // Hintergrund sichtbar, Dokument selbst aber klein im Bild). Dadurch fiel die App auf
+    // die Standard-Ecken (fast das ganze Bild) zurück, obwohl die Kanten längst richtig
+    // gefunden waren. 3% lässt auch kleiner fotografierte Dokumente zu; zusätzlich prüfen
+    // wir Breite/Höhe der Bounding-Box, damit keine hauchdünnen Fehlerkennungen durchrutschen.
+    if (area < full * 0.03 || area > full * 0.98) return false;
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    const bboxW = Math.max(...xs) - Math.min(...xs);
+    const bboxH = Math.max(...ys) - Math.min(...ys);
+    if (bboxW < w * 0.08 || bboxH < h * 0.08) return false;
+    return true;
   }
 
   function tryAutoDetect(canvas){
