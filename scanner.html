@@ -210,6 +210,16 @@
     font-weight:600;
   }
   .livecam-hint.ready{ color:var(--primary); }
+  .livecam-flash{
+    position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none;
+    transition:opacity .12s ease;
+  }
+  .livecam-flash.show{ opacity:.75; transition:opacity .02s ease; }
+  .livecam-badge{
+    position:absolute; top:10px; right:10px; min-width:30px; height:30px; padding:0 8px;
+    border-radius:15px; background:var(--primary); color:#fff; font-weight:700; font-size:.9rem;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.35);
+  }
 </style>
 </head>
 <body>
@@ -240,6 +250,7 @@
         <p style="color:var(--muted); margin:0 0 6px;">Kamera öffnen oder Bild wählen</p>
         <div class="btn-row">
           <button type="button" class="btn primary" id="btnLiveCam">🎥 Live-Kamera (Auto-Scan)</button>
+          <button type="button" class="btn primary" id="btnBatchCam">🗂️ Batch-Scan (mehrere Seiten automatisch)</button>
           <label class="btn secondary" for="cameraInput">📷 Foto aufnehmen</label>
           <label class="btn secondary" for="fileInput">🖼️ Bild auswählen</label>
         </div>
@@ -251,11 +262,14 @@
         <div class="livecam-wrap">
           <video id="liveCamVideo" autoplay playsinline muted></video>
           <canvas id="liveCamOverlay"></canvas>
+          <div class="livecam-flash" id="liveCamFlash"></div>
+          <div class="livecam-badge" id="liveCamBadge" style="display:none;">0</div>
         </div>
         <p class="livecam-hint" id="liveCamHint">Kamera wird gestartet …</p>
         <div class="btn-row">
           <button type="button" class="btn secondary" id="btnLiveCamClose">Abbrechen</button>
           <button type="button" class="btn primary" id="btnLiveCamShutter">📸 Jetzt aufnehmen</button>
+          <button type="button" class="btn primary" id="btnBatchDone" style="display:none;">✅ Fertig (<span id="batchCount">0</span> Seiten)</button>
         </div>
       </div>
 
@@ -350,6 +364,8 @@
     liveCamVideo: document.getElementById('liveCamVideo'),
     liveCamOverlay: document.getElementById('liveCamOverlay'),
     liveCamHint: document.getElementById('liveCamHint'),
+    liveCamFlash: document.getElementById('liveCamFlash'),
+    liveCamBadge: document.getElementById('liveCamBadge'),
   };
 
   let pages = []; // { dataUrl, label }
@@ -463,6 +479,8 @@
   let liveStableCount = 0;
   let liveLastQuad = null;
   let liveCaptured = false;
+  let batchMode = false; // true = Batch-Scan: Kamera bleibt nach jeder Seite offen und scannt automatisch weiter
+  let batchPauseUntil = 0; // Timestamp bis zu dem nach einer Aufnahme kurz pausiert wird (Flash-Feedback)
   const LIVE_STABLE_NEEDED = 6; // ~6 Frames mit ähnlichem Quad => auto-auslösen
   const liveHiddenCanvas = document.createElement('canvas');
 
@@ -474,13 +492,19 @@
     return true;
   }
 
-  async function startLiveCam(){
+  async function startLiveCam(isBatch){
+    batchMode = !!isBatch;
     liveCaptured = false;
     liveStableCount = 0;
     liveLastQuad = null;
+    batchPauseUntil = 0;
     els.liveCamBox.style.display = '';
     els.liveCamHint.textContent = 'Kamera wird gestartet …';
     els.liveCamHint.classList.remove('ready');
+    document.getElementById('btnLiveCamShutter').style.display = batchMode ? 'none' : '';
+    document.getElementById('btnBatchDone').style.display = batchMode ? '' : 'none';
+    els.liveCamBadge.style.display = batchMode ? 'flex' : 'none';
+    updateBatchBadge();
     try{
       liveStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -488,11 +512,18 @@
       });
       els.liveCamVideo.srcObject = liveStream;
       await els.liveCamVideo.play();
-      els.liveCamHint.textContent = 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
+      els.liveCamHint.textContent = batchMode
+        ? 'Halte das Dokument ruhig in den Rahmen – jede Seite wird automatisch nacheinander gescannt.'
+        : 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
       liveDetectLoop();
     } catch(err){
       els.liveCamHint.textContent = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.');
     }
+  }
+
+  function updateBatchBadge(){
+    els.liveCamBadge.textContent = String(pages.length);
+    document.getElementById('batchCount').textContent = String(pages.length);
   }
 
   function stopLiveCam(){
@@ -503,11 +534,13 @@
       liveStream = null;
     }
     els.liveCamBox.style.display = 'none';
+    batchMode = false;
   }
 
   function liveDetectLoop(){
     liveRafId = requestAnimationFrame(liveDetectLoop);
     if(liveCaptured) return;
+    if(batchMode && performance.now() < batchPauseUntil) return; // kurze Pause nach jeder Batch-Aufnahme
     const video = els.liveCamVideo;
     if(!video.videoWidth) return;
 
@@ -562,7 +595,11 @@
       if(liveStableCount >= LIVE_STABLE_NEEDED){
         els.liveCamHint.textContent = '✓ Erkannt – wird automatisch aufgenommen …';
         els.liveCamHint.classList.add('ready');
-        liveCaptureShot();
+        if(batchMode){
+          batchCaptureShot(quad, detW, detH);
+        } else {
+          liveCaptureShot();
+        }
       } else {
         els.liveCamHint.textContent = 'Dokument erkannt – halte still zum Auto-Scan …';
         els.liveCamHint.classList.add('ready');
@@ -590,7 +627,64 @@
     }, 'image/jpeg', 0.92);
   }
 
-  document.getElementById('btnLiveCam').addEventListener('click', startLiveCam);
+  // ---------- Batch-Scan: Kamera bleibt offen, jede Seite wird automatisch erkannt,
+  // zugeschnitten und übernommen – wie beim "Batch"-Modus bekannter Scanner-Apps. ----------
+  function flashLiveCam(){
+    els.liveCamFlash.classList.add('show');
+    setTimeout(() => els.liveCamFlash.classList.remove('show'), 130);
+  }
+
+  function batchCaptureShot(quad, detW, detH){
+    if(liveCaptured) return;
+    liveCaptured = true;
+    flashLiveCam();
+    const video = els.liveCamVideo;
+    const shot = document.createElement('canvas');
+    shot.width = video.videoWidth;
+    shot.height = video.videoHeight;
+    shot.getContext('2d').drawImage(video, 0, 0);
+
+    // Erkanntes Viereck (auf dem kleinen Erkennungsbild) auf die volle Aufnahmegröße skalieren
+    const scaleX = shot.width / detW;
+    const scaleY = shot.height / detH;
+    const fullQuad = quad.map(p => ({ x: p.x * scaleX, y: p.y * scaleY }));
+
+    const wTop = Math.hypot(fullQuad[1].x-fullQuad[0].x, fullQuad[1].y-fullQuad[0].y);
+    const wBot = Math.hypot(fullQuad[2].x-fullQuad[3].x, fullQuad[2].y-fullQuad[3].y);
+    const hLeft = Math.hypot(fullQuad[3].x-fullQuad[0].x, fullQuad[3].y-fullQuad[0].y);
+    const hRight = Math.hypot(fullQuad[2].x-fullQuad[1].x, fullQuad[2].y-fullQuad[1].y);
+    const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
+    const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+
+    const warped = warpToRect(shot, fullQuad, outW, outH);
+    const filtered = applyFilter(warped, 'auto');
+    const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
+    pages.push({ dataUrl, label: currentPageLabel() });
+    updateBatchBadge();
+
+    els.liveCamHint.textContent = pages.length + '. Seite gescannt – nächste Seite bereithalten …';
+    els.liveCamHint.classList.remove('ready');
+
+    // Kurze Pause, damit die nächste Seite bewusst eingelegt werden kann, dann weiter erkennen.
+    batchPauseUntil = performance.now() + 900;
+    setTimeout(() => {
+      liveCaptured = false;
+      liveStableCount = 0;
+      liveLastQuad = null;
+    }, 900);
+  }
+
+  document.getElementById('btnBatchDone').addEventListener('click', () => {
+    stopLiveCam();
+    if(pages.length){
+      renderPagesGrid();
+      els.pagesSummary.style.display = '';
+      setStatus(pages.length + ' Seite(n) im Batch-Scan erfasst.');
+    }
+  });
+
+  document.getElementById('btnLiveCam').addEventListener('click', () => startLiveCam(false));
+  document.getElementById('btnBatchCam').addEventListener('click', () => startLiveCam(true));
   document.getElementById('btnLiveCamClose').addEventListener('click', stopLiveCam);
   document.getElementById('btnLiveCamShutter').addEventListener('click', liveCaptureShot);
 
