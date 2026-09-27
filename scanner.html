@@ -405,14 +405,43 @@
   }
 
   // ---------- Automatische Kantenerkennung (jscanify + OpenCV.js) ----------
+  // WICHTIG: opencv.js ist eine mehrere MB große WASM-Datei. Auf dem echten Handy kann es
+  // ein paar Sekunden dauern, bis sie geladen UND initialisiert ist. Bis dahin darf die App
+  // NICHT wie eine stumme Kamera wirken – der Nutzer muss sehen, dass der Scanner noch lädt.
+  // Außerdem: cv.onRuntimeInitialized kann (je nach Cache/Timing) schon gefeuert haben, BEVOR
+  // wir unseren eigenen Callback registrieren – deshalb zusätzlich per Polling auf cv.Mat prüfen,
+  // statt uns nur auf den einmaligen Callback zu verlassen.
   let cvReady = false;
+  function markCvReady(){
+    if (cvReady) return;
+    cvReady = true;
+    if (els.liveCamBox && els.liveCamBox.style.display !== 'none' && els.liveCamHint){
+      if (!liveCaptured){
+        els.liveCamHint.textContent = batchMode
+          ? 'Scanner bereit – halte das Dokument ruhig in den Rahmen.'
+          : 'Scanner bereit – halte das Dokument ruhig in den Rahmen.';
+      }
+    }
+  }
   (function waitForCv(){
     if (typeof cv !== 'undefined') {
-      cv['onRuntimeInitialized'] = () => { cvReady = true; };
+      if (cv.Mat) { markCvReady(); return; }
+      cv['onRuntimeInitialized'] = markCvReady;
+      const pollId = setInterval(() => {
+        if (cvReady) { clearInterval(pollId); return; }
+        if (typeof cv !== 'undefined' && cv.Mat) { clearInterval(pollId); markCvReady(); }
+      }, 200);
     } else {
-      setTimeout(waitForCv, 300);
+      setTimeout(waitForCv, 150);
     }
   })();
+  // Ehrliche Rückmeldung, falls die Scan-Engine gar nicht lädt (z. B. blockiertes Netzwerk).
+  // Manuelles Aufnehmen bleibt in dem Fall trotzdem möglich.
+  setTimeout(() => {
+    if (!cvReady && els.liveCamBox && els.liveCamBox.style.display !== 'none' && els.liveCamHint && !liveCaptured){
+      els.liveCamHint.textContent = '⚠️ Automatische Kantenerkennung nicht verfügbar – du kannst trotzdem manuell aufnehmen.';
+    }
+  }, 15000);
 
   function polygonArea(pts){
     let area = 0;
@@ -535,9 +564,11 @@
       });
       els.liveCamVideo.srcObject = liveStream;
       await els.liveCamVideo.play();
-      els.liveCamHint.textContent = batchMode
-        ? 'Halte das Dokument ruhig in den Rahmen – jede Seite wird automatisch nacheinander gescannt.'
-        : 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
+      els.liveCamHint.textContent = cvReady
+        ? (batchMode
+            ? 'Halte das Dokument ruhig in den Rahmen – jede Seite wird automatisch nacheinander gescannt.'
+            : 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.')
+        : '🔄 Scanner wird geladen … (kann beim ersten Mal ein paar Sekunden dauern)';
       // Manche Handys/Browser beenden den Kamera-Track von sich aus (z. B. wenn die Seite kurz
       // im Hintergrund war oder das System die Kamera aus anderen Gründen freigibt). Ohne diese
       // Behandlung "friert" der Batch-Scan dann wortlos ein. Bei Bedarf automatisch neu starten.
@@ -572,6 +603,34 @@
     batchMode = false;
   }
 
+  // Zeichnet dezente Eckklammern (wie ein Kamera-/Scanner-Sucher), damit die Live-Ansicht
+  // JEDERZEIT wie ein aktiver Scanner aussieht – nicht wie eine stumme Kamera – auch bevor
+  // oder solange kein Dokument erkannt wurde.
+  function drawViewfinderGuide(octx, w, h){
+    if(!w || !h) return;
+    const marginX = w * 0.06, marginY = h * 0.10;
+    const gw = w - marginX * 2, gh = h - marginY * 2;
+    const len = Math.min(gw, gh) * 0.12;
+    octx.save();
+    octx.strokeStyle = 'rgba(255,255,255,0.55)';
+    octx.lineWidth = 3;
+    octx.lineCap = 'round';
+    const corners = [
+      [marginX, marginY, 1, 1],
+      [marginX + gw, marginY, -1, 1],
+      [marginX, marginY + gh, 1, -1],
+      [marginX + gw, marginY + gh, -1, -1]
+    ];
+    corners.forEach(([x, y, dx, dy]) => {
+      octx.beginPath();
+      octx.moveTo(x, y + len * dy);
+      octx.lineTo(x, y);
+      octx.lineTo(x + len * dx, y);
+      octx.stroke();
+    });
+    octx.restore();
+  }
+
   function liveDetectLoop(){
     liveRafId = requestAnimationFrame(liveDetectLoop);
     if(liveCaptured) return;
@@ -586,8 +645,16 @@
     }
     const octx = overlay.getContext('2d');
     octx.clearRect(0, 0, overlay.width, overlay.height);
+    drawViewfinderGuide(octx, overlay.width, overlay.height);
 
-    if(liveDetectBusy || !cvReady || typeof jscanify === 'undefined') return;
+    if(!cvReady || typeof jscanify === 'undefined'){
+      if(!liveCaptured){
+        els.liveCamHint.textContent = '🔄 Scanner wird geladen …';
+        els.liveCamHint.classList.remove('ready');
+      }
+      return;
+    }
+    if(liveDetectBusy) return;
     liveDetectBusy = true;
 
     // Kantenerkennung auf einem verkleinerten Frame (Performance)
