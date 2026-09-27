@@ -323,8 +323,7 @@
         <div class="capture-icon">📷</div>
         <p style="color:var(--muted); margin:0 0 6px;">Kamera öffnen oder Bild wählen</p>
         <div class="btn-row">
-          <button type="button" class="btn primary" id="btnLiveCam">🎥 Live-Kamera (Auto-Scan)</button>
-          <button type="button" class="btn primary" id="btnBatchCam">🗂️ Batch-Scan (mehrere Seiten automatisch)</button>
+          <button type="button" class="btn primary" id="btnLiveCam">📷 Kamera öffnen (Scanner)</button>
           <label class="btn secondary" for="cameraInput">📷 Foto aufnehmen</label>
           <label class="btn secondary" for="fileInput">🖼️ Bild auswählen</label>
         </div>
@@ -1035,8 +1034,10 @@
     }
   });
 
-  document.getElementById('btnLiveCam').addEventListener('click', () => startLiveCam(false));
-  document.getElementById('btnBatchCam').addEventListener('click', () => startLiveCam(true));
+  // Eine einzige Kamera für alles: sie scannt automatisch (oder manuell, per Umschalter)
+  // beliebig viele Seiten hintereinander, statt zwischen zwei getrennten Kamera-Modi wählen
+  // zu müssen. Wer nur eine Seite braucht, tippt nach der ersten Aufnahme einfach "Fertig".
+  document.getElementById('btnLiveCam').addEventListener('click', () => startLiveCam(true));
   document.getElementById('btnLiveCamClose').addEventListener('click', stopLiveCam);
   document.getElementById('btnLiveCamShutter').addEventListener('click', () => {
     if(batchMode){
