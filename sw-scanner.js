@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-scanner-v1';
+const CACHE_NAME = 'sd-scanner-v2';
 const APP_FILES = ['./scanner.html', './manifest-scanner.json', './icon.svg'];
 
 self.addEventListener('install', event => {
@@ -7,7 +7,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', event => {

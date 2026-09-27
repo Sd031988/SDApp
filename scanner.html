@@ -2222,7 +2222,19 @@
   // App startet auf dem Startbildschirm ("Alle Scans"), nicht direkt im Scan-Ablauf.
   showStep('stepLibrary');
 
-  if(document.getElementById('sdScannerManifestLink') && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
+  if(document.getElementById('sdScannerManifestLink') && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
+    navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
+  }
+  function sdUpdateBereit() {
+    if (document.getElementById('sd-update-banner')) return;
+    const b = document.createElement('div');
+    b.id = 'sd-update-banner';
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#1c4a42;color:#f4ead0;padding:12px 16px;text-align:center;font-family:inherit;font-size:0.95rem;box-shadow:0 -2px 10px rgba(0,0,0,.35);';
+    b.innerHTML = '🔄 Eine neue Version ist verfügbar. <button id="sd-update-btn" style="margin-left:10px;padding:6px 14px;border:0;border-radius:6px;background:#c9a86a;color:#1c2e2a;font-weight:bold;cursor:pointer;">Jetzt aktualisieren</button>';
+    document.body.appendChild(b);
+    document.getElementById('sd-update-btn').onclick = () => location.reload();
+  }
 })();
 </script>
 </body>
