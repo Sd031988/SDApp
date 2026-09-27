@@ -37,6 +37,81 @@
     background:linear-gradient(135deg,var(--gold),var(--primary));
     display:grid; place-items:center; color:#0b1625; font-weight:900; font-size:.85rem;
   }
+
+  /* ---------- Startbildschirm ("Alle Scans") ---------- */
+  .home-topbar{
+    display:none; align-items:center; gap:10px; padding:14px 16px;
+    background:var(--panel); border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:10;
+  }
+  body.home-active .home-topbar{ display:flex; }
+  body.home-active header{ display:none; }
+  body.home-active .home-bottombar{ display:flex; }
+  .home-title{ flex:1; font-size:1.15rem; font-weight:800; }
+  .home-topbar-actions{ display:flex; gap:6px; }
+  .home-icon-btn{
+    width:38px; height:38px; border-radius:50%; border:none; background:transparent;
+    color:var(--text); font-size:1.15rem; cursor:pointer; display:grid; place-items:center;
+  }
+  .home-icon-btn:active{ background:rgba(255,255,255,.08); }
+  .home-search-input{
+    display:block; margin:10px 16px 0; padding:10px 14px; border-radius:12px;
+    border:1px solid var(--border); background:var(--panel-2); color:var(--text); font-size:.95rem;
+    width:calc(100% - 32px);
+  }
+  .home-dropdown{
+    position:fixed; top:60px; z-index:30; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); overflow:hidden; min-width:240px;
+  }
+  #homeMenuDropdown{ left:12px; }
+  #homeMoreDropdown, #homePhotosMenu{ right:12px; }
+  #homePhotosMenu{ top:auto; bottom:78px; }
+  .home-dropdown button{
+    display:block; width:100%; text-align:left; padding:13px 16px; border:none; background:transparent;
+    color:var(--text); font-size:.92rem; cursor:pointer; border-bottom:1px solid var(--border);
+  }
+  .home-dropdown button:last-child{ border-bottom:none; }
+  .home-dropdown button:active{ background:rgba(255,255,255,.06); }
+
+  .home-bottombar{
+    display:none; position:sticky; bottom:0; z-index:10; gap:10px; padding:12px 16px;
+    background:var(--panel); border-top:1px solid var(--border);
+  }
+  .home-bottom-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:10px 0; border-radius:14px; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--text); font-size:.82rem; font-weight:600; cursor:pointer;
+  }
+  .home-bottom-btn.primary{
+    background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#06121f; border:none;
+  }
+  .home-bottom-icon{ font-size:1.5rem; }
+
+  .library-list{ display:flex; flex-direction:column; gap:0; }
+  .library-row{
+    display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid var(--border);
+  }
+  .library-row img{ width:56px; height:72px; object-fit:cover; border-radius:6px; background:#000; flex-shrink:0; }
+  .library-row .lib-row-info{ flex:1; min-width:0; }
+  .library-row .lib-row-name{ font-weight:700; font-size:1rem; margin:0 0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .library-row .lib-row-meta{ font-size:.8rem; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .library-row .lib-row-meta .badge{
+    border:1px solid var(--border); border-radius:6px; padding:1px 6px; font-weight:700;
+  }
+  .library-row .lib-row-menu{ position:relative; }
+  .library-row .lib-row-menu-btn{
+    background:none; border:none; color:var(--muted); font-size:1.3rem; cursor:pointer; padding:6px 10px;
+  }
+  .library-row .lib-row-actions{
+    display:none; position:absolute; right:0; top:32px; background:var(--panel-2); border:1px solid var(--border);
+    border-radius:10px; overflow:hidden; z-index:20; min-width:170px; box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  .library-row .lib-row-actions.show{ display:block; }
+  .library-row .lib-row-actions button{
+    display:block; width:100%; text-align:left; padding:10px 14px; border:none; background:transparent;
+    color:var(--text); font-size:.85rem; cursor:pointer; border-bottom:1px solid var(--border);
+  }
+  .library-row .lib-row-actions button:last-child{ border-bottom:none; }
   header a.back{ color:var(--muted); font-size:.85rem; text-decoration:none; }
   main{
     flex:1;
@@ -294,17 +369,40 @@
 </style>
 </head>
 <body>
-  <header>
+  <header id="mainHeader">
     <div class="brand"><div class="brand-mark">SD</div><span>SD Scanner</span></div>
     <div style="display:flex; align-items:center; gap:16px;">
-      <a class="back" href="#" id="btnOpenLibrary">📁 Meine Dokumente</a>
+      <a class="back" href="#" id="btnOpenLibrary">📁 Alle Scans</a>
       <a class="back" href="index.html">← Zur Übersicht</a>
     </div>
   </header>
 
+  <!-- App-Startbildschirm: Liste aller gespeicherten Scans, Kamera direkt erreichbar -->
+  <div class="home-topbar" id="homeTopbar">
+    <button type="button" class="home-icon-btn" id="btnHomeMenu">☰</button>
+    <span class="home-title" id="homeTitle">Alle Scans (0)</span>
+    <div class="home-topbar-actions">
+      <button type="button" class="home-icon-btn" id="btnHomeSearch">🔍</button>
+      <button type="button" class="home-icon-btn" id="btnHomeCloud">☁️</button>
+      <button type="button" class="home-icon-btn" id="btnHomeMore">⋮</button>
+    </div>
+  </div>
+  <input type="text" id="homeSearchInput" class="home-search-input" placeholder="Dokumente durchsuchen …" style="display:none;">
+
+  <div class="home-dropdown" id="homeMenuDropdown" style="display:none;">
+    <button type="button" data-action="new-scan">📄 Neuer Scan (Dokumenttyp wählen)</button>
+    <button type="button" data-action="overview">🏠 Zur App-Übersicht</button>
+  </div>
+  <div class="home-dropdown" id="homeMoreDropdown" style="display:none;">
+    <label class="checkbox-row" style="padding:10px 14px;">
+      <input type="checkbox" id="chkAutoScanDefault" checked>
+      Automatisch scannen (Auto-Erkennung) als Standard
+    </label>
+  </div>
+
   <main>
     <!-- STEP: capture -->
-    <section class="step active" id="stepCapture">
+    <section class="step" id="stepCapture">
       <h1>Dokument scannen</h1>
       <p class="hint">Foto aufnehmen oder ein vorhandenes Bild auswählen. Danach kannst du zuschneiden und einen Filter wählen – oder das Original behalten.</p>
 
@@ -459,21 +557,31 @@
       </div>
     </section>
 
-    <!-- STEP: library (Ordner/Organisation) -->
-    <section class="step" id="stepLibrary">
-      <h1>Meine Dokumente</h1>
-      <p class="hint">Deine gespeicherten Scans, organisiert in Ordnern. Die Dokumente werden lokal auf diesem Gerät gespeichert.</p>
+    <!-- STEP: library / Startbildschirm (Ordner/Organisation) -->
+    <section class="step active" id="stepLibrary">
       <div class="folder-row" id="folderRow"></div>
-      <div class="btn-row" style="margin-bottom:18px;">
-        <button class="btn secondary" id="btnNewFolder">+ Neuer Ordner</button>
-        <button class="btn ghost" id="btnLibraryBack">← Zurück zum Scanner</button>
-      </div>
-      <div class="library-grid" id="libraryGrid"></div>
+      <button class="btn secondary" id="btnNewFolder" style="margin-bottom:14px;">+ Neuer Ordner</button>
+      <div class="library-list" id="libraryGrid"></div>
       <p class="status-bar" id="libraryStatus"></p>
     </section>
 
     <p class="status-bar" id="globalStatus"></p>
   </main>
+
+  <!-- Feste Fußleiste auf dem Startbildschirm: Fotos importieren / Kamera direkt öffnen -->
+  <div class="home-bottombar" id="homeBottombar">
+    <button type="button" class="home-bottom-btn" id="btnHomePhotos">
+      <span class="home-bottom-icon">🖼️</span><span>Fotos</span>
+    </button>
+    <button type="button" class="home-bottom-btn primary" id="btnHomeCamera">
+      <span class="home-bottom-icon">📷</span><span>Kamera</span>
+    </button>
+  </div>
+  <div class="home-dropdown" id="homePhotosMenu" style="display:none;">
+    <button type="button" id="btnPhotosFromGallery">🖼️ Fotos aus Galerie hochladen</button>
+    <button type="button" id="btnPhotosOtherFile">📄 Andere Datei hochladen (PDF)</button>
+  </div>
+  <input type="file" id="pdfImportInput" accept="application/pdf" style="display:none;">
 
   <footer class="attrib">SD Scanner · Teil von SD Bewerbungsstudio</footer>
 
@@ -619,6 +727,8 @@
     ['stepCapture','stepCrop','stepFilter','stepExport','stepMarkup','stepLibrary'].forEach(k => {
       document.getElementById(k).classList.toggle('active', k === name);
     });
+    document.body.classList.toggle('home-active', name === 'stepLibrary');
+    if(name === 'stepLibrary') renderLibrary();
     window.scrollTo({top:0, behavior:'smooth'});
   }
 
@@ -758,8 +868,10 @@
     els.liveCamBox.style.display = '';
     els.liveCamHint.textContent = 'Kamera wird gestartet …';
     els.liveCamHint.classList.remove('ready');
-    captureMode = 'auto';
-    document.querySelectorAll('#liveCamModeToggle .mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === 'auto'));
+    // Standard aus den Einstellungen übernehmen (⋮-Menü auf dem Startbildschirm), statt immer
+    // fest auf "Auto" zu starten.
+    captureMode = localStorage.getItem('sdScannerAutoDefault') === 'off' ? 'manuell' : 'auto';
+    document.querySelectorAll('#liveCamModeToggle .mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === captureMode));
     updateShutterVisibility();
     document.getElementById('btnBatchDone').style.display = batchMode ? '' : 'none';
     els.liveCamBadge.style.display = batchMode ? 'flex' : 'none';
@@ -1810,13 +1922,10 @@
 
   document.getElementById('btnOpenLibrary').addEventListener('click', (e) => {
     e.preventDefault();
-    const activeStep = document.querySelector('main .step.active');
-    libraryCallerStep = activeStep ? activeStep.id : 'stepCapture';
     currentFolderFilter = 'Alle';
     renderLibrary();
     showStep('stepLibrary');
   });
-  document.getElementById('btnLibraryBack').addEventListener('click', () => showStep(libraryCallerStep));
 
   document.getElementById('btnNewFolder').addEventListener('click', () => {
     const name = window.prompt('Name des neuen Ordners:');
@@ -1829,6 +1938,22 @@
     currentFolderFilter = name;
     renderLibrary();
   });
+
+  // Grobe Dateigrößen-Schätzung aus der Base64-Länge (wie "1 MB" / "716 KB" im Referenz-Screenshot).
+  function estimateSize(dataUrl){
+    if(!dataUrl) return '0 KB';
+    const base64Len = dataUrl.length - (dataUrl.indexOf(',') + 1);
+    const bytes = base64Len * 0.75;
+    if(bytes > 1024*1024) return (bytes/1024/1024).toFixed(1).replace('.0','') + ' MB';
+    return Math.round(bytes/1024) + ' KB';
+  }
+  function formatLibDate(ts){
+    const d = new Date(ts);
+    const today = new Date();
+    const isToday = d.toDateString() === today.toDateString();
+    const time = d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    return isToday ? `Heute, ${time}` : d.toLocaleDateString('de-DE', { day:'2-digit', month:'short' }) + `, ${time}`;
+  }
 
   function renderLibrary(){
     const docs = loadLibrary();
@@ -1848,37 +1973,62 @@
     folders.forEach(f => folderRow.appendChild(makeChip('📁 ' + f, f)));
     folderRow.appendChild(makeChip('🗑️ Papierkorb', 'Papierkorb'));
 
+    const searchInput = document.getElementById('homeSearchInput');
+    const query = (searchInput.value || '').trim().toLowerCase();
+
     const grid = document.getElementById('libraryGrid');
     grid.innerHTML = '';
-    const visible = docs.filter(d => currentFolderFilter === 'Alle' ? d.folder !== 'Papierkorb' : d.folder === currentFolderFilter);
+    let visible = docs.filter(d => currentFolderFilter === 'Alle' ? d.folder !== 'Papierkorb' : d.folder === currentFolderFilter);
+    if(query) visible = visible.filter(d => (d.name || '').toLowerCase().includes(query));
+    visible = visible.slice().sort((a,b) => b.createdAt - a.createdAt);
+
+    document.getElementById('homeTitle').textContent =
+      (currentFolderFilter === 'Alle' ? 'Alle Scans' : currentFolderFilter) + ' (' + visible.length + ')';
 
     if(!visible.length){
-      grid.innerHTML = '<p class="hint">Keine Dokumente in dieser Ansicht.</p>';
+      grid.innerHTML = '<p class="hint" style="padding:20px 4px;">Keine Dokumente in dieser Ansicht.</p>';
       return;
     }
 
     visible.forEach(doc => {
       const isTrash = doc.folder === 'Papierkorb';
-      const card = document.createElement('div');
-      card.className = 'library-card';
-      card.innerHTML = `
+      const row = document.createElement('div');
+      row.className = 'library-row';
+      row.innerHTML = `
         <img src="${doc.thumb}">
-        <div class="lib-info">
-          <p class="lib-name">${doc.name}</p>
-          <p class="lib-meta">${doc.pageCount} Seite(n) · ${new Date(doc.createdAt).toLocaleDateString('de-DE')}</p>
+        <div class="lib-row-info">
+          <p class="lib-row-name">${doc.name}</p>
+          <p class="lib-row-meta">
+            <span>${estimateSize(doc.pdfBase64)}</span>
+            <span class="badge">${doc.pageCount}</span>
+            <span>${formatLibDate(doc.createdAt)}</span>
+          </p>
         </div>
-        <div class="lib-actions">
-          ${isTrash ? `
-            <button data-action="restore" data-id="${doc.id}">↩️ Zurück</button>
-            <button data-action="delete-forever" data-id="${doc.id}">🗑️ Endgültig</button>
-          ` : `
-            <button data-action="open" data-id="${doc.id}">⬇️ PDF</button>
-            <button data-action="rename" data-id="${doc.id}">✏️ Name</button>
-            <button data-action="move" data-id="${doc.id}">📁 Verschieben</button>
-            <button data-action="trash" data-id="${doc.id}">🗑️ Löschen</button>
-          `}
+        <div class="lib-row-menu">
+          <button type="button" class="lib-row-menu-btn" data-menu-id="${doc.id}">⋮</button>
+          <div class="lib-row-actions" id="rowActions_${doc.id}">
+            ${isTrash ? `
+              <button data-action="restore" data-id="${doc.id}">↩️ Wiederherstellen</button>
+              <button data-action="delete-forever" data-id="${doc.id}">🗑️ Endgültig löschen</button>
+            ` : `
+              <button data-action="open" data-id="${doc.id}">⬇️ PDF herunterladen</button>
+              <button data-action="rename" data-id="${doc.id}">✏️ Umbenennen</button>
+              <button data-action="move" data-id="${doc.id}">📁 Verschieben</button>
+              <button data-action="trash" data-id="${doc.id}">🗑️ Löschen</button>
+            `}
+          </div>
         </div>`;
-      grid.appendChild(card);
+      grid.appendChild(row);
+    });
+
+    grid.querySelectorAll('.lib-row-menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = document.getElementById('rowActions_' + btn.dataset.menuId);
+        const wasOpen = menu.classList.contains('show');
+        grid.querySelectorAll('.lib-row-actions').forEach(m => m.classList.remove('show'));
+        if(!wasOpen) menu.classList.add('show');
+      });
     });
 
     grid.querySelectorAll('[data-action]').forEach(btn => {
@@ -1917,6 +2067,110 @@
     });
   }
 
+  // ---------- Startbildschirm-Bedienung (Hamburger, Suche, Fotos/Kamera unten) ----------
+  const AUTO_DEFAULT_KEY = 'sdScannerAutoDefault';
+  document.getElementById('chkAutoScanDefault').checked = localStorage.getItem(AUTO_DEFAULT_KEY) !== 'off';
+  document.getElementById('chkAutoScanDefault').addEventListener('change', (e) => {
+    localStorage.setItem(AUTO_DEFAULT_KEY, e.target.checked ? 'on' : 'off');
+  });
+
+  function closeAllHomeDropdowns(){
+    document.getElementById('homeMenuDropdown').style.display = 'none';
+    document.getElementById('homeMoreDropdown').style.display = 'none';
+    document.getElementById('homePhotosMenu').style.display = 'none';
+  }
+  // Ein einziger globaler Listener schließt Dropdowns und Zeilen-Menüs bei Klick daneben.
+  document.addEventListener('click', () => {
+    closeAllHomeDropdowns();
+    document.querySelectorAll('.lib-row-actions').forEach(m => m.classList.remove('show'));
+  });
+  document.getElementById('btnHomeMenu').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('homeMenuDropdown');
+    const willShow = dd.style.display === 'none';
+    closeAllHomeDropdowns();
+    dd.style.display = willShow ? 'block' : 'none';
+  });
+  document.getElementById('btnHomeMore').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('homeMoreDropdown');
+    const willShow = dd.style.display === 'none';
+    closeAllHomeDropdowns();
+    dd.style.display = willShow ? 'block' : 'none';
+  });
+  document.getElementById('btnHomeCloud').addEventListener('click', () => {
+    setStatus('☁️ Cloud-Sync: Scans lokal auf diesem Gerät. Für Google Drive/Dropbox nutze "Teilen" beim Export.');
+  });
+  document.getElementById('btnHomeSearch').addEventListener('click', () => {
+    const input = document.getElementById('homeSearchInput');
+    const willShow = input.style.display === 'none';
+    input.style.display = willShow ? 'block' : 'none';
+    if(willShow) input.focus(); else input.value = '';
+    renderLibrary();
+  });
+  document.getElementById('homeSearchInput').addEventListener('input', renderLibrary);
+
+  document.querySelectorAll('#homeMenuDropdown [data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      closeAllHomeDropdowns();
+      if(btn.dataset.action === 'new-scan'){ showStep('stepCapture'); }
+      else if(btn.dataset.action === 'overview'){ window.location.href = 'index.html'; }
+    });
+  });
+
+  document.getElementById('btnHomeCamera').addEventListener('click', () => {
+    docType = 'dokument';
+    document.querySelectorAll('.doctype-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === 'dokument'));
+    showStep('stepCapture');
+    startLiveCam(true);
+  });
+
+  document.getElementById('btnHomePhotos').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('homePhotosMenu');
+    const willShow = dd.style.display === 'none';
+    closeAllHomeDropdowns();
+    dd.style.display = willShow ? 'block' : 'none';
+  });
+  document.getElementById('btnPhotosFromGallery').addEventListener('click', () => {
+    closeAllHomeDropdowns();
+    els.fileInput.click();
+  });
+  document.getElementById('btnPhotosOtherFile').addEventListener('click', () => {
+    closeAllHomeDropdowns();
+    document.getElementById('pdfImportInput').click();
+  });
+  document.getElementById('pdfImportInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    document.getElementById('libraryStatus').textContent = 'PDF wird importiert …';
+    try{
+      const reader = new FileReader();
+      reader.onload = () => {
+        const docs = loadLibrary();
+        docs.push({
+          id: 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+          name: file.name.replace(/\.pdf$/i, ''),
+          folder: 'Standard',
+          createdAt: Date.now(),
+          pageCount: 1,
+          // Generisches PDF-Symbol als Vorschau, da eine echte Seiten-Vorschau ohne PDF-Rendering
+          // (z. B. pdf.js) hier nicht ohne Weiteres erzeugt werden kann.
+          thumb: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="150"><rect width="120" height="150" fill="%23c0392b"/><text x="60" y="82" font-size="28" fill="white" text-anchor="middle" font-family="Arial" font-weight="bold">PDF</text></svg>'),
+          pdfBase64: reader.result
+        });
+        saveLibrary(docs);
+        document.getElementById('libraryStatus').textContent = 'PDF importiert ✓';
+        renderLibrary();
+      };
+      reader.onerror = () => { document.getElementById('libraryStatus').textContent = 'Fehler beim Import.'; };
+      reader.readAsDataURL(file);
+    } catch(err){
+      document.getElementById('libraryStatus').textContent = 'Fehler beim Import: ' + err.message;
+    }
+    e.target.value = '';
+  });
+
   document.getElementById('btnSaveToLibrary').addEventListener('click', async () => {
     if(!pages.length) return;
     const statusEl = document.getElementById('exportStatus');
@@ -1947,6 +2201,9 @@
       statusEl.textContent = 'Fehler beim Speichern in die Bibliothek: ' + err.message;
     }
   });
+
+  // App startet auf dem Startbildschirm ("Alle Scans"), nicht direkt im Scan-Ablauf.
+  showStep('stepLibrary');
 
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
 })();
