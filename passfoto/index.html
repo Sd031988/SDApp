@@ -194,10 +194,32 @@
 </header>
 
 <main>
-  <!-- Schritt 1: Foto wählen -->
-  <section class="step active" id="stepCapture">
+  <!-- Schritt 1: Format wählen -->
+  <section class="step active" id="stepFormat">
     <h1>📸 Pass- &amp; Bewerbungsfoto</h1>
-    <p class="hint">Lade ein Foto hoch oder mach eins mit der Kamera. Danach richtest du es passend zu, entfernst bei Bedarf den Hintergrund und lädst es fertig herunter.</p>
+    <p class="hint">Wähle zuerst, für was das Foto gebraucht wird. Danach richten wir Kamera und Zuschnitt automatisch passend dazu aus.</p>
+    <div class="format-list" id="formatList"></div>
+
+    <div id="audienceRow" class="audience-row">
+      <span class="audience-label">Für wen ist das Foto?</span>
+      <div class="audience-options" id="audienceOptions">
+        <button type="button" class="audience-btn selected" data-audience="erwachsen">Erwachsener</button>
+        <button type="button" class="audience-btn" data-audience="kind">Kind (1–5 Jahre)</button>
+        <button type="button" class="audience-btn" data-audience="baby">Baby (unter 1 Jahr)</button>
+      </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel"></div>
+
+    <div class="btn-row">
+      <button class="btn primary" id="btnFormatNext">Weiter →</button>
+    </div>
+  </section>
+
+  <!-- Schritt 2: Foto wählen -->
+  <section class="step" id="stepCapture">
+    <h1>📷 Foto aufnehmen</h1>
+    <p class="hint">Mach ein Foto mit der Live-Kamera (mit passender Ausrichthilfe für das gewählte Format), nimm eins direkt auf oder wähle ein vorhandenes.</p>
     <div class="capture-box">
       <div class="capture-icon">🙂</div>
       <div class="btn-row">
@@ -220,24 +242,16 @@
         <button class="btn primary" id="btnLiveCamShutter">📸 Jetzt aufnehmen</button>
       </div>
     </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="btnCaptureBack">← Anderes Format wählen</button>
+    </div>
   </section>
 
-  <!-- Schritt 2: Format wählen + zuschneiden -->
+  <!-- Schritt 3: Zuschneiden -->
   <section class="step" id="stepCrop">
     <h1>✂️ Zuschneiden &amp; ausrichten</h1>
-    <p class="hint">Format wählen, dann Kopf in den Rahmen ziehen und mit dem Regler die Größe anpassen.</p>
-    <div class="format-list" id="formatList"></div>
-
-    <div id="audienceRow" class="audience-row">
-      <span class="audience-label">Für wen ist das Foto?</span>
-      <div class="audience-options" id="audienceOptions">
-        <button type="button" class="audience-btn selected" data-audience="erwachsen">Erwachsener</button>
-        <button type="button" class="audience-btn" data-audience="kind">Kind (1–5 Jahre)</button>
-        <button type="button" class="audience-btn" data-audience="baby">Baby (unter 1 Jahr)</button>
-      </div>
-    </div>
-
-    <div class="info-panel" id="infoPanel"></div>
+    <p class="hint">Kopf in den Rahmen ziehen und mit dem Regler die Größe anpassen.</p>
 
     <div class="crop-stage" id="cropStage">
       <canvas id="cropCanvas"></canvas>
@@ -380,6 +394,7 @@
   };
 
   let selectedFormat = FORMATS[0];
+  let selectedAudience = 'erwachsen';
   let img = null; // aktuell geladenes Foto (Image)
   let zoom = 1;
   let centerX = 0, centerY = 0; // Mittelpunkt des sichtbaren Ausschnitts, in Original-Pixeln
@@ -392,9 +407,13 @@
     $(id).classList.add('active');
   }
 
-  // ---------- Schritt 1: Foto aufnehmen/auswählen ----------
+  // ---------- Schritt 1: Format wählen ----------
+  $('btnFormatNext').onclick = () => showStep('stepCapture');
+
+  // ---------- Schritt 2: Foto aufnehmen/auswählen ----------
   $('btnTakePhoto').onclick = () => $('fileInputCamera').click();
   $('btnChoosePhoto').onclick = () => $('fileInputChoose').click();
+  $('btnCaptureBack').onclick = () => { stopLiveCam(); showStep('stepFormat'); };
 
   function handleFileChosen(file) {
     if (!file) return;
@@ -406,10 +425,6 @@
         zoom = 1;
         centerX = image.naturalWidth / 2;
         centerY = image.naturalHeight / 2;
-        selectedAudience = 'erwachsen';
-        document.querySelectorAll('.audience-btn').forEach(b => b.classList.toggle('selected', b.dataset.audience === 'erwachsen'));
-        buildFormatList();
-        renderInfoPanel();
         showStep('stepCrop');
         setupCropStage();
       };
@@ -508,7 +523,6 @@
     });
   }
 
-  let selectedAudience = 'erwachsen';
   document.querySelectorAll('.audience-btn').forEach(btn => {
     btn.onclick = () => {
       selectedAudience = btn.dataset.audience;
@@ -810,6 +824,10 @@
   };
 
   window.addEventListener('resize', () => { if (img && $('stepCrop').classList.contains('active')) setupCropStage(); });
+
+  // Erste Ansicht: Format-Liste direkt befüllen (Schritt 1 ist jetzt die Formatwahl)
+  buildFormatList();
+  renderInfoPanel();
 
   // Register Service Worker for PWA
   if ('serviceWorker' in navigator) {
