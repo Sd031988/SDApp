@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Anleitung | SD Bewerbungsstudio</title>
+    <style>
+        :root {
+            --bg: #030b14;
+            --panel: rgba(17, 24, 39, 0.84);
+            --primary: #62f0d4;
+            --gold: #f8d779;
+            --text: #edf6ff;
+            --muted: #bfd2e8;
+            --border: rgba(191, 210, 232, 0.18);
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Inter, Arial, sans-serif;
+            color: var(--text);
+            background: radial-gradient(circle at top left, rgba(98, 240, 212, 0.16), transparent 22%), radial-gradient(circle at bottom right, rgba(91, 184, 255, 0.15), transparent 28%), linear-gradient(135deg, #020812 0%, #081827 30%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        a { color: var(--primary); }
+        .container {
+            width: min(820px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 36px 0 64px;
+        }
+        .zurueck {
+            display: inline-block;
+            margin-bottom: 24px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        h1 {
+            font-size: clamp(1.6rem, 4vw, 2.1rem);
+            margin: 0 0 20px;
+        }
+        .karte {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 26px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(6px);
+        }
+        .karte h2 {
+            font-size: 1.15rem;
+            margin-top: 0;
+            color: var(--gold);
+        }
+        .karte p, .karte li {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.96rem;
+        }
+        .karte ul, .karte ol { padding-left: 20px; margin: 8px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--muted); }
+        th { color: var(--text); }
+        code {
+            background: rgba(191, 210, 232, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a class="zurueck" href="index.html">← Zurück zur Startseite</a>
+        <h1>Anleitung – SD Bewerbungsstudio starten</h1>
+
+        <div class="karte">
+            <h2>Am einfachsten: direkt im Browser</h2>
+            <p>Du brauchst nichts herunterzuladen oder zu installieren. Öffne einfach <a href="index.html">thesdhub.com</a> und wähle unter "Bereiche" die gewünschte App (Bewerbung, PDF Studio, Scanner oder Passfoto). Alles läuft direkt im Browser, deine Daten bleiben auf deinem Gerät.</p>
+            <p>Auf dem Handy kannst du die App zusätzlich über "Zum Home-Bildschirm hinzufügen" (iPhone) bzw. "App installieren" (Android) wie eine normale App auf deinem Startbildschirm ablegen.</p>
+        </div>
+
+        <div class="karte">
+            <h2>Downloads für Windows, macOS und Linux</h2>
+            <p>Wer die App lieber lokal ohne Internetverbindung nutzen möchte, findet auf der Startseite unter "Downloads" passende Pakete:</p>
+            <table>
+                <tr><th>Datei</th><th>Für wen?</th></tr>
+                <tr><td>Windows ZIP</td><td>Windows-Nutzer, PowerShell-Start mit automatischem Browser-Öffnen</td></tr>
+                <tr><td>macOS ZIP</td><td>Mac-Nutzer, Startskript mit Python 3</td></tr>
+                <tr><td>Linux ZIP</td><td>Linux-Nutzer, lokales Startskript</td></tr>
+            </table>
+        </div>
+
+        <div class="karte">
+            <h2>Windows – Schritt für Schritt</h2>
+            <ol>
+                <li>ZIP-Datei entpacken</li>
+                <li>Enthaltene Datei doppelklicken – die App öffnet sich automatisch im Standardbrowser</li>
+                <li>Falls Windows eine Sicherheitswarnung zeigt: auf "Trotzdem ausführen" klicken</li>
+            </ol>
+        </div>
+
+        <div class="karte">
+            <h2>macOS – Schritt für Schritt</h2>
+            <ol>
+                <li>ZIP-Datei entpacken</li>
+                <li>Enthaltenes Startskript öffnen (bei Bedarf im Finder mit Rechtsklick → "Öffnen", falls macOS zunächst warnt)</li>
+                <li>Die App öffnet sich im Standardbrowser</li>
+            </ol>
+        </div>
+
+        <div class="karte">
+            <h2>Linux – Schritt für Schritt</h2>
+            <ol>
+                <li>ZIP-Datei entpacken</li>
+                <li>Startskript im Terminal ausführbar machen und starten</li>
+                <li>Die App öffnet sich im Standardbrowser</li>
+            </ol>
+        </div>
+
+        <div class="karte">
+            <h2>Systemvoraussetzungen</h2>
+            <ul>
+                <li>Windows 10 oder höher, macOS 11 oder höher, bzw. eine aktuelle Linux-Distribution</li>
+                <li>Ein aktueller Browser (Chrome, Firefox, Edge oder Safari)</li>
+                <li>Internetverbindung nur beim allerersten Start nötig (danach auch offline nutzbar)</li>
+            </ul>
+        </div>
+
+        <div class="karte">
+            <h2>Fragen oder Probleme?</h2>
+            <p>Schreib uns einfach per E-Mail: <a href="mailto:durrani.sulaiman@yahoo.de">durrani.sulaiman@yahoo.de</a></p>
+        </div>
+
+        <footer>SD Bewerbungsstudio · thesdhub.com</footer>
+    </div>
+</body>
+</html>
