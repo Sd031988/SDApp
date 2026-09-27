@@ -30,7 +30,10 @@
     // alte und neue Codes nicht mehr zusammen.
     const SD_GEHEIM = 'SD-Bewerbungsstudio-Silvi-2026-x7Q';
 
-    const FREI_TAGE = 15; // 15 Tage kostenlose Testphase
+    const VOLL_TAGE = 30; // 1 Monat voller, uneingeschraenkter Zugriff
+    const EINGESCHRAENKT_TAGE = 180; // danach 6 Monate eingeschraenkter Zugriff (kein Export, weniger Vorlagen)
+    // Erst nach VOLL_TAGE + EINGESCHRAENKT_TAGE (hier: 7 Monate insgesamt)
+    // kommt die volle Sperre (zeigeSperre) mit Freischalt-Code-Pflicht.
     const ERSTBESUCH_KEY = 'sdErstbesuch';
     const ZUGANG_BIS_KEY = 'sdZugangBis';
     const GERAETE_ID_KEY = 'sdGeraeteId';
@@ -133,17 +136,48 @@
         localStorage.setItem(ERSTBESUCH_KEY, String(erstbesuch));
     }
 
-    function hatZugang() {
-        const inFreiPhase = (Date.now() - erstbesuch) < FREI_TAGE * 24 * 60 * 60 * 1000;
-        if (inFreiPhase) return true;
+    // Liefert den aktuellen Status als Text: 'voll' (Testphase oder
+    // gueltiger Freischalt-Code - alles nutzbar), 'eingeschraenkt' (Testphase
+    // vorbei, aber die 6 Monate danach noch nicht - App bleibt nutzbar, aber
+    // jede einzelne App entscheidet selbst, was sie in diesem Zustand sperrt,
+    // z. B. Export/Download oder bestimmte Vorlagen), oder 'gesperrt' (auch
+    // die 6 Monate vorbei, kompletter Sperrbildschirm bis zur Freischaltung).
+    function sdStatus() {
         const zugangBis = parseInt(localStorage.getItem(ZUGANG_BIS_KEY) || '0', 10);
-        return zugangBis > Date.now();
+        if (zugangBis > Date.now()) return 'voll';
+        const tageSeitErstbesuch = (Date.now() - erstbesuch) / 86400000;
+        if (tageSeitErstbesuch < VOLL_TAGE) return 'voll';
+        if (tageSeitErstbesuch < VOLL_TAGE + EINGESCHRAENKT_TAGE) return 'eingeschraenkt';
+        return 'gesperrt';
+    }
+    window.sdStatus = sdStatus;
+
+    function hatZugang() {
+        return sdStatus() !== 'gesperrt';
     }
 
+    // Dezenter, nicht blockierender Hinweis fuer den 'eingeschraenkt'-Status -
+    // im Gegensatz zu zeigeSperre() unten haelt das die App weiter benutzbar,
+    // erinnert aber daran, dass man gerade im eingeschraenkten Modus ist.
+    function sdZeigeEinschraenkungsHinweis() {
+        if (document.getElementById('sd-einschraenkung-banner')) return;
+        const geraeteId = sdGeraeteId();
+        const banner = document.createElement('div');
+        banner.id = 'sd-einschraenkung-banner';
+        banner.innerHTML =
+            '<span>🔓 Eingeschränkter Modus: Die volle Testphase ist vorbei. Manche Funktionen (z. B. Export/Download, weitere Vorlagen) sind erst mit Freischalt-Code wieder verfügbar.</span>' +
+            '<button id="sd-einschraenkung-code-btn" type="button">Code eingeben</button>' +
+            '<button id="sd-einschraenkung-schliessen" type="button" aria-label="Schließen">✕</button>';
+        document.body.prepend(banner);
+        document.getElementById('sd-einschraenkung-schliessen').addEventListener('click', () => banner.remove());
+        document.getElementById('sd-einschraenkung-code-btn').addEventListener('click', zeigeSperre);
+    }
+    window.sdZeigeEinschraenkungsHinweis = sdZeigeEinschraenkungsHinweis;
+
     function zeigeSperre() {
+        if (document.getElementById('sd-zugang-overlay')) return;
         const overlay = document.createElement('div');
         overlay.id = 'sd-zugang-overlay';
-        const resttageFrei = Math.max(0, FREI_TAGE - Math.floor((Date.now() - erstbesuch) / 86400000));
         const geraeteId = sdGeraeteId();
         overlay.innerHTML =
             '<div class="sd-zugang-box">' +
@@ -212,6 +246,14 @@
         '.sd-geraete-box code{display:block;font-size:1.05rem;font-weight:bold;letter-spacing:1px;' +
         'background:#f1f5f9;padding:8px;border-radius:6px;text-align:center;margin-bottom:8px;}' +
         '.sd-geraete-box button{background:#eef2ef;color:#172a3a;font-size:.8rem;padding:8px;}' +
+        '#sd-einschraenkung-banner{position:fixed;top:0;left:0;right:0;z-index:999998;background:#3a2416;' +
+        'color:#fdeecb;padding:10px 14px;font-family:"Trebuchet MS",Verdana,sans-serif;font-size:0.85rem;' +
+        'display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.3);}' +
+        '#sd-einschraenkung-banner span{flex:1 1 240px;}' +
+        '#sd-einschraenkung-banner button{width:auto;padding:6px 12px;border-radius:6px;border:0;' +
+        'font-weight:bold;cursor:pointer;font-size:0.8rem;}' +
+        '#sd-einschraenkung-code-btn{background:#2f7d72;color:#fff;}' +
+        '#sd-einschraenkung-schliessen{background:transparent;color:#fdeecb;font-size:1rem;padding:2px 8px;}' +
         /* Kopierschutz: Text nicht markierbar/kopierbar, ausser in echten
            Eingabefeldern - sonst koennte man ja nicht mehr in die eigenen
            Formulare tippen oder in der Vorschau editieren. */
@@ -219,12 +261,15 @@
         'input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;}';
     document.head.appendChild(style);
 
-    if (!hatZugang()) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', zeigeSperre);
-        } else {
-            zeigeSperre();
-        }
+    function sdPruefeUndZeigeStatus() {
+        const status = sdStatus();
+        if (status === 'gesperrt') zeigeSperre();
+        else if (status === 'eingeschraenkt') sdZeigeEinschraenkungsHinweis();
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', sdPruefeUndZeigeStatus);
+    } else {
+        sdPruefeUndZeigeStatus();
     }
 
     // Einfache Kopierschutz-Massnahmen (siehe Hinweis ganz oben: das ist

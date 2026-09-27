@@ -3231,6 +3231,12 @@
     // --- PDF Export Engine ---
     $('btnExport').onclick = async () => {
       if (!state.pages.length) return;
+      // Eingeschraenkter Modus (nach der 1-Monat-Testphase, siehe
+      // zugang.js): PDF-Export ist erst mit Freischalt-Code wieder moeglich.
+      if (typeof sdStatus === 'function' && sdStatus() === 'eingeschraenkt') {
+        alert('🔒 Export/Download ist im eingeschränkten Modus nicht verfügbar.\n\nBitte schalte die App über den gelben Hinweis-Balken oben ("Code eingeben") mit einem Freischalt-Code frei.');
+        return;
+      }
       showToast('PDF wird generiert...', 10000);
       $('btnExport').disabled = true;
 

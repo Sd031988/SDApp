@@ -2018,6 +2018,7 @@
 
         function waehleDownload(format) {
             schliesseDownloadMenu();
+            if (format !== 'json' && sdBlockiertImEingeschraenktenModus('Export/Download')) return;
             if (format === 'docx') speichereAlsDocx();
             if (format === 'doc') speichereFuerOffice();
             if (format === 'json') downloadDaten();
@@ -2482,7 +2483,19 @@
 
         let aktuellerModus = 'lebenslauf';
 
+        // Im eingeschraenkten Modus (nach der 1-Monat-Testphase, siehe
+        // zugang.js) bleibt nur der Lebenslauf-Bereich frei nutzbar - alle
+        // anderen Vorlagen und jeglicher Export/Download verlangen einen
+        // Freischalt-Code. Gibt true zurueck (und zeigt einen Hinweis), wenn
+        // die aufrufende Aktion deswegen abgebrochen werden soll.
+        function sdBlockiertImEingeschraenktenModus(bezeichnung) {
+            if (typeof sdStatus !== 'function' || sdStatus() !== 'eingeschraenkt') return false;
+            alert('🔒 "' + bezeichnung + '" ist im eingeschränkten Modus nicht verfügbar.\n\nBitte schalte die App mit einem Freischalt-Code frei (Button "🔑 Meine Geräte-ID anzeigen" weiter unten, ID per E-Mail schicken).');
+            return true;
+        }
+
         function zeigeModus(modus) {
+            if (modus !== 'lebenslauf' && sdBlockiertImEingeschraenktenModus('Vorlage „' + modus + '"')) return;
             aktuellerModus = modus;
             const lebenslaufAktiv = modus === 'lebenslauf';
             const anschreibenAktiv = modus === 'anschreiben';
@@ -2558,6 +2571,7 @@
         }
 
         function druckeMappe() {
+            if (sdBlockiertImEingeschraenktenModus('Bewerbungsmappe')) return;
             zeigeModus('mappe');
             exportAlsPdf();
         }
@@ -2569,6 +2583,7 @@
         // fertigen Bewerbungsdokument - das war vorher bei window.print()
         // auf manchen Geraeten (v. a. iPhone) nicht abschaltbar.
         async function exportAlsPdf() {
+            if (sdBlockiertImEingeschraenktenModus('Export/Download')) return;
             const istMappe = aktuellerModus === 'mappe';
             const zielId = istMappe ? 'mappe-vorschau' : (aktuellerModus + '-vorschau');
             const element = document.getElementById(zielId);
