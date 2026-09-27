@@ -221,6 +221,7 @@
             '</div>' +
             '<div class="sd-preise sd-preise-paket">' +
             '<strong>🎁 Komplettpaket – alle Apps zusammen:</strong>' +
+            '<div class="sd-preis-zeile"><span>6 Monate, alle Apps</span><span>50 €</span></div>' +
             '<div class="sd-preis-zeile"><span>1 Jahr, alle Apps</span><span>80 €</span></div>' +
             '<small>Spart gegenüber Einzelkauf aller Apps deutlich – ein Code schaltet dann Bewerbung, PDF Studio, Scanner und Passfoto Studio zusammen frei.</small>' +
             '</div>' +
