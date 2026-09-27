@@ -171,8 +171,9 @@
   }
   .livecam-wrap video{
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-    transform:scaleX(-1); /* Spiegelbild wie ein Spiegel/Selfie-Kamera */
   }
+  /* Spiegelbild nur bei der Frontkamera (wie ein Spiegel/Selfie) – bei der Rückkamera nicht spiegeln */
+  .livecam-wrap video.mirrored{ transform:scaleX(-1); }
   .livecam-guide{ position:absolute; inset:0; pointer-events:none; }
   .livecam-hint{
     text-align:center; color:var(--muted); font-size:.85rem; margin:10px 0 4px; font-weight:600;
@@ -209,6 +210,16 @@
   }
   .export-card .et{ font-weight:800; font-size:.92rem; }
   .export-card .es{ color:var(--muted); font-size:.78rem; margin-top:2px; }
+
+  .paper-size-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px; }
+  .paper-size-btn{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    border:1px solid var(--border); border-radius:12px; background:var(--panel);
+    padding:10px 8px; cursor:pointer; min-height:56px;
+  }
+  .paper-size-btn:hover{ border-color:var(--primary); }
+  .paper-size-btn .psz-label{ font-weight:800; font-size:.85rem; color:var(--text); }
+  .paper-size-btn .psz-count{ font-size:.72rem; color:var(--muted); }
 
   .note{ font-size:.78rem; color:var(--muted); margin-top:18px; line-height:1.5; border-top:1px dashed var(--border); padding-top:12px; }
 </style>
@@ -270,6 +281,7 @@
       <p class="livecam-hint" id="liveCamHint">Kamera wird gestartet …</p>
       <div class="btn-row">
         <button class="btn secondary" id="btnLiveCamClose">Abbrechen</button>
+        <button class="btn secondary" id="btnLiveCamFlip" title="Kamera wechseln">🔄 Kamera wechseln</button>
         <button class="btn primary" id="btnLiveCamShutter">📸 Jetzt aufnehmen</button>
       </div>
     </div>
@@ -335,12 +347,12 @@
         </div>
         <button class="btn primary" id="btnDownloadSingle">Download</button>
       </div>
-      <div class="export-card">
+      <div class="export-card" style="flex-direction:column; align-items:stretch; gap:10px;">
         <div>
-          <div class="et">🖨️ Fotobogen (10 × 15 cm)</div>
-          <div class="es" id="sheetInfo">–</div>
+          <div class="et">🖨️ Fotobogen drucken</div>
+          <div class="es">Papierformat wählen – die Seite wird automatisch mit so vielen Fotos wie möglich gefüllt.</div>
         </div>
-        <button class="btn secondary" id="btnDownloadSheet">Download</button>
+        <div class="paper-size-grid" id="paperSizeGrid"></div>
       </div>
     </div>
     <div class="btn-row">
@@ -499,6 +511,7 @@
 
   // ---------- Live-Kamera mit Ausrichthilfe (Kopf-Oval passend zum gewählten Format) ----------
   let liveStream = null;
+  let liveFacingMode = 'user'; // 'user' = Frontkamera (Selfie), 'environment' = Rückkamera
 
   function drawLiveGuide() {
     const wrap = $('liveCamBox').querySelector('.livecam-wrap');
@@ -520,16 +533,25 @@
   }
   window.addEventListener('resize', () => { if (liveStream) drawLiveGuide(); });
 
-  async function startLiveCam() {
+  async function startLiveCam(requestedFacing) {
+    if (requestedFacing) liveFacingMode = requestedFacing;
+    // Laufenden Stream sauber stoppen, bevor die andere Kamera gestartet wird
+    if (liveStream) {
+      liveStream.getTracks().forEach(t => t.stop());
+      liveStream = null;
+    }
     $('liveCamBox').style.display = '';
     $('liveCamHint').textContent = 'Kamera wird gestartet …';
     try {
       liveStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 1280 } },
+        video: { facingMode: { ideal: liveFacingMode }, width: { ideal: 1280 }, height: { ideal: 1280 } },
         audio: false
       });
-      $('liveCamVideo').srcObject = liveStream;
-      await $('liveCamVideo').play();
+      const video = $('liveCamVideo');
+      video.srcObject = liveStream;
+      // Nur die Frontkamera spiegeln (wie ein Spiegel) – die Rückkamera zeigt das Bild seitenrichtig
+      video.classList.toggle('mirrored', liveFacingMode === 'user');
+      await video.play();
       drawLiveGuide();
       $('liveCamHint').textContent = 'Kopf mittig ins Oval einpassen, dann auslösen.';
     } catch (err) {
@@ -545,6 +567,10 @@
     $('liveCamBox').style.display = 'none';
   }
 
+  function flipLiveCam() {
+    startLiveCam(liveFacingMode === 'user' ? 'environment' : 'user');
+  }
+
   function liveCaptureShot() {
     const video = $('liveCamVideo');
     if (!video.videoWidth) return;
@@ -552,9 +578,11 @@
     shot.width = video.videoWidth;
     shot.height = video.videoHeight;
     const sctx = shot.getContext('2d');
-    // Spiegelung rückgängig machen, damit das gespeicherte Foto seitenrichtig ist
-    sctx.translate(shot.width, 0);
-    sctx.scale(-1, 1);
+    if (liveFacingMode === 'user') {
+      // Spiegelung rückgängig machen, damit das gespeicherte Foto seitenrichtig ist
+      sctx.translate(shot.width, 0);
+      sctx.scale(-1, 1);
+    }
     sctx.drawImage(video, 0, 0);
     shot.toBlob(blob => {
       stopLiveCam();
@@ -563,9 +591,10 @@
     }, 'image/jpeg', 0.95);
   }
 
-  $('btnLiveCamPhoto').onclick = startLiveCam;
+  $('btnLiveCamPhoto').onclick = () => startLiveCam();
   $('btnLiveCamClose').onclick = stopLiveCam;
   $('btnLiveCamShutter').onclick = liveCaptureShot;
+  $('btnLiveCamFlip').onclick = flipLiveCam;
 
   // ---------- Schritt 1: Format-Liste (mit Suche) ----------
   let formatQuery = '';
@@ -847,8 +876,7 @@
     const wmm = selectedFormat.wmm, hmm = selectedFormat.hmm;
     $('singleInfo').textContent = `${selectedFormat.label} · ${wmm}×${hmm} mm · ${finalCanvasResult.width}×${finalCanvasResult.height}px`;
 
-    const sheetInfo = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height);
-    $('sheetInfo').textContent = `${sheetInfo.cols * sheetInfo.rows} Kopien auf 10 × 15 cm`;
+    buildPaperSizeGrid();
 
     showStep('stepExport');
   };
@@ -867,16 +895,25 @@
     downloadCanvas(finalCanvasResult, 'Passfoto.jpg');
   };
 
-  function computeSheetLayout(photoW, photoH) {
-    const sheetW = mmToPx(100), sheetH = mmToPx(150);
+  // Gängige Papier-/Abzugsformate für den Fotodruck (Fotoautomat, Fotolabor, Heimdrucker)
+  const PAPER_SIZES = [
+    { id: '9x13', label: '9 × 13 cm', wmm: 90, hmm: 130 },
+    { id: '10x15', label: '10 × 15 cm', wmm: 100, hmm: 150 },
+    { id: '13x18', label: '13 × 18 cm', wmm: 130, hmm: 180 },
+    { id: 'a5', label: 'A5', wmm: 148, hmm: 210 },
+    { id: 'a4', label: 'A4', wmm: 210, hmm: 297 },
+  ];
+
+  function computeSheetLayout(photoW, photoH, sheetW, sheetH) {
     const gap = Math.round(DPI * 0.04); // ca. 1 mm Abstand
     const cols = Math.max(1, Math.floor((sheetW + gap) / (photoW + gap)));
     const rows = Math.max(1, Math.floor((sheetH + gap) / (photoH + gap)));
     return { sheetW, sheetH, gap, cols, rows };
   }
 
-  $('btnDownloadSheet').onclick = () => {
-    const { sheetW, sheetH, gap, cols, rows } = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height);
+  function downloadPaperSheet(paper) {
+    const sheetW = mmToPx(paper.wmm), sheetH = mmToPx(paper.hmm);
+    const { gap, cols, rows } = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height, sheetW, sheetH);
     const sheet = document.createElement('canvas');
     sheet.width = sheetW; sheet.height = sheetH;
     const ctx = sheet.getContext('2d');
@@ -895,8 +932,23 @@
         ctx.drawImage(finalCanvasResult, x, y);
       }
     }
-    downloadCanvas(sheet, 'Fotobogen_10x15.jpg');
-  };
+    downloadCanvas(sheet, `Fotobogen_${paper.id}.jpg`);
+  }
+
+  function buildPaperSizeGrid() {
+    const grid = $('paperSizeGrid');
+    grid.innerHTML = '';
+    PAPER_SIZES.forEach(paper => {
+      const sheetW = mmToPx(paper.wmm), sheetH = mmToPx(paper.hmm);
+      const { cols, rows } = computeSheetLayout(finalCanvasResult.width, finalCanvasResult.height, sheetW, sheetH);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'paper-size-btn';
+      btn.innerHTML = `<span class="psz-label">${paper.label}</span><span class="psz-count">${cols * rows}× Foto</span>`;
+      btn.onclick = () => downloadPaperSheet(paper);
+      grid.appendChild(btn);
+    });
+  }
 
   $('btnExportBack').onclick = () => { showStep('stepBackground'); };
   $('btnNewPhoto').onclick = () => {
