@@ -515,6 +515,18 @@
       els.liveCamHint.textContent = batchMode
         ? 'Halte das Dokument ruhig in den Rahmen – jede Seite wird automatisch nacheinander gescannt.'
         : 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
+      // Manche Handys/Browser beenden den Kamera-Track von sich aus (z. B. wenn die Seite kurz
+      // im Hintergrund war oder das System die Kamera aus anderen Gründen freigibt). Ohne diese
+      // Behandlung "friert" der Batch-Scan dann wortlos ein. Bei Bedarf automatisch neu starten.
+      const track = liveStream.getVideoTracks()[0];
+      if(track){
+        track.addEventListener('ended', () => {
+          if(els.liveCamBox.style.display === 'none') return; // wurde absichtlich geschlossen
+          els.liveCamHint.textContent = 'Kamera-Verbindung unterbrochen – wird neu gestartet …';
+          const wasBatch = batchMode;
+          setTimeout(() => startLiveCam(wasBatch).then(() => updateBatchBadge()), 400);
+        });
+      }
       liveDetectLoop();
     } catch(err){
       els.liveCamHint.textContent = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.');
@@ -634,44 +646,66 @@
     setTimeout(() => els.liveCamFlash.classList.remove('show'), 130);
   }
 
+  const BATCH_MAX_DIM = 1400; // Aufnahme für den Warp verkleinern – volle Auflösung (z.B. 1920x1080)
+                               // Pixel-für-Pixel per JS zu entzerren ist auf dem Handy so langsam,
+                               // dass die Kamera/das Video danach hängen bleibt. Kleiner = flüssiger.
+
+  function resumeBatchDetection(){
+    liveCaptured = false;
+    liveStableCount = 0;
+    liveLastQuad = null;
+  }
+
   function batchCaptureShot(quad, detW, detH){
     if(liveCaptured) return;
     liveCaptured = true;
     flashLiveCam();
-    const video = els.liveCamVideo;
-    const shot = document.createElement('canvas');
-    shot.width = video.videoWidth;
-    shot.height = video.videoHeight;
-    shot.getContext('2d').drawImage(video, 0, 0);
+    // Sicherheitsnetz: falls beim Zuschneiden/Filtern irgendetwas schiefgeht, darf die
+    // Erkennung nicht für immer stehen bleiben – sonst "friert" der Batch-Scan nach der
+    // ersten Seite ein, ohne dass man weiß warum.
+    const safetyTimer = setTimeout(resumeBatchDetection, 4000);
 
-    // Erkanntes Viereck (auf dem kleinen Erkennungsbild) auf die volle Aufnahmegröße skalieren
-    const scaleX = shot.width / detW;
-    const scaleY = shot.height / detH;
-    const fullQuad = quad.map(p => ({ x: p.x * scaleX, y: p.y * scaleY }));
-
-    const wTop = Math.hypot(fullQuad[1].x-fullQuad[0].x, fullQuad[1].y-fullQuad[0].y);
-    const wBot = Math.hypot(fullQuad[2].x-fullQuad[3].x, fullQuad[2].y-fullQuad[3].y);
-    const hLeft = Math.hypot(fullQuad[3].x-fullQuad[0].x, fullQuad[3].y-fullQuad[0].y);
-    const hRight = Math.hypot(fullQuad[2].x-fullQuad[1].x, fullQuad[2].y-fullQuad[1].y);
-    const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
-    const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
-
-    const warped = warpToRect(shot, fullQuad, outW, outH);
-    const filtered = applyFilter(warped, 'auto');
-    const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
-    pages.push({ dataUrl, label: currentPageLabel() });
-    updateBatchBadge();
-
-    els.liveCamHint.textContent = pages.length + '. Seite gescannt – nächste Seite bereithalten …';
-    els.liveCamHint.classList.remove('ready');
-
-    // Kurze Pause, damit die nächste Seite bewusst eingelegt werden kann, dann weiter erkennen.
-    batchPauseUntil = performance.now() + 900;
+    // Die schwere Bildverarbeitung (Zuschneiden + Filter) erst nach dem Blitz-Effekt starten,
+    // damit die Kamera-Vorschau nicht einfriert, bevor die Aufnahme sichtbar bestätigt wurde.
     setTimeout(() => {
-      liveCaptured = false;
-      liveStableCount = 0;
-      liveLastQuad = null;
-    }, 900);
+      try{
+        const video = els.liveCamVideo;
+        const srcW = video.videoWidth, srcH = video.videoHeight;
+        const scaleDown = Math.min(1, BATCH_MAX_DIM / Math.max(srcW, srcH));
+        const shot = document.createElement('canvas');
+        shot.width = Math.round(srcW * scaleDown);
+        shot.height = Math.round(srcH * scaleDown);
+        shot.getContext('2d').drawImage(video, 0, 0, shot.width, shot.height);
+
+        // Erkanntes Viereck (auf dem kleinen Erkennungsbild) auf die verkleinerte Aufnahme skalieren
+        const scaleX = shot.width / detW;
+        const scaleY = shot.height / detH;
+        const fullQuad = quad.map(p => ({ x: p.x * scaleX, y: p.y * scaleY }));
+
+        const wTop = Math.hypot(fullQuad[1].x-fullQuad[0].x, fullQuad[1].y-fullQuad[0].y);
+        const wBot = Math.hypot(fullQuad[2].x-fullQuad[3].x, fullQuad[2].y-fullQuad[3].y);
+        const hLeft = Math.hypot(fullQuad[3].x-fullQuad[0].x, fullQuad[3].y-fullQuad[0].y);
+        const hRight = Math.hypot(fullQuad[2].x-fullQuad[1].x, fullQuad[2].y-fullQuad[1].y);
+        const outW = Math.max(200, Math.min(BATCH_MAX_DIM, Math.round(Math.max(wTop, wBot))));
+        const outH = Math.max(200, Math.min(BATCH_MAX_DIM, Math.round(Math.max(hLeft, hRight))));
+
+        const warped = warpToRect(shot, fullQuad, outW, outH);
+        const filtered = applyFilter(warped, 'auto');
+        const dataUrl = filtered.toDataURL('image/jpeg', 0.85);
+        pages.push({ dataUrl, label: currentPageLabel() });
+        updateBatchBadge();
+
+        els.liveCamHint.textContent = pages.length + '. Seite gescannt – nächste Seite bereithalten …';
+        els.liveCamHint.classList.remove('ready');
+      } catch(err){
+        els.liveCamHint.textContent = 'Seite konnte nicht übernommen werden – bitte nochmal versuchen.';
+      } finally {
+        clearTimeout(safetyTimer);
+        // Kurze Pause, damit die nächste Seite bewusst eingelegt werden kann, dann weiter erkennen.
+        batchPauseUntil = performance.now() + 900;
+        setTimeout(resumeBatchDetection, 900);
+      }
+    }, 20);
   }
 
   document.getElementById('btnBatchDone').addEventListener('click', () => {
