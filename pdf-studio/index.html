@@ -1038,29 +1038,130 @@
         overflow: auto;
       }
 
+      /* Topbar: auf dem Handy ist kein Platz für eine einzelne Zeile mit
+         Titel, Zoom, Rückgängig und allen Aktionsknöpfen - daher wird
+         umgebrochen statt seitlich abgeschnitten/überlappt. */
+      .topbar {
+        height: auto;
+        flex-wrap: wrap;
+        row-gap: 8px;
+        padding: 10px 10px;
+      }
+
+      .topbar-left,
+      .topbar-center,
+      .topbar-right {
+        flex-wrap: wrap;
+        row-gap: 8px;
+      }
+
+      .topbar-center {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .doc-name-input {
+        max-width: 140px;
+      }
+
+      .topbar-right {
+        margin-left: auto;
+      }
+
       .app-layout {
         display: flex;
         flex-direction: column;
         height: auto;
       }
 
+      /* Reihenfolge auf dem Handy: zuerst das Dokument (Stage), danach die
+         Seitenliste, danach die Werkzeug-Einstellungen - so sieht man das
+         Ergebnis zuerst statt erst durch die Seitenliste scrollen zu müssen. */
+      .stage-container {
+        order: 1;
+      }
+
       .sidebar {
+        order: 2;
         max-height: 280px;
+        overflow-y: auto;
+      }
+
+      .inspector {
+        order: 3;
+        max-height: 60vh;
+        overflow-y: auto;
+        border-left: none;
+        border-top: 1px solid var(--line);
       }
 
       .stage-viewport {
         min-height: 60vh;
-        padding: 60px 12px 20px;
+        padding: 60px 10px 20px;
       }
 
       .toolbar-bar {
-        width: 92%;
+        width: 94%;
+        max-width: 94vw;
         overflow-x: auto;
         justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Größere Tippflächen für Finger statt Mauszeiger */
+      .tool-tab,
+      .zoom-btn,
+      .nav-btn,
+      .tool-btn,
+      .mini-btn,
+      .btn-primary,
+      .btn-convert {
+        min-height: 40px;
+      }
+
+      .color-dot {
+        width: 34px;
+        height: 34px;
       }
 
       .convert-grid {
         grid-template-columns: 1fr;
+      }
+
+      .modal-box {
+        padding: 16px;
+      }
+
+      .doctype-btn {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .topbar-right {
+        width: 100%;
+        justify-content: space-between;
+        margin-left: 0;
+      }
+
+      .btn-convert,
+      #btnPrint {
+        padding: 8px 10px;
+        font-size: 0.72rem;
+      }
+
+      .btn-primary {
+        padding: 8px 10px;
+        font-size: 0.78rem;
+      }
+
+      .import-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        max-height: 240px;
       }
     }
 
@@ -2422,8 +2523,20 @@
       stageWrap.className = `paper-stage tool-${state.activeTool}`;
       stageWrap.id = 'paperStage';
 
-      const targetWidth = Math.min(860, window.innerWidth - 680);
-      const baseWidth = Math.max(480, targetWidth);
+      // Berechnet die Papierbreite anhand des tatsächlich verfügbaren Platzes
+      // im Stage-Viewport (nicht anhand von window.innerWidth mit einer festen
+      // Sidebar-Breite abgezogen) - so passt sich die Seite auch auf schmalen
+      // Handy-Bildschirmen an, wo Sidebar/Inspektor untereinander statt
+      // nebeneinander liegen und der Viewport fast die volle Bildschirmbreite hat.
+      const viewportEl = $('stageViewport');
+      const viewportPad = 60; // entspricht ungefähr dem Innenabstand des Viewports
+      const availableWidth = viewportEl
+        ? Math.max(220, viewportEl.clientWidth - viewportPad)
+        : window.innerWidth - 680;
+      const isSmallScreen = window.innerWidth <= 768;
+      const minWidth = isSmallScreen ? 220 : 480;
+      const targetWidth = Math.min(860, availableWidth);
+      const baseWidth = Math.max(minWidth, Math.min(targetWidth, availableWidth));
       const baseHeight = Math.round(baseWidth * (displayH / displayW));
 
       stageWrap.style.width = baseWidth + 'px';
@@ -4354,6 +4467,20 @@
     $('btnLiveCamScan').onclick = startLiveCam;
     $('btnLiveCamClose').onclick = stopLiveCam;
     $('btnLiveCamShutter').onclick = liveCaptureShot;
+
+    // --- Responsives Neuzeichnen der Seite bei Größenänderung ---
+    // Auf dem Handy ändert sich die verfügbare Breite z.B. beim Drehen des
+    // Geräts (Hoch-/Querformat) oder wenn die Adressleiste des Browsers
+    // ein-/ausgeblendet wird. Ohne diesen Listener bliebe die Papierseite
+    // in der zuletzt berechneten Breite "eingefroren" und würde nicht mehr
+    // zum Bildschirm passen.
+    let resizeRerenderTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeRerenderTimer);
+      resizeRerenderTimer = setTimeout(() => {
+        if (getSelectedPage()) renderStage();
+      }, 150);
+    });
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
