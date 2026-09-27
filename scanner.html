@@ -715,7 +715,10 @@
         const warped = warpToRect(shot, fullQuad, outW, outH);
         const filtered = applyFilter(warped, 'auto');
         const dataUrl = filtered.toDataURL('image/jpeg', 0.85);
-        pages.push({ dataUrl, label: currentPageLabel() });
+        // Rohfoto + automatisch erkanntes Viereck aufheben: bei der Nachkontrolle nach dem
+        // Batch-Scan soll man die ECHTE Erkennung sehen und nachjustieren können (wie im
+        // Referenz-Video), nicht nochmal auf dem bereits fertig zugeschnittenen Bild raten.
+        pages.push({ dataUrl, rawDataUrl: shot.toDataURL('image/jpeg', 0.9), quad: fullQuad, label: currentPageLabel() });
         updateBatchBadge();
 
         els.liveCamHint.textContent = pages.length + '. Seite gescannt – nächste Seite bereithalten …';
@@ -752,12 +755,17 @@
   function loadReviewPage(index){
     reviewIndex = index;
     updateReviewBar();
+    const page = pages[reviewIndex];
+    // Wenn beim Batch-Scan das Rohfoto + die automatisch erkannten Ecken aufgehoben wurden,
+    // genau die zeigen (echtes Foto mit passendem Vorschlag) – nicht nochmal auf dem bereits
+    // zugeschnittenen Ergebnis raten. Ohne Rohfoto (z.B. manuell hinzugefügte Seite) läuft
+    // initCrop wie gewohnt mit eigener Auto-Erkennung.
     const img = new Image();
     img.onload = () => {
       currentImage = img;
-      initCrop(img);
+      initCrop(img, page.quad);
     };
-    img.src = pages[reviewIndex].dataUrl;
+    img.src = page.rawDataUrl || page.dataUrl;
   }
 
   function startBatchReview(){
@@ -807,7 +815,7 @@
   // ---------- Crop ----------
   const MAX_DIM = 1600; // downscale large photos for performance
 
-  function initCrop(img){
+  function initCrop(img, presetCorners){
     let w = img.naturalWidth, h = img.naturalHeight;
     const scale = Math.min(1, MAX_DIM / Math.max(w, h));
     w = Math.round(w * scale);
@@ -819,6 +827,16 @@
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, w, h);
+
+    // Schon bekanntes Viereck (z.B. aus der Batch-Erkennung) übernehmen, statt neu zu raten
+    // oder auf ein Standard-Rechteck zurückzufallen – die Ecken sollen sich automatisch an
+    // das an die tatsächliche Erkennung anpassen.
+    if(presetCorners && presetCorners.length === 4){
+      corners = presetCorners.map(p => ({ x: p.x * scale, y: p.y * scale }));
+      renderHandles();
+      setStatus('Automatisch erkannte Kanten – bei Bedarf per Hand nachziehen.');
+      return;
+    }
 
     const margin = 0.06;
     const defaultCorners = [
@@ -1008,9 +1026,15 @@
 
       if(reviewMode){
         // Batch-Nachbearbeitung: Filter wurde beim automatischen Scan schon angewendet,
-        // hier nur die (ggf. nachgezogenen/gedrehten) Ecken final übernehmen.
+        // hier nur die (ggf. nachgezogenen/gedrehten) Ecken final übernehmen. Rohfoto und
+        // Viereck im aktuellen Zustand sichern, damit "Vorherige Seite" später wieder genau
+        // hier ansetzt (inkl. eigener Korrekturen und Drehungen), statt auf die ursprüngliche
+        // Auto-Erkennung zurückzuspringen.
         const filtered = applyFilter(warpedCanvasCache, 'auto');
         const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
+        const page = pages[reviewIndex];
+        page.rawDataUrl = els.cropCanvas.toDataURL('image/jpeg', 0.92);
+        page.quad = corners.map(p => ({ x: p.x / cropScale, y: p.y / cropScale }));
         setStatus('');
         finishReviewOrAdvance(dataUrl);
         return;
