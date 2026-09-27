@@ -282,6 +282,8 @@
       </div>
       <div class="btn-row">
         <button class="btn ghost" id="btnCropReset">↺ Zurücksetzen</button>
+        <button class="btn secondary" id="btnRotateLeft" title="90° nach links drehen">⟲ Links</button>
+        <button class="btn secondary" id="btnRotateRight" title="90° nach rechts drehen">⟳ Rechts</button>
         <button class="btn primary" id="btnCropNext">Weiter →</button>
       </div>
     </section>
@@ -311,6 +313,7 @@
       <div class="btn-row">
         <button class="btn primary" id="btnSavePdf">📄 Als PDF speichern</button>
         <button class="btn secondary" id="btnSaveImages">🖼️ Als Bilder speichern</button>
+        <button class="btn secondary" id="btnSharePdf">📤 Teilen</button>
         <button class="btn ghost" id="btnBackToPages">← Zurück</button>
       </div>
       <p class="status-bar" id="exportStatus"></p>
@@ -629,6 +632,32 @@
       renderHandles();
     }, 40);
   }
+
+  // ---------- Bild drehen (90° links/rechts) ----------
+  function rotateCurrentImage(direction){
+    if(!currentImage) return;
+    const srcW = currentImage.naturalWidth, srcH = currentImage.naturalHeight;
+    const rotCanvas = document.createElement('canvas');
+    rotCanvas.width = srcH;
+    rotCanvas.height = srcW;
+    const rctx = rotCanvas.getContext('2d');
+    if(direction === 'right'){
+      rctx.translate(srcH, 0);
+      rctx.rotate(Math.PI / 2);
+    } else {
+      rctx.translate(0, srcW);
+      rctx.rotate(-Math.PI / 2);
+    }
+    rctx.drawImage(currentImage, 0, 0);
+    const rotatedImg = new Image();
+    rotatedImg.onload = () => {
+      currentImage = rotatedImg;
+      initCrop(rotatedImg);
+    };
+    rotatedImg.src = rotCanvas.toDataURL('image/jpeg', 0.95);
+  }
+  document.getElementById('btnRotateLeft').addEventListener('click', () => rotateCurrentImage('left'));
+  document.getElementById('btnRotateRight').addEventListener('click', () => rotateCurrentImage('right'));
 
   function renderHandles(){
     const rect = els.cropCanvas.getBoundingClientRect();
@@ -949,6 +978,43 @@
       document.getElementById('exportStatus').textContent = 'PDF gespeichert.';
     } catch(err){
       document.getElementById('exportStatus').textContent = 'Fehler beim Erstellen des PDFs: ' + err.message;
+    }
+  });
+
+  async function buildPdfBlob(){
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    for(const p of pages){
+      const imgBytes = await (await fetch(p.dataUrl)).arrayBuffer();
+      const img = await pdfDoc.embedJpg(imgBytes);
+      const pageW = img.width, pageH = img.height;
+      const pdfPage = pdfDoc.addPage([pageW, pageH]);
+      pdfPage.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
+    }
+    const bytes = await pdfDoc.save();
+    return new Blob([bytes], { type:'application/pdf' });
+  }
+
+  document.getElementById('btnSharePdf').addEventListener('click', async () => {
+    if(!pages.length) return;
+    const statusEl = document.getElementById('exportStatus');
+    statusEl.textContent = 'PDF wird für das Teilen vorbereitet …';
+    try{
+      const blob = await buildPdfBlob();
+      const file = new File([blob], 'gescannt.pdf', { type: 'application/pdf' });
+      if(navigator.canShare && navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: 'Gescanntes Dokument' });
+        statusEl.textContent = 'Geteilt.';
+      } else if(navigator.share){
+        // Fallback: manche Browser können keine Dateien teilen – dann wenigstens einen Link/Text.
+        await navigator.share({ title: 'Gescanntes Dokument', text: 'Gescanntes Dokument (PDF liegt als Download bereit).' });
+        statusEl.textContent = 'Teilen nicht mit Datei möglich – bitte stattdessen „Als PDF speichern" nutzen und die Datei manuell anhängen.';
+      } else {
+        statusEl.textContent = 'Teilen wird auf diesem Gerät/Browser nicht unterstützt – bitte „Als PDF speichern" nutzen.';
+      }
+    } catch(err){
+      if(err && err.name === 'AbortError') { statusEl.textContent = ''; return; }
+      statusEl.textContent = 'Fehler beim Teilen: ' + err.message;
     }
   });
 
