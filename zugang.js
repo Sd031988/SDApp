@@ -30,12 +30,36 @@
     // alte und neue Codes nicht mehr zusammen.
     const SD_GEHEIM = 'SD-Bewerbungsstudio-Silvi-2026-x7Q';
 
+    // Jede App setzt VOR dem Einbinden von zugang.js einmal
+    // window.SD_APP = '<kennung>' (z. B. 'lebenslauf', 'pdfstudio',
+    // 'scanner', 'passfoto'). Ein Freischalt-Code wird an genau DIESE
+    // Kennung gebunden (siehe sdSigniere-Aufrufe unten) - ein Code fuer
+    // 'lebenslauf' funktioniert dadurch NICHT automatisch auch fuer
+    // 'pdfstudio' & Co., obwohl alle Apps auf derselben Domain laufen und
+    // sich sonst denselben Speicher (localStorage) teilen wuerden. Fehlt
+    // die Kennung (versehentlich vergessen), wird 'app' als Fallback
+    // verwendet - besser ein erkennbar falscher Code als ein versehentlich
+    // fuer alle Apps gueltiger.
+    const APP = window.SD_APP || 'app';
+    const APP_NAMEN = {
+        lebenslauf: 'Bewerbung (Lebenslauf, Anschreiben, Mappe, ...)',
+        pdfstudio: 'PDF Studio',
+        scanner: 'SD Scanner',
+        passfoto: 'Passfoto Studio'
+    };
+    const APP_NAME = APP_NAMEN[APP] || 'diese App';
+
     const VOLL_TAGE = 30; // 1 Monat voller, uneingeschraenkter Zugriff
     const EINGESCHRAENKT_TAGE = 180; // danach 6 Monate eingeschraenkter Zugriff (kein Export, weniger Vorlagen)
     // Erst nach VOLL_TAGE + EINGESCHRAENKT_TAGE (hier: 7 Monate insgesamt)
     // kommt die volle Sperre (zeigeSperre) mit Freischalt-Code-Pflicht.
-    const ERSTBESUCH_KEY = 'sdErstbesuch';
-    const ZUGANG_BIS_KEY = 'sdZugangBis';
+    // Testphase-Zeitpunkt und Freischaltung sind PRO APP gespeichert (siehe
+    // APP oben) - jede App zaehlt ihre eigene Testphase unabhaengig von den
+    // anderen. Nur die Geraete-ID bleibt bewusst app-uebergreifend gleich,
+    // damit ein Kunde beim Kauf mehrerer Apps nicht mehrfach verschiedene
+    // IDs durchgeben muss.
+    const ERSTBESUCH_KEY = 'sdErstbesuch_' + APP;
+    const ZUGANG_BIS_KEY = 'sdZugangBis_' + APP;
     const GERAETE_ID_KEY = 'sdGeraeteId';
     const KONTAKT_EMAIL = 'durrani.sulaiman@yahoo.de';
 
@@ -74,9 +98,9 @@
     // Geraete-ID des Zielrechners muss beim Erstellen bekannt sein (der
     // Kunde schickt sie einmalig) - der Code ist danach nur auf genau
     // diesem Rechner gueltig.
-    async function sdCodeErstellen(geraeteId, gueltigTage) {
+    async function sdCodeErstellen(geraeteId, gueltigTage, appKennung) {
         const ablauf = Date.now() + gueltigTage * 24 * 60 * 60 * 1000;
-        const sigVoll = await sdSigniere(geraeteId + '|' + String(ablauf));
+        const sigVoll = await sdSigniere(geraeteId + '|' + (appKennung || APP) + '|' + String(ablauf));
         const sigKurz = sigVoll.slice(0, 10).toUpperCase();
         return ablauf.toString(36).toUpperCase() + '-' + sigKurz;
     }
@@ -117,17 +141,24 @@
     }
     window.sdZeigeGeraeteId = sdZeigeGeraeteId;
 
+    // Ein Code passt entweder, wenn er speziell fuer DIESE App erstellt
+    // wurde, oder wenn er ein Komplettpaket-Code ist (im Generator mit
+    // "ALLE" statt einer einzelnen App-Kennung signiert - schaltet dadurch
+    // jede einzelne App frei, die denselben Code bekommt).
     async function sdCodePruefen(code) {
         const teile = (code || '').trim().toUpperCase().replace(/\s+/g, '').split('-');
         if (teile.length !== 2) return null;
         const [ablaufB36, sigKurz] = teile;
         const ablauf = parseInt(ablaufB36, 36);
         if (!ablauf || isNaN(ablauf)) return null;
-        const sigVoll = await sdSigniere(sdGeraeteId() + '|' + String(ablauf));
-        const erwartet = sigVoll.slice(0, 10).toUpperCase();
-        if (erwartet !== sigKurz) return null;
-        if (ablauf < Date.now()) return 'abgelaufen';
-        return ablauf;
+        const geraeteId = sdGeraeteId();
+        for (const kennung of [APP, 'ALLE']) {
+            const sigVoll = await sdSigniere(geraeteId + '|' + kennung + '|' + String(ablauf));
+            if (sigVoll.slice(0, 10).toUpperCase() === sigKurz) {
+                return ablauf < Date.now() ? 'abgelaufen' : ablauf;
+            }
+        }
+        return null;
     }
 
     let erstbesuch = parseInt(localStorage.getItem(ERSTBESUCH_KEY) || '0', 10);
@@ -184,12 +215,16 @@
             '<h2>🔒 Zugang freischalten</h2>' +
             '<p>Die kostenlose Testphase ist abgelaufen. Bitte gib deinen Freischalt-Code ein, um weiterzumachen.</p>' +
             '<div class="sd-preise">' +
-            '<strong>Preise:</strong>' +
-            '<div class="sd-preis-zeile"><span>1 Monat</span><span>kostenlos</span></div>' +
+            '<strong>Nur ' + APP_NAME + ':</strong>' +
             '<div class="sd-preis-zeile"><span>6 Monate</span><span>30 €</span></div>' +
             '<div class="sd-preis-zeile"><span>1 Jahr</span><span>50 €</span></div>' +
-            '<small>Zahlungsabwicklung befindet sich aktuell noch in der Testphase – schreib uns einfach per E-Mail, wir sagen dir, wie die Zahlung im Moment abläuft.</small>' +
             '</div>' +
+            '<div class="sd-preise sd-preise-paket">' +
+            '<strong>🎁 Komplettpaket – alle Apps zusammen:</strong>' +
+            '<div class="sd-preis-zeile"><span>1 Jahr, alle Apps</span><span>80 €</span></div>' +
+            '<small>Spart gegenüber Einzelkauf aller Apps deutlich – ein Code schaltet dann Bewerbung, PDF Studio, Scanner und Passfoto Studio zusammen frei.</small>' +
+            '</div>' +
+            '<small style="display:block;margin:8px 0 -4px;color:#64748b;">Zahlungsabwicklung befindet sich aktuell noch in der Testphase – schreib uns einfach per E-Mail, wir sagen dir, wie die Zahlung im Moment abläuft.</small>' +
             '<input type="text" id="sd-zugang-code" placeholder="z. B. K3F8A2-9B1C4D0E2A" autocomplete="off">' +
             '<button id="sd-zugang-btn" type="button">Freischalten</button>' +
             '<div id="sd-zugang-status"></div>' +
@@ -236,6 +271,8 @@
         '.sd-preise strong{display:block;margin-bottom:6px;font-size:0.8rem;text-transform:uppercase;color:#475569;}' +
         '.sd-preis-zeile{display:flex;justify-content:space-between;padding:3px 0;font-weight:bold;}' +
         '.sd-preise small{display:block;margin-top:8px;color:#64748b;font-weight:normal;}' +
+        '.sd-preise-paket{background:#fff7e6;border:1px solid #e9c46a;}' +
+        '.sd-preise-paket strong{color:#8a5a00;}' +
         '.sd-zugang-box input{width:100%;box-sizing:border-box;padding:10px;border:1px solid #d8e0dc;' +
         'border-radius:7px;margin:10px 0;font-size:1rem;text-transform:uppercase;}' +
         '.sd-zugang-box button{width:100%;padding:11px;background:#2f7d72;color:#fff;border:0;' +
