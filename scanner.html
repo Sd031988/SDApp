@@ -4,8 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-<link rel="manifest" href="manifest-scanner.json">
+<link rel="manifest" href="manifest-scanner.json" id="sdScannerManifestLink">
 <title>SD Scanner – Dokumente scannen</title>
+<script>
+  // Der Scanner ist bewusst nur fuer Smartphones gedacht (braucht eine
+  // Kamera, macht am Computer keinen Sinn). Auf einem Desktop-Geraet wird
+  // deshalb der Manifest-Link entfernt, damit der Browser dort keine
+  // "App installieren"-Option fuer den Scanner anbietet - andere Apps
+  // (Bewerbung, PDF Studio, Passfoto) bleiben davon unberuehrt, jede hat
+  // ihre eigene, unabhaengige Installations-Datei (manifest.json).
+  (function () {
+    const istHandy = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    if (!istHandy) {
+      const link = document.getElementById('sdScannerManifestLink');
+      if (link) link.remove();
+    }
+  })();
+</script>
 <style>
   :root{
     --bg:#030b14; --panel:#0f172a; --panel-2:#111c2e;
@@ -2206,7 +2221,7 @@
   // App startet auf dem Startbildschirm ("Alle Scans"), nicht direkt im Scan-Ablauf.
   showStep('stepLibrary');
 
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
+  if(document.getElementById('sdScannerManifestLink') && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
 })();
 </script>
 </body>
