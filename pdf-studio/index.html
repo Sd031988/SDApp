@@ -16,10 +16,10 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script>if (typeof Peer === 'undefined') { document.write('<scr' + 'ipt src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\/scr' + 'ipt>'); }</script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script>if (typeof QRCode === 'undefined') { document.write('<scr' + 'ipt src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"><\/scr' + 'ipt>'); }</script>
+  <!-- PeerJS + QRCode werden lokal mitgeliefert (kein CDN nötig) – manche Netzwerke/Firewalls
+       blockieren unpkg.com/jsdelivr.net, auch wenn sonst normal Internet vorhanden ist. -->
+  <script src="./vendor/peerjs.min.js"></script>
+  <script src="./vendor/qrcode.min.js"></script>
   <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
   <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
 
