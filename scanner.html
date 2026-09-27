@@ -306,6 +306,56 @@
     .filter-grid{ grid-template-columns:repeat(2,1fr); }
   }
 
+  @media (max-width:768px){
+    header{ padding:12px 14px; }
+    header .brand span{ font-size:.95rem; }
+    main{ padding:16px 14px 32px; }
+    .btn-row{ gap:10px; }
+    .home-dropdown{ min-width:200px; }
+  }
+
+  @media (max-width:480px){
+    /* Kopfzeile: Titel + zwei Links passen sonst nicht in eine Zeile und
+       reissen die Seite in die horizontale Scrollrichtung auf. */
+    header{
+      flex-wrap:wrap;
+      row-gap:8px;
+      padding:10px 14px;
+    }
+    header > div{ gap:10px !important; flex-wrap:wrap; }
+    header a.back{ font-size:.8rem; }
+
+    /* Buttons mit langem Text (z. B. "Teilen (auch zu Google Drive / Dropbox)")
+       wurden sonst nicht schmaler als ihr Inhalt und liefen ueber den
+       Bildschirmrand hinaus. Auf dem Handy volle Breite + Text darf umbrechen. */
+    .btn-row{ flex-direction:column; align-items:stretch; }
+    .btn-row .btn{ width:100%; white-space:normal; text-align:center; }
+
+    /* Zurueck-/Weiter-Zeile am oberen Rand der Zuschneide-Ansicht: bei sehr
+       schmalen Screens lieber zweizeilig statt gequetscht. */
+    .review-bar{ justify-content:center; }
+    .review-bar .btn{ flex:1 1 auto; }
+
+    /* Dokumenttyp-Auswahl (📄/🛂/🪪): drei Buttons nebeneinander mit
+       min-width:150px passten ab ca. 470px nicht mehr in eine Zeile und
+       liessen dann einen einzelnen, ueberbreiten Button in der zweiten
+       Reihe stehen. Auf dem Handy stattdessen sauber untereinander. */
+    .doctype-options{ flex-direction:column; }
+    .doctype-btn{ min-width:0; width:100%; }
+
+    /* Tipp-/Antipp-Flaechen unter der von Apple/Google empfohlenen
+       Mindestgroesse (~44px) vergroessern. */
+    .home-icon-btn{ width:44px; height:44px; }
+    .handle{ width:34px; height:34px; margin:-17px 0 0 -17px; }
+
+    .markup-toolbar{ gap:6px; }
+    .markup-tool{ padding:8px 10px; font-size:.85rem; }
+
+    .library-card .lib-actions button{ min-width:70px; }
+
+    .home-dropdown{ min-width:0; left:12px !important; right:12px !important; width:auto; }
+  }
+
   .doctype-row{ margin:0 0 18px; }
   .doctype-label{ display:block; font-size:.85rem; color:var(--muted); margin-bottom:8px; }
   .doctype-options{ display:flex; gap:10px; flex-wrap:wrap; }
@@ -894,10 +944,28 @@
     els.liveCamBadge.style.display = batchMode ? 'flex' : 'none';
     updateBatchBadge();
     try{
-      liveStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false
-      });
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+        // Passiert z.B. wenn die Seite nicht über HTTPS läuft (Mixed Content) oder der
+        // Browser/WebView keine Kamera-API unterstützt. Ohne diese Prüfung würde der Code
+        // unten mit einer kryptischen "Cannot read properties of undefined"-Meldung abstürzen,
+        // die dem Nutzer nicht weiterhilft.
+        throw Object.assign(new Error('Kamera-Zugriff wird von diesem Browser nicht unterstützt.'), { name: 'NotSupportedError' });
+      }
+      try {
+        liveStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false
+        });
+      } catch (innerErr) {
+        // Falls die bevorzugten Constraints (Rückkamera/Auflösung) auf diesem Gerät nicht
+        // erfüllbar sind (OverconstrainedError), lieber mit irgendeiner verfügbaren Kamera
+        // starten, statt gar nicht – besser eine Frontkamera als gar kein Bild.
+        if (innerErr && innerErr.name === 'OverconstrainedError'){
+          liveStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } else {
+          throw innerErr;
+        }
+      }
       els.liveCamVideo.srcObject = liveStream;
       await els.liveCamVideo.play();
       els.liveCamHint.textContent = cvReady
@@ -919,7 +987,27 @@
       }
       liveDetectLoop();
     } catch(err){
-      els.liveCamHint.textContent = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.');
+      // Unterschiedliche Fehler brauchen unterschiedliche, klare Ansagen – ein einziger
+      // generischer Text ("Zugriff verweigert") hilft dem Nutzer nicht, wenn z.B. gar keine
+      // Kamera verbaut ist oder eine andere App die Kamera gerade blockiert.
+      const name = err && err.name;
+      let msg;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError'){
+        msg = '🚫 Kein Kamera-Zugriff erlaubt. Bitte erlaube der App in den Handy-Einstellungen den Zugriff auf die Kamera und versuche es erneut.';
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError'){
+        msg = '📷 Es wurde keine Kamera gefunden. Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      } else if (name === 'NotReadableError' || name === 'TrackStartError'){
+        msg = '⚠️ Die Kamera wird gerade von einer anderen App verwendet. Bitte schließe andere Apps, die die Kamera nutzen, und versuche es erneut.';
+      } else if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError'){
+        msg = '⚠️ Die Kamera dieses Geräts unterstützt die benötigten Einstellungen nicht. Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      } else if (name === 'NotSupportedError'){
+        msg = '🚫 Dieser Browser unterstützt die Live-Kamera nicht. Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      } else if (name === 'SecurityError'){
+        msg = '🚫 Kamera-Zugriff aus Sicherheitsgründen blockiert (z. B. keine sichere Verbindung). Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      } else {
+        msg = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.') + ' Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      }
+      els.liveCamHint.textContent = msg;
     }
   }
 
@@ -1004,14 +1092,25 @@
     liveDetectBusy = false;
 
     if(quad && cornersLookValid(quad, detW, detH)){
-      // Overlay-Koordinaten (Videobild ist per object-fit:cover skaliert)
-      const scaleX = overlay.width / detW;
-      const scaleY = overlay.height / detH;
+      // Overlay-Koordinaten: das Video wird per object-fit:cover angezeigt, d.h. es wird
+      // NICHT einfach gestreckt, sondern (falls Seitenverhältnis von Kamera-Stream und
+      // Anzeige-Container unterschiedlich sind – auf dem Handy sehr häufig!) ein Teil des
+      // Bildes oben/unten oder links/rechts abgeschnitten. Eine einfache lineare Skalierung
+      // (alte Version: scaleX = overlay.width/detW) ignoriert diesen Zuschnitt und zeichnet
+      // die erkannten Ecken an der falschen Stelle. Deshalb hier den echten cover-Ausschnitt
+      // nachrechnen.
+      const coverScale = Math.max(overlay.width / video.videoWidth, overlay.height / video.videoHeight);
+      const renderedW = video.videoWidth * coverScale;
+      const renderedH = video.videoHeight * coverScale;
+      const offsetX = (renderedW - overlay.width) / 2;
+      const offsetY = (renderedH - overlay.height) / 2;
+      const toDisplayX = (x) => (x * (detW ? video.videoWidth / detW : 1)) * coverScale - offsetX;
+      const toDisplayY = (y) => (y * (detH ? video.videoHeight / detH : 1)) * coverScale - offsetY;
       octx.strokeStyle = '#62f0d4';
       octx.lineWidth = 3;
       octx.beginPath();
       quad.forEach((p, i) => {
-        const x = p.x * scaleX, y = p.y * scaleY;
+        const x = toDisplayX(p.x), y = toDisplayY(p.y);
         if(i === 0) octx.moveTo(x, y); else octx.lineTo(x, y);
       });
       octx.closePath();
@@ -1019,7 +1118,7 @@
       quad.forEach(p => {
         octx.fillStyle = '#62f0d4';
         octx.beginPath();
-        octx.arc(p.x*scaleX, p.y*scaleY, 5, 0, Math.PI*2);
+        octx.arc(toDisplayX(p.x), toDisplayY(p.y), 5, 0, Math.PI*2);
         octx.fill();
       });
 

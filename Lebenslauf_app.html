@@ -1263,9 +1263,27 @@
                 padding-bottom: 26mm;
             }
 
+            /* Das Download-/Archiv-Dialogfenster war fest vertikal
+               zentriert (align-items: center) und selbst nicht scrollbar.
+               Auf kleinen Handybildschirmen - vor allem wenn die
+               Tastatur beim Ausfuellen des Namensfelds zusaetzlich Platz
+               wegnimmt - konnte der Inhalt (Titel, Hinweistext, Felder,
+               Archivliste, Buttons) hoeher als der sichtbare Bereich
+               werden; ohne eigenes Scrollen war der untere Teil (z. B.
+               der "Schliessen"-Button) dann weder sichtbar noch
+               erreichbar. Jetzt darf das Dialogfenster selbst scrollen
+               und wird oben ausgerichtet statt starr zentriert. */
+            .download-dialog {
+                align-items: flex-start;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 16px;
+            }
+
             .download-box {
                 width: 100%;
                 padding: 18px;
+                margin: 12px auto;
             }
 
             .archiv-item {

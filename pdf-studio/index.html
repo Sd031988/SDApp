@@ -1069,41 +1069,147 @@
         margin-left: auto;
       }
 
+      /* Handy-Layout: nur EIN Element scrollt (die Seite/body). Die Seitenliste
+         und die Werkzeug-Einstellungen sind auf dem Handy keine dauerhaft
+         sichtbaren Spalten mehr, sondern werden zu ausklappbaren "Sheets"
+         (wie in echten Handy-Apps), die man über zwei Knöpfe am unteren
+         Bildschirmrand öffnet. Dadurch bleibt die eigentliche Arbeitsfläche
+         (das Dokument) immer die einzige große Fläche auf dem Bildschirm -
+         nichts liegt mehr gleichzeitig übereinander oder klaut Platz. */
       .app-layout {
         display: flex;
         flex-direction: column;
         height: auto;
       }
 
-      /* Reihenfolge auf dem Handy: zuerst das Dokument (Stage), danach die
-         Seitenliste, danach die Werkzeug-Einstellungen - so sieht man das
-         Ergebnis zuerst statt erst durch die Seitenliste scrollen zu müssen. */
       .stage-container {
         order: 1;
+        overflow: visible;
+        /* Platz unten lassen, damit die feste Knopfleiste (Seiten/Werkzeuge)
+           nichts vom Dokument verdeckt. */
+        padding-bottom: 64px;
       }
 
-      .sidebar {
-        order: 2;
-        max-height: 280px;
+      /* Seitenliste & Werkzeug-Einstellungen: auf dem Handy als von unten
+         einfahrende Sheets statt als permanente Spalten - dadurch können sie
+         nicht mehr mit dem Dokument oder miteinander überlappen. Per JS
+         bekommen sie die Klasse "mobile-sheet"/"open", siehe Script weiter
+         unten (nur aktiv unter 768px, Desktop bleibt unverändert). */
+      .sidebar.mobile-sheet,
+      .inspector.mobile-sheet {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 75vh;
         overflow-y: auto;
-      }
-
-      .inspector {
-        order: 3;
-        max-height: 60vh;
-        overflow-y: auto;
-        border-left: none;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+        z-index: 150;
+        transform: translateY(105%);
+        transition: transform 0.25s ease-out;
         border-top: 1px solid var(--line);
       }
 
-      .stage-viewport {
-        min-height: 60vh;
-        padding: 60px 10px 20px;
+      .sidebar.mobile-sheet {
+        border-right: none;
       }
 
+      .inspector.mobile-sheet {
+        border-left: none;
+      }
+
+      .sidebar.mobile-sheet.open,
+      .inspector.mobile-sheet.open {
+        transform: translateY(0);
+      }
+
+      .mobile-only-handle {
+        display: flex !important;
+      }
+
+      .mobile-sheet-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 39, 42, 0.4);
+        z-index: 140;
+      }
+
+      .mobile-sheet-backdrop.open {
+        display: block;
+      }
+
+      .mobile-sheet-handle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .mobile-sheet-handle button {
+        background: #edf3f1;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-weight: 700;
+      }
+
+      /* Feste Knopfleiste unten: ersetzt die zwei Spalten und ist der einzige
+         Weg, wie man auf dem Handy an Seitenliste/Werkzeuge kommt. */
+      .mobile-panel-toggles {
+        display: none;
+      }
+
+      .mobile-panel-toggles.show-on-mobile {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        gap: 8px;
+        padding: 8px 10px;
+        background: var(--paper);
+        border-top: 1px solid var(--line);
+        box-shadow: 0 -4px 14px rgba(23, 59, 63, 0.1);
+        z-index: 160;
+      }
+
+      .mobile-panel-toggles button {
+        flex: 1;
+        min-height: 44px;
+        background: #edf3f1;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .mobile-panel-toggles button.active {
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .stage-viewport {
+        min-height: 50vh;
+        overflow: visible;
+        padding: 10px 10px 20px;
+      }
+
+      /* Die schwebende Werkzeugleiste bleibt oben am Dokument "kleben"
+         (sticky) statt frei über dem Dokument zu schweben - so verdeckt sie
+         beim Scrollen im Dokument nichts mehr, was vorher der Hauptgrund für
+         das "Durcheinander" war. */
       .toolbar-bar {
-        width: 94%;
-        max-width: 94vw;
+        position: sticky;
+        top: 8px;
+        left: 0;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto 10px;
         overflow-x: auto;
         justify-content: flex-start;
         -webkit-overflow-scrolling: touch;
@@ -1158,10 +1264,6 @@
 
       .import-actions {
         grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        max-height: 240px;
       }
     }
 
@@ -1256,7 +1358,12 @@
   <div class="app-layout">
 
     <!-- Left Sidebar: Pages & Import -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebarPanel">
+      <!-- Nur sichtbar, wenn die Seitenliste auf dem Handy als Sheet eingeblendet ist -->
+      <div class="mobile-sheet-handle mobile-only-handle" style="display:none;">
+        <span>📑 Seiten</span>
+        <button type="button" id="btnCloseSidebarSheet">Fertig ✕</button>
+      </div>
       <div class="sidebar-section-title">Dokumente hinzufügen</div>
       <div id="dropzone" class="dropzone" title="Dateien per Drag & Drop hierher ziehen">
         <div class="dropzone-icon">📄</div>
@@ -1348,7 +1455,12 @@
     </main>
 
     <!-- Right Sidebar: Inspector & Tool Settings -->
-    <aside class="inspector">
+    <aside class="inspector" id="inspectorPanel">
+      <!-- Nur sichtbar, wenn die Werkzeug-Einstellungen auf dem Handy als Sheet eingeblendet sind -->
+      <div class="mobile-sheet-handle mobile-only-handle" style="display:none;">
+        <span>⚙️ Werkzeug-Einstellungen</span>
+        <button type="button" id="btnCloseInspectorSheet">Fertig ✕</button>
+      </div>
 
       <!-- Contextual Tool Settings: Stift / Freihand -->
       <div id="panelPen" class="control-box">
@@ -1508,6 +1620,15 @@
       </div>
 
     </aside>
+  </div>
+
+  <!-- Handy: Abdunklung hinter dem aufgeklappten Seiten-/Werkzeuge-Sheet -->
+  <div id="mobileSheetBackdrop" class="mobile-sheet-backdrop"></div>
+
+  <!-- Handy: feste Knopfleiste unten, um Seiten bzw. Werkzeug-Einstellungen ein-/auszuklappen -->
+  <div id="mobilePanelToggles" class="mobile-panel-toggles">
+    <button type="button" id="btnToggleSidebarSheet">📑 Seiten</button>
+    <button type="button" id="btnToggleInspectorSheet">⚙️ Werkzeuge</button>
   </div>
 
   <!-- Status Toast -->
@@ -4497,6 +4618,66 @@
       document.body.appendChild(b);
       document.getElementById('sd-update-btn').onclick = () => location.reload();
     }
+
+    // --- Handy-Layout: Seitenliste & Werkzeug-Einstellungen als Sheets ---
+    // Nur unterhalb von 768px aktiv (dieselbe Grenze wie die CSS-Media-Query).
+    // Auf dem Desktop bleiben Seitenliste und Werkzeuge unverändert als feste
+    // Spalten sichtbar - hier passiert dann schlicht nichts.
+    (function initMobileSheets() {
+      const mq = window.matchMedia('(max-width: 768px)');
+      const sidebarPanel = $('sidebarPanel');
+      const inspectorPanel = $('inspectorPanel');
+      const backdrop = $('mobileSheetBackdrop');
+      const toggles = $('mobilePanelToggles');
+      const btnToggleSidebar = $('btnToggleSidebarSheet');
+      const btnToggleInspector = $('btnToggleInspectorSheet');
+      const btnCloseSidebar = $('btnCloseSidebarSheet');
+      const btnCloseInspector = $('btnCloseInspectorSheet');
+      if (!sidebarPanel || !inspectorPanel || !backdrop || !toggles) return;
+
+      function closeAllSheets() {
+        sidebarPanel.classList.remove('open');
+        inspectorPanel.classList.remove('open');
+        backdrop.classList.remove('open');
+        btnToggleSidebar.classList.remove('active');
+        btnToggleInspector.classList.remove('active');
+      }
+
+      function openSheet(panel, btn) {
+        const wasOpen = panel.classList.contains('open');
+        closeAllSheets();
+        if (!wasOpen) {
+          panel.classList.add('open');
+          backdrop.classList.add('open');
+          btn.classList.add('active');
+        }
+      }
+
+      function applyMode(isMobile) {
+        if (isMobile) {
+          sidebarPanel.classList.add('mobile-sheet');
+          inspectorPanel.classList.add('mobile-sheet');
+          toggles.classList.add('show-on-mobile');
+        } else {
+          sidebarPanel.classList.remove('mobile-sheet');
+          inspectorPanel.classList.remove('mobile-sheet');
+          toggles.classList.remove('show-on-mobile');
+          closeAllSheets();
+        }
+      }
+
+      btnToggleSidebar.onclick = () => openSheet(sidebarPanel, btnToggleSidebar);
+      btnToggleInspector.onclick = () => openSheet(inspectorPanel, btnToggleInspector);
+      btnCloseSidebar.onclick = closeAllSheets;
+      btnCloseInspector.onclick = closeAllSheets;
+      backdrop.onclick = closeAllSheets;
+
+      applyMode(mq.matches);
+      // addEventListener('change', ...) ist der moderne Weg; addListener ist
+      // der Fallback für ältere Handy-Browser (z.B. ältere Safari-Versionen).
+      if (mq.addEventListener) mq.addEventListener('change', e => applyMode(e.matches));
+      else if (mq.addListener) mq.addListener(e => applyMode(e.matches));
+    })();
   </script>
 </body>
 
