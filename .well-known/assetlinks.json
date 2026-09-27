@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.thesdhub.twa",
+    "sha256_cert_fingerprints": ["A9:17:46:6B:84:77:E5:12:AA:8B:A7:F4:67:17:2E:A3:D2:73:DE:E3:DF:E3:CF:31:EB:D8:E3:36:97:7A:07:EE"]
+  }
+}]
