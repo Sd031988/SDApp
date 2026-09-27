@@ -63,6 +63,19 @@
     const GERAETE_ID_KEY = 'sdGeraeteId';
     const KONTAKT_EMAIL = 'durrani.sulaiman@yahoo.de';
 
+    // ---- Android: voruebergehend komplett kostenlos ----
+    // Solange die Bezahlung/der Play-Store-Eintrag noch nicht fertig
+    // eingerichtet sind, ist die App auf Android-Geraeten komplett frei
+    // nutzbar (kein Testphasen-Ablauf, keine Sperre). Sobald alles bereit
+    // ist, hier NUR den Wert auf "false" stellen - mehr nicht. Ab dann
+    // bekommt jedes Android-Geraet, das eigentlich schon gesperrt waere,
+    // einmalig ANDROID_GNADENFRIST_TAGE Tage Zeit, um zu kaufen, mit einem
+    // deutlichen Hinweisbanner, bevor die normale Sperre greift.
+    const ANDROID_AKTION_AKTIV = true;
+    const ANDROID_GNADENFRIST_TAGE = 15;
+    const IST_ANDROID = /Android/i.test(navigator.userAgent || '');
+    const ANDROID_GNADENFRIST_KEY = 'sdAndroidGnadenfristBis_' + APP;
+
     // Jeder Rechner/Browser bekommt beim allerersten Besuch eine eigene,
     // zufaellige Geraete-ID, die dauerhaft lokal gespeichert bleibt. Ein
     // Freischalt-Code wird beim Erstellen an genau diese ID gebunden (siehe
@@ -176,10 +189,30 @@
     function sdStatus() {
         const zugangBis = parseInt(localStorage.getItem(ZUGANG_BIS_KEY) || '0', 10);
         if (zugangBis > Date.now()) return 'voll';
+
         const tageSeitErstbesuch = (Date.now() - erstbesuch) / 86400000;
-        if (tageSeitErstbesuch < VOLL_TAGE) return 'voll';
-        if (tageSeitErstbesuch < VOLL_TAGE + EINGESCHRAENKT_TAGE) return 'eingeschraenkt';
-        return 'gesperrt';
+        let regulaererStatus;
+        if (tageSeitErstbesuch < VOLL_TAGE) regulaererStatus = 'voll';
+        else if (tageSeitErstbesuch < VOLL_TAGE + EINGESCHRAENKT_TAGE) regulaererStatus = 'eingeschraenkt';
+        else regulaererStatus = 'gesperrt';
+
+        // Waehrend der Android-Gratis-Aktion zaehlt die Testphase im
+        // Hintergrund zwar weiter (fuer den Tag, an dem die Aktion endet),
+        // wirkt sich aber nicht aus - alles bleibt "voll".
+        if (IST_ANDROID && ANDROID_AKTION_AKTIV) return 'voll';
+
+        // Aktion vorbei, und die App waere jetzt eigentlich gesperrt:
+        // einmalige Gnadenfrist statt sofortiger Sperre.
+        if (IST_ANDROID && regulaererStatus === 'gesperrt') {
+            let gnadenfristBis = parseInt(localStorage.getItem(ANDROID_GNADENFRIST_KEY) || '0', 10);
+            if (!gnadenfristBis) {
+                gnadenfristBis = Date.now() + ANDROID_GNADENFRIST_TAGE * 24 * 60 * 60 * 1000;
+                localStorage.setItem(ANDROID_GNADENFRIST_KEY, String(gnadenfristBis));
+            }
+            return gnadenfristBis > Date.now() ? 'gnadenfrist' : 'gesperrt';
+        }
+
+        return regulaererStatus;
     }
     window.sdStatus = sdStatus;
 
@@ -204,6 +237,49 @@
         document.getElementById('sd-einschraenkung-code-btn').addEventListener('click', zeigeSperre);
     }
     window.sdZeigeEinschraenkungsHinweis = sdZeigeEinschraenkungsHinweis;
+
+    // Dezenter "gute Nachricht"-Hinweis, solange die Android-Gratis-Aktion
+    // laeuft - schliessbar, blockiert nichts.
+    function sdZeigeAndroidAktionsHinweis() {
+        if (document.getElementById('sd-android-aktion-banner')) return;
+        const banner = document.createElement('div');
+        banner.id = 'sd-android-aktion-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999998;background:#1c4a42;' +
+            'color:#eafff5;padding:10px 14px;font-family:"Trebuchet MS",Verdana,sans-serif;font-size:0.85rem;' +
+            'display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.3);';
+        banner.innerHTML =
+            '<span style="flex:1 1 240px;">🎉 Aktuell für Android komplett kostenlos, solange wir die Bezahlung ' +
+            'für den Play Store einrichten. Du wirst rechtzeitig informiert, bevor sich das ändert (dann mit ' +
+            ANDROID_GNADENFRIST_TAGE + ' Tagen Zeit zum Kauf).</span>' +
+            '<button id="sd-android-aktion-schliessen" type="button" aria-label="Schließen" ' +
+            'style="width:auto;background:transparent;color:#eafff5;font-size:1rem;padding:2px 8px;border:0;cursor:pointer;">✕</button>';
+        document.body.prepend(banner);
+        document.getElementById('sd-android-aktion-schliessen').addEventListener('click', () => banner.remove());
+    }
+    window.sdZeigeAndroidAktionsHinweis = sdZeigeAndroidAktionsHinweis;
+
+    // Deutlicher Hinweis waehrend der einmaligen Gnadenfrist, nachdem die
+    // Android-Aktion beendet wurde - zeigt die verbleibenden Tage und einen
+    // direkten Weg zur Freischaltung, sperrt aber noch nichts.
+    function sdZeigeGnadenfristHinweis() {
+        if (document.getElementById('sd-gnadenfrist-banner')) return;
+        const gnadenfristBis = parseInt(localStorage.getItem(ANDROID_GNADENFRIST_KEY) || '0', 10);
+        const tageUebrig = Math.max(1, Math.ceil((gnadenfristBis - Date.now()) / 86400000));
+        const banner = document.createElement('div');
+        banner.id = 'sd-gnadenfrist-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999998;background:#5c1a1a;' +
+            'color:#ffe9e9;padding:10px 14px;font-family:"Trebuchet MS",Verdana,sans-serif;font-size:0.85rem;' +
+            'display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.3);';
+        banner.innerHTML =
+            '<span style="flex:1 1 240px;">⏳ Die kostenlose Android-Aktion ist beendet. Du hast noch ' + tageUebrig +
+            ' Tag(e) Zeit, ' + APP_NAME + ' zu kaufen - danach wird die App gesperrt.</span>' +
+            '<button id="sd-gnadenfrist-code-btn" type="button" ' +
+            'style="width:auto;padding:6px 12px;border-radius:6px;border:0;font-weight:bold;cursor:pointer;' +
+            'font-size:0.8rem;background:#2f7d72;color:#fff;">Jetzt freischalten</button>';
+        document.body.prepend(banner);
+        document.getElementById('sd-gnadenfrist-code-btn').addEventListener('click', zeigeSperre);
+    }
+    window.sdZeigeGnadenfristHinweis = sdZeigeGnadenfristHinweis;
 
     function zeigeSperre() {
         if (document.getElementById('sd-zugang-overlay')) return;
@@ -302,7 +378,9 @@
     function sdPruefeUndZeigeStatus() {
         const status = sdStatus();
         if (status === 'gesperrt') zeigeSperre();
+        else if (status === 'gnadenfrist') sdZeigeGnadenfristHinweis();
         else if (status === 'eingeschraenkt') sdZeigeEinschraenkungsHinweis();
+        else if (IST_ANDROID && ANDROID_AKTION_AKTIV) sdZeigeAndroidAktionsHinweis();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', sdPruefeUndZeigeStatus);
