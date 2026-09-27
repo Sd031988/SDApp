@@ -627,6 +627,64 @@
   }
 
   // ---------- Capture ----------
+  // Seite fertig übernehmen: Bildquelle einreihen, Ausweis-Vorder-/Rückseiten-Ablauf beachten,
+  // und OHNE Unterbrechung zur Seitenübersicht zurück (weiterscannen oder "Fertig"), statt bei
+  // jedem einzelnen Foto zwingend anzuhalten. Genutzt sowohl vom automatischen Pfad (Foto
+  // aufnehmen / Bild auswählen) als auch vom manuellen Zuschneide-Pfad.
+  function finalizePage(dataUrl, extra){
+    pages.push(Object.assign({ dataUrl, label: currentPageLabel() }, extra || {}));
+    renderPagesGrid();
+    els.pagesSummary.style.display = 'block';
+
+    const banner = document.getElementById('ausweisBanner');
+    if (docType === 'ausweis' && ausweisSide === 'front') {
+      ausweisSide = 'back';
+      banner.classList.add('show');
+      showStep('stepCapture');
+      els.cameraInput.value = '';
+      els.cameraInput.click();
+    } else {
+      if (docType === 'ausweis') ausweisSide = 'front';
+      banner.classList.remove('show');
+      showStep('stepCapture');
+    }
+  }
+
+  // "Foto aufnehmen" / "Bild auswählen": genau wie beim Live-Scan werden Kanten automatisch
+  // erkannt, zugeschnitten und gefiltert - OHNE dass man dafür bei jedem Bild manuell ran muss.
+  // Seite kann danach jederzeit über den ✏️-Knopf nachbearbeitet werden.
+  function autoProcessAndAddPage(img){
+    setStatus('Seite wird automatisch verarbeitet …');
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const scale = Math.min(1, MAX_DIM / Math.max(w, h));
+    w = Math.round(w * scale); h = Math.round(h * scale);
+    const rawCanvas = document.createElement('canvas');
+    rawCanvas.width = w; rawCanvas.height = h;
+    rawCanvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+    setTimeout(() => {
+      let quad = tryAutoDetect(rawCanvas);
+      if(!quad || !cornersLookValid(quad, w, h)){
+        const margin = 0.06;
+        quad = [
+          {x: w*margin, y: h*margin}, {x: w*(1-margin), y: h*margin},
+          {x: w*(1-margin), y: h*(1-margin)}, {x: w*margin, y: h*(1-margin)}
+        ];
+      }
+      const wTop = Math.hypot(quad[1].x-quad[0].x, quad[1].y-quad[0].y);
+      const wBot = Math.hypot(quad[2].x-quad[3].x, quad[2].y-quad[3].y);
+      const hLeft = Math.hypot(quad[3].x-quad[0].x, quad[3].y-quad[0].y);
+      const hRight = Math.hypot(quad[2].x-quad[1].x, quad[2].y-quad[1].y);
+      const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
+      const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      const warped = warpToRect(rawCanvas, quad, outW, outH);
+      const filtered = applyFilter(warped, 'auto');
+      const dataUrl = filtered.toDataURL('image/jpeg', 0.92);
+      setStatus('');
+      finalizePage(dataUrl, { rawDataUrl: rawCanvas.toDataURL('image/jpeg', 0.92), quad });
+    }, 30);
+  }
+
   function loadFile(file){
     if(!file) return;
     reviewMode = false;
@@ -634,11 +692,7 @@
     const reader = new FileReader();
     reader.onload = e => {
       const img = new Image();
-      img.onload = () => {
-        currentImage = img;
-        initCrop(img);
-        showStep('stepCrop');
-      };
+      img.onload = () => autoProcessAndAddPage(img);
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
@@ -1375,22 +1429,7 @@
   document.getElementById('btnFilterNext').addEventListener('click', () => {
     const finalCanvas = applyFilter(warpedCanvasCache, selectedFilter);
     const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
-    pages.push({ dataUrl, label: currentPageLabel() });
-    renderPagesGrid();
-    els.pagesSummary.style.display = 'block';
-
-    const banner = document.getElementById('ausweisBanner');
-    if (docType === 'ausweis' && ausweisSide === 'front') {
-      ausweisSide = 'back';
-      banner.classList.add('show');
-      showStep('stepCapture');
-      els.cameraInput.value = '';
-      els.cameraInput.click();
-    } else {
-      if (docType === 'ausweis') ausweisSide = 'front'; // Rückseite fertig -> zurücksetzen für nächstes Dokument
-      banner.classList.remove('show');
-      showStep('stepCapture');
-    }
+    finalizePage(dataUrl);
   });
 
   function renderPagesGrid(){
