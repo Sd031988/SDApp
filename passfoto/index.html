@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#eef1f7">
 <link rel="manifest" href="manifest-passfoto.json">
 <title>SD Passfoto – Pass- &amp; Bewerbungsfotos</title>
 <script type="module">
@@ -19,16 +19,16 @@
 </script>
 <style>
   :root{
-    --bg:#030b14; --panel:#0f172a; --panel-2:#111c2e;
-    --primary:#62f0d4; --primary-2:#5bb8ff; --gold:#f8d779;
-    --text:#edf6ff; --muted:#bfd2e8; --border:rgba(191,210,232,.18);
-    --danger:#ff6b6b;
+    --bg:#eef1f7; --panel:#ffffff; --panel-2:#f2f4f9;
+    --primary:#3b6fd6; --primary-2:#5b8def; --primary-soft:#e7eefb; --gold:#f8d779; --gold-text:#96690d;
+    --text:#1a2233; --muted:#6b7690; --border:rgba(26,34,51,.10);
+    --danger:#e0483f;
   }
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
     margin:0;
-    background:linear-gradient(135deg,#020812 0%,#081827 30%,#0f172a 100%);
+    background:linear-gradient(180deg,#f6f8fc 0%,#eef1f7 100%);
     color:var(--text);
     font-family:"Segoe UI",Inter,Arial,sans-serif;
     min-height:100vh;
@@ -39,14 +39,15 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:14px 18px;
     border-bottom:1px solid var(--border);
-    background:rgba(3,11,20,.75);
+    background:rgba(255,255,255,.85);
+    backdrop-filter:blur(6px);
     position:sticky; top:0; z-index:10;
   }
   .brand{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.04em; text-decoration:none; color:var(--text); }
   .brand-mark{
     width:34px; height:34px; border-radius:10px;
     background:linear-gradient(135deg,var(--gold),var(--primary));
-    display:grid; place-items:center; color:#0b1625; font-weight:900; font-size:.85rem;
+    display:grid; place-items:center; color:#15213a; font-weight:900; font-size:.85rem;
   }
   header a.back{ color:var(--muted); font-size:.85rem; text-decoration:none; }
   main{
@@ -66,7 +67,7 @@
     border-radius:20px;
     padding:36px 20px;
     text-align:center;
-    background:rgba(15,23,42,.5);
+    background:var(--panel-2);
   }
   .capture-icon{ font-size:2.4rem; margin-bottom:10px; }
   .btn{
@@ -77,33 +78,46 @@
   }
   .btn:active{ transform:scale(.97); }
   .btn:disabled{ opacity:.5; cursor:not-allowed; }
-  .btn.primary{ background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#041926; }
-  .btn.secondary{ background:rgba(15,23,42,.7); border:1px solid var(--border); color:var(--text); }
+  .btn.primary{ background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#fff; box-shadow:0 4px 14px rgba(59,111,214,.28); }
+  .btn.secondary{ background:var(--panel-2); border:1px solid var(--border); color:var(--text); }
   .btn.ghost{ background:transparent; border:1px solid var(--border); color:var(--muted); }
   .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
   input[type=file]{ display:none; }
 
   .format-search{
-    width:100%; padding:12px 14px; margin-bottom:14px; box-sizing:border-box;
-    border-radius:14px; border:1px solid var(--border); background:var(--panel-2);
+    width:100%; padding:14px 16px; margin-bottom:18px; box-sizing:border-box;
+    border-radius:14px; border:1px solid var(--border); background:var(--panel);
     color:var(--text); font-size:.95rem;
+    box-shadow:0 1px 2px rgba(26,34,51,.04);
   }
   .format-search::placeholder{ color:var(--muted); }
+
+  .format-list-header{
+    display:flex; align-items:center; gap:12px; margin:4px 0 14px; color:var(--muted);
+    font-size:.8rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+  }
+  .format-list-header::before, .format-list-header::after{
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+
   .format-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
   .format-card{
     display:flex; align-items:center; gap:14px;
-    border:1px solid var(--border); border-radius:14px; padding:12px 14px;
-    background:var(--panel-2); cursor:pointer; text-align:left;
+    border:1px solid var(--border); border-radius:16px; padding:14px 16px;
+    background:var(--panel); cursor:pointer; text-align:left;
+    box-shadow:0 1px 3px rgba(26,34,51,.06);
+    transition:box-shadow .15s ease, border-color .15s ease;
   }
-  .format-card.selected{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+  .format-card:hover{ box-shadow:0 3px 10px rgba(26,34,51,.10); }
+  .format-card.selected{ border-color:var(--primary); box-shadow:0 0 0 2px rgba(59,111,214,.35); }
   .format-card .fi{
-    flex:0 0 auto; width:44px; height:44px; border-radius:50%;
-    background:rgba(98,240,212,.12); display:flex; align-items:center; justify-content:center;
-    font-size:1.3rem;
+    flex:0 0 auto; width:48px; height:48px; border-radius:50%;
+    background:var(--primary-soft, #e7eefb); display:flex; align-items:center; justify-content:center;
+    font-size:1.35rem;
   }
   .format-card .ftext{ flex:1; min-width:0; }
-  .format-card .ft{ font-weight:800; font-size:.95rem; }
-  .format-card .fs{ color:var(--muted); font-size:.8rem; margin-top:2px; }
+  .format-card .ft{ font-weight:800; font-size:.98rem; color:var(--text); }
+  .format-card .fs{ color:var(--muted); font-size:.82rem; margin-top:2px; }
   .format-card .fsize{ flex:0 0 auto; color:var(--muted); font-size:.82rem; text-align:right; white-space:nowrap; }
 
   .audience-row{ margin-bottom: 14px; }
@@ -111,14 +125,15 @@
   .audience-options{ display:flex; gap:8px; flex-wrap:wrap; }
   .audience-btn{
     flex:1; min-width:110px; padding:9px 10px; border-radius:10px;
-    border:1px solid var(--border); background:var(--panel-2); color:var(--text);
+    border:1px solid var(--border); background:var(--panel); color:var(--text);
     font-size:.8rem; font-weight:700; cursor:pointer;
   }
   .audience-btn.selected{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
 
   .info-panel{
-    background:rgba(15,23,42,.55); border:1px solid var(--border); border-radius:14px;
-    padding:12px 14px; margin-bottom:16px; font-size:.82rem; line-height:1.55; color:var(--muted);
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:14px 16px; margin-bottom:16px; font-size:.85rem; line-height:1.6; color:var(--muted);
+    box-shadow:0 1px 3px rgba(26,34,51,.05);
   }
   .info-panel dt{ color:var(--text); font-weight:700; display:inline; }
   .info-panel dd{ display:inline; margin:0 0 0 4px; }
@@ -129,7 +144,7 @@
   }
   .info-panel .info-official{
     margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);
-    color:var(--gold);
+    color:var(--gold-text);
   }
 
   .crop-stage{
@@ -213,6 +228,7 @@
     <h1>📸 Pass- &amp; Bewerbungsfoto</h1>
     <p class="hint">Wähle zuerst, für was das Foto gebraucht wird. Danach richten wir Kamera und Zuschnitt automatisch passend dazu aus.</p>
     <input type="text" class="format-search" id="formatSearch" placeholder="🔍 Was willst du finden? (z. B. Reisepass, Führerschein …)">
+    <div class="format-list-header">Alle Dokumenttypen</div>
     <div class="format-list" id="formatList"></div>
 
     <div id="audienceRow" class="audience-row">
