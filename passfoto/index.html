@@ -83,14 +83,28 @@
   .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
   input[type=file]{ display:none; }
 
+  .format-search{
+    width:100%; padding:12px 14px; margin-bottom:14px; box-sizing:border-box;
+    border-radius:14px; border:1px solid var(--border); background:var(--panel-2);
+    color:var(--text); font-size:.95rem;
+  }
+  .format-search::placeholder{ color:var(--muted); }
   .format-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
   .format-card{
+    display:flex; align-items:center; gap:14px;
     border:1px solid var(--border); border-radius:14px; padding:12px 14px;
     background:var(--panel-2); cursor:pointer; text-align:left;
   }
   .format-card.selected{ border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+  .format-card .fi{
+    flex:0 0 auto; width:44px; height:44px; border-radius:50%;
+    background:rgba(98,240,212,.12); display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem;
+  }
+  .format-card .ftext{ flex:1; min-width:0; }
   .format-card .ft{ font-weight:800; font-size:.95rem; }
   .format-card .fs{ color:var(--muted); font-size:.8rem; margin-top:2px; }
+  .format-card .fsize{ flex:0 0 auto; color:var(--muted); font-size:.82rem; text-align:right; white-space:nowrap; }
 
   .audience-row{ margin-bottom: 14px; }
   .audience-label{ display:block; font-size:.82rem; color:var(--muted); margin-bottom:6px; }
@@ -198,6 +212,7 @@
   <section class="step active" id="stepFormat">
     <h1>📸 Pass- &amp; Bewerbungsfoto</h1>
     <p class="hint">Wähle zuerst, für was das Foto gebraucht wird. Danach richten wir Kamera und Zuschnitt automatisch passend dazu aus.</p>
+    <input type="text" class="format-search" id="formatSearch" placeholder="🔍 Was willst du finden? (z. B. Reisepass, Führerschein …)">
     <div class="format-list" id="formatList"></div>
 
     <div id="audienceRow" class="audience-row">
@@ -325,37 +340,70 @@
 <script>
   const $ = (id) => document.getElementById(id);
 
+  const BIO_INFO = {
+    'Maße': '35 × 45 mm, Kopfhöhe (Kinn bis Haaransatz) 32–36 mm',
+    'Hintergrund': 'Hellgrau empfohlen – reines Weiß wird von der Bundesdruckerei oft abgelehnt',
+    'Ausdruck': 'Mund geschlossen, neutraler Ausdruck, Blick direkt in die Kamera',
+    'Brille': 'Keine Brille erlaubt (auch keine durchsichtigen Gestelle) – Ausnahme nur mit ärztlichem Attest',
+    'Kopfbedeckung': 'Nur aus religiösen Gründen (z. B. Kopftuch, Turban, Kippa) – Gesicht muss von Stirn bis Kinn und Ohr zu Ohr frei sichtbar sein. Niqab/Burka nicht erlaubt.',
+    'Gültigkeit': 'Foto darf höchstens 6 Monate alt sein',
+    'Auflösung': 'Mindestens 600 dpi für den Druck',
+  };
+  const BIO_OFFICIAL_NOTE = 'Für Ausweise/Reisepässe von Kindern verlangen viele Bürgerämter ein zertifiziertes Foto (BSI PointID) vom Fotografen oder Amt selbst – ein hier erstelltes Foto eignet sich als Vorbereitung/Vorschau, ersetzt das aber ggf. nicht.';
+
   const FORMATS = [
     {
-      id: 'bio', label: 'Biometrisches Passfoto', sub: '35 × 45 mm – Reisepass, Personalausweis, Schengen-Visum',
-      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: true,
-      info: {
-        'Maße': '35 × 45 mm, Kopfhöhe (Kinn bis Haaransatz) 32–36 mm',
-        'Hintergrund': 'Hellgrau empfohlen – reines Weiß wird von der Bundesdruckerei oft abgelehnt',
-        'Ausdruck': 'Mund geschlossen, neutraler Ausdruck, Blick direkt in die Kamera',
-        'Brille': 'Keine Brille erlaubt (auch keine durchsichtigen Gestelle) – Ausnahme nur mit ärztlichem Attest',
-        'Kopfbedeckung': 'Nur aus religiösen Gründen (z. B. Kopftuch, Turban, Kippa) – Gesicht muss von Stirn bis Kinn und Ohr zu Ohr frei sichtbar sein. Niqab/Burka nicht erlaubt.',
-        'Gültigkeit': 'Foto darf höchstens 6 Monate alt sein',
-        'Auflösung': 'Mindestens 600 dpi für den Druck',
-      },
-      audienceNotes: {
-        kind: 'Kinder bis 5 Jahre: Kopfhaltung, Blickrichtung und Mimik dürfen leicht abweichen – Hauptsache das Gesicht ist gut erkennbar.',
-        baby: 'Babys unter 1 Jahr: Augen müssen nicht offen sein, neutraler Ausdruck ist nicht nötig. Das Baby darf auf einer weißen Unterlage liegen. Hände der Eltern dürfen nicht im Bild zu sehen sein.',
-      },
-      officialNote: 'Für Ausweise/Reisepässe von Kindern verlangen viele Bürgerämter ein zertifiziertes Foto (BSI PointID) vom Fotografen oder Amt selbst – ein hier erstelltes Foto eignet sich als Vorbereitung/Vorschau, ersetzt das aber ggf. nicht.',
+      id: 'reisepass', icon: '🛂', label: 'Reisepass', sub: '35 × 45 mm – Erwachsene',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: BIO_INFO,
+      officialNote: BIO_OFFICIAL_NOTE,
     },
     {
-      id: 'bewerbung', label: 'Bewerbungsfoto', sub: '45 × 60 mm – klassisches Format für Lebenslauf',
-      wmm: 45, hmm: 60, headPct: 0.60, hasAudience: false,
+      id: 'personalausweis', icon: '🪪', label: 'Personalausweis', sub: '35 × 45 mm – Erwachsene',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: BIO_INFO,
+      officialNote: BIO_OFFICIAL_NOTE,
+    },
+    {
+      id: 'kinderreisepass', icon: '🧒', label: 'Kinderreisepass', sub: '35 × 45 mm – Kinder unter 10 Jahren',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: BIO_INFO,
+      officialNote: 'Kinder bis 5 Jahre: Kopfhaltung, Blickrichtung und Mimik dürfen leicht abweichen – Hauptsache das Gesicht ist gut erkennbar. ' + BIO_OFFICIAL_NOTE,
+    },
+    {
+      id: 'babyreisepass', icon: '👶', label: 'Baby-Reisepass', sub: '35 × 45 mm – Babys unter 6 Monaten',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: Object.assign({}, BIO_INFO, {
+        'Ausdruck': 'Neutraler Ausdruck nicht nötig, Augen müssen nicht offen sein',
+      }),
+      officialNote: 'Babys unter 1 Jahr: Das Baby darf auf einer weißen Unterlage liegen, Hände der Eltern dürfen nicht im Bild zu sehen sein. ' + BIO_OFFICIAL_NOTE,
+    },
+    {
+      id: 'fuehrerschein', icon: '🚗', label: 'Führerschein', sub: '35 × 45 mm',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: BIO_INFO,
+      officialNote: 'Seit der EU-weiten Kartenführerschein-Umstellung gelten für Führerschein-Fotos in Deutschland dieselben biometrischen Vorgaben wie für Reisepass/Personalausweis.',
+    },
+    {
+      id: 'visum', icon: '✈️', label: 'Schengen-Visum', sub: '35 × 45 mm',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      info: BIO_INFO,
+      officialNote: 'Für Visumanträge bei Botschaften/Konsulaten gelten dieselben biometrischen Vorgaben wie für den Reisepass. Manche Botschaften verlangen zusätzlich reines Weiß statt Hellgrau als Hintergrund – bitte vorab prüfen.',
+    },
+    {
+      id: 'egk', icon: '💳', label: 'Gesundheitskarte (eGK)', sub: '35 × 45 mm – ab 15 Jahren Pflicht',
+      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
       info: {
-        'Maße': '45 × 60 mm (kein amtlicher Standard, aber in Deutschland üblich für Bewerbungsunterlagen)',
-        'Hintergrund': 'Frei wählbar – neutral, hell oder passend zur Branche',
-        'Ausdruck': 'Freundlicher, natürlicher Ausdruck erlaubt – kein neutraler Zwang wie bei Ausweisfotos',
-        'Hinweis': 'Kein amtliches Dokument – hier darfst du gestalterisch freier sein.',
+        'Maße': '35 × 45 mm, digital mindestens 300 × 400 Pixel',
+        'Hintergrund': 'Neutral – muss nicht biometrisch/amtlich streng sein',
+        'Ausdruck': 'Kopf gerade, nicht geneigt oder gedreht',
+        'Kopfbedeckung': 'Keine Kopfbedeckung erlaubt',
+        'Pflicht ab': '15 Jahren – jüngere Versicherte erhalten die Karte auch ohne Foto',
+        'Hinweis': 'Es muss nicht biometrisch sein wie ein Passfoto – etwas mehr Spielraum bei Kopfhaltung/Ausdruck ist erlaubt.',
       },
     },
     {
-      id: 'us', label: 'US-Passfoto / Visum', sub: '51 × 51 mm (2 × 2 Zoll) – USA',
+      id: 'us', icon: '🇺🇸', label: 'US-Passfoto / Visum', sub: '51 × 51 mm (2 × 2 Zoll) – USA',
       wmm: 51, hmm: 51, headPct: 0.62, hasAudience: true,
       info: {
         'Maße': '51 × 51 mm / 2 × 2 Zoll, Kopfhöhe ca. 25–35 mm (1–1⅜ Zoll)',
@@ -371,15 +419,13 @@
       },
     },
     {
-      id: 'egk', label: 'Gesundheitskarte (eGK)', sub: '35 × 45 mm – ab 15 Jahren Pflicht',
-      wmm: 35, hmm: 45, headPct: 0.75, hasAudience: false,
+      id: 'bewerbung', icon: '💼', label: 'Bewerbungsfoto', sub: '45 × 60 mm – klassisches Format für Lebenslauf',
+      wmm: 45, hmm: 60, headPct: 0.60, hasAudience: false,
       info: {
-        'Maße': '35 × 45 mm, digital mindestens 300 × 400 Pixel',
-        'Hintergrund': 'Neutral – muss nicht biometrisch/amtlich streng sein',
-        'Ausdruck': 'Kopf gerade, nicht geneigt oder gedreht',
-        'Kopfbedeckung': 'Keine Kopfbedeckung erlaubt',
-        'Pflicht ab': '15 Jahren – jüngere Versicherte erhalten die Karte auch ohne Foto',
-        'Hinweis': 'Es muss nicht biometrisch sein wie ein Passfoto – etwas mehr Spielraum bei Kopfhaltung/Ausdruck ist erlaubt.',
+        'Maße': '45 × 60 mm (kein amtlicher Standard, aber in Deutschland üblich für Bewerbungsunterlagen)',
+        'Hintergrund': 'Frei wählbar – neutral, hell oder passend zur Branche',
+        'Ausdruck': 'Freundlicher, natürlicher Ausdruck erlaubt – kein neutraler Zwang wie bei Ausweisfotos',
+        'Hinweis': 'Kein amtliches Dokument – hier darfst du gestalterisch freier sein.',
       },
     },
   ];
@@ -505,14 +551,29 @@
   $('btnLiveCamClose').onclick = stopLiveCam;
   $('btnLiveCamShutter').onclick = liveCaptureShot;
 
-  // ---------- Schritt 2: Zuschneiden ----------
+  // ---------- Schritt 1: Format-Liste (mit Suche) ----------
+  let formatQuery = '';
   function buildFormatList() {
     const list = $('formatList');
     list.innerHTML = '';
-    FORMATS.forEach(f => {
+    const q = formatQuery.trim().toLowerCase();
+    const filtered = q
+      ? FORMATS.filter(f => (f.label + ' ' + f.sub).toLowerCase().includes(q))
+      : FORMATS;
+    if (!filtered.length) {
+      list.innerHTML = '<p style="color:var(--muted); font-size:.9rem;">Keine Treffer – versuch einen anderen Suchbegriff.</p>';
+      return;
+    }
+    filtered.forEach(f => {
       const card = document.createElement('div');
       card.className = 'format-card' + (f.id === selectedFormat.id ? ' selected' : '');
-      card.innerHTML = `<div class="ft">${f.label}</div><div class="fs">${f.sub}</div>`;
+      card.innerHTML = `
+        <div class="fi">${f.icon || '📄'}</div>
+        <div class="ftext">
+          <div class="ft">${f.label}</div>
+          <div class="fs">${f.sub}</div>
+        </div>
+        <div class="fsize">${f.wmm} × ${f.hmm} mm</div>`;
       card.onclick = () => {
         selectedFormat = f;
         buildFormatList();
@@ -522,6 +583,10 @@
       list.appendChild(card);
     });
   }
+  $('formatSearch').oninput = (e) => {
+    formatQuery = e.target.value;
+    buildFormatList();
+  };
 
   document.querySelectorAll('.audience-btn').forEach(btn => {
     btn.onclick = () => {
