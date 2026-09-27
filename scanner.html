@@ -215,6 +215,11 @@
     transition:opacity .12s ease;
   }
   .livecam-flash.show{ opacity:.75; transition:opacity .02s ease; }
+  .review-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:14px; flex-wrap:wrap;
+  }
+  .review-counter{ font-weight:700; color:var(--primary); }
   .livecam-badge{
     position:absolute; top:10px; right:10px; min-width:30px; height:30px; padding:0 8px;
     border-radius:15px; background:var(--primary); color:#fff; font-weight:700; font-size:.9rem;
@@ -285,6 +290,11 @@
 
     <!-- STEP: crop -->
     <section class="step" id="stepCrop">
+      <div class="review-bar" id="reviewBar" style="display:none;">
+        <button class="btn ghost" id="btnReviewPrev">← Vorherige Seite</button>
+        <span class="review-counter" id="reviewCounter">Seite 1/1</span>
+        <button class="btn ghost" id="btnReviewSkip">Überspringen</button>
+      </div>
       <h1>Ecken anpassen</h1>
       <p class="hint">Ziehe die vier Punkte auf die Ecken des Dokuments. Standardmäßig ist das ganze Bild ausgewählt.</p>
       <div class="crop-wrap" id="cropWrap">
@@ -460,6 +470,8 @@
   // ---------- Capture ----------
   function loadFile(file){
     if(!file) return;
+    reviewMode = false;
+    document.getElementById('reviewBar').style.display = 'none';
     const reader = new FileReader();
     reader.onload = e => {
       const img = new Image();
@@ -722,8 +734,67 @@
   document.getElementById('btnBatchDone').addEventListener('click', () => {
     stopLiveCam();
     if(pages.length){
+      startBatchReview();
+    }
+  });
+
+  // ---------- Batch-Nachbearbeitung: jede automatisch gescannte Seite noch einmal einzeln
+  // durchgehen und die Ecken bei Bedarf nachziehen/drehen – genau wie im "Ecken anpassen"
+  // Karussell (1/6, 2/6, …) bekannter Scanner-Apps nach einem Batch-Scan. ----------
+  let reviewMode = false;
+  let reviewIndex = 0;
+
+  function updateReviewBar(){
+    document.getElementById('reviewCounter').textContent = 'Seite ' + (reviewIndex + 1) + '/' + pages.length;
+    document.getElementById('btnReviewPrev').style.display = reviewIndex > 0 ? '' : 'none';
+  }
+
+  function loadReviewPage(index){
+    reviewIndex = index;
+    updateReviewBar();
+    const img = new Image();
+    img.onload = () => {
+      currentImage = img;
+      initCrop(img);
+    };
+    img.src = pages[reviewIndex].dataUrl;
+  }
+
+  function startBatchReview(){
+    reviewMode = true;
+    reviewIndex = 0;
+    document.getElementById('reviewBar').style.display = 'flex';
+    loadReviewPage(0);
+    showStep('stepCrop');
+  }
+
+  function finishReviewOrAdvance(updatedDataUrl){
+    pages[reviewIndex].dataUrl = updatedDataUrl;
+    if(reviewIndex < pages.length - 1){
+      loadReviewPage(reviewIndex + 1);
+    } else {
+      reviewMode = false;
+      document.getElementById('reviewBar').style.display = 'none';
       renderPagesGrid();
       els.pagesSummary.style.display = '';
+      showStep('stepCapture');
+      setStatus(pages.length + ' Seite(n) im Batch-Scan erfasst und geprüft.');
+    }
+  }
+
+  document.getElementById('btnReviewPrev').addEventListener('click', () => {
+    if(reviewIndex > 0) loadReviewPage(reviewIndex - 1);
+  });
+  document.getElementById('btnReviewSkip').addEventListener('click', () => {
+    // Seite so übernehmen wie sie ist (ohne die Ecken neu anzuwenden)
+    if(reviewIndex < pages.length - 1){
+      loadReviewPage(reviewIndex + 1);
+    } else {
+      reviewMode = false;
+      document.getElementById('reviewBar').style.display = 'none';
+      renderPagesGrid();
+      els.pagesSummary.style.display = '';
+      showStep('stepCapture');
       setStatus(pages.length + ' Seite(n) im Batch-Scan erfasst.');
     }
   });
@@ -934,6 +1005,17 @@
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
       warpedCanvasCache = warpToRect(els.cropCanvas, corners, outW, outH);
+
+      if(reviewMode){
+        // Batch-Nachbearbeitung: Filter wurde beim automatischen Scan schon angewendet,
+        // hier nur die (ggf. nachgezogenen/gedrehten) Ecken final übernehmen.
+        const filtered = applyFilter(warpedCanvasCache, 'auto');
+        const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
+        setStatus('');
+        finishReviewOrAdvance(dataUrl);
+        return;
+      }
+
       buildFilterPreviews();
       showStep('stepFilter');
       setStatus('');
