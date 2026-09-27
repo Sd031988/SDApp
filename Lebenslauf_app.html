@@ -1228,6 +1228,12 @@
 
 <body>
     <script src="zugang.js"></script>
+    <!-- Erzeugt die fertige PDF-Datei direkt im Browser, ohne den Umweg
+         ueber die Betriebssystem-eigene Druckfunktion - dadurch landet
+         keine automatische Kopf-/Fusszeile (Web-Adresse, Datum, Seitenzahl)
+         mehr im fertigen Dokument, wie es z. B. iPhones beim normalen
+         Drucken/"Als PDF sichern" selbst und ungefragt hinzufuegen. -->
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
     <div class="editor-sidebar">
         <div class="brand">
@@ -1651,7 +1657,7 @@
         <button id="install-button" class="action-btn install-btn" onclick="installiereApp()">📲 App
             installieren</button>
         <button class="action-btn secondary-btn" onclick="oeffneDownloadMenu()">⬇️ Speichern / Herunterladen</button>
-        <button class="action-btn print-btn" onclick="window.print()">🖨️ Druckvorschau / Als PDF speichern</button>
+        <button class="action-btn print-btn" onclick="exportAlsPdf()">🖨️ Als PDF speichern</button>
         <button class="action-btn secondary-btn" onclick="oeffneArchivDialog()">🗄️ Bewerbungsarchiv</button>
         <button class="action-btn secondary-btn" onclick="sdZeigeGeraeteId()">🔑 Meine Geräte-ID anzeigen</button>
         <div id="speicher-status" class="success" aria-live="polite"></div>
@@ -2017,7 +2023,7 @@
             if (format === 'json') downloadDaten();
             if (format === 'pdf') {
                 if (aktuellerModus === 'mappe') druckeMappe();
-                else window.print();
+                else exportAlsPdf();
             }
         }
 
@@ -2553,7 +2559,68 @@
 
         function druckeMappe() {
             zeigeModus('mappe');
-            window.print();
+            exportAlsPdf();
+        }
+
+        // Erstellt die PDF-Datei selbst (statt ueber window.print() den
+        // Betriebssystem-Druckdialog aufzurufen) und startet direkt den
+        // Download. So landet keine vom Handy/Browser automatisch
+        // hinzugefuegte Kopf-/Fusszeile (Web-Adresse, Datum, Seitenzahl) im
+        // fertigen Bewerbungsdokument - das war vorher bei window.print()
+        // auf manchen Geraeten (v. a. iPhone) nicht abschaltbar.
+        async function exportAlsPdf() {
+            const istMappe = aktuellerModus === 'mappe';
+            const zielId = istMappe ? 'mappe-vorschau' : (aktuellerModus + '-vorschau');
+            const element = document.getElementById(zielId);
+            if (!element || typeof html2pdf === 'undefined') {
+                // Notfall-Rueckfalloption, falls die PDF-Bibliothek aus
+                // irgendeinem Grund nicht geladen werden konnte (z. B. keine
+                // Internetverbindung beim allerersten Aufruf).
+                window.print();
+                return;
+            }
+
+            const vorname = (document.getElementById('vorname').value || '').trim();
+            const nachname = (document.getElementById('nachname').value || '').trim();
+            const namensteil = (vorname || nachname) ? `${vorname}-${nachname}`.replace(/^-|-$/g, '') : 'Bewerbung';
+            const bezeichnung = istMappe ? 'Bewerbungsmappe' : (document.getElementById('mode-menu-label')?.textContent || 'Dokument');
+            const dateiname = `${bezeichnung}-${namensteil}.pdf`.replace(/\s+/g, '_');
+
+            const options = {
+                margin: 0,
+                filename: dateiname,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    onclone: (klonDoc) => {
+                        // Dieselben Anpassungen wie im @media-print-Block
+                        // oben, aber nur auf die unsichtbare Kopie
+                        // angewendet, die html2canvas fuer das Bild nutzt -
+                        // die echte, sichtbare Seite bleibt unveraendert.
+                        const style = klonDoc.createElement('style');
+                        style.textContent =
+                            '.ghost-placeholder:empty::before{content:none !important;}' +
+                            '.editor-sidebar{display:none !important;}' +
+                            '.a4-page{box-shadow:none !important;border-top:none !important;' +
+                            'width:210mm !important;min-height:297mm !important;margin:0 !important;padding:22mm !important;}' +
+                            '.cv-section{break-inside:avoid;}';
+                        klonDoc.head.appendChild(style);
+                    }
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: istMappe
+                    ? { mode: ['css'], before: ['#mappe-lebenslauf', '#mappe-anschreiben'] }
+                    : { mode: ['css'] }
+            };
+
+            try {
+                await html2pdf().set(options).from(element).save();
+            } catch (err) {
+                console.error(err);
+                window.print();
+            }
         }
 
         function aktiviereMuster(button) {
