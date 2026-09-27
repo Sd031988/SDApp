@@ -281,6 +281,16 @@
     border-radius:15px; background:var(--primary); color:#fff; font-weight:700; font-size:.9rem;
     display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.35);
   }
+  .livecam-mode-toggle{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    display:flex; background:rgba(0,0,0,.55); border-radius:20px; padding:3px;
+    backdrop-filter:blur(4px);
+  }
+  .livecam-mode-toggle .mode-btn{
+    border:none; background:transparent; color:rgba(255,255,255,.75); font-size:.85rem; font-weight:600;
+    padding:6px 16px; border-radius:16px; cursor:pointer;
+  }
+  .livecam-mode-toggle .mode-btn.selected{ background:#fff; color:#111; }
 </style>
 </head>
 <body>
@@ -328,6 +338,10 @@
           <canvas id="liveCamOverlay"></canvas>
           <div class="livecam-flash" id="liveCamFlash"></div>
           <div class="livecam-badge" id="liveCamBadge" style="display:none;">0</div>
+          <div class="livecam-mode-toggle" id="liveCamModeToggle">
+            <button type="button" class="mode-btn selected" data-mode="auto">Auto</button>
+            <button type="button" class="mode-btn" data-mode="manuell">Manuell</button>
+          </div>
         </div>
         <p class="livecam-hint" id="liveCamHint">Kamera wird gestartet …</p>
         <div class="btn-row">
@@ -428,6 +442,7 @@
         <button type="button" class="markup-tool" data-tool="signature">✒️ Unterschrift</button>
         <button type="button" class="markup-tool" data-tool="eraser">🧽 Radiergummi</button>
         <button type="button" class="markup-tool" data-tool="text">🔤 Text</button>
+        <button type="button" class="markup-tool" data-tool="highlight">🖍️ Hervorheben</button>
         <span class="markup-colors">
           <button type="button" class="markup-color selected" data-color="#ff3b30" style="background:#ff3b30;"></button>
           <button type="button" class="markup-color" data-color="#111111" style="background:#111111;"></button>
@@ -652,6 +667,27 @@
   const LIVE_STABLE_NEEDED = 6; // ~6 Frames mit ähnlichem Quad => auto-auslösen
   const liveHiddenCanvas = document.createElement('canvas');
 
+  // Auto/Manuell-Umschalter (wie im Referenz-Scanner): im Auto-Modus löst die Aufnahme
+  // automatisch aus, sobald die Kanten stabil erkannt wurden. Im Manuell-Modus wird die
+  // Kantenerkennung weiterhin live angezeigt (grüner Rahmen), aber erst beim Tippen auf den
+  // Auslöser tatsächlich aufgenommen.
+  let captureMode = 'auto';
+  let lastDetQuad = null, lastDetW = 480, lastDetH = 640;
+  document.querySelectorAll('#liveCamModeToggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#liveCamModeToggle .mode-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      captureMode = btn.dataset.mode;
+      updateShutterVisibility();
+    });
+  });
+  function updateShutterVisibility(){
+    // Im Batch-Modus ist der Auslöser normalerweise ausgeblendet (Auto-Scan Seite für Seite) -
+    // außer im Manuell-Modus, dann braucht man ihn, um jede Seite selbst auszulösen.
+    document.getElementById('btnLiveCamShutter').style.display =
+      (!batchMode || captureMode === 'manuell') ? '' : 'none';
+  }
+
   function quadsClose(a, b, tol){
     if(!a || !b) return false;
     for(let i=0;i<4;i++){
@@ -669,7 +705,9 @@
     els.liveCamBox.style.display = '';
     els.liveCamHint.textContent = 'Kamera wird gestartet …';
     els.liveCamHint.classList.remove('ready');
-    document.getElementById('btnLiveCamShutter').style.display = batchMode ? 'none' : '';
+    captureMode = 'auto';
+    document.querySelectorAll('#liveCamModeToggle .mode-btn').forEach(b => b.classList.toggle('selected', b.dataset.mode === 'auto'));
+    updateShutterVisibility();
     document.getElementById('btnBatchDone').style.display = batchMode ? '' : 'none';
     els.liveCamBadge.style.display = batchMode ? 'flex' : 'none';
     updateBatchBadge();
@@ -809,8 +847,12 @@
         liveStableCount = 0;
       }
       liveLastQuad = quad;
+      lastDetQuad = quad; lastDetW = detW; lastDetH = detH;
 
-      if(liveStableCount >= LIVE_STABLE_NEEDED){
+      if(captureMode === 'manuell'){
+        els.liveCamHint.textContent = '✓ Dokument erkannt – tippe auf 📸 zum Aufnehmen.';
+        els.liveCamHint.classList.add('ready');
+      } else if(liveStableCount >= LIVE_STABLE_NEEDED){
         els.liveCamHint.textContent = '✓ Erkannt – wird automatisch aufgenommen …';
         els.liveCamHint.classList.add('ready');
         if(batchMode){
@@ -825,7 +867,10 @@
     } else {
       liveStableCount = 0;
       liveLastQuad = null;
-      els.liveCamHint.textContent = 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
+      lastDetQuad = null; lastDetW = detW; lastDetH = detH;
+      els.liveCamHint.textContent = captureMode === 'manuell'
+        ? 'Warten auf Dokument – halte es in den Rahmen und tippe dann auf 📸.'
+        : 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
       els.liveCamHint.classList.remove('ready');
     }
   }
@@ -993,7 +1038,19 @@
   document.getElementById('btnLiveCam').addEventListener('click', () => startLiveCam(false));
   document.getElementById('btnBatchCam').addEventListener('click', () => startLiveCam(true));
   document.getElementById('btnLiveCamClose').addEventListener('click', stopLiveCam);
-  document.getElementById('btnLiveCamShutter').addEventListener('click', liveCaptureShot);
+  document.getElementById('btnLiveCamShutter').addEventListener('click', () => {
+    if(batchMode){
+      // Manueller Auslöser im Batch-Modus: nimmt die zuletzt erkannte Kontur, oder – falls
+      // (noch) keine erkannt wurde – einen Rahmen mit etwas Rand als Fallback.
+      const quad = lastDetQuad || [
+        { x: lastDetW*0.06, y: lastDetH*0.06 }, { x: lastDetW*0.94, y: lastDetH*0.06 },
+        { x: lastDetW*0.94, y: lastDetH*0.94 }, { x: lastDetW*0.06, y: lastDetH*0.94 }
+      ];
+      batchCaptureShot(quad, lastDetW, lastDetH);
+    } else {
+      liveCaptureShot();
+    }
+  });
 
   // ---------- Crop ----------
   const MAX_DIM = 1600; // downscale large photos for performance
@@ -1620,14 +1677,19 @@
     if(!markupDrawing) return;
     evt.preventDefault();
     const pt = getCanvasPoint(evt);
+    const isHighlight = markupTool === 'highlight';
+    markupCtx.globalAlpha = isHighlight ? 0.35 : 1;
+    markupCtx.globalCompositeOperation = isHighlight ? 'multiply' : 'source-over';
     markupCtx.strokeStyle = markupTool === 'eraser' ? '#ffffff' : markupColor;
-    markupCtx.lineWidth = markupTool === 'eraser' ? 28 : (markupTool === 'signature' ? 3 : 5);
-    markupCtx.lineCap = 'round';
+    markupCtx.lineWidth = markupTool === 'eraser' ? 28 : (markupTool === 'signature' ? 3 : (isHighlight ? 22 : 5));
+    markupCtx.lineCap = isHighlight ? 'butt' : 'round';
     markupCtx.lineJoin = 'round';
     markupCtx.beginPath();
     markupCtx.moveTo(markupLastPt.x, markupLastPt.y);
     markupCtx.lineTo(pt.x, pt.y);
     markupCtx.stroke();
+    markupCtx.globalAlpha = 1;
+    markupCtx.globalCompositeOperation = 'source-over';
     markupLastPt = pt;
   }
   function markupPointerUp(){
