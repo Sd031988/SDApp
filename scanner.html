@@ -151,6 +151,18 @@
     text-align:center;
   }
 
+  .export-options{ margin:16px 0; display:flex; flex-direction:column; gap:8px; }
+  .checkbox-row{ display:flex; align-items:center; gap:8px; font-size:.95rem; cursor:pointer; }
+  .checkbox-row input{ width:18px; height:18px; }
+  #watermarkText{
+    padding:10px 12px; border-radius:10px; border:1px solid var(--border,#2a3244);
+    background:var(--panel,#141b2b); color:var(--fg,#eee); font-size:.9rem;
+  }
+  #ocrText{
+    padding:10px 12px; border-radius:10px; border:1px solid var(--border,#2a3244);
+    background:var(--panel,#141b2b); color:var(--fg,#eee);
+  }
+
   footer.attrib{
     text-align:center; color:var(--muted); font-size:.78rem;
     padding:20px 0 30px;
@@ -334,13 +346,29 @@
       <h1>Exportieren</h1>
       <p class="hint" id="exportHint">Alles bereit. Wähle das gewünschte Format.</p>
       <div class="pages-grid" id="exportPagesGrid"></div>
+
+      <div class="export-options">
+        <label class="checkbox-row">
+          <input type="checkbox" id="chkWatermark">
+          Wasserzeichen einfügen
+        </label>
+        <input type="text" id="watermarkText" placeholder="Wasserzeichen-Text (z. B. Firmenname)" style="display:none;">
+      </div>
+
       <div class="btn-row">
         <button class="btn primary" id="btnSavePdf">📄 Als PDF speichern</button>
-        <button class="btn secondary" id="btnSaveImages">🖼️ Als Bilder speichern</button>
+        <button class="btn secondary" id="btnSaveImages">🖼️ Als Bilder speichern (JPG)</button>
         <button class="btn secondary" id="btnSharePdf">📤 Teilen</button>
+        <button class="btn secondary" id="btnRunOcr">🔤 Text erkennen (OCR)</button>
+        <button class="btn secondary" id="btnSaveTxt" style="display:none;">📝 Als TXT speichern</button>
         <button class="btn ghost" id="btnBackToPages">← Zurück</button>
       </div>
       <p class="status-bar" id="exportStatus"></p>
+
+      <div id="ocrResult" style="display:none;">
+        <h2 style="font-size:16px; margin:20px 0 8px;">Erkannter Text</h2>
+        <textarea id="ocrText" rows="10" style="width:100%; box-sizing:border-box; font-family:monospace; font-size:13px;" readonly></textarea>
+      </div>
     </section>
 
     <p class="status-bar" id="globalStatus"></p>
@@ -351,6 +379,7 @@
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
 <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 (function(){
   'use strict';
@@ -1261,25 +1290,60 @@
       div.innerHTML = `<img src="${p.dataUrl}"><span class="num">${i+1}</span><span class="label">${p.label || ''}</span>`;
       els.exportPagesGrid.appendChild(div);
     });
+    // Reset von OCR-Ergebnissen aus einem vorherigen Dokument, damit hier nicht versehentlich
+    // veralteter Text zu den neuen Seiten angezeigt wird.
+    ocrPageTexts = [];
+    document.getElementById('ocrResult').style.display = 'none';
+    document.getElementById('ocrText').value = '';
+    document.getElementById('btnSaveTxt').style.display = 'none';
+    document.getElementById('exportStatus').textContent = '';
     showStep('stepExport');
   });
   document.getElementById('btnBackToPages').addEventListener('click', () => showStep('stepCapture'));
+
+  const chkWatermark = document.getElementById('chkWatermark');
+  const watermarkTextInput = document.getElementById('watermarkText');
+  chkWatermark.addEventListener('change', () => {
+    watermarkTextInput.style.display = chkWatermark.checked ? '' : 'none';
+  });
+
+  // Zentrale PDF-Erstellung (mit optionalem Wasserzeichen), damit "Speichern" und "Teilen"
+  // exakt dasselbe Dokument erzeugen und Änderungen nur an einer Stelle gepflegt werden müssen.
+  async function buildPdfBlob(){
+    const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const wantWatermark = chkWatermark.checked && watermarkTextInput.value.trim();
+    let font = null;
+    if(wantWatermark) font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    for(const p of pages){
+      const imgBytes = await (await fetch(p.dataUrl)).arrayBuffer();
+      const img = await pdfDoc.embedJpg(imgBytes);
+      const pageW = img.width, pageH = img.height;
+      const pdfPage = pdfDoc.addPage([pageW, pageH]);
+      pdfPage.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
+      if(wantWatermark){
+        const text = watermarkTextInput.value.trim();
+        const fontSize = Math.max(24, Math.round(Math.min(pageW, pageH) * 0.08));
+        pdfPage.drawText(text, {
+          x: pageW * 0.5 - (text.length * fontSize * 0.28),
+          y: pageH * 0.5,
+          size: fontSize,
+          font,
+          color: rgb(0.55, 0.55, 0.55),
+          opacity: 0.35,
+          rotate: degrees(35)
+        });
+      }
+    }
+    const bytes = await pdfDoc.save();
+    return new Blob([bytes], { type:'application/pdf' });
+  }
 
   document.getElementById('btnSavePdf').addEventListener('click', async () => {
     if(!pages.length) return;
     document.getElementById('exportStatus').textContent = 'PDF wird erstellt …';
     try{
-      const { PDFDocument } = PDFLib;
-      const pdfDoc = await PDFDocument.create();
-      for(const p of pages){
-        const imgBytes = await (await fetch(p.dataUrl)).arrayBuffer();
-        const img = await pdfDoc.embedJpg(imgBytes);
-        const pageW = img.width, pageH = img.height;
-        const pdfPage = pdfDoc.addPage([pageW, pageH]);
-        pdfPage.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
-      }
-      const bytes = await pdfDoc.save();
-      const blob = new Blob([bytes], { type:'application/pdf' });
+      const blob = await buildPdfBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1292,20 +1356,6 @@
       document.getElementById('exportStatus').textContent = 'Fehler beim Erstellen des PDFs: ' + err.message;
     }
   });
-
-  async function buildPdfBlob(){
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-    for(const p of pages){
-      const imgBytes = await (await fetch(p.dataUrl)).arrayBuffer();
-      const img = await pdfDoc.embedJpg(imgBytes);
-      const pageW = img.width, pageH = img.height;
-      const pdfPage = pdfDoc.addPage([pageW, pageH]);
-      pdfPage.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
-    }
-    const bytes = await pdfDoc.save();
-    return new Blob([bytes], { type:'application/pdf' });
-  }
 
   document.getElementById('btnSharePdf').addEventListener('click', async () => {
     if(!pages.length) return;
@@ -1341,6 +1391,58 @@
       a.remove();
     });
     document.getElementById('exportStatus').textContent = 'Bilder werden heruntergeladen …';
+  });
+
+  // ---------- OCR (Tesseract.js) ----------
+  let ocrPageTexts = [];
+  document.getElementById('btnRunOcr').addEventListener('click', async () => {
+    if(!pages.length) return;
+    if(typeof Tesseract === 'undefined'){
+      document.getElementById('exportStatus').textContent = 'OCR-Engine konnte nicht geladen werden – bitte Internetverbindung prüfen.';
+      return;
+    }
+    const statusEl = document.getElementById('exportStatus');
+    const ocrBtn = document.getElementById('btnRunOcr');
+    ocrBtn.disabled = true;
+    ocrPageTexts = [];
+    try{
+      for(let i = 0; i < pages.length; i++){
+        statusEl.textContent = `Texterkennung: Seite ${i+1}/${pages.length} …`;
+        const { data } = await Tesseract.recognize(pages[i].dataUrl, 'deu+eng', {
+          logger: m => {
+            if(m.status === 'recognizing text'){
+              statusEl.textContent = `Texterkennung: Seite ${i+1}/${pages.length} … ${Math.round((m.progress||0)*100)}%`;
+            }
+          }
+        });
+        ocrPageTexts.push(data.text.trim());
+      }
+      const combined = pages.map((p, i) => `--- ${p.label || ('Seite ' + (i+1))} ---\n${ocrPageTexts[i]}`).join('\n\n');
+      const ocrResultBox = document.getElementById('ocrResult');
+      const ocrTextArea = document.getElementById('ocrText');
+      ocrResultBox.style.display = '';
+      ocrTextArea.value = combined;
+      document.getElementById('btnSaveTxt').style.display = '';
+      statusEl.textContent = 'Text erkannt – siehe unten. Als TXT speicherbar.';
+    } catch(err){
+      statusEl.textContent = 'Fehler bei der Texterkennung: ' + err.message;
+    } finally {
+      ocrBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnSaveTxt').addEventListener('click', () => {
+    if(!ocrPageTexts.length) return;
+    const combined = pages.map((p, i) => `--- ${p.label || ('Seite ' + (i+1))} ---\n${ocrPageTexts[i] || ''}`).join('\n\n');
+    const blob = new Blob([combined], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gescannt.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    document.getElementById('exportStatus').textContent = 'Text als TXT gespeichert.';
   });
 
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw-scanner.js').catch(()=>{});
