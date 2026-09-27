@@ -306,6 +306,30 @@
                 line-height: 1.7;
             }
 
+        .intro-band {
+            max-width: 780px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 8px 16px 32px;
+        }
+
+            .intro-band h2 {
+                margin: 0 0 18px;
+                font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+                letter-spacing: -0.03em;
+            }
+
+            .intro-band p {
+                margin: 0 0 14px;
+                color: var(--muted);
+                line-height: 1.75;
+                font-size: 1.05rem;
+            }
+
+            .intro-band p:last-child {
+                margin-bottom: 0;
+            }
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -498,6 +522,7 @@
                 <span>SD Bewerbungsstudio</span>
             </div>
             <nav class="nav">
+                <a href="#einleitung">Über uns</a>
                 <a href="#bereiche">Bereiche</a>
                 <a href="#features">Features</a>
                 <a href="#downloads">Downloads</a>
@@ -563,6 +588,23 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section class="section" id="einleitung">
+                <div class="intro-band">
+                    <h2>Deine Werkzeuge. Deine Daten. Dein Tempo.</h2>
+                    <p>
+                        thesdhub.com ist der zentrale Ort für praktische Werkzeuge rund um Bewerbung und Dokumente –
+                        heute mit Lebenslauf, Anschreiben, PDF-Bearbeitung, Dokumenten-Scanner und Passfoto-Tool,
+                        in Zukunft wachsend um weitere Anwendungen, die nahtlos miteinander verbunden sind.
+                    </p>
+                    <p>
+                        Alles läuft direkt in deinem Browser – deine Daten bleiben auf deinem Gerät, nicht auf
+                        fremden Servern. Datenschutz ist dabei kein Zusatz, sondern Grundprinzip: im Einklang mit
+                        der europäischen Datenschutz-Grundverordnung (DSGVO) und mit dem Anspruch, weltweit
+                        vertrauenswürdig zu funktionieren – ganz gleich, wo du diese Seite nutzt.
+                    </p>
                 </div>
             </section>
 
