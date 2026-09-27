@@ -281,7 +281,8 @@
       <p class="livecam-hint" id="liveCamHint">Kamera wird gestartet …</p>
       <div class="btn-row">
         <button class="btn secondary" id="btnLiveCamClose">Abbrechen</button>
-        <button class="btn secondary" id="btnLiveCamFlip" title="Kamera wechseln">🔄 Kamera wechseln</button>
+        <button class="btn secondary" id="btnLiveCamFlip" title="Zwischen erkannten Kameras wechseln">🔄 Andere Kamera</button>
+        <button class="btn secondary" id="btnLiveCamMirror" title="Spiegelbild ein/aus">🔀 Spiegeln</button>
         <button class="btn primary" id="btnLiveCamShutter">📸 Jetzt aufnehmen</button>
       </div>
     </div>
@@ -510,8 +511,15 @@
   $('fileInputChoose').onchange = (e) => { handleFileChosen(e.target.files[0]); e.target.value = ''; };
 
   // ---------- Live-Kamera mit Ausrichthilfe (Kopf-Oval passend zum gewählten Format) ----------
+  // Hinweis: facingMode allein ist auf vielen Geräten unzuverlässig (z. B. Laptops mit nur
+  // einer Kamera, oder Browser, die "environment" ignorieren). Deshalb werden hier die
+  // tatsächlich vorhandenen Kameras über enumerateDevices() ermittelt und per deviceId
+  // ausgewählt – das funktioniert zuverlässig auf PC und Handy gleichermaßen. Das Spiegeln
+  // ist zusätzlich manuell umschaltbar, falls die Automatik mal falsch liegt.
   let liveStream = null;
-  let liveFacingMode = 'user'; // 'user' = Frontkamera (Selfie), 'environment' = Rückkamera
+  let liveVideoDevices = [];
+  let liveDeviceIndex = 0;
+  let liveMirrored = true;
 
   function drawLiveGuide() {
     const wrap = $('liveCamBox').querySelector('.livecam-wrap');
@@ -533,9 +541,18 @@
   }
   window.addEventListener('resize', () => { if (liveStream) drawLiveGuide(); });
 
-  async function startLiveCam(requestedFacing) {
-    if (requestedFacing) liveFacingMode = requestedFacing;
-    // Laufenden Stream sauber stoppen, bevor die andere Kamera gestartet wird
+  async function refreshLiveVideoDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      liveVideoDevices = devices.filter(d => d.kind === 'videoinput');
+    } catch (e) {
+      liveVideoDevices = [];
+    }
+  }
+
+  async function startLiveCam(deviceIndex) {
+    if (typeof deviceIndex === 'number') liveDeviceIndex = deviceIndex;
+    // Laufenden Stream sauber stoppen, bevor eine andere Kamera gestartet wird
     if (liveStream) {
       liveStream.getTracks().forEach(t => t.stop());
       liveStream = null;
@@ -543,17 +560,33 @@
     $('liveCamBox').style.display = '';
     $('liveCamHint').textContent = 'Kamera wird gestartet …';
     try {
-      liveStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: liveFacingMode }, width: { ideal: 1280 }, height: { ideal: 1280 } },
-        audio: false
-      });
+      // Erster Aufruf ohne genaue Kamera, damit der Browser um Erlaubnis fragt und
+      // enumerateDevices() danach echte Kamera-Labels liefert (nötig auf vielen Browsern).
+      if (!liveVideoDevices.length) {
+        const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        probe.getTracks().forEach(t => t.stop());
+        await refreshLiveVideoDevices();
+      }
+      if (liveDeviceIndex >= liveVideoDevices.length) liveDeviceIndex = 0;
+      const chosen = liveVideoDevices[liveDeviceIndex];
+      const videoConstraint = chosen
+        ? { deviceId: { exact: chosen.deviceId }, width: { ideal: 1280 }, height: { ideal: 1280 } }
+        : { width: { ideal: 1280 }, height: { ideal: 1280 } };
+
+      liveStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint, audio: false });
+      // Nach dem Start die Geräteliste aktualisieren (Labels sind jetzt sicher vorhanden)
+      await refreshLiveVideoDevices();
+
       const video = $('liveCamVideo');
       video.srcObject = liveStream;
-      // Nur die Frontkamera spiegeln (wie ein Spiegel) – die Rückkamera zeigt das Bild seitenrichtig
-      video.classList.toggle('mirrored', liveFacingMode === 'user');
+      video.classList.toggle('mirrored', liveMirrored);
       await video.play();
       drawLiveGuide();
-      $('liveCamHint').textContent = 'Kopf mittig ins Oval einpassen, dann auslösen.';
+      const camLabel = chosen && chosen.label ? ` (${chosen.label})` : '';
+      const multiCam = liveVideoDevices.length > 1;
+      $('liveCamHint').textContent = 'Kopf mittig ins Oval einpassen, dann auslösen.'
+        + (multiCam ? ' Falsche Kamera? Auf "Andere Kamera" tippen.' : '');
+      $('btnLiveCamFlip').style.display = multiCam ? '' : 'none';
     } catch (err) {
       $('liveCamHint').textContent = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.');
     }
@@ -568,7 +601,13 @@
   }
 
   function flipLiveCam() {
-    startLiveCam(liveFacingMode === 'user' ? 'environment' : 'user');
+    if (!liveVideoDevices.length) return;
+    startLiveCam((liveDeviceIndex + 1) % liveVideoDevices.length);
+  }
+
+  function toggleMirror() {
+    liveMirrored = !liveMirrored;
+    $('liveCamVideo').classList.toggle('mirrored', liveMirrored);
   }
 
   function liveCaptureShot() {
@@ -578,7 +617,7 @@
     shot.width = video.videoWidth;
     shot.height = video.videoHeight;
     const sctx = shot.getContext('2d');
-    if (liveFacingMode === 'user') {
+    if (liveMirrored) {
       // Spiegelung rückgängig machen, damit das gespeicherte Foto seitenrichtig ist
       sctx.translate(shot.width, 0);
       sctx.scale(-1, 1);
@@ -595,6 +634,7 @@
   $('btnLiveCamClose').onclick = stopLiveCam;
   $('btnLiveCamShutter').onclick = liveCaptureShot;
   $('btnLiveCamFlip').onclick = flipLiveCam;
+  $('btnLiveCamMirror').onclick = toggleMirror;
 
   // ---------- Schritt 1: Format-Liste (mit Suche) ----------
   let formatQuery = '';
