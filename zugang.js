@@ -30,7 +30,7 @@
     // alte und neue Codes nicht mehr zusammen.
     const SD_GEHEIM = 'SD-Bewerbungsstudio-Silvi-2026-x7Q';
 
-    const FREI_TAGE = 42; // 6 Wochen kostenlose Testphase
+    const FREI_TAGE = 15; // 15 Tage kostenlose Testphase
     const ERSTBESUCH_KEY = 'sdErstbesuch';
     const ZUGANG_BIS_KEY = 'sdZugangBis';
     const GERAETE_ID_KEY = 'sdGeraeteId';
