@@ -1378,6 +1378,11 @@
         <button id="btnChooseFiles" class="tool-btn">📂 Datei wählen</button>
         <button id="btnCameraScan" class="tool-btn">📷 Scan / Foto</button>
       </div>
+      <div id="scanPendingBar" style="display:none; align-items:center; gap:8px; flex-wrap:wrap; background:var(--accent-soft,#eef4ff); border:1px solid var(--accent,#3366ff); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+        <span style="font-weight:600;"><span id="scanPendingCount">0</span> Seite(n) aufgenommen</span>
+        <button id="btnScanPendingMore" class="tool-btn" style="margin:0;">📷 Weitere Seite</button>
+        <button id="btnScanPendingDone" class="btn-primary" style="margin:0;">✅ Fertig – bearbeiten</button>
+      </div>
       <button id="btnLiveCamScan" class="tool-btn" style="width:100%;margin-bottom:8px;">🎥 Live-Kamera (Auto-Scan)</button>
       <button id="btnPhoneScan" class="tool-btn" style="width:100%;margin-bottom:8px;">📱 Mit Handy scannen</button>
       <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
@@ -1811,9 +1816,11 @@
         <canvas id="liveCamOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
       </div>
       <p id="liveCamHint" style="font-weight:600; color:var(--accent); margin:12px 0 4px;">Kamera wird gestartet …</p>
-      <div class="modal-actions" style="justify-content:center;">
+      <p id="liveCamCount" style="display:none; font-size:.85rem; color:var(--muted); margin:0 0 8px;"><span id="liveCamCountNum">0</span> Seite(n) aufgenommen – weiter scannen oder fertigstellen</p>
+      <div class="modal-actions" style="justify-content:center; flex-wrap:wrap;">
         <button id="btnLiveCamClose" class="tool-btn">Abbrechen</button>
         <button id="btnLiveCamShutter" class="btn-primary">📸 Jetzt aufnehmen</button>
+        <button id="btnLiveCamDone" class="btn-primary" style="display:none; background:var(--success,#2e9e4f);">✅ Fertig – Seiten bearbeiten</button>
       </div>
     </div>
   </div>
@@ -3943,10 +3950,53 @@
       fi.click();
     };
 
+    // Seiten, die per Kamera/Live-Kamera bereits aufgenommen, aber noch nicht
+    // zugeschnitten/gefiltert wurden. So kann man erst mehrere Seiten
+    // nacheinander scannen und sie danach am Stück bearbeiten, statt nach
+    // jeder einzelnen Seite direkt in den Zuschneide-Dialog zu müssen.
+    let scanPendingCaptures = [];
+
+    function updateScanPendingBar() {
+      const bar = $('scanPendingBar');
+      const n = scanPendingCaptures.length;
+      $('scanPendingCount').textContent = n;
+      bar.style.display = n > 0 ? 'flex' : 'none';
+    }
+
+    function addPendingCapture(file) {
+      scanPendingCaptures.push(file);
+      updateScanPendingBar();
+      const liveCount = $('liveCamCount');
+      if (liveCount) {
+        $('liveCamCountNum').textContent = scanPendingCaptures.length;
+        liveCount.style.display = scanPendingCaptures.length > 0 ? '' : 'none';
+      }
+      const doneBtn = $('btnLiveCamDone');
+      if (doneBtn) doneBtn.style.display = scanPendingCaptures.length > 0 ? '' : 'none';
+    }
+
+    $('btnScanPendingMore').onclick = () => { $('btnCameraScan').click(); };
+    $('btnScanPendingDone').onclick = () => {
+      const files = scanPendingCaptures;
+      scanPendingCaptures = [];
+      updateScanPendingBar();
+      startScanEnhanceQueue(files);
+    };
+
     $('fileInput').onchange = (e) => {
       const files = Array.from(e.target.files);
       if (state.scanCaptureMode && files.some(f => f.type.startsWith('image/'))) {
-        startScanEnhanceQueue(files.filter(f => f.type.startsWith('image/')));
+        const imgFiles = files.filter(f => f.type.startsWith('image/'));
+        // Ausweis Vorder-/Rückseite hat einen eigenen geführten 2-Schritt-Ablauf
+        // (siehe btnScanFilterDone) und wird weiterhin sofort bearbeitet.
+        // Bei "Dokument"/"Reisepass" erst sammeln, damit mehrere Seiten am
+        // Stück fotografiert werden können (Leiste unten: "Weitere Seite" /
+        // "Fertig – bearbeiten").
+        if (scanDocType === 'ausweis') {
+          startScanEnhanceQueue(imgFiles);
+        } else {
+          imgFiles.forEach(addPendingCapture);
+        }
         const rest = files.filter(f => !f.type.startsWith('image/'));
         if (rest.length) handleFiles(rest);
       } else {
@@ -4482,6 +4532,9 @@
       liveLastQuad = null;
       $('modalLiveCam').classList.add('open');
       $('liveCamHint').textContent = 'Kamera wird gestartet …';
+      $('liveCamCountNum').textContent = scanPendingCaptures.length;
+      $('liveCamCount').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
+      $('btnLiveCamDone').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
       try {
         liveStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -4579,11 +4632,25 @@
       shot.height = video.videoHeight;
       shot.getContext('2d').drawImage(video, 0, 0);
       shot.toBlob(blob => {
-        stopLiveCam();
-        const file = new File([blob], 'live-scan.jpg', { type: 'image/jpeg' });
-        startScanEnhanceQueue([file]);
+        const file = new File([blob], 'live-scan-' + (scanPendingCaptures.length + 1) + '.jpg', { type: 'image/jpeg' });
+        addPendingCapture(file);
+        // Kamera bleibt an: die nächste Seite kann sofort aufgenommen
+        // werden, statt jedes Mal zurück in den Zuschneide-Dialog zu
+        // müssen. Kurzer Hinweis, dann läuft die Auto-Erkennung weiter.
+        $('liveCamHint').textContent = `✓ Seite ${scanPendingCaptures.length} aufgenommen – weiter scannen oder „Fertig“ tippen`;
+        liveStableCount = 0;
+        liveLastQuad = null;
+        setTimeout(() => { liveCaptured = false; }, 700);
       }, 'image/jpeg', 0.92);
     }
+
+    $('btnLiveCamDone').onclick = () => {
+      stopLiveCam();
+      const files = scanPendingCaptures;
+      scanPendingCaptures = [];
+      updateScanPendingBar();
+      startScanEnhanceQueue(files);
+    };
 
     $('btnLiveCamScan').onclick = startLiveCam;
     $('btnLiveCamClose').onclick = stopLiveCam;
