@@ -4122,11 +4122,6 @@
     }
 
     function openScanEnhanceModal(img, fileName) {
-      $('modalScanEnhance').classList.add('open');
-      $('scanCropStage').style.display = '';
-      $('scanFilterStage').style.display = 'none';
-      $('scanEnhanceHint').textContent = `„${fileName}“ – ziehe die vier Punkte auf die Ecken des Dokuments.`;
-
       let w = img.naturalWidth, h = img.naturalHeight;
       const scale = Math.min(1, SCAN_MAX_DIM / Math.max(w, h));
       w = Math.round(w * scale);
@@ -4137,23 +4132,54 @@
       canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
-      const margin = 0.06;
-      const defaultCorners = [
-        { x: w * margin, y: h * margin },
-        { x: w * (1 - margin), y: h * margin },
-        { x: w * (1 - margin), y: h * (1 - margin) },
-        { x: w * margin, y: h * (1 - margin) },
-      ];
-      scanCorners = defaultCorners;
-      renderScanHandles();
-
+      // Wie bei Adobe Scan/CamScanner: das Foto wird zuerst automatisch
+      // analysiert. Wird das Dokument eindeutig und vollständig erkannt,
+      // begradigt und optimiert die App die Seite direkt selbst – ganz ohne
+      // manuellen Zwischenschritt. Nur wenn die Erkennung unsicher ist,
+      // erscheint der Zuschneide-Dialog (mit dem Vorschlag schon vorausgefüllt).
       setTimeout(() => {
         const auto = scanTryAutoDetect(canvas);
-        if (auto && scanCornersLookValid(auto, w, h)) {
-          scanCorners = auto;
-          renderScanHandles();
+        const validAuto = auto && scanCornersLookValid(auto, w, h);
+        const ratio = validAuto ? scanPolygonArea(auto) / (w * h) : 0;
+        const confidentAuto = validAuto && ratio > 0.20 && ratio < 0.94;
+
+        if (confidentAuto) {
+          finishScanFromCorners(canvas, auto, 'auto');
+          showToast('Seite automatisch begradigt & optimiert ✓');
+          return;
         }
+
+        $('modalScanEnhance').classList.add('open');
+        $('scanCropStage').style.display = '';
+        $('scanFilterStage').style.display = 'none';
+        $('scanEnhanceHint').textContent = `„${fileName}“ – ziehe die vier Punkte auf die Ecken des Dokuments.`;
+
+        const margin = 0.06;
+        const defaultCorners = [
+          { x: w * margin, y: h * margin },
+          { x: w * (1 - margin), y: h * margin },
+          { x: w * (1 - margin), y: h * (1 - margin) },
+          { x: w * margin, y: h * (1 - margin) },
+        ];
+        scanCorners = validAuto ? auto : defaultCorners;
+        renderScanHandles();
       }, 40);
+    }
+
+    // Berechnet die Warp-Zielgröße aus den vier Ecken, entzerrt das Bild und
+    // schließt die Seite direkt mit dem angegebenen Filter ab – der gemeinsame
+    // Pfad für die vollautomatische Erkennung und für "Weiter" im manuellen Dialog.
+    function finishScanFromCorners(canvas, corners, filterMode) {
+      const c = corners;
+      const wTop = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
+      const wBot = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
+      const hLeft = Math.hypot(c[3].x - c[0].x, c[3].y - c[0].y);
+      const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
+      const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
+      const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      scanWarpedCache = scanWarpToRect(canvas, corners, outW, outH);
+      scanSelectedFilter = filterMode;
+      finalizeScanPage();
     }
 
     function renderScanHandles() {
@@ -4285,6 +4311,111 @@
       return out;
     }
 
+    // ---- Beleuchtungsausgleich für den "auto"-Filter (Clear-Scan-Stil) ----
+    // Baut eine stark verkleinerte, weichgezeichnete Karte der lokalen
+    // Papier-Helligkeit. Das entfernt Text (zu klein, um im Downscale zu
+    // überleben) und behält nur ungleiches Licht/Schatten übrig, sodass jede
+    // Bildregion einzeln auf "weiß" normalisiert werden kann statt nur
+    // global – genau das Problem, das schräg/seitlich gehaltene Handyfotos
+    // gegenüber einem echten Flachbettscan haben.
+    function scanBuildBackgroundMap(srcCanvas, w, h) {
+      const smallW = Math.max(20, Math.round(w / 24));
+      const smallH = Math.max(20, Math.round(h / 24));
+      const small = document.createElement('canvas');
+      small.width = smallW; small.height = smallH;
+      const sctx = small.getContext('2d');
+      sctx.imageSmoothingEnabled = true;
+      sctx.imageSmoothingQuality = 'high';
+      sctx.drawImage(srcCanvas, 0, 0, smallW, smallH);
+      const sdata = sctx.getImageData(0, 0, smallW, smallH).data;
+
+      const rMap = new Float32Array(smallW * smallH);
+      const gMap = new Float32Array(smallW * smallH);
+      const bMap = new Float32Array(smallW * smallH);
+      for (let p = 0, i = 0; i < sdata.length; i += 4, p++) {
+        rMap[p] = sdata[i]; gMap[p] = sdata[i + 1]; bMap[p] = sdata[i + 2];
+      }
+
+      function boxBlur(src) {
+        const out = new Float32Array(smallW * smallH);
+        const radius = 2;
+        for (let y = 0; y < smallH; y++) {
+          for (let x = 0; x < smallW; x++) {
+            let sum = 0, count = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+              const yy = y + dy;
+              if (yy < 0 || yy >= smallH) continue;
+              for (let dx = -radius; dx <= radius; dx++) {
+                const xx = x + dx;
+                if (xx < 0 || xx >= smallW) continue;
+                sum += src[yy * smallW + xx];
+                count++;
+              }
+            }
+            out[y * smallW + x] = sum / count;
+          }
+        }
+        return out;
+      }
+
+      return { w: smallW, h: smallH, r: boxBlur(rMap), g: boxBlur(gMap), b: boxBlur(bMap) };
+    }
+
+    function scanClearScanEnhance(srcCanvas, destCtx, w, h) {
+      const bg = scanBuildBackgroundMap(srcCanvas, w, h);
+      const imgData = destCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      function sampleMap(map, mw, mh, u, v) {
+        const x = Math.min(mw - 1, Math.max(0, u));
+        const y = Math.min(mh - 1, Math.max(0, v));
+        const x0 = Math.floor(x), y0 = Math.floor(y);
+        const x1 = Math.min(mw - 1, x0 + 1), y1 = Math.min(mh - 1, y0 + 1);
+        const fx = x - x0, fy = y - y0;
+        const idx = (xx, yy) => yy * mw + xx;
+        const top = map[idx(x0, y0)] * (1 - fx) + map[idx(x1, y0)] * fx;
+        const bot = map[idx(x0, y1)] * (1 - fx) + map[idx(x1, y1)] * fx;
+        return top * (1 - fy) + bot * fy;
+      }
+
+      // Zielhelligkeit für "Papierweiß": das hellste Fleckchen der Karte —
+      // sonst würde ein insgesamt dunkles Foto nur grau statt weiß werden.
+      let targetR = 180, targetG = 180, targetB = 180;
+      for (let i = 0; i < bg.r.length; i++) {
+        if (bg.r[i] > targetR) targetR = bg.r[i];
+        if (bg.g[i] > targetG) targetG = bg.g[i];
+        if (bg.b[i] > targetB) targetB = bg.b[i];
+      }
+
+      const contrast = 1.32;
+      const scaleU = bg.w / w, scaleV = bg.h / h;
+
+      for (let y = 0; y < h; y++) {
+        const v = y * scaleV;
+        const rowOff = y * w;
+        for (let x = 0; x < w; x++) {
+          const u = x * scaleU;
+          const bR = Math.max(35, sampleMap(bg.r, bg.w, bg.h, u, v));
+          const bG = Math.max(35, sampleMap(bg.g, bg.w, bg.h, u, v));
+          const bB = Math.max(35, sampleMap(bg.b, bg.w, bg.h, u, v));
+          const i = (rowOff + x) * 4;
+
+          let r = d[i] * (targetR / bR);
+          let g = d[i + 1] * (targetG / bG);
+          let b = d[i + 2] * (targetB / bB);
+
+          r = (r - 128) * contrast + 128;
+          g = (g - 128) * contrast + 128;
+          b = (b - 128) * contrast + 128;
+
+          d[i] = Math.min(255, Math.max(0, r));
+          d[i + 1] = Math.min(255, Math.max(0, g));
+          d[i + 2] = Math.min(255, Math.max(0, b));
+        }
+      }
+      destCtx.putImageData(imgData, 0, 0);
+    }
+
     function scanApplyFilter(srcCanvas, mode) {
       const w = srcCanvas.width, h = srcCanvas.height;
       const out = document.createElement('canvas');
@@ -4292,6 +4423,14 @@
       const octx = out.getContext('2d');
       octx.drawImage(srcCanvas, 0, 0);
       if (mode === 'original') return out;
+
+      if (mode === 'auto') {
+        // Clear-Scan-Stil: Beleuchtungs-/Schattenkorrektur pro Bildregion statt
+        // nur ein globaler Kontrast-Stretch – macht den Hintergrund gleichmäßig
+        // papierweiß und den Text kräftig, wie bei Adobe Scan/CamScanner.
+        scanClearScanEnhance(srcCanvas, octx, w, h);
+        return out;
+      }
 
       const imgData = octx.getImageData(0, 0, w, h);
       const d = imgData.data;
@@ -4315,15 +4454,6 @@
         for (let i = 0, p = 0; i < d.length; i += 4, p++) {
           const v = gray[p] > thresh ? 255 : 0;
           d[i] = d[i + 1] = d[i + 2] = v;
-        }
-      } else if (mode === 'auto') {
-        const boost = 1.18, lift = 12;
-        for (let i = 0; i < d.length; i += 4) {
-          for (let k = 0; k < 3; k++) {
-            let v = (d[i + k] - min) / range * 255;
-            v = (v - 128) * boost + 128 + lift * 0.15;
-            d[i + k] = Math.min(255, Math.max(0, v));
-          }
         }
       } else if (mode === 'vivid') {
         const contrast = 1.12, satBoost = 1.35;
@@ -4392,7 +4522,7 @@
       }
     }
 
-    $('btnScanFilterDone').onclick = () => {
+    function finalizeScanPage() {
       const finalCanvas = scanApplyFilter(scanWarpedCache, scanSelectedFilter);
       const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
       pushUndoState();
@@ -4418,7 +4548,9 @@
         $('scanAusweisBanner').classList.remove('show');
         closeScanModalAndAdvance();
       }
-    };
+    }
+
+    $('btnScanFilterDone').onclick = finalizeScanPage;
 
     $('btnScanCancel1').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
     $('btnScanCancel2').onclick = () => { scanQueue.index = scanQueue.files.length; closeScanModalAndAdvance(); };
