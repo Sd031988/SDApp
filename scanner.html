@@ -1977,9 +1977,17 @@
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
     src.delete();
 
-    const blurred = new cv.Mat();
-    cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0);
+    // Handyfotos haben Sensor-/JPEG-Rauschen, das eine adaptive
+    // Schwellenwert-Binarisierung sonst 1:1 in Salz-und-Pfeffer-Rauschen
+    // ("Schnee") auf Papier und in den Buchstaben übersetzt. Ein
+    // kantenerhaltender Weichzeichner (bilateral) vorher nimmt das Rauschen
+    // raus, ohne die Textkanten zu verwaschen.
+    const denoised = new cv.Mat();
+    cv.bilateralFilter(gray, denoised, 7, 50, 50);
     gray.delete();
+    const blurred = new cv.Mat();
+    cv.GaussianBlur(denoised, blurred, new cv.Size(3, 3), 0);
+    denoised.delete();
 
     const w = blurred.cols, h = blurred.rows;
     let block = Math.round(Math.min(w, h) / 18);
@@ -1999,10 +2007,17 @@
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
     src.delete();
 
+    // Gleiches Problem wie bei Schwarz-Weiß: CLAHE hebt lokalen Kontrast
+    // an und verstärkt dabei jedes Bildrauschen zu deutlich sichtbaren
+    // Pünktchen/"Schnee" auf dem Papier. Erst entrauschen, dann CLAHE.
+    const denoised = new cv.Mat();
+    cv.bilateralFilter(gray, denoised, 7, 50, 50);
+    gray.delete();
+
     const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
     const out = new cv.Mat();
-    clahe.apply(gray, out);
-    gray.delete();
+    clahe.apply(denoised, out);
+    denoised.delete();
     clahe.delete();
 
     const sharpOut = cvSharpen(out, 0.3);
