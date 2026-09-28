@@ -1714,13 +1714,141 @@
     destCtx.putImageData(imgData, 0, 0);
   }
 
+  // ---- Echte OpenCV.js-Filter (adaptive Binarisierung/CLAHE/Shading-Korrektur) ----
+  // Das ist die gleiche Technik, die Adobe Scan/CamScanner intern nutzen
+  // (lokale statt globale Schwellenwerte), ersetzt die einfache JS-Variante
+  // sobald OpenCV.js geladen und bereit ist; sonst JS-Fallback unten.
+  function cvMatToCanvas(mat){
+    const canvas = document.createElement('canvas');
+    canvas.width = mat.cols; canvas.height = mat.rows;
+    cv.imshow(canvas, mat);
+    mat.delete();
+    return canvas;
+  }
+
+  function cvShadingCorrectChannel(chMat, ksize, target){
+    const blurred = new cv.Mat();
+    cv.GaussianBlur(chMat, blurred, new cv.Size(ksize, ksize), 0);
+    const chF = new cv.Mat();
+    chMat.convertTo(chF, cv.CV_32F);
+    const bgF = new cv.Mat();
+    blurred.convertTo(bgF, cv.CV_32F, 1, 1);
+    blurred.delete();
+    const ratio = new cv.Mat();
+    cv.divide(chF, bgF, ratio);
+    chF.delete(); bgF.delete();
+    const out = new cv.Mat();
+    ratio.convertTo(out, cv.CV_8U, target);
+    ratio.delete();
+    return out;
+  }
+
+  function cvAutoEnhance(srcCanvas){
+    const src = cv.imread(srcCanvas);
+    const rgb = new cv.Mat();
+    cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
+    src.delete();
+
+    const w = rgb.cols, h = rgb.rows;
+    let k = Math.round(Math.min(w, h) / 10);
+    if (k % 2 === 0) k++;
+    if (k < 25) k = 25;
+
+    const channels = new cv.MatVector();
+    cv.split(rgb, channels);
+    rgb.delete();
+
+    let target = 180;
+    const blurredPeeks = [];
+    for (let i = 0; i < 3; i++) {
+      const blurred = new cv.Mat();
+      cv.GaussianBlur(channels.get(i), blurred, new cv.Size(k, k), 0);
+      const mm = cv.minMaxLoc(blurred);
+      if (mm.maxVal > target) target = mm.maxVal;
+      blurredPeeks.push(blurred);
+    }
+    blurredPeeks.forEach(m => m.delete());
+
+    const outChannels = new cv.MatVector();
+    for (let i = 0; i < 3; i++) {
+      outChannels.push_back(cvShadingCorrectChannel(channels.get(i), k, target));
+      channels.get(i).delete();
+    }
+    channels.delete();
+
+    const merged = new cv.Mat();
+    cv.merge(outChannels, merged);
+    outChannels.delete();
+
+    const finalMat = new cv.Mat();
+    cv.convertScaleAbs(merged, finalMat, 1.15, -12);
+    merged.delete();
+
+    return cvMatToCanvas(finalMat);
+  }
+
+  function cvAdaptiveBW(srcCanvas){
+    const src = cv.imread(srcCanvas);
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    src.delete();
+
+    const blurred = new cv.Mat();
+    cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0);
+    gray.delete();
+
+    const w = blurred.cols, h = blurred.rows;
+    let block = Math.round(Math.min(w, h) / 18);
+    if (block % 2 === 0) block++;
+    if (block < 15) block = 15;
+
+    const bw = new cv.Mat();
+    cv.adaptiveThreshold(blurred, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block, 12);
+    blurred.delete();
+
+    return cvMatToCanvas(bw);
+  }
+
+  function cvClaheGray(srcCanvas){
+    const src = cv.imread(srcCanvas);
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    src.delete();
+
+    const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+    const out = new cv.Mat();
+    clahe.apply(gray, out);
+    gray.delete();
+    clahe.delete();
+
+    return cvMatToCanvas(out);
+  }
+
   function applyFilter(srcCanvas, mode){
     const w = srcCanvas.width, h = srcCanvas.height;
+
+    if(mode === 'original'){
+      const out = document.createElement('canvas');
+      out.width = w; out.height = h;
+      out.getContext('2d').drawImage(srcCanvas, 0, 0);
+      return out;
+    }
+
+    const cvOk = cvReady && typeof cv !== 'undefined' && cv.Mat;
+    if(cvOk){
+      try {
+        if (mode === 'auto') return cvAutoEnhance(srcCanvas);
+        if (mode === 'bw') return cvAdaptiveBW(srcCanvas);
+        if (mode === 'gray') return cvClaheGray(srcCanvas);
+      } catch(e) {
+        // Bei einem OpenCV-Fehler unten mit der JS-Variante weitermachen.
+      }
+    }
+
     const out = document.createElement('canvas');
     out.width = w; out.height = h;
     const octx = out.getContext('2d');
     octx.drawImage(srcCanvas, 0, 0);
-    if(mode === 'original') return out;
 
     if(mode === 'auto'){
       // Clear-Scan-Stil: Beleuchtungs-/Schattenkorrektur pro Bildregion statt
