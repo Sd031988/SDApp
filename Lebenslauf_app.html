@@ -1391,6 +1391,8 @@
 </head>
 
 <body>
+    <!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
+    <div id="sdAuthHost" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
     <script>window.SD_APP = 'lebenslauf';</script>
     <script src="zugang.js"></script>
     <!-- Erzeugt die fertige PDF-Datei direkt im Browser, ohne den Umweg
@@ -1824,6 +1826,8 @@
         <button class="action-btn secondary-btn" onclick="oeffneDownloadMenu()">⬇️ Speichern / Herunterladen</button>
         <button class="action-btn print-btn" onclick="exportAlsPdf()">🖨️ Als PDF speichern</button>
         <button class="action-btn secondary-btn" onclick="oeffneArchivDialog()">🗄️ Bewerbungsarchiv</button>
+        <button class="action-btn secondary-btn" onclick="sdCloudSpeichern()">☁️ In meinem Konto speichern</button>
+        <button class="action-btn secondary-btn" onclick="sdCloudLaden()">☁️ Aus meinem Konto laden</button>
         <button class="action-btn secondary-btn" onclick="sdZeigeGeraeteId()">🔑 Meine Geräte-ID anzeigen</button>
         <div id="speicher-status" class="success" aria-live="polite"></div>
     </div>
@@ -2646,6 +2650,75 @@
             }
         }
 
+        // ---- Konto/Cloud: aktuellen Stand im eigenen Konto speichern bzw. laden ----
+        // Nutzt dieselbe Feld-Sammlung wie speichereDaten()/ladeDaten(), speichert
+        // aber zusaetzlich im Konto des angemeldeten Nutzers (Firebase), sodass man
+        // auf einem anderen Geraet mit demselben Konto weiterarbeiten kann.
+        function sdRequireLoginOrPrompt() {
+            if (window.SD_AUTH && window.SD_AUTH.user) return true;
+            if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
+            else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
+            return false;
+        }
+
+        async function sdCloudSpeichern() {
+            if (!sdRequireLoginOrPrompt()) return;
+            const status = document.getElementById('speicher-status');
+            if (status) status.innerText = 'Wird in deinem Konto gespeichert...';
+            try {
+                const daten = {};
+                document.querySelectorAll('input, textarea, select').forEach(feld => {
+                    if (feld.type === 'file' || !feld.id || NICHT_ALS_DATEN_SPEICHERN.includes(feld.id)) return;
+                    if (feld.type === 'radio' && feld.name) return;
+                    daten[feld.id] = (feld.type === 'checkbox') ? feld.checked : feld.value;
+                });
+                await window.SD_AUTH.saveJSON('bewerbungsstudio/lebenslauf', { felder: daten });
+                const foto = localStorage.getItem('lebenslaufFoto');
+                if (foto) await window.SD_AUTH.saveFile('bewerbungsstudio/foto.jpg', foto);
+                if (status) status.innerText = '✅ In deinem Konto gespeichert';
+            } catch (err) {
+                console.error(err);
+                if (status) status.innerText = 'Fehler beim Speichern in der Cloud';
+                alert('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+            }
+        }
+
+        async function sdCloudLaden() {
+            if (!sdRequireLoginOrPrompt()) return;
+            if (!confirm('Die aktuellen Angaben hier durch den in deinem Konto gespeicherten Stand ersetzen?')) return;
+            const status = document.getElementById('speicher-status');
+            if (status) status.innerText = 'Wird aus deinem Konto geladen...';
+            try {
+                const data = await window.SD_AUTH.loadJSON('bewerbungsstudio/lebenslauf');
+                if (!data || !data.felder) {
+                    if (status) status.innerText = '';
+                    alert('In deinem Konto wurde noch nichts gespeichert.');
+                    return;
+                }
+                Object.keys(data.felder).forEach(id => {
+                    const feld = document.getElementById(id);
+                    if (!feld) return;
+                    if (feld.type === 'checkbox') feld.checked = !!data.felder[id];
+                    else feld.value = data.felder[id];
+                });
+                try {
+                    const foto = await window.SD_AUTH.loadFileAsDataUrl('bewerbungsstudio/foto.jpg');
+                    if (foto) {
+                        localStorage.setItem('lebenslaufFoto', foto);
+                        document.getElementById('prev-foto').src = foto;
+                        document.getElementById('prev-foto').style.display = 'block';
+                    }
+                } catch (e) { /* kein Foto in der Cloud gespeichert - ok */ }
+                speichereDaten();
+                if (typeof updateVorschau === 'function') updateVorschau();
+                if (status) status.innerText = '✅ Aus deinem Konto geladen';
+            } catch (err) {
+                console.error(err);
+                if (status) status.innerText = 'Fehler beim Laden aus der Cloud';
+                alert('Fehler beim Laden aus der Cloud: ' + (err && err.message ? err.message : err));
+            }
+        }
+
         let aktuellerModus = 'lebenslauf';
 
         // Im eingeschraenkten Modus (nach der 1-Monat-Testphase, siehe
@@ -3105,6 +3178,9 @@
             document.getElementById('sd-update-btn').onclick = () => location.reload();
         }
     </script>
+
+    <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
+    <script type="module" src="./sd-auth.js"></script>
 </body>
 
 </html>
