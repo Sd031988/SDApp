@@ -422,8 +422,18 @@
     <div id="status">Verbinde …</div>
   </div>
 
-  <!-- Schritt 1: Modus wählen -->
-  <div id="modeScreen">
+  <!-- Der Live-Scan-Modus (Kamera direkt in der Seite) brachte trotz mehrerer
+       Anläufe nicht die gewünschte Qualität und wurde auf Wunsch komplett
+       entfernt. Es gibt jetzt nur noch einen Weg: die normale Kamera-App des
+       Handys (oder ein vorhandenes Foto), damit sich die ganze Arbeit auf
+       genau diesen einen Pfad konzentrieren kann. Die Modus-Auswahl entfällt
+       deshalb - es geht direkt in den Foto-Modus (siehe modeApp.onclick weiter
+       unten, wird beim Laden der Seite automatisch ausgelöst).
+       Der bisherige #modeScreen-Einstieg und die Live-Kamera-UI/-Logik
+       bleiben als Code erhalten (u.a. weil autoTryDetect, openReviewStage
+       etc. von beiden Pfaden gemeinsam genutzt wurden), sind aber für die
+       Person nicht mehr erreichbar. -->
+  <div id="modeScreen" class="hidden">
     <div class="icon">📄</div>
     <h2>Wie möchtest du scannen?</h2>
     <div class="mode-card recommended" id="modeLive">
@@ -620,6 +630,9 @@
       modeScreen.classList.add('hidden');
       appModeScreen.classList.remove('hidden');
     };
+    // Live-Scan ist entfernt - direkt in den (einzigen verbliebenen) Foto-Modus
+    // starten, ohne die Modus-Auswahl überhaupt zu zeigen.
+    modeApp.onclick();
 
     // ---- Robuste Kamera-Fehlermeldung (Safari wirft öfter/andere Fehlernamen
     // als Chrome) – unterscheidet "wirklich nicht unterstützt" von
