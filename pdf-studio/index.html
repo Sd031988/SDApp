@@ -1408,6 +1408,11 @@
       <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
         einfügen</button>
 
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button id="btnCloudSave" class="tool-btn" style="flex:1;" title="Alle Seiten in deinem Konto speichern, um sie auf einem anderen Gerät weiterzubearbeiten">☁️ Speichern</button>
+        <button id="btnCloudLoad" class="tool-btn" style="flex:1;" title="Zuletzt in der Cloud gespeicherten Stand laden">☁️ Laden</button>
+      </div>
+
       <div class="sidebar-section-title">
         <span>Seiten (<span id="pageCount">0</span>)</span>
         <button id="btnClearAll" class="mini-btn danger" title="Alle Seiten leeren">Alle leeren</button>
@@ -2342,6 +2347,89 @@
       renderSidebarPages();
       renderStage();
       showToast('Neue leere A4-Seite hinzugefügt');
+    };
+
+    // ---- Konto/Cloud: aktuellen Stand speichern bzw. den zuletzt gespeicherten laden ----
+    function requireLoginOrPrompt() {
+      if (window.SD_AUTH && window.SD_AUTH.user) return true;
+      showToast('Bitte zuerst anmelden...', 2500);
+      if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
+      else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
+      return false;
+    }
+
+    $('btnCloudSave').onclick = async () => {
+      if (!requireLoginOrPrompt()) return;
+      if (!state.pages.length) { showToast('Keine Seiten zum Speichern vorhanden'); return; }
+      $('btnCloudSave').disabled = true;
+      showToast('Wird in deinem Konto gespeichert...', 15000);
+      try {
+        const pagesMeta = [];
+        for (const page of state.pages) {
+          await window.SD_AUTH.saveFile('pdf-studio/pages/' + page.id + '.jpg', page.src);
+          pagesMeta.push({
+            id: page.id, name: page.name, width: page.width, height: page.height,
+            rotation: page.rotation, flipX: page.flipX, flipY: page.flipY,
+            drawings: page.drawings || [], overlays: page.overlays || [],
+            shapes: page.shapes || [], corrections: page.corrections || [],
+            storagePath: 'pdf-studio/pages/' + page.id + '.jpg'
+          });
+        }
+        await window.SD_AUTH.saveJSON('pdf-studio/project', {
+          pages: pagesMeta, selectedPageId: state.selectedPageId
+        });
+        showToast('✅ In deinem Konto gespeichert');
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+      } finally {
+        $('btnCloudSave').disabled = false;
+      }
+    };
+
+    $('btnCloudLoad').onclick = async () => {
+      if (!requireLoginOrPrompt()) return;
+      $('btnCloudLoad').disabled = true;
+      showToast('Wird aus deinem Konto geladen...', 15000);
+      try {
+        const data = await window.SD_AUTH.loadJSON('pdf-studio/project');
+        if (!data || !data.pages || !data.pages.length) {
+          showToast('Keine gespeicherten Seiten in deinem Konto gefunden');
+          return;
+        }
+        if (state.pages.length && !confirm('Aktuelle Seiten hier ersetzen durch den gespeicherten Cloud-Stand?')) {
+          return;
+        }
+        pushUndoState();
+        const newPages = [];
+        for (const m of data.pages) {
+          const src = await window.SD_AUTH.loadFileAsDataUrl(m.storagePath);
+          const page = createPageModel(src, m.name, m.width, m.height);
+          page.id = m.id;
+          page.rotation = m.rotation || 0;
+          page.flipX = !!m.flipX;
+          page.flipY = !!m.flipY;
+          page.drawings = m.drawings || [];
+          page.overlays = m.overlays || [];
+          page.shapes = m.shapes || [];
+          page.corrections = m.corrections || [];
+          newPages.push(page);
+        }
+        state.pages = newPages;
+        state.selectedPageId = data.selectedPageId || (newPages[0] && newPages[0].id) || null;
+        $('pageCount').textContent = state.pages.length;
+        $('btnExport').disabled = !state.pages.length;
+        $('btnPrint').disabled = !state.pages.length;
+        $('btnOpenConvertModal').disabled = !state.pages.length;
+        renderSidebarPages();
+        renderStage();
+        showToast('✅ Aus deinem Konto geladen (' + newPages.length + ' Seite(n))');
+      } catch (err) {
+        console.error(err);
+        showToast('Fehler beim Laden aus der Cloud: ' + (err && err.message ? err.message : err));
+      } finally {
+        $('btnCloudLoad').disabled = false;
+      }
     };
 
     // --- Sidebar Page Cards Rendering & Drag/Reorder ---
@@ -5662,6 +5750,9 @@
       else if (mq.addListener) mq.addListener(e => applyMode(e.matches));
     })();
   </script>
+
+  <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
+  <script type="module" src="./sd-auth.js"></script>
 </body>
 
 </html>
