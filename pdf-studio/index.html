@@ -820,14 +820,27 @@
       position: relative;
       background: #000;
       border-radius: 12px;
-      overflow: hidden;
       max-height: 60vh;
       touch-action: none;
+      /* Vorher: overflow:hidden + canvas width:100%/height:auto. Bei
+         hochkant fotografierten Dokumenten wurde die Canvas dadurch höher
+         als die 60vh-Begrenzung und der untere Teil (inkl. der unteren
+         beiden Ziehpunkte) wurde einfach abgeschnitten - man konnte die
+         unteren Ecken nie sehen oder erreichen. Jetzt wird die Canvas per
+         max-width/max-height komplett eingepasst ("contain") und mittig
+         zentriert, sodass immer das ganze Dokument samt allen vier
+         Eckpunkten sichtbar ist. */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: visible;
     }
 
     .scan-crop-wrap canvas {
       display: block;
-      width: 100%;
+      max-width: 100%;
+      max-height: 60vh;
+      width: auto;
       height: auto;
       touch-action: none;
     }
@@ -4398,21 +4411,27 @@
 
     function renderScanHandles() {
       const canvas = $('scanCropCanvas');
-      const rect = canvas.getBoundingClientRect();
+      // Canvas wird per max-width/max-height "contain" eingepasst und im
+      // Wrap zentriert (siehe CSS) - deshalb hier offsetWidth/offsetHeight/
+      // offsetLeft/offsetTop verwenden (relativ zum position:relative-Wrap),
+      // statt getBoundingClientRect(): so stimmt die Position der Ziehpunkte
+      // auch, wenn die Canvas durch Letterboxing nicht die ganze Wrap-Breite
+      // einnimmt oder oben/unten Rand hat.
+      const cw = canvas.offsetWidth, ch = canvas.offsetHeight;
       // Sicherheitsnetz: wird diese Funktion aufgerufen, bevor das Modal
-      // tatsächlich sichtbar ist, liefert getBoundingClientRect() eine 0x0-
-      // Größe und alle Punkte würden unsichtbar auf (0,0) landen. Einmal auf
-      // den nächsten Frame verschieben, wenn das Layout vermutlich fertig ist.
-      if (rect.width === 0 || rect.height === 0) {
+      // tatsächlich sichtbar ist, liefert das eine 0x0-Größe und alle Punkte
+      // würden unsichtbar auf (0,0) landen. Einmal auf den nächsten Frame
+      // verschieben, wenn das Layout vermutlich fertig ist.
+      if (cw === 0 || ch === 0) {
         requestAnimationFrame(renderScanHandles);
         return;
       }
-      const scaleX = rect.width / canvas.width;
-      const scaleY = rect.height / canvas.height;
+      const scaleX = cw / canvas.width;
+      const scaleY = ch / canvas.height;
       ['sh0', 'sh1', 'sh2', 'sh3'].forEach((id, i) => {
         const el = $(id);
-        el.style.left = (scanCorners[i].x * scaleX) + 'px';
-        el.style.top = (scanCorners[i].y * scaleY) + 'px';
+        el.style.left = (canvas.offsetLeft + scanCorners[i].x * scaleX) + 'px';
+        el.style.top = (canvas.offsetTop + scanCorners[i].y * scaleY) + 'px';
       });
     }
     window.addEventListener('resize', renderScanHandles);
