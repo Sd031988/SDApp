@@ -380,6 +380,7 @@
       gap: 4px;
       margin-top: 6px;
       justify-content: flex-end;
+      flex-wrap: wrap;
     }
 
     .mini-btn {
@@ -1763,8 +1764,12 @@
           <div class="scan-handle" id="sh2"></div>
           <div class="scan-handle" id="sh3"></div>
         </div>
-        <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
-          <button id="btnScanCropReset" class="tool-btn">↺ Zurücksetzen</button>
+        <div class="modal-actions" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="btnScanCropReset" class="tool-btn">↺ Zurücksetzen</button>
+            <button id="btnScanRotateLeft" class="tool-btn" title="90° nach links drehen">⟲ Links</button>
+            <button id="btnScanRotateRight" class="tool-btn" title="90° nach rechts drehen">⟳ Rechts</button>
+          </div>
           <div style="display:flex;gap:8px;">
             <button id="btnScanCancel1" class="tool-btn">Abbrechen</button>
             <button id="btnScanCropNext" class="btn-primary">Weiter →</button>
@@ -1886,7 +1891,7 @@
     }
 
     // --- Page Management & Model ---
-    function createPageModel(src, name, width, height) {
+    function createPageModel(src, name, width, height, scanMeta) {
       return {
         id: 'p_' + (++state.nextId) + '_' + Date.now(),
         src,
@@ -1900,7 +1905,10 @@
         overlays: [],
         shapes: [],
         corrections: [],
-        rawTextItems: []
+        rawTextItems: [],
+        // Für gescannte Seiten: Rohfoto + erkannte Ecken, damit man den Zuschnitt
+        // später jederzeit nochmal nachjustieren/geradebiegen kann.
+        scanMeta: scanMeta || null
       };
     }
 
@@ -2335,13 +2343,15 @@
         actions.innerHTML = `
           <button class="mini-btn" title="Nach oben verschieben">↑</button>
           <button class="mini-btn" title="Nach unten verschieben">↓</button>
+          <button class="mini-btn" title="Zuschnitt/Ausrichtung anpassen">✂️</button>
           <button class="mini-btn" title="90° nach rechts drehen">↷</button>
           <button class="mini-btn danger" title="Seite löschen">✕</button>
         `;
 
-        const [btnUp, btnDown, btnRotate, btnDel] = actions.querySelectorAll('button');
+        const [btnUp, btnDown, btnCrop, btnRotate, btnDel] = actions.querySelectorAll('button');
         btnUp.onclick = (e) => { e.stopPropagation(); movePage(index, index - 1); };
         btnDown.onclick = (e) => { e.stopPropagation(); movePage(index, index + 1); };
+        btnCrop.onclick = (e) => { e.stopPropagation(); openPageCropEditor(page.id); };
         btnRotate.onclick = (e) => { e.stopPropagation(); rotatePage(page.id, 90); };
         btnDel.onclick = (e) => { e.stopPropagation(); deletePage(page.id); };
 
@@ -4038,6 +4048,20 @@
     let scanCorners = [];
     let scanWarpedCache = null;
     let scanSelectedFilter = 'auto';
+    // Rohfoto + erkannte Ecken der aktuell bearbeiteten Scan-Seite, damit der
+    // Zuschnitt später (über "✂️ Zuschneiden" an der Seite) erneut geöffnet und
+    // nachjustiert/gedreht werden kann – auch wenn die Seite automatisch ohne
+    // manuellen Zwischenschritt übernommen wurde.
+    let scanRawDataUrlCache = null;
+    let scanQuadCache = null;
+    // Ist eine bestehende Seite (statt einer neuen aus der Scan-Warteschlange)
+    // gerade im Zuschneide-Dialog in Bearbeitung?
+    let scanEditingPageId = null;
+
+    function cacheRawForPage(canvas, corners) {
+      scanRawDataUrlCache = canvas.toDataURL('image/jpeg', 0.9);
+      scanQuadCache = corners.map(p => ({ x: p.x, y: p.y }));
+    }
     const SCAN_MAX_DIM = 1600;
 
     // ---- Dokumenttyp (Dokument / Reisepass / Ausweis mit Vorder- & Rückseite) ----
@@ -4166,6 +4190,64 @@
       }, 40);
     }
 
+    // Öffnet den Zuschneide-Dialog nachträglich für eine bereits fertige Seite
+    // (Button "✂️ Zuschneiden" an der Seite in der Liste) – z.B. wenn eine
+    // automatisch übernommene Scan-Seite doch noch angepasst oder gedreht
+    // werden soll ("oben/unten mehr abschneiden", "Papier lag andersrum").
+    // Nutzt bei gescannten Seiten das aufgehobene Rohfoto + die erkannten
+    // Ecken, sonst die aktuelle Seite selbst als Ausgangsbild.
+    function openPageCropEditor(pageId) {
+      const page = state.pages.find(p => p.id === pageId);
+      if (!page) return;
+      const rawSrc = (page.scanMeta && page.scanMeta.rawDataUrl) || page.src;
+      const presetQuad = page.scanMeta && page.scanMeta.quad;
+
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const scale = Math.min(1, SCAN_MAX_DIM / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+
+        const canvas = $('scanCropCanvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+        scanEditingPageId = pageId;
+        $('modalScanEnhance').classList.add('open');
+        $('scanCropStage').style.display = '';
+        $('scanFilterStage').style.display = 'none';
+        $('scanEnhanceHint').textContent = 'Zuschnitt anpassen: Ecken auf die Ränder ziehen oder das Bild drehen.';
+
+        const margin = 0.06;
+        const defaultCorners = [
+          { x: w * margin, y: h * margin },
+          { x: w * (1 - margin), y: h * margin },
+          { x: w * (1 - margin), y: h * (1 - margin) },
+          { x: w * margin, y: h * (1 - margin) },
+        ];
+
+        if (presetQuad) {
+          const scaleQ = w / img.naturalWidth;
+          const quad = presetQuad.map(p => ({ x: p.x * scaleQ, y: p.y * scaleQ }));
+          scanCorners = scanCornersLookValid(quad, w, h) ? quad : defaultCorners;
+          renderScanHandles();
+        } else {
+          scanCorners = defaultCorners;
+          renderScanHandles();
+          setTimeout(() => {
+            const auto = scanTryAutoDetect(canvas);
+            if (auto && scanCornersLookValid(auto, w, h)) {
+              scanCorners = auto;
+              renderScanHandles();
+            }
+          }, 40);
+        }
+      };
+      img.src = rawSrc;
+    }
+
     // Berechnet die Warp-Zielgröße aus den vier Ecken, entzerrt das Bild und
     // schließt die Seite direkt mit dem angegebenen Filter ab – der gemeinsame
     // Pfad für die vollautomatische Erkennung und für "Weiter" im manuellen Dialog.
@@ -4177,6 +4259,7 @@
       const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      cacheRawForPage(canvas, corners);
       scanWarpedCache = scanWarpToRect(canvas, corners, outW, outH);
       scanSelectedFilter = filterMode;
       finalizeScanPage();
@@ -4237,6 +4320,46 @@
       ];
       renderScanHandles();
     };
+
+    // Dreht das Foto im Zuschneide-Dialog um 90° – für Seiten, die verkehrt herum
+    // oder quer eingescannt wurden ("Papier andersrum gelegen"). Nach dem Drehen
+    // wird die automatische Kantenerkennung erneut versucht, sonst ein Standard-
+    // Rahmen mit etwas Rand vorgeschlagen.
+    function rotateScanCropImage(direction) {
+      const canvas = $('scanCropCanvas');
+      const w = canvas.width, h = canvas.height;
+      const rotated = document.createElement('canvas');
+      rotated.width = h; rotated.height = w;
+      const rctx = rotated.getContext('2d');
+      rctx.save();
+      rctx.translate(rotated.width / 2, rotated.height / 2);
+      rctx.rotate(direction === 'left' ? -Math.PI / 2 : Math.PI / 2);
+      rctx.drawImage(canvas, -w / 2, -h / 2);
+      rctx.restore();
+
+      canvas.width = rotated.width;
+      canvas.height = rotated.height;
+      canvas.getContext('2d').drawImage(rotated, 0, 0);
+
+      const margin = 0.06;
+      scanCorners = [
+        { x: rotated.width * margin, y: rotated.height * margin },
+        { x: rotated.width * (1 - margin), y: rotated.height * margin },
+        { x: rotated.width * (1 - margin), y: rotated.height * (1 - margin) },
+        { x: rotated.width * margin, y: rotated.height * (1 - margin) },
+      ];
+      renderScanHandles();
+
+      setTimeout(() => {
+        const auto = scanTryAutoDetect(canvas);
+        if (auto && scanCornersLookValid(auto, canvas.width, canvas.height)) {
+          scanCorners = auto;
+          renderScanHandles();
+        }
+      }, 40);
+    }
+    $('btnScanRotateLeft').onclick = () => rotateScanCropImage('left');
+    $('btnScanRotateRight').onclick = () => rotateScanCropImage('right');
 
     function scanSolveLinear(A, b) {
       const n = A.length;
@@ -4499,6 +4622,7 @@
       const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      cacheRawForPage($('scanCropCanvas'), scanCorners);
       scanWarpedCache = scanWarpToRect($('scanCropCanvas'), scanCorners, outW, outH);
       buildScanFilterPreviews();
       $('scanCropStage').style.display = 'none';
@@ -4512,6 +4636,14 @@
 
     function closeScanModalAndAdvance() {
       $('modalScanEnhance').classList.remove('open');
+      if (scanEditingPageId) {
+        // Nachträgliche Bearbeitung einer bestehenden Seite (nicht Teil einer
+        // Scan-Warteschlange) – nur schließen, keine Warteschlange fortsetzen.
+        scanEditingPageId = null;
+        renderSidebarPages();
+        renderStage();
+        return;
+      }
       scanQueue.index++;
       if (scanQueue.index < scanQueue.files.length) {
         processNextScanFile();
@@ -4525,8 +4657,29 @@
     function finalizeScanPage() {
       const finalCanvas = scanApplyFilter(scanWarpedCache, scanSelectedFilter);
       const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
+      const scanMeta = { rawDataUrl: scanRawDataUrlCache, quad: scanQuadCache, filterMode: scanSelectedFilter };
+
+      if (scanEditingPageId) {
+        // Bestehende Seite wird nachträglich über "✂️ Zuschneiden" korrigiert –
+        // die Seite an Ort und Stelle aktualisieren statt eine neue anzuhängen.
+        pushUndoState();
+        const page = state.pages.find(p => p.id === scanEditingPageId);
+        if (page) {
+          page.src = dataUrl;
+          page.width = finalCanvas.width;
+          page.height = finalCanvas.height;
+          page.scanMeta = scanMeta;
+        }
+        scanEditingPageId = null;
+        $('modalScanEnhance').classList.remove('open');
+        renderSidebarPages();
+        renderStage();
+        showToast('Seite aktualisiert ✓');
+        return;
+      }
+
       pushUndoState();
-      const page = createPageModel(dataUrl, scanCurrentLabel(), finalCanvas.width, finalCanvas.height);
+      const page = createPageModel(dataUrl, scanCurrentLabel(), finalCanvas.width, finalCanvas.height, scanMeta);
       state.pages.push(page);
       if (!state.selectedPageId) state.selectedPageId = page.id;
       $('pageCount').textContent = state.pages.length;
