@@ -5033,23 +5033,33 @@
 
       phonePeer.on('connection', (conn) => {
         phoneConn = conn;
+        // Der QR-Code wird nicht mehr gebraucht, sobald das Handy verbunden
+        // ist – ihn weiter anzuzeigen hat verwirrt ("ist das noch aktiv?").
+        // Stattdessen ein klares "Verbunden"-Häkchen zeigen.
+        $('phoneScanQr').innerHTML = '<div style="text-align:center;"><div style="font-size:2.4rem;">📱✓</div><div style="font-weight:600; color:var(--success,#2e9e4f); margin-top:6px;">Handy verbunden</div></div>';
         $('phoneScanStatus').textContent = 'Handy verbunden ✓ – jetzt auf dem Handy fotografieren.';
 
         conn.on('data', (data) => {
           if (!data || data.type !== 'photo' || !data.data) return;
-          phoneScanCount++;
-          $('phoneScanStatus').textContent = `Handy verbunden ✓ – ${phoneScanCount} Foto(s) empfangen.`;
+          // WICHTIG: Fehler hier NICHT stillschweigend verschlucken (früher:
+          // ".catch(() => {})") – dadurch verschwand ein empfangenes Foto
+          // spurlos, ohne dass am PC irgendetwas darauf hindeutete, dass
+          // etwas schiefgelaufen ist ("hab gescannt, aber nichts kam an").
           fetch(data.data)
             .then(res => res.blob())
             .then(blob => {
+              phoneScanCount++;
               const file = new File([blob], data.name || ('Handyscan_' + phoneScanCount + '.jpg'), { type: data.mime || 'image/jpeg' });
               addPhoneScanFile(file);
+              $('phoneScanStatus').textContent = `Handy verbunden ✓ – ${phoneScanCount} Foto(s) empfangen.`;
             })
-            .catch(() => { });
+            .catch(() => {
+              $('phoneScanStatus').textContent = '⚠️ Ein Foto vom Handy konnte nicht verarbeitet werden – bitte diese Seite auf dem Handy erneut senden.';
+            });
         });
 
         conn.on('close', () => {
-          $('phoneScanStatus').textContent = 'Handy-Verbindung beendet.';
+          $('phoneScanStatus').textContent = '⚠️ Handy-Verbindung beendet – bitte Seite neu laden und QR-Code erneut scannen, falls noch Seiten fehlen.';
         });
       });
 

@@ -503,43 +503,73 @@
     }
 
     // --- PeerJS-Verbindung zum PC (läuft unabhängig vom gewählten Modus) ---
+    // Wird als eigene Funktion gebaut (statt nur einmal beim Laden), damit
+    // nach einem WLAN-Wackler/Verbindungsabbruch automatisch neu verbunden
+    // werden kann, ohne dass die Seite neu geladen werden muss.
+    let reconnectTimer = null;
+    function connectToPC() {
+      if (!targetId || typeof Peer === 'undefined') return;
+      conn = peer.connect(targetId, { reliable: true });
+
+      conn.on('open', () => {
+        connReady = true;
+        statusEl.textContent = 'Verbunden mit PC ✓';
+        updateCaptureEnabled();
+      });
+
+      conn.on('close', () => {
+        connReady = false;
+        statusEl.textContent = '⚠️ Verbindung unterbrochen – versuche erneut zu verbinden …';
+        updateCaptureEnabled();
+        scheduleReconnect();
+      });
+
+      conn.on('error', () => {
+        connReady = false;
+        statusEl.textContent = '⚠️ Verbindungsfehler – versuche erneut zu verbinden …';
+        updateCaptureEnabled();
+        scheduleReconnect();
+      });
+    }
+
+    function scheduleReconnect() {
+      if (reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!connReady) connectToPC();
+      }, 1500);
+    }
+
     if (!targetId) {
       statusEl.textContent = 'Kein PC gefunden. Bitte QR-Code am PC neu scannen.';
     } else if (typeof Peer === 'undefined') {
       statusEl.textContent = 'Keine Internetverbindung.';
     } else {
       peer = new Peer();
-
-      peer.on('open', () => {
-        conn = peer.connect(targetId, { reliable: true });
-
-        conn.on('open', () => {
-          connReady = true;
-          statusEl.textContent = 'Verbunden mit PC ✓';
-          updateCaptureEnabled();
-        });
-
-        conn.on('close', () => {
-          connReady = false;
-          statusEl.textContent = 'Verbindung beendet.';
-          updateCaptureEnabled();
-        });
-
-        conn.on('error', () => {
-          connReady = false;
-          statusEl.textContent = 'Verbindungsfehler.';
-          updateCaptureEnabled();
-        });
-      });
-
+      peer.on('open', connectToPC);
       peer.on('error', () => {
         statusEl.textContent = 'Verbindung fehlgeschlagen. Bitte QR-Code am PC neu scannen.';
       });
+      peer.on('disconnected', () => {
+        connReady = false;
+        updateCaptureEnabled();
+        try { peer.reconnect(); } catch (e) { }
+      });
     }
 
+    // Gibt true zurück, wenn das Foto wirklich verschickt werden konnte.
+    // WICHTIG: früher wurde hier bei fehlender Verbindung nur "return"
+    // gemacht und der Aufrufer hat trotzdem "gesendet ✓" angezeigt – dadurch
+    // ging eine fertig bearbeitete Seite spurlos verloren, ohne dass am
+    // Handy irgendetwas darauf hingewiesen hat.
     function sendPhoto(dataUrl, mime, name) {
-      if (!conn || !conn.open) return;
-      conn.send({ type: 'photo', name, mime, data: dataUrl });
+      if (!conn || !conn.open) return false;
+      try {
+        conn.send({ type: 'photo', name, mime, data: dataUrl });
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
 
     // --- Modus-Auswahl ---
@@ -954,16 +984,32 @@
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
       fileInput.value = '';
-      if (!file || !conn || !conn.open) return;
+      if (!file) return;
       btnAppCapture.disabled = true;
       btnAppCapture.textContent = 'Wird gesendet …';
       const reader = new FileReader();
       reader.onload = () => {
-        sendPhoto(reader.result, file.type, file.name || ('Handyscan_' + (sentApp + 1) + '.jpg'));
-        sentApp++;
-        countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
-        btnAppCapture.disabled = false;
-        btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
+        const dataUrl = reader.result;
+        const name = file.name || ('Handyscan_' + (sentApp + 1) + '.jpg');
+        // Wie beim Live-Modus: Erfolg prüfen und bei Verbindungsabbruch im
+        // Hintergrund weiter versuchen, statt "gesendet ✓" ohne echten
+        // Versand anzuzeigen.
+        const attemptSend = (attempts) => {
+          if (sendPhoto(dataUrl, file.type, name)) {
+            sentApp++;
+            countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
+            btnAppCapture.disabled = false;
+            btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
+          } else if (attempts >= 20) {
+            countAppEl.textContent = '❌ Verbindung zum PC nicht möglich – bitte nochmal versuchen.';
+            btnAppCapture.disabled = false;
+            btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
+          } else {
+            countAppEl.textContent = '⚠️ Keine Verbindung – wird automatisch erneut versucht …';
+            setTimeout(() => attemptSend(attempts + 1), 1000);
+          }
+        };
+        attemptSend(0);
       };
       reader.readAsDataURL(file);
     };
@@ -1419,7 +1465,6 @@
     }
 
     document.getElementById('btnReviewSend').onclick = () => {
-      if (!conn || !conn.open) return;
       const c = reviewCorners;
       const wTop = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
       const wBot = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
@@ -1430,11 +1475,38 @@
       const warpedRaw = reviewWarpToRect(reviewCanvas, reviewCorners, outW, outH);
       const warped = reviewApplyEnhance(warpedRaw);
       const dataUrl = warped.toDataURL('image/jpeg', 0.92);
+      const pendingName = reviewPendingName || ('Handyscan_' + (sent + 1) + '.jpg');
 
-      sendPhoto(dataUrl, 'image/jpeg', reviewPendingName || ('Handyscan_' + (sent + 1) + '.jpg'));
-      sent++;
-      countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
-      closeReviewStage(true);
+      // WICHTIG: früher wurde hier "gesendet ✓" angezeigt, egal ob die
+      // Verbindung gerade da war oder nicht – eine fertig bearbeitete Seite
+      // konnte dadurch spurlos verschwinden. Jetzt wird der Erfolg geprüft
+      // und bei einer kurzen Verbindungsunterbrechung automatisch im
+      // Hintergrund weiter versucht, statt das Foto zu verwerfen.
+      if (sendPhoto(dataUrl, 'image/jpeg', pendingName)) {
+        sent++;
+        countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+        closeReviewStage(true);
+        return;
+      }
+
+      const hint = document.getElementById('reviewTopHint');
+      hint.textContent = '⚠️ Keine Verbindung zum PC – wird automatisch erneut versucht …';
+      let attempts = 0;
+      const retry = setInterval(() => {
+        attempts++;
+        if (sendPhoto(dataUrl, 'image/jpeg', pendingName)) {
+          clearInterval(retry);
+          sent++;
+          countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+          closeReviewStage(true);
+        } else if (attempts >= 20) {
+          // Nach ~20s aufgeben, aber das Foto NICHT verwerfen – der Nutzer
+          // kann es jederzeit erneut versuchen, ohne die Seite neu
+          // fotografieren zu müssen.
+          clearInterval(retry);
+          hint.textContent = '❌ Verbindung zum PC nicht möglich – „Verwenden & senden" nochmal antippen, sobald wieder verbunden.';
+        }
+      }, 1000);
     };
   </script>
 </body>
