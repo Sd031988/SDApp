@@ -342,7 +342,8 @@
     }
 
     .r-handle {
-      position: absolute;
+      position: fixed;
+      z-index: 40;
       width: 26px;
       height: 26px;
       margin: -13px 0 0 -13px;
@@ -913,12 +914,19 @@
     }
 
     function renderReviewHandles() {
+      // WICHTIG: getBoundingClientRect() liefert die Canvas-Position relativ zum
+      // sichtbaren Fenster (Viewport), nicht relativ zum umschließenden Wrapper.
+      // Weil die Canvas per Flexbox zentriert wird (max-width/max-height: 100%),
+      // hat sie fast immer einen Rand-Versatz (Letterboxing) zum Wrapper – ohne
+      // rect.left/rect.top hier zu addieren, landeten die Ecken-Punkte bisher an
+      // der falschen Stelle und wurden vom "overflow:hidden" des Wrappers
+      // unsichtbar abgeschnitten. Dadurch konnte niemand die Ecken korrigieren.
       const rect = reviewCanvas.getBoundingClientRect();
       const scaleX = rect.width / reviewCanvas.width;
       const scaleY = rect.height / reviewCanvas.height;
       reviewHandles.forEach((el, i) => {
-        el.style.left = (reviewCorners[i].x * scaleX) + 'px';
-        el.style.top = (reviewCorners[i].y * scaleY) + 'px';
+        el.style.left = (rect.left + reviewCorners[i].x * scaleX) + 'px';
+        el.style.top = (rect.top + reviewCorners[i].y * scaleY) + 'px';
       });
     }
     window.addEventListener('resize', () => {

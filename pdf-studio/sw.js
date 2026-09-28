@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-studio-v16';
+const CACHE_NAME = 'pdf-studio-v17';
 const APP_FILES = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', event => {
