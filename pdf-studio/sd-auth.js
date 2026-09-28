@@ -193,6 +193,11 @@ function buildModal() {
       <input type="password" id="sdAuthPassword" placeholder="Passwort" autocomplete="current-password">
       <button class="sd-primary" id="sdAuthSubmit">Anmelden</button>
       <button class="sd-link" id="sdAuthForgot">Passwort vergessen?</button>
+      <p style="font-size:0.72rem;color:#888;text-align:center;margin:14px 0 0;line-height:1.4;">
+        Mit Anmeldung/Registrierung akzeptierst du unsere
+        <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
+        Deine Inhalte werden dabei bei unserem Cloud-Dienstleister (Google Firebase) gespeichert.
+      </p>
     </div>
   `;
   document.body.appendChild(backdrop);
