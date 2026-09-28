@@ -80,6 +80,7 @@
   }
   #homeMenuDropdown{ left:12px; }
   #homeMoreDropdown, #homePhotosMenu{ right:12px; }
+  #homeCloudDropdown{ right:12px; }
   #homePhotosMenu{ top:auto; bottom:78px; }
   .home-dropdown button{
     display:block; width:100%; text-align:left; padding:13px 16px; border:none; background:transparent;
@@ -434,6 +435,8 @@
 </style>
 </head>
 <body>
+<!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
+<div id="sdAuthHost" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
 <script>window.SD_APP = 'scanner';</script>
 <script src="zugang.js"></script>
   <header id="mainHeader">
@@ -473,6 +476,12 @@
       <input type="checkbox" id="chkAutoScanDefault" checked>
       Automatisch scannen (Auto-Erkennung) als Standard
     </label>
+  </div>
+  <div class="home-dropdown" id="homeCloudDropdown" style="display:none;">
+    <button type="button" data-action="cloud-login" id="cloudMenuLogin">🔑 Anmelden (optional)</button>
+    <button type="button" data-action="cloud-save" id="cloudMenuSave" style="display:none;">☁️ In meinem Konto speichern</button>
+    <button type="button" data-action="cloud-load" id="cloudMenuLoad" style="display:none;">☁️ Aus meinem Konto laden</button>
+    <button type="button" data-action="cloud-logout" id="cloudMenuLogout" style="display:none;">🚪 Abmelden</button>
   </div>
 
   <main>
@@ -2710,6 +2719,7 @@
   function closeAllHomeDropdowns(){
     document.getElementById('homeMenuDropdown').style.display = 'none';
     document.getElementById('homeMoreDropdown').style.display = 'none';
+    document.getElementById('homeCloudDropdown').style.display = 'none';
     document.getElementById('homePhotosMenu').style.display = 'none';
   }
   // Ein einziger globaler Listener schließt Dropdowns und Zeilen-Menüs bei Klick daneben.
@@ -2731,9 +2741,74 @@
     closeAllHomeDropdowns();
     dd.style.display = willShow ? 'block' : 'none';
   });
-  document.getElementById('btnHomeCloud').addEventListener('click', () => {
-    setStatus('☁️ Cloud-Sync: Scans lokal auf diesem Gerät. Für Google Drive/Dropbox nutze "Teilen" beim Export.');
+  document.getElementById('btnHomeCloud').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('homeCloudDropdown');
+    const willShow = dd.style.display === 'none';
+    closeAllHomeDropdowns();
+    dd.style.display = willShow ? 'block' : 'none';
   });
+  document.querySelectorAll('#homeCloudDropdown [data-action]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeAllHomeDropdowns();
+      const action = btn.dataset.action;
+      if(action === 'cloud-login'){ if(window.SD_AUTH) window.SD_AUTH.openLoginModal(); }
+      else if(action === 'cloud-save'){ sdScannerCloudSpeichern(); }
+      else if(action === 'cloud-load'){ sdScannerCloudLaden(); }
+      else if(action === 'cloud-logout'){ if(window.SD_AUTH) window.SD_AUTH.signOutNow(); }
+    });
+  });
+
+  // ---- Konto/Cloud: gesamte Bibliothek (alle Scans + Ordner) im eigenen Konto
+  // sichern bzw. laden, damit man z. B. am Handy scannt und am PC weiterarbeitet.
+  // Die Bibliothek kann durch die eingebetteten Bilder recht groß werden, deshalb
+  // als eine einzelne Datei in Firebase Storage (nicht als Firestore-Dokument,
+  // das ist auf ca. 1 MB begrenzt).
+  function sdScannerUpdateCloudMenu(user){
+    document.getElementById('cloudMenuLogin').style.display = user ? 'none' : 'block';
+    document.getElementById('cloudMenuSave').style.display = user ? 'block' : 'none';
+    document.getElementById('cloudMenuLoad').style.display = user ? 'block' : 'none';
+    document.getElementById('cloudMenuLogout').style.display = user ? 'block' : 'none';
+  }
+  if (window.SD_AUTH) {
+    window.SD_AUTH.onChange(sdScannerUpdateCloudMenu);
+  } else {
+    window.addEventListener('sd-auth-ready', () => window.SD_AUTH.onChange(sdScannerUpdateCloudMenu));
+  }
+
+  async function sdScannerCloudSpeichern(){
+    if (!window.SD_AUTH || !window.SD_AUTH.user) { if(window.SD_AUTH) window.SD_AUTH.openLoginModal(); return; }
+    setStatus('☁️ Wird in deinem Konto gespeichert …');
+    try{
+      const payload = { dokumente: loadLibrary(), ordner: getAllFolders(loadLibrary()) };
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      await window.SD_AUTH.saveFile('scanner/bibliothek.json', blob);
+      setStatus('✅ Alle Scans in deinem Konto gespeichert.');
+    } catch(err){
+      console.error(err);
+      setStatus('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  async function sdScannerCloudLaden(){
+    if (!window.SD_AUTH || !window.SD_AUTH.user) { if(window.SD_AUTH) window.SD_AUTH.openLoginModal(); return; }
+    if (!confirm('Die Scans hier auf diesem Gerät durch den in deinem Konto gespeicherten Stand ersetzen? Bereits hier vorhandene, noch nicht in der Cloud gesicherte Scans gehen dabei verloren.')) return;
+    setStatus('☁️ Wird aus deinem Konto geladen …');
+    try{
+      const dataUrl = await window.SD_AUTH.loadFileAsDataUrl('scanner/bibliothek.json');
+      const text = await (await fetch(dataUrl)).text();
+      const payload = JSON.parse(text);
+      if (!payload || !Array.isArray(payload.dokumente)) { setStatus('In deinem Konto wurde noch nichts gespeichert.'); return; }
+      saveLibrary(payload.dokumente);
+      if (Array.isArray(payload.ordner)) localStorage.setItem(FOLDERS_KEY, JSON.stringify(payload.ordner));
+      renderLibrary();
+      setStatus('✅ Scans aus deinem Konto geladen.');
+    } catch(err){
+      console.error(err);
+      setStatus('In deinem Konto wurde noch nichts gespeichert oder es gab einen Fehler beim Laden.');
+    }
+  }
   document.getElementById('btnHomeSearch').addEventListener('click', () => {
     const input = document.getElementById('homeSearchInput');
     const willShow = input.style.display === 'none';
@@ -2853,5 +2928,8 @@
   }
 })();
 </script>
+
+<!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
+<script type="module" src="./sd-auth.js?v=3"></script>
 </body>
 </html>

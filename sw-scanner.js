@@ -1,5 +1,5 @@
-const CACHE_NAME = 'sd-scanner-v2';
-const APP_FILES = ['./scanner.html', './manifest-scanner.json', './icon.svg'];
+const CACHE_NAME = 'sd-scanner-v3';
+const APP_FILES = ['./scanner.html', './manifest-scanner.json', './icon.svg', './sd-auth.js?v=3'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
