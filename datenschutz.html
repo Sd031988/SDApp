@@ -30,11 +30,40 @@
             margin: 0 auto;
             padding: 36px 0 64px;
         }
+        .topzeile {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
         .zurueck {
             display: inline-block;
-            margin-bottom: 24px;
             color: var(--muted);
             font-size: 0.9rem;
+        }
+        .sd-lang-switch {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 999px;
+            padding: 3px;
+        }
+        .sd-lang-btn {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        .sd-lang-btn.active {
+            background: var(--primary);
+            color: #06251f;
         }
         h1 {
             font-size: clamp(1.6rem, 4vw, 2.1rem);
@@ -76,76 +105,159 @@
             margin-top: 20px;
         }
     </style>
+    <script>
+        window.SD_I18N = {
+            de: {
+                page_title: 'Datenschutzerklärung | SD Bewerbungsstudio',
+                zurueck: '← Zurück zur Startseite',
+                h1: 'Datenschutzerklärung',
+                stand: 'Stand: 28. September 2026 — gilt für alle Anwendungen des SD Bewerbungsstudio (Bewerbung/Lebenslauf, PDF Studio, SD Schreibstudio, SD Scanner, Passfoto Studio) unter thesdhub.com sowie deren Installation als App auf Computer, Android und iOS.',
+                s0_h2: '🔒 Das Wichtigste in Kürze',
+                s0_p1: 'SD Bewerbungsstudio läuft <strong>grundsätzlich lokal in deinem Browser bzw. auf deinem Gerät</strong>. Deine Lebensläufe, Dokumente, Scans und Fotos werden standardmäßig <strong>nicht an einen Server gesendet oder dort gespeichert</strong> – sie bleiben auf dem Gerät, mit dem du die App nutzt.',
+                s0_p2: 'Optional kannst du dich in PDF Studio, im Bewerbungsstudio und im Schreibstudio mit einem <strong>kostenlosen Konto anmelden</strong>, um deine Seiten/Angaben zu speichern und von mehreren Geräten aus darauf zuzugreifen. In diesem Fall werden dein Konto (E-Mail-Adresse) sowie die von dir gespeicherten Inhalte bei unserem Cloud-Dienstleister Google Firebase verarbeitet – siehe Abschnitt 8. Ohne Anmeldung ändert sich nichts an der lokalen Verarbeitung.',
+                s1_h2: '1. Verantwortlicher',
+                s1_p1: 'Sulaiman Durrani',
+                s2_h2: '2. Welche Daten verarbeitet werden',
+                s2_p1: 'Die Inhalte, die du in den Apps eingibst oder erstellst — Lebenslauf-Angaben, Anschreiben, hochgeladene oder gescannte Dokumente, Passfotos — werden zunächst <strong>im Speicher deines eigenen Geräts</strong> verarbeitet (z. B. im lokalen Browserspeicher / localStorage, bzw. beim Erzeugen von PDF- und Bilddateien direkt im Browser). Ohne dass du dich anmeldest oder aktiv "Speichern"/"In meinem Konto speichern" auswählst, verlassen diese Daten dein Gerät nicht und werden von uns nicht eingesehen oder weiterverarbeitet.',
+                s2_p2: 'Nutzt du das optionale Konto (siehe Abschnitt 8), werden zusätzlich deine E-Mail-Adresse, dein gewählter Anzeigename sowie die von dir bewusst gespeicherten Inhalte (z. B. Scan-Seiten, Lebenslauf-Angaben, Passfotos) bei unserem Cloud-Dienstleister verarbeitet.',
+                s2_p3: 'Für die Freischaltung nach der Testphase wird auf deinem Gerät eine zufällig erzeugte, nicht personenbezogene <strong>Geräte-Kennung</strong> gespeichert, die technisch notwendig ist, um einen Freischalt-Code an dein Gerät zu binden. Schickst du uns diese Geräte-ID freiwillig per E-Mail, um einen Freischalt-Code zu erhalten, verarbeiten wir diese sowie deine E-Mail-Adresse ausschließlich zur Erstellung und Zusendung des Codes.',
+                s3_h2: '3. Hosting & technische Verbindungsdaten',
+                s3_p1: 'Die Seiten von thesdhub.com werden über GitHub Pages (GitHub Inc./Cloudflare als DNS-Anbieter) ausgeliefert. Beim Aufruf der Seite verarbeitet der Hosting-Anbieter technisch bedingt Standard-Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs) in Server-Logs, wie das bei jedem Webseitenaufruf im Internet der Fall ist. Wir selbst haben auf diese Logs keinen gesonderten Zugriff und werten sie nicht personenbezogen aus.',
+                s4_h2: '4. Installation als App (PWA / Play Store)',
+                s4_p1: 'Wenn du eine der Anwendungen auf deinem Gerät installierst (Startbildschirm, Windows/macOS/Linux oder über den Google Play Store), ändert sich an der Datenverarbeitung nichts: Die App lädt weiterhin die Inhalte von thesdhub.com und speichert deine Inhalte lokal auf deinem Gerät.',
+                s5_h2: '5. Keine Cookies, kein Tracking, keine Werbung',
+                s5_p1: 'Wir setzen keine Analyse- oder Werbe-Cookies und keine Tracking-Dienste Dritter ein. Für das optionale Konto (Abschnitt 8) sind lediglich technisch notwendige Anmelde-/Sitzungsdaten erforderlich, kein Tracking zu Werbezwecken.',
+                s6_h2: '6. Deine Rechte',
+                s6_p1: 'Soweit deine Inhalte nicht bei uns gespeichert werden (siehe oben), kannst du sie jederzeit selbst auf deinem Gerät löschen (z. B. über die Browser- bzw. App-Einstellungen "Website-Daten löschen"). Für Anfragen zu deinen Rechten nach der Datenschutz-Grundverordnung (DSGVO) – Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerruf einer Einwilligung – kannst du dich jederzeit an die oben genannte Kontakt-E-Mail wenden. Das gilt auch für die Löschung deines optionalen Kontos samt aller darin gespeicherten Inhalte.',
+                s7_h2: '7. Hosting-Hinweis für das Konto',
+                s7_p1: 'Die Anmeldefunktion und die Cloud-Speicherung sind vom übrigen Hosting (Abschnitt 3) getrennt zu betrachten: Während thesdhub.com selbst über GitHub Pages ausgeliefert wird, laufen Anmeldung, Datenbank und Dateispeicher über Google Firebase (siehe Abschnitt 8).',
+                s8_h2: '8. Optionales Nutzerkonto & Cloud-Speicherung (Google Firebase)',
+                s8_p1: 'PDF Studio, das Bewerbungsstudio und das Schreibstudio bieten dir optional die Möglichkeit, dich mit E-Mail-Adresse und Passwort ein eigenes Konto anzulegen. Nutzt du diese Funktion nicht, wird nichts von deinen Inhalten an uns oder Dritte übertragen (siehe Abschnitt 2).',
+                s8_p2: 'Meldest du dich an und wählst aktiv "Speichern" bzw. "In meinem Konto speichern", werden folgende Daten verarbeitet:',
+                s8_li1: '<strong>Kontodaten:</strong> E-Mail-Adresse, verschlüsseltes Passwort, optional ein von dir gewählter Anzeigename sowie eine technische Nutzer-ID.',
+                s8_li2: '<strong>Von dir gespeicherte Inhalte:</strong> z. B. hochgeladene/gescannte Seiten, Lebenslauf- und Anschreiben-Angaben, Passfotos – jeweils nur, wenn du sie aktiv über die Speichern-Funktion in dein Konto lädst.',
+                s8_p3_html: 'Für Authentifizierung, Datenbank (Cloud Firestore) und Dateispeicher (Cloud Storage) nutzen wir <strong>Google Firebase</strong>, einen Dienst der Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Irland) bzw. der Google LLC (USA). Die Datenbank-Inhalte werden in einem europäischen Rechenzentrum (Region Europa) verarbeitet; der Datei-Speicher für Bilder/Scans liegt aus technischen Gründen aktuell in einem US-Rechenzentrum von Google. Soweit dabei Daten in die USA übertragen werden, stützt sich Google auf die EU-Standardvertragsklauseln als geeignete Garantien nach Art. 46 DSGVO. Weitere Informationen: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a> und <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.',
+                s8_p4: 'Der Zugriff auf deine gespeicherten Inhalte ist über Sicherheitsregeln technisch so beschränkt, dass ausschließlich du – nach Anmeldung mit deinem Konto – auf deine eigenen Daten zugreifen kannst.',
+                s8_p5: '<strong>Rechtsgrundlage</strong> ist deine Einwilligung bei der Registrierung sowie die Vertragserfüllung zur Bereitstellung der Konto-Funktion (Art. 6 Abs. 1 lit. a und b DSGVO). Du kannst dein Konto und die darin gespeicherten Inhalte jederzeit über die Kontakt-E-Mail (Abschnitt 1) löschen lassen; eine Einwilligung kannst du jederzeit mit Wirkung für die Zukunft widerrufen, indem du dein Konto löschen lässt.',
+                s9_h2: '9. Änderungen dieser Erklärung',
+                s9_p1: 'Diese Datenschutzerklärung kann angepasst werden, wenn sich die Anwendungen oder rechtliche Vorgaben ändern. Die jeweils aktuelle Fassung ist immer unter dieser Adresse abrufbar.',
+                footer_txt: 'SD Bewerbungsstudio · thesdhub.com'
+            },
+            en: {
+                page_title: 'Privacy Policy | SD Bewerbungsstudio',
+                zurueck: '← Back to homepage',
+                h1: 'Privacy Policy',
+                stand: 'Last updated: September 28, 2026 — applies to all SD Bewerbungsstudio applications (application/resume builder, PDF Studio, SD Schreibstudio, SD Scanner, passport-photo studio) at thesdhub.com and to their installation as an app on computer, Android and iOS.',
+                s0_h2: '🔒 The essentials in brief',
+                s0_p1: 'SD Bewerbungsstudio runs, in principle, <strong>locally in your browser or on your device</strong>. Your resumes, documents, scans and photos are by default <strong>not sent to or stored on a server</strong> – they stay on the device you use the app with.',
+                s0_p2: 'Optionally, you can sign in to PDF Studio, the application/resume studio and the Schreibstudio with a <strong>free account</strong> to save your pages/entries and access them from multiple devices. In this case, your account (email address) and the content you save are processed by our cloud provider, Google Firebase – see section 8. Without signing in, nothing changes about the local processing.',
+                s1_h2: '1. Controller',
+                s1_p1: 'Sulaiman Durrani',
+                s2_h2: '2. What data is processed',
+                s2_p1: 'The content you enter or create in the apps — resume information, cover letters, uploaded or scanned documents, passport photos — is initially processed <strong>in the storage of your own device</strong> (e.g. in local browser storage / localStorage, or when generating PDF and image files directly in the browser). Unless you sign in or actively select "Save" / "Save to my account", this data never leaves your device and is not viewed or further processed by us.',
+                s2_p2: 'If you use the optional account (see section 8), your email address, your chosen display name, and the content you deliberately save (e.g. scanned pages, resume information, passport photos) are additionally processed by our cloud provider.',
+                s2_p3: 'To unlock the app after the trial period, a randomly generated, non-personal <strong>device identifier</strong> is stored on your device, which is technically necessary to bind an unlock code to your device. If you voluntarily send us this device ID by email to receive an unlock code, we process it together with your email address solely to create and send you the code.',
+                s3_h2: '3. Hosting & technical connection data',
+                s3_p1: 'The pages of thesdhub.com are delivered via GitHub Pages (GitHub Inc. / Cloudflare as DNS provider). When the page is accessed, the hosting provider technically processes standard connection data (e.g. IP address, time of access) in server logs, as happens with every website visit on the internet. We ourselves have no separate access to these logs and do not evaluate them on a personal basis.',
+                s4_h2: '4. Installing as an app (PWA / Play Store)',
+                s4_p1: 'If you install one of the applications on your device (home screen, Windows/macOS/Linux, or via the Google Play Store), nothing changes about the data processing: the app continues to load its content from thesdhub.com and stores your content locally on your device.',
+                s5_h2: '5. No cookies, no tracking, no advertising',
+                s5_p1: 'We do not use analytics or advertising cookies, nor any third-party tracking services. The optional account (section 8) only requires technically necessary login/session data, not tracking for advertising purposes.',
+                s6_h2: '6. Your rights',
+                s6_p1: 'As long as your content is not stored with us (see above), you can delete it yourself on your device at any time (e.g. via the browser or app settings "Clear website data"). For requests regarding your rights under the General Data Protection Regulation (GDPR) – access, rectification, erasure, restriction of processing, data portability, and withdrawal of consent – you can contact the email address given above at any time. This also applies to deleting your optional account together with all content stored in it.',
+                s7_h2: '7. Hosting note for the account',
+                s7_p1: 'The login feature and cloud storage should be viewed separately from the remaining hosting (section 3): while thesdhub.com itself is delivered via GitHub Pages, sign-in, the database and file storage run via Google Firebase (see section 8).',
+                s8_h2: '8. Optional user account & cloud storage (Google Firebase)',
+                s8_p1: 'PDF Studio, the application/resume studio and the Schreibstudio optionally let you create your own account with an email address and password. If you do not use this feature, none of your content is transmitted to us or third parties (see section 2).',
+                s8_p2: 'If you sign in and actively choose "Save" or "Save to my account", the following data is processed:',
+                s8_li1: '<strong>Account data:</strong> email address, encrypted password, an optional display name you choose, and a technical user ID.',
+                s8_li2: '<strong>Content you save:</strong> e.g. uploaded/scanned pages, resume and cover-letter information, passport photos – in each case only if you actively upload them to your account via the save feature.',
+                s8_p3_html: 'For authentication, database (Cloud Firestore) and file storage (Cloud Storage) we use <strong>Google Firebase</strong>, a service of Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Ireland) and/or Google LLC (USA). The database content is processed in a European data center (Europe region); for technical reasons, the file storage for images/scans is currently located in a US data center operated by Google. To the extent data is transferred to the USA as a result, Google relies on the EU Standard Contractual Clauses as appropriate safeguards under Art. 46 GDPR. Further information: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a> and <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.',
+                s8_p4: 'Access to your stored content is technically restricted by security rules so that only you – after signing in with your account – can access your own data.',
+                s8_p5: '<strong>The legal basis</strong> is your consent given at registration as well as the performance of the contract to provide the account feature (Art. 6(1)(a) and (b) GDPR). You can have your account and the content stored in it deleted at any time via the contact email (section 1); you can withdraw consent at any time with effect for the future by having your account deleted.',
+                s9_h2: '9. Changes to this policy',
+                s9_p1: 'This privacy policy may be updated if the applications or legal requirements change. The current version is always available at this address.',
+                footer_txt: 'SD Bewerbungsstudio · thesdhub.com'
+            }
+        };
+    </script>
 </head>
 <body>
     <div class="container">
-        <a class="zurueck" href="index.html">← Zurück zur Startseite</a>
-        <h1>Datenschutzerklärung</h1>
-        <p class="stand">Stand: 28. September 2026 — gilt für alle Anwendungen des SD Bewerbungsstudio (Bewerbung/Lebenslauf, PDF Studio, SD Schreibstudio, SD Scanner, Passfoto Studio) unter thesdhub.com sowie deren Installation als App auf Computer, Android und iOS.</p>
+        <div class="topzeile">
+            <a class="zurueck" href="index.html" data-i18n="zurueck">← Zurück zur Startseite</a>
+            <div class="sd-lang-switch">
+                <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+                <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+            </div>
+        </div>
+        <h1 data-i18n="h1">Datenschutzerklärung</h1>
+        <p class="stand" data-i18n="stand">Stand: 28. September 2026 — gilt für alle Anwendungen des SD Bewerbungsstudio (Bewerbung/Lebenslauf, PDF Studio, SD Schreibstudio, SD Scanner, Passfoto Studio) unter thesdhub.com sowie deren Installation als App auf Computer, Android und iOS.</p>
 
         <div class="karte hervorhebung">
-            <h2>🔒 Das Wichtigste in Kürze</h2>
-            <p>SD Bewerbungsstudio läuft <strong>grundsätzlich lokal in deinem Browser bzw. auf deinem Gerät</strong>. Deine Lebensläufe, Dokumente, Scans und Fotos werden standardmäßig <strong>nicht an einen Server gesendet oder dort gespeichert</strong> – sie bleiben auf dem Gerät, mit dem du die App nutzt.</p>
-            <p>Optional kannst du dich in PDF Studio, im Bewerbungsstudio und im Schreibstudio mit einem <strong>kostenlosen Konto anmelden</strong>, um deine Seiten/Angaben zu speichern und von mehreren Geräten aus darauf zuzugreifen. In diesem Fall werden dein Konto (E-Mail-Adresse) sowie die von dir gespeicherten Inhalte bei unserem Cloud-Dienstleister Google Firebase verarbeitet – siehe Abschnitt 8. Ohne Anmeldung ändert sich nichts an der lokalen Verarbeitung.</p>
+            <h2 data-i18n="s0_h2">🔒 Das Wichtigste in Kürze</h2>
+            <p data-i18n-html="1" data-i18n="s0_p1">SD Bewerbungsstudio läuft <strong>grundsätzlich lokal in deinem Browser bzw. auf deinem Gerät</strong>. Deine Lebensläufe, Dokumente, Scans und Fotos werden standardmäßig <strong>nicht an einen Server gesendet oder dort gespeichert</strong> – sie bleiben auf dem Gerät, mit dem du die App nutzt.</p>
+            <p data-i18n-html="1" data-i18n="s0_p2">Optional kannst du dich in PDF Studio, im Bewerbungsstudio und im Schreibstudio mit einem <strong>kostenlosen Konto anmelden</strong>, um deine Seiten/Angaben zu speichern und von mehreren Geräten aus darauf zuzugreifen. In diesem Fall werden dein Konto (E-Mail-Adresse) sowie die von dir gespeicherten Inhalte bei unserem Cloud-Dienstleister Google Firebase verarbeitet – siehe Abschnitt 8. Ohne Anmeldung ändert sich nichts an der lokalen Verarbeitung.</p>
         </div>
 
         <div class="karte">
-            <h2>1. Verantwortlicher</h2>
-            <p>Sulaiman Durrani<br>
+            <h2 data-i18n="s1_h2">1. Verantwortlicher</h2>
+            <p><span data-i18n="s1_p1">Sulaiman Durrani</span><br>
             Kontakt: <a href="mailto:durrani.sulaiman@yahoo.de">durrani.sulaiman@yahoo.de</a></p>
         </div>
 
         <div class="karte">
-            <h2>2. Welche Daten verarbeitet werden</h2>
-            <p>Die Inhalte, die du in den Apps eingibst oder erstellst — Lebenslauf-Angaben, Anschreiben, hochgeladene oder gescannte Dokumente, Passfotos — werden zunächst <strong>im Speicher deines eigenen Geräts</strong> verarbeitet (z. B. im lokalen Browserspeicher / localStorage, bzw. beim Erzeugen von PDF- und Bilddateien direkt im Browser). Ohne dass du dich anmeldest oder aktiv "Speichern"/"In meinem Konto speichern" auswählst, verlassen diese Daten dein Gerät nicht und werden von uns nicht eingesehen oder weiterverarbeitet.</p>
-            <p>Nutzt du das optionale Konto (siehe Abschnitt 8), werden zusätzlich deine E-Mail-Adresse, dein gewählter Anzeigename sowie die von dir bewusst gespeicherten Inhalte (z. B. Scan-Seiten, Lebenslauf-Angaben, Passfotos) bei unserem Cloud-Dienstleister verarbeitet.</p>
-            <p>Für die Freischaltung nach der Testphase wird auf deinem Gerät eine zufällig erzeugte, nicht personenbezogene <strong>Geräte-Kennung</strong> gespeichert, die technisch notwendig ist, um einen Freischalt-Code an dein Gerät zu binden. Schickst du uns diese Geräte-ID freiwillig per E-Mail, um einen Freischalt-Code zu erhalten, verarbeiten wir diese sowie deine E-Mail-Adresse ausschließlich zur Erstellung und Zusendung des Codes.</p>
+            <h2 data-i18n="s2_h2">2. Welche Daten verarbeitet werden</h2>
+            <p data-i18n-html="1" data-i18n="s2_p1">Die Inhalte, die du in den Apps eingibst oder erstellst — Lebenslauf-Angaben, Anschreiben, hochgeladene oder gescannte Dokumente, Passfotos — werden zunächst <strong>im Speicher deines eigenen Geräts</strong> verarbeitet (z. B. im lokalen Browserspeicher / localStorage, bzw. beim Erzeugen von PDF- und Bilddateien direkt im Browser). Ohne dass du dich anmeldest oder aktiv "Speichern"/"In meinem Konto speichern" auswählst, verlassen diese Daten dein Gerät nicht und werden von uns nicht eingesehen oder weiterverarbeitet.</p>
+            <p data-i18n="s2_p2">Nutzt du das optionale Konto (siehe Abschnitt 8), werden zusätzlich deine E-Mail-Adresse, dein gewählter Anzeigename sowie die von dir bewusst gespeicherten Inhalte (z. B. Scan-Seiten, Lebenslauf-Angaben, Passfotos) bei unserem Cloud-Dienstleister verarbeitet.</p>
+            <p data-i18n-html="1" data-i18n="s2_p3">Für die Freischaltung nach der Testphase wird auf deinem Gerät eine zufällig erzeugte, nicht personenbezogene <strong>Geräte-Kennung</strong> gespeichert, die technisch notwendig ist, um einen Freischalt-Code an dein Gerät zu binden. Schickst du uns diese Geräte-ID freiwillig per E-Mail, um einen Freischalt-Code zu erhalten, verarbeiten wir diese sowie deine E-Mail-Adresse ausschließlich zur Erstellung und Zusendung des Codes.</p>
         </div>
 
         <div class="karte">
-            <h2>3. Hosting & technische Verbindungsdaten</h2>
-            <p>Die Seiten von thesdhub.com werden über GitHub Pages (GitHub Inc./Cloudflare als DNS-Anbieter) ausgeliefert. Beim Aufruf der Seite verarbeitet der Hosting-Anbieter technisch bedingt Standard-Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs) in Server-Logs, wie das bei jedem Webseitenaufruf im Internet der Fall ist. Wir selbst haben auf diese Logs keinen gesonderten Zugriff und werten sie nicht personenbezogen aus.</p>
+            <h2 data-i18n="s3_h2">3. Hosting & technische Verbindungsdaten</h2>
+            <p data-i18n="s3_p1">Die Seiten von thesdhub.com werden über GitHub Pages (GitHub Inc./Cloudflare als DNS-Anbieter) ausgeliefert. Beim Aufruf der Seite verarbeitet der Hosting-Anbieter technisch bedingt Standard-Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt des Zugriffs) in Server-Logs, wie das bei jedem Webseitenaufruf im Internet der Fall ist. Wir selbst haben auf diese Logs keinen gesonderten Zugriff und werten sie nicht personenbezogen aus.</p>
         </div>
 
         <div class="karte">
-            <h2>4. Installation als App (PWA / Play Store)</h2>
-            <p>Wenn du eine der Anwendungen auf deinem Gerät installierst (Startbildschirm, Windows/macOS/Linux oder über den Google Play Store), ändert sich an der Datenverarbeitung nichts: Die App lädt weiterhin die Inhalte von thesdhub.com und speichert deine Inhalte lokal auf deinem Gerät.</p>
+            <h2 data-i18n="s4_h2">4. Installation als App (PWA / Play Store)</h2>
+            <p data-i18n="s4_p1">Wenn du eine der Anwendungen auf deinem Gerät installierst (Startbildschirm, Windows/macOS/Linux oder über den Google Play Store), ändert sich an der Datenverarbeitung nichts: Die App lädt weiterhin die Inhalte von thesdhub.com und speichert deine Inhalte lokal auf deinem Gerät.</p>
         </div>
 
         <div class="karte">
-            <h2>5. Keine Cookies, kein Tracking, keine Werbung</h2>
-            <p>Wir setzen keine Analyse- oder Werbe-Cookies und keine Tracking-Dienste Dritter ein. Für das optionale Konto (Abschnitt 8) sind lediglich technisch notwendige Anmelde-/Sitzungsdaten erforderlich, kein Tracking zu Werbezwecken.</p>
+            <h2 data-i18n="s5_h2">5. Keine Cookies, kein Tracking, keine Werbung</h2>
+            <p data-i18n="s5_p1">Wir setzen keine Analyse- oder Werbe-Cookies und keine Tracking-Dienste Dritter ein. Für das optionale Konto (Abschnitt 8) sind lediglich technisch notwendige Anmelde-/Sitzungsdaten erforderlich, kein Tracking zu Werbezwecken.</p>
         </div>
 
         <div class="karte">
-            <h2>6. Deine Rechte</h2>
-            <p>Soweit deine Inhalte nicht bei uns gespeichert werden (siehe oben), kannst du sie jederzeit selbst auf deinem Gerät löschen (z. B. über die Browser- bzw. App-Einstellungen "Website-Daten löschen"). Für Anfragen zu deinen Rechten nach der Datenschutz-Grundverordnung (DSGVO) – Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerruf einer Einwilligung – kannst du dich jederzeit an die oben genannte Kontakt-E-Mail wenden. Das gilt auch für die Löschung deines optionalen Kontos samt aller darin gespeicherten Inhalte.</p>
+            <h2 data-i18n="s6_h2">6. Deine Rechte</h2>
+            <p data-i18n="s6_p1">Soweit deine Inhalte nicht bei uns gespeichert werden (siehe oben), kannst du sie jederzeit selbst auf deinem Gerät löschen (z. B. über die Browser- bzw. App-Einstellungen "Website-Daten löschen"). Für Anfragen zu deinen Rechten nach der Datenschutz-Grundverordnung (DSGVO) – Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit sowie Widerruf einer Einwilligung – kannst du dich jederzeit an die oben genannte Kontakt-E-Mail wenden. Das gilt auch für die Löschung deines optionalen Kontos samt aller darin gespeicherten Inhalte.</p>
         </div>
 
         <div class="karte">
-            <h2>7. Hosting-Hinweis für das Konto</h2>
-            <p>Die Anmeldefunktion und die Cloud-Speicherung sind vom übrigen Hosting (Abschnitt 3) getrennt zu betrachten: Während thesdhub.com selbst über GitHub Pages ausgeliefert wird, laufen Anmeldung, Datenbank und Dateispeicher über Google Firebase (siehe Abschnitt 8).</p>
+            <h2 data-i18n="s7_h2">7. Hosting-Hinweis für das Konto</h2>
+            <p data-i18n="s7_p1">Die Anmeldefunktion und die Cloud-Speicherung sind vom übrigen Hosting (Abschnitt 3) getrennt zu betrachten: Während thesdhub.com selbst über GitHub Pages ausgeliefert wird, laufen Anmeldung, Datenbank und Dateispeicher über Google Firebase (siehe Abschnitt 8).</p>
         </div>
 
         <div class="karte hervorhebung">
-            <h2>8. Optionales Nutzerkonto & Cloud-Speicherung (Google Firebase)</h2>
-            <p>PDF Studio, das Bewerbungsstudio und das Schreibstudio bieten dir optional die Möglichkeit, dich mit E-Mail-Adresse und Passwort ein eigenes Konto anzulegen. Nutzt du diese Funktion nicht, wird nichts von deinen Inhalten an uns oder Dritte übertragen (siehe Abschnitt 2).</p>
-            <p>Meldest du dich an und wählst aktiv "Speichern" bzw. "In meinem Konto speichern", werden folgende Daten verarbeitet:</p>
+            <h2 data-i18n="s8_h2">8. Optionales Nutzerkonto & Cloud-Speicherung (Google Firebase)</h2>
+            <p data-i18n="s8_p1">PDF Studio, das Bewerbungsstudio und das Schreibstudio bieten dir optional die Möglichkeit, dich mit E-Mail-Adresse und Passwort ein eigenes Konto anzulegen. Nutzt du diese Funktion nicht, wird nichts von deinen Inhalten an uns oder Dritte übertragen (siehe Abschnitt 2).</p>
+            <p data-i18n="s8_p2">Meldest du dich an und wählst aktiv "Speichern" bzw. "In meinem Konto speichern", werden folgende Daten verarbeitet:</p>
             <ul>
-                <li><strong>Kontodaten:</strong> E-Mail-Adresse, verschlüsseltes Passwort, optional ein von dir gewählter Anzeigename sowie eine technische Nutzer-ID.</li>
-                <li><strong>Von dir gespeicherte Inhalte:</strong> z. B. hochgeladene/gescannte Seiten, Lebenslauf- und Anschreiben-Angaben, Passfotos – jeweils nur, wenn du sie aktiv über die Speichern-Funktion in dein Konto lädst.</li>
+                <li data-i18n-html="1" data-i18n="s8_li1"><strong>Kontodaten:</strong> E-Mail-Adresse, verschlüsseltes Passwort, optional ein von dir gewählter Anzeigename sowie eine technische Nutzer-ID.</li>
+                <li data-i18n-html="1" data-i18n="s8_li2"><strong>Von dir gespeicherte Inhalte:</strong> z. B. hochgeladene/gescannte Seiten, Lebenslauf- und Anschreiben-Angaben, Passfotos – jeweils nur, wenn du sie aktiv über die Speichern-Funktion in dein Konto lädst.</li>
             </ul>
-            <p>Für Authentifizierung, Datenbank (Cloud Firestore) und Dateispeicher (Cloud Storage) nutzen wir <strong>Google Firebase</strong>, einen Dienst der Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Irland) bzw. der Google LLC (USA). Die Datenbank-Inhalte werden in einem europäischen Rechenzentrum (Region Europa) verarbeitet; der Datei-Speicher für Bilder/Scans liegt aus technischen Gründen aktuell in einem US-Rechenzentrum von Google. Soweit dabei Daten in die USA übertragen werden, stützt sich Google auf die EU-Standardvertragsklauseln als geeignete Garantien nach Art. 46 DSGVO. Weitere Informationen: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a> und <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
-            <p>Der Zugriff auf deine gespeicherten Inhalte ist über Sicherheitsregeln technisch so beschränkt, dass ausschließlich du – nach Anmeldung mit deinem Konto – auf deine eigenen Daten zugreifen kannst.</p>
-            <p><strong>Rechtsgrundlage</strong> ist deine Einwilligung bei der Registrierung sowie die Vertragserfüllung zur Bereitstellung der Konto-Funktion (Art. 6 Abs. 1 lit. a und b DSGVO). Du kannst dein Konto und die darin gespeicherten Inhalte jederzeit über die Kontakt-E-Mail (Abschnitt 1) löschen lassen; eine Einwilligung kannst du jederzeit mit Wirkung für die Zukunft widerrufen, indem du dein Konto löschen lässt.</p>
+            <p data-i18n-html="1" data-i18n="s8_p3_html">Für Authentifizierung, Datenbank (Cloud Firestore) und Dateispeicher (Cloud Storage) nutzen wir <strong>Google Firebase</strong>, einen Dienst der Google Ireland Limited (Gordon House, Barrow Street, Dublin 4, Irland) bzw. der Google LLC (USA). Die Datenbank-Inhalte werden in einem europäischen Rechenzentrum (Region Europa) verarbeitet; der Datei-Speicher für Bilder/Scans liegt aus technischen Gründen aktuell in einem US-Rechenzentrum von Google. Soweit dabei Daten in die USA übertragen werden, stützt sich Google auf die EU-Standardvertragsklauseln als geeignete Garantien nach Art. 46 DSGVO. Weitere Informationen: <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a> und <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>
+            <p data-i18n="s8_p4">Der Zugriff auf deine gespeicherten Inhalte ist über Sicherheitsregeln technisch so beschränkt, dass ausschließlich du – nach Anmeldung mit deinem Konto – auf deine eigenen Daten zugreifen kannst.</p>
+            <p data-i18n-html="1" data-i18n="s8_p5"><strong>Rechtsgrundlage</strong> ist deine Einwilligung bei der Registrierung sowie die Vertragserfüllung zur Bereitstellung der Konto-Funktion (Art. 6 Abs. 1 lit. a und b DSGVO). Du kannst dein Konto und die darin gespeicherten Inhalte jederzeit über die Kontakt-E-Mail (Abschnitt 1) löschen lassen; eine Einwilligung kannst du jederzeit mit Wirkung für die Zukunft widerrufen, indem du dein Konto löschen lässt.</p>
         </div>
 
         <div class="karte">
-            <h2>9. Änderungen dieser Erklärung</h2>
-            <p>Diese Datenschutzerklärung kann angepasst werden, wenn sich die Anwendungen oder rechtliche Vorgaben ändern. Die jeweils aktuelle Fassung ist immer unter dieser Adresse abrufbar.</p>
+            <h2 data-i18n="s9_h2">9. Änderungen dieser Erklärung</h2>
+            <p data-i18n="s9_p1">Diese Datenschutzerklärung kann angepasst werden, wenn sich die Anwendungen oder rechtliche Vorgaben ändern. Die jeweils aktuelle Fassung ist immer unter dieser Adresse abrufbar.</p>
         </div>
 
-        <footer>SD Bewerbungsstudio · thesdhub.com</footer>
+        <footer data-i18n="footer_txt">SD Bewerbungsstudio · thesdhub.com</footer>
     </div>
+    <script src="./i18n.js?v=1"></script>
 </body>
 </html>
