@@ -4693,10 +4693,17 @@
     // verändern. Ohne diesen Schritt wirkte der Scan nach der Schatten-
     // korrektur/CLAHE spürbar weicher als das Originalfoto.
     function scanCvSharpen(mat, amount) {
+      // Erst ein sehr leichtes Entrauschen (JPEG-Blockartefakte vom Handyfoto),
+      // sonst verstärkt die anschließende unscharfe Maskierung genau dieses
+      // Rauschen/diese Artefakte statt nur die Schrift -> Text wirkt "schlimmer"
+      // statt schärfer.
+      const denoised = new cv.Mat();
+      cv.medianBlur(mat, denoised, 3);
       const blurred = new cv.Mat();
-      cv.GaussianBlur(mat, blurred, new cv.Size(0, 0), 3);
+      cv.GaussianBlur(denoised, blurred, new cv.Size(0, 0), 1.4);
       const sharpened = new cv.Mat();
-      cv.addWeighted(mat, 1 + amount, blurred, -amount, 0, sharpened);
+      cv.addWeighted(denoised, 1 + amount, blurred, -amount, 0, sharpened);
+      denoised.delete();
       blurred.delete();
       return sharpened;
     }
@@ -4746,7 +4753,7 @@
       cv.convertScaleAbs(merged, finalMat, 1.15, -12);
       merged.delete();
 
-      const sharpMat = scanCvSharpen(finalMat, 0.6);
+      const sharpMat = scanCvSharpen(finalMat, 0.35);
       finalMat.delete();
 
       return scanMatToCanvas(sharpMat);
@@ -4786,7 +4793,7 @@
       gray.delete();
       clahe.delete();
 
-      const sharpOut = scanCvSharpen(out, 0.5);
+      const sharpOut = scanCvSharpen(out, 0.3);
       out.delete();
 
       return scanMatToCanvas(sharpOut);

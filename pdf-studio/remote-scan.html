@@ -1396,10 +1396,16 @@
     // geglättete Kopie verstärkt Kanten/Text, ohne Flächen wie Papierweiß zu
     // verändern.
     function reviewCvSharpen(mat, amount) {
+      // Erst ein sehr leichtes Entrauschen (JPEG-Blockartefakte vom Handyfoto),
+      // sonst verstärkt die unscharfe Maskierung genau dieses Rauschen statt
+      // nur die Schrift -> Text wirkt "schlimmer" statt schärfer.
+      const denoised = new cv.Mat();
+      cv.medianBlur(mat, denoised, 3);
       const blurred = new cv.Mat();
-      cv.GaussianBlur(mat, blurred, new cv.Size(0, 0), 3);
+      cv.GaussianBlur(denoised, blurred, new cv.Size(0, 0), 1.4);
       const sharpened = new cv.Mat();
-      cv.addWeighted(mat, 1 + amount, blurred, -amount, 0, sharpened);
+      cv.addWeighted(denoised, 1 + amount, blurred, -amount, 0, sharpened);
+      denoised.delete();
       blurred.delete();
       return sharpened;
     }
@@ -1445,7 +1451,7 @@
       cv.convertScaleAbs(merged, finalMat, 1.15, -12);
       merged.delete();
 
-      const sharpMat = reviewCvSharpen(finalMat, 0.6);
+      const sharpMat = reviewCvSharpen(finalMat, 0.35);
       finalMat.delete();
 
       return reviewCvMatToCanvas(sharpMat);
