@@ -794,10 +794,29 @@
           cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
           if (approx.rows === 4 && cv.isContourConvex(approx)) {
             const area = Math.abs(cv.contourArea(approx));
-            if (area > imgArea * 0.15 && area < imgArea * 0.98 && area > bestArea) {
-              bestArea = area;
-              if (best) best.delete();
-              best = approx.clone();
+            // Wenn kein echter Dokumentrand gefunden wird (Muster im
+            // Hintergrund, Sofa, Bettdecke), findet Canny manchmal nur den
+            // Rand des ganzen Fotos selbst (oder schwarze Letterbox-Balken)
+            // als "Viereck" - das wurde bisher als Dokument akzeptiert und
+            // die Ecken landeten dann an den Bildrändern statt am Papier.
+            // Deshalb: kleinere Obergrenze UND explizite Ablehnung, wenn das
+            // Viereck bis an den Bildrand reicht (kein Rand = kein Dokument).
+            if (area > imgArea * 0.15 && area < imgArea * 0.9 && area > bestArea) {
+              const d = approx.data32S;
+              const margin = Math.min(w, h) * 0.01;
+              let touchesBorder = false;
+              for (let k = 0; k < 4; k++) {
+                const px = d[k * 2], py = d[k * 2 + 1];
+                if (px < margin || py < margin || px > w - margin || py > h - margin) {
+                  touchesBorder = true;
+                  break;
+                }
+              }
+              if (!touchesBorder) {
+                bestArea = area;
+                if (best) best.delete();
+                best = approx.clone();
+              }
             }
           }
           approx.delete();
@@ -1041,7 +1060,13 @@
       if (!pts.every(p => isFinite(p.x) && isFinite(p.y))) return false;
       const area = autoPolygonArea(pts);
       const full = w * h;
-      return area > full * 0.10 && area < full * 0.98;
+      if (area <= full * 0.10 || area >= full * 0.9) return false;
+      // Ein "Dokument", das bis an den Fotorand reicht, ist keine echte
+      // Erkennung, sondern der Bildrand selbst (z.B. bei strukturiertem
+      // Hintergrund wie Sofa/Bettdecke) - lieber ablehnen und die Standard-
+      // Ecken mit Rand anbieten, die man dann von Hand nachzieht.
+      const margin = Math.min(w, h) * 0.01;
+      return pts.every(p => p.x > margin && p.y > margin && p.x < w - margin && p.y < h - margin);
     }
 
     function renderReviewHandles() {
