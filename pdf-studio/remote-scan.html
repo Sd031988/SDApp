@@ -304,6 +304,84 @@
     .hidden {
       display: none !important;
     }
+
+    /* --- Bestätigen/Zuschneiden auf dem Handy, bevor gesendet wird --- */
+    #reviewStage {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #reviewTopHint {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: .85rem;
+      font-weight: 600;
+      color: #9fb3c8;
+      background: #0f172a;
+    }
+
+    .review-canvas-wrap {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+    }
+
+    #reviewCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+
+    .r-handle {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      margin: -13px 0 0 -13px;
+      border-radius: 50%;
+      background: #d66b45;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+      touch-action: none;
+    }
+
+    .review-actions {
+      flex-shrink: 0;
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+      background: #0f172a;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .review-actions button {
+      flex: 0 0 auto;
+      background: #1c2c48;
+      color: #fff;
+      border: 1px solid #2c3e5c;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #btnReviewSend {
+      background: #d66b45;
+      border-color: #d66b45;
+      flex: 1 1 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+    }
   </style>
 </head>
 
@@ -362,6 +440,25 @@
   <input type="file" id="fileInput" accept="image/*" capture="environment">
 
   <canvas id="captureCanvas" class="hidden"></canvas>
+
+  <!-- Zuschnitt/Ausrichtung direkt auf dem Handy bestätigen, bevor gesendet wird -->
+  <div id="reviewStage" class="hidden">
+    <div id="reviewTopHint">Ecken prüfen/ziehen, bei Bedarf drehen – dann senden</div>
+    <div class="review-canvas-wrap">
+      <canvas id="reviewCanvas"></canvas>
+      <div class="r-handle" id="rh0"></div>
+      <div class="r-handle" id="rh1"></div>
+      <div class="r-handle" id="rh2"></div>
+      <div class="r-handle" id="rh3"></div>
+    </div>
+    <div class="review-actions">
+      <button id="btnReviewReset">↺ Zurücksetzen</button>
+      <button id="btnReviewRotateLeft">⟲ Links</button>
+      <button id="btnReviewRotateRight">⟳ Rechts</button>
+      <button id="btnReviewRetake">🔄 Erneut aufnehmen</button>
+      <button id="btnReviewSend">✅ Verwenden &amp; senden</button>
+    </div>
+  </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -475,7 +572,11 @@
       }
     }
 
-    function doCapture(auto) {
+    // Nimmt das Bild auf und öffnet direkt die Bestätigungs-/Zuschneide-Ansicht
+    // auf dem Handy, statt sofort zu senden – so kann die Seite schon hier
+    // begradigt/nachjustiert werden und kommt fertig bei PDF-Studio an, statt
+    // erst am PC nachbearbeitet werden zu müssen.
+    function doCapture(auto, quad, detW, detH) {
       const vw = video.videoWidth, vh = video.videoHeight;
       if (!vw || !vh) return;
 
@@ -486,12 +587,16 @@
       flashEl.classList.add('active');
       setTimeout(() => flashEl.classList.remove('active'), 200);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      sendPhoto(dataUrl, 'image/jpeg', 'Handyscan_' + (sent + 1) + '.jpg');
-      sent++;
-      countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
       autoStableCount = 0;
       autoLastQuad = null;
+
+      let fullQuad = null;
+      if (quad && detW && detH) {
+        const scaleX = vw / detW, scaleY = vh / detH;
+        fullQuad = quad.map(p => ({ x: p.x * scaleX, y: p.y * scaleY }));
+      }
+
+      openReviewStage(canvas, fullQuad, 'Handyscan_' + (sent + 1) + '.jpg');
     }
 
     btn.onclick = () => {
@@ -696,10 +801,10 @@
       hintEl.classList.remove('detected');
 
       if (autoStableCount >= AUTO_STABLE_NEEDED) {
-        hintEl.textContent = '✓ Perfekt erkannt – wird automatisch gescannt …';
+        hintEl.textContent = '✓ Perfekt erkannt – zum Bestätigen geöffnet …';
         if (conn && conn.open && stream && !autoCaptured) {
           autoCaptured = true;
-          doCapture(true);
+          doCapture(true, quad, detW, detH);
           setTimeout(() => { autoCaptured = false; }, 900);
         }
       } else {
@@ -734,10 +839,342 @@
 
     function finishSession() {
       stopAutoDetect();
+      closeReviewStage(false);
       if (conn) { try { conn.close(); } catch (e) { } }
       if (peer) { try { peer.destroy(); } catch (e) { } }
       if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { } }
     }
+
+    // ================= Auf dem Handy bestätigen/zuschneiden vor dem Senden =================
+    // Statt jedes Foto blind an den PC zu schicken und dort nachzubessern, kann
+    // die Seite hier direkt geprüft, zugeschnitten und gedreht werden – erst
+    // danach geht sie fertig bearbeitet an PDF-Studio raus.
+    const reviewStageEl = document.getElementById('reviewStage');
+    const reviewCanvas = document.getElementById('reviewCanvas');
+    const reviewHandles = ['rh0', 'rh1', 'rh2', 'rh3'].map(id => document.getElementById(id));
+    let reviewCorners = [];
+    let reviewPendingName = '';
+
+    function reviewCornersLookValid(pts, w, h) {
+      if (!pts.every(p => isFinite(p.x) && isFinite(p.y))) return false;
+      const area = autoPolygonArea(pts);
+      const full = w * h;
+      return area > full * 0.10 && area < full * 0.98;
+    }
+
+    function renderReviewHandles() {
+      const rect = reviewCanvas.getBoundingClientRect();
+      const scaleX = rect.width / reviewCanvas.width;
+      const scaleY = rect.height / reviewCanvas.height;
+      reviewHandles.forEach((el, i) => {
+        el.style.left = (reviewCorners[i].x * scaleX) + 'px';
+        el.style.top = (reviewCorners[i].y * scaleY) + 'px';
+      });
+    }
+    window.addEventListener('resize', () => {
+      if (!reviewStageEl.classList.contains('hidden')) renderReviewHandles();
+    });
+
+    function attachReviewDrag(handleEl, index) {
+      let dragging = false;
+      function toCanvasCoords(clientX, clientY) {
+        const rect = reviewCanvas.getBoundingClientRect();
+        const scaleX = reviewCanvas.width / rect.width;
+        const scaleY = reviewCanvas.height / rect.height;
+        return {
+          x: Math.max(0, Math.min(reviewCanvas.width, (clientX - rect.left) * scaleX)),
+          y: Math.max(0, Math.min(reviewCanvas.height, (clientY - rect.top) * scaleY)),
+        };
+      }
+      function start(e) { dragging = true; e.preventDefault(); }
+      function move(e) {
+        if (!dragging) return;
+        const point = e.touches ? e.touches[0] : e;
+        reviewCorners[index] = toCanvasCoords(point.clientX, point.clientY);
+        renderReviewHandles();
+        e.preventDefault();
+      }
+      function end() { dragging = false; }
+      handleEl.addEventListener('mousedown', start);
+      handleEl.addEventListener('touchstart', start, { passive: false });
+      window.addEventListener('mousemove', move);
+      window.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('mouseup', end);
+      window.addEventListener('touchend', end);
+    }
+    reviewHandles.forEach((el, i) => attachReviewDrag(el, i));
+
+    function setDefaultReviewCorners() {
+      const w = reviewCanvas.width, h = reviewCanvas.height;
+      const margin = 0.06;
+      reviewCorners = [
+        { x: w * margin, y: h * margin },
+        { x: w * (1 - margin), y: h * margin },
+        { x: w * (1 - margin), y: h * (1 - margin) },
+        { x: w * margin, y: h * (1 - margin) },
+      ];
+    }
+
+    function openReviewStage(sourceCanvas, presetQuad, name) {
+      if (autoRafId) { cancelAnimationFrame(autoRafId); autoRafId = null; }
+      reviewPendingName = name;
+
+      let w = sourceCanvas.width, h = sourceCanvas.height;
+      const scale = Math.min(1, 1600 / Math.max(w, h));
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      reviewCanvas.width = w;
+      reviewCanvas.height = h;
+      reviewCanvas.getContext('2d').drawImage(sourceCanvas, 0, 0, w, h);
+
+      if (presetQuad) {
+        const scaleQ = w / sourceCanvas.width;
+        const q = presetQuad.map(p => ({ x: p.x * scaleQ, y: p.y * scaleQ }));
+        if (reviewCornersLookValid(q, w, h)) {
+          reviewCorners = q;
+        } else {
+          setDefaultReviewCorners();
+        }
+      } else {
+        setDefaultReviewCorners();
+      }
+      renderReviewHandles();
+      reviewStageEl.classList.remove('hidden');
+
+      if (!presetQuad) {
+        setTimeout(() => {
+          const auto = autoTryDetect(reviewCanvas);
+          if (auto && reviewCornersLookValid(auto, reviewCanvas.width, reviewCanvas.height)) {
+            reviewCorners = auto;
+            renderReviewHandles();
+          }
+        }, 40);
+      }
+    }
+
+    function closeReviewStage(resumeCamera) {
+      reviewStageEl.classList.add('hidden');
+      autoCaptured = false;
+      if (resumeCamera && stream) autoDetectLoop();
+    }
+
+    document.getElementById('btnReviewReset').onclick = () => { setDefaultReviewCorners(); renderReviewHandles(); };
+
+    function rotateReviewCanvas(direction) {
+      const w = reviewCanvas.width, h = reviewCanvas.height;
+      const rotated = document.createElement('canvas');
+      rotated.width = h; rotated.height = w;
+      const rctx = rotated.getContext('2d');
+      rctx.save();
+      rctx.translate(rotated.width / 2, rotated.height / 2);
+      rctx.rotate(direction === 'left' ? -Math.PI / 2 : Math.PI / 2);
+      rctx.drawImage(reviewCanvas, -w / 2, -h / 2);
+      rctx.restore();
+      reviewCanvas.width = rotated.width;
+      reviewCanvas.height = rotated.height;
+      reviewCanvas.getContext('2d').drawImage(rotated, 0, 0);
+      setDefaultReviewCorners();
+      renderReviewHandles();
+      setTimeout(() => {
+        const auto = autoTryDetect(reviewCanvas);
+        if (auto && reviewCornersLookValid(auto, reviewCanvas.width, reviewCanvas.height)) {
+          reviewCorners = auto;
+          renderReviewHandles();
+        }
+      }, 40);
+    }
+    document.getElementById('btnReviewRotateLeft').onclick = () => rotateReviewCanvas('left');
+    document.getElementById('btnReviewRotateRight').onclick = () => rotateReviewCanvas('right');
+
+    document.getElementById('btnReviewRetake').onclick = () => { closeReviewStage(true); };
+
+    // ---- Perspektivkorrektur + Clear-Scan-Aufhellung, direkt auf dem Handy ----
+    function reviewSolveLinear(A, b) {
+      const n = A.length;
+      const M = A.map((row, i) => row.concat([b[i]]));
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        for (let r = col + 1; r < n; r++) { if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r; }
+        [M[col], M[pivot]] = [M[pivot], M[col]];
+        const pv = M[col][col] || 1e-12;
+        for (let c = col; c <= n; c++) M[col][c] /= pv;
+        for (let r = 0; r < n; r++) {
+          if (r === col) continue;
+          const factor = M[r][col];
+          for (let c = col; c <= n; c++) M[r][c] -= factor * M[col][c];
+        }
+      }
+      return M.map(row => row[n]);
+    }
+
+    function reviewComputeHomography(src, dst) {
+      const A = [], b = [];
+      for (let i = 0; i < 4; i++) {
+        const { x: X, y: Y } = dst[i];
+        const { x: u, y: v } = src[i];
+        A.push([X, Y, 1, 0, 0, 0, -X * u, -Y * u]); b.push(u);
+        A.push([0, 0, 0, X, Y, 1, -X * v, -Y * v]); b.push(v);
+      }
+      return reviewSolveLinear(A, b);
+    }
+
+    function reviewWarpToRect(srcCanvas, srcCorners, outW, outH) {
+      const dstCorners = [{ x: 0, y: 0 }, { x: outW, y: 0 }, { x: outW, y: outH }, { x: 0, y: outH }];
+      const h = reviewComputeHomography(srcCorners, dstCorners);
+      const [a, bb, c, d, e, f, g, hh] = h;
+
+      const sctx = srcCanvas.getContext('2d');
+      const srcData = sctx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
+      const sw = srcCanvas.width, sh = srcCanvas.height;
+
+      const out = document.createElement('canvas');
+      out.width = outW; out.height = outH;
+      const octx = out.getContext('2d');
+      const outData = octx.createImageData(outW, outH);
+
+      function sampleBilinear(u, v) {
+        if (u < 0 || v < 0 || u > sw - 1 || v > sh - 1) return [255, 255, 255, 255];
+        const x0 = Math.floor(u), y0 = Math.floor(v);
+        const x1 = Math.min(x0 + 1, sw - 1), y1 = Math.min(y0 + 1, sh - 1);
+        const fx = u - x0, fy = v - y0;
+        const idx = (x, y) => (y * sw + x) * 4;
+        const p00 = idx(x0, y0), p10 = idx(x1, y0), p01 = idx(x0, y1), p11 = idx(x1, y1);
+        const out4 = [0, 0, 0, 0];
+        for (let k = 0; k < 4; k++) {
+          const top = srcData.data[p00 + k] * (1 - fx) + srcData.data[p10 + k] * fx;
+          const bot = srcData.data[p01 + k] * (1 - fx) + srcData.data[p11 + k] * fx;
+          out4[k] = top * (1 - fy) + bot * fy;
+        }
+        return out4;
+      }
+
+      for (let Y = 0; Y < outH; Y++) {
+        for (let X = 0; X < outW; X++) {
+          const denom = g * X + hh * Y + 1;
+          const u = (a * X + bb * Y + c) / denom;
+          const v = (d * X + e * Y + f) / denom;
+          const [r, gg, bl, al] = sampleBilinear(u, v);
+          const oi = (Y * outW + X) * 4;
+          outData.data[oi] = r; outData.data[oi + 1] = gg; outData.data[oi + 2] = bl; outData.data[oi + 3] = al;
+        }
+      }
+      octx.putImageData(outData, 0, 0);
+      return out;
+    }
+
+    function reviewBuildBackgroundMap(srcCanvas, w, h) {
+      const smallW = Math.max(20, Math.round(w / 24));
+      const smallH = Math.max(20, Math.round(h / 24));
+      const small = document.createElement('canvas');
+      small.width = smallW; small.height = smallH;
+      const sctx = small.getContext('2d');
+      sctx.imageSmoothingEnabled = true;
+      sctx.imageSmoothingQuality = 'high';
+      sctx.drawImage(srcCanvas, 0, 0, smallW, smallH);
+      const sdata = sctx.getImageData(0, 0, smallW, smallH).data;
+
+      const rMap = new Float32Array(smallW * smallH);
+      const gMap = new Float32Array(smallW * smallH);
+      const bMap = new Float32Array(smallW * smallH);
+      for (let p = 0, i = 0; i < sdata.length; i += 4, p++) {
+        rMap[p] = sdata[i]; gMap[p] = sdata[i + 1]; bMap[p] = sdata[i + 2];
+      }
+
+      function boxBlur(src) {
+        const out = new Float32Array(smallW * smallH);
+        const radius = 2;
+        for (let y = 0; y < smallH; y++) {
+          for (let x = 0; x < smallW; x++) {
+            let sum = 0, count = 0;
+            for (let dy = -radius; dy <= radius; dy++) {
+              const yy = y + dy;
+              if (yy < 0 || yy >= smallH) continue;
+              for (let dx = -radius; dx <= radius; dx++) {
+                const xx = x + dx;
+                if (xx < 0 || xx >= smallW) continue;
+                sum += src[yy * smallW + xx];
+                count++;
+              }
+            }
+            out[y * smallW + x] = sum / count;
+          }
+        }
+        return out;
+      }
+
+      return { w: smallW, h: smallH, r: boxBlur(rMap), g: boxBlur(gMap), b: boxBlur(bMap) };
+    }
+
+    function reviewClearScanEnhance(srcCanvas, destCtx, w, h) {
+      const bg = reviewBuildBackgroundMap(srcCanvas, w, h);
+      const imgData = destCtx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      function sampleMap(map, mw, mh, u, v) {
+        const x = Math.min(mw - 1, Math.max(0, u));
+        const y = Math.min(mh - 1, Math.max(0, v));
+        const x0 = Math.floor(x), y0 = Math.floor(y);
+        const x1 = Math.min(mw - 1, x0 + 1), y1 = Math.min(mh - 1, y0 + 1);
+        const fx = x - x0, fy = y - y0;
+        const idx = (xx, yy) => yy * mw + xx;
+        const top = map[idx(x0, y0)] * (1 - fx) + map[idx(x1, y0)] * fx;
+        const bot = map[idx(x0, y1)] * (1 - fx) + map[idx(x1, y1)] * fx;
+        return top * (1 - fy) + bot * fy;
+      }
+
+      let targetR = 180, targetG = 180, targetB = 180;
+      for (let i = 0; i < bg.r.length; i++) {
+        if (bg.r[i] > targetR) targetR = bg.r[i];
+        if (bg.g[i] > targetG) targetG = bg.g[i];
+        if (bg.b[i] > targetB) targetB = bg.b[i];
+      }
+
+      const contrast = 1.32;
+      const scaleU = bg.w / w, scaleV = bg.h / h;
+
+      for (let y = 0; y < h; y++) {
+        const v = y * scaleV;
+        const rowOff = y * w;
+        for (let x = 0; x < w; x++) {
+          const u = x * scaleU;
+          const bR = Math.max(35, sampleMap(bg.r, bg.w, bg.h, u, v));
+          const bG = Math.max(35, sampleMap(bg.g, bg.w, bg.h, u, v));
+          const bB = Math.max(35, sampleMap(bg.b, bg.w, bg.h, u, v));
+          const i = (rowOff + x) * 4;
+
+          let r = d[i] * (targetR / bR);
+          let g = d[i + 1] * (targetG / bG);
+          let b = d[i + 2] * (targetB / bB);
+
+          r = (r - 128) * contrast + 128;
+          g = (g - 128) * contrast + 128;
+          b = (b - 128) * contrast + 128;
+
+          d[i] = Math.min(255, Math.max(0, r));
+          d[i + 1] = Math.min(255, Math.max(0, g));
+          d[i + 2] = Math.min(255, Math.max(0, b));
+        }
+      }
+      destCtx.putImageData(imgData, 0, 0);
+    }
+
+    document.getElementById('btnReviewSend').onclick = () => {
+      if (!conn || !conn.open) return;
+      const c = reviewCorners;
+      const wTop = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
+      const wBot = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
+      const hLeft = Math.hypot(c[3].x - c[0].x, c[3].y - c[0].y);
+      const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
+      const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
+      const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
+      const warped = reviewWarpToRect(reviewCanvas, reviewCorners, outW, outH);
+      reviewClearScanEnhance(warped, warped.getContext('2d'), warped.width, warped.height);
+      const dataUrl = warped.toDataURL('image/jpeg', 0.92);
+
+      sendPhoto(dataUrl, 'image/jpeg', reviewPendingName || ('Handyscan_' + (sent + 1) + '.jpg'));
+      sent++;
+      countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+      closeReviewStage(true);
+    };
   </script>
 </body>
 
