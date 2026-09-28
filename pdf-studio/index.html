@@ -1400,7 +1400,10 @@
         <button id="btnScanPendingMore" class="tool-btn" style="margin:0;">📷 Weitere Seite</button>
         <button id="btnScanPendingDone" class="btn-primary" style="margin:0;">✅ Fertig – bearbeiten</button>
       </div>
-      <button id="btnLiveCamScan" class="tool-btn" style="width:100%;margin-bottom:8px;">🎥 Live-Kamera (Auto-Scan)</button>
+      <!-- Live-Kamera-Auto-Scan-Einstieg auf Wunsch entfernt (28.09.2026): nur noch "Scan / Foto"
+           soll genutzt werden. Der zugrunde liegende Code bleibt bestehen, da er teils von der
+           Foto-Pipeline mitbenutzt wird, ist aber über die Oberfläche nicht mehr erreichbar. -->
+      <button id="btnLiveCamScan" class="tool-btn" style="display:none;">🎥 Live-Kamera (Auto-Scan)</button>
       <button id="btnPhoneScan" class="tool-btn" style="width:100%;margin-bottom:8px;">📱 Mit Handy scannen</button>
       <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
         einfügen</button>
