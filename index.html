@@ -88,6 +88,31 @@
                 font-size: 0.96rem;
             }
 
+        .sd-lang-switch {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 999px;
+            padding: 3px;
+        }
+
+        .sd-lang-btn {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 5px 11px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .sd-lang-btn.active {
+            background: var(--primary);
+            color: #06251f;
+        }
+
         .hero {
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
@@ -512,49 +537,143 @@
             }
         }
     </style>
+    <script>
+        window.SD_I18N = {
+            de: {
+                brand: 'SD Bewerbungsstudio',
+                nav_ueber: 'Über uns', nav_bereiche: 'Bereiche', nav_features: 'Features',
+                nav_downloads: 'Downloads', nav_start: 'Start',
+                hero_eyebrow: 'Premium • Lokal • Plattformübergreifend',
+                hero_h1: 'Starke Bewerbung. Moderne Präsentation.',
+                hero_lead: 'SD Bewerbungsstudio ist eine elegante, portable Bewerbungs-App für digitale Profile, Lebenslauf, Projekte und professionelle Präsentationen. Die Lösung läuft lokal im Browser und ist für Windows, macOS und Linux verfügbar.',
+                hero_download_btn: 'Jetzt herunterladen', hero_apps_btn: 'Apps öffnen',
+                stat_systeme: 'Systeme', stat_lokal: 'Lokaler Start', stat_browser: 'Browserfunktionen',
+                mini_profil: 'Profil', mini_profil_txt: 'Lebenslauf & Kompetenzen',
+                mini_portfolio: 'Portfolio', mini_portfolio_txt: 'Projekte & Referenzen',
+                mini_praesentation: 'Präsentation', mini_praesentation_txt: 'Professioneller Aufbau',
+                intro_h2: 'Deine Werkzeuge. Deine Daten. Dein Tempo.',
+                intro_p1: 'thesdhub.com ist der zentrale Ort für praktische Werkzeuge rund um Bewerbung und Dokumente – heute mit Lebenslauf, Anschreiben, PDF-Bearbeitung, Dokumenten-Scanner und Passfoto-Tool, in Zukunft wachsend um weitere Anwendungen, die nahtlos miteinander verbunden sind.',
+                intro_p2: 'Alles läuft direkt in deinem Browser – deine Daten bleiben auf deinem Gerät, nicht auf fremden Servern. Datenschutz ist dabei kein Zusatz, sondern Grundprinzip: im Einklang mit der europäischen Datenschutz-Grundverordnung (DSGVO) und mit dem Anspruch, weltweit vertrauenswürdig zu funktionieren – ganz gleich, wo du diese Seite nutzt.',
+                bereiche_h2: 'Wähle deinen Bereich',
+                bereiche_lead: 'Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.',
+                card_bewerbung_h3: 'Bewerbung schreiben',
+                card_bewerbung_p: 'Lebenslauf, Anschreiben, Deckblatt & Bewerbungsmappe – mit KI-Schreibhilfe und frei wählbarem Design.',
+                card_schreib_h3: 'Schreibstudio',
+                card_schreib_p: 'Kündigung, Entschuldigung & formeller Brief – mit KI-Schreibhilfe, fertigen Mustern und PDF-Export.',
+                card_pdf_h3: 'PDF-Werkzeuge',
+                card_pdf_p: 'PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.',
+                card_scanner_h3: 'Dokumenten-Scanner',
+                card_scanner_p: 'Dokumente mit der Handykamera scannen, zuschneiden und mit Filtern (Original, Automatisch, Graustufen, Schwarz-Weiß) verbessern.',
+                card_foto_h3: 'Pass- & Bewerbungsfoto',
+                card_foto_p: 'Foto zuschneiden auf Passfoto-, Bewerbungsfoto- oder US-Visum-Format, Hintergrund austauschen (Weiß, Grau, Blau) und druckfertig als Fotobogen speichern.',
+                features_h2: 'Warum SD Bewerbungsstudio?',
+                features_lead: 'Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.',
+                feat1_h3: 'Schneller Einstieg', feat1_p: 'Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.',
+                feat2_h3: 'Für alle Geräte', feat2_p: 'Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.',
+                feat3_h3: 'Lokale Sicherheit', feat3_p: 'Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.',
+                downloads_h2: 'Downloads',
+                downloads_lead: 'Wähle die passende Version für dein System und starte sofort in die Bewerbung.',
+                dl_win_h3: 'Windows', dl_win_p: 'PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.',
+                dl_mac_h3: 'macOS', dl_mac_p: 'Startskript für macOS mit Python 3 und Direktzugriff zur App.',
+                dl_linux_h3: 'Linux', dl_linux_p: 'Linux-Startskript für die lokale App-Öffnung im Browser.',
+                start_h2: 'Direkt starten',
+                start_lead: 'Öffne die App sofort oder nutze die passende Download-Version für dein System.',
+                start_app_btn: 'App auswählen', start_anleitung_btn: 'Anleitung lesen',
+                footer_txt: 'SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux',
+                footer_datenschutz: 'Datenschutz'
+            },
+            en: {
+                brand: 'SD Bewerbungsstudio',
+                nav_ueber: 'About', nav_bereiche: 'Tools', nav_features: 'Features',
+                nav_downloads: 'Downloads', nav_start: 'Start',
+                hero_eyebrow: 'Premium • Local • Cross-platform',
+                hero_h1: 'Stronger applications. Modern presentation.',
+                hero_lead: 'SD Bewerbungsstudio is an elegant, portable app for job applications: digital profiles, resumes, projects and professional presentations. It runs locally in your browser and is available for Windows, macOS and Linux.',
+                hero_download_btn: 'Download now', hero_apps_btn: 'Open apps',
+                stat_systeme: 'Systems', stat_lokal: 'Local start', stat_browser: 'Browser-based',
+                mini_profil: 'Profile', mini_profil_txt: 'Resume & skills',
+                mini_portfolio: 'Portfolio', mini_portfolio_txt: 'Projects & references',
+                mini_praesentation: 'Presentation', mini_praesentation_txt: 'Professional layout',
+                intro_h2: 'Your tools. Your data. Your pace.',
+                intro_p1: 'thesdhub.com is the central place for practical job-application and document tools – today with resume, cover letter, PDF editing, a document scanner and a passport-photo tool, and growing with more apps that connect seamlessly.',
+                intro_p2: 'Everything runs directly in your browser – your data stays on your device, not on someone else’s server. Privacy isn’t an add-on here, it’s the foundation: in line with the European General Data Protection Regulation (GDPR), and built to be trustworthy wherever in the world you use this site.',
+                bereiche_h2: 'Choose your tool',
+                bereiche_lead: 'Everything you need for your job application, in one place.',
+                card_bewerbung_h3: 'Write your application',
+                card_bewerbung_p: 'Resume, cover letter, title page & full application folder – with AI writing help and a design of your choice.',
+                card_schreib_h3: 'Letter Studio',
+                card_schreib_p: 'Termination letters, excuse notes & formal letters – with AI writing help, ready-made templates and PDF export.',
+                card_pdf_h3: 'PDF tools',
+                card_pdf_p: 'Merge, edit and annotate PDFs and get them ready for your application – right in the browser.',
+                card_scanner_h3: 'Document scanner',
+                card_scanner_p: 'Scan documents with your phone camera, crop them and enhance them with filters (original, automatic, grayscale, black & white).',
+                card_foto_h3: 'Passport & application photo',
+                card_foto_p: 'Crop a photo to passport, application or US visa format, swap the background (white, gray, blue) and save it print-ready as a photo sheet.',
+                features_h2: 'Why SD Bewerbungsstudio?',
+                features_lead: 'Modern, simple, professional design with a quick, local start.',
+                feat1_h3: 'Quick start', feat1_p: 'The app starts instantly and is ready to use right in your browser. No lengthy setup required.',
+                feat2_h3: 'Works everywhere', feat2_p: 'Optimized for desktop use and compatible with different operating systems.',
+                feat3_h3: 'Local & private', feat3_p: 'Everything runs locally on your machine, keeping your workflow clear, fast and under your control.',
+                downloads_h2: 'Downloads',
+                downloads_lead: 'Choose the right version for your system and get started right away.',
+                dl_win_h3: 'Windows', dl_win_p: 'PowerShell version with automatic browser launch and easy use.',
+                dl_mac_h3: 'macOS', dl_mac_p: 'Startup script for macOS with Python 3 and direct access to the app.',
+                dl_linux_h3: 'Linux', dl_linux_p: 'Linux startup script to open the app locally in your browser.',
+                start_h2: 'Get started',
+                start_lead: 'Open the app right away or use the matching download for your system.',
+                start_app_btn: 'Choose an app', start_anleitung_btn: 'Read the guide',
+                footer_txt: 'SD Bewerbungsstudio • Professional application solution for Windows, macOS and Linux',
+                footer_datenschutz: 'Privacy'
+            }
+        };
+    </script>
 </head>
 <body>
     <div class="container">
         <header class="topbar">
             <div class="brand">
                 <div class="brand-mark">SD</div>
-                <span>SD Bewerbungsstudio</span>
+                <span data-i18n="brand">SD Bewerbungsstudio</span>
             </div>
             <nav class="nav">
-                <a href="#einleitung">Über uns</a>
-                <a href="#bereiche">Bereiche</a>
-                <a href="#features">Features</a>
-                <a href="#downloads">Downloads</a>
-                <a href="#start">Start</a>
+                <a href="#einleitung" data-i18n="nav_ueber">Über uns</a>
+                <a href="#bereiche" data-i18n="nav_bereiche">Bereiche</a>
+                <a href="#features" data-i18n="nav_features">Features</a>
+                <a href="#downloads" data-i18n="nav_downloads">Downloads</a>
+                <a href="#start" data-i18n="nav_start">Start</a>
             </nav>
+            <div class="sd-lang-switch">
+                <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+                <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+            </div>
         </header>
 
         <main>
             <section class="hero">
                 <div>
-                    <span class="eyebrow">Premium • Lokal • Plattformübergreifend</span>
-                    <h1>Starke Bewerbung. Moderne Präsentation.</h1>
-                    <p class="lead">
+                    <span class="eyebrow" data-i18n="hero_eyebrow">Premium • Lokal • Plattformübergreifend</span>
+                    <h1 data-i18n="hero_h1">Starke Bewerbung. Moderne Präsentation.</h1>
+                    <p class="lead" data-i18n="hero_lead">
                         SD Bewerbungsstudio ist eine elegante, portable Bewerbungs-App für digitale Profile, Lebenslauf, Projekte und professionelle Präsentationen. Die Lösung läuft lokal im Browser und ist für Windows, macOS und Linux verfügbar.
                     </p>
 
                     <div class="actions">
-                        <a class="button primary" href="#downloads">Jetzt herunterladen</a>
-                        <a class="button secondary" href="#bereiche">Apps öffnen</a>
+                        <a class="button primary" href="#downloads" data-i18n="hero_download_btn">Jetzt herunterladen</a>
+                        <a class="button secondary" href="#bereiche" data-i18n="hero_apps_btn">Apps öffnen</a>
                     </div>
 
                     <div class="stats">
                         <div class="stat">
                             <strong>3</strong>
-                            <span>Systeme</span>
+                            <span data-i18n="stat_systeme">Systeme</span>
                         </div>
                         <div class="stat">
                             <strong>1</strong>
-                            <span>Lokaler Start</span>
+                            <span data-i18n="stat_lokal">Lokaler Start</span>
                         </div>
                         <div class="stat">
                             <strong>100%</strong>
-                            <span>Browserfunktionen</span>
+                            <span data-i18n="stat_browser">Browserfunktionen</span>
                         </div>
                     </div>
                 </div>
@@ -562,7 +681,7 @@
                 <div class="visual" aria-label="App-Vorschau">
                     <div class="visual-inner">
                         <div class="window-bar">
-                            <span>SD Bewerbungsstudio</span>
+                            <span data-i18n="brand">SD Bewerbungsstudio</span>
                             <div class="window-dots">
                                 <span></span>
                                 <span></span>
@@ -571,18 +690,18 @@
                         </div>
                         <div class="screen">
                             <div class="card-mini">
-                                <span class="label">Profil</span>
-                                <div>Lebenslauf &amp; Kompetenzen</div>
+                                <span class="label" data-i18n="mini_profil">Profil</span>
+                                <div data-i18n="mini_profil_txt">Lebenslauf &amp; Kompetenzen</div>
                                 <div class="progress"><span style="width: 86%;"></span></div>
                             </div>
                             <div class="card-mini">
-                                <span class="label">Portfolio</span>
-                                <div>Projekte &amp; Referenzen</div>
+                                <span class="label" data-i18n="mini_portfolio">Portfolio</span>
+                                <div data-i18n="mini_portfolio_txt">Projekte &amp; Referenzen</div>
                                 <div class="progress"><span style="width: 72%;"></span></div>
                             </div>
                             <div class="card-mini">
-                                <span class="label">Präsentation</span>
-                                <div>Professioneller Aufbau</div>
+                                <span class="label" data-i18n="mini_praesentation">Präsentation</span>
+                                <div data-i18n="mini_praesentation_txt">Professioneller Aufbau</div>
                                 <div class="progress"><span style="width: 92%;"></span></div>
                             </div>
                         </div>
@@ -592,13 +711,13 @@
 
             <section class="section" id="einleitung">
                 <div class="intro-band">
-                    <h2>Deine Werkzeuge. Deine Daten. Dein Tempo.</h2>
-                    <p>
+                    <h2 data-i18n="intro_h2">Deine Werkzeuge. Deine Daten. Dein Tempo.</h2>
+                    <p data-i18n="intro_p1">
                         thesdhub.com ist der zentrale Ort für praktische Werkzeuge rund um Bewerbung und Dokumente –
                         heute mit Lebenslauf, Anschreiben, PDF-Bearbeitung, Dokumenten-Scanner und Passfoto-Tool,
                         in Zukunft wachsend um weitere Anwendungen, die nahtlos miteinander verbunden sind.
                     </p>
-                    <p>
+                    <p data-i18n="intro_p2">
                         Alles läuft direkt in deinem Browser – deine Daten bleiben auf deinem Gerät, nicht auf
                         fremden Servern. Datenschutz ist dabei kein Zusatz, sondern Grundprinzip: im Einklang mit
                         der europäischen Datenschutz-Grundverordnung (DSGVO) und mit dem Anspruch, weltweit
@@ -609,43 +728,43 @@
 
             <section class="section" id="bereiche">
                 <div class="section-head">
-                    <h2>Wähle deinen Bereich</h2>
-                    <p>Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.</p>
+                    <h2 data-i18n="bereiche_h2">Wähle deinen Bereich</h2>
+                    <p data-i18n="bereiche_lead">Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.</p>
                 </div>
 
                 <div class="dept-grid">
                     <a class="dept-card" href="Lebenslauf_app.html">
                         <div class="dept-icon">📝</div>
-                        <h3>Bewerbung schreiben</h3>
-                        <p>Lebenslauf, Anschreiben, Deckblatt &amp; Bewerbungsmappe – mit KI-Schreibhilfe und frei wählbarem Design.</p>
+                        <h3 data-i18n="card_bewerbung_h3">Bewerbung schreiben</h3>
+                        <p data-i18n="card_bewerbung_p">Lebenslauf, Anschreiben, Deckblatt &amp; Bewerbungsmappe – mit KI-Schreibhilfe und frei wählbarem Design.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 
                     <a class="dept-card" href="schreibstudio/index.html">
                         <div class="dept-icon">✉️</div>
-                        <h3>Schreibstudio</h3>
-                        <p>Kündigung, Entschuldigung &amp; formeller Brief – mit KI-Schreibhilfe, fertigen Mustern und PDF-Export.</p>
+                        <h3 data-i18n="card_schreib_h3">Schreibstudio</h3>
+                        <p data-i18n="card_schreib_p">Kündigung, Entschuldigung &amp; formeller Brief – mit KI-Schreibhilfe, fertigen Mustern und PDF-Export.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 
                     <a class="dept-card" href="pdf-studio/index.html">
                         <div class="dept-icon">📄</div>
-                        <h3>PDF-Werkzeuge</h3>
-                        <p>PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.</p>
+                        <h3 data-i18n="card_pdf_h3">PDF-Werkzeuge</h3>
+                        <p data-i18n="card_pdf_p">PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 
                     <a class="dept-card" href="scanner.html">
                         <div class="dept-icon">📷</div>
-                        <h3>Dokumenten-Scanner</h3>
-                        <p>Dokumente mit der Handykamera scannen, zuschneiden und mit Filtern (Original, Automatisch, Graustufen, Schwarz-Weiß) verbessern.</p>
+                        <h3 data-i18n="card_scanner_h3">Dokumenten-Scanner</h3>
+                        <p data-i18n="card_scanner_p">Dokumente mit der Handykamera scannen, zuschneiden und mit Filtern (Original, Automatisch, Graustufen, Schwarz-Weiß) verbessern.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 
                     <a class="dept-card" href="passfoto/index.html">
                         <div class="dept-icon">🪪</div>
-                        <h3>Pass- &amp; Bewerbungsfoto</h3>
-                        <p>Foto zuschneiden auf Passfoto-, Bewerbungsfoto- oder US-Visum-Format, Hintergrund austauschen (Weiß, Grau, Blau) und druckfertig als Fotobogen speichern.</p>
+                        <h3 data-i18n="card_foto_h3">Pass- &amp; Bewerbungsfoto</h3>
+                        <p data-i18n="card_foto_p">Foto zuschneiden auf Passfoto-, Bewerbungsfoto- oder US-Visum-Format, Hintergrund austauschen (Weiß, Grau, Blau) und druckfertig als Fotobogen speichern.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
                 </div>
@@ -653,53 +772,53 @@
 
             <section class="section" id="features">
                 <div class="section-head">
-                    <h2>Warum SD Bewerbungsstudio?</h2>
-                    <p>Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.</p>
+                    <h2 data-i18n="features_h2">Warum SD Bewerbungsstudio?</h2>
+                    <p data-i18n="features_lead">Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.</p>
                 </div>
 
                 <div class="feature-grid">
                     <article class="feature">
                         <div class="feature-badge">⚡</div>
-                        <h3>Schneller Einstieg</h3>
-                        <p>Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.</p>
+                        <h3 data-i18n="feat1_h3">Schneller Einstieg</h3>
+                        <p data-i18n="feat1_p">Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.</p>
                     </article>
 
                     <article class="feature">
                         <div class="feature-badge">🧩</div>
-                        <h3>Für alle Geräte</h3>
-                        <p>Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.</p>
+                        <h3 data-i18n="feat2_h3">Für alle Geräte</h3>
+                        <p data-i18n="feat2_p">Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.</p>
                     </article>
 
                     <article class="feature">
                         <div class="feature-badge">🛡️</div>
-                        <h3>Lokale Sicherheit</h3>
-                        <p>Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.</p>
+                        <h3 data-i18n="feat3_h3">Lokale Sicherheit</h3>
+                        <p data-i18n="feat3_p">Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.</p>
                     </article>
                 </div>
             </section>
 
             <section class="section" id="downloads">
                 <div class="section-head">
-                    <h2>Downloads</h2>
-                    <p>Wähle die passende Version für dein System und starte sofort in die Bewerbung.</p>
+                    <h2 data-i18n="downloads_h2">Downloads</h2>
+                    <p data-i18n="downloads_lead">Wähle die passende Version für dein System und starte sofort in die Bewerbung.</p>
                 </div>
 
                 <div class="download-wrap">
                     <div class="download-card">
-                        <h3>Windows</h3>
-                        <p>PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.</p>
+                        <h3 data-i18n="dl_win_h3">Windows</h3>
+                        <p data-i18n="dl_win_p">PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.</p>
                         <a href="SD-Bewerbungsstudio-Windows.zip">Windows ZIP</a>
                     </div>
 
                     <div class="download-card">
-                        <h3>macOS</h3>
-                        <p>Startskript für macOS mit Python 3 und Direktzugriff zur App.</p>
+                        <h3 data-i18n="dl_mac_h3">macOS</h3>
+                        <p data-i18n="dl_mac_p">Startskript für macOS mit Python 3 und Direktzugriff zur App.</p>
                         <a href="SD-Bewerbungsstudio-macOS.zip">macOS ZIP</a>
                     </div>
 
                     <div class="download-card">
-                        <h3>Linux</h3>
-                        <p>Linux-Startskript für die lokale App-Öffnung im Browser.</p>
+                        <h3 data-i18n="dl_linux_h3">Linux</h3>
+                        <p data-i18n="dl_linux_p">Linux-Startskript für die lokale App-Öffnung im Browser.</p>
                         <a href="SD-Bewerbungsstudio-Linux.zip">Linux ZIP</a>
                     </div>
                 </div>
@@ -707,22 +826,23 @@
 
             <section class="section" id="start">
                 <div class="section-head">
-                    <h2>Direkt starten</h2>
-                    <p>Öffne die App sofort oder nutze die passende Download-Version für dein System.</p>
+                    <h2 data-i18n="start_h2">Direkt starten</h2>
+                    <p data-i18n="start_lead">Öffne die App sofort oder nutze die passende Download-Version für dein System.</p>
                 </div>
 
                 <div class="cta-row">
-                    <a class="button primary" href="#bereiche">App auswählen</a>
-                    <a class="button secondary" href="anleitung.html">Anleitung lesen</a>
+                    <a class="button primary" href="#bereiche" data-i18n="start_app_btn">App auswählen</a>
+                    <a class="button secondary" href="anleitung.html" data-i18n="start_anleitung_btn">Anleitung lesen</a>
                 </div>
             </section>
         </main>
 
         <footer class="footer">
-            SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux
-            · <a href="datenschutz.html" style="color:inherit;text-decoration:underline;">Datenschutz</a>
+            <span data-i18n="footer_txt">SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux</span>
+            · <a href="datenschutz.html" style="color:inherit;text-decoration:underline;" data-i18n="footer_datenschutz">Datenschutz</a>
         </footer>
     </div>
+    <script src="./i18n.js?v=1"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');

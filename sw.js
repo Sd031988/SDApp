@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v26';
+const CACHE_NAME = 'sd-bewerbungsstudio-v27';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
   './icon.svg',
-  './sd-auth.js?v=3'
+  './sd-auth.js?v=3',
+  './i18n.js?v=1'
 ];
 
 self.addEventListener('install', event => {
