@@ -45,7 +45,8 @@
         lebenslauf: 'Bewerbung (Lebenslauf, Anschreiben, Mappe, ...)',
         pdfstudio: 'PDF Studio',
         scanner: 'SD Scanner',
-        passfoto: 'Passfoto Studio'
+        passfoto: 'Passfoto Studio',
+        schreibstudio: 'SD Schreibstudio'
     };
     const APP_NAME = APP_NAMEN[APP] || 'diese App';
 

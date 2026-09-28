@@ -1,0 +1,18 @@
+{
+  "name": "SD Schreibstudio",
+  "short_name": "Schreibstudio",
+  "description": "Kündigungen, Entschuldigungen und Briefe direkt im Browser schreiben",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4ead0",
+  "theme_color": "#0f172a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

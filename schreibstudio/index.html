@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SD Bewerbungsstudio</title>
+    <title>SD Schreibstudio</title>
     <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="Lebenslauf-, Anschreiben- und Bewerbungsmappen-App">
+    <meta name="description" content="Kündigungs-, Entschuldigungs- und Brief-App">
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
@@ -1393,8 +1393,8 @@
 <body>
     <!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
     <div id="sdAuthHost" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
-    <script>window.SD_APP = 'lebenslauf';</script>
-    <script src="zugang.js"></script>
+    <script>window.SD_APP = 'schreibstudio';</script>
+    <script src="../zugang.js"></script>
     <!-- Erzeugt die fertige PDF-Datei direkt im Browser, ohne den Umweg
          ueber die Betriebssystem-eigene Druckfunktion - dadurch landet
          keine automatische Kopf-/Fusszeile (Web-Adresse, Datum, Seitenzahl)
@@ -1404,14 +1404,14 @@
 
     <div class="editor-sidebar">
         <div class="brand">
-            <div class="sd-logo" role="img" aria-label="SD Bewerbungsstudio Logo">
+            <div class="sd-logo" role="img" aria-label="SD Schreibstudio Logo">
                 <svg viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <text x="23" y="28" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
                         font-size="20" font-weight="700" letter-spacing="-1" fill="#f4ead0">SD</text>
                     <line x1="12" y1="33" x2="34" y2="33" stroke="#c9a86a" stroke-width="1.4" />
                 </svg>
             </div>
-            <div><strong>SD Bewerbungsstudio</strong><small>Deine Unterlagen. Dein Auftritt.</small></div>
+            <div><strong>SD Schreibstudio</strong><small>Deine Unterlagen. Dein Auftritt.</small></div>
         </div>
 
         <!-- Speicher-Einstellung: ganz oben, noch vor den persoenlichen
@@ -1440,7 +1440,7 @@
              Felder zu. -->
         <div class="shared-panel">
             <h2 style="margin-top:0;">Persönliche Angaben</h2>
-            <p class="ki-hint" style="margin-top:-6px;">Gilt für alle Bereiche (Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe).</p>
+            <p class="ki-hint" style="margin-top:-6px;">Gilt für alle Bereiche (Kündigung, Entschuldigung, Brief).</p>
             <div class="form-group">
                 <label>Vorname</label>
                 <input type="text" id="vorname" placeholder="z. B. Max" oninput="updateVorschau()">
@@ -1465,18 +1465,16 @@
                 <label>Telefon</label>
                 <input type="tel" id="telefon" placeholder="z. B. 0176 12345678" oninput="updateVorschau()">
             </div>
-        </div>
 
         <div class="mode-menu" id="mode-menu">
             <button type="button" class="mode-menu-toggle" onclick="toggleModeMenu()">
-                <span id="mode-menu-label">Lebenslauf</span>
+                <span id="mode-menu-label">Kündigung</span>
                 <span class="chev">▼</span>
             </button>
             <div class="mode-tabs">
-                <button class="mode-tab active" onclick="zeigeModus('lebenslauf')">Lebenslauf</button>
-                <button class="mode-tab" onclick="zeigeModus('anschreiben')">Anschreiben</button>
-                <button class="mode-tab" onclick="zeigeModus('deckblatt')">Deckblatt</button>
-                <button class="mode-tab" onclick="zeigeModus('mappe')">Bewerbungsmappe</button>
+                <button class="mode-tab active" onclick="zeigeModus('kuendigung')">Kündigung</button>
+                <button class="mode-tab" onclick="zeigeModus('entschuldigung')">Entschuldigung</button>
+                <button class="mode-tab" onclick="zeigeModus('brief')">Brief</button>
             </div>
         </div>
         <div class="ki-panel" id="ki-panel">
@@ -1485,7 +1483,7 @@
             </button>
             <div class="ki-panel-body" id="ki-panel-body" style="display:none;">
                 <p class="ki-hint">
-                    Lass Texte (Anschreiben, Lebenslauf-Abschnitte) von einer KI
+                    Lass Texte (Kündigung, Entschuldigung, Brief) von einer KI
                     (Google Gemini) vorformulieren – auf Basis deiner bereits ausgefüllten Angaben. Dafür
                     brauchst du deinen <strong>eigenen, kostenlosen</strong> Gemini-API-Schlüssel.
                 </p>
@@ -1523,201 +1521,166 @@
             <button class="reset-design" onclick="designZuruecksetzen()">↺ Muster-Design zurücksetzen</button>
         </div>
 
-        <div id="lebenslauf-panel" class="mode-panel active">
-            <h2>Lebenslauf-Muster</h2>
-            <div class="tpl-menu" id="tpl-menu-1">
-                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(1)"><span>Muster auswählen</span><span class="chev">▼</span></button>
+        <div id="kuendigung-panel" class="mode-panel active">
+            <h2>Kündigungs-Muster</h2>
+            <div class="tpl-menu" id="tpl-menu-3">
+                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(3)"><span>Muster auswählen</span><span class="chev">▼</span></button>
                 <div class="template-list">
-                <button class="tpl-btn active" onclick="ladeLebenslaufMuster('klassisch')">Klassisch</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('modern')">Modern</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('sozial')">Sozial</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('buero')">Büro</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('it')">IT</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('fuehrung')">Führungskraft</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('pflege')">Pflege</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('erziehung')">Erziehung</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('verkauf')">Verkauf</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('marketing')">Marketing</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('design')">Design</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('logistik')">Logistik</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('fahrer')">Fahrer</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('gastronomie')">Gastronomie</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('handwerk')">Handwerk</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('reinigung')">Reinigung</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('medizin')">Medizin</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('verwaltung')">Verwaltung</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('bau')">Bau</button>
-                <button class="tpl-btn" onclick="ladeLebenslaufMuster('ausbildung')">Ausbildung</button>
+                <button class="tpl-btn active" onclick="ladeKuendigungMuster('arbeit')">Arbeitsvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('wohnung')">Wohnung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('versicherung')">Versicherung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('fitness')">Fitnessstudio</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('vertrag')">Allgemein</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('internet')">Internet</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('handy')">Handyvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('zeitung')">Zeitung</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('strom')">Stromvertrag</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('bank')">Bankkonto</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('verein')">Verein</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('streaming')">Streaming</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('abo')">Abo</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('leasing')">Leasing</button>
+                <button class="tpl-btn" onclick="ladeKuendigungMuster('dienstleistung')">Dienstleistung</button>
 
                 </div>
             </div>
-            <h2>Weitere Lebenslauf-Angaben</h2>
+
+            <h2>Kündigungsdaten</h2>
             <div class="form-group">
-                <label>Geburtsdatum</label>
-                <input type="text" id="geburtsdatum" placeholder="TT.MM.JJJJ" oninput="updateVorschau()">
-            </div>
-            <div class="form-group">
-                <label>Familienstand</label>
-                <select id="familienstand" onchange="updateVorschau()">
-                    <option value="">Bitte auswählen</option>
-                    <option value="ledig">Ledig</option>
-                    <option value="verheiratet">Verheiratet</option>
-                    <option value="geschieden">Geschieden</option>
-                    <option value="verwitwet">Verwitwet</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Kinder</label>
-                <select id="kinder" onchange="updateVorschau()">
-                    <option value="">Bitte auswählen</option>
-                    <option value="keine Kinder">Keine Kinder</option>
-                    <option value="1 Kind">1 Kind</option>
-                    <option value="2 Kinder">2 Kinder</option>
-                    <option value="3 oder mehr Kinder">3 oder mehr Kinder</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Staatsangehörigkeit</label>
-                <input type="text" id="staatsangehoerigkeit" placeholder="z. B. deutsch" oninput="updateVorschau()">
-            </div>
-            <div class="form-group">
-                <label>Führerschein</label>
-                <input type="text" id="fuehrerschein" placeholder="z. B. Klasse B" oninput="updateVorschau()">
-            </div>
-            <div class="form-group">
-                <label>Verfügbarkeit</label>
-                <input type="text" id="verfuegbarkeit" placeholder="z. B. ab sofort" oninput="updateVorschau()">
-            </div>
-            <div class="form-group photo-upload">
-                <label for="foto">Foto</label>
-                <input type="file" id="foto" accept="image/*" onchange="ladeFoto(event)">
-                <button type="button" class="tpl-btn" style="margin-top:6px;" onclick="fotoEntfernen()">Foto entfernen</button>
-            </div>
-            <div class="form-group">
-                <label>Berufserfahrung</label>
-                <textarea id="erfahrung" rows="4" placeholder="2022 - heute: Familienhilfe bei ..."
+                <label>Empfänger</label>
+                <textarea id="kuendigung-empfaenger" rows="2" placeholder="Firma oder Vermieter, Adresse"
                     oninput="updateVorschau()"></textarea>
             </div>
             <div class="form-group">
-                <label>Ausbildung</label>
-                <textarea id="ausbildung" rows="3" placeholder="2018 - 2021: Ausbildung zum ..."
-                    oninput="updateVorschau()"></textarea>
+                <label>Vertragsnummer</label>
+                <input type="text" id="vertragsnummer" placeholder="Optional" oninput="updateVorschau()">
             </div>
             <div class="form-group">
-                <label>Kenntnisse</label>
-                <textarea id="kenntnisse" rows="3" placeholder="Organisation, MS Office, Teamarbeit ..."
-                    oninput="updateVorschau()"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Sprachen</label>
-                <textarea id="sprachen" rows="2" placeholder="Deutsch: sehr gut, Englisch: gut ..."
-                    oninput="updateVorschau()"></textarea>
+                <label>Kündigungstext</label>
+                <textarea id="kuendigung-text" rows="9" placeholder="z. B. Hiermit kündige ich den Vertrag fristgerecht zum nächstmöglichen Zeitpunkt ..." oninput="updateVorschau()"></textarea>
+                <div class="spellcheck-bar">
+                    <button type="button" class="spellcheck-btn" onclick="pruefeText('kuendigung-text')">🔎 Rechtschreibung &amp; Grammatik prüfen</button>
+                    <span id="kuendigung-text-status" class="spellcheck-status"></span>
+                </div>
+                <div id="kuendigung-text-ergebnisse" class="spellcheck-results"></div>
             </div>
             <button type="button" class="ki-write-btn ki-write-btn-block"
-                onclick="kiSchreibenLebenslauf(this)">✨ Lebenslauf-Angaben komplett von KI schreiben lassen</button>
+                onclick="kiSchreiben('kuendigung-text', 'Schreibe einen formal korrekten deutschen Kündigungstext (Hauptteil, ohne Anrede/Grußformel): fristgerechte Kündigung des Vertrags/Arbeitsverhältnisses zum nächstmöglichen Zeitpunkt, Bitte um schriftliche Bestätigung.', this)">✨ Kündigungstext komplett von KI schreiben lassen</button>
         </div>
 
-        <div id="anschreiben-panel" class="mode-panel">
-            <h2>Anschreiben-Muster</h2>
-            <div class="tpl-menu" id="tpl-menu-2">
-                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(2)"><span>Muster auswählen</span><span class="chev">▼</span></button>
+        <div id="entschuldigung-panel" class="mode-panel">
+            <h2>Entschuldigungs-Muster</h2>
+            <div class="tpl-menu" id="tpl-menu-4">
+                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(4)"><span>Muster auswählen</span><span class="chev">▼</span></button>
                 <div class="template-list">
-                <button class="tpl-btn active" onclick="ladeAnschreibenMuster('klassisch')">Klassisch</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('motiviert')">Motiviert</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('sozial')">Sozial</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('buero')">Büro</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('it')">IT</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('fuehrung')">Führungskraft</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('pflege')">Pflege</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('erziehung')">Erziehung</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('verkauf')">Verkauf</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('marketing')">Marketing</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('design')">Design</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('logistik')">Logistik</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('fahrer')">Fahrer</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('gastronomie')">Gastronomie</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('handwerk')">Handwerk</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('reinigung')">Reinigung</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('medizin')">Medizin</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('verwaltung')">Verwaltung</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('bau')">Bau</button>
-                <button class="tpl-btn" onclick="ladeAnschreibenMuster('ausbildung')">Ausbildung</button>
+                <button class="tpl-btn active" onclick="ladeEntschuldigungMuster('kita')">Kita / Kindergarten</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('schule-krank')">Schule (Krankheit)</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('schule-termin')">Schule (Termin)</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('sport-befreiung')">Sportbefreiung</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('arbeit-krank')">Arbeit (Krankmeldung)</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('verspaetung')">Verspätung</button>
+                <button class="tpl-btn" onclick="ladeEntschuldigungMuster('fruehere-abholung')">Frühere Abholung</button>
 
                 </div>
             </div>
 
-            <h2>Anschreiben</h2>
+            <h2>Angaben</h2>
             <div class="form-group">
-                <label>Unternehmen</label>
-                <input type="text" id="unternehmen" placeholder="Unternehmen GmbH" oninput="updateVorschau()">
-            </div>
-
-            <div class="form-group">
-                <label>Ansprechperson</label>
-                <input type="text" id="ansprechperson" placeholder="Frau oder Herr ..." oninput="updateVorschau()">
+                <label>Empfänger (Einrichtung, Adresse)</label>
+                <textarea id="entschuldigung-empfaenger" rows="2" placeholder="Kita/Schule Name, Adresse" oninput="updateVorschau()"></textarea>
             </div>
             <div class="form-group">
                 <label>Anrede</label>
-                <select id="anrede" onchange="updateVorschau()">
-                    <option value="auto">Automatisch (aus Ansprechperson)</option>
+                <select id="entschuldigung-anrede" onchange="updateVorschau()">
                     <option value="damen-herren">Sehr geehrte Damen und Herren,</option>
-                    <option value="herr">Sehr geehrter Herr ...</option>
-                    <option value="frau">Sehr geehrte Frau ...</option>
-                    <option value="team">Liebes Team,</option>
-                    <option value="custom">Eigene Anrede eingeben</option>
+                    <option value="kita-team">Liebes Kita-Team,</option>
+                    <option value="klassenleitung">Liebe Klassenleitung,</option>
+                    <option value="custom">Eigene Anrede ...</option>
                 </select>
-            </div>
-            <div class="form-group" id="custom-anrede-group" style="display:none;">
-                <label>Eigene Anrede</label>
-                <input type="text" id="custom-anrede" placeholder="z. B. Sehr geehrter Herr Müller," oninput="updateVorschau()">
+                <input type="text" id="entschuldigung-custom-anrede" placeholder="z. B. Sehr geehrte Frau Meier,"
+                    oninput="updateVorschau()" style="margin-top:6px;display:none;">
             </div>
             <div class="form-group">
-                <label>Text des Anschreibens</label>
-                <textarea id="anschreiben" style="height: 120px;" placeholder="z. B. mit großem Interesse bewerbe ich mich um die ausgeschriebene Position ..."
-                    oninput="updateVorschau()"></textarea>
+                <label>Name des Kindes</label>
+                <input type="text" id="entschuldigung-kind" placeholder="Vor- und Nachname des Kindes" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Klasse / Gruppe (optional)</label>
+                <input type="text" id="entschuldigung-klasse" placeholder="z. B. Klasse 3b oder Sonnengruppe" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Zeitraum</label>
+                <input type="text" id="entschuldigung-zeitraum" placeholder="z. B. 12.03.2026 oder 12.–14.03.2026" oninput="updateVorschau()">
+            </div>
+            <label class="privacy-note"><input type="checkbox" id="entschuldigung-attest" onchange="updateVorschau()">
+                Ärztliches Attest liegt bei (wird als Anlage vermerkt)</label>
+            <div class="form-group">
+                <label>Text der Entschuldigung</label>
+                <textarea id="entschuldigung-text" rows="7" placeholder="z. B. Hiermit möchte ich mitteilen, dass ... an den oben genannten Tagen nicht kommen kann ..." oninput="updateVorschau()"></textarea>
                 <div class="spellcheck-bar">
-                    <button type="button" class="spellcheck-btn" onclick="pruefeText('anschreiben')">🔎 Rechtschreibung &amp; Grammatik prüfen</button>
-                    <span id="anschreiben-status" class="spellcheck-status"></span>
+                    <button type="button" class="spellcheck-btn" onclick="pruefeText('entschuldigung-text')">🔎 Rechtschreibung &amp; Grammatik prüfen</button>
+                    <span id="entschuldigung-text-status" class="spellcheck-status"></span>
                 </div>
-                <div id="anschreiben-ergebnisse" class="spellcheck-results"></div>
+                <div id="entschuldigung-text-ergebnisse" class="spellcheck-results"></div>
             </div>
             <button type="button" class="ki-write-btn ki-write-btn-block"
-                onclick="kiSchreiben('anschreiben', 'Schreibe den Haupttext (Mittelteil) eines Bewerbungsanschreibens: warum die Person zur Stelle passt, ihre Stärken/Erfahrung, und ein motivierter Schlusssatz vor der Grußformel.', this)">✨ Anschreiben komplett von KI schreiben lassen</button>
+                onclick="kiSchreiben('entschuldigung-text', 'Schreibe einen höflichen deutschen Entschuldigungstext für Kita/Schule (Hauptteil, ohne Anrede/Grußformel). Nutze für den Namen des Kindes exakt den Platzhalter {KIND} (wird automatisch ersetzt), z. B. \'{KIND} kann im genannten Zeitraum leider nicht teilnehmen.\' Nenne einen plausiblen, neutralen Grund (z. B. Erkrankung) falls keiner bekannt ist.', this)">✨ Entschuldigungstext komplett von KI schreiben lassen</button>
         </div>
 
-        <div id="deckblatt-panel" class="mode-panel">
-            <h2>Deckblatt-Muster</h2>
-            <div class="tpl-menu" id="tpl-menu-5">
-                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(5)"><span>Muster auswählen</span><span class="chev">▼</span></button>
+        <div id="brief-panel" class="mode-panel">
+            <h2>Brief-Muster</h2>
+            <div class="tpl-menu" id="tpl-menu-6">
+                <button type="button" class="tpl-menu-toggle" onclick="toggleTplMenu(6)"><span>Muster auswählen</span><span class="chev">▼</span></button>
                 <div class="template-list">
-                <button class="tpl-btn active" onclick="ladeDeckblattMuster('klassisch')">Klassisch</button>
-                <button class="tpl-btn" onclick="ladeDeckblattMuster('modern')">Modern</button>
-                <button class="tpl-btn" onclick="ladeDeckblattMuster('schlicht')">Schlicht</button>
-                <button class="tpl-btn" onclick="ladeDeckblattMuster('farbe')">Akzent</button>
-                <button class="tpl-btn" onclick="ladeDeckblattMuster('kompakt')">Kompakt</button>
+                <button class="tpl-btn active" onclick="ladeBriefMuster('formell')">Formell</button>
+                <button class="tpl-btn" onclick="ladeBriefMuster('anfrage')">Anfrage</button>
+                <button class="tpl-btn" onclick="ladeBriefMuster('beschwerde')">Beschwerde</button>
+                <button class="tpl-btn" onclick="ladeBriefMuster('dank')">Dank</button>
+                <button class="tpl-btn" onclick="ladeBriefMuster('informell')">Persönlich</button>
+                <button class="tpl-btn" onclick="ladeBriefMuster('leer')">Leer</button>
 
                 </div>
             </div>
-            <h2>Deckblatt</h2>
-            <p class="mappe-note">Das Deckblatt übernimmt automatisch deine Daten aus dem Lebenslauf.</p>
-            <label class="privacy-note"><input type="checkbox" id="foto-auf-deckblatt" checked
-                    onchange="syncFotoCheckboxen(this)"> Foto auch auf dem Deckblatt verwenden</label>
-        </div>
 
-        <div id="mappe-panel" class="mode-panel">
-            <h2>Komplette Bewerbungsmappe</h2>
-            <p class="mappe-note">Die Mappe enthält Deckblatt, Lebenslauf und Anschreiben. Wähle zuerst deine Muster und
-                persönlichen Daten aus.</p>
-            <label class="privacy-note"><input type="checkbox" id="mappe-mit-foto" checked onchange="syncFotoCheckboxen(this)">
-                Foto auf dem Deckblatt verwenden</label>
-            <button class="action-btn print-btn" onclick="druckeMappe()">🗂️ Komplette Mappe als PDF</button>
+            <h2>Briefdaten</h2>
+            <div class="form-group">
+                <label>Empfänger</label>
+                <textarea id="brief-empfaenger" rows="2" placeholder="Name/Firma, Adresse"
+                    oninput="updateVorschau()"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Betreff</label>
+                <input type="text" id="brief-betreff" placeholder="z. B. Ihre Anfrage vom 01.03.2026" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Anrede</label>
+                <select id="brief-anrede" onchange="updateVorschau()">
+                    <option value="damen-herren">Sehr geehrte Damen und Herren,</option>
+                    <option value="herr">Sehr geehrter Herr ...,</option>
+                    <option value="frau">Sehr geehrte Frau ...,</option>
+                    <option value="custom">Eigene Anrede</option>
+                </select>
+                <input type="text" id="brief-custom-anrede" placeholder="z. B. Liebe Grüße vorab,"
+                    style="margin-top:6px;display:none;" oninput="updateVorschau()">
+            </div>
+            <div class="form-group">
+                <label>Brieftext</label>
+                <textarea id="brief-text" rows="10" placeholder="z. B. hiermit möchte ich Ihnen mitteilen, dass ..." oninput="updateVorschau()"></textarea>
+                <div class="spellcheck-bar">
+                    <button type="button" class="spellcheck-btn" onclick="pruefeText('brief-text')">🔎 Rechtschreibung &amp; Grammatik prüfen</button>
+                    <span id="brief-text-status" class="spellcheck-status"></span>
+                </div>
+                <div id="brief-text-ergebnisse" class="spellcheck-results"></div>
+            </div>
+            <button type="button" class="ki-write-btn ki-write-btn-block"
+                onclick="kiSchreiben('brief-text', 'Schreibe den Haupttext eines höflichen, klar formulierten deutschen Briefes (Hauptteil, ohne Anrede/Grußformel) zum angegebenen Betreff.', this)">✨ Brieftext komplett von KI schreiben lassen</button>
         </div>
 
         <button id="install-button" class="action-btn install-btn" onclick="installiereApp()">📲 App
             installieren</button>
         <button class="action-btn secondary-btn" onclick="oeffneDownloadMenu()">⬇️ Speichern / Herunterladen</button>
         <button class="action-btn print-btn" onclick="exportAlsPdf()">🖨️ Als PDF speichern</button>
-        <button class="action-btn secondary-btn" onclick="oeffneArchivDialog()">🗄️ Bewerbungsarchiv</button>
+        <button class="action-btn secondary-btn" onclick="oeffneArchivDialog()">🗄️ Vorlagen-Archiv</button>
         <button id="btnSdCloudSpeichern" class="action-btn secondary-btn" onclick="sdCloudSpeichern()" style="display:none;">☁️ In meinem Konto speichern</button>
         <button id="btnSdCloudLaden" class="action-btn secondary-btn" onclick="sdCloudLaden()" style="display:none;">☁️ Aus meinem Konto laden</button>
         <button class="action-btn secondary-btn" onclick="sdZeigeGeraeteId()">🔑 Meine Geräte-ID anzeigen</button>
@@ -1736,12 +1699,12 @@
 
     <div id="archiv-dialog" class="download-dialog" role="dialog" aria-modal="true" aria-labelledby="archiv-title">
         <div class="download-box">
-            <h2 id="archiv-title">🗄️ Bewerbungsarchiv</h2>
+            <h2 id="archiv-title">🗄️ Vorlagen-Archiv</h2>
             <p class="ki-hint" style="margin-top:-6px;">Speichere den aktuellen Stand unter einem Namen ab. Nach
                 der gewählten Dauer wird der Eintrag automatisch wieder gelöscht.</p>
             <div class="form-group">
                 <label>Name (z. B. Firma / Position)</label>
-                <input type="text" id="archiv-name" placeholder="z. B. Bewerbung Musterfirma">
+                <input type="text" id="archiv-name" placeholder="z. B. Kündigung Fitnessstudio">
             </div>
             <div class="form-group">
                 <label>Aufbewahren für</label>
@@ -1758,199 +1721,41 @@
         </div>
     </div>
 
-    <div class="preview-area">
-        <div id="lebenslauf-vorschau" class="a4-page">
-            <div class="header-content"
-                style="border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px;">
-                <img id="prev-foto" class="preview-photo" alt="Bewerbungsfoto">
-                <h1 id="prev-name" class="ghost-placeholder" data-placeholder="Vorname Nachname"
-                    style="margin: 0; font-size: 2rem; color: #0f172a; text-transform: uppercase;"></h1>
-                <p id="prev-position" class="ghost-placeholder" data-placeholder="z. B. Ambulante Familienhilfe"
-                    style="color: #0284c7; font-weight: bold; font-size: 1.1rem; margin-top: 5px;"></p>
-                <p id="prev-kontakt" class="ghost-placeholder" data-placeholder="max.mustermann@example.com | 0176 12345678"
-                    style="color: #64748b; font-size: 0.85rem; margin-top: 5px;"></p>
-                <p id="prev-persoenlich" style="color: #64748b; font-size: 0.8rem; margin-top: 5px;"></p>
-            </div>
 
-            <div class="cv-section">
-                <h3>Berufserfahrung</h3>
-                <p id="prev-erfahrung" class="editable-preview ghost-placeholder" contenteditable="true"
-                    data-sync="erfahrung" data-placeholder="2022 - heute: Familienhilfe bei ..."></p>
-            </div>
-            <div class="cv-section">
-                <h3>Ausbildung</h3>
-                <p id="prev-ausbildung" class="editable-preview ghost-placeholder" contenteditable="true"
-                    data-sync="ausbildung" data-placeholder="2018 - 2021: Ausbildung zum ..."></p>
-            </div>
-            <div class="cv-section">
-                <h3>Kenntnisse</h3>
-                <p id="prev-kenntnisse" class="editable-preview ghost-placeholder" contenteditable="true"
-                    data-sync="kenntnisse" data-placeholder="Organisation, MS Office, Teamarbeit ..."></p>
-            </div>
-            <div class="cv-section">
-                <h3>Sprachen</h3>
-                <p id="prev-sprachen" class="editable-preview ghost-placeholder" contenteditable="true"
-                    data-sync="sprachen" data-placeholder="Deutsch: sehr gut, Englisch: gut ..."></p>
-            </div>
+    <div class="preview-area">
+        <div id="kuendigung-vorschau" class="a4-page letter-page" style="display: none;">
+            <p id="prev-kuendigung-date" style="text-align: right; color: #64748b;"></p>
+            <p id="prev-kuendigung-absender" style="white-space: pre-line; line-height: 1.6;"></p>
+            <p id="prev-kuendigung-empfaenger" style="white-space: pre-line; line-height: 1.6;"></p>
+            <h1 style="font-size: 1.5rem; color: #0f172a;">Kündigung</h1>
+            <p id="prev-kuendigung-betreff" style="font-weight: bold;"></p>
+            <p id="prev-kuendigung-text" class="editable-preview" contenteditable="true" data-sync="kuendigung-text" style="line-height: 1.8; white-space: pre-line;"></p>
+            <p class="letter-closing" style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-kuendigung-name"></span></p>
             <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
         </div>
-        <div id="anschreiben-vorschau" class="a4-page letter-page" style="display: none;">
-            <p id="prev-letter-date" style="text-align: right; color: #64748b;"></p>
-            <h1 style="font-size: 1.5rem; color: #0f172a;">Bewerbung als <span id="prev-letter-position"></span></h1>
-            <p id="prev-letter-address" style="line-height: 1.6; white-space: pre-line;"></p>
-            <p id="prev-letter-greeting"></p>
-            <p id="prev-text" class="editable-preview" contenteditable="true" data-sync="anschreiben" style="line-height: 1.8; color: #334155; white-space: pre-line;"></p>
-            <p class="letter-closing" style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-letter-name"></span></p>
+        <div id="entschuldigung-vorschau" class="a4-page letter-page" style="display: none;">
+            <p id="prev-entschuldigung-date" style="text-align: right; color: #64748b;"></p>
+            <p id="prev-entschuldigung-absender" style="white-space: pre-line; line-height: 1.6;"></p>
+            <p id="prev-entschuldigung-empfaenger" style="white-space: pre-line; line-height: 1.6;"></p>
+            <h1 style="font-size: 1.5rem; color: #0f172a;">Entschuldigung</h1>
+            <p id="prev-entschuldigung-betreff" style="font-weight: bold;"></p>
+            <p id="prev-entschuldigung-anrede" style="margin-top: 14px;"></p>
+            <p id="prev-entschuldigung-text" class="editable-preview" contenteditable="true" data-sync="entschuldigung-text" style="line-height: 1.8; white-space: pre-line;"></p>
+            <p id="prev-entschuldigung-anlage" style="color: #475569;"></p>
+            <p class="letter-closing" style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-entschuldigung-name"></span><br><span id="prev-entschuldigung-rolle" style="font-size: 0.85rem; color: #64748b;"></span></p>
             <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
-        </div>
-        <div id="deckblatt-vorschau" class="a4-page letter-page" style="display: none;">
-            <div class="cover-preview">
-                <img id="prev-deckblatt-foto" class="cover-photo" alt="Bewerbungsfoto auf dem Deckblatt">
-                <h1 id="prev-deckblatt-name"></h1>
-                <h2 id="prev-deckblatt-title"></h2>
-                <p class="cover-contact" id="prev-deckblatt-kontakt"></p>
-            </div>
+        <div id="brief-vorschau" class="a4-page letter-page" style="display: none;">
+            <p id="prev-brief-date" style="text-align: right; color: #64748b;"></p>
+            <p id="prev-brief-absender" style="white-space: pre-line; line-height: 1.6;"></p>
+            <p id="prev-brief-empfaenger" style="white-space: pre-line; line-height: 1.6;"></p>
+            <p id="prev-brief-betreff" style="font-weight: bold; margin-top: 14px;"></p>
+            <p id="prev-brief-anrede" style="margin-top: 14px;"></p>
+            <p id="prev-brief-text" class="editable-preview" contenteditable="true" data-sync="brief-text" style="line-height: 1.8; white-space: pre-line;"></p>
+            <p class="letter-closing" style="line-height: 1.8;">Mit freundlichen Grüßen<br><span id="prev-brief-name"></span></p>
             <div class="document-footer"><span class="document-date"></span><span class="document-page"></span></div>
-        </div>
-        <div id="mappe-vorschau" class="mappe-page">
-            <div id="mappe-deckblatt" class="a4-page"></div>
-            <div id="mappe-lebenslauf" class="a4-page"></div>
-            <div id="mappe-anschreiben" class="a4-page"></div>
         </div>
     </div>
-
     <script>
-        function updateVorschau() {
-            const v = document.getElementById('vorname').value;
-            const n = document.getElementById('nachname').value;
-            // [v, n].filter(Boolean) statt "v + ' ' + n": sind beide Felder
-            // leer, bleibt das Element wirklich leer (kein einzelnes
-            // Leerzeichen als Inhalt) - nur so greift die CSS-Platzhalter-
-            // Anzeige (:empty::before) weiter unten korrekt.
-            document.getElementById('prev-name').innerText = [v, n].filter(Boolean).join(' ');
-            document.getElementById('prev-position').innerText = document.getElementById('position').value;
-            const kontakt = [document.getElementById('email').value, document.getElementById('telefon').value].filter(Boolean).join(' | ');
-            document.getElementById('prev-kontakt').innerText = kontakt;
-            const persoenlich = [
-                document.getElementById('adresse').value,
-                document.getElementById('geburtsdatum').value,
-                document.getElementById('familienstand').value,
-                document.getElementById('kinder').value,
-                document.getElementById('staatsangehoerigkeit').value,
-                document.getElementById('fuehrerschein').value,
-                document.getElementById('verfuegbarkeit').value
-            ].filter(Boolean).join(' | ');
-            document.getElementById('prev-persoenlich').innerText = persoenlich;
-            document.getElementById('prev-erfahrung').innerText = document.getElementById('erfahrung').value;
-            document.getElementById('prev-ausbildung').innerText = document.getElementById('ausbildung').value;
-            document.getElementById('prev-kenntnisse').innerText = document.getElementById('kenntnisse').value;
-            document.getElementById('prev-sprachen').innerText = document.getElementById('sprachen').value;
-            document.getElementById('prev-letter-position').innerText = document.getElementById('position').value;
-            document.getElementById('prev-letter-address').innerText = [document.getElementById('unternehmen').value, document.getElementById('ansprechperson').value].filter(Boolean).join('\n');
-                        const anredeEl = document.getElementById('anrede');
-            const anredeVal = anredeEl ? anredeEl.value : 'auto';
-            const ansprechpersonVal = document.getElementById('ansprechperson').value.trim();
-            let grussText = '';
-            if (anredeVal === 'auto') {
-                grussText = ansprechpersonVal ? 'Sehr geehrte ' + ansprechpersonVal + ',' : 'Sehr geehrte Damen und Herren,';
-            } else if (anredeVal === 'damen-herren') {
-                grussText = 'Sehr geehrte Damen und Herren,';
-            } else if (anredeVal === 'herr') {
-                grussText = 'Sehr geehrter Herr ' + (ansprechpersonVal || '...') + ',';
-            } else if (anredeVal === 'frau') {
-                grussText = 'Sehr geehrte Frau ' + (ansprechpersonVal || '...') + ',';
-            } else if (anredeVal === 'team') {
-                grussText = 'Liebes Team,';
-            } else if (anredeVal === 'custom') {
-                grussText = document.getElementById('custom-anrede').value || 'Sehr geehrte Damen und Herren,';
-            }
-            document.getElementById('prev-letter-greeting').innerText = grussText;
-            const customGroup = document.getElementById('custom-anrede-group');
-            if (customGroup) customGroup.style.display = anredeVal === 'custom' ? 'block' : 'none';
-            document.getElementById('prev-letter-name').innerText = v + ' ' + n;
-            document.getElementById('prev-text').innerText = document.getElementById('anschreiben').value;
-            document.getElementById('prev-deckblatt-name').innerText = v + ' ' + n;
-            document.getElementById('prev-deckblatt-title').innerText = document.getElementById('position').value;
-            document.getElementById('prev-deckblatt-kontakt').innerText = [
-                document.getElementById('email').value,
-                document.getElementById('telefon').value,
-                document.getElementById('adresse').value
-            ].filter(Boolean).join('\n');
-            const deckblattFotoAktiv = document.getElementById('foto-auf-deckblatt').checked && document.getElementById('mappe-mit-foto').checked;
-            aktualisiereDeckblattFoto(deckblattFotoAktiv);
-            aktualisiereFusszeilen();
-            document.getElementById('mappe-deckblatt').innerHTML = document.getElementById('deckblatt-vorschau').innerHTML;
-            document.getElementById('mappe-lebenslauf').innerHTML = document.getElementById('lebenslauf-vorschau').innerHTML;
-            document.getElementById('mappe-anschreiben').innerHTML = document.getElementById('anschreiben-vorschau').innerHTML;
-            document.querySelectorAll('#mappe-vorschau .sd-logo').forEach(logo => logo.remove());
-            document.querySelectorAll('#mappe-vorschau .a4-page').forEach((seite, index, seiten) => {
-                seite.querySelector('.document-date').innerText = new Date().toLocaleDateString('de-DE');
-                seite.querySelector('.document-page').innerText = `Seite ${index + 1} von ${seiten.length}`;
-            });
-        }
-
-        function aktualisiereFusszeilen() {
-            const datum = new Date().toLocaleDateString('de-DE');
-            ['lebenslauf-vorschau', 'anschreiben-vorschau', 'deckblatt-vorschau'].forEach(id => {
-                const seite = document.getElementById(id);
-                seite.querySelector('.document-date').innerText = datum;
-                seite.querySelector('.document-page').innerText = 'Seite 1';
-            });
-        }
-
-        function ladeFoto(event) {
-            const datei = event.target.files[0];
-            if (!datei) return;
-            const reader = new FileReader();
-            reader.onload = function () {
-                const foto = document.getElementById('prev-foto');
-                foto.src = reader.result;
-                foto.style.display = 'block';
-                localStorage.setItem('lebenslaufFoto', reader.result);
-                aktualisiereDeckblattFoto(true);
-                updateVorschau();
-            };
-            reader.readAsDataURL(datei);
-        }
-
-        function fotoEntfernen() {
-            const foto = document.getElementById('prev-foto');
-            foto.removeAttribute('src');
-            foto.style.display = 'none';
-            document.getElementById('foto').value = '';
-            localStorage.removeItem('lebenslaufFoto');
-            aktualisiereDeckblattFoto(false);
-            updateVorschau();
-        }
-
-        function aktualisiereDeckblattFoto(aktiv) {
-            const lebenslaufFoto = document.getElementById('prev-foto');
-            const deckblattFoto = document.getElementById('prev-deckblatt-foto');
-            const gespeichertesFoto = localStorage.getItem('lebenslaufFoto');
-            const fotoQuelle = lebenslaufFoto.src && lebenslaufFoto.src !== window.location.href ? lebenslaufFoto.src : gespeichertesFoto;
-            if (aktiv && fotoQuelle) {
-                deckblattFoto.src = fotoQuelle;
-                deckblattFoto.style.display = 'block';
-            } else {
-                deckblattFoto.removeAttribute('src');
-                deckblattFoto.style.display = 'none';
-            }
-        }
-
-        // "Dauerhaft" -> localStorage (bleibt bis man es selbst loescht).
-        // "Sitzung"   -> sessionStorage (weg, sobald der Browser/Tab
-        // geschlossen wird). Die eigene Auswahl selbst wird immer in
-        // localStorage gemerkt, damit man sie beim naechsten Besuch nicht
-        // erneut treffen muss.
-        function aktuellerSpeicherModus() {
-            const el = document.getElementById('speicher-modus-sitzung');
-            return (el && el.checked) ? 'sitzung' : 'dauerhaft';
-        }
-
-        // Diese Felder gehoeren NICHT zu den normalen Bewerbungsdaten und
-        // werden hier bewusst ausgeklammert: der Gemini-Schluessel hat seine
-        // eigene, separate Speicherung (siehe geminiSpeicherOrt), und die
-        // beiden Einstellungs-Radios speichern sich selbst schon getrennt.
         const NICHT_ALS_DATEN_SPEICHERN = ['gemini-api-key'];
 
         function speichereDaten() {
@@ -1962,25 +1767,30 @@
             });
             const modus = aktuellerSpeicherModus();
             if (modus === 'sitzung') {
-                sessionStorage.setItem('lebenslaufDaten', JSON.stringify(daten));
+                sessionStorage.setItem('schreibstudioDaten', JSON.stringify(daten));
             } else {
-                localStorage.setItem('lebenslaufDaten', JSON.stringify(daten));
+                localStorage.setItem('schreibstudioDaten', JSON.stringify(daten));
             }
             const status = document.getElementById('speicher-status');
             if (status) status.innerText = 'Gespeichert';
         }
 
+        function aktuellerSpeicherModus() {
+            const el = document.getElementById('speicher-modus-sitzung');
+            return (el && el.checked) ? 'sitzung' : 'dauerhaft';
+        }
+
         function wechsleSpeicherModus() {
             const modus = aktuellerSpeicherModus();
-            localStorage.setItem('speicherModusEinstellung', modus);
+            localStorage.setItem('schreibstudioSpeicherModusEinstellung', modus);
             if (modus === 'sitzung') {
                 // Wer sich fuer "nur diese Sitzung" entscheidet, moechte
                 // nicht, dass der bisherige dauerhafte Stand liegen bleibt -
                 // die aktuellen Werte werden aber sofort in die
                 // Sitzungs-Speicherung uebernommen, es geht nichts verloren.
-                localStorage.removeItem('lebenslaufDaten');
+                localStorage.removeItem('schreibstudioDaten');
             } else {
-                sessionStorage.removeItem('lebenslaufDaten');
+                sessionStorage.removeItem('schreibstudioDaten');
             }
             speichereDaten();
         }
@@ -1991,7 +1801,7 @@
             const datei = new Blob([JSON.stringify(daten, null, 2)], { type: 'application/json' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(datei);
-            link.download = 'lebenslauf-daten.json';
+            link.download = 'schreibstudio-daten.json';
             link.click();
             URL.revokeObjectURL(link.href);
         }
@@ -2010,21 +1820,10 @@
             if (format === 'docx') speichereAlsDocx();
             if (format === 'doc') speichereFuerOffice();
             if (format === 'json') downloadDaten();
-            if (format === 'pdf') {
-                if (aktuellerModus === 'mappe') druckeMappe();
-                else exportAlsPdf();
-            }
+            if (format === 'pdf') exportAlsPdf();
         }
 
-        // ==========================================================
-        // Bewerbungsarchiv: ein fertiger Stand kann unter einem Namen fuer
-        // eine selbst gewaehlte Dauer (1 Woche bis 6 Monate) abgelegt werden.
-        // Nach Ablauf dieser Frist wird der Eintrag beim naechsten Start der
-        // App automatisch geloescht (siehe bereinigeArchiv). Die Liste liegt
-        // immer in localStorage, unabhaengig von der "Meine Eingaben
-        // speichern?"-Einstellung oben, weil das Archivieren hier ein
-        // bewusster, expliziter Klick ist - kein automatisches Mitspeichern.
-        const ARCHIV_STORAGE = 'bewerbungsArchiv';
+        const ARCHIV_STORAGE = 'schreibstudioArchiv';
 
         function ladeArchiv() {
             return JSON.parse(localStorage.getItem(ARCHIV_STORAGE) || '[]');
@@ -2034,9 +1833,6 @@
             localStorage.setItem(ARCHIV_STORAGE, JSON.stringify(liste));
         }
 
-        // Entfernt beim Start abgelaufene Eintraege automatisch - "nach 6
-        // Monaten loescht es sich von selbst" (oder nach der jeweils
-        // gewaehlten Dauer).
         function bereinigeArchiv() {
             const liste = ladeArchiv();
             const jetzt = Date.now();
@@ -2057,7 +1853,7 @@
         }
 
         function archiviereBewerbung() {
-            const name = (document.getElementById('archiv-name').value || '').trim() || 'Bewerbung ohne Namen';
+            const name = (document.getElementById('archiv-name').value || '').trim() || 'Vorlage ohne Namen';
             const tage = parseInt(document.getElementById('archiv-dauer').value, 10);
             const daten = {};
             document.querySelectorAll('input, textarea, select').forEach(feld => {
@@ -2074,7 +1870,6 @@
                 laeuftAb: jetzt + tage * 24 * 60 * 60 * 1000,
                 tage: tage,
                 daten: daten,
-                foto: localStorage.getItem('lebenslaufFoto') || null
             });
             schreibeArchiv(liste);
             renderArchivListe();
@@ -2091,7 +1886,6 @@
                 if (feld.type === 'checkbox') feld.checked = !!eintrag.daten[feldId];
                 else feld.value = eintrag.daten[feldId];
             });
-            if (eintrag.foto) localStorage.setItem('lebenslaufFoto', eintrag.foto);
             schliesseArchivDialog();
             updateVorschau();
             speichereDaten();
@@ -2230,26 +2024,10 @@
             document.getElementById('install-button').style.display = 'none';
         }
 
-        // --- KI-Schreibhilfe (Google Gemini, mit dem eigenen kostenlosen
-        // Schlüssel der Person) ---
-        // Wichtig fuer den Datenschutz: der Schluessel wird bewusst NUR im
-        // sessionStorage abgelegt, nicht im localStorage - sessionStorage
-        // wird vom Browser automatisch geloescht, sobald der Tab/das
-        // Browserfenster geschlossen wird. Der Schluessel ueberlebt also
-        // NICHT das Schliessen des Browsers und muss beim naechsten Mal
-        // neu eingegeben werden. Er wird auch nie an einen eigenen Server
-        // geschickt - es gibt hier keinen, diese App laeuft komplett lokal.
-        // Anfragen gehen direkt vom Browser der Person zu Google; wir
-        // sehen, speichern oder verarbeiten davon nichts.
         const GEMINI_KEY_STORAGE = 'biGeminiApiKey';
         const GEMINI_MODUS_STORAGE = 'biGeminiSpeicherModus';
         const GEMINI_MODELL = 'gemini-flash-latest';
 
-        // Manche Leute nutzen die App immer wieder und wollen ihren Schlüssel
-        // nicht jedes Mal neu eintippen - andere wollen aus Datenschutzgruenden
-        // lieber, dass nichts liegen bleibt. Deshalb kann man wählen: nur diese
-        // Sitzung (sessionStorage, weg beim Schliessen) oder dauerhaft
-        // (localStorage, bleibt bis man es selbst loescht).
         function geminiSpeicherOrt() {
             const dauerhaft = document.getElementById('gemini-speicher-dauerhaft');
             return (dauerhaft && dauerhaft.checked) ? localStorage : sessionStorage;
@@ -2302,24 +2080,16 @@
             if (status) status.textContent = text;
         }
 
-        // Baut aus den bereits ausgefuellten Angaben eine kurze
-        // Kontext-Zusammenfassung, damit die KI personalisiert statt
-        // generisch schreibt.
         function sammleKiKontext() {
             const val = (id) => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
             const teile = [];
             const name = [val('vorname'), val('nachname')].filter(Boolean).join(' ');
             if (name) teile.push(`Name der Person: ${name}`);
-            if (val('position')) teile.push(`Angestrebte Position / Beruf: ${val('position')}`);
-            if (val('erfahrung')) teile.push(`Bisherige Berufserfahrung (Stichpunkte): ${val('erfahrung')}`);
-            if (val('ausbildung')) teile.push(`Ausbildung (Stichpunkte): ${val('ausbildung')}`);
-            if (val('kenntnisse')) teile.push(`Kenntnisse (Stichpunkte): ${val('kenntnisse')}`);
-            if (val('unternehmen')) teile.push(`Zielunternehmen: ${val('unternehmen')}`);
+            if (val('entschuldigung-zeitraum')) teile.push(`Zeitraum der Entschuldigung: ${val('entschuldigung-zeitraum')}`);
+            if (val('entschuldigung-klasse')) teile.push(`Klasse/Gruppe: ${val('entschuldigung-klasse')}`);
             return teile.join('\n');
         }
 
-        // Ruft Gemini mit einem Prompt auf und liefert den reinen Text
-        // zurueck (wirft bei Fehlern eine verstaendliche Fehlermeldung).
         async function rufeGeminiAuf(prompt) {
             const key = sessionStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(GEMINI_KEY_STORAGE);
             if (!key) {
@@ -2351,8 +2121,6 @@
             return text.trim();
         }
 
-        // Fuellt ein Feld (Textarea) per KI aus. buttonEl bekommt waehrend
-        // des Ladens einen Sperr-/Lade-Zustand.
         async function kiSchreiben(feldId, aufgabe, buttonEl) {
             const feld = document.getElementById(feldId);
             if (!feld) return;
@@ -2381,272 +2149,14 @@
             }
         }
 
-        // Fuellt den gesamten Lebenslauf-Bereich (Berufserfahrung, Ausbildung,
-        // Kenntnisse, Sprachen) mit EINEM KI-Aufruf, statt vier einzelnen -
-        // die KI liefert die vier Abschnitte in einer festen, klar
-        // markierten Struktur zurueck, die hier wieder auseinandergenommen
-        // und auf die vier Felder verteilt wird.
-        async function kiSchreibenLebenslauf(buttonEl) {
-            const alterText = buttonEl ? buttonEl.textContent : '';
-            if (buttonEl) { buttonEl.disabled = true; buttonEl.textContent = '✨ Schreibt ...'; }
-            try {
-                const kontext = sammleKiKontext();
-                const prompt = `Du hilfst beim Formulieren eines deutschen Lebenslaufs. Erstelle passende Inhalte ` +
-                    `für die angestrebte Position, auf Basis der bekannten Angaben (falls vorhanden, sonst plausibel ` +
-                    `und allgemein passend zur Position).\n\n` +
-                    (kontext ? `Bekannte Angaben zur Person:\n${kontext}\n\n` : '') +
-                    `Antworte AUSSCHLIESSLICH in exakt diesem Format, mit genau diesen vier Überschriften in ` +
-                    `Großbuchstaben, jede in einer eigenen Zeile, gefolgt vom jeweiligen Inhalt (keine ` +
-                    `zusätzlichen Erklärungen, kein Markdown, keine Anführungszeichen):\n\n` +
-                    `BERUFSERFAHRUNG:\n(2-4 Zeilen, je Zeile: Zeitraum + Tätigkeit/Firma)\n\n` +
-                    `AUSBILDUNG:\n(1-3 Zeilen, je Zeile: Zeitraum + Ausbildungsgang/Schule)\n\n` +
-                    `KENNTNISSE:\n(eine Zeile, 4-8 passende Kenntnisse, kommagetrennt)\n\n` +
-                    `SPRACHEN:\n(eine Zeile, Format 'Sprache: Niveau, Sprache: Niveau', ohne Angabe Deutsch als Muttersprache annehmen)`;
-                const text = await rufeGeminiAuf(prompt);
+        let aktuellerModus = 'kuendigung';
 
-                // Antwort anhand der vier Überschriften in Abschnitte zerlegen.
-                const abschnitte = { BERUFSERFAHRUNG: 'erfahrung', AUSBILDUNG: 'ausbildung', KENNTNISSE: 'kenntnisse', SPRACHEN: 'sprachen' };
-                const marken = Object.keys(abschnitte);
-                const muster = new RegExp('(' + marken.join('|') + '):\\s*([\\s\\S]*?)(?=(?:' + marken.join('|') + '):|$)', 'g');
-                let treffer, gefunden = 0;
-                while ((treffer = muster.exec(text)) !== null) {
-                    const feldId = abschnitte[treffer[1]];
-                    const inhalt = treffer[2].trim();
-                    if (feldId && inhalt) {
-                        document.getElementById(feldId).value = inhalt;
-                        gefunden++;
-                    }
-                }
-                if (gefunden === 0) {
-                    // Falls die KI sich nicht ans Format gehalten hat: lieber
-                    // den ganzen Text sichtbar machen (in Berufserfahrung),
-                    // statt stillschweigend nichts zu tun.
-                    document.getElementById('erfahrung').value = text;
-                }
-                updateVorschau();
-                const status = document.getElementById('speicher-status');
-                if (status) {
-                    status.innerText = gefunden > 0
-                        ? '✨ Lebenslauf-Angaben von der KI eingefügt – bitte kurz gegenlesen und bei Bedarf anpassen.'
-                        : '✨ KI-Antwort erhalten, aber nicht im erwarteten Format – bitte prüfen.';
-                    setTimeout(() => { if (status.innerText.startsWith('✨')) status.innerText = ''; }, 6000);
-                }
-            } catch (err) {
-                alert(err.message || 'Die KI-Anfrage ist fehlgeschlagen.');
-            } finally {
-                if (buttonEl) { buttonEl.disabled = false; buttonEl.textContent = alterText; }
-            }
-        }
-
-        function ladeDaten() {
-            // Zuerst die gemerkte Speicher-Einstellung selbst wiederherstellen ...
-            if (localStorage.getItem('speicherModusEinstellung') === 'sitzung') {
-                const radio = document.getElementById('speicher-modus-sitzung');
-                if (radio) radio.checked = true;
-            }
-            // ... und dann aus dem passenden Speicher lesen (localStorage bei
-            // "dauerhaft", sessionStorage bei "nur diese Sitzung" - zur
-            // Sicherheit wird trotzdem in beiden nachgeschaut, falls z. B.
-            // gerade erst umgeschaltet wurde).
-            const modus = aktuellerSpeicherModus();
-            const quelle = modus === 'sitzung' ? sessionStorage : localStorage;
-            const rohdaten = quelle.getItem('lebenslaufDaten') || localStorage.getItem('lebenslaufDaten') || sessionStorage.getItem('lebenslaufDaten');
-            const daten = JSON.parse(rohdaten || 'null');
-            if (daten) {
-                Object.keys(daten).forEach(id => {
-                    const feld = document.getElementById(id);
-                    if (!feld) return;
-                    if (feld.type === 'checkbox') feld.checked = !!daten[id];
-                    else feld.value = daten[id];
-                });
-            }
-            const foto = localStorage.getItem('lebenslaufFoto');
-            if (foto) {
-                document.getElementById('prev-foto').src = foto;
-                document.getElementById('prev-foto').style.display = 'block';
-            }
-        }
-
-        // ---- Konto/Cloud: aktuellen Stand im eigenen Konto speichern bzw. laden ----
-        // Nutzt dieselbe Feld-Sammlung wie speichereDaten()/ladeDaten(), speichert
-        // aber zusaetzlich im Konto des angemeldeten Nutzers (Firebase), sodass man
-        // auf einem anderen Geraet mit demselben Konto weiterarbeiten kann.
-        function sdRequireLoginOrPrompt() {
-            if (window.SD_AUTH && window.SD_AUTH.user) return true;
-            if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
-            else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
-            return false;
-        }
-
-        // Die Cloud-Speichern/Laden-Buttons nur zeigen, wenn wirklich ein Konto
-        // besteht - vorher würden sie fälschlich suggerieren, dass hier schon
-        // etwas in der Cloud gespeichert wird.
-        function sdUpdateCloudButtons(user) {
-            const anzeige = user ? '' : 'none';
-            const btnSave = document.getElementById('btnSdCloudSpeichern');
-            const btnLoad = document.getElementById('btnSdCloudLaden');
-            if (btnSave) btnSave.style.display = anzeige;
-            if (btnLoad) btnLoad.style.display = anzeige;
-        }
-        if (window.SD_AUTH) {
-            window.SD_AUTH.onChange(sdUpdateCloudButtons);
-        } else {
-            window.addEventListener('sd-auth-ready', () => window.SD_AUTH.onChange(sdUpdateCloudButtons));
-        }
-
-        async function sdCloudSpeichern() {
-            if (!sdRequireLoginOrPrompt()) return;
-            const status = document.getElementById('speicher-status');
-            if (status) status.innerText = 'Wird in deinem Konto gespeichert...';
-            try {
-                const daten = {};
-                document.querySelectorAll('input, textarea, select').forEach(feld => {
-                    if (feld.type === 'file' || !feld.id || NICHT_ALS_DATEN_SPEICHERN.includes(feld.id)) return;
-                    if (feld.type === 'radio' && feld.name) return;
-                    daten[feld.id] = (feld.type === 'checkbox') ? feld.checked : feld.value;
-                });
-                await window.SD_AUTH.saveJSON('bewerbungsstudio/lebenslauf', { felder: daten });
-                const foto = localStorage.getItem('lebenslaufFoto');
-                if (foto) await window.SD_AUTH.saveFile('bewerbungsstudio/foto.jpg', foto);
-                if (status) status.innerText = '✅ In deinem Konto gespeichert';
-            } catch (err) {
-                console.error(err);
-                if (status) status.innerText = 'Fehler beim Speichern in der Cloud';
-                alert('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
-            }
-        }
-
-        async function sdCloudLaden() {
-            if (!sdRequireLoginOrPrompt()) return;
-            if (!confirm('Die aktuellen Angaben hier durch den in deinem Konto gespeicherten Stand ersetzen?')) return;
-            const status = document.getElementById('speicher-status');
-            if (status) status.innerText = 'Wird aus deinem Konto geladen...';
-            try {
-                const data = await window.SD_AUTH.loadJSON('bewerbungsstudio/lebenslauf');
-                if (!data || !data.felder) {
-                    if (status) status.innerText = '';
-                    alert('In deinem Konto wurde noch nichts gespeichert.');
-                    return;
-                }
-                Object.keys(data.felder).forEach(id => {
-                    const feld = document.getElementById(id);
-                    if (!feld) return;
-                    if (feld.type === 'checkbox') feld.checked = !!data.felder[id];
-                    else feld.value = data.felder[id];
-                });
-                try {
-                    const foto = await window.SD_AUTH.loadFileAsDataUrl('bewerbungsstudio/foto.jpg');
-                    if (foto) {
-                        localStorage.setItem('lebenslaufFoto', foto);
-                        document.getElementById('prev-foto').src = foto;
-                        document.getElementById('prev-foto').style.display = 'block';
-                    }
-                } catch (e) { /* kein Foto in der Cloud gespeichert - ok */ }
-                speichereDaten();
-                if (typeof updateVorschau === 'function') updateVorschau();
-                if (status) status.innerText = '✅ Aus deinem Konto geladen';
-            } catch (err) {
-                console.error(err);
-                if (status) status.innerText = 'Fehler beim Laden aus der Cloud';
-                alert('Fehler beim Laden aus der Cloud: ' + (err && err.message ? err.message : err));
-            }
-        }
-
-        let aktuellerModus = 'lebenslauf';
-
-        // Im eingeschraenkten Modus (nach der 1-Monat-Testphase, siehe
-        // zugang.js) bleibt nur der Lebenslauf-Bereich frei nutzbar - alle
-        // anderen Vorlagen und jeglicher Export/Download verlangen einen
-        // Freischalt-Code. Gibt true zurueck (und zeigt einen Hinweis), wenn
-        // die aufrufende Aktion deswegen abgebrochen werden soll.
         function sdBlockiertImEingeschraenktenModus(bezeichnung) {
             if (typeof sdStatus !== 'function' || sdStatus() !== 'eingeschraenkt') return false;
             alert('🔒 "' + bezeichnung + '" ist im eingeschränkten Modus nicht verfügbar.\n\nBitte schalte die App mit einem Freischalt-Code frei (Button "🔑 Meine Geräte-ID anzeigen" weiter unten, ID per E-Mail schicken).');
             return true;
         }
 
-        function zeigeModus(modus) {
-            if (modus !== 'lebenslauf' && sdBlockiertImEingeschraenktenModus('Vorlage „' + modus + '"')) return;
-            aktuellerModus = modus;
-            const lebenslaufAktiv = modus === 'lebenslauf';
-            const anschreibenAktiv = modus === 'anschreiben';
-            const deckblattAktiv = modus === 'deckblatt';
-            const mappeAktiv = modus === 'mappe';
-            document.getElementById('lebenslauf-panel').classList.toggle('active', lebenslaufAktiv);
-            document.getElementById('anschreiben-panel').classList.toggle('active', anschreibenAktiv);
-            document.getElementById('deckblatt-panel').classList.toggle('active', deckblattAktiv);
-            document.getElementById('mappe-panel').classList.toggle('active', mappeAktiv);
-            document.getElementById('lebenslauf-vorschau').style.display = lebenslaufAktiv ? 'block' : 'none';
-            document.getElementById('anschreiben-vorschau').style.display = anschreibenAktiv ? 'block' : 'none';
-            document.getElementById('deckblatt-vorschau').style.display = deckblattAktiv ? 'block' : 'none';
-            document.getElementById('mappe-vorschau').classList.toggle('active', mappeAktiv);
-            document.querySelectorAll('.mode-tab').forEach(button => button.classList.remove('active'));
-            const aktiverTab = document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`);
-            aktiverTab.classList.add('active');
-            const label = document.getElementById('mode-menu-label');
-            if (label) label.textContent = aktiverTab.textContent;
-            const menu = document.getElementById('mode-menu');
-            if (menu) menu.classList.remove('open');
-        }
-
-        function toggleModeMenu() {
-            document.getElementById('mode-menu').classList.toggle('open');
-        }
-
-        function toggleTplMenu(idx) {
-            document.getElementById('tpl-menu-' + idx).classList.toggle('open');
-        }
-
-        function toggleKiPanel() {
-            const body = document.getElementById('ki-panel-body');
-            const chev = document.getElementById('ki-panel-chev');
-            const offen = body.style.display !== 'none';
-            body.style.display = offen ? 'none' : 'block';
-            chev.style.transform = offen ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
-
-        document.addEventListener('click', function (e) {
-            const menu = document.getElementById('mode-menu');
-            if (menu && menu.classList.contains('open') && !menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
-
-        function ladeDeckblattMuster(art) {
-            aktiviereMuster(event.currentTarget);
-            wechsleDesign(art);
-            const fotoAktiv = art !== 'schlicht';
-            document.getElementById('foto-auf-deckblatt').checked = fotoAktiv;
-            document.getElementById('mappe-mit-foto').checked = fotoAktiv;
-            updateVorschau();
-        }
-
-        // Die beiden Foto-Haekchen (im Deckblatt-Bereich und im Mappe-Bereich)
-        // steuern optisch dasselbe Foto auf dem Deckblatt. Frueher waren sie
-        // unabhaengig voneinander und per ODER verknuepft, wodurch das Foto
-        // sichtbar blieb, sobald nur eines der beiden Haekchen aktiv war -
-        // ein Haekchen zu entfernen hat dann nichts bewirkt. Jetzt werden
-        // beide Haekchen synchron gehalten: sobald man eines aendert,
-        // uebernimmt das andere automatisch denselben Zustand.
-        function syncFotoCheckboxen(quelle) {
-            const aktiv = quelle.checked;
-            document.getElementById('foto-auf-deckblatt').checked = aktiv;
-            document.getElementById('mappe-mit-foto').checked = aktiv;
-            updateVorschau();
-        }
-
-        function druckeMappe() {
-            if (sdBlockiertImEingeschraenktenModus('Bewerbungsmappe')) return;
-            zeigeModus('mappe');
-            exportAlsPdf();
-        }
-
-        // Erstellt die PDF-Datei selbst (statt ueber window.print() den
-        // Betriebssystem-Druckdialog aufzurufen) und startet direkt den
-        // Download. So landet keine vom Handy/Browser automatisch
-        // hinzugefuegte Kopf-/Fusszeile (Web-Adresse, Datum, Seitenzahl) im
-        // fertigen Bewerbungsdokument - das war vorher bei window.print()
-        // auf manchen Geraeten (v. a. iPhone) nicht abschaltbar.
         async function exportAlsPdf() {
             if (sdBlockiertImEingeschraenktenModus('Export/Download')) return;
             const istMappe = aktuellerModus === 'mappe';
@@ -2703,12 +2213,234 @@
             }
         }
 
+        function updateVorschau() {
+            const v = document.getElementById('vorname').value;
+            const n = document.getElementById('nachname').value;
+            document.getElementById('prev-kuendigung-empfaenger').innerText = document.getElementById('kuendigung-empfaenger').value;
+            document.getElementById('prev-kuendigung-absender').innerText = [
+                v + ' ' + n,
+                document.getElementById('adresse').value,
+                document.getElementById('telefon').value,
+                document.getElementById('email').value
+            ].filter(Boolean).join('\n');
+            document.getElementById('prev-kuendigung-betreff').innerText = document.getElementById('vertragsnummer').value ? 'Vertragsnummer: ' + document.getElementById('vertragsnummer').value : 'Hiermit kündige ich den Vertrag.';
+            document.getElementById('prev-kuendigung-text').innerText = document.getElementById('kuendigung-text').value;
+            document.getElementById('prev-kuendigung-name').innerText = v + ' ' + n;
+            document.getElementById('prev-entschuldigung-empfaenger').innerText = document.getElementById('entschuldigung-empfaenger').value;
+            document.getElementById('prev-entschuldigung-absender').innerText = [
+                v + ' ' + n,
+                document.getElementById('adresse').value,
+                document.getElementById('telefon').value,
+                document.getElementById('email').value
+            ].filter(Boolean).join('\n');
+            const entschKind = document.getElementById('entschuldigung-kind').value;
+            const entschKlasse = document.getElementById('entschuldigung-klasse').value;
+            const entschZeitraum = document.getElementById('entschuldigung-zeitraum').value;
+            document.getElementById('prev-entschuldigung-betreff').innerText = [
+                entschKind ? ('Kind: ' + entschKind) : '',
+                entschKlasse ? ('Klasse/Gruppe: ' + entschKlasse) : '',
+                entschZeitraum ? ('Zeitraum: ' + entschZeitraum) : ''
+            ].filter(Boolean).join(' | ');
+            const entschAnredeEl = document.getElementById('entschuldigung-anrede');
+            const entschAnredeVal = entschAnredeEl ? entschAnredeEl.value : 'damen-herren';
+            let entschGruss = 'Sehr geehrte Damen und Herren,';
+            if (entschAnredeVal === 'kita-team') {
+                entschGruss = 'Liebes Kita-Team,';
+            } else if (entschAnredeVal === 'klassenleitung') {
+                entschGruss = 'Liebe Klassenleitung,';
+            } else if (entschAnredeVal === 'custom') {
+                entschGruss = document.getElementById('entschuldigung-custom-anrede').value || 'Sehr geehrte Damen und Herren,';
+            }
+            document.getElementById('prev-entschuldigung-anrede').innerText = entschGruss;
+            const entschCustomGroup = document.getElementById('entschuldigung-custom-anrede');
+            if (entschCustomGroup) entschCustomGroup.style.display = entschAnredeVal === 'custom' ? 'block' : 'none';
+            const entschKindName = entschKind.trim() || 'mein Kind';
+            document.getElementById('prev-entschuldigung-text').innerText = document.getElementById('entschuldigung-text').value.split('{KIND}').join(entschKindName);
+            document.getElementById('prev-entschuldigung-name').innerText = v + ' ' + n;
+            const entschAttestEl = document.getElementById('entschuldigung-attest');
+            document.getElementById('prev-entschuldigung-anlage').innerText = (entschAttestEl && entschAttestEl.checked) ? 'Anlage: ärztliches Attest' : '';
+            const entschRolleZeigen = typeof aktuellesEntschuldigungsTyp !== 'undefined'
+                && aktuellesEntschuldigungsTyp !== 'arbeit-krank' && entschKind.trim();
+            document.getElementById('prev-entschuldigung-rolle').innerText = entschRolleZeigen
+                ? ('Erziehungsberechtigte/r von ' + entschKind.trim()) : '';
+            document.getElementById('prev-brief-empfaenger').innerText = document.getElementById('brief-empfaenger').value;
+            document.getElementById('prev-brief-absender').innerText = [
+                v + ' ' + n,
+                document.getElementById('adresse').value,
+                document.getElementById('telefon').value,
+                document.getElementById('email').value
+            ].filter(Boolean).join('\n');
+            document.getElementById('prev-brief-betreff').innerText = document.getElementById('brief-betreff').value;
+            const briefAnredeEl = document.getElementById('brief-anrede');
+            const briefAnredeVal = briefAnredeEl ? briefAnredeEl.value : 'damen-herren';
+            let briefGruss = 'Sehr geehrte Damen und Herren,';
+            if (briefAnredeVal === 'herr') {
+                briefGruss = 'Sehr geehrter Herr ...,';
+            } else if (briefAnredeVal === 'frau') {
+                briefGruss = 'Sehr geehrte Frau ...,';
+            } else if (briefAnredeVal === 'custom') {
+                briefGruss = document.getElementById('brief-custom-anrede').value || 'Sehr geehrte Damen und Herren,';
+            }
+            document.getElementById('prev-brief-anrede').innerText = briefGruss;
+            const briefCustomGroup = document.getElementById('brief-custom-anrede');
+            if (briefCustomGroup) briefCustomGroup.style.display = briefAnredeVal === 'custom' ? 'block' : 'none';
+            document.getElementById('prev-brief-text').innerText = document.getElementById('brief-text').value;
+            document.getElementById('prev-brief-name').innerText = v + ' ' + n;
+            aktualisiereFusszeilen();
+        }
+
+        function aktualisiereFusszeilen() {
+            const datum = new Date().toLocaleDateString('de-DE');
+            ['kuendigung-vorschau', 'entschuldigung-vorschau', 'brief-vorschau'].forEach(id => {
+                const seite = document.getElementById(id);
+                seite.querySelector('.document-date').innerText = datum;
+                seite.querySelector('.document-page').innerText = 'Seite 1';
+            });
+        }
+
+        function ladeDaten() {
+            // Zuerst die gemerkte Speicher-Einstellung selbst wiederherstellen ...
+            if (localStorage.getItem('speicherModusEinstellung') === 'sitzung') {
+                const radio = document.getElementById('speicher-modus-sitzung');
+                if (radio) radio.checked = true;
+            }
+            // ... und dann aus dem passenden Speicher lesen (localStorage bei
+            // "dauerhaft", sessionStorage bei "nur diese Sitzung" - zur
+            // Sicherheit wird trotzdem in beiden nachgeschaut, falls z. B.
+            // gerade erst umgeschaltet wurde).
+            const modus = aktuellerSpeicherModus();
+            const quelle = modus === 'sitzung' ? sessionStorage : localStorage;
+            const rohdaten = quelle.getItem('schreibstudioDaten') || localStorage.getItem('schreibstudioDaten') || sessionStorage.getItem('schreibstudioDaten');
+            const daten = JSON.parse(rohdaten || 'null');
+            if (daten) {
+                Object.keys(daten).forEach(id => {
+                    const feld = document.getElementById(id);
+                    if (!feld) return;
+                    if (feld.type === 'checkbox') feld.checked = !!daten[id];
+                    else feld.value = daten[id];
+                });
+            }
+        }
+
+        function sdRequireLoginOrPrompt() {
+            if (window.SD_AUTH && window.SD_AUTH.user) return true;
+            if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
+            else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
+            return false;
+        }
+
+        function sdUpdateCloudButtons(user) {
+            const anzeige = user ? '' : 'none';
+            const btnSave = document.getElementById('btnSdCloudSpeichern');
+            const btnLoad = document.getElementById('btnSdCloudLaden');
+            if (btnSave) btnSave.style.display = anzeige;
+            if (btnLoad) btnLoad.style.display = anzeige;
+        }
+
+        if (window.SD_AUTH) {
+            window.SD_AUTH.onChange(sdUpdateCloudButtons);
+        } else {
+            window.addEventListener('sd-auth-ready', () => window.SD_AUTH.onChange(sdUpdateCloudButtons));
+        }
+
+        async function sdCloudSpeichern() {
+            if (!sdRequireLoginOrPrompt()) return;
+            const status = document.getElementById('speicher-status');
+            if (status) status.innerText = 'Wird in deinem Konto gespeichert...';
+            try {
+                const daten = {};
+                document.querySelectorAll('input, textarea, select').forEach(feld => {
+                    if (feld.type === 'file' || !feld.id || NICHT_ALS_DATEN_SPEICHERN.includes(feld.id)) return;
+                    if (feld.type === 'radio' && feld.name) return;
+                    daten[feld.id] = (feld.type === 'checkbox') ? feld.checked : feld.value;
+                });
+                await window.SD_AUTH.saveJSON('schreibstudio/daten', { felder: daten });
+                if (status) status.innerText = '✅ In deinem Konto gespeichert';
+            } catch (err) {
+                console.error(err);
+                if (status) status.innerText = 'Fehler beim Speichern in der Cloud';
+                alert('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+            }
+        }
+
+        async function sdCloudLaden() {
+            if (!sdRequireLoginOrPrompt()) return;
+            if (!confirm('Die aktuellen Angaben hier durch den in deinem Konto gespeicherten Stand ersetzen?')) return;
+            const status = document.getElementById('speicher-status');
+            if (status) status.innerText = 'Wird aus deinem Konto geladen...';
+            try {
+                const data = await window.SD_AUTH.loadJSON('schreibstudio/daten');
+                if (!data || !data.felder) {
+                    if (status) status.innerText = '';
+                    alert('In deinem Konto wurde noch nichts gespeichert.');
+                    return;
+                }
+                Object.keys(data.felder).forEach(id => {
+                    const feld = document.getElementById(id);
+                    if (!feld) return;
+                    if (feld.type === 'checkbox') feld.checked = !!data.felder[id];
+                    else feld.value = data.felder[id];
+                });
+                speichereDaten();
+                if (typeof updateVorschau === 'function') updateVorschau();
+                if (status) status.innerText = '✅ Aus deinem Konto geladen';
+            } catch (err) {
+                console.error(err);
+                if (status) status.innerText = 'Fehler beim Laden aus der Cloud';
+                alert('Fehler beim Laden aus der Cloud: ' + (err && err.message ? err.message : err));
+            }
+        }
+
+        function zeigeModus(modus) {
+            if (modus !== 'kuendigung' && sdBlockiertImEingeschraenktenModus('Vorlage „' + modus + '"')) return;
+            aktuellerModus = modus;
+            const kuendigungAktiv = modus === 'kuendigung';
+            const entschuldigungAktiv = modus === 'entschuldigung';
+            const briefAktiv = modus === 'brief';
+            document.getElementById('kuendigung-panel').classList.toggle('active', kuendigungAktiv);
+            document.getElementById('entschuldigung-panel').classList.toggle('active', entschuldigungAktiv);
+            document.getElementById('brief-panel').classList.toggle('active', briefAktiv);
+            document.getElementById('kuendigung-vorschau').style.display = kuendigungAktiv ? 'block' : 'none';
+            document.getElementById('entschuldigung-vorschau').style.display = entschuldigungAktiv ? 'block' : 'none';
+            document.getElementById('brief-vorschau').style.display = briefAktiv ? 'block' : 'none';
+            document.querySelectorAll('.mode-tab').forEach(button => button.classList.remove('active'));
+            const aktiverTab = document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`);
+            aktiverTab.classList.add('active');
+            const label = document.getElementById('mode-menu-label');
+            if (label) label.textContent = aktiverTab.textContent;
+            const menu = document.getElementById('mode-menu');
+            if (menu) menu.classList.remove('open');
+        }
+
+        function toggleModeMenu() {
+            document.getElementById('mode-menu').classList.toggle('open');
+        }
+
+        function toggleTplMenu(idx) {
+            document.getElementById('tpl-menu-' + idx).classList.toggle('open');
+        }
+
+        function toggleKiPanel() {
+            const body = document.getElementById('ki-panel-body');
+            const chev = document.getElementById('ki-panel-chev');
+            const offen = body.style.display !== 'none';
+            body.style.display = offen ? 'none' : 'block';
+            chev.style.transform = offen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('mode-menu');
+            if (menu && menu.classList.contains('open') && !menu.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+
+        let aktuellesDesign = 'klassisch';
+
         function aktiviereMuster(button) {
             button.parentElement.querySelectorAll('.tpl-btn').forEach(item => item.classList.remove('active'));
             button.classList.add('active');
         }
-
-        let aktuellesDesign = 'klassisch';
 
         function wechsleDesign(name) {
             document.body.className = document.body.className.replace(/theme-[a-z-]+/g, '').trim();
@@ -2731,74 +2463,104 @@
             updateVorschau();
         }
 
-        function ladeLebenslaufMuster(art) {
+        function ladeKuendigungMuster(art) {
             if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
-            wechsleDesign(art);
+            wechsleDesign(art === 'vertrag' ? 'klassisch' : art);
             const muster = {
-                klassisch: ['Sachbearbeiter', '2022 - heute: Sachbearbeitung und Kundenbetreuung', '2019 - 2022: Ausbildung zum Kaufmann für Büromanagement', 'MS Office, Organisation, Kundenkontakt', 'Deutsch: sehr gut, Englisch: gut'],
-                modern: ['Projektkoordinator', '2021 - heute: Planung und Koordination von Projekten', '2018 - 2021: Studium Betriebswirtschaft', 'Projektplanung, Kommunikation, Präsentationen', 'Deutsch: sehr gut, Englisch: sehr gut'],
-                sozial: ['Ambulante Familienhilfe', '2022 - heute: Unterstützung von Familien im Alltag', '2017 - 2020: Ausbildung im sozialen Bereich', 'Beratung, Empathie, Teamarbeit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
-                buero: ['Bürokaufmann', '2021 - heute: Sachbearbeitung und Kundenkontakt', '2016 - 2019: Ausbildung zum Bürokaufmann', 'MS Office, Terminplanung, Buchhaltung', 'Deutsch: sehr gut, Englisch: gut'],
-                it: ['Softwareentwickler', '2022 - heute: Entwicklung von Web-Anwendungen', '2018 - 2021: Ausbildung zum Fachinformatiker', 'JavaScript, Python, HTML, CSS, Git', 'Deutsch: sehr gut, Englisch: sehr gut'],
-                fuehrung: ['Teamleiter', '2020 - heute: Leitung eines Teams mit 12 Mitarbeitenden', '2015 - 2018: Studium Management', 'Führung, Planung, Konfliktlösung', 'Deutsch: sehr gut, Englisch: gut'],
-                pflege: ['Pflegefachkraft', '2021 - heute: Betreuung und Pflege von Patientinnen und Patienten', '2018 - 2021: Ausbildung zur Pflegefachkraft', 'Grundpflege, Dokumentation, Teamarbeit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
-                erziehung: ['Erzieher', '2020 - heute: Pädagogische Betreuung von Kindern', '2017 - 2020: Ausbildung zum Erzieher', 'Pädagogik, Kreativität, Elternarbeit', 'Deutsch: sehr gut, Englisch: gut'],
-                verkauf: ['Verkäufer', '2022 - heute: Beratung und Verkauf im Einzelhandel', '2019 - 2021: Ausbildung im Einzelhandel', 'Kundenberatung, Kasse, Warenpflege', 'Deutsch: sehr gut, Englisch: gut'],
-                marketing: ['Marketingmanager', '2021 - heute: Planung digitaler Marketingkampagnen', '2016 - 2019: Studium Marketing', 'Social Media, Analyse, Content-Erstellung', 'Deutsch: sehr gut, Englisch: sehr gut'],
-                design: ['Grafikdesigner', '2020 - heute: Gestaltung von Print- und Digitalmedien', '2017 - 2020: Ausbildung Grafikdesign', 'Adobe Creative Cloud, Layout, Fotografie', 'Deutsch: sehr gut, Englisch: gut'],
-                logistik: ['Fachkraft für Lagerlogistik', '2021 - heute: Warenannahme und Versand', '2018 - 2021: Ausbildung Lagerlogistik', 'Warenwirtschaft, Kommissionierung, SAP', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
-                fahrer: ['Berufskraftfahrer', '2019 - heute: Sicherer Transport im Nah- und Fernverkehr', '2016 - 2018: Ausbildung Berufskraftfahrer', 'Führerschein Klasse CE, Routenplanung, Fahrzeugpflege', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
-                gastronomie: ['Koch', '2020 - heute: Zubereitung von Speisen und Küchenorganisation', '2017 - 2020: Ausbildung zum Koch', 'Lebensmittelhygiene, Planung, Teamarbeit', 'Deutsch: gut, Englisch: gut'],
-                handwerk: ['Elektroniker', '2021 - heute: Installation und Wartung elektrischer Anlagen', '2018 - 2021: Ausbildung zum Elektroniker', 'Elektroinstallation, Fehlersuche, Sicherheit', 'Deutsch: sehr gut, Englisch: Grundkenntnisse'],
-                reinigung: ['Reinigungskraft', '2022 - heute: Reinigung von Büro- und Gebäudeflächen', '2020 - 2022: Gebäudereinigung', 'Sorgfalt, Hygiene, Zeitplanung', 'Deutsch: gut, Englisch: Grundkenntnisse'],
-                medizin: ['Medizinische Fachangestellte', '2021 - heute: Anmeldung und Assistenz in einer Arztpraxis', '2018 - 2021: Ausbildung zur MFA', 'Patientenbetreuung, Abrechnung, Organisation', 'Deutsch: sehr gut, Englisch: gut'],
-                verwaltung: ['Verwaltungsfachangestellte', '2020 - heute: Bearbeitung von Anträgen und Bürgeranfragen', '2017 - 2020: Ausbildung Verwaltung', 'Recht, Aktenführung, MS Office', 'Deutsch: sehr gut, Englisch: gut'],
-                bau: ['Bauleiter', '2019 - heute: Koordination von Baustellen und Gewerken', '2015 - 2018: Ausbildung im Bauwesen', 'Baustellenplanung, Sicherheit, Teamleitung', 'Deutsch: sehr gut, Englisch: gut'],
-                ausbildung: ['Auszubildender im Büromanagement', '2024 - heute: Unterstützung im Büro und Kundenservice', '2024 - heute: Ausbildung zum Kaufmann für Büromanagement', 'MS Office, Kommunikation, Organisation', 'Deutsch: sehr gut, Englisch: gut']
+                arbeit: ['Personalabteilung Musterfirma GmbH\nMusterstraße 1\n12345 Musterstadt', 'ARB-2026-001', 'Hiermit kündige ich meinen Arbeitsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir den Beendigungszeitpunkt schriftlich und stellen Sie mir ein qualifiziertes Arbeitszeugnis aus.'],
+                wohnung: ['Hausverwaltung Beispiel\nWohnweg 12\n12345 Musterstadt', 'MIET-2026-045', 'Hiermit kündige ich den Mietvertrag für die oben genannte Wohnung fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir den Beendigungszeitpunkt schriftlich und teilen Sie mir einen Termin für die Wohnungsübergabe mit.'],
+                versicherung: ['Beispiel Versicherung AG\nVersicherungsweg 5\n12345 Musterstadt', 'VERS-778899', 'Hiermit kündige ich den Versicherungsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und den Vertragsendtermin schriftlich.'],
+                fitness: ['Fit & Aktiv GmbH\nSportstraße 8\n12345 Musterstadt', 'FIT-2026-123', 'Hiermit kündige ich meine Mitgliedschaft fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.'],
+                vertrag: ['Vertragspartner Beispiel GmbH\nHauptstraße 20\n12345 Musterstadt', 'VER-2026-999', 'Hiermit kündige ich den Vertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte senden Sie mir eine schriftliche Bestätigung der Kündigung mit dem Beendigungsdatum.'],
+                internet: ['MusterNet GmbH\nInternetweg 4\n12345 Musterstadt', 'NET-2026-456', 'Hiermit kündige ich meinen Internetvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir schriftlich den Vertragsendtermin.'],
+                handy: ['Mobilfunk Beispiel AG\nTelefonstraße 10\n12345 Musterstadt', 'MOB-2026-789', 'Hiermit kündige ich meinen Mobilfunkvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                zeitung: ['Musterzeitung Verlag\nPresseweg 2\n12345 Musterstadt', 'ABO-2026-111', 'Hiermit kündige ich mein Zeitungsabonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                strom: ['MusterEnergie GmbH\nEnergieweg 7\n12345 Musterstadt', 'STROM-2026-222', 'Hiermit kündige ich meinen Stromvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Vertragsende schriftlich.'],
+                bank: ['Musterbank\nBankplatz 1\n12345 Musterstadt', 'KONTO-2026-333', 'Hiermit kündige ich mein Konto zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und teilen Sie mir mit, welche Schritte noch erforderlich sind.'],
+                verein: ['Sportverein Musterstadt e. V.\nVereinsweg 3\n12345 Musterstadt', 'VEREIN-2026-444', 'Hiermit kündige ich meine Vereinsmitgliedschaft fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Ende der Mitgliedschaft schriftlich.'],
+                streaming: ['MusterStream GmbH\nMedienweg 9\n12345 Musterstadt', 'STREAM-2026-555', 'Hiermit kündige ich mein Streaming-Abonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung schriftlich.'],
+                abo: ['Abo-Service Beispiel\nAboweg 6\n12345 Musterstadt', 'ABO-2026-666', 'Hiermit kündige ich mein Abonnement fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.'],
+                leasing: ['Muster Leasing GmbH\nFahrzeugweg 8\n12345 Musterstadt', 'LEAS-2026-777', 'Hiermit kündige ich den Leasingvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir die Kündigung und den Rückgabetermin schriftlich.'],
+                dienstleistung: ['Dienstleistung Beispiel GmbH\nServiceweg 11\n12345 Musterstadt', 'SERV-2026-888', 'Hiermit kündige ich den Dienstleistungsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir das Vertragsende schriftlich.']
             };
-            document.getElementById('position').value = muster[art][0];
-            document.getElementById('erfahrung').value = muster[art][1];
-            document.getElementById('ausbildung').value = muster[art][2];
-            document.getElementById('kenntnisse').value = muster[art][3];
-            document.getElementById('sprachen').value = muster[art][4];
+            document.getElementById('kuendigung-empfaenger').value = muster[art][0];
+            document.getElementById('vertragsnummer').value = muster[art][1];
+            document.getElementById('kuendigung-text').value = muster[art][2];
             updateVorschau();
         }
 
-        function ladeAnschreibenMuster(art) {
+        let aktuellesEntschuldigungsTyp = 'kita';
+
+        function ladeEntschuldigungMuster(art) {
+            aktuellesEntschuldigungsTyp = art;
             if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
-            wechsleDesign(art);
+            // {KIND} wird bei der Vorschau automatisch durch den Namen aus dem
+            // Feld "Name des Kindes" ersetzt (oder durch "mein Kind", falls leer) -
+            // so muss niemand einen Platzhalter im Text von Hand suchen und ersetzen.
             const muster = {
-                klassisch: ['Sachbearbeiter', 'Musterfirma GmbH', 'Frau Müller', 'mit großem Interesse bewerbe ich mich um die ausgeschriebene Position. Meine zuverlässige Arbeitsweise und meine schnelle Auffassungsgabe möchte ich gerne in Ihr Unternehmen einbringen.\n\nÜber eine Einladung zu einem persönlichen Gespräch freue ich mich sehr.'],
-                motiviert: ['Projektkoordinator', 'Innovativ AG', 'Herr Schneider', 'Ihre Stelle hat sofort mein Interesse geweckt. Ich bringe hohe Motivation, Engagement und Freude an neuen Aufgaben mit. Gerne möchte ich Ihr Team aktiv unterstützen und gemeinsam gute Ergebnisse erreichen.\n\nIch freue mich darauf, Sie persönlich kennenzulernen.'],
-                sozial: ['Ambulante Familienhilfe', 'Sozialwerk Beispiel e. V.', 'Frau Kaya', 'als engagierter Mitarbeiter unterstütze ich Menschen strukturiert, geduldig und lösungsorientiert. Der respektvolle Umgang mit Familien und die gemeinsame Entwicklung praktischer Lösungen sind mir besonders wichtig.\n\nGerne erläutere ich Ihnen meine Motivation in einem persönlichen Gespräch.'],
-                buero: ['Bürokaufmann', 'Büroservice Beispiel GmbH', 'Herr Weber', 'mit meinem Organisationstalent und meiner sorgfältigen Arbeitsweise möchte ich Ihre administrativen Abläufe zuverlässig unterstützen. Kundenkontakt, Terminplanung und die Bearbeitung von Vorgängen erledige ich verantwortungsbewusst und präzise.\n\nÜber Ihre Einladung freue ich mich.'],
-                it: ['Softwareentwickler', 'TechStart Solutions GmbH', 'Frau Hoffmann', 'mit Begeisterung für digitale Lösungen und moderne Web-Anwendungen möchte ich meine Kenntnisse in Ihr Team einbringen. Ich arbeite mich schnell in neue Technologien ein und entwickle gerne praktische, verständliche Lösungen.\n\nGerne überzeuge ich Sie in einem persönlichen Gespräch.'],
-                fuehrung: ['Teamleiter', 'Muster Unternehmensgruppe', 'Herr Becker', 'mit meiner Erfahrung in der Teamleitung und meiner klaren, wertschätzenden Kommunikation möchte ich Verantwortung in Ihrem Unternehmen übernehmen. Ich motiviere Mitarbeitende, strukturiere Abläufe und behalte gemeinsame Ziele im Blick.'],
-                pflege: ['Pflegefachkraft', 'Seniorenzentrum am Park', 'Frau Roth', 'die Betreuung und Pflege von Menschen ist für mich eine verantwortungsvolle und sinnvolle Aufgabe. Mit Einfühlungsvermögen, Sorgfalt und Teamgeist möchte ich Ihr Pflegeteam unterstützen.'],
-                erziehung: ['Erzieher', 'Kindergarten Sonnenschein', 'Frau Yilmaz', 'Kinder in ihrer Entwicklung zu begleiten, bereitet mir große Freude. Mit Kreativität, Geduld und einem offenen Ohr möchte ich den pädagogischen Alltag Ihrer Einrichtung bereichern.'],
-                verkauf: ['Verkäufer', 'Muster Markt GmbH', 'Herr Lange', 'der direkte Kontakt mit Kundinnen und Kunden sowie die Beratung zu passenden Produkten machen mir Freude. Ich arbeite freundlich, zuverlässig und serviceorientiert.'],
-                marketing: ['Marketingmanager', 'MarketingPlus AG', 'Frau König', 'ich möchte meine Erfahrung in digitalem Marketing und meine Begeisterung für kreative Kampagnen in Ihr Team einbringen. Datenbasierte Planung und gute Inhalte verbinde ich dabei mit einem Blick für die Zielgruppe.'],
-                design: ['Grafikdesigner', 'Kreativstudio Beispiel', 'Herr Wolf', 'Ihre visuellen Projekte sprechen mich sehr an. Mit sicherem Gespür für Gestaltung, Layout und Markenwirkung möchte ich überzeugende Print- und Digitalmedien für Ihre Kundschaft entwickeln.'],
-                logistik: ['Fachkraft für Lagerlogistik', 'Logistik Beispiel GmbH', 'Frau Neumann', 'durch meine sorgfältige und strukturierte Arbeitsweise unterstütze ich Warenannahme, Kommissionierung und Versand zuverlässig. Ich arbeite gerne im Team und behalte auch bei hohem Tempo den Überblick.'],
-                fahrer: ['Berufskraftfahrer', 'Transport Beispiel GmbH', 'Herr Peters', 'ich bringe Erfahrung im sicheren und pünktlichen Transport sowie einen verantwortungsvollen Umgang mit Fahrzeugen und Waren mit. Ihre Touren möchte ich zuverlässig unterstützen.'],
-                gastronomie: ['Koch', 'Restaurant am Markt', 'Frau Schmitt', 'gutes Essen, saubere Abläufe und ein starkes Küchenteam sind meine Motivation. Mit Erfahrung in Vorbereitung, Zubereitung und Hygiene möchte ich Ihre Küche engagiert unterstützen.'],
-                handwerk: ['Elektroniker', 'Elektro Muster GmbH', 'Herr Fischer', 'ich arbeite sorgfältig, lösungsorientiert und sicher an elektrischen Anlagen. Meine Kenntnisse in Installation und Fehlersuche möchte ich gerne in Ihre Projekte einbringen.'],
-                reinigung: ['Reinigungskraft', 'Gebäudeservice Muster', 'Frau Bauer', 'Zuverlässigkeit, Sorgfalt und ein Auge für Sauberkeit zeichnen meine Arbeit aus. Gerne unterstütze ich Ihr Team bei der professionellen Reinigung Ihrer Gebäude.'],
-                medizin: ['Medizinische Fachangestellte', 'Praxis am Rathaus', 'Frau Dr. Weber', 'der freundliche Umgang mit Patientinnen und Patienten sowie eine sorgfältige Praxisorganisation sind mir besonders wichtig. Meine Erfahrung in Anmeldung und Assistenz möchte ich gerne einbringen.'],
-                verwaltung: ['Verwaltungsfachangestellte', 'Stadtverwaltung Musterstadt', 'Herr Hoffmann', 'mit meiner strukturierten Arbeitsweise und Freude am Kontakt mit Menschen möchte ich Ihre Verwaltung unterstützen. Sorgfältige Aktenführung und zuverlässige Bearbeitung sind für mich selbstverständlich.'],
-                bau: ['Bauleiter', 'Bauprojekt Muster GmbH', 'Herr Richter', 'ich bringe Erfahrung in der Koordination von Baustellen, Gewerken und Terminen mit. Verantwortungsbewusstes Arbeiten und klare Kommunikation sind für erfolgreiche Projekte entscheidend.'],
-                ausbildung: ['Ausbildung im Büromanagement', 'Muster Büro GmbH', 'Frau Wagner', 'ich möchte meine Ausbildung mit Engagement, Lernbereitschaft und Freude an Organisation und Kundenkontakt absolvieren. Ihr Unternehmen bietet dafür ein vielseitiges Umfeld.']
+                kita: [
+                    'Kindertagesstätte Sonnenschein\nKitaweg 3\n12345 Musterstadt',
+                    'kita-team',
+                    'hiermit möchte ich Ihnen mitteilen, dass {KIND} in der oben genannten Zeit nicht in die Kita kommen kann.\n\nIch bitte Sie, dies als Entschuldigung für das Fehlen zu betrachten. Bei Rückfragen erreichen Sie mich jederzeit unter der oben angegebenen Telefonnummer.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                'schule-krank': [
+                    'Grundschule Musterstadt\nSchulweg 5\n12345 Musterstadt',
+                    'klassenleitung',
+                    'hiermit entschuldige ich das Fehlen von {KIND} im oben genannten Zeitraum.\n\nDer Grund für das Fernbleiben vom Unterricht ist eine Erkrankung. Ich bitte Sie, die Fehltage als entschuldigt zu vermerken. Bei Bedarf reiche ich gerne ein ärztliches Attest nach.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                'schule-termin': [
+                    'Grundschule Musterstadt\nSchulweg 5\n12345 Musterstadt',
+                    'klassenleitung',
+                    'hiermit bitte ich Sie, {KIND} für den oben genannten Zeitraum vom Unterricht zu befreien, da ein wichtiger Termin (z. B. ein Arzt- oder Behördentermin) ansteht.\n\nIch bitte Sie, das Fernbleiben als entschuldigt zu vermerken.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                'sport-befreiung': [
+                    'Grundschule Musterstadt\nSchulweg 5\n12345 Musterstadt',
+                    'klassenleitung',
+                    'hiermit bitte ich darum, {KIND} für den oben genannten Zeitraum vom Sportunterricht zu befreien.\n\nDer Grund hierfür ist eine gesundheitliche Einschränkung. Die Teilnahme am übrigen Unterricht ist davon nicht betroffen.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                'arbeit-krank': [
+                    'Personalabteilung Musterfirma GmbH\nMusterstraße 1\n12345 Musterstadt',
+                    'damen-herren',
+                    'hiermit teile ich Ihnen mit, dass ich im oben genannten Zeitraum krankheitsbedingt nicht arbeiten kann.\n\nEine ärztliche Arbeitsunfähigkeitsbescheinigung reiche ich schnellstmöglich nach. Für Rückfragen stehe ich Ihnen gerne zur Verfügung.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                verspaetung: [
+                    'Grundschule Musterstadt\nSchulweg 5\n12345 Musterstadt',
+                    'klassenleitung',
+                    'hiermit entschuldige ich die Verspätung von {KIND} am oben genannten Tag.\n\nDer pünktliche Unterrichtsbeginn konnte leider nicht eingehalten werden. Ich bitte Sie, die Verspätung als entschuldigt zu vermerken.\n\nVielen Dank für Ihr Verständnis.'
+                ],
+                'fruehere-abholung': [
+                    'Kindertagesstätte Sonnenschein\nKitaweg 3\n12345 Musterstadt',
+                    'kita-team',
+                    'hiermit möchte ich Sie bitten, {KIND} am oben genannten Tag bereits vor dem regulären Ende abholen zu dürfen.\n\nDer Grund hierfür ist ein wichtiger Termin. Ich bitte Sie, dies entsprechend zu vermerken und die Abholung durch eine berechtigte Person zuzulassen.\n\nVielen Dank für Ihr Verständnis.'
+                ]
             };
-            document.getElementById('position').value = muster[art][0];
-            document.getElementById('unternehmen').value = muster[art][1];
-            document.getElementById('ansprechperson').value = muster[art][2];
-            document.getElementById('anschreiben').value = muster[art][3];
+            document.getElementById('entschuldigung-empfaenger').value = muster[art][0];
+            const anredeFeld = document.getElementById('entschuldigung-anrede');
+            if (anredeFeld) anredeFeld.value = muster[art][1];
+            document.getElementById('entschuldigung-text').value = muster[art][2];
             updateVorschau();
         }
 
-        // ==========================================================
-        // Rechtschreib- und Grammatikpruefung (LanguageTool, kostenlos)
-        // ==========================================================
+        function ladeBriefMuster(art) {
+            if (typeof event !== 'undefined' && event.currentTarget) aktiviereMuster(event.currentTarget);
+            wechsleDesign(art === 'leer' ? 'klassisch' : art);
+            const muster = {
+                formell: ['Firma/Behörde Beispiel\nMusterstraße 1\n12345 Musterstadt', 'Ihr Schreiben vom ...', 'damen-herren', 'hiermit möchte ich Ihnen Folgendes mitteilen: ...\n\nBitte bestätigen Sie mir den Erhalt dieses Schreibens.'],
+                anfrage: ['Firma Beispiel GmbH\nMusterstraße 1\n12345 Musterstadt', 'Anfrage zu Ihrem Angebot', 'damen-herren', 'hiermit möchte ich mich nach Folgendem erkundigen: ...\n\nÜber eine Rückmeldung würde ich mich freuen.'],
+                beschwerde: ['Firma Beispiel GmbH\nMusterstraße 1\n12345 Musterstadt', 'Beschwerde bezüglich ...', 'damen-herren', 'leider muss ich mich über Folgendes beschweren: ...\n\nIch bitte um eine zeitnahe Klärung und Rückmeldung.'],
+                dank: ['Name/Firma\nMusterstraße 1\n12345 Musterstadt', 'Herzlichen Dank', 'damen-herren', 'ich möchte mich herzlich bedanken für: ...\n\nDas hat mich sehr gefreut.'],
+                informell: ['Liebe/r ...\nMusterstraße 1\n12345 Musterstadt', '', 'custom', 'ich hoffe, es geht dir gut! Ich wollte dir schreiben, weil ...'],
+                leer: ['', '', 'damen-herren', '']
+            };
+            document.getElementById('brief-empfaenger').value = muster[art][0];
+            document.getElementById('brief-betreff').value = muster[art][1];
+            const anredeFeld = document.getElementById('brief-anrede');
+            if (anredeFeld) anredeFeld.value = muster[art][2];
+            document.getElementById('brief-custom-anrede').value = art === 'informell' ? 'Liebe Grüße vorab,' : '';
+            document.getElementById('brief-text').value = muster[art][3];
+            updateVorschau();
+        }
+
         async function pruefeText(feldId) {
             const feld = document.getElementById(feldId);
             const statusEl = document.getElementById(feldId + '-status');
@@ -2831,38 +2593,6 @@
             }
         }
 
-        function zeigePruefergebnis(feldId, matches) {
-            const statusEl = document.getElementById(feldId + '-status');
-            const ergebnisseEl = document.getElementById(feldId + '-ergebnisse');
-
-            if (matches.length === 0) {
-                statusEl.textContent = '';
-                ergebnisseEl.innerHTML = '<div class="spellcheck-ok">✅ Keine Fehler gefunden – sieht gut aus!</div>';
-                return;
-            }
-
-            statusEl.textContent = matches.length + ' Hinweis(e) gefunden:';
-
-            ergebnisseEl.innerHTML = matches.map((match, i) => {
-                const kontext = match.context;
-                const vor = kontext.text.substring(0, kontext.offset);
-                const fehler = kontext.text.substring(kontext.offset, kontext.offset + kontext.length);
-                const nach = kontext.text.substring(kontext.offset + kontext.length);
-                const vorschlaege = (match.replacements || []).slice(0, 3).map(r => r.value);
-                const vorschlaegeHtml = vorschlaege.length
-                    ? vorschlaege.map(v =>
-                        `<button type="button" class="spellcheck-fix-btn" onclick="wendeKorrekturAn('${feldId}', ${match.offset}, ${match.length}, '${v.replace(/'/g, "\\'")}', ${i})">${v}</button>`
-                      ).join(' ')
-                    : '<em>kein Vorschlag</em>';
-
-                return `<div class="spellcheck-item" data-idx="${i}">
-                    <div class="spellcheck-msg">${match.message}</div>
-                    <div class="spellcheck-context">${vor}<mark>${fehler}</mark>${nach}</div>
-                    <div class="spellcheck-suggestions">${vorschlaegeHtml}</div>
-                </div>`;
-            }).join('');
-        }
-
         function wendeKorrekturAn(feldId, offset, length, ersatz, idx) {
             const feld = document.getElementById(feldId);
             const text = feld.value;
@@ -2874,47 +2604,27 @@
         }
 
         document.querySelectorAll('.template-list .tpl-btn').forEach(btn => btn.classList.remove('active'));
-        (function einmaligeBereinigung() {
-            if (!localStorage.getItem('pdfstudioBereinigtV2')) {
-                localStorage.removeItem('lebenslaufFoto');
-                localStorage.removeItem('lebenslaufDaten');
-                localStorage.setItem('pdfstudioBereinigtV2', '1');
-            }
-        })();
 
         ladeDaten();
         ladeGeminiKey();
         wechsleDesign('klassisch');
-        zeigeModus('lebenslauf');
+        zeigeModus('kuendigung');
         updateVorschau();
         bereinigeArchiv();
 
-        // Automatisches Speichern: bei jeder Eingabe wird der aktuelle Stand
-        // sofort weggeschrieben - je nachdem, was oben unter "Meine Eingaben
-        // speichern?" ausgewaehlt ist, entweder dauerhaft oder nur fuer
-        // diese Sitzung.
         document.querySelector('.editor-sidebar').addEventListener('input', speichereDaten);
         document.querySelector('.editor-sidebar').addEventListener('change', speichereDaten);
 
-        // Direkt-in-der-Vorschau-schreiben: Aenderungen in einem editierbaren
-        // Vorschaubereich werden live in das zugehoerige Formularfeld links
-        // zurueckgeschrieben (und damit auch automatisch mitgespeichert),
-        // ohne die Vorschau bei jedem Tastendruck komplett neu aufzubauen
-        // (das wuerde sonst die Schreibmarke/den Cursor verspringen lassen).
         document.querySelectorAll('.editable-preview[data-sync]').forEach(el => {
             el.addEventListener('input', () => {
                 const feld = document.getElementById(el.dataset.sync);
                 if (feld) feld.value = el.innerText;
             });
-            // Beim Verlassen einmal komplett neu rendern, damit z. B. Fusszeilen,
-            // Seitenumbrueche oder abgeleitete Felder wieder ganz aktuell sind.
             el.addEventListener('blur', () => updateVorschau());
         });
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
-            // Zeigt einen Hinweis, sobald im Hintergrund eine neue Version geladen wurde,
-            // damit offene Geräte die Aktualisierung sehen und übernehmen können.
             navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
         }
         function sdUpdateBereit() {
