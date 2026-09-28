@@ -1365,6 +1365,9 @@
       <button id="btnExport" class="btn-primary" disabled>
         📥 PDF Speichern
       </button>
+      <button id="btnSharePdf" class="nav-btn" title="Fertiges PDF direkt teilen (E-Mail, WhatsApp, ...)" disabled>
+        📤 Teilen
+      </button>
     </div>
   </header>
 
@@ -1624,6 +1627,16 @@
             <option value="original">Originalgröße beibehalten</option>
           </select>
         </div>
+        <div class="form-row" style="align-items:center;">
+          <label for="pdfWatermarkOn" style="display:flex;align-items:center;gap:6px;">
+            <input type="checkbox" id="pdfWatermarkOn" style="width:auto;">
+            Wasserzeichen/Stempel
+          </label>
+        </div>
+        <div class="form-row" id="pdfWatermarkTextRow" style="display:none;">
+          <label for="pdfWatermarkText">Text</label>
+          <input type="text" id="pdfWatermarkText" placeholder="z. B. Kopie, Vertraulich" value="Kopie">
+        </div>
       </div>
 
       <!-- Page Actions -->
@@ -1798,6 +1811,15 @@
           <div class="scan-filter-card" data-filter="bw"><canvas></canvas><span>Schwarz-Weiß</span></div>
           <div class="scan-filter-card" data-filter="vivid"><canvas></canvas><span>Farbe kräftig</span></div>
         </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
+          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);">Helligkeit
+            <input type="range" id="scanBrightness" min="-60" max="60" value="0" style="width:100%;">
+          </label>
+          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);">Kontrast
+            <input type="range" id="scanContrast" min="-60" max="60" value="0" style="width:100%;">
+          </label>
+          <button id="btnScanAdjustReset" class="tool-btn" style="flex:0 0 auto;align-self:flex-end;">↺ Zurücksetzen</button>
+        </div>
         <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
           <button id="btnScanFilterBack" class="tool-btn">← Zurück</button>
           <div style="display:flex;gap:8px;">
@@ -1895,7 +1917,7 @@
   <script type="module">
     import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-    const { PDFDocument, rgb, degrees } = window.PDFLib;
+    const { PDFDocument, rgb, degrees, StandardFonts } = window.PDFLib;
 
     // --- State Management ---
     const state = {
@@ -3515,6 +3537,14 @@
     })();
 
     // --- PDF Export Engine ---
+    // Zuletzt erzeugtes PDF (für den "Teilen"-Button) - Web Share API kann
+    // nur ein bereits vorliegendes File-Objekt teilen, kein PDF neu bauen.
+    let lastExportedPdfBlob = null;
+
+    $('pdfWatermarkOn').addEventListener('change', () => {
+      $('pdfWatermarkTextRow').style.display = $('pdfWatermarkOn').checked ? '' : 'none';
+    });
+
     $('btnExport').onclick = async () => {
       if (!state.pages.length) return;
       // Eingeschraenkter Modus (nach der 1-Monat-Testphase, siehe
@@ -3530,6 +3560,9 @@
         const outPdf = await PDFDocument.create();
         const qualityMode = $('pdfQuality').value;
         const pageFormat = $('pdfPageFormat').value;
+        const watermarkOn = $('pdfWatermarkOn').checked;
+        const watermarkText = $('pdfWatermarkText').value.trim() || 'Kopie';
+        const watermarkFont = watermarkOn ? await outPdf.embedFont(StandardFonts.HelveticaBold) : null;
 
         const renderDpiScale = qualityMode === 'high' ? 2.5 : (qualityMode === 'medium' ? 1.8 : 1.2);
         const jpegQuality = qualityMode === 'high' ? 0.93 : (qualityMode === 'medium' ? 0.80 : 0.65);
@@ -3563,10 +3596,28 @@
             width: pdfPageW,
             height: pdfPageH
           });
+
+          if (watermarkOn && watermarkFont) {
+            // Diagonal, halbtransparent über die ganze Seite - wie der
+            // "Kopie"/"Vertraulich"-Stempel bekannter Scan-Apps.
+            const fontSize = Math.max(24, Math.round(Math.min(pdfPageW, pdfPageH) / 6));
+            const textWidth = watermarkFont.widthOfTextAtSize(watermarkText, fontSize);
+            pdfPage.drawText(watermarkText, {
+              x: pdfPageW / 2 - textWidth / 2,
+              y: pdfPageH / 2 - fontSize / 3,
+              size: fontSize,
+              font: watermarkFont,
+              color: rgb(0.6, 0.15, 0.1),
+              opacity: 0.25,
+              rotate: degrees(35),
+            });
+          }
         }
 
         const pdfBytes = await outPdf.save({ useObjectStreams: true });
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        lastExportedPdfBlob = blob;
+        $('btnSharePdf').disabled = false;
         triggerDownload(blob, getFilenameWithExt('pdf'));
         showToast('✅ PDF erfolgreich gespeichert!');
       } catch (err) {
@@ -3606,6 +3657,25 @@
     window.addEventListener('afterprint', () => {
       document.body.classList.remove('printing-mode');
     });
+
+    // Direktes Teilen (E-Mail, WhatsApp, AirDrop, ...) über die Web-Share-API,
+    // wie es Scan-Apps direkt nach dem Speichern anbieten. Teilt das zuletzt
+    // erzeugte PDF; ohne Share-Unterstützung (z. B. Desktop-Firefox) wird
+    // stattdessen erklärt, dass die gespeicherte Datei manuell angehängt
+    // werden kann.
+    $('btnSharePdf').onclick = async () => {
+      if (!lastExportedPdfBlob) return;
+      const file = new File([lastExportedPdfBlob], getFilenameWithExt('pdf'), { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: getBaseFilename() });
+        } catch (e) {
+          // Nutzer hat das Teilen-Menü abgebrochen - kein Fehler.
+        }
+      } else {
+        showToast('Teilen wird von diesem Browser nicht unterstützt – bitte die gespeicherte PDF-Datei manuell anhängen.', 5000);
+      }
+    };
 
     function getBaseFilename() {
       let title = $('docTitle').value.trim() || 'Bewerbung_Dokumente';
@@ -4289,7 +4359,43 @@
       reader.readAsDataURL(file);
     }
 
+    // Grobe Qualitäts-Prüfung wie bei Adobe Scan/CamScanner: warnt vor
+    // offensichtlich unscharfen oder zu dunklen/hellen Fotos, statt eine
+    // unbrauchbare Seite kommentarlos zu übernehmen. Schwellenwerte sind
+    // Erfahrungswerte (Laplace-Varianz für Schärfe, Mittelwert für
+    // Belichtung) - eine Heuristik, kein Ersatz fürs Hinschauen.
+    function scanCheckPhotoQuality(canvas) {
+      if (!(scanCvReady && typeof cv !== 'undefined' && cv.Mat)) return null;
+      let src, gray, lap, meanMat, stddevMat;
+      try {
+        src = cv.imread(canvas);
+        gray = new cv.Mat();
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+        lap = new cv.Mat();
+        cv.Laplacian(gray, lap, cv.CV_64F);
+        meanMat = new cv.Mat(); stddevMat = new cv.Mat();
+        cv.meanStdDev(lap, meanMat, stddevMat);
+        const sharpness = Math.pow(stddevMat.data64F[0], 2);
+        const brightness = cv.mean(gray)[0];
+        const warnings = [];
+        if (sharpness < 45) warnings.push('unscharf');
+        if (brightness < 65) warnings.push('sehr dunkel');
+        if (brightness > 235) warnings.push('überbelichtet');
+        return warnings;
+      } catch (e) {
+        return null;
+      } finally {
+        if (src) src.delete();
+        if (gray) gray.delete();
+        if (lap) lap.delete();
+        if (meanMat) meanMat.delete();
+        if (stddevMat) stddevMat.delete();
+      }
+    }
+
     function openScanEnhanceModal(img, fileName) {
+      $('scanBrightness').value = 0;
+      $('scanContrast').value = 0;
       let w = img.naturalWidth, h = img.naturalHeight;
       const scale = Math.min(1, SCAN_MAX_DIM / Math.max(w, h));
       w = Math.round(w * scale);
@@ -4306,6 +4412,8 @@
       // manuellen Zwischenschritt. Nur wenn die Erkennung unsicher ist,
       // erscheint der Zuschneide-Dialog (mit dem Vorschlag schon vorausgefüllt).
       setTimeout(() => {
+        const qualityWarnings = scanCheckPhotoQuality(canvas);
+
         const auto = scanTryAutoDetect(canvas);
         const validAuto = auto && scanCornersLookValid(auto, w, h);
         const ratio = validAuto ? scanPolygonArea(auto) / (w * h) : 0;
@@ -4313,14 +4421,20 @@
 
         if (confidentAuto) {
           finishScanFromCorners(canvas, auto, 'auto');
-          showToast('Seite automatisch begradigt & optimiert ✓');
+          if (qualityWarnings && qualityWarnings.length) {
+            showToast(`⚠️ Foto wirkt ${qualityWarnings.join(' und ')} – bei Bedarf über "✂️ Zuschneiden" neu aufnehmen`, 6000);
+          } else {
+            showToast('Seite automatisch begradigt & optimiert ✓');
+          }
           return;
         }
 
         $('modalScanEnhance').classList.add('open');
         $('scanCropStage').style.display = '';
         $('scanFilterStage').style.display = 'none';
-        $('scanEnhanceHint').textContent = `„${fileName}“ – ziehe die vier Punkte auf die Ecken des Dokuments.`;
+        $('scanEnhanceHint').textContent = qualityWarnings && qualityWarnings.length
+          ? `„${fileName}“ – ⚠️ Foto wirkt ${qualityWarnings.join(' und ')}. Ecken trotzdem anpassen oder neu aufnehmen.`
+          : `„${fileName}“ – ziehe die vier Punkte auf die Ecken des Dokuments.`;
 
         const margin = 0.06;
         const defaultCorners = [
@@ -4953,12 +5067,43 @@
       return out;
     }
 
+    // Manuelle Helligkeits-/Kontrast-Nachregelung zusätzlich zu den festen
+    // Filtern (wie ein Schieberegler in Clear Scanner & Co.) - wirkt auf das
+    // Ergebnis des gewählten Filters, nicht auf das Rohfoto.
+    function scanApplyBrightnessContrast(canvas, brightness, contrast) {
+      if (!brightness && !contrast) return canvas;
+      const out = document.createElement('canvas');
+      out.width = canvas.width; out.height = canvas.height;
+      const octx = out.getContext('2d');
+      octx.drawImage(canvas, 0, 0);
+      const imgData = octx.getImageData(0, 0, out.width, out.height);
+      const d = imgData.data;
+      const c = (100 + contrast) / 100;
+      for (let i = 0; i < d.length; i += 4) {
+        for (let k = 0; k < 3; k++) {
+          let v = d[i + k];
+          v = (v - 128) * c + 128 + brightness;
+          d[i + k] = Math.min(255, Math.max(0, v));
+        }
+      }
+      octx.putImageData(imgData, 0, 0);
+      return out;
+    }
+
+    function getScanAdjust() {
+      return {
+        brightness: parseInt($('scanBrightness').value, 10) || 0,
+        contrast: parseInt($('scanContrast').value, 10) || 0,
+      };
+    }
+
     function buildScanFilterPreviews() {
       const cards = document.querySelectorAll('#scanFilterGrid .scan-filter-card');
+      const adj = getScanAdjust();
       cards.forEach(card => {
         const mode = card.dataset.filter;
         const canvas = card.querySelector('canvas');
-        const resultCanvas = scanApplyFilter(scanWarpedCache, mode);
+        const resultCanvas = scanApplyBrightnessContrast(scanApplyFilter(scanWarpedCache, mode), adj.brightness, adj.contrast);
         const previewW = 260;
         const previewH = Math.round(resultCanvas.height * (previewW / resultCanvas.width));
         canvas.width = previewW; canvas.height = previewH;
@@ -4971,7 +5116,22 @@
       });
     }
 
+    let scanAdjustDebounce = null;
+    ['scanBrightness', 'scanContrast'].forEach(id => {
+      $(id).addEventListener('input', () => {
+        clearTimeout(scanAdjustDebounce);
+        scanAdjustDebounce = setTimeout(buildScanFilterPreviews, 80);
+      });
+    });
+    $('btnScanAdjustReset').onclick = () => {
+      $('scanBrightness').value = 0;
+      $('scanContrast').value = 0;
+      buildScanFilterPreviews();
+    };
+
     $('btnScanCropNext').onclick = () => {
+      $('scanBrightness').value = 0;
+      $('scanContrast').value = 0;
       const c = scanCorners;
       const wTop = Math.hypot(c[1].x - c[0].x, c[1].y - c[0].y);
       const wBot = Math.hypot(c[2].x - c[3].x, c[2].y - c[3].y);
@@ -5012,7 +5172,8 @@
     }
 
     function finalizeScanPage() {
-      const finalCanvas = scanApplyFilter(scanWarpedCache, scanSelectedFilter);
+      const adj = getScanAdjust();
+      const finalCanvas = scanApplyBrightnessContrast(scanApplyFilter(scanWarpedCache, scanSelectedFilter), adj.brightness, adj.contrast);
       const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
       const scanMeta = { rawDataUrl: scanRawDataUrlCache, quad: scanQuadCache, filterMode: scanSelectedFilter };
 
