@@ -383,6 +383,34 @@
       padding: 14px 16px;
       font-size: 1rem;
     }
+
+    .review-filter-row {
+      flex-shrink: 0;
+      padding: 4px 14px 0;
+      background: #0f172a;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .review-filter-btn {
+      flex: 1 1 0;
+      max-width: 200px;
+      background: #1c2c48;
+      color: #cbd5e1;
+      border: 1px solid #2c3e5c;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .review-filter-btn.selected {
+      background: #d66b45;
+      border-color: #d66b45;
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -452,6 +480,10 @@
       <div class="r-handle" id="rh2"></div>
       <div class="r-handle" id="rh3"></div>
     </div>
+    <div class="review-filter-row">
+      <button type="button" class="review-filter-btn" data-mode="gray">⬛ Graustufen</button>
+      <button type="button" class="review-filter-btn selected" data-mode="color">🎨 Farbe</button>
+    </div>
     <div class="review-actions">
       <button id="btnReviewReset">↺ Zurücksetzen</button>
       <button id="btnReviewRotateLeft">⟲ Links</button>
@@ -491,6 +523,11 @@
 
     let sent = 0;
     let sentApp = 0;
+    // true, während die Bestätigungs-/Zuschneide-Ansicht ein Foto aus der
+    // normalen Kamera (App-Modus, kein Live-Video) zeigt - dann darf beim
+    // Schließen nicht die (nicht vorhandene) Live-Kamera fortgesetzt werden,
+    // sondern muss der "Noch ein Foto aufnehmen"-Bildschirm wieder erscheinen.
+    let reviewFromAppMode = false;
     let conn = null;
     let peer = null;
     let stream = null;
@@ -1000,35 +1037,35 @@
     // --- Modus 2: normale Kamera-App / Fotoauswahl ---
     btnAppCapture.onclick = () => fileInput.click();
 
+    // Früher wurde das mit der normalen Kamera aufgenommene Foto direkt und
+    // unbearbeitet an den PC geschickt - die automatische Ecken-Erkennung,
+    // das Begradigen und die Graustufen/Farbe-Auswahl gab es dann nur noch
+    // (unzuverlässiger, weil ohne Live-Vorschau) im "Scan optimieren"-Dialog
+    // am PC. Jetzt läuft ein Foto aus der normalen Kamera durch genau die
+    // gleiche Bestätigungs-/Zuschneide-Ansicht wie die Live-Kamera: Ecken
+    // automatisch erkennen, bei Bedarf nachziehen, Graustufen oder Farbe
+    // wählen - und erst DANACH geht die fertige Seite an den PC.
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
       fileInput.value = '';
       if (!file) return;
-      btnAppCapture.disabled = true;
-      btnAppCapture.textContent = 'Wird gesendet …';
+      const name = file.name || ('Handyscan_' + (sentApp + 1) + '.jpg');
       const reader = new FileReader();
       reader.onload = () => {
-        const dataUrl = reader.result;
-        const name = file.name || ('Handyscan_' + (sentApp + 1) + '.jpg');
-        // Wie beim Live-Modus: Erfolg prüfen und bei Verbindungsabbruch im
-        // Hintergrund weiter versuchen, statt "gesendet ✓" ohne echten
-        // Versand anzuzeigen.
-        const attemptSend = (attempts) => {
-          if (sendPhoto(dataUrl, file.type, name)) {
-            sentApp++;
-            countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
-            btnAppCapture.disabled = false;
-            btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
-          } else if (attempts >= 20) {
-            countAppEl.textContent = '❌ Verbindung zum PC nicht möglich – bitte nochmal versuchen.';
-            btnAppCapture.disabled = false;
-            btnAppCapture.textContent = '📸 Noch ein Foto aufnehmen / wählen';
-          } else {
-            countAppEl.textContent = '⚠️ Keine Verbindung – wird automatisch erneut versucht …';
-            setTimeout(() => attemptSend(attempts + 1), 1000);
-          }
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          appModeScreen.classList.add('hidden');
+          reviewFromAppMode = true;
+          openReviewStage(c, null, name);
         };
-        attemptSend(0);
+        img.onerror = () => {
+          countAppEl.textContent = '⚠️ Foto konnte nicht gelesen werden – bitte erneut versuchen.';
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     };
@@ -1185,6 +1222,11 @@
     function closeReviewStage(resumeCamera) {
       reviewStageEl.classList.add('hidden');
       autoCaptured = false;
+      if (reviewFromAppMode) {
+        reviewFromAppMode = false;
+        appModeScreen.classList.remove('hidden');
+        return;
+      }
       if (resumeCamera && stream) autoDetectLoop();
     }
 
@@ -1482,10 +1524,45 @@
       return reviewCvMatToCanvas(sharpMat);
     }
 
+    function reviewCvClaheGray(srcCanvas) {
+      const src = cv.imread(srcCanvas);
+      const gray = new cv.Mat();
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+      src.delete();
+
+      // Handyfoto-Rauschen erst raus, sonst verstärkt CLAHE es zu sichtbaren
+      // Pünktchen ("Schnee") statt nur den Text-Kontrast anzuheben.
+      const denoised = new cv.Mat();
+      cv.bilateralFilter(gray, denoised, 7, 50, 50);
+      gray.delete();
+
+      const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+      const out = new cv.Mat();
+      clahe.apply(denoised, out);
+      denoised.delete();
+      clahe.delete();
+
+      const sharpOut = reviewCvSharpen(out, 0.3);
+      out.delete();
+
+      return reviewCvMatToCanvas(sharpOut);
+    }
+
+    // Zwei einfache Optionen wie bei anderen Scanner-Apps: "Graustufen" oder
+    // "Farbe". Ausgewählt über die beiden Buttons unter dem Zuschnitt-Bild.
+    let reviewSelectedMode = 'color';
+    document.querySelectorAll('.review-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        reviewSelectedMode = btn.dataset.mode;
+        document.querySelectorAll('.review-filter-btn').forEach(b => b.classList.toggle('selected', b === btn));
+      });
+    });
+
     function reviewApplyEnhance(warped) {
       const cvOk = scanCvReady && typeof cv !== 'undefined' && cv.Mat;
       if (cvOk) {
         try {
+          if (reviewSelectedMode === 'gray') return reviewCvClaheGray(warped);
           return reviewCvAutoEnhance(warped);
         } catch (e) {
           // Bei einem OpenCV-Fehler unten mit der JS-Variante weitermachen.
@@ -1514,8 +1591,13 @@
       // und bei einer kurzen Verbindungsunterbrechung automatisch im
       // Hintergrund weiter versucht, statt das Foto zu verwerfen.
       if (sendPhoto(dataUrl, 'image/jpeg', pendingName)) {
-        sent++;
-        countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+        if (reviewFromAppMode) {
+          sentApp++;
+          countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
+        } else {
+          sent++;
+          countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+        }
         closeReviewStage(true);
         return;
       }
@@ -1527,8 +1609,13 @@
         attempts++;
         if (sendPhoto(dataUrl, 'image/jpeg', pendingName)) {
           clearInterval(retry);
-          sent++;
-          countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+          if (reviewFromAppMode) {
+            sentApp++;
+            countAppEl.textContent = sentApp + ' Seite(n) gesendet ✓';
+          } else {
+            sent++;
+            countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+          }
           closeReviewStage(true);
         } else if (attempts >= 20) {
           // Nach ~20s aufgeben, aber das Foto NICHT verwerfen – der Nutzer
