@@ -4404,7 +4404,7 @@
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
       cacheRawForPage(canvas, corners);
-      scanWarpedCache = scanWarpToRect(canvas, corners, outW, outH);
+      scanWarpedCache = scanWarpToRect(canvas, scanInsetCorners(corners, 0.015), outW, outH);
       scanSelectedFilter = filterMode;
       finalizeScanPage();
     }
@@ -4535,6 +4535,23 @@
         }
       }
       return M.map(row => row[n]);
+    }
+
+    // Zieht die vier Ecken minimal (1.5%) zum Mittelpunkt der Auswahl hin ein,
+    // bevor entzerrt wird. Ecken lassen sich beim Ziehen von Hand (oder bei
+    // der Auto-Erkennung) so gut wie nie pixelgenau auf die Papierkante
+    // legen - ein winziger Rest Hintergrund/Tischkante bleibt fast immer
+    // knapp innerhalb der Auswahl übrig und erscheint dann als auffälliger
+    // farbiger Streifen am Rand des fertigen Scans. Professionelle Scan-Apps
+    // schneiden deshalb absichtlich hauchdünn (kaum sichtbar) nach innen,
+    // statt exakt auf der gezogenen Linie zu bleiben.
+    function scanInsetCorners(corners, frac) {
+      const cx = corners.reduce((s, p) => s + p.x, 0) / 4;
+      const cy = corners.reduce((s, p) => s + p.y, 0) / 4;
+      return corners.map(p => ({
+        x: p.x + (cx - p.x) * frac,
+        y: p.y + (cy - p.y) * frac,
+      }));
     }
 
     function scanComputeHomography(src, dst) {
@@ -4959,7 +4976,7 @@
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
       cacheRawForPage($('scanCropCanvas'), scanCorners);
-      scanWarpedCache = scanWarpToRect($('scanCropCanvas'), scanCorners, outW, outH);
+      scanWarpedCache = scanWarpToRect($('scanCropCanvas'), scanInsetCorners(scanCorners, 0.015), outW, outH);
       buildScanFilterPreviews();
       $('scanCropStage').style.display = 'none';
       $('scanFilterStage').style.display = '';

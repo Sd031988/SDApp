@@ -1279,6 +1279,16 @@
       return M.map(row => row[n]);
     }
 
+    // Zieht die vier Ecken minimal (1.5%) zum Mittelpunkt hin ein, bevor
+    // entzerrt wird - Ecken lassen sich von Hand oder per Auto-Erkennung so
+    // gut wie nie pixelgenau auf die Papierkante legen, sonst bleibt ein
+    // Hintergrund-/Tischkanten-Streifen am Rand des fertigen Scans sichtbar.
+    function reviewInsetCorners(corners, frac) {
+      const cx = corners.reduce((s, p) => s + p.x, 0) / 4;
+      const cy = corners.reduce((s, p) => s + p.y, 0) / 4;
+      return corners.map(p => ({ x: p.x + (cx - p.x) * frac, y: p.y + (cy - p.y) * frac }));
+    }
+
     function reviewComputeHomography(src, dst) {
       const A = [], b = [];
       for (let i = 0; i < 4; i++) {
@@ -1580,7 +1590,7 @@
       const hRight = Math.hypot(c[2].x - c[1].x, c[2].y - c[1].y);
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
-      const warpedRaw = reviewWarpToRect(reviewCanvas, reviewCorners, outW, outH);
+      const warpedRaw = reviewWarpToRect(reviewCanvas, reviewInsetCorners(reviewCorners, 0.015), outW, outH);
       const warped = reviewApplyEnhance(warpedRaw);
       const dataUrl = warped.toDataURL('image/jpeg', 0.92);
       const pendingName = reviewPendingName || ('Handyscan_' + (sent + 1) + '.jpg');

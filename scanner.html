@@ -1019,7 +1019,7 @@
       const hRight = Math.hypot(quad[2].x-quad[1].x, quad[2].y-quad[1].y);
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
-      const warped = warpToRect(rawCanvas, quad, outW, outH);
+      const warped = warpToRect(rawCanvas, insetCorners(quad, 0.015), outW, outH);
       const filtered = applyFilter(warped, 'auto');
       const dataUrl = filtered.toDataURL('image/jpeg', 0.92);
       setStatus('');
@@ -1393,7 +1393,7 @@
         const outW = Math.max(200, Math.min(BATCH_MAX_DIM, Math.round(Math.max(wTop, wBot))));
         const outH = Math.max(200, Math.min(BATCH_MAX_DIM, Math.round(Math.max(hLeft, hRight))));
 
-        const warped = warpToRect(shot, fullQuad, outW, outH);
+        const warped = warpToRect(shot, insetCorners(fullQuad, 0.015), outW, outH);
         const filtered = applyFilter(warped, 'auto');
         const dataUrl = filtered.toDataURL('image/jpeg', 0.85);
         // Rohfoto + automatisch erkanntes Viereck aufheben: bei der Nachkontrolle nach dem
@@ -1702,6 +1702,16 @@
     return M.map(row => row[n]);
   }
 
+  // Zieht die vier Ecken minimal (1.5%) zum Mittelpunkt hin ein, bevor
+  // entzerrt wird - Ecken lassen sich von Hand oder per Auto-Erkennung so
+  // gut wie nie pixelgenau auf die Papierkante legen, sonst bleibt ein
+  // Hintergrund-/Tischkanten-Streifen am Rand des fertigen Scans sichtbar.
+  function insetCorners(corners, frac){
+    const cx = corners.reduce((s,p)=>s+p.x,0)/4;
+    const cy = corners.reduce((s,p)=>s+p.y,0)/4;
+    return corners.map(p => ({ x: p.x + (cx-p.x)*frac, y: p.y + (cy-p.y)*frac }));
+  }
+
   function warpToRect(srcCanvas, srcCorners, outW, outH){
     const dstCorners = [{x:0,y:0},{x:outW,y:0},{x:outW,y:outH},{x:0,y:outH}];
     const h = computeHomography(srcCorners, dstCorners); // dst(X,Y) -> src(u,v)
@@ -1756,7 +1766,7 @@
       const hRight = Math.hypot(c[2].x-c[1].x, c[2].y-c[1].y);
       const outW = Math.max(200, Math.round(Math.max(wTop, wBot)));
       const outH = Math.max(200, Math.round(Math.max(hLeft, hRight)));
-      warpedCanvasCache = warpToRect(els.cropCanvas, corners, outW, outH);
+      warpedCanvasCache = warpToRect(els.cropCanvas, insetCorners(corners, 0.015), outW, outH);
 
       if(singleEditIndex !== null){
         // Nachträglicher Zuschnitt einer einzelnen fertigen Seite: Ergebnis direkt
