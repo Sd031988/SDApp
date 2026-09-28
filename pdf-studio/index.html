@@ -1408,7 +1408,7 @@
       <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
         einfügen</button>
 
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <div id="cloudButtonsRow" style="display:none;gap:6px;margin-bottom:8px;">
         <button id="btnCloudSave" class="tool-btn" style="flex:1;" title="Alle Seiten in deinem Konto speichern, um sie auf einem anderen Gerät weiterzubearbeiten">☁️ Speichern</button>
         <button id="btnCloudLoad" class="tool-btn" style="flex:1;" title="Zuletzt in der Cloud gespeicherten Stand laden">☁️ Laden</button>
       </div>
@@ -2360,6 +2360,19 @@
       if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
       else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
       return false;
+    }
+
+    // Die Cloud-Speichern/Laden-Buttons nur zeigen, wenn tatsächlich ein Konto
+    // besteht - vorher würden sie fälschlich suggerieren, dass hier schon etwas
+    // in der Cloud gespeichert wird.
+    function updateCloudButtonsVisibility(user) {
+      const row = $('cloudButtonsRow');
+      if (row) row.style.display = user ? 'flex' : 'none';
+    }
+    if (window.SD_AUTH) {
+      window.SD_AUTH.onChange(updateCloudButtonsVisibility);
+    } else {
+      window.addEventListener('sd-auth-ready', () => window.SD_AUTH.onChange(updateCloudButtonsVisibility));
     }
 
     $('btnCloudSave').onclick = async () => {
@@ -5760,7 +5773,7 @@
   </script>
 
   <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
-  <script type="module" src="./sd-auth.js"></script>
+  <script type="module" src="./sd-auth.js?v=3"></script>
 </body>
 
 </html>

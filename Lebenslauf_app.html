@@ -1826,8 +1826,8 @@
         <button class="action-btn secondary-btn" onclick="oeffneDownloadMenu()">⬇️ Speichern / Herunterladen</button>
         <button class="action-btn print-btn" onclick="exportAlsPdf()">🖨️ Als PDF speichern</button>
         <button class="action-btn secondary-btn" onclick="oeffneArchivDialog()">🗄️ Bewerbungsarchiv</button>
-        <button class="action-btn secondary-btn" onclick="sdCloudSpeichern()">☁️ In meinem Konto speichern</button>
-        <button class="action-btn secondary-btn" onclick="sdCloudLaden()">☁️ Aus meinem Konto laden</button>
+        <button id="btnSdCloudSpeichern" class="action-btn secondary-btn" onclick="sdCloudSpeichern()" style="display:none;">☁️ In meinem Konto speichern</button>
+        <button id="btnSdCloudLaden" class="action-btn secondary-btn" onclick="sdCloudLaden()" style="display:none;">☁️ Aus meinem Konto laden</button>
         <button class="action-btn secondary-btn" onclick="sdZeigeGeraeteId()">🔑 Meine Geräte-ID anzeigen</button>
         <div id="speicher-status" class="success" aria-live="polite"></div>
     </div>
@@ -2661,6 +2661,22 @@
             return false;
         }
 
+        // Die Cloud-Speichern/Laden-Buttons nur zeigen, wenn wirklich ein Konto
+        // besteht - vorher würden sie fälschlich suggerieren, dass hier schon
+        // etwas in der Cloud gespeichert wird.
+        function sdUpdateCloudButtons(user) {
+            const anzeige = user ? '' : 'none';
+            const btnSave = document.getElementById('btnSdCloudSpeichern');
+            const btnLoad = document.getElementById('btnSdCloudLaden');
+            if (btnSave) btnSave.style.display = anzeige;
+            if (btnLoad) btnLoad.style.display = anzeige;
+        }
+        if (window.SD_AUTH) {
+            window.SD_AUTH.onChange(sdUpdateCloudButtons);
+        } else {
+            window.addEventListener('sd-auth-ready', () => window.SD_AUTH.onChange(sdUpdateCloudButtons));
+        }
+
         async function sdCloudSpeichern() {
             if (!sdRequireLoginOrPrompt()) return;
             const status = document.getElementById('speicher-status');
@@ -3180,7 +3196,7 @@
     </script>
 
     <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
-    <script type="module" src="./sd-auth.js"></script>
+    <script type="module" src="./sd-auth.js?v=3"></script>
 </body>
 
 </html>
