@@ -967,7 +967,14 @@
         }
       }
       els.liveCamVideo.srcObject = liveStream;
-      await els.liveCamVideo.play();
+      try {
+        await els.liveCamVideo.play();
+      } catch (playErr) {
+        // iOS Safari verweigert play() manchmal ohne frische Nutzergeste, obwohl der
+        // Stream angekommen ist – per Tap auf das Video erneut versuchen, statt die
+        // ganze Live-Kamera fälschlich als "nicht unterstützt" zu melden.
+        els.liveCamVideo.addEventListener('click', () => els.liveCamVideo.play().catch(() => {}), { once: true });
+      }
       els.liveCamHint.textContent = cvReady
         ? (batchMode
             ? 'Halte das Dokument ruhig in den Rahmen – jede Seite wird automatisch nacheinander gescannt.'

@@ -553,14 +553,64 @@
       appModeScreen.classList.remove('hidden');
     };
 
+    // ---- Robuste Kamera-Fehlermeldung (Safari wirft öfter/andere Fehlernamen
+    // als Chrome) – unterscheidet "wirklich nicht unterstützt" von
+    // Berechtigung/Constraints/unsicherer Verbindung.
+    function describeCamError(err) {
+      const name = err && err.name;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        return 'Kamera-Zugriff wurde verweigert. Bitte in den Browser-Einstellungen erlauben und die Seite neu laden.';
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return 'Es wurde keine Kamera gefunden.';
+      }
+      if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return 'Kamera ist gerade durch eine andere App belegt. Bitte andere Apps schließen und erneut versuchen.';
+      }
+      if (name === 'SecurityError') {
+        return 'Kamera-Zugriff aus Sicherheitsgründen blockiert (keine sichere HTTPS-Verbindung).';
+      }
+      if (name === 'NotSupportedError' || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+        return 'Dieser Browser unterstützt die Live-Kamera nicht.';
+      }
+      return 'Kein Kamerazugriff' + (err && err.message ? ' (' + err.message + ')' : '') + '.';
+    }
+
     // --- Modus 1: Live-Kamera (kein Foto wird auf dem Handy gespeichert) ---
     async function startCamera() {
+      if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+        permissionScreen.innerHTML = '<div class="icon">🚫</div><p>' + describeCamError({ name: 'NotSupportedError' }) + '</p>';
+        return;
+      }
+      if (!(location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        permissionScreen.innerHTML = '<div class="icon">🚫</div><p>' + describeCamError({ name: 'SecurityError' }) + '</p>';
+        return;
+      }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1600 }, height: { ideal: 2000 } },
-          audio: false
-        });
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1600 }, height: { ideal: 2000 } },
+            audio: false
+          });
+        } catch (innerErr) {
+          // Safari ist bei Constraints strenger als Chrome und wirft hier
+          // öfter OverconstrainedError – dann mit einfachster Anfrage erneut
+          // versuchen, statt die Live-Kamera direkt aufzugeben.
+          if (innerErr && innerErr.name === 'OverconstrainedError') {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          } else {
+            throw innerErr;
+          }
+        }
         video.srcObject = stream;
+        try {
+          await video.play();
+        } catch (playErr) {
+          // iOS Safari verweigert play() manchmal ohne frische Nutzergeste;
+          // Stream ist meist trotzdem angekommen, also per Tap erneut versuchen
+          // statt die ganze Live-Kamera als fehlgeschlagen zu behandeln.
+          video.addEventListener('click', () => video.play().catch(() => {}), { once: true });
+        }
         permissionScreen.classList.add('hidden');
         cameraWrap.classList.remove('hidden');
         bottomBar.classList.remove('hidden');
@@ -568,7 +618,7 @@
         updateCaptureEnabled();
         autoDetectLoop();
       } catch (err) {
-        permissionScreen.innerHTML = '<div class="icon">🚫</div><p>Kein Kamerazugriff. Bitte in den Browser-Einstellungen erlauben und die Seite neu laden.</p>';
+        permissionScreen.innerHTML = '<div class="icon">🚫</div><p>' + describeCamError(err) + '</p>';
       }
     }
 

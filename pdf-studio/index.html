@@ -4948,6 +4948,44 @@
       return true;
     }
 
+    // ---- Robuste Kamera-Fehlermeldung (Safari wirft öfter/andere Fehlernamen
+    // als Chrome) – unterscheidet "wirklich nicht unterstützt" von
+    // Berechtigung/Constraints/unsicherer Verbindung, damit Nutzer nicht
+    // fälschlich denken, Live-Kamera gehe generell nicht.
+    function describeCamError(err) {
+      const name = err && err.name;
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        return '🚫 Kamera-Zugriff wurde verweigert. Bitte in den Browser-/Website-Einstellungen erlauben und erneut versuchen.';
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return '🚫 Es wurde keine Kamera gefunden.';
+      }
+      if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return '🚫 Kamera ist gerade durch eine andere App belegt. Bitte andere Apps schließen und erneut versuchen.';
+      }
+      if (name === 'SecurityError') {
+        return '🚫 Kamera-Zugriff aus Sicherheitsgründen blockiert (keine sichere HTTPS-Verbindung). Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      }
+      if (name === 'NotSupportedError' || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+        return '🚫 Dieser Browser unterstützt die Live-Kamera nicht. Bitte nutze stattdessen die normale Foto-Aufnahme.';
+      }
+      return 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.') + ' Bitte nutze stattdessen die normale Foto-Aufnahme.';
+    }
+
+    async function requestEnvironmentCamStream(constraints) {
+      try {
+        return await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (innerErr) {
+        // Safari ist bei Constraints strenger als Chrome und wirft hier
+        // öfter OverconstrainedError – dann mit einfachster Anfrage erneut
+        // versuchen, statt die Live-Kamera direkt aufzugeben.
+        if (innerErr && innerErr.name === 'OverconstrainedError') {
+          return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+        throw innerErr;
+      }
+    }
+
     async function startLiveCam() {
       liveCaptured = false;
       liveStableCount = 0;
@@ -4957,17 +4995,32 @@
       $('liveCamCountNum').textContent = scanPendingCaptures.length;
       $('liveCamCount').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
       $('btnLiveCamDone').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
+      if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+        $('liveCamHint').textContent = describeCamError({ name: 'NotSupportedError' });
+        return;
+      }
+      if (!(location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        $('liveCamHint').textContent = describeCamError({ name: 'SecurityError' });
+        return;
+      }
       try {
-        liveStream = await navigator.mediaDevices.getUserMedia({
+        liveStream = await requestEnvironmentCamStream({
           video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false
         });
         $('liveCamVideo').srcObject = liveStream;
-        await $('liveCamVideo').play();
+        try {
+          await $('liveCamVideo').play();
+        } catch (playErr) {
+          // iOS Safari verweigert play() manchmal ohne frische Nutzergeste;
+          // Stream ist meist trotzdem angekommen, also weitermachen statt
+          // abzubrechen – notfalls per Video-Klick erneut versuchen.
+          $('liveCamVideo').addEventListener('click', () => $('liveCamVideo').play().catch(() => {}), { once: true });
+        }
         $('liveCamHint').textContent = 'Halte das Dokument ruhig in den Rahmen – Kanten werden automatisch erkannt.';
         liveDetectLoop();
       } catch (err) {
-        $('liveCamHint').textContent = 'Kamera nicht verfügbar: ' + (err && err.message ? err.message : 'Zugriff verweigert.');
+        $('liveCamHint').textContent = describeCamError(err);
       }
     }
 
