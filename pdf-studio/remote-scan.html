@@ -8,6 +8,9 @@
   <title>Handy-Scanner – SD PDF Studio</title>
   <!-- PeerJS lokal mitgeliefert (kein CDN nötig) -->
   <script src="./vendor/peerjs.min.js"></script>
+  <!-- Automatische Kantenerkennung, gleiche Engine wie im Live-Kamera-Modus von PDF-Studio -->
+  <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+  <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
   <style>
     * { box-sizing: border-box; }
 
@@ -139,6 +142,24 @@
       border-radius: 12px;
       pointer-events: none;
       box-shadow: 0 0 0 2000px rgba(0, 0, 0, .25);
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #guideFrame.detected {
+      border-color: #ffb648;
+      border-style: solid;
+    }
+
+    #guideFrame.ready {
+      border-color: #3ddc84;
+      border-style: solid;
+      box-shadow: 0 0 0 2000px rgba(61, 220, 132, .12);
+    }
+
+    #liveOverlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
     }
 
     #hint {
@@ -148,10 +169,15 @@
       right: 12px;
       text-align: center;
       font-size: .85rem;
+      font-weight: 600;
       color: #fff;
       text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
       pointer-events: none;
+      transition: color .15s ease;
     }
+
+    #hint.ready { color: #3ddc84; }
+    #hint.detected { color: #ffb648; }
 
     #flash {
       position: absolute;
@@ -313,13 +339,14 @@
 
   <div id="cameraWrap" class="hidden">
     <video id="video" autoplay playsinline muted></video>
+    <canvas id="liveOverlay"></canvas>
     <div id="guideFrame"></div>
-    <div id="hint">Dokument in den Rahmen halten, dann unten scannen</div>
+    <div id="hint">Dokument in den Rahmen halten – wird automatisch erkannt</div>
     <div id="flash"></div>
   </div>
 
   <div id="bottomBar" class="hidden">
-    <button id="btnCapture" disabled title="Scannen"></button>
+    <button id="btnCapture" disabled title="Manuell scannen"></button>
     <div id="count"></div>
     <button id="btnDone" class="btn-secondary">Fertig – Verbindung beenden</button>
   </div>
@@ -354,6 +381,9 @@
     const countEl = document.getElementById('count');
     const flashEl = document.getElementById('flash');
     const canvas = document.getElementById('captureCanvas');
+    const hintEl = document.getElementById('hint');
+    const guideFrameEl = document.getElementById('guideFrame');
+    const liveOverlay = document.getElementById('liveOverlay');
 
     const appModeScreen = document.getElementById('appModeScreen');
     const btnAppCapture = document.getElementById('btnAppCapture');
@@ -439,13 +469,13 @@
         bottomBar.classList.remove('hidden');
         cameraReady = true;
         updateCaptureEnabled();
+        autoDetectLoop();
       } catch (err) {
         permissionScreen.innerHTML = '<div class="icon">🚫</div><p>Kein Kamerazugriff. Bitte in den Browser-Einstellungen erlauben und die Seite neu laden.</p>';
       }
     }
 
-    btn.onclick = () => {
-      if (!conn || !conn.open || !stream) return;
+    function doCapture(auto) {
       const vw = video.videoWidth, vh = video.videoHeight;
       if (!vw || !vh) return;
 
@@ -460,15 +490,222 @@
       sendPhoto(dataUrl, 'image/jpeg', 'Handyscan_' + (sent + 1) + '.jpg');
       sent++;
       countEl.textContent = sent + ' Seite(n) gesendet ✓ – nächste Seite in den Rahmen halten';
+      autoStableCount = 0;
+      autoLastQuad = null;
+    }
+
+    btn.onclick = () => {
+      if (!conn || !conn.open || !stream) return;
+      doCapture(false);
     };
 
     btnDone.onclick = () => {
+      stopAutoDetect();
       finishSession();
       cameraWrap.classList.add('hidden');
       bottomBar.classList.add('hidden');
       permissionScreen.classList.remove('hidden');
       permissionScreen.innerHTML = '<div class="icon">✅</div><p>Verbindung beendet. Du kannst das Fenster schließen.</p>';
     };
+
+    // --- Automatische Kantenerkennung + Positions-Feedback (jscanify + OpenCV.js) ---
+    // Läuft mit der gleichen Engine wie die Live-Kamera in PDF-Studio: erkennt die
+    // vier Ecken des Dokuments in Echtzeit, prüft ob es gerade, mittig und vollständig
+    // im Bild liegt, gibt bei Bedarf eine Richtungs-Hinweis-Meldung aus, und löst den
+    // Scan erst automatisch aus, sobald das Dokument einige Frames lang stabil und
+    // korrekt positioniert erkannt wurde.
+    let scanCvReady = false;
+    (function waitForScanCv() {
+      if (typeof cv !== 'undefined') {
+        cv['onRuntimeInitialized'] = () => { scanCvReady = true; };
+      } else {
+        setTimeout(waitForScanCv, 300);
+      }
+    })();
+
+    let autoRafId = null;
+    let autoDetectBusy = false;
+    let autoStableCount = 0;
+    let autoLastQuad = null;
+    let autoCaptured = false;
+    const AUTO_STABLE_NEEDED = 7;
+    const autoHiddenCanvas = document.createElement('canvas');
+
+    function stopAutoDetect() {
+      if (autoRafId) cancelAnimationFrame(autoRafId);
+      autoRafId = null;
+      autoStableCount = 0;
+      autoLastQuad = null;
+      autoCaptured = false;
+      guideFrameEl.classList.remove('detected', 'ready');
+      hintEl.classList.remove('detected', 'ready');
+    }
+
+    function autoQuadsClose(a, b, tol) {
+      if (!a || !b) return false;
+      for (let i = 0; i < 4; i++) {
+        if (Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y) > tol) return false;
+      }
+      return true;
+    }
+
+    function autoPolygonArea(pts) {
+      let area = 0;
+      for (let i = 0; i < pts.length; i++) {
+        const j = (i + 1) % pts.length;
+        area += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+      }
+      return Math.abs(area / 2);
+    }
+
+    function autoTryDetect(sourceCanvas) {
+      try {
+        if (!scanCvReady || typeof jscanify === 'undefined' || typeof cv === 'undefined' || !cv.Mat) return null;
+        const scanner = new jscanify();
+        const mat = cv.imread(sourceCanvas);
+        const contour = scanner.findPaperContour(mat);
+        const pts = scanner.getCornerPoints(contour);
+        mat.delete();
+        if (!pts || !pts.topLeftCorner) return null;
+        return [pts.topLeftCorner, pts.topRightCorner, pts.bottomRightCorner, pts.bottomLeftCorner];
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Prüft Position/Ausrichtung des erkannten Vierecks und liefert entweder
+    // { ok:true } wenn alles passt, oder { ok:false, message } mit einer
+    // konkreten Handlungsanweisung ("weiter nach links" usw.).
+    function autoAssessQuad(quad, w, h) {
+      const area = autoPolygonArea(quad);
+      const full = w * h;
+      const ratio = area / full;
+
+      if (ratio < 0.15) return { ok: false, message: 'Dokument ist zu klein im Bild – näher heranhalten' };
+      if (ratio > 0.97) return { ok: false, message: 'Zu nah dran – etwas Abstand zum Dokument halten' };
+
+      // Vollständig im Bild? (kein Punkt zu nah am Rand → sonst evtl. abgeschnitten)
+      const margin = Math.min(w, h) * 0.015;
+      const cut = quad.some(p => p.x < margin || p.y < margin || p.x > w - margin || p.y > h - margin);
+      if (cut) return { ok: false, message: 'Rand des Dokuments fehlt – etwas weiter weg halten' };
+
+      // Zentrierung: Mittelpunkt des Vierecks vs. Bildmitte
+      const cx = quad.reduce((s, p) => s + p.x, 0) / 4;
+      const cy = quad.reduce((s, p) => s + p.y, 0) / 4;
+      const dx = (cx - w / 2) / w;
+      const dy = (cy - h / 2) / h;
+      const offTol = 0.10;
+      if (Math.abs(dx) > offTol || Math.abs(dy) > offTol) {
+        let dir = '';
+        if (dy < -offTol) dir = 'weiter nach oben';
+        else if (dy > offTol) dir = 'weiter nach unten';
+        if (Math.abs(dx) > offTol) {
+          const side = dx < 0 ? 'nach links' : 'nach rechts';
+          dir = dir ? dir + ' und ' + side : 'etwas ' + side;
+        }
+        return { ok: false, message: 'Handy ' + dir + ' verschieben, Dokument mittig halten' };
+      }
+
+      // Verzerrung/Schräglage: gegenüberliegende Kanten sollten ähnlich lang sein
+      const [tl, tr, br, bl] = quad;
+      const topLen = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+      const botLen = Math.hypot(br.x - bl.x, br.y - bl.y);
+      const leftLen = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+      const rightLen = Math.hypot(br.x - tr.x, br.y - tr.y);
+      const hSkew = Math.abs(topLen - botLen) / Math.max(topLen, botLen);
+      const vSkew = Math.abs(leftLen - rightLen) / Math.max(leftLen, rightLen);
+      if (hSkew > 0.30 || vSkew > 0.30) {
+        return { ok: false, message: 'Handy gerade über das Dokument halten – nicht schräg' };
+      }
+
+      return { ok: true };
+    }
+
+    function autoDetectLoop() {
+      autoRafId = requestAnimationFrame(autoDetectLoop);
+      if (autoCaptured || !video.videoWidth) return;
+
+      if (liveOverlay.width !== video.clientWidth || liveOverlay.height !== video.clientHeight) {
+        liveOverlay.width = video.clientWidth;
+        liveOverlay.height = video.clientHeight;
+      }
+      const octx = liveOverlay.getContext('2d');
+      octx.clearRect(0, 0, liveOverlay.width, liveOverlay.height);
+
+      if (autoDetectBusy || !scanCvReady || typeof jscanify === 'undefined') return;
+      autoDetectBusy = true;
+
+      const detW = 420;
+      const detH = Math.round(detW * video.videoHeight / video.videoWidth);
+      autoHiddenCanvas.width = detW;
+      autoHiddenCanvas.height = detH;
+      autoHiddenCanvas.getContext('2d').drawImage(video, 0, 0, detW, detH);
+
+      const quad = autoTryDetect(autoHiddenCanvas);
+      autoDetectBusy = false;
+
+      if (!quad) {
+        autoStableCount = 0;
+        autoLastQuad = null;
+        guideFrameEl.classList.remove('detected', 'ready');
+        hintEl.classList.remove('detected', 'ready');
+        hintEl.textContent = 'Dokument in den Rahmen halten – wird automatisch erkannt';
+        return;
+      }
+
+      // Erkanntes Viereck zur Kontrolle einzeichnen
+      const scaleX = liveOverlay.width / detW, scaleY = liveOverlay.height / detH;
+      const assessment = autoAssessQuad(quad, detW, detH);
+      octx.strokeStyle = assessment.ok ? '#3ddc84' : '#ffb648';
+      octx.lineWidth = 3;
+      octx.beginPath();
+      quad.forEach((p, i) => {
+        const x = p.x * scaleX, y = p.y * scaleY;
+        if (i === 0) octx.moveTo(x, y); else octx.lineTo(x, y);
+      });
+      octx.closePath();
+      octx.stroke();
+      quad.forEach(p => {
+        octx.fillStyle = assessment.ok ? '#3ddc84' : '#ffb648';
+        octx.beginPath();
+        octx.arc(p.x * scaleX, p.y * scaleY, 5, 0, Math.PI * 2);
+        octx.fill();
+      });
+
+      if (!assessment.ok) {
+        autoStableCount = 0;
+        autoLastQuad = null;
+        guideFrameEl.classList.add('detected');
+        guideFrameEl.classList.remove('ready');
+        hintEl.classList.add('detected');
+        hintEl.classList.remove('ready');
+        hintEl.textContent = assessment.message;
+        return;
+      }
+
+      if (autoQuadsClose(quad, autoLastQuad, Math.max(5, detW * 0.02))) {
+        autoStableCount++;
+      } else {
+        autoStableCount = 0;
+      }
+      autoLastQuad = quad;
+
+      guideFrameEl.classList.add('ready');
+      guideFrameEl.classList.remove('detected');
+      hintEl.classList.add('ready');
+      hintEl.classList.remove('detected');
+
+      if (autoStableCount >= AUTO_STABLE_NEEDED) {
+        hintEl.textContent = '✓ Perfekt erkannt – wird automatisch gescannt …';
+        if (conn && conn.open && stream && !autoCaptured) {
+          autoCaptured = true;
+          doCapture(true);
+          setTimeout(() => { autoCaptured = false; }, 900);
+        }
+      } else {
+        hintEl.textContent = 'Ruhig halten – Dokument liegt richtig …';
+      }
+    }
 
     // --- Modus 2: normale Kamera-App / Fotoauswahl ---
     btnAppCapture.onclick = () => fileInput.click();
@@ -496,6 +733,7 @@
     };
 
     function finishSession() {
+      stopAutoDetect();
       if (conn) { try { conn.close(); } catch (e) { } }
       if (peer) { try { peer.destroy(); } catch (e) { } }
       if (stream) { try { stream.getTracks().forEach(t => t.stop()); } catch (e) { } }
