@@ -1819,9 +1819,30 @@
       <div style="position:relative; width:100%; max-width:640px; margin:0 auto; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:4/3;">
         <video id="liveCamVideo" autoplay playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;"></video>
         <canvas id="liveCamOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+        <!-- Weißer "Auslöser"-Blitz beim Aufnehmen, wie bei einer echten Kamera –
+             macht spürbar, dass in diesem Moment etwas passiert ist, statt dass
+             die Seite unsichtbar/instant im Hintergrund verarbeitet wird. -->
+        <div id="liveCamFlash" style="position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .12s ease;"></div>
+        <!-- Kurze Bestätigung mit dem gerade aufgenommenen Bild + Häkchen, damit
+             sichtbar ist, DASS und WAS gerade gescannt wurde, statt dass die
+             App einfach kommentarlos weiterläuft. -->
+        <div id="liveCamCapturedOverlay" style="position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.55); flex-direction:column; gap:10px;">
+          <img id="liveCamCapturedImg" style="max-width:70%; max-height:60%; border-radius:8px; box-shadow:0 4px 18px rgba(0,0,0,.5);">
+          <div style="color:#fff; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-flex; width:28px; height:28px; border-radius:50%; background:var(--success,#2e9e4f); align-items:center; justify-content:center;">✓</span>
+            <span id="liveCamCapturedLabel">Seite gescannt</span>
+          </div>
+        </div>
       </div>
       <p id="liveCamHint" style="font-weight:600; color:var(--accent); margin:12px 0 4px;">Kamera wird gestartet …</p>
       <p id="liveCamCount" style="display:none; font-size:.85rem; color:var(--muted); margin:0 0 8px;"><span id="liveCamCountNum">0</span> Seite(n) aufgenommen – weiter scannen oder fertigstellen</p>
+      <!-- Miniaturen aller in dieser Sitzung schon aufgenommenen Seiten, zum
+           kurzen Überprüfen (antippen zeigt sie groß an), ohne dafür den
+           Live-Scan verlassen zu müssen. -->
+      <div id="liveCamThumbs" style="display:none; gap:8px; overflow-x:auto; padding:4px 2px 10px; justify-content:center;"></div>
+      <div id="liveCamThumbLightbox" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.85); align-items:center; justify-content:center; cursor:zoom-out;">
+        <img id="liveCamThumbLightboxImg" style="max-width:92vw; max-height:92vh; border-radius:8px;">
+      </div>
       <div class="modal-actions" style="justify-content:center; flex-wrap:wrap;">
         <button id="btnLiveCamClose" class="tool-btn">Abbrechen</button>
         <button id="btnLiveCamShutter" class="btn-primary">📸 Jetzt aufnehmen</button>
@@ -4659,6 +4680,19 @@
       return out;
     }
 
+    // Unscharfe Maskierung (Standard-Schärfungstechnik): Original minus leicht
+    // geglättete Kopie verstärkt Kanten/Text, ohne Flächen wie Papierweiß zu
+    // verändern. Ohne diesen Schritt wirkte der Scan nach der Schatten-
+    // korrektur/CLAHE spürbar weicher als das Originalfoto.
+    function scanCvSharpen(mat, amount) {
+      const blurred = new cv.Mat();
+      cv.GaussianBlur(mat, blurred, new cv.Size(0, 0), 3);
+      const sharpened = new cv.Mat();
+      cv.addWeighted(mat, 1 + amount, blurred, -amount, 0, sharpened);
+      blurred.delete();
+      return sharpened;
+    }
+
     function scanCvAutoEnhance(srcCanvas) {
       const src = cv.imread(srcCanvas);
       const rgb = new cv.Mat();
@@ -4704,7 +4738,10 @@
       cv.convertScaleAbs(merged, finalMat, 1.15, -12);
       merged.delete();
 
-      return scanMatToCanvas(finalMat);
+      const sharpMat = scanCvSharpen(finalMat, 0.6);
+      finalMat.delete();
+
+      return scanMatToCanvas(sharpMat);
     }
 
     function scanCvAdaptiveBW(srcCanvas) {
@@ -4741,7 +4778,10 @@
       gray.delete();
       clahe.delete();
 
-      return scanMatToCanvas(out);
+      const sharpOut = scanCvSharpen(out, 0.5);
+      out.delete();
+
+      return scanMatToCanvas(sharpOut);
     }
 
     function scanApplyFilter(srcCanvas, mode) {
@@ -5080,6 +5120,9 @@
       $('liveCamCountNum').textContent = scanPendingCaptures.length;
       $('liveCamCount').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
       $('btnLiveCamDone').style.display = scanPendingCaptures.length > 0 ? '' : 'none';
+      $('liveCamCapturedOverlay').style.display = 'none';
+      $('liveCamThumbs').innerHTML = '';
+      $('liveCamThumbs').style.display = scanPendingCaptures.length > 0 ? 'flex' : 'none';
       if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
         $('liveCamHint').textContent = describeCamError({ name: 'NotSupportedError' });
         return;
@@ -5183,6 +5226,25 @@
       }
     }
 
+    // Zeigt in Miniatur alle in dieser Live-Sitzung bereits aufgenommenen Seiten,
+    // damit man jederzeit sieht/prüfen kann, was schon gescannt wurde, statt sich
+    // nur auf einen Zähler verlassen zu müssen.
+    function liveCamAddThumb(dataUrl, pageNum) {
+      const strip = $('liveCamThumbs');
+      strip.style.display = 'flex';
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.title = 'Seite ' + pageNum;
+      img.style.cssText = 'height:64px; border-radius:6px; border:2px solid var(--border); cursor:zoom-in; flex-shrink:0;';
+      img.onclick = () => {
+        $('liveCamThumbLightboxImg').src = dataUrl;
+        $('liveCamThumbLightbox').style.display = 'flex';
+      };
+      strip.appendChild(img);
+      strip.scrollLeft = strip.scrollWidth;
+    }
+    $('liveCamThumbLightbox').onclick = () => { $('liveCamThumbLightbox').style.display = 'none'; };
+
     function liveCaptureShot() {
       if (liveCaptured) return;
       liveCaptured = true;
@@ -5191,16 +5253,40 @@
       shot.width = video.videoWidth;
       shot.height = video.videoHeight;
       shot.getContext('2d').drawImage(video, 0, 0);
+
+      // Kurzer weißer Auslöser-Blitz, wie bei einer echten Kamera – macht
+      // spürbar, dass genau JETZT ein Foto gemacht wurde, statt dass alles
+      // unsichtbar im Hintergrund passiert.
+      const flash = $('liveCamFlash');
+      flash.style.opacity = '0.85';
+      setTimeout(() => { flash.style.opacity = '0'; }, 120);
+
       shot.toBlob(blob => {
-        const file = new File([blob], 'live-scan-' + (scanPendingCaptures.length + 1) + '.jpg', { type: 'image/jpeg' });
+        const pageNum = scanPendingCaptures.length + 1;
+        const file = new File([blob], 'live-scan-' + pageNum + '.jpg', { type: 'image/jpeg' });
         addPendingCapture(file);
-        // Kamera bleibt an: die nächste Seite kann sofort aufgenommen
-        // werden, statt jedes Mal zurück in den Zuschneide-Dialog zu
-        // müssen. Kurzer Hinweis, dann läuft die Auto-Erkennung weiter.
-        $('liveCamHint').textContent = `✓ Seite ${scanPendingCaptures.length} aufgenommen – weiter scannen oder „Fertig“ tippen`;
+
+        const dataUrl = shot.toDataURL('image/jpeg', 0.8);
+        liveCamAddThumb(dataUrl, pageNum);
+
+        // Kurz sichtbar anzeigen, DASS und WAS gerade gescannt wurde – vorher
+        // lief die Aufnahme komplett unsichtbar/instant durch, wodurch es nie
+        // wie ein echter Scanvorgang wirkte.
+        $('liveCamCapturedImg').src = dataUrl;
+        $('liveCamCapturedLabel').textContent = `Seite ${pageNum} gescannt`;
+        $('liveCamCapturedOverlay').style.display = 'flex';
+
+        // Kamera bleibt an: die nächste Seite kann direkt danach aufgenommen
+        // werden, statt jedes Mal zurück in den Zuschneide-Dialog zu müssen.
+        $('liveCamHint').textContent = `✓ Seite ${pageNum} aufgenommen – weiter scannen oder „Fertig“ tippen`;
+        $('liveCamCount').style.display = '';
+        $('liveCamCountNum').textContent = pageNum;
         liveStableCount = 0;
         liveLastQuad = null;
-        setTimeout(() => { liveCaptured = false; }, 700);
+        setTimeout(() => {
+          $('liveCamCapturedOverlay').style.display = 'none';
+          liveCaptured = false;
+        }, 900);
       }, 'image/jpeg', 0.92);
     }
 

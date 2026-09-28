@@ -1329,6 +1329,18 @@
       return out;
     }
 
+    // Unscharfe Maskierung (Standard-Schärfungstechnik): Original minus leicht
+    // geglättete Kopie verstärkt Kanten/Text, ohne Flächen wie Papierweiß zu
+    // verändern.
+    function reviewCvSharpen(mat, amount) {
+      const blurred = new cv.Mat();
+      cv.GaussianBlur(mat, blurred, new cv.Size(0, 0), 3);
+      const sharpened = new cv.Mat();
+      cv.addWeighted(mat, 1 + amount, blurred, -amount, 0, sharpened);
+      blurred.delete();
+      return sharpened;
+    }
+
     function reviewCvAutoEnhance(srcCanvas) {
       const src = cv.imread(srcCanvas);
       const rgb = new cv.Mat();
@@ -1370,7 +1382,10 @@
       cv.convertScaleAbs(merged, finalMat, 1.15, -12);
       merged.delete();
 
-      return reviewCvMatToCanvas(finalMat);
+      const sharpMat = reviewCvSharpen(finalMat, 0.6);
+      finalMat.delete();
+
+      return reviewCvMatToCanvas(sharpMat);
     }
 
     function reviewApplyEnhance(warped) {
