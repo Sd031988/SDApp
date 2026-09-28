@@ -1007,6 +1007,16 @@
       // der falschen Stelle und wurden vom "overflow:hidden" des Wrappers
       // unsichtbar abgeschnitten. Dadurch konnte niemand die Ecken korrigieren.
       const rect = reviewCanvas.getBoundingClientRect();
+      // Sicherheitsnetz: wird diese Funktion aufgerufen, bevor der Bereich
+      // tatsächlich sichtbar/layoutet ist (z.B. durch einen künftigen
+      // Reihenfolge-Fehler wie den oben beschriebenen), liefert
+      // getBoundingClientRect() eine 0x0-Größe. Statt dann alle Punkte
+      // unsichtbar auf (0,0) zu platzieren, einmal auf den nächsten Frame
+      // verschieben, wenn das Layout vermutlich fertig ist.
+      if (rect.width === 0 || rect.height === 0) {
+        requestAnimationFrame(renderReviewHandles);
+        return;
+      }
       const scaleX = rect.width / reviewCanvas.width;
       const scaleY = rect.height / reviewCanvas.height;
       reviewHandles.forEach((el, i) => {
@@ -1080,8 +1090,15 @@
       } else {
         setDefaultReviewCorners();
       }
-      renderReviewHandles();
+      // WICHTIG: erst sichtbar machen, DANN die Ziehpunkte positionieren.
+      // getBoundingClientRect() der Canvas liefert 0x0, solange der
+      // Übergeordnete Container noch "display:none" (Klasse .hidden) ist –
+      // dadurch landeten alle vier Punkte bisher exakt bei (0,0), also
+      // praktisch unsichtbar in der oberen linken Ecke, statt auf den
+      // Bildecken. Das war der eigentliche Grund, warum sie in den Tests
+      // weiterhin nicht zu sehen waren, auch nach der vorherigen Korrektur.
       reviewStageEl.classList.remove('hidden');
+      renderReviewHandles();
 
       if (!presetQuad) {
         setTimeout(() => {

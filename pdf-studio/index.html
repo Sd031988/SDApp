@@ -4374,6 +4374,14 @@
     function renderScanHandles() {
       const canvas = $('scanCropCanvas');
       const rect = canvas.getBoundingClientRect();
+      // Sicherheitsnetz: wird diese Funktion aufgerufen, bevor das Modal
+      // tatsächlich sichtbar ist, liefert getBoundingClientRect() eine 0x0-
+      // Größe und alle Punkte würden unsichtbar auf (0,0) landen. Einmal auf
+      // den nächsten Frame verschieben, wenn das Layout vermutlich fertig ist.
+      if (rect.width === 0 || rect.height === 0) {
+        requestAnimationFrame(renderScanHandles);
+        return;
+      }
       const scaleX = rect.width / canvas.width;
       const scaleY = rect.height / canvas.height;
       ['sh0', 'sh1', 'sh2', 'sh3'].forEach((id, i) => {

@@ -1420,8 +1420,13 @@
     const img = new Image();
     img.onload = () => {
       currentImage = img;
-      initCrop(img, page.quad);
+      // WICHTIG: erst den Schritt sichtbar machen, DANN initCrop (das die
+      // Ziehpunkte per getBoundingClientRect() der Canvas positioniert).
+      // Solange #stepCrop noch "display:none" ist, liefert die Canvas eine
+      // 0x0-Größe zurück, wodurch alle Ecken-Punkte auf (0,0) statt auf dem
+      // Dokument landen – unsichtbar in der oberen linken Ecke.
       showStep('stepCrop');
+      initCrop(img, page.quad);
     };
     img.src = page.rawDataUrl || page.dataUrl;
   }
@@ -1451,8 +1456,11 @@
     reviewMode = true;
     reviewIndex = 0;
     document.getElementById('reviewBar').style.display = 'flex';
-    loadReviewPage(0);
+    // Reihenfolge wichtig: erst den Schritt sichtbar machen, dann die Seite
+    // laden (siehe Kommentar in openCropEditorForPage) – sonst werden die
+    // Ecken-Ziehpunkte auf einer noch unsichtbaren (0x0) Canvas berechnet.
     showStep('stepCrop');
+    loadReviewPage(0);
   }
 
   function finishReviewOrAdvance(updatedDataUrl){
@@ -1582,6 +1590,14 @@
 
   function renderHandles(){
     const rect = els.cropCanvas.getBoundingClientRect();
+    // Sicherheitsnetz: wird diese Funktion aufgerufen, bevor #stepCrop
+    // tatsächlich sichtbar ist, liefert getBoundingClientRect() eine 0x0-
+    // Größe und alle Punkte würden unsichtbar auf (0,0) landen. Einmal auf
+    // den nächsten Frame verschieben, wenn das Layout vermutlich fertig ist.
+    if (rect.width === 0 || rect.height === 0) {
+      requestAnimationFrame(renderHandles);
+      return;
+    }
     const scaleX = rect.width / els.cropCanvas.width;
     const scaleY = rect.height / els.cropCanvas.height;
     ['h0','h1','h2','h3'].forEach((id, i) => {
