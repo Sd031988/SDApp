@@ -2020,18 +2020,22 @@
     const denoised = new cv.Mat();
     cv.bilateralFilter(gray, denoised, 7, 50, 50);
     gray.delete();
-    const blurred = new cv.Mat();
-    cv.GaussianBlur(denoised, blurred, new cv.Size(3, 3), 0);
-    denoised.delete();
 
-    const w = blurred.cols, h = blurred.rows;
-    let block = Math.round(Math.min(w, h) / 18);
+    // Getestet an echten Fotos (nicht nur Videos): die alte Blockgröße
+    // (Bildgröße/18) und Schwelle 12 machten kleinere Schrift spürbar
+    // fetter/verklumpt, bis Buchstaben ineinanderliefen. Größerer Block
+    // (/50) + kleinere Schwelle (8) halten die Strichstärke nah am
+    // Original und die Schrift bleibt bei jeder Schriftgröße klar lesbar.
+    // Der zusätzliche 3x3-Weichzeichner nach dem Bilateral-Filter entfiel,
+    // weil er zusätzlich zur Verdickung beitrug.
+    const w = denoised.cols, h = denoised.rows;
+    let block = Math.round(Math.min(w, h) / 50);
     if (block % 2 === 0) block++;
     if (block < 15) block = 15;
 
     const bw = new cv.Mat();
-    cv.adaptiveThreshold(blurred, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block, 12);
-    blurred.delete();
+    cv.adaptiveThreshold(denoised, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block, 8);
+    denoised.delete();
 
     return cvMatToCanvas(bw);
   }
