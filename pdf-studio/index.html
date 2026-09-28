@@ -1355,8 +1355,8 @@
     </div>
 
     <div class="topbar-right">
-      <button id="btnOpenConvertModal" class="btn-convert"
-        title="Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt">
+      <button id="btnOpenConvertModal" class="btn-convert" disabled
+        title="Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt (erst verfügbar, sobald Seiten geladen sind)">
         🔄 Konvertieren
       </button>
       <button id="btnPrint" class="nav-btn" title="Alle Seiten direkt drucken" disabled>
@@ -1466,14 +1466,11 @@
           <div class="empty-prompt">
             <h2>Dein PDF & Dokumenten Studio</h2>
             <p style="max-width:460px;line-height:1.5;margin:8px auto 16px;">
-              Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos hoch.
+              Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos über
+              "📂 Datei wählen" oder "📷 Scan / Foto" links hoch.
               Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel
               zwischen allen Formaten!
             </p>
-            <div style="display:flex;gap:10px;justify-content:center;">
-              <button id="btnEmptyPromptAdd" class="btn-primary">Dateien jetzt laden</button>
-              <button id="btnEmptyPromptConvert" class="btn-convert">🔄 Konverter öffnen</button>
-            </div>
           </div>
         </div>
       </div>
@@ -2320,6 +2317,7 @@
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = !state.pages.length;
       $('btnPrint').disabled = !state.pages.length;
+      $('btnOpenConvertModal').disabled = !state.pages.length;
       renderSidebarPages();
       renderStage();
       showToast(`${state.pages.length} Seite(n) bereit`);
@@ -2359,12 +2357,14 @@
         $('pageCount').textContent = '0';
         $('btnExport').disabled = true;
         $('btnPrint').disabled = true;
+        $('btnOpenConvertModal').disabled = true;
         return;
       }
 
       $('pageCount').textContent = state.pages.length;
       $('btnExport').disabled = false;
       $('btnPrint').disabled = false;
+      $('btnOpenConvertModal').disabled = false;
 
       state.pages.forEach((page, index) => {
         const card = document.createElement('div');
@@ -2702,13 +2702,7 @@
               Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos hoch. 
               Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel zwischen allen Formaten!
             </p>
-            <div style="display:flex;gap:10px;justify-content:center;">
-              <button id="btnEmptyPromptAdd" class="btn-primary">Dateien jetzt laden</button>
-              <button id="btnEmptyPromptConvert" class="btn-convert">🔄 Konverter öffnen</button>
-            </div>
           </div>`;
-        $('btnEmptyPromptAdd').onclick = () => $('fileInput').click();
-        $('btnEmptyPromptConvert').onclick = () => $('modalConvert').classList.add('open');
         return;
       }
 
