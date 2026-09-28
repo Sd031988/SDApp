@@ -277,7 +277,7 @@ function renderAccountButton() {
   injectStyles();
   let btn = document.getElementById('sdAuthBtn');
   if (!btn) {
-    const host = document.querySelector('.topbar-right') || document.body;
+    const host = document.querySelector('#sdAuthHost') || document.querySelector('.topbar-right') || document.body;
     btn = document.createElement('button');
     btn.id = 'sdAuthBtn';
     host.insertBefore(btn, host.firstChild);
