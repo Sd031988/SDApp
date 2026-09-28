@@ -5646,6 +5646,13 @@
           toggles.classList.remove('show-on-mobile');
           closeAllSheets();
         }
+        // "Mit Handy scannen" (QR-Code, um von einem anderen Gerät aus zu scannen)
+        // ergibt nur auf Desktop/Tablet Sinn. Wer PDF Studio bereits direkt auf dem
+        // Handy nutzt, hat mit "Scan / Foto" schon den vollen Funktionsumfang
+        // (Kantenerkennung, Zuschnitt, Schwarz-Weiß/Farbe, Filter usw.) direkt zur
+        // Verfügung, daher blenden wir den Button dort aus.
+        const phoneScanBtn = $('btnPhoneScan');
+        if (phoneScanBtn) phoneScanBtn.style.display = isMobile ? 'none' : '';
       }
 
       btnToggleSidebar.onclick = () => openSheet(sidebarPanel, btnToggleSidebar);
