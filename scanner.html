@@ -444,6 +444,14 @@
     </div>
   </header>
 
+  <!-- Eingebettete In-App-Browser (WhatsApp/Instagram/Facebook/TikTok usw.) blockieren die
+       Kamera-API oft komplett, auch wenn die Seite selbst über HTTPS läuft. Das sieht dann für
+       den Nutzer genauso aus wie ein "kaputter Scanner", ist aber nur mit dem echten Safari/
+       Chrome zu beheben – deshalb hier früh und deutlich darauf hinweisen. -->
+  <div id="inAppBrowserWarning" style="display:none; background:#7a1f1f; color:#fff; padding:12px 16px; font-size:14px; line-height:1.5;">
+    ⚠️ Diese Seite scheint gerade in der eingebauten Vorschau einer anderen App (z. B. WhatsApp, Instagram, Facebook) geöffnet zu sein. Dort funktioniert die Kamera nicht. Bitte tippe oben rechts auf <b>„…"</b> bzw. <b>„im Browser öffnen"</b>, oder öffne diese Adresse direkt in Safari/Chrome.
+  </div>
+
   <!-- App-Startbildschirm: Liste aller gespeicherten Scans, Kamera direkt erreichbar -->
   <div class="home-topbar" id="homeTopbar">
     <button type="button" class="home-icon-btn" id="btnHomeMenu">☰</button>
@@ -716,6 +724,19 @@
   // Außerdem: cv.onRuntimeInitialized kann (je nach Cache/Timing) schon gefeuert haben, BEVOR
   // wir unseren eigenen Callback registrieren – deshalb zusätzlich per Polling auf cv.Mat prüfen,
   // statt uns nur auf den einmaligen Callback zu verlassen.
+  // Erkennt bekannte eingebettete In-App-Browser anhand des User-Agents. Diese WebViews
+  // blockieren getUserMedia häufig vollständig (auch über HTTPS) – die Kamera-Warnung
+  // "nicht unterstützt" ist dann keine echte Browser-Einschränkung, sondern nur diese
+  // eingebettete Vorschau. Früh und sichtbar darauf hinweisen erspart lange Fehlersuche.
+  (function warnIfInAppBrowser(){
+    const ua = navigator.userAgent || '';
+    const isEmbedded = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|MicroMessenger|TikTok|Snapchat|Twitter/i.test(ua);
+    if (isEmbedded) {
+      const el = document.getElementById('inAppBrowserWarning');
+      if (el) el.style.display = 'block';
+    }
+  })();
+
   let cvReady = false;
   function markCvReady(){
     if (cvReady) return;
@@ -827,10 +848,25 @@
     }
   }
 
+  // Wartet bis zu maxWaitMs darauf, dass OpenCV.js/jscanify fertig geladen ist, statt sofort
+  // mit "nicht bereit" aufzugeben. Auf dem Handy kann das WASM-Modul beim allerersten Foto
+  // (direkt nach App-Start) noch ein paar Sekunden laden – ohne diese Wartezeit würde die
+  // automatische Kantenerkennung in genau diesem, sehr häufigen Fall nie greifen.
+  function waitForCvReady(maxWaitMs){
+    return new Promise(resolve => {
+      if (cvReady) { resolve(true); return; }
+      const start = Date.now();
+      const iv = setInterval(() => {
+        if (cvReady) { clearInterval(iv); resolve(true); }
+        else if (Date.now() - start > maxWaitMs) { clearInterval(iv); resolve(false); }
+      }, 100);
+    });
+  }
+
   // "Foto aufnehmen" / "Bild auswählen": genau wie beim Live-Scan werden Kanten automatisch
   // erkannt, zugeschnitten und gefiltert - OHNE dass man dafür bei jedem Bild manuell ran muss.
   // Seite kann danach jederzeit über den ✏️-Knopf nachbearbeitet werden.
-  function autoProcessAndAddPage(img){
+  async function autoProcessAndAddPage(img){
     setStatus('Seite wird automatisch verarbeitet …');
     let w = img.naturalWidth, h = img.naturalHeight;
     const scale = Math.min(1, MAX_DIM / Math.max(w, h));
@@ -839,14 +875,26 @@
     rawCanvas.width = w; rawCanvas.height = h;
     rawCanvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
+    if(!cvReady){
+      setStatus('Scanner wird geladen …');
+      await waitForCvReady(6000);
+      setStatus('Seite wird automatisch verarbeitet …');
+    }
+
     setTimeout(() => {
-      let quad = tryAutoDetect(rawCanvas);
+      const quad = tryAutoDetect(rawCanvas);
       if(!quad || !cornersLookValid(quad, w, h)){
-        const margin = 0.06;
-        quad = [
-          {x: w*margin, y: h*margin}, {x: w*(1-margin), y: h*margin},
-          {x: w*(1-margin), y: h*(1-margin)}, {x: w*margin, y: h*(1-margin)}
-        ];
+        // Wie bei Adobe Scan/CamScanner: wenn die Kanten NICHT sicher erkannt wurden, lieber
+        // den Nutzer kurz bestätigen/nachziehen lassen, statt eine wahrscheinlich falsche
+        // automatische Zuschneidung (nur ein kleiner Rand ab) stillschweigend zu übernehmen –
+        // genau das sah bisher wie ein rohes, unbearbeitetes Foto aus.
+        setStatus('');
+        reviewMode = false;
+        document.getElementById('reviewBar').style.display = 'none';
+        currentImage = img;
+        showStep('stepCrop');
+        initCrop(img);
+        return;
       }
       const wTop = Math.hypot(quad[1].x-quad[0].x, quad[1].y-quad[0].y);
       const wBot = Math.hypot(quad[2].x-quad[3].x, quad[2].y-quad[3].y);
