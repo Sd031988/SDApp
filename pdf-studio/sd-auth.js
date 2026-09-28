@@ -181,35 +181,66 @@ function buildModal() {
   backdrop.innerHTML = `
     <div class="sd-auth-box">
       <button class="sd-close" id="sdAuthClose">✕</button>
-      <div class="sd-auth-tabs">
-        <button id="sdAuthTabLogin" class="active">Anmelden</button>
-        <button id="sdAuthTabSignup">Registrieren</button>
+
+      <div id="sdAuthConsentStep">
+        <h3>Bevor du dich anmeldest</h3>
+        <p class="sub">
+          Du kannst PDF Studio auch <strong>ohne Anmeldung</strong> vollständig nutzen – alles bleibt dann
+          ausschließlich auf diesem Gerät, nichts wird irgendwohin übertragen.
+        </p>
+        <p class="sub">
+          Meldest du dich stattdessen an, um deine Seiten zu speichern und von mehreren Geräten zu nutzen,
+          werden deine Inhalte bei unserem Cloud-Dienstleister <strong>Google (Firebase)</strong> gespeichert –
+          nicht bei uns auf einem eigenen Server. Details dazu in unserer
+          <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
+        </p>
+        <button class="sd-primary" id="sdAuthConsentContinue">Trotzdem anmelden</button>
+        <button class="sd-link" id="sdAuthConsentCancel">Ohne Anmeldung weiter nutzen</button>
       </div>
-      <h3 id="sdAuthTitle">Willkommen zurück</h3>
-      <p class="sub" id="sdAuthSub">Melde dich an, um deine Dokumente geräteübergreifend zu nutzen.</p>
-      <div class="sd-err" id="sdAuthErr"></div>
-      <input type="text" id="sdAuthName" placeholder="Dein Name" style="display:none;">
-      <input type="email" id="sdAuthEmail" placeholder="E-Mail-Adresse" autocomplete="username">
-      <input type="password" id="sdAuthPassword" placeholder="Passwort" autocomplete="current-password">
-      <button class="sd-primary" id="sdAuthSubmit">Anmelden</button>
-      <button class="sd-link" id="sdAuthForgot">Passwort vergessen?</button>
-      <p style="font-size:0.72rem;color:#888;text-align:center;margin:14px 0 0;line-height:1.4;">
-        Mit Anmeldung/Registrierung akzeptierst du unsere
-        <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
-        Deine Inhalte werden dabei bei unserem Cloud-Dienstleister (Google Firebase) gespeichert.
-      </p>
+
+      <div id="sdAuthFormStep" style="display:none;">
+        <div class="sd-auth-tabs">
+          <button id="sdAuthTabLogin" class="active">Anmelden</button>
+          <button id="sdAuthTabSignup">Registrieren</button>
+        </div>
+        <h3 id="sdAuthTitle">Willkommen zurück</h3>
+        <p class="sub" id="sdAuthSub">Melde dich an, um deine Dokumente geräteübergreifend zu nutzen.</p>
+        <div class="sd-err" id="sdAuthErr"></div>
+        <input type="text" id="sdAuthName" placeholder="Dein Name" style="display:none;">
+        <input type="email" id="sdAuthEmail" placeholder="E-Mail-Adresse" autocomplete="username">
+        <input type="password" id="sdAuthPassword" placeholder="Passwort" autocomplete="current-password">
+        <button class="sd-primary" id="sdAuthSubmit">Anmelden</button>
+        <button class="sd-link" id="sdAuthForgot">Passwort vergessen?</button>
+        <p style="font-size:0.72rem;color:#888;text-align:center;margin:14px 0 0;line-height:1.4;">
+          Mit Anmeldung/Registrierung akzeptierst du unsere
+          <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
+          Deine Inhalte werden dabei bei unserem Cloud-Dienstleister (Google Firebase) gespeichert.
+        </p>
+      </div>
     </div>
   `;
   document.body.appendChild(backdrop);
 
   const els = {
     backdrop, close: backdrop.querySelector('#sdAuthClose'),
+    consentStep: backdrop.querySelector('#sdAuthConsentStep'), formStep: backdrop.querySelector('#sdAuthFormStep'),
+    consentContinue: backdrop.querySelector('#sdAuthConsentContinue'), consentCancel: backdrop.querySelector('#sdAuthConsentCancel'),
     tabLogin: backdrop.querySelector('#sdAuthTabLogin'), tabSignup: backdrop.querySelector('#sdAuthTabSignup'),
     title: backdrop.querySelector('#sdAuthTitle'), sub: backdrop.querySelector('#sdAuthSub'),
     err: backdrop.querySelector('#sdAuthErr'), name: backdrop.querySelector('#sdAuthName'),
     email: backdrop.querySelector('#sdAuthEmail'), password: backdrop.querySelector('#sdAuthPassword'),
     submit: backdrop.querySelector('#sdAuthSubmit'), forgot: backdrop.querySelector('#sdAuthForgot'),
   };
+
+  function showForm() {
+    els.consentStep.style.display = 'none';
+    els.formStep.style.display = 'block';
+  }
+  els.consentContinue.onclick = () => {
+    try { localStorage.setItem('sdAuthConsentOk', '1'); } catch (e) {}
+    showForm();
+  };
+  els.consentCancel.onclick = () => { backdrop.classList.remove('open'); };
 
   let mode = 'login';
   function setMode(m) {
@@ -274,7 +305,15 @@ function buildModal() {
     }
   };
 
-  return { open: (m) => { setMode(m || 'login'); backdrop.classList.add('open'); } };
+  return {
+    open: (m) => {
+      setMode(m || 'login');
+      let consented = false;
+      try { consented = localStorage.getItem('sdAuthConsentOk') === '1'; } catch (e) {}
+      if (consented) { showForm(); } else { els.consentStep.style.display = 'block'; els.formStep.style.display = 'none'; }
+      backdrop.classList.add('open');
+    }
+  };
 }
 
 let modalCtrl = null;
