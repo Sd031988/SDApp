@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lebenslauf Vorlagen - Premium Template Galerie</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&family=Roboto+Serif:wght@400;600;700&display=swap">
+    <style>
+        /* ===== DESIGN TOKENS ===== */
+        :root {
+            /* Layout: 2-column grid gallery with premium card styling */
+            --primary: #1D4ED8;
+            --primary-light: #3B82F6;
+            --primary-dark: #0F2855;
+            --secondary: #7C3AED;
+            --accent-gold: #D4AF37;
+            --accent-emerald: #059669;
+            --accent-purple: #9333EA;
+            --accent-rose: #E11D48;
+            --surface: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --border-light: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--surface);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 48px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo::before {
+            content: '✦';
+            font-size: 28px;
+        }
+
+        nav .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 14px;
+        }
+
+        nav .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+            color: white;
+            padding: 80px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 6vw, 3.6rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 2;
+            opacity: 0.95;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            width: min(1400px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        /* ===== SECTION HEADERS ===== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ===== TEMPLATE GALLERY GRID ===== */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-bottom: 80px;
+        }
+
+        /* ===== TEMPLATE CARD ===== */
+        .template-card {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .template-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 320px;
+            background: linear-gradient(135deg, var(--surface-light) 0%, var(--surface-muted) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 800;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Template color themes */
+        .template-classic .template-preview {
+            background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%);
+            color: #333;
+        }
+
+        .template-modern .template-preview {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 100%);
+            color: white;
+        }
+
+        .template-gold .template-preview {
+            background: linear-gradient(135deg, #FBF5E6 0%, #F4E4C1 100%);
+            color: #D4AF37;
+        }
+
+        .template-purple .template-preview {
+            background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+            color: #9333EA;
+        }
+
+        .template-emerald .template-preview {
+            background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+            color: #059669;
+        }
+
+        .template-rose .template-preview {
+            background: linear-gradient(135deg, #FFE4E6 0%, #FBCFE8 100%);
+            color: #E11D48;
+        }
+
+        .template-midnight .template-preview {
+            background: linear-gradient(135deg, #1E1E2E 0%, #2D2D44 100%);
+            color: #E8E8E8;
+        }
+
+        .template-forest .template-preview {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+            color: #6EE7B7;
+        }
+
+        .template-vintage .template-preview {
+            background: linear-gradient(135deg, #FEF5E7 0%, #F8E5C0 100%);
+            color: #8B6F47;
+        }
+
+        .template-tech .template-preview {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: #06B6D4;
+        }
+
+        /* Badge on preview */
+        .template-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .template-classic .template-badge { background: #E8E8E8; color: #333; }
+        .template-modern .template-badge { background: rgba(255,255,255,0.95); color: #0F2855; }
+        .template-gold .template-badge { background: #D4AF37; color: white; }
+        .template-purple .template-badge { background: #9333EA; color: white; }
+        .template-emerald .template-badge { background: #059669; color: white; }
+        .template-rose .template-badge { background: #E11D48; color: white; }
+
+        .template-info {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .template-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .template-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+
+        .template-features {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            background: var(--surface-muted);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .template-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+        }
+
+        .template-action:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* ===== CATEGORIES SECTION ===== */
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-light);
+            background: var(--surface);
+            color: var(--text-secondary);
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .category-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .category-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta-section {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+            color: white;
+            padding: 80px 48px;
+            text-align: center;
+            border-radius: 20px;
+            margin-top: 100px;
+        }
+
+        .cta-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: white;
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid white;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary-dark);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            border-top: 1px solid var(--border-light);
+            margin-top: 80px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            nav {
+                padding: 12px 20px;
+            }
+
+            .hero {
+                padding: 60px 24px;
+            }
+
+            .container {
+                width: calc(100% - 24px);
+                padding: 40px 12px;
+            }
+
+            .templates-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .cta-section {
+                padding: 60px 24px;
+                margin-top: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="bewerbung-studio-landing.html" class="back-link">← Zurück</a>
+        <a href="bewerbung-studio-landing.html" class="logo">Bewerbungsstudio</a>
+        <div style="width: 150px;"></div>
+    </nav>
+
+    <div class="hero">
+        <h1>Professionelle Lebenslauf Vorlagen</h1>
+        <p>Wähle aus 10+ Premium-Designs und erstelle deinen perfekten Lebenslauf in Minuten</p>
+    </div>
+
+    <div class="container">
+        <!-- Category Filter -->
+        <div class="category-tabs">
+            <button class="category-btn active" onclick="filterTemplates('all')">Alle Vorlagen</button>
+            <button class="category-btn" onclick="filterTemplates('classic')">Klassisch</button>
+            <button class="category-btn" onclick="filterTemplates('modern')">Modern</button>
+            <button class="category-btn" onclick="filterTemplates('creative')">Kreativ</button>
+        </div>
+
+        <!-- Templates Grid -->
+        <div class="templates-grid">
+            <!-- 1. Klassisch Elegant -->
+            <div class="template-card classic" data-category="classic">
+                <div class="template-preview">
+                    📄
+                    <span class="template-badge">Klassisch</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Klassisch Elegant</div>
+                    <p class="template-description">Zeitloses Design mit grauem Hintergrund. Perfekt für konservative Branchen und traditionelle Unternehmen.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">2-spaltig</span>
+                        <span class="feature-tag">Foto-Option</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('classic-elegant')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Modern Blau -->
+            <div class="template-card modern" data-category="modern">
+                <div class="template-preview">
+                    ⬛
+                    <span class="template-badge">Modern</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Modern Blau</div>
+                    <p class="template-description">Frisches Design mit blauem Farbverlauf. Ideal für IT, Tech und digitale Branchen.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Farbverlauf</span>
+                        <span class="feature-tag">Icons</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('modern-blue')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Gold Premium -->
+            <div class="template-card gold" data-category="creative">
+                <div class="template-preview">
+                    ✨
+                    <span class="template-badge">Premium</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Gold Premium</div>
+                    <p class="template-description">Luxuriöses Design mit Gold-Akzenten. Für Executive und gehobene Positionen.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Gold-Akzente</span>
+                        <span class="feature-tag">Elegant</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('gold-premium')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Purple Kreativ -->
+            <div class="template-card purple" data-category="creative">
+                <div class="template-preview">
+                    🎨
+                    <span class="template-badge">Kreativ</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Purple Kreativ</div>
+                    <p class="template-description">Lebendiges Design mit lila Farbschema. Perfekt für kreative und Design-Profis.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Kreativ</span>
+                        <span class="feature-tag">Farbig</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('purple-creative')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. Emerald Modern -->
+            <div class="template-card emerald" data-category="modern">
+                <div class="template-preview">
+                    🌿
+                    <span class="template-badge">Modern</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Emerald Modern</div>
+                    <p class="template-description">Frische Grüntöne mit modernem Layout. Ideal für Nachhaltigkeit und Umwelt-Branchen.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Öko-freundlich</span>
+                        <span class="feature-tag">Modern</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('emerald-modern')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 6. Rose Professional -->
+            <div class="template-card rose" data-category="creative">
+                <div class="template-preview">
+                    💼
+                    <span class="template-badge">Professionell</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Rose Professional</div>
+                    <p class="template-description">Elegantes Rose-Design mit professionellem Flair. Für Mode und HR-Experten.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Elegant</span>
+                        <span class="feature-tag">Akzente</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('rose-professional')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 7. Midnight Tech -->
+            <div class="template-card midnight" data-category="modern">
+                <div class="template-preview">
+                    💻
+                    <span class="template-badge">Tech</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Midnight Tech</div>
+                    <p class="template-description">Dunkles Minimalist-Design für Tech-Profis. Mit hochmoderner Typographie.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Dunkel</span>
+                        <span class="feature-tag">Minimal</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('midnight-tech')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 8. Forest Natural -->
+            <div class="template-card forest" data-category="classic">
+                <div class="template-preview">
+                    🌲
+                    <span class="template-badge">Natürlich</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Forest Natural</div>
+                    <p class="template-description">Naturinspiriertes Grün-Design. Für Umwelt-, Landwirtschafts- und NGO-Sektor.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Natur-Farben</span>
+                        <span class="feature-tag">Rustikal</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('forest-natural')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 9. Vintage Retro -->
+            <div class="template-card vintage" data-category="creative">
+                <div class="template-preview">
+                    🎭
+                    <span class="template-badge">Retro</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Vintage Retro</div>
+                    <p class="template-description">Vintage-Design mit Retro-Charme. Für Kreative und Künstler mit Charakter.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Vintage</span>
+                        <span class="feature-tag">Warm</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('vintage-retro')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 10. Cyber Cyan -->
+            <div class="template-card tech" data-category="modern">
+                <div class="template-preview">
+                    🔮
+                    <span class="template-badge">Zukunft</span>
+                </div>
+                <div class="template-info">
+                    <div class="template-title">Cyber Cyan</div>
+                    <p class="template-description">Futuristisches Design mit Cyan-Akzenten. Für Tech-Startups und Innovation.</p>
+                    <div class="template-features">
+                        <span class="feature-tag">Futuristisch</span>
+                        <span class="feature-tag">Cyan</span>
+                    </div>
+                    <button class="template-action" onclick="selectTemplate('cyber-cyan')">
+                        Auswählen →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <h2>Bereit für deinen perfekten Lebenslauf?</h2>
+            <p>Beginne jetzt mit einer der Premium-Vorlagen und erstelle deinen Lebenslauf in wenigen Minuten. Kostenlos und ohne Registrierung.</p>
+            <div class="cta-buttons">
+                <a href="Lebenslauf_app.html" class="btn-primary">Lebenslauf erstellen →</a>
+                <a href="bewerbung-studio-landing.html" class="btn-secondary">Zurück zur Startseite</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Bewerbungsstudio • Premium Lebenslauf Generator | 10+ professionelle Vorlagen • Kostenlos • Ohne Registrierung</p>
+    </footer>
+
+    <script>
+        function selectTemplate(templateName) {
+            // Store selected template in session storage
+            sessionStorage.setItem('selectedTemplate', templateName);
+            // Redirect to main builder
+            window.location.href = 'Lebenslauf_app.html?template=' + templateName;
+        }
+
+        function filterTemplates(category) {
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter templates
+            const cards = document.querySelectorAll('.template-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = '';
+                    setTimeout(() => card.style.opacity = '1', 10);
+                } else {
+                    card.style.opacity = '0';
+                    setTimeout(() => card.style.display = 'none', 300);
+                }
+            });
+        }
+
+        // Smooth scroll to templates when page loads
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.style.opacity = '1';
+                card.style.transition = 'all 0.3s ease';
+            });
+        });
+    </script>
+</body>
+</html>

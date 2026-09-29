@@ -631,6 +631,24 @@
             color: var(--emerald-primary);
         }
 
+        .template-rose .preview-header {
+            background: linear-gradient(135deg, #E11D48 0%, #EC4899 100%);
+        }
+
+        .template-rose .preview-section-title {
+            border-bottom-color: #E11D48;
+            color: #E11D48;
+        }
+
+        .template-classic .preview-header {
+            background: linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%);
+        }
+
+        .template-classic .preview-section-title {
+            border-bottom-color: #6B7280;
+            color: #6B7280;
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             background: var(--surface-dark);
@@ -833,10 +851,15 @@
                     <div class="template-selector-group">
                         <div class="template-selector-title">Template</div>
                         <div class="template-buttons">
-                            <button type="button" class="template-btn active" data-template="template-blue">Modern</button>
-                            <button type="button" class="template-btn" data-template="template-gold">Gold</button>
-                            <button type="button" class="template-btn" data-template="template-purple">Purple</button>
-                            <button type="button" class="template-btn" data-template="template-emerald">Emerald</button>
+                            <button type="button" class="template-btn active" data-template="template-blue" title="Modern Blau">Modern</button>
+                            <button type="button" class="template-btn" data-template="template-gold" title="Gold Premium">Gold</button>
+                            <button type="button" class="template-btn" data-template="template-purple" title="Purple Kreativ">Purple</button>
+                            <button type="button" class="template-btn" data-template="template-emerald" title="Emerald Modern">Emerald</button>
+                            <button type="button" class="template-btn" data-template="template-rose" title="Rose Professional" style="background: linear-gradient(135deg, #FFE4E6 0%, #FBCFE8 100%); color: #E11D48;">Rose</button>
+                            <button type="button" class="template-btn" data-template="template-classic" title="Klassisch Elegant" style="background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); color: #333;">Klassisch</button>
+                        </div>
+                        <div style="margin-top: 12px; text-align: center;">
+                            <a href="templates-gallery.html" style="color: var(--text-secondary); font-size: 0.9rem; text-decoration: none; text-align: center; display: inline-block;">← Zur Template-Galerie</a>
                         </div>
                     </div>
                 </form>
@@ -1119,6 +1142,33 @@
         });
 
         // Template switching
+        // Template mapping from gallery to app templates
+        const templateMapping = {
+            'classic-elegant': 'template-classic',
+            'modern-blue': 'template-blue',
+            'gold-premium': 'template-gold',
+            'purple-creative': 'template-purple',
+            'emerald-modern': 'template-emerald',
+            'rose-professional': 'template-rose',
+            'midnight-tech': 'template-blue', // Use blue as base for now
+            'forest-natural': 'template-emerald', // Use emerald as base
+            'vintage-retro': 'template-gold', // Use gold as base
+            'cyber-cyan': 'template-blue' // Use blue as base
+        };
+
+        // Auto-select template from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedTemplate = urlParams.get('template');
+        if (selectedTemplate && templateMapping[selectedTemplate]) {
+            const mappedTemplate = templateMapping[selectedTemplate];
+            const btn = document.querySelector(`[data-template="${mappedTemplate}"]`);
+            if (btn) {
+                setTimeout(() => {
+                    btn.click();
+                }, 100);
+            }
+        }
+
         templateButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
