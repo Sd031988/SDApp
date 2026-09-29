@@ -1134,6 +1134,200 @@
             margin: 0;
         }
 
+        /* ===== CV LAYOUT TEMPLATES ===== */
+        /* Klassisches Layout: einfache Struktur, oben Kopfzeile, darunter Sektionen */
+        .a4-page.cv-classic {
+            /* Basis-Styling wird durch vorhandene CSS-Regeln bereitgestellt */
+        }
+
+        .cv-classic .header-content {
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cv-classic .cv-section {
+            margin-top: 18px;
+            break-inside: avoid;
+        }
+
+        .cv-classic .cv-section h3 {
+            font-size: 0.85rem;
+            color: var(--ink);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 6px;
+            margin: 0 0 10px;
+        }
+
+        /* Modernes Layout: zwei Spalten, Sidebar mit Akzenten */
+        .a4-page.cv-modern {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            grid-gap: 20px;
+            padding: 20mm 18mm !important;
+        }
+
+        .cv-modern .header-content {
+            grid-column: 1 / -1;
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin-bottom: 16px;
+        }
+
+        .cv-modern .header-content h1 {
+            margin-bottom: 4px;
+        }
+
+        .cv-modern .header-content p {
+            margin: 2px 0;
+            font-size: 0.8rem;
+        }
+
+        .cv-modern .sidebar {
+            grid-column: 1;
+            grid-row: 2;
+            background: var(--accent-soft);
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+        }
+
+        .cv-modern .sidebar h3 {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 12px 0 6px;
+            border: 0;
+            padding: 0;
+        }
+
+        .cv-modern .sidebar p {
+            margin: 0 0 8px;
+            font-size: 0.76rem;
+            line-height: 1.5;
+        }
+
+        .cv-modern .main-content {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cv-modern .cv-section {
+            break-inside: avoid;
+        }
+
+        .cv-modern .cv-section h3 {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 5px;
+            margin: 0 0 8px;
+        }
+
+        .cv-modern .cv-section p {
+            font-size: 0.85rem;
+        }
+
+        /* Kreatives Layout: Akzente und geometrische Formen */
+        .a4-page.cv-creative {
+            padding: 18mm 18mm !important;
+        }
+
+        .cv-creative .header-content {
+            background: linear-gradient(135deg, var(--accent-soft) 0%, rgba(255,255,255,0.5) 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            border-left: 5px solid var(--accent);
+        }
+
+        .cv-creative .header-content h1 {
+            color: var(--accent);
+            margin: 0 0 6px;
+        }
+
+        .cv-creative .header-content p {
+            margin: 3px 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .cv-creative .cv-section {
+            margin-top: 22px;
+            padding: 14px;
+            background: rgba(0,0,0,0.02);
+            border-left: 4px solid var(--accent);
+            break-inside: avoid;
+        }
+
+        .cv-creative .cv-section h3 {
+            font-size: 0.82rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 0;
+            margin: 0 0 10px;
+            padding: 0;
+            font-weight: 700;
+        }
+
+        .cv-creative .cv-section p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Einfaches Layout: sehr minimalistisch, nur Text */
+        .a4-page.cv-minimal {
+            padding: 20mm 20mm !important;
+        }
+
+        .cv-minimal .header-content {
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .cv-minimal .header-content h1 {
+            font-size: 1.1rem;
+            margin: 0 0 4px;
+        }
+
+        .cv-minimal .header-content p {
+            margin: 2px 0;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .cv-minimal .cv-section {
+            margin-top: 16px;
+            break-inside: avoid;
+        }
+
+        .cv-minimal .cv-section h3 {
+            font-size: 0.8rem;
+            color: var(--ink);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border: 0;
+            margin: 0 0 6px;
+            padding: 0;
+            font-weight: 700;
+        }
+
+        .cv-minimal .cv-section p {
+            font-size: 0.84rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         @media (max-width: 900px) {
             /* Auf dem Handy sollen Formular (Sidebar) und Vorschau
                untereinander stehen und ganz normal die Seite mit dem
@@ -1812,6 +2006,20 @@
             <label class="privacy-note"><input type="radio" name="speicher-modus" id="speicher-modus-sitzung"
                     value="sitzung" onchange="wechsleSpeicherModus()"> <span data-i18n="save_session">Nein, nur für diese Sitzung (weg beim
                 Schließen)</span></label>
+        </div>
+
+        <!-- CV Layout Template Selector -->
+        <div class="tpl-menu" id="cv-tpl-menu" style="margin-bottom: 18px;">
+            <button type="button" class="tpl-menu-toggle" onclick="toggleCvTplMenu()" style="background: var(--accent-soft); color: var(--accent); border-color: var(--line); padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-weight: 600; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                <span id="cv-tpl-label">📋 Layout: Klassisch</span>
+                <span class="chev" style="font-size: 0.7rem;">▼</span>
+            </button>
+            <div class="template-list" id="cv-tpl-list" style="display: none; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px;">
+                <button class="tpl-btn" style="background: var(--accent); color: white; border-color: var(--accent); padding: 8px; border: 1px solid var(--accent); border-radius: 4px; cursor: pointer; font-size: 0.9rem;" onclick="setCvTemplate('classic')">📄 Klassisch</button>
+                <button class="tpl-btn" style="background: transparent; color: var(--accent); border-color: var(--line); padding: 8px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 0.9rem;" onclick="setCvTemplate('modern')">🏢 Modern</button>
+                <button class="tpl-btn" style="background: transparent; color: var(--accent); border-color: var(--line); padding: 8px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 0.9rem;" onclick="setCvTemplate('creative')">✨ Kreativ</button>
+                <button class="tpl-btn" style="background: transparent; color: var(--accent); border-color: var(--line); padding: 8px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; font-size: 0.9rem;" onclick="setCvTemplate('minimal')">📝 Minimal</button>
+            </div>
         </div>
 
         <!-- Persoenliche Angaben: bewusst als ALLERERSTES im Sidebar direkt
@@ -3385,6 +3593,63 @@
             el.addEventListener('blur', () => updateVorschau());
         });
 
+        // ===== CV TEMPLATE FUNCTIONS =====
+        let currentCvTemplate = 'classic';
+
+        function toggleCvTplMenu() {
+            const menu = document.getElementById('cv-tpl-menu');
+            const list = document.getElementById('cv-tpl-list');
+            list.style.display = list.style.display === 'none' ? 'grid' : 'none';
+            menu.classList.toggle('open', list.style.display !== 'none');
+        }
+
+        function setCvTemplate(template) {
+            currentCvTemplate = template;
+            const labels = {
+                'classic': '📋 Layout: Klassisch',
+                'modern': '🏢 Layout: Modern',
+                'creative': '✨ Layout: Kreativ',
+                'minimal': '📝 Layout: Minimal'
+            };
+            document.getElementById('cv-tpl-label').textContent = labels[template] || labels['classic'];
+
+            // Update CSS-Klasse auf der Mappe
+            const cvPage = document.getElementById('mappe-lebenslauf');
+            if (cvPage) {
+                ['cv-classic', 'cv-modern', 'cv-creative', 'cv-minimal'].forEach(cls => {
+                    cvPage.classList.remove(cls);
+                });
+                cvPage.classList.add('cv-' + template);
+            }
+
+            // Schließe das Menü
+            document.getElementById('cv-tpl-list').style.display = 'none';
+
+            // Speichere die Auswahl
+            if (localStorage) {
+                localStorage.setItem('sd-cv-template', template);
+            }
+
+            // Aktualisiere die Vorschau
+            updateVorschau();
+        }
+
+        // Lade gespeicherte Template-Auswahl beim Start
+        function loadCvTemplate() {
+            if (localStorage) {
+                const saved = localStorage.getItem('sd-cv-template');
+                if (saved) {
+                    setCvTemplate(saved);
+                    return;
+                }
+            }
+            // Standard: klassisches Template
+            setCvTemplate('classic');
+        }
+
+        // Lade Template beim Seitenstart
+        document.addEventListener('DOMContentLoaded', loadCvTemplate);
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
             // Zeigt einen Hinweis, sobald im Hintergrund eine neue Version geladen wurde,
@@ -3404,6 +3669,7 @@
 
     <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
     <script type="module" src="./sd-auth.js?v=5"></script>
+    <!-- CV Layout Templates - v1 -->
 </body>
 
 </html>
