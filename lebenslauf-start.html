@@ -385,7 +385,7 @@
 
             if (sessions.length > 0) {
                 recentList.innerHTML = sessions.map(session => `
-                    <a href="Lebenslauf_app_v3_phase5.html?sessionId=${session.id}" class="session-card">
+                    <a href="Lebenslauf_app_v4_phase6.html?sessionId=${session.id}" class="session-card">
                         <div class="session-name">${session.name || 'Ohne Titel'}</div>
                         <div class="session-time">Bearbeitet: ${new Date(session.lastModified).toLocaleDateString('de-DE')}</div>
                         <div class="session-progress">${session.completeness}% fertig</div>
@@ -411,7 +411,7 @@
             localStorage.setItem('session_' + sessionId, JSON.stringify(newSession));
 
             // Redirect to integrated editor with AI & Recovery features
-            window.location.href = 'Lebenslauf_app_v3_phase5.html?sessionId=' + sessionId + '&mode=new';
+            window.location.href = 'Lebenslauf_app_v4_phase6.html?sessionId=' + sessionId + '&mode=new';
         }
 
         function startImproveResume() {
@@ -430,7 +430,7 @@
             localStorage.setItem('session_' + sessionId, JSON.stringify(newSession));
 
             // Redirect to integrated editor with file upload prompt
-            window.location.href = 'Lebenslauf_app_v3_phase5.html?sessionId=' + sessionId + '&mode=improve&uploadPrompt=true';
+            window.location.href = 'Lebenslauf_app_v4_phase6.html?sessionId=' + sessionId + '&mode=improve&uploadPrompt=true';
         }
 
         // Load recent sessions on page load
