@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30+ Premium Lebenslauf Vorlagen - Bewerbungsstudio</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap">
+    <style>
+        :root {
+            --primary: #1D4ED8;
+            --primary-light: #3B82F6;
+            --primary-dark: #0F2855;
+            --surface: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --border-light: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--surface);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAV ===== */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 48px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        nav .back-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        nav .back-link:hover { color: var(--primary); }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+            color: white;
+            padding: 60px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            width: min(1400px, calc(100% - 48px));
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        /* ===== SLIDER SECTION ===== */
+        .slider-container {
+            margin-bottom: 80px;
+        }
+
+        .slider-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .slider-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .slider-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        /* ===== CAROUSEL ===== */
+        .carousel-wrapper {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .carousel {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 20px 0;
+            scroll-snap-type: x mandatory;
+        }
+
+        .carousel::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .carousel::-webkit-scrollbar-track {
+            background: var(--surface-light);
+        }
+
+        .carousel::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+
+        /* ===== CAROUSEL BUTTONS ===== */
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border: 1px solid var(--border-light);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .carousel-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .carousel-btn.prev { left: -22px; }
+        .carousel-btn.next { right: -22px; }
+
+        /* ===== TEMPLATE CARD IN SLIDER ===== */
+        .template-card-slider {
+            flex: 0 0 280px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            scroll-snap-align: center;
+        }
+
+        .template-card-slider:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .template-preview-slider {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, var(--surface-light) 0%, var(--surface-muted) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .template-badge-slider {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(29, 78, 216, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .template-info-slider {
+            padding: 20px;
+        }
+
+        .template-title-slider {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .template-desc-slider {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .template-action-slider {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .template-action-slider:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ===== PAGINATION ===== */
+        .carousel-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .page-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border-light);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-dot.active {
+            background: var(--primary);
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .page-dot:hover {
+            background: var(--primary-light);
+        }
+
+        /* ===== GRID VIEW TOGGLE ===== */
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 40px 0;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-light);
+            background: white;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ===== GRID ===== */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 24px;
+        }
+
+        .templates-grid.hidden {
+            display: none;
+        }
+
+        /* ===== MORE TEMPLATES LINK ===== */
+        .more-templates {
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .more-templates-btn {
+            display: inline-block;
+            padding: 16px 40px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .more-templates-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            padding: 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            border-top: 1px solid var(--border-light);
+            margin-top: 80px;
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 12px 20px; }
+            .hero { padding: 40px 20px; }
+            .container { width: calc(100% - 24px); padding: 40px 12px; }
+            .carousel-btn { display: none; }
+            .carousel { gap: 16px; padding: 10px 0; }
+            .template-card-slider { flex: 0 0 200px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="bewerbung-studio-landing.html" class="back-link">← Zurück</a>
+        <a href="bewerbung-studio-landing.html" class="logo">✦ Bewerbungsstudio</a>
+        <div style="width: 150px;"></div>
+    </nav>
+
+    <div class="hero">
+        <h1>30+ Premium Lebenslauf Vorlagen</h1>
+        <p>Professionelle Designs für jede Branche. Wähle deine Vorlage und erstelle deinen perfekten Lebenslauf</p>
+    </div>
+
+    <div class="container">
+        <!-- SLIDER SECTION -->
+        <div class="slider-container">
+            <div class="slider-header">
+                <h2>Beliebte Vorlagen</h2>
+                <p>Swipe durch die meistverwendeten Premium-Designs</p>
+            </div>
+
+            <div class="carousel-wrapper">
+                <button class="carousel-btn prev" onclick="scrollCarousel(-1)">‹</button>
+                <div class="carousel" id="carousel">
+                    <!-- Cards werden durch JavaScript eingefügt -->
+                </div>
+                <button class="carousel-btn next" onclick="scrollCarousel(1)">›</button>
+            </div>
+
+            <div class="carousel-pagination" id="pagination"></div>
+        </div>
+
+        <!-- VIEW TOGGLE -->
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="toggleView('slider')">Slider-Ansicht</button>
+            <button class="view-btn" onclick="toggleView('grid')">Alle anzeigen</button>
+        </div>
+
+        <!-- GRID VIEW -->
+        <div class="templates-grid hidden" id="gridView">
+            <!-- Cards werden durch JavaScript eingefügt -->
+        </div>
+
+        <!-- MORE TEMPLATES LINK -->
+        <div class="more-templates">
+            <a href="Lebenslauf_app.html" class="more-templates-btn">Zum Lebenslauf-Editor →</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>Bewerbungsstudio • 30+ Premium Lebenslauf Vorlagen | Kostenlos • Ohne Registrierung</p>
+    </footer>
+
+    <script>
+        // 30+ TEMPLATE DATEN
+        const templates = [
+            { id: 1, name: 'Klassisch Eleganz', category: 'classic', desc: 'Zeitloses grau Design', icon: '📄', color: '#6B7280' },
+            { id: 2, name: 'Modern Blau', category: 'modern', desc: 'Frischer Farbverlauf', icon: '⬛', color: '#1D4ED8' },
+            { id: 3, name: 'Gold Premium', category: 'premium', desc: 'Luxus mit Gold-Akzenten', icon: '✨', color: '#D4AF37' },
+            { id: 4, name: 'Purple Kreativ', category: 'creative', desc: 'Lebhaft und modern', icon: '🎨', color: '#9333EA' },
+            { id: 5, name: 'Emerald Natur', category: 'modern', desc: 'Frisches Grün', icon: '🌿', color: '#059669' },
+            { id: 6, name: 'Rose Professionell', category: 'premium', desc: 'Elegante Rose-Töne', icon: '💼', color: '#E11D48' },
+            { id: 7, name: 'Midnight Tech', category: 'modern', desc: 'Dunkel & minimal', icon: '💻', color: '#1E1E2E' },
+            { id: 8, name: 'Forest Natur', category: 'classic', desc: 'Natur-inspiriert', icon: '🌲', color: '#1F2937' },
+            { id: 9, name: 'Vintage Retro', category: 'creative', desc: 'Retro-Charme', icon: '🎭', color: '#8B6F47' },
+            { id: 10, name: 'Cyber Cyan', category: 'modern', desc: 'Futuristisch', icon: '🔮', color: '#06B6D4' },
+            { id: 11, name: 'Minimalista', category: 'classic', desc: 'Reduktionismus', icon: '□', color: '#374151' },
+            { id: 12, name: 'Executive Blue', category: 'premium', desc: 'Für Führungskräfte', icon: '👔', color: '#0F2855' },
+            { id: 13, name: 'Creative Studio', category: 'creative', desc: 'Für Designer & Kreative', icon: '🎪', color: '#7C3AED' },
+            { id: 14, name: 'Tech Summit', category: 'modern', desc: 'Für IT-Profis', icon: '⚙️', color: '#1D4ED8' },
+            { id: 15, name: 'Medical Pro', category: 'premium', desc: 'Für Mediziner', icon: '⚕️', color: '#0369A1' },
+            { id: 16, name: 'Financial Expert', category: 'premium', desc: 'Für Finanzfachleute', icon: '💰', color: '#1E40AF' },
+            { id: 17, name: 'HR Specialist', category: 'modern', desc: 'Für HR-Profis', icon: '👥', color: '#DC2626' },
+            { id: 18, name: 'Marketing Genius', category: 'creative', desc: 'Für Marketing-Experten', icon: '📢', color: '#EA580C' },
+            { id: 19, name: 'Sales Champion', category: 'modern', desc: 'Für Vertriebler', icon: '🏆', color: '#059669' },
+            { id: 20, name: 'Engineering Master', category: 'modern', desc: 'Für Ingenieure', icon: '🔧', color: '#475569' },
+            { id: 21, name: 'Architect Dream', category: 'premium', desc: 'Für Architekten', icon: '🏛️', color: '#7C2D12' },
+            { id: 22, name: 'Legal Shield', category: 'premium', desc: 'Für Juristen', icon: '⚖️', color: '#1E1B4B' },
+            { id: 23, name: 'Education First', category: 'modern', desc: 'Für Pädagogen', icon: '🎓', color: '#3B82F6' },
+            { id: 24, name: 'Art & Culture', category: 'creative', desc: 'Für Künstler', icon: '🎨', color: '#BE123C' },
+            { id: 25, name: 'Science Explorer', category: 'modern', desc: 'Für Wissenschaftler', icon: '🔬', color: '#0891B2' },
+            { id: 26, name: 'Business Master', category: 'premium', desc: 'Für Business-Manager', icon: '📊', color: '#1F2937' },
+            { id: 27, name: 'Startup Hero', category: 'creative', desc: 'Für Unternehmer', icon: '🚀', color: '#3B82F6' },
+            { id: 28, name: 'Travel & Tourism', category: 'creative', desc: 'Für Reisebranche', icon: '✈️', color: '#06B6D4' },
+            { id: 29, name: 'Hospitality Pro', category: 'modern', desc: 'Für Gastgewerbe', icon: '🍽️', color: '#DC2626' },
+            { id: 30, name: 'Sustainability', category: 'modern', desc: 'Für Umweltbewusste', icon: '🌱', color: '#16A34A' }
+        ];
+
+        // CAROUSEL SETUP
+        function initCarousel() {
+            const carousel = document.getElementById('carousel');
+            const pagination = document.getElementById('pagination');
+            const gridView = document.getElementById('gridView');
+
+            // Slider-Vorlagen (erste 10)
+            templates.slice(0, 10).forEach((template, idx) => {
+                const card = document.createElement('div');
+                card.className = 'template-card-slider';
+                card.style.setProperty('--template-color', template.color);
+                card.innerHTML = `
+                    <div class="template-preview-slider" style="background: linear-gradient(135deg, ${template.color}22 0%, ${template.color}11 100%); color: ${template.color};">
+                        ${template.icon}
+                        <span class="template-badge-slider">#${template.id}</span>
+                    </div>
+                    <div class="template-info-slider">
+                        <div class="template-title-slider">${template.name}</div>
+                        <div class="template-desc-slider">${template.desc}</div>
+                        <button class="template-action-slider" onclick="selectTemplate(${template.id})">Auswählen</button>
+                    </div>
+                `;
+                carousel.appendChild(card);
+            });
+
+            // Grid-Vorlagen (alle 30)
+            templates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'template-card-slider';
+                card.style.setProperty('--template-color', template.color);
+                card.innerHTML = `
+                    <div class="template-preview-slider" style="background: linear-gradient(135deg, ${template.color}22 0%, ${template.color}11 100%); color: ${template.color};">
+                        ${template.icon}
+                        <span class="template-badge-slider">#${template.id}</span>
+                    </div>
+                    <div class="template-info-slider">
+                        <div class="template-title-slider">${template.name}</div>
+                        <div class="template-desc-slider">${template.desc}</div>
+                        <button class="template-action-slider" onclick="selectTemplate(${template.id})">Auswählen</button>
+                    </div>
+                `;
+                gridView.appendChild(card);
+            });
+
+            // Pagination (10 Punkte für erste 10 Templates)
+            for (let i = 0; i < 10; i++) {
+                const dot = document.createElement('button');
+                dot.className = `page-dot ${i === 0 ? 'active' : ''}`;
+                dot.onclick = () => goToPage(i);
+                pagination.appendChild(dot);
+            }
+        }
+
+        function scrollCarousel(direction) {
+            const carousel = document.getElementById('carousel');
+            const scrollAmount = 320; // 280px card + 40px gap
+            carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
+
+        function goToPage(pageNum) {
+            const carousel = document.getElementById('carousel');
+            const dots = document.querySelectorAll('.page-dot');
+            dots.forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === pageNum);
+            });
+            carousel.scrollBy({ left: (pageNum * 320) - carousel.scrollLeft, behavior: 'smooth' });
+        }
+
+        function toggleView(view) {
+            const carousel = document.getElementById('carousel').parentElement;
+            const gridView = document.getElementById('gridView');
+            const buttons = document.querySelectorAll('.view-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'slider') {
+                carousel.style.display = '';
+                gridView.classList.add('hidden');
+            } else {
+                carousel.style.display = 'none';
+                gridView.classList.remove('hidden');
+            }
+        }
+
+        function selectTemplate(templateId) {
+            const template = templates.find(t => t.id === templateId);
+            sessionStorage.setItem('selectedTemplate', `template-${templateId}-${template.name.toLowerCase().replace(/\s+/g, '-')}`);
+            window.location.href = 'Lebenslauf_app.html?template=' + templateId;
+        }
+
+        // INITIALIZE ON LOAD
+        window.addEventListener('load', initCarousel);
+    </script>
+</body>
+</html>
