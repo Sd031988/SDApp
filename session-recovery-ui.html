@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Recovery - Bewerbungsstudio</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap">
+    <script src="session-recovery.js"></script>
+    <style>
+        :root {
+            --primary: #1D4ED8;
+            --primary-dark: #0F2855;
+            --primary-light: #3B82F6;
+            --emerald: #059669;
+            --danger: #DC2626;
+            --surface: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --border: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F0F9FF 0%, #F0F4FF 50%, #FAFBFC 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 48px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 48px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 32px;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface-light);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .backup-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: var(--surface-light);
+            transition: all 0.2s;
+        }
+
+        .backup-item:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .backup-info {
+            flex: 1;
+        }
+
+        .backup-timestamp {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .backup-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        button, input[type="file"] {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--surface-muted);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #B91C1C;
+        }
+
+        .btn-success {
+            background: var(--emerald);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #A7F3D0;
+        }
+
+        .alert-danger {
+            background: #FEE2E2;
+            color: #7F1D1D;
+            border: 1px solid #FECACA;
+        }
+
+        .alert-info {
+            background: #DBEAFE;
+            color: #0C2340;
+            border: 1px solid #93C5FD;
+        }
+
+        .input-file-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 20px;
+            background: var(--surface-muted);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .storage-bar {
+            background: var(--surface-muted);
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .storage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            transition: width 0.3s;
+        }
+
+        footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 32px 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button, .file-label {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🎯 Bewerbungsstudio</div>
+        <a href="index.html">← Zurück zur Startseite</a>
+    </nav>
+
+    <div class="container">
+        <h1>📊 Session Recovery & Backup</h1>
+
+        <!-- Storage Usage -->
+        <div class="section">
+            <h2>Speichernutzung</h2>
+            <div class="stats-grid" id="storageStats">
+                <div class="stat-card">
+                    <div class="stat-label">Verwendet</div>
+                    <div class="stat-value" id="usedStorage">0 KB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Verfügbar</div>
+                    <div class="stat-value">~5000 KB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Auslastung</div>
+                    <div class="stat-value" id="percentUsed">0%</div>
+                </div>
+            </div>
+            <div class="storage-bar">
+                <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Session List & Recovery -->
+        <div class="section">
+            <h2>💾 Verfügbare Sitzungen</h2>
+            <div class="alert alert-info" id="infoAlert"></div>
+            <div id="sessionsList"></div>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">
+                Wählen Sie eine Sitzung aus, um die verfügbaren Sicherungen anzuzeigen.
+            </p>
+        </div>
+
+        <!-- Backups for Selected Session -->
+        <div class="section" id="backupsSection" style="display: none;">
+            <h2>🔄 Sicherungen für: <span id="selectedSessionName"></span></h2>
+            <div class="alert alert-info" id="backupAlert"></div>
+            <div class="backup-list" id="backupsList"></div>
+        </div>
+
+        <!-- Import/Export -->
+        <div class="section">
+            <h2>⬇️ Import / Export</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Sichern Sie Ihre Sitzungen lokal oder importieren Sie gespeicherte Sitzungen.
+            </p>
+            <div class="button-group">
+                <button class="btn-primary" onclick="exportAllSessions()">📥 Alle Sitzungen exportieren</button>
+                <div class="input-file-wrapper">
+                    <label class="file-label" for="importFile">📤 Sitzung importieren</label>
+                    <input type="file" id="importFile" accept=".json" onchange="handleFileImport(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Options -->
+        <div class="section">
+            <h2>⚙️ Erweiterte Optionen</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                <button class="btn-secondary" onclick="checkAllSessionsHealth()">🏥 Sitzungen überprüfen</button>
+                <button class="btn-secondary" onclick="clearOldBackups()">🗑️ Alte Sicherungen löschen</button>
+                <button class="btn-danger" onclick="clearAllData()">⚠️ Alle Daten löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>
+            © 2024 Bewerbungsstudio |
+            <a href="impressum.html">Impressum</a>
+            <a href="datenschutz.html">Datenschutz</a>
+            <a href="agb.html">AGB</a>
+        </p>
+    </footer>
+
+    <script>
+        // Load and display sessions on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSessions();
+            updateStorageDisplay();
+        });
+
+        function loadSessions() {
+            const history = recoveryManager.getSessionHistory();
+            const sessionsList = document.getElementById('sessionsList');
+
+            if (history.length === 0) {
+                sessionsList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">Keine Sitzungen gefunden. Erstellen Sie einen neuen Lebenslauf, um zu starten.</p>';
+                return;
+            }
+
+            sessionsList.innerHTML = history.map(session => `
+                <div class="backup-item" onclick="selectSession('${session.sessionId}')">
+                    <div class="backup-info">
+                        <div class="backup-timestamp">📝 ${session.sessionId}</div>
+                        <div class="backup-size">
+                            ${session.backupCount || 0} Sicherung(en) · Zuletzt: ${new Date(session.lastBackup).toLocaleString('de-DE')}
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn-small btn-primary" onclick="event.stopPropagation(); recoverSession('${session.sessionId}')">Wiederherstellen</button>
+                        <button class="btn-small btn-secondary" onclick="event.stopPropagation(); exportSession('${session.sessionId}')">Export</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectSession(sessionId) {
+            const backups = recoveryManager.getBackupsForSession(sessionId);
+            const section = document.getElementById('backupsSection');
+            const backupsList = document.getElementById('backupsList');
+
+            document.getElementById('selectedSessionName').textContent = sessionId;
+
+            if (backups.length === 0) {
+                backupsList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">Keine Sicherungen für diese Sitzung.</p>';
+            } else {
+                backupsList.innerHTML = backups.map((backup, index) => `
+                    <div class="backup-item">
+                        <div class="backup-info">
+                            <div class="backup-timestamp">Sicherung #${index + 1}</div>
+                            <div class="backup-size">
+                                ${new Date(backup.timestamp).toLocaleString('de-DE')} · ${(backup.size / 1024).toFixed(2)} KB
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button class="btn-small btn-success" onclick="restoreBackup('${backup.key}', '${backup.sessionId}')">Wiederherstellen</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function restoreBackup(backupKey, sessionId) {
+            const result = recoveryManager.restoreFromBackup(backupKey);
+            if (result.success) {
+                showAlert('backupAlert', `Sicherung erfolgreich wiederhergestellt: ${new Date(result.timestamp).toLocaleString('de-DE')}`, 'success');
+                localStorage.setItem(`session_${sessionId}`, JSON.stringify(result.data));
+                setTimeout(() => {
+                    window.location.href = `Lebenslauf_app_v2.html?sessionId=${sessionId}`;
+                }, 2000);
+            } else {
+                showAlert('backupAlert', 'Fehler beim Wiederherstellen: ' + result.error, 'danger');
+            }
+        }
+
+        function recoverSession(sessionId) {
+            const result = recoveryManager.recoverCorruptSession(sessionId);
+            const message = result.message || 'Wiederherstellung abgeschlossen';
+            showAlert('infoAlert', message, result.recovered ? 'success' : 'danger');
+            
+            if (result.recovered && result.fromBackup) {
+                setTimeout(() => {
+                    window.location.href = `Lebenslauf_app_v2.html?sessionId=${sessionId}`;
+                }, 2000);
+            }
+        }
+
+        function exportSession(sessionId) {
+            const result = recoveryManager.exportSession(sessionId);
+            if (!result.success) {
+                showAlert('infoAlert', 'Fehler beim Export: ' + result.error, 'danger');
+            }
+        }
+
+        function exportAllSessions() {
+            const sessions = recoveryManager.getSessionHistory();
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                sessions: sessions.map(s => ({
+                    ...s,
+                    backups: recoveryManager.getBackupsForSession(s.sessionId)
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Bewerbungsstudio_Backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            recoveryManager.importSession(file)
+                .then(result => {
+                    showAlert('infoAlert', result.message, 'success');
+                    setTimeout(() => {
+                        loadSessions();
+                        document.getElementById('importFile').value = '';
+                    }, 2000);
+                })
+                .catch(error => {
+                    showAlert('infoAlert', 'Fehler beim Import: ' + error.error, 'danger');
+                });
+        }
+
+        function checkAllSessionsHealth() {
+            const sessions = recoveryManager.getSessionHistory();
+            let healthy = 0;
+            let recovered = 0;
+
+            sessions.forEach(session => {
+                const result = recoveryManager.recoverCorruptSession(session.sessionId);
+                if (result.recovered) {
+                    if (result.fromBackup) recovered++;
+                    else healthy++;
+                }
+            });
+
+            showAlert('infoAlert', `✓ ${healthy} Sitzung(en) OK · 🔄 ${recovered} wiederhergestellt`, 'success');
+        }
+
+        function clearOldBackups() {
+            if (!confirm('Alle alten Sicherungen löschen? Dies kann nicht rückgängig gemacht werden.')) return;
+
+            const sessions = recoveryManager.getSessionHistory();
+            let totalDeleted = 0;
+
+            sessions.forEach(session => {
+                const result = recoveryManager.cleanOldBackups(session.sessionId);
+                totalDeleted += result.deleted || 0;
+            });
+
+            showAlert('infoAlert', `${totalDeleted} alte Sicherung(en) gelöscht`, 'success');
+            updateStorageDisplay();
+        }
+
+        function clearAllData() {
+            if (!confirm('WARNUNG: Alle Daten werden gelöscht! Dies kann nicht rückgängig gemacht werden.')) return;
+            if (!confirm('Wirklich alle Daten löschen?')) return;
+
+            localStorage.clear();
+            showAlert('infoAlert', 'Alle Daten gelöscht', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        function updateStorageDisplay() {
+            const usage = recoveryManager.getStorageUsage();
+            document.getElementById('usedStorage').textContent = usage.totalSizeKB + ' KB';
+            document.getElementById('percentUsed').textContent = usage.percentageUsed + '%';
+            document.getElementById('storageFill').style.width = Math.min(parseFloat(usage.percentageUsed), 100) + '%';
+        }
+
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Update storage display every 5 seconds
+        setInterval(updateStorageDisplay, 5000);
+    </script>
+</body>
+</html>
