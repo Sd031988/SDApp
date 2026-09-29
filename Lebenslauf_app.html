@@ -2530,10 +2530,10 @@
                 const sidebar = document.createElement('div');
                 sidebar.className = 'sidebar';
                 sidebar.innerHTML = `
-                    <h3>${t('lbl_kenntnisse')}</h3>
+                    <h3 data-i18n="lbl_kenntnisse">Kenntnisse</h3>
                     <p id="prev-kenntnisse" class="editable-preview ghost-placeholder" contenteditable="true"
                         data-sync="kenntnisse" data-placeholder="Organisation, MS Office ..."></p>
-                    <h3>${t('lbl_sprachen')}</h3>
+                    <h3 data-i18n="lbl_sprachen">Sprachen</h3>
                     <p id="prev-sprachen" class="editable-preview ghost-placeholder" contenteditable="true"
                         data-sync="sprachen" data-placeholder="Deutsch: sehr gut, Englisch: gut ..."></p>
                 `;
@@ -2544,12 +2544,12 @@
                 mainContent.className = 'main-content';
                 mainContent.innerHTML = `
                     <div class="cv-section">
-                        <h3>${t('lbl_erfahrung')}</h3>
+                        <h3 data-i18n="lbl_erfahrung">Berufserfahrung</h3>
                         <p id="prev-erfahrung" class="editable-preview ghost-placeholder" contenteditable="true"
                             data-sync="erfahrung" data-placeholder="2022 - heute: Familienhilfe bei ..."></p>
                     </div>
                     <div class="cv-section">
-                        <h3>${t('lbl_ausbildung')}</h3>
+                        <h3 data-i18n="lbl_ausbildung">Ausbildung</h3>
                         <p id="prev-ausbildung" class="editable-preview ghost-placeholder" contenteditable="true"
                             data-sync="ausbildung" data-placeholder="2018 - 2021: Ausbildung zum ..."></p>
                     </div>
@@ -2578,22 +2578,22 @@
                     // Recreate standard structure
                     const newHTML = `
                         <div class="cv-section">
-                            <h3>${t('lbl_erfahrung')}</h3>
+                            <h3 data-i18n="lbl_erfahrung">Berufserfahrung</h3>
                             <p id="prev-erfahrung" class="editable-preview ghost-placeholder" contenteditable="true"
                                 data-sync="erfahrung" data-placeholder="2022 - heute: Familienhilfe bei ..."></p>
                         </div>
                         <div class="cv-section">
-                            <h3>${t('lbl_ausbildung')}</h3>
+                            <h3 data-i18n="lbl_ausbildung">Ausbildung</h3>
                             <p id="prev-ausbildung" class="editable-preview ghost-placeholder" contenteditable="true"
                                 data-sync="ausbildung" data-placeholder="2018 - 2021: Ausbildung zum ..."></p>
                         </div>
                         <div class="cv-section">
-                            <h3>${t('lbl_kenntnisse')}</h3>
+                            <h3 data-i18n="lbl_kenntnisse">Kenntnisse</h3>
                             <p id="prev-kenntnisse" class="editable-preview ghost-placeholder" contenteditable="true"
                                 data-sync="kenntnisse" data-placeholder="Organisation, MS Office, Teamarbeit ..."></p>
                         </div>
                         <div class="cv-section">
-                            <h3>${t('lbl_sprachen')}</h3>
+                            <h3 data-i18n="lbl_sprachen">Sprachen</h3>
                             <p id="prev-sprachen" class="editable-preview ghost-placeholder" contenteditable="true"
                                 data-sync="sprachen" data-placeholder="Deutsch: sehr gut, Englisch: gut ..."></p>
                         </div>
