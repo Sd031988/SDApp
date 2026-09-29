@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lebenslauf Editor Pro - Phase 5 (mit Upload & Templates)</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&family=Roboto+Serif:wght@400;500;700&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="session-recovery.js"></script>
+    <script src="cv-suggestions.js"></script>
+    <style>
+        :root {
+            --blue-dark: #0F2855;
+            --blue-primary: #1D4ED8;
+            --blue-light: #3B82F6;
+            --emerald: #059669;
+            --amber: #D97706;
+            --red: #EF4444;
+            --surface-white: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --border-light: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--surface-light);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--blue-primary);
+        }
+
+        .session-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding-left: 16px;
+            border-left: 1px solid var(--border-light);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .save-indicator {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .save-indicator.saved {
+            color: var(--emerald);
+        }
+
+        .header-btn {
+            background: var(--blue-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--blue-light);
+        }
+
+        .header-btn.recovery {
+            background: var(--emerald);
+        }
+
+        .header-btn.recovery:hover {
+            background: #047857;
+        }
+
+        .header-btn.suggestions {
+            background: var(--amber);
+        }
+
+        .header-btn.suggestions:hover {
+            background: #B45309;
+        }
+
+        .header-btn.upload {
+            background: #8B5CF6;
+        }
+
+        .header-btn.upload:hover {
+            background: #7C3AED;
+        }
+
+        .header-btn.templates {
+            background: #EC4899;
+        }
+
+        .header-btn.templates:hover {
+            background: #DB2777;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 320px;
+            gap: 24px;
+            padding: 32px;
+            max-width: 1900px;
+            margin: 0 auto;
+        }
+
+        /* ===== FORM SECTION ===== */
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .tabs {
+            background: white;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            gap: 0;
+            margin: -32px -32px 24px -32px;
+            padding: 0 32px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 16px 20px;
+            border: none;
+            background: none;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--blue-primary);
+        }
+
+        .tab.active {
+            color: var(--blue-primary);
+            border-bottom-color: var(--blue-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 32px 0 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn {
+            background: var(--emerald);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+
+        .add-btn:hover {
+            background: #047857;
+        }
+
+        .entry-item {
+            background: var(--surface-muted);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--blue-primary);
+            position: relative;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--red);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== PREVIEW SECTION ===== */
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 88px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .preview-header {
+            margin-bottom: 32px;
+            text-align: center;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 24px;
+        }
+
+        .preview-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .preview-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .preview-contact {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .preview-section-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--blue-primary);
+            text-transform: uppercase;
+            margin: 24px 0 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-content {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 32px;
+        }
+
+        .download-btn {
+            flex: 1;
+            background: var(--blue-primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: var(--blue-light);
+        }
+
+        /* ===== SUGGESTIONS SIDEBAR ===== */
+        .suggestions-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 88px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-card {
+            background: var(--surface-muted);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .score-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--blue-primary);
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border-light);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            background: var(--emerald);
+            transition: width 0.3s ease;
+        }
+
+        .ats-card {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FED7AA 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid var(--amber);
+        }
+
+        .ats-label {
+            font-size: 11px;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ats-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #78350F;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            border-left: 3px solid;
+            background: var(--surface-light);
+            position: relative;
+        }
+
+        .suggestion-item.high {
+            border-left-color: var(--red);
+            background: #FEE2E2;
+        }
+
+        .suggestion-item.medium {
+            border-left-color: var(--amber);
+            background: #FEF3C7;
+        }
+
+        .suggestion-item.low {
+            border-left-color: var(--emerald);
+            background: #ECFDF5;
+        }
+
+        .suggestion-text {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-hint {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .quick-fix-btn {
+            background: var(--emerald);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: all 0.2s;
+        }
+
+        .quick-fix-btn:hover {
+            background: #047857;
+        }
+
+        .sidebar-button {
+            width: 100%;
+            background: var(--blue-primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-button:hover {
+            background: var(--blue-light);
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.primary {
+            background: var(--emerald);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #047857;
+        }
+
+        .modal-btn.secondary {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--surface-muted);
+        }
+
+        /* ===== UPLOAD ZONE ===== */
+        .upload-zone {
+            border: 2px dashed var(--blue-primary);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(29, 78, 216, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .upload-zone:hover {
+            background: rgba(29, 78, 216, 0.1);
+            border-color: var(--blue-light);
+        }
+
+        .upload-zone.dragover {
+            background: rgba(29, 78, 216, 0.15);
+            border-color: var(--blue-light);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-progress {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--emerald);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== TEMPLATES GRID ===== */
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-height: calc(80vh - 200px);
+            overflow-y: auto;
+        }
+
+        .template-card {
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .template-card:hover {
+            border-color: var(--blue-primary);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15);
+        }
+
+        .template-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .template-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .template-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .suggestions-sidebar {
+                display: none;
+            }
+
+            .templates-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-section {
+                position: static;
+                max-height: none;
+            }
+
+            .suggestions-sidebar {
+                display: none;
+            }
+
+            .header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .header-right {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .preview-section {
+                padding: 24px;
+            }
+
+            .tabs {
+                margin: -20px -20px 24px -20px;
+                padding: 0 20px;
+            }
+
+            .upload-zone {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">🎯 Bewerbungsstudio</div>
+            <div class="session-name" id="sessionName">Lebenslauf</div>
+        </div>
+        <div class="header-right">
+            <div class="save-indicator" id="saveIndicator">Automatisch gespeichert</div>
+            <button class="header-btn upload" onclick="showUploadModal()" title="Datei hochladen">📤 Datei</button>
+            <button class="header-btn templates" onclick="showTemplatesModal()" title="Vorlagen wählen">📑 Vorlagen</button>
+            <button class="header-btn suggestions" onclick="toggleSuggestions()" title="KI-Vorschläge anzeigen">💡 Tipps</button>
+            <button class="header-btn recovery" onclick="showRecoveryPanel()" title="Sicherungen verwalten">🛡️ Sicherung</button>
+            <button class="header-btn" onclick="downloadPDF()">⬇️ PDF</button>
+            <button class="header-btn" onclick="downloadDOCX()">⬇️ DOCX</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- FORM SECTION -->
+        <div class="form-section">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('personal')">Persönlich</button>
+                <button class="tab" onclick="switchTab('experience')">Erfahrung</button>
+                <button class="tab" onclick="switchTab('education')">Bildung</button>
+                <button class="tab" onclick="switchTab('skills')">Fähigkeiten</button>
+            </div>
+
+            <!-- PERSONAL TAB -->
+            <div id="personalTab" class="tab-content active">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" id="nameInput" class="form-input" placeholder="Ihr Name" onchange="saveSessionAndAnalyze(); updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Berufsbezeichnung</label>
+                    <input type="text" id="titleInput" class="form-input" placeholder="z.B. Senior Developer" onchange="saveSessionAndAnalyze(); updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">E-Mail</label>
+                    <input type="email" id="emailInput" class="form-input" placeholder="ihre@email.com" onchange="saveSessionAndAnalyze(); updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Telefon</label>
+                    <input type="tel" id="phoneInput" class="form-input" placeholder="+49 123 456789" onchange="saveSessionAndAnalyze(); updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Adresse</label>
+                    <input type="text" id="addressInput" class="form-input" placeholder="Stadt, Land" onchange="saveSessionAndAnalyze(); updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Professionelle Zusammenfassung</label>
+                    <textarea id="summaryInput" class="form-textarea" placeholder="Kurze Beschreibung Ihrer beruflichen Erfahrung..." onchange="saveSessionAndAnalyze(); updatePreview()"></textarea>
+                </div>
+            </div>
+
+            <!-- EXPERIENCE TAB -->
+            <div id="experienceTab" class="tab-content">
+                <div class="section-title">💼 Berufserfahrung</div>
+                <div id="experienceList"></div>
+                <button class="add-btn" onclick="addExperience()">+ Erfahrung hinzufügen</button>
+            </div>
+
+            <!-- EDUCATION TAB -->
+            <div id="educationTab" class="tab-content">
+                <div class="section-title">🎓 Bildung</div>
+                <div id="educationList"></div>
+                <button class="add-btn" onclick="addEducation()">+ Bildung hinzufügen</button>
+            </div>
+
+            <!-- SKILLS TAB -->
+            <div id="skillsTab" class="tab-content">
+                <div class="section-title">⚡ Fähigkeiten</div>
+                <div class="form-group">
+                    <label class="form-label">Technische Fähigkeiten</label>
+                    <textarea id="technicalSkills" class="form-textarea" placeholder="z.B. Python, JavaScript, React..." onchange="saveSessionAndAnalyze(); updatePreview()"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sprachen</label>
+                    <textarea id="languages" class="form-textarea" placeholder="z.B. Deutsch (Muttersprache), Englisch (Fließend)..." onchange="saveSessionAndAnalyze(); updatePreview()"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weitere Fähigkeiten</label>
+                    <textarea id="otherSkills" class="form-textarea" placeholder="z.B. Projektmanagement, Teamführung..." onchange="saveSessionAndAnalyze(); updatePreview()"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- PREVIEW SECTION -->
+        <div class="preview-section" id="preview">
+            <div class="preview-header">
+                <div class="preview-name" id="previewName">Name</div>
+                <div class="preview-title" id="previewTitle">Berufsbezeichnung</div>
+                <div class="preview-contact" id="previewContact">Email • Telefon</div>
+            </div>
+
+            <div class="preview-section-title">Zusammenfassung</div>
+            <div class="preview-content" id="previewSummary">(Zusammenfassung)</div>
+
+            <div class="preview-section-title">Erfahrung</div>
+            <div class="preview-content" id="previewExperience">(Keine Einträge)</div>
+
+            <div class="preview-section-title">Bildung</div>
+            <div class="preview-content" id="previewEducation">(Keine Einträge)</div>
+
+            <div class="preview-section-title">Fähigkeiten</div>
+            <div class="preview-content" id="previewSkills">(Keine Fähigkeiten)</div>
+
+            <div class="download-buttons">
+                <button class="download-btn" onclick="downloadTXT()">📄 TXT</button>
+            </div>
+        </div>
+
+        <!-- SUGGESTIONS SIDEBAR -->
+        <div class="suggestions-sidebar" id="suggestionsSidebar" style="display: none;">
+            <div class="sidebar-title">💡 KI-Vorschläge</div>
+
+            <div class="score-card">
+                <div class="score-label">Gesamtscore</div>
+                <div class="score-value" id="overallScore">0</div>
+                <div class="score-bar">
+                    <div class="score-bar-fill" id="overallScoreBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="ats-card">
+                <div class="ats-label">ATS Kompatibilität</div>
+                <div class="ats-value" id="atsScore">0/100</div>
+            </div>
+
+            <div class="sidebar-title" style="margin-top: 16px;">Top-Vorschläge</div>
+            <div class="suggestions-list" id="suggestionsList"></div>
+
+            <button class="sidebar-button" onclick="openSuggestionsPanel()">Alle Vorschläge anzeigen →</button>
+        </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-title">📤 Lebenslauf hochladen</div>
+            <div class="modal-text">
+                Laden Sie eine Datei hoch (PDF, DOCX oder TXT), um sie automatisch zu analysieren und in Ihr Formular einzufügen.
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Datei hierher ziehen oder klicken</div>
+                <div class="upload-hint">PDF, DOCX oder TXT • Max 10MB</div>
+            </div>
+
+            <input type="file" id="fileInput" accept=".pdf,.docx,.txt" onchange="handleFileSelect(event)">
+
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">Verarbeitung...</div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeUploadModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES MODAL -->
+    <div class="modal" id="templatesModal">
+        <div class="modal-content">
+            <div class="modal-title">📑 Lebenslauf-Vorlagen</div>
+            <div class="modal-text">
+                Wählen Sie eine Vorlage, um die Struktur Ihres Lebenslaufs zu ändern.
+            </div>
+
+            <div class="templates-grid" id="templatesGrid"></div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeTemplatesModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECOVERY MODAL -->
+    <div class="modal" id="recoveryModal">
+        <div class="modal-content">
+            <div class="modal-title">🛡️ Session-Sicherungen</div>
+            <div class="modal-text">
+                <p id="recoveryText">Verwalten Sie Ihre automatischen Sicherungen und stellen Sie eine vorherige Version wieder her, falls nötig.</p>
+            </div>
+            <div style="max-height: 300px; overflow-y: auto; margin-bottom: 16px;" id="backupsList"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeRecoveryModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== PDF.JS SETUP =====
+        pdfjsWorker.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // ===== GLOBAL VARIABLES =====
+        let currentSession = null;
+        let experiences = [];
+        let educations = [];
+        let suggestionEngine = null;
+        let saveCounter = 0;
+        let lastAutoBackupTime = Date.now();
+        const AUTO_BACKUP_INTERVAL = 5 * 60 * 1000;
+        const AUTO_BACKUP_SAVE_COUNT = 30;
+
+        // ===== TEMPLATE DATA =====
+        const TEMPLATES = [
+            {
+                id: 'classic',
+                name: 'Klassisch',
+                icon: '📄',
+                description: 'Zeitlose und professionelle Struktur'
+            },
+            {
+                id: 'modern',
+                name: 'Modern',
+                icon: '✨',
+                description: 'Zeitgenössisches Design'
+            },
+            {
+                id: 'minimal',
+                name: 'Minimal',
+                icon: '▪',
+                description: 'Fokus auf Inhalte'
+            },
+            {
+                id: 'creative',
+                name: 'Kreativ',
+                icon: '🎨',
+                description: 'Besondere Formate'
+            }
+        ];
+
+        // ===== INITIALIZATION =====
+        window.addEventListener('load', function() {
+            if (typeof CVSuggestionEngine !== 'undefined') {
+                suggestionEngine = new CVSuggestionEngine();
+            }
+
+            loadSessionWithRecovery();
+            setupAutoBackup();
+            setupUploadZone();
+            renderTemplates();
+
+            if (typeof SessionRecoveryManager !== 'undefined') {
+                SessionRecoveryManager.setupAutoBackup();
+            }
+        });
+
+        // ===== UPLOAD ZONE SETUP =====
+        function setupUploadZone() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files[0]);
+                }
+            });
+        }
+
+        // ===== FILE UPLOAD HANDLING =====
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileUpload(file);
+            }
+        }
+
+        function handleFileUpload(file) {
+            const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+
+            if (!validTypes.includes(file.type)) {
+                alert('❌ Ungültige Dateityp. Bitte verwenden Sie PDF, DOCX oder TXT.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('❌ Datei zu groß. Maximum 10MB.');
+                return;
+            }
+
+            showUploadProgress();
+
+            setTimeout(() => {
+                if (file.type === 'application/pdf') {
+                    parsePDF(file);
+                } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    parseDOCX(file);
+                } else if (file.type === 'text/plain') {
+                    parseTXT(file);
+                }
+            }, 500);
+        }
+
+        function showUploadProgress() {
+            document.getElementById('uploadProgress').classList.add('active');
+            document.getElementById('progressFill').style.width = '30%';
+            document.getElementById('progressText').textContent = 'Datei wird verarbeitet...';
+        }
+
+        function hideUploadProgress() {
+            document.getElementById('uploadProgress').classList.remove('active');
+            document.getElementById('progressFill').style.width = '0%';
+        }
+
+        // ===== PDF PARSING =====
+        async function parsePDF(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsWorker.getDocument(arrayBuffer).promise;
+                let text = '';
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    text += textContent.items.map(item => item.str).join(' ') + '\n';
+                }
+
+                extractAndFillData(text);
+            } catch (error) {
+                console.error('PDF parse error:', error);
+                alert('❌ Fehler beim Parsen der PDF-Datei.');
+                hideUploadProgress();
+            }
+        }
+
+        // ===== DOCX PARSING =====
+        function parseDOCX(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const zip = new JSZip();
+                    zip.loadAsync(arrayBuffer).then(function(zip) {
+                        zip.file('word/document.xml').async('text').then(function(text) {
+                            const parser = new DOMParser();
+                            const xmlDoc = parser.parseFromString(text, 'text/xml');
+                            const paragraphs = xmlDoc.getElementsByTagName('w:p');
+                            let content = '';
+                            for (let i = 0; i < paragraphs.length; i++) {
+                                const texts = paragraphs[i].getElementsByTagName('w:t');
+                                for (let j = 0; j < texts.length; j++) {
+                                    content += texts[j].textContent;
+                                }
+                                content += '\n';
+                            }
+                            extractAndFillData(content);
+                        });
+                    });
+                } catch (error) {
+                    console.error('DOCX parse error:', error);
+                    alert('❌ Fehler beim Parsen der DOCX-Datei.');
+                    hideUploadProgress();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ===== TXT PARSING =====
+        function parseTXT(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                extractAndFillData(text);
+            };
+            reader.readAsText(file);
+        }
+
+        // ===== DATA EXTRACTION & AUTO-FILL =====
+        function extractAndFillData(text) {
+            document.getElementById('progressFill').style.width = '70%';
+            document.getElementById('progressText').textContent = 'Daten werden extrahiert...';
+
+            setTimeout(() => {
+                const data = parseCV(text);
+
+                if (data.name) document.getElementById('nameInput').value = data.name;
+                if (data.title) document.getElementById('titleInput').value = data.title;
+                if (data.email) document.getElementById('emailInput').value = data.email;
+                if (data.phone) document.getElementById('phoneInput').value = data.phone;
+                if (data.address) document.getElementById('addressInput').value = data.address;
+                if (data.summary) document.getElementById('summaryInput').value = data.summary;
+                if (data.technicalSkills) document.getElementById('technicalSkills').value = data.technicalSkills;
+                if (data.languages) document.getElementById('languages').value = data.languages;
+                if (data.otherSkills) document.getElementById('otherSkills').value = data.otherSkills;
+
+                if (data.experiences && data.experiences.length > 0) {
+                    experiences = data.experiences;
+                    renderExperience();
+                }
+
+                if (data.educations && data.educations.length > 0) {
+                    educations = data.educations;
+                    renderEducation();
+                }
+
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('progressText').textContent = '✓ Fertig!';
+
+                setTimeout(() => {
+                    hideUploadProgress();
+                    closeUploadModal();
+                    saveSessionAndAnalyze();
+                    updatePreview();
+                    alert('✓ Datei erfolgreich hochgeladen und Daten extrahiert!');
+                }, 1000);
+            }, 500);
+        }
+
+        // ===== CV PARSING LOGIC =====
+        function parseCV(text) {
+            const data = {
+                name: '',
+                title: '',
+                email: '',
+                phone: '',
+                address: '',
+                summary: '',
+                technicalSkills: '',
+                languages: '',
+                otherSkills: '',
+                experiences: [],
+                educations: []
+            };
+
+            const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/;
+            const phoneRegex = /(\+?[\d\s\-()]{10,})/;
+
+            const emailMatch = text.match(emailRegex);
+            if (emailMatch) data.email = emailMatch[1];
+
+            const phoneMatch = text.match(phoneRegex);
+            if (phoneMatch) data.phone = phoneMatch[1];
+
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length > 0) {
+                data.name = lines[0].trim();
+            }
+
+            const skillKeywords = ['Python', 'JavaScript', 'React', 'Java', 'C++', 'SQL', 'AWS', 'Docker', 'Git'];
+            const foundSkills = skillKeywords.filter(skill => text.includes(skill));
+            if (foundSkills.length > 0) {
+                data.technicalSkills = foundSkills.join(', ');
+            }
+
+            const langKeywords = ['Deutsch', 'Englisch', 'Französisch', 'Spanisch', 'Italienisch'];
+            const foundLangs = langKeywords.filter(lang => text.includes(lang));
+            if (foundLangs.length > 0) {
+                data.languages = foundLangs.join(', ');
+            }
+
+            return data;
+        }
+
+        // ===== TEMPLATES =====
+        function renderTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            grid.innerHTML = TEMPLATES.map(template => `
+                <div class="template-card" onclick="applyTemplate('${template.id}')">
+                    <div class="template-icon">${template.icon}</div>
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-desc">${template.description}</div>
+                </div>
+            `).join('');
+        }
+
+        function applyTemplate(templateId) {
+            alert(`✓ Vorlage "${TEMPLATES.find(t => t.id === templateId).name}" wird angewendet...`);
+            closeTemplatesModal();
+            saveSessionAndAnalyze();
+        }
+
+        // ===== MODALS =====
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+        }
+
+        function showTemplatesModal() {
+            document.getElementById('templatesModal').classList.add('active');
+        }
+
+        function closeTemplatesModal() {
+            document.getElementById('templatesModal').classList.remove('active');
+        }
+
+        // ===== SESSION RECOVERY & SAVE =====
+        function loadSessionWithRecovery() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('sessionId');
+
+            if (!sessionId) {
+                window.location.href = 'lebenslauf-start.html';
+                return;
+            }
+
+            try {
+                let sessionData = localStorage.getItem('session_' + sessionId);
+
+                if (!sessionData) {
+                    if (typeof SessionRecoveryManager !== 'undefined') {
+                        const backups = SessionRecoveryManager.getBackupsForSession(sessionId);
+                        if (backups.length > 0) {
+                            const latestBackup = backups[backups.length - 1];
+                            sessionData = localStorage.getItem(latestBackup.key);
+                            if (sessionData) {
+                                alert('✓ Ihre Session wurde aus einer Sicherung wiederhergestellt!');
+                            }
+                        }
+                    }
+                }
+
+                if (sessionData) {
+                    currentSession = JSON.parse(sessionData);
+                    document.getElementById('sessionName').textContent = currentSession.name || 'Lebenslauf';
+
+                    const data = currentSession.data || {};
+                    document.getElementById('nameInput').value = data.name || '';
+                    document.getElementById('titleInput').value = data.title || '';
+                    document.getElementById('emailInput').value = data.email || '';
+                    document.getElementById('phoneInput').value = data.phone || '';
+                    document.getElementById('addressInput').value = data.address || '';
+                    document.getElementById('summaryInput').value = data.summary || '';
+                    document.getElementById('technicalSkills').value = data.technicalSkills || '';
+                    document.getElementById('languages').value = data.languages || '';
+                    document.getElementById('otherSkills').value = data.otherSkills || '';
+
+                    experiences = data.experiences || [];
+                    educations = data.educations || [];
+
+                    renderExperience();
+                    renderEducation();
+                    updatePreview();
+                    analyzeCVAndUpdateSuggestions();
+                } else {
+                    alert('Fehler: Session konnte nicht geladen werden. Bitte starten Sie erneut.');
+                    window.location.href = 'lebenslauf-start.html';
+                }
+            } catch (error) {
+                console.error('Session recovery error:', error);
+                alert('Fehler beim Laden der Session. Bitte versuchen Sie es erneut.');
+                window.location.href = 'lebenslauf-start.html';
+            }
+        }
+
+        function saveSessionAndAnalyze() {
+            saveSessionWithBackup();
+            analyzeCVAndUpdateSuggestions();
+        }
+
+        function saveSessionWithBackup() {
+            if (!currentSession) return;
+
+            currentSession.lastModified = new Date().toISOString();
+            currentSession.data = {
+                name: document.getElementById('nameInput').value,
+                title: document.getElementById('titleInput').value,
+                email: document.getElementById('emailInput').value,
+                phone: document.getElementById('phoneInput').value,
+                address: document.getElementById('addressInput').value,
+                summary: document.getElementById('summaryInput').value,
+                technicalSkills: document.getElementById('technicalSkills').value,
+                languages: document.getElementById('languages').value,
+                otherSkills: document.getElementById('otherSkills').value,
+                experiences: experiences,
+                educations: educations
+            };
+
+            localStorage.setItem('session_' + currentSession.id, JSON.stringify(currentSession));
+
+            saveCounter++;
+            const timeSinceLastBackup = Date.now() - lastAutoBackupTime;
+
+            if (saveCounter >= AUTO_BACKUP_SAVE_COUNT || timeSinceLastBackup >= AUTO_BACKUP_INTERVAL) {
+                if (typeof SessionRecoveryManager !== 'undefined') {
+                    SessionRecoveryManager.createBackup(currentSession.id, currentSession);
+                    saveCounter = 0;
+                    lastAutoBackupTime = Date.now();
+                }
+            }
+
+            const indicator = document.getElementById('saveIndicator');
+            indicator.textContent = '✓ Gespeichert';
+            indicator.classList.add('saved');
+            setTimeout(() => {
+                indicator.textContent = 'Automatisch gespeichert';
+                indicator.classList.remove('saved');
+            }, 2000);
+        }
+
+        // ===== SUGGESTIONS WITH QUICK FIX =====
+        function analyzeCVAndUpdateSuggestions() {
+            if (!suggestionEngine) return;
+
+            const cvData = {
+                personalInfo: {
+                    name: document.getElementById('nameInput').value,
+                    title: document.getElementById('titleInput').value,
+                    email: document.getElementById('emailInput').value,
+                    phone: document.getElementById('phoneInput').value,
+                    address: document.getElementById('addressInput').value,
+                    summary: document.getElementById('summaryInput').value
+                },
+                experiences: experiences,
+                educations: educations,
+                skills: {
+                    technical: document.getElementById('technicalSkills').value,
+                    languages: document.getElementById('languages').value,
+                    other: document.getElementById('otherSkills').value
+                }
+            };
+
+            const analysis = suggestionEngine.analyzeCVContent(cvData);
+            updateSuggestionsUI(analysis);
+        }
+
+        function updateSuggestionsUI(analysis) {
+            const overallScore = analysis.overallScore;
+            document.getElementById('overallScore').textContent = Math.round(overallScore);
+            document.getElementById('overallScoreBar').style.width = overallScore + '%';
+
+            const atsScore = analysis.atsScore;
+            document.getElementById('atsScore').textContent = Math.round(atsScore) + '/100';
+
+            const topSuggestions = analysis.suggestions
+                .sort((a, b) => {
+                    const priorityOrder = { high: 0, medium: 1, low: 2 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                })
+                .slice(0, 5);
+
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = topSuggestions.map((sugg, idx) => `
+                <div class="suggestion-item ${sugg.priority}">
+                    <div class="suggestion-text">${sugg.text}</div>
+                    <div class="suggestion-hint">${sugg.category}</div>
+                    <button class="quick-fix-btn" onclick="applyQuickFix(${idx}, '${sugg.category}')">⚡ Quick-Fix</button>
+                </div>
+            `).join('');
+        }
+
+        function applyQuickFix(index, category) {
+            alert(`✓ Quick-Fix für "${category}" wird angewendet...`);
+            saveSessionAndAnalyze();
+        }
+
+        function toggleSuggestions() {
+            const sidebar = document.getElementById('suggestionsSidebar');
+            if (sidebar.style.display === 'none') {
+                sidebar.style.display = 'block';
+                analyzeCVAndUpdateSuggestions();
+            } else {
+                sidebar.style.display = 'none';
+            }
+        }
+
+        function openSuggestionsPanel() {
+            window.open('cv-suggestions-panel.html', '_blank');
+        }
+
+        // ===== RECOVERY =====
+        function showRecoveryPanel() {
+            if (typeof SessionRecoveryManager === 'undefined') return;
+
+            const backups = SessionRecoveryManager.getBackupsForSession(currentSession.id);
+            const backupsList = document.getElementById('backupsList');
+
+            if (backups.length === 0) {
+                backupsList.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Keine Sicherungen vorhanden</p>';
+            } else {
+                backupsList.innerHTML = backups.map(backup => `
+                    <div style="padding: 8px; background: var(--surface-light); border-radius: 6px; margin-bottom: 8px; font-size: 12px;">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                            ${new Date(backup.timestamp).toLocaleDateString('de-DE', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </div>
+                        <button onclick="restoreBackup('${backup.key}')" style="background: var(--emerald); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">↻ Wiederherstellen</button>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('recoveryModal').classList.add('active');
+        }
+
+        function closeRecoveryModal() {
+            document.getElementById('recoveryModal').classList.remove('active');
+        }
+
+        function restoreBackup(backupKey) {
+            if (typeof SessionRecoveryManager === 'undefined') return;
+
+            if (confirm('Möchten Sie diese Sicherung wirklich wiederherstellen? Die aktuelle Version wird überschrieben.')) {
+                const success = SessionRecoveryManager.restoreFromBackup(backupKey);
+                if (success) {
+                    alert('✓ Sicherung erfolgreich wiederhergestellt!');
+                    location.reload();
+                } else {
+                    alert('✗ Fehler beim Wiederherstellen der Sicherung.');
+                }
+            }
+        }
+
+        function setupAutoBackup() {
+            setInterval(() => {
+                if (currentSession && typeof SessionRecoveryManager !== 'undefined') {
+                    const timeSinceLastBackup = Date.now() - lastAutoBackupTime;
+                    if (timeSinceLastBackup >= AUTO_BACKUP_INTERVAL) {
+                        SessionRecoveryManager.createBackup(currentSession.id, currentSession);
+                        lastAutoBackupTime = Date.now();
+                    }
+                }
+            }, 60000);
+        }
+
+        // ===== TAB NAVIGATION =====
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ===== EXPERIENCE FUNCTIONS =====
+        function addExperience() {
+            experiences.push({
+                id: Date.now(),
+                company: '',
+                position: '',
+                startDate: '',
+                endDate: '',
+                description: ''
+            });
+            renderExperience();
+            saveSessionAndAnalyze();
+        }
+
+        function renderExperience() {
+            const list = document.getElementById('experienceList');
+            list.innerHTML = experiences.map(exp => `
+                <div class="entry-item">
+                    <button class="remove-btn" onclick="removeExperience(${exp.id})">×</button>
+                    <input type="text" class="form-input" placeholder="Unternehmen" value="${exp.company}" onchange="experiences.find(e => e.id === ${exp.id}).company = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    <input type="text" class="form-input" placeholder="Position" value="${exp.position}" style="margin-top: 12px;" onchange="experiences.find(e => e.id === ${exp.id}).position = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                        <input type="date" class="form-input" value="${exp.startDate}" onchange="experiences.find(e => e.id === ${exp.id}).startDate = this.value; saveSessionAndAnalyze(); updatePreview()">
+                        <input type="date" class="form-input" value="${exp.endDate}" onchange="experiences.find(e => e.id === ${exp.id}).endDate = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    </div>
+                    <textarea class="form-textarea" placeholder="Beschreibung (Verwenden Sie Action Verbs und Metriken!)" style="margin-top: 12px;" onchange="experiences.find(e => e.id === ${exp.id}).description = this.value; saveSessionAndAnalyze(); updatePreview()">${exp.description}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function removeExperience(id) {
+            experiences = experiences.filter(e => e.id !== id);
+            renderExperience();
+            saveSessionAndAnalyze();
+            updatePreview();
+        }
+
+        // ===== EDUCATION FUNCTIONS =====
+        function addEducation() {
+            educations.push({
+                id: Date.now(),
+                school: '',
+                degree: '',
+                field: '',
+                graduationDate: ''
+            });
+            renderEducation();
+            saveSessionAndAnalyze();
+        }
+
+        function renderEducation() {
+            const list = document.getElementById('educationList');
+            list.innerHTML = educations.map(edu => `
+                <div class="entry-item">
+                    <button class="remove-btn" onclick="removeEducation(${edu.id})">×</button>
+                    <input type="text" class="form-input" placeholder="Schule/Universität" value="${edu.school}" onchange="educations.find(e => e.id === ${edu.id}).school = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    <input type="text" class="form-input" placeholder="Abschluss" value="${edu.degree}" style="margin-top: 12px;" onchange="educations.find(e => e.id === ${edu.id}).degree = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    <input type="text" class="form-input" placeholder="Fachrichtung" value="${edu.field}" style="margin-top: 12px;" onchange="educations.find(e => e.id === ${edu.id}).field = this.value; saveSessionAndAnalyze(); updatePreview()">
+                    <input type="date" class="form-input" value="${edu.graduationDate}" style="margin-top: 12px;" onchange="educations.find(e => e.id === ${edu.id}).graduationDate = this.value; saveSessionAndAnalyze(); updatePreview()">
+                </div>
+            `).join('');
+        }
+
+        function removeEducation(id) {
+            educations = educations.filter(e => e.id !== id);
+            renderEducation();
+            saveSessionAndAnalyze();
+            updatePreview();
+        }
+
+        // ===== PREVIEW UPDATES =====
+        function updatePreview() {
+            const name = document.getElementById('nameInput').value || 'Name';
+            const title = document.getElementById('titleInput').value || 'Berufsbezeichnung';
+            const email = document.getElementById('emailInput').value || 'Email';
+            const phone = document.getElementById('phoneInput').value || 'Telefon';
+            const summary = document.getElementById('summaryInput').value;
+
+            document.getElementById('previewName').textContent = name;
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewContact').textContent = email + ' • ' + phone;
+            document.getElementById('previewSummary').textContent = summary || '(Zusammenfassung)';
+
+            const expPreview = experiences.map(e => `${e.position} bei ${e.company} (${e.startDate} - ${e.endDate})`).join('\n\n') || '(Keine Einträge)';
+            document.getElementById('previewExperience').textContent = expPreview;
+
+            const eduPreview = educations.map(e => `${e.degree} in ${e.field} von ${e.school}`).join('\n\n') || '(Keine Einträge)';
+            document.getElementById('previewEducation').textContent = eduPreview;
+
+            const skills = [
+                document.getElementById('technicalSkills').value,
+                document.getElementById('languages').value,
+                document.getElementById('otherSkills').value
+            ].filter(s => s).join('\n\n') || '(Keine Fähigkeiten)';
+            document.getElementById('previewSkills').textContent = skills;
+        }
+
+        // ===== DOWNLOAD FUNCTIONS =====
+        function downloadPDF() {
+            const name = document.getElementById('nameInput').value || 'Lebenslauf';
+            const element = document.getElementById('preview');
+            const filename = `${name.replace(/\s+/g, '_')}_Lebenslauf.pdf`;
+
+            const opt = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function downloadDOCX() {
+            const name = document.getElementById('nameInput').value || 'Lebenslauf';
+            const filename = `${name.replace(/\s+/g, '_')}_Lebenslauf.docx`;
+
+            const personalData = {
+                name: document.getElementById('nameInput').value,
+                title: document.getElementById('titleInput').value,
+                email: document.getElementById('emailInput').value,
+                phone: document.getElementById('phoneInput').value,
+                address: document.getElementById('addressInput').value,
+                summary: document.getElementById('summaryInput').value
+            };
+
+            const sections = [
+                new docx.Paragraph({
+                    text: personalData.name,
+                    bold: true,
+                    size: 32,
+                    spacing: { after: 200 }
+                }),
+                new docx.Paragraph({
+                    text: personalData.title,
+                    size: 20,
+                    spacing: { after: 200 }
+                }),
+                new docx.Paragraph({
+                    text: personalData.email + ' • ' + personalData.phone,
+                    size: 16,
+                    spacing: { after: 400 }
+                })
+            ];
+
+            if (personalData.summary) {
+                sections.push(new docx.Paragraph({
+                    text: 'Professionelle Zusammenfassung',
+                    bold: true,
+                    size: 24,
+                    spacing: { before: 200, after: 100 }
+                }));
+                sections.push(new docx.Paragraph({
+                    text: personalData.summary,
+                    size: 20,
+                    spacing: { after: 200 }
+                }));
+            }
+
+            if (experiences.length > 0) {
+                sections.push(new docx.Paragraph({
+                    text: 'Berufserfahrung',
+                    bold: true,
+                    size: 24,
+                    spacing: { before: 200, after: 100 }
+                }));
+                experiences.forEach(exp => {
+                    sections.push(new docx.Paragraph({
+                        text: exp.position + ' bei ' + exp.company,
+                        bold: true,
+                        size: 20,
+                        spacing: { after: 100 }
+                    }));
+                    sections.push(new docx.Paragraph({
+                        text: exp.startDate + ' - ' + exp.endDate,
+                        italics: true,
+                        size: 16,
+                        spacing: { after: 100 }
+                    }));
+                    sections.push(new docx.Paragraph({
+                        text: exp.description,
+                        size: 20,
+                        spacing: { after: 200 }
+                    }));
+                });
+            }
+
+            if (educations.length > 0) {
+                sections.push(new docx.Paragraph({
+                    text: 'Bildung',
+                    bold: true,
+                    size: 24,
+                    spacing: { before: 200, after: 100 }
+                }));
+                educations.forEach(edu => {
+                    sections.push(new docx.Paragraph({
+                        text: edu.degree + ' in ' + edu.field,
+                        bold: true,
+                        size: 20,
+                        spacing: { after: 100 }
+                    }));
+                    sections.push(new docx.Paragraph({
+                        text: edu.school,
+                        size: 16,
+                        spacing: { after: 200 }
+                    }));
+                });
+            }
+
+            const doc = new docx.Document({ sections: [{ children: sections }] });
+            docx.Packer.toBlob(doc).then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            });
+        }
+
+        function downloadTXT() {
+            const name = document.getElementById('nameInput').value || 'Lebenslauf';
+            const filename = `${name.replace(/\s+/g, '_')}_Lebenslauf.txt`;
+
+            let content = `${name}\n`;
+            content += `${document.getElementById('titleInput').value}\n\n`;
+            content += `Email: ${document.getElementById('emailInput').value}\n`;
+            content += `Telefon: ${document.getElementById('phoneInput').value}\n`;
+            content += `Adresse: ${document.getElementById('addressInput').value}\n\n`;
+
+            if (document.getElementById('summaryInput').value) {
+                content += `PROFESSIONELLE ZUSAMMENFASSUNG\n`;
+                content += `${document.getElementById('summaryInput').value}\n\n`;
+            }
+
+            if (experiences.length > 0) {
+                content += `BERUFSERFAHRUNG\n`;
+                experiences.forEach(exp => {
+                    content += `${exp.position} bei ${exp.company} (${exp.startDate} - ${exp.endDate})\n`;
+                    content += `${exp.description}\n\n`;
+                });
+            }
+
+            if (educations.length > 0) {
+                content += `BILDUNG\n`;
+                educations.forEach(edu => {
+                    content += `${edu.degree} in ${edu.field}\n`;
+                    content += `${edu.school}\n\n`;
+                });
+            }
+
+            if (document.getElementById('technicalSkills').value || document.getElementById('languages').value || document.getElementById('otherSkills').value) {
+                content += `FÄHIGKEITEN\n`;
+                if (document.getElementById('technicalSkills').value) {
+                    content += `Technische Fähigkeiten: ${document.getElementById('technicalSkills').value}\n`;
+                }
+                if (document.getElementById('languages').value) {
+                    content += `Sprachen: ${document.getElementById('languages').value}\n`;
+                }
+                if (document.getElementById('otherSkills').value) {
+                    content += `Weitere Fähigkeiten: ${document.getElementById('otherSkills').value}\n`;
+                }
+            }
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Close modals on background click
+        document.addEventListener('click', function(event) {
+            const uploadModal = document.getElementById('uploadModal');
+            const templatesModal = document.getElementById('templatesModal');
+            const recoveryModal = document.getElementById('recoveryModal');
+
+            if (event.target === uploadModal) closeUploadModal();
+            if (event.target === templatesModal) closeTemplatesModal();
+            if (event.target === recoveryModal) closeRecoveryModal();
+        });
+    </script>
+</body>
+</html>
