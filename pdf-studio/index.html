@@ -525,8 +525,9 @@
       box-sizing: border-box;
       border: 1.5px dashed transparent;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       outline: none;
+      overflow: hidden;
     }
 
     .overlay-element:hover {
@@ -536,6 +537,21 @@
     .overlay-element.selected {
       border-color: var(--accent);
       background: rgba(214, 107, 69, 0.05);
+      overflow: visible;
+    }
+
+    .overlay-content {
+      width: 100%;
+      height: 100%;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      cursor: text;
+    }
+
+    .overlay-content[contenteditable="true"] {
+      cursor: text;
+      outline: none;
     }
 
     .overlay-element .del-bubble {
@@ -561,6 +577,34 @@
       display: flex;
     }
 
+    /* Vergrößern/Verkleinern eines Textfelds: kleine Griffe an den vier
+       Rändern, nur sichtbar/bedienbar wenn das Textfeld ausgewählt ist.
+       Ziehen bleibt dabei immer innerhalb der Seite (siehe JS-Klemmung). */
+    .overlay-resize-handle {
+      position: absolute;
+      display: none;
+      background: var(--accent);
+      border: 1.5px solid #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      z-index: 11;
+    }
+    .overlay-element.selected .overlay-resize-handle {
+      display: block;
+    }
+    .overlay-resize-handle.rh-e, .overlay-resize-handle.rh-w {
+      top: 50%; width: 8px; height: 22px; margin-top: -11px; border-radius: 4px; cursor: ew-resize;
+    }
+    .overlay-resize-handle.rh-e { right: -5px; }
+    .overlay-resize-handle.rh-w { left: -5px; }
+    .overlay-resize-handle.rh-n, .overlay-resize-handle.rh-s {
+      left: 50%; width: 22px; height: 8px; margin-left: -11px; border-radius: 4px; cursor: ns-resize;
+    }
+    .overlay-resize-handle.rh-n { top: -5px; }
+    .overlay-resize-handle.rh-s { bottom: -5px; }
+    .overlay-resize-handle.rh-se {
+      right: -6px; bottom: -6px; width: 12px; height: 12px; border-radius: 50%; cursor: nwse-resize;
+    }
+
     /* OCR Word Badges - nur im Korrektur-Modus aktiv/klickbar,
        damit beim normalen Arbeiten (Stift, Marker, Auswählen, ...)
        kein Hover-Tooltip auf jedem Wort erscheint. */
@@ -581,6 +625,16 @@
     .tool-correct .ocr-word-hit:hover {
       background: rgba(47, 125, 114, 0.18);
       border-color: #2f7d72;
+    }
+
+    /* Im "Ganzer Bereich"-Modus soll ein Ziehen über mehrere Zeilen als
+       Rechteck-Auswahl funktionieren statt einzelne Wörter anzuklicken -
+       daher hier bewusst kein pointer-events auf den einzelnen Wort-Treffern. */
+    .tool-correct.bereich-scope .ocr-word-hit {
+      pointer-events: none;
+    }
+    .tool-correct.bereich-scope {
+      cursor: crosshair;
     }
 
     /* Schwebende Info-Anzeige: zeigt beim Hover im Korrektur-Modus
@@ -1404,6 +1458,9 @@
         panel_correct_title: '🩹 Korrektur-Modus',
         correct_info: 'Klicke im Dokument direkt auf ein erkanntes Wort oder eine Stelle, um sie zu ersetzen oder ein leeres Feld auszufüllen. Fahre mit der Maus über eine Stelle, um Schriftgröße, Schriftart (sofern im Dokument ermittelbar) und Fettdruck angezeigt zu bekommen – diese werden bei der Korrektur automatisch übernommen, damit der Ersatztext an derselben Stelle und im gleichen Stil wie das Original erscheint.',
         label_correct_scope: 'Was möchtest du korrigieren?', scope_word: 'Nur ein Wort', scope_line: 'Ganzer Satz/Zeile',
+        scope_area: 'Ganzer Bereich', scope_area_hint: 'Ziehe im Dokument ein Rechteck über mehrere Zeilen/Sätze, um sie zusammen zu ersetzen.',
+        correct_resize_hint: 'Nach dem Ersetzen kannst du das neue Textfeld an den Rändern per Ziehen vergrößern/verkleinern und direkt im Feld weiterschreiben (Klick hinein) – es bleibt dabei innerhalb der Seite.',
+        toast_no_text_in_area: 'Kein Text in diesem Bereich gefunden. Bitte ziehe das Rechteck über Text.',
         panel_ocr_title: '🔎 Scan-Texterkennung (OCR)', label_ocr_lang: 'Erkennungssprache',
         ocr_lang_de: 'Deutsch (Standard)', ocr_lang_en: 'Englisch',
         btn_run_ocr: 'Texterkennung starten', ocr_status_processing: 'Wird verarbeitet...',
@@ -1571,6 +1628,9 @@
         panel_correct_title: '🩹 Correction mode',
         correct_info: 'Click directly on a detected word or area in the document to replace it or fill in a blank field. Hover over an area to see its font size, font (where detectable in the document) and bold styling – these are automatically applied to the correction so the replacement text appears in the same place and style as the original.',
         label_correct_scope: 'What do you want to correct?', scope_word: 'Just one word', scope_line: 'Whole sentence/line',
+        scope_area: 'Whole area', scope_area_hint: 'Drag a rectangle over several lines/sentences in the document to replace them together.',
+        correct_resize_hint: 'After replacing, you can drag the new text box\'s edges to resize it and click into it to keep typing – it stays within the page.',
+        toast_no_text_in_area: 'No text found in this area. Please drag the rectangle over some text.',
         panel_ocr_title: '🔎 Scan text recognition (OCR)', label_ocr_lang: 'Recognition language',
         ocr_lang_de: 'German (default)', ocr_lang_en: 'English',
         btn_run_ocr: 'Start text recognition', ocr_status_processing: 'Processing...',
@@ -1956,11 +2016,19 @@
         </p>
         <div class="form-row">
           <label data-i18n="label_correct_scope">Was möchtest du korrigieren?</label>
-          <div style="display:flex;gap:8px;margin-top:4px;">
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
             <button type="button" id="scopeWortBtn" class="tpl-btn active" style="flex:1;" data-i18n="scope_word">Nur ein Wort</button>
             <button type="button" id="scopeSatzBtn" class="tpl-btn" style="flex:1;" data-i18n="scope_line">Ganzer Satz/Zeile</button>
+            <button type="button" id="scopeBereichBtn" class="tpl-btn" style="flex:1;" data-i18n="scope_area">Ganzer Bereich</button>
           </div>
+          <p id="scopeBereichHint" style="display:none;font-size:0.78rem;color:var(--muted);margin:8px 0 0;" data-i18n="scope_area_hint">
+            Ziehe im Dokument ein Rechteck über mehrere Zeilen/Sätze, um sie zusammen zu ersetzen.
+          </p>
         </div>
+        <p style="font-size:0.78rem;color:var(--muted);margin:10px 0 0;" data-i18n="correct_resize_hint">
+          Nach dem Ersetzen kannst du das neue Textfeld an den Rändern per Ziehen vergrößern/verkleinern
+          und direkt im Feld weiterschreiben (Klick hinein) – es bleibt dabei innerhalb der Seite.
+        </p>
       </div>
 
       <!-- OCR Info Box -->
@@ -3201,7 +3269,7 @@
       const displayH = isRotated ? page.width : page.height;
 
       const stageWrap = document.createElement('div');
-      stageWrap.className = `paper-stage tool-${state.activeTool}`;
+      stageWrap.className = `paper-stage tool-${state.activeTool}${(state.activeTool === 'correct' && state.correctionScope === 'bereich') ? ' bereich-scope' : ''}`;
       stageWrap.id = 'paperStage';
 
       // Berechnet die Papierbreite anhand des tatsächlich verfügbaren Platzes
@@ -3262,7 +3330,7 @@
     function renderStageInteractivity() {
       const stage = $('paperStage');
       if (!stage) return;
-      stage.className = `paper-stage tool-${state.activeTool}`;
+      stage.className = `paper-stage tool-${state.activeTool}${(state.activeTool === 'correct' && state.correctionScope === 'bereich') ? ' bereich-scope' : ''}`;
     }
 
     function renderShapesOnDoc(ctx, page, w, h) {
@@ -3363,6 +3431,11 @@
           canvas.setPointerCapture(e.pointerId);
           shapeStartPoint = getCanvasCoords(e);
         }
+        else if (state.activeTool === 'correct' && state.correctionScope === 'bereich') {
+          isDrawing = true;
+          canvas.setPointerCapture(e.pointerId);
+          shapeStartPoint = getCanvasCoords(e);
+        }
         else if (state.activeTool === 'text') {
           const pt = getCanvasCoords(e);
           addNewTextOverlay(page, pt.x / width, pt.y / height);
@@ -3399,6 +3472,23 @@
             ctx.fillStyle = state.highlightColor;
             ctx.fillRect(sx, sy, sw, sh);
           }
+          ctx.restore();
+        }
+        else if (state.activeTool === 'correct' && state.correctionScope === 'bereich' && shapeStartPoint) {
+          const pt = getCanvasCoords(e);
+          redrawPageDrawings(canvas, page, width, height);
+          ctx.save();
+          const sx = Math.min(shapeStartPoint.x, pt.x);
+          const sy = Math.min(shapeStartPoint.y, pt.y);
+          const sw = Math.abs(pt.x - shapeStartPoint.x);
+          const sh = Math.abs(pt.y - shapeStartPoint.y);
+          ctx.strokeStyle = '#2563eb';
+          ctx.fillStyle = 'rgba(37,99,235,0.12)';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.fillRect(sx, sy, sw, sh);
+          ctx.strokeRect(sx, sy, sw, sh);
+          ctx.setLineDash([]);
           ctx.restore();
         }
       };
@@ -3439,6 +3529,26 @@
           shapeStartPoint = null;
           renderStage();
         }
+        else if (state.activeTool === 'correct' && state.correctionScope === 'bereich' && shapeStartPoint) {
+          const pt = getCanvasCoords(e);
+          const sx = Math.min(shapeStartPoint.x, pt.x) / width;
+          const sy = Math.min(shapeStartPoint.y, pt.y) / height;
+          const sw = Math.abs(pt.x - shapeStartPoint.x) / width;
+          const sh = Math.abs(pt.y - shapeStartPoint.y) / height;
+          shapeStartPoint = null;
+
+          if (sw > 0.01 && sh > 0.005 && page.rawTextItems && page.rawTextItems.length) {
+            const stueck = gruppiereBereich(page.rawTextItems, { x: sx, y: sy, width: sw, height: sh });
+            if (stueck) {
+              ersetzeStueck(page, stueck, height);
+            } else {
+              redrawPageDrawings(canvas, page, width, height);
+              showToast(t('toast_no_text_in_area'));
+            }
+          } else {
+            redrawPageDrawings(canvas, page, width, height);
+          }
+        }
       };
 
       canvas.onpointerup = finishDrawing;
@@ -3464,6 +3574,11 @@
       }
     }
 
+    // Mindestgroesse eines Textfelds (als Anteil der Seite), damit es beim
+    // Verkleinern nicht auf 0 schrumpfen oder verschwinden kann.
+    const OVERLAY_MIN_WIDTH = 0.03;
+    const OVERLAY_MIN_HEIGHT = 0.02;
+
     function addNewTextOverlay(page, x, y, initialText = 'Hier Text eingeben') {
       pushUndoState();
       const overlay = {
@@ -3472,6 +3587,8 @@
         text: initialText,
         x: Math.max(0.02, Math.min(0.85, x)),
         y: Math.max(0.02, Math.min(0.92, y)),
+        width: 0.3,
+        height: 0.06,
         font: 'Arial, sans-serif',
         size: 16,
         color: '#173b3f',
@@ -3490,17 +3607,26 @@
       if (!page.overlays || !page.overlays.length) return;
 
       page.overlays.forEach(item => {
+        // Aeltere/aus der Korrektur erzeugte Textfelder hatten frueher keine
+        // eigene Breite/Hoehe (wuchsen automatisch mit dem Text) - hier
+        // einmalig eine sinnvolle Startgroesse nachtragen, damit sie sich
+        // wie alle anderen Felder per Ziehen vergroessern/verkleinern lassen.
+        if (item.width === undefined) item.width = Math.max(OVERLAY_MIN_WIDTH, Math.min(0.9, (item.text.length * item.size * 0.55) / baseWidth));
+        if (item.height === undefined) item.height = Math.max(OVERLAY_MIN_HEIGHT, (item.size * 1.35) / baseHeight);
+
         const el = document.createElement('div');
         el.className = `overlay-element ${item.id === state.selectedOverlayId ? 'selected' : ''}`;
         el.id = item.id;
         el.style.left = (item.x * 100) + '%';
         el.style.top = (item.y * 100) + '%';
+        el.style.width = (item.width * 100) + '%';
+        el.style.height = (item.height * 100) + '%';
         el.style.fontFamily = item.font;
         el.style.fontSize = item.size + 'px';
         el.style.color = item.color;
         el.style.fontWeight = item.bold ? 'bold' : 'normal';
 
-        const content = document.createElement('span');
+        const content = document.createElement('div');
         content.className = 'overlay-content';
         content.textContent = item.text;
         el.appendChild(content);
@@ -3519,8 +3645,59 @@
         };
         el.appendChild(delBtn);
 
+        // Vier Rand-Griffe + eine Ecke, zum Vergroessern/Verkleinern des
+        // Textfelds - das Ziehen wird dabei immer so geklemmt, dass das
+        // Feld nie ueber den Seitenrand hinausragt (x/y bleiben >= 0, und
+        // x+Breite bzw. y+Hoehe bleiben <= 1).
+        ['n', 's', 'e', 'w', 'se'].forEach(dir => {
+          const handle = document.createElement('div');
+          handle.className = `overlay-resize-handle rh-${dir}`;
+          handle.onpointerdown = (e) => {
+            e.stopPropagation();
+            handle.setPointerCapture(e.pointerId);
+            const startX = e.clientX, startY = e.clientY;
+            const start = { x: item.x, y: item.y, width: item.width, height: item.height };
+
+            const onMove = (moveEv) => {
+              const dx = (moveEv.clientX - startX) / (baseWidth * state.zoom);
+              const dy = (moveEv.clientY - startY) / (baseHeight * state.zoom);
+
+              if (dir.includes('e')) {
+                item.width = Math.max(OVERLAY_MIN_WIDTH, Math.min(1 - start.x, start.width + dx));
+              }
+              if (dir.includes('w')) {
+                const neueX = Math.max(0, Math.min(start.x + start.width - OVERLAY_MIN_WIDTH, start.x + dx));
+                item.width = start.width + (start.x - neueX);
+                item.x = neueX;
+              }
+              if (dir.includes('s')) {
+                item.height = Math.max(OVERLAY_MIN_HEIGHT, Math.min(1 - start.y, start.height + dy));
+              }
+              if (dir.includes('n')) {
+                const neueY = Math.max(0, Math.min(start.y + start.height - OVERLAY_MIN_HEIGHT, start.y + dy));
+                item.height = start.height + (start.y - neueY);
+                item.y = neueY;
+              }
+
+              el.style.left = (item.x * 100) + '%';
+              el.style.top = (item.y * 100) + '%';
+              el.style.width = (item.width * 100) + '%';
+              el.style.height = (item.height * 100) + '%';
+            };
+            const onUp = () => {
+              handle.removeEventListener('pointermove', onMove);
+              handle.removeEventListener('pointerup', onUp);
+            };
+            pushUndoState();
+            handle.addEventListener('pointermove', onMove);
+            handle.addEventListener('pointerup', onUp);
+          };
+          el.appendChild(handle);
+        });
+
         el.onpointerdown = (e) => {
-          if (e.target.classList.contains('del-bubble')) return;
+          if (e.target.classList.contains('del-bubble') || e.target.classList.contains('overlay-resize-handle')) return;
+          if (content.isContentEditable) return; // beim Tippen im Feld nicht gleichzeitig verschieben
           e.stopPropagation();
           state.selectedOverlayId = item.id;
           document.querySelectorAll('.overlay-element').forEach(o => o.classList.remove('selected'));
@@ -3536,8 +3713,8 @@
           const onMove = (moveEv) => {
             const dx = (moveEv.clientX - startX) / (baseWidth * state.zoom);
             const dy = (moveEv.clientY - startY) / (baseHeight * state.zoom);
-            item.x = Math.max(0, Math.min(0.92, initialOx + dx));
-            item.y = Math.max(0, Math.min(0.96, initialOy + dy));
+            item.x = Math.max(0, Math.min(1 - item.width, initialOx + dx));
+            item.y = Math.max(0, Math.min(1 - item.height, initialOy + dy));
             el.style.left = (item.x * 100) + '%';
             el.style.top = (item.y * 100) + '%';
           };
@@ -3551,15 +3728,28 @@
           el.addEventListener('pointerup', onUp);
         };
 
+        // Statt eines Browser-Popups (window.prompt) wird direkt im Feld
+        // weitergeschrieben - der Text bleibt dabei im Feld selbst und
+        // umgebrochen, statt unkontrolliert ueber den Seitenrand hinauszulaufen.
+        function starteBearbeitung() {
+          pushUndoState();
+          content.contentEditable = 'true';
+          content.focus();
+          document.execCommand('selectAll', false, null);
+        }
         el.ondblclick = (e) => {
           e.stopPropagation();
-          const newText = prompt('Text bearbeiten:', item.text);
-          if (newText !== null && newText.trim()) {
-            pushUndoState();
-            item.text = newText;
-            content.textContent = newText;
-            $('textInputVal').value = newText;
-          }
+          starteBearbeitung();
+        };
+        el._starteBearbeitung = starteBearbeitung;
+        content.oninput = () => { item.text = content.textContent; };
+        content.onblur = () => {
+          content.contentEditable = 'false';
+          item.text = content.textContent;
+          if ($('textInputVal')) $('textInputVal').value = item.text;
+        };
+        content.onkeydown = (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); content.blur(); }
         };
 
         stageWrap.appendChild(el);
@@ -3568,9 +3758,11 @@
 
     function setzeKorrekturBereich(bereich) {
       state.correctionScope = bereich;
-      const wortBtn = $('scopeWortBtn'), satzBtn = $('scopeSatzBtn');
+      const wortBtn = $('scopeWortBtn'), satzBtn = $('scopeSatzBtn'), bereichBtn = $('scopeBereichBtn');
       if (wortBtn) wortBtn.classList.toggle('active', bereich === 'wort');
       if (satzBtn) satzBtn.classList.toggle('active', bereich === 'satz');
+      if (bereichBtn) bereichBtn.classList.toggle('active', bereich === 'bereich');
+      if ($('scopeBereichHint')) $('scopeBereichHint').style.display = (bereich === 'bereich') ? 'block' : 'none';
       renderStage();
     }
     // Hinweis: die Buttons werden bewusst per addEventListener verdrahtet
@@ -3581,6 +3773,7 @@
     // reagierte).
     if ($('scopeWortBtn')) $('scopeWortBtn').addEventListener('click', () => setzeKorrekturBereich('wort'));
     if ($('scopeSatzBtn')) $('scopeSatzBtn').addEventListener('click', () => setzeKorrekturBereich('satz'));
+    if ($('scopeBereichBtn')) $('scopeBereichBtn').addEventListener('click', () => setzeKorrekturBereich('bereich'));
 
     // Gruppiert einzelne erkannte Woerter zu Zeilen/Saetzen, wenn sie auf
     // etwa derselben Hoehe liegen (Toleranz relativ zur Wortgroesse).
@@ -3614,8 +3807,82 @@
       });
     }
 
+    // Fasst alle erkannten Woerter zusammen, deren Mittelpunkt innerhalb des
+    // vom Nutzer aufgezogenen Rechtecks liegt (fuer den "Ganzer Bereich"-Modus,
+    // z.B. mehrere Saetze/Zeilen auf einmal). Mehrere Zeilen werden dabei mit
+    // Zeilenumbruch getrennt, damit der urspruengliche Absatz erkennbar bleibt.
+    function gruppiereBereich(rawTextItems, rechteck) {
+      const treffer = rawTextItems.filter(w => {
+        const mx = w.x + w.width / 2, my = w.y + w.height / 2;
+        return mx >= rechteck.x && mx <= rechteck.x + rechteck.width &&
+               my >= rechteck.y && my <= rechteck.y + rechteck.height;
+      });
+      if (!treffer.length) return null;
+      const zeilen = gruppiereZeilen(treffer);
+      const x = Math.min(...treffer.map(w => w.x));
+      const y = Math.min(...treffer.map(w => w.y));
+      const rechts = Math.max(...treffer.map(w => w.x + w.width));
+      const unten = Math.max(...treffer.map(w => w.y + w.height));
+      return {
+        text: zeilen.sort((a, b) => a.y - b.y).map(z => z.text).join('\n'),
+        x, y,
+        width: rechts - x,
+        height: unten - y,
+        fontFamily: treffer[0].fontFamily
+      };
+    }
+
+    // Gemeinsame Ersetzungs-Logik fuer Wort/Satz/Bereich: deckt die
+    // Original-Stelle ab (Weiss-Ueberdeckung) und legt an derselben Stelle
+    // ein neues, direkt bearbeitbares Textfeld an (vorausgefuellt mit dem
+    // Originaltext, damit man nur noch die zu aendernden Teile antippt/
+    // ueberschreibt statt alles neu einzutippen).
+    async function ersetzeStueck(page, stueck, baseHeight, stageWrapGetter) {
+      pushUndoState();
+      const info = await ermittleSchriftEigenschaften(page, stueck, baseHeight);
+      page.shapes.push({
+        id: 'shp_' + Date.now(),
+        type: 'whiteout',
+        x: stueck.x - 0.002,
+        y: stueck.y - 0.002,
+        width: stueck.width + 0.004,
+        height: stueck.height + 0.004
+      });
+      const overlayId = 'txt_' + Date.now();
+      page.overlays.push({
+        id: overlayId,
+        type: 'text',
+        text: stueck.text,
+        x: stueck.x,
+        y: stueck.y,
+        width: Math.max(OVERLAY_MIN_WIDTH, stueck.width + 0.01),
+        height: Math.max(OVERLAY_MIN_HEIGHT, stueck.height + 0.01),
+        // Schriftart fuer die Korrektur: Calibri wurde als die in
+        // diesem Dokumenttyp tatsaechlich verwendete Schrift optisch
+        // identifiziert (typische Firmen-/Behoerdenschrift, seit 2007
+        // Word-Standardschrift). Carlito ist die metrisch identische
+        // freie Alternative (falls Calibri auf dem Geraet fehlt),
+        // Arial/sans-serif greifen nur als letzter Ausweg.
+        font: 'Calibri, Carlito, Arial, sans-serif',
+        size: info.groesse,
+        color: info.farbe,
+        bold: !!info.fett
+      });
+      state.selectedOverlayId = overlayId;
+      renderStage();
+      showToast(t('toast_correction_done', {bold: info.fett ? t('toast_correction_bold_part') : ''}));
+      // Direkt in Bearbeitung versetzen, damit man ohne weiteren Klick
+      // sofort den Ersatztext eintippen kann.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(overlayId);
+        if (el && el._starteBearbeitung) el._starteBearbeitung();
+      });
+    }
+
     function renderOcrBadges(stageWrap, page, baseWidth, baseHeight) {
       if (!page.rawTextItems || !page.rawTextItems.length) return;
+      if (state.correctionScope === 'bereich') return; // Auswahl erfolgt hier per Rechteck-Ziehen auf dem Canvas, siehe bindDrawingEvents
+
       const bereiche = state.correctionScope === 'satz'
         ? gruppiereZeilen(page.rawTextItems)
         : page.rawTextItems;
@@ -3641,41 +3908,7 @@
         span.onclick = async (e) => {
           e.stopPropagation();
           verbergeFontHinweis();
-          const beschriftung = state.correctionScope === 'satz'
-            ? `Satz/Zeile ersetzen oder ausfüllen:\nOriginal: "${stueck.text}"`
-            : `Wort ersetzen oder ausfüllen:\nOriginal: "${stueck.text}"`;
-          const repl = prompt(beschriftung, stueck.text);
-          if (repl !== null && repl !== stueck.text) {
-            pushUndoState();
-            const info = hinweisInfo || await ermittleSchriftEigenschaften(page, stueck, baseHeight);
-            page.shapes.push({
-              id: 'shp_' + Date.now(),
-              type: 'whiteout',
-              x: stueck.x - 0.002,
-              y: stueck.y - 0.002,
-              width: stueck.width + 0.004,
-              height: stueck.height + 0.004
-            });
-            page.overlays.push({
-              id: 'txt_' + Date.now(),
-              type: 'text',
-              text: repl,
-              x: stueck.x,
-              y: stueck.y,
-              // Schriftart fuer die Korrektur: Calibri wurde als die in
-              // diesem Dokumenttyp tatsaechlich verwendete Schrift optisch
-              // identifiziert (typische Firmen-/Behoerdenschrift, seit 2007
-              // Word-Standardschrift). Carlito ist die metrisch identische
-              // freie Alternative (falls Calibri auf dem Geraet fehlt),
-              // Arial/sans-serif greifen nur als letzter Ausweg.
-              font: 'Calibri, Carlito, Arial, sans-serif',
-              size: info.groesse,
-              color: info.farbe,
-              bold: !!info.fett
-            });
-            renderStage();
-            showToast(t('toast_correction_done', {bold: info.fett ? t('toast_correction_bold_part') : ''}));
-          }
+          await ersetzeStueck(page, stueck, baseHeight);
         };
         stageWrap.appendChild(span);
       });
