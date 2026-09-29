@@ -1164,8 +1164,8 @@
         /* Modernes Layout: zwei Spalten, Sidebar mit Akzenten */
         .a4-page.cv-modern {
             display: grid;
-            grid-template-columns: 140px 1fr;
-            grid-gap: 20px;
+            grid-template-columns: 130px 1fr;
+            grid-gap: 16px;
             padding: 20mm 18mm !important;
         }
 
@@ -1173,41 +1173,48 @@
             grid-column: 1 / -1;
             border-left: 4px solid var(--accent);
             padding-left: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 6px;
         }
 
         .cv-modern .header-content h1 {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
+            font-size: 1.8rem;
         }
 
         .cv-modern .header-content p {
-            margin: 2px 0;
-            font-size: 0.8rem;
+            margin: 1px 0;
+            font-size: 0.75rem;
         }
 
         .cv-modern .sidebar {
             grid-column: 1;
-            grid-row: 2;
+            grid-row: 2 / 999;
             background: var(--accent-soft);
-            padding: 14px;
-            border-radius: 6px;
-            font-size: 0.78rem;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            height: fit-content;
         }
 
         .cv-modern .sidebar h3 {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            margin: 12px 0 6px;
+            margin: 8px 0 4px;
             border: 0;
             padding: 0;
+            font-weight: 700;
+        }
+
+        .cv-modern .sidebar h3:first-child {
+            margin-top: 0;
         }
 
         .cv-modern .sidebar p {
-            margin: 0 0 8px;
-            font-size: 0.76rem;
-            line-height: 1.5;
+            font-size: 0.73rem;
+            line-height: 1.4;
+            margin: 0 0 6px;
         }
 
         .cv-modern .main-content {
@@ -1215,7 +1222,7 @@
             grid-row: 2;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .cv-modern .cv-section {
@@ -2353,7 +2360,7 @@
     </div>
 
     <div class="preview-area">
-        <div id="lebenslauf-vorschau" class="a4-page">
+        <div id="lebenslauf-vorschau" class="a4-page cv-classic">
             <div class="header-content"
                 style="border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 25px;">
                 <img id="prev-foto" class="preview-photo" alt="Bewerbungsfoto">
@@ -2486,6 +2493,8 @@
             const deckblattFotoAktiv = document.getElementById('foto-auf-deckblatt').checked && document.getElementById('mappe-mit-foto').checked;
             aktualisiereDeckblattFoto(deckblattFotoAktiv);
             aktualisiereFusszeilen();
+            // Stelle sicher, dass die richtige Template-Struktur verwendet wird
+            restructureLebenslaufForTemplate(currentCvTemplate);
             document.getElementById('mappe-deckblatt').innerHTML = document.getElementById('deckblatt-vorschau').innerHTML;
             document.getElementById('mappe-lebenslauf').innerHTML = document.getElementById('lebenslauf-vorschau').innerHTML;
             document.getElementById('mappe-anschreiben').innerHTML = document.getElementById('anschreiben-vorschau').innerHTML;
@@ -2495,6 +2504,122 @@
                 seite.querySelector('.document-page').innerText = t('footer_seite_von', { n: index + 1, m: seiten.length });
             });
             sdAktualisiereGhostPlaceholders();
+        }
+
+        function restructureLebenslaufForTemplate(template) {
+            const vorschau = document.getElementById('lebenslauf-vorschau');
+            if (!vorschau) return;
+
+            // Entferne alte Template-Klassen
+            ['cv-classic', 'cv-modern', 'cv-creative', 'cv-minimal'].forEach(cls => {
+                vorschau.classList.remove(cls);
+            });
+            // Füge neue Klasse hinzu
+            vorschau.classList.add('cv-' + template);
+
+            // Für Modern-Layout: Umstrukturierung nötig
+            if (template === 'modern') {
+                const header = vorschau.querySelector('.header-content');
+                const sections = Array.from(vorschau.querySelectorAll(':scope > .cv-section'));
+                const footer = vorschau.querySelector('.document-footer');
+
+                // Entferne alle Sektionen temporär
+                sections.forEach(s => s.remove());
+
+                // Erstelle Sidebar
+                const sidebar = document.createElement('div');
+                sidebar.className = 'sidebar';
+                sidebar.innerHTML = `
+                    <h3>${t('lbl_kenntnisse')}</h3>
+                    <p id="prev-kenntnisse" class="editable-preview ghost-placeholder" contenteditable="true"
+                        data-sync="kenntnisse" data-placeholder="Organisation, MS Office ..."></p>
+                    <h3>${t('lbl_sprachen')}</h3>
+                    <p id="prev-sprachen" class="editable-preview ghost-placeholder" contenteditable="true"
+                        data-sync="sprachen" data-placeholder="Deutsch: sehr gut, Englisch: gut ..."></p>
+                `;
+                vorschau.appendChild(sidebar);
+
+                // Erstelle Main-Content
+                const mainContent = document.createElement('div');
+                mainContent.className = 'main-content';
+                mainContent.innerHTML = `
+                    <div class="cv-section">
+                        <h3>${t('lbl_erfahrung')}</h3>
+                        <p id="prev-erfahrung" class="editable-preview ghost-placeholder" contenteditable="true"
+                            data-sync="erfahrung" data-placeholder="2022 - heute: Familienhilfe bei ..."></p>
+                    </div>
+                    <div class="cv-section">
+                        <h3>${t('lbl_ausbildung')}</h3>
+                        <p id="prev-ausbildung" class="editable-preview ghost-placeholder" contenteditable="true"
+                            data-sync="ausbildung" data-placeholder="2018 - 2021: Ausbildung zum ..."></p>
+                    </div>
+                `;
+                vorschau.appendChild(mainContent);
+                vorschau.appendChild(footer);
+
+            } else {
+                // Für alle anderen Layouts: Standardstruktur wiederherstellen
+                const header = vorschau.querySelector('.header-content');
+                const sidebar = vorschau.querySelector('.sidebar');
+                const mainContent = vorschau.querySelector('.main-content');
+                const footer = vorschau.querySelector('.document-footer');
+
+                // Wenn Sidebar/Main-Content existieren, ersetze durch normale Struktur
+                if (sidebar || mainContent) {
+                    // Sammle die Inhalte
+                    const erfahrung = mainContent?.querySelector('#prev-erfahrung')?.innerText || '';
+                    const ausbildung = mainContent?.querySelector('#prev-ausbildung')?.innerText || '';
+                    const kenntnisse = sidebar?.querySelector('#prev-kenntnisse')?.innerText || '';
+                    const sprachen = sidebar?.querySelector('#prev-sprachen')?.innerText || '';
+
+                    // Entferne alles außer Header und Footer
+                    Array.from(vorschau.querySelectorAll(':scope > div:not(.header-content):not(.document-footer)')).forEach(el => el.remove());
+
+                    // Recreate standard structure
+                    const newHTML = `
+                        <div class="cv-section">
+                            <h3>${t('lbl_erfahrung')}</h3>
+                            <p id="prev-erfahrung" class="editable-preview ghost-placeholder" contenteditable="true"
+                                data-sync="erfahrung" data-placeholder="2022 - heute: Familienhilfe bei ..."></p>
+                        </div>
+                        <div class="cv-section">
+                            <h3>${t('lbl_ausbildung')}</h3>
+                            <p id="prev-ausbildung" class="editable-preview ghost-placeholder" contenteditable="true"
+                                data-sync="ausbildung" data-placeholder="2018 - 2021: Ausbildung zum ..."></p>
+                        </div>
+                        <div class="cv-section">
+                            <h3>${t('lbl_kenntnisse')}</h3>
+                            <p id="prev-kenntnisse" class="editable-preview ghost-placeholder" contenteditable="true"
+                                data-sync="kenntnisse" data-placeholder="Organisation, MS Office, Teamarbeit ..."></p>
+                        </div>
+                        <div class="cv-section">
+                            <h3>${t('lbl_sprachen')}</h3>
+                            <p id="prev-sprachen" class="editable-preview ghost-placeholder" contenteditable="true"
+                                data-sync="sprachen" data-placeholder="Deutsch: sehr gut, Englisch: gut ..."></p>
+                        </div>
+                    `;
+                    footer.insertAdjacentHTML('beforebegin', newHTML);
+
+                    // Restore content
+                    if (erfahrung) document.getElementById('prev-erfahrung').innerText = erfahrung;
+                    if (ausbildung) document.getElementById('prev-ausbildung').innerText = ausbildung;
+                    if (kenntnisse) document.getElementById('prev-kenntnisse').innerText = kenntnisse;
+                    if (sprachen) document.getElementById('prev-sprachen').innerText = sprachen;
+                }
+            }
+
+            // Re-attach event listeners for editable fields
+            document.querySelectorAll('#lebenslauf-vorschau .editable-preview[data-sync]').forEach(el => {
+                el.removeEventListener('input', syncFieldInput);
+                el.addEventListener('input', syncFieldInput);
+                el.removeEventListener('blur', updateVorschau);
+                el.addEventListener('blur', updateVorschau);
+            });
+        }
+
+        function syncFieldInput(e) {
+            const feld = document.getElementById(e.target.dataset.sync);
+            if (feld) feld.value = e.target.innerText;
         }
 
         function aktualisiereFusszeilen() {
@@ -3613,14 +3738,8 @@
             };
             document.getElementById('cv-tpl-label').textContent = labels[template] || labels['classic'];
 
-            // Update CSS-Klasse auf der Mappe
-            const cvPage = document.getElementById('mappe-lebenslauf');
-            if (cvPage) {
-                ['cv-classic', 'cv-modern', 'cv-creative', 'cv-minimal'].forEach(cls => {
-                    cvPage.classList.remove(cls);
-                });
-                cvPage.classList.add('cv-' + template);
-            }
+            // Umstrukturiere die Vorschau für das neue Template
+            restructureLebenslaufForTemplate(template);
 
             // Schließe das Menü
             document.getElementById('cv-tpl-list').style.display = 'none';
