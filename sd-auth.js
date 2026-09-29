@@ -18,7 +18,7 @@ import {
   getFirestore, doc, setDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import {
-  getStorage, ref, uploadString, uploadBytes, getDownloadURL, listAll, getBlob, deleteObject
+  getStorage, ref, uploadString, uploadBytes, getDownloadURL, listAll, getBlob, deleteObject, getMetadata
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -37,6 +37,42 @@ const storage = getStorage(app);
 
 let currentUser = null;
 const listeners = [];
+
+// Schutz-Obergrenze pro Nutzerkonto: das kostenlose Firebase-Kontingent (5 GB Storage)
+// gilt für ALLE Nutzer der App zusammen, nicht pro Person. Damit ein einzelnes Konto
+// nicht versehentlich das gesamte gemeinsame Kontingent aufbraucht, begrenzen wir hier
+// zusätzlich, wie viel ein einzelner Nutzer in seinem eigenen Cloud-Ordner speichern darf.
+const MAX_USER_BYTES = 75 * 1024 * 1024; // 75 MB pro Nutzer
+
+function estimateDataUrlBytes(dataUrl) {
+  const idx = dataUrl.indexOf(',');
+  const b64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+  return Math.ceil(b64.length * 3 / 4);
+}
+
+async function getFolderUsageBytes(folderRef) {
+  const res = await listAll(folderRef);
+  let total = 0;
+  for (const item of res.items) {
+    try {
+      const meta = await getMetadata(item);
+      total += meta.size || 0;
+    } catch (e) { /* Datei evtl. inzwischen gelöscht - ignorieren */ }
+  }
+  for (const prefix of res.prefixes) {
+    total += await getFolderUsageBytes(prefix);
+  }
+  return total;
+}
+
+async function getUserUsageBytes() {
+  if (!currentUser) return 0;
+  try {
+    return await getFolderUsageBytes(ref(storage, 'users/' + currentUser.uid));
+  } catch (e) {
+    return 0; // z.B. wenn der Nutzer noch gar keine Dateien hat
+  }
+}
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
@@ -94,8 +130,16 @@ const SD_AUTH = {
   // ---- Cloud-Speicher: Dateien/Bilder (Firebase Storage), z.B. Scan-Seiten, Fotos ----
   async saveFile(path, blobOrDataUrl) {
     if (!currentUser) throw new Error('Nicht angemeldet');
+    const isDataUrl = typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:');
+    const newBytes = isDataUrl ? estimateDataUrlBytes(blobOrDataUrl) : (blobOrDataUrl.size || 0);
+    const used = await getUserUsageBytes();
+    if (used + newBytes > MAX_USER_BYTES) {
+      const usedMb = (used / (1024 * 1024)).toFixed(1);
+      const maxMb = (MAX_USER_BYTES / (1024 * 1024)).toFixed(0);
+      throw new Error('Dein Cloud-Speicher ist voll (' + usedMb + ' von ' + maxMb + ' MB genutzt). Bitte lösche alte Dateien in deinem Konto, um Platz zu schaffen.');
+    }
     const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
-    if (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:')) {
+    if (isDataUrl) {
       await uploadString(fileRef, blobOrDataUrl, 'data_url');
     } else {
       await uploadBytes(fileRef, blobOrDataUrl);
@@ -123,6 +167,16 @@ const SD_AUTH = {
     if (!currentUser) throw new Error('Nicht angemeldet');
     const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
     await deleteObject(fileRef);
+  },
+  // ---- Speicherplatz-Info: wie viel von den 75 MB pro Nutzer ist belegt? ----
+  async getUsage() {
+    const used = await getUserUsageBytes();
+    return {
+      usedBytes: used,
+      maxBytes: MAX_USER_BYTES,
+      usedMb: +(used / (1024 * 1024)).toFixed(1),
+      maxMb: MAX_USER_BYTES / (1024 * 1024),
+    };
   },
 
   openLoginModal() { if (modalCtrl) modalCtrl.open('login'); },
