@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerbungsstudio Phase 6</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Roboto+Serif:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #1D4ED8;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --light: #F9FAFB;
+            --border: #E5E7EB;
+            --text: #374151;
+            --text-light: #6B7280;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .version-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ===== PHASE 6 WEEK 3: TAB NAVIGATION ===== */
+        .tab-navigation {
+            display: flex;
+            gap: 0;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            padding: 0 2rem;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Cover Letter Styles */
+        .anschreiben-preview {
+            font-family: 'Roboto Serif', serif;
+            padding: 2rem;
+            background: white;
+            line-height: 1.8;
+            color: var(--dark);
+        }
+
+        .letter-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .letter-header p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .letter-date {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+        }
+
+        .letter-body p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+
+        /* Deckblatt Styles */
+        .deckblatt-preview {
+            aspect-ratio: 8.5 / 11;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .deckblatt-centered {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 100%;
+            height: 100%;
+            padding: 3rem;
+            gap: 2rem;
+        }
+
+        .deckblatt-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .deckblatt-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .deckblatt-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+        }
+
+        .deckblatt-photo {
+            flex: 0 0 200px;
+            height: 200px;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 100%;
+            background: var(--light);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        .deckblatt-split {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .deckblatt-info {
+            flex: 1;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .deckblatt-info h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .deckblatt-info p {
+            font-size: 1rem;
+            margin: 0.25rem 0;
+            color: var(--text-light);
+        }
+
+        .deckblatt-contact {
+            margin-top: 1rem;
+            font-size: 0.9rem !important;
+        }
+
+        .deckblatt-photo-full {
+            flex: 0 0 300px;
+            height: 100%;
+        }
+
+        .deckblatt-overlay {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .photo-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.3;
+        }
+
+        .deckblatt-overlay-text {
+            position: relative;
+            z-index: 2;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100%;
+        }
+
+        .deckblatt-overlay-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .deckblatt-overlay-text p {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Template Card Styles */
+        .template-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .template-header h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+
+        .template-industry {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .template-description {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .template-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        /* Tab Content Container */
+        .tab-container {
+            display: flex;
+            width: 100%;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            flex-direction: column;
+        }
+
+        .template-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+
+        .preview-area {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            overflow-y: auto;
+        }
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Tab content sections */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Anschreiben (Cover Letter) specific styles */
+        .anschreiben-preview {
+            background: white;
+            padding: 2rem;
+            font-family: 'Roboto Serif', serif;
+            line-height: 1.6;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            min-height: 600px;
+        }
+
+        .anschreiben-placeholder {
+            color: var(--text-light);
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 0.375rem;
+            font-style: italic;
+            margin: 0.5rem 0;
+        }
+
+        /* Deckblatt (Cover Page) specific styles */
+        .deckblatt-preview {
+            background: white;
+            padding: 3rem;
+            aspect-ratio: 8.5 / 11;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+
+        .deckblatt-preview h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .deckblatt-preview .position {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+        }
+
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .form-column {
+            flex: 0 0 35%;
+            background: white;
+            overflow-y: auto;
+            padding: 2rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .preview-column {
+            flex: 0 0 35%;
+            background: white;
+            overflow-y: auto;
+            padding: 2rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .suggestions-column {
+            flex: 0 0 30%;
+            background: var(--light);
+            overflow-y: auto;
+            padding: 1.5rem;
+            border-left: 1px solid var(--border);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .form-column, .preview-column {
+                flex: 0 0 50%;
+            }
+            .suggestions-column {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            .form-column, .preview-column, .suggestions-column {
+                flex: 0 0 auto;
+                max-height: 50%;
+                width: 100%;
+            }
+            .suggestions-column {
+                display: block;
+            }
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 0.375rem;
+            color: var(--text);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Spell-Check UI */
+        .spell-check-container {
+            background: #FEF3C7;
+            border: 1px solid #F59E0B;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .spell-check-container.active {
+            display: block;
+        }
+
+        .spell-check-title {
+            font-weight: 600;
+            color: #92400E;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .spell-issue {
+            background: white;
+            border-left: 3px solid #F59E0B;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .spell-issue.error {
+            border-left-color: #EF4444;
+            background: #FEE2E2;
+        }
+
+        .spell-issue.warning {
+            border-left-color: #F59E0B;
+            background: #FEF3C7;
+        }
+
+        .spell-issue-text {
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .spell-issue-suggestion {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 0.375rem;
+        }
+
+        .spell-buttons {
+            display: flex;
+            gap: 0.375rem;
+        }
+
+        .btn-fix {
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+            border-radius: 0.25rem;
+        }
+
+        .btn-fix:hover {
+            background: #059669;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* Template Selector */
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .template-card {
+            border: 2px solid var(--border);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .template-card.active {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 100px;
+            border: 1px solid var(--border);
+            border-radius: 0.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            overflow: hidden;
+        }
+
+        .template-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .template-info {
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .template-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--border);
+            background: white;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* CV Preview */
+        .cv-preview {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            min-height: 400px;
+            box-shadow: var(--shadow);
+            font-family: 'Roboto Serif', serif;
+        }
+
+        .cv-header {
+            border-bottom: 2px solid var(--dark);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .cv-name {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .cv-contact {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .cv-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .cv-section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--dark);
+            border-bottom: 1px solid var(--dark);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .cv-entry {
+            margin-bottom: 1rem;
+        }
+
+        .cv-entry-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .cv-entry-subtitle {
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .cv-entry-date {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .cv-entry-text {
+            font-size: 0.875rem;
+            margin-top: 0.375rem;
+            line-height: 1.6;
+        }
+
+        .cv-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .cv-skill {
+            background: var(--light);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+        }
+
+        /* Suggestions Panel */
+        .suggestions-header {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ats-score-box {
+            background: white;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .ats-score-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .ats-score-label {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .ats-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .ats-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .suggestion-item {
+            background: white;
+            border-left: 3px solid var(--primary);
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            box-shadow: var(--shadow);
+            font-size: 0.8rem;
+        }
+
+        .suggestion-priority {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .suggestion-priority.high {
+            background: var(--danger);
+        }
+
+        .suggestion-priority.medium {
+            background: var(--warning);
+        }
+
+        .suggestion-text {
+            margin: 0.375rem 0;
+            color: var(--text);
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 0.375rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-suggestion {
+            flex: 1;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.7rem;
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-suggestion:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Template Styles */
+        .template-pro-blue {
+            --accent-color: #1D4ED8;
+        }
+
+        .template-pro-blue .cv-section-title {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .template-pro-blue .cv-header {
+            border-color: var(--accent-color);
+        }
+
+        /* Utility Helpers */
+        .hidden {
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            border-left: 4px solid var(--success);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            box-shadow: var(--shadow-lg);
+            max-width: 300px;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">📄 Bewerbungsstudio</div>
+                <div class="version-badge">Phase 6</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary btn-icon" onclick="openTemplateSelector()" title="Vorlagen">🎨</button>
+                <button class="btn-secondary btn-icon" onclick="openSpellCheck()" title="Rechtschreibung">✏️</button>
+                <button class="btn-secondary btn-icon" onclick="openSessionRecovery()" title="Wiederherstellen">🛡️</button>
+                <button class="btn-primary" onclick="downloadCV()">📥 Herunterladen</button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (Phase 6 Week 3) -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('lebenslauf')">📄 Lebenslauf</button>
+            <button class="tab-btn" onclick="switchTab('anschreiben')">💌 Anschreiben</button>
+            <button class="tab-btn" onclick="switchTab('deckblatt')">🎨 Deckblatt</button>
+        </div>
+
+        <!-- Content -->
+        <div class="content-wrapper" id="lebenslauf-content">
+            <!-- Form Column -->
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">👤 Persönliche Daten</div>
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="name" placeholder="Vor- und Nachname" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="email@example.com" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefon</label>
+                        <input type="tel" id="phone" placeholder="+49 123 456789" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Ort</label>
+                        <input type="text" id="location" placeholder="Stadt, Land" oninput="updatePreview()">
+                    </div>
+                </div>
+
+                <!-- Spell Check Info -->
+                <div class="spell-check-container" id="spellCheckContainer">
+                    <div class="spell-check-title">⚠️ Rechtschreibprüfung</div>
+                    <div id="spellCheckIssues"></div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">📝 Berufliches Profil</div>
+                    <div class="form-group">
+                        <label>Professionelle Zusammenfassung</label>
+                        <textarea id="summary" placeholder="Kurze Beschreibung Ihrer Fähigkeiten und Erfahrungen..." oninput="updatePreview()"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">💼 Berufserfahrung</div>
+                    <div id="experienceList"></div>
+                    <button class="btn-secondary" onclick="addExperience()">+ Berufserfahrung</button>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">🎓 Bildung</div>
+                    <div id="educationList"></div>
+                    <button class="btn-secondary" onclick="addEducation()">+ Ausbildung</button>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">🔧 Fähigkeiten</div>
+                    <div class="form-group">
+                        <label>Skills (kommagetrennt)</label>
+                        <textarea id="skills" placeholder="JavaScript, React, Node.js, Python, ..." oninput="updatePreview()"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">🌍 Sprachen</div>
+                    <div class="form-group">
+                        <label>Sprachen (kommagetrennt)</label>
+                        <textarea id="languages" placeholder="Deutsch (Muttersprache), Englisch (Fließend), ..." oninput="updatePreview()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Column -->
+            <div class="preview-column">
+                <div id="cvPreview" class="cv-preview">
+                    <div class="cv-header">
+                        <div class="cv-name" id="previewName">Ihr Name</div>
+                        <div class="cv-contact" id="previewContact">email@example.com | +49 123 456789 | Stadt</div>
+                    </div>
+
+                    <div class="cv-section" id="summarySection" style="display:none;">
+                        <div class="cv-section-title">Professionelle Zusammenfassung</div>
+                        <div class="cv-entry-text" id="previewSummary"></div>
+                    </div>
+
+                    <div class="cv-section" id="experienceSection" style="display:none;">
+                        <div class="cv-section-title">Berufserfahrung</div>
+                        <div id="previewExperience"></div>
+                    </div>
+
+                    <div class="cv-section" id="educationSection" style="display:none;">
+                        <div class="cv-section-title">Bildung</div>
+                        <div id="previewEducation"></div>
+                    </div>
+
+                    <div class="cv-section" id="skillsSection" style="display:none;">
+                        <div class="cv-section-title">Fähigkeiten</div>
+                        <div class="cv-skills" id="previewSkills"></div>
+                    </div>
+
+                    <div class="cv-section" id="languagesSection" style="display:none;">
+                        <div class="cv-section-title">Sprachen</div>
+                        <div id="previewLanguages"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions Column -->
+            <div class="suggestions-column">
+                <div class="suggestions-header">💡 AI-Analyse</div>
+
+                <div class="ats-score-box">
+                    <div class="ats-score-value" id="atsScore">0</div>
+                    <div class="ats-score-label">ATS Kompatibilität</div>
+                    <div class="ats-bar">
+                        <div class="ats-bar-fill" id="atsBar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="suggestionsList"></div>
+            </div>
+        </div>
+
+        <!-- Anschreiben Tab Content -->
+        <div class="content-wrapper" id="anschreiben-content" style="display: none;">
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">📋 Vorlage Auswählen</div>
+                    <div id="anschreiben-template-list" class="template-list"></div>
+                </div>
+            </div>
+            <div class="preview-column">
+                <div class="anschreiben-preview" id="anschreiben-preview-content">
+                    <p style="text-align: center; color: var(--text-light);">Wählen Sie eine Vorlage aus, um eine Vorschau zu sehen</p>
+                </div>
+            </div>
+            <div class="suggestions-column">
+                <div class="suggestions-header">💡 Anschreiben Tools</div>
+                <button class="btn btn-primary" onclick="exportComplete()" style="width: 100%; margin-bottom: 1rem;">📥 Exportieren</button>
+                <div style="font-size: 0.875rem; line-height: 1.6; color: var(--text-light);">
+                    <p><strong>Tipps:</strong></p>
+                    <ul style="margin: 0.5rem 0 0 1rem;">
+                        <li>Wählen Sie eine Vorlage passend zu Ihrer Industrie</li>
+                        <li>Die Daten aus dem Lebenslauf werden automatisch eingefügt</li>
+                        <li>Sie können den Text nach Bedarf anpassen</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deckblatt Tab Content -->
+        <div class="content-wrapper" id="deckblatt-content" style="display: none;">
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">🎨 Deckblatt-Design</div>
+                    <div id="deckblatt-template-list" class="template-list"></div>
+                </div>
+            </div>
+            <div class="preview-column">
+                <div class="deckblatt-preview" id="deckblatt-preview-content">
+                    <p style="color: var(--text-light);">Wählen Sie ein Design aus, um eine Vorschau zu sehen</p>
+                </div>
+            </div>
+            <div class="suggestions-column">
+                <div class="suggestions-header">💡 Deckblatt Tools</div>
+                <button class="btn btn-primary" onclick="exportComplete()" style="width: 100%; margin-bottom: 1rem;">📥 Exportieren</button>
+                <div style="font-size: 0.875rem; line-height: 1.6; color: var(--text-light);">
+                    <p><strong>Informationen:</strong></p>
+                    <ul style="margin: 0.5rem 0 0 1rem;">
+                        <li>Das Deckblatt wird vor Ihrem Lebenslauf angezeigt</li>
+                        <li>Professionelle Designs für Ihre Branche</li>
+                        <li>Ihr Foto wird automatisch eingefügt</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Selector Modal -->
+    <div id="templateModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🎨 Vorlagen Auswählen</div>
+                <button class="modal-close" onclick="closeModal('templateModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="template-filter" id="templateFilters"></div>
+                <div class="template-grid" id="templateGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spell Check Modal -->
+    <div id="spellCheckModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">✏️ Rechtschreibprüfung</div>
+                <button class="modal-close" onclick="closeModal('spellCheckModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="spellCheckDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Recovery Modal -->
+    <div id="recoveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🛡️ Sitzungen Wiederherstellen</div>
+                <button class="modal-close" onclick="closeModal('recoveryModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="recoveryList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Phase 6 Application State
+        const appState = {
+            templates: [],
+            currentTemplate: null,
+            currentCV: {
+                name: '',
+                email: '',
+                phone: '',
+                location: '',
+                summary: '',
+                experience: [],
+                education: [],
+                skills: [],
+                languages: []
+            },
+            coverLetterData: {},
+            detectedIndustry: 'IT',
+            advancedAnalysis: null,
+            spellCheckIssues: [],
+            suggestions: []
+        };
+
+        // Initialize App
+        async function initApp() {
+            await loadTemplates();
+            renderTemplateGrid();
+            loadFromStorage();
+            updatePreview();
+            runAIAnalysis();
+        }
+
+        // Load Templates Database
+        async function loadTemplates() {
+            try {
+                // For Phase 6, templates are embedded in the JSON
+                const templateData = {
+                    "version": "1.0",
+                    "lastUpdated": "2026-09-29",
+                    "totalTemplates": 28,
+                    "templates": [
+                        {
+                            "id": "template_001",
+                            "name": "Professional Blue",
+                            "shortName": "Pro Blue",
+                            "category": "Klassisch",
+                            "industries": ["Finance", "Law", "Corporate", "Banking"],
+                            "levels": ["Junior", "Mid", "Senior", "Executive"],
+                            "style": "Professional",
+                            "colors": ["#1D4ED8", "#FFFFFF", "#F3F4F6"],
+                            "atsScore": 98,
+                            "popularity": 1200,
+                            "description": "Vertrauenswürdige, professionelle Vorlage"
+                        }
+                        // Full template list would go here - using simplified for demo
+                    ]
+                };
+                appState.templates = templateData.templates;
+            } catch (error) {
+                console.error('Template loading error:', error);
+            }
+        }
+
+        // Render Template Grid
+        function renderTemplateGrid() {
+            const grid = document.getElementById('templateGrid');
+            grid.innerHTML = '';
+
+            appState.templates.slice(0, 28).forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'template-card' + (appState.currentTemplate?.id === template.id ? ' active' : '');
+                card.innerHTML = `
+                    <div class="template-preview" style="background: linear-gradient(135deg, ${template.colors[0]}, ${template.colors[2]})"></div>
+                    <div class="template-name">${template.shortName}</div>
+                    <div class="template-info">ATS: ${template.atsScore}%</div>
+                `;
+                card.onclick = () => selectTemplate(template);
+                grid.appendChild(card);
+            });
+        }
+
+        // Select Template
+        function selectTemplate(template) {
+            appState.currentTemplate = template;
+            renderTemplateGrid();
+            updatePreview();
+            showNotification(`Vorlage "${template.name}" ausgewählt`);
+        }
+
+        // Update Preview
+        function updatePreview() {
+            appState.currentCV.name = document.getElementById('name').value || 'Ihr Name';
+            appState.currentCV.email = document.getElementById('email').value || 'email@example.com';
+            appState.currentCV.phone = document.getElementById('phone').value || '';
+            appState.currentCV.location = document.getElementById('location').value || '';
+            appState.currentCV.summary = document.getElementById('summary').value;
+            appState.currentCV.skills = document.getElementById('skills').value.split(',').filter(s => s.trim());
+            appState.currentCV.languages = document.getElementById('languages').value;
+
+            // Update preview elements
+            document.getElementById('previewName').textContent = appState.currentCV.name;
+
+            const contact = [
+                appState.currentCV.email,
+                appState.currentCV.phone,
+                appState.currentCV.location
+            ].filter(c => c).join(' | ');
+            document.getElementById('previewContact').textContent = contact;
+
+            // Show/hide sections
+            document.getElementById('summarySection').style.display = appState.currentCV.summary ? 'block' : 'none';
+            document.getElementById('skillsSection').style.display = appState.currentCV.skills.length > 0 ? 'block' : 'none';
+
+            // Update skills display
+            const skillsHtml = appState.currentCV.skills.map(s => `<div class="cv-skill">${s.trim()}</div>`).join('');
+            document.getElementById('previewSkills').innerHTML = skillsHtml;
+
+            // Auto-save
+            saveToStorage();
+
+            // Trigger spell check
+            runSpellCheck();
+
+            // Update analysis
+            runAIAnalysis();
+        }
+
+        // Spell Check (LanguageTool API)
+        async function runSpellCheck() {
+            const textToCheck = [
+                appState.currentCV.name,
+                appState.currentCV.summary,
+                appState.currentCV.skills.join(', ')
+            ].filter(t => t).join(' ');
+
+            if (!textToCheck.trim()) {
+                document.getElementById('spellCheckContainer').classList.remove('active');
+                return;
+            }
+
+            try {
+                // Simulated spell check for now (LanguageTool API can be added)
+                const issues = [];
+
+                // Basic checks
+                if (textToCheck.length > 0) {
+                    // Demo: Check for common mistakes
+                    if (textToCheck.includes('  ')) {
+                        issues.push({
+                            text: 'Doppelte Leerzeichen',
+                            suggestion: 'Doppelte Leerzeichen entfernen',
+                            type: 'error'
+                        });
+                    }
+                }
+
+                appState.spellCheckIssues = issues;
+                displaySpellCheckIssues();
+            } catch (error) {
+                console.error('Spell check error:', error);
+            }
+        }
+
+        // Display Spell Check Issues
+        function displaySpellCheckIssues() {
+            const container = document.getElementById('spellCheckContainer');
+            const issuesDiv = document.getElementById('spellCheckIssues');
+
+            if (appState.spellCheckIssues.length === 0) {
+                container.classList.remove('active');
+                return;
+            }
+
+            container.classList.add('active');
+            issuesDiv.innerHTML = appState.spellCheckIssues.map((issue, idx) => `
+                <div class="spell-issue ${issue.type}">
+                    <div>
+                        <div class="spell-issue-text">${issue.text}</div>
+                        <div class="spell-issue-suggestion">${issue.suggestion}</div>
+                    </div>
+                    <div class="spell-buttons">
+                        <button class="btn-fix" onclick="fixSpellIssue(${idx})">Beheben</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Fix Spell Issue
+        function fixSpellIssue(idx) {
+            appState.spellCheckIssues.splice(idx, 1);
+            displaySpellCheckIssues();
+            showNotification('Fehler behoben');
+        }
+
+        // AI Analysis & ATS Scoring
+        function runAIAnalysis() {
+            const atsScore = calculateATSScore();
+            const suggestions = generateSuggestions();
+
+            // Update ATS Score
+            document.getElementById('atsScore').textContent = atsScore;
+            document.getElementById('atsBar').style.width = atsScore + '%';
+
+            // Display Suggestions
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = suggestions.map(sug => `
+                <div class="suggestion-item">
+                    <span class="suggestion-priority ${sug.priority.toLowerCase()}">${sug.priority}</span>
+                    <div class="suggestion-text">${sug.text}</div>
+                    <div class="suggestion-actions">
+                        <button class="btn-suggestion" onclick="applySuggestion('${sug.action}')">Anwenden</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Calculate ATS Score
+        function calculateATSScore() {
+            let score = 0;
+
+            // Name (10%)
+            if (appState.currentCV.name && appState.currentCV.name !== 'Ihr Name') score += 10;
+
+            // Contact Info (15%)
+            if (appState.currentCV.email) score += 5;
+            if (appState.currentCV.phone) score += 5;
+            if (appState.currentCV.location) score += 5;
+
+            // Professional Summary (15%)
+            if (appState.currentCV.summary && appState.currentCV.summary.length > 50) score += 15;
+
+            // Skills (20%)
+            if (appState.currentCV.skills.length > 0) score += 20;
+
+            // Experience (20%)
+            if (appState.currentCV.experience && appState.currentCV.experience.length > 0) score += 20;
+
+            // Education (10%)
+            if (appState.currentCV.education && appState.currentCV.education.length > 0) score += 10;
+
+            // Languages (10%)
+            if (appState.currentCV.languages && appState.currentCV.languages.trim().length > 0) score += 10;
+
+            return Math.min(score, 100);
+        }
+
+        // Generate AI Suggestions
+        function generateSuggestions() {
+            const suggestions = [];
+
+            if (!appState.currentCV.name || appState.currentCV.name === 'Ihr Name') {
+                suggestions.push({
+                    priority: 'High',
+                    text: 'Bitte geben Sie Ihren Namen ein',
+                    action: 'name'
+                });
+            }
+
+            if (!appState.currentCV.summary || appState.currentCV.summary.length < 50) {
+                suggestions.push({
+                    priority: 'High',
+                    text: 'Professionelle Zusammenfassung hinzufügen (min. 50 Zeichen)',
+                    action: 'summary'
+                });
+            }
+
+            if (appState.currentCV.skills.length === 0) {
+                suggestions.push({
+                    priority: 'Medium',
+                    text: 'Fähigkeiten hinzufügen für bessere ATS-Kompatibilität',
+                    action: 'skills'
+                });
+            }
+
+            if (!appState.currentCV.phone) {
+                suggestions.push({
+                    priority: 'Medium',
+                    text: 'Telefonnummer hinzufügen',
+                    action: 'phone'
+                });
+            }
+
+            if (appState.currentTemplate) {
+                suggestions.push({
+                    priority: 'Low',
+                    text: `Vorlage "${appState.currentTemplate.name}" angewendet (ATS: ${appState.currentTemplate.atsScore}%)`,
+                    action: 'template'
+                });
+            }
+
+            return suggestions;
+        }
+
+        // Apply Suggestion
+        function applySuggestion(action) {
+            switch(action) {
+                case 'name':
+                    document.getElementById('name').focus();
+                    break;
+                case 'summary':
+                    document.getElementById('summary').focus();
+                    break;
+                case 'skills':
+                    document.getElementById('skills').focus();
+                    break;
+                case 'phone':
+                    document.getElementById('phone').focus();
+                    break;
+            }
+            showNotification('Bitte füllen Sie das Feld aus');
+        }
+
+        // Add Experience
+        function addExperience() {
+            const idx = appState.currentCV.experience.length;
+            appState.currentCV.experience.push({ title: '', company: '', date: '', description: '' });
+            renderExperienceList();
+        }
+
+        // Add Education
+        function addEducation() {
+            const idx = appState.currentCV.education.length;
+            appState.currentCV.education.push({ institution: '', degree: '', date: '', details: '' });
+            renderEducationList();
+        }
+
+        // Render Experience List
+        function renderExperienceList() {
+            const list = document.getElementById('experienceList');
+            list.innerHTML = appState.currentCV.experience.map((exp, idx) => `
+                <div class="form-group">
+                    <input type="text" placeholder="Stellentitel" value="${exp.title}"
+                        onchange="appState.currentCV.experience[${idx}].title = this.value; updatePreview();">
+                    <input type="text" placeholder="Unternehmen" value="${exp.company}"
+                        onchange="appState.currentCV.experience[${idx}].company = this.value; updatePreview();">
+                    <input type="text" placeholder="Datum (z.B. 2022-2024)" value="${exp.date}"
+                        onchange="appState.currentCV.experience[${idx}].date = this.value; updatePreview();">
+                    <textarea placeholder="Beschreibung" onchange="appState.currentCV.experience[${idx}].description = this.value; updatePreview();">${exp.description}</textarea>
+                    <button class="btn-secondary" onclick="appState.currentCV.experience.splice(${idx}, 1); renderExperienceList(); updatePreview();">Entfernen</button>
+                </div>
+            `).join('');
+        }
+
+        // Render Education List
+        function renderEducationList() {
+            const list = document.getElementById('educationList');
+            list.innerHTML = appState.currentCV.education.map((edu, idx) => `
+                <div class="form-group">
+                    <input type="text" placeholder="Schule/Universität" value="${edu.institution}"
+                        onchange="appState.currentCV.education[${idx}].institution = this.value; updatePreview();">
+                    <input type="text" placeholder="Abschluss/Grad" value="${edu.degree}"
+                        onchange="appState.currentCV.education[${idx}].degree = this.value; updatePreview();">
+                    <input type="text" placeholder="Datum" value="${edu.date}"
+                        onchange="appState.currentCV.education[${idx}].date = this.value; updatePreview();">
+                    <button class="btn-secondary" onclick="appState.currentCV.education.splice(${idx}, 1); renderEducationList(); updatePreview();">Entfernen</button>
+                </div>
+            `).join('');
+        }
+
+        // Modal Functions
+        function openTemplateSelector() {
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        function openSpellCheck() {
+            document.getElementById('spellCheckModal').classList.add('active');
+            document.getElementById('spellCheckDetails').innerHTML = appState.spellCheckIssues.length > 0
+                ? appState.spellCheckIssues.map(issue => `<div>${issue.text}: ${issue.suggestion}</div>`).join('')
+                : '<p>Keine Fehler gefunden ✓</p>';
+        }
+
+        function openSessionRecovery() {
+            document.getElementById('recoveryModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Download CV
+        function downloadCV() {
+            const element = document.getElementById('cvPreview');
+            const opt = {
+                margin: 10,
+                filename: `${appState.currentCV.name}_CV.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Storage Functions
+        function saveToStorage() {
+            localStorage.setItem('bewerbungsstudio_cv', JSON.stringify(appState.currentCV));
+            localStorage.setItem('bewerbungsstudio_template', JSON.stringify(appState.currentTemplate));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('bewerbungsstudio_cv');
+            const template = localStorage.getItem('bewerbungsstudio_template');
+
+            if (saved) {
+                appState.currentCV = JSON.parse(saved);
+                document.getElementById('name').value = appState.currentCV.name;
+                document.getElementById('email').value = appState.currentCV.email;
+                document.getElementById('phone').value = appState.currentCV.phone;
+                document.getElementById('location').value = appState.currentCV.location;
+                document.getElementById('summary').value = appState.currentCV.summary;
+                document.getElementById('skills').value = appState.currentCV.skills.join(', ');
+                document.getElementById('languages').value = appState.currentCV.languages;
+            }
+
+            if (template) {
+                appState.currentTemplate = JSON.parse(template);
+            }
+        }
+
+        // Notification
+        function showNotification(message) {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // ===== PHASE 6 WEEK 2: ADVANCED AI FEATURES =====
+
+        // Global AI engines (initialized after databases load)
+        let advancedAI = null;
+        let skillsDatabase = null;
+        let verbDatabase = null;
+        let industryClassifier = null;
+        let skillAutoCompleter = null;
+        let actionVerbOptimizer = null;
+        let keywordAnalyzer = null;
+
+        // Load and parse AI databases
+        async function loadAIDatabases() {
+            try {
+                // Load skills database
+                const skillsResponse = await fetch('skills-database.json');
+                skillsDatabase = await skillsResponse.json();
+
+                // Load action verbs database
+                const verbsResponse = await fetch('action-verbs-database.json');
+                verbDatabase = await verbsResponse.json();
+
+                console.log('AI Databases loaded successfully');
+                console.log('Skills:', skillsDatabase.totalSkills, 'across', skillsDatabase.industries.length, 'industries');
+                console.log('Action Verbs:', verbDatabase.totalVerbs, 'verbs loaded');
+
+                return { skillsDatabase, verbDatabase };
+            } catch (error) {
+                console.warn('Could not load AI databases locally, using fallback mode:', error.message);
+                return { skillsDatabase: null, verbDatabase: null };
+            }
+        }
+
+        // Initialize AI engines after databases load
+        async function initializeAIEngines() {
+            const { skillsDatabase: sDb, verbDatabase: vDb } = await loadAIDatabases();
+
+            if (sDb && vDb) {
+                // Initialize all AI engines
+                industryClassifier = {
+                    classify: (jobTitle, skills) => {
+                        // Detect industry from job title and skills
+                        const industries = Object.keys(sDb.industries);
+                        const text = (jobTitle + ' ' + skills.join(' ')).toLowerCase();
+                        let bestMatch = 'IT';
+                        let bestScore = 0;
+
+                        industries.forEach(industry => {
+                          const keywords = sDb.industries[industry].skills
+                            .slice(0, 5)
+                            .map(s => s.name.toLowerCase());
+                          const score = keywords.filter(k => text.includes(k)).length;
+                          if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = industry;
+                          }
+                        });
+                        return bestMatch;
+                      }
+                };
+
+                skillAutoCompleter = {
+                    suggest: (partial, industry = 'IT', limit = 5) => {
+                        if (partial.length < 2) return [];
+                        const lowerPartial = partial.toLowerCase();
+                        const industrySkills = sDb.industries[industry]?.skills || [];
+                        return industrySkills
+                            .filter(s => s.name.toLowerCase().startsWith(lowerPartial))
+                            .slice(0, limit)
+                            .map(s => ({ name: s.name, priority: s.priority, category: s.category }));
+                    }
+                };
+
+                actionVerbOptimizer = {
+                    optimize: (text, industry = 'IT') => {
+                        let optimized = text;
+                        const replacements = [];
+
+                        Object.entries(vDb.weakVerbMap).forEach(([weakVerb, data]) => {
+                            const regex = new RegExp(`\\b${weakVerb}\\b`, 'gi');
+                            if (regex.test(text)) {
+                                const powerVerbs = data.powerVerbs;
+                                const bestVerb = powerVerbs[0];
+                                optimized = optimized.replace(regex, bestVerb);
+                                replacements.push({ weak: weakVerb, power: bestVerb });
+                            }
+                        });
+
+                        return { optimized, replacements, score: Math.min(100, 50 + replacements.length * 5) };
+                    }
+                };
+
+                keywordAnalyzer = {
+                    analyze: (text) => {
+                        const words = (text.toLowerCase().match(/\b[a-zäöüß]+\b/g) || [])
+                            .filter(w => w.length > 3);
+                        const freq = {};
+                        words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+
+                        return {
+                            keywords: Object.entries(freq)
+                                .map(([word, count]) => ({ word, count }))
+                                .sort((a, b) => b.count - a.count)
+                                .slice(0, 20),
+                            totalWords: words.length,
+                            uniqueKeywords: Object.keys(freq).length
+                        };
+                    }
+                };
+
+                console.log('AI engines initialized successfully');
+            } else {
+                console.log('AI engines disabled - databases not available');
+            }
+        }
+
+        // Enhanced AI Analysis with Phase 6 Week 2 features
+        function runAdvancedAIAnalysis() {
+            if (!industryClassifier || !skillAutoCompleter || !actionVerbOptimizer || !keywordAnalyzer) {
+                return; // Fall back to basic analysis
+            }
+
+            const cv = appState.currentCV;
+
+            // Detect industry
+            const detectedIndustry = industryClassifier.classify(
+                cv.experience?.[0]?.position || '',
+                cv.skills || []
+            );
+
+            appState.detectedIndustry = detectedIndustry;
+
+            // Analyze keywords
+            const fullText = [cv.summary, cv.skills?.join(' '), cv.experience?.map(e => e.description)?.join(' ')]
+                .filter(t => t).join(' ');
+            const keywordAnalysis = keywordAnalyzer.analyze(fullText);
+
+            // Optimize action verbs
+            const verbOptimization = actionVerbOptimizer.optimize(
+                cv.experience?.map(e => e.description)?.join(' ') || '',
+                detectedIndustry
+            );
+
+            // Generate advanced recommendations
+            const suggestions = [];
+
+            if (verbOptimization.replacements.length > 0) {
+                suggestions.push({
+                    type: 'optimization',
+                    priority: 'high',
+                    title: 'Verben optimieren',
+                    description: `${verbOptimization.replacements.length} schwache Verben können optimiert werden`,
+                    action: verbOptimization.replacements.map(r => `${r.weak} → ${r.power}`).join(', ')
+                });
+            }
+
+            // Store for use in suggestions panel
+            appState.advancedAnalysis = {
+                industry: detectedIndustry,
+                keywordAnalysis,
+                verbOptimization,
+                suggestions
+            };
+        }
+
+        // Add skill autocomplete to skills input
+        function initSkillAutocomplete() {
+            if (!skillAutoCompleter) return;
+
+            const skillsInput = document.getElementById('skills');
+            if (!skillsInput) return;
+
+            skillsInput.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const lastComma = value.lastIndexOf(',');
+                const currentInput = value.substring(lastComma + 1).trim();
+
+                if (currentInput.length >= 2) {
+                    const suggestions = skillAutoCompleter.suggest(
+                        currentInput,
+                        appState.detectedIndustry || 'IT',
+                        3
+                    );
+
+                    if (suggestions.length > 0) {
+                        // Show skill suggestions (could be enhanced with UI)
+                        console.log('Skill suggestions:', suggestions.map(s => s.name).join(', '));
+                    }
+                }
+            });
+        }
+
+        // Override original runAIAnalysis to include advanced features
+        const originalRunAIAnalysis = runAIAnalysis;
+        runAIAnalysis = function() {
+            originalRunAIAnalysis();
+            if (industryClassifier) {
+                runAdvancedAIAnalysis();
+            }
+        };
+
+        // ===== PHASE 6 WEEK 3: COVER LETTER & DECKBLATT =====
+
+        // Global cover letter and deckblatt state
+        let coverLetterTemplates = null;
+        let deckblattTemplates = null;
+        let currentTab = 'lebenslauf';
+        let currentCoverLetterTemplate = null;
+        let currentDeckblattTemplate = null;
+
+        // Load cover letter and deckblatt templates
+        async function loadCoverLetterTemplates() {
+            try {
+                const response = await fetch('cover-letter-templates.json');
+                const data = await response.json();
+                coverLetterTemplates = data.coverLetterTemplates;
+                deckblattTemplates = data.deckblattTemplates;
+                console.log('Cover letter templates loaded:', coverLetterTemplates.length);
+                console.log('Deckblatt templates loaded:', deckblattTemplates.length);
+                return { coverLetterTemplates, deckblattTemplates };
+            } catch (error) {
+                console.warn('Could not load cover letter templates:', error.message);
+                return { coverLetterTemplates: null, deckblattTemplates: null };
+            }
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            currentTab = tabName;
+
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content visibility
+            document.querySelectorAll('[id$="-content"]').forEach(content => {
+                content.style.display = 'none';
+            });
+
+            const tabContent = document.getElementById(`${tabName}-content`);
+            if (tabContent) {
+                tabContent.style.display = 'flex';
+            }
+
+            // Load content based on tab
+            if (tabName === 'anschreiben' && coverLetterTemplates) {
+                renderCoverLetterTemplates();
+            } else if (tabName === 'deckblatt' && deckblattTemplates) {
+                renderDeckblattTemplates();
+            }
+        }
+
+        // Render cover letter template selection
+        function renderCoverLetterTemplates() {
+            const container = document.getElementById('anschreiben-template-list');
+            if (!container || !coverLetterTemplates) return;
+
+            container.innerHTML = '';
+            coverLetterTemplates.forEach((template, index) => {
+                const templateCard = document.createElement('div');
+                templateCard.className = 'template-card';
+                templateCard.innerHTML = `
+                    <div class="template-header">
+                        <h4>${template.name}</h4>
+                        <span class="template-industry">${template.industry}</span>
+                    </div>
+                    <p class="template-description">${template.description}</p>
+                    <div class="template-meta">
+                        <span>${template.wordCount} Wörter</span>
+                        <span>Popularität: ${template.popularity}</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="selectCoverLetterTemplate(${index})">
+                        Wählen
+                    </button>
+                `;
+                container.appendChild(templateCard);
+            });
+        }
+
+        // Render deckblatt template selection
+        function renderDeckblattTemplates() {
+            const container = document.getElementById('deckblatt-template-list');
+            if (!container || !deckblattTemplates) return;
+
+            container.innerHTML = '';
+            deckblattTemplates.forEach((template, index) => {
+                const templateCard = document.createElement('div');
+                templateCard.className = 'template-card';
+                templateCard.innerHTML = `
+                    <div class="template-header">
+                        <h4>${template.name}</h4>
+                    </div>
+                    <p class="template-description">${template.description}</p>
+                    <div class="template-meta">
+                        <span>Layout: ${template.layout}</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="selectDeckblattTemplate(${index})">
+                        Wählen
+                    </button>
+                `;
+                container.appendChild(templateCard);
+            });
+        }
+
+        // Select cover letter template
+        function selectCoverLetterTemplate(index) {
+            currentCoverLetterTemplate = index;
+            const template = coverLetterTemplates[index];
+            console.log('Selected cover letter template:', template.name);
+
+            // Auto-fill with CV data
+            autofillCoverLetter(template);
+            updateCoverLetterPreview();
+
+            showNotification(`Vorlage "${template.name}" ausgewählt`);
+        }
+
+        // Select deckblatt template
+        function selectDeckblattTemplate(index) {
+            currentDeckblattTemplate = index;
+            const template = deckblattTemplates[index];
+            console.log('Selected deckblatt template:', template.name);
+
+            updateDeckblattPreview(template);
+            showNotification(`Vorlage "${template.name}" ausgewählt`);
+        }
+
+        // Auto-fill cover letter with CV data
+        function autofillCoverLetter(template) {
+            if (!template || !appState.currentCV) {
+                // Initialize empty cover letter data if CV not ready
+                if (!appState.coverLetterData) {
+                    appState.coverLetterData = {};
+                }
+                return;
+            }
+
+            const cv = appState.currentCV;
+            const autoFillData = {
+                '[NAME]': cv.name || '',
+                '[EMAIL]': cv.email || '',
+                '[PHONE]': cv.phone || '',
+                '[JOB_TITLE]': cv.experience?.[0]?.position || '',
+                '[COMPANY_NAME]': cv.experience?.[0]?.company || '',
+                '[INDUSTRY]': appState.detectedIndustry || 'Ihrer Branche',
+                '[YEARS_EXPERIENCE]': cv.experience?.length || '5+',
+                '[KEY_SKILLS]': cv.skills?.slice(0, 3)?.join(', ') || '',
+                '[SUMMARY]': cv.summary || ''
+            };
+
+            // Store auto-fill data
+            appState.coverLetterData = autoFillData;
+            console.log('Cover letter auto-filled with CV data');
+        }
+
+        // Generate and display cover letter preview
+        function updateCoverLetterPreview() {
+            if (currentCoverLetterTemplate === null || !coverLetterTemplates) return;
+
+            const template = coverLetterTemplates[currentCoverLetterTemplate];
+            const preview = document.getElementById('anschreiben-preview-content');
+            if (!preview) return;
+
+            let content = `<div class="letter-header">
+                <p>${appState.coverLetterData['[NAME]'] || 'Ihr Name'}</p>
+                <p>${appState.coverLetterData['[EMAIL]'] || 'Email'}</p>
+                <p>${appState.coverLetterData['[PHONE]'] || 'Telefon'}</p>
+            </div>
+            <div class="letter-date">${new Date().toLocaleDateString('de-DE')}</div>
+            <div class="letter-body">`;
+
+            // Replace placeholders in template sections
+            template.sections.forEach(section => {
+                let sectionContent = section.content;
+                Object.entries(appState.coverLetterData || {}).forEach(([key, value]) => {
+                    sectionContent = sectionContent.replace(new RegExp(key, 'g'), value);
+                });
+                content += `<p>${sectionContent}</p>`;
+            });
+
+            content += '</div>';
+            preview.innerHTML = content;
+        }
+
+        // Update deckblatt preview
+        function updateDeckblattPreview(template) {
+            const preview = document.getElementById('deckblatt-preview-content');
+            if (!preview || !template) return;
+
+            const cv = appState.currentCV;
+            let deckblattContent = '';
+
+            if (template.layout === 'title_centered_photo_right') {
+                deckblattContent = `
+                    <div class="deckblatt-centered">
+                        <div class="deckblatt-title">
+                            <h1>${cv.name || 'Vollständiger Name'}</h1>
+                            <p class="deckblatt-subtitle">${cv.experience?.[0]?.position || 'Berufstitel'}</p>
+                        </div>
+                        <div class="deckblatt-photo">
+                            <div class="photo-placeholder">📷</div>
+                        </div>
+                    </div>
+                `;
+            } else if (template.layout === 'name_left_photo_full') {
+                deckblattContent = `
+                    <div class="deckblatt-split">
+                        <div class="deckblatt-info">
+                            <h1>${cv.name || 'Vollständiger Name'}</h1>
+                            <p>${cv.experience?.[0]?.position || 'Berufstitel'}</p>
+                            <p class="deckblatt-contact">${cv.email || 'Email'}</p>
+                        </div>
+                        <div class="deckblatt-photo-full">
+                            <div class="photo-placeholder">📷</div>
+                        </div>
+                    </div>
+                `;
+            } else if (template.layout === 'photo_dominant_text_overlay') {
+                deckblattContent = `
+                    <div class="deckblatt-overlay">
+                        <div class="photo-background">
+                            <div class="photo-placeholder">📷</div>
+                        </div>
+                        <div class="deckblatt-overlay-text">
+                            <h1>${cv.name || 'Vollständiger Name'}</h1>
+                            <p>${cv.experience?.[0]?.position || 'Berufstitel'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            preview.innerHTML = deckblattContent;
+        }
+
+        // Export complete application (CV + Cover Letter + Deckblatt)
+        function exportComplete() {
+            if (!appState.currentCV) {
+                showNotification('Bitte füllen Sie zuerst Ihren Lebenslauf aus');
+                return;
+            }
+
+            // Create a complete PDF bundle or document
+            const cv = appState.currentCV;
+            const exportData = {
+                lebenslauf: cv,
+                coverLetter: {
+                    template: currentCoverLetterTemplate,
+                    data: appState.coverLetterData,
+                    templateName: coverLetterTemplates?.[currentCoverLetterTemplate]?.name || 'Standard'
+                },
+                deckblatt: {
+                    template: currentDeckblattTemplate,
+                    templateName: deckblattTemplates?.[currentDeckblattTemplate]?.name || 'Standard'
+                },
+                exportDate: new Date().toISOString()
+            };
+
+            // Download as JSON for now (can be extended to PDF)
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Bewerbung_${cv.name}_${new Date().getFullYear()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showNotification('Bewerbungsunterlagen exportiert');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', async () => {
+            await initializeAIEngines();
+            await loadCoverLetterTemplates();
+            initSkillAutocomplete();
+            await initApp();
+        });
+
+        // Close modals on background click
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

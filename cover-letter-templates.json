@@ -1,0 +1,322 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-09-30",
+  "totalTemplates": 12,
+  "description": "Professional cover letter templates with auto-fill support",
+  "templates": [
+    {
+      "id": "anschreiben_001",
+      "name": "Klassisch Formell",
+      "category": "Klassisch",
+      "language": "de",
+      "industries": ["Finance", "Law", "Corporate", "Banking", "Government"],
+      "style": "Formal",
+      "tone": "Professional",
+      "sections": ["salutation", "opening", "body_1", "body_2", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "opening": "hiermit bewerbe ich mich auf die Position der [JOB_TITLE] in Ihrem Unternehmen. Mit meiner umfangreichen Erfahrung in [INDUSTRY] und meiner Passion für [KEY_SKILL] bin ich überzeugt, dass ich einen wertvollen Beitrag zu Ihrem erfolgreichen Team leisten kann.",
+        "body_1": "Meine bisherige Karriere in [INDUSTRY] hat mir ein tiefes Verständnis für die Anforderungen und Best Practices dieses Bereichs vermittelt. Besonders stolz bin ich auf meine Erfolge in [ACHIEVEMENT_1], die maßgeblich zu [BUSINESS_RESULT] beigetragen haben.",
+        "body_2": "Ihre Organisation fasziniert mich besonders durch [COMPANY_STRENGTH]. Ich bin davon überzeugt, dass meine Fähigkeiten in [KEY_SKILL_2] sowie meine Erfahrung mit [TOOL_TECHNOLOGY] ideal zu Ihrer Unternehmenskultur und Ihren aktuellen Zielen passen.",
+        "closing": "Ich freue mich darauf, Sie in einem persönlichen Gespräch von meinen Qualifikationen zu überzeugen. Für Rückfragen stehe ich Ihnen jederzeit zur Verfügung.",
+        "signature": "Mit freundlichen Grüßen,\n\n[NAME]\n[EMAIL]\n[PHONE]\n[LOCATION]"
+      },
+      "placeholders": ["JOB_TITLE", "INDUSTRY", "KEY_SKILL", "ACHIEVEMENT_1", "BUSINESS_RESULT", "COMPANY_STRENGTH", "KEY_SKILL_2", "TOOL_TECHNOLOGY", "NAME", "EMAIL", "PHONE", "LOCATION"],
+      "wordCount": 180,
+      "popularityScore": 95,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_002",
+      "name": "Modern Dynamisch",
+      "category": "Modern",
+      "language": "de",
+      "industries": ["IT", "Startup", "Technology", "Marketing", "Creative"],
+      "style": "Modern",
+      "tone": "Enthusiastic",
+      "sections": ["salutation", "opening", "body_1", "body_2", "closing", "signature"],
+      "content": {
+        "salutation": "Hallo [HIRING_MANAGER],\n\n",
+        "opening": "Ich bin begeistert von der Gelegenheit, mich auf die Position als [JOB_TITLE] bei [COMPANY_NAME] zu bewerben. Ihre innovative Arbeit in [COMPANY_FOCUS] inspiriert mich, und ich bin überzeugt, dass meine Leidenschaft für [PASSION_AREA] und meine Expertise in [KEY_SKILL] perfekt zu Ihrem Team passen.",
+        "body_1": "In meiner bisherigen Laufbahn habe ich gelangweilt, innovative Lösungen zu entwickeln, die echte Ergebnisse liefern. Ein Highlight war mein Projekt [PROJECT_NAME], bei dem ich [ACHIEVEMENT_2] erreicht habe – ein Erfolg, der unmittelbar zu [BUSINESS_IMPACT] führte.",
+        "body_2": "Besonders reizt mich an Ihrem Unternehmen die Kombination aus [COMPANY_VALUE_1] und [COMPANY_VALUE_2]. Ich bin nicht nur ein technischer Experte, sondern auch ein Teamplayer, der gerne [COLLABORATIVE_SKILL] einbringt und andere inspiriert.",
+        "closing": "Ich würde mich freuen, mehr über diese spannende Opportunity zu erfahren und Ihnen zu zeigen, wie ich Ihrem Team Mehrwert bringen kann.",
+        "signature": "Viele Grüße,\n[NAME]\n[PHONE] | [EMAIL]\nLinkedIn: [LINKEDIN_PROFILE]"
+      },
+      "placeholders": ["HIRING_MANAGER", "JOB_TITLE", "COMPANY_NAME", "COMPANY_FOCUS", "PASSION_AREA", "KEY_SKILL", "PROJECT_NAME", "ACHIEVEMENT_2", "BUSINESS_IMPACT", "COMPANY_VALUE_1", "COMPANY_VALUE_2", "COLLABORATIVE_SKILL", "NAME", "PHONE", "EMAIL", "LINKEDIN_PROFILE"],
+      "wordCount": 190,
+      "popularityScore": 88,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_003",
+      "name": "Fokus auf Kompetenzen",
+      "category": "Spezial",
+      "language": "de",
+      "industries": ["All"],
+      "style": "Structured",
+      "tone": "Competency-Focused",
+      "sections": ["salutation", "opening", "body_skills", "body_motivation", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "opening": "als erfahrener [JOB_TITLE] mit Schwerpunkt auf [KEY_SKILL_1] und [KEY_SKILL_2] bewerbe ich mich auf die ausgeschriebene Position bei [COMPANY_NAME].",
+        "body_skills": "Meine Kernkompetenzen umfassen:\n\n• [SKILL_1]: Nachgewiesene Expertise durch [SKILL_1_PROOF]\n• [SKILL_2]: Erfolgreich implementiert in [SKILL_2_CONTEXT]\n• [SKILL_3]: Kontinuierlich erweitert durch [SKILL_3_DEVELOPMENT]\n\nDiese Kombination ermöglicht mir, [UNIQUE_VALUE] zu bieten.",
+        "body_motivation": "Ihr Unternehmen reizt mich wegen [MOTIVATION_1] und [MOTIVATION_2]. Ich bin überzeugt, dass meine Erfahrung in [RELEVANT_EXPERIENCE] ideal zu Ihren aktuellen Anforderungen passt und ich unmittelbar [IMMEDIATE_CONTRIBUTION] leisten kann.",
+        "closing": "Ich freue mich auf ein Gespräch, in dem ich Ihnen detailliert von meinen Qualifikationen berichte.",
+        "signature": "Mit freundlichen Grüßen,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["JOB_TITLE", "KEY_SKILL_1", "KEY_SKILL_2", "COMPANY_NAME", "SKILL_1", "SKILL_1_PROOF", "SKILL_2", "SKILL_2_CONTEXT", "SKILL_3", "SKILL_3_DEVELOPMENT", "UNIQUE_VALUE", "MOTIVATION_1", "MOTIVATION_2", "RELEVANT_EXPERIENCE", "IMMEDIATE_CONTRIBUTION", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 170,
+      "popularityScore": 82,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_004",
+      "name": "Storytelling Approach",
+      "category": "Creative",
+      "language": "de",
+      "industries": ["Marketing", "Creative", "Media", "PR", "Sales"],
+      "style": "Narrative",
+      "tone": "Engaging",
+      "sections": ["salutation", "story_setup", "story_development", "story_resolution", "closing", "signature"],
+      "content": {
+        "salutation": "Liebe [HIRING_TEAM],\n\n",
+        "story_setup": "[OPENING_STORY] – dieser Moment prägte meine Karriere und zeigt, warum ich für die Position als [JOB_TITLE] bei [COMPANY_NAME] die ideale Kandidatin bin.",
+        "story_development": "Diese Erkenntnis führte mich zu [CAREER_PATH]. In den letzten [YEARS] Jahren bei [CURRENT_COMPANY] habe ich [MAJOR_ACHIEVEMENT] erreicht, indem ich [APPROACH_USED] anwendete. Das Resultat: [QUANTIFIABLE_RESULT].",
+        "story_resolution": "Heute sehe ich in Ihrer Ausschreibung die perfekte Gelegenheit, meine Leidenschaft für [PASSION] und meine Expertise in [EXPERTISE] einzubringen. Ich bin nicht nur eine Kandidatin – ich bin jemand, der [COMMITMENT] bringt.",
+        "closing": "Ich würde mich freuen, Ihnen diese Geschichte im Gespräch zu erzählen und zu zeigen, wie ich Ihrem Team Mehrwert biete.",
+        "signature": "Mit herzlichen Grüßen,\n[NAME]\n[CONTACT_INFO]"
+      },
+      "placeholders": ["HIRING_TEAM", "OPENING_STORY", "JOB_TITLE", "COMPANY_NAME", "CAREER_PATH", "YEARS", "CURRENT_COMPANY", "MAJOR_ACHIEVEMENT", "APPROACH_USED", "QUANTIFIABLE_RESULT", "PASSION", "EXPERTISE", "COMMITMENT", "NAME", "CONTACT_INFO"],
+      "wordCount": 200,
+      "popularityScore": 75,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_005",
+      "name": "Lateral Mover / Karrierewechsel",
+      "category": "Special",
+      "language": "de",
+      "industries": ["All"],
+      "style": "Transition-Focused",
+      "tone": "Confident",
+      "sections": ["salutation", "opening", "bridge", "body", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "opening": "Obwohl ich meine Karriere in [PREVIOUS_FIELD] gestartet habe, habe ich mich bewusst für einen Wechsel zu [NEW_FIELD] entschieden. Diese Entscheidung basiert auf [MOTIVATION_FOR_CHANGE].",
+        "bridge": "Der Übergang war kein Sprung ins Unbekannte – sondern eine natürliche Evolution. Meine Erfahrung in [TRANSFERABLE_SKILL_1] und [TRANSFERABLE_SKILL_2] sind direkt auf die Position als [JOB_TITLE] übertragbar. Zusätzlich habe ich bereits konkrete Erfahrung durch [RELEVANT_TRAINING_OR_PROJECT] gesammelt.",
+        "body": "Was mich für diese Rolle besonders qualifiziert, ist die einzigartige Perspektive, die mein bisheriger Hintergrund bietet. Ich verstehe [UNIQUE_INSIGHT], was mich in [NEW_FIELD] differenziert. Mein Ziel ist es, [CAREER_OBJECTIVE] zu erreichen.",
+        "closing": "Ich freue mich, Ihnen zu zeigen, wie mein unkonventioneller Weg zu unkonventionellen Lösungen führt.",
+        "signature": "Mit freundlichen Grüßen,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["PREVIOUS_FIELD", "NEW_FIELD", "MOTIVATION_FOR_CHANGE", "TRANSFERABLE_SKILL_1", "TRANSFERABLE_SKILL_2", "JOB_TITLE", "RELEVANT_TRAINING_OR_PROJECT", "UNIQUE_INSIGHT", "CAREER_OBJECTIVE", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 175,
+      "popularityScore": 78,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_006",
+      "name": "Referral / Internal Recommend",
+      "category": "Special",
+      "language": "de",
+      "industries": ["All"],
+      "style": "Personal",
+      "tone": "Warm",
+      "sections": ["salutation", "referral_intro", "body", "closing", "signature"],
+      "content": {
+        "salutation": "Liebe [HIRING_MANAGER_NAME],\n\n",
+        "referral_intro": "auf Empfehlung von [REFERRER_NAME], [REFERRER_TITLE] bei Ihrem Unternehmen, bewerbe ich mich auf die Position als [JOB_TITLE]. [REFERRER_NAME] sprach mit großem Enthusiasmus von [COMPANY_CULTURE_ASPECT] und schlug vor, dass meine Fähigkeiten ideal zu Ihrem Team passen würden.",
+        "body": "[REFERRER_NAME] hatte recht – Ihre [COMPANY_STRENGTH] passt perfekt zu meinen [CAREER_GOALS]. In meiner Zeit bei [CURRENT_EMPLOYER] konnte ich [RELEVANT_ACHIEVEMENT] erreichen, was direkt zu [COMPANY_NEED] beitragen kann. Besonders freue ich mich auf die Möglichkeit, an [SPECIFIC_PROJECT] zu arbeiten.",
+        "closing": "Danke der Empfehlung von [REFERRER_NAME] freue ich mich besonders auf diese Gelegenheit. Lassen Sie mich wissen, wie ich Sie unterstützen kann.",
+        "signature": "Mit freundlichen Grüßen,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["HIRING_MANAGER_NAME", "REFERRER_NAME", "REFERRER_TITLE", "JOB_TITLE", "COMPANY_CULTURE_ASPECT", "COMPANY_STRENGTH", "CAREER_GOALS", "CURRENT_EMPLOYER", "RELEVANT_ACHIEVEMENT", "COMPANY_NEED", "SPECIFIC_PROJECT", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 160,
+      "popularityScore": 85,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_007",
+      "name": "Executive / C-Level",
+      "category": "Executive",
+      "language": "de",
+      "industries": ["Finance", "Technology", "Corporate", "Consulting", "Strategic"],
+      "style": "Strategic",
+      "tone": "Executive",
+      "sections": ["salutation", "strategic_opening", "business_impact", "vision_alignment", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "strategic_opening": "Als [CURRENT_TITLE] mit [YEARS_EXPERIENCE] Jahren Erfahrung in [INDUSTRY], interessiere ich mich zukunftsorientiert für die Möglichkeit, die Rolle des [POSITION] zu übernehmen.",
+        "business_impact": "Meine Track Record spricht für sich: [BUSINESS_METRIC_1] stieg um [IMPROVEMENT_1]%, [BUSINESS_METRIC_2] wurde um [IMPROVEMENT_2] optimiert, und ich führte ein Team von [TEAM_SIZE] mit durchschnittlichem [RETENTION_RATE]% Mitarbeiterzufriedenheit. Diese Erfolge resultierten aus meiner Strategie: [STRATEGIC_APPROACH].",
+        "vision_alignment": "Ihre Wachstumsstrategie von [COMPANY_STRATEGY] resoniert mit meinem Ansatz zu [LEADERSHIP_PHILOSOPHY]. Ich bin überzeugt, dass ich als [POSITION] [STRATEGIC_OBJECTIVE] vorantreibe und damit [SHAREHOLDER_VALUE] generiere.",
+        "closing": "Ich freue mich auf ein strategisches Gespräch, um Sie von meiner Vision zu überzeugen.",
+        "signature": "[NAME]\n[TITLE]\n[EMAIL] | [PHONE]\nLinkedIn: [LINKEDIN]"
+      },
+      "placeholders": ["CURRENT_TITLE", "YEARS_EXPERIENCE", "INDUSTRY", "POSITION", "BUSINESS_METRIC_1", "IMPROVEMENT_1", "BUSINESS_METRIC_2", "IMPROVEMENT_2", "TEAM_SIZE", "RETENTION_RATE", "STRATEGIC_APPROACH", "COMPANY_STRATEGY", "LEADERSHIP_PHILOSOPHY", "STRATEGIC_OBJECTIVE", "SHAREHOLDER_VALUE", "NAME", "TITLE", "EMAIL", "PHONE", "LINKEDIN"],
+      "wordCount": 185,
+      "popularityScore": 80,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_008",
+      "name": "Short & Sweet (2 Absätze)",
+      "category": "Brief",
+      "language": "de",
+      "industries": ["All"],
+      "style": "Concise",
+      "tone": "Direct",
+      "sections": ["salutation", "opening_impact", "body_credentials", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "opening_impact": "Mit [YEARS] Jahren Erfahrung als [JOB_TITLE] und bewiesener Erfolg in [KEY_ACHIEVEMENT], bin ich die ideale Kandidatin für diese Position.",
+        "body_credentials": "Ich habe [SKILL_1], [SKILL_2] und [SKILL_3] erfolgreich in [RELEVANT_CONTEXT] eingesetzt, was zu [MEASURABLE_RESULT] führte. Ich freue mich darauf, diese Fähigkeiten für [COMPANY_NAME] einzubringen.",
+        "closing": "Ich bin bereit, sofort zu beginnen.",
+        "signature": "Mit freundlichen Grüßen,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["YEARS", "JOB_TITLE", "KEY_ACHIEVEMENT", "SKILL_1", "SKILL_2", "SKILL_3", "RELEVANT_CONTEXT", "MEASURABLE_RESULT", "COMPANY_NAME", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 90,
+      "popularityScore": 72,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_009",
+      "name": "Academic / Research Position",
+      "category": "Academic",
+      "language": "de",
+      "industries": ["Education", "Research", "Science", "Academia"],
+      "style": "Scholarly",
+      "tone": "Academic",
+      "sections": ["salutation", "research_background", "academic_contribution", "future_vision", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "research_background": "Als promovierter Forscher im Bereich [RESEARCH_FIELD] mit Fokus auf [RESEARCH_FOCUS], bewerbe ich mich für die Position des [ACADEMIC_POSITION] bei [UNIVERSITY_NAME].",
+        "academic_contribution": "Meine Forschungen haben zu [PUBLICATION_COUNT] peer-reviewed Publikationen in hochrangigen Journals wie [JOURNAL_EXAMPLES] geführt. Besonders stolz bin ich auf meine Arbeit zu [KEY_RESEARCH], die [RESEARCH_IMPACT] erreichte und von [CITATION_COUNT] Kollegen zitiert wurde.",
+        "future_vision": "In meiner neuen Position möchte ich [RESEARCH_AGENDA] vorantreiben, während ich gleichzeitig meine Leidenschaft für [TEACHING_FOCUS] weitergebe. Mein Ziel ist es, eine Forschungsgruppe zu etablieren, die [RESEARCH_GOAL] revolutioniert.",
+        "closing": "Ich freue mich auf die Gelegenheit, die Zukunft von [FIELD] an [UNIVERSITY_NAME] zu gestalten.",
+        "signature": "Mit freundlichen Grüßen,\nDr. [NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["RESEARCH_FIELD", "RESEARCH_FOCUS", "ACADEMIC_POSITION", "UNIVERSITY_NAME", "PUBLICATION_COUNT", "JOURNAL_EXAMPLES", "KEY_RESEARCH", "RESEARCH_IMPACT", "CITATION_COUNT", "RESEARCH_AGENDA", "TEACHING_FOCUS", "RESEARCH_GOAL", "FIELD", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 170,
+      "popularityScore": 68,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_010",
+      "name": "English (Professional)",
+      "category": "English",
+      "language": "en",
+      "industries": ["All"],
+      "style": "Professional",
+      "tone": "Formal",
+      "sections": ["salutation", "opening", "body", "closing", "signature"],
+      "content": {
+        "salutation": "Dear [HIRING_MANAGER],\n\n",
+        "opening": "I am writing to express my strong interest in the [JOB_TITLE] position at [COMPANY_NAME]. With [YEARS] years of experience in [INDUSTRY], combined with my expertise in [KEY_SKILL], I am confident I can make a significant contribution to your team.",
+        "body": "Throughout my career, I have successfully [ACHIEVEMENT_1] and [ACHIEVEMENT_2], resulting in [BUSINESS_IMPACT]. My proficiency in [SKILL_1], [SKILL_2], and [SKILL_3] would enable me to [IMMEDIATE_CONTRIBUTION] for [COMPANY_NAME]. I am particularly excited about your company's commitment to [COMPANY_VALUE].",
+        "closing": "I would welcome the opportunity to discuss how my background, skills, and enthusiasm align with your needs. Thank you for considering my application.",
+        "signature": "Sincerely,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["HIRING_MANAGER", "JOB_TITLE", "COMPANY_NAME", "YEARS", "INDUSTRY", "KEY_SKILL", "ACHIEVEMENT_1", "ACHIEVEMENT_2", "BUSINESS_IMPACT", "SKILL_1", "SKILL_2", "SKILL_3", "IMMEDIATE_CONTRIBUTION", "COMPANY_VALUE", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 160,
+      "popularityScore": 85,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_011",
+      "name": "Email-Style (Casual Professional)",
+      "category": "Modern",
+      "language": "de",
+      "industries": ["Startup", "Tech", "Creative", "Marketing"],
+      "style": "Email",
+      "tone": "Casual-Professional",
+      "sections": ["salutation", "subject_line", "greeting", "body_1", "body_2", "sign_off", "signature"],
+      "content": {
+        "salutation": "",
+        "subject_line": "Bewerbung: [JOB_TITLE] bei [COMPANY_NAME] – [YOUR_NAME]",
+        "greeting": "Hi [HIRING_MANAGER],\n\n",
+        "body_1": "cool, dass [COMPANY_NAME] [OPEN_POSITION] sucht. Ich bin [YOUR_NAME], und ich bin überzeugt, dass ich für diese Rolle genau die richtige Person bin.\n\nWhy? Weil ich die letzten [YEARS] Jahre genau das gemacht habe, was du brauchst: [RELEVANT_EXPERIENCE]. Mit Fokus auf [KEY_SKILL], konnte ich [ACHIEVEMENT] erreichen.",
+        "body_2": "Deine Firma begeistert mich, weil [COMPANY_REASON]. Und ehrlich gesagt, ich bin ready, sofort zu starten und [IMMEDIATE_GOAL] mit euch zu erreichen.",
+        "sign_off": "Lass uns ein Gespräch führen!",
+        "signature": "[YOUR_NAME]\n[PHONE] | [EMAIL]\n[LINKEDIN]"
+      },
+      "placeholders": ["JOB_TITLE", "COMPANY_NAME", "YOUR_NAME", "HIRING_MANAGER", "OPEN_POSITION", "YEARS", "RELEVANT_EXPERIENCE", "KEY_SKILL", "ACHIEVEMENT", "COMPANY_REASON", "IMMEDIATE_GOAL", "PHONE", "EMAIL", "LINKEDIN"],
+      "wordCount": 120,
+      "popularityScore": 70,
+      "aiFriendly": true
+    },
+    {
+      "id": "anschreiben_012",
+      "name": "Deutsch / Englisch Mix",
+      "category": "Bilingual",
+      "language": "de/en",
+      "industries": ["International", "Technology", "Consulting", "Finance"],
+      "style": "Professional",
+      "tone": "Multilingual",
+      "sections": ["salutation", "intro_de", "intro_en", "body_de", "body_en", "closing", "signature"],
+      "content": {
+        "salutation": "Sehr geehrte Damen und Herren,\n\n",
+        "intro_de": "mit großem Interesse bewerbe ich mich auf die Position des [JOB_TITLE] bei [COMPANY_NAME]. Meine bilinguale Kompetenz (Deutsch/Englisch) verbunden mit meiner Expertise in [KEY_SKILL] macht mich zur idealen Kandidatin.",
+        "intro_en": "I am fluent in both German and English, with proven experience in international team environments. My background in [INDUSTRY] has prepared me perfectly for this role.",
+        "body_de": "In meinen bisherigen Positionen bei [PREVIOUS_COMPANIES] konnte ich [ACHIEVEMENT_DE] erreichen. Meine Fähigkeit, nahtlos zwischen [LANGUAGE_CONTEXTS] zu arbeiten, ermöglichte mir, [UNIQUE_VALUE_DE] zu bieten.",
+        "body_en": "My multilingual approach has consistently delivered results: [ACHIEVEMENT_EN] and improved [BUSINESS_METRIC]. This unique perspective positions me to [FUTURE_CONTRIBUTION].",
+        "closing": "Ich freue mich auf die Chance, in einem persönlichen Gespräch meine Qualifikationen zu präsentieren.",
+        "signature": "Mit freundlichen Grüßen / Best regards,\n[NAME]\n[EMAIL] | [PHONE]"
+      },
+      "placeholders": ["JOB_TITLE", "COMPANY_NAME", "KEY_SKILL", "INDUSTRY", "PREVIOUS_COMPANIES", "ACHIEVEMENT_DE", "LANGUAGE_CONTEXTS", "UNIQUE_VALUE_DE", "ACHIEVEMENT_EN", "BUSINESS_METRIC", "FUTURE_CONTRIBUTION", "NAME", "EMAIL", "PHONE"],
+      "wordCount": 210,
+      "popularityScore": 65,
+      "aiFriendly": true
+    }
+  ],
+  "deckblatt_templates": [
+    {
+      "id": "deckblatt_001",
+      "name": "Klassisch Elegant",
+      "layout": "title_centered_photo_right",
+      "sections": ["photo", "name", "position", "key_achievements", "contact"],
+      "colors": ["#1D4ED8", "#FFFFFF", "#F3F4F6"],
+      "design": "Professional"
+    },
+    {
+      "id": "deckblatt_002",
+      "name": "Modern Minimalist",
+      "layout": "name_left_photo_full",
+      "sections": ["name", "position", "tagline", "contact"],
+      "colors": ["#FFFFFF", "#111827", "#E5E7EB"],
+      "design": "Contemporary"
+    },
+    {
+      "id": "deckblatt_003",
+      "name": "Executive Visual",
+      "layout": "photo_dominant_text_overlay",
+      "sections": ["photo", "name", "title", "key_metrics", "contact"],
+      "colors": ["#0F2855", "#FFFFFF", "#D4AF37"],
+      "design": "Premium"
+    }
+  ],
+  "autoFillMapping": {
+    "NAME": "currentCV.name",
+    "EMAIL": "currentCV.email",
+    "PHONE": "currentCV.phone",
+    "LOCATION": "currentCV.location",
+    "YEARS": "calculateYearsExperience()",
+    "JOB_TITLE": "currentCV.experience[0].position",
+    "COMPANY_NAME": "currentCV.experience[0].company",
+    "INDUSTRY": "detectedIndustry"
+  },
+  "placeholderCategories": {
+    "personal": ["NAME", "EMAIL", "PHONE", "LOCATION", "LINKEDIN_PROFILE"],
+    "professional": ["JOB_TITLE", "COMPANY_NAME", "YEARS", "INDUSTRY", "CURRENT_TITLE"],
+    "achievements": ["ACHIEVEMENT_1", "ACHIEVEMENT_2", "BUSINESS_RESULT", "BUSINESS_IMPACT"],
+    "skills": ["KEY_SKILL", "SKILL_1", "SKILL_2", "SKILL_3"],
+    "company_info": ["COMPANY_STRENGTH", "COMPANY_FOCUS", "COMPANY_VALUE"],
+    "dynamic": ["HIRING_MANAGER", "HIRING_MANAGER_NAME", "COMPANY_NAME"]
+  },
+  "summary": {
+    "totalTemplates": 12,
+    "languages": ["de", "en", "de/en"],
+    "categories": ["Klassisch", "Modern", "Special", "Creative", "Academic", "Executive", "Brief", "English", "Bilingual"],
+    "averageWordCount": 160,
+    "allAIFriendly": true
+  }
+}
