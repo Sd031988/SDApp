@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerbungsstudio - Professioneller Lebenslauf Generator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap">
+    <style>
+        :root {
+            --primary: #1D4ED8;
+            --primary-light: #3B82F6;
+            --primary-dark: #0F2855;
+            --accent: #7C3AED;
+            --success: #059669;
+            --surface: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --border-light: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: white;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 48px;
+            background: white;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+            color: white;
+            padding: 80px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+        }
+
+        .btn {
+            padding: 16px 48px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ===== TRUST SECTION ===== */
+        .trust {
+            background: var(--surface-light);
+            padding: 40px 48px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .trust-text {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .badge-icon {
+            font-size: 20px;
+        }
+
+        /* ===== FEATURES SECTION ===== */
+        .features {
+            padding: 80px 48px;
+            background: white;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 60px;
+            letter-spacing: -1px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            padding: 40px 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            text-align: center;
+            transition: all 0.3s;
+            background: var(--surface-light);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 20px 40px rgba(29, 78, 216, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ===== TEMPLATES SECTION ===== */
+        .templates {
+            padding: 80px 48px;
+            background: var(--surface-light);
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .template-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .template-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+
+        .template-preview {
+            height: 240px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .template-blue .template-preview {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 100%);
+            color: white;
+        }
+
+        .template-gold .template-preview {
+            background: linear-gradient(135deg, #2C1810 0%, #B8860B 100%);
+            color: white;
+        }
+
+        .template-purple .template-preview {
+            background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%);
+            color: white;
+        }
+
+        .template-emerald .template-preview {
+            background: linear-gradient(135deg, #064E3B 0%, #059669 100%);
+            color: white;
+        }
+
+        .template-info {
+            padding: 20px;
+        }
+
+        .template-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .template-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .how-it-works {
+            padding: 80px 48px;
+            background: white;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .step {
+            text-align: center;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .step h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ===== CTA SECTION ===== */
+        .cta {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 100%);
+            color: white;
+            padding: 80px 48px;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 44px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .cta p {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta .btn-primary {
+            padding: 18px 60px;
+            font-size: 17px;
+        }
+
+        /* ===== TESTIMONIALS ===== */
+        .testimonials {
+            padding: 80px 48px;
+            background: var(--surface-light);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonial {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+        }
+
+        .stars {
+            color: #FDB022;
+            margin-bottom: 12px;
+        }
+
+        .testimonial-text {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--surface-dark);
+            color: white;
+            padding: 40px 48px;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            nav {
+                padding: 16px 24px;
+            }
+
+            nav ul {
+                gap: 16px;
+            }
+
+            .hero {
+                padding: 40px 24px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .hero-stats {
+                gap: 30px;
+                margin-top: 24px;
+            }
+
+            .features, .templates, .how-it-works, .cta, .testimonials {
+                padding: 40px 24px;
+            }
+
+            .section-title, .cta h2 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="logo">Bewerbungsstudio</div>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#templates">Vorlagen</a></li>
+            <li><a href="#how">So funktioniert's</a></li>
+            <li><a href="#cta">Starten</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Professioneller Lebenslauf in Minuten</h1>
+            <p>Erstelle beeindruckende Lebensläufe mit unseren Premium-Vorlagen. Garantiert professionell, individuell anpassbar.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="startBuilder()">JETZT LEBENSLAUF ERSTELLEN</button>
+                <button class="btn btn-secondary">Vorlagen Ansehen</button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">500K+</span>
+                    <span class="stat-label">Erstelle CVs</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">98%</span>
+                    <span class="stat-label">Zufriedenheit</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">4.8★</span>
+                    <span class="stat-label">Bewertung</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUST SECTION -->
+    <section class="trust">
+        <div class="trust-text">Vertrauen Sie den führenden Bewerbungsexperten</div>
+        <div class="trust-badges">
+            <div class="badge">
+                <span class="badge-icon">✓</span>
+                <span>100% Kostenlos</span>
+            </div>
+            <div class="badge">
+                <span class="badge-icon">✓</span>
+                <span>Keine Registrierung</span>
+            </div>
+            <div class="badge">
+                <span class="badge-icon">✓</span>
+                <span>PDF Download</span>
+            </div>
+            <div class="badge">
+                <span class="badge-icon">✓</span>
+                <span>Premium Templates</span>
+            </div>
+            <div class="badge">
+                <span class="badge-icon">✓</span>
+                <span>Sofort einsatzbereit</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features" id="features">
+        <h2 class="section-title">Warum Bewerbungsstudio?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Blitzschnell</h3>
+                <p>Erstelle deinen CV in unter 5 Minuten mit unseren intelligenten Formularen</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Premium Templates</h3>
+                <p>Wähle aus 7+ professionellen Vorlagen, die überall begeistern</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Responsive Design</h3>
+                <p>Perfekt auf Desktop, Tablet und Smartphone</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📤</div>
+                <h3>PDF Export</h3>
+                <p>Laden Sie Ihren CV als hochwertiges PDF herunter</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Jederzeit Ändern</h3>
+                <p>Bearbeiten Sie Ihren CV jederzeit und erstellen Sie Varianten</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>Import Funktion</h3>
+                <p>Laden Sie einen alten CV hoch und importieren Sie alle Daten</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TEMPLATES SECTION -->
+    <section class="templates" id="templates">
+        <h2 class="section-title">Unsere Premium Vorlagen</h2>
+        <div class="templates-grid">
+            <div class="template-card template-blue">
+                <div class="template-preview">Modern Elegance</div>
+                <div class="template-info">
+                    <div class="template-name">Modern Elegance</div>
+                    <div class="template-desc">Zeitlos elegant mit modernem Gradient</div>
+                </div>
+            </div>
+            <div class="template-card template-gold">
+                <div class="template-preview">Luxury Gold</div>
+                <div class="template-info">
+                    <div class="template-name">Luxury Gold</div>
+                    <div class="template-desc">Premium mit Gold-Akzenten</div>
+                </div>
+            </div>
+            <div class="template-card template-purple">
+                <div class="template-preview">Creative Purple</div>
+                <div class="template-info">
+                    <div class="template-name">Creative Purple</div>
+                    <div class="template-desc">Modern kreativ</div>
+                </div>
+            </div>
+            <div class="template-card template-emerald">
+                <div class="template-preview">Executive Emerald</div>
+                <div class="template-info">
+                    <div class="template-name">Executive Emerald</div>
+                    <div class="template-desc">Professionell mit Details</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how-it-works" id="how">
+        <h2 class="section-title">So funktioniert's</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Angaben Machen</h3>
+                <p>Füllen Sie Ihre Daten in das einfache Formular ein</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Vorlage Wählen</h3>
+                <p>Wählen Sie Ihre Lieblingsvorlage aus 7+ Designs</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Live Vorschau</h3>
+                <p>Sehen Sie sofort wie Ihr CV aussieht</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Download</h3>
+                <p>Laden Sie Ihren CV als PDF herunter</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA SECTION -->
+    <section class="cta" id="cta">
+        <h2>Starten Sie Ihren Traumjob Weg</h2>
+        <p>Erstellen Sie einen überzeugenden Lebenslauf, der Sie wirklich zum Leben bringt. Kostenlos, professionell, einfach.</p>
+        <button class="btn btn-primary" onclick="startBuilder()">JETZT KOSTENLOS STARTEN</button>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="testimonials">
+        <h2 class="section-title">Das sagen Nutzer</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <div class="testimonial-text">"Bewerbungsstudio hat mir geholfen, einen professionellen CV zu erstellen. Super einfach zu bedienen!"</div>
+                <div class="testimonial-author">— Sarah M., München</div>
+            </div>
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <div class="testimonial-text">"Die Vorlagen sind absolut beeindruckend. Ich habe sofort eine Vorstellung bekommen!"</div>
+                <div class="testimonial-author">— Thomas K., Berlin</div>
+            </div>
+            <div class="testimonial">
+                <div class="stars">★★★★★</div>
+                <div class="testimonial-text">"Kostenlos und ohne Schnickschnack. Genau das, was ich gebraucht habe. Danke!"</div>
+                <div class="testimonial-author">— Julia L., Hamburg</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>© 2024 Bewerbungsstudio. Alle Rechte vorbehalten. | Premium CV Builder</p>
+    </footer>
+
+    <script>
+        function startBuilder() {
+            window.location.href = 'Lebenslauf_app.html';
+        }
+    </script>
+</body>
+</html>
