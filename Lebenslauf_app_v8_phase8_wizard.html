@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerbungsstudio - Lebenslauf Wizard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #1D4ED8;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --danger: #EF4444;
+            --success: #10B981;
+            --light: #F9FAFB;
+            --border: #E5E7EB;
+            --text: #374151;
+            --text-light: #6B7280;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .version-badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        /* ===== WIZARD CONTAINER ===== */
+        .wizard-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .wizard-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .wizard-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        /* ===== STEP DISPLAY ===== */
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-subtitle {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+        }
+
+        .step-content {
+            flex: 1;
+            margin-bottom: 2rem;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* ===== OPTIONS GRID ===== */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .option-button {
+            padding: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .option-button:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .option-button.selected {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+
+        /* ===== TWO COLUMN LAYOUT ===== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 2rem;
+        }
+
+        .photo-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .photo-preview {
+            width: 250px;
+            height: 320px;
+            background: var(--light);
+            border: 2px dashed var(--border);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-input {
+            cursor: pointer;
+        }
+
+        .form-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ===== TEMPLATE GALLERY ===== */
+        .template-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .template-card {
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .template-card.selected {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .template-name {
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== REPEATABLE SECTION ===== */
+        .repeatable-section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .repeatable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .repeatable-title {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .btn-remove {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-remove:hover {
+            background: #DC2626;
+        }
+
+        /* ===== AI SUGGESTIONS PANEL ===== */
+        .suggestions-panel {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .suggestions-title {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+        }
+
+        .suggestion-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* ===== COMPETENCIES GRID ===== */
+        .competencies-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .competency-tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .competency-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        /* ===== BUTTONS ===== */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-add-another {
+            background: var(--secondary);
+            color: white;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .btn-add-another:hover {
+            background: #059669;
+        }
+
+        /* ===== LANDING PAGE ===== */
+        .landing-page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .landing-page.active {
+            display: flex;
+        }
+
+        .landing-hero {
+            margin-bottom: 3rem;
+        }
+
+        .landing-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .landing-hero p {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .landing-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            min-width: 200px;
+        }
+
+        /* ===== SIGNATURE SECTION ===== */
+        .signature-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .signature-option {
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .signature-option h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .color-swatch.selected {
+            border-color: var(--dark);
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--dark);
+        }
+
+        /* ===== PREVIEW SECTION ===== */
+        .preview-section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .preview-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .preview-pane {
+            width: 100%;
+            height: 400px;
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            overflow: auto;
+            padding: 2rem;
+        }
+
+        .cv-preview {
+            background: white;
+            padding: 2rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .cv-preview h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .cv-preview h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .cv-preview-entry {
+            margin-bottom: 1rem;
+        }
+
+        .cv-preview-entry strong {
+            display: block;
+            color: var(--text);
+        }
+
+        .cv-preview-entry em {
+            display: block;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        /* ===== DOWNLOAD OPTIONS ===== */
+        .download-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .download-btn {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .download-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+            transform: translateY(-2px);
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .wizard-content {
+                padding: 1rem;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .photo-preview,
+            .photo-preview.two-column {
+                width: 100%;
+                height: 200px;
+            }
+
+            .template-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .step-title {
+                font-size: 1.5rem;
+            }
+
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <span class="logo">Bewerbungsstudio</span>
+                    <span class="version-badge">Phase 8</span>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--text-light);">
+                    Lebenslauf erstellen leicht gemacht
+                </div>
+            </div>
+        </div>
+
+        <!-- WIZARD CONTAINER -->
+        <div class="wizard-container">
+            <div class="wizard-content">
+                <div class="wizard-inner">
+                    <!-- PROGRESS -->
+                    <div class="progress-section" id="progressSection">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="progressText">Schritt 1 von 12</span>
+                        </div>
+                    </div>
+
+                    <!-- LANDING PAGE -->
+                    <div class="landing-page active" id="landingPage">
+                        <div class="landing-hero">
+                            <h1>Willkommen bei Bewerbungsstudio</h1>
+                            <p>Erstellen Sie ihren perfekten Lebenslauf in wenigen Minuten - Schritt für Schritt, ganz einfach.</p>
+                        </div>
+                        <div class="landing-actions">
+                            <button class="btn btn-primary btn-large" onclick="startNewCV()">
+                                ✨ Neuen Lebenslauf erstellen
+                            </button>
+                            <button class="btn btn-secondary btn-large" onclick="loadExistingCV()">
+                                📂 Lebenslauf laden
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: EXPERIENCE LEVEL -->
+                    <div class="step active" id="step1">
+                        <h2 class="step-title">Ihr Erfahrungslevel</h2>
+                        <p class="step-subtitle">Wie viel Berufserfahrung haben Sie?</p>
+                        <div class="step-content">
+                            <div class="options-grid">
+                                <button class="option-button" onclick="selectExperienceLevel('keine', this)">
+                                    👤 Keine Erfahrung
+                                </button>
+                                <button class="option-button" onclick="selectExperienceLevel('1-3', this)">
+                                    📈 1-3 Jahre
+                                </button>
+                                <button class="option-button" onclick="selectExperienceLevel('4-6', this)">
+                                    💼 4-6 Jahre
+                                </button>
+                                <button class="option-button" onclick="selectExperienceLevel('7-10', this)">
+                                    🎯 7-10 Jahre
+                                </button>
+                                <button class="option-button" onclick="selectExperienceLevel('10+', this)">
+                                    ⭐ 10+ Jahre
+                                </button>
+                                <button class="option-button" onclick="selectExperienceLevel('anderes', this)">
+                                    ❓ Sonstiges
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: EDUCATION STATUS -->
+                    <div class="step" id="step2">
+                        <h2 class="step-title">Ihre Ausbildung</h2>
+                        <p class="step-subtitle">Welchen Abschluss haben Sie oder verfolgen Sie?</p>
+                        <div class="step-content">
+                            <div class="options-grid">
+                                <button class="option-button" onclick="selectEducationStatus('studiert', this)">
+                                    🎓 Studiere noch
+                                </button>
+                                <button class="option-button" onclick="selectEducationStatus('abgeschlossen', this)">
+                                    ✅ Abgeschlossen
+                                </button>
+                                <button class="option-button" onclick="selectEducationStatus('ausbildung', this)">
+                                    🔧 Ausbildung
+                                </button>
+                                <button class="option-button" onclick="selectEducationStatus('schulabschluss', this)">
+                                    📚 Schulabschluss
+                                </button>
+                                <button class="option-button" onclick="selectEducationStatus('keine', this)">
+                                    ➖ Keine
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: TEMPLATE GALLERY -->
+                    <div class="step" id="step3">
+                        <h2 class="step-title">Wählen Sie ein Template</h2>
+                        <p class="step-subtitle">Welcher Stil passt zu Ihnen?</p>
+                        <div class="step-content">
+                            <div class="template-gallery" id="templateGallery">
+                                <div class="template-card" onclick="selectTemplate(0, this)">
+                                    <div class="template-preview">📋</div>
+                                    <div class="template-name">Klassisch</div>
+                                </div>
+                                <div class="template-card" onclick="selectTemplate(1, this)">
+                                    <div class="template-preview">🎨</div>
+                                    <div class="template-name">Modern</div>
+                                </div>
+                                <div class="template-card" onclick="selectTemplate(2, this)">
+                                    <div class="template-preview">✨</div>
+                                    <div class="template-name">Premium</div>
+                                </div>
+                                <div class="template-card" onclick="selectTemplate(3, this)">
+                                    <div class="template-preview">🚀</div>
+                                    <div class="template-name">Tech</div>
+                                </div>
+                                <div class="template-card" onclick="selectTemplate(4, this)">
+                                    <div class="template-preview">🎯</div>
+                                    <div class="template-name">Minimal</div>
+                                </div>
+                                <div class="template-card" onclick="selectTemplate(5, this)">
+                                    <div class="template-preview">💡</div>
+                                    <div class="template-name">Kreativ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: PERSONAL DATA -->
+                    <div class="step" id="step4">
+                        <h2 class="step-title">Persönliche Daten</h2>
+                        <p class="step-subtitle">Grundinformationen für Ihren Lebenslauf</p>
+                        <div class="step-content">
+                            <div class="two-column">
+                                <div class="photo-section">
+                                    <div class="photo-preview" id="photoPreview">
+                                        📷 Foto
+                                    </div>
+                                    <input type="file" id="photoInput" accept="image/*" onchange="uploadPhoto(event)" class="photo-input" />
+                                    <label for="photoInput" style="cursor: pointer; color: var(--primary); text-align: center; font-weight: 600;">
+                                        Foto ändern
+                                    </label>
+                                </div>
+                                <div class="form-fields">
+                                    <div class="form-group">
+                                        <label class="form-label">Vorname</label>
+                                        <input type="text" class="form-input" id="vorname" placeholder="Max">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Nachname</label>
+                                        <input type="text" class="form-input" id="nachname" placeholder="Mustermann">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Geburtsdatum</label>
+                                        <input type="date" class="form-input" id="geburtsdatum">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">E-Mail</label>
+                                        <input type="email" class="form-input" id="email" placeholder="max@example.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefon</label>
+                                        <input type="tel" class="form-input" id="telefon" placeholder="+49 123 456789">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Adresse</label>
+                                        <input type="text" class="form-input" id="adresse" placeholder="Straße 123, 12345 Stadt">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5: PROFESSIONAL EXPERIENCE -->
+                    <div class="step" id="step5">
+                        <h2 class="step-title">Berufserfahrung</h2>
+                        <p class="step-subtitle">Ihre letzten und aktuellen Positionen</p>
+                        <div class="step-content">
+                            <div id="experienceList"></div>
+                            <button class="btn-add-another" onclick="addExperience()">+ Weitere Stelle hinzufügen</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 6: JOB DESCRIPTION & AI SUGGESTIONS -->
+                    <div class="step" id="step6">
+                        <h2 class="step-title">Tätigkeitsbeschreibung & AI Vorschläge</h2>
+                        <p class="step-subtitle">Beschreiben Sie Ihre Aufgaben und Erfolge</p>
+                        <div class="step-content">
+                            <div class="repeatable-section" id="jobDescriptionSection">
+                                <div class="form-group">
+                                    <label class="form-label">Positionen auswählen</label>
+                                    <select class="form-select" id="jobSelector" onchange="loadJobForDescription()">
+                                        <option value="">-- Bitte wählen Sie eine Position --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tätigkeitsbeschreibung</label>
+                                    <textarea class="form-textarea" id="jobDescription" placeholder="Beschreiben Sie Ihre Aufgaben, Verantwortungen und Erfolge..."></textarea>
+                                </div>
+                                <div class="suggestions-panel" id="suggestionsPanel">
+                                    <div class="suggestions-title">💡 AI Vorschläge basierend auf Ihrer Position</div>
+                                    <div class="suggestions-list" id="suggestionsList">
+                                        <div class="suggestion-item">Laden Sie eine Position, um Vorschläge zu sehen...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 7: EXPERIENCE REVIEW -->
+                    <div class="step" id="step7">
+                        <h2 class="step-title">Übersicht Ihrer Erfahrung</h2>
+                        <p class="step-subtitle">Überprüfen und bearbeiten Sie Ihre Einträge</p>
+                        <div class="step-content" id="experienceReview">
+                        </div>
+                    </div>
+
+                    <!-- STEP 8: EDUCATION -->
+                    <div class="step" id="step8">
+                        <h2 class="step-title">Ausbildung</h2>
+                        <p class="step-subtitle">Schulen, Universitäten, Kurse</p>
+                        <div class="step-content">
+                            <div id="educationList"></div>
+                            <button class="btn-add-another" onclick="addEducation()">+ Weitere Ausbildung hinzufügen</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 9: COMPETENCIES -->
+                    <div class="step" id="step9">
+                        <h2 class="step-title">Kompetenzen & Fähigkeiten</h2>
+                        <p class="step-subtitle">Sprachen, technische Fähigkeiten und Soft Skills</p>
+                        <div class="step-content">
+                            <div class="form-group">
+                                <label class="form-label">Sprachen</label>
+                                <input type="text" class="form-input" id="newLanguage" placeholder="Sprache, Niveau (z.B. Deutsch - Muttersprache)">
+                                <button class="btn-add-another" onclick="addLanguage()">+ Sprache hinzufügen</button>
+                                <div class="competencies-list" id="languagesList"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Technische Fähigkeiten</label>
+                                <input type="text" class="form-input" id="newTechnicalSkill" placeholder="z.B. JavaScript, Python, Figma">
+                                <button class="btn-add-another" onclick="addTechnicalSkill()">+ Fähigkeit hinzufügen</button>
+                                <div class="competencies-list" id="technicalSkillsList"></div>
+
+                                <div class="suggestions-panel" style="margin-top: 1.5rem;">
+                                    <div class="suggestions-title">💡 Vorschlagene technische Fähigkeiten</div>
+                                    <div class="suggestions-list" id="techSuggestions"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Soft Skills</label>
+                                <input type="text" class="form-input" id="newSoftSkill" placeholder="z.B. Teamfähigkeit, Kommunikation">
+                                <button class="btn-add-another" onclick="addSoftSkill()">+ Skill hinzufügen</button>
+                                <div class="competencies-list" id="softSkillsList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 10: ADDITIONAL SECTIONS -->
+                    <div class="step" id="step10">
+                        <h2 class="step-title">Zusätzliche Abschnitte</h2>
+                        <p class="step-subtitle">Weitere relevante Informationen</p>
+                        <div class="step-content">
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+                                    <input type="checkbox" id="showCertifications"> Zertifizierungen & Qualifikationen
+                                </label>
+                                <textarea class="form-textarea" id="certifications" placeholder="Geben Sie Ihre Zertifizierungen ein..." style="display: none; margin-top: 0.5rem;"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+                                    <input type="checkbox" id="showPublications"> Publikationen & Projekte
+                                </label>
+                                <textarea class="form-textarea" id="publications" placeholder="Geben Sie Ihre Publikationen und Projekte ein..." style="display: none; margin-top: 0.5rem;"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
+                                    <input type="checkbox" id="showVolunteering"> Ehrenamtliche Tätigkeiten
+                                </label>
+                                <textarea class="form-textarea" id="volunteering" placeholder="Beschreiben Sie Ihre ehrenamtlichen Aktivitäten..." style="display: none; margin-top: 0.5rem;"></textarea>
+                            </div>
+
+                            <script>
+                                document.getElementById('showCertifications').addEventListener('change', function() {
+                                    document.getElementById('certifications').style.display = this.checked ? 'block' : 'none';
+                                });
+                                document.getElementById('showPublications').addEventListener('change', function() {
+                                    document.getElementById('publications').style.display = this.checked ? 'block' : 'none';
+                                });
+                                document.getElementById('showVolunteering').addEventListener('change', function() {
+                                    document.getElementById('volunteering').style.display = this.checked ? 'block' : 'none';
+                                });
+                            </script>
+                        </div>
+                    </div>
+
+                    <!-- STEP 11: SIGNATURE & FORMATTING -->
+                    <div class="step" id="step11">
+                        <h2 class="step-title">Unterschrift & Formatierung</h2>
+                        <p class="step-subtitle">Personalisieren Sie Ihr Lebenslauf-Design</p>
+                        <div class="step-content">
+                            <div class="signature-options">
+                                <div class="signature-option">
+                                    <h4>Handschrift-Stil</h4>
+                                    <select class="form-select" id="signatureStyle">
+                                        <option value="standard">Standard</option>
+                                        <option value="elegant">Elegant</option>
+                                        <option value="modern">Modern</option>
+                                        <option value="casual">Casual</option>
+                                    </select>
+                                </div>
+                                <div class="signature-option">
+                                    <h4>Signatur-Farbe</h4>
+                                    <div class="color-picker">
+                                        <div class="color-swatch selected" style="background: #000;" onclick="selectColor(this, '#000')"></div>
+                                        <div class="color-swatch" style="background: #1D4ED8;" onclick="selectColor(this, '#1D4ED8')"></div>
+                                        <div class="color-swatch" style="background: #DC2626;" onclick="selectColor(this, '#DC2626')"></div>
+                                        <div class="color-swatch" style="background: #7C3AED;" onclick="selectColor(this, '#7C3AED')"></div>
+                                        <div class="color-swatch" style="background: #059669;" onclick="selectColor(this, '#059669')"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Unterschrift akzeptieren</label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                    <input type="checkbox" id="acceptSignature" checked> Unterschrift in Lebenslauf einfügen
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 12: DOWNLOAD & EXPORT -->
+                    <div class="step" id="step12">
+                        <h2 class="step-title">Lebenslauf Herunterladen</h2>
+                        <p class="step-subtitle">Speichern Sie Ihren perfekten Lebenslauf</p>
+                        <div class="step-content">
+                            <div class="preview-section">
+                                <div class="preview-title">Vorschau</div>
+                                <div class="preview-pane">
+                                    <div class="cv-preview" id="cvPreview"></div>
+                                </div>
+                            </div>
+
+                            <div class="download-options">
+                                <button class="download-btn" onclick="downloadPDF()">
+                                    📄 PDF herunterladen
+                                </button>
+                                <button class="download-btn" onclick="downloadWord()">
+                                    📝 Word herunterladen
+                                </button>
+                                <button class="download-btn" onclick="downloadText()">
+                                    📋 Text herunterladen
+                                </button>
+                            </div>
+
+                            <div style="margin-top: 2rem; text-align: center;">
+                                <button class="btn btn-secondary" onclick="createAnother()">
+                                    + Weiteren Lebenslauf erstellen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NAVIGATION BUTTONS -->
+                    <div class="button-group" id="navigationButtons">
+                        <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
+                            ← Zurück
+                        </button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+                            Weiter →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE MANAGEMENT =====
+        const state = {
+            currentStep: 0,
+            experienceLevel: null,
+            educationStatus: null,
+            selectedTemplate: 0,
+            personalData: {},
+            experiences: [],
+            educations: [],
+            jobDescriptions: {},
+            languages: [],
+            technicalSkills: [],
+            softSkills: [],
+            certifications: '',
+            publications: '',
+            volunteering: '',
+            signatureStyle: 'standard',
+            signatureColor: '#000',
+            acceptSignature: true,
+            photo: null
+        };
+
+        const steps = [
+            'landingPage', 'step1', 'step2', 'step3', 'step4', 'step5', 'step6',
+            'step7', 'step8', 'step9', 'step10', 'step11', 'step12'
+        ];
+
+        // ===== LANDING PAGE =====
+        function startNewCV() {
+            document.getElementById('landingPage').classList.remove('active');
+            showStep(1);
+        }
+
+        function loadExistingCV() {
+            const saved = localStorage.getItem('cvData');
+            if (saved) {
+                Object.assign(state, JSON.parse(saved));
+                showStep(1);
+            } else {
+                alert('Keine gespeicherten Daten gefunden.');
+            }
+        }
+
+        // ===== WIZARD NAVIGATION =====
+        function showStep(stepIndex) {
+            state.currentStep = stepIndex;
+
+            // Hide all steps
+            steps.forEach(step => {
+                document.getElementById(step)?.classList.remove('active');
+            });
+
+            // Show current step
+            if (stepIndex < steps.length) {
+                document.getElementById(steps[stepIndex])?.classList.add('active');
+            }
+
+            // Update progress
+            updateProgress();
+
+            // Update buttons
+            updateNavigationButtons();
+
+            // Auto-load data
+            if (stepIndex === 5) renderExperienceList();
+            if (stepIndex === 6) populateJobSelector();
+            if (stepIndex === 7) renderExperienceReview();
+            if (stepIndex === 8) renderEducationList();
+            if (stepIndex === 9) renderCompetencies();
+            if (stepIndex === 12) generateCVPreview();
+        }
+
+        function nextStep() {
+            if (validateCurrentStep()) {
+                showStep(state.currentStep + 1);
+                saveProgress();
+            }
+        }
+
+        function previousStep() {
+            showStep(state.currentStep - 1);
+        }
+
+        function updateProgress() {
+            const percentage = (state.currentStep / 12) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = `Schritt ${state.currentStep} von 12`;
+
+            if (state.currentStep === 0) {
+                document.getElementById('progressSection').style.display = 'none';
+            } else {
+                document.getElementById('progressSection').style.display = 'block';
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const navButtons = document.getElementById('navigationButtons');
+
+            if (state.currentStep === 0) {
+                navButtons.style.display = 'none';
+            } else {
+                navButtons.style.display = 'flex';
+                prevBtn.style.display = state.currentStep > 1 ? 'block' : 'none';
+                nextBtn.textContent = state.currentStep === 12 ? 'Fertig ✓' : 'Weiter →';
+            }
+        }
+
+        // ===== STEP 1: EXPERIENCE LEVEL =====
+        function selectExperienceLevel(level, element) {
+            state.experienceLevel = level;
+            document.querySelectorAll('#step1 .option-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // ===== STEP 2: EDUCATION STATUS =====
+        function selectEducationStatus(status, element) {
+            state.educationStatus = status;
+            document.querySelectorAll('#step2 .option-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // ===== STEP 3: TEMPLATE =====
+        function selectTemplate(index, element) {
+            state.selectedTemplate = index;
+            document.querySelectorAll('#step3 .template-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // ===== STEP 4: PERSONAL DATA =====
+        function uploadPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.photo = e.target.result;
+                    document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" />`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ===== STEP 5: PROFESSIONAL EXPERIENCE =====
+        function addExperience() {
+            state.experiences.push({
+                id: Date.now(),
+                jobTitle: '',
+                employer: '',
+                startDate: '',
+                endDate: '',
+                currentlyWorking: false,
+                description: ''
+            });
+            renderExperienceList();
+        }
+
+        function renderExperienceList() {
+            const list = document.getElementById('experienceList');
+            list.innerHTML = '';
+
+            if (state.experiences.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-light);">Klicken Sie auf "Weitere Stelle hinzufügen" um eine Position einzutragen.</p>';
+                return;
+            }
+
+            state.experiences.forEach((exp, index) => {
+                const section = document.createElement('div');
+                section.className = 'repeatable-section';
+                section.innerHTML = `
+                    <div class="repeatable-header">
+                        <div class="repeatable-title">Position ${index + 1}</div>
+                        <button class="btn-remove" onclick="removeExperience(${exp.id})">Entfernen</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jobtitel</label>
+                        <input type="text" class="form-input" value="${exp.jobTitle}"
+                               onchange="updateExperience(${exp.id}, 'jobTitle', this.value)"
+                               placeholder="z.B. Senior Developer">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Unternehmen</label>
+                        <input type="text" class="form-input" value="${exp.employer}"
+                               onchange="updateExperience(${exp.id}, 'employer', this.value)"
+                               placeholder="Unternehmen">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Von</label>
+                            <input type="date" class="form-input" value="${exp.startDate}"
+                                   onchange="updateExperience(${exp.id}, 'startDate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bis</label>
+                            <input type="date" class="form-input" value="${exp.endDate}"
+                                   onchange="updateExperience(${exp.id}, 'endDate', this.value)"
+                                   ${exp.currentlyWorking ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" ${exp.currentlyWorking ? 'checked' : ''}
+                               onchange="updateExperience(${exp.id}, 'currentlyWorking', this.checked)">
+                        Arbeite derzeit hier
+                    </label>
+                `;
+                list.appendChild(section);
+            });
+        }
+
+        function updateExperience(id, field, value) {
+            const exp = state.experiences.find(e => e.id === id);
+            if (exp) exp[field] = value;
+        }
+
+        function removeExperience(id) {
+            state.experiences = state.experiences.filter(e => e.id !== id);
+            renderExperienceList();
+        }
+
+        // ===== STEP 6: JOB DESCRIPTIONS =====
+        function populateJobSelector() {
+            const selector = document.getElementById('jobSelector');
+            selector.innerHTML = '<option value="">-- Bitte wählen Sie eine Position --</option>';
+
+            state.experiences.forEach((exp, index) => {
+                const option = document.createElement('option');
+                option.value = exp.id;
+                option.textContent = `${exp.jobTitle} - ${exp.employer}`;
+                selector.appendChild(option);
+            });
+        }
+
+        function loadJobForDescription() {
+            const jobId = document.getElementById('jobSelector').value;
+            if (!jobId) return;
+
+            const job = state.experiences.find(e => e.id == jobId);
+            if (job) {
+                document.getElementById('jobDescription').value = job.description || '';
+                generateJobSuggestions(job);
+            }
+        }
+
+        function generateJobSuggestions(job) {
+            const suggestions = [
+                'Verantwortlich für die Leitung von Projektteams',
+                'Implementierung und Optimierung von Geschäftsprozessen',
+                'Zusammenarbeit mit Stakeholdern und Kunden',
+                'Entwicklung von strategischen Konzepten',
+                'Mentoring von Junior Team-Mitgliedern',
+                'Verbesserte Effizienz um 30%',
+                'Erfolgreiche Projektumsetzung im Budget',
+                'Kundenbetreuung und Support'
+            ];
+
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = '';
+
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `
+                    <span>${suggestion}</span>
+                    <button class="suggestion-btn" onclick="addSuggestionToDescription('${suggestion}')">Hinzufügen</button>
+                `;
+                suggestionsList.appendChild(item);
+            });
+        }
+
+        function addSuggestionToDescription(suggestion) {
+            const textarea = document.getElementById('jobDescription');
+            textarea.value = textarea.value + (textarea.value ? '\n• ' : '• ') + suggestion;
+        }
+
+        // ===== STEP 7: EXPERIENCE REVIEW =====
+        function renderExperienceReview() {
+            const review = document.getElementById('experienceReview');
+            review.innerHTML = '';
+
+            if (state.experiences.length === 0) {
+                review.innerHTML = '<p>Keine Positionen eingetragen.</p>';
+                return;
+            }
+
+            state.experiences.forEach((exp, index) => {
+                const item = document.createElement('div');
+                item.className = 'repeatable-section';
+                item.innerHTML = `
+                    <div class="repeatable-title">${exp.jobTitle} - ${exp.employer}</div>
+                    <div style="margin-top: 1rem; color: var(--text-light); font-size: 0.875rem;">
+                        ${exp.startDate} bis ${exp.currentlyWorking ? 'Heute' : exp.endDate}
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--text);">
+                        ${exp.description}
+                    </div>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" style="font-size: 0.875rem;" onclick="editExperience(${exp.id})">Bearbeiten</button>
+                        <button class="btn-remove" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="removeExperience(${exp.id})">Löschen</button>
+                    </div>
+                `;
+                review.appendChild(item);
+            });
+        }
+
+        function editExperience(id) {
+            showStep(5);
+            // Focus on editing this experience
+        }
+
+        // ===== STEP 8: EDUCATION =====
+        function addEducation() {
+            state.educations.push({
+                id: Date.now(),
+                school: '',
+                fieldOfStudy: '',
+                startDate: '',
+                endDate: '',
+                grade: ''
+            });
+            renderEducationList();
+        }
+
+        function renderEducationList() {
+            const list = document.getElementById('educationList');
+            list.innerHTML = '';
+
+            if (state.educations.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-light);">Klicken Sie auf "Weitere Ausbildung hinzufügen" um eine Ausbildung einzutragen.</p>';
+                return;
+            }
+
+            state.educations.forEach((edu, index) => {
+                const section = document.createElement('div');
+                section.className = 'repeatable-section';
+                section.innerHTML = `
+                    <div class="repeatable-header">
+                        <div class="repeatable-title">Ausbildung ${index + 1}</div>
+                        <button class="btn-remove" onclick="removeEducation(${edu.id})">Entfernen</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Schule / Universität</label>
+                        <input type="text" class="form-input" value="${edu.school}"
+                               onchange="updateEducation(${edu.id}, 'school', this.value)"
+                               placeholder="Name der Institution">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Studienrichtung / Fachbereich</label>
+                        <input type="text" class="form-input" value="${edu.fieldOfStudy}"
+                               onchange="updateEducation(${edu.id}, 'fieldOfStudy', this.value)"
+                               placeholder="z.B. Informatik, Betriebswirtschaft">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Von</label>
+                            <input type="date" class="form-input" value="${edu.startDate}"
+                                   onchange="updateEducation(${edu.id}, 'startDate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bis</label>
+                            <input type="date" class="form-input" value="${edu.endDate}"
+                                   onchange="updateEducation(${edu.id}, 'endDate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Note/Abschluss</label>
+                            <input type="text" class="form-input" value="${edu.grade}"
+                                   onchange="updateEducation(${edu.id}, 'grade', this.value)"
+                                   placeholder="z.B. 1.5, Bestanden">
+                        </div>
+                    </div>
+                `;
+                list.appendChild(section);
+            });
+        }
+
+        function updateEducation(id, field, value) {
+            const edu = state.educations.find(e => e.id === id);
+            if (edu) edu[field] = value;
+        }
+
+        function removeEducation(id) {
+            state.educations = state.educations.filter(e => e.id !== id);
+            renderEducationList();
+        }
+
+        // ===== STEP 9: COMPETENCIES =====
+        function addLanguage() {
+            const lang = document.getElementById('newLanguage').value.trim();
+            if (lang) {
+                state.languages.push(lang);
+                document.getElementById('newLanguage').value = '';
+                renderCompetencies();
+            }
+        }
+
+        function addTechnicalSkill() {
+            const skill = document.getElementById('newTechnicalSkill').value.trim();
+            if (skill) {
+                state.technicalSkills.push(skill);
+                document.getElementById('newTechnicalSkill').value = '';
+                renderCompetencies();
+            }
+        }
+
+        function addSoftSkill() {
+            const skill = document.getElementById('newSoftSkill').value.trim();
+            if (skill) {
+                state.softSkills.push(skill);
+                document.getElementById('newSoftSkill').value = '';
+                renderCompetencies();
+            }
+        }
+
+        function renderCompetencies() {
+            // Render languages
+            const langsList = document.getElementById('languagesList');
+            langsList.innerHTML = state.languages.map((lang, idx) =>
+                `<span class="competency-tag">${lang} <button onclick="removeLanguage(${idx})">×</button></span>`
+            ).join('');
+
+            // Render technical skills
+            const techList = document.getElementById('technicalSkillsList');
+            techList.innerHTML = state.technicalSkills.map((skill, idx) =>
+                `<span class="competency-tag" style="background: var(--secondary);">${skill} <button onclick="removeTechnicalSkill(${idx})">×</button></span>`
+            ).join('');
+
+            // Render soft skills
+            const softList = document.getElementById('softSkillsList');
+            softList.innerHTML = state.softSkills.map((skill, idx) =>
+                `<span class="competency-tag" style="background: var(--accent);">${skill} <button onclick="removeSoftSkill(${idx})">×</button></span>`
+            ).join('');
+
+            // Generate tech skill suggestions based on job titles
+            generateTechSkillSuggestions();
+        }
+
+        function removeLanguage(idx) {
+            state.languages.splice(idx, 1);
+            renderCompetencies();
+        }
+
+        function removeTechnicalSkill(idx) {
+            state.technicalSkills.splice(idx, 1);
+            renderCompetencies();
+        }
+
+        function removeSoftSkill(idx) {
+            state.softSkills.splice(idx, 1);
+            renderCompetencies();
+        }
+
+        function generateTechSkillSuggestions() {
+            const suggestions = [
+                'Microsoft Office', 'Google Workspace', 'Salesforce',
+                'JavaScript', 'Python', 'Java', 'SQL',
+                'Figma', 'Adobe Creative Suite', 'Photoshop',
+                'Project Management', 'Agile/Scrum', 'Analytics'
+            ];
+
+            const suggestionsList = document.getElementById('techSuggestions');
+            if (suggestionsList) {
+                suggestionsList.innerHTML = suggestions.slice(0, 5).map(skill =>
+                    `<div class="suggestion-item">
+                        <span>${skill}</span>
+                        <button class="suggestion-btn" onclick="state.technicalSkills.push('${skill}'); renderCompetencies();">Hinzufügen</button>
+                    </div>`
+                ).join('');
+            }
+        }
+
+        // ===== STEP 11: SIGNATURE =====
+        function selectColor(element, color) {
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            state.signatureColor = color;
+        }
+
+        // ===== STEP 12: GENERATE PREVIEW & DOWNLOAD =====
+        function generateCVPreview() {
+            const vorname = document.getElementById('vorname')?.value || state.personalData.vorname || '';
+            const nachname = document.getElementById('nachname')?.value || state.personalData.nachname || '';
+            const email = document.getElementById('email')?.value || state.personalData.email || '';
+            const telefon = document.getElementById('telefon')?.value || state.personalData.telefon || '';
+
+            let html = `
+                <h1>${vorname} ${nachname}</h1>
+                <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
+                    ${email} | ${telefon}
+                </div>
+            `;
+
+            if (state.experiences.length > 0) {
+                html += '<h2>Berufserfahrung</h2>';
+                state.experiences.forEach(exp => {
+                    html += `
+                        <div class="cv-preview-entry">
+                            <strong>${exp.jobTitle}</strong>
+                            <em>${exp.employer} | ${exp.startDate} bis ${exp.currentlyWorking ? 'Heute' : exp.endDate}</em>
+                            <p>${exp.description}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            if (state.educations.length > 0) {
+                html += '<h2>Ausbildung</h2>';
+                state.educations.forEach(edu => {
+                    html += `
+                        <div class="cv-preview-entry">
+                            <strong>${edu.fieldOfStudy}</strong>
+                            <em>${edu.school} | ${edu.startDate} bis ${edu.endDate}</em>
+                            ${edu.grade ? `<p>Abschluss: ${edu.grade}</p>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            if (state.languages.length > 0 || state.technicalSkills.length > 0 || state.softSkills.length > 0) {
+                html += '<h2>Kompetenzen</h2>';
+                if (state.languages.length > 0) {
+                    html += '<strong>Sprachen:</strong> ' + state.languages.join(', ') + '<br>';
+                }
+                if (state.technicalSkills.length > 0) {
+                    html += '<strong>Technische Fähigkeiten:</strong> ' + state.technicalSkills.join(', ') + '<br>';
+                }
+                if (state.softSkills.length > 0) {
+                    html += '<strong>Soft Skills:</strong> ' + state.softSkills.join(', ');
+                }
+            }
+
+            document.getElementById('cvPreview').innerHTML = html;
+        }
+
+        function downloadPDF() {
+            const content = document.getElementById('cvPreview').innerText;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(content, 10, 10);
+            doc.save('Lebenslauf.pdf');
+            showDownloadSuccess();
+        }
+
+        function downloadWord() {
+            const content = document.getElementById('cvPreview').innerHTML;
+            const html = `<html><head><meta charset="UTF-8"></head><body>${content}</body></html>`;
+            const blob = new Blob([html], { type: 'application/msword' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Lebenslauf.doc';
+            link.click();
+            showDownloadSuccess();
+        }
+
+        function downloadText() {
+            const content = document.getElementById('cvPreview').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Lebenslauf.txt';
+            link.click();
+            showDownloadSuccess();
+        }
+
+        function showDownloadSuccess() {
+            alert('Lebenslauf erfolgreich heruntergeladen! ✓');
+        }
+
+        function createAnother() {
+            // Reset state
+            Object.assign(state, {
+                currentStep: 0,
+                experienceLevel: null,
+                educationStatus: null,
+                selectedTemplate: 0,
+                personalData: {},
+                experiences: [],
+                educations: [],
+                jobDescriptions: {},
+                languages: [],
+                technicalSkills: [],
+                softSkills: [],
+                certifications: '',
+                publications: '',
+                volunteering: '',
+                signatureStyle: 'standard',
+                signatureColor: '#000',
+                acceptSignature: true,
+                photo: null
+            });
+
+            document.getElementById('landingPage').classList.add('active');
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('navigationButtons').style.display = 'none';
+        }
+
+        // ===== VALIDATION =====
+        function validateCurrentStep() {
+            switch (state.currentStep) {
+                case 1:
+                    if (!state.experienceLevel) {
+                        alert('Bitte wählen Sie ein Erfahrungslevel.');
+                        return false;
+                    }
+                    return true;
+                case 2:
+                    if (!state.educationStatus) {
+                        alert('Bitte wählen Sie Ihren Ausbildungsstatus.');
+                        return false;
+                    }
+                    return true;
+                case 3:
+                    return true; // Template selection is optional
+                case 4:
+                    const vorname = document.getElementById('vorname')?.value.trim();
+                    const nachname = document.getElementById('nachname')?.value.trim();
+                    const email = document.getElementById('email')?.value.trim();
+                    if (!vorname || !nachname || !email) {
+                        alert('Bitte füllen Sie alle erforderlichen Felder aus (Vorname, Nachname, E-Mail).');
+                        return false;
+                    }
+                    // Save personal data
+                    state.personalData = {
+                        vorname, nachname,
+                        geburtsdatum: document.getElementById('geburtsdatum')?.value,
+                        email,
+                        telefon: document.getElementById('telefon')?.value,
+                        adresse: document.getElementById('adresse')?.value
+                    };
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        // ===== STORAGE =====
+        function saveProgress() {
+            localStorage.setItem('cvData', JSON.stringify(state));
+        }
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            updateProgress();
+            updateNavigationButtons();
+        });
+    </script>
+</body>
+</html>
