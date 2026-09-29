@@ -1307,8 +1307,213 @@
             setTimeout(() => notif.remove(), 3000);
         }
 
+        // ===== PHASE 6 WEEK 2: ADVANCED AI FEATURES =====
+
+        // Global AI engines (initialized after databases load)
+        let advancedAI = null;
+        let skillsDatabase = null;
+        let verbDatabase = null;
+        let industryClassifier = null;
+        let skillAutoCompleter = null;
+        let actionVerbOptimizer = null;
+        let keywordAnalyzer = null;
+
+        // Load and parse AI databases
+        async function loadAIDatabases() {
+            try {
+                // Load skills database
+                const skillsResponse = await fetch('skills-database.json');
+                skillsDatabase = await skillsResponse.json();
+
+                // Load action verbs database
+                const verbsResponse = await fetch('action-verbs-database.json');
+                verbDatabase = await verbsResponse.json();
+
+                console.log('AI Databases loaded successfully');
+                console.log('Skills:', skillsDatabase.totalSkills, 'across', skillsDatabase.industries.length, 'industries');
+                console.log('Action Verbs:', verbDatabase.totalVerbs, 'verbs loaded');
+
+                return { skillsDatabase, verbDatabase };
+            } catch (error) {
+                console.warn('Could not load AI databases locally, using fallback mode:', error.message);
+                return { skillsDatabase: null, verbDatabase: null };
+            }
+        }
+
+        // Initialize AI engines after databases load
+        async function initializeAIEngines() {
+            const { skillsDatabase: sDb, verbDatabase: vDb } = await loadAIDatabases();
+
+            if (sDb && vDb) {
+                // Initialize all AI engines
+                industryClassifier = {
+                    classify: (jobTitle, skills) => {
+                        // Detect industry from job title and skills
+                        const industries = Object.keys(sDb.industries);
+                        const text = (jobTitle + ' ' + skills.join(' ')).toLowerCase();
+                        let bestMatch = 'IT';
+                        let bestScore = 0;
+
+                        industries.forEach(industry => {
+                          const keywords = sDb.industries[industry].skills
+                            .slice(0, 5)
+                            .map(s => s.name.toLowerCase());
+                          const score = keywords.filter(k => text.includes(k)).length;
+                          if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = industry;
+                          }
+                        });
+                        return bestMatch;
+                      }
+                };
+
+                skillAutoCompleter = {
+                    suggest: (partial, industry = 'IT', limit = 5) => {
+                        if (partial.length < 2) return [];
+                        const lowerPartial = partial.toLowerCase();
+                        const industrySkills = sDb.industries[industry]?.skills || [];
+                        return industrySkills
+                            .filter(s => s.name.toLowerCase().startsWith(lowerPartial))
+                            .slice(0, limit)
+                            .map(s => ({ name: s.name, priority: s.priority, category: s.category }));
+                    }
+                };
+
+                actionVerbOptimizer = {
+                    optimize: (text, industry = 'IT') => {
+                        let optimized = text;
+                        const replacements = [];
+
+                        Object.entries(vDb.weakVerbMap).forEach(([weakVerb, data]) => {
+                            const regex = new RegExp(`\\b${weakVerb}\\b`, 'gi');
+                            if (regex.test(text)) {
+                                const powerVerbs = data.powerVerbs;
+                                const bestVerb = powerVerbs[0];
+                                optimized = optimized.replace(regex, bestVerb);
+                                replacements.push({ weak: weakVerb, power: bestVerb });
+                            }
+                        });
+
+                        return { optimized, replacements, score: Math.min(100, 50 + replacements.length * 5) };
+                    }
+                };
+
+                keywordAnalyzer = {
+                    analyze: (text) => {
+                        const words = (text.toLowerCase().match(/\b[a-zäöüß]+\b/g) || [])
+                            .filter(w => w.length > 3);
+                        const freq = {};
+                        words.forEach(w => freq[w] = (freq[w] || 0) + 1);
+
+                        return {
+                            keywords: Object.entries(freq)
+                                .map(([word, count]) => ({ word, count }))
+                                .sort((a, b) => b.count - a.count)
+                                .slice(0, 20),
+                            totalWords: words.length,
+                            uniqueKeywords: Object.keys(freq).length
+                        };
+                    }
+                };
+
+                console.log('AI engines initialized successfully');
+            } else {
+                console.log('AI engines disabled - databases not available');
+            }
+        }
+
+        // Enhanced AI Analysis with Phase 6 Week 2 features
+        function runAdvancedAIAnalysis() {
+            if (!industryClassifier || !skillAutoCompleter || !actionVerbOptimizer || !keywordAnalyzer) {
+                return; // Fall back to basic analysis
+            }
+
+            const cv = appState.currentCV;
+
+            // Detect industry
+            const detectedIndustry = industryClassifier.classify(
+                cv.experience?.[0]?.position || '',
+                cv.skills || []
+            );
+
+            appState.detectedIndustry = detectedIndustry;
+
+            // Analyze keywords
+            const fullText = [cv.summary, cv.skills?.join(' '), cv.experience?.map(e => e.description)?.join(' ')]
+                .filter(t => t).join(' ');
+            const keywordAnalysis = keywordAnalyzer.analyze(fullText);
+
+            // Optimize action verbs
+            const verbOptimization = actionVerbOptimizer.optimize(
+                cv.experience?.map(e => e.description)?.join(' ') || '',
+                detectedIndustry
+            );
+
+            // Generate advanced recommendations
+            const suggestions = [];
+
+            if (verbOptimization.replacements.length > 0) {
+                suggestions.push({
+                    type: 'optimization',
+                    priority: 'high',
+                    title: 'Verben optimieren',
+                    description: `${verbOptimization.replacements.length} schwache Verben können optimiert werden`,
+                    action: verbOptimization.replacements.map(r => `${r.weak} → ${r.power}`).join(', ')
+                });
+            }
+
+            // Store for use in suggestions panel
+            appState.advancedAnalysis = {
+                industry: detectedIndustry,
+                keywordAnalysis,
+                verbOptimization,
+                suggestions
+            };
+        }
+
+        // Add skill autocomplete to skills input
+        function initSkillAutocomplete() {
+            if (!skillAutoCompleter) return;
+
+            const skillsInput = document.getElementById('skills');
+            if (!skillsInput) return;
+
+            skillsInput.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const lastComma = value.lastIndexOf(',');
+                const currentInput = value.substring(lastComma + 1).trim();
+
+                if (currentInput.length >= 2) {
+                    const suggestions = skillAutoCompleter.suggest(
+                        currentInput,
+                        appState.detectedIndustry || 'IT',
+                        3
+                    );
+
+                    if (suggestions.length > 0) {
+                        // Show skill suggestions (could be enhanced with UI)
+                        console.log('Skill suggestions:', suggestions.map(s => s.name).join(', '));
+                    }
+                }
+            });
+        }
+
+        // Override original runAIAnalysis to include advanced features
+        const originalRunAIAnalysis = runAIAnalysis;
+        runAIAnalysis = function() {
+            originalRunAIAnalysis();
+            if (industryClassifier) {
+                runAdvancedAIAnalysis();
+            }
+        };
+
         // Initialize on load
-        window.addEventListener('load', initApp);
+        window.addEventListener('load', async () => {
+            await initializeAIEngines();
+            initSkillAutocomplete();
+            await initApp();
+        });
 
         // Close modals on background click
         document.addEventListener('click', (e) => {

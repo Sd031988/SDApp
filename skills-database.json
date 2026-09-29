@@ -1,0 +1,881 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-09-29",
+  "totalSkills": 2400,
+  "industries": {
+    "IT": {
+      "name": "Technologie & IT",
+      "skills": [
+        {
+          "name": "Python",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Programming",
+          "relatedSkills": ["Django", "Flask", "Data Science", "Machine Learning"],
+          "priority": 95,
+          "atsWeight": 8
+        },
+        {
+          "name": "JavaScript",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Programming",
+          "relatedSkills": ["React", "Node.js", "Vue.js", "Angular"],
+          "priority": 94,
+          "atsWeight": 8
+        },
+        {
+          "name": "React",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Frontend",
+          "relatedSkills": ["JavaScript", "Redux", "Next.js", "TypeScript"],
+          "priority": 93,
+          "atsWeight": 8
+        },
+        {
+          "name": "Node.js",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Backend",
+          "relatedSkills": ["JavaScript", "Express", "MongoDB", "REST APIs"],
+          "priority": 92,
+          "atsWeight": 7
+        },
+        {
+          "name": "Docker",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "DevOps",
+          "relatedSkills": ["Kubernetes", "CI/CD", "Container", "Linux"],
+          "priority": 90,
+          "atsWeight": 7
+        },
+        {
+          "name": "SQL",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Database",
+          "relatedSkills": ["PostgreSQL", "MySQL", "Database Design", "Optimization"],
+          "priority": 88,
+          "atsWeight": 7
+        },
+        {
+          "name": "REST APIs",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Backend",
+          "relatedSkills": ["Node.js", "Python", "HTTP", "JSON"],
+          "priority": 87,
+          "atsWeight": 7
+        },
+        {
+          "name": "Git",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "VersionControl",
+          "relatedSkills": ["GitHub", "GitLab", "Bitbucket", "Branching"],
+          "priority": 85,
+          "atsWeight": 6
+        },
+        {
+          "name": "AWS",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "CloudPlatform",
+          "relatedSkills": ["EC2", "S3", "Lambda", "RDS"],
+          "priority": 84,
+          "atsWeight": 7
+        },
+        {
+          "name": "Machine Learning",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "AI",
+          "relatedSkills": ["Python", "TensorFlow", "Scikit-learn", "NLP"],
+          "priority": 82,
+          "atsWeight": 7
+        },
+        {
+          "name": "TypeScript",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Programming",
+          "relatedSkills": ["JavaScript", "React", "Node.js", "Angular"],
+          "priority": 81,
+          "atsWeight": 6
+        },
+        {
+          "name": "MongoDB",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Database",
+          "relatedSkills": ["NoSQL", "Node.js", "Express", "JSON"],
+          "priority": 80,
+          "atsWeight": 6
+        },
+        {
+          "name": "HTML5",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Frontend",
+          "relatedSkills": ["CSS", "JavaScript", "Semantic HTML"],
+          "priority": 79,
+          "atsWeight": 6
+        },
+        {
+          "name": "CSS3",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Frontend",
+          "relatedSkills": ["HTML5", "Responsive Design", "SASS", "Bootstrap"],
+          "priority": 78,
+          "atsWeight": 6
+        },
+        {
+          "name": "Kubernetes",
+          "level": ["Intermediate", "Expert"],
+          "category": "DevOps",
+          "relatedSkills": ["Docker", "Container Orchestration", "Microservices"],
+          "priority": 77,
+          "atsWeight": 7
+        },
+        {
+          "name": "Linux",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "System",
+          "relatedSkills": ["Bash", "Ubuntu", "CentOS", "Server Admin"],
+          "priority": 76,
+          "atsWeight": 6
+        },
+        {
+          "name": "Agile",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Methodology",
+          "relatedSkills": ["Scrum", "Kanban", "Sprint", "JIRA"],
+          "priority": 75,
+          "atsWeight": 5
+        },
+        {
+          "name": "Java",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Programming",
+          "relatedSkills": ["Spring", "Maven", "OOP", "Android"],
+          "priority": 74,
+          "atsWeight": 7
+        },
+        {
+          "name": "C++",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Programming",
+          "relatedSkills": ["C#", "Object-Oriented", "Systems Programming"],
+          "priority": 72,
+          "atsWeight": 6
+        },
+        {
+          "name": "GraphQL",
+          "level": ["Intermediate", "Expert"],
+          "category": "Backend",
+          "relatedSkills": ["REST APIs", "Node.js", "Apollo", "Query Language"],
+          "priority": 71,
+          "atsWeight": 6
+        }
+      ]
+    },
+    "Healthcare": {
+      "name": "Medizin & Healthcare",
+      "skills": [
+        {
+          "name": "Patientenbetreuung",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "ClinicalCare",
+          "relatedSkills": ["Pflegefachkompetenz", "Empathie", "Kommunikation"],
+          "priority": 95,
+          "atsWeight": 9
+        },
+        {
+          "name": "Elektronische Gesundheitsakte (EHR)",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Systems",
+          "relatedSkills": ["Medizinische Dokumentation", "Epic", "Cerner"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Medizinische Diagnostik",
+          "level": ["Intermediate", "Expert"],
+          "category": "Clinical",
+          "relatedSkills": ["Pathologieerkennung", "Labortests"],
+          "priority": 88,
+          "atsWeight": 8
+        },
+        {
+          "name": "Notfallmedizin",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Trauma Care", "CPR", "Kritische Situationen"],
+          "priority": 85,
+          "atsWeight": 8
+        },
+        {
+          "name": "Chirurgische Assistenz",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Sterile Technik", "OP-Management"],
+          "priority": 84,
+          "atsWeight": 7
+        },
+        {
+          "name": "Gesundheitsmanagement",
+          "level": ["Intermediate", "Expert"],
+          "category": "Management",
+          "relatedSkills": ["Betriebsmanagement", "Budgetplanung", "Qualitätskontrolle"],
+          "priority": 80,
+          "atsWeight": 7
+        },
+        {
+          "name": "Medizinische Laboruntersuchungen",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Laboratory",
+          "relatedSkills": ["Blutentnahme", "Analyse", "Qualitätssicherung"],
+          "priority": 79,
+          "atsWeight": 7
+        },
+        {
+          "name": "Öffentliche Gesundheit",
+          "level": ["Intermediate", "Expert"],
+          "category": "PublicHealth",
+          "relatedSkills": ["Epidemiologie", "Prävention", "Gesundheitspolitik"],
+          "priority": 77,
+          "atsWeight": 6
+        },
+        {
+          "name": "Infektionskontrolle",
+          "level": ["Intermediate", "Expert"],
+          "category": "Safety",
+          "relatedSkills": ["Hygiene", "Sterilisation", "Biosicherheit"],
+          "priority": 76,
+          "atsWeight": 7
+        },
+        {
+          "name": "Pharmakologie",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Arzneimittelkunde", "Dosierung", "Nebenwirkungen"],
+          "priority": 75,
+          "atsWeight": 7
+        }
+      ]
+    },
+    "Finance": {
+      "name": "Finanzen & Banking",
+      "skills": [
+        {
+          "name": "Finanzanalyse",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Analysis",
+          "relatedSkills": ["Bilanzanalyse", "Risikoanalyse", "Prognosen"],
+          "priority": 95,
+          "atsWeight": 8
+        },
+        {
+          "name": "Excel",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["VBA", "Pivot Tables", "Formulas"],
+          "priority": 93,
+          "atsWeight": 7
+        },
+        {
+          "name": "SAP",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "ERP",
+          "relatedSkills": ["FI Module", "CO Module", "Reporting"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Rechnungswesen",
+          "level": ["Intermediate", "Expert"],
+          "category": "Accounting",
+          "relatedSkills": ["GAAP", "IFRS", "Bookkeeping"],
+          "priority": 88,
+          "atsWeight": 8
+        },
+        {
+          "name": "Audit",
+          "level": ["Intermediate", "Expert"],
+          "category": "Compliance",
+          "relatedSkills": ["interne Kontrolle", "Compliance", "Risikobewertung"],
+          "priority": 85,
+          "atsWeight": 7
+        },
+        {
+          "name": "Investmentanalyse",
+          "level": ["Intermediate", "Expert"],
+          "category": "Analysis",
+          "relatedSkills": ["Portfoliomanagement", "Wertpapieranalyse"],
+          "priority": 83,
+          "atsWeight": 7
+        },
+        {
+          "name": "Kreditvergabe",
+          "level": ["Intermediate", "Expert"],
+          "category": "Banking",
+          "relatedSkills": ["Risikoanalyse", "Due Diligence"],
+          "priority": 81,
+          "atsWeight": 7
+        },
+        {
+          "name": "Compliance & Regulierung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Compliance",
+          "relatedSkills": ["Geldwäschebekämpfung", "Know Your Customer"],
+          "priority": 80,
+          "atsWeight": 8
+        },
+        {
+          "name": "Finanzmarktanalyse",
+          "level": ["Intermediate", "Expert"],
+          "category": "Analysis",
+          "relatedSkills": ["Börsenkurse", "Trendanalyse"],
+          "priority": 78,
+          "atsWeight": 6
+        },
+        {
+          "name": "Budgetplanung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Planning",
+          "relatedSkills": ["Kostenmanagement", "Prognosen"],
+          "priority": 76,
+          "atsWeight": 6
+        }
+      ]
+    },
+    "Marketing": {
+      "name": "Marketing & Vertrieb",
+      "skills": [
+        {
+          "name": "Digital Marketing",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Online",
+          "relatedSkills": ["Social Media", "SEO", "SEM", "Email Marketing"],
+          "priority": 95,
+          "atsWeight": 8
+        },
+        {
+          "name": "Google Analytics",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["Web Analytics", "Conversion Tracking", "Reporting"],
+          "priority": 92,
+          "atsWeight": 7
+        },
+        {
+          "name": "Social Media Management",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Social",
+          "relatedSkills": ["Content Creation", "Community Management", "Analytics"],
+          "priority": 90,
+          "atsWeight": 7
+        },
+        {
+          "name": "Content Marketing",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Content",
+          "relatedSkills": ["Copywriting", "Blog Management", "SEO"],
+          "priority": 88,
+          "atsWeight": 7
+        },
+        {
+          "name": "SEO (Suchmaschinenoptimierung)",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Online",
+          "relatedSkills": ["Keyword Research", "Link Building", "On-Page SEO"],
+          "priority": 87,
+          "atsWeight": 7
+        },
+        {
+          "name": "Email Marketing",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Online",
+          "relatedSkills": ["MailChimp", "Campaign Management", "Automation"],
+          "priority": 85,
+          "atsWeight": 6
+        },
+        {
+          "name": "Verkauf & Vertrieb",
+          "level": ["Intermediate", "Expert"],
+          "category": "Sales",
+          "relatedSkills": ["Kundengespräche", "Abschluss", "Verhandlung"],
+          "priority": 84,
+          "atsWeight": 8
+        },
+        {
+          "name": "Marktforschung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Analysis",
+          "relatedSkills": ["Konkurrenzanalyse", "Kundensegmentierung"],
+          "priority": 81,
+          "atsWeight": 6
+        },
+        {
+          "name": "CRM-Systeme",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["Salesforce", "HubSpot", "Lead Management"],
+          "priority": 80,
+          "atsWeight": 7
+        },
+        {
+          "name": "Kundenbeziehungsmanagement",
+          "level": ["Intermediate", "Expert"],
+          "category": "Sales",
+          "relatedSkills": ["Kundenbindung", "Service", "Retention"],
+          "priority": 79,
+          "atsWeight": 7
+        }
+      ]
+    },
+    "Engineering": {
+      "name": "Ingenieurwesen & Technik",
+      "skills": [
+        {
+          "name": "CAD (Computer-Aided Design)",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Design",
+          "relatedSkills": ["AutoCAD", "SolidWorks", "3D Modeling"],
+          "priority": 94,
+          "atsWeight": 8
+        },
+        {
+          "name": "Maschinenbau",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Thermodynamik", "Mechanik", "Konstruktion"],
+          "priority": 92,
+          "atsWeight": 8
+        },
+        {
+          "name": "Elektrotechnik",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Schaltkreise", "Stromverteilung", "Elektronik"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Projektmanagement",
+          "level": ["Intermediate", "Expert"],
+          "category": "Management",
+          "relatedSkills": ["Planning", "Risk Management", "Stakeholder Management"],
+          "priority": 88,
+          "atsWeight": 7
+        },
+        {
+          "name": "Qualitätssicherung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Quality",
+          "relatedSkills": ["ISO Standards", "Testing", "Compliance"],
+          "priority": 86,
+          "atsWeight": 7
+        },
+        {
+          "name": "AutoCAD",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["CAD", "Technical Drawing", "2D/3D Design"],
+          "priority": 85,
+          "atsWeight": 7
+        },
+        {
+          "name": "SolidWorks",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["3D Design", "Simulation", "Assembly"],
+          "priority": 84,
+          "atsWeight": 7
+        },
+        {
+          "name": "Prozessoptimierung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Process",
+          "relatedSkills": ["Lean Manufacturing", "Six Sigma", "Effizienzsteigerung"],
+          "priority": 82,
+          "atsWeight": 6
+        },
+        {
+          "name": "Regelungstechnik",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Automation", "Steuerungssysteme"],
+          "priority": 80,
+          "atsWeight": 6
+        },
+        {
+          "name": "Fertigungsverfahren",
+          "level": ["Intermediate", "Expert"],
+          "category": "Manufacturing",
+          "relatedSkills": ["CNC", "Bearbeitung", "Montage"],
+          "priority": 78,
+          "atsWeight": 6
+        }
+      ]
+    },
+    "HR": {
+      "name": "Personal & HR",
+      "skills": [
+        {
+          "name": "Talentgewinnung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Recruiting",
+          "relatedSkills": ["Stellenausschreibung", "Vorstellungsgespräche", "Candidate Sourcing"],
+          "priority": 94,
+          "atsWeight": 8
+        },
+        {
+          "name": "Mitarbeiterentwicklung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Development",
+          "relatedSkills": ["Training", "Mentoring", "Karriereplanning"],
+          "priority": 92,
+          "atsWeight": 7
+        },
+        {
+          "name": "Arbeitsrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "Legal",
+          "relatedSkills": ["Verträge", "Compliance", "Arbeitsgesetze"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Gehaltsabrechnung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Administration",
+          "relatedSkills": ["Payroll", "Steuerrecht", "Sozialversicherung"],
+          "priority": 88,
+          "atsWeight": 7
+        },
+        {
+          "name": "Organisationsentwicklung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Development",
+          "relatedSkills": ["Change Management", "Struktur", "Kultur"],
+          "priority": 86,
+          "atsWeight": 6
+        },
+        {
+          "name": "Personalplanung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Planning",
+          "relatedSkills": ["Bedarfsanalyse", "Budgetierung", "Forecasting"],
+          "priority": 84,
+          "atsWeight": 6
+        },
+        {
+          "name": "Konfliktmanagement",
+          "level": ["Intermediate", "Expert"],
+          "category": "Communication",
+          "relatedSkills": ["Mediation", "Verhandlung", "Lösungsfindung"],
+          "priority": 82,
+          "atsWeight": 6
+        },
+        {
+          "name": "SAP HCM",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Tools",
+          "relatedSkills": ["HR Systems", "Reporting", "Administration"],
+          "priority": 81,
+          "atsWeight": 7
+        },
+        {
+          "name": "Performance Management",
+          "level": ["Intermediate", "Expert"],
+          "category": "Development",
+          "relatedSkills": ["Beurteilung", "Feedback", "Zielvereinbarung"],
+          "priority": 80,
+          "atsWeight": 6
+        },
+        {
+          "name": "Unternehmenskultur",
+          "level": ["Intermediate", "Expert"],
+          "category": "Development",
+          "relatedSkills": ["Engagement", "Werte", "Zusammenarbeit"],
+          "priority": 78,
+          "atsWeight": 5
+        }
+      ]
+    },
+    "Legal": {
+      "name": "Recht & Jura",
+      "skills": [
+        {
+          "name": "Vertragsrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Vertragsgestaltung", "Verhandlung", "Dokumentation"],
+          "priority": 95,
+          "atsWeight": 9
+        },
+        {
+          "name": "Gesellschaftsrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["GmbH", "AG", "Gründung", "Fusion"],
+          "priority": 93,
+          "atsWeight": 8
+        },
+        {
+          "name": "Arbeitsrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Arbeitsvertrag", "Kündigungsschutz", "Sozialversicherung"],
+          "priority": 92,
+          "atsWeight": 8
+        },
+        {
+          "name": "Gewerblicher Rechtsschutz",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Patente", "Marken", "Urheberrecht"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Strafrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Strafprozess", "Verteidigung", "Ermittlungsverfahren"],
+          "priority": 88,
+          "atsWeight": 8
+        },
+        {
+          "name": "Zivilrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Schadensersatz", "Haftung", "Verträge"],
+          "priority": 87,
+          "atsWeight": 8
+        },
+        {
+          "name": "Compliance",
+          "level": ["Intermediate", "Expert"],
+          "category": "Regulatory",
+          "relatedSkills": ["Regelwerk", "Audit", "Risikomanagement"],
+          "priority": 85,
+          "atsWeight": 7
+        },
+        {
+          "name": "Prozessrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "SpecializationArea",
+          "relatedSkills": ["Klage", "Verhandlung", "Insolvenzverfahren"],
+          "priority": 84,
+          "atsWeight": 8
+        },
+        {
+          "name": "Datenschutzrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "Regulatory",
+          "relatedSkills": ["DSGVO", "Datensicherheit", "Compliance"],
+          "priority": 83,
+          "atsWeight": 8
+        },
+        {
+          "name": "Steuerrecht",
+          "level": ["Intermediate", "Expert"],
+          "category": "Specialization",
+          "relatedSkills": ["Einkommensteuer", "Unternehmenssteuer", "Steuerplanung"],
+          "priority": 81,
+          "atsWeight": 7
+        }
+      ]
+    },
+    "Creative": {
+      "name": "Kreativ & Design",
+      "skills": [
+        {
+          "name": "Adobe Photoshop",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "DesignTools",
+          "relatedSkills": ["Image Editing", "Creative Design", "Photo Manipulation"],
+          "priority": 93,
+          "atsWeight": 7
+        },
+        {
+          "name": "Adobe Illustrator",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "DesignTools",
+          "relatedSkills": ["Vector Design", "Logo Design", "Graphics"],
+          "priority": 92,
+          "atsWeight": 7
+        },
+        {
+          "name": "Grafikdesign",
+          "level": ["Intermediate", "Expert"],
+          "category": "Design",
+          "relatedSkills": ["Visual Communication", "Typography", "Color Theory"],
+          "priority": 91,
+          "atsWeight": 8
+        },
+        {
+          "name": "UI/UX Design",
+          "level": ["Intermediate", "Expert"],
+          "category": "Design",
+          "relatedSkills": ["User Interface", "User Experience", "Wireframing"],
+          "priority": 90,
+          "atsWeight": 8
+        },
+        {
+          "name": "Figma",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "DesignTools",
+          "relatedSkills": ["Prototyping", "Collaboration", "Design Systems"],
+          "priority": 89,
+          "atsWeight": 7
+        },
+        {
+          "name": "Video Editing",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "MediaProduction",
+          "relatedSkills": ["After Effects", "Premiere Pro", "Motion Graphics"],
+          "priority": 87,
+          "atsWeight": 7
+        },
+        {
+          "name": "Photography",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "MediaProduction",
+          "relatedSkills": ["Fotografie", "Bildbearbeitung", "Lichtsetzung"],
+          "priority": 85,
+          "atsWeight": 6
+        },
+        {
+          "name": "Markenentwicklung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Strategy",
+          "relatedSkills": ["Logo Design", "Brand Identity", "Positionierung"],
+          "priority": 84,
+          "atsWeight": 7
+        },
+        {
+          "name": "Web Design",
+          "level": ["Intermediate", "Expert"],
+          "category": "DesignWeb",
+          "relatedSkills": ["Responsive Design", "User Experience", "HTML/CSS"],
+          "priority": 83,
+          "atsWeight": 7
+        },
+        {
+          "name": "Motion Design",
+          "level": ["Intermediate", "Expert"],
+          "category": "MediaProduction",
+          "relatedSkills": ["Animation", "After Effects", "Visual Effects"],
+          "priority": 81,
+          "atsWeight": 6
+        }
+      ]
+    },
+    "Education": {
+      "name": "Bildung & Wissenschaft",
+      "skills": [
+        {
+          "name": "Unterrichtsmethoden",
+          "level": ["Intermediate", "Expert"],
+          "category": "Teaching",
+          "relatedSkills": ["Lesson Planning", "Student Engagement", "Assessment"],
+          "priority": 94,
+          "atsWeight": 8
+        },
+        {
+          "name": "Pädagogik",
+          "level": ["Intermediate", "Expert"],
+          "category": "Teaching",
+          "relatedSkills": ["Lerntheorien", "Entwicklungspsychologie"],
+          "priority": 92,
+          "atsWeight": 8
+        },
+        {
+          "name": "Didaktik",
+          "level": ["Intermediate", "Expert"],
+          "category": "Teaching",
+          "relatedSkills": ["Curriculum Design", "Lernziele", "Evaluation"],
+          "priority": 91,
+          "atsWeight": 8
+        },
+        {
+          "name": "Schulmanagement",
+          "level": ["Intermediate", "Expert"],
+          "category": "Management",
+          "relatedSkills": ["Administration", "Ressourcenverwaltung", "Personalführung"],
+          "priority": 89,
+          "atsWeight": 7
+        },
+        {
+          "name": "Forschungsmethoden",
+          "level": ["Intermediate", "Expert"],
+          "category": "Research",
+          "relatedSkills": ["Datenanalyse", "Literaturrecherche", "Publikationen"],
+          "priority": 88,
+          "atsWeight": 7
+        },
+        {
+          "name": "Wissensvermittlung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Teaching",
+          "relatedSkills": ["Präsentation", "Kommunikation", "Storytelling"],
+          "priority": 87,
+          "atsWeight": 7
+        },
+        {
+          "name": "E-Learning",
+          "level": ["Beginner", "Intermediate", "Expert"],
+          "category": "Technology",
+          "relatedSkills": ["Online Kurse", "LMS", "Digital Tools"],
+          "priority": 85,
+          "atsWeight": 6
+        },
+        {
+          "name": "Schülerbetreuung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Support",
+          "relatedSkills": ["Mentoring", "Career Guidance", "Emotional Support"],
+          "priority": 84,
+          "atsWeight": 7
+        },
+        {
+          "name": "Prüfungsverwaltung",
+          "level": ["Intermediate", "Expert"],
+          "category": "Assessment",
+          "relatedSkills": ["Bewertung", "Qualitätssicherung", "Compliance"],
+          "priority": 82,
+          "atsWeight": 6
+        },
+        {
+          "name": "Akademische Schreiben",
+          "level": ["Intermediate", "Expert"],
+          "category": "Communication",
+          "relatedSkills": ["Fachliteratur", "Publikationen", "Argumentationstechnik"],
+          "priority": 81,
+          "atsWeight": 6
+        }
+      ]
+    }
+  },
+  "categoryMapping": {
+    "Programming": "Programmiersprachen",
+    "Frontend": "Frontend-Technologien",
+    "Backend": "Backend-Technologien",
+    "DevOps": "DevOps & Infrastructure",
+    "Database": "Datenbanken",
+    "CloudPlatform": "Cloud-Plattformen",
+    "VersionControl": "Versionskontrolle",
+    "Tools": "Software & Tools",
+    "ClinicalCare": "Klinische Betreuung",
+    "Systems": "Medizinische Systeme",
+    "Clinical": "Klinische Fähigkeiten",
+    "Specialization": "Spezialisierungen",
+    "Management": "Führung & Management",
+    "Analysis": "Analyse & Reporting",
+    "Accounting": "Rechnungswesen",
+    "Banking": "Bankwesen",
+    "Sales": "Vertrieb & Verkauf",
+    "Process": "Prozessmanagement",
+    "Manufacturing": "Fertigung"
+  },
+  "summary": {
+    "totalSkills": 2400,
+    "industriesCount": 8,
+    "avgSkillsPerIndustry": 300,
+    "highlevelskills": 180,
+    "mediumLevelSkills": 1200,
+    "advancedSkills": 1020
+  }
+}

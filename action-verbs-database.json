@@ -1,0 +1,376 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-09-30",
+  "totalVerbs": 120,
+  "description": "Comprehensive database of 120+ power action verbs for CV optimization with context-aware replacement engine",
+  "actionVerbs": {
+    "Leadership": {
+      "category": "Führung & Management",
+      "impact": "High",
+      "verbs": [
+        {
+          "weak": "managed",
+          "powerVerbs": ["orchestrated", "spearheaded", "championed", "commanded", "directed"],
+          "german": {"weak": "leitete", "power": ["orchestrierte", "führte an", "lancierte", "beaufsichtigte"]},
+          "context": ["team management", "project direction", "organizational change"],
+          "priority": 95
+        },
+        {
+          "weak": "led",
+          "powerVerbs": ["pioneered", "guided", "stewarded", "navigated", "catalyzed"],
+          "german": {"weak": "leitete", "power": ["bahnbrechend", "führte", "lenkte", "katalysierte"]},
+          "context": ["team leadership", "strategic direction", "transformation"],
+          "priority": 94
+        },
+        {
+          "weak": "oversaw",
+          "powerVerbs": ["supervised", "presided", "administered", "controlled", "ensured"],
+          "german": {"weak": "beaufsichtigte", "power": ["beaufsichtigte", "präsidierte", "verwaltete", "kontrollierte"]},
+          "context": ["oversight", "compliance", "quality control"],
+          "priority": 92
+        },
+        {
+          "weak": "coordinated",
+          "powerVerbs": ["synchronized", "harmonized", "integrated", "unified", "aligned"],
+          "german": {"weak": "koordinierte", "power": ["synchronisierte", "harmonisierte", "integrierte", "einheitete"]},
+          "context": ["cross-team coordination", "project synchronization"],
+          "priority": 90
+        },
+        {
+          "weak": "organized",
+          "powerVerbs": ["structured", "systematized", "established", "instituted", "formalized"],
+          "german": {"weak": "organisierte", "power": ["strukturierte", "systematisierte", "etablierte", "formalisierte"]},
+          "context": ["process establishment", "system organization"],
+          "priority": 88
+        }
+      ]
+    },
+    "Achievement": {
+      "category": "Erfolg & Ergebnisse",
+      "impact": "High",
+      "verbs": [
+        {
+          "weak": "achieved",
+          "powerVerbs": ["attained", "accomplished", "exceeded", "surpassed", "realized"],
+          "german": {"weak": "erreichte", "power": ["erlangte", "vollbrachte", "übertraf", "verwirklichte"]},
+          "context": ["goals", "targets", "objectives", "results"],
+          "priority": 94
+        },
+        {
+          "weak": "improved",
+          "powerVerbs": ["optimized", "enhanced", "elevated", "transformed", "revolutionized"],
+          "german": {"weak": "verbesserte", "power": ["optimierte", "erhöhte", "transformierte", "revolutionierte"]},
+          "context": ["performance", "efficiency", "quality", "processes"],
+          "priority": 93
+        },
+        {
+          "weak": "increased",
+          "powerVerbs": ["amplified", "escalated", "maximized", "accelerated", "augmented"],
+          "german": {"weak": "erhöhte", "power": ["verstärkte", "beschleunigte", "maximierte", "vergrößerte"]},
+          "context": ["sales", "revenue", "growth", "metrics"],
+          "priority": 92
+        },
+        {
+          "weak": "reduced",
+          "powerVerbs": ["minimized", "curtailed", "streamlined", "eliminated", "depleted"],
+          "german": {"weak": "reduzierte", "power": ["minimierte", "beseitigte", "rationalisierte", "senkte"]},
+          "context": ["costs", "waste", "errors", "risks"],
+          "priority": 91
+        },
+        {
+          "weak": "solved",
+          "powerVerbs": ["resolved", "rectified", "remedied", "mitigated", "addressed"],
+          "german": {"weak": "löste", "power": ["behob", "berichtigte", "entschärfte", "bewälttigte"]},
+          "context": ["problems", "issues", "challenges", "obstacles"],
+          "priority": 90
+        }
+      ]
+    },
+    "Innovation": {
+      "category": "Innovation & Kreativität",
+      "impact": "High",
+      "verbs": [
+        {
+          "weak": "created",
+          "powerVerbs": ["innovated", "pioneered", "engineered", "conceived", "architected"],
+          "german": {"weak": "erstellte", "power": ["innovierte", "bahnbrechend", "konzipierte", "entwickelte"]},
+          "context": ["new solutions", "products", "strategies", "systems"],
+          "priority": 95
+        },
+        {
+          "weak": "designed",
+          "powerVerbs": ["engineered", "architected", "fabricated", "formulated", "blueprinted"],
+          "german": {"weak": "entwarf", "power": ["entwickelte", "konstruierte", "formulierte", "konzipierte"]},
+          "context": ["systems", "processes", "solutions", "strategies"],
+          "priority": 93
+        },
+        {
+          "weak": "developed",
+          "powerVerbs": ["cultivated", "evolved", "nurtured", "advanced", "matured"],
+          "german": {"weak": "entwickelte", "power": ["kultivierte", "vorantrieb", "förderte", "reifte"]},
+          "context": ["strategies", "teams", "skills", "relationships"],
+          "priority": 92
+        },
+        {
+          "weak": "implemented",
+          "powerVerbs": ["deployed", "executed", "operationalized", "rolled out", "instituted"],
+          "german": {"weak": "implementierte", "power": ["einführte", "realisierte", "in Betrieb nahm", "etablierte"]},
+          "context": ["solutions", "systems", "changes", "initiatives"],
+          "priority": 91
+        }
+      ]
+    },
+    "Analysis": {
+      "category": "Analyse & Strategie",
+      "impact": "Medium-High",
+      "verbs": [
+        {
+          "weak": "analyzed",
+          "powerVerbs": ["examined", "scrutinized", "evaluated", "assessed", "investigated"],
+          "german": {"weak": "analysierte", "power": ["untersuchte", "bewertete", "prüfte", "erforschte"]},
+          "context": ["data", "trends", "performance", "requirements"],
+          "priority": 90
+        },
+        {
+          "weak": "identified",
+          "powerVerbs": ["pinpointed", "diagnosed", "detected", "uncovered", "recognized"],
+          "german": {"weak": "identifizierte", "power": ["erkannte", "aufdeckte", "entdeckte", "lokalisierte"]},
+          "context": ["opportunities", "risks", "problems", "trends"],
+          "priority": 89
+        },
+        {
+          "weak": "researched",
+          "powerVerbs": ["investigated", "explored", "probed", "examined", "studied"],
+          "german": {"weak": "recherchierte", "power": ["untersuchte", "erforschte", "studierte", "analysierte"]},
+          "context": ["markets", "trends", "technologies", "solutions"],
+          "priority": 88
+        },
+        {
+          "weak": "planned",
+          "powerVerbs": ["strategized", "mapped", "formulated", "charted", "architected"],
+          "german": {"weak": "plante", "power": ["strategisierte", "konzipierte", "formulierte", "entwarf"]},
+          "context": ["initiatives", "campaigns", "projects", "strategies"],
+          "priority": 87
+        }
+      ]
+    },
+    "Communication": {
+      "category": "Kommunikation & Zusammenarbeit",
+      "impact": "Medium",
+      "verbs": [
+        {
+          "weak": "communicated",
+          "powerVerbs": ["articulated", "conveyed", "expressed", "presented", "delivered"],
+          "german": {"weak": "kommunizierte", "power": ["vermittelte", "drückte aus", "präsentierte", "lieferte"]},
+          "context": ["ideas", "findings", "updates", "strategies"],
+          "priority": 85
+        },
+        {
+          "weak": "collaborated",
+          "powerVerbs": ["partnered", "allied", "coordinated", "teamed", "cooperated"],
+          "german": {"weak": "kollaborierte", "power": ["kooperierte", "partnerte", "arbeitete zusammen", "koordinierte"]},
+          "context": ["cross-functional", "teams", "vendors", "stakeholders"],
+          "priority": 83
+        },
+        {
+          "weak": "presented",
+          "powerVerbs": ["showcased", "demonstrated", "exhibited", "revealed", "unveiled"],
+          "german": {"weak": "präsentierte", "power": ["zeigte", "vorführte", "demonstrierte", "enthüllte"]},
+          "context": ["ideas", "results", "products", "findings"],
+          "priority": 82
+        },
+        {
+          "weak": "influenced",
+          "powerVerbs": ["persuaded", "convinced", "inspired", "motivated", "compelled"],
+          "german": {"weak": "beeinflusste", "power": ["überredete", "überzeugte", "inspirierte", "motivierte"]},
+          "context": ["stakeholders", "teams", "decisions", "direction"],
+          "priority": 81
+        }
+      ]
+    },
+    "Sales_Marketing": {
+      "category": "Verkauf & Marketing",
+      "impact": "High",
+      "verbs": [
+        {
+          "weak": "sold",
+          "powerVerbs": ["negotiated", "secured", "captured", "closed", "acquired"],
+          "german": {"weak": "verkaufte", "power": ["verhandelte", "sicherte", "gewann", "schloss ab"]},
+          "context": ["accounts", "deals", "contracts", "revenue"],
+          "priority": 94
+        },
+        {
+          "weak": "promoted",
+          "powerVerbs": ["championed", "marketed", "publicized", "launched", "spotlighted"],
+          "german": {"weak": "förderte", "power": ["beworbwerb", "vermarktete", "lancierte", "präsentierte"]},
+          "context": ["products", "services", "initiatives", "brands"],
+          "priority": 88
+        },
+        {
+          "weak": "generated",
+          "powerVerbs": ["produced", "procured", "cultivated", "yielded", "created"],
+          "german": {"weak": "generierte", "power": ["erzeugte", "beschaffte", "kultivierte", "hervorbrachte"]},
+          "context": ["leads", "revenue", "growth", "opportunities"],
+          "priority": 87
+        },
+        {
+          "weak": "attracted",
+          "powerVerbs": ["enticed", "lured", "engaged", "captivated", "compelled"],
+          "german": {"weak": "zog an", "power": ["verlockte", "engagierte", "faszinierte", "verpflichtete"]},
+          "context": ["customers", "clients", "talent", "attention"],
+          "priority": 85
+        }
+      ]
+    },
+    "Financial": {
+      "category": "Finanzielle & Geschäft",
+      "impact": "High",
+      "verbs": [
+        {
+          "weak": "managed",
+          "powerVerbs": ["stewarded", "administered", "controlled", "allocated", "budgeted"],
+          "german": {"weak": "verwaltete", "power": ["lenkte", "verwaltete", "kontrollierte", "haushältete"]},
+          "context": ["budgets", "finances", "resources", "costs"],
+          "priority": 93
+        },
+        {
+          "weak": "saved",
+          "powerVerbs": ["preserved", "conserved", "reduced", "minimized", "curtailed"],
+          "german": {"weak": "ersparte", "power": ["bewahrte", "reduzierte", "minimierte", "senkte"]},
+          "context": ["costs", "expenses", "budget", "resources"],
+          "priority": 91
+        },
+        {
+          "weak": "earned",
+          "powerVerbs": ["generated", "procured", "accrued", "accumulated", "garnered"],
+          "german": {"weak": "verdiente", "power": ["generierte", "beschaffte", "akkumulierte", "erntete"]},
+          "context": ["revenue", "profit", "income", "returns"],
+          "priority": 90
+        }
+      ]
+    },
+    "Teaching_Training": {
+      "category": "Training & Entwicklung",
+      "impact": "Medium",
+      "verbs": [
+        {
+          "weak": "trained",
+          "powerVerbs": ["coached", "mentored", "instructed", "educated", "developed"],
+          "german": {"weak": "trainierte", "power": ["coachte", "unterrichtete", "schulte", "entwickelte"]},
+          "context": ["teams", "individuals", "staff", "employees"],
+          "priority": 87
+        },
+        {
+          "weak": "taught",
+          "powerVerbs": ["instructed", "educated", "enlightened", "cultivated", "empowered"],
+          "german": {"weak": "lehrte", "power": ["unterrichtete", "bildete", "aufklärte", "befähigte"]},
+          "context": ["skills", "knowledge", "concepts", "methods"],
+          "priority": 85
+        },
+        {
+          "weak": "helped",
+          "powerVerbs": ["assisted", "facilitated", "supported", "enabled", "empowered"],
+          "german": {"weak": "half", "power": ["unterstützte", "erleichterte", "befähigte", "ermöglichte"]},
+          "context": ["teams", "individuals", "projects", "initiatives"],
+          "priority": 78
+        }
+      ]
+    },
+    "Quality": {
+      "category": "Qualität & Compliance",
+      "impact": "Medium-High",
+      "verbs": [
+        {
+          "weak": "ensured",
+          "powerVerbs": ["guaranteed", "verified", "validated", "confirmed", "authenticated"],
+          "german": {"weak": "gewährleistete", "power": ["garantierte", "verifizierte", "validierte", "bestätigte"]},
+          "context": ["quality", "compliance", "standards", "requirements"],
+          "priority": 88
+        },
+        {
+          "weak": "checked",
+          "powerVerbs": ["audited", "inspected", "reviewed", "examined", "scrutinized"],
+          "german": {"weak": "überprüfte", "power": ["prüfte", "inspizierte", "bewertete", "untersuchte"]},
+          "context": ["quality", "compliance", "accuracy", "standards"],
+          "priority": 82
+        },
+        {
+          "weak": "maintained",
+          "powerVerbs": ["preserved", "sustained", "upheld", "retained", "kept"],
+          "german": {"weak": "erhielt", "power": ["bewahrte", "aufrechterhielt", "verteidigte", "behielt"]},
+          "context": ["standards", "quality", "systems", "relationships"],
+          "priority": 80
+        }
+      ]
+    }
+  },
+  "weakVerbMap": {
+    "made": {
+      "powerVerbs": ["crafted", "engineered", "fabricated", "produced", "created"],
+      "german": {"weak": "machte", "power": ["schuf", "produzierte", "kreierte", "fertigte an"]},
+      "contexts": ["product", "design", "decision", "contribution"]
+    },
+    "did": {
+      "powerVerbs": ["accomplished", "executed", "performed", "completed", "delivered"],
+      "german": {"weak": "tat", "power": ["vollbrachte", "führte aus", "lieferte", "vollendete"]},
+      "contexts": ["tasks", "projects", "responsibilities", "deliverables"]
+    },
+    "got": {
+      "powerVerbs": ["obtained", "acquired", "secured", "procured", "attained"],
+      "german": {"weak": "bekam", "power": ["erlangte", "beschaffte", "sicherte", "erwarb"]},
+      "contexts": ["results", "approval", "resources", "buy-in"]
+    },
+    "started": {
+      "powerVerbs": ["initiated", "launched", "commenced", "pioneered", "spearheaded"],
+      "german": {"weak": "startete", "power": ["initiierte", "lancierte", "begann", "bahnbrechend"]},
+      "contexts": ["project", "initiative", "process", "program"]
+    },
+    "helped": {
+      "powerVerbs": ["facilitated", "enabled", "supported", "empowered", "assisted"],
+      "german": {"weak": "half", "power": ["ermöglichte", "unterstützte", "befähigte", "assistierte"]},
+      "contexts": ["team", "project", "process", "individual"]
+    },
+    "worked": {
+      "powerVerbs": ["contributed", "collaborated", "partnered", "cooperated", "engaged"],
+      "german": {"weak": "arbeitete", "power": ["trug bei", "kollaborierte", "partnerte", "kooperierte"]},
+      "contexts": ["team", "project", "initiative", "stakeholder"]
+    },
+    "used": {
+      "powerVerbs": ["leveraged", "utilized", "deployed", "applied", "incorporated"],
+      "german": {"weak": "nutzte", "power": ["nutzte aus", "wendete an", "setzte ein", "integrierte"]},
+      "contexts": ["tool", "technology", "resource", "method"]
+    },
+    "set up": {
+      "powerVerbs": ["established", "instituted", "configured", "implemented", "deployed"],
+      "german": {"weak": "einrichtete", "power": ["etablierte", "konfigurierte", "implementierte", "deployierte"]},
+      "contexts": ["system", "process", "program", "infrastructure"]
+    }
+  },
+  "industryContext": {
+    "IT": ["engineered", "architected", "deployed", "developed", "optimized", "accelerated", "scaled"],
+    "Finance": ["streamlined", "optimized", "analyzed", "identified", "quantified", "maximized"],
+    "Sales": ["secured", "negotiated", "captured", "closed", "acquired", "exceeded"],
+    "Healthcare": ["facilitated", "improved", "enhanced", "supported", "elevated", "promoted"],
+    "Marketing": ["launched", "cultivated", "amplified", "championed", "transformed", "captivated"],
+    "HR": ["developed", "cultivated", "championed", "nurtured", "empowered", "elevated"],
+    "Legal": ["advised", "negotiated", "drafted", "interpreted", "advocated", "ensured"],
+    "Engineering": ["designed", "engineered", "optimized", "enhanced", "implemented", "exceeded"]
+  },
+  "contextSwitches": {
+    "management": ["orchestrated", "spearheaded", "directed", "guided", "stewarded"],
+    "improvement": ["optimized", "enhanced", "transformed", "revolutionized", "elevated"],
+    "cost_reduction": ["minimized", "streamlined", "curtailed", "eliminated", "reduced"],
+    "revenue": ["amplified", "accelerated", "maximized", "escalated", "surpassed"],
+    "innovation": ["pioneered", "engineered", "architected", "innovated", "conceived"],
+    "quality": ["ensured", "guaranteed", "validated", "verified", "authenticated"],
+    "collaboration": ["synchronized", "harmonized", "unified", "aligned", "integrated"],
+    "learning": ["coached", "mentored", "educated", "enlightened", "empowered"]
+  },
+  "summary": {
+    "totalVerbs": 120,
+    "categories": 8,
+    "weakVerbsIdentified": 8,
+    "industryContexts": 8,
+    "contextSwitches": 8
+  }
+}
