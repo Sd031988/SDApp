@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#173b3f">
   <link rel="manifest" href="manifest.json">
   <title>PDF Studio – Dokumente, Scans, Office & Formulare bearbeiten</title>
+  <script>document.addEventListener('sd-lang-changed', function (e) { document.title = (e.detail.lang === 'en' ? 'PDF Studio – Edit documents, scans, office files & forms' : 'PDF Studio – Dokumente, Scans, Office & Formulare bearbeiten'); });</script>
 
   <!-- Externe Bibliotheken -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
@@ -1321,7 +1322,370 @@
         page-break-after: auto;
       }
     }
+
+    .sd-lang-switch {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.06);
+      border: 1px solid rgba(0,0,0,0.14);
+      border-radius: 999px;
+      padding: 3px;
+    }
+
+    .sd-lang-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted, #667);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .sd-lang-btn.active {
+      background: var(--accent, #3366ff);
+      color: #fff;
+    }
   </style>
+  <script>
+    window.SD_I18N = {
+      de: {
+        page_title: 'PDF Studio – Dokumente, Scans, Office & Formulare bearbeiten',
+        brand_tag: 'Konverter',
+        brand_title_link: 'Zur Übersicht',
+        doctitle_hint: 'Dateiname für Export bearbeiten',
+        zoom_out: 'Verkleinern', zoom_in: 'Vergrößern', zoom_fit: 'An Bildschirm anpassen', zoom_fit_short: 'Fit',
+        undo_btn: '↶ Rückgängig', undo_hint: 'Letzten Schritt rückgängig (Strg+Z)',
+        btn_convert: '🔄 Konvertieren', btn_convert_hint: 'Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt (erst verfügbar, sobald Seiten geladen sind)',
+        btn_print: '🖨️ Drucken', btn_print_hint: 'Alle Seiten direkt drucken',
+        btn_export: '📥 PDF Speichern',
+        btn_share: '📤 Teilen', btn_share_hint: 'Fertiges PDF direkt teilen (E-Mail, WhatsApp, ...)',
+        sheet_pages: '📑 Seiten', sheet_fertig: 'Fertig ✕',
+        add_docs_title: 'Dokumente hinzufügen',
+        dropzone_hint: 'Dateien per Drag & Drop hierher ziehen',
+        dropzone_strong: 'PDF, Word, Excel, PowerPoint oder Bilder',
+        dropzone_txt: 'hierher ziehen oder anklicken',
+        btn_choose_files: '📂 Datei wählen', btn_camera_scan: '📷 Scan / Foto',
+        scan_pending_suffix: 'Seite(n) aufgenommen',
+        btn_scan_pending_more: '📷 Weitere Seite', btn_scan_pending_done: '✅ Fertig – bearbeiten',
+        btn_live_cam_scan: '🎥 Live-Kamera (Auto-Scan)',
+        btn_phone_scan: '📱 Mit Handy scannen',
+        btn_add_blank_page: '+ Leere A4-Seite einfügen',
+        btn_cloud_save: '☁️ Speichern', btn_cloud_save_hint: 'Alle Seiten in deinem Konto speichern, um sie auf einem anderen Gerät weiterzubearbeiten',
+        btn_cloud_load: '☁️ Laden', btn_cloud_load_hint: 'Zuletzt in der Cloud gespeicherten Stand laden',
+        pages_title: 'Seiten', btn_clear_all: 'Alle leeren', btn_clear_all_hint: 'Alle Seiten leeren',
+        empty_pages: 'Noch keine Seiten vorhanden. Füge eine PDF, Word-, Excel- oder Bilddatei hinzu.',
+        tool_select: '👆 Auswählen', tool_select_hint: 'Auswählen, Verschieben & Bearbeiten',
+        tool_pen: '✏️ Stift', tool_pen_hint: 'Stift: Handschriftlich Lücken ausfüllen, unterschreiben, ankreuzen',
+        tool_text: '🔤 Text', tool_text_hint: 'Textfeld platzieren',
+        tool_highlight: '🖍️ Marker', tool_highlight_hint: 'Textmarker: Text gelb/bunt hervorheben',
+        tool_correct: '🩹 Korrektur', tool_correct_hint: 'Korrektur: Erkannten Text im Dokument anklicken, um ihn zu ersetzen oder auszufüllen',
+        tool_redact: '⬛ Schwärzen', tool_redact_hint: 'Schwärzen: Vertrauliche Daten verdecken',
+        tool_whiteout: '⬜ Überdecken', tool_whiteout_hint: 'Whiteout: Fehler oder Stellen weiß überdecken',
+        btn_signature: '✍️ Unterschrift', btn_signature_hint: 'Unterschrift zeichnen und einfügen',
+        btn_ocr_scan: '🔎 Scan OCR', btn_ocr_scan_hint: 'Scan-Text per OCR erkennen & korrigieren',
+        empty_h2: 'Dein PDF & Dokumenten Studio',
+        empty_p1_html: 'Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos über "📂 Datei wählen" oder "📷 Scan / Foto" links hoch. Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel zwischen allen Formaten!',
+        empty_p2: '💡 Melde dich oben rechts kostenlos an, um deine Seiten in deinem Konto zu speichern und von jedem Gerät wieder darauf zuzugreifen.',
+        sheet_tool_settings: '⚙️ Werkzeug-Einstellungen',
+        panel_pen_title: '✏️ Stift-Einstellungen', label_pen_color: 'Stift-Farbe',
+        color_blue: 'Kugelschreiber Dokumentenblau', color_black: 'Dokumentenschwarz', color_red: 'Korrekturrot',
+        color_green: 'Notizengrün', color_amber: 'Warmes Bernstein/Gelb', color_custom: 'Eigene Farbe wählen',
+        label_stroke: 'Strichstärke', stroke_fine: 'Fein (1.8px)', stroke_medium: 'Mittel (3.5px)', stroke_thick: 'Dick (6px)',
+        btn_eraser: '🧹 Radierer', btn_clear_drawings: 'Alle Striche löschen',
+        panel_text_title: '🔤 Textfeld-Eigenschaften', label_text: 'Text', text_placeholder: 'Text hier eingeben...',
+        label_font: 'Schriftart', font_arial: 'Arial (Klar & Modern)', font_georgia: 'Georgia (Klassisch)',
+        font_times: 'Times New Roman', font_trebuchet: 'Trebuchet MS', font_courier: 'Schreibmaschine / Courier',
+        label_size_pt: 'Größe (pt)', label_color: 'Farbe',
+        btn_bold: 'Fett', btn_delete: 'Löschen',
+        panel_highlight_title: '🖍️ Textmarker-Farbe',
+        hl_yellow: 'Klassisches Leuchtgelb', hl_green: 'Leuchtgrün', hl_blue: 'Leuchtblau', hl_pink: 'Leuchtrosa', hl_orange: 'Leuchtorange',
+        panel_correct_title: '🩹 Korrektur-Modus',
+        correct_info: 'Klicke im Dokument direkt auf ein erkanntes Wort oder eine Stelle, um sie zu ersetzen oder ein leeres Feld auszufüllen. Fahre mit der Maus über eine Stelle, um Schriftgröße, Schriftart (sofern im Dokument ermittelbar) und Fettdruck angezeigt zu bekommen – diese werden bei der Korrektur automatisch übernommen, damit der Ersatztext an derselben Stelle und im gleichen Stil wie das Original erscheint.',
+        label_correct_scope: 'Was möchtest du korrigieren?', scope_word: 'Nur ein Wort', scope_line: 'Ganzer Satz/Zeile',
+        panel_ocr_title: '🔎 Scan-Texterkennung (OCR)', label_ocr_lang: 'Erkennungssprache',
+        ocr_lang_de: 'Deutsch (Standard)', ocr_lang_en: 'Englisch',
+        btn_run_ocr: 'Texterkennung starten', ocr_status_processing: 'Wird verarbeitet...',
+        export_settings_title: '⚙️ PDF-Export-Einstellungen', label_quality: 'Qualität & Auflösung',
+        quality_high: 'Druckqualität (Scharf & Hochauflösend)', quality_medium: 'Web / E-Mail (Ausgewogen ~150 DPI)', quality_compact: 'Kompakt (Kleine Dateigröße für Uploads)',
+        label_page_format: 'Seitenformat', format_a4: 'Einheitlich DIN A4', format_original: 'Originalgröße beibehalten',
+        label_watermark: 'Wasserzeichen/Stempel', label_watermark_text: 'Text', watermark_placeholder: 'z. B. Kopie, Vertraulich',
+        page_actions_title: '📄 Seite drehen & spiegeln',
+        btn_rotate_left: '↶ 90° Links', btn_rotate_right: '↷ 90° Rechts', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertikal',
+        btn_duplicate_page: 'Seite duplizieren',
+        toggle_pages: '📑 Seiten', toggle_tools: '⚙️ Werkzeuge',
+        toast_ready: 'Bereit',
+        modal_convert_h3: '🔄 Dokumenten-Konverter',
+        modal_convert_p: 'Konvertiere zwischen PDF, Word, Excel, PowerPoint und Bildern – 100% lokal & sicher im Browser.',
+        tab_export: '📤 Aus PDF exportieren', tab_import: '📥 In PDF umwandeln (Import)',
+        conv_word_head: 'Word (.docx)', conv_word_desc: 'Wandelt PDF-Seiten & Texte in ein editierbares Microsoft Word Dokument um.', conv_word_btn: 'Word herunterladen',
+        conv_excel_head: 'Excel (.xlsx)', conv_excel_desc: 'Extrahiert Tabellendaten und Zeilen in eine Microsoft Excel-Arbeitsmappe.', conv_excel_btn: 'Excel herunterladen',
+        conv_pptx_head: 'PowerPoint (.pptx)', conv_pptx_desc: 'Erstellt eine Präsentation mit jeder PDF-Seite als hochauflösende Folie.', conv_pptx_btn: 'PowerPoint herunterladen',
+        conv_img_head: 'Bilder (JPG / PNG)', conv_img_desc: 'Speichert die aktuelle Seite als Bild oder alle Seiten als ZIP-Archiv.',
+        conv_jpg_btn: 'JPG', conv_png_btn: 'PNG', conv_zip_btn: 'Alle (ZIP)',
+        conv_photos_head: 'Fotos / Bilder ➔ PDF', conv_photos_desc: 'Bündelt mehrere Fotos (JPG, PNG, WebP) sauber zu einem fertigen PDF-Dokument.', conv_photos_btn: 'Fotos wählen',
+        conv_word2pdf_head: 'Word (.docx) ➔ PDF', conv_word2pdf_desc: 'Liest ein Microsoft Word Dokument ein und wandelt es in PDF-Druckseiten um.', conv_word2pdf_btn: 'Word öffnen',
+        conv_excel2pdf_head: 'Excel (.xlsx/.csv) ➔ PDF', conv_excel2pdf_desc: 'Wandelt Excel-Kalkulationstabellen mit Gitternetz in PDF-Seiten um.', conv_excel2pdf_btn: 'Excel öffnen',
+        conv_pptx2pdf_head: 'PowerPoint (.pptx) ➔ PDF', conv_pptx2pdf_desc: 'Importiert Präsentationsfolien als druckbare PDF-Seiten in das Studio.', conv_pptx2pdf_btn: 'PowerPoint öffnen',
+        conv_footer_note: '🔒 Alle Konvertierungen finden ausschließlich lokal in deinem Browser statt. Keine Dokumentdaten verlassen deinen PC.',
+        modal_scanenhance_h3: '📷 Scan optimieren', scan_enhance_hint: 'Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter".',
+        doctype_label: 'Was scannst du?', doctype_dokument: '📄 Dokument', doctype_reisepass: '🛂 Reisepass', doctype_ausweis: '🪪 Ausweis (Vorder- & Rückseite)',
+        ausweis_banner: '🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.',
+        btn_scan_crop_reset: '↺ Zurücksetzen', btn_scan_rotate_left: '⟲ Links', btn_scan_rotate_left_hint: '90° nach links drehen',
+        btn_scan_rotate_right: '⟳ Rechts', btn_scan_rotate_right_hint: '90° nach rechts drehen',
+        btn_scan_cancel: 'Abbrechen', btn_scan_crop_next: 'Weiter →',
+        filter_original: 'Original', filter_auto: 'Automatisch', filter_gray: 'Graustufen', filter_bw: 'Schwarz-Weiß', filter_vivid: 'Farbe kräftig',
+        label_brightness: 'Helligkeit', label_contrast: 'Kontrast',
+        btn_scan_filter_back: '← Zurück', btn_scan_filter_done: 'Seite übernehmen ✓',
+        modal_phonescan_h3: '📱 Mit Handy scannen',
+        phonescan_p: 'Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet sich eine Scan-Seite im Handy-Browser – keine App nötig.',
+        phonescan_qr_wait: 'QR-Code wird erstellt …', phonescan_status_prep: 'Verbindung wird vorbereitet …',
+        btn_close_modal: 'Schließen',
+        modal_livecam_h3: '🎥 Live-Kamera (Auto-Scan)',
+        livecam_scanned_label: 'Seite gescannt', livecam_hint_starting: 'Kamera wird gestartet …',
+        livecam_count_suffix: 'Seite(n) aufgenommen – weiter scannen oder fertigstellen',
+        btn_livecam_shutter: '📸 Jetzt aufnehmen', btn_livecam_done: '✅ Fertig – Seiten bearbeiten',
+        modal_signature_h3: '✍️ Unterschrift zeichnen',
+        signature_p: 'Zeichne mit Maus, Touch oder Stylus-Stift deine Unterschrift. Sie wird mit transparentem Hintergrund auf der Seite eingefügt.',
+        signature_hint: 'Hier unterschreiben', btn_clear_sig: 'Leeren', btn_insert_sig: 'Unterschrift einfügen',
+        toast_undo_done: 'Rückgängig gemacht',
+        toast_file_loading: '{name} wird geladen...',
+        toast_file_converting: '{name} wird als PDF konvertiert...',
+        toast_word_import_ok: 'Word-Dokument erfolgreich in Seite umgewandelt!',
+        toast_word_import_err: 'Fehler beim Konvertieren der Word-Datei',
+        toast_file_reading: '{name} wird eingelesen...',
+        toast_excel_import_ok: 'Excel-Tabelle erfolgreich in PDF-Seiten umgewandelt!',
+        toast_excel_module_prep: 'Excel-Modul wird vorbereitet...',
+        toast_excel_import_err: 'Fehler beim Einlesen der Excel-Tabelle',
+        toast_file_processing: '{name} wird verarbeitet...',
+        toast_pptx_import_ok: '{n} Folie(n) aus Präsentation importiert!',
+        toast_pptx_import_err: 'Fehler beim Importieren der PowerPoint-Datei',
+        toast_pages_ready: '{n} Seite(n) bereit',
+        toast_blank_page_added: 'Neue leere A4-Seite hinzugefügt',
+        toast_please_login: 'Bitte zuerst anmelden...',
+        toast_no_pages_to_save: 'Keine Seiten zum Speichern vorhanden',
+        toast_cloud_saving: 'Wird in deinem Konto gespeichert...',
+        toast_cloud_saved: '✅ In deinem Konto gespeichert',
+        toast_cloud_save_err: 'Fehler beim Speichern in der Cloud: ',
+        toast_cloud_loading: 'Wird aus deinem Konto geladen...',
+        toast_cloud_none_found: 'Keine gespeicherten Seiten in deinem Konto gefunden',
+        toast_cloud_load_err: 'Fehler beim Laden aus der Cloud: ',
+        toast_page_rotated: 'Seite gedreht ({deg}°)',
+        toast_page_deleted: 'Seite gelöscht',
+        toast_page_duplicated: 'Seite dupliziert',
+        toast_project_cleared: 'Projekt geleert',
+        toast_pen_active: 'Stift aktiv',
+        toast_eraser_active: 'Radiergummi aktiv: Klicke auf Striche zum Löschen',
+        toast_drawings_cleared: 'Zeichnungen gelöscht',
+        toast_textbox_deleted: 'Textfeld gelöscht',
+        toast_stroke_removed: 'Strich entfernt',
+        toast_textbox_added: 'Textfeld hinzugefügt – ziehe zum Verschieben',
+        toast_signature_placed: 'Unterschrift auf der Seite platziert',
+        toast_ocr_recognized: '{n} Textstellen erkannt – klicke auf Wörter zum Ändern',
+        toast_ocr_failed: 'Texterkennung fehlgeschlagen (Internetverbindung prüfen)',
+        toast_pdf_generating: 'PDF wird generiert...',
+        toast_pdf_saved: '✅ PDF erfolgreich gespeichert!',
+        toast_pdf_create_err: 'Fehler beim Erstellen der PDF-Datei',
+        toast_print_preparing: 'Druckvorschau wird vorbereitet ...',
+        toast_print_err: 'Fehler bei der Druckvorbereitung',
+        toast_share_unsupported: 'Teilen wird von diesem Browser nicht unterstützt – bitte die gespeicherte PDF-Datei manuell anhängen.',
+        toast_word_creating: 'Word-Dokument (.docx) wird erstellt (mit Bildern & Layout) ...',
+        toast_word_export_ok: '✅ Word-Dokument mit Bild, Layout & Text erfolgreich exportiert!',
+        toast_excel_creating: 'Excel-Datei (.xlsx) wird erstellt...',
+        toast_excel_export_ok: '✅ Excel-Datei erfolgreich exportiert!',
+        toast_csv_saved: 'Tabelle als CSV gespeichert!',
+        toast_pptx_creating: 'PowerPoint-Präsentation (.pptx) wird erstellt...',
+        toast_pptx_export_ok: '✅ PowerPoint-Präsentation erfolgreich exportiert!',
+        toast_pptx_module_unavailable: 'PowerPoint-Modul nicht verfügbar.',
+        toast_pptx_export_err: 'Fehler beim Exportieren nach PowerPoint',
+        toast_jpg_downloaded: 'JPG-Bild heruntergeladen',
+        toast_png_downloaded: 'PNG-Bild heruntergeladen',
+        toast_images_preparing: 'Bilder werden vorbereitet...',
+        toast_zip_saved: '✅ Alle Seiten als ZIP-Archiv gespeichert!',
+        toast_zip_err: 'Fehler beim Erstellen des ZIP-Archivs',
+        toast_page_auto_optimized: 'Seite automatisch begradigt & optimiert ✓',
+        toast_page_updated: 'Seite aktualisiert ✓',
+        toast_ausweis_front_saved: 'Vorderseite gespeichert ✓ – bitte jetzt die Rückseite scannen',
+        toast_cloud_loaded_suffix: 'Aus deinem Konto geladen',
+        toast_pages_unit: 'Seite(n)',
+        toast_area_redacted: 'Bereich geschwärzt',
+        toast_area_whiteout: 'Bereich überdeckt',
+        toast_correction_bold_part: ' & Fettdruck',
+        toast_correction_done: 'Textstelle korrigiert (Schriftgröße, Farbe{bold} automatisch übernommen)',
+        toast_photo_quality_warn_prefix: 'Foto wirkt',
+        toast_and: 'und',
+        toast_photo_quality_warn_suffix: '– bei Bedarf über "✂️ Zuschneiden" neu aufnehmen',
+      },
+      en: {
+        page_title: 'PDF Studio – Edit documents, scans, office files & forms',
+        brand_tag: 'Converter',
+        brand_title_link: 'Back to overview',
+        doctitle_hint: 'Edit the file name used for export',
+        zoom_out: 'Zoom out', zoom_in: 'Zoom in', zoom_fit: 'Fit to screen', zoom_fit_short: 'Fit',
+        undo_btn: '↶ Undo', undo_hint: 'Undo last step (Ctrl+Z)',
+        btn_convert: '🔄 Convert', btn_convert_hint: 'Convert: PDF to Word, Excel, PowerPoint, images or vice versa (available once pages are loaded)',
+        btn_print: '🖨️ Print', btn_print_hint: 'Print all pages directly',
+        btn_export: '📥 Save PDF',
+        btn_share: '📤 Share', btn_share_hint: 'Share the finished PDF directly (email, WhatsApp, ...)',
+        sheet_pages: '📑 Pages', sheet_fertig: 'Done ✕',
+        add_docs_title: 'Add documents',
+        dropzone_hint: 'Drag & drop files here',
+        dropzone_strong: 'PDF, Word, Excel, PowerPoint or images',
+        dropzone_txt: 'drag here or click to browse',
+        btn_choose_files: '📂 Choose file', btn_camera_scan: '📷 Scan / Photo',
+        scan_pending_suffix: 'page(s) captured',
+        btn_scan_pending_more: '📷 Another page', btn_scan_pending_done: '✅ Done – edit',
+        btn_live_cam_scan: '🎥 Live camera (auto-scan)',
+        btn_phone_scan: '📱 Scan with phone',
+        btn_add_blank_page: '+ Insert blank A4 page',
+        btn_cloud_save: '☁️ Save', btn_cloud_save_hint: 'Save all pages to your account to continue editing on another device',
+        btn_cloud_load: '☁️ Load', btn_cloud_load_hint: 'Load the most recently saved version from the cloud',
+        pages_title: 'Pages', btn_clear_all: 'Clear all', btn_clear_all_hint: 'Clear all pages',
+        empty_pages: 'No pages yet. Add a PDF, Word, Excel or image file.',
+        tool_select: '👆 Select', tool_select_hint: 'Select, move & edit',
+        tool_pen: '✏️ Pen', tool_pen_hint: 'Pen: fill in gaps by hand, sign, tick boxes',
+        tool_text: '🔤 Text', tool_text_hint: 'Place a text box',
+        tool_highlight: '🖍️ Highlight', tool_highlight_hint: 'Highlighter: highlight text in yellow/color',
+        tool_correct: '🩹 Correct', tool_correct_hint: 'Correction: click detected text in the document to replace or fill it in',
+        tool_redact: '⬛ Redact', tool_redact_hint: 'Redact: black out confidential data',
+        tool_whiteout: '⬜ Whiteout', tool_whiteout_hint: 'Whiteout: cover mistakes or areas in white',
+        btn_signature: '✍️ Signature', btn_signature_hint: 'Draw and insert a signature',
+        btn_ocr_scan: '🔎 Scan OCR', btn_ocr_scan_hint: 'Recognize & correct scanned text with OCR',
+        empty_h2: 'Your PDF & document studio',
+        empty_p1_html: 'Upload <strong>PDF, Word, Excel or PowerPoint files</strong> as well as photos via "📂 Choose file" or "📷 Scan / Photo" on the left. Fill in gaps by hand with the <strong>pen</strong>, redact data and convert flexibly between all formats!',
+        empty_p2: '💡 Sign in for free at the top right to save your pages to your account and access them from any device.',
+        sheet_tool_settings: '⚙️ Tool settings',
+        panel_pen_title: '✏️ Pen settings', label_pen_color: 'Pen color',
+        color_blue: 'Ballpoint document blue', color_black: 'Document black', color_red: 'Correction red',
+        color_green: 'Notes green', color_amber: 'Warm amber/yellow', color_custom: 'Choose custom color',
+        label_stroke: 'Stroke width', stroke_fine: 'Fine (1.8px)', stroke_medium: 'Medium (3.5px)', stroke_thick: 'Thick (6px)',
+        btn_eraser: '🧹 Eraser', btn_clear_drawings: 'Clear all strokes',
+        panel_text_title: '🔤 Text box properties', label_text: 'Text', text_placeholder: 'Enter text here...',
+        label_font: 'Font', font_arial: 'Arial (clear & modern)', font_georgia: 'Georgia (classic)',
+        font_times: 'Times New Roman', font_trebuchet: 'Trebuchet MS', font_courier: 'Typewriter / Courier',
+        label_size_pt: 'Size (pt)', label_color: 'Color',
+        btn_bold: 'Bold', btn_delete: 'Delete',
+        panel_highlight_title: '🖍️ Highlight color',
+        hl_yellow: 'Classic bright yellow', hl_green: 'Bright green', hl_blue: 'Bright blue', hl_pink: 'Bright pink', hl_orange: 'Bright orange',
+        panel_correct_title: '🩹 Correction mode',
+        correct_info: 'Click directly on a detected word or area in the document to replace it or fill in a blank field. Hover over an area to see its font size, font (where detectable in the document) and bold styling – these are automatically applied to the correction so the replacement text appears in the same place and style as the original.',
+        label_correct_scope: 'What do you want to correct?', scope_word: 'Just one word', scope_line: 'Whole sentence/line',
+        panel_ocr_title: '🔎 Scan text recognition (OCR)', label_ocr_lang: 'Recognition language',
+        ocr_lang_de: 'German (default)', ocr_lang_en: 'English',
+        btn_run_ocr: 'Start text recognition', ocr_status_processing: 'Processing...',
+        export_settings_title: '⚙️ PDF export settings', label_quality: 'Quality & resolution',
+        quality_high: 'Print quality (sharp & high-res)', quality_medium: 'Web / email (balanced ~150 DPI)', quality_compact: 'Compact (small file size for uploads)',
+        label_page_format: 'Page format', format_a4: 'Uniform DIN A4', format_original: 'Keep original size',
+        label_watermark: 'Watermark/stamp', label_watermark_text: 'Text', watermark_placeholder: 'e.g. Copy, Confidential',
+        page_actions_title: '📄 Rotate & flip page',
+        btn_rotate_left: '↶ 90° left', btn_rotate_right: '↷ 90° right', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertical',
+        btn_duplicate_page: 'Duplicate page',
+        toggle_pages: '📑 Pages', toggle_tools: '⚙️ Tools',
+        toast_ready: 'Ready',
+        modal_convert_h3: '🔄 Document converter',
+        modal_convert_p: 'Convert between PDF, Word, Excel, PowerPoint and images – 100% local & secure in your browser.',
+        tab_export: '📤 Export from PDF', tab_import: '📥 Convert to PDF (import)',
+        conv_word_head: 'Word (.docx)', conv_word_desc: 'Converts PDF pages & text into an editable Microsoft Word document.', conv_word_btn: 'Download Word',
+        conv_excel_head: 'Excel (.xlsx)', conv_excel_desc: 'Extracts table data and rows into a Microsoft Excel workbook.', conv_excel_btn: 'Download Excel',
+        conv_pptx_head: 'PowerPoint (.pptx)', conv_pptx_desc: 'Creates a presentation with each PDF page as a high-resolution slide.', conv_pptx_btn: 'Download PowerPoint',
+        conv_img_head: 'Images (JPG / PNG)', conv_img_desc: 'Saves the current page as an image or all pages as a ZIP archive.',
+        conv_jpg_btn: 'JPG', conv_png_btn: 'PNG', conv_zip_btn: 'All (ZIP)',
+        conv_photos_head: 'Photos / images ➔ PDF', conv_photos_desc: 'Neatly bundles several photos (JPG, PNG, WebP) into a finished PDF document.', conv_photos_btn: 'Choose photos',
+        conv_word2pdf_head: 'Word (.docx) ➔ PDF', conv_word2pdf_desc: 'Reads a Microsoft Word document and converts it into printable PDF pages.', conv_word2pdf_btn: 'Open Word',
+        conv_excel2pdf_head: 'Excel (.xlsx/.csv) ➔ PDF', conv_excel2pdf_desc: 'Converts Excel spreadsheets with gridlines into PDF pages.', conv_excel2pdf_btn: 'Open Excel',
+        conv_pptx2pdf_head: 'PowerPoint (.pptx) ➔ PDF', conv_pptx2pdf_desc: 'Imports presentation slides as printable PDF pages into the studio.', conv_pptx2pdf_btn: 'Open PowerPoint',
+        conv_footer_note: '🔒 All conversions happen exclusively locally in your browser. No document data leaves your PC.',
+        modal_scanenhance_h3: '📷 Optimize scan', scan_enhance_hint: 'Drag the four points onto the corners of the document, then "Next".',
+        doctype_label: 'What are you scanning?', doctype_dokument: '📄 Document', doctype_reisepass: '🛂 Passport', doctype_ausweis: '🪪 ID card (front & back)',
+        ausweis_banner: '🪪 Front saved ✓ – now please photograph the back.',
+        btn_scan_crop_reset: '↺ Reset', btn_scan_rotate_left: '⟲ Left', btn_scan_rotate_left_hint: 'Rotate 90° left',
+        btn_scan_rotate_right: '⟳ Right', btn_scan_rotate_right_hint: 'Rotate 90° right',
+        btn_scan_cancel: 'Cancel', btn_scan_crop_next: 'Next →',
+        filter_original: 'Original', filter_auto: 'Automatic', filter_gray: 'Grayscale', filter_bw: 'Black & white', filter_vivid: 'Vivid color',
+        label_brightness: 'Brightness', label_contrast: 'Contrast',
+        btn_scan_filter_back: '← Back', btn_scan_filter_done: 'Use this page ✓',
+        modal_phonescan_h3: '📱 Scan with phone',
+        phonescan_p: 'Scan the QR code with your phone\'s camera app. A scan page opens in your phone\'s browser – no app needed.',
+        phonescan_qr_wait: 'Generating QR code …', phonescan_status_prep: 'Preparing connection …',
+        btn_close_modal: 'Close',
+        modal_livecam_h3: '🎥 Live camera (auto-scan)',
+        livecam_scanned_label: 'Page scanned', livecam_hint_starting: 'Starting camera …',
+        livecam_count_suffix: 'page(s) captured – keep scanning or finish',
+        btn_livecam_shutter: '📸 Capture now', btn_livecam_done: '✅ Done – edit pages',
+        modal_signature_h3: '✍️ Draw signature',
+        signature_p: 'Draw your signature with mouse, touch or a stylus. It will be inserted on the page with a transparent background.',
+        signature_hint: 'Sign here', btn_clear_sig: 'Clear', btn_insert_sig: 'Insert signature',
+        toast_undo_done: 'Undone',
+        toast_file_loading: '{name} is loading...',
+        toast_file_converting: '{name} is being converted to PDF...',
+        toast_word_import_ok: 'Word document successfully converted into a page!',
+        toast_word_import_err: 'Error converting the Word file',
+        toast_file_reading: '{name} is being read...',
+        toast_excel_import_ok: 'Excel spreadsheet successfully converted into PDF pages!',
+        toast_excel_module_prep: 'Preparing Excel module...',
+        toast_excel_import_err: 'Error reading the Excel spreadsheet',
+        toast_file_processing: '{name} is being processed...',
+        toast_pptx_import_ok: '{n} slide(s) imported from presentation!',
+        toast_pptx_import_err: 'Error importing the PowerPoint file',
+        toast_pages_ready: '{n} page(s) ready',
+        toast_blank_page_added: 'New blank A4 page added',
+        toast_please_login: 'Please sign in first...',
+        toast_no_pages_to_save: 'No pages to save',
+        toast_cloud_saving: 'Saving to your account...',
+        toast_cloud_saved: '✅ Saved to your account',
+        toast_cloud_save_err: 'Error saving to the cloud: ',
+        toast_cloud_loading: 'Loading from your account...',
+        toast_cloud_none_found: 'No saved pages found in your account',
+        toast_cloud_load_err: 'Error loading from the cloud: ',
+        toast_page_rotated: 'Page rotated ({deg}°)',
+        toast_page_deleted: 'Page deleted',
+        toast_page_duplicated: 'Page duplicated',
+        toast_project_cleared: 'Project cleared',
+        toast_pen_active: 'Pen active',
+        toast_eraser_active: 'Eraser active: click strokes to delete them',
+        toast_drawings_cleared: 'Drawings cleared',
+        toast_textbox_deleted: 'Text box deleted',
+        toast_stroke_removed: 'Stroke removed',
+        toast_textbox_added: 'Text box added – drag to move',
+        toast_signature_placed: 'Signature placed on the page',
+        toast_ocr_recognized: '{n} text elements recognized – click words to change them',
+        toast_ocr_failed: 'Text recognition failed (check your internet connection)',
+        toast_pdf_generating: 'Generating PDF...',
+        toast_pdf_saved: '✅ PDF saved successfully!',
+        toast_pdf_create_err: 'Error creating the PDF file',
+        toast_print_preparing: 'Preparing print preview ...',
+        toast_print_err: 'Error preparing print',
+        toast_share_unsupported: 'Sharing is not supported by this browser – please attach the saved PDF file manually.',
+        toast_word_creating: 'Creating Word document (.docx) (with images & layout) ...',
+        toast_word_export_ok: '✅ Word document with image, layout & text exported successfully!',
+        toast_excel_creating: 'Creating Excel file (.xlsx)...',
+        toast_excel_export_ok: '✅ Excel file exported successfully!',
+        toast_csv_saved: 'Table saved as CSV!',
+        toast_pptx_creating: 'Creating PowerPoint presentation (.pptx)...',
+        toast_pptx_export_ok: '✅ PowerPoint presentation exported successfully!',
+        toast_pptx_module_unavailable: 'PowerPoint module unavailable.',
+        toast_pptx_export_err: 'Error exporting to PowerPoint',
+        toast_jpg_downloaded: 'JPG image downloaded',
+        toast_png_downloaded: 'PNG image downloaded',
+        toast_images_preparing: 'Preparing images...',
+        toast_zip_saved: '✅ All pages saved as a ZIP archive!',
+        toast_zip_err: 'Error creating the ZIP archive',
+        toast_page_auto_optimized: 'Page automatically straightened & optimized ✓',
+        toast_page_updated: 'Page updated ✓',
+        toast_ausweis_front_saved: 'Front saved ✓ – please scan the back now',
+        toast_cloud_loaded_suffix: 'Loaded from your account',
+        toast_pages_unit: 'page(s)',
+        toast_area_redacted: 'Area redacted',
+        toast_area_whiteout: 'Area covered',
+        toast_correction_bold_part: ' & bold',
+        toast_correction_done: 'Text corrected (font size, color{bold} applied automatically)',
+        toast_photo_quality_warn_prefix: 'Photo looks',
+        toast_and: 'and',
+        toast_photo_quality_warn_suffix: '– retake it via "✂️ Crop" if needed',
+      }
+    };
+  </script>
 </head>
 
 <body>
@@ -1334,38 +1698,43 @@
   <!-- Top Navigation Bar -->
   <header class="topbar">
     <div class="topbar-left">
-      <a href="../index.html" class="brand" title="Zur Übersicht">
+      <a href="../index.html" class="brand" data-i18n-title="brand_title_link" title="Zur Übersicht">
         <span class="brand-mark">SD</span>
         <span class="brand-title">PDF Studio</span>
-        <span class="brand-tag">Konverter</span>
+        <span class="brand-tag" data-i18n="brand_tag">Konverter</span>
       </a>
+      <div class="sd-lang-switch">
+        <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+        <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+      </div>
     </div>
 
     <div class="topbar-center">
       <input type="text" id="docTitle" class="doc-name-input" value="Bewerbung_Dokumente.pdf"
-        title="Dateiname für Export bearbeiten">
+        data-i18n-title="doctitle_hint" title="Dateiname für Export bearbeiten">
       <div class="zoom-group">
-        <button id="zoomOut" class="zoom-btn" title="Verkleinern">−</button>
+        <button id="zoomOut" class="zoom-btn" data-i18n-title="zoom_out" title="Verkleinern">−</button>
         <span id="zoomLabel" class="zoom-text">100%</span>
-        <button id="zoomIn" class="zoom-btn" title="Vergrößern">+</button>
-        <button id="zoomFit" class="zoom-btn" title="An Bildschirm anpassen"
+        <button id="zoomIn" class="zoom-btn" data-i18n-title="zoom_in" title="Vergrößern">+</button>
+        <button id="zoomFit" class="zoom-btn" data-i18n="zoom_fit_short" data-i18n-title="zoom_fit" title="An Bildschirm anpassen"
           style="font-size:0.75rem;padding:5px 7px;">Fit</button>
       </div>
-      <button id="undoBtn" class="nav-btn" title="Letzten Schritt rückgängig (Strg+Z)" disabled>↶ Rückgängig</button>
+      <button id="undoBtn" class="nav-btn" data-i18n="undo_btn" data-i18n-title="undo_hint" title="Letzten Schritt rückgängig (Strg+Z)" disabled>↶ Rückgängig</button>
     </div>
 
     <div class="topbar-right">
       <button id="btnOpenConvertModal" class="btn-convert" disabled
+        data-i18n="btn_convert" data-i18n-title="btn_convert_hint"
         title="Konvertieren: PDF in Word, Excel, PowerPoint, Bilder oder umgekehrt (erst verfügbar, sobald Seiten geladen sind)">
         🔄 Konvertieren
       </button>
-      <button id="btnPrint" class="nav-btn" title="Alle Seiten direkt drucken" disabled>
+      <button id="btnPrint" class="nav-btn" data-i18n="btn_print" data-i18n-title="btn_print_hint" title="Alle Seiten direkt drucken" disabled>
         🖨️ Drucken
       </button>
-      <button id="btnExport" class="btn-primary" disabled>
+      <button id="btnExport" class="btn-primary" data-i18n="btn_export" disabled>
         📥 PDF Speichern
       </button>
-      <button id="btnSharePdf" class="nav-btn" title="Fertiges PDF direkt teilen (E-Mail, WhatsApp, ...)" disabled>
+      <button id="btnSharePdf" class="nav-btn" data-i18n="btn_share" data-i18n-title="btn_share_hint" title="Fertiges PDF direkt teilen (E-Mail, WhatsApp, ...)" disabled>
         📤 Teilen
       </button>
     </div>
@@ -1378,49 +1747,49 @@
     <aside class="sidebar" id="sidebarPanel">
       <!-- Nur sichtbar, wenn die Seitenliste auf dem Handy als Sheet eingeblendet ist -->
       <div class="mobile-sheet-handle mobile-only-handle" style="display:none;">
-        <span>📑 Seiten</span>
-        <button type="button" id="btnCloseSidebarSheet">Fertig ✕</button>
+        <span data-i18n="sheet_pages">📑 Seiten</span>
+        <button type="button" id="btnCloseSidebarSheet" data-i18n="sheet_fertig">Fertig ✕</button>
       </div>
-      <div class="sidebar-section-title">Dokumente hinzufügen</div>
-      <div id="dropzone" class="dropzone" title="Dateien per Drag & Drop hierher ziehen">
+      <div class="sidebar-section-title" data-i18n="add_docs_title">Dokumente hinzufügen</div>
+      <div id="dropzone" class="dropzone" data-i18n-title="dropzone_hint" title="Dateien per Drag & Drop hierher ziehen">
         <div class="dropzone-icon">📄</div>
-        <strong>PDF, Word, Excel, PowerPoint oder Bilder</strong><br>
-        hierher ziehen oder anklicken
+        <strong data-i18n="dropzone_strong">PDF, Word, Excel, PowerPoint oder Bilder</strong><br>
+        <span data-i18n="dropzone_txt">hierher ziehen oder anklicken</span>
       </div>
       <!-- File input accepts PDF, Images, Word docx, Excel xlsx/csv, PowerPoint pptx -->
       <input id="fileInput" type="file" accept="application/pdf,image/*,.docx,.xlsx,.xls,.csv,.pptx" multiple
         style="display:none">
 
       <div class="import-actions">
-        <button id="btnChooseFiles" class="tool-btn">📂 Datei wählen</button>
-        <button id="btnCameraScan" class="tool-btn">📷 Scan / Foto</button>
+        <button id="btnChooseFiles" class="tool-btn" data-i18n="btn_choose_files">📂 Datei wählen</button>
+        <button id="btnCameraScan" class="tool-btn" data-i18n="btn_camera_scan">📷 Scan / Foto</button>
       </div>
       <div id="scanPendingBar" style="display:none; align-items:center; gap:8px; flex-wrap:wrap; background:var(--accent-soft,#eef4ff); border:1px solid var(--accent,#3366ff); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
-        <span style="font-weight:600;"><span id="scanPendingCount">0</span> Seite(n) aufgenommen</span>
-        <button id="btnScanPendingMore" class="tool-btn" style="margin:0;">📷 Weitere Seite</button>
-        <button id="btnScanPendingDone" class="btn-primary" style="margin:0;">✅ Fertig – bearbeiten</button>
+        <span style="font-weight:600;"><span id="scanPendingCount">0</span> <span data-i18n="scan_pending_suffix">Seite(n) aufgenommen</span></span>
+        <button id="btnScanPendingMore" class="tool-btn" style="margin:0;" data-i18n="btn_scan_pending_more">📷 Weitere Seite</button>
+        <button id="btnScanPendingDone" class="btn-primary" style="margin:0;" data-i18n="btn_scan_pending_done">✅ Fertig – bearbeiten</button>
       </div>
       <!-- Live-Kamera-Auto-Scan-Einstieg auf Wunsch entfernt (28.09.2026): nur noch "Scan / Foto"
            soll genutzt werden. Der zugrunde liegende Code bleibt bestehen, da er teils von der
            Foto-Pipeline mitbenutzt wird, ist aber über die Oberfläche nicht mehr erreichbar. -->
-      <button id="btnLiveCamScan" class="tool-btn" style="display:none;">🎥 Live-Kamera (Auto-Scan)</button>
-      <button id="btnPhoneScan" class="tool-btn" style="width:100%;margin-bottom:8px;">📱 Mit Handy scannen</button>
-      <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;">+ Leere A4-Seite
+      <button id="btnLiveCamScan" class="tool-btn" style="display:none;" data-i18n="btn_live_cam_scan">🎥 Live-Kamera (Auto-Scan)</button>
+      <button id="btnPhoneScan" class="tool-btn" style="width:100%;margin-bottom:8px;" data-i18n="btn_phone_scan">📱 Mit Handy scannen</button>
+      <button id="btnAddBlankPage" class="tool-btn btn-accent" style="width:100%;margin-bottom:8px;" data-i18n="btn_add_blank_page">+ Leere A4-Seite
         einfügen</button>
 
       <div id="cloudButtonsRow" style="display:none;gap:6px;margin-bottom:8px;">
-        <button id="btnCloudSave" class="tool-btn" style="flex:1;" title="Alle Seiten in deinem Konto speichern, um sie auf einem anderen Gerät weiterzubearbeiten">☁️ Speichern</button>
-        <button id="btnCloudLoad" class="tool-btn" style="flex:1;" title="Zuletzt in der Cloud gespeicherten Stand laden">☁️ Laden</button>
+        <button id="btnCloudSave" class="tool-btn" style="flex:1;" data-i18n="btn_cloud_save" data-i18n-title="btn_cloud_save_hint" title="Alle Seiten in deinem Konto speichern, um sie auf einem anderen Gerät weiterzubearbeiten">☁️ Speichern</button>
+        <button id="btnCloudLoad" class="tool-btn" style="flex:1;" data-i18n="btn_cloud_load" data-i18n-title="btn_cloud_load_hint" title="Zuletzt in der Cloud gespeicherten Stand laden">☁️ Laden</button>
       </div>
 
       <div class="sidebar-section-title">
-        <span>Seiten (<span id="pageCount">0</span>)</span>
-        <button id="btnClearAll" class="mini-btn danger" title="Alle Seiten leeren">Alle leeren</button>
+        <span><span data-i18n="pages_title">Seiten</span> (<span id="pageCount">0</span>)</span>
+        <button id="btnClearAll" class="mini-btn danger" data-i18n="btn_clear_all" data-i18n-title="btn_clear_all_hint" title="Alle Seiten leeren">Alle leeren</button>
       </div>
 
       <div id="pagesList" class="pages-list">
         <div class="empty-prompt" style="padding:20px 0;">
-          <p style="font-size:0.8rem;">Noch keine Seiten vorhanden. Füge eine PDF, Word-, Excel- oder Bilddatei hinzu.
+          <p style="font-size:0.8rem;" data-i18n="empty_pages">Noch keine Seiten vorhanden. Füge eine PDF, Word-, Excel- oder Bilddatei hinzu.
           </p>
         </div>
       </div>
@@ -1430,36 +1799,36 @@
     <main class="stage-container">
       <!-- Floating Toolbar -->
       <div class="toolbar-bar">
-        <button class="tool-tab active" data-tool="select" title="Auswählen, Verschieben & Bearbeiten">
+        <button class="tool-tab active" data-tool="select" data-i18n="tool_select" data-i18n-title="tool_select_hint" title="Auswählen, Verschieben & Bearbeiten">
           👆 Auswählen
         </button>
-        <button class="tool-tab" data-tool="pen"
+        <button class="tool-tab" data-tool="pen" data-i18n="tool_pen" data-i18n-title="tool_pen_hint"
           title="Stift: Handschriftlich Lücken ausfüllen, unterschreiben, ankreuzen">
           ✏️ Stift
         </button>
-        <button class="tool-tab" data-tool="text" title="Textfeld platzieren">
+        <button class="tool-tab" data-tool="text" data-i18n="tool_text" data-i18n-title="tool_text_hint" title="Textfeld platzieren">
           🔤 Text
         </button>
-        <button class="tool-tab" data-tool="highlight" title="Textmarker: Text gelb/bunt hervorheben">
+        <button class="tool-tab" data-tool="highlight" data-i18n="tool_highlight" data-i18n-title="tool_highlight_hint" title="Textmarker: Text gelb/bunt hervorheben">
           🖍️ Marker
         </button>
-        <button class="tool-tab" data-tool="correct"
+        <button class="tool-tab" data-tool="correct" data-i18n="tool_correct" data-i18n-title="tool_correct_hint"
           title="Korrektur: Erkannten Text im Dokument anklicken, um ihn zu ersetzen oder auszufüllen">
           🩹 Korrektur
         </button>
         <div class="tool-divider"></div>
-        <button class="tool-tab" data-tool="redact" title="Schwärzen: Vertrauliche Daten verdecken">
+        <button class="tool-tab" data-tool="redact" data-i18n="tool_redact" data-i18n-title="tool_redact_hint" title="Schwärzen: Vertrauliche Daten verdecken">
           ⬛ Schwärzen
         </button>
-        <button class="tool-tab" data-tool="whiteout" title="Whiteout: Fehler oder Stellen weiß überdecken">
+        <button class="tool-tab" data-tool="whiteout" data-i18n="tool_whiteout" data-i18n-title="tool_whiteout_hint" title="Whiteout: Fehler oder Stellen weiß überdecken">
           ⬜ Überdecken
         </button>
         <div class="tool-divider"></div>
-        <button id="btnOpenSignature" class="tool-btn" style="padding:5px 9px;"
+        <button id="btnOpenSignature" class="tool-btn" style="padding:5px 9px;" data-i18n="btn_signature" data-i18n-title="btn_signature_hint"
           title="Unterschrift zeichnen und einfügen">
           ✍️ Unterschrift
         </button>
-        <button id="btnOcrScan" class="tool-btn" style="padding:5px 9px;"
+        <button id="btnOcrScan" class="tool-btn" style="padding:5px 9px;" data-i18n="btn_ocr_scan" data-i18n-title="btn_ocr_scan_hint"
           title="Scan-Text per OCR erkennen & korrigieren">
           🔎 Scan OCR
         </button>
@@ -1469,14 +1838,14 @@
       <div id="stageViewport" class="stage-viewport">
         <div id="stageInner">
           <div class="empty-prompt">
-            <h2>Dein PDF & Dokumenten Studio</h2>
-            <p style="max-width:460px;line-height:1.5;margin:8px auto 16px;">
+            <h2 data-i18n="empty_h2">Dein PDF & Dokumenten Studio</h2>
+            <p style="max-width:460px;line-height:1.5;margin:8px auto 16px;" data-i18n-html="1" data-i18n="empty_p1_html">
               Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos über
               "📂 Datei wählen" oder "📷 Scan / Foto" links hoch.
               Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel
               zwischen allen Formaten!
             </p>
-            <p style="max-width:460px;line-height:1.5;margin:0 auto 8px;font-size:0.85rem;color:#666;">
+            <p style="max-width:460px;line-height:1.5;margin:0 auto 8px;font-size:0.85rem;color:#666;" data-i18n="empty_p2">
               💡 Melde dich oben rechts kostenlos an, um deine Seiten in deinem Konto zu speichern
               und von jedem Gerät wieder darauf zuzugreifen.
             </p>
@@ -1489,96 +1858,96 @@
     <aside class="inspector" id="inspectorPanel">
       <!-- Nur sichtbar, wenn die Werkzeug-Einstellungen auf dem Handy als Sheet eingeblendet sind -->
       <div class="mobile-sheet-handle mobile-only-handle" style="display:none;">
-        <span>⚙️ Werkzeug-Einstellungen</span>
-        <button type="button" id="btnCloseInspectorSheet">Fertig ✕</button>
+        <span data-i18n="sheet_tool_settings">⚙️ Werkzeug-Einstellungen</span>
+        <button type="button" id="btnCloseInspectorSheet" data-i18n="sheet_fertig">Fertig ✕</button>
       </div>
 
       <!-- Contextual Tool Settings: Stift / Freihand -->
       <div id="panelPen" class="control-box">
-        <div class="inspector-title">✏️ Stift-Einstellungen</div>
+        <div class="inspector-title" data-i18n="panel_pen_title">✏️ Stift-Einstellungen</div>
         <div class="form-row">
-          <label>Stift-Farbe</label>
+          <label data-i18n="label_pen_color">Stift-Farbe</label>
           <div class="palette-row">
             <div class="color-dot active" data-color="#1a4480" style="background:#1a4480;"
-              title="Kugelschreiber Dokumentenblau"></div>
-            <div class="color-dot" data-color="#111111" style="background:#111111;" title="Dokumentenschwarz"></div>
-            <div class="color-dot" data-color="#d62828" style="background:#d62828;" title="Korrekturrot"></div>
-            <div class="color-dot" data-color="#16803c" style="background:#16803c;" title="Notizengrün"></div>
-            <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b;" title="Warmes Bernstein/Gelb"></div>
+              data-i18n-title="color_blue" title="Kugelschreiber Dokumentenblau"></div>
+            <div class="color-dot" data-color="#111111" style="background:#111111;" data-i18n-title="color_black" title="Dokumentenschwarz"></div>
+            <div class="color-dot" data-color="#d62828" style="background:#d62828;" data-i18n-title="color_red" title="Korrekturrot"></div>
+            <div class="color-dot" data-color="#16803c" style="background:#16803c;" data-i18n-title="color_green" title="Notizengrün"></div>
+            <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b;" data-i18n-title="color_amber" title="Warmes Bernstein/Gelb"></div>
             <input type="color" id="customPenColor" class="custom-color-input" value="#1a4480"
-              title="Eigene Farbe wählen">
+              data-i18n-title="color_custom" title="Eigene Farbe wählen">
           </div>
         </div>
 
         <div class="form-row">
-          <label>Strichstärke</label>
+          <label data-i18n="label_stroke">Strichstärke</label>
           <div class="stroke-presets">
-            <button class="stroke-btn active" data-size="1.8">Fein (1.8px)</button>
-            <button class="stroke-btn" data-size="3.5">Mittel (3.5px)</button>
-            <button class="stroke-btn" data-size="6">Dick (6px)</button>
+            <button class="stroke-btn active" data-size="1.8" data-i18n="stroke_fine">Fein (1.8px)</button>
+            <button class="stroke-btn" data-size="3.5" data-i18n="stroke_medium">Mittel (3.5px)</button>
+            <button class="stroke-btn" data-size="6" data-i18n="stroke_thick">Dick (6px)</button>
           </div>
         </div>
 
         <div class="form-row" style="margin-top:10px;display:flex;gap:6px;">
-          <button id="btnPenEraser" class="tool-btn" style="flex:1;">🧹 Radierer</button>
-          <button id="btnClearPageDrawings" class="tool-btn" style="flex:1;">Alle Striche löschen</button>
+          <button id="btnPenEraser" class="tool-btn" style="flex:1;" data-i18n="btn_eraser">🧹 Radierer</button>
+          <button id="btnClearPageDrawings" class="tool-btn" style="flex:1;" data-i18n="btn_clear_drawings">Alle Striche löschen</button>
         </div>
       </div>
 
       <!-- Contextual Tool Settings: Text -->
       <div id="panelText" class="control-box" style="display:none;">
-        <div class="inspector-title">🔤 Textfeld-Eigenschaften</div>
+        <div class="inspector-title" data-i18n="panel_text_title">🔤 Textfeld-Eigenschaften</div>
         <div class="form-row">
-          <label for="textInputVal">Text</label>
-          <textarea id="textInputVal" rows="2" placeholder="Text hier eingeben..."></textarea>
+          <label for="textInputVal" data-i18n="label_text">Text</label>
+          <textarea id="textInputVal" rows="2" data-i18n-placeholder="text_placeholder" placeholder="Text hier eingeben..."></textarea>
         </div>
         <div class="form-row">
-          <label for="textFont">Schriftart</label>
+          <label for="textFont" data-i18n="label_font">Schriftart</label>
           <select id="textFont">
-            <option value="Arial, sans-serif">Arial (Klar & Modern)</option>
-            <option value="Georgia, serif">Georgia (Klassisch)</option>
-            <option value="'Times New Roman', serif">Times New Roman</option>
-            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-            <option value="'Courier New', monospace">Schreibmaschine / Courier</option>
+            <option value="Arial, sans-serif" data-i18n="font_arial">Arial (Klar & Modern)</option>
+            <option value="Georgia, serif" data-i18n="font_georgia">Georgia (Klassisch)</option>
+            <option value="'Times New Roman', serif" data-i18n="font_times">Times New Roman</option>
+            <option value="'Trebuchet MS', sans-serif" data-i18n="font_trebuchet">Trebuchet MS</option>
+            <option value="'Courier New', monospace" data-i18n="font_courier">Schreibmaschine / Courier</option>
           </select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="form-row">
           <div>
-            <label for="textSize">Größe (pt)</label>
+            <label for="textSize" data-i18n="label_size_pt">Größe (pt)</label>
             <input type="number" id="textSize" value="16" min="8" max="72">
           </div>
           <div>
-            <label for="textColor">Farbe</label>
+            <label for="textColor" data-i18n="label_color">Farbe</label>
             <input type="color" id="textColor" value="#173b3f" style="height:35px;padding:2px;">
           </div>
         </div>
         <div class="form-row" style="display:flex;gap:6px;">
-          <button id="btnTextBold" class="tool-btn" style="flex:1;"><b>Fett</b></button>
-          <button id="btnDeleteSelectedText" class="tool-btn danger" style="flex:1;color:#dc2626;">Löschen</button>
+          <button id="btnTextBold" class="tool-btn" style="flex:1;"><b data-i18n="btn_bold">Fett</b></button>
+          <button id="btnDeleteSelectedText" class="tool-btn danger" style="flex:1;color:#dc2626;" data-i18n="btn_delete">Löschen</button>
         </div>
       </div>
 
       <!-- Contextual Tool Settings: Marker -->
       <div id="panelHighlight" class="control-box" style="display:none;">
-        <div class="inspector-title">🖍️ Textmarker-Farbe</div>
+        <div class="inspector-title" data-i18n="panel_highlight_title">🖍️ Textmarker-Farbe</div>
         <div class="palette-row">
           <div class="color-dot active" data-hcolor="rgba(255, 235, 59, 0.45)" style="background:#fef08a;"
-            title="Klassisches Leuchtgelb"></div>
-          <div class="color-dot" data-hcolor="rgba(74, 222, 128, 0.42)" style="background:#bbf7d0;" title="Leuchtgrün">
+            data-i18n-title="hl_yellow" title="Klassisches Leuchtgelb"></div>
+          <div class="color-dot" data-hcolor="rgba(74, 222, 128, 0.42)" style="background:#bbf7d0;" data-i18n-title="hl_green" title="Leuchtgrün">
           </div>
-          <div class="color-dot" data-hcolor="rgba(96, 165, 250, 0.42)" style="background:#bfdbfe;" title="Leuchtblau">
+          <div class="color-dot" data-hcolor="rgba(96, 165, 250, 0.42)" style="background:#bfdbfe;" data-i18n-title="hl_blue" title="Leuchtblau">
           </div>
-          <div class="color-dot" data-hcolor="rgba(244, 114, 182, 0.42)" style="background:#fbcfe8;" title="Leuchtrosa">
+          <div class="color-dot" data-hcolor="rgba(244, 114, 182, 0.42)" style="background:#fbcfe8;" data-i18n-title="hl_pink" title="Leuchtrosa">
           </div>
           <div class="color-dot" data-hcolor="rgba(251, 146, 60, 0.42)" style="background:#fed7aa;"
-            title="Leuchtorange"></div>
+            data-i18n-title="hl_orange" title="Leuchtorange"></div>
         </div>
       </div>
 
       <!-- Korrektur Info Box -->
       <div id="panelCorrect" class="control-box" style="display:none;">
-        <div class="inspector-title">🩹 Korrektur-Modus</div>
-        <p style="font-size:0.8rem;color:var(--muted);margin:0 0 10px;">
+        <div class="inspector-title" data-i18n="panel_correct_title">🩹 Korrektur-Modus</div>
+        <p style="font-size:0.8rem;color:var(--muted);margin:0 0 10px;" data-i18n="correct_info">
           Klicke im Dokument direkt auf ein erkanntes Wort oder eine Stelle, um sie zu ersetzen
           oder ein leeres Feld auszufüllen. Fahre mit der Maus über eine Stelle, um Schriftgröße,
           Schriftart (sofern im Dokument ermittelbar) und Fettdruck angezeigt zu bekommen – diese
@@ -1586,30 +1955,30 @@
           Stelle und im gleichen Stil wie das Original erscheint.
         </p>
         <div class="form-row">
-          <label>Was möchtest du korrigieren?</label>
+          <label data-i18n="label_correct_scope">Was möchtest du korrigieren?</label>
           <div style="display:flex;gap:8px;margin-top:4px;">
-            <button type="button" id="scopeWortBtn" class="tpl-btn active" style="flex:1;">Nur ein Wort</button>
-            <button type="button" id="scopeSatzBtn" class="tpl-btn" style="flex:1;">Ganzer Satz/Zeile</button>
+            <button type="button" id="scopeWortBtn" class="tpl-btn active" style="flex:1;" data-i18n="scope_word">Nur ein Wort</button>
+            <button type="button" id="scopeSatzBtn" class="tpl-btn" style="flex:1;" data-i18n="scope_line">Ganzer Satz/Zeile</button>
           </div>
         </div>
       </div>
 
       <!-- OCR Info Box -->
       <div id="panelOcr" class="control-box" style="display:none;">
-        <div class="inspector-title">🔎 Scan-Texterkennung (OCR)</div>
+        <div class="inspector-title" data-i18n="panel_ocr_title">🔎 Scan-Texterkennung (OCR)</div>
         <div class="form-row">
-          <label for="ocrLang">Erkennungssprache</label>
+          <label for="ocrLang" data-i18n="label_ocr_lang">Erkennungssprache</label>
           <select id="ocrLang">
-            <option value="deu" selected>Deutsch (Standard)</option>
-            <option value="eng">Englisch</option>
+            <option value="deu" selected data-i18n="ocr_lang_de">Deutsch (Standard)</option>
+            <option value="eng" data-i18n="ocr_lang_en">Englisch</option>
           </select>
         </div>
-        <button id="btnRunOcr" class="btn-primary" style="width:100%;margin-top:6px;">
+        <button id="btnRunOcr" class="btn-primary" style="width:100%;margin-top:6px;" data-i18n="btn_run_ocr">
           Texterkennung starten
         </button>
         <div id="ocrProgressBox" style="display:none;margin-top:10px;">
           <div style="display:flex;justify-content:space-between;font-size:0.72rem;font-weight:bold;">
-            <span id="ocrStatusMsg">Wird verarbeitet...</span>
+            <span id="ocrStatusMsg" data-i18n="ocr_status_processing">Wird verarbeitet...</span>
             <span id="ocrPercent">0%</span>
           </div>
           <div class="progress-bar-wrap">
@@ -1620,44 +1989,44 @@
 
       <!-- Export & Quality Settings -->
       <div class="control-box">
-        <div class="inspector-title">⚙️ PDF-Export-Einstellungen</div>
+        <div class="inspector-title" data-i18n="export_settings_title">⚙️ PDF-Export-Einstellungen</div>
         <div class="form-row">
-          <label for="pdfQuality">Qualität & Auflösung</label>
+          <label for="pdfQuality" data-i18n="label_quality">Qualität & Auflösung</label>
           <select id="pdfQuality">
-            <option value="high" selected>Druckqualität (Scharf & Hochauflösend)</option>
-            <option value="medium">Web / E-Mail (Ausgewogen ~150 DPI)</option>
-            <option value="compact">Kompakt (Kleine Dateigröße für Uploads)</option>
+            <option value="high" selected data-i18n="quality_high">Druckqualität (Scharf & Hochauflösend)</option>
+            <option value="medium" data-i18n="quality_medium">Web / E-Mail (Ausgewogen ~150 DPI)</option>
+            <option value="compact" data-i18n="quality_compact">Kompakt (Kleine Dateigröße für Uploads)</option>
           </select>
         </div>
         <div class="form-row">
-          <label for="pdfPageFormat">Seitenformat</label>
+          <label for="pdfPageFormat" data-i18n="label_page_format">Seitenformat</label>
           <select id="pdfPageFormat">
-            <option value="a4" selected>Einheitlich DIN A4</option>
-            <option value="original">Originalgröße beibehalten</option>
+            <option value="a4" selected data-i18n="format_a4">Einheitlich DIN A4</option>
+            <option value="original" data-i18n="format_original">Originalgröße beibehalten</option>
           </select>
         </div>
         <div class="form-row" style="align-items:center;">
           <label for="pdfWatermarkOn" style="display:flex;align-items:center;gap:6px;">
             <input type="checkbox" id="pdfWatermarkOn" style="width:auto;">
-            Wasserzeichen/Stempel
+            <span data-i18n="label_watermark">Wasserzeichen/Stempel</span>
           </label>
         </div>
         <div class="form-row" id="pdfWatermarkTextRow" style="display:none;">
-          <label for="pdfWatermarkText">Text</label>
-          <input type="text" id="pdfWatermarkText" placeholder="z. B. Kopie, Vertraulich" value="Kopie">
+          <label for="pdfWatermarkText" data-i18n="label_watermark_text">Text</label>
+          <input type="text" id="pdfWatermarkText" data-i18n-placeholder="watermark_placeholder" placeholder="z. B. Kopie, Vertraulich" value="Kopie">
         </div>
       </div>
 
       <!-- Page Actions -->
       <div class="control-box">
-        <div class="inspector-title">📄 Seite drehen & spiegeln</div>
+        <div class="inspector-title" data-i18n="page_actions_title">📄 Seite drehen & spiegeln</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-          <button id="btnRotateLeft" class="tool-btn">↶ 90° Links</button>
-          <button id="btnRotateRight" class="tool-btn">↷ 90° Rechts</button>
-          <button id="btnFlipH" class="tool-btn">⇋ Horizontal</button>
-          <button id="btnFlipV" class="tool-btn">⇵ Vertikal</button>
+          <button id="btnRotateLeft" class="tool-btn" data-i18n="btn_rotate_left">↶ 90° Links</button>
+          <button id="btnRotateRight" class="tool-btn" data-i18n="btn_rotate_right">↷ 90° Rechts</button>
+          <button id="btnFlipH" class="tool-btn" data-i18n="btn_flip_h">⇋ Horizontal</button>
+          <button id="btnFlipV" class="tool-btn" data-i18n="btn_flip_v">⇵ Vertikal</button>
         </div>
-        <button id="btnDuplicatePage" class="tool-btn" style="width:100%;margin-top:8px;">Seite duplizieren</button>
+        <button id="btnDuplicatePage" class="tool-btn" style="width:100%;margin-top:8px;" data-i18n="btn_duplicate_page">Seite duplizieren</button>
       </div>
 
     </aside>
@@ -1668,13 +2037,13 @@
 
   <!-- Handy: feste Knopfleiste unten, um Seiten bzw. Werkzeug-Einstellungen ein-/auszuklappen -->
   <div id="mobilePanelToggles" class="mobile-panel-toggles">
-    <button type="button" id="btnToggleSidebarSheet">📑 Seiten</button>
-    <button type="button" id="btnToggleInspectorSheet">⚙️ Werkzeuge</button>
+    <button type="button" id="btnToggleSidebarSheet" data-i18n="toggle_pages">📑 Seiten</button>
+    <button type="button" id="btnToggleInspectorSheet" data-i18n="toggle_tools">⚙️ Werkzeuge</button>
   </div>
 
   <!-- Status Toast -->
   <div id="statusToast" class="status-toast hidden">
-    <span id="toastText">Bereit</span>
+    <span id="toastText" data-i18n="toast_ready">Bereit</span>
   </div>
 
   <!-- Modal: Universeller Konverter -->
@@ -1682,8 +2051,8 @@
     <div class="modal-box">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
-          <h3>🔄 Dokumenten-Konverter</h3>
-          <p style="font-size:0.78rem;color:var(--muted);">
+          <h3 data-i18n="modal_convert_h3">🔄 Dokumenten-Konverter</h3>
+          <p style="font-size:0.78rem;color:var(--muted);" data-i18n="modal_convert_p">
             Konvertiere zwischen PDF, Word, Excel, PowerPoint und Bildern – 100% lokal & sicher im Browser.
           </p>
         </div>
@@ -1692,8 +2061,8 @@
 
       <!-- Modal Tabs -->
       <div class="modal-tabs">
-        <button class="modal-tab active" id="tabExportMode">📤 Aus PDF exportieren</button>
-        <button class="modal-tab" id="tabImportMode">📥 In PDF umwandeln (Import)</button>
+        <button class="modal-tab active" id="tabExportMode" data-i18n="tab_export">📤 Aus PDF exportieren</button>
+        <button class="modal-tab" id="tabImportMode" data-i18n="tab_import">📥 In PDF umwandeln (Import)</button>
       </div>
 
       <!-- Tab Content 1: PDF in andere Formate exportieren -->
@@ -1701,33 +2070,33 @@
         <div class="convert-grid">
           <!-- Word -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📄</span> Word (.docx)</div>
-            <div class="convert-card-desc">Wandelt PDF-Seiten & Texte in ein editierbares Microsoft Word Dokument um.
+            <div class="convert-card-head"><span>📄</span> <span data-i18n="conv_word_head">Word (.docx)</span></div>
+            <div class="convert-card-desc" data-i18n="conv_word_desc">Wandelt PDF-Seiten & Texte in ein editierbares Microsoft Word Dokument um.
             </div>
-            <button id="btnConvWord" class="btn-primary" style="background:#2b579a;">Word herunterladen</button>
+            <button id="btnConvWord" class="btn-primary" style="background:#2b579a;" data-i18n="conv_word_btn">Word herunterladen</button>
           </div>
           <!-- Excel -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📊</span> Excel (.xlsx)</div>
-            <div class="convert-card-desc">Extrahiert Tabellendaten und Zeilen in eine Microsoft Excel-Arbeitsmappe.
+            <div class="convert-card-head"><span>📊</span> <span data-i18n="conv_excel_head">Excel (.xlsx)</span></div>
+            <div class="convert-card-desc" data-i18n="conv_excel_desc">Extrahiert Tabellendaten und Zeilen in eine Microsoft Excel-Arbeitsmappe.
             </div>
-            <button id="btnConvExcel" class="btn-primary" style="background:#217346;">Excel herunterladen</button>
+            <button id="btnConvExcel" class="btn-primary" style="background:#217346;" data-i18n="conv_excel_btn">Excel herunterladen</button>
           </div>
           <!-- PowerPoint -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📽️</span> PowerPoint (.pptx)</div>
-            <div class="convert-card-desc">Erstellt eine Präsentation mit jeder PDF-Seite als hochauflösende Folie.
+            <div class="convert-card-head"><span>📽️</span> <span data-i18n="conv_pptx_head">PowerPoint (.pptx)</span></div>
+            <div class="convert-card-desc" data-i18n="conv_pptx_desc">Erstellt eine Präsentation mit jeder PDF-Seite als hochauflösende Folie.
             </div>
-            <button id="btnConvPptx" class="btn-primary" style="background:#d24726;">PowerPoint herunterladen</button>
+            <button id="btnConvPptx" class="btn-primary" style="background:#d24726;" data-i18n="conv_pptx_btn">PowerPoint herunterladen</button>
           </div>
           <!-- Bilder -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>🖼️</span> Bilder (JPG / PNG)</div>
-            <div class="convert-card-desc">Speichert die aktuelle Seite als Bild oder alle Seiten als ZIP-Archiv.</div>
+            <div class="convert-card-head"><span>🖼️</span> <span data-i18n="conv_img_head">Bilder (JPG / PNG)</span></div>
+            <div class="convert-card-desc" data-i18n="conv_img_desc">Speichert die aktuelle Seite als Bild oder alle Seiten als ZIP-Archiv.</div>
             <div style="display:flex;gap:4px;">
-              <button id="btnConvJpg" class="tool-btn" style="flex:1;">JPG</button>
-              <button id="btnConvPng" class="tool-btn" style="flex:1;">PNG</button>
-              <button id="btnConvZip" class="btn-primary" style="flex:1;background:var(--accent);padding:7px 4px;">Alle
+              <button id="btnConvJpg" class="tool-btn" style="flex:1;" data-i18n="conv_jpg_btn">JPG</button>
+              <button id="btnConvPng" class="tool-btn" style="flex:1;" data-i18n="conv_png_btn">PNG</button>
+              <button id="btnConvZip" class="btn-primary" style="flex:1;background:var(--accent);padding:7px 4px;" data-i18n="conv_zip_btn">Alle
                 (ZIP)</button>
             </div>
           </div>
@@ -1739,34 +2108,34 @@
         <div class="convert-grid">
           <!-- Fotos zu PDF -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>🖼️</span> Fotos / Bilder ➔ PDF</div>
-            <div class="convert-card-desc">Bündelt mehrere Fotos (JPG, PNG, WebP) sauber zu einem fertigen PDF-Dokument.
+            <div class="convert-card-head"><span>🖼️</span> <span data-i18n="conv_photos_head">Fotos / Bilder ➔ PDF</span></div>
+            <div class="convert-card-desc" data-i18n="conv_photos_desc">Bündelt mehrere Fotos (JPG, PNG, WebP) sauber zu einem fertigen PDF-Dokument.
             </div>
-            <button id="btnPickPhotosToPdf" class="btn-primary">Fotos wählen</button>
+            <button id="btnPickPhotosToPdf" class="btn-primary" data-i18n="conv_photos_btn">Fotos wählen</button>
           </div>
           <!-- Word zu PDF -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📄</span> Word (.docx) ➔ PDF</div>
-            <div class="convert-card-desc">Liest ein Microsoft Word Dokument ein und wandelt es in PDF-Druckseiten um.
+            <div class="convert-card-head"><span>📄</span> <span data-i18n="conv_word2pdf_head">Word (.docx) ➔ PDF</span></div>
+            <div class="convert-card-desc" data-i18n="conv_word2pdf_desc">Liest ein Microsoft Word Dokument ein und wandelt es in PDF-Druckseiten um.
             </div>
-            <button id="btnPickWordToPdf" class="btn-primary" style="background:#2b579a;">Word öffnen</button>
+            <button id="btnPickWordToPdf" class="btn-primary" style="background:#2b579a;" data-i18n="conv_word2pdf_btn">Word öffnen</button>
           </div>
           <!-- Excel zu PDF -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📊</span> Excel (.xlsx/.csv) ➔ PDF</div>
-            <div class="convert-card-desc">Wandelt Excel-Kalkulationstabellen mit Gitternetz in PDF-Seiten um.</div>
-            <button id="btnPickExcelToPdf" class="btn-primary" style="background:#217346;">Excel öffnen</button>
+            <div class="convert-card-head"><span>📊</span> <span data-i18n="conv_excel2pdf_head">Excel (.xlsx/.csv) ➔ PDF</span></div>
+            <div class="convert-card-desc" data-i18n="conv_excel2pdf_desc">Wandelt Excel-Kalkulationstabellen mit Gitternetz in PDF-Seiten um.</div>
+            <button id="btnPickExcelToPdf" class="btn-primary" style="background:#217346;" data-i18n="conv_excel2pdf_btn">Excel öffnen</button>
           </div>
           <!-- PowerPoint zu PDF -->
           <div class="convert-card">
-            <div class="convert-card-head"><span>📽️</span> PowerPoint (.pptx) ➔ PDF</div>
-            <div class="convert-card-desc">Importiert Präsentationsfolien als druckbare PDF-Seiten in das Studio.</div>
-            <button id="btnPickPptxToPdf" class="btn-primary" style="background:#d24726;">PowerPoint öffnen</button>
+            <div class="convert-card-head"><span>📽️</span> <span data-i18n="conv_pptx2pdf_head">PowerPoint (.pptx) ➔ PDF</span></div>
+            <div class="convert-card-desc" data-i18n="conv_pptx2pdf_desc">Importiert Präsentationsfolien als druckbare PDF-Seiten in das Studio.</div>
+            <button id="btnPickPptxToPdf" class="btn-primary" style="background:#d24726;" data-i18n="conv_pptx2pdf_btn">PowerPoint öffnen</button>
           </div>
         </div>
       </div>
 
-      <div style="font-size:0.72rem;color:var(--muted);text-align:center;">
+      <div style="font-size:0.72rem;color:var(--muted);text-align:center;" data-i18n="conv_footer_note">
         🔒 Alle Konvertierungen finden ausschließlich lokal in deinem Browser statt. Keine Dokumentdaten verlassen
         deinen PC.
       </div>
@@ -1776,64 +2145,64 @@
   <!-- Modal: Scan optimieren (Zuschnitt/Geraderichten + Filter) -->
   <div id="modalScanEnhance" class="modal-backdrop">
     <div class="modal-box" style="width:min(680px,100%);">
-      <h3>📷 Scan optimieren</h3>
-      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;" id="scanEnhanceHint">
-        Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter“.
+      <h3 data-i18n=”modal_scanenhance_h3”>📷 Scan optimieren</h3>
+      <p style=”font-size:0.78rem;color:var(--muted);margin-bottom:10px;” id=”scanEnhanceHint” data-i18n=”scan_enhance_hint”>
+        Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter”.
       </p>
 
-      <div class="doctype-row" id="scanDoctypeRow">
-        <span class="doctype-label">Was scannst du?</span>
-        <div class="doctype-options">
-          <button type="button" class="doctype-btn selected" data-type="dokument">📄 Dokument</button>
-          <button type="button" class="doctype-btn" data-type="reisepass">🛂 Reisepass</button>
-          <button type="button" class="doctype-btn" data-type="ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
+      <div class=”doctype-row” id=”scanDoctypeRow”>
+        <span class=”doctype-label” data-i18n=”doctype_label”>Was scannst du?</span>
+        <div class=”doctype-options”>
+          <button type=”button” class=”doctype-btn selected” data-type=”dokument” data-i18n=”doctype_dokument”>📄 Dokument</button>
+          <button type=”button” class=”doctype-btn” data-type=”reisepass” data-i18n=”doctype_reisepass”>🛂 Reisepass</button>
+          <button type=”button” class=”doctype-btn” data-type=”ausweis” data-i18n=”doctype_ausweis”>🪪 Ausweis (Vorder- &amp; Rückseite)</button>
         </div>
       </div>
-      <div class="ausweis-banner" id="scanAusweisBanner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.</div>
+      <div class=”ausweis-banner” id=”scanAusweisBanner” data-i18n=”ausweis_banner”>🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.</div>
 
-      <div id="scanCropStage">
-        <div class="scan-crop-wrap" id="scanCropWrap">
-          <canvas id="scanCropCanvas"></canvas>
-          <div class="scan-handle" id="sh0"></div>
-          <div class="scan-handle" id="sh1"></div>
-          <div class="scan-handle" id="sh2"></div>
-          <div class="scan-handle" id="sh3"></div>
+      <div id=”scanCropStage”>
+        <div class=”scan-crop-wrap” id=”scanCropWrap”>
+          <canvas id=”scanCropCanvas”></canvas>
+          <div class=”scan-handle” id=”sh0”></div>
+          <div class=”scan-handle” id=”sh1”></div>
+          <div class=”scan-handle” id=”sh2”></div>
+          <div class=”scan-handle” id=”sh3”></div>
         </div>
-        <div class="modal-actions" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="btnScanCropReset" class="tool-btn">↺ Zurücksetzen</button>
-            <button id="btnScanRotateLeft" class="tool-btn" title="90° nach links drehen">⟲ Links</button>
-            <button id="btnScanRotateRight" class="tool-btn" title="90° nach rechts drehen">⟳ Rechts</button>
+        <div class=”modal-actions” style=”display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;”>
+          <div style=”display:flex;gap:8px;flex-wrap:wrap;”>
+            <button id=”btnScanCropReset” class=”tool-btn” data-i18n=”btn_scan_crop_reset”>↺ Zurücksetzen</button>
+            <button id=”btnScanRotateLeft” class=”tool-btn” data-i18n=”btn_scan_rotate_left” data-i18n-title=”btn_scan_rotate_left_hint” title=”90° nach links drehen”>⟲ Links</button>
+            <button id=”btnScanRotateRight” class=”tool-btn” data-i18n=”btn_scan_rotate_right” data-i18n-title=”btn_scan_rotate_right_hint” title=”90° nach rechts drehen”>⟳ Rechts</button>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button id="btnScanCancel1" class="tool-btn">Abbrechen</button>
-            <button id="btnScanCropNext" class="btn-primary">Weiter →</button>
+          <div style=”display:flex;gap:8px;”>
+            <button id=”btnScanCancel1” class=”tool-btn” data-i18n=”btn_scan_cancel”>Abbrechen</button>
+            <button id=”btnScanCropNext” class=”btn-primary” data-i18n=”btn_scan_crop_next”>Weiter →</button>
           </div>
         </div>
       </div>
 
-      <div id="scanFilterStage" style="display:none;">
-        <div class="scan-filter-grid" id="scanFilterGrid">
-          <div class="scan-filter-card" data-filter="original"><canvas></canvas><span>Original</span></div>
-          <div class="scan-filter-card" data-filter="auto"><canvas></canvas><span>Automatisch</span></div>
-          <div class="scan-filter-card" data-filter="gray"><canvas></canvas><span>Graustufen</span></div>
-          <div class="scan-filter-card" data-filter="bw"><canvas></canvas><span>Schwarz-Weiß</span></div>
-          <div class="scan-filter-card" data-filter="vivid"><canvas></canvas><span>Farbe kräftig</span></div>
+      <div id=”scanFilterStage” style=”display:none;”>
+        <div class=”scan-filter-grid” id=”scanFilterGrid”>
+          <div class=”scan-filter-card” data-filter=”original”><canvas></canvas><span data-i18n=”filter_original”>Original</span></div>
+          <div class=”scan-filter-card” data-filter=”auto”><canvas></canvas><span data-i18n=”filter_auto”>Automatisch</span></div>
+          <div class=”scan-filter-card” data-filter=”gray”><canvas></canvas><span data-i18n=”filter_gray”>Graustufen</span></div>
+          <div class=”scan-filter-card” data-filter=”bw”><canvas></canvas><span data-i18n=”filter_bw”>Schwarz-Weiß</span></div>
+          <div class=”scan-filter-card” data-filter=”vivid”><canvas></canvas><span data-i18n=”filter_vivid”>Farbe kräftig</span></div>
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
-          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);">Helligkeit
-            <input type="range" id="scanBrightness" min="-60" max="60" value="0" style="width:100%;">
+        <div style=”display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;”>
+          <label style=”flex:1 1 160px;font-size:.8rem;color:var(--muted);”><span data-i18n=”label_brightness”>Helligkeit</span>
+            <input type=”range” id=”scanBrightness” min=”-60” max=”60” value=”0” style=”width:100%;”>
           </label>
-          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);">Kontrast
-            <input type="range" id="scanContrast" min="-60" max="60" value="0" style="width:100%;">
+          <label style=”flex:1 1 160px;font-size:.8rem;color:var(--muted);”><span data-i18n=”label_contrast”>Kontrast</span>
+            <input type=”range” id=”scanContrast” min=”-60” max=”60” value=”0” style=”width:100%;”>
           </label>
-          <button id="btnScanAdjustReset" class="tool-btn" style="flex:0 0 auto;align-self:flex-end;">↺ Zurücksetzen</button>
+          <button id=”btnScanAdjustReset” class=”tool-btn” style=”flex:0 0 auto;align-self:flex-end;” data-i18n=”btn_scan_crop_reset”>↺ Zurücksetzen</button>
         </div>
-        <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
-          <button id="btnScanFilterBack" class="tool-btn">← Zurück</button>
-          <div style="display:flex;gap:8px;">
-            <button id="btnScanCancel2" class="tool-btn">Abbrechen</button>
-            <button id="btnScanFilterDone" class="btn-primary">Seite übernehmen ✓</button>
+        <div class=”modal-actions” style=”display:flex;justify-content:space-between;margin-top:14px;”>
+          <button id=”btnScanFilterBack” class=”tool-btn” data-i18n=”btn_scan_filter_back”>← Zurück</button>
+          <div style=”display:flex;gap:8px;”>
+            <button id=”btnScanCancel2” class=”tool-btn” data-i18n=”btn_scan_cancel”>Abbrechen</button>
+            <button id=”btnScanFilterDone” class=”btn-primary” data-i18n=”btn_scan_filter_done”>Seite übernehmen ✓</button>
           </div>
         </div>
       </div>
@@ -1841,25 +2210,25 @@
   </div>
 
   <!-- Modal: Mit Handy scannen -->
-  <div id="modalPhoneScan" class="modal-backdrop">
-    <div class="modal-box" style="width:min(420px,100%); text-align:center;">
-      <h3>📱 Mit Handy scannen</h3>
-      <p style="color:var(--muted); font-size:.9rem;">Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
+  <div id=”modalPhoneScan” class=”modal-backdrop”>
+    <div class=”modal-box” style=”width:min(420px,100%); text-align:center;”>
+      <h3 data-i18n=”modal_phonescan_h3”>📱 Mit Handy scannen</h3>
+      <p style=”color:var(--muted); font-size:.9rem;” data-i18n=”phonescan_p”>Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
         sich eine Scan-Seite im Handy-Browser – keine App nötig.</p>
-      <div id="phoneScanQr" style="display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;">
-        <span style="color:var(--muted); font-size:.85rem;">QR-Code wird erstellt …</span>
+      <div id=”phoneScanQr” style=”display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;”>
+        <span style=”color:var(--muted); font-size:.85rem;” data-i18n=”phonescan_qr_wait”>QR-Code wird erstellt …</span>
       </div>
-      <p id="phoneScanStatus" style="font-weight:600; color:var(--accent);">Verbindung wird vorbereitet …</p>
-      <div class="modal-actions" style="justify-content:center;">
-        <button id="btnPhoneScanClose" class="tool-btn">Schließen</button>
+      <p id=”phoneScanStatus” style=”font-weight:600; color:var(--accent);” data-i18n=”phonescan_status_prep”>Verbindung wird vorbereitet …</p>
+      <div class=”modal-actions” style=”justify-content:center;”>
+        <button id=”btnPhoneScanClose” class=”tool-btn” data-i18n=”btn_close_modal”>Schließen</button>
       </div>
     </div>
   </div>
 
   <!-- Modal: Live-Kamera mit Echtzeit-Kantenerkennung -->
-  <div id="modalLiveCam" class="modal-backdrop">
-    <div class="modal-box" style="width:min(680px,100%); text-align:center;">
-      <h3>🎥 Live-Kamera (Auto-Scan)</h3>
+  <div id=”modalLiveCam” class=”modal-backdrop”>
+    <div class=”modal-box” style=”width:min(680px,100%); text-align:center;”>
+      <h3 data-i18n=”modal_livecam_h3”>🎥 Live-Kamera (Auto-Scan)</h3>
       <div style="position:relative; width:100%; max-width:640px; margin:0 auto; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:4/3;">
         <video id="liveCamVideo" autoplay playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;"></video>
         <canvas id="liveCamOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
@@ -1874,12 +2243,12 @@
           <img id="liveCamCapturedImg" style="max-width:70%; max-height:60%; border-radius:8px; box-shadow:0 4px 18px rgba(0,0,0,.5);">
           <div style="color:#fff; font-weight:700; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
             <span style="display:inline-flex; width:28px; height:28px; border-radius:50%; background:var(--success,#2e9e4f); align-items:center; justify-content:center;">✓</span>
-            <span id="liveCamCapturedLabel">Seite gescannt</span>
+            <span id="liveCamCapturedLabel" data-i18n="livecam_scanned_label">Seite gescannt</span>
           </div>
         </div>
       </div>
-      <p id="liveCamHint" style="font-weight:600; color:var(--accent); margin:12px 0 4px;">Kamera wird gestartet …</p>
-      <p id="liveCamCount" style="display:none; font-size:.85rem; color:var(--muted); margin:0 0 8px;"><span id="liveCamCountNum">0</span> Seite(n) aufgenommen – weiter scannen oder fertigstellen</p>
+      <p id="liveCamHint" style="font-weight:600; color:var(--accent); margin:12px 0 4px;" data-i18n="livecam_hint_starting">Kamera wird gestartet …</p>
+      <p id="liveCamCount" style="display:none; font-size:.85rem; color:var(--muted); margin:0 0 8px;"><span id="liveCamCountNum">0</span> <span data-i18n="livecam_count_suffix">Seite(n) aufgenommen – weiter scannen oder fertigstellen</span></p>
       <!-- Miniaturen aller in dieser Sitzung schon aufgenommenen Seiten, zum
            kurzen Überprüfen (antippen zeigt sie groß an), ohne dafür den
            Live-Scan verlassen zu müssen. -->
@@ -1888,9 +2257,9 @@
         <img id="liveCamThumbLightboxImg" style="max-width:92vw; max-height:92vh; border-radius:8px;">
       </div>
       <div class="modal-actions" style="justify-content:center; flex-wrap:wrap;">
-        <button id="btnLiveCamClose" class="tool-btn">Abbrechen</button>
-        <button id="btnLiveCamShutter" class="btn-primary">📸 Jetzt aufnehmen</button>
-        <button id="btnLiveCamDone" class="btn-primary" style="display:none; background:var(--success,#2e9e4f);">✅ Fertig – Seiten bearbeiten</button>
+        <button id="btnLiveCamClose" class="tool-btn" data-i18n="btn_scan_cancel">Abbrechen</button>
+        <button id="btnLiveCamShutter" class="btn-primary" data-i18n="btn_livecam_shutter">📸 Jetzt aufnehmen</button>
+        <button id="btnLiveCamDone" class="btn-primary" style="display:none; background:var(--success,#2e9e4f);" data-i18n="btn_livecam_done">✅ Fertig – Seiten bearbeiten</button>
       </div>
     </div>
   </div>
@@ -1898,26 +2267,26 @@
   <!-- Modal: Unterschrift zeichnen -->
   <div id="modalSignature" class="modal-backdrop">
     <div class="modal-box">
-      <h3>✍️ Unterschrift zeichnen</h3>
-      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;">
+      <h3 data-i18n="modal_signature_h3">✍️ Unterschrift zeichnen</h3>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px;" data-i18n="signature_p">
         Zeichne mit Maus, Touch oder Stylus-Stift deine Unterschrift. Sie wird mit transparentem Hintergrund auf der
         Seite eingefügt.
       </p>
       <div class="sig-canvas-wrap">
         <canvas id="sigCanvas"></canvas>
-        <span class="sig-hint">Hier unterschreiben</span>
+        <span class="sig-hint" data-i18n="signature_hint">Hier unterschreiben</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <div class="palette-row">
           <div class="color-dot active" data-sigcolor="#1a4480" style="background:#1a4480;"
-            title="Kugelschreiber Dokumentenblau"></div>
-          <div class="color-dot" data-sigcolor="#111111" style="background:#111111;" title="Dokumentenschwarz"></div>
+            data-i18n-title="color_blue" title="Kugelschreiber Dokumentenblau"></div>
+          <div class="color-dot" data-sigcolor="#111111" style="background:#111111;" data-i18n-title="color_black" title="Dokumentenschwarz"></div>
         </div>
-        <button id="btnClearSig" class="tool-btn">Leeren</button>
+        <button id="btnClearSig" class="tool-btn" data-i18n="btn_clear_sig">Leeren</button>
       </div>
       <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:8px;">
-        <button id="btnCloseSig" class="tool-btn">Abbrechen</button>
-        <button id="btnInsertSig" class="btn-primary">Unterschrift einfügen</button>
+        <button id="btnCloseSig" class="tool-btn" data-i18n="btn_scan_cancel">Abbrechen</button>
+        <button id="btnInsertSig" class="btn-primary" data-i18n="btn_insert_sig">Unterschrift einfügen</button>
       </div>
     </div>
   </div>
@@ -1944,6 +2313,18 @@
     };
 
     const $ = id => document.getElementById(id);
+
+    // i18n-Helfer: liefert den uebersetzten Text fuer "key" in der aktuell
+    // gewaehlten Sprache (window.SD_LANG, von i18n.js gesetzt), faellt auf
+    // Deutsch und dann auf den Schluessel selbst zurueck.
+    function t(key, vars) {
+      const dict = (window.SD_I18N && window.SD_I18N[window.SD_LANG || 'de']) || (window.SD_I18N && window.SD_I18N.de) || {};
+      let text = dict[key] != null ? dict[key] : key;
+      if (vars) {
+        Object.keys(vars).forEach(k => { text = text.split('{' + k + '}').join(vars[k]); });
+      }
+      return text;
+    }
 
     // --- Toast Notifications ---
     let toastTimer = null;
@@ -2005,7 +2386,7 @@
       renderSidebarPages();
       renderStage();
       updateInspector();
-      showToast('Rückgängig gemacht');
+      showToast(t('toast_undo_done'));
     };
 
     // --- File Utilities ---
@@ -2134,7 +2515,7 @@
 
     // --- Import Handlers: PDF, Images, Word, Excel, PowerPoint ---
     async function importPdfFile(file) {
-      showToast(`${file.name} wird geladen...`, 4000);
+      showToast(t('toast_file_loading', {name: file.name}), 4000);
       const buffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
 
@@ -2176,7 +2557,7 @@
     }
 
     async function importImageFile(file) {
-      showToast(`${file.name} wird geladen...`);
+      showToast(t('toast_file_loading', {name: file.name}));
       const dataUrl = await readFileAsDataUrl(file);
       const img = await loadImage(dataUrl);
       const page = createPageModel(dataUrl, file.name, img.naturalWidth, img.naturalHeight);
@@ -2224,7 +2605,7 @@
 
     // Import Word (.docx)
     async function importDocxFile(file) {
-      showToast(`${file.name} wird als PDF konvertiert...`, 4000);
+      showToast(t('toast_file_converting', {name: file.name}), 4000);
       try {
         const buffer = await readFileAsArrayBuffer(file);
         let htmlResult = '';
@@ -2239,16 +2620,16 @@
         const page = await renderHtmlToPageCanvas(htmlResult, file.name);
         state.pages.push(page);
         if (!state.selectedPageId) state.selectedPageId = page.id;
-        showToast('Word-Dokument erfolgreich in Seite umgewandelt!');
+        showToast(t('toast_word_import_ok'));
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Konvertieren der Word-Datei');
+        showToast(t('toast_word_import_err'));
       }
     }
 
     // Import Excel (.xlsx / .csv)
     async function importExcelFile(file) {
-      showToast(`${file.name} wird eingelesen...`, 4000);
+      showToast(t('toast_file_reading', {name: file.name}), 4000);
       try {
         const buffer = await readFileAsArrayBuffer(file);
         if (window.XLSX) {
@@ -2261,19 +2642,19 @@
             state.pages.push(page);
             if (!state.selectedPageId) state.selectedPageId = page.id;
           }
-          showToast('Excel-Tabelle erfolgreich in PDF-Seiten umgewandelt!');
+          showToast(t('toast_excel_import_ok'));
         } else {
-          showToast('Excel-Modul wird vorbereitet...');
+          showToast(t('toast_excel_module_prep'));
         }
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Einlesen der Excel-Tabelle');
+        showToast(t('toast_excel_import_err'));
       }
     }
 
     // Import PowerPoint (.pptx)
     async function importPptxFile(file) {
-      showToast(`${file.name} wird verarbeitet...`, 4000);
+      showToast(t('toast_file_processing', {name: file.name}), 4000);
       try {
         const buffer = await readFileAsArrayBuffer(file);
         if (window.JSZip) {
@@ -2291,7 +2672,7 @@
               state.pages.push(page);
               if (!state.selectedPageId) state.selectedPageId = page.id;
             }
-            showToast(`${imageEntries.length} Folie(n) aus Präsentation importiert!`);
+            showToast(t('toast_pptx_import_ok', {n: imageEntries.length}));
           } else {
             // Text presentation slide fallback
             const pageHtml = `<h2>${file.name}</h2><p>Präsentation erfolgreich als Folienseiten geladen.</p>`;
@@ -2302,7 +2683,7 @@
         }
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Importieren der PowerPoint-Datei');
+        showToast(t('toast_pptx_import_err'));
       }
     }
 
@@ -2329,7 +2710,7 @@
       $('btnOpenConvertModal').disabled = !state.pages.length;
       renderSidebarPages();
       renderStage();
-      showToast(`${state.pages.length} Seite(n) bereit`);
+      showToast(t('toast_pages_ready', {n: state.pages.length}));
     }
 
     // --- Blank Page Insertion ---
@@ -2350,13 +2731,13 @@
       $('btnPrint').disabled = false;
       renderSidebarPages();
       renderStage();
-      showToast('Neue leere A4-Seite hinzugefügt');
+      showToast(t('toast_blank_page_added'));
     };
 
     // ---- Konto/Cloud: aktuellen Stand speichern bzw. den zuletzt gespeicherten laden ----
     function requireLoginOrPrompt() {
       if (window.SD_AUTH && window.SD_AUTH.user) return true;
-      showToast('Bitte zuerst anmelden...', 2500);
+      showToast(t('toast_please_login'), 2500);
       if (window.SD_AUTH) window.SD_AUTH.openLoginModal();
       else alert('Die Konto-Funktion lädt noch, bitte kurz warten und erneut versuchen.');
       return false;
@@ -2377,9 +2758,9 @@
 
     $('btnCloudSave').onclick = async () => {
       if (!requireLoginOrPrompt()) return;
-      if (!state.pages.length) { showToast('Keine Seiten zum Speichern vorhanden'); return; }
+      if (!state.pages.length) { showToast(t('toast_no_pages_to_save')); return; }
       $('btnCloudSave').disabled = true;
-      showToast('Wird in deinem Konto gespeichert...', 15000);
+      showToast(t('toast_cloud_saving'), 15000);
       try {
         const pagesMeta = [];
         for (const page of state.pages) {
@@ -2395,10 +2776,10 @@
         await window.SD_AUTH.saveJSON('pdf-studio/project', {
           pages: pagesMeta, selectedPageId: state.selectedPageId
         });
-        showToast('✅ In deinem Konto gespeichert');
+        showToast(t('toast_cloud_saved'));
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+        showToast(t('toast_cloud_save_err') + (err && err.message ? err.message : err));
       } finally {
         $('btnCloudSave').disabled = false;
       }
@@ -2407,11 +2788,11 @@
     $('btnCloudLoad').onclick = async () => {
       if (!requireLoginOrPrompt()) return;
       $('btnCloudLoad').disabled = true;
-      showToast('Wird aus deinem Konto geladen...', 15000);
+      showToast(t('toast_cloud_loading'), 15000);
       try {
         const data = await window.SD_AUTH.loadJSON('pdf-studio/project');
         if (!data || !data.pages || !data.pages.length) {
-          showToast('Keine gespeicherten Seiten in deinem Konto gefunden');
+          showToast(t('toast_cloud_none_found'));
           return;
         }
         if (state.pages.length && !confirm('Aktuelle Seiten hier ersetzen durch den gespeicherten Cloud-Stand?')) {
@@ -2440,10 +2821,10 @@
         $('btnOpenConvertModal').disabled = !state.pages.length;
         renderSidebarPages();
         renderStage();
-        showToast('✅ Aus deinem Konto geladen (' + newPages.length + ' Seite(n))');
+        showToast('✅ ' + t('toast_cloud_loaded_suffix') + ' (' + newPages.length + ' ' + t('toast_pages_unit') + ')');
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Laden aus der Cloud: ' + (err && err.message ? err.message : err));
+        showToast(t('toast_cloud_load_err') + (err && err.message ? err.message : err));
       } finally {
         $('btnCloudLoad').disabled = false;
       }
@@ -2558,7 +2939,7 @@
       page.rotation = (page.rotation + deg + 360) % 360;
       renderSidebarPages();
       renderStage();
-      showToast(`Seite gedreht (${page.rotation}°)`);
+      showToast(t('toast_page_rotated', {deg: page.rotation}));
     }
 
     function deletePage(pageId) {
@@ -2572,7 +2953,7 @@
       renderSidebarPages();
       renderStage();
       updateInspector();
-      showToast('Seite gelöscht');
+      showToast(t('toast_page_deleted'));
     }
 
     $('btnDuplicatePage').onclick = () => {
@@ -2587,7 +2968,7 @@
       state.selectedPageId = dup.id;
       renderSidebarPages();
       renderStage();
-      showToast('Seite dupliziert');
+      showToast(t('toast_page_duplicated'));
     };
 
     $('btnClearAll').onclick = () => {
@@ -2599,7 +2980,7 @@
         renderSidebarPages();
         renderStage();
         updateInspector();
-        showToast('Projekt geleert');
+        showToast(t('toast_project_cleared'));
       }
     };
 
@@ -2698,11 +3079,11 @@
       if (state.activeTool === 'eraser') {
         state.activeTool = 'pen';
         $('btnPenEraser').classList.remove('btn-accent');
-        showToast('Stift aktiv');
+        showToast(t('toast_pen_active'));
       } else {
         state.activeTool = 'eraser';
         $('btnPenEraser').classList.add('btn-accent');
-        showToast('Radiergummi aktiv: Klicke auf Striche zum Löschen');
+        showToast(t('toast_eraser_active'));
       }
       renderStageInteractivity();
     };
@@ -2714,7 +3095,7 @@
         pushUndoState();
         page.drawings = [];
         renderStage();
-        showToast('Zeichnungen gelöscht');
+        showToast(t('toast_drawings_cleared'));
       }
     };
 
@@ -2790,7 +3171,7 @@
       state.selectedOverlayId = null;
       renderStage();
       updateInspector();
-      showToast('Textfeld gelöscht');
+      showToast(t('toast_textbox_deleted'));
     };
 
     // --- Stage Rendering & Canvas Management ---
@@ -3053,7 +3434,7 @@
               height: sh,
               color: state.activeTool === 'highlight' ? state.highlightColor : null
             });
-            showToast(`${state.activeTool === 'redact' ? 'Bereich geschwärzt' : 'Bereich überdeckt'}`);
+            showToast(state.activeTool === 'redact' ? t('toast_area_redacted') : t('toast_area_whiteout'));
           }
           shapeStartPoint = null;
           renderStage();
@@ -3079,7 +3460,7 @@
       if (page.drawings.length !== initialLen) {
         pushUndoState();
         redrawPageDrawings(canvas, page, width, height);
-        showToast('Strich entfernt');
+        showToast(t('toast_stroke_removed'));
       }
     }
 
@@ -3102,7 +3483,7 @@
       document.querySelectorAll('.tool-tab').forEach(t => t.classList.toggle('active', t.dataset.tool === 'select'));
       renderStage();
       updateInspector();
-      showToast('Textfeld hinzugefügt – ziehe zum Verschieben');
+      showToast(t('toast_textbox_added'));
     }
 
     function renderTextOverlays(stageWrap, page, baseWidth, baseHeight) {
@@ -3293,7 +3674,7 @@
               bold: !!info.fett
             });
             renderStage();
-            showToast(`Textstelle korrigiert (Schriftgröße, Farbe${info.fett ? ' & Fettdruck' : ''} automatisch übernommen)`);
+            showToast(t('toast_correction_done', {bold: info.fett ? t('toast_correction_bold_part') : ''}));
           }
         };
         stageWrap.appendChild(span);
@@ -3516,7 +3897,7 @@
       page.overlays.push(overlay);
       $('modalSignature').classList.remove('open');
       renderStage();
-      showToast('Unterschrift auf der Seite platziert');
+      showToast(t('toast_signature_placed'));
     };
 
     // --- OCR Scan Execution ---
@@ -3569,10 +3950,10 @@
         }));
 
         renderStage();
-        showToast(`${page.rawTextItems.length} Textstellen erkannt – klicke auf Wörter zum Ändern`);
+        showToast(t('toast_ocr_recognized', {n: page.rawTextItems.length}));
       } catch (err) {
         console.error(err);
-        showToast('Texterkennung fehlgeschlagen (Internetverbindung prüfen)', 5000);
+        showToast(t('toast_ocr_failed'), 5000);
       } finally {
         $('btnRunOcr').disabled = false;
         progressBox.style.display = 'none';
@@ -3659,7 +4040,7 @@
         alert('🔒 Export/Download ist im eingeschränkten Modus nicht verfügbar.\n\nBitte schalte die App über den gelben Hinweis-Balken oben ("Code eingeben") mit einem Freischalt-Code frei.');
         return;
       }
-      showToast('PDF wird generiert...', 10000);
+      showToast(t('toast_pdf_generating'), 10000);
       $('btnExport').disabled = true;
 
       try {
@@ -3725,10 +4106,10 @@
         lastExportedPdfBlob = blob;
         $('btnSharePdf').disabled = false;
         triggerDownload(blob, getFilenameWithExt('pdf'));
-        showToast('✅ PDF erfolgreich gespeichert!');
+        showToast(t('toast_pdf_saved'));
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Erstellen der PDF-Datei');
+        showToast(t('toast_pdf_create_err'));
       } finally {
         $('btnExport').disabled = false;
       }
@@ -3741,7 +4122,7 @@
     // "PDF speichern" und das Oeffnen einer separaten Datei.
     $('btnPrint').onclick = async () => {
       if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
-      showToast('Druckvorschau wird vorbereitet ...', 4000);
+      showToast(t('toast_print_preparing'), 4000);
       try {
         const container = $('printContainer');
         container.innerHTML = '';
@@ -3755,7 +4136,7 @@
         window.print();
       } catch (err) {
         console.error(err);
-        showToast('Fehler bei der Druckvorbereitung');
+        showToast(t('toast_print_err'));
         document.body.classList.remove('printing-mode');
       }
     };
@@ -3779,7 +4160,7 @@
           // Nutzer hat das Teilen-Menü abgebrochen - kein Fehler.
         }
       } else {
-        showToast('Teilen wird von diesem Browser nicht unterstützt – bitte die gespeicherte PDF-Datei manuell anhängen.', 5000);
+        showToast(t('toast_share_unsupported'), 5000);
       }
     };
 
@@ -3870,7 +4251,7 @@
     // Text-Extraktion vorher der Fall war.
     $('btnConvWord').onclick = async () => {
       if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
-      showToast('Word-Dokument (.docx) wird erstellt (mit Bildern & Layout) ...', 6000);
+      showToast(t('toast_word_creating'), 6000);
 
       const pageData = extractTextLinesFromPages();
 
@@ -3991,14 +4372,14 @@
 
       const content = await zip.generateAsync({ type: 'blob' });
       triggerDownload(content, getFilenameWithExt('docx'));
-      showToast('✅ Word-Dokument mit Bild, Layout & Text erfolgreich exportiert!');
+      showToast(t('toast_word_export_ok'));
       $('modalConvert').classList.remove('open');
     };
 
     // 2. PDF ➔ Excel (.xlsx) Export
     $('btnConvExcel').onclick = () => {
       if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
-      showToast('Excel-Datei (.xlsx) wird erstellt...');
+      showToast(t('toast_excel_creating'));
 
       if (window.XLSX) {
         const wb = window.XLSX.utils.book_new();
@@ -4028,7 +4409,7 @@
         });
 
         window.XLSX.writeFile(wb, getFilenameWithExt('xlsx'));
-        showToast('✅ Excel-Datei erfolgreich exportiert!');
+        showToast(t('toast_excel_export_ok'));
         $('modalConvert').classList.remove('open');
       } else {
         // Fallback: CSV export
@@ -4039,14 +4420,14 @@
         });
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         triggerDownload(blob, getFilenameWithExt('csv'));
-        showToast('Tabelle als CSV gespeichert!');
+        showToast(t('toast_csv_saved'));
       }
     };
 
     // 3. PDF ➔ PowerPoint (.pptx) Export
     $('btnConvPptx').onclick = async () => {
       if (!state.pages.length) { alert('Bitte zuerst eine Datei laden.'); return; }
-      showToast('PowerPoint-Präsentation (.pptx) wird erstellt...', 6000);
+      showToast(t('toast_pptx_creating'), 6000);
 
       try {
         if (window.PptxGenJS) {
@@ -4070,14 +4451,14 @@
           }
 
           await pptx.writeFile({ fileName: getFilenameWithExt('pptx') });
-          showToast('✅ PowerPoint-Präsentation erfolgreich exportiert!');
+          showToast(t('toast_pptx_export_ok'));
           $('modalConvert').classList.remove('open');
         } else {
-          showToast('PowerPoint-Modul nicht verfügbar.');
+          showToast(t('toast_pptx_module_unavailable'));
         }
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Exportieren nach PowerPoint');
+        showToast(t('toast_pptx_export_err'));
       }
     };
 
@@ -4088,7 +4469,7 @@
       const canvas = await renderPageToCanvas(page, 2.0);
       canvas.toBlob(blob => {
         triggerDownload(blob, `${getBaseFilename()}_Seite_${state.pages.indexOf(page) + 1}.jpg`);
-        showToast('JPG-Bild heruntergeladen');
+        showToast(t('toast_jpg_downloaded'));
       }, 'image/jpeg', 0.92);
     };
 
@@ -4098,13 +4479,13 @@
       const canvas = await renderPageToCanvas(page, 2.0);
       canvas.toBlob(blob => {
         triggerDownload(blob, `${getBaseFilename()}_Seite_${state.pages.indexOf(page) + 1}.png`);
-        showToast('PNG-Bild heruntergeladen');
+        showToast(t('toast_png_downloaded'));
       }, 'image/png');
     };
 
     $('btnConvZip').onclick = async () => {
       if (!state.pages.length) return;
-      showToast('Bilder werden vorbereitet...', 8000);
+      showToast(t('toast_images_preparing'), 8000);
       try {
         const zip = new window.JSZip();
         for (let i = 0; i < state.pages.length; i++) {
@@ -4116,11 +4497,11 @@
         }
         const zipBlob = await zip.generateAsync({ type: 'blob' });
         triggerDownload(zipBlob, `${getBaseFilename()}_Bilder.zip`);
-        showToast('✅ Alle Seiten als ZIP-Archiv gespeichert!');
+        showToast(t('toast_zip_saved'));
         $('modalConvert').classList.remove('open');
       } catch (err) {
         console.error(err);
-        showToast('Fehler beim Erstellen des ZIP-Archivs');
+        showToast(t('toast_zip_err'));
       }
     };
 
@@ -4528,9 +4909,9 @@
         if (confidentAuto) {
           finishScanFromCorners(canvas, auto, 'auto');
           if (qualityWarnings && qualityWarnings.length) {
-            showToast(`⚠️ Foto wirkt ${qualityWarnings.join(' und ')} – bei Bedarf über "✂️ Zuschneiden" neu aufnehmen`, 6000);
+            showToast('⚠️ ' + t('toast_photo_quality_warn_prefix') + ' ' + qualityWarnings.join(' ' + t('toast_and') + ' ') + ' ' + t('toast_photo_quality_warn_suffix'), 6000);
           } else {
-            showToast('Seite automatisch begradigt & optimiert ✓');
+            showToast(t('toast_page_auto_optimized'));
           }
           return;
         }
@@ -5273,7 +5654,7 @@
       } else {
         renderSidebarPages();
         renderStage();
-        showToast(`${state.pages.length} Seite(n) bereit`);
+        showToast(t('toast_pages_ready', {n: state.pages.length}));
       }
     }
 
@@ -5298,7 +5679,7 @@
         $('modalScanEnhance').classList.remove('open');
         renderSidebarPages();
         renderStage();
-        showToast('Seite aktualisiert ✓');
+        showToast(t('toast_page_updated'));
         return;
       }
 
@@ -5318,7 +5699,7 @@
         scanQueue.index = scanQueue.files.length; // laufende Queue abschließen
         renderSidebarPages();
         renderStage();
-        showToast('Vorderseite gespeichert ✓ – bitte jetzt die Rückseite scannen');
+        showToast(t('toast_ausweis_front_saved'));
         setTimeout(() => { $('btnCameraScan').click(); }, 350);
       } else {
         if (scanDocType === 'ausweis') scanAusweisSide = 'front';
@@ -5774,6 +6155,7 @@
 
   <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
   <script type="module" src="./sd-auth.js?v=3"></script>
+  <script src="../i18n.js?v=1"></script>
 </body>
 
 </html>
