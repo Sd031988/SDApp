@@ -38,8 +38,16 @@
         }
 
         .editor-sidebar {
-            width: 430px;
-            flex: 0 0 430px;
+            /* War fest 430px breit - auf einem schmaleren Laptop-Fenster
+               (z.B. nicht maximiert oder kleinerer Bildschirm) blieb dafuer
+               oft kein Platz mehr fuer die Vorschau daneben, wodurch der
+               Browser schon deutlich vor der eigentlichen Handy-Grenze in
+               das (fuer echte Handys gedachte) untereinander-Layout
+               gerutscht ist. Mit clamp() schrumpft die Formular-Spalte auf
+               breiteren Laptop-Fenstern weich mit, statt die Vorschau
+               vorzeitig nach unten zu verdraengen. */
+            width: clamp(300px, 34vw, 430px);
+            flex: 0 0 clamp(300px, 34vw, 430px);
             background: rgba(255, 255, 255, 0.94);
             padding: 26px;
             border-right: 1px solid var(--line);
@@ -1134,7 +1142,30 @@
             margin: 0;
         }
 
-        @media (max-width: 900px) {
+        /* Fenster, die schmaler als ein grosser Desktop, aber noch kein
+           Handy sind (z.B. ein nicht maximiertes Laptop-Browserfenster):
+           Formular und Vorschau bleiben nebeneinander, nur das A4-Blatt
+           schrumpft mit, statt dass die ganze Seite vorzeitig in das
+           (fuer Handys gedachte) untereinander-Layout wechselt. */
+        @media (max-width: 1150px) and (min-width: 681px) {
+            .preview-area {
+                padding: 24px;
+            }
+
+            .a4-page {
+                width: 100%;
+                max-width: 210mm;
+                min-height: auto;
+                padding: 5vw;
+            }
+
+            .document-footer {
+                left: 5vw;
+                right: 5vw;
+            }
+        }
+
+        @media (max-width: 680px) {
             /* Auf dem Handy sollen Formular (Sidebar) und Vorschau
                untereinander stehen und ganz normal die Seite mit dem
                Finger nach unten scrollen lassen. Vorher blieb "height:
