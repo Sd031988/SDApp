@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bewerbungsstudio Phase 6</title>
+    <title>Bewerbungsstudio Phase 7</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Roboto+Serif:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Firebase SDK v10.x -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js"></script>
 
     <style>
         * {
@@ -77,6 +83,181 @@
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
+        }
+
+        /* ===== PHASE 7 WEEK 1: USER AUTHENTICATION ===== */
+        .user-profile-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .user-profile-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .user-profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            min-width: 200px;
+            margin-top: 0.5rem;
+        }
+
+        .user-profile-dropdown.hidden {
+            display: none;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--light);
+        }
+
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-modal h2 {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .auth-form-group {
+            margin-bottom: 1rem;
+        }
+
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .auth-form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .auth-button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .auth-button-group button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .auth-submit-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .auth-submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .auth-cancel-btn {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .auth-cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        .auth-toggle-link {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .auth-toggle-link a {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-toggle-link a:hover {
+            text-decoration: underline;
+        }
+
+        .cloud-sync-status {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            background: #ECFDF5;
+            color: #065F46;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cloud-sync-status.active {
+            display: flex;
         }
 
         /* ===== PHASE 6 WEEK 3: TAB NAVIGATION ===== */
@@ -1087,9 +1268,25 @@
         <div class="header">
             <div class="header-left">
                 <div class="logo">📄 Bewerbungsstudio</div>
-                <div class="version-badge">Phase 6</div>
+                <div class="version-badge">Phase 7</div>
             </div>
             <div class="header-actions">
+                <!-- Cloud Sync Status (Phase 7) -->
+                <div class="cloud-sync-status" id="cloudSyncStatus">
+                    ☁️ <span id="syncStatusText">Syncing...</span>
+                </div>
+                <!-- User Profile Button (Phase 7) -->
+                <div style="position: relative;">
+                    <button class="user-profile-btn" id="userProfileBtn" onclick="toggleUserMenu()">
+                        <span>👤</span>
+                        <span id="userDisplayName">Login</span>
+                    </button>
+                    <div class="user-profile-dropdown hidden" id="userMenuDropdown">
+                        <div class="dropdown-item" onclick="openUserProfile()">👤 Profil</div>
+                        <div class="dropdown-item" onclick="openCloudSettings()">☁️ Cloud-Einstellungen</div>
+                        <div class="dropdown-item" onclick="logout()" style="color: var(--danger);">🚪 Abmelden</div>
+                    </div>
+                </div>
                 <div class="language-switcher">
                     <select id="languageSelect" onchange="changeLanguage(this.value)" class="language-select">
                         <option value="de">🇩🇪 Deutsch</option>
@@ -1323,6 +1520,80 @@
             <div class="modal-body">
                 <div id="recoveryList"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Firebase Authentication Modals (Phase 7 Week 1) -->
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <h2>Anmelden</h2>
+            <form onsubmit="loginWithEmail(event)">
+                <div class="auth-form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="loginPassword">Passwort</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div class="auth-button-group">
+                    <button type="submit" class="auth-submit-btn">Anmelden</button>
+                    <button type="button" class="auth-cancel-btn" onclick="closeAuthModal('loginModal')">Abbrechen</button>
+                </div>
+                <div class="auth-toggle-link">
+                    Kein Konto? <a onclick="switchToRegister()">Registrieren</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <h2>Konto erstellen</h2>
+            <form onsubmit="registerWithEmail(event)">
+                <div class="auth-form-group">
+                    <label for="registerName">Name</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="registerPassword">Passwort</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="registerPassword2">Passwort wiederholen</label>
+                    <input type="password" id="registerPassword2" required>
+                </div>
+                <div class="auth-button-group">
+                    <button type="submit" class="auth-submit-btn">Erstellen</button>
+                    <button type="button" class="auth-cancel-btn" onclick="closeAuthModal('registerModal')">Abbrechen</button>
+                </div>
+                <div class="auth-toggle-link">
+                    Bereits registriert? <a onclick="switchToLogin()">Anmelden</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cloud Settings Modal -->
+    <div id="cloudSettingsModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <h2>Cloud-Einstellungen</h2>
+            <div id="cloudSettingsContent"></div>
+        </div>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div id="userProfileModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <h2>Mein Profil</h2>
+            <div id="userProfileContent"></div>
         </div>
     </div>
 
@@ -2946,6 +3217,307 @@
                 e.target.classList.remove('active');
                 analytics.trackEvent('modal_close', { modalId: e.target.id });
             }
+        });
+
+        // ===== PHASE 7 WEEK 1: FIREBASE BACKEND INTEGRATION =====
+
+        // Firebase Configuration
+        // Note: Replace with your Firebase project credentials
+        const firebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase State
+        let firebaseApp = null;
+        let firebaseAuth = null;
+        let firebaseDb = null;
+        let currentUser = null;
+        let isFirebaseReady = false;
+
+        // Initialize Firebase
+        async function initializeFirebase() {
+            try {
+                // Note: In production, load Firebase dynamically
+                if (window.firebase && window.firebase.initializeApp) {
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    firebaseAuth = firebase.auth();
+                    firebaseDb = firebase.firestore();
+                    isFirebaseReady = true;
+
+                    // Set up auth state listener
+                    firebaseAuth.onAuthStateChanged((user) => {
+                        currentUser = user;
+                        updateUIForAuthState();
+                        if (user) {
+                            analytics.trackEvent('firebase_login', { userId: user.uid });
+                            loadUserData(user.uid);
+                            startCloudSync(user.uid);
+                        }
+                    });
+
+                    console.log('[Firebase] Initialized successfully');
+                } else {
+                    console.log('[Firebase] SDK not loaded yet - using local storage fallback');
+                }
+            } catch (error) {
+                console.error('[Firebase] Initialization error:', error);
+                showAuthError('Firebase konfiguriert nicht. Offline-Modus aktiv.');
+            }
+        }
+
+        // Update UI based on auth state
+        function updateUIForAuthState() {
+            const userBtn = document.getElementById('userProfileBtn');
+            if (currentUser) {
+                userBtn.innerHTML = `<span>👤</span><span>${currentUser.displayName || currentUser.email.split('@')[0]}</span>`;
+                document.getElementById('userDisplayName').textContent = currentUser.displayName || currentUser.email.split('@')[0];
+            } else {
+                userBtn.innerHTML = '<span>👤</span><span>Login</span>';
+                document.getElementById('userDisplayName').textContent = 'Login';
+            }
+        }
+
+        // Authentication Functions
+
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function openAuthModal(mode) {
+            if (mode === 'login') {
+                document.getElementById('loginModal').classList.add('active');
+            } else {
+                document.getElementById('registerModal').classList.add('active');
+            }
+        }
+
+        function closeAuthModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function switchToRegister() {
+            closeAuthModal('loginModal');
+            openAuthModal('register');
+        }
+
+        function switchToLogin() {
+            closeAuthModal('registerModal');
+            openAuthModal('login');
+        }
+
+        async function loginWithEmail(event) {
+            event.preventDefault();
+            if (!isFirebaseReady) {
+                showAuthError('Firebase nicht verfügbar. Verwenden Sie lokalen Speicher.');
+                return;
+            }
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const result = await firebaseAuth.signInWithEmailAndPassword(email, password);
+                closeAuthModal('loginModal');
+                showAuthSuccess('Erfolgreich angemeldet!');
+                analytics.trackEvent('firebase_login_success', { email: email });
+            } catch (error) {
+                showAuthError(`Login fehlgeschlagen: ${error.message}`);
+                analytics.trackEvent('firebase_login_failed', { error: error.code });
+            }
+        }
+
+        async function registerWithEmail(event) {
+            event.preventDefault();
+            if (!isFirebaseReady) {
+                showAuthError('Firebase nicht verfügbar. Verwenden Sie lokalen Speicher.');
+                return;
+            }
+
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const password2 = document.getElementById('registerPassword2').value;
+
+            if (password !== password2) {
+                showAuthError('Passwörter stimmen nicht überein!');
+                return;
+            }
+
+            try {
+                const result = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+                await result.user.updateProfile({ displayName: name });
+
+                // Create user profile in Firestore
+                await firebaseDb.collection('users').doc(result.user.uid).set({
+                    email: email,
+                    displayName: name,
+                    photoURL: '',
+                    createdAt: new Date().toISOString(),
+                    preferences: { language: i18n.currentLanguage || 'de' }
+                });
+
+                closeAuthModal('registerModal');
+                showAuthSuccess('Konto erfolgreich erstellt!');
+                analytics.trackEvent('firebase_register_success', { email: email });
+            } catch (error) {
+                showAuthError(`Registrierung fehlgeschlagen: ${error.message}`);
+                analytics.trackEvent('firebase_register_failed', { error: error.code });
+            }
+        }
+
+        async function logout() {
+            if (!isFirebaseReady) return;
+            try {
+                await firebaseAuth.signOut();
+                showAuthSuccess('Erfolgreich abgemeldet!');
+                toggleUserMenu();
+                analytics.trackEvent('firebase_logout', {});
+            } catch (error) {
+                showAuthError(`Abmeldung fehlgeschlagen: ${error.message}`);
+            }
+        }
+
+        // Cloud Data Sync
+
+        async function loadUserData(userId) {
+            if (!isFirebaseReady) return;
+            try {
+                const userDoc = await firebaseDb.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    console.log('[Firestore] User data loaded:', userDoc.data());
+                }
+
+                // Load CVs
+                const cvsSnapshot = await firebaseDb.collection('users').doc(userId).collection('cvs').get();
+                const cvs = [];
+                cvsSnapshot.forEach(doc => {
+                    cvs.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('[Firestore] CVs loaded:', cvs);
+                analytics.trackEvent('firebase_data_loaded', { cvCount: cvs.length });
+            } catch (error) {
+                console.error('[Firestore] Error loading user data:', error);
+            }
+        }
+
+        async function saveUserCVToCloud(userId) {
+            if (!isFirebaseReady || !currentUser) return;
+            try {
+                const cvRef = firebaseDb.collection('users').doc(userId).collection('cvs').doc('current');
+                await cvRef.set({
+                    ...appState.currentCV,
+                    lastModified: new Date().toISOString(),
+                    synced: true
+                });
+                showCloudSyncStatus('☁️ Synchronisiert');
+                analytics.trackEvent('firebase_cv_saved', { cvName: appState.currentCV.name });
+                return true;
+            } catch (error) {
+                console.error('[Firestore] Error saving CV:', error);
+                showCloudSyncStatus('❌ Synchronisierung fehlgeschlagen');
+                return false;
+            }
+        }
+
+        function startCloudSync(userId) {
+            if (!isFirebaseReady) return;
+            // Auto-save every 30 seconds
+            setInterval(() => {
+                if (currentUser) {
+                    saveUserCVToCloud(userId);
+                }
+            }, 30000);
+        }
+
+        // UI Helpers
+
+        function showCloudSyncStatus(message) {
+            const status = document.getElementById('cloudSyncStatus');
+            document.getElementById('syncStatusText').textContent = message;
+            status.classList.add('active');
+            setTimeout(() => status.classList.remove('active'), 3000);
+        }
+
+        function showAuthSuccess(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10B981; color: white; padding: 1rem; border-radius: 0.5rem; z-index: 9999;';
+            notification.textContent = '✅ ' + message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function showAuthError(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #EF4444; color: white; padding: 1rem; border-radius: 0.5rem; z-index: 9999;';
+            notification.textContent = '❌ ' + message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function openUserProfile() {
+            if (currentUser) {
+                document.getElementById('userProfileContent').innerHTML = `
+                    <div style="padding: 1rem;">
+                        <p><strong>Name:</strong> ${currentUser.displayName || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${currentUser.email}</p>
+                        <p><strong>Konto erstellt:</strong> ${new Date(currentUser.metadata.creationTime).toLocaleDateString('de-DE')}</p>
+                        <button onclick="closeAuthModal('userProfileModal')" class="auth-cancel-btn" style="width: 100%; margin-top: 1rem;">Schließen</button>
+                    </div>
+                `;
+                document.getElementById('userProfileModal').classList.add('active');
+            } else {
+                openAuthModal('login');
+            }
+        }
+
+        function openCloudSettings() {
+            document.getElementById('cloudSettingsContent').innerHTML = `
+                <div style="padding: 1rem;">
+                    <p><strong>Cloud-Synchronisierung:</strong> ${currentUser ? 'Aktiviert' : 'Deaktiviert'}</p>
+                    <p style="font-size: 0.875rem; color: #6B7280;">Ihre Daten werden automatisch alle 30 Sekunden synchronisiert.</p>
+                    <label style="margin-top: 1rem; display: block;">
+                        <input type="checkbox" ${currentUser ? 'checked' : ''} onchange="toggleCloudSync(this.checked)"> Cloud-Backup aktivieren
+                    </label>
+                    <button onclick="closeAuthModal('cloudSettingsModal')" class="auth-cancel-btn" style="width: 100%; margin-top: 1rem;">Schließen</button>
+                </div>
+            `;
+            document.getElementById('cloudSettingsModal').classList.add('active');
+        }
+
+        function toggleCloudSync(enabled) {
+            if (enabled && currentUser) {
+                showCloudSyncStatus('Cloud-Backup aktiviert');
+            } else {
+                showCloudSyncStatus('Cloud-Backup deaktiviert');
+            }
+        }
+
+        function closeAuthModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal && modal.classList.contains('auth-modal')) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Initialize Firebase on page load
+        window.addEventListener('load', () => {
+            initializeFirebase();
+        });
+
+        // Check if running in development mode (show login if not authenticated)
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!currentUser && isFirebaseReady) {
+                    // You could auto-show login here, or wait for user action
+                    // openAuthModal('login');
+                }
+            }, 1000);
         });
     </script>
 </body>
