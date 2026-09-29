@@ -1243,6 +1243,39 @@
             font-size: 0.85rem;
         }
 
+        /* Modern-Layout für Handys: Sidebar oben, dann Content */
+        @media (max-width: 480px) {
+            .a4-page.cv-modern {
+                display: block;
+                padding: 18mm 14mm !important;
+            }
+
+            .cv-modern .sidebar {
+                background: var(--accent-soft);
+                padding: 10px;
+                border-radius: 4px;
+                margin-bottom: 16px;
+            }
+
+            .cv-modern .sidebar h3 {
+                font-size: 0.65rem;
+                margin: 6px 0 3px;
+            }
+
+            .cv-modern .sidebar p {
+                font-size: 0.7rem;
+                margin: 0 0 4px;
+            }
+
+            .cv-modern .main-content {
+                display: block;
+            }
+
+            .cv-modern .cv-section {
+                margin-top: 14px;
+            }
+        }
+
         /* Kreatives Layout: Akzente und geometrische Formen */
         .a4-page.cv-creative {
             padding: 18mm 18mm !important;
@@ -2434,77 +2467,8 @@
         }
         function sdKiAnschreibenPrompt() { return t('ki_anschreiben_prompt'); }
 
-        function updateVorschau() {
-            const v = document.getElementById('vorname').value;
-            const n = document.getElementById('nachname').value;
-            // [v, n].filter(Boolean) statt "v + ' ' + n": sind beide Felder
-            // leer, bleibt das Element wirklich leer (kein einzelnes
-            // Leerzeichen als Inhalt) - nur so greift die CSS-Platzhalter-
-            // Anzeige (:empty::before) weiter unten korrekt.
-            document.getElementById('prev-name').innerText = [v, n].filter(Boolean).join(' ');
-            document.getElementById('prev-position').innerText = document.getElementById('position').value;
-            const kontakt = [document.getElementById('email').value, document.getElementById('telefon').value].filter(Boolean).join(' | ');
-            document.getElementById('prev-kontakt').innerText = kontakt;
-            const persoenlich = [
-                document.getElementById('adresse').value,
-                document.getElementById('geburtsdatum').value,
-                document.getElementById('familienstand').value,
-                document.getElementById('kinder').value,
-                document.getElementById('staatsangehoerigkeit').value,
-                document.getElementById('fuehrerschein').value,
-                document.getElementById('verfuegbarkeit').value
-            ].filter(Boolean).join(' | ');
-            document.getElementById('prev-persoenlich').innerText = persoenlich;
-            document.getElementById('prev-erfahrung').innerText = document.getElementById('erfahrung').value;
-            document.getElementById('prev-ausbildung').innerText = document.getElementById('ausbildung').value;
-            document.getElementById('prev-kenntnisse').innerText = document.getElementById('kenntnisse').value;
-            document.getElementById('prev-sprachen').innerText = document.getElementById('sprachen').value;
-            document.getElementById('prev-letter-position').innerText = document.getElementById('position').value;
-            document.getElementById('prev-letter-address').innerText = [document.getElementById('unternehmen').value, document.getElementById('ansprechperson').value].filter(Boolean).join('\n');
-                        const anredeEl = document.getElementById('anrede');
-            const anredeVal = anredeEl ? anredeEl.value : 'auto';
-            const ansprechpersonVal = document.getElementById('ansprechperson').value.trim();
-            let grussText = '';
-            if (anredeVal === 'auto') {
-                grussText = ansprechpersonVal ? t('greet_sehr_geehrte') + ' ' + ansprechpersonVal + ',' : t('greet_damen_herren');
-            } else if (anredeVal === 'damen-herren') {
-                grussText = t('greet_damen_herren');
-            } else if (anredeVal === 'herr') {
-                grussText = t('greet_sehr_geehrter_herr') + ' ' + (ansprechpersonVal || '...') + ',';
-            } else if (anredeVal === 'frau') {
-                grussText = t('greet_sehr_geehrte_frau') + ' ' + (ansprechpersonVal || '...') + ',';
-            } else if (anredeVal === 'team') {
-                grussText = t('greet_liebes_team');
-            } else if (anredeVal === 'custom') {
-                grussText = document.getElementById('custom-anrede').value || t('greet_damen_herren');
-            }
-            document.getElementById('prev-letter-greeting').innerText = grussText;
-            const customGroup = document.getElementById('custom-anrede-group');
-            if (customGroup) customGroup.style.display = anredeVal === 'custom' ? 'block' : 'none';
-            document.getElementById('prev-letter-name').innerText = v + ' ' + n;
-            document.getElementById('prev-text').innerText = document.getElementById('anschreiben').value;
-            document.getElementById('prev-deckblatt-name').innerText = v + ' ' + n;
-            document.getElementById('prev-deckblatt-title').innerText = document.getElementById('position').value;
-            document.getElementById('prev-deckblatt-kontakt').innerText = [
-                document.getElementById('email').value,
-                document.getElementById('telefon').value,
-                document.getElementById('adresse').value
-            ].filter(Boolean).join('\n');
-            const deckblattFotoAktiv = document.getElementById('foto-auf-deckblatt').checked && document.getElementById('mappe-mit-foto').checked;
-            aktualisiereDeckblattFoto(deckblattFotoAktiv);
-            aktualisiereFusszeilen();
-            // Stelle sicher, dass die richtige Template-Struktur verwendet wird
-            restructureLebenslaufForTemplate(currentCvTemplate);
-            document.getElementById('mappe-deckblatt').innerHTML = document.getElementById('deckblatt-vorschau').innerHTML;
-            document.getElementById('mappe-lebenslauf').innerHTML = document.getElementById('lebenslauf-vorschau').innerHTML;
-            document.getElementById('mappe-anschreiben').innerHTML = document.getElementById('anschreiben-vorschau').innerHTML;
-            document.querySelectorAll('#mappe-vorschau .sd-logo').forEach(logo => logo.remove());
-            document.querySelectorAll('#mappe-vorschau .a4-page').forEach((seite, index, seiten) => {
-                seite.querySelector('.document-date').innerText = new Date().toLocaleDateString(window.SD_LANG === 'en' ? 'en-US' : 'de-DE');
-                seite.querySelector('.document-page').innerText = t('footer_seite_von', { n: index + 1, m: seiten.length });
-            });
-            sdAktualisiereGhostPlaceholders();
-        }
+        // ===== CV TEMPLATE VARIABLES & FUNCTIONS (must be early, before updateVorschau) =====
+        let currentCvTemplate = 'classic';
 
         function restructureLebenslaufForTemplate(template) {
             const vorschau = document.getElementById('lebenslauf-vorschau');
@@ -2516,6 +2480,15 @@
             });
             // Füge neue Klasse hinzu
             vorschau.classList.add('cv-' + template);
+
+            // Wende auch die Klasse auf das Mappe-Element an (für Print/Export)
+            const mappe = document.getElementById('mappe-lebenslauf');
+            if (mappe) {
+                ['cv-classic', 'cv-modern', 'cv-creative', 'cv-minimal'].forEach(cls => {
+                    mappe.classList.remove(cls);
+                });
+                mappe.classList.add('cv-' + template);
+            }
 
             // Für Modern-Layout: Umstrukturierung nötig
             if (template === 'modern') {
@@ -2615,6 +2588,78 @@
                 el.removeEventListener('blur', updateVorschau);
                 el.addEventListener('blur', updateVorschau);
             });
+        }
+
+        function updateVorschau() {
+            const v = document.getElementById('vorname').value;
+            const n = document.getElementById('nachname').value;
+            // [v, n].filter(Boolean) statt "v + ' ' + n": sind beide Felder
+            // leer, bleibt das Element wirklich leer (kein einzelnes
+            // Leerzeichen als Inhalt) - nur so greift die CSS-Platzhalter-
+            // Anzeige (:empty::before) weiter unten korrekt.
+            document.getElementById('prev-name').innerText = [v, n].filter(Boolean).join(' ');
+            document.getElementById('prev-position').innerText = document.getElementById('position').value;
+            const kontakt = [document.getElementById('email').value, document.getElementById('telefon').value].filter(Boolean).join(' | ');
+            document.getElementById('prev-kontakt').innerText = kontakt;
+            const persoenlich = [
+                document.getElementById('adresse').value,
+                document.getElementById('geburtsdatum').value,
+                document.getElementById('familienstand').value,
+                document.getElementById('kinder').value,
+                document.getElementById('staatsangehoerigkeit').value,
+                document.getElementById('fuehrerschein').value,
+                document.getElementById('verfuegbarkeit').value
+            ].filter(Boolean).join(' | ');
+            document.getElementById('prev-persoenlich').innerText = persoenlich;
+            document.getElementById('prev-erfahrung').innerText = document.getElementById('erfahrung').value;
+            document.getElementById('prev-ausbildung').innerText = document.getElementById('ausbildung').value;
+            document.getElementById('prev-kenntnisse').innerText = document.getElementById('kenntnisse').value;
+            document.getElementById('prev-sprachen').innerText = document.getElementById('sprachen').value;
+            document.getElementById('prev-letter-position').innerText = document.getElementById('position').value;
+            document.getElementById('prev-letter-address').innerText = [document.getElementById('unternehmen').value, document.getElementById('ansprechperson').value].filter(Boolean).join('\n');
+                        const anredeEl = document.getElementById('anrede');
+            const anredeVal = anredeEl ? anredeEl.value : 'auto';
+            const ansprechpersonVal = document.getElementById('ansprechperson').value.trim();
+            let grussText = '';
+            if (anredeVal === 'auto') {
+                grussText = ansprechpersonVal ? t('greet_sehr_geehrte') + ' ' + ansprechpersonVal + ',' : t('greet_damen_herren');
+            } else if (anredeVal === 'damen-herren') {
+                grussText = t('greet_damen_herren');
+            } else if (anredeVal === 'herr') {
+                grussText = t('greet_sehr_geehrter_herr') + ' ' + (ansprechpersonVal || '...') + ',';
+            } else if (anredeVal === 'frau') {
+                grussText = t('greet_sehr_geehrte_frau') + ' ' + (ansprechpersonVal || '...') + ',';
+            } else if (anredeVal === 'team') {
+                grussText = t('greet_liebes_team');
+            } else if (anredeVal === 'custom') {
+                grussText = document.getElementById('custom-anrede').value || t('greet_damen_herren');
+            }
+            document.getElementById('prev-letter-greeting').innerText = grussText;
+            const customGroup = document.getElementById('custom-anrede-group');
+            if (customGroup) customGroup.style.display = anredeVal === 'custom' ? 'block' : 'none';
+            document.getElementById('prev-letter-name').innerText = v + ' ' + n;
+            document.getElementById('prev-text').innerText = document.getElementById('anschreiben').value;
+            document.getElementById('prev-deckblatt-name').innerText = v + ' ' + n;
+            document.getElementById('prev-deckblatt-title').innerText = document.getElementById('position').value;
+            document.getElementById('prev-deckblatt-kontakt').innerText = [
+                document.getElementById('email').value,
+                document.getElementById('telefon').value,
+                document.getElementById('adresse').value
+            ].filter(Boolean).join('\n');
+            const deckblattFotoAktiv = document.getElementById('foto-auf-deckblatt').checked && document.getElementById('mappe-mit-foto').checked;
+            aktualisiereDeckblattFoto(deckblattFotoAktiv);
+            aktualisiereFusszeilen();
+            // Stelle sicher, dass die richtige Template-Struktur verwendet wird
+            restructureLebenslaufForTemplate(currentCvTemplate);
+            document.getElementById('mappe-deckblatt').innerHTML = document.getElementById('deckblatt-vorschau').innerHTML;
+            document.getElementById('mappe-lebenslauf').innerHTML = document.getElementById('lebenslauf-vorschau').innerHTML;
+            document.getElementById('mappe-anschreiben').innerHTML = document.getElementById('anschreiben-vorschau').innerHTML;
+            document.querySelectorAll('#mappe-vorschau .sd-logo').forEach(logo => logo.remove());
+            document.querySelectorAll('#mappe-vorschau .a4-page').forEach((seite, index, seiten) => {
+                seite.querySelector('.document-date').innerText = new Date().toLocaleDateString(window.SD_LANG === 'en' ? 'en-US' : 'de-DE');
+                seite.querySelector('.document-page').innerText = t('footer_seite_von', { n: index + 1, m: seiten.length });
+            });
+            sdAktualisiereGhostPlaceholders();
         }
 
         function syncFieldInput(e) {
@@ -3718,9 +3763,7 @@
             el.addEventListener('blur', () => updateVorschau());
         });
 
-        // ===== CV TEMPLATE FUNCTIONS =====
-        let currentCvTemplate = 'classic';
-
+        // ===== CV TEMPLATE FUNCTIONS (continued - variable defined at line 2471) =====
         function toggleCvTplMenu() {
             const menu = document.getElementById('cv-tpl-menu');
             const list = document.getElementById('cv-tpl-list');
