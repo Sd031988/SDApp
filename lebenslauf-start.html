@@ -334,12 +334,12 @@
             <a href="javascript:void(0)" class="option-card" onclick="startNewResume()">
                 <div class="option-icon">✨</div>
                 <h2>Neuen Lebenslauf erstellen</h2>
-                <p>Erstellen Sie einen professionellen Lebenslauf von Grund auf mit unseren intuitiven Formularen und Premium-Vorlagen.</p>
+                <p>Erstellen Sie einen professionellen Lebenslauf mit KI-gestützten Vorschlägen, automatischen Sicherungen und Live-Analyse.</p>
                 <ul class="option-features">
-                    <li>Schritt-für-Schritt Anleitung</li>
-                    <li>30+ professionelle Vorlagen</li>
-                    <li>Live-Vorschau</li>
-                    <li>PDF/DOCX/TXT Export</li>
+                    <li>🤖 KI-Vorschläge & ATS-Scoring</li>
+                    <li>🛡️ Automatische Sicherungen</li>
+                    <li>📊 Live-Vorschau & Scores</li>
+                    <li>📥 PDF/DOCX/TXT Export</li>
                 </ul>
                 <button class="option-btn">Neuen Lebenslauf erstellen</button>
             </a>
@@ -348,12 +348,12 @@
             <a href="javascript:void(0)" class="option-card" onclick="startImproveResume()">
                 <div class="option-icon">🚀</div>
                 <h2>Lebenslauf verbessern</h2>
-                <p>Laden Sie Ihren existierenden Lebenslauf hoch und verbessern Sie ihn mit unserem intelligenten Editor und KI-Vorschlägen.</p>
+                <p>Laden Sie Ihren Lebenslauf hoch und verbessern Sie ihn mit intelligenter KI-Analyse und professionellen Empfehlungen.</p>
                 <ul class="option-features">
-                    <li>PDF/DOCX/TXT Upload</li>
-                    <li>Automatische Datenextraktion</li>
-                    <li>Intelligente Verbesserungen</li>
-                    <li>Gleiche Export-Optionen</li>
+                    <li>📄 PDF/DOCX/TXT Upload</li>
+                    <li>🔍 Automatische Analyse</li>
+                    <li>💡 KI-gestützte Verbesserungen</li>
+                    <li>✅ ATS-Kompatibilität prüfen</li>
                 </ul>
                 <button class="option-btn">Lebenslauf verbessern</button>
             </a>
@@ -385,7 +385,7 @@
 
             if (sessions.length > 0) {
                 recentList.innerHTML = sessions.map(session => `
-                    <a href="Lebenslauf_app.html?sessionId=${session.id}" class="session-card">
+                    <a href="Lebenslauf_app_v2_integrated.html?sessionId=${session.id}" class="session-card">
                         <div class="session-name">${session.name || 'Ohne Titel'}</div>
                         <div class="session-time">Bearbeitet: ${new Date(session.lastModified).toLocaleDateString('de-DE')}</div>
                         <div class="session-progress">${session.completeness}% fertig</div>
@@ -410,8 +410,8 @@
 
             localStorage.setItem('session_' + sessionId, JSON.stringify(newSession));
 
-            // Redirect to editor
-            window.location.href = 'Lebenslauf_app.html?sessionId=' + sessionId + '&mode=new';
+            // Redirect to integrated editor with AI & Recovery features
+            window.location.href = 'Lebenslauf_app_v2_integrated.html?sessionId=' + sessionId + '&mode=new';
         }
 
         function startImproveResume() {
@@ -429,8 +429,8 @@
 
             localStorage.setItem('session_' + sessionId, JSON.stringify(newSession));
 
-            // Redirect to editor with file upload prompt
-            window.location.href = 'Lebenslauf_app.html?sessionId=' + sessionId + '&mode=improve&uploadPrompt=true';
+            // Redirect to integrated editor with file upload prompt
+            window.location.href = 'Lebenslauf_app_v2_integrated.html?sessionId=' + sessionId + '&mode=improve&uploadPrompt=true';
         }
 
         // Load recent sessions on page load
