@@ -1,0 +1,149 @@
+{
+  "language": "es",
+  "name": "Español",
+  "direction": "ltr",
+  "header": {
+    "title": "Estudio de Solicitud",
+    "phase": "Fase 6",
+    "templateBtn": "Plantillas",
+    "spellCheckBtn": "Corrección",
+    "recoveryBtn": "Recuperar",
+    "downloadBtn": "Descargar"
+  },
+  "tabs": {
+    "lebenslauf": "📄 CV",
+    "anschreiben": "💌 Carta",
+    "deckblatt": "🎨 Portada"
+  },
+  "personalData": {
+    "title": "👤 Información Personal",
+    "name": "Nombre",
+    "namePlaceholder": "Nombre y Apellidos",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "email@example.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "+34 123 456 789",
+    "location": "Ubicación",
+    "locationPlaceholder": "Ciudad, País"
+  },
+  "spellCheck": {
+    "title": "⚠️ Corrección Ortográfica",
+    "heading": "⚠️ Corrección Ortográfica"
+  },
+  "professionalProfile": {
+    "title": "📝 Perfil Profesional",
+    "summary": "Resumen Profesional",
+    "summaryPlaceholder": "Breve descripción de sus habilidades y experiencia..."
+  },
+  "experience": {
+    "title": "💼 Experiencia Profesional",
+    "addBtn": "+ Añadir Experiencia",
+    "position": "Puesto",
+    "company": "Empresa",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "description": "Descripción",
+    "removeBtn": "Eliminar",
+    "currentlyWorking": "Actualmente trabajo aquí"
+  },
+  "education": {
+    "title": "🎓 Educación",
+    "addBtn": "+ Añadir Educación",
+    "degree": "Título",
+    "school": "Escuela/Universidad",
+    "graduationDate": "Fecha de Graduación",
+    "field": "Campo de Estudio",
+    "removeBtn": "Eliminar"
+  },
+  "skills": {
+    "title": "🔧 Habilidades",
+    "label": "Habilidades (separadas por comas)",
+    "placeholder": "JavaScript, React, Node.js, Python, ..."
+  },
+  "languages": {
+    "title": "🌍 Idiomas",
+    "label": "Idiomas (separados por comas)",
+    "placeholder": "Español (Nativo), Inglés (Fluido), ..."
+  },
+  "preview": {
+    "professionalSummary": "Resumen Profesional",
+    "experience": "Experiencia Profesional",
+    "education": "Educación",
+    "skills": "Habilidades",
+    "languages": "Idiomas"
+  },
+  "suggestions": {
+    "title": "💡 Análisis IA",
+    "atsCompatibility": "Compatibilidad ATS",
+    "verifyOptimization": "Optimizar Verbos",
+    "optimize": "Optimizar"
+  },
+  "anschreiben": {
+    "selectTemplate": "📋 Seleccionar Plantilla",
+    "preview": "Seleccione una plantilla para ver una vista previa",
+    "tools": "💡 Herramientas de Carta",
+    "export": "📥 Exportar",
+    "tips": "Consejos:",
+    "tip1": "Elija una plantilla adecuada para su industria",
+    "tip2": "Sus datos de CV se completarán automáticamente",
+    "tip3": "Puede personalizar el texto según sea necesario"
+  },
+  "deckblatt": {
+    "selectDesign": "🎨 Diseño de Portada",
+    "preview": "Seleccione un diseño para ver una vista previa",
+    "tools": "💡 Herramientas de Portada",
+    "export": "📥 Exportar",
+    "info": "Información:",
+    "info1": "La portada aparece antes de su CV",
+    "info2": "Diseños profesionales para su sector",
+    "info3": "Su foto se agregará automáticamente"
+  },
+  "templates": {
+    "selectTemplate": "🎨 Seleccionar Plantillas",
+    "filterByCategory": "Filtrar por Categoría",
+    "atsScore": "ATS",
+    "selectBtn": "Seleccionar"
+  },
+  "notifications": {
+    "templateSelected": "Plantilla \"{name}\" seleccionada",
+    "deckblattSelected": "Plantilla \"{name}\" seleccionada",
+    "exported": "Documentos de solicitud exportados",
+    "fillCV": "Complete su CV primero",
+    "spellCheckComplete": "Corrección completada",
+    "aiAnalysisComplete": "Análisis IA completado"
+  },
+  "buttons": {
+    "add": "Añadir",
+    "remove": "Eliminar",
+    "select": "Seleccionar",
+    "export": "Exportar",
+    "download": "Descargar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar"
+  },
+  "modals": {
+    "templateSelector": "🎨 Seleccionar Plantillas",
+    "spellCheck": "✏️ Corrección Ortográfica",
+    "recovery": "🛡️ Recuperar Sesiones"
+  },
+  "templateNames": {
+    "klassischFormell": "Profesional Clásico",
+    "modernDynamisch": "Dinámico Moderno",
+    "fokusKompetenzen": "Enfocado en Competencias",
+    "storytelling": "Enfoque Narrativo",
+    "lateralMover": "Cambio de Carrera",
+    "referral": "Recomendación Interna",
+    "executive": "Ejecutivo / C-Level",
+    "shortSweet": "Breve y Efectivo",
+    "academic": "Posición Académica/Investigación",
+    "englishProfessional": "Inglés (Profesional)",
+    "emailCasual": "Estilo Correo",
+    "bilingual": "Español / Inglés Mix"
+  },
+  "deckblattNames": {
+    "klassischElegant": "Elegancia Clásica",
+    "modernMinimalist": "Minimalismo Moderno",
+    "executiveVisual": "Visual Ejecutivo"
+  }
+}

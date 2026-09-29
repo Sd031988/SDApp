@@ -1,0 +1,149 @@
+{
+  "language": "en",
+  "name": "English",
+  "direction": "ltr",
+  "header": {
+    "title": "Application Studio",
+    "phase": "Phase 6",
+    "templateBtn": "Templates",
+    "spellCheckBtn": "Spell Check",
+    "recoveryBtn": "Recover",
+    "downloadBtn": "Download"
+  },
+  "tabs": {
+    "lebenslauf": "📄 CV",
+    "anschreiben": "💌 Cover Letter",
+    "deckblatt": "🎨 Cover Page"
+  },
+  "personalData": {
+    "title": "👤 Personal Information",
+    "name": "Name",
+    "namePlaceholder": "First and Last Name",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "+49 123 456789",
+    "location": "Location",
+    "locationPlaceholder": "City, Country"
+  },
+  "spellCheck": {
+    "title": "⚠️ Spell Check",
+    "heading": "⚠️ Spell Check"
+  },
+  "professionalProfile": {
+    "title": "📝 Professional Profile",
+    "summary": "Professional Summary",
+    "summaryPlaceholder": "Brief description of your skills and experience..."
+  },
+  "experience": {
+    "title": "💼 Work Experience",
+    "addBtn": "+ Add Experience",
+    "position": "Position",
+    "company": "Company",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "description": "Description",
+    "removeBtn": "Remove",
+    "currentlyWorking": "I currently work here"
+  },
+  "education": {
+    "title": "🎓 Education",
+    "addBtn": "+ Add Education",
+    "degree": "Degree",
+    "school": "School/University",
+    "graduationDate": "Graduation Date",
+    "field": "Field of Study",
+    "removeBtn": "Remove"
+  },
+  "skills": {
+    "title": "🔧 Skills",
+    "label": "Skills (comma-separated)",
+    "placeholder": "JavaScript, React, Node.js, Python, ..."
+  },
+  "languages": {
+    "title": "🌍 Languages",
+    "label": "Languages (comma-separated)",
+    "placeholder": "English (Native), German (Fluent), ..."
+  },
+  "preview": {
+    "professionalSummary": "Professional Summary",
+    "experience": "Work Experience",
+    "education": "Education",
+    "skills": "Skills",
+    "languages": "Languages"
+  },
+  "suggestions": {
+    "title": "💡 AI Analysis",
+    "atsCompatibility": "ATS Compatibility",
+    "verifyOptimization": "Optimize Verbs",
+    "optimize": "Optimize"
+  },
+  "anschreiben": {
+    "selectTemplate": "📋 Select Template",
+    "preview": "Select a template to see a preview",
+    "tools": "💡 Cover Letter Tools",
+    "export": "📥 Export",
+    "tips": "Tips:",
+    "tip1": "Choose a template matching your industry",
+    "tip2": "Your CV data will be automatically filled in",
+    "tip3": "You can customize the text as needed"
+  },
+  "deckblatt": {
+    "selectDesign": "🎨 Cover Page Design",
+    "preview": "Select a design to see a preview",
+    "tools": "💡 Cover Page Tools",
+    "export": "📥 Export",
+    "info": "Information:",
+    "info1": "The cover page appears before your CV",
+    "info2": "Professional designs for your industry",
+    "info3": "Your photo will be automatically added"
+  },
+  "templates": {
+    "selectTemplate": "🎨 Select Templates",
+    "filterByCategory": "Filter by Category",
+    "atsScore": "ATS",
+    "selectBtn": "Select"
+  },
+  "notifications": {
+    "templateSelected": "Template \"{name}\" selected",
+    "deckblattSelected": "Template \"{name}\" selected",
+    "exported": "Application documents exported",
+    "fillCV": "Please complete your CV first",
+    "spellCheckComplete": "Spell check completed",
+    "aiAnalysisComplete": "AI analysis completed"
+  },
+  "buttons": {
+    "add": "Add",
+    "remove": "Remove",
+    "select": "Select",
+    "export": "Export",
+    "download": "Download",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
+  },
+  "modals": {
+    "templateSelector": "🎨 Select Templates",
+    "spellCheck": "✏️ Spell Check",
+    "recovery": "🛡️ Recover Sessions"
+  },
+  "templateNames": {
+    "klassischFormell": "Classic Professional",
+    "modernDynamisch": "Modern Dynamic",
+    "fokusKompetenzen": "Competency Focused",
+    "storytelling": "Storytelling Approach",
+    "lateralMover": "Career Transition",
+    "referral": "Referral / Internal Recommend",
+    "executive": "Executive / C-Level",
+    "shortSweet": "Short & Sweet (2 Paragraphs)",
+    "academic": "Academic / Research Position",
+    "englishProfessional": "English (Professional)",
+    "emailCasual": "Email-Style (Casual Professional)",
+    "bilingual": "German / English Mix"
+  },
+  "deckblattNames": {
+    "klassischElegant": "Classic Elegant",
+    "modernMinimalist": "Modern Minimalist",
+    "executiveVisual": "Executive Visual"
+  }
+}

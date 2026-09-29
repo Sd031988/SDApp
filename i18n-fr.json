@@ -1,0 +1,149 @@
+{
+  "language": "fr",
+  "name": "Français",
+  "direction": "ltr",
+  "header": {
+    "title": "Studio de Candidature",
+    "phase": "Phase 6",
+    "templateBtn": "Modèles",
+    "spellCheckBtn": "Vérification",
+    "recoveryBtn": "Récupérer",
+    "downloadBtn": "Télécharger"
+  },
+  "tabs": {
+    "lebenslauf": "📄 CV",
+    "anschreiben": "💌 Lettre",
+    "deckblatt": "🎨 Page de Couverture"
+  },
+  "personalData": {
+    "title": "👤 Informations Personnelles",
+    "name": "Nom",
+    "namePlaceholder": "Prénom et Nom",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "phone": "Téléphone",
+    "phonePlaceholder": "+33 1 23 45 67 89",
+    "location": "Localisation",
+    "locationPlaceholder": "Ville, Pays"
+  },
+  "spellCheck": {
+    "title": "⚠️ Vérification Orthographique",
+    "heading": "⚠️ Vérification Orthographique"
+  },
+  "professionalProfile": {
+    "title": "📝 Profil Professionnel",
+    "summary": "Résumé Professionnel",
+    "summaryPlaceholder": "Brève description de vos compétences et expérience..."
+  },
+  "experience": {
+    "title": "💼 Expérience Professionnelle",
+    "addBtn": "+ Ajouter Expérience",
+    "position": "Poste",
+    "company": "Entreprise",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "description": "Description",
+    "removeBtn": "Supprimer",
+    "currentlyWorking": "Je travaille actuellement ici"
+  },
+  "education": {
+    "title": "🎓 Éducation",
+    "addBtn": "+ Ajouter Formation",
+    "degree": "Diplôme",
+    "school": "École/Université",
+    "graduationDate": "Date de Diplôme",
+    "field": "Domaine d'Étude",
+    "removeBtn": "Supprimer"
+  },
+  "skills": {
+    "title": "🔧 Compétences",
+    "label": "Compétences (séparées par des virgules)",
+    "placeholder": "JavaScript, React, Node.js, Python, ..."
+  },
+  "languages": {
+    "title": "🌍 Langues",
+    "label": "Langues (séparées par des virgules)",
+    "placeholder": "Français (Maternelle), Anglais (Courant), ..."
+  },
+  "preview": {
+    "professionalSummary": "Résumé Professionnel",
+    "experience": "Expérience Professionnelle",
+    "education": "Éducation",
+    "skills": "Compétences",
+    "languages": "Langues"
+  },
+  "suggestions": {
+    "title": "💡 Analyse IA",
+    "atsCompatibility": "Compatibilité ATS",
+    "verifyOptimization": "Optimiser Verbes",
+    "optimize": "Optimiser"
+  },
+  "anschreiben": {
+    "selectTemplate": "📋 Sélectionner Modèle",
+    "preview": "Sélectionnez un modèle pour voir un aperçu",
+    "tools": "💡 Outils Lettre",
+    "export": "📥 Exporter",
+    "tips": "Conseils:",
+    "tip1": "Choisissez un modèle adapté à votre industrie",
+    "tip2": "Vos données CV seront automatiquement remplies",
+    "tip3": "Vous pouvez personnaliser le texte selon vos besoins"
+  },
+  "deckblatt": {
+    "selectDesign": "🎨 Design Page de Couverture",
+    "preview": "Sélectionnez un design pour voir un aperçu",
+    "tools": "💡 Outils Page de Couverture",
+    "export": "📥 Exporter",
+    "info": "Informations:",
+    "info1": "La page de couverture apparaît avant votre CV",
+    "info2": "Designs professionnels pour votre secteur",
+    "info3": "Votre photo sera automatiquement ajoutée"
+  },
+  "templates": {
+    "selectTemplate": "🎨 Sélectionner Modèles",
+    "filterByCategory": "Filtrer par Catégorie",
+    "atsScore": "ATS",
+    "selectBtn": "Sélectionner"
+  },
+  "notifications": {
+    "templateSelected": "Modèle \"{name}\" sélectionné",
+    "deckblattSelected": "Modèle \"{name}\" sélectionné",
+    "exported": "Documents de candidature exportés",
+    "fillCV": "Veuillez d'abord compléter votre CV",
+    "spellCheckComplete": "Vérification orthographique terminée",
+    "aiAnalysisComplete": "Analyse IA terminée"
+  },
+  "buttons": {
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "select": "Sélectionner",
+    "export": "Exporter",
+    "download": "Télécharger",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "close": "Fermer"
+  },
+  "modals": {
+    "templateSelector": "🎨 Sélectionner Modèles",
+    "spellCheck": "✏️ Vérification Orthographique",
+    "recovery": "🛡️ Récupérer Sessions"
+  },
+  "templateNames": {
+    "klassischFormell": "Professionnel Classique",
+    "modernDynamisch": "Moderne Dynamique",
+    "fokusKompetenzen": "Axé Compétences",
+    "storytelling": "Approche Narrative",
+    "lateralMover": "Changement de Carrière",
+    "referral": "Recommandation Interne",
+    "executive": "Exécutif / C-Level",
+    "shortSweet": "Court & Efficace",
+    "academic": "Position Académique/Recherche",
+    "englishProfessional": "Anglais (Professionnel)",
+    "emailCasual": "Style Email",
+    "bilingual": "Français / Anglais Mix"
+  },
+  "deckblattNames": {
+    "klassischElegant": "Élégant Classique",
+    "modernMinimalist": "Minimaliste Moderne",
+    "executiveVisual": "Visuel Exécutif"
+  }
+}

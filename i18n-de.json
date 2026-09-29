@@ -1,0 +1,149 @@
+{
+  "language": "de",
+  "name": "Deutsch",
+  "direction": "ltr",
+  "header": {
+    "title": "Bewerbungsstudio",
+    "phase": "Phase 6",
+    "templateBtn": "Vorlagen",
+    "spellCheckBtn": "Rechtschreibung",
+    "recoveryBtn": "Wiederherstellen",
+    "downloadBtn": "Herunterladen"
+  },
+  "tabs": {
+    "lebenslauf": "📄 Lebenslauf",
+    "anschreiben": "💌 Anschreiben",
+    "deckblatt": "🎨 Deckblatt"
+  },
+  "personalData": {
+    "title": "👤 Persönliche Daten",
+    "name": "Name",
+    "namePlaceholder": "Vor- und Nachname",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "phone": "Telefon",
+    "phonePlaceholder": "+49 123 456789",
+    "location": "Ort",
+    "locationPlaceholder": "Stadt, Land"
+  },
+  "spellCheck": {
+    "title": "⚠️ Rechtschreibprüfung",
+    "heading": "⚠️ Rechtschreibprüfung"
+  },
+  "professionalProfile": {
+    "title": "📝 Berufliches Profil",
+    "summary": "Professionelle Zusammenfassung",
+    "summaryPlaceholder": "Kurze Beschreibung Ihrer Fähigkeiten und Erfahrungen..."
+  },
+  "experience": {
+    "title": "💼 Berufserfahrung",
+    "addBtn": "+ Berufserfahrung",
+    "position": "Position",
+    "company": "Unternehmen",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "description": "Beschreibung",
+    "removeBtn": "Entfernen",
+    "currentlyWorking": "Ich arbeite hier noch"
+  },
+  "education": {
+    "title": "🎓 Bildung",
+    "addBtn": "+ Ausbildung",
+    "degree": "Abschluss",
+    "school": "Schule/Universität",
+    "graduationDate": "Abschlussdatum",
+    "field": "Fachrichtung",
+    "removeBtn": "Entfernen"
+  },
+  "skills": {
+    "title": "🔧 Fähigkeiten",
+    "label": "Skills (kommagetrennt)",
+    "placeholder": "JavaScript, React, Node.js, Python, ..."
+  },
+  "languages": {
+    "title": "🌍 Sprachen",
+    "label": "Sprachen (kommagetrennt)",
+    "placeholder": "Deutsch (Muttersprache), Englisch (Fließend), ..."
+  },
+  "preview": {
+    "professionalSummary": "Professionelle Zusammenfassung",
+    "experience": "Berufserfahrung",
+    "education": "Bildung",
+    "skills": "Fähigkeiten",
+    "languages": "Sprachen"
+  },
+  "suggestions": {
+    "title": "💡 AI-Analyse",
+    "atsCompatibility": "ATS Kompatibilität",
+    "verifyOptimization": "Verben optimieren",
+    "optimize": "Optimieren"
+  },
+  "anschreiben": {
+    "selectTemplate": "📋 Vorlage Auswählen",
+    "preview": "Wählen Sie eine Vorlage aus, um eine Vorschau zu sehen",
+    "tools": "💡 Anschreiben Tools",
+    "export": "📥 Exportieren",
+    "tips": "Tipps:",
+    "tip1": "Wählen Sie eine Vorlage passend zu Ihrer Industrie",
+    "tip2": "Die Daten aus dem Lebenslauf werden automatisch eingefügt",
+    "tip3": "Sie können den Text nach Bedarf anpassen"
+  },
+  "deckblatt": {
+    "selectDesign": "🎨 Deckblatt-Design",
+    "preview": "Wählen Sie ein Design aus, um eine Vorschau zu sehen",
+    "tools": "💡 Deckblatt Tools",
+    "export": "📥 Exportieren",
+    "info": "Informationen:",
+    "info1": "Das Deckblatt wird vor Ihrem Lebenslauf angezeigt",
+    "info2": "Professionelle Designs für Ihre Branche",
+    "info3": "Ihr Foto wird automatisch eingefügt"
+  },
+  "templates": {
+    "selectTemplate": "🎨 Vorlagen Auswählen",
+    "filterByCategory": "Nach Kategorie filtern",
+    "atsScore": "ATS",
+    "selectBtn": "Wählen"
+  },
+  "notifications": {
+    "templateSelected": "Vorlage \"{name}\" ausgewählt",
+    "deckblattSelected": "Vorlage \"{name}\" ausgewählt",
+    "exported": "Bewerbungsunterlagen exportiert",
+    "fillCV": "Bitte füllen Sie zuerst Ihren Lebenslauf aus",
+    "spellCheckComplete": "Rechtschreibprüfung abgeschlossen",
+    "aiAnalysisComplete": "AI-Analyse abgeschlossen"
+  },
+  "buttons": {
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "select": "Wählen",
+    "export": "Exportieren",
+    "download": "Herunterladen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "close": "Schließen"
+  },
+  "modals": {
+    "templateSelector": "🎨 Vorlagen Auswählen",
+    "spellCheck": "✏️ Rechtschreibprüfung",
+    "recovery": "🛡️ Sitzungen Wiederherstellen"
+  },
+  "templateNames": {
+    "klassischFormell": "Klassisch Formell",
+    "modernDynamisch": "Modern Dynamisch",
+    "fokusKompetenzen": "Fokus auf Kompetenzen",
+    "storytelling": "Storytelling Approach",
+    "lateralMover": "Lateral Mover / Karrierewechsel",
+    "referral": "Referral / Internal Recommend",
+    "executive": "Executive / C-Level",
+    "shortSweet": "Short & Sweet (2 Absätze)",
+    "academic": "Academic / Research Position",
+    "englishProfessional": "English (Professional)",
+    "emailCasual": "Email-Style (Casual Professional)",
+    "bilingual": "Deutsch / Englisch Mix"
+  },
+  "deckblattNames": {
+    "klassischElegant": "Klassisch Elegant",
+    "modernMinimalist": "Modern Minimalist",
+    "executiveVisual": "Executive Visual"
+  }
+}
