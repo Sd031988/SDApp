@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deckblatt Generator - Bewerbungsstudio</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&family=Roboto+Serif:wght@400;500;700&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+    <style>
+        /* ===== ULTRA PREMIUM DESIGN SYSTEM ===== */
+
+        :root {
+            /* Color Palettes */
+            --blue-dark: #0F2855;
+            --blue-primary: #1D4ED8;
+            --blue-light: #3B82F6;
+            --blue-lighter: #DBEAFE;
+
+            --gold-dark: #2C1810;
+            --gold-primary: #B8860B;
+            --gold-light: #DAA520;
+
+            --emerald-dark: #064E3B;
+            --emerald-primary: #059669;
+            --emerald-light: #10B981;
+
+            --purple-dark: #5B21B6;
+            --purple-primary: #7C3AED;
+            --purple-light: #A78BFA;
+
+            /* Neutral */
+            --surface-white: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --surface-muted: #F3F4F6;
+            --surface-dark: #1F2937;
+            --surface-darker: #0F172A;
+
+            --border-light: #E5E7EB;
+            --border: #D1D5DB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+            /* Gradients */
+            --gradient-blue: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+            --gradient-gold: linear-gradient(135deg, #2C1810 0%, #B8860B 50%, #DAA520 100%);
+            --gradient-purple: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A78BFA 100%);
+            --gradient-emerald: linear-gradient(135deg, #064E3B 0%, #059669 50%, #10B981 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--surface-white);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface-light);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: var(--gradient-emerald);
+            color: white;
+            padding: 80px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.95;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--emerald-dark);
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 14px 32px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--emerald-dark);
+        }
+
+        /* ===== EDITOR SECTION ===== */
+        .editor-section {
+            padding: 60px 48px;
+            background: var(--surface-light);
+        }
+
+        .editor-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+        }
+
+        .editor-form {
+            background: var(--surface-white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--emerald-primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ===== TEMPLATE SELECTOR ===== */
+        .template-selector-group {
+            background: var(--surface-muted);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 32px;
+        }
+
+        .template-selector-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .template-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .template-btn {
+            padding: 12px 14px;
+            border: 2px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--surface-white);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .template-btn:hover {
+            border-color: var(--emerald-primary);
+            background: #ECFDF5;
+        }
+
+        .template-btn.active {
+            background: var(--emerald-primary);
+            color: white;
+            border-color: var(--emerald-primary);
+        }
+
+        /* ===== PREVIEW ===== */
+        .editor-preview {
+            background: var(--surface-white);
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            height: fit-content;
+            position: sticky;
+            top: 48px;
+            overflow: hidden;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .preview-content {
+            padding: 60px 40px;
+            width: 100%;
+        }
+
+        .preview-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .preview-position {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .preview-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 auto 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .preview-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 40px;
+        }
+
+        .preview-info div {
+            margin: 8px 0;
+        }
+
+        /* Template Styles */
+        .template-elegant {
+            background: var(--gradient-emerald);
+        }
+
+        .template-minimal {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+
+        .template-modern {
+            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 50%, #3B82F6 100%);
+        }
+
+        .template-creative {
+            background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A78BFA 100%);
+        }
+
+        /* ===== DOWNLOAD SECTION ===== */
+        .download-section {
+            background: linear-gradient(135deg, #F0FDF4 0%, #F0F4FF 100%);
+            padding: 60px 48px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .download-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .download-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .download-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--emerald-dark);
+            margin-bottom: 8px;
+        }
+
+        .download-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .download-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            background: var(--surface-white);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .download-btn:hover {
+            border-color: var(--emerald-primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .download-icon {
+            font-size: 32px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .download-text {
+            flex: 1;
+        }
+
+        .download-format {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .download-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--surface-dark);
+            color: white;
+            padding: 40px 48px;
+            text-align: center;
+        }
+
+        .footer p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .editor-preview {
+                position: relative;
+                top: auto;
+                margin-top: 24px;
+            }
+
+            .hero h1 {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 48px 24px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .editor-section {
+                padding: 40px 24px;
+            }
+
+            .editor-form {
+                padding: 24px;
+            }
+
+            .download-section {
+                padding: 40px 24px;
+            }
+
+            .download-buttons {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .download-header h2 {
+                font-size: 24px;
+            }
+
+            .template-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-title {
+                font-size: 32px;
+            }
+
+            .preview-position {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Deckblatt Generator</h1>
+            <p>Erstellen Sie ein professionelles Deckblatt für Ihre Bewerbung</p>
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="scrollToEditor()">Jetzt erstellen</button>
+                <button class="btn-secondary" onclick="location.href='index.html'">← Zurück</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- EDITOR SECTION -->
+    <section class="editor-section">
+        <div class="editor-container">
+            <!-- FORM -->
+            <div class="editor-form">
+                <form id="coverForm">
+                    <div class="form-group">
+                        <label class="form-label">Ihr Name</label>
+                        <input type="text" class="form-input" id="nameInput" placeholder="Max Mustermann" value="Max Mustermann">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Position angestrebt</label>
+                        <input type="text" class="form-input" id="positionInput" placeholder="z.B. Senior Softwareentwickler" value="Senior Softwareentwickler">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Unternehmen</label>
+                        <input type="text" class="form-input" id="companyInput" placeholder="Name des Unternehmens" value="TechCorp GmbH">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">E-Mail</label>
+                        <input type="email" class="form-input" id="emailInput" placeholder="max@example.com" value="max@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Telefon</label>
+                        <input type="tel" class="form-input" id="phoneInput" placeholder="+49 123 456789" value="+49 123 456789">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Kurze Beschreibung (Optional)</label>
+                        <textarea class="form-input form-textarea" id="descInput" placeholder="Ein kurzer Text über Sie...">Leidenschaftlicher Entwickler mit Fokus auf moderne Technologien und innovative Lösungen.</textarea>
+                    </div>
+
+                    <!-- TEMPLATE SELECTOR -->
+                    <div class="template-selector-group">
+                        <div class="template-selector-title">Vorlage</div>
+                        <div class="template-buttons">
+                            <button type="button" class="template-btn active" data-template="template-elegant" title="Elegante Vorlage">Elegant</button>
+                            <button type="button" class="template-btn" data-template="template-minimal" title="Minimalistische Vorlage">Minimal</button>
+                            <button type="button" class="template-btn" data-template="template-modern" title="Moderne Vorlage">Modern</button>
+                            <button type="button" class="template-btn" data-template="template-creative" title="Kreative Vorlage">Kreativ</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="editor-preview template-elegant" id="preview">
+                <div class="preview-content">
+                    <div class="preview-photo">👤</div>
+                    <div class="preview-title" id="previewName">Max Mustermann</div>
+                    <div class="preview-position" id="previewPosition">Senior Softwareentwickler</div>
+                    <div class="preview-info">
+                        <div id="previewCompany">TechCorp GmbH</div>
+                        <div id="previewEmail">max@example.com</div>
+                        <div id="previewPhone">+49 123 456789</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DOWNLOAD SECTION -->
+    <section class="download-section" id="downloadSection" style="display: none;">
+        <div class="download-container">
+            <div class="download-header">
+                <h2>Deckblatt herunterladen</h2>
+                <p>Wählen Sie Ihr bevorzugtes Format</p>
+            </div>
+            <div class="download-buttons">
+                <button class="download-btn download-btn-pdf" onclick="downloadPDF()">
+                    <div class="download-icon">📄</div>
+                    <div class="download-text">
+                        <div class="download-format">PDF</div>
+                        <div class="download-desc">Professionelles Format</div>
+                    </div>
+                </button>
+                <button class="download-btn download-btn-docx" onclick="downloadDOCX()">
+                    <div class="download-icon">📋</div>
+                    <div class="download-text">
+                        <div class="download-format">DOCX</div>
+                        <div class="download-desc">Bearbeitbar in Word</div>
+                    </div>
+                </button>
+                <button class="download-btn download-btn-txt" onclick="downloadTXT()">
+                    <div class="download-icon">📝</div>
+                    <div class="download-text">
+                        <div class="download-format">TXT</div>
+                        <div class="download-desc">Einfacher Text</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>© 2024 Bewerbungsstudio. Alle Rechte vorbehalten. | Premium CV Builder</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('coverForm');
+        const preview = document.getElementById('preview');
+        const templateButtons = document.querySelectorAll('.template-btn');
+
+        // Update preview on input
+        form.addEventListener('input', (e) => {
+            const { id, value } = e.target;
+
+            if (id === 'nameInput') {
+                document.getElementById('previewName').textContent = value || 'Name';
+            } else if (id === 'positionInput') {
+                document.getElementById('previewPosition').textContent = value || 'Position';
+            } else if (id === 'companyInput') {
+                document.getElementById('previewCompany').textContent = value || 'Unternehmen';
+            } else if (id === 'emailInput') {
+                document.getElementById('previewEmail').textContent = value || 'Email';
+            } else if (id === 'phoneInput') {
+                document.getElementById('previewPhone').textContent = value || 'Telefon';
+            }
+
+            showDownloadSection();
+        });
+
+        // Template switching
+        templateButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                templateButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const template = btn.dataset.template;
+                preview.className = `editor-preview ${template}`;
+            });
+        });
+
+        // Show download section when form has data
+        function showDownloadSection() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (name) {
+                document.getElementById('downloadSection').style.display = 'block';
+            }
+        }
+
+        // Get cover data object
+        function getCoverData() {
+            return {
+                name: document.getElementById('nameInput').value,
+                position: document.getElementById('positionInput').value,
+                company: document.getElementById('companyInput').value,
+                email: document.getElementById('emailInput').value,
+                phone: document.getElementById('phoneInput').value,
+                description: document.getElementById('descInput').value
+            };
+        }
+
+        // Download as PDF
+        function downloadPDF() {
+            const data = getCoverData();
+            const element = document.getElementById('preview');
+            const filename = `${data.name.replace(/\s+/g, '_')}_Deckblatt.pdf`;
+
+            const opt = {
+                margin: 0,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Download as DOCX
+        function downloadDOCX() {
+            const data = getCoverData();
+            const filename = `${data.name.replace(/\s+/g, '_')}_Deckblatt.docx`;
+
+            const sections = [
+                new docx.Paragraph({
+                    text: '',
+                    spacing: { after: 200 }
+                }),
+                new docx.Paragraph({
+                    text: data.name,
+                    bold: true,
+                    size: 96,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 12 }
+                }),
+                new docx.Paragraph({
+                    text: data.position,
+                    size: 40,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 24 }
+                }),
+                new docx.Paragraph({
+                    text: data.company,
+                    size: 24,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 24 }
+                }),
+                new docx.Paragraph({
+                    text: data.email + ' • ' + data.phone,
+                    size: 22,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 }
+                }),
+                new docx.Paragraph({
+                    text: data.description,
+                    size: 22,
+                    alignment: docx.AlignmentType.CENTER,
+                    italics: true
+                })
+            ];
+
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: sections
+                }]
+            });
+
+            docx.Packer.toBlob(doc).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Download as TXT
+        function downloadTXT() {
+            const data = getCoverData();
+            const filename = `${data.name.replace(/\s+/g, '_')}_Deckblatt.txt`;
+
+            const content = `
+
+                    ${data.name}
+
+                    ${data.position}
+
+                    ${data.company}
+
+                    ${data.email} • ${data.phone}
+
+
+                    ${data.description}
+
+---
+Erstellt mit Bewerbungsstudio
+${new Date().toLocaleDateString('de-DE')}
+`;
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Scroll functions
+        function scrollToEditor() {
+            document.querySelector('.editor-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show download section on page load if data exists
+        window.addEventListener('load', () => {
+            showDownloadSection();
+        });
+    </script>
+</body>
+</html>
