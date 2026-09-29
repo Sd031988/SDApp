@@ -6,6 +6,8 @@
     <title>Bewerbungsstudio - Premium Application Suite</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&family=Roboto+Serif:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
     <style>
         /* ===== ULTRA PREMIUM DESIGN SYSTEM ===== */
 
@@ -649,6 +651,98 @@
             color: #6B7280;
         }
 
+        /* ===== DOWNLOAD SECTION ===== */
+        .download-section {
+            background: linear-gradient(135deg, #F0F9FF 0%, #F0F4FF 100%);
+            padding: 60px 48px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .download-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .download-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .download-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--blue-dark);
+            margin-bottom: 8px;
+        }
+
+        .download-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .download-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .download-btn {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            background: var(--surface-white);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .download-btn:hover {
+            border-color: var(--blue-primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .download-btn-pdf:hover {
+            background: rgba(29, 78, 216, 0.05);
+            border-color: var(--blue-primary);
+        }
+
+        .download-btn-docx:hover {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: #10b981;
+        }
+
+        .download-btn-txt:hover {
+            background: rgba(124, 58, 237, 0.05);
+            border-color: var(--purple-primary);
+        }
+
+        .download-icon {
+            font-size: 32px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .download-text {
+            flex: 1;
+        }
+
+        .download-format {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .download-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             background: var(--surface-dark);
@@ -693,6 +787,19 @@
 
             .features, .templates-showcase, .editor-section {
                 padding: 40px 24px;
+            }
+
+            .download-section {
+                padding: 40px 24px;
+            }
+
+            .download-buttons {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .download-header h2 {
+                font-size: 24px;
             }
 
             .section-title {
@@ -880,6 +987,39 @@
                 <div class="preview-entry-content" id="previewSummary">
                     Erfahrener Softwareentwickler mit Fokus auf Full-Stack-Entwicklung und moderne Technologien.
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DOWNLOAD SECTION -->
+    <section class="download-section" id="downloadSection" style="display: none;">
+        <div class="download-container">
+            <div class="download-header">
+                <h2>Lebenslauf herunterladen</h2>
+                <p>Wählen Sie Ihr bevorzugtes Format</p>
+            </div>
+            <div class="download-buttons">
+                <button class="download-btn download-btn-pdf" onclick="downloadPDF()">
+                    <div class="download-icon">📄</div>
+                    <div class="download-text">
+                        <div class="download-format">PDF</div>
+                        <div class="download-desc">Professionelles Format</div>
+                    </div>
+                </button>
+                <button class="download-btn download-btn-docx" onclick="downloadDOCX()">
+                    <div class="download-icon">📋</div>
+                    <div class="download-text">
+                        <div class="download-format">DOCX</div>
+                        <div class="download-desc">Bearbeitbar in Word</div>
+                    </div>
+                </button>
+                <button class="download-btn download-btn-txt" onclick="downloadTXT()">
+                    <div class="download-icon">📝</div>
+                    <div class="download-text">
+                        <div class="download-format">TXT</div>
+                        <div class="download-desc">Einfacher Text</div>
+                    </div>
+                </button>
             </div>
         </div>
     </section>
@@ -1188,6 +1328,138 @@
         function scrollToTemplates() {
             document.querySelector('.templates-showcase').scrollIntoView({ behavior: 'smooth' });
         }
+
+        // ===== DOWNLOAD FUNCTIONS =====
+
+        // Show download section when form has data
+        function showDownloadSection() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (name) {
+                document.getElementById('downloadSection').style.display = 'block';
+            }
+        }
+
+        // Update preview to trigger download section display
+        form.addEventListener('input', () => {
+            showDownloadSection();
+        });
+
+        // Get CV data object
+        function getCVData() {
+            return {
+                name: document.getElementById('nameInput').value,
+                title: document.getElementById('titleInput').value,
+                email: document.getElementById('emailInput').value,
+                phone: document.getElementById('phoneInput').value,
+                summary: document.getElementById('summaryInput').value
+            };
+        }
+
+        // Download as PDF
+        function downloadPDF() {
+            const data = getCVData();
+            const element = document.getElementById('preview');
+            const filename = `${data.name.replace(/\s+/g, '_')}_Lebenslauf.pdf`;
+
+            const opt = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Download as DOCX
+        function downloadDOCX() {
+            const data = getCVData();
+            const filename = `${data.name.replace(/\s+/g, '_')}_Lebenslauf.docx`;
+
+            // Create document content
+            const sections = [
+                new docx.Paragraph({
+                    text: data.name,
+                    bold: true,
+                    size: 32,
+                    spacing: { after: 0 }
+                }),
+                new docx.Paragraph({
+                    text: data.title,
+                    size: 24,
+                    color: "1D4ED8",
+                    spacing: { after: 12 }
+                }),
+                new docx.Paragraph({
+                    text: data.email + " • " + data.phone,
+                    size: 20,
+                    spacing: { after: 24 }
+                }),
+                new docx.Paragraph({
+                    text: "Zusammenfassung",
+                    bold: true,
+                    size: 24,
+                    spacing: { before: 12, after: 6 }
+                }),
+                new docx.Paragraph({
+                    text: data.summary,
+                    size: 22,
+                    spacing: { after: 24 }
+                })
+            ];
+
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: sections
+                }]
+            });
+
+            docx.Packer.toBlob(doc).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Download as TXT
+        function downloadTXT() {
+            const data = getCVData();
+            const filename = `${data.name.replace(/\s+/g, '_')}_Lebenslauf.txt`;
+
+            const content = `${data.name}
+${data.title}
+
+${data.email} • ${data.phone}
+
+ZUSAMMENFASSUNG
+${data.summary}
+
+---
+Erstellt mit Bewerbungsstudio
+${new Date().toLocaleDateString('de-DE')}`;
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Show download section on page load if data exists
+        window.addEventListener('load', () => {
+            showDownloadSection();
+        });
     </script>
 </body>
 </html>
