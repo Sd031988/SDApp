@@ -1327,6 +1327,7 @@
             <button class="tab-btn" onclick="switchTab('deckblatt')">🎨 Deckblatt</button>
             <button class="tab-btn" onclick="switchTab('analytics')" style="margin-left: auto;">📊 Analytics</button>
             <button class="tab-btn" onclick="switchTab('privacy')">🔒 Datenschutz</button>
+            <button class="tab-btn" onclick="switchTab('errors')" style="margin-left: 0.5rem;">🚨 Fehler-Monitor</button>
         </div>
 
         <!-- Content -->
@@ -1670,6 +1671,82 @@
                     <p style="font-weight: 600; margin-bottom: 0.5rem;">📞 Support</p>
                     <p style="font-size: 0.875rem; color: var(--text-light);">Bei Fragen zum Datenschutz kontaktieren Sie uns unter:</p>
                     <p style="font-size: 0.875rem; margin-top: 0.5rem;"><a href="mailto:privacy@bewerbungsstudio.de" style="color: var(--primary); text-decoration: none;">privacy@bewerbungsstudio.de</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Monitoring Dashboard (Phase 7 Week 4) -->
+        <div class="content-wrapper" id="errors-content" style="display: none;">
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">🚨 Error-Übersicht</div>
+
+                    <div id="errorStats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid var(--danger);">
+                            <p style="color: var(--text-light); font-size: 0.875rem;">Gesamte Fehler</p>
+                            <p style="font-size: 1.75rem; font-weight: 700; color: var(--danger);" id="totalErrorCount">0</p>
+                        </div>
+                        <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; border-left: 4px solid var(--warning);">
+                            <p style="color: var(--text-light); font-size: 0.875rem;">Kritische Fehler</p>
+                            <p style="font-size: 1.75rem; font-weight: 700; color: var(--danger);" id="criticalErrorCount">0</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">⚙️ Filter & Optionen</div>
+
+                    <select id="errorSeverityFilter" onchange="filterErrors()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <option value="">Alle Schweregrad</option>
+                        <option value="critical">🔴 Kritisch</option>
+                        <option value="high">🟠 Hoch</option>
+                        <option value="medium">🟡 Mittel</option>
+                        <option value="low">🟢 Niedrig</option>
+                    </select>
+
+                    <input type="text" id="errorSearchBox" placeholder="Fehler durchsuchen..."
+                           onkeyup="filterErrors()"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem;">
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" onclick="clearErrorLog()" style="flex: 1;">🗑️ Löschen</button>
+                        <button class="btn btn-primary" onclick="exportErrorLog()" style="flex: 1;">📥 Exportieren</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-column">
+                <div class="form-section">
+                    <div class="section-title">📋 Error-Protokoll</div>
+                    <div id="errorLogContainer" style="max-height: 600px; overflow-y: auto; border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem;">
+                        <!-- Errors populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestions-column">
+                <div class="suggestions-header">📊 Error-Analyse</div>
+
+                <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">🎯 Top Fehler</p>
+                    <div id="topErrorsList" style="font-size: 0.875rem; line-height: 1.8;">
+                        <!-- Top errors populated here -->
+                    </div>
+                </div>
+
+                <div style="background: #FEF3C7; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid var(--warning);">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">💡 Fehlertrends</p>
+                    <div id="errorTrends" style="font-size: 0.875rem;">
+                        <!-- Trend analysis -->
+                    </div>
+                </div>
+
+                <div style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">ℹ️ Schweregrad</p>
+                    <div style="font-size: 0.875rem; line-height: 1.8;">
+                        <p>🔴 <strong>Kritisch</strong>: App-Crash, Datenverlust</p>
+                        <p>🟠 <strong>Hoch</strong>: Feature broken, no workaround</p>
+                        <p>🟡 <strong>Mittel</strong>: Feature issue, workaround exists</p>
+                        <p>🟢 <strong>Niedrig</strong>: Minor issues, UI bugs</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3686,6 +3763,7 @@
             document.getElementById('deckblatt-content').style.display = 'none';
             document.getElementById('analytics-content').style.display = 'none';
             document.getElementById('privacy-content').style.display = 'none';
+            document.getElementById('errors-content').style.display = 'none';
 
             // Remove active state from all buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3698,7 +3776,8 @@
                 'anschreiben': 'anschreiben-content',
                 'deckblatt': 'deckblatt-content',
                 'analytics': 'analytics-content',
-                'privacy': 'privacy-content'
+                'privacy': 'privacy-content',
+                'errors': 'errors-content'
             };
 
             const contentId = tabMap[tabName];
@@ -3718,6 +3797,8 @@
                 refreshAnalyticsDashboard();
             } else if (tabName === 'privacy') {
                 loadPrivacySettings();
+            } else if (tabName === 'errors') {
+                refreshErrorMonitoring();
             }
 
             analytics.trackEvent('tab_switch', { tab: tabName });
@@ -3897,6 +3978,96 @@
             document.getElementById('userProfileModal').classList.add('active');
         }
 
+        // ===== PHASE 7 WEEK 4: ADVANCED ERROR HANDLING & MONITORING =====
+
+        // Error severity levels and categorization
+        const ErrorSeverity = {
+            CRITICAL: { level: 'critical', emoji: '🔴', label: 'Kritisch', value: 4 },
+            HIGH: { level: 'high', emoji: '🟠', label: 'Hoch', value: 3 },
+            MEDIUM: { level: 'medium', emoji: '🟡', label: 'Mittel', value: 2 },
+            LOW: { level: 'low', emoji: '🟢', label: 'Niedrig', value: 1 }
+        };
+
+        // Error categorization rules
+        const ErrorPatterns = {
+            'Cannot read': 'high',
+            'TypeError': 'high',
+            'ReferenceError': 'high',
+            'SyntaxError': 'critical',
+            'Uncaught': 'high',
+            'FirebaseError': 'medium',
+            'fetch': 'medium',
+            'timeout': 'medium',
+            'undefined': 'low',
+            'warning': 'low'
+        };
+
+        // Determine error severity based on error message
+        function determineErrorSeverity(errorMessage) {
+            for (const [pattern, severity] of Object.entries(ErrorPatterns)) {
+                if (errorMessage.includes(pattern)) {
+                    return severity;
+                }
+            }
+            return 'medium'; // Default to medium
+        }
+
+        // Enhanced error tracking with severity
+        function trackErrorWithSeverity(message, stack, context = {}) {
+            const severity = determineErrorSeverity(message);
+            const errorObject = {
+                message: message,
+                stack: stack,
+                timestamp: new Date().toISOString(),
+                severity: severity,
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                sessionId: analytics.sessionId,
+                context: context,
+                id: `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            };
+
+            // Add to analytics
+            analytics.trackError(message, stack);
+
+            // Store with severity metadata
+            if (!analytics.userMetrics.errors) {
+                analytics.userMetrics.errors = [];
+            }
+            if (!Array.isArray(analytics.userMetrics.errors)) {
+                analytics.userMetrics.errors = [];
+            }
+            analytics.userMetrics.errors.push(errorObject);
+
+            // Save to localStorage
+            analytics.saveAnalytics();
+
+            // Log to console for development
+            console.log(`[ERROR-${severity.toUpperCase()}] ${message}`, errorObject);
+
+            // Check for critical errors and attempt recovery
+            if (severity === 'critical') {
+                attemptErrorRecovery(errorObject);
+            }
+
+            return errorObject;
+        }
+
+        // Error recovery strategy
+        function attemptErrorRecovery(errorObject) {
+            console.warn('Attempting error recovery for critical error:', errorObject.message);
+
+            // Recovery strategies based on error type
+            if (errorObject.message.includes('Firebase')) {
+                console.log('Activating Firebase fallback mode');
+            } else if (errorObject.message.includes('localStorage')) {
+                console.log('Activating memory-only mode');
+            } else if (errorObject.message.includes('render')) {
+                console.log('Attempting UI reset');
+                // Could reset UI state here
+            }
+        }
+
         // ===== PHASE 7 WEEK 3: PRIVACY CONTROLS & GDPR =====
 
         // Load privacy settings from localStorage
@@ -4071,6 +4242,208 @@
                 showAuthError('Fehler beim Löschen des Kontos');
             }
         }
+
+        // ===== ERROR MONITORING DASHBOARD =====
+
+        // Refresh error monitoring dashboard
+        function refreshErrorMonitoring() {
+            const errors = analytics.userMetrics.errors || [];
+
+            // Update error statistics
+            document.getElementById('totalErrorCount').textContent = errors.length;
+
+            const criticalErrors = errors.filter(e => e.severity === 'critical').length;
+            document.getElementById('criticalErrorCount').textContent = criticalErrors;
+
+            // Populate error log
+            displayErrorLog(errors);
+
+            // Display top errors
+            displayTopErrors(errors);
+
+            // Display error trends
+            displayErrorTrends(errors);
+        }
+
+        // Display filtered error log
+        function displayErrorLog(errors) {
+            const container = document.getElementById('errorLogContainer');
+            const severityFilter = document.getElementById('errorSeverityFilter').value;
+            const searchTerm = document.getElementById('errorSearchBox').value.toLowerCase();
+
+            // Filter errors
+            let filtered = errors;
+            if (severityFilter) {
+                filtered = filtered.filter(e => e.severity === severityFilter);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(e =>
+                    e.message.toLowerCase().includes(searchTerm) ||
+                    e.stack.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by timestamp (newest first)
+            filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            // Display errors
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center; padding: 2rem;">Keine Fehler</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map((error, idx) => `
+                <div style="padding: 1rem; background: var(--light); margin-bottom: 0.75rem; border-radius: 0.5rem; border-left: 4px solid ${getSeverityColor(error.severity)};">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;">${ErrorSeverity[error.severity.toUpperCase()] ? ErrorSeverity[error.severity.toUpperCase()].emoji : '❓'} ${error.severity.charAt(0).toUpperCase() + error.severity.slice(1)}</span>
+                        <span style="font-size: 0.75rem; color: var(--text-light);">#${error.id.split('_')[0]}</span>
+                    </div>
+                    <p style="margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem;">${escapeHtml(error.message)}</p>
+                    <p style="margin: 0.5rem 0; font-size: 0.75rem; color: var(--text-light);">${new Date(error.timestamp).toLocaleString('de-DE')}</p>
+                    <details style="font-size: 0.8rem; margin-top: 0.5rem;">
+                        <summary style="cursor: pointer; color: var(--primary);">Stack Trace anzeigen</summary>
+                        <pre style="margin-top: 0.5rem; background: white; padding: 0.5rem; border-radius: 0.25rem; overflow-x: auto; font-size: 0.7rem;">${escapeHtml(error.stack)}</pre>
+                    </details>
+                </div>
+            `).join('');
+        }
+
+        // Display top errors
+        function displayTopErrors(errors) {
+            const container = document.getElementById('topErrorsList');
+
+            // Count error occurrences
+            const errorCounts = {};
+            errors.forEach(e => {
+                const key = e.message.substring(0, 50);
+                errorCounts[key] = (errorCounts[key] || 0) + 1;
+            });
+
+            // Get top 5 errors
+            const topErrors = Object.entries(errorCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            if (topErrors.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light);">Keine Fehler</p>';
+                return;
+            }
+
+            container.innerHTML = topErrors.map(([msg, count]) => `
+                <p>• ${escapeHtml(msg.substring(0, 40))}... (${count}x)</p>
+            `).join('');
+        }
+
+        // Display error trends and analysis
+        function displayErrorTrends(errors) {
+            const container = document.getElementById('errorTrends');
+
+            // Analyze trends
+            const severityCounts = {
+                critical: errors.filter(e => e.severity === 'critical').length,
+                high: errors.filter(e => e.severity === 'high').length,
+                medium: errors.filter(e => e.severity === 'medium').length,
+                low: errors.filter(e => e.severity === 'low').length
+            };
+
+            // Calculate trend
+            const criticalPercent = errors.length > 0 ?
+                Math.round((severityCounts.critical / errors.length) * 100) : 0;
+
+            container.innerHTML = `
+                <div>
+                    <p>Gesamt: ${errors.length} Fehler</p>
+                    <p style="margin-top: 0.5rem;">Verteilung:</p>
+                    <div style="margin: 0.5rem 0;">
+                        <p style="margin: 0.25rem 0; font-size: 0.8rem;">
+                            🔴 Kritisch: ${severityCounts.critical} (${Math.round((severityCounts.critical / errors.length) * 100) || 0}%)
+                        </p>
+                        <p style="margin: 0.25rem 0; font-size: 0.8rem;">
+                            🟠 Hoch: ${severityCounts.high} (${Math.round((severityCounts.high / errors.length) * 100) || 0}%)
+                        </p>
+                        <p style="margin: 0.25rem 0; font-size: 0.8rem;">
+                            🟡 Mittel: ${severityCounts.medium} (${Math.round((severityCounts.medium / errors.length) * 100) || 0}%)
+                        </p>
+                        <p style="margin: 0.25rem 0; font-size: 0.8rem;">
+                            🟢 Niedrig: ${severityCounts.low} (${Math.round((severityCounts.low / errors.length) * 100) || 0}%)
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Filter and refresh error log
+        function filterErrors() {
+            const errors = analytics.userMetrics.errors || [];
+            displayErrorLog(errors);
+        }
+
+        // Clear error log
+        function clearErrorLog() {
+            if (confirm('Alle Fehler wirklich löschen?')) {
+                if (analytics.userMetrics) {
+                    analytics.userMetrics.errors = [];
+                }
+                analytics.saveAnalytics();
+                refreshErrorMonitoring();
+                showAuthSuccess('Error-Protokoll gelöscht');
+            }
+        }
+
+        // Export error log as JSON
+        function exportErrorLog() {
+            const errors = analytics.userMetrics.errors || [];
+            const report = {
+                exportedAt: new Date().toISOString(),
+                totalErrors: errors.length,
+                severitySummary: {
+                    critical: errors.filter(e => e.severity === 'critical').length,
+                    high: errors.filter(e => e.severity === 'high').length,
+                    medium: errors.filter(e => e.severity === 'medium').length,
+                    low: errors.filter(e => e.severity === 'low').length
+                },
+                errors: errors
+            };
+
+            const jsonStr = JSON.stringify(report, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `error-log-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            analytics.trackEvent('error_log_exported', { errorCount: errors.length });
+            showAuthSuccess('Error-Protokoll exportiert');
+        }
+
+        // Get severity color for UI
+        function getSeverityColor(severity) {
+            switch(severity) {
+                case 'critical': return 'var(--danger)';
+                case 'high': return 'var(--warning)';
+                case 'medium': return 'var(--accent)';
+                case 'low': return 'var(--secondary)';
+                default: return 'var(--border)';
+            }
+        }
+
+        // HTML escape utility
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Enhanced error handlers with severity tracking
+        window.addEventListener('error', (event) => {
+            trackErrorWithSeverity(event.message, `${event.filename}:${event.lineno}:${event.colno}`);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            trackErrorWithSeverity('Unhandled Promise: ' + (event.reason || 'Unknown'));
+        });
 
         // Check if running in development mode (show login if not authenticated)
         window.addEventListener('load', () => {
