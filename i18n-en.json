@@ -110,7 +110,9 @@
     "exported": "Application documents exported",
     "fillCV": "Please complete your CV first",
     "spellCheckComplete": "Spell check completed",
-    "aiAnalysisComplete": "AI analysis completed"
+    "aiAnalysisComplete": "AI analysis completed",
+    "pdfExported": "PDF successfully exported",
+    "downloadError": "Error downloading file"
   },
   "buttons": {
     "add": "Add",

@@ -110,7 +110,9 @@
     "exported": "Bewerbungsunterlagen exportiert",
     "fillCV": "Bitte füllen Sie zuerst Ihren Lebenslauf aus",
     "spellCheckComplete": "Rechtschreibprüfung abgeschlossen",
-    "aiAnalysisComplete": "AI-Analyse abgeschlossen"
+    "aiAnalysisComplete": "AI-Analyse abgeschlossen",
+    "pdfExported": "PDF erfolgreich exportiert",
+    "downloadError": "Fehler beim Herunterladen der Datei"
   },
   "buttons": {
     "add": "Hinzufügen",

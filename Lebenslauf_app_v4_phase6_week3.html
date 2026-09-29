@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bewerbungsstudio Phase 6</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Roboto+Serif:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         * {
@@ -2287,6 +2288,267 @@
             preview.innerHTML = deckblattContent;
         }
 
+        // ===== PHASE 6 WEEK 5: PDF GENERATION WITH LANGUAGE SUPPORT =====
+        const PDFGenerator = {
+            // Generate CV PDF
+            generateCVPDF: function(cv, language = 'de') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                let yPosition = 20;
+                const margin = 20;
+
+                // Translations
+                const translations = {
+                    de: {
+                        personalInfo: 'Persönliche Daten',
+                        profile: 'Profil',
+                        experience: 'Berufserfahrung',
+                        education: 'Ausbildung',
+                        skills: 'Kompetenzen',
+                        languages: 'Sprachen'
+                    },
+                    en: {
+                        personalInfo: 'Personal Information',
+                        profile: 'Professional Profile',
+                        experience: 'Work Experience',
+                        education: 'Education',
+                        skills: 'Skills',
+                        languages: 'Languages'
+                    },
+                    fr: {
+                        personalInfo: 'Informations Personnelles',
+                        profile: 'Profil Professionnel',
+                        experience: 'Expérience Professionnelle',
+                        education: 'Éducation',
+                        skills: 'Compétences',
+                        languages: 'Langues'
+                    },
+                    es: {
+                        personalInfo: 'Información Personal',
+                        profile: 'Perfil Profesional',
+                        experience: 'Experiencia Profesional',
+                        education: 'Educación',
+                        skills: 'Habilidades',
+                        languages: 'Idiomas'
+                    },
+                    it: {
+                        personalInfo: 'Informazioni Personali',
+                        profile: 'Profilo Professionale',
+                        experience: 'Esperienza Professionale',
+                        education: 'Istruzione',
+                        skills: 'Competenze',
+                        languages: 'Lingue'
+                    }
+                };
+
+                const t = translations[language] || translations.de;
+
+                // Header - Name and Contact
+                doc.setFontSize(20);
+                doc.setFont(undefined, 'bold');
+                doc.text(cv.name || 'Name', margin, yPosition);
+                yPosition += 12;
+
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                const contactInfo = [
+                    cv.email,
+                    cv.phone,
+                    cv.location
+                ].filter(Boolean).join(' • ');
+                doc.text(contactInfo, margin, yPosition);
+                yPosition += 10;
+
+                // Professional Summary
+                if (cv.summary) {
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(t.profile, margin, yPosition);
+                    yPosition += 6;
+
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'normal');
+                    const summaryLines = doc.splitTextToSize(cv.summary, pageWidth - 2 * margin);
+                    doc.text(summaryLines, margin, yPosition);
+                    yPosition += summaryLines.length * 4 + 4;
+                }
+
+                // Experience
+                if (cv.experience && cv.experience.length > 0) {
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(t.experience, margin, yPosition);
+                    yPosition += 6;
+
+                    cv.experience.forEach(job => {
+                        doc.setFontSize(9);
+                        doc.setFont(undefined, 'bold');
+                        const dateRange = job.endDate && job.endDate !== 'Present' ?
+                            `${job.startDate} - ${job.endDate}` :
+                            `${job.startDate} - ${language === 'de' ? 'Präsent' : 'Present'}`;
+                        doc.text(`${job.position} at ${job.company} (${dateRange})`, margin, yPosition);
+                        yPosition += 5;
+
+                        if (job.description) {
+                            doc.setFont(undefined, 'normal');
+                            doc.setFontSize(8);
+                            const descLines = doc.splitTextToSize(job.description, pageWidth - 2 * margin);
+                            doc.text(descLines, margin + 5, yPosition);
+                            yPosition += descLines.length * 3 + 3;
+                        }
+                    });
+
+                    yPosition += 2;
+                }
+
+                // Education
+                if (cv.education && cv.education.length > 0) {
+                    if (yPosition > pageHeight - 40) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(t.education, margin, yPosition);
+                    yPosition += 6;
+
+                    cv.education.forEach(edu => {
+                        doc.setFontSize(9);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`${edu.degree} in ${edu.field}`, margin, yPosition);
+                        yPosition += 5;
+
+                        doc.setFont(undefined, 'normal');
+                        doc.setFontSize(8);
+                        doc.text(`${edu.school} (${edu.graduationDate})`, margin + 5, yPosition);
+                        yPosition += 5;
+                    });
+
+                    yPosition += 2;
+                }
+
+                // Skills
+                if (cv.skills) {
+                    if (yPosition > pageHeight - 30) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(t.skills, margin, yPosition);
+                    yPosition += 6;
+
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'normal');
+                    const skillsList = typeof cv.skills === 'string' ? cv.skills : cv.skills.join(', ');
+                    const skillsLines = doc.splitTextToSize(skillsList, pageWidth - 2 * margin);
+                    doc.text(skillsLines, margin, yPosition);
+                    yPosition += skillsLines.length * 3 + 2;
+                }
+
+                // Languages
+                if (cv.languages) {
+                    if (yPosition > pageHeight - 20) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+
+                    doc.setFontSize(11);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(t.languages, margin, yPosition);
+                    yPosition += 6;
+
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'normal');
+                    const langsList = typeof cv.languages === 'string' ? cv.languages : cv.languages.join(', ');
+                    const langLines = doc.splitTextToSize(langsList, pageWidth - 2 * margin);
+                    doc.text(langLines, margin, yPosition);
+                }
+
+                return doc;
+            },
+
+            // Generate Cover Letter PDF
+            generateCoverLetterPDF: function(cv, coverLetterData, language = 'de') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                let yPosition = 20;
+                const margin = 20;
+
+                // Header
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text(cv.name, margin, yPosition);
+                yPosition += 10;
+
+                // Sender info
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'normal');
+                doc.text([cv.email, cv.phone, cv.location].filter(Boolean).join(' • '), margin, yPosition);
+                yPosition += 10;
+
+                // Date
+                const today = new Date().toLocaleDateString(language);
+                doc.text(today, margin, yPosition);
+                yPosition += 8;
+
+                // Body
+                if (coverLetterData && coverLetterData.content) {
+                    doc.setFontSize(10);
+                    const contentLines = doc.splitTextToSize(coverLetterData.content, pageWidth - 2 * margin);
+                    doc.text(contentLines, margin, yPosition);
+                }
+
+                return doc;
+            },
+
+            // Generate Deckblatt PDF
+            generateDeckblattPDF: function(cv, language = 'de') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+
+                // Background color
+                doc.setFillColor(59, 130, 246);
+                doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                // Title
+                doc.setFontSize(28);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(255, 255, 255);
+                doc.text('Bewerbung', pageWidth / 2, pageHeight / 3, { align: 'center' });
+
+                // Name
+                doc.setFontSize(20);
+                doc.text(cv.name || 'Name', pageWidth / 2, pageHeight / 3 + 20, { align: 'center' });
+
+                // Position
+                if (cv.experience && cv.experience[0]) {
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(cv.experience[0].position, pageWidth / 2, pageHeight / 3 + 35, { align: 'center' });
+                }
+
+                // Date at bottom
+                const today = new Date().toLocaleDateString(language);
+                doc.setFontSize(10);
+                doc.text(today, pageWidth / 2, pageHeight - 30, { align: 'center' });
+
+                return doc;
+            },
+
+            // Download PDF
+            downloadPDF: function(doc, filename) {
+                doc.save(filename);
+            }
+        };
+
         // Export complete application (CV + Cover Letter + Deckblatt)
         function exportComplete() {
             if (!appState.currentCV) {
@@ -2296,6 +2558,12 @@
 
             // Create a complete PDF bundle or document
             const cv = appState.currentCV;
+            const currentLanguage = i18n.currentLanguage || 'de';
+
+            // Get current cover letter content from preview
+            const coverLetterPreview = document.getElementById('coverLetterPreview');
+            const coverLetterContent = coverLetterPreview ? coverLetterPreview.textContent : '';
+
             const exportData = {
                 lebenslauf: cv,
                 coverLetter: {
@@ -2307,20 +2575,48 @@
                     template: currentDeckblattTemplate,
                     templateName: deckblattTemplates?.[currentDeckblattTemplate]?.name || 'Standard'
                 },
+                language: currentLanguage,
                 exportDate: new Date().toISOString()
             };
 
-            // Download as JSON for now (can be extended to PDF)
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Bewerbung_${cv.name}_${new Date().getFullYear()}.json`;
-            link.click();
-            URL.revokeObjectURL(url);
+            // Export as PDF - Multiple documents
+            try {
+                // 1. Export CV as PDF
+                const cvPdf = PDFGenerator.generateCVPDF(cv, currentLanguage);
+                PDFGenerator.downloadPDF(cvPdf, `${cv.name}_CV_${new Date().getFullYear()}.pdf`);
 
-            showNotification('Bewerbungsunterlagen exportiert');
+                // 2. Export Cover Letter as PDF
+                setTimeout(() => {
+                    const letterPdf = PDFGenerator.generateCoverLetterPDF(cv, {
+                        content: coverLetterContent || 'Cover Letter'
+                    }, currentLanguage);
+                    PDFGenerator.downloadPDF(letterPdf, `${cv.name}_Anschreiben_${new Date().getFullYear()}.pdf`);
+                }, 500);
+
+                // 3. Export Deckblatt as PDF
+                setTimeout(() => {
+                    const deckblattPdf = PDFGenerator.generateDeckblattPDF(cv, currentLanguage);
+                    PDFGenerator.downloadPDF(deckblattPdf, `${cv.name}_Deckblatt_${new Date().getFullYear()}.pdf`);
+                }, 1000);
+
+                // 4. Also export as JSON for data backup
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `Bewerbung_${cv.name}_${new Date().getFullYear()}.json`;
+
+                setTimeout(() => {
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, 1500);
+
+                showNotification(i18n.get('notifications.exported', 'Dokumente exportiert'));
+            } catch (error) {
+                console.error('Export error:', error);
+                showNotification('Fehler beim Exportieren der Dokumente');
+            }
         }
 
         // Initialize on load
@@ -2334,6 +2630,42 @@
             initSkillAutocomplete();
             await initApp();
         });
+
+        // Quick PDF download functions
+        function downloadCVPDF() {
+            if (!appState.currentCV) {
+                showNotification(i18n.get('notifications.fillCV', 'Bitte füllen Sie zuerst Ihren Lebenslauf aus'));
+                return;
+            }
+            const currentLanguage = i18n.currentLanguage || 'de';
+            const cvPdf = PDFGenerator.generateCVPDF(appState.currentCV, currentLanguage);
+            PDFGenerator.downloadPDF(cvPdf, `${appState.currentCV.name}_CV_${new Date().getFullYear()}.pdf`);
+            showNotification(i18n.get('notifications.exported', 'CV exportiert'));
+        }
+
+        function downloadCoverLetterPDF() {
+            if (!appState.currentCV) {
+                showNotification(i18n.get('notifications.fillCV', 'Bitte füllen Sie zuerst Ihren Lebenslauf aus'));
+                return;
+            }
+            const currentLanguage = i18n.currentLanguage || 'de';
+            const coverLetterPreview = document.getElementById('coverLetterPreview');
+            const content = coverLetterPreview ? coverLetterPreview.textContent : 'Cover Letter';
+            const letterPdf = PDFGenerator.generateCoverLetterPDF(appState.currentCV, { content }, currentLanguage);
+            PDFGenerator.downloadPDF(letterPdf, `${appState.currentCV.name}_Anschreiben_${new Date().getFullYear()}.pdf`);
+            showNotification(i18n.get('notifications.exported', 'Anschreiben exportiert'));
+        }
+
+        function downloadDeckblattPDF() {
+            if (!appState.currentCV) {
+                showNotification(i18n.get('notifications.fillCV', 'Bitte füllen Sie zuerst Ihren Lebenslauf aus'));
+                return;
+            }
+            const currentLanguage = i18n.currentLanguage || 'de';
+            const deckblattPdf = PDFGenerator.generateDeckblattPDF(appState.currentCV, currentLanguage);
+            PDFGenerator.downloadPDF(deckblattPdf, `${appState.currentCV.name}_Deckblatt_${new Date().getFullYear()}.pdf`);
+            showNotification(i18n.get('notifications.exported', 'Deckblatt exportiert'));
+        }
 
         // Close modals on background click
         document.addEventListener('click', (e) => {

@@ -110,7 +110,9 @@
     "exported": "Documentos de solicitud exportados",
     "fillCV": "Complete su CV primero",
     "spellCheckComplete": "Corrección completada",
-    "aiAnalysisComplete": "Análisis IA completado"
+    "aiAnalysisComplete": "Análisis IA completado",
+    "pdfExported": "PDF exportado exitosamente",
+    "downloadError": "Error al descargar el archivo"
   },
   "buttons": {
     "add": "Añadir",
