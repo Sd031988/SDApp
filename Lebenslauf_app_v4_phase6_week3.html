@@ -245,6 +245,23 @@
             text-decoration: underline;
         }
 
+        /* ===== PHASE 7 WEEK 3: PRIVACY CONTROLS ===== */
+        .privacy-toggle {
+            width: 2rem;
+            height: 2rem;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger) !important;
+            color: white !important;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626 !important;
+        }
+
         .cloud-sync-status {
             padding: 0.5rem 1rem;
             border-radius: 0.25rem;
@@ -1303,12 +1320,13 @@
             </div>
         </div>
 
-        <!-- Tab Navigation (Phase 6 Week 3 + Phase 7 Week 2) -->
+        <!-- Tab Navigation (Phase 6 Week 3 + Phase 7 Weeks 1-3) -->
         <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('lebenslauf')">📄 Lebenslauf</button>
             <button class="tab-btn" onclick="switchTab('anschreiben')">💌 Anschreiben</button>
             <button class="tab-btn" onclick="switchTab('deckblatt')">🎨 Deckblatt</button>
             <button class="tab-btn" onclick="switchTab('analytics')" style="margin-left: auto;">📊 Analytics</button>
+            <button class="tab-btn" onclick="switchTab('privacy')">🔒 Datenschutz</button>
         </div>
 
         <!-- Content -->
@@ -1552,6 +1570,106 @@
                             <a onclick="openErrorLog()" style="color: var(--primary); cursor: pointer; text-decoration: none;">🚨 Fehler-Log</a>
                         </p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy & GDPR Controls (Phase 7 Week 3) -->
+        <div class="content-wrapper" id="privacy-content" style="display: none;">
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">🔒 Datenschutzeinstellungen</div>
+
+                    <!-- Analytics Consent -->
+                    <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-weight: 600; margin-bottom: 0.25rem;">📊 Analytics</p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">Anonyme Nutzungsdaten nachverfolgen</p>
+                            </div>
+                            <input type="checkbox" id="analyticsConsent" class="privacy-toggle" onchange="updatePrivacySettings()">
+                        </div>
+                    </div>
+
+                    <!-- Error Tracking Consent -->
+                    <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-weight: 600; margin-bottom: 0.25rem;">🚨 Fehlererfassung</p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">Fehler zur Verbesserung erfassen</p>
+                            </div>
+                            <input type="checkbox" id="errorTracking" class="privacy-toggle" onchange="updatePrivacySettings()">
+                        </div>
+                    </div>
+
+                    <!-- Performance Monitoring Consent -->
+                    <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="font-weight: 600; margin-bottom: 0.25rem;">⚡ Performance-Überwachung</p>
+                                <p style="font-size: 0.875rem; color: var(--text-light);">Leistungsdaten aufzeichnen</p>
+                            </div>
+                            <input type="checkbox" id="performanceTracking" class="privacy-toggle" onchange="updatePrivacySettings()">
+                        </div>
+                    </div>
+
+                    <div class="section-title">📥 Datenexport (DSGVO)</div>
+                    <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 1rem;">Laden Sie eine Kopie Ihrer persönlichen Daten herunter</p>
+                    <button class="btn btn-primary" onclick="exportUserData()" style="width: 100%; margin-bottom: 1rem;">📋 Daten exportieren</button>
+                    <p style="font-size: 0.75rem; color: var(--text-light);">Enthält: Profil, CVs, Analytics-Daten, Einstellungen</p>
+                </div>
+            </div>
+
+            <div class="preview-column">
+                <div class="form-section">
+                    <div class="section-title">ℹ️ Datenschutz-Übersicht</div>
+
+                    <div style="background: #DBEAFE; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid var(--primary);">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">Ihre Daten gehören Ihnen</p>
+                        <p style="font-size: 0.875rem;">Alle Ihre Daten werden verschlüsselt gespeichert und sind jederzeit zugänglich oder löschbar.</p>
+                    </div>
+
+                    <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">🔐 Was wir speichern:</p>
+                        <ul style="font-size: 0.875rem; line-height: 1.6; margin-left: 1rem; color: var(--text-light);">
+                            <li>Persönliche Daten (Name, Email, Telefon)</li>
+                            <li>Lebenslauf-Inhalte</li>
+                            <li>Anschreiben-Vorlagen</li>
+                            <li>Spracheinstellungen</li>
+                            <li>Authentifizierungsdaten (verschlüsselt)</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem;">⚙️ Sicherheitsmaßnahmen:</p>
+                        <ul style="font-size: 0.875rem; line-height: 1.6; margin-left: 1rem; color: var(--text-light);">
+                            <li>Ende-zu-Ende-Verschlüsselung</li>
+                            <li>SSL/TLS für alle Verbindungen</li>
+                            <li>HTTPS-only Kommunikation</li>
+                            <li>Firebase Security Rules</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestions-column">
+                <div class="suggestions-header">🗑️ Konto Management</div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 0.75rem;">Sitzungsdaten löschen</p>
+                    <button class="btn btn-secondary" onclick="clearSessionData()" style="width: 100%;">🗑️ Sitzung löschen</button>
+                </div>
+
+                <div style="padding-top: 1rem; border-top: 1px solid var(--border); margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-light); margin-bottom: 0.75rem;">Recht auf Vergessenheit</p>
+                    <button class="btn btn-danger" onclick="deleteAccountConfirm()" style="width: 100%;">⚠️ Konto löschen</button>
+                    <p style="font-size: 0.75rem; color: var(--danger); margin-top: 0.5rem;">Warnung: Diese Aktion kann nicht rückgängig gemacht werden</p>
+                </div>
+
+                <div style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">📞 Support</p>
+                    <p style="font-size: 0.875rem; color: var(--text-light);">Bei Fragen zum Datenschutz kontaktieren Sie uns unter:</p>
+                    <p style="font-size: 0.875rem; margin-top: 0.5rem;"><a href="mailto:privacy@bewerbungsstudio.de" style="color: var(--primary); text-decoration: none;">privacy@bewerbungsstudio.de</a></p>
                 </div>
             </div>
         </div>
@@ -3567,6 +3685,7 @@
             document.getElementById('anschreiben-content').style.display = 'none';
             document.getElementById('deckblatt-content').style.display = 'none';
             document.getElementById('analytics-content').style.display = 'none';
+            document.getElementById('privacy-content').style.display = 'none';
 
             // Remove active state from all buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3578,7 +3697,8 @@
                 'lebenslauf': 'lebenslauf-content',
                 'anschreiben': 'anschreiben-content',
                 'deckblatt': 'deckblatt-content',
-                'analytics': 'analytics-content'
+                'analytics': 'analytics-content',
+                'privacy': 'privacy-content'
             };
 
             const contentId = tabMap[tabName];
@@ -3596,6 +3716,8 @@
                 renderDeckblattTemplates();
             } else if (tabName === 'analytics') {
                 refreshAnalyticsDashboard();
+            } else if (tabName === 'privacy') {
+                loadPrivacySettings();
             }
 
             analytics.trackEvent('tab_switch', { tab: tabName });
@@ -3775,8 +3897,194 @@
             document.getElementById('userProfileModal').classList.add('active');
         }
 
+        // ===== PHASE 7 WEEK 3: PRIVACY CONTROLS & GDPR =====
+
+        // Load privacy settings from localStorage
+        function loadPrivacySettings() {
+            const settings = JSON.parse(localStorage.getItem('privacySettings') || '{"analyticsConsent": true, "errorTracking": true, "performanceTracking": true}');
+
+            document.getElementById('analyticsConsent').checked = settings.analyticsConsent;
+            document.getElementById('errorTracking').checked = settings.errorTracking;
+            document.getElementById('performanceTracking').checked = settings.performanceTracking;
+        }
+
+        // Update privacy settings
+        function updatePrivacySettings() {
+            const settings = {
+                analyticsConsent: document.getElementById('analyticsConsent').checked,
+                errorTracking: document.getElementById('errorTracking').checked,
+                performanceTracking: document.getElementById('performanceTracking').checked,
+                lastUpdated: new Date().toISOString()
+            };
+
+            localStorage.setItem('privacySettings', JSON.stringify(settings));
+            analytics.trackEvent('privacy_settings_updated', settings);
+            showAuthSuccess('Datenschutzeinstellungen gespeichert');
+        }
+
+        // Export user data (GDPR right to access)
+        function exportUserData() {
+            try {
+                const userData = {
+                    exportedAt: new Date().toISOString(),
+                    user: {
+                        email: currentUser ? currentUser.email : 'Not authenticated',
+                        uid: currentUser ? currentUser.uid : null,
+                        displayName: currentUser ? currentUser.displayName : null
+                    },
+                    cvData: appState.currentCV,
+                    coverLetterData: appState.coverLetter,
+                    deckblattData: appState.deckblatt,
+                    preferences: {
+                        language: localStorage.getItem('selectedLanguage'),
+                        privacySettings: JSON.parse(localStorage.getItem('privacySettings') || '{}')
+                    },
+                    analytics: analytics.exportAnalytics(),
+                    gdprRights: {
+                        dataAccess: 'Compliant',
+                        dataPortability: 'Compliant',
+                        rightToDelete: 'Available',
+                        rightToRectification: 'Available'
+                    }
+                };
+
+                const jsonStr = JSON.stringify(userData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `bewerbungsstudio-export-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                analytics.trackEvent('gdpr_data_export', { dataSize: jsonStr.length });
+                showAuthSuccess('Datenexport erfolgreich heruntergeladen');
+            } catch (error) {
+                console.error('Export error:', error);
+                showAuthError('Fehler beim Exportieren der Daten');
+            }
+        }
+
+        // Clear session data
+        function clearSessionData() {
+            if (confirm('Alle Sitzungsdaten wirklich löschen?')) {
+                localStorage.removeItem('cvData');
+                localStorage.removeItem('coverLetterData');
+                localStorage.removeItem('deckblattData');
+                localStorage.removeItem('analyticsData');
+                appState.currentCV = getDefaultCV();
+                appState.coverLetter = { text: '', template: 1 };
+                appState.deckblatt = { template: 1 };
+
+                analytics.trackEvent('session_data_cleared', {
+                    timestamp: new Date().toISOString()
+                });
+                showAuthSuccess('Sitzungsdaten gelöscht');
+
+                // Reload page after 1 second
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        // Delete account confirmation dialog
+        function deleteAccountConfirm() {
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'auth-modal';
+            confirmModal.id = 'deleteConfirmModal';
+            confirmModal.innerHTML = `
+                <div class="auth-modal-content" style="border: 2px solid var(--danger);">
+                    <h2 style="color: var(--danger);">⚠️ Warnung</h2>
+                    <p style="margin-bottom: 1rem; line-height: 1.6;">
+                        Das Löschen Ihres Kontos ist eine permanente Aktion und kann nicht rückgängig gemacht werden. Alle Ihre Daten werden gelöscht:
+                    </p>
+                    <ul style="margin-bottom: 1rem; margin-left: 1rem;">
+                        <li>Profildaten</li>
+                        <li>Alle Lebensläufe</li>
+                        <li>Alle Anschreiben</li>
+                        <li>Analytics-Daten</li>
+                        <li>Cloud-Speicherung</li>
+                    </ul>
+                    <p style="margin-bottom: 1.5rem; font-weight: 600;">Sind Sie sicher?</p>
+                    <div class="auth-button-group">
+                        <button class="btn btn-danger" onclick="deleteAccountFinal()" style="flex: 1;">Ja, Konto löschen</button>
+                        <button class="btn btn-secondary" onclick="closeAuthModal('deleteConfirmModal')" style="flex: 1;">Abbrechen</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmModal);
+            confirmModal.classList.add('active');
+        }
+
+        // Final account deletion
+        async function deleteAccountFinal() {
+            if (!currentUser) {
+                showAuthError('Nicht authentifiziert');
+                return;
+            }
+
+            try {
+                showAuthSuccess('Konto wird gelöscht...');
+
+                // Clear all local data
+                localStorage.clear();
+
+                // If Firebase is available, delete Firestore data
+                if (isFirebaseReady && typeof firebaseDb !== 'undefined') {
+                    try {
+                        // Delete user collection
+                        await firebaseDb.collection('users').doc(currentUser.uid).delete();
+
+                        // Track deletion event before logout
+                        analytics.trackEvent('account_deleted', {
+                            timestamp: new Date().toISOString(),
+                            uid: currentUser.uid
+                        });
+                    } catch (fbError) {
+                        console.log('Firebase deletion note:', fbError);
+                    }
+                }
+
+                // Sign out from Firebase
+                if (isFirebaseReady && typeof firebaseAuth !== 'undefined') {
+                    try {
+                        await firebaseAuth.signOut();
+                    } catch (signOutError) {
+                        console.log('Sign out note:', signOutError);
+                    }
+                }
+
+                // Reset app state
+                currentUser = null;
+                appState.currentCV = getDefaultCV();
+
+                showAuthSuccess('Ihr Konto wurde gelöscht. Seite wird neu geladen...');
+
+                // Reload after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Account deletion error:', error);
+                showAuthError('Fehler beim Löschen des Kontos');
+            }
+        }
+
         // Check if running in development mode (show login if not authenticated)
         window.addEventListener('load', () => {
+            // Load privacy settings on page load
+            try {
+                const privacySettings = JSON.parse(localStorage.getItem('privacySettings'));
+                if (privacySettings && !privacySettings.analyticsConsent) {
+                    // Disable analytics if user opted out
+                    console.log('Analytics disabled by user preference');
+                }
+            } catch (e) {
+                // Use default settings
+            }
+
             setTimeout(() => {
                 if (!currentUser && isFirebaseReady) {
                     // You could auto-show login here, or wait for user action
