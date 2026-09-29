@@ -3,7 +3,7 @@
   "lastUpdated": "2026-09-30",
   "totalTemplates": 12,
   "description": "Professional cover letter templates with auto-fill support",
-  "templates": [
+  "coverLetterTemplates": [
     {
       "id": "anschreiben_001",
       "name": "Klassisch Formell",
@@ -268,7 +268,7 @@
       "aiFriendly": true
     }
   ],
-  "deckblatt_templates": [
+  "deckblattTemplates": [
     {
       "id": "deckblatt_001",
       "name": "Klassisch Elegant",
