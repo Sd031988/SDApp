@@ -1166,51 +1166,30 @@
         }
 
         @media (max-width: 680px) {
-            /* Auf dem Handy sollen Formular (Sidebar) und Vorschau
-               untereinander stehen und ganz normal die Seite mit dem
-               Finger nach unten scrollen lassen. Vorher blieb "height:
-               100vh; overflow: hidden" vom Desktop-Layout bestehen, obwohl
-               "display: block" schon zwei Kaesten untereinander erzeugt hat
-               - das ergab zwei einzeln, winzig scrollende Kaesten
-               uebereinander statt einer normal scrollenden Seite: genau das
-               "durcheinander" auf dem Handy. */
-            html, body {
-                height: auto;
-                min-height: 100%;
-            }
-
-            body {
-                display: block;
-                overflow: visible;
-                overflow-x: hidden;
-            }
-
+            /* Auch auf dem Handy sollen Formular (Sidebar) und Vorschau
+               nebeneinander bleiben statt untereinander zu stehen - beide
+               Spalten scrollen dafuer unabhaengig voneinander senkrecht
+               (wie am Computer), nur schmaler. Die Formular-Spalte
+               schrumpft hier staerker als auf Laptop-Breiten, damit noch
+               spuerbar Platz fuer die Vorschau daneben bleibt. */
             .editor-sidebar {
-                width: 100%;
-                flex: none;
-                padding: 16px;
-                height: auto;
-                max-height: none;
-                overflow-y: visible;
-                border-right: none;
-                box-shadow: 0 4px 16px rgba(23, 42, 58, 0.08);
+                width: clamp(130px, 42vw, 220px);
+                flex: 0 0 clamp(130px, 42vw, 220px);
+                padding: 12px;
                 box-sizing: border-box;
             }
 
             .preview-area {
-                width: 100%;
-                padding: 16px 10px 32px;
-                height: auto;
-                overflow-y: visible;
+                padding: 12px 8px;
                 box-sizing: border-box;
             }
 
             /* Das A4-Blatt darf auf dem Handy nicht mehr in echten
-               Millimetern (210mm) breit sein - das ist breiter als jeder
-               Handybildschirm und zwingt die Seite zum seitlichen Scrollen.
-               Stattdessen passt es sich der Bildschirmbreite an; die
-               Innenabstaende schrumpfen ebenfalls mit, statt riesige
-               Raender auf kleinem Platz zu erzwingen. */
+               Millimetern (210mm) breit sein - das ist breiter als die
+               schmale Vorschau-Spalte. Stattdessen passt es sich der
+               verfuegbaren Breite an; die Innenabstaende schrumpfen
+               ebenfalls mit, statt riesige Raender auf kleinem Platz zu
+               erzwingen. */
             .a4-page {
                 width: 100%;
                 max-width: 100%;
