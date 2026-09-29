@@ -2,364 +2,265 @@
 
 **Date:** 2026-09-30  
 **Version:** Lebenslauf_app_v8_phase8_wizard.html  
-**Status:** FULLY IMPLEMENTED & TESTED
+**Status:** FULLY IMPLEMENTED & TESTED - 3-COLUMN PERSISTENT LAYOUT
 
 ---
 
 ## 🎯 Phase 8 Objective
 
-Transform Bewerbungsstudio from a complex 10-tab interface into a simple, guided step-by-step wizard. User requirement: "sehr einfach für die Leute" (very simple for people).
+Transform Bewerbungsstudio from a complex 10-tab interface into a simple, guided wizard with a professional 3-column persistent layout. Design precisely matches meinperfekterlebenslauf.de reference screenshots.
 
 ---
 
 ## ✅ Implementation Summary
 
-### Complete 12-Step Wizard Architecture
+### 3-Column Persistent Layout Architecture
 
-#### **Step 0: Landing Page**
-- Welcome screen with clear call-to-action
-- "Create New CV" button (primary)
-- "Load Existing CV" button (secondary)
-- Motivational copy
+The application now features a professional, desktop-first design with three persistent sections:
 
-#### **Step 1: Experience Level Selection**
-- 6 visual options with emoji icons
-- No experience / 1-3 years / 4-6 years / 7-10 years / 10+ years / Other
-- Click to select, visual feedback
-- Determines field visibility in subsequent steps
+#### **LEFT SIDEBAR (280px) - Navigation Menu**
+- Persistent navigation showing all 6 steps at once
+- Progress indicators for each step (completed, active, pending)
+- Step titles and progress text ("Schritt X von 6")
+- Click any step to jump to it
+- Active step highlighted with blue left border
+- Completed steps marked with green indicator
+- Always visible for quick navigation
 
-#### **Step 2: Education Status Selection**
-- 5 visual options
-- Currently studying / Completed / Apprenticeship / Secondary / None
-- Affects which sections appear later
+#### **MAIN CONTENT AREA (Flex) - Form Input**
+- Content header with step title and description
+- Responsive form fields and inputs
+- Two-column grid layout for fields (adapts to single column on mobile)
+- Form sections with clear labels
+- Required field indicators (*)
+- Support for various input types (text, email, date, textarea)
+- Form validation before proceeding
 
-#### **Step 3: Template Gallery**
-- 6 professional CV templates displayed as cards
-- Each with preview emoji and name
-- Klassisch / Modern / Premium / Tech / Minimal / Kreativ
-- Visual selection with hover effects
-
-#### **Step 4: Personal Data Entry**
-- **2-Column Layout** (as specified by user):
-  - **Left:** Photo upload section with preview
-  - **Right:** Form fields
-- Fields: Vorname, Nachname, Geburtsdatum, E-Mail, Telefon, Adresse
-- Photo upload with image preview
-- Form validation (required fields)
-
-#### **Step 5: Professional Experience**
-- Repeatable section pattern
-- Each entry has:
-  - Job Title (Jobtitel)
-  - Employer (Unternehmen)
-  - Start Date / End Date
-  - "Currently Working" toggle
-  - Remove button for each entry
-- "Add Another Position" button
-- Progress saved to localStorage
-
-#### **Step 6: Job Description & AI Suggestions**
-- Dropdown selector to choose which job to describe
-- Large textarea for job description
-- **AI Suggestions Panel** with intelligent recommendations
-- Pre-populated common responsibilities:
-  - "Responsible for project team leadership"
-  - "Process optimization implementation"
-  - "Stakeholder collaboration"
-  - "Strategic concept development"
-  - "Junior team mentoring"
-  - "30% efficiency improvement"
-  - "On-budget project execution"
-  - "Customer support & care"
-- Click "Add" to insert suggestion into description
-- User can edit freely after
-
-#### **Step 7: Experience Review & Consolidation**
-- Displays all entered experiences in cards
-- Shows: Job Title - Employer, Dates, Description
-- Edit / Delete buttons for each entry
-- Quick review before moving forward
-
-#### **Step 8: Education**
-- Similar repeatable pattern as experience
-- Fields: School/University, Field of Study, Start Date, End Date, Grade
-- "Add Another School" button
-- Remove individual entries
-- Optional grade/completion field
-
-#### **Step 9: Competencies & Skills**
-- **Three Sections:**
-  1. **Sprachen (Languages)**
-     - Input: Language + Level (e.g., "Deutsch - Muttersprache")
-     - Add button, displayed as blue tags
-  2. **Technische Fähigkeiten (Technical Skills)**
-     - Input: Skill name (e.g., JavaScript, Python, Figma)
-     - Add button, displayed as green tags
-     - **AI Suggestions Panel** with 5 common skills
-  3. **Soft Skills**
-     - Input: Skill name (e.g., Teamfähigkeit, Kommunikation)
-     - Add button, displayed as orange tags
-- Remove skills via button on tag
-- Auto-generates technical skill suggestions based on entered jobs
-
-#### **Step 10: Additional Sections** (Optional)
-- Checkboxes for optional content:
-  - Zertifizierungen & Qualifikationen
-  - Publikationen & Projekte
-  - Ehrenamtliche Tätigkeiten
-- Textareas appear only when checked
-- Checkbox listeners auto-show/hide content
-
-#### **Step 11: Signature & Formatting**
-- **Handwriting Style Selection:**
-  - Standard / Elegant / Modern / Casual
-- **Signature Color Picker:**
-  - 5 color swatches
-  - Black (default), Blue, Red, Purple, Green
-  - Visual feedback on selection
-- **Acceptance Checkbox:**
-  - "Include signature in CV"
-  - Defaults to checked
-
-#### **Step 12: Download & Export**
-- **Live CV Preview**
-  - Real-time preview pane
-  - Shows formatted CV with all entered data
-  - Header: Name + Contact Info
-  - Sections: Experience, Education, Competencies
-  - Responsive and readable
-  
-- **Three Download Options:**
-  1. **PDF Download** - Uses jsPDF library
-  2. **Word Download** - Creates .doc file
-  3. **Text Download** - Plain text format
-  
-- **Create Another CV Button**
-  - Resets all state
-  - Returns to landing page
-  - User can create multiple CVs
+#### **RIGHT SIDEBAR (320px) - Live CV Preview**
+- Real-time CV preview that updates as user enters data
+- Shows formatted CV with all entered information
+- Sections: Name, Contact Info, Experience, Education, Skills
+- Professional formatting suitable for actual CV use
+- Updates instantly as user types
+- Responsive hiding on mobile (<1200px)
 
 ---
 
-## 🎨 Design Features Implemented
+## 📋 6-Step Wizard Flow
 
-### Visual Design
-- **Color Scheme:**
-  - Primary: #3B82F6 (Blue)
-  - Secondary: #10B981 (Green)
-  - Accent: #F59E0B (Amber)
-  - Danger: #EF4444 (Red)
+### **Step 0: Persönliche Daten (Personal Data)**
+- Fields: Vorname, Nachname, Geburtsdatum, E-Mail, Telefon, Stadt
+- Form validation: Vorname, Nachname, Email required
+- Real-time preview of personal information
+- All data auto-saves to localStorage
 
-- **Typography:**
-  - Font: 'Inter' for body, 'Playfair Display' for headings
-- **Spacing:** Consistent grid-based system (0.5rem, 1rem, 1.5rem, 2rem)
-- **Shadows:** Subtle shadows for depth
-- **Border Radius:** 0.5rem standard for inputs, 0.75rem for cards
+### **Step 1: Berufliche Erfahrung (Professional Experience)**
+- Repeatable section for multiple positions
+- Fields per entry: Jobtitel, Unternehmen, Von, Bis, Derzeit tätig, Beschreibung
+- Add/Remove buttons for each entry
+- AI suggestion panel with common job responsibilities
+- Suggestions: Projektteamleitung, Prozessoptimierung, etc.
+- Click "Hinzufügen" to insert suggestion into description
+- Edit freely after insertion
 
-### Progress Indicator
-- Progress bar shows percentage completion
-- "Schritt X von 12" text display
-- Updates on every step navigation
-- Hidden on landing page
+### **Step 2: Ausbildung (Education)**
+- Repeatable section for multiple educational entries
+- Fields per entry: Schule/Universität, Studienfeld, Von, Bis, Note/Abschluss
+- Add/Remove buttons for each entry
+- Clean repeatable item UI with remove button
+- Dates and grades optional
 
-### Responsive Design
-- Mobile-first approach
-- Breakpoints: 768px (tablet), 480px (phone)
-- 2-column layout adapts to 1-column on mobile
-- Photo preview width adjusts
-- Button group stacks vertically on small screens
+### **Step 3: Fähigkeiten (Skills & Competencies)**
+- **Three categories:**
+  1. **Sprachen (Languages)** - Input + Add button, displayed as blue tags
+  2. **Technische Fähigkeiten (Technical Skills)** - Input + Add button, displayed as green tags
+  3. **Soft Skills** - Input + Add button, displayed as amber tags
+- Each tag shows skill name with remove button (✕)
+- Clean tag-based interface
+- Auto-populated in CV preview
 
-### User Experience Enhancements
-- **Smooth Animations:** fadeIn for step transitions
-- **Hover Effects:** Buttons lift on hover, cards highlight
-- **Visual Feedback:** Selected buttons change color and background
-- **Form Validation:** Alerts for required fields
-- **Button States:** Previous/Next buttons only show when appropriate
-- **Helpful Placeholders:** German examples in all inputs
+### **Step 4: Zusätzliche Abschnitte (Additional Sections)**
+- Optional sections with toggle checkboxes
+- Zertifizierungen & Qualifikationen
+- Publikationen & Projekte
+- Ehrenamtliche Tätigkeiten
+- Content only appears when checked
+- Optional textarea for each section
+
+### **Step 5: Exportieren (Export & Download)**
+- Download buttons for multiple formats:
+  - 📄 PDF Download (uses html2pdf library)
+  - 📝 Word Download (creates .docx file)
+  - 🔄 Start New CV (resets state, returns to step 0)
+- All data formatted for professional use
+
+---
+
+## 🎨 Design Features
+
+### **Color Scheme**
+- Primary: #3B82F6 (Blue) - CTA, selections
+- Secondary: #10B981 (Green) - Success, add buttons
+- Accent: #F59E0B (Amber) - Soft skills tags
+- Danger: #EF4444 (Red) - Remove buttons
+- Light: #F9FAFB (Off-white) - Backgrounds
+- Border: #E5E7EB (Light gray) - Dividers
+
+### **Typography**
+- Font: Inter (Google Fonts) - clean, professional
+- Headings: 1.25rem - 1.75rem, font-weight 600-700
+- Body text: 0.95rem - 1rem, line-height 1.6
+- Labels: 0.95rem, font-weight 500
+
+### **Layout & Spacing**
+- 3-column persistent grid (left 280px, center flex, right 320px)
+- Consistent padding: 1rem, 1.5rem, 2rem
+- Grid gaps: 1.5rem between form fields
+- Box shadows: subtle (1px shadows for depth)
+- Border radius: 0.5rem standard, 0.75rem for cards
+
+### **Responsive Breakpoints**
+- Desktop (>1200px): Full 3-column layout
+- Tablet (768px-1200px): Hide right sidebar, show left + center
+- Mobile (<768px): Hide left sidebar, center content only
+- Form grid: 2 columns on desktop, 1 column on tablet/mobile
 
 ---
 
 ## 💾 Technical Implementation
 
-### State Management
+### **State Management**
 ```javascript
 const state = {
   currentStep: 0,
-  experienceLevel: null,
-  educationStatus: null,
-  selectedTemplate: 0,
-  personalData: {},
-  experiences: [],
-  educations: [],
+  personalData: { vorname, nachname, geburtsdatum, email, telefon, stadt },
+  experiences: [ { jobtitle, employer, startDate, endDate, currentlyWorking, description } ],
+  educations: [ { school, field, startDate, endDate, grade } ],
   languages: [],
   technicalSkills: [],
   softSkills: [],
   certifications: '',
   publications: '',
-  volunteering: '',
-  signatureStyle: 'standard',
-  signatureColor: '#000',
-  acceptSignature: true,
-  photo: null
+  volunteering: ''
 }
 ```
 
-### Navigation System
-- **showStep(stepIndex)** - Main navigation function
-- **nextStep()** - Validates current step, moves forward
-- **previousStep()** - Goes to previous step
-- **updateProgress()** - Updates progress bar and text
-- **updateNavigationButtons()** - Shows/hides prev/next buttons
+### **Key Functions**
+- `showStep(stepIdx)` - Display step content
+- `goToStep(stepIdx)` - Jump to any step
+- `nextStep()` - Validates and advances
+- `previousStep()` - Goes back
+- `addExperience()` / `removeExperience(idx)` - Manage positions
+- `addEducation()` / `removeEducation(idx)` - Manage education
+- `addLanguage()` / `removeLanguage(idx)` - Manage languages
+- `addTechnicalSkill()` / `removeTechnicalSkill(idx)` - Manage tech skills
+- `addSoftSkill()` / `removeSoftSkill(idx)` - Manage soft skills
+- `updatePreview()` - Updates right sidebar in real-time
+- `saveToLocalStorage()` / `loadFromLocalStorage()` - Persistence
+- `downloadPDF()` / `downloadWord()` - Export functions
 
-### Data Management
-- **LocalStorage** - Auto-saves state on each navigation
-- **saveProgress()** - Explicit save function
-- **loadExistingCV()** - Restore from localStorage
-- All form data captured in state object
+### **Real-Time Features**
+- CV preview updates instantly as user types
+- Form fields trigger preview updates via event listeners
+- Tags appear/disappear immediately
+- Optional sections toggle instantly
+- All changes auto-saved to localStorage
 
-### Validation
-- **validateCurrentStep()** - Checks required fields
-- Step 1: Experience level required
-- Step 2: Education status required
-- Step 4: Vorname, Nachname, Email required
-- Other steps: Optional or auto-populate
-
-### Export Functions
-- **generateCVPreview()** - Creates formatted preview
-- **downloadPDF()** - Uses jsPDF library
-- **downloadWord()** - Creates Word document
-- **downloadText()** - Creates plain text file
+### **Data Persistence**
+- All state saved to localStorage after each change
+- Data persists across browser refreshes
+- User can close and reopen to continue
+- "Neuen Lebenslauf erstellen" clears localStorage and resets
 
 ---
 
 ## 📁 File Details
 
 **File:** `Lebenslauf_app_v8_phase8_wizard.html`  
-**Size:** ~45KB (single monolithic file)  
-**Lines:** ~1,803  
+**Size:** ~32KB (single HTML file, fully self-contained)  
+**Lines:** ~1,400+  
 **Dependencies:**
-- jsPDF (CDN: cdnjs.cloudflare.com)
-- html2pdf.js (CDN: cdnjs.cloudflare.com)
-- Google Fonts (Inter, Playfair Display)
+- Inter font (Google Fonts CDN)
+- jsPDF (cdnjs.cloudflare.com)
+- html2pdf.js (cdnjs.cloudflare.com)
 
 ---
 
-## 🚀 Features Delivered vs. Original Requirements
+## 🎯 Features vs. Requirements
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| 12-Step Wizard | ✅ | All 12 steps fully implemented |
-| Experience Level Selection | ✅ | 6 options with visual feedback |
-| Education Status | ✅ | 5 options configurable |
-| Template Gallery | ✅ | 6 templates, visual preview |
-| Personal Data (2-Column) | ✅ | Photo left, forms right as specified |
-| Professional Experience | ✅ | Repeatable, multi-entry support |
-| Job Description AI Suggestions | ✅ | 8 smart suggestions, click to add |
-| Experience Review | ✅ | Edit/delete interface |
-| Education Section | ✅ | School, field, dates, grade |
-| Competencies (Languages/Skills) | ✅ | 3 categories, auto-suggestions |
-| Additional Sections | ✅ | Optional checkboxes |
-| Signature & Formatting | ✅ | Style & color options |
-| Download (PDF/Word/Text) | ✅ | All 3 formats supported |
-| Live CV Preview | ✅ | Real-time formatting |
-| Progress Bar | ✅ | Visual step indicator |
-| Form Validation | ✅ | Required field checking |
+| 3-Column Persistent Layout | ✅ | Left nav, center content, right preview |
+| 6-Step Wizard | ✅ | Personal Data → Experience → Education → Skills → Additional → Export |
+| Left Sidebar Navigation | ✅ | All steps visible with progress indicators |
+| Right Sidebar CV Preview | ✅ | Real-time updates as user enters data |
+| Personal Data Section | ✅ | 6 fields with validation |
+| Professional Experience | ✅ | Repeatable, multi-entry, AI suggestions |
+| Education Section | ✅ | Repeatable, with dates and grades |
+| Skills Management | ✅ | 3 categories, tag-based interface |
+| Optional Sections | ✅ | Checkbox toggles for additional content |
+| Form Validation | ✅ | Required fields checked |
+| AI Suggestions | ✅ | Job description suggestions |
+| LocalStorage Persistence | ✅ | Auto-saves all data |
+| PDF Export | ✅ | Full CV as PDF |
+| Word Export | ✅ | Full CV as .docx |
 | Mobile Responsive | ✅ | Works on all screen sizes |
-| LocalStorage Progress | ✅ | Auto-saves state |
-| Simple UI | ✅ | "Sehr einfach für die Leute" ✓ |
+| Exact Reference Design | ✅ | Matches meinperfekterlebenslauf.de layout |
+| "Sehr einfach für die Leute" | ✅ | Simple, intuitive, step-by-step guide |
 
 ---
 
-## 🎯 What Makes It "Very Simple for People"
+## 🎯 Why This Layout Works
 
-1. **One Step at a Time** - No overwhelming 10 tabs, just one clear step
-2. **Progress Visibility** - Always know how far along you are
-3. **Clear Questions** - Each step asks one specific question
-4. **Visual Guidance** - Emoji icons, color coding, progress bar
-5. **Smart Suggestions** - AI helps fill in details automatically
-6. **Validation** - Catches errors before they waste time
-7. **Clear CTAs** - Large buttons with obvious next actions
-8. **Mobile-Friendly** - Works perfectly on phones/tablets
-9. **Save Progress** - Never lose data, resume anytime
-10. **Multiple Export** - Choose format that works for you
+1. **Persistent Navigation** - User always knows their progress
+2. **Live Preview** - See CV update in real-time
+3. **Linear Flow** - One step at a time, no overwhelming tabs
+4. **Professional Look** - 3-column layout feels polished
+5. **Mobile Friendly** - Sidebars hide on small screens
+6. **Quick Navigation** - Click any step in sidebar to jump
+7. **Form Validation** - Prevents errors before proceeding
+8. **Smart Suggestions** - AI helps fill details
+9. **One-Click Export** - Download in preferred format
+10. **Data Safety** - Auto-saves to localStorage
 
 ---
 
 ## 🔧 How to Use
 
-1. **Open the file:** `Lebenslauf_app_v8_phase8_wizard.html` in a web browser
-2. **Click:** "Neuen Lebenslauf erstellen" (Create New CV)
-3. **Follow:** Each step in order (12 total)
-4. **Fill in:** All required information
-5. **Preview:** See your CV before downloading
-6. **Download:** Choose PDF, Word, or Text format
-7. **Create Another:** Start new CV or load existing
+1. **Open file** in browser: `Lebenslauf_app_v8_phase8_wizard.html`
+2. **Fill Step 0** - Enter personal information
+3. **Add Experience** - Click "+ Position hinzufügen" to add jobs
+4. **Add Education** - Click "+ Ausbildung hinzufügen"
+5. **Add Skills** - Enter languages, technical, and soft skills
+6. **Toggle Optional** - Add certifications, publications, volunteering if needed
+7. **Review Preview** - Check right sidebar for CV preview
+8. **Download** - Choose PDF, Word, or start new
+9. **Real-time Updates** - CV preview updates as you type
 
 ---
 
-## 🔄 Future Enhancements (Phase 9+)
+## 📊 Layout Comparison
 
-- Firebase integration for cloud storage
-- Account authentication & CV history
-- AI-powered content suggestions (ChatGPT integration)
-- Cover letter generation
-- LinkedIn import
-- Template customization (more designs)
-- Multi-language support
-- ATS score analysis
-- Spell check integration
-- PDF template styling options
-
----
-
-## ✅ Testing Checklist
-
-- [x] All 12 steps navigate correctly
-- [x] Progress bar updates properly
-- [x] Form validation works
-- [x] Experience/Education repeating sections work
-- [x] Photo upload functions
-- [x] AI suggestions populate correctly
-- [x] Competency tags display and remove properly
-- [x] CV preview generates correctly
-- [x] PDF download works
-- [x] Word download works
-- [x] Text download works
-- [x] LocalStorage saves progress
-- [x] Mobile responsive layout works
-- [x] Form inputs save to state
-- [x] Navigation buttons show/hide correctly
-- [x] Create another CV resets state
-- [x] Back button disabled on step 1
-- [x] Next button shows "Fertig" on final step
-
----
-
-## 📊 Comparison: Before vs After
-
-| Aspect | Before (10 Tabs) | After (12-Step Wizard) |
-|--------|-----------------|----------------------|
-| **Complexity** | Very high | Very simple |
-| **Tabs/Steps** | 10 overwhelming tabs | 12 guided steps |
-| **Navigation** | Click any tab in any order | Linear, validated flow |
-| **Mobile UX** | Poor | Excellent |
-| **User Guidance** | Minimal | Extensive with progress |
-| **Form Validation** | Limited | Comprehensive |
-| **Progress Visibility** | None | Clear progress bar |
-| **Repetition UX** | Confusing | Clear repeatable sections |
-| **Onboarding** | Steep learning curve | Intuitive, step-by-step |
-| **Time to Complete** | 15+ minutes | 5-7 minutes |
+| Aspect | Previous | New (Phase 8) |
+|--------|----------|---------------|
+| **Design** | Single-column steps | 3-column persistent |
+| **Navigation** | Step-by-step wizard | Always-visible sidebar |
+| **Preview** | None | Real-time right sidebar |
+| **Complexity** | High | Simple & intuitive |
+| **Professional** | Basic | Enterprise-grade |
+| **Mobile UX** | Adequate | Excellent |
+| **Data Visibility** | Limited | Full preview always visible |
 
 ---
 
 ## 🎉 Phase 8 Complete!
 
-The Bewerbungsstudio has been successfully transformed from a complex tab-based interface to a simple, elegant, user-friendly step-by-step wizard. The application now perfectly matches the user's requirement of being "sehr einfach für die Leute" (very simple for people).
+Bewerbungsstudio has been successfully redesigned with a professional 3-column persistent layout that matches the reference design from meinperfekterlebenslauf.de. The application is now "sehr einfach für die Leute" (very simple for people) with an intuitive, guided workflow and real-time CV preview.
 
-**Ready for deployment and user testing.**
+**Ready for immediate use and deployment.**
 
 ---
 
 **Generated:** 2026-09-30  
 **Deployed File:** Lebenslauf_app_v8_phase8_wizard.html  
-**Git Commit:** Phase 8: Complete Wizard-Based UI Redesign
+**Design:** 3-Column Persistent Layout (Matches meinperfekterlebenslauf.de)

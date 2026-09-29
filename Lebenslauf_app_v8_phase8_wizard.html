@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bewerbungsstudio - Lebenslauf Wizard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <title>Bewerbungsstudio - Lebenslauf</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -21,175 +21,194 @@
             --secondary: #10B981;
             --accent: #F59E0B;
             --danger: #EF4444;
-            --success: #10B981;
             --light: #F9FAFB;
+            --white: #FFFFFF;
             --border: #E5E7EB;
-            --text: #374151;
+            --text: #1F2937;
             --text-light: #6B7280;
-            --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --bg: #F3F4F6;
         }
 
         html, body {
             height: 100%;
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: var(--bg);
             color: var(--text);
             line-height: 1.6;
         }
 
+        /* ===== LAYOUT: 3-COLUMN PERSISTENT ===== */
         .app-container {
             display: flex;
             height: 100%;
+            width: 100%;
+        }
+
+        /* LEFT SIDEBAR - Navigation */
+        .sidebar-left {
+            width: 280px;
+            background: var(--white);
+            border-right: 1px solid var(--border);
+            display: flex;
             flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 1px 0 3px rgba(0,0,0,0.05);
         }
 
-        /* ===== HEADER ===== */
-        .header {
-            background: white;
+        .sidebar-header {
+            padding: 1.5rem;
             border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .version-badge {
-            background: var(--primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
         }
 
-        /* ===== WIZARD CONTAINER ===== */
-        .wizard-container {
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .nav-steps {
+            padding: 1rem 0;
             flex: 1;
-            display: flex;
-            overflow: hidden;
         }
 
-        .wizard-content {
+        .nav-step {
+            padding: 1rem 1.25rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-step:hover {
+            background: var(--light);
+        }
+
+        .nav-step.active {
+            border-left-color: var(--primary);
+            background: #EBF5FF;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-step-title {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-step-progress {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .progress-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border);
+            margin-right: 0.5rem;
+        }
+
+        .nav-step.completed .progress-indicator {
+            background: var(--secondary);
+        }
+
+        .nav-step.active .progress-indicator {
+            background: var(--primary);
+            width: 8px;
+            height: 8px;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+        }
+
+        .content-header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
             padding: 2rem;
         }
 
-        .wizard-inner {
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
+        .content-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-description {
+            font-size: 1rem;
+            color: var(--text-light);
+        }
+
+        .content-body {
             flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .form-section {
+            background: var(--white);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
             display: flex;
             flex-direction: column;
         }
 
-        /* ===== PROGRESS BAR ===== */
-        .progress-section {
-            margin-bottom: 2rem;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            font-size: 0.875rem;
-            color: var(--text-light);
-            font-weight: 600;
-        }
-
-        /* ===== STEP DISPLAY ===== */
-        .step {
-            display: none;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .step-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 0.5rem;
-        }
-
-        .step-subtitle {
-            font-size: 1rem;
-            color: var(--text-light);
-            margin-bottom: 2rem;
-        }
-
-        .step-content {
-            flex: 1;
-            margin-bottom: 2rem;
-        }
-
-        /* ===== FORM ELEMENTS ===== */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
         .form-label {
-            display: block;
-            font-weight: 600;
+            font-size: 0.95rem;
+            font-weight: 500;
             margin-bottom: 0.5rem;
             color: var(--text);
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: var(--danger);
         }
 
         .form-input,
         .form-textarea,
         .form-select {
-            width: 100%;
             padding: 0.75rem;
             border: 1px solid var(--border);
             border-radius: 0.5rem;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s;
         }
 
         .form-input:focus,
@@ -201,210 +220,48 @@
         }
 
         .form-textarea {
-            min-height: 120px;
             resize: vertical;
+            min-height: 120px;
         }
 
-        /* ===== OPTIONS GRID ===== */
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .option-button {
-            padding: 1.5rem;
-            border: 2px solid var(--border);
-            border-radius: 0.75rem;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .option-button:hover {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .option-button.selected {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--primary);
-        }
-
-        /* ===== TWO COLUMN LAYOUT ===== */
-        .two-column {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 2rem;
-            align-items: start;
-            margin-bottom: 2rem;
-        }
-
-        .photo-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .photo-preview {
-            width: 250px;
-            height: 320px;
-            background: var(--light);
-            border: 2px dashed var(--border);
+        /* AI SUGGESTIONS */
+        .ai-suggestions {
+            background: #F0F7FF;
+            border: 1px solid #BEE3F8;
             border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-light);
-            font-size: 0.875rem;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        .photo-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .photo-input {
-            cursor: pointer;
-        }
-
-        .form-fields {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        /* ===== TEMPLATE GALLERY ===== */
-        .template-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .template-card {
-            border: 2px solid var(--border);
-            border-radius: 0.75rem;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: white;
-        }
-
-        .template-card:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-4px);
-        }
-
-        .template-card.selected {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .template-preview {
-            width: 100%;
-            height: 240px;
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-
-        .template-name {
             padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .ai-suggestions-title {
+            font-size: 0.875rem;
             font-weight: 600;
-            color: var(--text);
-            text-align: center;
-            border-top: 1px solid var(--border);
-        }
-
-        /* ===== REPEATABLE SECTION ===== */
-        .repeatable-section {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .repeatable-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .repeatable-title {
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .btn-remove {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.3s;
-        }
-
-        .btn-remove:hover {
-            background: #DC2626;
-        }
-
-        /* ===== AI SUGGESTIONS PANEL ===== */
-        .suggestions-panel {
-            background: rgba(59, 130, 246, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .suggestions-title {
-            font-weight: 700;
             color: var(--primary);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
         }
 
-        .suggestions-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+        .ai-suggestions-title::before {
+            content: "✨";
+            margin-right: 0.5rem;
         }
 
         .suggestion-item {
-            padding: 0.75rem;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.3s;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0.5rem 0;
             font-size: 0.875rem;
+            border-bottom: 1px solid #BEE3F8;
         }
 
-        .suggestion-item:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--primary);
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-text {
+            color: var(--text-light);
         }
 
         .suggestion-btn {
@@ -412,56 +269,232 @@
             color: white;
             border: none;
             padding: 0.25rem 0.75rem;
-            border-radius: 0.25rem;
+            border-radius: 0.375rem;
             cursor: pointer;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        /* ===== COMPETENCIES GRID ===== */
-        .competencies-list {
+        .suggestion-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* REPEATABLE SECTIONS */
+        .repeatable-item {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .item-remove-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .item-remove-btn:hover {
+            background: #DC2626;
+        }
+
+        .add-item-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .add-item-btn:hover {
+            background: #059669;
+        }
+
+        /* TAGS */
+        .tags-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
         }
 
-        .competency-tag {
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             background: var(--primary);
             color: white;
             padding: 0.5rem 1rem;
             border-radius: 9999px;
             font-size: 0.875rem;
+        }
+
+        .tag.tech {
+            background: var(--secondary);
+        }
+
+        .tag.soft {
+            background: var(--accent);
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: 700;
+            opacity: 0.8;
+        }
+
+        .tag-remove:hover {
+            opacity: 1;
+        }
+
+        /* OPTIONAL SECTIONS */
+        .optional-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .optional-toggle {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .competency-tag button {
-            background: none;
-            border: none;
-            color: white;
+            gap: 0.75rem;
             cursor: pointer;
-            padding: 0;
-            font-weight: bold;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
         }
 
-        /* ===== BUTTONS ===== */
+        .optional-toggle:hover {
+            background: var(--light);
+        }
+
+        .optional-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .optional-content {
+            display: none;
+            background: var(--light);
+            border-left: 3px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .optional-content.visible {
+            display: block;
+        }
+
+        /* RIGHT SIDEBAR - CV PREVIEW */
+        .sidebar-right {
+            width: 320px;
+            background: var(--white);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: -1px 0 3px rgba(0,0,0,0.05);
+        }
+
+        .preview-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--light);
+        }
+
+        .preview-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .cv-preview {
+            padding: 1.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .preview-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .preview-contact {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-section {
+            margin-bottom: 1rem;
+        }
+
+        .preview-section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--primary);
+        }
+
+        .preview-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .preview-item-title {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .preview-item-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* BUTTONS */
         .button-group {
+            padding: 2rem;
+            background: var(--white);
+            border-top: 1px solid var(--border);
             display: flex;
             gap: 1rem;
-            margin-top: 2rem;
-            justify-content: space-between;
+            justify-content: flex-end;
         }
 
         .btn {
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 0.5rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.95rem;
         }
 
         .btn-primary {
@@ -469,1335 +502,766 @@
             color: white;
         }
 
-        .btn-primary:hover:not(:disabled) {
+        .btn-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
         }
 
         .btn-secondary {
-            background: white;
-            color: var(--primary);
-            border: 2px solid var(--primary);
+            background: var(--light);
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: rgba(59, 130, 246, 0.05);
+            background: var(--border);
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-add-another {
+        .btn-success {
             background: var(--secondary);
             color: white;
-            margin-top: 1rem;
-            width: 100%;
         }
 
-        .btn-add-another:hover {
+        .btn-success:hover {
             background: #059669;
         }
 
-        /* ===== LANDING PAGE ===== */
-        .landing-page {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .landing-page.active {
-            display: flex;
-        }
-
-        .landing-hero {
-            margin-bottom: 3rem;
-        }
-
-        .landing-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-
-        .landing-hero p {
-            font-size: 1.125rem;
-            color: var(--text-light);
-            margin-bottom: 2rem;
-            max-width: 500px;
-        }
-
-        .landing-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-large {
-            padding: 1rem 2rem;
-            font-size: 1.125rem;
-            min-width: 200px;
-        }
-
-        /* ===== SIGNATURE SECTION ===== */
-        .signature-options {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .signature-option {
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-        }
-
-        .signature-option h4 {
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--text);
-        }
-
-        .color-picker {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .color-swatch {
-            width: 40px;
-            height: 40px;
-            border-radius: 0.5rem;
-            border: 2px solid var(--border);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .color-swatch.selected {
-            border-color: var(--dark);
-            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--dark);
-        }
-
-        /* ===== PREVIEW SECTION ===== */
-        .preview-section {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .preview-title {
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--text);
-        }
-
-        .preview-pane {
-            width: 100%;
-            height: 400px;
-            background: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            overflow: auto;
-            padding: 2rem;
-        }
-
-        .cv-preview {
-            background: white;
-            padding: 2rem;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .cv-preview h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-
-        .cv-preview h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 0.5rem;
-        }
-
-        .cv-preview-entry {
-            margin-bottom: 1rem;
-        }
-
-        .cv-preview-entry strong {
-            display: block;
-            color: var(--text);
-        }
-
-        .cv-preview-entry em {
-            display: block;
-            color: var(--text-light);
-            font-size: 0.85rem;
-        }
-
-        /* ===== DOWNLOAD OPTIONS ===== */
-        .download-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .download-btn {
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: 0.75rem;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .download-btn:hover {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.05);
-            transform: translateY(-2px);
-        }
-
-        /* ===== MODAL ===== */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: var(--shadow-lg);
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .sidebar-right {
+                display: none;
             }
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .wizard-content {
-                padding: 1rem;
+            .sidebar-left {
+                display: none;
             }
 
-            .two-column {
+            .form-row {
                 grid-template-columns: 1fr;
-            }
-
-            .photo-preview,
-            .photo-preview.two-column {
-                width: 100%;
-                height: 200px;
-            }
-
-            .template-gallery {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-
-            .step-title {
-                font-size: 1.5rem;
-            }
-
-            .options-grid {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        @media (max-width: 480px) {
-            .options-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="header-content">
-                <div>
-                    <span class="logo">Bewerbungsstudio</span>
-                    <span class="version-badge">Phase 8</span>
-                </div>
-                <div style="font-size: 0.875rem; color: var(--text-light);">
-                    Lebenslauf erstellen leicht gemacht
-                </div>
+        <!-- LEFT SIDEBAR: Navigation -->
+        <div class="sidebar-left">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Lebenslauf</div>
+                <div class="sidebar-subtitle">Schritt für Schritt</div>
+            </div>
+            <div class="nav-steps" id="navSteps">
+                <!-- Navigation items will be inserted here -->
             </div>
         </div>
 
-        <!-- WIZARD CONTAINER -->
-        <div class="wizard-container">
-            <div class="wizard-content">
-                <div class="wizard-inner">
-                    <!-- PROGRESS -->
-                    <div class="progress-section" id="progressSection">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span id="progressText">Schritt 1 von 12</span>
-                        </div>
-                    </div>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="content-header">
+                <div class="content-title" id="stepTitle">Persönliche Daten</div>
+                <div class="content-description" id="stepDescription">Geben Sie Ihre persönlichen Informationen ein</div>
+            </div>
 
-                    <!-- LANDING PAGE -->
-                    <div class="landing-page active" id="landingPage">
-                        <div class="landing-hero">
-                            <h1>Willkommen bei Bewerbungsstudio</h1>
-                            <p>Erstellen Sie ihren perfekten Lebenslauf in wenigen Minuten - Schritt für Schritt, ganz einfach.</p>
-                        </div>
-                        <div class="landing-actions">
-                            <button class="btn btn-primary btn-large" onclick="startNewCV()">
-                                ✨ Neuen Lebenslauf erstellen
-                            </button>
-                            <button class="btn btn-secondary btn-large" onclick="loadExistingCV()">
-                                📂 Lebenslauf laden
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 1: EXPERIENCE LEVEL -->
-                    <div class="step active" id="step1">
-                        <h2 class="step-title">Ihr Erfahrungslevel</h2>
-                        <p class="step-subtitle">Wie viel Berufserfahrung haben Sie?</p>
-                        <div class="step-content">
-                            <div class="options-grid">
-                                <button class="option-button" onclick="selectExperienceLevel('keine', this)">
-                                    👤 Keine Erfahrung
-                                </button>
-                                <button class="option-button" onclick="selectExperienceLevel('1-3', this)">
-                                    📈 1-3 Jahre
-                                </button>
-                                <button class="option-button" onclick="selectExperienceLevel('4-6', this)">
-                                    💼 4-6 Jahre
-                                </button>
-                                <button class="option-button" onclick="selectExperienceLevel('7-10', this)">
-                                    🎯 7-10 Jahre
-                                </button>
-                                <button class="option-button" onclick="selectExperienceLevel('10+', this)">
-                                    ⭐ 10+ Jahre
-                                </button>
-                                <button class="option-button" onclick="selectExperienceLevel('anderes', this)">
-                                    ❓ Sonstiges
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 2: EDUCATION STATUS -->
-                    <div class="step" id="step2">
-                        <h2 class="step-title">Ihre Ausbildung</h2>
-                        <p class="step-subtitle">Welchen Abschluss haben Sie oder verfolgen Sie?</p>
-                        <div class="step-content">
-                            <div class="options-grid">
-                                <button class="option-button" onclick="selectEducationStatus('studiert', this)">
-                                    🎓 Studiere noch
-                                </button>
-                                <button class="option-button" onclick="selectEducationStatus('abgeschlossen', this)">
-                                    ✅ Abgeschlossen
-                                </button>
-                                <button class="option-button" onclick="selectEducationStatus('ausbildung', this)">
-                                    🔧 Ausbildung
-                                </button>
-                                <button class="option-button" onclick="selectEducationStatus('schulabschluss', this)">
-                                    📚 Schulabschluss
-                                </button>
-                                <button class="option-button" onclick="selectEducationStatus('keine', this)">
-                                    ➖ Keine
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 3: TEMPLATE GALLERY -->
-                    <div class="step" id="step3">
-                        <h2 class="step-title">Wählen Sie ein Template</h2>
-                        <p class="step-subtitle">Welcher Stil passt zu Ihnen?</p>
-                        <div class="step-content">
-                            <div class="template-gallery" id="templateGallery">
-                                <div class="template-card" onclick="selectTemplate(0, this)">
-                                    <div class="template-preview">📋</div>
-                                    <div class="template-name">Klassisch</div>
-                                </div>
-                                <div class="template-card" onclick="selectTemplate(1, this)">
-                                    <div class="template-preview">🎨</div>
-                                    <div class="template-name">Modern</div>
-                                </div>
-                                <div class="template-card" onclick="selectTemplate(2, this)">
-                                    <div class="template-preview">✨</div>
-                                    <div class="template-name">Premium</div>
-                                </div>
-                                <div class="template-card" onclick="selectTemplate(3, this)">
-                                    <div class="template-preview">🚀</div>
-                                    <div class="template-name">Tech</div>
-                                </div>
-                                <div class="template-card" onclick="selectTemplate(4, this)">
-                                    <div class="template-preview">🎯</div>
-                                    <div class="template-name">Minimal</div>
-                                </div>
-                                <div class="template-card" onclick="selectTemplate(5, this)">
-                                    <div class="template-preview">💡</div>
-                                    <div class="template-name">Kreativ</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 4: PERSONAL DATA -->
-                    <div class="step" id="step4">
-                        <h2 class="step-title">Persönliche Daten</h2>
-                        <p class="step-subtitle">Grundinformationen für Ihren Lebenslauf</p>
-                        <div class="step-content">
-                            <div class="two-column">
-                                <div class="photo-section">
-                                    <div class="photo-preview" id="photoPreview">
-                                        📷 Foto
-                                    </div>
-                                    <input type="file" id="photoInput" accept="image/*" onchange="uploadPhoto(event)" class="photo-input" />
-                                    <label for="photoInput" style="cursor: pointer; color: var(--primary); text-align: center; font-weight: 600;">
-                                        Foto ändern
-                                    </label>
-                                </div>
-                                <div class="form-fields">
-                                    <div class="form-group">
-                                        <label class="form-label">Vorname</label>
-                                        <input type="text" class="form-input" id="vorname" placeholder="Max">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Nachname</label>
-                                        <input type="text" class="form-input" id="nachname" placeholder="Mustermann">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Geburtsdatum</label>
-                                        <input type="date" class="form-input" id="geburtsdatum">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">E-Mail</label>
-                                        <input type="email" class="form-input" id="email" placeholder="max@example.com">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Telefon</label>
-                                        <input type="tel" class="form-input" id="telefon" placeholder="+49 123 456789">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Adresse</label>
-                                        <input type="text" class="form-input" id="adresse" placeholder="Straße 123, 12345 Stadt">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 5: PROFESSIONAL EXPERIENCE -->
-                    <div class="step" id="step5">
-                        <h2 class="step-title">Berufserfahrung</h2>
-                        <p class="step-subtitle">Ihre letzten und aktuellen Positionen</p>
-                        <div class="step-content">
-                            <div id="experienceList"></div>
-                            <button class="btn-add-another" onclick="addExperience()">+ Weitere Stelle hinzufügen</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 6: JOB DESCRIPTION & AI SUGGESTIONS -->
-                    <div class="step" id="step6">
-                        <h2 class="step-title">Tätigkeitsbeschreibung & AI Vorschläge</h2>
-                        <p class="step-subtitle">Beschreiben Sie Ihre Aufgaben und Erfolge</p>
-                        <div class="step-content">
-                            <div class="repeatable-section" id="jobDescriptionSection">
-                                <div class="form-group">
-                                    <label class="form-label">Positionen auswählen</label>
-                                    <select class="form-select" id="jobSelector" onchange="loadJobForDescription()">
-                                        <option value="">-- Bitte wählen Sie eine Position --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Tätigkeitsbeschreibung</label>
-                                    <textarea class="form-textarea" id="jobDescription" placeholder="Beschreiben Sie Ihre Aufgaben, Verantwortungen und Erfolge..."></textarea>
-                                </div>
-                                <div class="suggestions-panel" id="suggestionsPanel">
-                                    <div class="suggestions-title">💡 AI Vorschläge basierend auf Ihrer Position</div>
-                                    <div class="suggestions-list" id="suggestionsList">
-                                        <div class="suggestion-item">Laden Sie eine Position, um Vorschläge zu sehen...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- STEP 7: EXPERIENCE REVIEW -->
-                    <div class="step" id="step7">
-                        <h2 class="step-title">Übersicht Ihrer Erfahrung</h2>
-                        <p class="step-subtitle">Überprüfen und bearbeiten Sie Ihre Einträge</p>
-                        <div class="step-content" id="experienceReview">
-                        </div>
-                    </div>
-
-                    <!-- STEP 8: EDUCATION -->
-                    <div class="step" id="step8">
-                        <h2 class="step-title">Ausbildung</h2>
-                        <p class="step-subtitle">Schulen, Universitäten, Kurse</p>
-                        <div class="step-content">
-                            <div id="educationList"></div>
-                            <button class="btn-add-another" onclick="addEducation()">+ Weitere Ausbildung hinzufügen</button>
-                        </div>
-                    </div>
-
-                    <!-- STEP 9: COMPETENCIES -->
-                    <div class="step" id="step9">
-                        <h2 class="step-title">Kompetenzen & Fähigkeiten</h2>
-                        <p class="step-subtitle">Sprachen, technische Fähigkeiten und Soft Skills</p>
-                        <div class="step-content">
+            <div class="content-body">
+                <!-- Step 0: Personal Data -->
+                <div class="step-container" data-step="0">
+                    <div class="form-section">
+                        <div class="form-section-title">Grundinformationen</div>
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Sprachen</label>
-                                <input type="text" class="form-input" id="newLanguage" placeholder="Sprache, Niveau (z.B. Deutsch - Muttersprache)">
-                                <button class="btn-add-another" onclick="addLanguage()">+ Sprache hinzufügen</button>
-                                <div class="competencies-list" id="languagesList"></div>
+                                <label class="form-label required">Vorname</label>
+                                <input type="text" class="form-input" id="vorname" placeholder="z.B. Max">
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">Technische Fähigkeiten</label>
-                                <input type="text" class="form-input" id="newTechnicalSkill" placeholder="z.B. JavaScript, Python, Figma">
-                                <button class="btn-add-another" onclick="addTechnicalSkill()">+ Fähigkeit hinzufügen</button>
-                                <div class="competencies-list" id="technicalSkillsList"></div>
+                                <label class="form-label required">Nachname</label>
+                                <input type="text" class="form-input" id="nachname" placeholder="z.B. Mustermann">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Geburtsdatum</label>
+                                <input type="date" class="form-input" id="geburtsdatum">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">E-Mail</label>
+                                <input type="email" class="form-input" id="email" placeholder="max@beispiel.de">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Telefon</label>
+                                <input type="tel" class="form-input" id="telefon" placeholder="+49 123 456789">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stadt</label>
+                                <input type="text" class="form-input" id="stadt" placeholder="z.B. Berlin">
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                <div class="suggestions-panel" style="margin-top: 1.5rem;">
-                                    <div class="suggestions-title">💡 Vorschlagene technische Fähigkeiten</div>
-                                    <div class="suggestions-list" id="techSuggestions"></div>
+                <!-- Step 1: Professional Experience -->
+                <div class="step-container hidden" data-step="1">
+                    <div class="form-section">
+                        <div class="form-section-title">Berufliche Erfahrung</div>
+                        <div id="experienceList"></div>
+                        <button class="add-item-btn" onclick="addExperience()">+ Position hinzufügen</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Education -->
+                <div class="step-container hidden" data-step="2">
+                    <div class="form-section">
+                        <div class="form-section-title">Ausbildung</div>
+                        <div id="educationList"></div>
+                        <button class="add-item-btn" onclick="addEducation()">+ Ausbildung hinzufügen</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Skills & Competencies -->
+                <div class="step-container hidden" data-step="3">
+                    <div class="form-section">
+                        <div class="form-section-title">Sprachen</div>
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label">Sprache</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" class="form-input" id="languageInput" placeholder="z.B. Deutsch" style="flex: 1;">
+                                    <button class="btn btn-primary" onclick="addLanguage()" style="width: auto;">Hinzufügen</button>
                                 </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Soft Skills</label>
-                                <input type="text" class="form-input" id="newSoftSkill" placeholder="z.B. Teamfähigkeit, Kommunikation">
-                                <button class="btn-add-another" onclick="addSoftSkill()">+ Skill hinzufügen</button>
-                                <div class="competencies-list" id="softSkillsList"></div>
+                                <div class="tags-container" id="languagesTags"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- STEP 10: ADDITIONAL SECTIONS -->
-                    <div class="step" id="step10">
-                        <h2 class="step-title">Zusätzliche Abschnitte</h2>
-                        <p class="step-subtitle">Weitere relevante Informationen</p>
-                        <div class="step-content">
+                    <div class="form-section">
+                        <div class="form-section-title">Technische Fähigkeiten</div>
+                        <div class="form-row full">
                             <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
-                                    <input type="checkbox" id="showCertifications"> Zertifizierungen & Qualifikationen
-                                </label>
-                                <textarea class="form-textarea" id="certifications" placeholder="Geben Sie Ihre Zertifizierungen ein..." style="display: none; margin-top: 0.5rem;"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
-                                    <input type="checkbox" id="showPublications"> Publikationen & Projekte
-                                </label>
-                                <textarea class="form-textarea" id="publications" placeholder="Geben Sie Ihre Publikationen und Projekte ein..." style="display: none; margin-top: 0.5rem;"></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600;">
-                                    <input type="checkbox" id="showVolunteering"> Ehrenamtliche Tätigkeiten
-                                </label>
-                                <textarea class="form-textarea" id="volunteering" placeholder="Beschreiben Sie Ihre ehrenamtlichen Aktivitäten..." style="display: none; margin-top: 0.5rem;"></textarea>
-                            </div>
-
-                            <script>
-                                document.getElementById('showCertifications').addEventListener('change', function() {
-                                    document.getElementById('certifications').style.display = this.checked ? 'block' : 'none';
-                                });
-                                document.getElementById('showPublications').addEventListener('change', function() {
-                                    document.getElementById('publications').style.display = this.checked ? 'block' : 'none';
-                                });
-                                document.getElementById('showVolunteering').addEventListener('change', function() {
-                                    document.getElementById('volunteering').style.display = this.checked ? 'block' : 'none';
-                                });
-                            </script>
-                        </div>
-                    </div>
-
-                    <!-- STEP 11: SIGNATURE & FORMATTING -->
-                    <div class="step" id="step11">
-                        <h2 class="step-title">Unterschrift & Formatierung</h2>
-                        <p class="step-subtitle">Personalisieren Sie Ihr Lebenslauf-Design</p>
-                        <div class="step-content">
-                            <div class="signature-options">
-                                <div class="signature-option">
-                                    <h4>Handschrift-Stil</h4>
-                                    <select class="form-select" id="signatureStyle">
-                                        <option value="standard">Standard</option>
-                                        <option value="elegant">Elegant</option>
-                                        <option value="modern">Modern</option>
-                                        <option value="casual">Casual</option>
-                                    </select>
+                                <label class="form-label">Fähigkeit</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" class="form-input" id="technicalInput" placeholder="z.B. JavaScript" style="flex: 1;">
+                                    <button class="btn btn-primary" onclick="addTechnicalSkill()" style="width: auto;">Hinzufügen</button>
                                 </div>
-                                <div class="signature-option">
-                                    <h4>Signatur-Farbe</h4>
-                                    <div class="color-picker">
-                                        <div class="color-swatch selected" style="background: #000;" onclick="selectColor(this, '#000')"></div>
-                                        <div class="color-swatch" style="background: #1D4ED8;" onclick="selectColor(this, '#1D4ED8')"></div>
-                                        <div class="color-swatch" style="background: #DC2626;" onclick="selectColor(this, '#DC2626')"></div>
-                                        <div class="color-swatch" style="background: #7C3AED;" onclick="selectColor(this, '#7C3AED')"></div>
-                                        <div class="color-swatch" style="background: #059669;" onclick="selectColor(this, '#059669')"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Unterschrift akzeptieren</label>
-                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                    <input type="checkbox" id="acceptSignature" checked> Unterschrift in Lebenslauf einfügen
-                                </label>
+                                <div class="tags-container" id="technicalTags"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- STEP 12: DOWNLOAD & EXPORT -->
-                    <div class="step" id="step12">
-                        <h2 class="step-title">Lebenslauf Herunterladen</h2>
-                        <p class="step-subtitle">Speichern Sie Ihren perfekten Lebenslauf</p>
-                        <div class="step-content">
-                            <div class="preview-section">
-                                <div class="preview-title">Vorschau</div>
-                                <div class="preview-pane">
-                                    <div class="cv-preview" id="cvPreview"></div>
+                    <div class="form-section">
+                        <div class="form-section-title">Soft Skills</div>
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label class="form-label">Fähigkeit</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="text" class="form-input" id="softInput" placeholder="z.B. Teamfähigkeit" style="flex: 1;">
+                                    <button class="btn btn-primary" onclick="addSoftSkill()" style="width: auto;">Hinzufügen</button>
                                 </div>
-                            </div>
-
-                            <div class="download-options">
-                                <button class="download-btn" onclick="downloadPDF()">
-                                    📄 PDF herunterladen
-                                </button>
-                                <button class="download-btn" onclick="downloadWord()">
-                                    📝 Word herunterladen
-                                </button>
-                                <button class="download-btn" onclick="downloadText()">
-                                    📋 Text herunterladen
-                                </button>
-                            </div>
-
-                            <div style="margin-top: 2rem; text-align: center;">
-                                <button class="btn btn-secondary" onclick="createAnother()">
-                                    + Weiteren Lebenslauf erstellen
-                                </button>
+                                <div class="tags-container" id="softTags"></div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- NAVIGATION BUTTONS -->
-                    <div class="button-group" id="navigationButtons">
-                        <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
-                            ← Zurück
-                        </button>
-                        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
-                            Weiter →
-                        </button>
+                <!-- Step 4: Additional Sections -->
+                <div class="step-container hidden" data-step="4">
+                    <div class="form-section">
+                        <div class="form-section-title">Zusätzliche Abschnitte</div>
+
+                        <div class="optional-section">
+                            <div class="optional-toggle">
+                                <input type="checkbox" id="certToggle" onchange="toggleOptional('certContent')">
+                                <label for="certToggle" style="cursor: pointer; flex: 1;">Zertifizierungen & Qualifikationen</label>
+                            </div>
+                            <div class="optional-content" id="certContent">
+                                <textarea class="form-textarea" id="certText" placeholder="Ihre Zertifizierungen eingeben..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="optional-section">
+                            <div class="optional-toggle">
+                                <input type="checkbox" id="pubToggle" onchange="toggleOptional('pubContent')">
+                                <label for="pubToggle" style="cursor: pointer; flex: 1;">Publikationen & Projekte</label>
+                            </div>
+                            <div class="optional-content" id="pubContent">
+                                <textarea class="form-textarea" id="pubText" placeholder="Ihre Publikationen eingeben..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="optional-section">
+                            <div class="optional-toggle">
+                                <input type="checkbox" id="volToggle" onchange="toggleOptional('volContent')">
+                                <label for="volToggle" style="cursor: pointer; flex: 1;">Ehrenamtliche Tätigkeiten</label>
+                            </div>
+                            <div class="optional-content" id="volContent">
+                                <textarea class="form-textarea" id="volText" placeholder="Ihre ehrenamtlichen Tätigkeiten eingeben..."></textarea>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Step 5: Download & Export -->
+                <div class="step-container hidden" data-step="5">
+                    <div class="form-section">
+                        <div class="form-section-title">Lebenslauf exportieren</div>
+                        <div class="form-row full">
+                            <p style="color: var(--text-light); margin-bottom: 1.5rem;">Ihr Lebenslauf ist fertig! Wählen Sie das gewünschte Format zum Herunterladen.</p>
+                        </div>
+                        <div class="form-row">
+                            <button class="btn btn-success" onclick="downloadPDF()" style="flex: 1;">📄 Als PDF herunterladen</button>
+                            <button class="btn btn-primary" onclick="downloadWord()" style="flex: 1;">📝 Als Word herunterladen</button>
+                        </div>
+                        <div class="form-row">
+                            <button class="btn btn-secondary" onclick="startNew()" style="flex: 1;">🔄 Neuen Lebenslauf erstellen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()">← Zurück</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Weiter →</button>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR: CV Preview -->
+        <div class="sidebar-right">
+            <div class="preview-header">
+                <div class="preview-title">Lebenslauf Vorschau</div>
+            </div>
+            <div class="cv-preview" id="cvPreview">
+                <div class="preview-name" id="previewName">Name</div>
+                <div class="preview-contact" id="previewContact">
+                    E-Mail | Telefon | Stadt
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-section-title">Berufliche Erfahrung</div>
+                    <div id="previewExperience" style="font-size: 0.8rem;">Noch keine Einträge</div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-section-title">Ausbildung</div>
+                    <div id="previewEducation" style="font-size: 0.8rem;">Noch keine Einträge</div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="preview-section-title">Fähigkeiten</div>
+                    <div id="previewSkills" style="font-size: 0.8rem;">Noch keine Einträge</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ===== STATE MANAGEMENT =====
+        // STATE MANAGEMENT
         const state = {
             currentStep: 0,
-            experienceLevel: null,
-            educationStatus: null,
-            selectedTemplate: 0,
-            personalData: {},
+            personalData: {
+                vorname: '',
+                nachname: '',
+                geburtsdatum: '',
+                email: '',
+                telefon: '',
+                stadt: ''
+            },
             experiences: [],
             educations: [],
-            jobDescriptions: {},
             languages: [],
             technicalSkills: [],
             softSkills: [],
             certifications: '',
             publications: '',
-            volunteering: '',
-            signatureStyle: 'standard',
-            signatureColor: '#000',
-            acceptSignature: true,
-            photo: null
+            volunteering: ''
         };
 
         const steps = [
-            'landingPage', 'step1', 'step2', 'step3', 'step4', 'step5', 'step6',
-            'step7', 'step8', 'step9', 'step10', 'step11', 'step12'
+            { title: 'Persönliche Daten', description: 'Geben Sie Ihre persönlichen Informationen ein' },
+            { title: 'Berufliche Erfahrung', description: 'Erfassen Sie Ihre bisherige Berufserfahrung' },
+            { title: 'Ausbildung', description: 'Geben Sie Ihre Ausbildung ein' },
+            { title: 'Fähigkeiten', description: 'Erläutern Sie Ihre Sprachen und Fähigkeiten' },
+            { title: 'Zusätzliche Abschnitte', description: 'Fügen Sie optionale Informationen hinzu' },
+            { title: 'Exportieren', description: 'Laden Sie Ihren Lebenslauf herunter' }
         ];
 
-        // ===== LANDING PAGE =====
-        function startNewCV() {
-            document.getElementById('landingPage').classList.remove('active');
-            showStep(1);
-        }
+        // INITIALIZE
+        function init() {
+            renderNavigation();
+            loadFromLocalStorage();
+            showStep(0);
+            updatePreview();
 
-        function loadExistingCV() {
-            const saved = localStorage.getItem('cvData');
-            if (saved) {
-                Object.assign(state, JSON.parse(saved));
-                showStep(1);
-            } else {
-                alert('Keine gespeicherten Daten gefunden.');
-            }
-        }
-
-        // ===== WIZARD NAVIGATION =====
-        function showStep(stepIndex) {
-            state.currentStep = stepIndex;
-
-            // Hide all steps
-            steps.forEach(step => {
-                document.getElementById(step)?.classList.remove('active');
+            // Add event listeners for real-time preview updates
+            ['vorname', 'nachname', 'email', 'telefon', 'stadt'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    state.personalData[id] = document.getElementById(id).value;
+                    updatePreview();
+                    saveToLocalStorage();
+                });
             });
 
-            // Show current step
-            if (stepIndex < steps.length) {
-                document.getElementById(steps[stepIndex])?.classList.add('active');
-            }
+            document.getElementById('geburtsdatum').addEventListener('change', () => {
+                state.personalData.geburtsdatum = document.getElementById('geburtsdatum').value;
+                updatePreview();
+                saveToLocalStorage();
+            });
+        }
 
-            // Update progress
-            updateProgress();
+        // NAVIGATION
+        function renderNavigation() {
+            const navSteps = document.getElementById('navSteps');
+            navSteps.innerHTML = '';
+            steps.forEach((step, idx) => {
+                const navStep = document.createElement('div');
+                navStep.className = 'nav-step';
+                if (idx === state.currentStep) navStep.classList.add('active');
+                if (idx < state.currentStep) navStep.classList.add('completed');
+
+                navStep.innerHTML = `
+                    <div class="progress-indicator"></div>
+                    <div class="nav-step-title">${step.title}</div>
+                    <div class="nav-step-progress">Schritt ${idx + 1} von ${steps.length}</div>
+                `;
+                navStep.onclick = () => goToStep(idx);
+                navSteps.appendChild(navStep);
+            });
+        }
+
+        function showStep(stepIdx) {
+            // Hide all step containers
+            document.querySelectorAll('.step-container').forEach(el => el.classList.add('hidden'));
+
+            // Show current step
+            const currentContainer = document.querySelector(`[data-step="${stepIdx}"]`);
+            if (currentContainer) currentContainer.classList.remove('hidden');
+
+            // Update headers
+            document.getElementById('stepTitle').textContent = steps[stepIdx].title;
+            document.getElementById('stepDescription').textContent = steps[stepIdx].description;
+
+            // Update navigation
+            renderNavigation();
 
             // Update buttons
-            updateNavigationButtons();
+            document.getElementById('prevBtn').style.display = stepIdx > 0 ? 'block' : 'none';
+            document.getElementById('nextBtn').textContent = stepIdx === steps.length - 1 ? 'Fertig' : 'Weiter →';
 
-            // Auto-load data
-            if (stepIndex === 5) renderExperienceList();
-            if (stepIndex === 6) populateJobSelector();
-            if (stepIndex === 7) renderExperienceReview();
-            if (stepIndex === 8) renderEducationList();
-            if (stepIndex === 9) renderCompetencies();
-            if (stepIndex === 12) generateCVPreview();
+            // Render step-specific content
+            if (stepIdx === 1) renderExperienceList();
+            if (stepIdx === 2) renderEducationList();
+            if (stepIdx === 3) {
+                renderLanguagesTags();
+                renderTechnicalTags();
+                renderSoftTags();
+            }
+        }
+
+        function goToStep(stepIdx) {
+            state.currentStep = stepIdx;
+            showStep(stepIdx);
+            document.querySelector('.content-body').scrollTop = 0;
+            updatePreview();
         }
 
         function nextStep() {
-            if (validateCurrentStep()) {
-                showStep(state.currentStep + 1);
-                saveProgress();
+            if (!validateCurrentStep()) return;
+            if (state.currentStep < steps.length - 1) {
+                state.currentStep++;
+                showStep(state.currentStep);
+                document.querySelector('.content-body').scrollTop = 0;
+                saveToLocalStorage();
+                updatePreview();
+            } else {
+                downloadPDF();
             }
         }
 
         function previousStep() {
-            showStep(state.currentStep - 1);
+            if (state.currentStep > 0) {
+                state.currentStep--;
+                showStep(state.currentStep);
+                document.querySelector('.content-body').scrollTop = 0;
+            }
         }
 
-        function updateProgress() {
-            const percentage = (state.currentStep / 12) * 100;
-            document.getElementById('progressFill').style.width = percentage + '%';
-            document.getElementById('progressText').textContent = `Schritt ${state.currentStep} von 12`;
-
+        function validateCurrentStep() {
             if (state.currentStep === 0) {
-                document.getElementById('progressSection').style.display = 'none';
-            } else {
-                document.getElementById('progressSection').style.display = 'block';
+                if (!state.personalData.vorname || !state.personalData.nachname || !state.personalData.email) {
+                    alert('Bitte füllen Sie alle erforderlichen Felder aus.');
+                    return false;
+                }
             }
+            return true;
         }
 
-        function updateNavigationButtons() {
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const navButtons = document.getElementById('navigationButtons');
-
-            if (state.currentStep === 0) {
-                navButtons.style.display = 'none';
-            } else {
-                navButtons.style.display = 'flex';
-                prevBtn.style.display = state.currentStep > 1 ? 'block' : 'none';
-                nextBtn.textContent = state.currentStep === 12 ? 'Fertig ✓' : 'Weiter →';
-            }
-        }
-
-        // ===== STEP 1: EXPERIENCE LEVEL =====
-        function selectExperienceLevel(level, element) {
-            state.experienceLevel = level;
-            document.querySelectorAll('#step1 .option-button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-
-        // ===== STEP 2: EDUCATION STATUS =====
-        function selectEducationStatus(status, element) {
-            state.educationStatus = status;
-            document.querySelectorAll('#step2 .option-button').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-
-        // ===== STEP 3: TEMPLATE =====
-        function selectTemplate(index, element) {
-            state.selectedTemplate = index;
-            document.querySelectorAll('#step3 .template-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-
-        // ===== STEP 4: PERSONAL DATA =====
-        function uploadPhoto(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    state.photo = e.target.result;
-                    document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" />`;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // ===== STEP 5: PROFESSIONAL EXPERIENCE =====
+        // EXPERIENCE MANAGEMENT
         function addExperience() {
             state.experiences.push({
-                id: Date.now(),
-                jobTitle: '',
+                jobtitle: '',
                 employer: '',
                 startDate: '',
                 endDate: '',
                 currentlyWorking: false,
                 description: ''
             });
+            saveToLocalStorage();
             renderExperienceList();
+            updatePreview();
+        }
+
+        function removeExperience(idx) {
+            state.experiences.splice(idx, 1);
+            saveToLocalStorage();
+            renderExperienceList();
+            updatePreview();
         }
 
         function renderExperienceList() {
             const list = document.getElementById('experienceList');
             list.innerHTML = '';
 
-            if (state.experiences.length === 0) {
-                list.innerHTML = '<p style="color: var(--text-light);">Klicken Sie auf "Weitere Stelle hinzufügen" um eine Position einzutragen.</p>';
-                return;
-            }
-
-            state.experiences.forEach((exp, index) => {
-                const section = document.createElement('div');
-                section.className = 'repeatable-section';
-                section.innerHTML = `
-                    <div class="repeatable-header">
-                        <div class="repeatable-title">Position ${index + 1}</div>
-                        <button class="btn-remove" onclick="removeExperience(${exp.id})">Entfernen</button>
+            state.experiences.forEach((exp, idx) => {
+                const item = document.createElement('div');
+                item.className = 'repeatable-item';
+                item.innerHTML = `
+                    <button class="item-remove-btn" onclick="removeExperience(${idx})">✕</button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Jobtitel</label>
+                            <input type="text" class="form-input" value="${exp.jobtitle || ''}"
+                                onchange="state.experiences[${idx}].jobtitle = this.value; saveToLocalStorage(); updatePreview();">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Unternehmen</label>
+                            <input type="text" class="form-input" value="${exp.employer || ''}"
+                                onchange="state.experiences[${idx}].employer = this.value; saveToLocalStorage(); updatePreview();">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Jobtitel</label>
-                        <input type="text" class="form-input" value="${exp.jobTitle}"
-                               onchange="updateExperience(${exp.id}, 'jobTitle', this.value)"
-                               placeholder="z.B. Senior Developer">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Unternehmen</label>
-                        <input type="text" class="form-input" value="${exp.employer}"
-                               onchange="updateExperience(${exp.id}, 'employer', this.value)"
-                               placeholder="Unternehmen">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Von</label>
-                            <input type="date" class="form-input" value="${exp.startDate}"
-                                   onchange="updateExperience(${exp.id}, 'startDate', this.value)">
+                            <input type="date" class="form-input" value="${exp.startDate || ''}"
+                                onchange="state.experiences[${idx}].startDate = this.value; saveToLocalStorage(); updatePreview();">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Bis</label>
-                            <input type="date" class="form-input" value="${exp.endDate}"
-                                   onchange="updateExperience(${exp.id}, 'endDate', this.value)"
-                                   ${exp.currentlyWorking ? 'disabled' : ''}>
+                            <input type="date" class="form-input" value="${exp.endDate || ''}" ${exp.currentlyWorking ? 'disabled' : ''}
+                                onchange="state.experiences[${idx}].endDate = this.value; saveToLocalStorage(); updatePreview();">
                         </div>
                     </div>
-                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                        <input type="checkbox" ${exp.currentlyWorking ? 'checked' : ''}
-                               onchange="updateExperience(${exp.id}, 'currentlyWorking', this.checked)">
-                        Arbeite derzeit hier
-                    </label>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" ${exp.currentlyWorking ? 'checked' : ''} onchange="
+                                    state.experiences[${idx}].currentlyWorking = this.checked;
+                                    renderExperienceList();
+                                    saveToLocalStorage();
+                                    updatePreview();
+                                "> Derzeit tätig
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label class="form-label">Beschreibung</label>
+                            <textarea class="form-textarea" onchange="state.experiences[${idx}].description = this.value; saveToLocalStorage(); updatePreview();">${exp.description || ''}</textarea>
+                            <div class="ai-suggestions">
+                                <div class="ai-suggestions-title">Vorschläge</div>
+                                <div class="suggestion-item">
+                                    <span class="suggestion-text">Projektteamleitung</span>
+                                    <button class="suggestion-btn" onclick="addSuggestion(${idx}, 'Projektteamleitung')">Hinzufügen</button>
+                                </div>
+                                <div class="suggestion-item">
+                                    <span class="suggestion-text">Prozessoptimierung</span>
+                                    <button class="suggestion-btn" onclick="addSuggestion(${idx}, 'Prozessoptimierung')">Hinzufügen</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
-                list.appendChild(section);
+                list.appendChild(item);
             });
         }
 
-        function updateExperience(id, field, value) {
-            const exp = state.experiences.find(e => e.id === id);
-            if (exp) exp[field] = value;
-        }
-
-        function removeExperience(id) {
-            state.experiences = state.experiences.filter(e => e.id !== id);
+        function addSuggestion(expIdx, text) {
+            const current = state.experiences[expIdx].description;
+            state.experiences[expIdx].description = current ? current + ' ' + text : text;
+            saveToLocalStorage();
             renderExperienceList();
+            updatePreview();
         }
 
-        // ===== STEP 6: JOB DESCRIPTIONS =====
-        function populateJobSelector() {
-            const selector = document.getElementById('jobSelector');
-            selector.innerHTML = '<option value="">-- Bitte wählen Sie eine Position --</option>';
-
-            state.experiences.forEach((exp, index) => {
-                const option = document.createElement('option');
-                option.value = exp.id;
-                option.textContent = `${exp.jobTitle} - ${exp.employer}`;
-                selector.appendChild(option);
-            });
-        }
-
-        function loadJobForDescription() {
-            const jobId = document.getElementById('jobSelector').value;
-            if (!jobId) return;
-
-            const job = state.experiences.find(e => e.id == jobId);
-            if (job) {
-                document.getElementById('jobDescription').value = job.description || '';
-                generateJobSuggestions(job);
-            }
-        }
-
-        function generateJobSuggestions(job) {
-            const suggestions = [
-                'Verantwortlich für die Leitung von Projektteams',
-                'Implementierung und Optimierung von Geschäftsprozessen',
-                'Zusammenarbeit mit Stakeholdern und Kunden',
-                'Entwicklung von strategischen Konzepten',
-                'Mentoring von Junior Team-Mitgliedern',
-                'Verbesserte Effizienz um 30%',
-                'Erfolgreiche Projektumsetzung im Budget',
-                'Kundenbetreuung und Support'
-            ];
-
-            const suggestionsList = document.getElementById('suggestionsList');
-            suggestionsList.innerHTML = '';
-
-            suggestions.forEach(suggestion => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.innerHTML = `
-                    <span>${suggestion}</span>
-                    <button class="suggestion-btn" onclick="addSuggestionToDescription('${suggestion}')">Hinzufügen</button>
-                `;
-                suggestionsList.appendChild(item);
-            });
-        }
-
-        function addSuggestionToDescription(suggestion) {
-            const textarea = document.getElementById('jobDescription');
-            textarea.value = textarea.value + (textarea.value ? '\n• ' : '• ') + suggestion;
-        }
-
-        // ===== STEP 7: EXPERIENCE REVIEW =====
-        function renderExperienceReview() {
-            const review = document.getElementById('experienceReview');
-            review.innerHTML = '';
-
-            if (state.experiences.length === 0) {
-                review.innerHTML = '<p>Keine Positionen eingetragen.</p>';
-                return;
-            }
-
-            state.experiences.forEach((exp, index) => {
-                const item = document.createElement('div');
-                item.className = 'repeatable-section';
-                item.innerHTML = `
-                    <div class="repeatable-title">${exp.jobTitle} - ${exp.employer}</div>
-                    <div style="margin-top: 1rem; color: var(--text-light); font-size: 0.875rem;">
-                        ${exp.startDate} bis ${exp.currentlyWorking ? 'Heute' : exp.endDate}
-                    </div>
-                    <div style="margin-top: 1rem; color: var(--text);">
-                        ${exp.description}
-                    </div>
-                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                        <button class="btn btn-secondary" style="font-size: 0.875rem;" onclick="editExperience(${exp.id})">Bearbeiten</button>
-                        <button class="btn-remove" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="removeExperience(${exp.id})">Löschen</button>
-                    </div>
-                `;
-                review.appendChild(item);
-            });
-        }
-
-        function editExperience(id) {
-            showStep(5);
-            // Focus on editing this experience
-        }
-
-        // ===== STEP 8: EDUCATION =====
+        // EDUCATION MANAGEMENT
         function addEducation() {
             state.educations.push({
-                id: Date.now(),
                 school: '',
-                fieldOfStudy: '',
+                field: '',
                 startDate: '',
                 endDate: '',
                 grade: ''
             });
+            saveToLocalStorage();
             renderEducationList();
+            updatePreview();
+        }
+
+        function removeEducation(idx) {
+            state.educations.splice(idx, 1);
+            saveToLocalStorage();
+            renderEducationList();
+            updatePreview();
         }
 
         function renderEducationList() {
             const list = document.getElementById('educationList');
             list.innerHTML = '';
 
-            if (state.educations.length === 0) {
-                list.innerHTML = '<p style="color: var(--text-light);">Klicken Sie auf "Weitere Ausbildung hinzufügen" um eine Ausbildung einzutragen.</p>';
-                return;
-            }
-
-            state.educations.forEach((edu, index) => {
-                const section = document.createElement('div');
-                section.className = 'repeatable-section';
-                section.innerHTML = `
-                    <div class="repeatable-header">
-                        <div class="repeatable-title">Ausbildung ${index + 1}</div>
-                        <button class="btn-remove" onclick="removeEducation(${edu.id})">Entfernen</button>
+            state.educations.forEach((edu, idx) => {
+                const item = document.createElement('div');
+                item.className = 'repeatable-item';
+                item.innerHTML = `
+                    <button class="item-remove-btn" onclick="removeEducation(${idx})">✕</button>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Schule / Universität</label>
+                            <input type="text" class="form-input" value="${edu.school || ''}"
+                                onchange="state.educations[${idx}].school = this.value; saveToLocalStorage(); updatePreview();">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Studienfeld</label>
+                            <input type="text" class="form-input" value="${edu.field || ''}"
+                                onchange="state.educations[${idx}].field = this.value; saveToLocalStorage(); updatePreview();">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Schule / Universität</label>
-                        <input type="text" class="form-input" value="${edu.school}"
-                               onchange="updateEducation(${edu.id}, 'school', this.value)"
-                               placeholder="Name der Institution">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Studienrichtung / Fachbereich</label>
-                        <input type="text" class="form-input" value="${edu.fieldOfStudy}"
-                               onchange="updateEducation(${edu.id}, 'fieldOfStudy', this.value)"
-                               placeholder="z.B. Informatik, Betriebswirtschaft">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Von</label>
-                            <input type="date" class="form-input" value="${edu.startDate}"
-                                   onchange="updateEducation(${edu.id}, 'startDate', this.value)">
+                            <input type="date" class="form-input" value="${edu.startDate || ''}"
+                                onchange="state.educations[${idx}].startDate = this.value; saveToLocalStorage(); updatePreview();">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Bis</label>
-                            <input type="date" class="form-input" value="${edu.endDate}"
-                                   onchange="updateEducation(${edu.id}, 'endDate', this.value)">
+                            <input type="date" class="form-input" value="${edu.endDate || ''}"
+                                onchange="state.educations[${idx}].endDate = this.value; saveToLocalStorage(); updatePreview();">
                         </div>
+                    </div>
+                    <div class="form-row full">
                         <div class="form-group">
-                            <label class="form-label">Note/Abschluss</label>
-                            <input type="text" class="form-input" value="${edu.grade}"
-                                   onchange="updateEducation(${edu.id}, 'grade', this.value)"
-                                   placeholder="z.B. 1.5, Bestanden">
+                            <label class="form-label">Note / Abschluss</label>
+                            <input type="text" class="form-input" value="${edu.grade || ''}" placeholder="z.B. 1,5"
+                                onchange="state.educations[${idx}].grade = this.value; saveToLocalStorage(); updatePreview();">
                         </div>
                     </div>
                 `;
-                list.appendChild(section);
+                list.appendChild(item);
             });
         }
 
-        function updateEducation(id, field, value) {
-            const edu = state.educations.find(e => e.id === id);
-            if (edu) edu[field] = value;
-        }
-
-        function removeEducation(id) {
-            state.educations = state.educations.filter(e => e.id !== id);
-            renderEducationList();
-        }
-
-        // ===== STEP 9: COMPETENCIES =====
+        // SKILLS MANAGEMENT
         function addLanguage() {
-            const lang = document.getElementById('newLanguage').value.trim();
-            if (lang) {
-                state.languages.push(lang);
-                document.getElementById('newLanguage').value = '';
-                renderCompetencies();
+            const input = document.getElementById('languageInput');
+            if (input.value.trim()) {
+                state.languages.push(input.value.trim());
+                input.value = '';
+                renderLanguagesTags();
+                saveToLocalStorage();
+                updatePreview();
             }
-        }
-
-        function addTechnicalSkill() {
-            const skill = document.getElementById('newTechnicalSkill').value.trim();
-            if (skill) {
-                state.technicalSkills.push(skill);
-                document.getElementById('newTechnicalSkill').value = '';
-                renderCompetencies();
-            }
-        }
-
-        function addSoftSkill() {
-            const skill = document.getElementById('newSoftSkill').value.trim();
-            if (skill) {
-                state.softSkills.push(skill);
-                document.getElementById('newSoftSkill').value = '';
-                renderCompetencies();
-            }
-        }
-
-        function renderCompetencies() {
-            // Render languages
-            const langsList = document.getElementById('languagesList');
-            langsList.innerHTML = state.languages.map((lang, idx) =>
-                `<span class="competency-tag">${lang} <button onclick="removeLanguage(${idx})">×</button></span>`
-            ).join('');
-
-            // Render technical skills
-            const techList = document.getElementById('technicalSkillsList');
-            techList.innerHTML = state.technicalSkills.map((skill, idx) =>
-                `<span class="competency-tag" style="background: var(--secondary);">${skill} <button onclick="removeTechnicalSkill(${idx})">×</button></span>`
-            ).join('');
-
-            // Render soft skills
-            const softList = document.getElementById('softSkillsList');
-            softList.innerHTML = state.softSkills.map((skill, idx) =>
-                `<span class="competency-tag" style="background: var(--accent);">${skill} <button onclick="removeSoftSkill(${idx})">×</button></span>`
-            ).join('');
-
-            // Generate tech skill suggestions based on job titles
-            generateTechSkillSuggestions();
         }
 
         function removeLanguage(idx) {
             state.languages.splice(idx, 1);
-            renderCompetencies();
+            renderLanguagesTags();
+            saveToLocalStorage();
+            updatePreview();
+        }
+
+        function renderLanguagesTags() {
+            const container = document.getElementById('languagesTags');
+            container.innerHTML = '';
+            state.languages.forEach((lang, idx) => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.innerHTML = `${lang} <span class="tag-remove" onclick="removeLanguage(${idx})">✕</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function addTechnicalSkill() {
+            const input = document.getElementById('technicalInput');
+            if (input.value.trim()) {
+                state.technicalSkills.push(input.value.trim());
+                input.value = '';
+                renderTechnicalTags();
+                saveToLocalStorage();
+                updatePreview();
+            }
         }
 
         function removeTechnicalSkill(idx) {
             state.technicalSkills.splice(idx, 1);
-            renderCompetencies();
+            renderTechnicalTags();
+            saveToLocalStorage();
+            updatePreview();
+        }
+
+        function renderTechnicalTags() {
+            const container = document.getElementById('technicalTags');
+            container.innerHTML = '';
+            state.technicalSkills.forEach((skill, idx) => {
+                const tag = document.createElement('div');
+                tag.className = 'tag tech';
+                tag.innerHTML = `${skill} <span class="tag-remove" onclick="removeTechnicalSkill(${idx})">✕</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function addSoftSkill() {
+            const input = document.getElementById('softInput');
+            if (input.value.trim()) {
+                state.softSkills.push(input.value.trim());
+                input.value = '';
+                renderSoftTags();
+                saveToLocalStorage();
+                updatePreview();
+            }
         }
 
         function removeSoftSkill(idx) {
             state.softSkills.splice(idx, 1);
-            renderCompetencies();
+            renderSoftTags();
+            saveToLocalStorage();
+            updatePreview();
         }
 
-        function generateTechSkillSuggestions() {
-            const suggestions = [
-                'Microsoft Office', 'Google Workspace', 'Salesforce',
-                'JavaScript', 'Python', 'Java', 'SQL',
-                'Figma', 'Adobe Creative Suite', 'Photoshop',
-                'Project Management', 'Agile/Scrum', 'Analytics'
-            ];
-
-            const suggestionsList = document.getElementById('techSuggestions');
-            if (suggestionsList) {
-                suggestionsList.innerHTML = suggestions.slice(0, 5).map(skill =>
-                    `<div class="suggestion-item">
-                        <span>${skill}</span>
-                        <button class="suggestion-btn" onclick="state.technicalSkills.push('${skill}'); renderCompetencies();">Hinzufügen</button>
-                    </div>`
-                ).join('');
-            }
-        }
-
-        // ===== STEP 11: SIGNATURE =====
-        function selectColor(element, color) {
-            document.querySelectorAll('.color-swatch').forEach(swatch => {
-                swatch.classList.remove('selected');
+        function renderSoftTags() {
+            const container = document.getElementById('softTags');
+            container.innerHTML = '';
+            state.softSkills.forEach((skill, idx) => {
+                const tag = document.createElement('div');
+                tag.className = 'tag soft';
+                tag.innerHTML = `${skill} <span class="tag-remove" onclick="removeSoftSkill(${idx})">✕</span>`;
+                container.appendChild(tag);
             });
-            element.classList.add('selected');
-            state.signatureColor = color;
         }
 
-        // ===== STEP 12: GENERATE PREVIEW & DOWNLOAD =====
-        function generateCVPreview() {
-            const vorname = document.getElementById('vorname')?.value || state.personalData.vorname || '';
-            const nachname = document.getElementById('nachname')?.value || state.personalData.nachname || '';
-            const email = document.getElementById('email')?.value || state.personalData.email || '';
-            const telefon = document.getElementById('telefon')?.value || state.personalData.telefon || '';
-
-            let html = `
-                <h1>${vorname} ${nachname}</h1>
-                <div style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">
-                    ${email} | ${telefon}
-                </div>
-            `;
-
-            if (state.experiences.length > 0) {
-                html += '<h2>Berufserfahrung</h2>';
-                state.experiences.forEach(exp => {
-                    html += `
-                        <div class="cv-preview-entry">
-                            <strong>${exp.jobTitle}</strong>
-                            <em>${exp.employer} | ${exp.startDate} bis ${exp.currentlyWorking ? 'Heute' : exp.endDate}</em>
-                            <p>${exp.description}</p>
-                        </div>
-                    `;
-                });
-            }
-
-            if (state.educations.length > 0) {
-                html += '<h2>Ausbildung</h2>';
-                state.educations.forEach(edu => {
-                    html += `
-                        <div class="cv-preview-entry">
-                            <strong>${edu.fieldOfStudy}</strong>
-                            <em>${edu.school} | ${edu.startDate} bis ${edu.endDate}</em>
-                            ${edu.grade ? `<p>Abschluss: ${edu.grade}</p>` : ''}
-                        </div>
-                    `;
-                });
-            }
-
-            if (state.languages.length > 0 || state.technicalSkills.length > 0 || state.softSkills.length > 0) {
-                html += '<h2>Kompetenzen</h2>';
-                if (state.languages.length > 0) {
-                    html += '<strong>Sprachen:</strong> ' + state.languages.join(', ') + '<br>';
-                }
-                if (state.technicalSkills.length > 0) {
-                    html += '<strong>Technische Fähigkeiten:</strong> ' + state.technicalSkills.join(', ') + '<br>';
-                }
-                if (state.softSkills.length > 0) {
-                    html += '<strong>Soft Skills:</strong> ' + state.softSkills.join(', ');
-                }
-            }
-
-            document.getElementById('cvPreview').innerHTML = html;
+        // OPTIONAL SECTIONS
+        function toggleOptional(contentId) {
+            const content = document.getElementById(contentId);
+            content.classList.toggle('visible');
+            saveToLocalStorage();
         }
 
+        // PREVIEW UPDATE
+        function updatePreview() {
+            const name = `${state.personalData.vorname} ${state.personalData.nachname}`.trim() || 'Name';
+            document.getElementById('previewName').textContent = name;
+
+            const contact = [state.personalData.email, state.personalData.telefon, state.personalData.stadt]
+                .filter(x => x).join(' | ') || 'Kontakt';
+            document.getElementById('previewContact').textContent = contact;
+
+            // Experience preview
+            let expHtml = '';
+            if (state.experiences.length === 0) {
+                expHtml = 'Noch keine Einträge';
+            } else {
+                expHtml = state.experiences.map(exp => `
+                    <div class="preview-item">
+                        <div class="preview-item-title">${exp.jobtitle || 'Position'}</div>
+                        <div class="preview-item-subtitle">${exp.employer || 'Unternehmen'}</div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('previewExperience').innerHTML = expHtml;
+
+            // Education preview
+            let eduHtml = '';
+            if (state.educations.length === 0) {
+                eduHtml = 'Noch keine Einträge';
+            } else {
+                eduHtml = state.educations.map(edu => `
+                    <div class="preview-item">
+                        <div class="preview-item-title">${edu.field || 'Studienfeld'}</div>
+                        <div class="preview-item-subtitle">${edu.school || 'Schule'}</div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('previewEducation').innerHTML = eduHtml;
+
+            // Skills preview
+            const allSkills = [...state.languages, ...state.technicalSkills, ...state.softSkills];
+            let skillsHtml = allSkills.length > 0 ? allSkills.join(', ') : 'Noch keine Einträge';
+            document.getElementById('previewSkills').innerHTML = skillsHtml;
+        }
+
+        // EXPORT FUNCTIONS
         function downloadPDF() {
-            const content = document.getElementById('cvPreview').innerText;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text(content, 10, 10);
-            doc.save('Lebenslauf.pdf');
-            showDownloadSuccess();
+            const element = document.getElementById('cvPreview');
+            const opt = {
+                margin: 10,
+                filename: 'Lebenslauf.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            html2pdf().set(opt).from(element).save();
         }
 
         function downloadWord() {
-            const content = document.getElementById('cvPreview').innerHTML;
-            const html = `<html><head><meta charset="UTF-8"></head><body>${content}</body></html>`;
-            const blob = new Blob([html], { type: 'application/msword' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Lebenslauf.doc';
-            link.click();
-            showDownloadSuccess();
-        }
-
-        function downloadText() {
-            const content = document.getElementById('cvPreview').innerText;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Lebenslauf.txt';
-            link.click();
-            showDownloadSuccess();
-        }
-
-        function showDownloadSuccess() {
-            alert('Lebenslauf erfolgreich heruntergeladen! ✓');
-        }
-
-        function createAnother() {
-            // Reset state
-            Object.assign(state, {
-                currentStep: 0,
-                experienceLevel: null,
-                educationStatus: null,
-                selectedTemplate: 0,
-                personalData: {},
-                experiences: [],
-                educations: [],
-                jobDescriptions: {},
-                languages: [],
-                technicalSkills: [],
-                softSkills: [],
-                certifications: '',
-                publications: '',
-                volunteering: '',
-                signatureStyle: 'standard',
-                signatureColor: '#000',
-                acceptSignature: true,
-                photo: null
+            const name = `${state.personalData.vorname} ${state.personalData.nachname}`.trim() || 'Lebenslauf';
+            let content = `${name}\n\n`;
+            content += `${state.personalData.email}\n${state.personalData.telefon}\n${state.personalData.stadt}\n\n`;
+            content += `BERUFLICHE ERFAHRUNG\n`;
+            state.experiences.forEach(exp => {
+                content += `${exp.jobtitel} - ${exp.employer}\n`;
+            });
+            content += `\nAUSBILDUNG\n`;
+            state.educations.forEach(edu => {
+                content += `${edu.field} - ${edu.school}\n`;
             });
 
-            document.getElementById('landingPage').classList.add('active');
-            document.getElementById('progressSection').style.display = 'none';
-            document.getElementById('navigationButtons').style.display = 'none';
+            const dataStr = content;
+            const dataBlob = new Blob([dataStr], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${name}.docx`;
+            link.click();
         }
 
-        // ===== VALIDATION =====
-        function validateCurrentStep() {
-            switch (state.currentStep) {
-                case 1:
-                    if (!state.experienceLevel) {
-                        alert('Bitte wählen Sie ein Erfahrungslevel.');
-                        return false;
-                    }
-                    return true;
-                case 2:
-                    if (!state.educationStatus) {
-                        alert('Bitte wählen Sie Ihren Ausbildungsstatus.');
-                        return false;
-                    }
-                    return true;
-                case 3:
-                    return true; // Template selection is optional
-                case 4:
-                    const vorname = document.getElementById('vorname')?.value.trim();
-                    const nachname = document.getElementById('nachname')?.value.trim();
-                    const email = document.getElementById('email')?.value.trim();
-                    if (!vorname || !nachname || !email) {
-                        alert('Bitte füllen Sie alle erforderlichen Felder aus (Vorname, Nachname, E-Mail).');
-                        return false;
-                    }
-                    // Save personal data
-                    state.personalData = {
-                        vorname, nachname,
-                        geburtsdatum: document.getElementById('geburtsdatum')?.value,
-                        email,
-                        telefon: document.getElementById('telefon')?.value,
-                        adresse: document.getElementById('adresse')?.value
-                    };
-                    return true;
-                default:
-                    return true;
+        function startNew() {
+            if (confirm('Wirklich einen neuen Lebenslauf erstellen? Ihre bisherigen Daten gehen verloren.')) {
+                localStorage.removeItem('lebenslaueState');
+                location.reload();
             }
         }
 
-        // ===== STORAGE =====
-        function saveProgress() {
-            localStorage.setItem('cvData', JSON.stringify(state));
+        // LOCAL STORAGE
+        function saveToLocalStorage() {
+            localStorage.setItem('lebenslaueState', JSON.stringify(state));
         }
 
-        // Initialize app
-        window.addEventListener('load', () => {
-            updateProgress();
-            updateNavigationButtons();
-        });
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('lebenslaueState');
+            if (saved) {
+                Object.assign(state, JSON.parse(saved));
+                document.getElementById('vorname').value = state.personalData.vorname || '';
+                document.getElementById('nachname').value = state.personalData.nachname || '';
+                document.getElementById('geburtsdatum').value = state.personalData.geburtsdatum || '';
+                document.getElementById('email').value = state.personalData.email || '';
+                document.getElementById('telefon').value = state.personalData.telefon || '';
+                document.getElementById('stadt').value = state.personalData.stadt || '';
+            }
+        }
+
+        // START
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
