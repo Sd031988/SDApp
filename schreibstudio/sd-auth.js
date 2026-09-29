@@ -1,7 +1,11 @@
-// SD Suite – Konto & Cloud-Synchronisierung (Firebase)
+// SD Suite – Konto & Cloud-Synchronisierung (Firebase Auth + Google Drive)
 // Dieses Modul stellt ein eigenes Nutzerkonto pro Person bereit: Login/Registrierung
-// per E-Mail/Passwort, sowie einfache Hilfsfunktionen, um Daten pro Nutzer in der
-// Cloud zu speichern (Firestore für kleine Daten/JSON, Storage für Dateien).
+// per E-Mail/Passwort ODER per Google-Konto, sowie Hilfsfunktionen, um Daten pro
+// Nutzer in der Cloud zu speichern:
+//   - Kleine JSON-Daten (Profil/Einstellungen) -> Firestore
+//   - Dateien (Scans, PDFs, Fotos) -> die EIGENE Google Drive des Nutzers (nicht
+//     unser gemeinsames Firebase-Kontingent), sobald er sich mit Google anmeldet
+//     und Drive-Zugriff erlaubt.
 //
 // Einbindung: <script type="module" src="./sd-auth.js"></script>
 // Nach dem Laden ist window.SD_AUTH verfügbar (siehe API unten). Andere,
@@ -12,14 +16,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/fireba
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
   signInWithEmailAndPassword, signOut, sendPasswordResetEmail,
-  updateProfile
+  updateProfile, GoogleAuthProvider, signInWithCredential
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import {
   getFirestore, doc, setDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-import {
-  getStorage, ref, uploadString, uploadBytes, getDownloadURL, listAll, getBlob, deleteObject, getMetadata
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6oWe7zveRGwkJbbtJ_BFR3bywxqwxRJQ",
@@ -30,48 +31,165 @@ const firebaseConfig = {
   appId: "1:817526531018:web:204a5ad4b55c8cd20c2533"
 };
 
+// Google-OAuth-Client (Google Cloud Console, Projekt "SD Suite"). Diese ID ist
+// KEIN Geheimnis - sie darf öffentlich im Code stehen.
+const GOOGLE_CLIENT_ID = '817526531018-glm761p9cf9fm6vq6eaaacfu8pdfht35.apps.googleusercontent.com';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FOLDER_NAME = 'SD Suite Dateien';
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 let currentUser = null;
 const listeners = [];
 
-// Schutz-Obergrenze pro Nutzerkonto: das kostenlose Firebase-Kontingent (5 GB Storage)
-// gilt für ALLE Nutzer der App zusammen, nicht pro Person. Damit ein einzelnes Konto
-// nicht versehentlich das gesamte gemeinsame Kontingent aufbraucht, begrenzen wir hier
-// zusätzlich, wie viel ein einzelner Nutzer in seinem eigenen Cloud-Ordner speichern darf.
-const MAX_USER_BYTES = 75 * 1024 * 1024; // 75 MB pro Nutzer
-
-function estimateDataUrlBytes(dataUrl) {
-  const idx = dataUrl.indexOf(',');
-  const b64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
-  return Math.ceil(b64.length * 3 / 4);
+// ---------------- Google Identity Services (Anmeldung + Drive-Zugriff) ----------------
+let gisReadyPromise = null;
+function loadGis() {
+  if (gisReadyPromise) return gisReadyPromise;
+  gisReadyPromise = new Promise((resolve, reject) => {
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true; s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Google-Anmeldedienst konnte nicht geladen werden.'));
+    document.head.appendChild(s);
+  });
+  return gisReadyPromise;
 }
 
-async function getFolderUsageBytes(folderRef) {
-  const res = await listAll(folderRef);
-  let total = 0;
-  for (const item of res.items) {
-    try {
-      const meta = await getMetadata(item);
-      total += meta.size || 0;
-    } catch (e) { /* Datei evtl. inzwischen gelöscht - ignorieren */ }
-  }
-  for (const prefix of res.prefixes) {
-    total += await getFolderUsageBytes(prefix);
-  }
-  return total;
+let tokenClient = null;
+let driveAccessToken = null;
+let driveTokenExpiry = 0; // ms epoch
+
+function requestGoogleToken(promptMode) {
+  return new Promise((resolve, reject) => {
+    tokenClient.callback = (resp) => {
+      if (resp && resp.access_token) {
+        driveAccessToken = resp.access_token;
+        driveTokenExpiry = Date.now() + (Number(resp.expires_in || 3600) * 1000);
+        resolve(resp.access_token);
+      } else {
+        reject(new Error((resp && resp.error) || 'Google-Anmeldung wurde nicht abgeschlossen.'));
+      }
+    };
+    tokenClient.error_callback = (err) => {
+      reject(new Error((err && err.type) || 'Google-Anmeldung wurde abgebrochen.'));
+    };
+    tokenClient.requestAccessToken({ prompt: promptMode === undefined ? '' : promptMode });
+  });
 }
 
-async function getUserUsageBytes() {
-  if (!currentUser) return 0;
+// Meldet den Nutzer über sein Google-Konto an (Firebase-Identität) UND holt im
+// selben Schritt die Erlaubnis, in seine eigene Google Drive zu schreiben.
+async function signInWithGoogle() {
+  await loadGis();
+  if (!tokenClient) {
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'openid email profile ' + DRIVE_SCOPE,
+      callback: () => {},
+    });
+  }
+  const accessToken = await requestGoogleToken('consent');
+  // Mit dem Google-Access-Token bei Firebase anmelden, damit wir wie gewohnt
+  // ein Firebase-Nutzerkonto (uid, E-Mail) für Profil/Einstellungen haben.
+  const credential = GoogleAuthProvider.credential(null, accessToken);
+  const result = await signInWithCredential(auth, credential);
+  return result.user;
+}
+
+// Liefert ein gültiges Drive-Zugriffstoken, holt bei Bedarf (Ablauf nach ca.
+// 1 Stunde) im Hintergrund ein neues - falls das nicht stillschweigend klappt,
+// muss der Nutzer die Verbindung einmal neu bestätigen (Pop-up).
+async function ensureDriveToken() {
+  if (driveAccessToken && Date.now() < driveTokenExpiry - 30000) return driveAccessToken;
+  await loadGis();
+  if (!tokenClient) {
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'openid email profile ' + DRIVE_SCOPE,
+      callback: () => {},
+    });
+  }
   try {
-    return await getFolderUsageBytes(ref(storage, 'users/' + currentUser.uid));
+    return await requestGoogleToken('');
   } catch (e) {
-    return 0; // z.B. wenn der Nutzer noch gar keine Dateien hat
+    throw new Error('Die Verbindung zu deiner Google Drive ist abgelaufen. Bitte klicke auf "Google Drive erneut verbinden".');
   }
+}
+
+// ---------------- Google Drive: kleine Hilfsfunktionen ----------------
+let appFolderIdCache = null;
+
+async function driveFetch(url, options) {
+  const token = await ensureDriveToken();
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...(options && options.headers), Authorization: 'Bearer ' + token },
+  });
+  if (!res.ok) {
+    let msg = 'Google Drive: Fehler ' + res.status;
+    try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch (e) {}
+    throw new Error(msg);
+  }
+  return res;
+}
+
+async function findOrCreateAppFolder() {
+  if (appFolderIdCache) return appFolderIdCache;
+  const q = encodeURIComponent(`name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const listRes = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  const listJson = await listRes.json();
+  if (listJson.files && listJson.files.length) {
+    appFolderIdCache = listJson.files[0].id;
+    return appFolderIdCache;
+  }
+  const createRes = await driveFetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }),
+  });
+  const createJson = await createRes.json();
+  appFolderIdCache = createJson.id;
+  return appFolderIdCache;
+}
+
+async function findDriveFileByPath(path) {
+  const q = encodeURIComponent(`appProperties has { key='sdPath' and value='${path.replace(/'/g, "\\'")}' } and trashed=false`);
+  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,size,appProperties)`);
+  const json = await res.json();
+  return (json.files && json.files[0]) || null;
+}
+
+function dataUrlToBlob(dataUrl) {
+  const [meta, b64] = dataUrl.split(',');
+  const mime = (meta.match(/data:(.*?);base64/) || [, 'application/octet-stream'])[1];
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
+
+async function driveUploadMultipart(path, blob, existingFileId, folderId) {
+  const metadata = { name: path.split('/').pop() || path, appProperties: { sdPath: path } };
+  if (!existingFileId) metadata.parents = [folderId];
+  const boundary = 'sdsuite-' + Math.random().toString(36).slice(2);
+  const metaPart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`;
+  const mediaHeader = `--${boundary}\r\nContent-Type: ${blob.type || 'application/octet-stream'}\r\n\r\n`;
+  const closing = `\r\n--${boundary}--`;
+  const body = new Blob([metaPart, mediaHeader, blob, closing]);
+  const url = existingFileId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart&fields=id`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id`;
+  const res = await driveFetch(url, {
+    method: existingFileId ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body,
+  });
+  return res.json();
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -97,6 +215,7 @@ function friendlyError(err) {
 // ---------------- Öffentliche API ----------------
 const SD_AUTH = {
   get user() { return currentUser; },
+  get hasDriveAccess() { return !!driveAccessToken; },
   onChange(cb) { listeners.push(cb); if (currentUser !== undefined) cb(currentUser); },
 
   async signUp(email, password, displayName) {
@@ -110,7 +229,22 @@ const SD_AUTH = {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     return cred.user;
   },
-  async signOutNow() { await signOut(auth); },
+  async signInWithGoogle() { return await signInWithGoogle(); },
+  async connectGoogleDrive() {
+    await loadGis();
+    if (!tokenClient) {
+      tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile ' + DRIVE_SCOPE,
+        callback: () => {},
+      });
+    }
+    return await requestGoogleToken('consent');
+  },
+  async signOutNow() {
+    driveAccessToken = null; driveTokenExpiry = 0; appFolderIdCache = null;
+    await signOut(auth);
+  },
   async resetPassword(email) { await sendPasswordResetEmail(auth, email); },
   friendlyError,
 
@@ -127,29 +261,22 @@ const SD_AUTH = {
     return snap.exists() ? snap.data() : null;
   },
 
-  // ---- Cloud-Speicher: Dateien/Bilder (Firebase Storage), z.B. Scan-Seiten, Fotos ----
+  // ---- Cloud-Speicher: Dateien/Bilder -> landen in der EIGENEN Google Drive des Nutzers ----
   async saveFile(path, blobOrDataUrl) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const isDataUrl = typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:');
-    const newBytes = isDataUrl ? estimateDataUrlBytes(blobOrDataUrl) : (blobOrDataUrl.size || 0);
-    const used = await getUserUsageBytes();
-    if (used + newBytes > MAX_USER_BYTES) {
-      const usedMb = (used / (1024 * 1024)).toFixed(1);
-      const maxMb = (MAX_USER_BYTES / (1024 * 1024)).toFixed(0);
-      throw new Error('Dein Cloud-Speicher ist voll (' + usedMb + ' von ' + maxMb + ' MB genutzt). Bitte lösche alte Dateien in deinem Konto, um Platz zu schaffen.');
-    }
-    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
-    if (isDataUrl) {
-      await uploadString(fileRef, blobOrDataUrl, 'data_url');
-    } else {
-      await uploadBytes(fileRef, blobOrDataUrl);
-    }
-    return fileRef.fullPath;
+    const blob = (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:'))
+      ? dataUrlToBlob(blobOrDataUrl) : blobOrDataUrl;
+    const folderId = await findOrCreateAppFolder();
+    const existing = await findDriveFileByPath(path);
+    const json = await driveUploadMultipart(path, blob, existing && existing.id, folderId);
+    return json.id;
   },
   async loadFileAsDataUrl(path) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
-    const blob = await getBlob(fileRef);
+    const file = await findDriveFileByPath(path);
+    if (!file) throw new Error('Datei nicht gefunden: ' + path);
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
+    const blob = await res.blob();
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -159,24 +286,32 @@ const SD_AUTH = {
   },
   async listFiles(folderPath) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const folderRef = ref(storage, 'users/' + currentUser.uid + '/' + folderPath);
-    const res = await listAll(folderRef);
-    return res.items.map(it => it.fullPath);
+    const folderId = await findOrCreateAppFolder();
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,size,appProperties)&pageSize=1000`);
+    const json = await res.json();
+    const prefix = folderPath ? folderPath.replace(/\/$/, '') + '/' : '';
+    return (json.files || [])
+      .map(f => (f.appProperties && f.appProperties.sdPath) || f.name)
+      .filter(p => !prefix || p.startsWith(prefix));
   },
   async deleteFile(path) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
-    await deleteObject(fileRef);
+    const file = await findDriveFileByPath(path);
+    if (!file) return;
+    await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}`, { method: 'DELETE' });
   },
-  // ---- Speicherplatz-Info: wie viel von den 75 MB pro Nutzer ist belegt? ----
+  // ---- Speicherplatz-Info: wie viel liegt in unserem App-Ordner in der Drive des Nutzers? ----
   async getUsage() {
-    const used = await getUserUsageBytes();
-    return {
-      usedBytes: used,
-      maxBytes: MAX_USER_BYTES,
-      usedMb: +(used / (1024 * 1024)).toFixed(1),
-      maxMb: MAX_USER_BYTES / (1024 * 1024),
-    };
+    if (!currentUser || !driveAccessToken) return { usedBytes: 0, usedMb: 0, isOwnDrive: true };
+    try {
+      const folderId = await findOrCreateAppFolder();
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(size)&pageSize=1000`);
+      const json = await res.json();
+      const used = (json.files || []).reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+      return { usedBytes: used, usedMb: +(used / (1024 * 1024)).toFixed(1), isOwnDrive: true };
+    } catch (e) {
+      return { usedBytes: 0, usedMb: 0, isOwnDrive: true };
+    }
   },
 
   openLoginModal() { if (modalCtrl) modalCtrl.open('login'); },
@@ -206,6 +341,12 @@ function injectStyles() {
     .sd-auth-box .sd-primary { width:100%; padding:11px; border:none; border-radius:8px; background:#3366ff;
       color:#fff; font-weight:600; font-size:0.92rem; cursor:pointer; margin-top:4px; }
     .sd-auth-box .sd-primary:hover { background:#2851d8; }
+    .sd-auth-box .sd-google { width:100%; padding:11px; border:1px solid #d0d5dd; border-radius:8px; background:#fff;
+      color:#222; font-weight:600; font-size:0.92rem; cursor:pointer; margin-top:4px; display:flex; align-items:center;
+      justify-content:center; gap:8px; }
+    .sd-auth-box .sd-google:hover { background:#f5f6f8; }
+    .sd-auth-box .sd-divider { display:flex; align-items:center; gap:10px; margin:16px 0; color:#999; font-size:0.75rem; }
+    .sd-auth-box .sd-divider::before, .sd-auth-box .sd-divider::after { content:''; flex:1; height:1px; background:#e5e5e5; }
     .sd-auth-box .sd-link { background:none; border:none; color:#3366ff; font-size:0.8rem; cursor:pointer;
       padding:0; margin-top:12px; display:block; text-align:center; width:100%; }
     .sd-auth-box .sd-err { color:#c0392b; font-size:0.8rem; margin:-4px 0 10px; min-height:1em; }
@@ -217,7 +358,7 @@ function injectStyles() {
       cursor:pointer; font-size:0.82rem; font-weight:600; color:#555; }
     .sd-auth-tabs button.active { background:#3366ff; color:#fff; border-color:#3366ff; }
     #sdAuthUserMenu { position:absolute; top:52px; right:10px; background:#fff; border:1px solid #e0e0e0;
-      border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.15); padding:8px; min-width:200px; z-index:100001; display:none; }
+      border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.15); padding:8px; min-width:220px; z-index:100001; display:none; }
     #sdAuthUserMenu.open { display:block; }
     #sdAuthUserMenu .sd-um-email { padding:8px 10px; font-size:0.8rem; color:#666; border-bottom:1px solid #eee; margin-bottom:6px; word-break:break-all; }
     #sdAuthUserMenu button { display:block; width:100%; text-align:left; padding:8px 10px; border:none; background:none;
@@ -226,6 +367,8 @@ function injectStyles() {
   `;
   document.head.appendChild(style);
 }
+
+const GOOGLE_G_SVG = `<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.91c1.7-1.57 2.69-3.88 2.69-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.17l-2.91-2.27c-.81.54-1.84.86-3.05.86-2.35 0-4.34-1.58-5.05-3.71H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.95 10.71A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.71V4.95H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.05l2.99-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l2.99 2.34C4.66 5.16 6.65 3.58 9 3.58z"/></svg>`;
 
 function buildModal() {
   if (document.getElementById('sdAuthBackdrop')) return;
@@ -243,9 +386,10 @@ function buildModal() {
           ausschließlich auf diesem Gerät, nichts wird irgendwohin übertragen.
         </p>
         <p class="sub">
-          Meldest du dich stattdessen an, um deine Angaben zu speichern und von mehreren Geräten zu nutzen,
-          werden deine Inhalte bei unserem Cloud-Dienstleister <strong>Google (Firebase)</strong> gespeichert –
-          nicht bei uns auf einem eigenen Server. Details dazu in unserer
+          Meldest du dich mit <strong>Google</strong> an, werden deine Dateien in deiner <strong>eigenen
+          Google Drive</strong> gespeichert (in einem eigenen Ordner "${DRIVE_FOLDER_NAME}") – nicht auf
+          unseren Servern. Bei Anmeldung per E-Mail/Passwort werden nur Profil/Einstellungen bei unserem
+          Cloud-Dienstleister <strong>Google (Firebase)</strong> gespeichert. Details dazu in unserer
           <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
         </p>
         <button class="sd-primary" id="sdAuthConsentContinue">Trotzdem anmelden</button>
@@ -253,13 +397,21 @@ function buildModal() {
       </div>
 
       <div id="sdAuthFormStep" style="display:none;">
+        <h3 id="sdAuthTitle">Willkommen</h3>
+        <p class="sub">Melde dich an, um deine Dokumente geräteübergreifend zu nutzen.</p>
+        <div class="sd-err" id="sdAuthErr"></div>
+
+        <button class="sd-google" id="sdAuthGoogleBtn">${GOOGLE_G_SVG} Mit Google anmelden</button>
+        <p style="font-size:0.72rem;color:#888;text-align:center;margin:8px 0 0;">
+          Speichert deine Dateien in deiner eigenen Google Drive.
+        </p>
+
+        <div class="sd-divider">oder mit E-Mail</div>
+
         <div class="sd-auth-tabs">
           <button id="sdAuthTabLogin" class="active">Anmelden</button>
           <button id="sdAuthTabSignup">Registrieren</button>
         </div>
-        <h3 id="sdAuthTitle">Willkommen zurück</h3>
-        <p class="sub" id="sdAuthSub">Melde dich an, um deine Dokumente geräteübergreifend zu nutzen.</p>
-        <div class="sd-err" id="sdAuthErr"></div>
         <input type="text" id="sdAuthName" placeholder="Dein Name" style="display:none;">
         <input type="email" id="sdAuthEmail" placeholder="E-Mail-Adresse" autocomplete="username">
         <input type="password" id="sdAuthPassword" placeholder="Passwort" autocomplete="current-password">
@@ -268,7 +420,6 @@ function buildModal() {
         <p style="font-size:0.72rem;color:#888;text-align:center;margin:14px 0 0;line-height:1.4;">
           Mit Anmeldung/Registrierung akzeptierst du unsere
           <a href="../datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
-          Deine Inhalte werden dabei bei unserem Cloud-Dienstleister (Google Firebase) gespeichert.
         </p>
       </div>
     </div>
@@ -279,8 +430,9 @@ function buildModal() {
     backdrop, close: backdrop.querySelector('#sdAuthClose'),
     consentStep: backdrop.querySelector('#sdAuthConsentStep'), formStep: backdrop.querySelector('#sdAuthFormStep'),
     consentContinue: backdrop.querySelector('#sdAuthConsentContinue'), consentCancel: backdrop.querySelector('#sdAuthConsentCancel'),
+    googleBtn: backdrop.querySelector('#sdAuthGoogleBtn'),
     tabLogin: backdrop.querySelector('#sdAuthTabLogin'), tabSignup: backdrop.querySelector('#sdAuthTabSignup'),
-    title: backdrop.querySelector('#sdAuthTitle'), sub: backdrop.querySelector('#sdAuthSub'),
+    title: backdrop.querySelector('#sdAuthTitle'),
     err: backdrop.querySelector('#sdAuthErr'), name: backdrop.querySelector('#sdAuthName'),
     email: backdrop.querySelector('#sdAuthEmail'), password: backdrop.querySelector('#sdAuthPassword'),
     submit: backdrop.querySelector('#sdAuthSubmit'), forgot: backdrop.querySelector('#sdAuthForgot'),
@@ -296,21 +448,33 @@ function buildModal() {
   };
   els.consentCancel.onclick = () => { backdrop.classList.remove('open'); };
 
+  els.googleBtn.onclick = async () => {
+    els.err.style.color = '#c0392b'; els.err.textContent = '';
+    els.googleBtn.disabled = true;
+    const oldLabel = els.googleBtn.innerHTML;
+    els.googleBtn.innerHTML = 'Bitte warten...';
+    try {
+      await SD_AUTH.signInWithGoogle();
+      backdrop.classList.remove('open');
+    } catch (e) {
+      els.err.textContent = friendlyError(e);
+    } finally {
+      els.googleBtn.disabled = false;
+      els.googleBtn.innerHTML = oldLabel;
+    }
+  };
+
   let mode = 'login';
   function setMode(m) {
     mode = m;
     els.err.textContent = '';
     if (m === 'login') {
       els.tabLogin.classList.add('active'); els.tabSignup.classList.remove('active');
-      els.title.textContent = 'Willkommen zurück';
-      els.sub.textContent = 'Melde dich an, um deine Dokumente geräteübergreifend zu nutzen.';
       els.name.style.display = 'none';
       els.submit.textContent = 'Anmelden';
       els.forgot.style.display = 'block';
     } else {
       els.tabSignup.classList.add('active'); els.tabLogin.classList.remove('active');
-      els.title.textContent = 'Konto erstellen';
-      els.sub.textContent = 'Kostenlos registrieren – deine Daten sind nur für dich sichtbar.';
       els.name.style.display = 'block';
       els.submit.textContent = 'Registrieren';
       els.forgot.style.display = 'none';
@@ -381,15 +545,20 @@ function renderAccountButton() {
     host.insertBefore(btn, host.firstChild);
     modalCtrl = buildModal();
 
-    // Nutzer-Menü (Logout) bei eingeloggtem Zustand
+    // Nutzer-Menü (Logout / Google Drive erneut verbinden) bei eingeloggtem Zustand
     const menu = document.createElement('div');
     menu.id = 'sdAuthUserMenu';
     menu.innerHTML = `<div class="sd-um-email" id="sdAuthUmEmail"></div>
+      <button id="sdAuthUmReconnect" style="display:none;">🔄 Google Drive erneut verbinden</button>
       <button id="sdAuthUmLogout">🚪 Abmelden</button>`;
     (host.parentElement || document.body).style.position = (host.parentElement || document.body).style.position || 'relative';
     document.body.appendChild(menu);
     menu.querySelector('#sdAuthUmLogout').onclick = async () => {
       await SD_AUTH.signOutNow();
+      menu.classList.remove('open');
+    };
+    menu.querySelector('#sdAuthUmReconnect').onclick = async () => {
+      try { await SD_AUTH.connectGoogleDrive(); } catch (e) { alert(friendlyError(e)); }
       menu.classList.remove('open');
     };
     document.addEventListener('click', (e) => {
@@ -403,9 +572,11 @@ function renderAccountButton() {
     btn.onclick = () => {
       const menu = document.getElementById('sdAuthUserMenu');
       document.getElementById('sdAuthUmEmail').textContent = currentUser.email;
+      const reconnectBtn = menu.querySelector('#sdAuthUmReconnect');
+      reconnectBtn.style.display = SD_AUTH.hasDriveAccess ? 'none' : 'block';
       const r = btn.getBoundingClientRect();
       menu.style.top = (r.bottom + window.scrollY + 6) + 'px';
-      menu.style.left = Math.max(10, r.right - 200) + 'px';
+      menu.style.left = Math.max(10, r.right - 220) + 'px';
       menu.style.right = 'auto';
       menu.classList.toggle('open');
     };

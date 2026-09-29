@@ -1,5 +1,5 @@
-const CACHE_NAME = 'pdf-studio-v41';
-const APP_FILES = ['./', './index.html', './manifest.json', './icon.svg', './sd-auth.js?v=3', '../i18n.js?v=1'];
+const CACHE_NAME = 'pdf-studio-v42';
+const APP_FILES = ['./', './index.html', './manifest.json', './icon.svg', './sd-auth.js?v=4', '../i18n.js?v=1'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)));
