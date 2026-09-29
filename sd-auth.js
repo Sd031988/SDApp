@@ -21,6 +21,9 @@ import {
 import {
   getFirestore, doc, setDoc, getDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadString, uploadBytes, getBlob, listAll, deleteObject, getMetadata
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD6oWe7zveRGwkJbbtJ_BFR3bywxqwxRJQ",
@@ -40,9 +43,47 @@ const DRIVE_FOLDER_NAME = 'SD Suite Dateien';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 let currentUser = null;
 const listeners = [];
+
+// Nutzer OHNE Google-Anmeldung (nur E-Mail/Passwort) speichern ihre Dateien in
+// unserem gemeinsamen Firebase-Kontingent (5 GB insgesamt für alle Nutzer
+// zusammen). Damit ein einzelnes Konto das nicht allein aufbraucht, gilt hier
+// bewusst ein kleines Limit - wer mehr Platz möchte, meldet sich stattdessen
+// mit Google an und bekommt dort seine eigene, viel größere Google Drive.
+const MAX_USER_BYTES = 10 * 1024 * 1024; // 10 MB pro Nutzer (nur ohne Google-Anmeldung)
+
+function estimateDataUrlBytes(dataUrl) {
+  const idx = dataUrl.indexOf(',');
+  const b64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;
+  return Math.ceil(b64.length * 3 / 4);
+}
+
+async function getFirebaseFolderUsageBytes(folderRef) {
+  const res = await listAll(folderRef);
+  let total = 0;
+  for (const item of res.items) {
+    try {
+      const meta = await getMetadata(item);
+      total += meta.size || 0;
+    } catch (e) { /* Datei evtl. inzwischen gelöscht - ignorieren */ }
+  }
+  for (const prefix of res.prefixes) {
+    total += await getFirebaseFolderUsageBytes(prefix);
+  }
+  return total;
+}
+
+async function getFirebaseUserUsageBytes() {
+  if (!currentUser) return 0;
+  try {
+    return await getFirebaseFolderUsageBytes(ref(storage, 'users/' + currentUser.uid));
+  } catch (e) {
+    return 0; // z.B. wenn der Nutzer noch gar keine Dateien hat
+  }
+}
 
 // ---------------- Google Identity Services (Anmeldung + Drive-Zugriff) ----------------
 let gisReadyPromise = null;
@@ -261,22 +302,52 @@ const SD_AUTH = {
     return snap.exists() ? snap.data() : null;
   },
 
-  // ---- Cloud-Speicher: Dateien/Bilder -> landen in der EIGENEN Google Drive des Nutzers ----
+  // ---- Cloud-Speicher: Dateien/Bilder ----
+  // Mit Google angemeldet -> eigene Google Drive des Nutzers (praktisch unbegrenzt).
+  // Nur mit E-Mail/Passwort angemeldet -> unser gemeinsamer Firebase-Speicher (klein begrenzt).
   async saveFile(path, blobOrDataUrl) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const blob = (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:'))
-      ? dataUrlToBlob(blobOrDataUrl) : blobOrDataUrl;
-    const folderId = await findOrCreateAppFolder();
-    const existing = await findDriveFileByPath(path);
-    const json = await driveUploadMultipart(path, blob, existing && existing.id, folderId);
-    return json.id;
+    if (driveAccessToken) {
+      const blob = (typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:'))
+        ? dataUrlToBlob(blobOrDataUrl) : blobOrDataUrl;
+      const folderId = await findOrCreateAppFolder();
+      const existing = await findDriveFileByPath(path);
+      const json = await driveUploadMultipart(path, blob, existing && existing.id, folderId);
+      return json.id;
+    }
+    const isDataUrl = typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:');
+    const newBytes = isDataUrl ? estimateDataUrlBytes(blobOrDataUrl) : (blobOrDataUrl.size || 0);
+    const used = await getFirebaseUserUsageBytes();
+    if (used + newBytes > MAX_USER_BYTES) {
+      const usedMb = (used / (1024 * 1024)).toFixed(1);
+      const maxMb = (MAX_USER_BYTES / (1024 * 1024)).toFixed(0);
+      throw new Error(
+        'Dein Cloud-Speicher ist voll (' + usedMb + ' von ' + maxMb + ' MB genutzt). ' +
+        'Melde dich stattdessen mit Google an, um deine eigene, viel größere Google Drive zu nutzen ' +
+        '- oder lösche alte Dateien in deinem Konto, um Platz zu schaffen.'
+      );
+    }
+    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
+    if (isDataUrl) { await uploadString(fileRef, blobOrDataUrl, 'data_url'); }
+    else { await uploadBytes(fileRef, blobOrDataUrl); }
+    return fileRef.fullPath;
   },
   async loadFileAsDataUrl(path) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const file = await findDriveFileByPath(path);
-    if (!file) throw new Error('Datei nicht gefunden: ' + path);
-    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
-    const blob = await res.blob();
+    if (driveAccessToken) {
+      const file = await findDriveFileByPath(path);
+      if (!file) throw new Error('Datei nicht gefunden: ' + path);
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
+      const blob = await res.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
+    const blob = await getBlob(fileRef);
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -286,32 +357,52 @@ const SD_AUTH = {
   },
   async listFiles(folderPath) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const folderId = await findOrCreateAppFolder();
-    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,size,appProperties)&pageSize=1000`);
-    const json = await res.json();
-    const prefix = folderPath ? folderPath.replace(/\/$/, '') + '/' : '';
-    return (json.files || [])
-      .map(f => (f.appProperties && f.appProperties.sdPath) || f.name)
-      .filter(p => !prefix || p.startsWith(prefix));
+    if (driveAccessToken) {
+      const folderId = await findOrCreateAppFolder();
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(id,name,size,appProperties)&pageSize=1000`);
+      const json = await res.json();
+      const prefix = folderPath ? folderPath.replace(/\/$/, '') + '/' : '';
+      return (json.files || [])
+        .map(f => (f.appProperties && f.appProperties.sdPath) || f.name)
+        .filter(p => !prefix || p.startsWith(prefix));
+    }
+    const folderRef = ref(storage, 'users/' + currentUser.uid + '/' + folderPath);
+    const res = await listAll(folderRef);
+    return res.items.map(it => it.fullPath);
   },
   async deleteFile(path) {
     if (!currentUser) throw new Error('Nicht angemeldet');
-    const file = await findDriveFileByPath(path);
-    if (!file) return;
-    await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}`, { method: 'DELETE' });
-  },
-  // ---- Speicherplatz-Info: wie viel liegt in unserem App-Ordner in der Drive des Nutzers? ----
-  async getUsage() {
-    if (!currentUser || !driveAccessToken) return { usedBytes: 0, usedMb: 0, isOwnDrive: true };
-    try {
-      const folderId = await findOrCreateAppFolder();
-      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(size)&pageSize=1000`);
-      const json = await res.json();
-      const used = (json.files || []).reduce((sum, f) => sum + (Number(f.size) || 0), 0);
-      return { usedBytes: used, usedMb: +(used / (1024 * 1024)).toFixed(1), isOwnDrive: true };
-    } catch (e) {
-      return { usedBytes: 0, usedMb: 0, isOwnDrive: true };
+    if (driveAccessToken) {
+      const file = await findDriveFileByPath(path);
+      if (!file) return;
+      await driveFetch(`https://www.googleapis.com/drive/v3/files/${file.id}`, { method: 'DELETE' });
+      return;
     }
+    const fileRef = ref(storage, 'users/' + currentUser.uid + '/' + path);
+    await deleteObject(fileRef);
+  },
+  // ---- Speicherplatz-Info ----
+  async getUsage() {
+    if (!currentUser) return { usedBytes: 0, usedMb: 0 };
+    if (driveAccessToken) {
+      try {
+        const folderId = await findOrCreateAppFolder();
+        const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`'${folderId}' in parents and trashed=false`)}&fields=files(size)&pageSize=1000`);
+        const json = await res.json();
+        const used = (json.files || []).reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+        return { usedBytes: used, usedMb: +(used / (1024 * 1024)).toFixed(1), isOwnDrive: true };
+      } catch (e) {
+        return { usedBytes: 0, usedMb: 0, isOwnDrive: true };
+      }
+    }
+    const used = await getFirebaseUserUsageBytes();
+    return {
+      usedBytes: used,
+      maxBytes: MAX_USER_BYTES,
+      usedMb: +(used / (1024 * 1024)).toFixed(1),
+      maxMb: MAX_USER_BYTES / (1024 * 1024),
+      isOwnDrive: false,
+    };
   },
 
   openLoginModal() { if (modalCtrl) modalCtrl.open('login'); },
@@ -388,8 +479,9 @@ function buildModal() {
         <p class="sub">
           Meldest du dich mit <strong>Google</strong> an, werden deine Dateien in deiner <strong>eigenen
           Google Drive</strong> gespeichert (in einem eigenen Ordner "${DRIVE_FOLDER_NAME}") – nicht auf
-          unseren Servern. Bei Anmeldung per E-Mail/Passwort werden nur Profil/Einstellungen bei unserem
-          Cloud-Dienstleister <strong>Google (Firebase)</strong> gespeichert. Details dazu in unserer
+          unseren Servern, und ohne festes Limit von uns. Bei Anmeldung per E-Mail/Passwort speichern wir
+          deine Dateien stattdessen in unserem eigenen, kleinen Kontingent bei
+          <strong>Google (Firebase)</strong> (bis 10&nbsp;MB pro Konto). Details dazu in unserer
           <a href="datenschutz.html" target="_blank" rel="noopener" style="color:#3366ff;">Datenschutzerklärung</a>.
         </p>
         <button class="sd-primary" id="sdAuthConsentContinue">Trotzdem anmelden</button>
