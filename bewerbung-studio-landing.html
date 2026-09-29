@@ -282,82 +282,6 @@
             line-height: 1.6;
         }
 
-        /* ===== TEMPLATES SECTION ===== */
-        .templates {
-            padding: 80px 48px;
-            background: var(--surface-light);
-        }
-
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .template-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-
-        .template-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
-            border-color: var(--primary);
-        }
-
-        .template-preview {
-            height: 240px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 16px;
-        }
-
-        .template-blue .template-preview {
-            background: linear-gradient(135deg, #0F2855 0%, #1D4ED8 100%);
-            color: white;
-        }
-
-        .template-gold .template-preview {
-            background: linear-gradient(135deg, #2C1810 0%, #B8860B 100%);
-            color: white;
-        }
-
-        .template-purple .template-preview {
-            background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%);
-            color: white;
-        }
-
-        .template-emerald .template-preview {
-            background: linear-gradient(135deg, #064E3B 0%, #059669 100%);
-            color: white;
-        }
-
-        .template-info {
-            padding: 20px;
-        }
-
-        .template-name {
-            font-weight: 700;
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .template-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
         /* ===== HOW IT WORKS ===== */
         .how-it-works {
             padding: 80px 48px;
@@ -435,7 +359,7 @@
 
         /* ===== FOOTER ===== */
         footer {
-            background: var(--surface-dark);
+            background: var(--primary-dark);
             color: white;
             padding: 40px 48px;
             text-align: center;
@@ -472,7 +396,7 @@
                 margin-top: 24px;
             }
 
-            .features, .templates, .how-it-works, .cta {
+            .features, .how-it-works, .cta {
                 padding: 40px 24px;
             }
 
@@ -488,7 +412,6 @@
         <div class="logo">Bewerbungsstudio</div>
         <ul>
             <li><a href="#features">Features</a></li>
-            <li><a href="#templates">Vorlagen</a></li>
             <li><a href="#how">So funktioniert's</a></li>
             <li><a href="#cta">Starten</a></li>
         </ul>
@@ -619,41 +542,6 @@
                     </div>
                 </div>
             </a>
-        </div>
-    </section>
-
-    <!-- TEMPLATES SECTION -->
-    <section class="templates" id="templates">
-        <h2 class="section-title">Unsere Premium Vorlagen</h2>
-        <div class="templates-grid">
-            <div class="template-card template-blue">
-                <div class="template-preview">Modern Elegance</div>
-                <div class="template-info">
-                    <div class="template-name">Modern Elegance</div>
-                    <div class="template-desc">Zeitlos elegant mit modernem Gradient</div>
-                </div>
-            </div>
-            <div class="template-card template-gold">
-                <div class="template-preview">Luxury Gold</div>
-                <div class="template-info">
-                    <div class="template-name">Luxury Gold</div>
-                    <div class="template-desc">Premium mit Gold-Akzenten</div>
-                </div>
-            </div>
-            <div class="template-card template-purple">
-                <div class="template-preview">Creative Purple</div>
-                <div class="template-info">
-                    <div class="template-name">Creative Purple</div>
-                    <div class="template-desc">Modern kreativ</div>
-                </div>
-            </div>
-            <div class="template-card template-emerald">
-                <div class="template-preview">Executive Emerald</div>
-                <div class="template-info">
-                    <div class="template-name">Executive Emerald</div>
-                    <div class="template-desc">Professionell mit Details</div>
-                </div>
-            </div>
         </div>
     </section>
 
