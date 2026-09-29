@@ -38,7 +38,7 @@ Ideal für Berufseinsteiger, Bewerber, Freiberufler und alle, die schnell profes
 Business (alternativ: Produktivität)
 
 ## Kontakt-E-Mail (Play Console)
-durrani.sulaiman@yahoo.de
+kontakt@thesdhub.com
 
 ## Datenschutzerklärung-URL (Pflichtfeld)
 https://thesdhub.com/datenschutz.html

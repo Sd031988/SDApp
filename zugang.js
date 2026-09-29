@@ -62,7 +62,7 @@
     const ERSTBESUCH_KEY = 'sdErstbesuch_' + APP;
     const ZUGANG_BIS_KEY = 'sdZugangBis_' + APP;
     const GERAETE_ID_KEY = 'sdGeraeteId';
-    const KONTAKT_EMAIL = 'durrani.sulaiman@yahoo.de';
+    const KONTAKT_EMAIL = 'kontakt@thesdhub.com';
 
     // ---- Android: voruebergehend komplett kostenlos ----
     // Solange die Bezahlung/der Play-Store-Eintrag noch nicht fertig
