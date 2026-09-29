@@ -2051,6 +2051,9 @@
 
         function changeLanguage(lang) {
             i18n.setLanguage(lang);
+            if (typeof analytics !== 'undefined') {
+                analytics.trackLanguageSwitch(lang);
+            }
         }
 
         // ===== PHASE 6 WEEK 3: COVER LETTER & DECKBLATT =====
@@ -2164,6 +2167,10 @@
             const template = coverLetterTemplates[index];
             console.log('Selected cover letter template:', template.name);
 
+            if (typeof analytics !== 'undefined') {
+                analytics.trackTemplateView(`CoverLetter: ${template.name}`);
+            }
+
             // Auto-fill with CV data
             autofillCoverLetter(template);
             updateCoverLetterPreview();
@@ -2176,6 +2183,10 @@
             currentDeckblattTemplate = index;
             const template = deckblattTemplates[index];
             console.log('Selected deckblatt template:', template.name);
+
+            if (typeof analytics !== 'undefined') {
+                analytics.trackTemplateView(`Deckblatt: ${template.name}`);
+            }
 
             updateDeckblattPreview(template);
             showNotification(`Vorlage "${template.name}" ausgewählt`);
@@ -2667,10 +2678,273 @@
             showNotification(i18n.get('notifications.exported', 'Deckblatt exportiert'));
         }
 
+        // ===== PHASE 6 WEEK 6: ANALYTICS & PERFORMANCE MONITORING =====
+        class AnalyticsEngine {
+            constructor() {
+                this.sessionId = this.generateSessionId();
+                this.sessionStart = Date.now();
+                this.events = [];
+                this.performance = {
+                    pageLoadTime: 0,
+                    initialRenderTime: 0,
+                    interactionLatencies: []
+                };
+                this.userMetrics = {
+                    totalEdits: 0,
+                    templatesViewed: 0,
+                    pdfExports: 0,
+                    languageSwitches: 0,
+                    aiAnalysisRuns: 0,
+                    errors: []
+                };
+                this.loadAnalytics();
+            }
+
+            generateSessionId() {
+                return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            }
+
+            // Track page load performance
+            recordPageLoad() {
+                this.performance.pageLoadTime = performance.now();
+                this.trackEvent('page_load', {
+                    loadTime: Math.round(this.performance.pageLoadTime),
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Track initial render time
+            recordInitialRender() {
+                this.performance.initialRenderTime = Date.now() - this.sessionStart;
+                this.trackEvent('initial_render', {
+                    renderTime: Math.round(this.performance.initialRenderTime),
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // Track any user event
+            trackEvent(eventName, eventData = {}) {
+                const event = {
+                    name: eventName,
+                    timestamp: Date.now(),
+                    sessionId: this.sessionId,
+                    language: i18n.currentLanguage || 'de',
+                    data: eventData
+                };
+                this.events.push(event);
+                this.saveAnalytics();
+                console.log(`[Analytics] ${eventName}`, eventData);
+            }
+
+            // Track user interactions
+            trackEdit() {
+                this.userMetrics.totalEdits++;
+                this.trackEvent('user_edit', { totalEdits: this.userMetrics.totalEdits });
+            }
+
+            trackTemplateView(templateName) {
+                this.userMetrics.templatesViewed++;
+                this.trackEvent('template_view', { template: templateName, total: this.userMetrics.templatesViewed });
+            }
+
+            trackPDFExport(documentType) {
+                this.userMetrics.pdfExports++;
+                this.trackEvent('pdf_export', { type: documentType, total: this.userMetrics.pdfExports });
+            }
+
+            trackLanguageSwitch(language) {
+                this.userMetrics.languageSwitches++;
+                this.trackEvent('language_switch', { language, total: this.userMetrics.languageSwitches });
+            }
+
+            trackAIAnalysis(analysisType) {
+                this.userMetrics.aiAnalysisRuns++;
+                this.trackEvent('ai_analysis', { type: analysisType, total: this.userMetrics.aiAnalysisRuns });
+            }
+
+            // Track errors
+            trackError(errorMessage, errorStack = '') {
+                this.userMetrics.errors.push({
+                    message: errorMessage,
+                    stack: errorStack,
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+                this.trackEvent('error', { message: errorMessage, errorCount: this.userMetrics.errors.length });
+            }
+
+            // Get session summary
+            getSessionSummary() {
+                const sessionDuration = Math.round((Date.now() - this.sessionStart) / 1000);
+                return {
+                    sessionId: this.sessionId,
+                    duration: `${sessionDuration}s`,
+                    startTime: new Date(this.sessionStart).toISOString(),
+                    totalEvents: this.events.length,
+                    userMetrics: this.userMetrics,
+                    performance: this.performance,
+                    language: i18n.currentLanguage || 'de'
+                };
+            }
+
+            // Performance monitoring
+            measureInteraction(actionName, callback) {
+                const startTime = performance.now();
+                const result = callback();
+                const latency = performance.now() - startTime;
+                this.performance.interactionLatencies.push({
+                    action: actionName,
+                    latency: Math.round(latency)
+                });
+                if (latency > 1000) {
+                    console.warn(`[Performance] ${actionName} took ${latency.toFixed(2)}ms`);
+                }
+                return result;
+            }
+
+            // Save to localStorage
+            saveAnalytics() {
+                try {
+                    localStorage.setItem('analyticsData', JSON.stringify({
+                        sessionId: this.sessionId,
+                        events: this.events,
+                        userMetrics: this.userMetrics,
+                        performance: this.performance
+                    }));
+                } catch (e) {
+                    console.warn('Failed to save analytics:', e);
+                }
+            }
+
+            // Load from localStorage
+            loadAnalytics() {
+                try {
+                    const saved = localStorage.getItem('analyticsData');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        if (data.sessionId === this.sessionId) {
+                            this.events = data.events || [];
+                            this.userMetrics = data.userMetrics || this.userMetrics;
+                            this.performance = data.performance || this.performance;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to load analytics:', e);
+                }
+            }
+
+            // Export analytics for backend
+            exportAnalytics() {
+                return {
+                    summary: this.getSessionSummary(),
+                    events: this.events,
+                    metrics: this.userMetrics
+                };
+            }
+        }
+
+        // Initialize Analytics
+        const analytics = new AnalyticsEngine();
+
+        // Track page load
+        window.addEventListener('load', () => {
+            analytics.recordPageLoad();
+        });
+
+        // Track initial render
+        window.addEventListener('load', () => {
+            setTimeout(() => analytics.recordInitialRender(), 0);
+        });
+
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            analytics.trackError(event.message, event.filename + ':' + event.lineno);
+        });
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (event) => {
+            analytics.trackError('Unhandled Promise: ' + event.reason);
+        });
+
+        // Track edits
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('input, textarea, select')) {
+                analytics.trackEdit();
+            }
+        });
+
+        // Intercept downloadCVPDF
+        const originalDownloadCVPDF = downloadCVPDF;
+        downloadCVPDF = function() {
+            analytics.trackPDFExport('CV');
+            originalDownloadCVPDF();
+        };
+
+        // Intercept downloadCoverLetterPDF
+        const originalDownloadCoverLetterPDF = downloadCoverLetterPDF;
+        downloadCoverLetterPDF = function() {
+            analytics.trackPDFExport('CoverLetter');
+            originalDownloadCoverLetterPDF();
+        };
+
+        // Intercept downloadDeckblattPDF
+        const originalDownloadDeckblattPDF = downloadDeckblattPDF;
+        downloadDeckblattPDF = function() {
+            analytics.trackPDFExport('Deckblatt');
+            originalDownloadDeckblattPDF();
+        };
+
+        // ===== PERFORMANCE OPTIMIZATION =====
+        // Lazy load heavy functions
+        const optimizePerformance = () => {
+            // Debounce resize events
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    analytics.trackEvent('window_resize', { width: window.innerWidth, height: window.innerHeight });
+                }, 250);
+            });
+
+            // Monitor memory usage (if available)
+            if (performance.memory) {
+                setInterval(() => {
+                    const used = Math.round(performance.memory.usedJSHeapSize / 1048576);
+                    const limit = Math.round(performance.memory.jsHeapSizeLimit / 1048576);
+                    if (used > limit * 0.8) {
+                        console.warn(`[Performance] High memory usage: ${used}MB / ${limit}MB`);
+                    }
+                }, 5000);
+            }
+        };
+        optimizePerformance();
+
+        // Session warning on tab close
+        window.addEventListener('beforeunload', () => {
+            const summary = analytics.getSessionSummary();
+            // Could send summary to server here
+            console.log('[Analytics] Session Summary:', summary);
+        });
+
+        // Add console commands for debugging
+        window.analyticsDebug = {
+            getSummary: () => analytics.getSessionSummary(),
+            getEvents: () => analytics.events,
+            getErrors: () => analytics.userMetrics.errors,
+            exportData: () => analytics.exportAnalytics(),
+            clearData: () => {
+                localStorage.removeItem('analyticsData');
+                analytics.events = [];
+                analytics.userMetrics = { totalEdits: 0, templatesViewed: 0, pdfExports: 0, languageSwitches: 0, aiAnalysisRuns: 0, errors: [] };
+            }
+        };
+
         // Close modals on background click
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 e.target.classList.remove('active');
+                analytics.trackEvent('modal_close', { modalId: e.target.id });
             }
         });
     </script>
