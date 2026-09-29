@@ -2145,64 +2145,64 @@
   <!-- Modal: Scan optimieren (Zuschnitt/Geraderichten + Filter) -->
   <div id="modalScanEnhance" class="modal-backdrop">
     <div class="modal-box" style="width:min(680px,100%);">
-      <h3 data-i18n=”modal_scanenhance_h3”>📷 Scan optimieren</h3>
-      <p style=”font-size:0.78rem;color:var(--muted);margin-bottom:10px;” id=”scanEnhanceHint” data-i18n=”scan_enhance_hint”>
+      <h3 data-i18n="modal_scanenhance_h3">📷 Scan optimieren</h3>
+      <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;" id="scanEnhanceHint" data-i18n="scan_enhance_hint">
         Ziehe die vier Punkte auf die Ecken des Dokuments, dann „Weiter”.
       </p>
 
-      <div class=”doctype-row” id=”scanDoctypeRow”>
-        <span class=”doctype-label” data-i18n=”doctype_label”>Was scannst du?</span>
-        <div class=”doctype-options”>
-          <button type=”button” class=”doctype-btn selected” data-type=”dokument” data-i18n=”doctype_dokument”>📄 Dokument</button>
-          <button type=”button” class=”doctype-btn” data-type=”reisepass” data-i18n=”doctype_reisepass”>🛂 Reisepass</button>
-          <button type=”button” class=”doctype-btn” data-type=”ausweis” data-i18n=”doctype_ausweis”>🪪 Ausweis (Vorder- &amp; Rückseite)</button>
+      <div class="doctype-row" id="scanDoctypeRow">
+        <span class="doctype-label" data-i18n="doctype_label">Was scannst du?</span>
+        <div class="doctype-options">
+          <button type="button" class="doctype-btn selected" data-type="dokument" data-i18n="doctype_dokument">📄 Dokument</button>
+          <button type="button" class="doctype-btn" data-type="reisepass" data-i18n="doctype_reisepass">🛂 Reisepass</button>
+          <button type="button" class="doctype-btn" data-type="ausweis" data-i18n="doctype_ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
         </div>
       </div>
-      <div class=”ausweis-banner” id=”scanAusweisBanner” data-i18n=”ausweis_banner”>🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.</div>
+      <div class="ausweis-banner" id="scanAusweisBanner" data-i18n="ausweis_banner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite fotografieren.</div>
 
-      <div id=”scanCropStage”>
-        <div class=”scan-crop-wrap” id=”scanCropWrap”>
-          <canvas id=”scanCropCanvas”></canvas>
-          <div class=”scan-handle” id=”sh0”></div>
-          <div class=”scan-handle” id=”sh1”></div>
-          <div class=”scan-handle” id=”sh2”></div>
-          <div class=”scan-handle” id=”sh3”></div>
+      <div id="scanCropStage">
+        <div class="scan-crop-wrap" id="scanCropWrap">
+          <canvas id="scanCropCanvas"></canvas>
+          <div class="scan-handle" id="sh0"></div>
+          <div class="scan-handle" id="sh1"></div>
+          <div class="scan-handle" id="sh2"></div>
+          <div class="scan-handle" id="sh3"></div>
         </div>
-        <div class=”modal-actions” style=”display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;”>
-          <div style=”display:flex;gap:8px;flex-wrap:wrap;”>
-            <button id=”btnScanCropReset” class=”tool-btn” data-i18n=”btn_scan_crop_reset”>↺ Zurücksetzen</button>
-            <button id=”btnScanRotateLeft” class=”tool-btn” data-i18n=”btn_scan_rotate_left” data-i18n-title=”btn_scan_rotate_left_hint” title=”90° nach links drehen”>⟲ Links</button>
-            <button id=”btnScanRotateRight” class=”tool-btn” data-i18n=”btn_scan_rotate_right” data-i18n-title=”btn_scan_rotate_right_hint” title=”90° nach rechts drehen”>⟳ Rechts</button>
+        <div class="modal-actions" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="btnScanCropReset" class="tool-btn" data-i18n="btn_scan_crop_reset">↺ Zurücksetzen</button>
+            <button id="btnScanRotateLeft" class="tool-btn" data-i18n="btn_scan_rotate_left" data-i18n-title="btn_scan_rotate_left_hint" title="90° nach links drehen">⟲ Links</button>
+            <button id="btnScanRotateRight" class="tool-btn" data-i18n="btn_scan_rotate_right" data-i18n-title="btn_scan_rotate_right_hint" title="90° nach rechts drehen">⟳ Rechts</button>
           </div>
-          <div style=”display:flex;gap:8px;”>
-            <button id=”btnScanCancel1” class=”tool-btn” data-i18n=”btn_scan_cancel”>Abbrechen</button>
-            <button id=”btnScanCropNext” class=”btn-primary” data-i18n=”btn_scan_crop_next”>Weiter →</button>
+          <div style="display:flex;gap:8px;">
+            <button id="btnScanCancel1" class="tool-btn" data-i18n="btn_scan_cancel">Abbrechen</button>
+            <button id="btnScanCropNext" class="btn-primary" data-i18n="btn_scan_crop_next">Weiter →</button>
           </div>
         </div>
       </div>
 
-      <div id=”scanFilterStage” style=”display:none;”>
-        <div class=”scan-filter-grid” id=”scanFilterGrid”>
-          <div class=”scan-filter-card” data-filter=”original”><canvas></canvas><span data-i18n=”filter_original”>Original</span></div>
-          <div class=”scan-filter-card” data-filter=”auto”><canvas></canvas><span data-i18n=”filter_auto”>Automatisch</span></div>
-          <div class=”scan-filter-card” data-filter=”gray”><canvas></canvas><span data-i18n=”filter_gray”>Graustufen</span></div>
-          <div class=”scan-filter-card” data-filter=”bw”><canvas></canvas><span data-i18n=”filter_bw”>Schwarz-Weiß</span></div>
-          <div class=”scan-filter-card” data-filter=”vivid”><canvas></canvas><span data-i18n=”filter_vivid”>Farbe kräftig</span></div>
+      <div id="scanFilterStage" style="display:none;">
+        <div class="scan-filter-grid" id="scanFilterGrid">
+          <div class="scan-filter-card" data-filter="original"><canvas></canvas><span data-i18n="filter_original">Original</span></div>
+          <div class="scan-filter-card" data-filter="auto"><canvas></canvas><span data-i18n="filter_auto">Automatisch</span></div>
+          <div class="scan-filter-card" data-filter="gray"><canvas></canvas><span data-i18n="filter_gray">Graustufen</span></div>
+          <div class="scan-filter-card" data-filter="bw"><canvas></canvas><span data-i18n="filter_bw">Schwarz-Weiß</span></div>
+          <div class="scan-filter-card" data-filter="vivid"><canvas></canvas><span data-i18n="filter_vivid">Farbe kräftig</span></div>
         </div>
-        <div style=”display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;”>
-          <label style=”flex:1 1 160px;font-size:.8rem;color:var(--muted);”><span data-i18n=”label_brightness”>Helligkeit</span>
-            <input type=”range” id=”scanBrightness” min=”-60” max=”60” value=”0” style=”width:100%;”>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
+          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);"><span data-i18n="label_brightness">Helligkeit</span>
+            <input type="range" id="scanBrightness" min="-60" max="60" value="0" style="width:100%;">
           </label>
-          <label style=”flex:1 1 160px;font-size:.8rem;color:var(--muted);”><span data-i18n=”label_contrast”>Kontrast</span>
-            <input type=”range” id=”scanContrast” min=”-60” max=”60” value=”0” style=”width:100%;”>
+          <label style="flex:1 1 160px;font-size:.8rem;color:var(--muted);"><span data-i18n="label_contrast">Kontrast</span>
+            <input type="range" id="scanContrast" min="-60" max="60" value="0" style="width:100%;">
           </label>
-          <button id=”btnScanAdjustReset” class=”tool-btn” style=”flex:0 0 auto;align-self:flex-end;” data-i18n=”btn_scan_crop_reset”>↺ Zurücksetzen</button>
+          <button id="btnScanAdjustReset" class="tool-btn" style="flex:0 0 auto;align-self:flex-end;" data-i18n="btn_scan_crop_reset">↺ Zurücksetzen</button>
         </div>
-        <div class=”modal-actions” style=”display:flex;justify-content:space-between;margin-top:14px;”>
-          <button id=”btnScanFilterBack” class=”tool-btn” data-i18n=”btn_scan_filter_back”>← Zurück</button>
-          <div style=”display:flex;gap:8px;”>
-            <button id=”btnScanCancel2” class=”tool-btn” data-i18n=”btn_scan_cancel”>Abbrechen</button>
-            <button id=”btnScanFilterDone” class=”btn-primary” data-i18n=”btn_scan_filter_done”>Seite übernehmen ✓</button>
+        <div class="modal-actions" style="display:flex;justify-content:space-between;margin-top:14px;">
+          <button id="btnScanFilterBack" class="tool-btn" data-i18n="btn_scan_filter_back">← Zurück</button>
+          <div style="display:flex;gap:8px;">
+            <button id="btnScanCancel2" class="tool-btn" data-i18n="btn_scan_cancel">Abbrechen</button>
+            <button id="btnScanFilterDone" class="btn-primary" data-i18n="btn_scan_filter_done">Seite übernehmen ✓</button>
           </div>
         </div>
       </div>
@@ -2210,25 +2210,25 @@
   </div>
 
   <!-- Modal: Mit Handy scannen -->
-  <div id=”modalPhoneScan” class=”modal-backdrop”>
-    <div class=”modal-box” style=”width:min(420px,100%); text-align:center;”>
-      <h3 data-i18n=”modal_phonescan_h3”>📱 Mit Handy scannen</h3>
-      <p style=”color:var(--muted); font-size:.9rem;” data-i18n=”phonescan_p”>Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
+  <div id="modalPhoneScan" class="modal-backdrop">
+    <div class="modal-box" style="width:min(420px,100%); text-align:center;">
+      <h3 data-i18n="modal_phonescan_h3">📱 Mit Handy scannen</h3>
+      <p style="color:var(--muted); font-size:.9rem;" data-i18n="phonescan_p">Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
         sich eine Scan-Seite im Handy-Browser – keine App nötig.</p>
-      <div id=”phoneScanQr” style=”display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;”>
-        <span style=”color:var(--muted); font-size:.85rem;” data-i18n=”phonescan_qr_wait”>QR-Code wird erstellt …</span>
+      <div id="phoneScanQr" style="display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;">
+        <span style="color:var(--muted); font-size:.85rem;" data-i18n="phonescan_qr_wait">QR-Code wird erstellt …</span>
       </div>
-      <p id=”phoneScanStatus” style=”font-weight:600; color:var(--accent);” data-i18n=”phonescan_status_prep”>Verbindung wird vorbereitet …</p>
-      <div class=”modal-actions” style=”justify-content:center;”>
-        <button id=”btnPhoneScanClose” class=”tool-btn” data-i18n=”btn_close_modal”>Schließen</button>
+      <p id="phoneScanStatus" style="font-weight:600; color:var(--accent);" data-i18n="phonescan_status_prep">Verbindung wird vorbereitet …</p>
+      <div class="modal-actions" style="justify-content:center;">
+        <button id="btnPhoneScanClose" class="tool-btn" data-i18n="btn_close_modal">Schließen</button>
       </div>
     </div>
   </div>
 
   <!-- Modal: Live-Kamera mit Echtzeit-Kantenerkennung -->
-  <div id=”modalLiveCam” class=”modal-backdrop”>
-    <div class=”modal-box” style=”width:min(680px,100%); text-align:center;”>
-      <h3 data-i18n=”modal_livecam_h3”>🎥 Live-Kamera (Auto-Scan)</h3>
+  <div id="modalLiveCam" class="modal-backdrop">
+    <div class="modal-box" style="width:min(680px,100%); text-align:center;">
+      <h3 data-i18n="modal_livecam_h3">🎥 Live-Kamera (Auto-Scan)</h3>
       <div style="position:relative; width:100%; max-width:640px; margin:0 auto; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:4/3;">
         <video id="liveCamVideo" autoplay playsinline muted style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;"></video>
         <canvas id="liveCamOverlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
