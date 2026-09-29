@@ -1303,11 +1303,12 @@
             </div>
         </div>
 
-        <!-- Tab Navigation (Phase 6 Week 3) -->
+        <!-- Tab Navigation (Phase 6 Week 3 + Phase 7 Week 2) -->
         <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('lebenslauf')">📄 Lebenslauf</button>
             <button class="tab-btn" onclick="switchTab('anschreiben')">💌 Anschreiben</button>
             <button class="tab-btn" onclick="switchTab('deckblatt')">🎨 Deckblatt</button>
+            <button class="tab-btn" onclick="switchTab('analytics')" style="margin-left: auto;">📊 Analytics</button>
         </div>
 
         <!-- Content -->
@@ -1478,6 +1479,79 @@
                         <li>Professionelle Designs für Ihre Branche</li>
                         <li>Ihr Foto wird automatisch eingefügt</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard (Phase 7 Week 2) -->
+        <div class="content-wrapper" id="analytics-content" style="display: none;">
+            <div class="form-column">
+                <div class="form-section">
+                    <div class="section-title">📊 Sitzungsübersicht</div>
+                    <div id="sessionOverview" style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <p style="color: var(--text-light); font-size: 0.875rem;">Sitzungen</p>
+                                <p style="font-size: 1.75rem; font-weight: 700; color: var(--primary);" id="totalSessions">0</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-light); font-size: 0.875rem;">Durchschn. Dauer</p>
+                                <p style="font-size: 1.75rem; font-weight: 700; color: var(--secondary);" id="avgDuration">0m</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-light); font-size: 0.875rem;">Bearbeitungen</p>
+                                <p style="font-size: 1.75rem; font-weight: 700; color: var(--accent);" id="totalEdits">0</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-light); font-size: 0.875rem;">Fehler</p>
+                                <p style="font-size: 1.75rem; font-weight: 700; color: var(--danger);" id="totalErrors">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">🔥 Feature-Nutzung</div>
+                    <div id="featureUsage" style="margin-top: 1rem;">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <div class="section-title">⚡ Performance-Daten</div>
+                    <div id="performanceData" style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                        <p><strong>Seitenladezeit:</strong> <span id="pageLoadTime">-</span>ms</p>
+                        <p><strong>Render-Zeit:</strong> <span id="renderTime">-</span>ms</p>
+                        <p><strong>Durchschn. Latenz:</strong> <span id="avgLatency">-</span>ms</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-column">
+                <div class="form-section">
+                    <div class="section-title">📈 Ereignisse Timeline</div>
+                    <div id="eventsTimeline" style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem;">
+                        <!-- Events populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="suggestions-column">
+                <div class="suggestions-header">📊 Dashboard Tools</div>
+                <button class="btn btn-primary" onclick="exportAnalyticsReport()" style="width: 100%; margin-bottom: 0.5rem;">📥 Bericht</button>
+                <button class="btn btn-secondary" onclick="clearAnalytics()" style="width: 100%; margin-bottom: 1rem;">🗑️ Löschen</button>
+
+                <div style="font-size: 0.875rem; line-height: 1.6; color: var(--text-light);">
+                    <p><strong>Übersicht:</strong></p>
+                    <p>Verfolgen Sie Ihre Anwendungsnutzung, Performance-Metriken und Benutzerverhalten. Daten werden lokal gespeichert und können in die Cloud synchronisiert werden.</p>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem;">🔗 Erweiterte Optionen</p>
+                    <div style="font-size: 0.875rem;">
+                        <p style="margin: 0.5rem 0;">
+                            <a onclick="openCloudAnalytics()" style="color: var(--primary); cursor: pointer; text-decoration: none;">☁️ Cloud-Daten</a>
+                        </p>
+                        <p style="margin: 0.5rem 0;">
+                            <a onclick="openErrorLog()" style="color: var(--primary); cursor: pointer; text-decoration: none;">🚨 Fehler-Log</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2352,33 +2426,7 @@
             }
         }
 
-        // Tab switching functionality
-        function switchTab(tabName) {
-            currentTab = tabName;
-
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // Update tab content visibility
-            document.querySelectorAll('[id$="-content"]').forEach(content => {
-                content.style.display = 'none';
-            });
-
-            const tabContent = document.getElementById(`${tabName}-content`);
-            if (tabContent) {
-                tabContent.style.display = 'flex';
-            }
-
-            // Load content based on tab
-            if (tabName === 'anschreiben' && coverLetterTemplates) {
-                renderCoverLetterTemplates();
-            } else if (tabName === 'deckblatt' && deckblattTemplates) {
-                renderDeckblattTemplates();
-            }
-        }
+        // Tab switching - moved to Phase 7 Week 2 section below
 
         // Render cover letter template selection
         function renderCoverLetterTemplates() {
@@ -3509,6 +3557,223 @@
         window.addEventListener('load', () => {
             initializeFirebase();
         });
+
+        // ===== PHASE 7 WEEK 2: ANALYTICS DASHBOARD =====
+
+        // Tab switching (updated to include analytics)
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.getElementById('lebenslauf-content').style.display = 'none';
+            document.getElementById('anschreiben-content').style.display = 'none';
+            document.getElementById('deckblatt-content').style.display = 'none';
+            document.getElementById('analytics-content').style.display = 'none';
+
+            // Remove active state from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            const tabMap = {
+                'lebenslauf': 'lebenslauf-content',
+                'anschreiben': 'anschreiben-content',
+                'deckblatt': 'deckblatt-content',
+                'analytics': 'analytics-content'
+            };
+
+            const contentId = tabMap[tabName];
+            if (contentId) {
+                document.getElementById(contentId).style.display = 'flex';
+            }
+
+            // Set active button
+            event.target.classList.add('active');
+
+            // Load content based on tab
+            if (tabName === 'anschreiben' && coverLetterTemplates) {
+                renderCoverLetterTemplates();
+            } else if (tabName === 'deckblatt' && deckblattTemplates) {
+                renderDeckblattTemplates();
+            } else if (tabName === 'analytics') {
+                refreshAnalyticsDashboard();
+            }
+
+            analytics.trackEvent('tab_switch', { tab: tabName });
+        }
+
+        // Analytics Dashboard Functions
+
+        function refreshAnalyticsDashboard() {
+            // Get current analytics data
+            const summary = analytics.getSessionSummary();
+
+            // Update session overview
+            document.getElementById('totalSessions').textContent = analytics.events.length > 0 ? '1' : '0';
+            const duration = Math.round(parseInt(summary.duration) / 60);
+            document.getElementById('avgDuration').textContent = duration + 'm';
+            document.getElementById('totalEdits').textContent = summary.userMetrics.totalEdits || 0;
+            document.getElementById('totalErrors').textContent = summary.userMetrics.errors.length || 0;
+
+            // Update performance data
+            document.getElementById('pageLoadTime').textContent = Math.round(summary.performance.pageLoadTime || 0);
+            document.getElementById('renderTime').textContent = Math.round(summary.performance.initialRenderTime || 0);
+
+            const avgLatency = summary.performance.interactionLatencies.length > 0
+                ? Math.round(summary.performance.interactionLatencies.reduce((a, b) => a + b.latency, 0) / summary.performance.interactionLatencies.length)
+                : 0;
+            document.getElementById('avgLatency').textContent = avgLatency;
+
+            // Update feature usage
+            updateFeatureUsageDisplay(summary.userMetrics);
+
+            // Update events timeline
+            updateEventsTimeline(analytics.events);
+        }
+
+        function updateFeatureUsageDisplay(metrics) {
+            const container = document.getElementById('featureUsage');
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
+                    <div style="padding: 0.75rem; background: var(--light); border-radius: 0.5rem;">
+                        <p style="display: flex; justify-content: space-between; margin: 0;">
+                            <span>📋 Vorlagen angesehen</span>
+                            <strong>${metrics.templatesViewed || 0}</strong>
+                        </p>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light); border-radius: 0.5rem;">
+                        <p style="display: flex; justify-content: space-between; margin: 0;">
+                            <span>📄 PDFs exportiert</span>
+                            <strong>${metrics.pdfExports || 0}</strong>
+                        </p>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light); border-radius: 0.5rem;">
+                        <p style="display: flex; justify-content: space-between; margin: 0;">
+                            <span>🌍 Sprachenwechsel</span>
+                            <strong>${metrics.languageSwitches || 0}</strong>
+                        </p>
+                    </div>
+                    <div style="padding: 0.75rem; background: var(--light); border-radius: 0.5rem;">
+                        <p style="display: flex; justify-content: space-between; margin: 0;">
+                            <span>🤖 KI-Analysen</span>
+                            <strong>${metrics.aiAnalysisRuns || 0}</strong>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateEventsTimeline(events) {
+            const container = document.getElementById('eventsTimeline');
+            if (events.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light); text-align: center;">Keine Ereignisse yet</p>';
+                return;
+            }
+
+            const recentEvents = events.slice(-20).reverse();
+            container.innerHTML = recentEvents.map((event, index) => {
+                const time = new Date(event.timestamp).toLocaleTimeString('de-DE');
+                const eventEmoji = {
+                    'page_load': '📄',
+                    'initial_render': '🎨',
+                    'user_edit': '✏️',
+                    'template_view': '📋',
+                    'pdf_export': '📥',
+                    'language_switch': '🌍',
+                    'ai_analysis': '🤖',
+                    'error': '🚨',
+                    'modal_close': '❌',
+                    'window_resize': '📐',
+                    'firebase_login': '🔐',
+                    'firebase_cv_saved': '💾'
+                };
+
+                const emoji = eventEmoji[event.name] || '📊';
+                return `
+                    <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;">
+                        <p style="margin: 0; display: flex; justify-content: space-between;">
+                            <span><strong>${emoji} ${event.name}</strong></span>
+                            <span style="color: var(--text-light);">${time}</span>
+                        </p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportAnalyticsReport() {
+            const data = analytics.exportAnalytics();
+            const report = {
+                exportedAt: new Date().toISOString(),
+                summary: data.summary,
+                eventCount: data.events.length,
+                recentEvents: data.events.slice(-50),
+                metrics: data.metrics
+            };
+
+            const jsonStr = JSON.stringify(report, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showAuthSuccess('Analytics-Bericht exportiert');
+            analytics.trackEvent('analytics_exported', { eventCount: data.events.length });
+        }
+
+        function clearAnalytics() {
+            if (confirm('Alle Analytics-Daten wirklich löschen?')) {
+                localStorage.removeItem('analyticsData');
+                analytics.events = [];
+                analytics.userMetrics = {
+                    totalEdits: 0,
+                    templatesViewed: 0,
+                    pdfExports: 0,
+                    languageSwitches: 0,
+                    aiAnalysisRuns: 0,
+                    errors: []
+                };
+                refreshAnalyticsDashboard();
+                showAuthSuccess('Analytics-Daten gelöscht');
+            }
+        }
+
+        function openCloudAnalytics() {
+            if (!currentUser) {
+                openAuthModal('login');
+                return;
+            }
+            showAuthSuccess('Cloud-Daten werden synchronisiert...');
+            if (typeof saveUserCVToCloud === 'function') {
+                saveUserCVToCloud(currentUser.uid);
+            }
+        }
+
+        function openErrorLog() {
+            const errors = analytics.userMetrics.errors || [];
+            let content = '<div style="padding: 1rem;">';
+
+            if (errors.length === 0) {
+                content += '<p style="color: var(--text-light);">Keine Fehler recorded</p>';
+            } else {
+                content += '<div style="max-height: 400px; overflow-y: auto;">';
+                errors.forEach((error, index) => {
+                    content += `
+                        <div style="padding: 0.75rem; background: var(--light); margin-bottom: 0.75rem; border-radius: 0.25rem;">
+                            <p style="margin: 0 0 0.25rem 0; font-weight: 600; color: var(--danger);">🚨 Error ${index + 1}</p>
+                            <p style="margin: 0 0 0.25rem 0; font-size: 0.875rem; font-family: monospace;">${error.message}</p>
+                            <p style="margin: 0; font-size: 0.75rem; color: var(--text-light);">${new Date(error.timestamp).toLocaleString('de-DE')}</p>
+                        </div>
+                    `;
+                });
+                content += '</div>';
+            }
+            content += '<button onclick="closeAuthModal(\'userProfileModal\')" class="auth-cancel-btn" style="width: 100%; margin-top: 1rem;">Schließen</button></div>';
+
+            document.getElementById('userProfileContent').innerHTML = content;
+            document.getElementById('userProfileModal').classList.add('active');
+        }
 
         // Check if running in development mode (show login if not authenticated)
         window.addEventListener('load', () => {
