@@ -6,6 +6,113 @@
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest-scanner.json" id="sdScannerManifestLink">
 <title>SD Scanner – Dokumente scannen</title>
+<script>document.addEventListener('sd-lang-changed', function (e) { document.title = (e.detail.lang === 'en' ? 'SD Scanner – Scan documents' : 'SD Scanner – Dokumente scannen'); });</script>
+<script>
+window.SD_I18N = {
+  de: {
+    nav_all_scans: '📁 Alle Scans', nav_all_scans_plain: 'Alle Scans', nav_overview: '← Zur Übersicht',
+    inapp_browser_warning: '⚠️ Diese Seite scheint gerade in der eingebauten Vorschau einer anderen App (z. B. WhatsApp, Instagram, Facebook) geöffnet zu sein. Dort funktioniert die Kamera nicht. Bitte tippe oben rechts auf <b>„…"</b> bzw. <b>„im Browser öffnen"</b>, oder öffne diese Adresse direkt in Safari/Chrome.',
+    home_search_placeholder: 'Dokumente durchsuchen …',
+    menu_new_scan: '📄 Neuer Scan (Dokumenttyp wählen)', menu_overview: '🏠 Zur App-Übersicht',
+    menu_autoscan_default: 'Automatisch scannen (Auto-Erkennung) als Standard',
+    cloud_login: '🔑 Anmelden (optional)', cloud_save: '☁️ In meinem Konto speichern',
+    cloud_load: '☁️ Aus meinem Konto laden', cloud_logout: '🚪 Abmelden',
+    capture_h1: 'Dokument scannen',
+    capture_hint: 'Foto aufnehmen oder ein vorhandenes Bild auswählen. Danach kannst du zuschneiden und einen Filter wählen – oder das Original behalten.',
+    doctype_label: 'Was scannst du?', doctype_dokument: '📄 Dokument (allgemein)', doctype_reisepass: '🛂 Reisepass',
+    doctype_ausweis: '🪪 Ausweis (Vorder- & Rückseite)',
+    ausweis_banner: '🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite des Ausweises fotografieren.',
+    capture_box_hint: 'Kamera öffnen oder Bild wählen',
+    btn_open_camera_scanner: '📷 Kamera öffnen (Scanner)', btn_take_photo: '📷 Foto aufnehmen', btn_choose_image: '🖼️ Bild auswählen',
+    mode_auto: 'Auto', mode_manual: 'Manuell',
+    livecam_hint_starting: 'Kamera wird gestartet …', btn_cancel: 'Abbrechen', btn_livecam_shutter: '📸 Jetzt aufnehmen',
+    btn_batch_done_prefix: '✅ Fertig (', btn_batch_done_suffix: ' Seiten)',
+    pages_summary_h1: 'Bisherige Seiten', btn_add_another: '+ Weitere Seite', btn_finish_export: '✅ Fertig – Exportieren',
+    btn_review_prev: '← Vorherige Seite', btn_review_skip: 'Überspringen',
+    crop_h1: 'Ecken anpassen', crop_hint: 'Ziehe die vier Punkte auf die Ecken des Dokuments. Standardmäßig ist das ganze Bild ausgewählt.',
+    btn_crop_reset: '↺ Zurücksetzen', btn_rotate_left: '⟲ Links', rotate_left_hint: '90° nach links drehen',
+    btn_rotate_right: '⟳ Rechts', rotate_right_hint: '90° nach rechts drehen', btn_crop_next: 'Weiter →',
+    filter_h1: 'Wie soll die Seite aussehen?', filter_hint: 'Wähle eine Variante. Du kannst jederzeit zum Original zurück.',
+    filter_original: 'Original', filter_auto_improved: 'Automatisch verbessert', filter_gray: 'Graustufen',
+    filter_bw: 'Schwarz-Weiß', filter_vivid: 'Farbe kräftig',
+    btn_filter_back: '← Zurück', btn_filter_done: 'Seite übernehmen ✓',
+    export_h1: 'Exportieren', export_hint: 'Alles bereit. Wähle das gewünschte Format.',
+    chk_watermark: 'Wasserzeichen einfügen', watermark_placeholder: 'Wasserzeichen-Text (z. B. Firmenname)',
+    btn_save_pdf: '📄 Als PDF speichern', btn_save_images: '🖼️ Als Bilder speichern (JPG)',
+    btn_share_pdf: '📤 Teilen (auch zu Google Drive / Dropbox)', btn_save_to_library: '📁 In Bibliothek speichern',
+    btn_run_ocr: '🔤 Text erkennen (OCR)', btn_save_txt: '📝 Als TXT speichern', btn_back: '← Zurück',
+    ocr_result_h2: 'Erkannter Text',
+    markup_h1: 'Seite bearbeiten', markup_hint: 'Zeichnen, Text/Unterschrift einfügen oder störende Stellen mit dem Radiergummi entfernen.',
+    tool_pen: '✏️ Stift', tool_signature: '✒️ Unterschrift', tool_eraser: '🧽 Radiergummi', tool_text: '🔤 Text', tool_highlight: '🖍️ Hervorheben',
+    btn_markup_undo: '↩️ Rückgängig', btn_markup_done: '✓ Fertig',
+    btn_new_folder: '+ Neuer Ordner',
+    bottom_photos: 'Fotos', bottom_camera: 'Kamera',
+    photos_from_gallery: '🖼️ Fotos aus Galerie hochladen', photos_other_file: '📄 Andere Datei hochladen (PDF)',
+    footer_attrib: 'SD Scanner · Teil von SD Bewerbungsstudio',
+    review_page_of: 'Seite {n}/{total}',
+    st_auto_processing: 'Seite wird automatisch verarbeitet …', st_scanner_loading: 'Scanner wird geladen …',
+    st_batch_captured_checked: 'Seite(n) im Batch-Scan erfasst und geprüft.', st_batch_captured: 'Seite(n) im Batch-Scan erfasst.',
+    st_edges_detected: 'Automatisch erkannte Kanten – bei Bedarf per Hand nachziehen.',
+    st_edges_detecting: 'Kanten werden automatisch erkannt …', st_cropping: 'Wird zugeschnitten …',
+    st_cloud_saving: '☁️ Wird in deinem Konto gespeichert …', st_cloud_saved: '✅ Alle Scans in deinem Konto gespeichert.',
+    st_cloud_save_err: 'Fehler beim Speichern in der Cloud: ', st_cloud_loading: '☁️ Wird aus deinem Konto geladen …',
+    st_cloud_nothing_saved: 'In deinem Konto wurde noch nichts gespeichert.', st_cloud_loaded: '✅ Scans aus deinem Konto geladen.',
+    st_cloud_load_err: 'In deinem Konto wurde noch nichts gespeichert oder es gab einen Fehler beim Laden.',
+    confirm_cloud_load_replace: 'Die Scans hier auf diesem Gerät durch den in deinem Konto gespeicherten Stand ersetzen? Bereits hier vorhandene, noch nicht in der Cloud gesicherte Scans gehen dabei verloren.'
+  },
+  en: {
+    nav_all_scans: '📁 All scans', nav_all_scans_plain: 'All scans', nav_overview: '← Back to overview',
+    inapp_browser_warning: '⚠️ This page seems to be open inside another app\'s built-in preview (e.g. WhatsApp, Instagram, Facebook). The camera does not work there. Please tap <b>"…"</b> or <b>"Open in browser"</b> at the top right, or open this address directly in Safari/Chrome.',
+    home_search_placeholder: 'Search documents …',
+    menu_new_scan: '📄 New scan (choose document type)', menu_overview: '🏠 Go to app overview',
+    menu_autoscan_default: 'Scan automatically (auto-detect) by default',
+    cloud_login: '🔑 Sign in (optional)', cloud_save: '☁️ Save to my account',
+    cloud_load: '☁️ Load from my account', cloud_logout: '🚪 Sign out',
+    capture_h1: 'Scan document',
+    capture_hint: 'Take a photo or choose an existing image. Then you can crop it and choose a filter – or keep the original.',
+    doctype_label: 'What are you scanning?', doctype_dokument: '📄 Document (general)', doctype_reisepass: '🛂 Passport',
+    doctype_ausweis: '🪪 ID card (front & back)',
+    ausweis_banner: '🪪 Front saved ✓ – now please photograph the back of the ID card.',
+    capture_box_hint: 'Open camera or choose an image',
+    btn_open_camera_scanner: '📷 Open camera (scanner)', btn_take_photo: '📷 Take photo', btn_choose_image: '🖼️ Choose image',
+    mode_auto: 'Auto', mode_manual: 'Manual',
+    livecam_hint_starting: 'Starting camera …', btn_cancel: 'Cancel', btn_livecam_shutter: '📸 Capture now',
+    btn_batch_done_prefix: '✅ Done (', btn_batch_done_suffix: ' pages)',
+    pages_summary_h1: 'Pages so far', btn_add_another: '+ Another page', btn_finish_export: '✅ Done – export',
+    btn_review_prev: '← Previous page', btn_review_skip: 'Skip',
+    crop_h1: 'Adjust corners', crop_hint: 'Drag the four points onto the corners of the document. By default the whole image is selected.',
+    btn_crop_reset: '↺ Reset', btn_rotate_left: '⟲ Left', rotate_left_hint: 'Rotate 90° left',
+    btn_rotate_right: '⟳ Right', rotate_right_hint: 'Rotate 90° right', btn_crop_next: 'Next →',
+    filter_h1: 'How should the page look?', filter_hint: 'Choose a variant. You can always go back to the original.',
+    filter_original: 'Original', filter_auto_improved: 'Automatically enhanced', filter_gray: 'Grayscale',
+    filter_bw: 'Black & white', filter_vivid: 'Vivid color',
+    btn_filter_back: '← Back', btn_filter_done: 'Use this page ✓',
+    export_h1: 'Export', export_hint: 'Everything is ready. Choose the format you want.',
+    chk_watermark: 'Add watermark', watermark_placeholder: 'Watermark text (e.g. company name)',
+    btn_save_pdf: '📄 Save as PDF', btn_save_images: '🖼️ Save as images (JPG)',
+    btn_share_pdf: '📤 Share (also to Google Drive / Dropbox)', btn_save_to_library: '📁 Save to library',
+    btn_run_ocr: '🔤 Recognize text (OCR)', btn_save_txt: '📝 Save as TXT', btn_back: '← Back',
+    ocr_result_h2: 'Recognized text',
+    markup_h1: 'Edit page', markup_hint: 'Draw, add text/signature, or remove distracting areas with the eraser.',
+    tool_pen: '✏️ Pen', tool_signature: '✒️ Signature', tool_eraser: '🧽 Eraser', tool_text: '🔤 Text', tool_highlight: '🖍️ Highlight',
+    btn_markup_undo: '↩️ Undo', btn_markup_done: '✓ Done',
+    btn_new_folder: '+ New folder',
+    bottom_photos: 'Photos', bottom_camera: 'Camera',
+    photos_from_gallery: '🖼️ Upload photos from gallery', photos_other_file: '📄 Upload other file (PDF)',
+    footer_attrib: 'SD Scanner · Part of SD Bewerbungsstudio',
+    review_page_of: 'Page {n}/{total}',
+    st_auto_processing: 'Page is being processed automatically …', st_scanner_loading: 'Loading scanner …',
+    st_batch_captured_checked: 'page(s) captured and checked in batch scan.', st_batch_captured: 'page(s) captured in batch scan.',
+    st_edges_detected: 'Edges detected automatically – adjust by hand if needed.',
+    st_edges_detecting: 'Detecting edges automatically …', st_cropping: 'Cropping …',
+    st_cloud_saving: '☁️ Saving to your account …', st_cloud_saved: '✅ All scans saved to your account.',
+    st_cloud_save_err: 'Error saving to the cloud: ', st_cloud_loading: '☁️ Loading from your account …',
+    st_cloud_nothing_saved: 'Nothing has been saved to your account yet.', st_cloud_loaded: '✅ Scans loaded from your account.',
+    st_cloud_load_err: 'Nothing has been saved to your account yet, or there was an error loading it.',
+    confirm_cloud_load_replace: 'Replace the scans on this device with the version saved in your account? Any scans that are only on this device and not yet backed up to the cloud will be lost.'
+  }
+};
+</script>
 <script>
   // Der Scanner ist bewusst nur fuer Smartphones gedacht (braucht eine
   // Kamera, macht am Computer keinen Sinn). Auf einem Desktop-Geraet wird
@@ -432,6 +539,15 @@
     padding:6px 16px; border-radius:16px; cursor:pointer;
   }
   .livecam-mode-toggle .mode-btn.selected{ background:#fff; color:#111; }
+  .sd-lang-switch{
+    display:flex; gap:4px; background:rgba(255,255,255,.08); border:1px solid var(--border);
+    border-radius:999px; padding:3px;
+  }
+  .sd-lang-btn{
+    border:0; background:transparent; color:var(--muted); font-size:.78rem; font-weight:700;
+    padding:4px 9px; border-radius:999px; cursor:pointer;
+  }
+  .sd-lang-btn.active{ background:var(--primary); color:#06251f; }
 </style>
 </head>
 <body>
@@ -442,8 +558,12 @@
   <header id="mainHeader">
     <div class="brand"><div class="brand-mark">SD</div><span>SD Scanner</span></div>
     <div style="display:flex; align-items:center; gap:16px;">
-      <a class="back" href="#" id="btnOpenLibrary">📁 Alle Scans</a>
-      <a class="back" href="index.html">← Zur Übersicht</a>
+      <div class="sd-lang-switch">
+        <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+        <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+      </div>
+      <a class="back" href="#" id="btnOpenLibrary" data-i18n="nav_all_scans">📁 Alle Scans</a>
+      <a class="back" href="index.html" data-i18n="nav_overview">← Zur Übersicht</a>
     </div>
   </header>
 
@@ -451,7 +571,7 @@
        Kamera-API oft komplett, auch wenn die Seite selbst über HTTPS läuft. Das sieht dann für
        den Nutzer genauso aus wie ein "kaputter Scanner", ist aber nur mit dem echten Safari/
        Chrome zu beheben – deshalb hier früh und deutlich darauf hinweisen. -->
-  <div id="inAppBrowserWarning" style="display:none; background:#7a1f1f; color:#fff; padding:12px 16px; font-size:14px; line-height:1.5;">
+  <div id="inAppBrowserWarning" style="display:none; background:#7a1f1f; color:#fff; padding:12px 16px; font-size:14px; line-height:1.5;" data-i18n-html="1" data-i18n="inapp_browser_warning">
     ⚠️ Diese Seite scheint gerade in der eingebauten Vorschau einer anderen App (z. B. WhatsApp, Instagram, Facebook) geöffnet zu sein. Dort funktioniert die Kamera nicht. Bitte tippe oben rechts auf <b>„…"</b> bzw. <b>„im Browser öffnen"</b>, oder öffne diese Adresse direkt in Safari/Chrome.
   </div>
 
@@ -460,54 +580,58 @@
     <button type="button" class="home-icon-btn" id="btnHomeMenu">☰</button>
     <span class="home-title" id="homeTitle">Alle Scans (0)</span>
     <div class="home-topbar-actions">
+      <div class="sd-lang-switch">
+        <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+        <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+      </div>
       <button type="button" class="home-icon-btn" id="btnHomeSearch">🔍</button>
       <button type="button" class="home-icon-btn" id="btnHomeCloud">☁️</button>
       <button type="button" class="home-icon-btn" id="btnHomeMore">⋮</button>
     </div>
   </div>
-  <input type="text" id="homeSearchInput" class="home-search-input" placeholder="Dokumente durchsuchen …" style="display:none;">
+  <input type="text" id="homeSearchInput" class="home-search-input" data-i18n-placeholder="home_search_placeholder" placeholder="Dokumente durchsuchen …" style="display:none;">
 
   <div class="home-dropdown" id="homeMenuDropdown" style="display:none;">
-    <button type="button" data-action="new-scan">📄 Neuer Scan (Dokumenttyp wählen)</button>
-    <button type="button" data-action="overview">🏠 Zur App-Übersicht</button>
+    <button type="button" data-action="new-scan" data-i18n="menu_new_scan">📄 Neuer Scan (Dokumenttyp wählen)</button>
+    <button type="button" data-action="overview" data-i18n="menu_overview">🏠 Zur App-Übersicht</button>
   </div>
   <div class="home-dropdown" id="homeMoreDropdown" style="display:none;">
     <label class="checkbox-row" style="padding:10px 14px;">
       <input type="checkbox" id="chkAutoScanDefault" checked>
-      Automatisch scannen (Auto-Erkennung) als Standard
+      <span data-i18n="menu_autoscan_default">Automatisch scannen (Auto-Erkennung) als Standard</span>
     </label>
   </div>
   <div class="home-dropdown" id="homeCloudDropdown" style="display:none;">
-    <button type="button" data-action="cloud-login" id="cloudMenuLogin">🔑 Anmelden (optional)</button>
-    <button type="button" data-action="cloud-save" id="cloudMenuSave" style="display:none;">☁️ In meinem Konto speichern</button>
-    <button type="button" data-action="cloud-load" id="cloudMenuLoad" style="display:none;">☁️ Aus meinem Konto laden</button>
-    <button type="button" data-action="cloud-logout" id="cloudMenuLogout" style="display:none;">🚪 Abmelden</button>
+    <button type="button" data-action="cloud-login" id="cloudMenuLogin" data-i18n="cloud_login">🔑 Anmelden (optional)</button>
+    <button type="button" data-action="cloud-save" id="cloudMenuSave" style="display:none;" data-i18n="cloud_save">☁️ In meinem Konto speichern</button>
+    <button type="button" data-action="cloud-load" id="cloudMenuLoad" style="display:none;" data-i18n="cloud_load">☁️ Aus meinem Konto laden</button>
+    <button type="button" data-action="cloud-logout" id="cloudMenuLogout" style="display:none;" data-i18n="cloud_logout">🚪 Abmelden</button>
   </div>
 
   <main>
     <!-- STEP: capture -->
     <section class="step" id="stepCapture">
-      <h1>Dokument scannen</h1>
-      <p class="hint">Foto aufnehmen oder ein vorhandenes Bild auswählen. Danach kannst du zuschneiden und einen Filter wählen – oder das Original behalten.</p>
+      <h1 data-i18n="capture_h1">Dokument scannen</h1>
+      <p class="hint" data-i18n="capture_hint">Foto aufnehmen oder ein vorhandenes Bild auswählen. Danach kannst du zuschneiden und einen Filter wählen – oder das Original behalten.</p>
 
       <div class="doctype-row" id="doctypeRow">
-        <span class="doctype-label">Was scannst du?</span>
+        <span class="doctype-label" data-i18n="doctype_label">Was scannst du?</span>
         <div class="doctype-options">
-          <button type="button" class="doctype-btn selected" data-type="dokument">📄 Dokument (allgemein)</button>
-          <button type="button" class="doctype-btn" data-type="reisepass">🛂 Reisepass</button>
-          <button type="button" class="doctype-btn" data-type="ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
+          <button type="button" class="doctype-btn selected" data-type="dokument" data-i18n="doctype_dokument">📄 Dokument (allgemein)</button>
+          <button type="button" class="doctype-btn" data-type="reisepass" data-i18n="doctype_reisepass">🛂 Reisepass</button>
+          <button type="button" class="doctype-btn" data-type="ausweis" data-i18n="doctype_ausweis">🪪 Ausweis (Vorder- &amp; Rückseite)</button>
         </div>
       </div>
 
-      <div class="ausweis-banner" id="ausweisBanner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite des Ausweises fotografieren.</div>
+      <div class="ausweis-banner" id="ausweisBanner" data-i18n="ausweis_banner">🪪 Vorderseite gespeichert ✓ – jetzt bitte die Rückseite des Ausweises fotografieren.</div>
 
       <div class="capture-box">
         <div class="capture-icon">📷</div>
-        <p style="color:var(--muted); margin:0 0 6px;">Kamera öffnen oder Bild wählen</p>
+        <p style="color:var(--muted); margin:0 0 6px;" data-i18n="capture_box_hint">Kamera öffnen oder Bild wählen</p>
         <div class="btn-row">
-          <button type="button" class="btn primary" id="btnLiveCam">📷 Kamera öffnen (Scanner)</button>
-          <label class="btn secondary" for="cameraInput">📷 Foto aufnehmen</label>
-          <label class="btn secondary" for="fileInput">🖼️ Bild auswählen</label>
+          <button type="button" class="btn primary" id="btnLiveCam" data-i18n="btn_open_camera_scanner">📷 Kamera öffnen (Scanner)</button>
+          <label class="btn secondary" for="cameraInput" data-i18n="btn_take_photo">📷 Foto aufnehmen</label>
+          <label class="btn secondary" for="fileInput" data-i18n="btn_choose_image">🖼️ Bild auswählen</label>
         </div>
         <input type="file" id="cameraInput" accept="image/*" capture="environment">
         <input type="file" id="fileInput" accept="image/*">
@@ -520,24 +644,24 @@
           <div class="livecam-flash" id="liveCamFlash"></div>
           <div class="livecam-badge" id="liveCamBadge" style="display:none;">0</div>
           <div class="livecam-mode-toggle" id="liveCamModeToggle">
-            <button type="button" class="mode-btn selected" data-mode="auto">Auto</button>
-            <button type="button" class="mode-btn" data-mode="manuell">Manuell</button>
+            <button type="button" class="mode-btn selected" data-mode="auto" data-i18n="mode_auto">Auto</button>
+            <button type="button" class="mode-btn" data-mode="manuell" data-i18n="mode_manual">Manuell</button>
           </div>
         </div>
-        <p class="livecam-hint" id="liveCamHint">Kamera wird gestartet …</p>
+        <p class="livecam-hint" id="liveCamHint" data-i18n="livecam_hint_starting">Kamera wird gestartet …</p>
         <div class="btn-row">
-          <button type="button" class="btn secondary" id="btnLiveCamClose">Abbrechen</button>
-          <button type="button" class="btn primary" id="btnLiveCamShutter">📸 Jetzt aufnehmen</button>
-          <button type="button" class="btn primary" id="btnBatchDone" style="display:none;">✅ Fertig (<span id="batchCount">0</span> Seiten)</button>
+          <button type="button" class="btn secondary" id="btnLiveCamClose" data-i18n="btn_cancel">Abbrechen</button>
+          <button type="button" class="btn primary" id="btnLiveCamShutter" data-i18n="btn_livecam_shutter">📸 Jetzt aufnehmen</button>
+          <button type="button" class="btn primary" id="btnBatchDone" style="display:none;"><span data-i18n="btn_batch_done_prefix">✅ Fertig (</span><span id="batchCount">0</span><span data-i18n="btn_batch_done_suffix"> Seiten)</span></button>
         </div>
       </div>
 
       <div id="pagesSummary" style="display:none;">
-        <h1 style="margin-top:32px;">Bisherige Seiten</h1>
+        <h1 style="margin-top:32px;" data-i18n="pages_summary_h1">Bisherige Seiten</h1>
         <div class="pages-grid" id="pagesGrid"></div>
         <div class="btn-row">
-          <button class="btn secondary" id="btnAddAnother">+ Weitere Seite</button>
-          <button class="btn primary" id="btnExport">✅ Fertig – Exportieren</button>
+          <button class="btn secondary" id="btnAddAnother" data-i18n="btn_add_another">+ Weitere Seite</button>
+          <button class="btn primary" id="btnExport" data-i18n="btn_finish_export">✅ Fertig – Exportieren</button>
         </div>
       </div>
     </section>
@@ -545,12 +669,12 @@
     <!-- STEP: crop -->
     <section class="step" id="stepCrop">
       <div class="review-bar" id="reviewBar" style="display:none;">
-        <button class="btn ghost" id="btnReviewPrev">← Vorherige Seite</button>
+        <button class="btn ghost" id="btnReviewPrev" data-i18n="btn_review_prev">← Vorherige Seite</button>
         <span class="review-counter" id="reviewCounter">Seite 1/1</span>
-        <button class="btn ghost" id="btnReviewSkip">Überspringen</button>
+        <button class="btn ghost" id="btnReviewSkip" data-i18n="btn_review_skip">Überspringen</button>
       </div>
-      <h1>Ecken anpassen</h1>
-      <p class="hint">Ziehe die vier Punkte auf die Ecken des Dokuments. Standardmäßig ist das ganze Bild ausgewählt.</p>
+      <h1 data-i18n="crop_h1">Ecken anpassen</h1>
+      <p class="hint" data-i18n="crop_hint">Ziehe die vier Punkte auf die Ecken des Dokuments. Standardmäßig ist das ganze Bild ausgewählt.</p>
       <div class="crop-wrap" id="cropWrap">
         <canvas id="cropCanvas"></canvas>
         <div class="handle" id="h0"></div>
@@ -559,92 +683,92 @@
         <div class="handle" id="h3"></div>
       </div>
       <div class="btn-row">
-        <button class="btn ghost" id="btnCropReset">↺ Zurücksetzen</button>
-        <button class="btn secondary" id="btnRotateLeft" title="90° nach links drehen">⟲ Links</button>
-        <button class="btn secondary" id="btnRotateRight" title="90° nach rechts drehen">⟳ Rechts</button>
-        <button class="btn primary" id="btnCropNext">Weiter →</button>
+        <button class="btn ghost" id="btnCropReset" data-i18n="btn_crop_reset">↺ Zurücksetzen</button>
+        <button class="btn secondary" id="btnRotateLeft" data-i18n="btn_rotate_left" data-i18n-title="rotate_left_hint" title="90° nach links drehen">⟲ Links</button>
+        <button class="btn secondary" id="btnRotateRight" data-i18n="btn_rotate_right" data-i18n-title="rotate_right_hint" title="90° nach rechts drehen">⟳ Rechts</button>
+        <button class="btn primary" id="btnCropNext" data-i18n="btn_crop_next">Weiter →</button>
       </div>
     </section>
 
     <!-- STEP: filter -->
     <section class="step" id="stepFilter">
-      <h1>Wie soll die Seite aussehen?</h1>
-      <p class="hint">Wähle eine Variante. Du kannst jederzeit zum Original zurück.</p>
+      <h1 data-i18n="filter_h1">Wie soll die Seite aussehen?</h1>
+      <p class="hint" data-i18n="filter_hint">Wähle eine Variante. Du kannst jederzeit zum Original zurück.</p>
       <div class="filter-grid" id="filterGrid">
-        <div class="filter-card" data-filter="original"><canvas></canvas><span>Original</span></div>
-        <div class="filter-card" data-filter="auto"><canvas></canvas><span>Automatisch verbessert</span></div>
-        <div class="filter-card" data-filter="gray"><canvas></canvas><span>Graustufen</span></div>
-        <div class="filter-card" data-filter="bw"><canvas></canvas><span>Schwarz-Weiß</span></div>
-        <div class="filter-card" data-filter="vivid"><canvas></canvas><span>Farbe kräftig</span></div>
+        <div class="filter-card" data-filter="original"><canvas></canvas><span data-i18n="filter_original">Original</span></div>
+        <div class="filter-card" data-filter="auto"><canvas></canvas><span data-i18n="filter_auto_improved">Automatisch verbessert</span></div>
+        <div class="filter-card" data-filter="gray"><canvas></canvas><span data-i18n="filter_gray">Graustufen</span></div>
+        <div class="filter-card" data-filter="bw"><canvas></canvas><span data-i18n="filter_bw">Schwarz-Weiß</span></div>
+        <div class="filter-card" data-filter="vivid"><canvas></canvas><span data-i18n="filter_vivid">Farbe kräftig</span></div>
       </div>
       <div class="btn-row">
-        <button class="btn ghost" id="btnFilterBack">← Zurück</button>
-        <button class="btn primary" id="btnFilterNext">Seite übernehmen ✓</button>
+        <button class="btn ghost" id="btnFilterBack" data-i18n="btn_filter_back">← Zurück</button>
+        <button class="btn primary" id="btnFilterNext" data-i18n="btn_filter_done">Seite übernehmen ✓</button>
       </div>
     </section>
 
     <!-- STEP: export -->
     <section class="step" id="stepExport">
-      <h1>Exportieren</h1>
-      <p class="hint" id="exportHint">Alles bereit. Wähle das gewünschte Format.</p>
+      <h1 data-i18n="export_h1">Exportieren</h1>
+      <p class="hint" id="exportHint" data-i18n="export_hint">Alles bereit. Wähle das gewünschte Format.</p>
       <div class="pages-grid" id="exportPagesGrid"></div>
 
       <div class="export-options">
         <label class="checkbox-row">
           <input type="checkbox" id="chkWatermark">
-          Wasserzeichen einfügen
+          <span data-i18n="chk_watermark">Wasserzeichen einfügen</span>
         </label>
-        <input type="text" id="watermarkText" placeholder="Wasserzeichen-Text (z. B. Firmenname)" style="display:none;">
+        <input type="text" id="watermarkText" data-i18n-placeholder="watermark_placeholder" placeholder="Wasserzeichen-Text (z. B. Firmenname)" style="display:none;">
       </div>
 
       <div class="btn-row">
-        <button class="btn primary" id="btnSavePdf">📄 Als PDF speichern</button>
-        <button class="btn secondary" id="btnSaveImages">🖼️ Als Bilder speichern (JPG)</button>
-        <button class="btn secondary" id="btnSharePdf">📤 Teilen (auch zu Google Drive / Dropbox)</button>
-        <button class="btn secondary" id="btnSaveToLibrary">📁 In Bibliothek speichern</button>
-        <button class="btn secondary" id="btnRunOcr">🔤 Text erkennen (OCR)</button>
-        <button class="btn secondary" id="btnSaveTxt" style="display:none;">📝 Als TXT speichern</button>
-        <button class="btn ghost" id="btnBackToPages">← Zurück</button>
+        <button class="btn primary" id="btnSavePdf" data-i18n="btn_save_pdf">📄 Als PDF speichern</button>
+        <button class="btn secondary" id="btnSaveImages" data-i18n="btn_save_images">🖼️ Als Bilder speichern (JPG)</button>
+        <button class="btn secondary" id="btnSharePdf" data-i18n="btn_share_pdf">📤 Teilen (auch zu Google Drive / Dropbox)</button>
+        <button class="btn secondary" id="btnSaveToLibrary" data-i18n="btn_save_to_library">📁 In Bibliothek speichern</button>
+        <button class="btn secondary" id="btnRunOcr" data-i18n="btn_run_ocr">🔤 Text erkennen (OCR)</button>
+        <button class="btn secondary" id="btnSaveTxt" style="display:none;" data-i18n="btn_save_txt">📝 Als TXT speichern</button>
+        <button class="btn ghost" id="btnBackToPages" data-i18n="btn_back">← Zurück</button>
       </div>
       <p class="status-bar" id="exportStatus"></p>
 
       <div id="ocrResult" style="display:none;">
-        <h2 style="font-size:16px; margin:20px 0 8px;">Erkannter Text</h2>
+        <h2 style="font-size:16px; margin:20px 0 8px;" data-i18n="ocr_result_h2">Erkannter Text</h2>
         <textarea id="ocrText" rows="10" style="width:100%; box-sizing:border-box; font-family:monospace; font-size:13px;" readonly></textarea>
       </div>
     </section>
 
     <!-- STEP: markup / annotation editor -->
     <section class="step" id="stepMarkup">
-      <h1>Seite bearbeiten</h1>
-      <p class="hint">Zeichnen, Text/Unterschrift einfügen oder störende Stellen mit dem Radiergummi entfernen.</p>
+      <h1 data-i18n="markup_h1">Seite bearbeiten</h1>
+      <p class="hint" data-i18n="markup_hint">Zeichnen, Text/Unterschrift einfügen oder störende Stellen mit dem Radiergummi entfernen.</p>
       <div class="markup-toolbar">
-        <button type="button" class="markup-tool selected" data-tool="pen">✏️ Stift</button>
-        <button type="button" class="markup-tool" data-tool="signature">✒️ Unterschrift</button>
-        <button type="button" class="markup-tool" data-tool="eraser">🧽 Radiergummi</button>
-        <button type="button" class="markup-tool" data-tool="text">🔤 Text</button>
-        <button type="button" class="markup-tool" data-tool="highlight">🖍️ Hervorheben</button>
+        <button type="button" class="markup-tool selected" data-tool="pen" data-i18n="tool_pen">✏️ Stift</button>
+        <button type="button" class="markup-tool" data-tool="signature" data-i18n="tool_signature">✒️ Unterschrift</button>
+        <button type="button" class="markup-tool" data-tool="eraser" data-i18n="tool_eraser">🧽 Radiergummi</button>
+        <button type="button" class="markup-tool" data-tool="text" data-i18n="tool_text">🔤 Text</button>
+        <button type="button" class="markup-tool" data-tool="highlight" data-i18n="tool_highlight">🖍️ Hervorheben</button>
         <span class="markup-colors">
           <button type="button" class="markup-color selected" data-color="#ff3b30" style="background:#ff3b30;"></button>
           <button type="button" class="markup-color" data-color="#111111" style="background:#111111;"></button>
           <button type="button" class="markup-color" data-color="#0a63ff" style="background:#0a63ff;"></button>
           <button type="button" class="markup-color" data-color="#12b76a" style="background:#12b76a;"></button>
         </span>
-        <button type="button" class="btn ghost" id="btnMarkupUndo">↩️ Rückgängig</button>
+        <button type="button" class="btn ghost" id="btnMarkupUndo" data-i18n="btn_markup_undo">↩️ Rückgängig</button>
       </div>
       <div class="markup-wrap" id="markupWrap">
         <canvas id="markupCanvas"></canvas>
       </div>
       <div class="btn-row">
-        <button class="btn ghost" id="btnMarkupCancel">Abbrechen</button>
-        <button class="btn primary" id="btnMarkupDone">✓ Fertig</button>
+        <button class="btn ghost" id="btnMarkupCancel" data-i18n="btn_cancel">Abbrechen</button>
+        <button class="btn primary" id="btnMarkupDone" data-i18n="btn_markup_done">✓ Fertig</button>
       </div>
     </section>
 
     <!-- STEP: library / Startbildschirm (Ordner/Organisation) -->
     <section class="step active" id="stepLibrary">
       <div class="folder-row" id="folderRow"></div>
-      <button class="btn secondary" id="btnNewFolder" style="margin-bottom:14px;">+ Neuer Ordner</button>
+      <button class="btn secondary" id="btnNewFolder" style="margin-bottom:14px;" data-i18n="btn_new_folder">+ Neuer Ordner</button>
       <div class="library-list" id="libraryGrid"></div>
       <p class="status-bar" id="libraryStatus"></p>
     </section>
@@ -655,19 +779,19 @@
   <!-- Feste Fußleiste auf dem Startbildschirm: Fotos importieren / Kamera direkt öffnen -->
   <div class="home-bottombar" id="homeBottombar">
     <button type="button" class="home-bottom-btn" id="btnHomePhotos">
-      <span class="home-bottom-icon">🖼️</span><span>Fotos</span>
+      <span class="home-bottom-icon">🖼️</span><span data-i18n="bottom_photos">Fotos</span>
     </button>
     <button type="button" class="home-bottom-btn primary" id="btnHomeCamera">
-      <span class="home-bottom-icon">📷</span><span>Kamera</span>
+      <span class="home-bottom-icon">📷</span><span data-i18n="bottom_camera">Kamera</span>
     </button>
   </div>
   <div class="home-dropdown" id="homePhotosMenu" style="display:none;">
-    <button type="button" id="btnPhotosFromGallery">🖼️ Fotos aus Galerie hochladen</button>
-    <button type="button" id="btnPhotosOtherFile">📄 Andere Datei hochladen (PDF)</button>
+    <button type="button" id="btnPhotosFromGallery" data-i18n="photos_from_gallery">🖼️ Fotos aus Galerie hochladen</button>
+    <button type="button" id="btnPhotosOtherFile" data-i18n="photos_other_file">📄 Andere Datei hochladen (PDF)</button>
   </div>
   <input type="file" id="pdfImportInput" accept="application/pdf" style="display:none;">
 
-  <footer class="attrib">SD Scanner · Teil von SD Bewerbungsstudio</footer>
+  <footer class="attrib" data-i18n="footer_attrib">SD Scanner · Teil von SD Bewerbungsstudio</footer>
 
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
@@ -676,6 +800,18 @@
 <script>
 (function(){
   'use strict';
+
+  // i18n-Helfer: liefert den uebersetzten Text fuer "key" in der aktuell
+  // gewaehlten Sprache (window.SD_LANG, von i18n.js gesetzt), faellt auf
+  // Deutsch und dann auf den Schluessel selbst zurueck.
+  function t(key, vars) {
+    const dict = (window.SD_I18N && window.SD_I18N[window.SD_LANG || 'de']) || (window.SD_I18N && window.SD_I18N.de) || {};
+    let text = dict[key] != null ? dict[key] : key;
+    if (vars) {
+      Object.keys(vars).forEach(k => { text = text.split('{' + k + '}').join(vars[k]); });
+    }
+    return text;
+  }
 
   const els = {
     stepCapture: document.getElementById('stepCapture'),
@@ -993,7 +1129,7 @@
   // erkannt, zugeschnitten und gefiltert - OHNE dass man dafür bei jedem Bild manuell ran muss.
   // Seite kann danach jederzeit über den ✏️-Knopf nachbearbeitet werden.
   async function autoProcessAndAddPage(img){
-    setStatus('Seite wird automatisch verarbeitet …');
+    setStatus(t('st_auto_processing'));
     let w = img.naturalWidth, h = img.naturalHeight;
     const scale = Math.min(1, MAX_DIM / Math.max(w, h));
     w = Math.round(w * scale); h = Math.round(h * scale);
@@ -1002,9 +1138,9 @@
     rawCanvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
     if(!cvReady){
-      setStatus('Scanner wird geladen …');
+      setStatus(t('st_scanner_loading'));
       await waitForCvReady(6000);
-      setStatus('Seite wird automatisch verarbeitet …');
+      setStatus(t('st_auto_processing'));
     }
 
     setTimeout(() => {
@@ -1466,7 +1602,7 @@
   }
 
   function updateReviewBar(){
-    document.getElementById('reviewCounter').textContent = 'Seite ' + (reviewIndex + 1) + '/' + pages.length;
+    document.getElementById('reviewCounter').textContent = t('review_page_of', {n: reviewIndex + 1, total: pages.length});
     document.getElementById('btnReviewPrev').style.display = reviewIndex > 0 ? '' : 'none';
   }
 
@@ -1507,7 +1643,7 @@
       renderPagesGrid();
       els.pagesSummary.style.display = '';
       showStep('stepCapture');
-      setStatus(pages.length + ' Seite(n) im Batch-Scan erfasst und geprüft.');
+      setStatus(pages.length + ' ' + t('st_batch_captured_checked'));
     }
   }
 
@@ -1524,7 +1660,7 @@
       renderPagesGrid();
       els.pagesSummary.style.display = '';
       showStep('stepCapture');
-      setStatus(pages.length + ' Seite(n) im Batch-Scan erfasst.');
+      setStatus(pages.length + ' ' + t('st_batch_captured'));
     }
   });
 
@@ -1569,7 +1705,7 @@
     if(presetCorners && presetCorners.length === 4){
       corners = presetCorners.map(p => ({ x: p.x * scale, y: p.y * scale }));
       renderHandles();
-      setStatus('Automatisch erkannte Kanten – bei Bedarf per Hand nachziehen.');
+      setStatus(t('st_edges_detected'));
       return;
     }
 
@@ -1583,12 +1719,12 @@
 
     corners = defaultCorners;
     renderHandles();
-    setStatus('Kanten werden automatisch erkannt …');
+    setStatus(t('st_edges_detecting'));
     setTimeout(() => {
       const auto = tryAutoDetect(canvas);
       if (auto && cornersLookValid(auto, w, h)) {
         corners = auto;
-        setStatus('Kanten automatisch erkannt – bei Bedarf per Hand nachziehen.');
+        setStatus(t('st_edges_detected'));
       } else {
         setStatus('');
       }
@@ -1766,7 +1902,7 @@
   }
 
   document.getElementById('btnCropNext').addEventListener('click', () => {
-    setStatus('Wird zugeschnitten …');
+    setStatus(t('st_cropping'));
     setTimeout(() => {
       const c = corners;
       const wTop = Math.hypot(c[1].x-c[0].x, c[1].y-c[0].y);
@@ -2625,7 +2761,7 @@
     visible = visible.slice().sort((a,b) => b.createdAt - a.createdAt);
 
     document.getElementById('homeTitle').textContent =
-      (currentFolderFilter === 'Alle' ? 'Alle Scans' : currentFolderFilter) + ' (' + visible.length + ')';
+      (currentFolderFilter === 'Alle' ? t('nav_all_scans_plain') : currentFolderFilter) + ' (' + visible.length + ')';
 
     if(!visible.length){
       grid.innerHTML = '<p class="hint" style="padding:20px 4px;">Keine Dokumente in dieser Ansicht.</p>';
@@ -2779,34 +2915,34 @@
 
   async function sdScannerCloudSpeichern(){
     if (!window.SD_AUTH || !window.SD_AUTH.user) { if(window.SD_AUTH) window.SD_AUTH.openLoginModal(); return; }
-    setStatus('☁️ Wird in deinem Konto gespeichert …');
+    setStatus(t('st_cloud_saving'));
     try{
       const payload = { dokumente: loadLibrary(), ordner: getAllFolders(loadLibrary()) };
       const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
       await window.SD_AUTH.saveFile('scanner/bibliothek.json', blob);
-      setStatus('✅ Alle Scans in deinem Konto gespeichert.');
+      setStatus(t('st_cloud_saved'));
     } catch(err){
       console.error(err);
-      setStatus('Fehler beim Speichern in der Cloud: ' + (err && err.message ? err.message : err));
+      setStatus(t('st_cloud_save_err') + (err && err.message ? err.message : err));
     }
   }
 
   async function sdScannerCloudLaden(){
     if (!window.SD_AUTH || !window.SD_AUTH.user) { if(window.SD_AUTH) window.SD_AUTH.openLoginModal(); return; }
-    if (!confirm('Die Scans hier auf diesem Gerät durch den in deinem Konto gespeicherten Stand ersetzen? Bereits hier vorhandene, noch nicht in der Cloud gesicherte Scans gehen dabei verloren.')) return;
-    setStatus('☁️ Wird aus deinem Konto geladen …');
+    if (!confirm(t('confirm_cloud_load_replace'))) return;
+    setStatus(t('st_cloud_loading'));
     try{
       const dataUrl = await window.SD_AUTH.loadFileAsDataUrl('scanner/bibliothek.json');
       const text = await (await fetch(dataUrl)).text();
       const payload = JSON.parse(text);
-      if (!payload || !Array.isArray(payload.dokumente)) { setStatus('In deinem Konto wurde noch nichts gespeichert.'); return; }
+      if (!payload || !Array.isArray(payload.dokumente)) { setStatus(t('st_cloud_nothing_saved')); return; }
       saveLibrary(payload.dokumente);
       if (Array.isArray(payload.ordner)) localStorage.setItem(FOLDERS_KEY, JSON.stringify(payload.ordner));
       renderLibrary();
-      setStatus('✅ Scans aus deinem Konto geladen.');
+      setStatus(t('st_cloud_loaded'));
     } catch(err){
       console.error(err);
-      setStatus('In deinem Konto wurde noch nichts gespeichert oder es gab einen Fehler beim Laden.');
+      setStatus(t('st_cloud_load_err'));
     }
   }
   document.getElementById('btnHomeSearch').addEventListener('click', () => {
@@ -2931,5 +3067,6 @@
 
 <!-- Konto & Cloud-Synchronisierung (optional - App funktioniert weiter auch ohne Login) -->
 <script type="module" src="./sd-auth.js?v=3"></script>
+<script src="./i18n.js?v=1"></script>
 </body>
 </html>
