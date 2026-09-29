@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Improvement Suggestions - Bewerbungsstudio</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800;900&display=swap">
+    <script src="cv-suggestions.js"></script>
+    <style>
+        :root {
+            --primary: #1D4ED8;
+            --primary-dark: #0F2855;
+            --primary-light: #3B82F6;
+            --emerald: #059669;
+            --warning: #D97706;
+            --danger: #DC2626;
+            --surface: #FFFFFF;
+            --surface-light: #FAFBFC;
+            --border: #E5E7EB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F0F9FF 0%, #F0F4FF 50%, #FAFBFC 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 32px;
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .score-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .score-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(29, 78, 216, 0.1);
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .score-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .score-bar {
+            height: 4px;
+            background: var(--surface-light);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 2px;
+            transition: width 0.5s;
+        }
+
+        .suggestions-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggestion-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: var(--surface-light);
+        }
+
+        .suggestion-item.high {
+            border-left-color: var(--danger);
+            background: #FEE2E2;
+        }
+
+        .suggestion-item.medium {
+            border-left-color: var(--warning);
+            background: #FEF3C7;
+        }
+
+        .suggestion-item.low {
+            border-left-color: var(--emerald);
+            background: #D1FAE5;
+        }
+
+        .suggestion-priority {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-priority.high {
+            background: var(--danger);
+            color: white;
+        }
+
+        .suggestion-priority.medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .suggestion-priority.low {
+            background: var(--emerald);
+            color: white;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .suggestion-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-explanation {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .tip-card {
+            background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--emerald);
+            color: #065F46;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .ats-score {
+            background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .ats-score-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .ats-warning {
+            color: #0C2340;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover,
+        button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .score-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tips-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 CV Verbesserungsvorschläge</h1>
+
+        <!-- Score Overview -->
+        <div class="score-grid" id="scoreGrid">
+            <div class="score-card">
+                <div class="score-label">Gesamt</div>
+                <div class="score-number" id="overallScore">0</div>
+                <div class="score-bar">
+                    <div class="score-fill" id="overallFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">Persönlich</div>
+                <div class="score-number" id="personalScore">0</div>
+                <div class="score-bar">
+                    <div class="score-fill" id="personalFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">Erfahrung</div>
+                <div class="score-number" id="experienceScore">0</div>
+                <div class="score-bar">
+                    <div class="score-fill" id="experienceFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">Ausbildung</div>
+                <div class="score-number" id="educationScore">0</div>
+                <div class="score-bar">
+                    <div class="score-fill" id="educationFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="score-card">
+                <div class="score-label">Kompetenzen</div>
+                <div class="score-number" id="skillsScore">0</div>
+                <div class="score-bar">
+                    <div class="score-fill" id="skillsFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATS Score -->
+        <div class="suggestions-section">
+            <div class="section-title">🤖 ATS Kompatibilität</div>
+            <div id="atsScoreContainer"></div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions-section">
+            <div class="section-title">💡 Verbesserungsvorschläge</div>
+            
+            <!-- Filter -->
+            <div class="filter-buttons">
+                <button class="active" onclick="filterSuggestions('all')">Alle</button>
+                <button onclick="filterSuggestions('high')">🔴 Wichtig</button>
+                <button onclick="filterSuggestions('medium')">🟡 Mittel</button>
+                <button onclick="filterSuggestions('low')">🟢 Optional</button>
+            </div>
+
+            <div id="suggestionsContainer"></div>
+        </div>
+
+        <!-- Improvement Tips -->
+        <div class="suggestions-section">
+            <div class="section-title">⭐ Tipps zur Verbesserung</div>
+            <div class="tips-grid" id="tipsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentCVData = null;
+        let analysis = null;
+        let filterType = 'all';
+
+        // Load demo data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDemoData();
+            analyzeCVFromStorage();
+        });
+
+        function loadDemoData() {
+            // Try to load from first session in localStorage
+            let foundSession = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('session_') && !key.includes('backup')) {
+                    try {
+                        const session = JSON.parse(localStorage.getItem(key));
+                        if (session && session.data) {
+                            currentCVData = session.data;
+                            foundSession = true;
+                            break;
+                        }
+                    } catch (e) {
+                        console.error('Error loading session:', e);
+                    }
+                }
+            }
+
+            if (!foundSession) {
+                // Show empty state with demo button
+                document.getElementById('suggestionsContainer').innerHTML =
+                    '<div class="empty-state"><div class="empty-state-icon">📄</div><p>Bitte öffnen Sie den CV-Editor und kehren Sie hierher zurück, um Verbesserungsvorschläge zu erhalten.</p></div>';
+            }
+        }
+
+        function analyzeCVFromStorage() {
+            if (!currentCVData) return;
+
+            analysis = suggestionEngine.analyzeCVContent(currentCVData);
+            displayResults();
+        }
+
+        function displayResults() {
+            if (!analysis) return;
+
+            // Update scores
+            document.getElementById('overallScore').textContent = analysis.scores.overall;
+            document.getElementById('personalScore').textContent = analysis.scores.personal;
+            document.getElementById('experienceScore').textContent = analysis.scores.experience;
+            document.getElementById('educationScore').textContent = analysis.scores.education;
+            document.getElementById('skillsScore').textContent = analysis.scores.skills;
+
+            // Update score bars
+            updateScoreBar('overallFill', analysis.scores.overall);
+            updateScoreBar('personalFill', analysis.scores.personal);
+            updateScoreBar('experienceFill', analysis.scores.experience);
+            updateScoreBar('educationFill', analysis.scores.education);
+            updateScoreBar('skillsFill', analysis.scores.skills);
+
+            // Display ATS score
+            displayATSScore();
+
+            // Display suggestions
+            displaySuggestions();
+
+            // Display tips
+            displayTips();
+        }
+
+        function updateScoreBar(elementId, score) {
+            document.getElementById(elementId).style.width = score + '%';
+        }
+
+        function displayATSScore() {
+            const atsResult = suggestionEngine.calculateATSScore(currentCVData);
+            const container = document.getElementById('atsScoreContainer');
+
+            let html = `<div class="ats-score">
+                <div class="ats-score-number">${atsResult.score}%</div>
+                <p style="color: #0C2340; margin-bottom: 8px;">ATS Kompatibilität</p>`;
+
+            if (atsResult.warnings.length > 0) {
+                atsResult.warnings.forEach(warning => {
+                    html += `<div class="ats-warning">${warning}</div>`;
+                });
+            } else {
+                html += '<div class="ats-warning">✓ Ihr CV ist gut für ATS-Systeme optimiert</div>';
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function displaySuggestions() {
+            let suggestions = analysis.suggestions;
+
+            if (filterType !== 'all') {
+                suggestions = suggestionEngine.getSuggestionsByPriority(filterType);
+            }
+
+            const container = document.getElementById('suggestionsContainer');
+
+            if (suggestions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✨</div><p>Großartig! Keine offenen Verbesserungsvorschläge.</p></div>';
+                return;
+            }
+
+            const grouped = {};
+            suggestions.forEach(s => {
+                if (!grouped[s.priority]) grouped[s.priority] = [];
+                grouped[s.priority].push(s);
+            });
+
+            let html = '';
+            ['high', 'medium', 'low'].forEach(priority => {
+                if (grouped[priority]) {
+                    grouped[priority].forEach(suggestion => {
+                        html += `<div class="suggestion-item ${suggestion.priority}">
+                            <div class="suggestion-priority ${suggestion.priority}">${suggestion.priority.toUpperCase()}</div>
+                            <div class="suggestion-title">${suggestion.category}</div>
+                            <div class="suggestion-text">${suggestion.suggestion}</div>
+                            <div class="suggestion-explanation">${suggestion.explanation}</div>
+                        </div>`;
+                    });
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function displayTips() {
+            const tips = suggestionEngine.getImprovementTips();
+            const html = tips.map(tip => `<div class="tip-card">${tip}</div>`).join('');
+            document.getElementById('tipsContainer').innerHTML = html;
+        }
+
+        function filterSuggestions(type) {
+            filterType = type;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            displaySuggestions();
+        }
+
+        // Refresh suggestions every 5 seconds
+        setInterval(() => {
+            loadDemoData();
+            analyzeCVFromStorage();
+        }, 5000);
+    </script>
+</body>
+</html>
