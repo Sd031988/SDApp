@@ -447,6 +447,22 @@
             background: #1e40af;
         }
 
+        /* ===== TEMPLATE GRID ===== */
+        .template-btn {
+            transition: all 0.3s ease !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+        }
+
+        .template-btn:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            transform: translateY(-2px);
+        }
+
+        .template-btn.selected {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+            transform: scale(1.02);
+        }
+
         /* ===== RIGHT PREVIEW ===== */
         .preview {
             background: #f5f5f5;
@@ -591,6 +607,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         let currentStep = 0;
+        const templates = {
+            'Klassisch': { color: '#000', sidebar: 'linear-gradient(135deg, #1a1a1a 0%, #333 100%)', name: '◆ Klassisch – Schwarz-Eleganz' },
+            'Modern': { color: '#0891b2', sidebar: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', name: '◆ Modern – Türkis-Frisch' },
+            'Professional': { color: '#1e40af', sidebar: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', name: '◆ Professional – Navy-Blau' },
+            'Executive': { color: '#15803d', sidebar: 'linear-gradient(135deg, #15803d 0%, #22c55e 100%)', name: '◆ Executive – Grün-Autorität' },
+            'Bold': { color: '#dc2626', sidebar: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)', name: '◆ Bold – Rot-Dynamik' },
+            'Creative': { color: '#9333ea', sidebar: 'linear-gradient(135deg, #9333ea 0%, #d946ef 100%)', name: '◆ Creative – Lila-Innovation' },
+            'Minimal': { color: '#525252', sidebar: 'linear-gradient(135deg, #737373 0%, #a3a3a3 100%)', name: '◆ Minimal – Grau-Clean' },
+            'Elegant': { color: '#b8860b', sidebar: 'linear-gradient(135deg, #b8860b 0%, #daa520 100%)', name: '◆ Elegant – Gold-Premium' },
+            'Startup': { color: '#0d9488', sidebar: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)', name: '◆ Startup – Teal-Modern' },
+            'Corporate': { color: '#1f2937', sidebar: 'linear-gradient(135deg, #1f2937 0%, #4b5563 100%)', name: '◆ Corporate – Anthrazit-Seriös' },
+            'Academic': { color: '#7c2d12', sidebar: 'linear-gradient(135deg, #7c2d12 0%, #b45309 100%)', name: '◆ Academic – Braun-Tradtion' },
+            'Tech': { color: '#06b6d4', sidebar: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)', name: '◆ Tech – Cyan-Digital' },
+            'Orange': { color: '#ea580c', sidebar: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)', name: '◆ Orange – Warm-Energie' },
+            'Indigo': { color: '#4f46e5', sidebar: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', name: '◆ Indigo – Licht-Innovation' },
+            'Warmth': { color: '#b91c1c', sidebar: 'linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)', name: '◆ Warmth – Dunkelrot-Passion' }
+        };
+
+        let currentTemplate = 'Modern';
+
         let appState = {
             firstName: '',
             lastName: '',
@@ -605,9 +641,10 @@
             competencies: [],
             languages: [{ language: '', level: 'Muttersprache' }],
             signature: 'formal',
-            color: '#000',
+            color: templates['Modern'].color,
             size: 'A',
-            alignment: 'left'
+            alignment: 'left',
+            template: 'Modern'
         };
 
         const competencyDatabase = [
@@ -645,9 +682,16 @@
                 <!-- STEP 0: TEMPLATE -->
                 <div class="section active" data-step="0">
                     <h2>Lebenslauf Vorlage</h2>
-                    <p class="section-subtitle">Wähle eine moderne, professionelle Vorlage.</p>
-                    <div style="padding: 20px; background: #f9f9f9; border-radius: 8px; text-align: center;">
-                        <p style="color: #666;">Moderne Vorlage - Professionell & Clean</p>
+                    <p class="section-subtitle">Wähle eine moderne, professionelle Vorlage für deinen Lebenslauf.</p>
+                    <div class="template-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 24px 0;">
+                        ${Object.entries(templates).map(([name, config]) => `
+                            <button class="template-btn ${name === 'Modern' ? 'selected' : ''}"
+                                    onclick="setTemplate('${name}')"
+                                    style="padding: 16px; border: 2px solid ${name === 'Modern' ? config.color : '#ddd'}; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500;">
+                                <div style="width: 100%; height: 30px; background: ${config.sidebar}; border-radius: 4px; margin-bottom: 8px;"></div>
+                                ${config.name}
+                            </button>
+                        `).join('')}
                     </div>
                     <div class="button-group">
                         <button class="btn btn-primary" onclick="goToStep(1)">Weiter</button>
@@ -1016,6 +1060,25 @@
             }).join('');
         }
 
+        function setTemplate(templateName) {
+            if (templates[templateName]) {
+                currentTemplate = templateName;
+                appState.template = templateName;
+                appState.color = templates[templateName].color;
+
+                // Update sidebar color
+                document.querySelector('.sidebar').style.background = templates[templateName].sidebar;
+
+                // Update template buttons
+                document.querySelectorAll('.template-btn').forEach(btn => {
+                    btn.classList.toggle('selected', btn.textContent.includes(templates[templateName].name.split('–')[0]));
+                });
+
+                updatePreview();
+                saveState();
+            }
+        }
+
         function setColor(index) {
             const colors = ['#000', '#1d4ed8', '#059669'];
             appState.color = colors[index];
@@ -1117,6 +1180,10 @@
             if (saved) {
                 try {
                     appState = JSON.parse(saved);
+                    if (appState.template && templates[appState.template]) {
+                        currentTemplate = appState.template;
+                        document.querySelector('.sidebar').style.background = templates[appState.template].sidebar;
+                    }
                     if (appState.firstName) document.getElementById('firstName').value = appState.firstName;
                     if (appState.lastName) document.getElementById('lastName').value = appState.lastName;
                     if (appState.email) document.getElementById('email').value = appState.email;
