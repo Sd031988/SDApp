@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerbungsstudio - Professioneller Lebenslauf Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr 400px;
+            gap: 0;
+            height: 100vh;
+            background: white;
+        }
+
+        /* ===== LEFT SIDEBAR ===== */
+        .sidebar {
+            background: linear-gradient(135deg, #0f2855 0%, #1d4ed8 100%);
+            color: white;
+            padding: 40px 24px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .sidebar h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: rgba(255,255,255,0.7);
+            position: relative;
+        }
+
+        .step:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .step.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: 600;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step.active .step-number {
+            background: white;
+            color: #0f2855;
+        }
+
+        .step-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .step-subtitle {
+            font-size: 11px;
+            opacity: 0.7;
+            line-height: 1.2;
+        }
+
+        .completion-bar {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .completion-label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4ade80;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .completion-percent {
+            font-size: 12px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            padding: 48px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #0f2855;
+        }
+
+        .section-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 32px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        input, textarea, select {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #1d4ed8;
+            background: #f0f4ff;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .repeatable-section {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .repeatable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .repeatable-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-remove:hover {
+            background: #dc2626;
+        }
+
+        .btn-add {
+            background: #1d4ed8;
+            color: white;
+            border: 2px dashed #1d4ed8;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+
+        .btn-add:hover {
+            background: #1e40af;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1d4ed8;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        /* Formatting Options */
+        .formatting-section {
+            background: #f0f4ff;
+            border: 2px solid #1d4ed8;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .formatting-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .format-option {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .format-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+        }
+
+        .size-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .size-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .size-btn.selected {
+            background: #1d4ed8;
+            color: white;
+            border-color: #1d4ed8;
+        }
+
+        .competency-search {
+            position: relative;
+        }
+
+        .competency-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .competency-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #1d4ed8;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggestion-item:hover {
+            background: #f0f4ff;
+        }
+
+        .suggestion-item::before {
+            content: '+';
+            font-weight: 700;
+            color: #1d4ed8;
+        }
+
+        .competency-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .competency-tag {
+            background: #1d4ed8;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .competency-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Navigation Buttons */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1d4ed8;
+            border: 2px solid #1d4ed8;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f4ff;
+        }
+
+        .btn-primary {
+            background: #1d4ed8;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* ===== RIGHT PREVIEW ===== */
+        .preview {
+            background: #f5f5f5;
+            border-left: 1px solid #e0e0e0;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .preview-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cv-preview {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cv-content {
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .cv-name {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .cv-contact {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cv-section {
+            margin-bottom: 12px;
+        }
+
+        .cv-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            border-bottom: 2px solid #1d4ed8;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+        }
+
+        .cv-entry {
+            margin-bottom: 8px;
+        }
+
+        .cv-entry-title {
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .cv-entry-subtitle {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .cv-entry-text {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        /* Download Section */
+        .download-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 24px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn-download {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+
+        .btn-download:hover {
+            background: #047857;
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar, .preview {
+                display: none;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar">
+            <h1>Bewerbungsstudio</h1>
+            <div class="steps">
+                <div class="step active" onclick="goToStep(0)">
+                    <div class="step-number">1</div>
+                    <div class="step-label">
+                        <div class="step-title">Lebenslauf auswählen</div>
+                        <div class="step-subtitle">Die Vorlage kannst du später noch ändern</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(1)">
+                    <div class="step-number">2</div>
+                    <div class="step-label">
+                        <div class="step-title">Lebenslauf erstellen</div>
+                        <div class="step-subtitle">Kontaktdaten</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(2)">
+                    <div class="step-number">2</div>
+                    <div class="step-label">
+                        <div class="step-title">Berufserfahrung</div>
+                        <div class="step-subtitle">Fehlende Information</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(3)">
+                    <div class="step-number">2</div>
+                    <div class="step-label">
+                        <div class="step-title">Ausbildung</div>
+                        <div class="step-subtitle">Fehlende Information</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(4)">
+                    <div class="step-number">2</div>
+                    <div class="step-label">
+                        <div class="step-title">Kompetenzen</div>
+                        <div class="step-subtitle">Fehlende Information</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(5)">
+                    <div class="step-number">2</div>
+                    <div class="step-label">
+                        <div class="step-title">Sprachen</div>
+                        <div class="step-subtitle">Fehlende Information</div>
+                    </div>
+                </div>
+                <div class="step" onclick="goToStep(6)">
+                    <div class="step-number">3</div>
+                    <div class="step-label">
+                        <div class="step-title">Fertigstellen</div>
+                        <div class="step-subtitle">Überarbeite und personalisiere deinen Lebenslauf, lade ihn hoch und sende ihn ab</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="completion-bar">
+                <div class="completion-label">Vollständigkeit des Lebenslaufs</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="completion-percent"><span id="completionPercent">0</span>%</div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <!-- STEP 0: TEMPLATE SELECTION -->
+            <div class="section active" id="section-0">
+                <h2>Lebenslauf auswählen</h2>
+                <p class="section-subtitle">Die Vorlage kannst du später noch ändern</p>
+                <p>Moderne, professionelle Vorlagen werden geladen...</p>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="goToStep(1)">Weiter</button>
+                </div>
+            </div>
+
+            <!-- STEP 1: CONTACT DATA -->
+            <div class="section" id="section-1">
+                <h2>Wie können dich Arbeitgeber am besten erreichen?</h2>
+                <p class="section-subtitle">Wir empfehlen, eine E-Mail-Adresse und eine Telefonnummer anzugeben.</p>
+
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="form-item">
+                            <label>Vorname</label>
+                            <input type="text" id="firstName" placeholder="z. B. Lisa" onchange="updatePreview()">
+                        </div>
+                        <div class="form-item">
+                            <label>Nachname</label>
+                            <input type="text" id="lastName" placeholder="z. B. Bach" onchange="updatePreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-item">
+                            <label>Geburtsdatum</label>
+                            <input type="text" id="birthDate" placeholder="z. B. 4.4.1990 in Duisburg" onchange="updatePreview()">
+                        </div>
+                        <div class="form-item">
+                            <label>Straße und Hausnummer</label>
+                            <input type="text" id="street" placeholder="z. B. Humboldtstraße 66" onchange="updatePreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-item">
+                            <label>Ort</label>
+                            <input type="text" id="city" placeholder="z. B. Heidelberg" onchange="updatePreview()">
+                        </div>
+                        <div class="form-item">
+                            <label>Postleitzahl</label>
+                            <input type="text" id="postalCode" placeholder="z. B. 40237" onchange="updatePreview()">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-item">
+                            <label>Telefonnummer</label>
+                            <input type="tel" id="phone" placeholder="+49157392714 54" onchange="updatePreview()">
+                        </div>
+                        <div class="form-item">
+                            <label>E-Mail-Adresse</label>
+                            <input type="email" id="email" placeholder="freweynim9@gmail.com" onchange="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(0)">Zurück</button>
+                    <button class="btn btn-primary" onclick="goToStep(2)">Weiter</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: PROFESSIONAL EXPERIENCE -->
+            <div class="section" id="section-2">
+                <h2>Zusammenfassung der Berufserfahrung</h2>
+                <p class="section-subtitle">Hier kannst du deine Berufserfahrung bearbeiten und organisieren.</p>
+
+                <div class="form-group" id="experienceContainer"></div>
+
+                <button class="btn-add" onclick="addExperience()">+ Weitere Stelle hinzufügen</button>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Zurück</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Weiter</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: EDUCATION -->
+            <div class="section" id="section-3">
+                <h2>Super! Jetzt geht's weiter mit deiner Ausbildung</h2>
+                <p class="section-subtitle">Beginne mit deiner aktuellsten Ausbildung und gehe dann zurück.</p>
+
+                <div class="form-group" id="educationContainer"></div>
+
+                <button class="btn-add" onclick="addEducation()">+ Weitere Ausbildung hinzufügen</button>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Zurück</button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">Weiter</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: COMPETENCIES -->
+            <div class="section" id="section-4">
+                <h2>Weiter geht's mit deinen Kompetenzen</h2>
+                <p class="section-subtitle">Füge 4 bis 8 Kompetenzen aus deinem vorherigen Job hinzu, die für die gewünschte Stelle relevant sind.</p>
+
+                <div class="form-group">
+                    <label>Kompetenzen suchen und hinzufügen</label>
+                    <div class="competency-search">
+                        <input type="text" class="competency-input" id="competencyInput" placeholder="z. B. Projektmanagement" onkeyup="filterCompetencies()">
+                        <div class="competency-suggestions" id="suggestions" style="display: none;"></div>
+                    </div>
+                    <div class="competency-list" id="competencyList"></div>
+                </div>
+            </div>
+
+            <!-- STEP 5: LANGUAGES -->
+            <div class="section" id="section-5">
+                <h2>Wie viele Sprachen sprichst du?</h2>
+                <p class="section-subtitle">Wenn es für die gewünschte Stelle relevant ist, kannst du hier deine Muttersprache und mögliche Fremdsprachenkenntnisse hinzufügen.</p>
+
+                <div class="form-group" id="languageContainer"></div>
+
+                <button class="btn-add" onclick="addLanguage()">+ Eine weitere Sprache hinzufügen</button>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(4)">Zurück</button>
+                    <button class="btn btn-primary" onclick="goToStep(6)">Weiter</button>
+                </div>
+            </div>
+
+            <!-- STEP 6: FINALIZATION -->
+            <div class="section" id="section-6">
+                <h2>Nächster Schritt: Lebenslauf fertigstellen</h2>
+                <p class="section-subtitle">Überarbeite und personalisiere deinen Lebenslauf, lade ihn hoch und sende ihn ab.</p>
+
+                <div class="formatting-section">
+                    <div class="formatting-title">Formatierung anpassen</div>
+
+                    <div class="format-grid">
+                        <div class="format-option">
+                            <div class="format-label">Farbe</div>
+                            <div class="color-picker">
+                                <div class="color-option selected" style="background: #000;" onclick="setColor(0)"></div>
+                                <div class="color-option" style="background: #1d4ed8;" onclick="setColor(1)"></div>
+                                <div class="color-option" style="background: #059669;" onclick="setColor(2)"></div>
+                            </div>
+                        </div>
+
+                        <div class="format-option">
+                            <div class="format-label">Größe</div>
+                            <div class="size-options">
+                                <button class="size-btn selected" onclick="setSize('A')">A</button>
+                                <button class="size-btn" onclick="setSize('A+')">A+</button>
+                            </div>
+                        </div>
+
+                        <div class="format-option">
+                            <div class="format-label">Ausrichtung</div>
+                            <div class="size-options">
+                                <button class="size-btn selected" onclick="setAlignment('left')">≡</button>
+                                <button class="size-btn" onclick="setAlignment('center')">☰</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Unterschrift/Schriftart</label>
+                    <select id="signature" onchange="updatePreview()">
+                        <option value="formal">Formale Unterschrift</option>
+                        <option value="casual">Lockere Unterschrift</option>
+                        <option value="modern">Moderne Unterschrift</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="goToStep(5)">Zurück</button>
+                    <button class="btn btn-primary" onclick="goToStep(6)">Abschließen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PREVIEW -->
+        <div class="preview">
+            <div class="preview-header">Vorschau</div>
+            <div class="cv-preview">
+                <div class="cv-content" id="cvPreview">
+                    <div class="cv-name" id="previewName">Max Mustermann</div>
+                    <div class="cv-contact" id="previewContact">max@example.com • +49 123 456789 • Berlin</div>
+                </div>
+            </div>
+            <button class="btn-download" onclick="downloadPDF()">⬇ PDF HERUNTERLADEN</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        let currentStep = 0;
+        let appState = {
+            firstName: '',
+            lastName: '',
+            birthDate: '',
+            street: '',
+            city: '',
+            postalCode: '',
+            phone: '',
+            email: '',
+            experiences: [],
+            educations: [],
+            competencies: [],
+            languages: [],
+            signature: 'formal',
+            color: '#000',
+            size: 'A',
+            alignment: 'left'
+        };
+
+        const competencyDatabase = [
+            'Projektmanagement', 'Problemlösungskompetenz', 'Teamfähigkeit', 'Selbstständige Sprachverwendung',
+            'Digitale Kommunikation', 'Begeisterungsfähigkeit', 'Organisationstalent', 'Analytische Fähigkeiten',
+            'Kundenservice', 'Führungskompetenz', 'Kreativität', 'Kritisches Denken',
+            'Zeitmanagement', 'Konfliktlösung', 'Präsentationsfähigkeit', 'Verkaufstalent'
+        ];
+
+        function goToStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + step).classList.add('active');
+            document.querySelectorAll('.step').forEach((s, i) => {
+                s.classList.toggle('active', i === step);
+            });
+            saveState();
+            updatePreview();
+            window.scrollTo(0, 0);
+        }
+
+        function addExperience() {
+            const id = Date.now();
+            appState.experiences.push({ id, company: '', position: '', start: '', end: '', description: '' });
+            renderExperiences();
+        }
+
+        function renderExperiences() {
+            const container = document.getElementById('experienceContainer');
+            container.innerHTML = appState.experiences.map((exp, i) => `
+                <div class="repeatable-section">
+                    <div class="repeatable-header">
+                        <div class="repeatable-title">${exp.position || 'Position ' + (i + 1)}</div>
+                        <button class="btn-remove" onclick="removeExperience(${i})">Löschen</button>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Unternehmen" value="${exp.company}" onchange="appState.experiences[${i}].company = this.value; updatePreview(); saveState()">
+                        <input type="text" placeholder="Position" value="${exp.position}" onchange="appState.experiences[${i}].position = this.value; renderExperiences(); updatePreview(); saveState()">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Von" value="${exp.start}" onchange="appState.experiences[${i}].start = this.value; updatePreview(); saveState()">
+                        <input type="text" placeholder="Bis" value="${exp.end}" onchange="appState.experiences[${i}].end = this.value; updatePreview(); saveState()">
+                    </div>
+                    <textarea placeholder="Beschreibung" onchange="appState.experiences[${i}].description = this.value; updatePreview(); saveState()">${exp.description}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function removeExperience(index) {
+            appState.experiences.splice(index, 1);
+            renderExperiences();
+            updatePreview();
+            saveState();
+        }
+
+        function addEducation() {
+            const id = Date.now();
+            appState.educations.push({ id, institution: '', degree: '', field: '', start: '', end: '' });
+            renderEducations();
+        }
+
+        function renderEducations() {
+            const container = document.getElementById('educationContainer');
+            container.innerHTML = appState.educations.map((edu, i) => `
+                <div class="repeatable-section">
+                    <div class="repeatable-header">
+                        <div class="repeatable-title">${edu.degree || 'Ausbildung ' + (i + 1)}</div>
+                        <button class="btn-remove" onclick="removeEducation(${i})">Löschen</button>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Institution" value="${edu.institution}" onchange="appState.educations[${i}].institution = this.value; updatePreview(); saveState()">
+                        <input type="text" placeholder="Ort" value="${edu.field}" onchange="appState.educations[${i}].field = this.value; updatePreview(); saveState()">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Abschluss" value="${edu.degree}" onchange="appState.educations[${i}].degree = this.value; renderEducations(); updatePreview(); saveState()">
+                        <input type="text" placeholder="Studienfach" value="${edu.field}" onchange="appState.educations[${i}].field = this.value; updatePreview(); saveState()">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Startdatum" value="${edu.start}" onchange="appState.educations[${i}].start = this.value; updatePreview(); saveState()">
+                        <input type="text" placeholder="Enddatum" value="${edu.end}" onchange="appState.educations[${i}].end = this.value; updatePreview(); saveState()">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeEducation(index) {
+            appState.educations.splice(index, 1);
+            renderEducations();
+            updatePreview();
+            saveState();
+        }
+
+        function filterCompetencies() {
+            const input = document.getElementById('competencyInput').value.toLowerCase();
+            const suggestions = document.getElementById('suggestions');
+            if (input.length < 1) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            const filtered = competencyDatabase.filter(c => c.toLowerCase().includes(input) && !appState.competencies.includes(c));
+            suggestions.innerHTML = filtered.map(c => `<div class="suggestion-item" onclick="addCompetency('${c}')">${c}</div>`).join('');
+            suggestions.style.display = filtered.length > 0 ? 'block' : 'none';
+        }
+
+        function addCompetency(competency) {
+            if (!appState.competencies.includes(competency)) {
+                appState.competencies.push(competency);
+                renderCompetencies();
+                updatePreview();
+                saveState();
+            }
+            document.getElementById('competencyInput').value = '';
+            document.getElementById('suggestions').style.display = 'none';
+        }
+
+        function removeCompetency(index) {
+            appState.competencies.splice(index, 1);
+            renderCompetencies();
+            updatePreview();
+            saveState();
+        }
+
+        function renderCompetencies() {
+            const list = document.getElementById('competencyList');
+            list.innerHTML = appState.competencies.map((c, i) => `
+                <div class="competency-tag">${c}<button onclick="removeCompetency(${i})">×</button></div>
+            `).join('');
+        }
+
+        function addLanguage() {
+            appState.languages.push({ language: '', level: 'Anfänger' });
+            renderLanguages();
+        }
+
+        function renderLanguages() {
+            const container = document.getElementById('languageContainer');
+            container.innerHTML = appState.languages.map((lang, i) => `
+                <div class="form-row">
+                    <select onchange="appState.languages[${i}].language = this.value; updatePreview(); saveState()">
+                        <option value="" ${!lang.language ? 'selected' : ''}>Sprache auswählen</option>
+                        <option value="Deutsch" ${lang.language === 'Deutsch' ? 'selected' : ''}>Deutsch</option>
+                        <option value="Englisch" ${lang.language === 'Englisch' ? 'selected' : ''}>Englisch</option>
+                        <option value="Französisch" ${lang.language === 'Französisch' ? 'selected' : ''}>Französisch</option>
+                        <option value="Spanisch" ${lang.language === 'Spanisch' ? 'selected' : ''}>Spanisch</option>
+                    </select>
+                    <select onchange="appState.languages[${i}].level = this.value; updatePreview(); saveState()">
+                        <option ${lang.level === 'Anfänger' ? 'selected' : ''}>Anfänger</option>
+                        <option ${lang.level === 'Grundlegende Kenntnisse' ? 'selected' : ''}>Grundlegende Kenntnisse</option>
+                        <option ${lang.level === 'Fließend' ? 'selected' : ''}>Fließend</option>
+                        <option ${lang.level === 'Muttersprache' ? 'selected' : ''}>Muttersprache</option>
+                    </select>
+                </div>
+            `).join('');
+        }
+
+        function setColor(index) {
+            const colors = ['#000', '#1d4ed8', '#059669'];
+            appState.color = colors[index];
+            updatePreview();
+            saveState();
+        }
+
+        function setSize(size) {
+            appState.size = size;
+            updatePreview();
+            saveState();
+        }
+
+        function setAlignment(alignment) {
+            appState.alignment = alignment;
+            updatePreview();
+            saveState();
+        }
+
+        function updatePreview() {
+            appState.firstName = document.getElementById('firstName')?.value || '';
+            appState.lastName = document.getElementById('lastName')?.value || '';
+            appState.phone = document.getElementById('phone')?.value || '';
+            appState.email = document.getElementById('email')?.value || '';
+            appState.city = document.getElementById('city')?.value || '';
+
+            const name = `${appState.firstName} ${appState.lastName}`.trim() || 'Max Mustermann';
+            const contact = [appState.email, appState.phone, appState.city].filter(Boolean).join(' • ') || 'max@example.com • Berlin';
+
+            let html = `
+                <div class="cv-name" style="color: ${appState.color}">${name}</div>
+                <div class="cv-contact">${contact}</div>
+            `;
+
+            if (appState.experiences.length > 0) {
+                html += '<div class="cv-section"><div class="cv-section-title" style="border-bottom-color: ${appState.color}; color: ${appState.color}">Berufserfahrung</div>';
+                appState.experiences.forEach(exp => {
+                    if (exp.company || exp.position) {
+                        html += `<div class="cv-entry"><div class="cv-entry-title">${exp.position || 'Position'}</div><div class="cv-entry-subtitle">${exp.company} ${exp.start ? '(' + exp.start + ')' : ''}</div></div>`;
+                    }
+                });
+                html += '</div>';
+            }
+
+            if (appState.educations.length > 0) {
+                html += '<div class="cv-section"><div class="cv-section-title" style="border-bottom-color: ${appState.color}; color: ${appState.color}">Ausbildung</div>';
+                appState.educations.forEach(edu => {
+                    if (edu.institution || edu.degree) {
+                        html += `<div class="cv-entry"><div class="cv-entry-title">${edu.degree || 'Abschluss'}</div><div class="cv-entry-subtitle">${edu.institution}</div></div>`;
+                    }
+                });
+                html += '</div>';
+            }
+
+            if (appState.competencies.length > 0) {
+                html += '<div class="cv-section"><div class="cv-section-title" style="border-bottom-color: ${appState.color}; color: ${appState.color}">Kompetenzen</div><div class="cv-entry-text">' + appState.competencies.join(', ') + '</div></div>';
+            }
+
+            document.getElementById('cvPreview').innerHTML = html;
+            updateCompletion();
+        }
+
+        function updateCompletion() {
+            let completion = 0;
+            if (appState.firstName) completion += 10;
+            if (appState.lastName) completion += 10;
+            if (appState.email) completion += 10;
+            if (appState.phone) completion += 10;
+            if (appState.experiences.length > 0) completion += 20;
+            if (appState.educations.length > 0) completion += 15;
+            if (appState.competencies.length > 0) completion += 15;
+
+            document.getElementById('progressFill').style.width = completion + '%';
+            document.getElementById('completionPercent').textContent = completion;
+        }
+
+        function saveState() {
+            localStorage.setItem('cvState', JSON.stringify(appState));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('cvState');
+            if (saved) {
+                appState = JSON.parse(saved);
+                if (appState.firstName) document.getElementById('firstName').value = appState.firstName;
+                if (appState.lastName) document.getElementById('lastName').value = appState.lastName;
+                if (appState.email) document.getElementById('email').value = appState.email;
+                if (appState.phone) document.getElementById('phone').value = appState.phone;
+                if (appState.city) document.getElementById('city').value = appState.city;
+                if (appState.street) document.getElementById('street').value = appState.street;
+                if (appState.postalCode) document.getElementById('postalCode').value = appState.postalCode;
+                if (appState.birthDate) document.getElementById('birthDate').value = appState.birthDate;
+
+                if (appState.experiences.length > 0) renderExperiences();
+                if (appState.educations.length > 0) renderEducations();
+                if (appState.competencies.length > 0) renderCompetencies();
+                if (appState.languages.length > 0) renderLanguages();
+
+                updatePreview();
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('cvPreview');
+            const opt = {
+                margin: 10,
+                filename: `${appState.firstName}_${appState.lastName}_Lebenslauf.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        loadState();
+        updatePreview();
+    </script>
+</body>
+</html>
