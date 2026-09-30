@@ -622,7 +622,17 @@
             'Tech': { color: '#06b6d4', sidebar: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)', name: '◆ Tech – Cyan-Digital' },
             'Orange': { color: '#ea580c', sidebar: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)', name: '◆ Orange – Warm-Energie' },
             'Indigo': { color: '#4f46e5', sidebar: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', name: '◆ Indigo – Licht-Innovation' },
-            'Warmth': { color: '#b91c1c', sidebar: 'linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)', name: '◆ Warmth – Dunkelrot-Passion' }
+            'Warmth': { color: '#b91c1c', sidebar: 'linear-gradient(135deg, #b91c1c 0%, #dc2626 100%)', name: '◆ Warmth – Dunkelrot-Passion' },
+            'SidebarPhoto-Blue': { color: '#1e40af', sidebar: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)', name: '✦ Sidebar Foto – Navy-Classic', photoLayout: 'left-sidebar' },
+            'SidebarPhoto-Teal': { color: '#0d9488', sidebar: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)', name: '✦ Sidebar Foto – Teal-Professionell', photoLayout: 'left-sidebar' },
+            'ModernHeader-Gradient': { color: '#7c3aed', sidebar: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)', name: '✦ Modern Header – Purple-Flair', photoLayout: 'top-header' },
+            'MinimalPurple': { color: '#6b21a8', sidebar: 'linear-gradient(135deg, #6b21a8 0%, #581c87 100%)', name: '✦ Minimal – Purple-Elegant', photoLayout: 'top-circle' },
+            'CreativeRose': { color: '#be185d', sidebar: 'linear-gradient(135deg, #be185d 0%, #9d174d 100%)', name: '✦ Creative – Rose-Modern', photoLayout: 'top-header' },
+            'ProfessionalGrey': { color: '#374151', sidebar: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)', name: '✦ Professional – Grau-Zeitlos', photoLayout: 'left-sidebar' },
+            'ModernOrange': { color: '#f97316', sidebar: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', name: '✦ Modern Orange – Energetic', photoLayout: 'top-header' },
+            'MinimalGreen': { color: '#059669', sidebar: 'linear-gradient(135deg, #059669 0%, #047857 100%)', name: '✦ Minimal Green – Natural', photoLayout: 'top-circle' },
+            'ExecutiveSilver': { color: '#6b7280', sidebar: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)', name: '✦ Executive – Silver-Corporate', photoLayout: 'left-sidebar' },
+            'VibrantPink': { color: '#ec4899', sidebar: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)', name: '✦ Vibrant Pink – Dynamisch', photoLayout: 'top-header' }
         };
 
         let currentTemplate = 'Modern';
@@ -643,6 +653,7 @@
             signature: 'formal',
             customSignature: '',
             signatureImage: null,
+            profilePhoto: null,
             color: templates['Modern'].color,
             size: 'A',
             alignment: 'left',
@@ -695,6 +706,22 @@
                             </button>
                         `).join('')}
                     </div>
+
+                    <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #ddd;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 12px;">Profilfoto (Optional)</label>
+                        <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 24px; text-align: center; background: #f9f9f9;">
+                            <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto()" style="display: none;">
+                            <button type="button" onclick="document.getElementById('photoUpload').click()" style="background: white; border: 1px solid #ddd; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                📷 Foto auswählen
+                            </button>
+                            <div id="photoPreview" style="margin-top: 12px; display: none;">
+                                <img id="photoPreviewImg" src="" style="max-height: 120px; border-radius: 6px;">
+                                <button type="button" onclick="clearProfilePhoto()" style="margin-top: 8px; background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Löschen</button>
+                            </div>
+                            <p style="font-size: 12px; color: #666; margin-top: 8px;">JPG, PNG oder GIF akzeptiert</p>
+                        </div>
+                    </div>
+
                     <div class="button-group">
                         <button class="btn btn-primary" onclick="goToStep(1)">Weiter</button>
                     </div>
@@ -1236,6 +1263,41 @@
             saveState();
         }
 
+        function uploadProfilePhoto() {
+            const input = document.getElementById('photoUpload');
+            const file = input.files[0];
+
+            if (!file) return;
+
+            // Limit file size to 5MB
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Die Datei ist zu groß. Bitte wähle ein Foto unter 5MB.');
+                return;
+            }
+
+            // Read file as data URL
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                appState.profilePhoto = e.target.result;
+
+                // Show preview
+                document.getElementById('photoPreviewImg').src = appState.profilePhoto;
+                document.getElementById('photoPreview').style.display = 'block';
+
+                updatePreview();
+                saveState();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearProfilePhoto() {
+            appState.profilePhoto = null;
+            document.getElementById('photoUpload').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+            updatePreview();
+            saveState();
+        }
+
         function setColor(index) {
             const colors = ['#000', '#1d4ed8', '#059669'];
             appState.color = colors[index];
@@ -1271,7 +1333,27 @@
             const name = `${appState.firstName} ${appState.lastName}`.trim() || 'Max Mustermann';
             const contact = [appState.email, appState.phone, appState.city].filter(Boolean).join(' • ') || 'max@example.com • Berlin';
 
-            let html = `
+            const template = templates[appState.template];
+            const photoLayout = template?.photoLayout || 'none';
+            const photoHtml = appState.profilePhoto ? `<img src="${appState.profilePhoto}" style="max-width: 100%; height: auto; border-radius: 8px;">` : '';
+
+            let html = '';
+
+            // Add photo for top-header layout
+            if (photoLayout === 'top-header' && appState.profilePhoto) {
+                html += `<div style="text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid ${appState.color};">
+                    <img src="${appState.profilePhoto}" style="max-width: 120px; max-height: 120px; border-radius: 8px; object-fit: cover;">
+                </div>`;
+            }
+
+            // Add photo for top-circle layout
+            if (photoLayout === 'top-circle' && appState.profilePhoto) {
+                html += `<div style="text-align: center; margin-bottom: 16px;">
+                    <img src="${appState.profilePhoto}" style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid ${appState.color};">
+                </div>`;
+            }
+
+            html += `
                 <div class="cv-name" style="color: ${appState.color};">${name}</div>
                 <div class="cv-contact">${contact}</div>
             `;
@@ -1367,6 +1449,11 @@
                     if (appState.signatureImage) {
                         document.getElementById('signaturePreviewImage').src = appState.signatureImage;
                         document.getElementById('signaturePreview').style.display = 'block';
+                    }
+
+                    if (appState.profilePhoto) {
+                        document.getElementById('photoPreviewImg').src = appState.profilePhoto;
+                        document.getElementById('photoPreview').style.display = 'block';
                     }
 
                     if (appState.experiences.length > 0) renderExperiences();
