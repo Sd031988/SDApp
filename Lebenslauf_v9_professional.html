@@ -975,22 +975,28 @@
 
         function renderLanguages() {
             const container = document.getElementById('languageContainer');
+            const languages = [
+                'Deutsch', 'Englisch', 'Französisch', 'Spanisch', 'Italienisch', 'Portugiesisch', 'Niederländisch', 'Polnisch',
+                'Russisch', 'Ukrainisch', 'Bulgarisch', 'Serbisch', 'Kroatisch', 'Slowenisch', 'Tschechisch', 'Slowakisch',
+                'Ungarisch', 'Rumänisch', 'Griechisch', 'Finnisch', 'Schwedisch', 'Norwegisch', 'Dänisch', 'Isländisch',
+                'Afrikaans', 'Niederländisch', 'Türkisch', 'Arabisch', 'Hebräisch', 'Persisch', 'Urdu', 'Hindi',
+                'Bengalisch', 'Punjabi', 'Marathi', 'Gujarati', 'Kannada', 'Malayalam', 'Tamil', 'Telugu',
+                'Chinesisch (Mandarin)', 'Chinesisch (Kantonesisch)', 'Japanisch', 'Koreanisch', 'Vietnamesisch',
+                'Thailändisch', 'Laotisch', 'Burmesisch', 'Kambodscha', 'Indonesisch', 'Malaiisch', 'Tagalog',
+                'Philippinisch', 'Singhalese', 'Nepali', 'Pashto', 'Kurdisch', 'Armenisch', 'Georgisch', 'Albanisch',
+                'Mazedonisch', 'Serbisch', 'Bosnisch', 'Katalanisch', 'Baskisch', 'Galizisch', 'Walisisch', 'Irisch'
+            ];
             container.innerHTML = appState.languages.map((lang, i) => `
                 <div class="form-row">
                     <select onchange="appState.languages[${i}].language = this.value; updatePreview(); saveState()" style="flex: 1;">
                         <option value="">Sprache wählen...</option>
-                        <option value="Deutsch" ${lang.language === 'Deutsch' ? 'selected' : ''}>Deutsch</option>
-                        <option value="Englisch" ${lang.language === 'Englisch' ? 'selected' : ''}>Englisch</option>
-                        <option value="Französisch" ${lang.language === 'Französisch' ? 'selected' : ''}>Französisch</option>
-                        <option value="Spanisch" ${lang.language === 'Spanisch' ? 'selected' : ''}>Spanisch</option>
-                        <option value="Italienisch" ${lang.language === 'Italienisch' ? 'selected' : ''}>Italienisch</option>
-                        <option value="Russisch" ${lang.language === 'Russisch' ? 'selected' : ''}>Russisch</option>
-                        <option value="Chinesisch" ${lang.language === 'Chinesisch' ? 'selected' : ''}>Chinesisch</option>
+                        ${languages.map(l => `<option value="${l}" ${lang.language === l ? 'selected' : ''}>${l}</option>`).join('')}
                     </select>
                     <select onchange="appState.languages[${i}].level = this.value; updatePreview(); saveState()" style="flex: 1;">
                         <option ${lang.level === 'Anfänger' ? 'selected' : ''}>Anfänger</option>
                         <option ${lang.level === 'Grundkenntnisse' ? 'selected' : ''}>Grundkenntnisse</option>
                         <option ${lang.level === 'Fließend' ? 'selected' : ''}>Fließend</option>
+                        <option ${lang.level === 'Verhandlungssicher' ? 'selected' : ''}>Verhandlungssicher</option>
                         <option ${lang.level === 'Muttersprache' ? 'selected' : ''}>Muttersprache</option>
                     </select>
                 </div>
