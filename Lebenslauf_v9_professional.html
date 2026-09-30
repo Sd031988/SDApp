@@ -984,23 +984,36 @@
                 'Chinesisch (Mandarin)', 'Chinesisch (Kantonesisch)', 'Japanisch', 'Koreanisch', 'Vietnamesisch',
                 'Thailändisch', 'Laotisch', 'Burmesisch', 'Kambodscha', 'Indonesisch', 'Malaiisch', 'Tagalog',
                 'Philippinisch', 'Singhalese', 'Nepali', 'Pashto', 'Kurdisch', 'Armenisch', 'Georgisch', 'Albanisch',
-                'Mazedonisch', 'Serbisch', 'Bosnisch', 'Katalanisch', 'Baskisch', 'Galizisch', 'Walisisch', 'Irisch'
+                'Mazedonisch', 'Serbisch', 'Bosnisch', 'Katalanisch', 'Baskisch', 'Galizisch', 'Walisisch', 'Irisch',
+                'Sonstiges'
             ];
-            container.innerHTML = appState.languages.map((lang, i) => `
-                <div class="form-row">
-                    <select onchange="appState.languages[${i}].language = this.value; updatePreview(); saveState()" style="flex: 1;">
-                        <option value="">Sprache wählen...</option>
-                        ${languages.map(l => `<option value="${l}" ${lang.language === l ? 'selected' : ''}>${l}</option>`).join('')}
-                    </select>
-                    <select onchange="appState.languages[${i}].level = this.value; updatePreview(); saveState()" style="flex: 1;">
-                        <option ${lang.level === 'Anfänger' ? 'selected' : ''}>Anfänger</option>
-                        <option ${lang.level === 'Grundkenntnisse' ? 'selected' : ''}>Grundkenntnisse</option>
-                        <option ${lang.level === 'Fließend' ? 'selected' : ''}>Fließend</option>
-                        <option ${lang.level === 'Verhandlungssicher' ? 'selected' : ''}>Verhandlungssicher</option>
-                        <option ${lang.level === 'Muttersprache' ? 'selected' : ''}>Muttersprache</option>
-                    </select>
+            container.innerHTML = appState.languages.map((lang, i) => {
+                const isSonstiges = lang.language === 'Sonstiges' || (lang.language && !languages.slice(0, -1).includes(lang.language));
+                return `
+                <div class="repeatable-section" style="padding: 12px; margin-bottom: 12px;">
+                    <div class="form-row">
+                        <select onchange="const val = this.value; appState.languages[${i}].language = val; if(val === 'Sonstiges') { appState.languages[${i}].customLanguage = ''; } renderLanguages(); updatePreview(); saveState();" style="flex: 1;">
+                            <option value="">Sprache wählen...</option>
+                            ${languages.map(l => `<option value="${l}" ${lang.language === l ? 'selected' : ''}>${l}</option>`).join('')}
+                            ${lang.language && !languages.includes(lang.language) ? `<option value="${lang.language}" selected>${lang.language}</option>` : ''}
+                        </select>
+                        ${isSonstiges ? `
+                            <input type="text" placeholder="z.B. Swahili, Baskenland..." value="${lang.customLanguage || ''}" onchange="appState.languages[${i}].customLanguage = this.value; appState.languages[${i}].language = this.value; updatePreview(); saveState();" style="flex: 1; margin-left: 8px;">
+                        ` : ''}
+                    </div>
+                    <div class="form-row" style="margin-top: 8px;">
+                        <select onchange="appState.languages[${i}].level = this.value; updatePreview(); saveState()" style="flex: 1;">
+                            <option ${lang.level === 'Anfänger' ? 'selected' : ''}>Anfänger</option>
+                            <option ${lang.level === 'Grundkenntnisse' ? 'selected' : ''}>Grundkenntnisse</option>
+                            <option ${lang.level === 'Fließend' ? 'selected' : ''}>Fließend</option>
+                            <option ${lang.level === 'Verhandlungssicher' ? 'selected' : ''}>Verhandlungssicher</option>
+                            <option ${lang.level === 'Muttersprache' ? 'selected' : ''}>Muttersprache</option>
+                        </select>
+                        <button class="btn-remove" onclick="appState.languages.splice(${i}, 1); renderLanguages(); updatePreview(); saveState();" style="margin-left: 8px;">×</button>
+                    </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function setColor(index) {
