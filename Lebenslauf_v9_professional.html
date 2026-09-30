@@ -641,6 +641,7 @@
             competencies: [],
             languages: [{ language: '', level: 'Muttersprache' }],
             signature: 'formal',
+            customSignature: '',
             color: templates['Modern'].color,
             size: 'A',
             alignment: 'left',
@@ -839,11 +840,35 @@
 
                     <div class="form-group">
                         <label>Unterschriftstil</label>
-                        <select id="signature" onchange="updatePreview(); saveState()">
-                            <option value="formal">Formale Unterschrift</option>
-                            <option value="casual">Lockere Unterschrift</option>
-                            <option value="modern">Moderne Unterschrift</option>
-                        </select>
+                        <div class="signature-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 12px 0;">
+                            <button class="signature-btn selected" onclick="setSignature('formal')" style="padding: 12px; border: 2px solid #1e40af; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Formale</div>
+                                <div style="font-size: 11px; color: #666;">Klassisch</div>
+                            </button>
+                            <button class="signature-btn" onclick="setSignature('casual')" style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Locker</div>
+                                <div style="font-size: 11px; color: #666;">Freundlich</div>
+                            </button>
+                            <button class="signature-btn" onclick="setSignature('modern')" style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Modern</div>
+                                <div style="font-size: 11px; color: #666;">Trendig</div>
+                            </button>
+                            <button class="signature-btn" onclick="setSignature('creative')" style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Kreativ</div>
+                                <div style="font-size: 11px; color: #666;">Innovativ</div>
+                            </button>
+                            <button class="signature-btn" onclick="setSignature('professional')" style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Professionell</div>
+                                <div style="font-size: 11px; color: #666;">Business</div>
+                            </button>
+                            <button class="signature-btn" onclick="setSignature('custom')" style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; font-size: 13px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Sonstiges</div>
+                                <div style="font-size: 11px; color: #666;">Eigene</div>
+                            </button>
+                        </div>
+                        <div id="customSignatureInput" style="display: none; margin-top: 12px;">
+                            <input type="text" id="customSignature" placeholder="z. B. Mit freundlichen Grüßen" onchange="appState.customSignature = this.value; updatePreview(); saveState()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                        </div>
                     </div>
 
                     <div class="button-group">
@@ -1079,6 +1104,30 @@
             }
         }
 
+        function setSignature(style) {
+            appState.signature = style;
+            document.querySelectorAll('.signature-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.textContent.toLowerCase().includes(style === 'formal' ? 'formale' : style === 'casual' ? 'locker' : style === 'modern' ? 'modern' : style === 'creative' ? 'kreativ' : style === 'professional' ? 'professionell' : 'sonstiges'));
+                if (style === 'formal') btn.style.borderColor = btn.textContent.toLowerCase().includes('formale') ? '#1e40af' : '#ddd';
+                else if (style === 'casual') btn.style.borderColor = btn.textContent.toLowerCase().includes('locker') ? '#1e40af' : '#ddd';
+                else if (style === 'modern') btn.style.borderColor = btn.textContent.toLowerCase().includes('modern') ? '#1e40af' : '#ddd';
+                else if (style === 'creative') btn.style.borderColor = btn.textContent.toLowerCase().includes('kreativ') ? '#1e40af' : '#ddd';
+                else if (style === 'professional') btn.style.borderColor = btn.textContent.toLowerCase().includes('professionell') ? '#1e40af' : '#ddd';
+                else if (style === 'custom') btn.style.borderColor = btn.textContent.toLowerCase().includes('sonstiges') ? '#1e40af' : '#ddd';
+            });
+
+            const customInput = document.getElementById('customSignatureInput');
+            if (style === 'custom') {
+                customInput.style.display = 'block';
+                document.getElementById('customSignature').focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+
+            updatePreview();
+            saveState();
+        }
+
         function setColor(index) {
             const colors = ['#000', '#1d4ed8', '#059669'];
             appState.color = colors[index];
@@ -1151,6 +1200,17 @@
                 html += '</div>';
             }
 
+            // Add signature/closing
+            const signatureTexts = {
+                'formal': 'Mit freundlichen Grüßen',
+                'casual': 'Viele Grüße',
+                'modern': 'Beste Grüße',
+                'creative': 'Herzliche Grüße',
+                'professional': 'Hochachtungsvoll',
+                'custom': appState.customSignature || 'Mit freundlichen Grüßen'
+            };
+            html += `<div class="cv-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #ddd;"><div style="font-size: 11px; color: #666; font-style: italic;">${signatureTexts[appState.signature]}</div></div>`;
+
             document.getElementById('cvPreview').innerHTML = html;
             updateCompletion();
         }
@@ -1192,6 +1252,8 @@
                     if (appState.street) document.getElementById('street').value = appState.street;
                     if (appState.postalCode) document.getElementById('postalCode').value = appState.postalCode;
                     if (appState.birthDate) document.getElementById('birthDate').value = appState.birthDate;
+                    if (appState.signature) setSignature(appState.signature);
+                    if (appState.customSignature) document.getElementById('customSignature').value = appState.customSignature;
 
                     if (appState.experiences.length > 0) renderExperiences();
                     if (appState.educations.length > 0) renderEducations();
