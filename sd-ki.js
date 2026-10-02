@@ -17,6 +17,7 @@
 
   const SKRIPT_URL = (document.currentScript && document.currentScript.src) || location.href;
   const WORKER_URL = new URL('sd-lotse-worker.js', SKRIPT_URL).href;
+  const INFO_URL = new URL('datenschutz.html#ki', SKRIPT_URL).href;
   const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.83';
   // Gleiche Modelle wie im KI-Assistenten -> derselbe Download fuer alle Apps.
   const MODELLE = {
@@ -34,8 +35,7 @@
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini-Schlüssel nötig · Texte gehen an Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'eigene KI · lokal auf diesem Gerät · ohne Schlüssel',
       lotse_hinweis: 'SD Lotse läuft komplett auf deinem Gerät (am besten PC/Laptop mit Chrome oder Edge). Er ist kleiner als Gemini – für kurze Texte gut, für lange Texte schwächer.',
-      credit: 'SD Lotse basiert auf Llama 3.2 von Meta · Built with Llama',
-      lizenz: 'Lizenz',
+      info: 'ℹ️ Datenschutz & Lizenzen',
       dl_titel: '🔒 SD Lotse einmalig herunterladen?',
       dl_text: 'Damit die eigene KI lokal auf deinem Gerät arbeiten kann, wird sie einmalig heruntergeladen (ca. {groesse}) und im Browser gespeichert. Danach steht sie in allen SD-Apps bereit – ohne Schlüssel, und deine Texte verlassen das Gerät nicht. Tipp: am besten im WLAN.',
       dl_ok: '⬇️ Herunterladen & starten', abbrechen: 'Abbrechen',
@@ -69,8 +69,7 @@
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini key needed · text is sent to Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'own AI · local on this device · no key',
       lotse_hinweis: 'SD Lotse runs entirely on your device (best on a PC/laptop with Chrome or Edge). It is smaller than Gemini – good for short texts, weaker for long ones.',
-      credit: 'SD Lotse is based on Llama 3.2 by Meta · Built with Llama',
-      lizenz: 'License',
+      info: 'ℹ️ Privacy & licenses',
       dl_titel: '🔒 Download SD Lotse once?',
       dl_text: 'To work locally on your device, our own AI is downloaded once (approx. {groesse}) and stored in the browser. After that it is available in all SD apps – no key needed, and your texts never leave the device. Tip: best over Wi-Fi.',
       dl_ok: '⬇️ Download & start', abbrechen: 'Cancel',
@@ -177,7 +176,7 @@
         '<button type="button" class="sdki-opt' + (a === 'lotse' ? ' aktiv' : '') + '" data-a="lotse" role="radio" aria-checked="' + (a === 'lotse') + '"><strong>' + esc(tx('lotse')) + '</strong><small>' + esc(tx('lotse_sub')) + '</small></button>' +
         '</div>' +
         (a === 'lotse'
-          ? '<p class="sdki-hinweis">' + esc(tx('lotse_hinweis')) + '<br>' + esc(tx('credit')) + ' · <a href="https://www.llama.com/llama3_2/license/" target="_blank" rel="noopener">' + esc(tx('lizenz')) + '</a></p>'
+          ? '<p class="sdki-hinweis">' + esc(tx('lotse_hinweis')) + ' <a href="' + INFO_URL + '" target="_blank" rel="noopener">' + esc(tx('info')) + '</a></p>'
           : '');
       box.querySelectorAll('.sdki-opt').forEach(b => { b.onclick = () => setzeAnbieter(b.dataset.a); });
     };
@@ -251,7 +250,7 @@
       const o = overlay(
         '<h2>' + esc(tx('dl_titel')) + '</h2>' +
         '<p>' + esc(tx('dl_text', { groesse: MODELLE[variante()].groesse })) + '</p>' +
-        '<p class="sdki-klein">' + esc(tx('credit')) + ' · <a href="https://www.llama.com/llama3_2/license/" target="_blank" rel="noopener">' + esc(tx('lizenz')) + '</a></p>' +
+        '<p class="sdki-klein"><a href="' + INFO_URL + '" target="_blank" rel="noopener">' + esc(tx('info')) + '</a></p>' +
         '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-ok>' + esc(tx('dl_ok')) + '</button>' +
         '<button type="button" class="sdki-btn" data-nein>' + esc(tx('abbrechen')) + '</button></div>');
       o.querySelector('[data-ok]').onclick = () => { o.remove(); resolve(true); };

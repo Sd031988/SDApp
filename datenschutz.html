@@ -208,7 +208,7 @@
             • docx.js für DOCX-Generierung im Browser
         </p>
         <p>
-            Alle diese Biblioteken verarbeiten Ihre Daten ausschließlich lokal in Ihrem Browser.
+            Diese Bibliotheken verarbeiten Ihre Eingaben lokal in Ihrem Browser. Ausnahmen sind die freiwilligen KI-Funktionen, die in <a href="#ki">Abschnitt 8</a> beschrieben sind.
         </p>
 
         <h2>5. Sicherheit</h2>
@@ -231,12 +231,53 @@
             • Datenschutzeinstellungen in Ihrem Browser anpassen
         </p>
 
-        <h2>8. Änderungen dieser Datenschutzerklärung</h2>
+        <h2 id="ki">8. KI-Funktionen (KI-Assistent, KI-Schreibhilfe, KI-Hilfe)</h2>
+        <p>
+            Die KI-Funktionen sind freiwillig. Sie wählen selbst, welche KI genutzt wird. Je nach Auswahl werden Daten unterschiedlich verarbeitet:
+        </p>
+
+        <h2>8.1 SD Lotse (eigene KI, lokal)</h2>
+        <p>
+            SD Lotse läuft vollständig in Ihrem Browser auf Ihrem Gerät. Ihre Eingaben, Texte und Dokumente werden dabei <strong>nicht</strong> an uns, an Meta oder an andere Dritte übertragen.
+        </p>
+        <p>
+            • Beim ersten Start (erst nach Ihrer Bestätigung) werden die Modelldateien einmalig von Hugging Face (huggingface.co) und die nötige Programmbibliothek von jsDelivr (esm.run / cdn.jsdelivr.net) geladen. Dabei erhalten diese Anbieter technisch bedingt Ihre IP-Adresse und Browser-Angaben – aber keine Ihrer Eingaben.<br>
+            • Das Modell wird danach im Speicher Ihres Browsers abgelegt. Sie können es im KI-Assistenten unter ⚙️ „SD Lotse vom Gerät löschen“ oder über die Browser-Einstellungen entfernen.<br>
+            • Nachschlagen auf Wikipedia (abschaltbar): Bei Wissensfragen im KI-Assistenten kann SD Lotse einen Suchbegriff aus Ihrer Frage an Wikipedia (Wikimedia Foundation) senden, um den passenden Artikel abzurufen. Diese Funktion lässt sich unter ⚙️ „Nachschlagen“ ausschalten.
+        </p>
+
+        <h2>8.2 Gemini (Google)</h2>
+        <p>
+            Wenn Sie ☁️ Gemini wählen, werden Ihre Nachrichten, angehängte Bilder/PDFs, in Links genannte Seiten und – nur wenn Sie „Anschreiben mit meinem Lebenslauf“ nutzen – Angaben aus Ihrem Lebenslauf (Name, Wunschposition, Erfahrung, Ausbildung, Kenntnisse, Sprachen; <strong>keine</strong> Adresse, Telefonnummer oder E-Mail) direkt von Ihrem Browser an Google (Gemini API) gesendet. Dafür nutzen Sie Ihren eigenen Gemini-Schlüssel; wir erhalten diese Daten nicht.
+        </p>
+        <p>
+            • Bei kostenlosen Schlüsseln kann Google Eingaben und Antworten nach seinen Nutzungsbedingungen zur Verbesserung seiner Dienste verwenden; dabei können sie auch von Menschen gelesen werden. Für Nutzer im EWR, in der Schweiz und im Vereinigten Königreich sehen Googles Bedingungen besondere Schutzregeln vor. Maßgeblich sind die jeweils aktuellen <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener">Nutzungsbedingungen der Gemini API</a> und die <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzerklärung von Google</a>.<br>
+            • Websuche und Link-Lesen: Gemini kann dafür die Google-Suche bzw. die von Ihnen eingefügten Links nutzen (abschaltbar unter ⚙️ „Websuche“).<br>
+            • Bitte geben Sie keine Passwörter, Bank- oder Gesundheitsdaten ein.
+        </p>
+
+        <h2>8.3 Knopf „Bei Google KI fragen“ (G↗)</h2>
+        <p>
+            Dieser Knopf öffnet Ihre Frage in einem neuen Fenster bzw. Tab direkt bei Google (KI-Modus der Google-Suche). Dort gilt die Datenschutzerklärung von Google. Wir lesen von dort nichts aus.
+        </p>
+
+        <h2 id="lizenzen">8.4 Lizenzhinweise</h2>
+        <p>
+            SD Lotse basiert auf <strong>Llama 3.2</strong> von Meta Platforms, Inc. – <strong>Built with Llama</strong>.
+            Llama 3.2 is licensed under the Llama 3.2 Community License, Copyright © Meta Platforms, Inc. All Rights Reserved.
+            Lizenztext: <a href="https://www.llama.com/llama3_2/license/" target="_blank" rel="noopener">Llama 3.2 Community License</a>.
+            Meta erhält dabei keine Daten von Ihnen – das Modell läuft lokal (siehe 8.1).
+        </p>
+        <p>
+            Die lokale Ausführung erfolgt mit <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener">WebLLM</a> (Apache-Lizenz 2.0).
+        </p>
+
+        <h2>9. Änderungen dieser Datenschutzerklärung</h2>
         <p>
             Wir behalten uns vor, diese Datenschutzerklärung jederzeit zu ändern. Die jeweils aktuelle Version finden Sie auf dieser Seite.
         </p>
 
-        <h2>9. Kontakt</h2>
+        <h2>10. Kontakt</h2>
         <p>
             Bei Fragen zum Datenschutz kontaktieren Sie uns bitte unter:<br>
             Email: <a href="mailto:durrani.sulaiman@gmail.com">durrani.sulaiman@gmail.com</a>
