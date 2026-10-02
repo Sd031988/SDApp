@@ -1764,6 +1764,17 @@
                 "import_titel": "📥 Alten Lebenslauf einlesen",
                 "import_beschreibung": "Wähle deinen bisherigen Lebenslauf. Die KI verteilt die Angaben auf die Felder – du siehst vorher alles und entscheidest, was übernommen wird.",
                 "import_kein_sdki": "Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.",
+                "stelle_text": "Hast du eine Stellenanzeige? Füge sie ein (Text, Link, Foto oder PDF) – die KI schreibt dein Anschreiben passend zur Stelle, auf Basis deines Lebenslaufs.",
+                "stelle_btn": "📌 Anschreiben zur Stellenanzeige",
+                "stelle_titel": "📌 Anschreiben zur Stellenanzeige",
+                "stelle_beschreibung": "Füge die Stellenanzeige ein: Text kopieren, Link einfügen, Foto/Screenshot oder PDF anhängen – oder vorlesen. Die KI schreibt daraus mit deinem Lebenslauf ein passendes Anschreiben.",
+                "stelle_platzhalter": "Text der Stellenanzeige hier einfügen (oder Link) …",
+                "stelle_start": "✍️ Anschreiben schreiben",
+                "stelle_cv_ok": "✓ Dein Lebenslauf wird verwendet: {felder}.",
+                "stelle_cv_leer": "⚠️ Dein Lebenslauf ist noch fast leer – das Anschreiben wird dann sehr allgemein und enthält Lücken in [eckigen Klammern]. Tipp: zuerst den Lebenslauf ausfüllen oder einlesen.",
+                "stelle_nur_link": "Links kann nur ☁️ Gemini öffnen. Bitte füge den Text der Anzeige ein oder hänge ein Foto/PDF an – oder wähle oben Gemini.",
+                "stelle_fertig": "✓ Anschreiben eingetragen – bitte durchlesen und bei Bedarf anpassen.",
+                "lbl_tipps": "💡 Tipps zur Passung (wird nicht übernommen)",
                 "personal_sub": "Gilt für alle Bereiche (Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe).",
                 "lbl_vorname": "Vorname",
                 "ph_vorname": "z. B. Max",
@@ -1949,6 +1960,17 @@
                 "import_titel": "📥 Import old resume",
                 "import_beschreibung": "Choose your existing resume. The AI distributes the details to the fields – you see everything first and decide what is applied.",
                 "import_kein_sdki": "The AI components could not be loaded. Please reload the page.",
+                "stelle_text": "Have a job ad? Add it (text, link, photo or PDF) – the AI writes your cover letter tailored to the job, based on your resume.",
+                "stelle_btn": "📌 Cover letter for a job ad",
+                "stelle_titel": "📌 Cover letter for a job ad",
+                "stelle_beschreibung": "Add the job ad: copy the text, paste a link, attach a photo/screenshot or PDF – or read it aloud. The AI writes a matching cover letter with your resume.",
+                "stelle_platzhalter": "Paste the text of the job ad here (or a link) …",
+                "stelle_start": "✍️ Write cover letter",
+                "stelle_cv_ok": "✓ Your resume is used: {felder}.",
+                "stelle_cv_leer": "⚠️ Your resume is still almost empty – the letter will be very general and contain gaps in [square brackets]. Tip: fill in or import your resume first.",
+                "stelle_nur_link": "Only ☁️ Gemini can open links. Please paste the text of the ad or attach a photo/PDF – or choose Gemini above.",
+                "stelle_fertig": "✓ Cover letter filled in – please read it and adjust if needed.",
+                "lbl_tipps": "💡 Tips on the fit (not applied)",
                 "personal_sub": "Applies to all areas (resume, cover letter, title page, application folder).",
                 "lbl_vorname": "First name",
                 "ph_vorname": "e.g. John",
@@ -2121,7 +2143,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=14"></script>
+    <script src="sd-ki.js?v=15"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2413,6 +2435,11 @@
                 </div>
             </div>
 
+            <div class="import-card">
+                <p data-i18n="stelle_text">Hast du eine Stellenanzeige? Füge sie ein (Text, Link, Foto oder PDF) – die KI schreibt dein Anschreiben passend zur Stelle, auf Basis deines Lebenslaufs.</p>
+                <button type="button" class="import-btn" onclick="anschreibenZurStelle()" data-i18n="stelle_btn">📌 Anschreiben zur Stellenanzeige</button>
+                <div class="import-status" id="stelle-status" aria-live="polite"></div>
+            </div>
             <h2 data-i18n="anschreiben_h2">Anschreiben</h2>
             <div class="form-group">
                 <label data-i18n="lbl_unternehmen">Unternehmen</label>
@@ -3280,6 +3307,103 @@
             const text = daten?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
             if (!text.trim()) throw new Error(t('err_kein_text_zurueck'));
             return text.trim();
+        }
+
+        // ---- Anschreiben zur Stellenanzeige: Anzeige + Lebenslauf -> Anschreiben ----
+        function lebenslaufFuerAnschreiben() {
+            const val = (id) => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+            const teile = [];
+            const name = [val('vorname'), val('nachname')].filter(Boolean).join(' ');
+            if (name) teile.push('Name: ' + name);
+            if (val('position')) teile.push('Berufsbezeichnung/Wunschposition: ' + val('position'));
+            if (val('erfahrung')) teile.push('Berufserfahrung:\n' + val('erfahrung'));
+            if (val('ausbildung')) teile.push('Ausbildung:\n' + val('ausbildung'));
+            if (val('kenntnisse')) teile.push('Kenntnisse: ' + val('kenntnisse'));
+            if (val('sprachen')) teile.push('Sprachen: ' + val('sprachen'));
+            if (val('fuehrerschein')) teile.push('Führerschein: ' + val('fuehrerschein'));
+            if (val('verfuegbarkeit')) teile.push('Verfügbar: ' + val('verfuegbarkeit'));
+            return teile.join('\n');
+        }
+
+        function anschreibenZurStelle() {
+            if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
+            const en = window.SD_LANG === 'en';
+            const cv = lebenslaufFuerAnschreiben();
+            const vorhanden = ['erfahrung', 'ausbildung', 'kenntnisse'].filter(id => (document.getElementById(id).value || '').trim());
+            const namen = { erfahrung: en ? 'experience' : 'Berufserfahrung', ausbildung: en ? 'education' : 'Ausbildung', kenntnisse: en ? 'skills' : 'Kenntnisse' };
+            const cvHinweis = vorhanden.length
+                ? t('stelle_cv_ok').replace('{felder}', vorhanden.map(v => namen[v]).join(', '))
+                : t('stelle_cv_leer');
+            const felder = [
+                { id: 'unternehmen', label: en ? 'Company' : 'Unternehmen', hinweis: 'Name des Unternehmens aus der Anzeige, eine Zeile' },
+                { id: 'ansprechperson', label: en ? 'Contact person' : 'Ansprechperson', hinweis: 'z. B. "Frau Müller" – nur wenn in der Anzeige genannt' },
+                { id: 'position', label: en ? 'Position (subject)' : 'Position (Betreff)', hinweis: 'Stellenbezeichnung aus der Anzeige' },
+                { id: 'anschreiben', label: en ? 'Cover letter text' : 'Text des Anschreibens', mehrzeilig: true },
+                { id: 'tipps', label: t('lbl_tipps'), nurAnzeige: true }
+            ];
+            window.sdKi.einleseDialog({
+                modus: 'beides',
+                ohneVerbessern: true,
+                titel: t('stelle_titel'),
+                beschreibung: t('stelle_beschreibung'),
+                zusatzHtml: '<p class="sdki-klein">' + cvHinweis.replace(/</g, '&lt;') + '</p>',
+                sprechHinweis: '',
+                platzhalter: t('stelle_platzhalter'),
+                startText: t('stelle_start'),
+                dokumentArt: 'eine Stellenanzeige',
+                felder,
+                fallbackFeld: 'anschreiben',
+                pruefeVorher: (text, anbieter) => {
+                    const ohneLinks = text.replace(/https?:\/\/\S+/g, '').trim();
+                    if (/https?:\/\//.test(text) && anbieter !== 'gemini' && ohneLinks.length < 150) return t('stelle_nur_link');
+                    return '';
+                },
+                promptBauer: (text, info) => {
+                    const sprache = en ? 'Englisch' : 'Deutsch';
+                    return 'Schreibe ein Bewerbungsanschreiben für die Stelle aus der Stellenanzeige unten, für die Person mit den Lebenslauf-Angaben unten.\n\n' +
+                        'REGELN:\n' +
+                        '- Nutze NUR Fakten aus den Lebenslauf-Angaben. Erfinde keine Erfahrungen, Firmen, Abschlüsse, Zahlen oder Kenntnisse.\n' +
+                        '- Beziehe dich konkret auf 2-3 wichtige Anforderungen oder Aufgaben aus der Anzeige und verbinde sie mit passenden Angaben aus dem Lebenslauf.\n' +
+                        '- Fehlt etwas, das die Anzeige verlangt, behaupte es nicht – zeige stattdessen Lernbereitschaft oder lass es weg.\n' +
+                        '- Fehlen Angaben, die für den Text nötig sind, schreibe eine Lücke in eckigen Klammern, z. B. [Eintrittstermin].\n' +
+                        '- Das Anschreiben: 3-4 kurze Absätze, ca. 180-250 Wörter, natürlich und motiviert, ohne Floskeln. NUR der Brieftext: ohne Briefkopf, ohne Anrede ("Sehr geehrte ..."), ohne Grußformel und ohne Unterschrift.\n' +
+                        '- Sprache des Anschreibens: ' + sprache + ' (oder die Sprache der Anzeige, falls sie eindeutig anders ist).\n' +
+                        '- Unter "tipps" in 2-4 kurzen Stichpunkten: was gut passt und was in der Anzeige verlangt wird, aber im Lebenslauf fehlt.\n' +
+                        (info.datei ? '- Die Anzeige ist zusätzlich als Datei/Foto angehängt.\n' : '') +
+                        (/https?:\/\//.test(text) && info.anbieter === 'gemini' ? '- Öffne den Link zur Anzeige und lies sie.\n' : '') +
+                        '- Antworte NUR in diesem Format, jede Überschrift genau so (### feldname), darunter der Inhalt; fehlt eine Angabe, schreibe nur: -\n\n' +
+                        '### unternehmen\n### ansprechperson\n### position\n### anschreiben\n### tipps\n\n' +
+                        '=== LEBENSLAUF-ANGABEN ===\n' + (cv || '(keine Angaben)') + '\n\n' +
+                        '=== STELLENANZEIGE ===\n' + (text || '(siehe angehängte Datei)');
+                },
+                uebernehmen: (werte) => {
+                    let n = 0;
+                    if (werte.anschreiben) {
+                        // Anrede und Grussformel setzt die App selbst - aus dem Text entfernen
+                        werte.anschreiben = werte.anschreiben
+                            .replace(/^\s*(sehr geehrte[^\n]*|liebe[^\n]*|hallo[^\n]*|dear[^\n]*|guten tag[^\n]*)\n+/i, '')
+                            .replace(/\n+\s*(mit freundlichen gr[üu][ßs]en|freundliche gr[üu][ßs]e|beste gr[üu][ßs]e|viele gr[üu][ßs]e|kind regards|best regards|sincerely|yours sincerely)[\s\S]*$/i, '')
+                            .trim();
+                    }
+                    ['unternehmen', 'ansprechperson', 'position', 'anschreiben'].forEach(id => {
+                        if (werte[id] == null) return;
+                        document.getElementById(id).value = werte[id];
+                        n++;
+                    });
+                    // Anrede passend setzen: mit Ansprechperson automatisch, sonst "Damen und Herren"
+                    const anrede = document.getElementById('anrede');
+                    if (anrede && (anrede.value === 'auto' || anrede.value === 'damen-herren')) {
+                        anrede.value = (document.getElementById('ansprechperson').value || '').trim() ? 'auto' : 'damen-herren';
+                    }
+                    updateVorschau();
+                    speichereDaten();
+                    return n;
+                },
+                fertig: () => {
+                    const el = document.getElementById('stelle-status');
+                    if (el) { el.textContent = t('stelle_fertig'); setTimeout(() => { if (el.textContent === t('stelle_fertig')) el.textContent = ''; }, 8000); }
+                }
+            });
         }
 
         // ---- Alten Lebenslauf einlesen: KI verteilt die Angaben auf die Felder ----

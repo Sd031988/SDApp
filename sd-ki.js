@@ -93,6 +93,8 @@
       sp_verweigert: 'Das Mikrofon ist nicht erlaubt. Bitte in den Browser-Einstellungen das Mikrofon für diese Seite erlauben – oder das 🎤 der Tastatur nutzen.',
       sp_fehler: 'Spracherkennung: {msg}',
       sp_leer: 'Bitte zuerst etwas erzählen oder schreiben.',
+      ein_datei_kurz: '📎 Datei / Foto',
+      ein_datei_drin: '📎 „{name}“ wurde eingelesen – der Text steht oben im Feld.',
       ein_lotse_tipp: 'SD Lotse ist für diese Aufgabe oft zu klein – mit Gemini, ChatGPT oder Claude klappt die Zuordnung deutlich besser.',
       ein_regeln: 'Hinweis: Ein Teil der Felder wurde ohne KI anhand des Aufbaus erkannt – bitte besonders genau prüfen. Mit Gemini, ChatGPT oder Claude wird die Zuordnung meist vollständiger.',
       ein_ki_fehler: 'Die KI hat nicht geantwortet ({msg}). Die Felder unten wurden ohne KI anhand des Aufbaus erkannt – bitte genau prüfen.',
@@ -171,6 +173,8 @@
       sp_verweigert: 'The microphone is not allowed. Please allow it for this site in the browser settings – or use the keyboard 🎤.',
       sp_fehler: 'Speech recognition: {msg}',
       sp_leer: 'Please say or write something first.',
+      ein_datei_kurz: '📎 File / photo',
+      ein_datei_drin: '📎 "{name}" was read – its text is in the field above.',
       ein_lotse_tipp: 'SD Lotse is often too small for this task – Gemini, ChatGPT or Claude assign the details much better.',
       ein_regeln: 'Note: some fields were recognized without AI from the layout – please check them carefully. Gemini, ChatGPT or Claude usually assign more completely.',
       ein_ki_fehler: 'The AI did not answer ({msg}). The fields below were recognized without AI from the layout – please check carefully.',
@@ -271,6 +275,8 @@
 .sdki-feld strong{font-size:.8rem}
 .sdki-feld textarea{grid-column:1/-1;width:100%;box-sizing:border-box;border:1px solid #d8e0dc;border-radius:8px;padding:6px 8px;font:inherit;font-size:.88rem;resize:vertical;min-height:38px}
 .sdki-diktat{width:100%;box-sizing:border-box;border:1px solid #d8e0dc;border-radius:10px;padding:10px;font:inherit;font-size:16px;line-height:1.5;resize:vertical;min-height:140px}
+.sdki-tipp{background:#fff8e6;border:1px solid #f0d9a0;border-radius:10px;padding:8px 10px;font-size:.85rem;line-height:1.45;white-space:pre-line}
+.sdki-tipp strong{display:block;font-size:.8rem;margin-bottom:2px}
 .sdki-check{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.4}
 .sdki-fehler{background:#fdf0ee;border:1px solid #f1c4bf;color:#b42318;border-radius:10px;padding:10px 12px;font-size:.88rem;white-space:pre-line}`;
     document.head.appendChild(st);
@@ -550,9 +556,15 @@
     const teile = opt.datei ? [{ inlineData: { mimeType: opt.datei.mime, data: opt.datei.data } }] : [];
     const body = { contents: [{ role: 'user', parts: teile.concat([{ text: String(prompt) }]) }] };
     if (opt.system) body.system_instruction = { parts: [{ text: opt.system }] };
+    // Links in der Anfrage (z. B. Stellenanzeige): Gemini darf sie oeffnen
+    if (opt.links) body.tools = [{ url_context: {} }];
     let antwort;
     try {
       ({ antwort } = await window.sdGemini.anfrage(key, body));
+      if (!antwort.ok && opt.links && antwort.status === 400) {
+        delete body.tools;
+        ({ antwort } = await window.sdGemini.anfrage(key, body));
+      }
     } catch (e) {
       throw new Error(tx('netz'));
     }
@@ -997,14 +1009,18 @@
       '<h2>' + esc(opt.titel || tx('ein_titel')) + '</h2>' +
       (opt.beschreibung ? '<p>' + esc(opt.beschreibung) + '</p>' : '') +
       '<div data-auswahl></div>' +
-      '<label class="sdki-check"><input type="checkbox" data-verbessern> <span>' + esc(tx('ein_verbessern')) + '</span></label>' +
+      (opt.ohneVerbessern ? '<input type="checkbox" data-verbessern hidden>'
+        : '<label class="sdki-check"><input type="checkbox" data-verbessern> <span>' + esc(tx('ein_verbessern')) + '</span></label>') +
+      (opt.zusatzHtml || '') +
       '<p class="sdki-klein" data-privat></p>' +
-      (opt.modus === 'sprechen'
+      (opt.modus === 'sprechen' || opt.modus === 'beides'
         ? '<p class="sdki-klein">' + esc(opt.sprechHinweis || '') + '</p>' +
-          '<textarea class="sdki-diktat" data-diktat rows="7" placeholder="' + esc(tx('sp_ph')) + '"></textarea>' +
+          '<textarea class="sdki-diktat" data-diktat rows="7" placeholder="' + esc(opt.platzhalter || tx('sp_ph')) + '"></textarea>' +
           '<p class="sdki-klein" data-sp-info></p>' +
+          (opt.modus === 'beides' ? '<input type="file" data-datei hidden accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*,.txt,.md,text/plain">' : '') +
           '<div class="sdki-knoepfe"><button type="button" class="sdki-btn akt" data-mikro>' + esc(tx('sp_start')) + '</button>' +
-          '<button type="button" class="sdki-btn prim" data-eintragen>' + esc(tx('sp_eintragen')) + '</button>' +
+          (opt.modus === 'beides' ? '<button type="button" class="sdki-btn" data-waehlen>' + esc(tx('ein_datei_kurz')) + '</button>' : '') +
+          '<button type="button" class="sdki-btn prim" data-eintragen>' + esc(opt.startText || tx('sp_eintragen')) + '</button>' +
           '<button type="button" class="sdki-btn" data-schliessen>' + esc(tx('abbrechen')) + '</button></div>'
         : '<input type="file" data-datei hidden accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*,.txt,.md,text/plain">' +
           '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-waehlen>' + esc(tx('ein_datei')) + '</button>' +
@@ -1017,7 +1033,7 @@
     if (opt.modus === 'sprechen') $q('[data-verbessern]').checked = true;
     const privat = () => {
       const a = anbieter();
-      const sp = opt.modus === 'sprechen' ? '_text' : '';
+      const sp = opt.modus === 'sprechen' || opt.modus === 'beides' ? '_text' : '';
       $q('[data-privat]').textContent = a === 'lotse' ? tx('ein_privat_lotse' + sp)
         : tx('ein_privat_online' + sp, { firma: ONLINE[a] ? ONLINE[a].firma : 'Google (Gemini)' });
     };
@@ -1028,15 +1044,40 @@
     $q('[data-schliessen]').onclick = schliessen;
     const status = (t) => { $q('[data-status]').textContent = t || ''; };
     const fehler = (t) => { const f = $q('[data-fehler]'); f.textContent = t || ''; f.hidden = !t; };
-    const startKnopf = $q(opt.modus === 'sprechen' ? '[data-eintragen]' : '[data-waehlen]');
-    if (opt.modus === 'sprechen') {
+    const textModus = opt.modus === 'sprechen' || opt.modus === 'beides';
+    const startKnopf = $q(textModus ? '[data-eintragen]' : '[data-waehlen]');
+    let angehaengt = null;   // bei 'beides': zuletzt gewaehlte Datei (Original fuer Online-KIs)
+    if (textModus) {
       const feld = $q('[data-diktat]');
       if (opt.vorgabeText) feld.value = opt.vorgabeText;
       diktat = diktatAnbinden(feld, $q('[data-mikro]'), (t) => { $q('[data-sp-info]').textContent = t || ''; });
+      if (opt.modus === 'beides') {
+        $q('[data-waehlen]').onclick = () => $q('[data-datei]').click();
+        $q('[data-datei]').onchange = async (e) => {
+          const file = e.target.files && e.target.files[0];
+          e.target.value = '';
+          if (!file) return;
+          fehler('');
+          try {
+            const text = await leseDatei(file, status);
+            status('');
+            angehaengt = file;
+            feld.value = (feld.value.trim() ? feld.value.trim() + '\n\n' : '') + (text || '');
+            $q('[data-sp-info]').textContent = tx('ein_datei_drin', { name: file.name });
+          } catch (err) {
+            status('');
+            fehler((err && err.message) || String(err));
+          }
+        };
+      }
       startKnopf.onclick = () => {
         if (diktat) diktat.stopp();
         const text = (feld.value || '').trim();
-        if (!text) { fehler(tx('sp_leer')); return; }
+        if (!text && !angehaengt) { fehler(tx('sp_leer')); return; }
+        if (opt.pruefeVorher) {
+          const warnung = opt.pruefeVorher(text, anbieter());
+          if (warnung) { fehler(warnung); return; }
+        }
         verarbeite(text, null);
       };
     } else {
@@ -1073,18 +1114,28 @@
         // Online-KIs bekommen zusaetzlich das Original (PDF/Foto): sie sehen
         // dann auch das Layout (Spalten, Tabellen) statt nur den Rohtext.
         let datei = (!file && opt.vorgabeDatei && !istLotse) ? opt.vorgabeDatei : null;
-        const typOk = !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(file.type || ''));
-        if (!istLotse && typOk && file.size <= 12 * 1024 * 1024) {
+        const original = file || angehaengt;
+        const typOk = !!original && (original.type === 'application/pdf' || /\.pdf$/i.test(original.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(original.type || ''));
+        if (!istLotse && typOk && original.size <= 12 * 1024 * 1024) {
+          file = original;
           try {
             const url = await new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fehler; r.readAsDataURL(file); });
             datei = { mime: /\.pdf$/i.test(file.name || '') ? 'application/pdf' : file.type, data: String(url).split(',')[1] || '', name: file.name };
           } catch (e) { datei = null; }
         }
         try {
-          const prompt = baueEinlesePrompt(Object.assign({}, opt, file ? {} : { dokumentArt: opt.diktatArt || opt.dokumentArt }), text, $q('[data-verbessern]').checked) +
-            (datei ? '\n\nDas Original-Dokument ist zusätzlich angehängt – nutze es, um Spalten und Tabellen richtig zuzuordnen.' : '');
-          const antwort = await schreibe(prompt, { maxTokens: istLotse ? 1100 : 2500, datei });
+          const prompt = opt.promptBauer
+            ? opt.promptBauer(text, { datei: !!datei, anbieter: anbieter() })
+            : baueEinlesePrompt(Object.assign({}, opt, vorgabeText != null ? { dokumentArt: opt.diktatArt || opt.dokumentArt } : {}), text, $q('[data-verbessern]').checked) +
+              (datei ? '\n\nDas Original-Dokument ist zusätzlich angehängt – nutze es, um Spalten und Tabellen richtig zuzuordnen.' : '');
+          const links = /https?:\/\/\S+/.test(text);
+          const antwort = await schreibe(prompt, { maxTokens: istLotse ? 1100 : 2500, datei, links });
           werte = leseEinleseAntwort(antwort, opt.felder);
+          // Hat sich die KI nicht ans Format gehalten, aber Text geliefert
+          // (z. B. SD Lotse schreibt einfach den Brief): in ein Feld legen.
+          if (!Object.keys(werte).length && opt.fallbackFeld && String(antwort).trim().length > 80) {
+            werte[opt.fallbackFeld] = String(antwort).replace(/^[ \t]*#{2,4}.*$/gm, '').trim();
+          }
         } catch (err) {
           kiFehler = err;
         }
@@ -1115,6 +1166,17 @@
       const liste = box.querySelector('.sdki-felder');
       opt.felder.forEach(f => {
         if (werte[f.id] == null) return;
+        if (f.nurAnzeige) {
+          // Nur zum Lesen (z. B. Tipps), wird nicht uebernommen
+          const p = document.createElement('div');
+          p.className = 'sdki-tipp';
+          p.innerHTML = '<strong>' + esc(f.label) + '</strong>';
+          const t2 = document.createElement('div');
+          t2.textContent = werte[f.id];
+          p.appendChild(t2);
+          liste.appendChild(p);
+          return;
+        }
         const zeile = document.createElement('div');
         zeile.className = 'sdki-feld';
         const cb = document.createElement('input');
