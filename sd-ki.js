@@ -141,6 +141,7 @@
 .sdki-hinweis,.sdki-box .sdki-hinweis{font-size:.75rem;color:#647482;margin:6px 2px 0;line-height:1.45}
 .sdki-hinweis a{color:#2f7d72}
 @media (max-width:420px){.sdki-optionen{grid-template-columns:1fr}}
+.sdki-badge{margin:0 auto 0 8px;font-size:.72rem;font-weight:bold;padding:2px 8px;border-radius:999px;background:#fff;color:#1c4a42;border:1px solid #2f7d72;white-space:nowrap}
 .sdki-overlay{position:fixed;inset:0;background:rgba(23,42,58,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Trebuchet MS',Verdana,sans-serif}
 .sdki-box{background:#fff;color:#172a3a;border-radius:16px;max-width:620px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:grid;gap:10px}
 .sdki-box h2{font-family:Georgia,serif;font-size:1.15rem;margin:0}
@@ -506,8 +507,37 @@
     return o;
   }
 
+  // ------------------------------------------------------------
+  // KI-Schreibhilfe-Bereich einer App verbinden: Auswahl oben, gewaehlte KI
+  // als Plakette in der (auch zugeklappt sichtbaren) Ueberschrift, und bei
+  // SD Lotse die Gemini-Schluesselfelder ausblenden (er braucht keinen).
+  // ------------------------------------------------------------
+  function verbindeKiPanel(panelBody, toggleButton) {
+    if (!panelBody) return;
+    stylesEinfuegen();
+    const auswahl = baueAuswahl(panelBody);
+    let plakette = null;
+    if (toggleButton) {
+      plakette = document.createElement('span');
+      plakette.className = 'sdki-badge';
+      const chev = toggleButton.querySelector('.chev');
+      toggleButton.insertBefore(plakette, chev || null);
+    }
+    const aktualisieren = () => {
+      const istLotse = anbieter() === 'lotse';
+      if (plakette) plakette.textContent = istLotse ? tx('lotse') : tx('gemini');
+      [...panelBody.children].forEach(el => {
+        if (el === auswahl || el.classList.contains('ki-hint')) return;
+        el.style.display = istLotse ? 'none' : '';
+      });
+    };
+    aktualisieren();
+    document.addEventListener('sd-ki-anbieter', aktualisieren);
+    document.addEventListener('sd-lang-changed', aktualisieren);
+  }
+
   window.sdKi = {
-    anbieter, setzeAnbieter, baueAuswahl,
+    anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
     geminiSchreibe, schreibe, dokumentDialog,
     _intern: { lotse, MODELLE }

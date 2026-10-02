@@ -1750,7 +1750,7 @@
                 "tab_deckblatt": "Deckblatt",
                 "tab_mappe": "Bewerbungsmappe",
                 "ki_panel_toggle": "🤖 KI-Schreibhilfe <small>(optional)</small>",
-                "ki_hint_p": "Lass Texte (Anschreiben, Lebenslauf-Abschnitte) von einer KI (Google Gemini) vorformulieren – auf Basis deiner bereits ausgefüllten Angaben. Dafür brauchst du deinen <strong>eigenen, kostenlosen</strong> Gemini-API-Schlüssel.",
+                "ki_hint_p": "Lass Texte (Anschreiben, Lebenslauf-Abschnitte) von einer KI vorformulieren – auf Basis deiner bereits ausgefüllten Angaben. Wähle oben: <strong>🔒 SD Lotse</strong>, unsere eigene KI – lokal auf deinem Gerät, ohne Schlüssel – oder <strong>☁️ Gemini</strong> von Google mit deinem <strong>eigenen, kostenlosen</strong> Gemini-Schlüssel.",
                 "ki_key_link": "🔗 Kostenlosen Schlüssel bei Google holen",
                 "lbl_gemini_key": "Dein Gemini-API-Schlüssel",
                 "ph_gemini_key": "Schlüssel hier einfügen ...",
@@ -1926,7 +1926,7 @@
                 "tab_deckblatt": "Title page",
                 "tab_mappe": "Application folder",
                 "ki_panel_toggle": "🤖 AI writing help <small>(optional)</small>",
-                "ki_hint_p": "Have texts (cover letter, resume sections) drafted by an AI (Google Gemini) – based on the details you've already filled in. For this you need your <strong>own, free</strong> Gemini API key.",
+                "ki_hint_p": "Have texts (cover letter, resume sections) drafted by an AI – based on the details you've already filled in. Choose above: <strong>🔒 SD Lotse</strong>, our own AI – local on your device, no key – or <strong>☁️ Gemini</strong> by Google with your <strong>own, free</strong> Gemini key.",
                 "ki_key_link": "🔗 Get a free key from Google",
                 "lbl_gemini_key": "Your Gemini API key",
                 "ph_gemini_key": "Paste key here ...",
@@ -2080,7 +2080,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=1"></script>
+    <script src="sd-ki.js?v=2"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2231,7 +2231,7 @@
                 </p>
             </div>
         </div>
-        <script>if (window.sdKi) window.sdKi.baueAuswahl(document.getElementById('ki-panel-body'));</script>
+        <script>if (window.sdKi) window.sdKi.verbindeKiPanel(document.getElementById('ki-panel-body'), document.querySelector('#ki-panel .ki-panel-toggle'));</script>
         <div class="design-panel">
             <h2 data-i18n="design_h2">Design anpassen</h2>
             <div class="color-row"><label for="akzentfarbe" data-i18n="lbl_akzentfarbe">Akzentfarbe</label><input id="akzentfarbe" type="color"
