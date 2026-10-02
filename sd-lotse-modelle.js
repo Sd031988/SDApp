@@ -121,10 +121,24 @@
 
   function okListe() { return lies(OK_KEY, []); }
 
+  // Verlaesst man die Seite waehrend des Ladens (App gewechselt, Tab im
+  // Hintergrund), darf das Betriebssystem sie beenden - das ist kein
+  // Absturz. Deshalb gilt der Merker nur, solange die Seite sichtbar ist.
+  let laufendeId = null;
+  function merkerSetzen(an) {
+    try { if (an && laufendeId) localStorage.setItem(START_KEY, laufendeId); else localStorage.removeItem(START_KEY); } catch (e) { /* egal */ }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (laufendeId) merkerSetzen(document.visibilityState === 'visible');
+  });
+  window.addEventListener('pagehide', () => { if (laufendeId) merkerSetzen(false); });
+
   function startBeginnt(id) {
-    try { localStorage.setItem(START_KEY, id); } catch (e) { /* egal */ }
+    laufendeId = id;
+    merkerSetzen(document.visibilityState !== 'hidden');
   }
   function startFertig(id, erfolgreich) {
+    laufendeId = null;
     try { localStorage.removeItem(START_KEY); } catch (e) { /* egal */ }
     if (erfolgreich) {
       const ok = okListe();

@@ -1443,7 +1443,7 @@
     </footer>
 
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-lotse-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
     <script src="../i18n.js?v=1"></script>
     <script>
         'use strict';
@@ -1698,7 +1698,7 @@
             const zaehle = (woerter) => woerter.reduce((n, w) => n + (t.split(' ' + w + ' ').length - 1), 0);
             const en = zaehle(['the', 'and', 'you', 'is', 'are', 'what', 'how', 'can', 'please', 'my', 'for', 'with',
                 'i', 'to', 'of', 'it', 'do', 'does', 'write', 'help', 'me', 'this', 'should', 'would', 'could', 'english', 'speak', "i'm", "don't",
-                'hello', 'hi', 'hey', 'thanks', 'thank', 'yes', 'good', 'morning', 'bye']);
+                'hello', 'thanks', 'thank', 'yes', 'good', 'morning', 'bye']);
             const de = zaehle(['der', 'die', 'das', 'und', 'ich', 'ist', 'nicht', 'wie', 'bitte', 'mein', 'meine', 'für',
                 'mit', 'ein', 'eine', 'kann', 'kannst', 'schreib', 'schreibe', 'hilf', 'du', 'sie', 'mir', 'mich', 'auf', 'zu', 'den', 'dem', 'deutsch', 'sprechen',
                 'hallo', 'danke', 'ja', 'nein', 'guten', 'tag', 'moin', 'servus', 'tschüss'])
@@ -1731,7 +1731,8 @@
             const sprache = erkenneSprache(letzteNachrichtDerPerson());
             if (sprache === 'en') return '\n\nThe user\'s latest message is in English. Reply in English.';
             if (sprache === 'de') return '\n\nThe user\'s latest message is in German. Reply in German (Deutsch).';
-            return '';
+            // Unklar (z. B. nur "Hi" oder "OK"): in der Sprache der App antworten
+            return window.SD_LANG === 'en' ? '\n\nReply in English.' : '\n\nReply in German (Deutsch).';
         }
 
         // ------------------------------------------------------------
@@ -2877,7 +2878,9 @@
             if (!text && !wartendeAnhaenge.length) return;
             if (optionen.modus === 'llama') {
                 if (findeLinks(text).length) { zeigeFehler(t('llama_no_links')); return; }
-                if (!llama.engine && !llama.ladeVersprechen && !llama.absturzText && await modellImSpeicher(llamaModellId())) {
+                if (!llama.engine && !llama.ladeVersprechen && await modellImSpeicher(llamaModellId())) {
+                    // Senden ist ein ausdruecklicher Wunsch: auch nach einem frueheren
+                    // Absturz einen neuen Versuch starten (der Absturz-Schutz bleibt aktiv).
                     // Schon auf dem Geraet: einfach starten statt Fehlermeldung.
                     starteLlama(false);
                 }

@@ -21,7 +21,7 @@
   const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.83';
   // Gleiche Modelle wie im KI-Assistenten -> derselbe Download fuer alle
   // Apps. Katalog, automatische Auswahl und Absturz-Schutz: sd-lotse-modelle.js
-  const MODELLE_URL = new URL('sd-lotse-modelle.js?v=1', SKRIPT_URL).href;
+  const MODELLE_URL = new URL('sd-lotse-modelle.js?v=2', SKRIPT_URL).href;
   const modelleBereit = window.SDLotseModelle ? Promise.resolve(window.SDLotseModelle) : new Promise((ok, fehler) => {
     const sc = document.createElement('script');
     sc.src = MODELLE_URL;
