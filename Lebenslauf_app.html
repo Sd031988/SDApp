@@ -1368,6 +1368,79 @@
             margin: 0;
         }
 
+        /* Untere Umschaltleiste (Bearbeiten / Vorschau) - nur auf dem Handy
+           sichtbar, am Computer ausgeblendet. */
+        .mobile-tabbar {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            /* Handy: statt die Vorschau erst ganz unten nach dem langen
+               Formular zu zeigen, wechselt eine feste Leiste unten zwischen
+               "Bearbeiten" (Formular) und "Vorschau" (Dokument) - jeweils in
+               voller Bildschirmbreite. */
+            html {
+                background: #e9eee9;
+            }
+
+            body {
+                padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+                background-attachment: fixed;
+            }
+
+            body.mobile-tab-edit .preview-area {
+                display: none !important;
+            }
+
+            body.mobile-tab-preview .editor-sidebar {
+                display: none !important;
+            }
+
+            .mobile-tabbar {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 50;
+                background: #ffffff;
+                border-top: 1px solid var(--line);
+                box-shadow: 0 -4px 16px rgba(23, 42, 58, 0.08);
+                padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+                gap: 8px;
+            }
+
+            .mobile-tabbar button {
+                flex: 1;
+                min-height: 48px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                color: var(--muted);
+                font-family: inherit;
+                font-size: 0.95rem;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .mobile-tabbar button.active {
+                background: var(--accent-soft);
+                color: var(--accent);
+            }
+
+            #sd-update-banner {
+                bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+
+            /* Das Blatt hat auf dem Handy keine feste A4-Hoehe mehr - eine
+               unten fest angeheftete Fusszeile lag dann ueber dem letzten
+               Abschnitt. Hier steht sie einfach unter dem Inhalt. */
+            .a4-page .document-footer {
+                position: static;
+                margin-top: 28px;
+            }
+        }
+
         @media (max-width: 900px) {
             /* Auf dem Handy sollen Formular (Sidebar) und Vorschau
                untereinander stehen und ganz normal die Seite mit dem
@@ -1554,9 +1627,11 @@
                 padding-right: 0;
             }
 
+            /* Kein "display: block" hier - sonst erscheint ohne
+               hochgeladenes Foto ein kaputtes Bildsymbol. Ist ein Foto da,
+               blendet das Script es selbst ein. */
             .preview-photo {
                 position: static;
-                display: block;
                 margin: 0 0 10px;
             }
         }
@@ -1651,6 +1726,7 @@
     <script>
         window.SD_I18N = {
             de: {
+                tab_bearbeiten: '✏️ Bearbeiten', tab_vorschau: '👁️ Vorschau',
                 "brand_tagline": "Deine Unterlagen. Dein Auftritt.",
                 "save_settings_h": "💾 Meine Eingaben speichern?",
                 "save_persist": "Ja, dauerhaft in diesem Browser (bis ich es selbst lösche)",
@@ -1826,6 +1902,7 @@
                 "ki_anschreiben_prompt": "Schreibe den Haupttext (Mittelteil) eines Bewerbungsanschreibens: warum die Person zur Stelle passt, ihre Stärken/Erfahrung, und ein motivierter Schlusssatz vor der Grußformel."
             },
             en: {
+                tab_bearbeiten: '✏️ Edit', tab_vorschau: '👁️ Preview',
                 "brand_tagline": "Your documents. Your presentation.",
                 "save_settings_h": "💾 Save my entries?",
                 "save_persist": "Yes, permanently in this browser (until I delete it myself)",
@@ -2004,7 +2081,11 @@
     </script>
 </head>
 
-<body>
+<body class="mobile-tab-edit">
+    <nav class="mobile-tabbar" aria-label="Ansicht wechseln">
+        <button type="button" id="mobile-tab-edit" class="active" onclick="sdMobileTab('edit')" data-i18n="tab_bearbeiten">✏️ Bearbeiten</button>
+        <button type="button" id="mobile-tab-preview" onclick="sdMobileTab('preview')" data-i18n="tab_vorschau">👁️ Vorschau</button>
+    </nav>
     <!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
     <div id="sdAuthHost" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
     <script>window.SD_APP = 'lebenslauf';</script>
@@ -3474,6 +3555,8 @@
                         style.textContent =
                             '.ghost-placeholder:empty::before{content:none !important;}' +
                             '.editor-sidebar{display:none !important;}' +
+                            'body.mobile-tab-edit .preview-area{display:block !important;}' +
+                            '.a4-page .document-footer{position:absolute !important;left:22mm !important;right:22mm !important;bottom:12mm !important;margin-top:0 !important;}' +
                             '.a4-page{box-shadow:none !important;border-top:none !important;' +
                             'width:210mm !important;min-height:297mm !important;margin:0 !important;padding:22mm !important;}' +
                             '.cv-section{break-inside:avoid;}';
@@ -3817,6 +3900,16 @@
             // Zeigt einen Hinweis, sobald im Hintergrund eine neue Version geladen wurde,
             // damit offene Geräte die Aktualisierung sehen und übernehmen können.
             navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
+        }
+        // Handy: zwischen Formular ("Bearbeiten") und Dokument ("Vorschau")
+        // umschalten. Am Computer ist die Leiste ausgeblendet.
+        function sdMobileTab(tab) {
+            document.body.classList.toggle('mobile-tab-edit', tab === 'edit');
+            document.body.classList.toggle('mobile-tab-preview', tab === 'preview');
+            document.getElementById('mobile-tab-edit').classList.toggle('active', tab === 'edit');
+            document.getElementById('mobile-tab-preview').classList.toggle('active', tab === 'preview');
+            if (tab === 'preview' && typeof updateVorschau === 'function') updateVorschau();
+            window.scrollTo(0, 0);
         }
         function sdUpdateBereit() {
             if (document.getElementById('sd-update-banner')) return;
