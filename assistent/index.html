@@ -265,6 +265,21 @@
             overflow-x: auto;
         }
 
+        .doc-status {
+            font-size: 0.82rem;
+            color: var(--accent-dark);
+            background: var(--accent-soft);
+            border-radius: 8px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+
+        .mini-btn.pdf-hervor {
+            background: var(--accent);
+            color: #fff;
+            font-weight: bold;
+        }
+
         .link-actions {
             display: flex;
             flex-wrap: wrap;
@@ -878,8 +893,10 @@
                 welcome_p: 'Ich bin dein KI-Assistent im SD Bewerbungsstudio – frag mich zu Bewerbung, Lebenslauf, Anschreiben, Briefen oder schick mir ein Foto oder PDF.',
                 ab_memory_h: '🧠 Gedächtnis',
                 ab_memory_p: 'Ich merke mir unser Gespräch – auch nach dem Schließen.',
-                ab_vision_h: '🖼️ Bilder & PDFs',
-                ab_vision_p: 'Hänge ein Foto oder PDF an und frag mich dazu.',
+                ab_vision_h: '📎 Dokumente & Fotos',
+                ab_vision_p: 'Hänge ein PDF, Word-Dokument, eine Textdatei oder ein Foto an und frag mich dazu.',
+                ab_pdf_h: '📄 PDF erstellen',
+                ab_pdf_p: 'Jede Antwort kannst du mit einem Tipp als PDF speichern.',
                 ab_code_h: '🐍 Python-Rechnen',
                 ab_code_p: 'Für Rechnungen schreibe und starte ich Python-Code.',
                 sug_1: 'Prüfe mein Anschreiben auf Fehler und Ton',
@@ -888,7 +905,7 @@
                 sug_4: 'Formuliere eine höfliche Absage auf ein Vorstellungsgespräch',
                 no_key_html: '🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel. Tippe oben auf ⚙️ und trage ihn ein.',
                 ph_message: 'Nachricht schreiben ...',
-                attach: 'Bild oder PDF anhängen',
+                attach: 'Dokument oder Foto anhängen (PDF, Word, Text, Bild)',
                 send: 'Senden',
                 privacy: 'Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet. Bitte keine Passwörter oder Kontodaten eingeben.',
                 copy: 'Kopieren',
@@ -905,7 +922,7 @@
                 err_google: 'Google-Anfrage fehlgeschlagen (Status {status}).',
                 err_empty: 'Google hat keine Antwort geliefert.',
                 err_blocked: 'Google hat die Antwort aus Sicherheitsgründen zurückgehalten. Bitte formuliere die Frage anders.',
-                err_file_type: '„{name}“ wird nicht unterstützt. Erlaubt sind Bilder und PDFs.',
+                err_file_type: '„{name}“ wird nicht unterstützt. Erlaubt sind Bilder, PDF, Word (.docx) und Textdateien.',
                 err_file_size: '„{name}“ ist zu groß (max. 15 MB pro Nachricht).',
                 you: 'Du',
                 memory_on_hint: 'Gespräch wird in diesem Browser gespeichert.',
@@ -933,7 +950,19 @@
                 llama_tech: 'Technischer Grund',
                 llama_not_started: 'Bitte starte SD Lotse zuerst oben mit „Herunterladen & starten“.',
                 llama_no_attach: 'SD Lotse kann keine Bilder oder PDFs ansehen. Für Anhänge bitte oben auf ☁️ Gemini wechseln.',
-                llama_privacy: '🔒 SD Lotse läuft komplett auf deinem Gerät – deine Nachrichten werden nicht gesendet. Nur bei Wissensfragen schlägt er auf Wikipedia nach (abschaltbar unter ⚙️). Das Modell wird einmalig heruntergeladen.',
+                doc_lesen: '📄 Lese „{name}“ …',
+                doc_ocr: '🔎 Texterkennung in „{name}“ … {p} %',
+                doc_leer: 'In „{name}“ wurde kein lesbarer Text gefunden.',
+                doc_fehler: '„{name}“ konnte nicht gelesen werden: {msg}',
+                doc_gekuerzt: '[… Rest des Dokuments gekürzt]',
+                doc_lotse_kurz: 'Das Dokument ist lang – SD Lotse hat nur den Anfang (ca. 4.000 Zeichen) gelesen. Für das ganze Dokument oben auf ☁️ Gemini wechseln.',
+                err_doc_alt: '„{name}“ ist ein altes Word-Format (.doc). Bitte als .docx oder PDF speichern und erneut anhängen.',
+                pdf_btn: '📄 Als PDF',
+                pdf_btn_title: 'Diese Antwort als PDF-Datei speichern',
+                pdf_fehler: 'PDF konnte nicht erstellt werden: {msg}',
+                pdf_fuss: 'Erstellt mit SD Bewerbungsstudio',
+                pdf_seite: 'Seite {n} von {m}',
+                llama_privacy: '🔒 SD Lotse läuft komplett auf deinem Gerät – deine Nachrichten und angehängten Dateien werden nicht gesendet, sondern hier gelesen. Nur bei Wissensfragen schlägt er auf Wikipedia nach (abschaltbar unter ⚙️). Das Modell wird einmalig heruntergeladen.',
                 llama_settings_lbl: 'SD Lotse (lokal)',
                 llama_delete: '🗑️ SD Lotse vom Gerät löschen',
                 llama_deleted: 'SD Lotse gelöscht – Speicher wieder frei.',
@@ -989,8 +1018,10 @@
                 welcome_p: 'I am your AI assistant in SD Bewerbungsstudio – ask me about applications, resumes, cover letters, letters, or send me a photo or PDF.',
                 ab_memory_h: '🧠 Memory',
                 ab_memory_p: 'I remember our conversation – even after closing.',
-                ab_vision_h: '🖼️ Images & PDFs',
-                ab_vision_p: 'Attach a photo or PDF and ask me about it.',
+                ab_vision_h: '📎 Documents & photos',
+                ab_vision_p: 'Attach a PDF, Word document, text file or photo and ask me about it.',
+                ab_pdf_h: '📄 Create PDF',
+                ab_pdf_p: 'Save any answer as a PDF with one tap.',
                 ab_code_h: '🐍 Python math',
                 ab_code_p: 'For calculations I write and run Python code.',
                 sug_1: 'Check my cover letter for mistakes and tone',
@@ -999,7 +1030,7 @@
                 sug_4: 'Write a polite reply declining a job interview',
                 no_key_html: '🔑 To start you need a free Gemini key. Tap ⚙️ at the top and enter it.',
                 ph_message: 'Write a message ...',
-                attach: 'Attach image or PDF',
+                attach: 'Attach document or photo (PDF, Word, text, image)',
                 send: 'Send',
                 privacy: 'Messages and attachments are sent directly from your browser to Google Gemini to answer them. Please do not enter passwords or bank details.',
                 copy: 'Copy',
@@ -1016,7 +1047,7 @@
                 err_google: 'Google request failed (status {status}).',
                 err_empty: 'Google returned no answer.',
                 err_blocked: 'Google withheld the answer for safety reasons. Please rephrase your question.',
-                err_file_type: '"{name}" is not supported. Images and PDFs are allowed.',
+                err_file_type: '"{name}" is not supported. Images, PDF, Word (.docx) and text files are allowed.',
                 err_file_size: '"{name}" is too large (max. 15 MB per message).',
                 you: 'You',
                 memory_on_hint: 'Conversation is saved in this browser.',
@@ -1044,7 +1075,19 @@
                 llama_tech: 'Technical reason',
                 llama_not_started: 'Please start SD Lotse first with "Download & start" at the top.',
                 llama_no_attach: 'SD Lotse cannot look at images or PDFs. For attachments please switch to ☁️ Gemini at the top.',
-                llama_privacy: '🔒 SD Lotse runs entirely on your device – your messages are not sent anywhere. Only for knowledge questions it looks things up on Wikipedia (can be turned off under ⚙️). The model is downloaded once.',
+                doc_lesen: '📄 Reading "{name}" …',
+                doc_ocr: '🔎 Recognizing text in "{name}" … {p} %',
+                doc_leer: 'No readable text was found in "{name}".',
+                doc_fehler: '"{name}" could not be read: {msg}',
+                doc_gekuerzt: '[… rest of the document shortened]',
+                doc_lotse_kurz: 'The document is long – SD Lotse only read the beginning (about 4,000 characters). For the whole document switch to ☁️ Gemini at the top.',
+                err_doc_alt: '"{name}" is an old Word format (.doc). Please save it as .docx or PDF and attach it again.',
+                pdf_btn: '📄 As PDF',
+                pdf_btn_title: 'Save this answer as a PDF file',
+                pdf_fehler: 'PDF could not be created: {msg}',
+                pdf_fuss: 'Created with SD Bewerbungsstudio',
+                pdf_seite: 'Page {n} of {m}',
+                llama_privacy: '🔒 SD Lotse runs entirely on your device – your messages and attached files are not sent anywhere, they are read right here. Only for knowledge questions it looks things up on Wikipedia (can be turned off under ⚙️). The model is downloaded once.',
                 llama_settings_lbl: 'SD Lotse (local)',
                 llama_delete: '🗑️ Delete SD Lotse from device',
                 llama_deleted: 'SD Lotse deleted – storage freed.',
@@ -1176,7 +1219,8 @@
                 <p data-i18n="welcome_p">Ich bin dein KI-Assistent im SD Bewerbungsstudio.</p>
                 <div class="abilities">
                     <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
-                    <div class="ability nur-gemini"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
+                    <div class="ability"><strong data-i18n="ab_vision_h">📎 Dokumente &amp; Fotos</strong><span data-i18n="ab_vision_p">Hänge ein PDF, Word-Dokument, eine Textdatei oder ein Foto an und frag mich dazu.</span></div>
+                    <div class="ability"><strong data-i18n="ab_pdf_h">📄 PDF erstellen</strong><span data-i18n="ab_pdf_p">Jede Antwort als PDF speichern.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_links_h">🔗 Links lesen</strong><span data-i18n="ab_links_p">Füge den Link einer Stellenanzeige ein.</span></div>
                     <div class="ability"><strong data-i18n="ab_search_h">🌐 Selbst nachsuchen</strong><span data-i18n="ab_search_p">Bei aktuellen Fragen sucht die KI selbst.</span></div>
@@ -1197,12 +1241,13 @@
     <footer class="composer">
         <div class="composer-inner">
             <div class="pending" id="pending"></div>
+            <div class="doc-status" id="docStatus" role="status" hidden></div>
             <div class="link-actions" id="linkActions" hidden>
                 <button type="button" id="actSummary" data-i18n="act_summary">📋 Anforderungen zusammenfassen</button>
                 <button type="button" id="actLetter" data-i18n="act_letter">✍️ Anschreiben mit meinem Lebenslauf</button>
             </div>
             <div class="input-row">
-                <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
+                <input type="file" id="fileInput" accept="image/*,application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,.md,.csv,text/plain,text/markdown,text/csv" multiple hidden>
                 <button type="button" class="icon-btn attach-btn" id="attachBtn" data-i18n-title="attach" title="Bild oder PDF anhängen" aria-label="Bild oder PDF anhängen">📎</button>
                 <textarea id="input" rows="1" data-i18n-placeholder="ph_message" placeholder="Nachricht schreiben ..."></textarea>
                 <a class="icon-btn google-btn" id="googleBtn" href="https://www.google.com/search?udm=50" target="_blank" rel="noopener noreferrer"
@@ -1232,6 +1277,9 @@
         const OPTIONS_STORAGE = 'sdAssistentOptionen';
         const MAX_HISTORY_SENT = 40;          // so viele Nachrichten gehen als Kontext mit
         const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+        const DOC_GEMINI_ZEICHEN = 150000;    // Word/Text an Gemini (sehr grosszuegig)
+        const DOC_LOTSE_ZEICHEN = 4000;       // SD Lotse hat nur ca. 4.000 Token Kontext
+        const DOC_SPEICHER_ZEICHEN = 6000;    // so viel Dokumenttext bleibt im gespeicherten Verlauf
         const IMAGE_MAX_SIDE = 1600;          // grosse Fotos werden vorher verkleinert
 
         const SYSTEM_PROMPT =
@@ -1246,7 +1294,10 @@
             'statt im Kopf zu rechnen. Wenn eine Frage aktuelle oder ueberpruefbare Fakten braucht (Wetter, ' +
             'Nachrichten, Preise, Termine, Oeffnungszeiten, Gesetze) und die Google-Suche verfuegbar ist, nutze ' +
             'sie. Ohne Suche erfinde solche aktuellen Angaben NIE: sag ehrlich, dass du sie nicht aktuell weisst, ' +
-            'und empfiehl den Knopf "G↗" (Google KI-Modus). Halte Antworten uebersichtlich (kurze Absaetze, Listen wenn ' +
+            'und empfiehl den Knopf "G↗" (Google KI-Modus). Angehaengte Dokumente (PDF, Word, Text) stehen ' +
+            'als Text in der Nachricht - beziehe dich darauf. Moechte die Person ein PDF oder Dokument, schreibe den ' +
+            'vollstaendigen Inhalt; unter deiner Antwort gibt es den Knopf "📄 Als PDF" zum Speichern - weise am ' +
+            'Ende kurz darauf hin. Halte Antworten uebersichtlich (kurze Absaetze, Listen wenn ' +
             'sinnvoll). Bei Bildern und PDFs beschreibe nur, was wirklich darin steht.';
 
         const $ = (id) => document.getElementById(id);
@@ -1339,10 +1390,12 @@
                 links: e.links,
                 wiki: e.wiki,
                 hinweis: e.hinweis,
-                anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime })),
+                anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime, art: a.art })),
                 parts: e.parts.map(p => p.inlineData
                     ? { text: '[' + t('attachment_gone', { name: p._name || 'Datei' }) + ']', _hinweis: true }
-                    : p)
+                    : (p._doc && p.text.length > DOC_SPEICHER_ZEICHEN
+                        ? { text: p.text.slice(0, DOC_SPEICHER_ZEICHEN) + '\n' + t('doc_gekuerzt'), _doc: p._doc }
+                        : p))
             }));
         }
 
@@ -1415,7 +1468,7 @@
         function letzteNachrichtDerPerson() {
             for (let i = verlauf.length - 1; i >= 0; i--) {
                 if (verlauf[i].role !== 'user') continue;
-                return verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n');
+                return verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis && !p._doc).map(p => p.text).join('\n');
             }
             return '';
         }
@@ -1520,7 +1573,7 @@
         function letzteFrage() {
             for (let i = verlauf.length - 1; i >= 0; i--) {
                 if (verlauf[i].role !== 'user') continue;
-                const text = verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n').trim();
+                const text = verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis && !p._doc).map(p => p.text).join('\n').trim();
                 if (text) return text;
             }
             return '';
@@ -1657,14 +1710,14 @@
                         } else {
                             const chip = document.createElement('span');
                             chip.className = 'file-chip';
-                            chip.innerHTML = (a.mime === 'application/pdf' ? '📄 ' : '🖼️ ') + '<span></span>';
+                            chip.innerHTML = anhangSymbol(a) + ' <span></span>';
                             chip.querySelector('span').textContent = a.name;
                             box.appendChild(chip);
                         }
                     });
                     wrap.appendChild(box);
                 }
-                const text = eintrag.parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n');
+                const text = eintrag.parts.filter(p => typeof p.text === 'string' && !p._hinweis && !p._doc).map(p => p.text).join('\n');
                 if (text) {
                     const b = document.createElement('div');
                     b.className = 'bubble';
@@ -1765,6 +1818,15 @@
             copyBtn.textContent = t('copy');
             copyBtn.onclick = () => kopiere(textAusParts(eintrag.parts), copyBtn);
             actions.appendChild(copyBtn);
+            if (textAusParts(eintrag.parts)) {
+                const pdfBtn = document.createElement('button');
+                pdfBtn.type = 'button';
+                pdfBtn.className = 'mini-btn' + (wolltePdf(eintrag) ? ' pdf-hervor' : '');
+                pdfBtn.textContent = t('pdf_btn');
+                pdfBtn.title = t('pdf_btn_title');
+                pdfBtn.onclick = () => erstellePdf(eintrag, pdfBtn);
+                actions.appendChild(pdfBtn);
+            }
             const quelle = document.createElement('span');
             quelle.className = 'src-label';
             quelle.textContent = (eintrag.quelle === 'llama' ? t('src_llama') : t('src_gemini')) +
@@ -1772,6 +1834,129 @@
             actions.appendChild(quelle);
             wrap.appendChild(actions);
             return wrap;
+        }
+
+        // ------------------------------------------------------------
+        // Antwort als PDF speichern (jsPDF, alles im Browser)
+        // ------------------------------------------------------------
+        const PDF_WUNSCH = /\b(als|zu[mr]?|in|ein|eine|einem|einer)\s+pdf\b|\bpdf\b[^.?!\n]{0,30}\b(erstell|mach|generier|export|speicher|umwandel)|\b(create|make|generate|export|save|turn|convert)\b[^.?!\n]{0,40}\bpdf\b|\bas\s+(a\s+)?pdf\b/i;
+
+        function wolltePdf(eintrag) {
+            let i = verlauf.indexOf(eintrag);
+            if (i < 0) i = verlauf.length;
+            for (let j = i - 1; j >= 0; j--) {
+                if (verlauf[j].role !== 'user') continue;
+                const text = verlauf[j].parts.filter(p => typeof p.text === 'string' && !p._hinweis && !p._doc).map(p => p.text).join('\n');
+                return PDF_WUNSCH.test(text);
+            }
+            return false;
+        }
+
+        // Die Standard-Schrift im PDF kennt nur westeuropaeische Zeichen
+        // (Windows-1252). Alles andere wird ersetzt oder weggelassen.
+        const CP1252_EXTRA = '€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
+        function pdfSicher(text) {
+            return String(text)
+                .replace(/[→⇒➜➡]/g, '->').replace(/[←⇐]/g, '<-')
+                .replace(/\s*[✓✔☑]/g, '').replace(/[✗✘❌]/g, 'x')
+                .replace(/[•●▪◦]/g, '•')
+                .replace(/[​-‍️]/g, '')
+                .replace(/\t/g, '    ')
+                .split('').filter(ch => {
+                    const c = ch.charCodeAt(0);
+                    return (c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF) || ch === '\n' || CP1252_EXTRA.includes(ch);
+                }).join('');
+        }
+
+        function ohneMarkdown(zeile) {
+            return zeile
+                .replace(/\*\*(.+?)\*\*/g, '$1').replace(/__(.+?)__/g, '$1')
+                .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, '$1$2')
+                .replace(/`([^`]+)`/g, '$1')
+                .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '$1 ($2)');
+        }
+
+        function pdfDateiname(text) {
+            const erste = (text.split('\n').find(z => z.trim()) || '').replace(/^#+\s*/, '');
+            const basis = ohneMarkdown(erste).normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/ß/g, 'ss').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+            return (basis || 'SD-Antwort') + '.pdf';
+        }
+
+        async function erstellePdf(eintrag, btn) {
+            const text = textAusParts(eintrag.parts);
+            if (!text) return;
+            const alt = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+            try {
+                const jspdf = await ladeSkript(BIB.jspdf, 'jspdf');
+                const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+                const B = 210, H = 297, RAND = 20, BREITE = B - 2 * RAND, UNTEN = H - 22;
+                let y = RAND;
+                const neueSeiteFallsNoetig = (hoehe) => {
+                    if (y + hoehe > UNTEN) { doc.addPage(); y = RAND; }
+                };
+                const schreibe = (inhalt, { schrift = 'helvetica', stil = 'normal', groesse = 11, einzug = 0, abstand = 0, zeichen = '' } = {}) => {
+                    doc.setFont(schrift, stil);
+                    doc.setFontSize(groesse);
+                    const zeilenH = groesse * 0.3528 * 1.35;
+                    const zeilen = doc.splitTextToSize(pdfSicher(inhalt), BREITE - einzug);
+                    y += abstand;
+                    zeilen.forEach((z, i) => {
+                        neueSeiteFallsNoetig(zeilenH);
+                        if (i === 0 && zeichen) doc.text(zeichen, RAND + einzug - 4.5, y + zeilenH * 0.75);
+                        doc.text(z, RAND + einzug, y + zeilenH * 0.75);
+                        y += zeilenH;
+                    });
+                };
+                let imCode = false;
+                text.split('\n').forEach(roh => {
+                    const zeile = roh.replace(/\s+$/, '');
+                    if (/^```/.test(zeile.trim())) { imCode = !imCode; y += 1.5; return; }
+                    if (imCode) { schreibe(zeile || ' ', { schrift: 'courier', groesse: 9.5 }); return; }
+                    if (!zeile.trim()) { y += 3; return; }
+                    let m;
+                    if ((m = zeile.match(/^(#{1,6})\s+(.*)$/))) {
+                        const groesse = m[1].length === 1 ? 17 : m[1].length === 2 ? 14.5 : 12.5;
+                        neueSeiteFallsNoetig(14);
+                        schreibe(ohneMarkdown(m[2]), { stil: 'bold', groesse, abstand: 3 });
+                        y += 1.5;
+                    } else if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(zeile)) {
+                        neueSeiteFallsNoetig(4);
+                        doc.setDrawColor(180); doc.line(RAND, y + 2, B - RAND, y + 2); y += 4;
+                    } else if ((m = zeile.match(/^(\s*)[-*•]\s+(.*)$/))) {
+                        const tiefe = Math.min(3, Math.floor(m[1].length / 2));
+                        schreibe(ohneMarkdown(m[2]), { einzug: 6 + tiefe * 5, zeichen: '•' });
+                    } else if ((m = zeile.match(/^(\s*)(\d+[.)])\s+(.*)$/))) {
+                        const tiefe = Math.min(3, Math.floor(m[1].length / 2));
+                        schreibe(ohneMarkdown(m[3]), { einzug: 7 + tiefe * 5, zeichen: m[2] });
+                    } else if (/^\s*\|/.test(zeile)) {
+                        if (/^\s*\|?\s*:?-{2,}/.test(zeile)) return;   // Trennzeile einer Tabelle
+                        const zellen = zeile.trim().replace(/^\||\|$/g, '').split('|').map(z => ohneMarkdown(z.trim()));
+                        schreibe(zellen.join('   |   '), { groesse: 10 });
+                    } else if ((m = zeile.match(/^>\s?(.*)$/))) {
+                        schreibe(ohneMarkdown(m[1]), { stil: 'italic', einzug: 6 });
+                    } else {
+                        schreibe(ohneMarkdown(zeile));
+                    }
+                });
+                // Fusszeile auf jeder Seite
+                const anzahl = doc.getNumberOfPages();
+                for (let n = 1; n <= anzahl; n++) {
+                    doc.setPage(n);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(130);
+                    doc.text(pdfSicher(t('pdf_fuss')), RAND, H - 12);
+                    doc.text(pdfSicher(t('pdf_seite', { n, m: anzahl })), B - RAND, H - 12, { align: 'right' });
+                    doc.setTextColor(0);
+                }
+                doc.save(pdfDateiname(text));
+            } catch (e) {
+                zeigeFehler(t('pdf_fehler', { msg: (e && e.message) || String(e) }));
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = alt; }
+            }
         }
 
         function quellenListe(titel, quellen) {
@@ -1866,11 +2051,178 @@
             return { dataUrl: gross, thumb: tc.toDataURL('image/jpeg', 0.8) };
         }
 
+        // ------------------------------------------------------------
+        // Dokumente lesen (alles hier im Browser)
+        // ------------------------------------------------------------
+        // Die Bibliotheken sind dieselben, die auch PDF Studio, Scanner und
+        // Lebenslauf benutzen; sie werden erst geladen, wenn sie gebraucht werden.
+        const BIB = {
+            pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs',
+            pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs',
+            mammoth: 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+            jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+            tesseract: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'
+        };
+        const OCR_MAX_SEITEN = 3;   // Texterkennung ist langsam - bei gescannten PDFs nur die ersten Seiten
+
+        function dateiArt(file) {
+            const name = (file.name || '').toLowerCase();
+            const typ = file.type || '';
+            if (/^image\//.test(typ)) return 'bild';
+            if (typ === 'application/pdf' || /\.pdf$/.test(name)) return 'pdf';
+            if (/\.docx$/.test(name) || typ === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'docx';
+            if (/\.doc$/.test(name) || typ === 'application/msword') return 'doc-alt';
+            if (/\.(txt|md|csv)$/.test(name) || /^text\/(plain|markdown|csv)$/.test(typ)) return 'text';
+            return null;
+        }
+
+        function anhangSymbol(a) {
+            const art = a.art || (a.mime === 'application/pdf' ? 'pdf' : 'bild');
+            return { pdf: '📄', docx: '📝', text: '📃', bild: '🖼️' }[art] || '📎';
+        }
+
+        function dokumentKopf(name) {
+            return (window.SD_LANG === 'en' ? '[Document "' + name + '"]' : '[Dokument „' + name + '“]') + '\n';
+        }
+
+        function normalisiereText(text) {
+            return String(text || '')
+                .replace(/\r\n?/g, '\n')
+                .replace(/[ \t ]+\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+        }
+
+        function zeigeDocStatus(text) {
+            const el = $('docStatus');
+            if (!el) return;
+            el.textContent = text || '';
+            el.hidden = !text;
+        }
+
+        const geladeneSkripte = {};
+        function ladeSkript(url, globalName) {
+            if (window[globalName]) return Promise.resolve(window[globalName]);
+            if (!geladeneSkripte[url]) {
+                geladeneSkripte[url] = new Promise((ok, fehler) => {
+                    const sc = document.createElement('script');
+                    sc.src = url;
+                    sc.async = true;
+                    sc.onload = () => window[globalName] ? ok(window[globalName]) : fehler(new Error(globalName + ' fehlt'));
+                    sc.onerror = () => { delete geladeneSkripte[url]; fehler(new Error(t('err_network'))); };
+                    document.head.appendChild(sc);
+                });
+            }
+            return geladeneSkripte[url];
+        }
+
+        let pdfjsPromise = null;
+        function ladePdfJs() {
+            if (!pdfjsPromise) {
+                pdfjsPromise = import(BIB.pdfjs).then(lib => {
+                    lib.GlobalWorkerOptions.workerSrc = BIB.pdfjsWorker;
+                    return lib;
+                }).catch(e => { pdfjsPromise = null; throw new Error(t('err_network')); });
+            }
+            return pdfjsPromise;
+        }
+
+        async function leseDocx(file) {
+            const mammoth = await ladeSkript(BIB.mammoth, 'mammoth');
+            const erg = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+            return normalisiereText(erg.value);
+        }
+
+        function base64ZuBytes(b64) {
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
+        }
+
+        // Zeilen einer PDF-Seite wieder zusammensetzen (pdf.js liefert
+        // einzelne Textstuecke mit Position).
+        function seitenText(inhalt) {
+            let text = '';
+            let letztesY = null;
+            inhalt.items.forEach(it => {
+                if (typeof it.str !== 'string') return;
+                const y = it.transform ? Math.round(it.transform[5]) : null;
+                if (letztesY !== null && y !== null && Math.abs(y - letztesY) > 2 && !text.endsWith('\n')) text += '\n';
+                text += it.str;
+                if (it.hasEOL) text += '\n';
+                letztesY = y;
+            });
+            return text;
+        }
+
+        async function ocrBild(quelle, name, seitenInfo) {
+            const Tesseract = await ladeSkript(BIB.tesseract, 'Tesseract');
+            const { data } = await Tesseract.recognize(quelle, 'deu+eng', {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        zeigeDocStatus(t('doc_ocr', { name: name + (seitenInfo || ''), p: Math.round((m.progress || 0) * 100) }));
+                    }
+                }
+            });
+            return normalisiereText(data.text);
+        }
+
+        // Text aus einem wartenden PDF/Bild-Anhang holen (fuer SD Lotse).
+        async function dokumentText(a) {
+            zeigeDocStatus(t('doc_lesen', { name: a.name }));
+            if (a.art === 'bild' || /^image\//.test(a.mime)) {
+                return await ocrBild('data:' + a.mime + ';base64,' + a.data, a.name, '');
+            }
+            const pdfjs = await ladePdfJs();
+            const pdf = await pdfjs.getDocument({ data: base64ZuBytes(a.data) }).promise;
+            const seiten = [];
+            for (let n = 1; n <= pdf.numPages; n++) {
+                const seite = await pdf.getPage(n);
+                seiten.push(seitenText(await seite.getTextContent()));
+                if (seiten.join('\n').length > DOC_GEMINI_ZEICHEN) break;
+            }
+            let text = normalisiereText(seiten.join('\n\n'));
+            // Kaum Text gefunden: vermutlich ein Scan - Seiten als Bild erkennen.
+            if (text.replace(/\s/g, '').length < 20) {
+                const teile = [];
+                const anzahl = Math.min(pdf.numPages, OCR_MAX_SEITEN);
+                for (let n = 1; n <= anzahl; n++) {
+                    const seite = await pdf.getPage(n);
+                    const vp = seite.getViewport({ scale: 2 });
+                    const c = document.createElement('canvas');
+                    c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+                    await seite.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+                    teile.push(await ocrBild(c, a.name, anzahl > 1 ? ' (' + n + '/' + anzahl + ')' : ''));
+                }
+                text = normalisiereText(teile.join('\n\n'));
+                if (text && pdf.numPages > anzahl) text += '\n' + t('doc_gekuerzt');
+            }
+            return text;
+        }
+
         async function fuegeDateienHinzu(dateien) {
             for (const file of dateien) {
-                const istBild = /^image\//.test(file.type);
-                const istPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-                if (!istBild && !istPdf) { zeigeFehler(t('err_file_type', { name: file.name })); continue; }
+                const art = dateiArt(file);
+                if (art === 'doc-alt') { zeigeFehler(t('err_doc_alt', { name: file.name })); continue; }
+                if (!art) { zeigeFehler(t('err_file_type', { name: file.name })); continue; }
+                if (art === 'docx' || art === 'text') {
+                    // Word/Text wird sofort hier im Browser in Text umgewandelt.
+                    try {
+                        if (file.size > MAX_UPLOAD_BYTES) { zeigeFehler(t('err_file_size', { name: file.name })); continue; }
+                        zeigeDocStatus(t('doc_lesen', { name: file.name }));
+                        const text = art === 'docx' ? await leseDocx(file) : normalisiereText(await file.text());
+                        if (!text.trim()) { zeigeFehler(t('doc_leer', { name: file.name })); continue; }
+                        wartendeAnhaenge.push({ name: file.name, mime: file.type || 'text/plain', art, text, bytes: text.length });
+                    } catch (e) {
+                        zeigeFehler(t('doc_fehler', { name: file.name, msg: (e && e.message) || String(e) }));
+                    } finally {
+                        zeigeDocStatus('');
+                    }
+                    continue;
+                }
+                const istBild = art === 'bild';
+                const istPdf = art === 'pdf';
                 try {
                     let dataUrl = await leseAlsDataUrl(file);
                     let thumb = null;
@@ -1885,7 +2237,7 @@
                     const bytes = Math.floor(data.length * 3 / 4);
                     const summe = wartendeAnhaenge.reduce((s, a) => s + a.bytes, 0) + bytes;
                     if (summe > MAX_UPLOAD_BYTES) { zeigeFehler(t('err_file_size', { name: file.name })); continue; }
-                    wartendeAnhaenge.push({ name: file.name, mime, data, thumb, bytes });
+                    wartendeAnhaenge.push({ name: file.name, mime, art, data, thumb, bytes });
                 } catch (e) {
                     zeigeFehler(t('err_file_type', { name: file.name }));
                 }
@@ -1904,7 +2256,7 @@
                     img.src = a.thumb; img.alt = '';
                     chip.appendChild(img);
                 } else {
-                    chip.appendChild(document.createTextNode(a.mime === 'application/pdf' ? '📄' : '🖼️'));
+                    chip.appendChild(document.createTextNode(anhangSymbol(a)));
                 }
                 const name = document.createElement('span');
                 name.textContent = a.name;
@@ -1924,7 +2276,7 @@
             // Interne Felder (z. B. _name) duerfen nicht mitgeschickt werden.
             return parts.map(p => {
                 if (p.inlineData) return { inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data } };
-                const { _name, _hinweis, ...rest } = p;
+                const { _name, _hinweis, _doc, ...rest } = p;
                 return rest;
             });
         }
@@ -2076,7 +2428,6 @@
             const text = (textVorgabe != null ? textVorgabe : $('input').value).trim();
             if (!text && !wartendeAnhaenge.length) return;
             if (optionen.modus === 'llama') {
-                if (wartendeAnhaenge.length) { zeigeFehler(t('llama_no_attach')); return; }
                 if (findeLinks(text).length) { zeigeFehler(t('llama_no_links')); return; }
                 if (!llama.engine) {
                     zeigeFehler(llama.gpu && !llama.gpu.ok
@@ -2093,12 +2444,49 @@
                 return;
             }
             const parts = [];
-            wartendeAnhaenge.forEach(a => parts.push({ inlineData: { mimeType: a.mime, data: a.data }, _name: a.name }));
+            let lotseGekuerzt = false;
+            if (optionen.modus === 'llama' && wartendeAnhaenge.length) {
+                // SD Lotse sieht keine Bilder/PDF-Seiten: hier im Browser in
+                // Text umwandeln (PDF-Textebene, sonst Texterkennung).
+                sendetGerade = true;
+                aktualisiereSendenKnopf();
+                try {
+                    for (const a of wartendeAnhaenge) {
+                        let inhalt;
+                        try {
+                            inhalt = a.text != null ? a.text : await dokumentText(a);
+                        } catch (e) {
+                            zeigeFehler(t('doc_fehler', { name: a.name, msg: (e && e.message) || String(e) }));
+                            return;
+                        }
+                        if (!inhalt || !inhalt.trim()) { zeigeFehler(t('doc_leer', { name: a.name })); return; }
+                        if (inhalt.length > DOC_LOTSE_ZEICHEN) {
+                            inhalt = inhalt.slice(0, DOC_LOTSE_ZEICHEN) + '\n' + t('doc_gekuerzt');
+                            lotseGekuerzt = true;
+                        }
+                        parts.push({ text: dokumentKopf(a.name) + inhalt, _doc: a.name });
+                    }
+                } finally {
+                    zeigeDocStatus('');
+                    sendetGerade = false;
+                    aktualisiereSendenKnopf();
+                }
+            } else {
+                wartendeAnhaenge.forEach(a => {
+                    if (a.text != null) {
+                        let inhalt = a.text;
+                        if (inhalt.length > DOC_GEMINI_ZEICHEN) inhalt = inhalt.slice(0, DOC_GEMINI_ZEICHEN) + '\n' + t('doc_gekuerzt');
+                        parts.push({ text: dokumentKopf(a.name) + inhalt, _doc: a.name });
+                    } else {
+                        parts.push({ inlineData: { mimeType: a.mime, data: a.data }, _name: a.name });
+                    }
+                });
+            }
             if (text) parts.push({ text });
             const eintrag = {
                 role: 'user',
                 parts,
-                anhaenge: wartendeAnhaenge.map(a => ({ name: a.name, mime: a.mime, thumb: a.thumb }))
+                anhaenge: wartendeAnhaenge.map(a => ({ name: a.name, mime: a.mime, art: a.art, thumb: a.thumb }))
             };
             // Falls die letzte Nachricht der Person unbeantwortet blieb
             // (z. B. Fehler), werden beide zusammengefasst - Gemini erwartet
@@ -2116,7 +2504,7 @@
             passeHoeheAn();
             rendereAlles();
             speichereVerlauf();
-            if (optionen.modus === 'llama') await antworteMitLlama();
+            if (optionen.modus === 'llama') await antworteMitLlama(lotseGekuerzt ? 'doc_lotse_kurz' : null);
             else await antworteAufLetzteNachricht();
         }
 
@@ -2165,8 +2553,11 @@
             'You are "SD Lotse", the friendly AI assistant inside the app "SD Bewerbungsstudio".\n' +
             'You CAN: help with CVs (Lebenslauf), cover letters (Anschreiben), job applications, letters and emails; ' +
             'write, shorten, improve and translate texts; explain things simply; answer general knowledge questions; ' +
-            'write and explain simple program code (for example Python, JavaScript or HTML) - but you cannot run it.\n' +
-            'You CANNOT: open links, see images or PDFs, browse the internet, access the user\'s device, or know ' +
+            'write and explain simple program code (for example Python, JavaScript or HTML) - but you cannot run it; ' +
+            'read documents the user attaches (PDF, Word, text, photos - their text is given to you in the message); ' +
+            'create documents: if the user wants a PDF or document, write the complete content - the app shows a ' +
+            '"📄 Als PDF" button below your answer to save it, mention that briefly at the end.\n' +
+            'You CANNOT: open links, see the pictures in images (only their recognized text), browse the internet, access the user\'s device, or know ' +
             'current news, weather or prices. For such current information say so honestly and suggest switching ' +
             'to "☁️ Gemini" or the "G↗" button. Never invent such data.\n' +
             'RULES: Answer the user\'s latest message directly and helpfully. Keep answers short (1-5 sentences) ' +
@@ -2314,17 +2705,44 @@
         // Verlauf in das Chat-Format von Llama umwandeln: nur Text, die
         // letzten Nachrichten, abwechselnd Person/KI.
         function llamaNachrichten() {
-            const liste = [];
-            verlauf.slice(-LLAMA_MAX_NACHRICHTEN).forEach(e => {
-                let text = e.parts.filter(p => typeof p.text === 'string' && !p.thought).map(p => p.text).join('\n').trim();
+            // Von hinten nach vorne auffuellen, bis das Zeichen-Budget voll
+            // ist: ein gerade angehaengtes Dokument hat Vorrang vor altem Verlauf.
+            const LLAMA_BUDGET = 5500;   // Zeichen; System-Text + Beispiele + Antwort muessen noch in ca. 4.000 Token passen
+            const letzteMitDoc = (() => {
+                for (let i = verlauf.length - 1; i >= 0; i--) if (verlauf[i].parts.some(p => p._doc)) return verlauf[i];
+                return null;
+            })();
+            const stuecke = [];
+            let summe = 0;
+            const auswahl = verlauf.slice(-LLAMA_MAX_NACHRICHTEN);
+            for (let i = auswahl.length - 1; i >= 0; i--) {
+                const e = auswahl[i];
+                const docs = e.parts.filter(p => p._doc && typeof p.text === 'string');
+                let eigen = e.parts.filter(p => typeof p.text === 'string' && !p.thought && !p._doc).map(p => p.text).join('\n').trim();
                 const hatAnhang = e.parts.some(p => p.inlineData || p._hinweis);
-                if (!text && hatAnhang) text = '(Anhang)';
-                if (!text) return;
-                if (text.length > LLAMA_MAX_ZEICHEN) text = text.slice(0, LLAMA_MAX_ZEICHEN) + ' …';
-                const role = e.role === 'model' ? 'assistant' : 'user';
+                if (eigen.length > LLAMA_MAX_ZEICHEN) eigen = eigen.slice(0, LLAMA_MAX_ZEICHEN) + ' …';
+                let text;
+                if (docs.length) {
+                    // Nur das neueste Dokument ganz, aeltere stark gekuerzt
+                    const grenze = e === letzteMitDoc ? DOC_LOTSE_ZEICHEN + 200 : 600;
+                    const docText = docs.map(p => p.text.length > grenze ? p.text.slice(0, grenze) + ' …' : p.text).join('\n\n');
+                    const frage = eigen || (erkenneSprache(docText) === 'en'
+                        ? 'Please summarize this document briefly and ask what I need help with.'
+                        : 'Bitte fasse dieses Dokument kurz zusammen und frag mich, wobei ich Hilfe brauche.');
+                    text = docText + '\n\n' + frage;
+                } else {
+                    text = eigen || (hatAnhang ? '(Anhang)' : '');
+                }
+                if (!text) continue;
+                if (stuecke.length && summe + text.length > LLAMA_BUDGET) break;
+                summe += text.length;
+                stuecke.unshift({ role: e.role === 'model' ? 'assistant' : 'user', content: text });
+            }
+            const liste = [];
+            stuecke.forEach(st => {
                 const letzte = liste[liste.length - 1];
-                if (letzte && letzte.role === role) letzte.content += '\n\n' + text;
-                else liste.push({ role, content: text });
+                if (letzte && letzte.role === st.role) letzte.content += '\n\n' + st.content;
+                else liste.push(st);
             });
             while (liste.length && liste[0].role !== 'user') liste.shift();
             const sprache = erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de');
@@ -2372,11 +2790,12 @@
             }
         }
 
-        async function antworteMitLlama() {
+        async function antworteMitLlama(hinweis) {
             sendetGerade = true;
             llama.generiert = true;
             aktualisiereSendenKnopf();
             const eintrag = { role: 'model', parts: [{ text: '' }], quelle: 'llama' };
+            if (hinweis) eintrag.hinweis = hinweis;
             const knoten = baueNachricht(eintrag);
             const bubble = knoten.querySelector('.bubble');
             bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
@@ -2449,7 +2868,6 @@
                 b.setAttribute('aria-pressed', an ? 'true' : 'false');
             });
             const istLlama = modus === 'llama';
-            $('attachBtn').hidden = istLlama;
             document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = istLlama; });
             aktualisiereLinkAktionen();
             $('privacyLlama').hidden = !istLlama;
