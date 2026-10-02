@@ -265,6 +265,8 @@
             overflow-x: auto;
         }
 
+        .llama-ios { margin: 10px 0; padding: 10px 12px; border-radius: 10px; background: var(--note-bg, rgba(200,150,40,.12)); }
+        .llama-ios .row { margin-top: 6px; }
         .doc-status {
             font-size: 0.82rem;
             color: var(--accent-dark);
@@ -953,6 +955,11 @@
                 llama_crashed: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts für das starke Modell nicht. Ich habe auf „Kompakt“ umgestellt. Tippe auf Starten, um es damit zu versuchen.',
                 llama_crashed_1b: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts nicht. Schließe andere Apps und tippe dann noch einmal auf Starten.',
                 llama_3b_ios: 'Stark (ca. 2 GB) – auf iPhone/iPad nicht möglich',
+                llama_ios_3b: '📱 Auf iPhone/iPad läuft nur die Kompakt-Version – für die starke Version reicht der Speicher, den Safari einer Webseite gibt, nicht. Die starke Version liegt aber noch auf deinem Gerät (ca. 2 GB).',
+                llama_ios_del: '🗑️ Starke Version löschen (ca. 2 GB frei)',
+                llama_ios_deleted: '✓ Gelöscht.',
+                llama_need_1b: 'Auf iPhone/iPad läuft nur die Kompakt-Version. Bitte oben einmal auf „Herunterladen & starten“ tippen (ca. 1 GB) – danach startet SD Lotse beim Öffnen von selbst.',
+                llama_autostart_send: '⏳ SD Lotse wird gestartet …',
                 llama_tech: 'Technischer Grund',
                 llama_not_started: 'Bitte starte SD Lotse zuerst oben mit „Herunterladen & starten“.',
                 llama_no_attach: 'SD Lotse kann keine Bilder oder PDFs ansehen. Für Anhänge bitte oben auf ☁️ Gemini wechseln.',
@@ -1084,6 +1091,11 @@
                 llama_crashed: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory for the strong model. I switched to "Compact". Tap Start to try with it.',
                 llama_crashed_1b: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory. Close other apps and tap Start again.',
                 llama_3b_ios: 'Strong (approx. 2 GB) – not possible on iPhone/iPad',
+                llama_ios_3b: '📱 On iPhone/iPad only the compact version works – Safari does not give a web page enough memory for the strong version. The strong version is still stored on your device though (approx. 2 GB).',
+                llama_ios_del: '🗑️ Delete strong version (frees approx. 2 GB)',
+                llama_ios_deleted: '✓ Deleted.',
+                llama_need_1b: 'On iPhone/iPad only the compact version works. Please tap "Download & start" at the top once (approx. 1 GB) – after that SD Lotse starts by itself when you open the app.',
+                llama_autostart_send: '⏳ Starting SD Lotse …',
                 llama_tech: 'Technical reason',
                 llama_not_started: 'Please start SD Lotse first with "Download & start" at the top.',
                 llama_no_attach: 'SD Lotse cannot look at images or PDFs. For attachments please switch to ☁️ Gemini at the top.',
@@ -1209,6 +1221,13 @@
                 <h2 data-i18n="llama_h">🔒 SD Lotse – unsere eigene KI auf deinem Gerät</h2>
                 <p class="hint" data-i18n="llama_p">Kein Schlüssel, keine Kosten.</p>
                 <p class="hint credit" data-i18n="llama_credit_html" data-i18n-html><a href="../datenschutz.html#ki" target="_blank" rel="noopener">ℹ️ Datenschutz &amp; Lizenzen</a></p>
+                <div class="llama-ios" id="llamaIos" hidden>
+                    <p class="hint" data-i18n="llama_ios_3b">📱 Auf iPhone/iPad läuft nur die Kompakt-Version – für die starke Version reicht der Speicher, den Safari einer Webseite gibt, nicht. Die starke Version liegt aber noch auf deinem Gerät (ca. 2 GB).</p>
+                    <div class="row">
+                        <button type="button" class="btn btn-ghost" id="llamaIosLoeschen" data-i18n="llama_ios_del">🗑️ Starke Version löschen (ca. 2 GB frei)</button>
+                        <span class="status" id="llamaIosStatus" role="status"></span>
+                    </div>
+                </div>
                 <div class="field" id="llamaSetup">
                     <label for="llamaModel" data-i18n="llama_model_lbl">Variante</label>
                     <select id="llamaModel">
@@ -2442,14 +2461,18 @@
             if (!text && !wartendeAnhaenge.length) return;
             if (optionen.modus === 'llama') {
                 if (findeLinks(text).length) { zeigeFehler(t('llama_no_links')); return; }
+                if (!llama.engine && !llama.ladeVersprechen && !llama.absturzText && await modellImSpeicher(llamaModellId())) {
+                    // Schon auf dem Geraet: einfach starten statt Fehlermeldung.
+                    starteLlama(false);
+                }
                 if (!llama.engine && llama.ladeVersprechen) {
-                    // SD Lotse startet gerade (z. B. automatisch) - kurz warten.
+                    // SD Lotse startet gerade - kurz warten.
                     await llama.ladeVersprechen;
                 }
                 if (!llama.engine) {
                     zeigeFehler(llama.gpu && !llama.gpu.ok
                         ? t('llama_unsupported') + '\n\n' + t('llama_tech') + ': ' + (llama.gpu.grund || '?') + ' · ' + geraeteInfo()
-                        : t('llama_not_started'));
+                        : (llama.absturzText ? llama.absturzText : (istIos() ? t('llama_need_1b') : t('llama_not_started'))));
                     zeigeLlamaKarte(true);
                     return;
                 }
@@ -2664,6 +2687,38 @@
             llama.absturzText = t(warGross ? 'llama_crashed' : 'llama_crashed_1b');
             llama.autoVersucht = true;   // nach einem Absturz nie automatisch starten
         }
+        async function modellImSpeicher(id) {
+            try {
+                const gpu = await pruefeWebGpu();
+                if (!gpu.ok) return false;
+                const lib = llama.lib || (await ladeWebLlm());
+                return await lib.hasModelInCache(id);
+            } catch (e) { return false; }
+        }
+
+        // iPhone/iPad: liegt noch die (dort unbrauchbare) starke Version
+        // im Speicher, Hinweis + Knopf zum Loeschen zeigen.
+        async function pruefeIos3b() {
+            const box = $('llamaIos');
+            if (!istIos() || llama.engine) { box.hidden = true; return; }
+            const m = LLAMA_MODELLE['3b'];
+            box.hidden = !((await modellImSpeicher(m.f16)) || (await modellImSpeicher(m.f32)));
+        }
+        async function loescheIos3b() {
+            const status = $('llamaIosStatus');
+            try {
+                const lib = await ladeWebLlm();
+                const m = LLAMA_MODELLE['3b'];
+                for (const id of [m.f16, m.f32]) {
+                    if (await lib.hasModelInCache(id)) await lib.deleteModelAllInfoInCache(id);
+                }
+                status.textContent = t('llama_ios_deleted');
+                setTimeout(() => { $('llamaIos').hidden = true; status.textContent = ''; }, 1500);
+            } catch (err) {
+                status.textContent = (err && err.message) || String(err);
+            }
+        }
+
         function sperre3bAufIos() {
             if (!istIos()) return;
             const opt = document.querySelector('#llamaModel option[value="3b"]');
@@ -2721,6 +2776,7 @@
             $('llamaStartBtn').textContent = imSpeicher ? t('llama_start_cached') : t('llama_start');
             zeigeLlamaKarte(false);
             zeigeSpeicherInfo(imSpeicher);
+            pruefeIos3b();
             // Schon auf dem Geraet gespeichert: automatisch starten (kein
             // Download noetig). Nur einmal pro Seitenaufruf, damit ein
             // Fehler nicht endlos wiederholt wird.
@@ -3019,6 +3075,7 @@
             aktualisiereLlamaKarte();
         };
         $('llamaDeleteBtn').onclick = () => loescheLlamaModell();
+        $('llamaIosLoeschen').onclick = () => loescheIos3b();
         $('keyModeSession').onchange = speichereKey;
         $('keyModePermanent').onchange = speichereKey;
         $('optMemory').onchange = speichereOptionen;
