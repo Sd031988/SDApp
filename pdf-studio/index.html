@@ -1103,6 +1103,10 @@
       margin-bottom: 8px;
     }
 
+    .mobile-text-bar {
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .app-layout {
@@ -1168,8 +1172,8 @@
         order: 1;
         overflow: visible;
         /* Platz unten lassen, damit die feste Knopfleiste (Seiten/Werkzeuge)
-           nichts vom Dokument verdeckt. */
-        padding-bottom: 64px;
+           und ggf. die Schriftleiste nichts vom Dokument verdecken. */
+        padding-bottom: 130px;
       }
 
       /* Seitenliste & Werkzeug-Einstellungen: auf dem Handy als von unten
@@ -1245,6 +1249,10 @@
         display: none;
       }
 
+      .mobile-text-bar {
+        display: none;
+      }
+
       .mobile-panel-toggles.show-on-mobile {
         display: flex;
         position: fixed;
@@ -1267,6 +1275,58 @@
         border-radius: 8px;
         font-weight: 700;
         color: var(--ink);
+      }
+
+      .mobile-text-bar.show {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        z-index: 158;
+        gap: 6px;
+        align-items: center;
+        padding: 8px 10px;
+        background: #ffffff;
+        border-top: 1px solid var(--line);
+        box-shadow: 0 -4px 14px rgba(23, 59, 63, 0.12);
+      }
+
+      .mobile-text-bar button,
+      .mobile-text-bar input,
+      .mobile-text-bar select {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #edf3f1;
+        color: var(--ink);
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .mobile-text-bar button {
+        min-width: 44px;
+        padding: 0 8px;
+      }
+
+      .mobile-text-bar button.active {
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .mobile-text-bar input {
+        width: 64px;
+        text-align: center;
+        background: #fff;
+      }
+
+      .mobile-text-bar select {
+        flex: 1;
+        min-width: 0;
+        padding: 0 6px;
+        background: #fff;
+        font-weight: 400;
+        font-size: 14px;
       }
 
       .mobile-panel-toggles button.active {
@@ -1485,6 +1545,7 @@
         btn_rotate_left: '↶ 90° Links', btn_rotate_right: '↷ 90° Rechts', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertikal',
         btn_duplicate_page: 'Seite duplizieren',
         toggle_pages: '📑 Seiten', toggle_tools: '⚙️ Werkzeuge',
+        font_from_document: 'aus dem Dokument', mtb_smaller: 'Schrift kleiner', mtb_bigger: 'Schrift größer', mtb_size: 'Schriftgröße (pt)', mtb_bold: 'Fett', mtb_font: 'Schriftart',
         toast_ready: 'Bereit',
         modal_convert_h3: '🔄 Dokumenten-Konverter',
         modal_convert_p: 'Konvertiere zwischen PDF, Word, Excel, PowerPoint und Bildern – 100% lokal & sicher im Browser.',
@@ -1655,6 +1716,7 @@
         btn_rotate_left: '↶ 90° left', btn_rotate_right: '↷ 90° right', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertical',
         btn_duplicate_page: 'Duplicate page',
         toggle_pages: '📑 Pages', toggle_tools: '⚙️ Tools',
+        font_from_document: 'from the document', mtb_smaller: 'Smaller text', mtb_bigger: 'Larger text', mtb_size: 'Font size (pt)', mtb_bold: 'Bold', mtb_font: 'Font',
         toast_ready: 'Ready',
         modal_convert_h3: '🔄 Document converter',
         modal_convert_p: 'Convert between PDF, Word, Excel, PowerPoint and images – 100% local & secure in your browser.',
@@ -1987,7 +2049,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="form-row">
           <div>
             <label for="textSize" data-i18n="label_size_pt">Größe (pt)</label>
-            <input type="number" id="textSize" value="16" min="8" max="72">
+            <input type="number" id="textSize" value="12" min="4" max="200" step="0.5" inputmode="decimal">
           </div>
           <div>
             <label for="textColor" data-i18n="label_color">Farbe</label>
@@ -2120,6 +2182,16 @@
   <div id="mobilePanelToggles" class="mobile-panel-toggles">
     <button type="button" id="btnToggleSidebarSheet" data-i18n="toggle_pages">📑 Seiten</button>
     <button type="button" id="btnToggleInspectorSheet" data-i18n="toggle_tools">⚙️ Werkzeuge</button>
+  </div>
+
+  <!-- Handy: Schriftleiste fuer das ausgewaehlte Textfeld (Groesse/Fett/Schrift),
+       erscheint nur, wenn ein Textfeld ausgewaehlt ist -->
+  <div id="mobileTextBar" class="mobile-text-bar" role="toolbar" aria-label="Schrift">
+    <button type="button" id="mtbSmaller" data-i18n-title="mtb_smaller" title="Schrift kleiner" aria-label="Schrift kleiner">A−</button>
+    <input type="number" id="mtbSize" inputmode="decimal" step="0.5" min="4" max="200" data-i18n-title="mtb_size" title="Schriftgröße (pt)" aria-label="Schriftgröße (pt)">
+    <button type="button" id="mtbBigger" data-i18n-title="mtb_bigger" title="Schrift größer" aria-label="Schrift größer">A+</button>
+    <button type="button" id="mtbBold" data-i18n-title="mtb_bold" title="Fett" aria-label="Fett"><b>F</b></button>
+    <select id="mtbFont" data-i18n-title="mtb_font" title="Schriftart" aria-label="Schriftart"></select>
   </div>
 
   <!-- Status Toast -->
@@ -2418,6 +2490,46 @@
     }
 
     // --- Page Management & Model ---
+    // Einheit fuer Textgroessen: "pt bezogen auf eine A4-Seitenbreite".
+    // Eine Seite ist in dieser Einheit immer 595 breit - Anzeige (beliebige
+    // Bildschirmbreite) und PDF-Export rechnen beide damit, so ist der Text
+    // auf dem Bildschirm genau so gross wie spaeter im PDF, und bei einem
+    // A4-Dokument entspricht die Zahl im Feld "Groesse (pt)" echten pt.
+    const TEXT_REF_W = 595.28;
+    function textSkalierung() {
+      return (state._stageBaseWidth || TEXT_REF_W) / TEXT_REF_W;
+    }
+
+    function median(werte) {
+      const w = werte.filter(v => v > 0).sort((a, b) => a - b);
+      if (!w.length) return 0;
+      const m = Math.floor(w.length / 2);
+      return w.length % 2 ? w[m] : (w[m - 1] + w[m]) / 2;
+    }
+
+    // Wandelt den internen PDF-Schriftnamen in eine nutzbare Schrift um,
+    // z. B. "ABCDEF+Calibri-Bold" -> Calibri, fett; "TimesNewRomanPSMT" ->
+    // Times New Roman. Ist die Schrift auf dem Geraet nicht installiert,
+    // greift eine passende Ersatzschrift (mit/ohne Serifen, Schreibmaschine).
+    function leseSchriftAusPdf(fo, generisch) {
+      const roh = String((fo && fo.name) || '').replace(/^[A-Z]{6}\+/, '');
+      if (!roh) return null;
+      const teile = roh.split(/[-,]/);
+      let familie = teile[0].replace(/(PSMT|PS|MT)$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
+      const stil = teile.slice(1).join(' ') + ' ' + roh;
+      const bold = !!(fo.bold || fo.black) || /bold|black|heavy|semibold|demi/i.test(stil);
+      const italic = !!fo.italic || /italic|oblique/i.test(stil);
+      if (!familie) return null;
+      const lc = familie.toLowerCase();
+      let ersatz = 'Arial, Helvetica, sans-serif';
+      if (generisch === 'serif' || /times|georgia|garamond|cambria|serif|roman|book/.test(lc)) ersatz = "'Times New Roman', Georgia, serif";
+      if (generisch === 'monospace' || /courier|mono|consol/.test(lc)) ersatz = "'Courier New', monospace";
+      if (lc === 'calibri') ersatz = 'Carlito, Arial, sans-serif';
+      if (lc === 'helvetica') ersatz = 'Arial, sans-serif';
+      if (lc === 'arial') ersatz = 'Helvetica, sans-serif';
+      return { name: familie, css: `'${familie}', ${ersatz}`, bold, italic };
+    }
+
     function createPageModel(src, name, width, height, scanMeta) {
       return {
         id: 'p_' + (++state.nextId) + '_' + Date.now(),
@@ -2496,6 +2608,36 @@
         img.onerror = reject;
         img.src = src;
       });
+    }
+
+    // Bricht Text wie das Textfeld auf dem Bildschirm um (white-space: pre-wrap,
+    // break-word): an \n und an der Feldbreite, zu lange Woerter notfalls
+    // mitten im Wort.
+    function brecheTextUm(ctx, text, maxBreite) {
+      const ergebnis = [];
+      text.split('\n').forEach(absatz => {
+        if (!isFinite(maxBreite)) { ergebnis.push(absatz); return; }
+        const woerter = absatz.split(/(\s+)/);
+        let zeile = '';
+        woerter.forEach(wort => {
+          if (!wort) return;
+          const probe = zeile + wort;
+          if (ctx.measureText(probe).width <= maxBreite || !zeile.trim()) {
+            zeile = probe;
+          } else {
+            ergebnis.push(zeile.replace(/\s+$/, ''));
+            zeile = /^\s+$/.test(wort) ? '' : wort;
+          }
+          while (ctx.measureText(zeile).width > maxBreite && zeile.length > 1) {
+            let n = zeile.length - 1;
+            while (n > 1 && ctx.measureText(zeile.slice(0, n)).width > maxBreite) n--;
+            ergebnis.push(zeile.slice(0, n));
+            zeile = zeile.slice(n);
+          }
+        });
+        ergebnis.push(zeile.replace(/\s+$/, ''));
+      });
+      return ergebnis;
     }
 
     // --- High-Resolution Page Canvas Rendering (Used for Export & Conversion) ---
@@ -2582,10 +2724,20 @@
           } else {
             ctx.save();
             ctx.fillStyle = item.color;
-            const fontPx = item.size * (exportW / 520);
-            ctx.font = `${item.bold ? 'bold ' : ''}${fontPx}px ${item.font}`;
+            const fontPx = item.size * (exportW / TEXT_REF_W);
+            ctx.font = `${item.italic ? 'italic ' : ''}${item.bold ? 'bold ' : ''}${fontPx}px ${item.font}`;
             ctx.textBaseline = 'top';
-            ctx.fillText(item.text, item.x * exportW, item.y * exportH);
+            // Wie auf dem Bildschirm: Innenabstand des Textfelds, Zeilen-
+            // umbrueche aus dem Text und automatischer Umbruch an der
+            // Feldbreite, mit demselben Zeilenabstand.
+            const pxProSchirmPx = exportW / (state._stageBaseWidth || TEXT_REF_W);
+            const padX = 4 * pxProSchirmPx, padY = 2 * pxProSchirmPx;
+            const zeilenHoehe = fontPx * (item.lineHeight || 1.2);
+            const maxBreite = item.width ? Math.max(fontPx, item.width * exportW - 2 * padX) : Infinity;
+            const zeilen = brecheTextUm(ctx, String(item.text || ''), maxBreite);
+            const startX = item.x * exportW + padX;
+            const startY = item.y * exportH + padY + (zeilenHoehe - fontPx) / 2;
+            zeilen.forEach((zeile, i) => ctx.fillText(zeile, startX, startY + i * zeilenHoehe));
             ctx.restore();
           }
         }
@@ -2621,13 +2773,25 @@
             // Schriftinfo), wird sie fuer die Anzeige im Korrektur-Modus genutzt.
             const stilInfo = textContent.styles && item.fontName ? textContent.styles[item.fontName] : null;
             const erkannteSchrift = stilInfo && stilInfo.fontFamily ? stilInfo.fontFamily : null;
+            // Den echten Schriftnamen aus dem PDF lesen (z. B. "ABCDEF+Calibri-Bold"),
+            // damit die Korrektur in derselben Schrift und demselben Stil erfolgt.
+            let pdfSchrift = null;
+            try {
+              if (pdfPage.commonObjs.has(item.fontName)) {
+                const fo = pdfPage.commonObjs.get(item.fontName);
+                pdfSchrift = leseSchriftAusPdf(fo, erkannteSchrift);
+              }
+            } catch (e) { /* Schriftname nicht verfuegbar - Ersatzschrift wird genutzt */ }
             return {
               text: item.str,
               x: transform[4] / canvas.width,
               y: (transform[5] - h) / canvas.height,
               width: Math.max(8, item.width * viewport.scale) / canvas.width,
               height: h / canvas.height,
-              fontFamily: erkannteSchrift
+              fontFamily: pdfSchrift ? pdfSchrift.name : erkannteSchrift,
+              cssFont: pdfSchrift ? pdfSchrift.css : null,
+              bold: pdfSchrift ? pdfSchrift.bold : undefined,
+              italic: pdfSchrift ? pdfSchrift.italic : undefined
             };
           });
         } catch (e) { }
@@ -3096,6 +3260,70 @@
       };
     });
 
+    // Die aus dem PDF uebernommene Schrift (z. B. Calibri) steht nicht in der
+    // festen Auswahlliste - sie wird dann als eigene Option ergaenzt, damit
+    // das Feld nicht leer erscheint und man zwischen Original und anderen
+    // Schriften wechseln kann.
+    function stelleSchriftOptionSicher(fontCss) {
+      [$('textFont'), $('mtbFont')].forEach(sel => {
+        if (!sel || !fontCss) return;
+        if ([...sel.options].some(o => o.value === fontCss)) return;
+        const opt = document.createElement('option');
+        opt.value = fontCss;
+        const name = (fontCss.match(/^'([^']+)'/) || [])[1] || fontCss.split(',')[0];
+        opt.textContent = name + ' (' + t('font_from_document') + ')';
+        sel.insertBefore(opt, sel.firstChild);
+      });
+    }
+
+    // Handy: Schriftleiste nur zeigen, wenn ein Textfeld ausgewaehlt ist.
+    // Alle Aenderungen laufen ueber dieselben Felder wie am PC (Groesse,
+    // Fett, Schriftart im Werkzeuge-Bereich), damit beides immer gleich ist.
+    function syncMobileTextBar() {
+      const bar = $('mobileTextBar');
+      if (!bar) return;
+      const page = getSelectedPage();
+      const overlay = page && state.selectedOverlayId
+        ? page.overlays.find(o => o.id === state.selectedOverlayId && !o.isSignature)
+        : null;
+      const istHandy = window.matchMedia('(max-width: 768px)').matches;
+      bar.classList.toggle('show', !!(overlay && istHandy));
+      if (!overlay) return;
+      if (document.activeElement !== $('mtbSize')) $('mtbSize').value = overlay.size;
+      $('mtbBold').classList.toggle('active', !!overlay.bold);
+      stelleSchriftOptionSicher(overlay.font);
+      $('mtbFont').value = overlay.font;
+    }
+
+    function setzeTextGroesse(wert) {
+      $('textSize').value = Math.min(200, Math.max(4, Math.round(wert * 2) / 2));
+      $('textSize').dispatchEvent(new Event('input'));
+    }
+
+    (function initMobileTextBar() {
+      const sel = $('mtbFont');
+      if (!sel) return;
+      [...$('textFont').options].forEach(o => sel.appendChild(o.cloneNode(true)));
+      const aktuelle = () => {
+        const page = getSelectedPage();
+        return page && state.selectedOverlayId ? page.overlays.find(o => o.id === state.selectedOverlayId) : null;
+      };
+      // Verhindert, dass ein Tipp auf die Leiste das Textfeld abwaehlt.
+      $('mobileTextBar').addEventListener('pointerdown', e => e.stopPropagation());
+      $('mtbSmaller').onclick = () => { const o = aktuelle(); if (o) setzeTextGroesse(o.size - 0.5); };
+      $('mtbBigger').onclick = () => { const o = aktuelle(); if (o) setzeTextGroesse(o.size + 0.5); };
+      $('mtbSize').oninput = (e) => {
+        const v = parseFloat(String(e.target.value).replace(',', '.'));
+        if (v >= 4) { $('textSize').value = v; $('textSize').dispatchEvent(new Event('input')); }
+      };
+      $('mtbBold').onclick = () => { $('btnTextBold').click(); syncMobileTextBar(); };
+      sel.onchange = () => {
+        $('textFont').value = sel.value;
+        $('textFont').dispatchEvent(new Event('change'));
+      };
+      window.addEventListener('resize', syncMobileTextBar);
+    })();
+
     function updateInspector() {
       $('panelPen').style.display = 'none';
       $('panelText').style.display = 'none';
@@ -3119,11 +3347,13 @@
         if (overlay) {
           $('panelText').style.display = 'block';
           $('textInputVal').value = overlay.text;
+          stelleSchriftOptionSicher(overlay.font);
           $('textFont').value = overlay.font;
           $('textSize').value = overlay.size;
           $('textColor').value = overlay.color;
         }
       }
+      syncMobileTextBar();
     }
 
     document.querySelectorAll('#panelPen .color-dot').forEach(dot => {
@@ -3216,9 +3446,12 @@
       if (!page || !state.selectedOverlayId) return;
       const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
       if (overlay) {
-        overlay.size = parseInt(e.target.value, 10) || 16;
+        const neu = parseFloat(String(e.target.value).replace(',', '.'));
+        if (!(neu > 0)) return;
+        overlay.size = Math.min(200, Math.max(4, neu));
         const el = document.getElementById(overlay.id);
-        if (el) el.style.fontSize = overlay.size + 'px';
+        if (el) el.style.fontSize = (overlay.size * textSkalierung()) + 'px';
+        syncMobileTextBar();
       }
     };
 
@@ -3300,6 +3533,8 @@
       const targetWidth = Math.min(860, availableWidth);
       const baseWidth = Math.max(minWidth, Math.min(targetWidth, availableWidth));
       const baseHeight = Math.round(baseWidth * (displayH / displayW));
+      state._stageBaseWidth = baseWidth;
+      state._stageBaseHeight = baseHeight;
 
       stageWrap.style.width = baseWidth + 'px';
       stageWrap.style.height = baseHeight + 'px';
@@ -3603,7 +3838,7 @@
         width: 0.3,
         height: 0.06,
         font: 'Arial, sans-serif',
-        size: 16,
+        size: 12,
         color: '#173b3f',
         bold: false
       };
@@ -3624,8 +3859,9 @@
         // eigene Breite/Hoehe (wuchsen automatisch mit dem Text) - hier
         // einmalig eine sinnvolle Startgroesse nachtragen, damit sie sich
         // wie alle anderen Felder per Ziehen vergroessern/verkleinern lassen.
-        if (item.width === undefined) item.width = Math.max(OVERLAY_MIN_WIDTH, Math.min(0.9, (item.text.length * item.size * 0.55) / baseWidth));
-        if (item.height === undefined) item.height = Math.max(OVERLAY_MIN_HEIGHT, (item.size * 1.35) / baseHeight);
+        const anzeigeGroesse = item.size * textSkalierung();
+        if (item.width === undefined) item.width = Math.max(OVERLAY_MIN_WIDTH, Math.min(0.9, (item.text.length * anzeigeGroesse * 0.55) / baseWidth));
+        if (item.height === undefined) item.height = Math.max(OVERLAY_MIN_HEIGHT, (anzeigeGroesse * 1.35) / baseHeight);
 
         const el = document.createElement('div');
         el.className = `overlay-element ${item.id === state.selectedOverlayId ? 'selected' : ''}`;
@@ -3635,12 +3871,14 @@
         el.style.width = (item.width * 100) + '%';
         el.style.height = (item.height * 100) + '%';
         el.style.fontFamily = item.font;
-        el.style.fontSize = item.size + 'px';
+        el.style.fontSize = (item.size * textSkalierung()) + 'px';
         el.style.color = item.color;
         el.style.fontWeight = item.bold ? 'bold' : 'normal';
+        el.style.fontStyle = item.italic ? 'italic' : 'normal';
 
         const content = document.createElement('div');
         content.className = 'overlay-content';
+        if (item.lineHeight) content.style.lineHeight = String(item.lineHeight);
         content.textContent = item.text;
         el.appendChild(content);
 
@@ -3815,9 +4053,28 @@
           x, y,
           width: rechts - x,
           height: unten - y,
-          fontFamily: geordnet[0].fontFamily
+          // Schrifthoehe einer einzelnen Zeile (nicht die Hoehe der ganzen
+          // Auswahl) - daraus wird spaeter die Schriftgroesse bestimmt.
+          schriftHoehe: median(geordnet.map(w => w.height)) || (unten - y),
+          ...schriftVon(geordnet)
         };
       });
+    }
+
+    // Schrift einer Wortgruppe: die am haeufigsten vorkommende (bei
+    // gemischten Zeilen gewinnt die Mehrheit, nicht zufaellig das erste Wort).
+    function schriftVon(woerter) {
+      const zaehler = new Map();
+      woerter.forEach(w => {
+        const k = [w.fontFamily, w.cssFont, w.bold, w.italic].join('|');
+        const e = zaehler.get(k) || { n: 0, w };
+        e.n += (w.text || '').length || 1;
+        zaehler.set(k, e);
+      });
+      let best = null;
+      zaehler.forEach(e => { if (!best || e.n > best.n) best = e; });
+      const w = best ? best.w : (woerter[0] || {});
+      return { fontFamily: w.fontFamily, cssFont: w.cssFont, bold: w.bold, italic: w.italic };
     }
 
     // Fasst alle erkannten Woerter zusammen, deren Mittelpunkt innerhalb des
@@ -3831,17 +4088,29 @@
                my >= rechteck.y && my <= rechteck.y + rechteck.height;
       });
       if (!treffer.length) return null;
-      const zeilen = gruppiereZeilen(treffer);
+      const zeilen = gruppiereZeilen(treffer).sort((a, b) => a.y - b.y);
       const x = Math.min(...treffer.map(w => w.x));
       const y = Math.min(...treffer.map(w => w.y));
       const rechts = Math.max(...treffer.map(w => w.x + w.width));
       const unten = Math.max(...treffer.map(w => w.y + w.height));
+      // WICHTIG: Die Schriftgroesse kommt aus der Hoehe EINER Zeile. Frueher
+      // wurde die Hoehe des ganzen Rechtecks (alle Zeilen zusammen) genommen
+      // - bei 5 Zeilen wurde die Schrift dadurch ca. 5x so gross.
+      const schriftHoehe = median(treffer.map(w => w.height)) || (unten - y);
+      const abstaende = [];
+      for (let i = 1; i < zeilen.length; i++) abstaende.push(zeilen[i].y - zeilen[i - 1].y);
+      const zeilenAbstand = median(abstaende);
+      const lineHeight = zeilenAbstand > 0
+        ? Math.min(2.5, Math.max(1.0, zeilenAbstand / schriftHoehe))
+        : 1.2;
       return {
-        text: zeilen.sort((a, b) => a.y - b.y).map(z => z.text).join('\n'),
+        text: zeilen.map(z => z.text).join('\n'),
         x, y,
         width: rechts - x,
         height: unten - y,
-        fontFamily: treffer[0].fontFamily
+        schriftHoehe,
+        lineHeight: Math.round(lineHeight * 100) / 100,
+        ...schriftVon(treffer)
       };
     }
 
@@ -3859,30 +4128,45 @@
         x: stueck.x - 0.002,
         y: stueck.y - 0.002,
         width: stueck.width + 0.004,
-        height: stueck.height + 0.004
+        // + Unterlaengen (g, p, y ...) der letzten Zeile, die unter der
+        // Grundlinie liegen und sonst unter der Abdeckung hervorschauen.
+        height: stueck.height + 0.004 + 0.25 * (stueck.schriftHoehe || stueck.height)
       });
       const overlayId = 'txt_' + Date.now();
+      // Das Textfeld hat einen kleinen Innenabstand (4px/2px) und die Zeilen
+      // einen Zeilenabstand - damit der Ersatztext genau auf der Original-
+      // stelle sitzt, wird das Feld um diese Betraege nach links/oben
+      // verschoben und entsprechend groesser angelegt (sonst bricht die
+      // letzte Silbe einer Zeile um bzw. die letzte Zeile wird abgeschnitten).
+      const stW = state._stageBaseWidth || 600, stH = state._stageBaseHeight || 850;
+      const zeilenFaktor = stueck.lineHeight || 1.2;
+      const schriftAnteilH = (info.groesse * textSkalierung()) / stH;
+      const padX = 4 / stW, padY = 2 / stH;
+      const halbDurchschuss = (zeilenFaktor - 1) / 2 * schriftAnteilH;
+      const zeilenAnzahl = String(stueck.text || '').split('\n').length;
       page.overlays.push({
         id: overlayId,
         type: 'text',
         text: stueck.text,
-        x: stueck.x,
-        y: stueck.y,
-        width: Math.max(OVERLAY_MIN_WIDTH, stueck.width + 0.01),
-        height: Math.max(OVERLAY_MIN_HEIGHT, stueck.height + 0.01),
-        // Schriftart fuer die Korrektur: Calibri wurde als die in
-        // diesem Dokumenttyp tatsaechlich verwendete Schrift optisch
-        // identifiziert (typische Firmen-/Behoerdenschrift, seit 2007
-        // Word-Standardschrift). Carlito ist die metrisch identische
-        // freie Alternative (falls Calibri auf dem Geraet fehlt),
-        // Arial/sans-serif greifen nur als letzter Ausweg.
-        font: 'Calibri, Carlito, Arial, sans-serif',
+        x: Math.max(0, stueck.x - padX),
+        y: Math.max(0, stueck.y - padY - halbDurchschuss),
+        width: Math.max(OVERLAY_MIN_WIDTH, stueck.width + 2 * padX + 0.03),
+        height: Math.max(OVERLAY_MIN_HEIGHT, zeilenAnzahl * zeilenFaktor * schriftAnteilH + 2 * padY + 0.01),
+        // Schriftart fuer die Korrektur: wenn das PDF seine Schrift
+        // mitliefert (z. B. Calibri, Arial, Times), genau diese. Sonst
+        // (z. B. bei Scans) Calibri - typische Firmen-/Behoerdenschrift
+        // und Word-Standardschrift; Carlito ist die metrisch identische
+        // freie Alternative, Arial/sans-serif nur als letzter Ausweg.
+        font: stueck.cssFont || 'Calibri, Carlito, Arial, sans-serif',
         size: info.groesse,
         color: info.farbe,
-        bold: !!info.fett
+        bold: stueck.bold !== undefined ? !!stueck.bold : !!info.fett,
+        italic: !!stueck.italic,
+        lineHeight: stueck.lineHeight || undefined
       });
       state.selectedOverlayId = overlayId;
       renderStage();
+      updateInspector();
       showToast(t('toast_correction_done', {bold: info.fett ? t('toast_correction_bold_part') : ''}));
       // Direkt in Bearbeitung versetzen, damit man ohne weiteren Klick
       // sofort den Ersatztext eintippen kann.
@@ -3932,7 +4216,7 @@
       if (!badge) return;
       const kurzText = text.length > 28 ? text.slice(0, 28) + '…' : text;
       const fettTeil = info.fettUnsicher ? '' : (info.fett ? ' · Fett' : ' · nicht fett');
-      badge.textContent = `"${kurzText}" · ${info.groesse}px · ${info.schriftart}${fettTeil}`;
+      badge.textContent = `"${kurzText}" · ${String(info.groesse).replace('.', ',')} pt · ${info.schriftart}${fettTeil}`;
       badge.style.display = 'block';
       badge.style.left = (e.clientX + 14) + 'px';
       badge.style.top = (e.clientY + 14) + 'px';
@@ -4015,7 +4299,13 @@
     //   keine Schriftart-Information - das wird ehrlich als "nicht
     //   ermittelbar" ausgewiesen, statt faelschlich "Arial" zu behaupten.
     async function ermittleSchriftEigenschaften(page, stueck, baseHeight) {
-      const groesse = Math.max(9, Math.round(stueck.height * baseHeight));
+      // Hoehe EINER Zeile (Anteil der Seitenhoehe) -> Schriftgroesse in der
+      // gemeinsamen Einheit (pt bezogen auf A4-Breite), auf 0,5 gerundet.
+      const seitenVerhaeltnis = (state._stageBaseHeight && state._stageBaseWidth)
+        ? state._stageBaseHeight / state._stageBaseWidth
+        : ((page.height || 1697) / (page.width || 1200));
+      const zeilenAnteil = stueck.schriftHoehe || stueck.height;
+      const groesse = Math.max(4, Math.round(zeilenAnteil * TEXT_REF_W * seitenVerhaeltnis * 2) / 2);
       let farbe = '#173b3f';
       let fett = false;
       let fettUnsicher = true;
@@ -4062,6 +4352,7 @@
           }
         }
       } catch (e) { /* Bei Fehler bleiben Standardwerte erhalten */ }
+      if (stueck.bold !== undefined) { fett = !!stueck.bold; fettUnsicher = false; }
       return { groesse, farbe, fett, fettUnsicher, schriftart };
     }
 
