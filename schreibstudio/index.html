@@ -908,6 +908,9 @@
             cursor: pointer;
         }
         .import-status { margin-top: 6px; font-size: .8rem; color: #1c4a42; }
+        .import-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .import-btn-2 { background: #fff; color: var(--accent, #2f7d72); border: 1px solid var(--accent, #2f7d72); }
+        @media (max-width: 420px) { .import-knoepfe { grid-template-columns: 1fr; } }
         .shared-panel {
             margin: 0 0 18px;
             padding: 14px;
@@ -1541,6 +1544,10 @@
                 import_titel: '📥 Schreiben einlesen: {bereich}',
                 import_beschreibung: 'Wähle das vorhandene Schreiben. Die KI verteilt Absender, Empfänger und Text auf die Felder – du siehst vorher alles und entscheidest, was übernommen wird.',
                 import_kein_sdki: 'Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.',
+                erzaehlen_btn: '🎤 Erzählen statt tippen',
+                erzaehlen_titel: '🎤 Erzähl, was du schreiben willst: {bereich}',
+                erzaehlen_beschreibung: 'Sprich oder schreib frei – die KI macht daraus dein Schreiben. Du siehst vorher alles und entscheidest, was übernommen wird.',
+                erzaehlen_hinweis: 'Erzähl zum Beispiel: wer du bist (Name, Adresse), an wen das Schreiben geht, worum es geht (z. B. welcher Vertrag, Kundennummer, ab wann) und was drinstehen soll.',
                 shared_hint: 'Gilt für alle Bereiche (Kündigung, Entschuldigung, Brief).',
                 label_vorname: 'Vorname', ph_vorname: 'z. B. Max',
                 label_nachname: 'Nachname', ph_nachname: 'z. B. Mustermann',
@@ -1680,6 +1687,10 @@
                 import_titel: '📥 Import letter: {bereich}',
                 import_beschreibung: 'Choose the existing letter. The AI distributes sender, recipient and text to the fields – you see everything first and decide what is applied.',
                 import_kein_sdki: 'The AI components could not be loaded. Please reload the page.',
+                erzaehlen_btn: '🎤 Talk instead of typing',
+                erzaehlen_titel: '🎤 Tell me what to write: {bereich}',
+                erzaehlen_beschreibung: 'Speak or write freely – the AI turns it into your letter. You see everything first and decide what is applied.',
+                erzaehlen_hinweis: 'For example tell: who you are (name, address), who the letter goes to, what it is about (e.g. which contract, customer number, from when) and what it should say.',
                 shared_hint: 'Applies to all sections (termination letter, excuse note, letter).',
                 label_vorname: 'First name', ph_vorname: 'e.g. Max',
                 label_nachname: 'Last name', ph_nachname: 'e.g. Mustermann',
@@ -1816,7 +1827,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-ki.js?v=11"></script>
+    <script src="../sd-ki.js?v=12"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -1878,7 +1889,10 @@
              Felder zu. -->
         <div class="import-card">
             <p data-i18n="import_text">Du hast schon ein Schreiben (z. B. eine alte Kündigung oder einen Brief)? Lade es hoch (PDF, Word oder Foto) – die KI trägt Absender, Empfänger und Text in den gerade gewählten Bereich ein.</p>
-            <button type="button" class="import-btn" onclick="schreibenEinlesen()" data-i18n="import_btn">📥 Vorhandenes Schreiben einlesen</button>
+            <div class="import-knoepfe">
+                <button type="button" class="import-btn" onclick="schreibenEinlesen()" data-i18n="import_btn">📥 Vorhandenes Schreiben einlesen</button>
+                <button type="button" class="import-btn import-btn-2" onclick="schreibenEinlesen('sprechen')" data-i18n="erzaehlen_btn">🎤 Erzählen statt tippen</button>
+            </div>
             <div class="import-status" id="import-status" aria-live="polite"></div>
         </div>
         <div class="shared-panel">
@@ -2566,7 +2580,7 @@
         }
 
         // ---- Vorhandenes Schreiben einlesen: KI verteilt die Angaben auf die Felder ----
-        function schreibenEinlesen() {
+        function schreibenEinlesen(art) {
             if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
             const en = window.SD_LANG === 'en';
             const absender = [
@@ -2596,10 +2610,15 @@
             };
             const modus = bereiche[aktuellerModus] ? aktuellerModus : 'brief';
             const tab = document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`);
+            const sprechen = art === 'sprechen';
+            const bereich = modus;
             window.sdKi.einleseDialog({
-                titel: t('import_titel').replace('{bereich}', tab ? tab.textContent.trim() : modus),
-                beschreibung: t('import_beschreibung'),
-                dokumentArt: bereiche[modus].art,
+                modus: sprechen ? 'sprechen' : 'datei',
+                titel: t(sprechen ? 'erzaehlen_titel' : 'import_titel').replace('{bereich}', tab ? tab.textContent.trim() : bereich),
+                beschreibung: t(sprechen ? 'erzaehlen_beschreibung' : 'import_beschreibung'),
+                sprechHinweis: t('erzaehlen_hinweis'),
+                diktatArt: 'frei gesprochene oder geschriebene Angaben einer Person für ' + bereiche[bereich].art + ' (per Spracherkennung diktiert – E-Mail-Adressen und Zahlen können ausgeschrieben sein; schreibe sie korrekt). Formuliere daraus den fertigen Brieftext in höflicher, korrekter Briefsprache; erfinde keine Angaben, fehlende Daten als [Lücke]',
+                dokumentArt: bereiche[bereich].art,
                 felder: absender.concat(bereiche[modus].felder),
                 heuristik: (text) => schreibenRegeln(text, modus),
                 uebernehmen: (werte) => {

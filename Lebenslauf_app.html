@@ -900,6 +900,9 @@
             cursor: pointer;
         }
         .import-status { margin-top: 6px; font-size: .8rem; color: #1c4a42; }
+        .import-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .import-btn-2 { background: #fff; color: var(--accent, #2f7d72); border: 1px solid var(--accent, #2f7d72); }
+        @media (max-width: 420px) { .import-knoepfe { grid-template-columns: 1fr; } }
         .shared-panel {
             margin: 0 0 18px;
             padding: 14px;
@@ -1752,7 +1755,11 @@
                 "save_persist": "Ja, dauerhaft in diesem Browser (bis ich es selbst lösche)",
                 "save_session": "Nein, nur für diese Sitzung (weg beim Schließen)",
                 "personal_h2": "Persönliche Angaben",
-                "import_text": "Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – die KI trägt die Angaben in die richtigen Felder ein. Danach kannst du alles prüfen, verbessern und neu gestalten.",
+                "import_text": "Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – oder erzähl der KI einfach von dir. Sie trägt die Angaben in die richtigen Felder ein; danach kannst du alles prüfen, verbessern und neu gestalten.",
+                "erzaehlen_btn": "🎤 Erzählen statt tippen",
+                "erzaehlen_titel": "🎤 Erzähl von dir",
+                "erzaehlen_beschreibung": "Sprich oder schreib frei – die KI macht daraus deinen Lebenslauf. Du siehst vorher alles und entscheidest, was übernommen wird.",
+                "erzaehlen_hinweis": "Erzähl zum Beispiel: deinen Namen, Adresse, Telefon, E-Mail, Geburtsdatum – dann deine Arbeitsstellen mit Zeitraum (von wann bis wann, wo, was du gemacht hast), deine Schule/Ausbildung, was du gut kannst und welche Sprachen du sprichst.",
                 "import_btn": "📥 Alten Lebenslauf einlesen",
                 "import_titel": "📥 Alten Lebenslauf einlesen",
                 "import_beschreibung": "Wähle deinen bisherigen Lebenslauf. Die KI verteilt die Angaben auf die Felder – du siehst vorher alles und entscheidest, was übernommen wird.",
@@ -1933,7 +1940,11 @@
                 "save_persist": "Yes, permanently in this browser (until I delete it myself)",
                 "save_session": "No, only for this session (gone when closed)",
                 "personal_h2": "Personal details",
-                "import_text": "Already have a resume? Upload it (PDF, Word or photo) – the AI puts the details into the right fields. Then you can check, improve and redesign everything.",
+                "import_text": "Already have a resume? Upload it (PDF, Word or photo) – or simply tell the AI about yourself. It puts the details into the right fields; then you can check, improve and redesign everything.",
+                "erzaehlen_btn": "🎤 Talk instead of typing",
+                "erzaehlen_titel": "🎤 Tell me about yourself",
+                "erzaehlen_beschreibung": "Speak or write freely – the AI turns it into your resume. You see everything first and decide what is applied.",
+                "erzaehlen_hinweis": "For example tell: your name, address, phone, e-mail, date of birth – then your jobs with dates (from when to when, where, what you did), your school/training, what you are good at and which languages you speak.",
                 "import_btn": "📥 Import old resume",
                 "import_titel": "📥 Import old resume",
                 "import_beschreibung": "Choose your existing resume. The AI distributes the details to the fields – you see everything first and decide what is applied.",
@@ -2110,7 +2121,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=11"></script>
+    <script src="sd-ki.js?v=12"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2186,8 +2197,11 @@
              trotzdem einmal eintragen - alle Bereiche greifen auf dieselben
              Felder zu. -->
         <div class="import-card">
-            <p data-i18n="import_text">Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – die KI trägt die Angaben in die richtigen Felder ein. Danach kannst du alles prüfen, verbessern und neu gestalten.</p>
-            <button type="button" class="import-btn" onclick="lebenslaufEinlesen()" data-i18n="import_btn">📥 Alten Lebenslauf einlesen</button>
+            <p data-i18n="import_text">Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – oder erzähl der KI einfach von dir. Sie trägt die Angaben in die richtigen Felder ein; danach kannst du alles prüfen, verbessern und neu gestalten.</p>
+            <div class="import-knoepfe">
+                <button type="button" class="import-btn" onclick="lebenslaufEinlesen()" data-i18n="import_btn">📥 Alten Lebenslauf einlesen</button>
+                <button type="button" class="import-btn import-btn-2" onclick="lebenslaufEinlesen('sprechen')" data-i18n="erzaehlen_btn">🎤 Erzählen statt tippen</button>
+            </div>
             <div class="import-status" id="import-status" aria-live="polite"></div>
         </div>
         <div class="shared-panel">
@@ -3349,7 +3363,7 @@
         }
 
         // ---- Alten Lebenslauf einlesen: KI verteilt die Angaben auf die Felder ----
-        function lebenslaufEinlesen() {
+        function lebenslaufEinlesen(modus) {
             if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
             const en = window.SD_LANG === 'en';
             const felder = [
@@ -3370,10 +3384,14 @@
                 { id: 'kenntnisse', label: en ? 'Skills' : 'Kenntnisse', mehrzeilig: true, hinweis: 'kommagetrennt' },
                 { id: 'sprachen', label: en ? 'Languages' : 'Sprachen', hinweis: 'Format "Sprache: Niveau", kommagetrennt' }
             ];
+            const sprechen = modus === 'sprechen';
             window.sdKi.einleseDialog({
-                titel: t('import_titel'),
-                beschreibung: t('import_beschreibung'),
+                modus: sprechen ? 'sprechen' : 'datei',
+                titel: t(sprechen ? 'erzaehlen_titel' : 'import_titel'),
+                beschreibung: t(sprechen ? 'erzaehlen_beschreibung' : 'import_beschreibung'),
+                sprechHinweis: t('erzaehlen_hinweis'),
                 dokumentArt: 'ein Lebenslauf',
+                diktatArt: 'frei gesprochene oder geschriebene Angaben einer Person über sich selbst für ihren Lebenslauf (per Spracherkennung diktiert – E-Mail-Adressen und Zahlen können ausgeschrieben sein, z. B. „at“ für @ und „Punkt“ für .; schreibe sie korrekt). Mache aus den Erzählungen knappe Lebenslauf-Zeilen',
                 felder,
                 heuristik: lebenslaufRegeln,
                 uebernehmen: (werte) => {

@@ -84,11 +84,22 @@
       ein_pruefen: 'Bitte prüfen und bei Bedarf korrigieren. Nur angehakte Felder werden übernommen – bestehende Eingaben in diesen Feldern werden ersetzt.',
       ein_uebernehmen: '✅ Übernehmen', ein_gekuerzt: 'Hinweis: Das Dokument ist lang – SD Lotse hat nur den Anfang gelesen. Für das ganze Dokument eine Online-KI wählen.',
       ein_fertig: '✓ {n} Felder übernommen.',
+      sp_titel: '🎤 Erzählen statt tippen',
+      sp_ph: 'Tippe auf „🎤 Sprechen“ und erzähl einfach – oder schreib hier hinein …',
+      sp_start: '🎤 Sprechen', sp_stopp: '⏹ Stopp', sp_eintragen: '🤖 Eintragen lassen',
+      sp_info: 'Die Spracherkennung macht dein Browser (bei Chrome/Android über Google, bei Safari/iPhone über Apple).',
+      sp_hoert: '🔴 Ich höre zu … Sprich ruhig in ganzen Sätzen. Mit „Stopp“ beenden.',
+      sp_keine: 'Dein Browser hat keine eigene Spracherkennung. Tipp: Nutze das 🎤 auf deiner Handy-Tastatur und sprich in das Feld.',
+      sp_verweigert: 'Das Mikrofon ist nicht erlaubt. Bitte in den Browser-Einstellungen das Mikrofon für diese Seite erlauben – oder das 🎤 der Tastatur nutzen.',
+      sp_fehler: 'Spracherkennung: {msg}',
+      sp_leer: 'Bitte zuerst etwas erzählen oder schreiben.',
       ein_lotse_tipp: 'SD Lotse ist für diese Aufgabe oft zu klein – mit Gemini, ChatGPT oder Claude klappt die Zuordnung deutlich besser.',
       ein_regeln: 'Hinweis: Ein Teil der Felder wurde ohne KI anhand des Aufbaus erkannt – bitte besonders genau prüfen. Mit Gemini, ChatGPT oder Claude wird die Zuordnung meist vollständiger.',
       ein_ki_fehler: 'Die KI hat nicht geantwortet ({msg}). Die Felder unten wurden ohne KI anhand des Aufbaus erkannt – bitte genau prüfen.',
       ein_privat_lotse: '🔒 SD Lotse liest lokal – die Datei verlässt dein Gerät nicht.',
       ein_privat_online: '☁️ Die Datei und ihr Text werden zur Zuordnung an {firma} gesendet.',
+      ein_privat_online_text: '☁️ Dein Text wird zur Zuordnung an {firma} gesendet.',
+      ein_privat_lotse_text: '🔒 SD Lotse ordnet lokal zu – dein Text verlässt das Gerät nicht.',
       dlg_titel: '🤖 KI-Hilfe zum Dokument',
       dlg_quelle: 'Erkannter Text: {n} Zeichen',
       dlg_gekuerzt: ' (für SD Lotse auf den Anfang gekürzt)',
@@ -151,11 +162,22 @@
       ein_pruefen: 'Please check and correct if needed. Only ticked fields are applied – existing entries in these fields will be replaced.',
       ein_uebernehmen: '✅ Apply', ein_gekuerzt: 'Note: the document is long – SD Lotse only read the beginning. Choose an online AI for the whole document.',
       ein_fertig: '✓ {n} fields applied.',
+      sp_titel: '🎤 Talk instead of typing',
+      sp_ph: 'Tap "🎤 Speak" and just talk – or type here …',
+      sp_start: '🎤 Speak', sp_stopp: '⏹ Stop', sp_eintragen: '🤖 Fill in for me',
+      sp_info: 'Speech recognition is done by your browser (Chrome/Android via Google, Safari/iPhone via Apple).',
+      sp_hoert: '🔴 Listening … feel free to speak in full sentences. Tap "Stop" to finish.',
+      sp_keine: 'Your browser has no speech recognition of its own. Tip: use the 🎤 on your phone keyboard and speak into the field.',
+      sp_verweigert: 'The microphone is not allowed. Please allow it for this site in the browser settings – or use the keyboard 🎤.',
+      sp_fehler: 'Speech recognition: {msg}',
+      sp_leer: 'Please say or write something first.',
       ein_lotse_tipp: 'SD Lotse is often too small for this task – Gemini, ChatGPT or Claude assign the details much better.',
       ein_regeln: 'Note: some fields were recognized without AI from the layout – please check them carefully. Gemini, ChatGPT or Claude usually assign more completely.',
       ein_ki_fehler: 'The AI did not answer ({msg}). The fields below were recognized without AI from the layout – please check carefully.',
       ein_privat_lotse: '🔒 SD Lotse reads locally – the file never leaves your device.',
       ein_privat_online: '☁️ The file and its text are sent to {firma} for sorting.',
+      ein_privat_online_text: '☁️ Your text is sent to {firma} for sorting.',
+      ein_privat_lotse_text: '🔒 SD Lotse sorts locally – your text never leaves the device.',
       dlg_titel: '🤖 AI help for this document',
       dlg_quelle: 'Recognized text: {n} characters',
       dlg_gekuerzt: ' (shortened to the beginning for SD Lotse)',
@@ -248,6 +270,7 @@
 .sdki-feld input[type=checkbox]{width:18px;height:18px;margin:0}
 .sdki-feld strong{font-size:.8rem}
 .sdki-feld textarea{grid-column:1/-1;width:100%;box-sizing:border-box;border:1px solid #d8e0dc;border-radius:8px;padding:6px 8px;font:inherit;font-size:.88rem;resize:vertical;min-height:38px}
+.sdki-diktat{width:100%;box-sizing:border-box;border:1px solid #d8e0dc;border-radius:10px;padding:10px;font:inherit;font-size:16px;line-height:1.5;resize:vertical;min-height:140px}
 .sdki-check{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.4}
 .sdki-fehler{background:#fdf0ee;border:1px solid #f1c4bf;color:#b42318;border-radius:10px;padding:10px 12px;font-size:.88rem;white-space:pre-line}`;
     document.head.appendChild(st);
@@ -783,6 +806,60 @@
     return werte;
   }
 
+  // ------------------------------------------------------------
+  // Diktat: Sprache -> Text ueber die Spracherkennung des Browsers
+  // (Chrome/Android: Google, Safari/iPhone: Apple). Gibt es sie nicht,
+  // bleibt das Mikrofon der Handy-Tastatur.
+  // ------------------------------------------------------------
+  function spracherkennungVorhanden() {
+    return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+  function diktatAnbinden(feld, knopf, info) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      knopf.hidden = true;
+      info(tx('sp_keine'));
+      return null;
+    }
+    info(tx('sp_info'));
+    let rec = null, aktiv = false, basis = '';
+    const anzeigen = () => { knopf.textContent = aktiv ? tx('sp_stopp') : tx('sp_start'); knopf.classList.toggle('prim', aktiv); };
+    const starten = () => {
+      rec = new SR();
+      rec.lang = sprache() === 'en' ? 'en-US' : 'de-DE';
+      rec.continuous = true;
+      rec.interimResults = true;
+      basis = feld.value ? feld.value.replace(/\s*$/, ' ') : '';
+      rec.onresult = (ev) => {
+        let fertig = '', vorlaeufig = '';
+        for (let i = ev.resultIndex; i < ev.results.length; i++) {
+          const r = ev.results[i];
+          if (r.isFinal) fertig += r[0].transcript; else vorlaeufig += r[0].transcript;
+        }
+        if (fertig) basis = (basis + fertig.trim() + ' ');
+        feld.value = basis + vorlaeufig;
+        feld.scrollTop = feld.scrollHeight;
+      };
+      rec.onerror = (ev) => {
+        if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { aktiv = false; info(tx('sp_verweigert')); }
+        else if (ev.error !== 'no-speech' && ev.error !== 'aborted') info(tx('sp_fehler', { msg: ev.error }));
+        anzeigen();
+      };
+      // Manche Browser (v. a. iPhone) beenden nach einer Pause von selbst:
+      // dann weiterhoeren, solange nicht auf Stopp getippt wurde.
+      rec.onend = () => { if (aktiv) { try { starten(); } catch (e) { aktiv = false; anzeigen(); } } };
+      rec.start();
+    };
+    knopf.onclick = () => {
+      if (aktiv) { aktiv = false; try { rec && rec.stop(); } catch (e) { /* egal */ } anzeigen(); return; }
+      aktiv = true;
+      try { starten(); info(tx('sp_hoert')); } catch (e) { aktiv = false; info(tx('sp_fehler', { msg: e.message || e })); }
+      anzeigen();
+    };
+    anzeigen();
+    return { stopp: () => { aktiv = false; try { rec && rec.stop(); } catch (e) { /* egal */ } anzeigen(); } };
+  }
+
   function einleseDialog(opt) {
     stylesEinfuegen();
     const o = overlay(
@@ -791,37 +868,65 @@
       '<div data-auswahl></div>' +
       '<label class="sdki-check"><input type="checkbox" data-verbessern> <span>' + esc(tx('ein_verbessern')) + '</span></label>' +
       '<p class="sdki-klein" data-privat></p>' +
-      '<input type="file" data-datei hidden accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*,.txt,.md,text/plain">' +
-      '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-waehlen>' + esc(tx('ein_datei')) + '</button>' +
-      '<button type="button" class="sdki-btn" data-schliessen>' + esc(tx('abbrechen')) + '</button></div>' +
+      (opt.modus === 'sprechen'
+        ? '<p class="sdki-klein">' + esc(opt.sprechHinweis || '') + '</p>' +
+          '<textarea class="sdki-diktat" data-diktat rows="7" placeholder="' + esc(tx('sp_ph')) + '"></textarea>' +
+          '<p class="sdki-klein" data-sp-info></p>' +
+          '<div class="sdki-knoepfe"><button type="button" class="sdki-btn akt" data-mikro>' + esc(tx('sp_start')) + '</button>' +
+          '<button type="button" class="sdki-btn prim" data-eintragen>' + esc(tx('sp_eintragen')) + '</button>' +
+          '<button type="button" class="sdki-btn" data-schliessen>' + esc(tx('abbrechen')) + '</button></div>'
+        : '<input type="file" data-datei hidden accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*,.txt,.md,text/plain">' +
+          '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-waehlen>' + esc(tx('ein_datei')) + '</button>' +
+          '<button type="button" class="sdki-btn" data-schliessen>' + esc(tx('abbrechen')) + '</button></div>') +
       '<p class="sdki-klein" data-status aria-live="polite"></p>' +
       '<div class="sdki-fehler" data-fehler hidden></div>' +
       '<div data-ergebnis hidden></div>');
     const $q = (sel) => o.querySelector(sel);
     baueAuswahl($q('[data-auswahl]'));
+    if (opt.modus === 'sprechen') $q('[data-verbessern]').checked = true;
     const privat = () => {
       const a = anbieter();
-      $q('[data-privat]').textContent = a === 'lotse' ? tx('ein_privat_lotse')
-        : tx('ein_privat_online', { firma: ONLINE[a] ? ONLINE[a].firma : 'Google (Gemini)' });
+      const sp = opt.modus === 'sprechen' ? '_text' : '';
+      $q('[data-privat]').textContent = a === 'lotse' ? tx('ein_privat_lotse' + sp)
+        : tx('ein_privat_online' + sp, { firma: ONLINE[a] ? ONLINE[a].firma : 'Google (Gemini)' });
     };
     privat();
     document.addEventListener('sd-ki-anbieter', privat);
-    const schliessen = () => { document.removeEventListener('sd-ki-anbieter', privat); lotseStopp(); o.remove(); };
+    let diktat = null;
+    const schliessen = () => { document.removeEventListener('sd-ki-anbieter', privat); lotseStopp(); if (diktat) diktat.stopp(); o.remove(); };
     $q('[data-schliessen]').onclick = schliessen;
     const status = (t) => { $q('[data-status]').textContent = t || ''; };
     const fehler = (t) => { const f = $q('[data-fehler]'); f.textContent = t || ''; f.hidden = !t; };
-    $q('[data-waehlen]').onclick = () => $q('[data-datei]').click();
-    $q('[data-datei]').onchange = async (e) => {
-      const file = e.target.files && e.target.files[0];
-      e.target.value = '';
-      if (!file) return;
+    const startKnopf = $q(opt.modus === 'sprechen' ? '[data-eintragen]' : '[data-waehlen]');
+    if (opt.modus === 'sprechen') {
+      const feld = $q('[data-diktat]');
+      diktat = diktatAnbinden(feld, $q('[data-mikro]'), (t) => { $q('[data-sp-info]').textContent = t || ''; });
+      startKnopf.onclick = () => {
+        if (diktat) diktat.stopp();
+        const text = (feld.value || '').trim();
+        if (!text) { fehler(tx('sp_leer')); return; }
+        verarbeite(text, null);
+      };
+    } else {
+      $q('[data-waehlen]').onclick = () => $q('[data-datei]').click();
+      $q('[data-datei]').onchange = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        verarbeite(null, file);
+      };
+    }
+    async function verarbeite(vorgabeText, file) {
       fehler('');
       $q('[data-ergebnis]').hidden = true;
-      $q('[data-waehlen]').disabled = true;
+      startKnopf.disabled = true;
       try {
-        let text = await leseDatei(file, status);
-        const kannOriginal = anbieter() !== 'lotse' && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\//.test(file.type || ''));
-        if ((!text || !text.trim()) && !kannOriginal) throw new Error(tx('ein_leer'));
+        let text = vorgabeText;
+        if (file) {
+          text = await leseDatei(file, status);
+          const kannOriginal = anbieter() !== 'lotse' && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\//.test(file.type || ''));
+          if ((!text || !text.trim()) && !kannOriginal) throw new Error(tx('ein_leer'));
+        }
         text = text || '';
         let gekuerzt = false;
         const istLotse = anbieter() === 'lotse';
@@ -836,7 +941,7 @@
         // Online-KIs bekommen zusaetzlich das Original (PDF/Foto): sie sehen
         // dann auch das Layout (Spalten, Tabellen) statt nur den Rohtext.
         let datei = null;
-        const typOk = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(file.type || '');
+        const typOk = !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(file.type || ''));
         if (!istLotse && typOk && file.size <= 12 * 1024 * 1024) {
           try {
             const url = await new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fehler; r.readAsDataURL(file); });
@@ -844,7 +949,7 @@
           } catch (e) { datei = null; }
         }
         try {
-          const prompt = baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked) +
+          const prompt = baueEinlesePrompt(Object.assign({}, opt, file ? {} : { dokumentArt: opt.diktatArt || opt.dokumentArt }), text, $q('[data-verbessern]').checked) +
             (datei ? '\n\nDas Original-Dokument ist zusätzlich angehängt – nutze es, um Spalten und Tabellen richtig zuzuordnen.' : '');
           const antwort = await schreibe(prompt, { maxTokens: istLotse ? 1100 : 2500, datei });
           werte = leseEinleseAntwort(antwort, opt.felder);
@@ -865,9 +970,9 @@
         status('');
         fehler((err && err.message) || String(err));
       } finally {
-        $q('[data-waehlen]').disabled = false;
+        startKnopf.disabled = false;
       }
-    };
+    }
     function zeigeErgebnis(werte, gekuerzt, notiz) {
       const box = $q('[data-ergebnis]');
       box.innerHTML = (gekuerzt ? '<p class="sdki-klein">' + esc(tx('ein_gekuerzt')) + '</p>' : '') +
@@ -1066,6 +1171,7 @@
     anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
     geminiSchreibe, onlineSchreibe, schreibe, dokumentDialog, einleseDialog, leseDatei,
+    diktatAnbinden, spracherkennungVorhanden,
     _intern: { lotse }
   };
 })();

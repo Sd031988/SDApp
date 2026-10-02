@@ -373,6 +373,7 @@
             margin-bottom: 6px;
         }
 
+        .mic-btn.aktiv { background: #fdecea; border-color: #e5484d; }
         .key-link {
             display: inline-block;
             margin: 2px 0 6px;
@@ -900,6 +901,9 @@
                 settings_title: 'Einstellungen',
                 lbl_key: 'Dein Gemini-API-Schlüssel',
                 lbl_anbieter: 'Online-KI',
+                mic_title: 'Sprechen statt tippen (Spracherkennung deines Browsers)',
+                mic_hoert: '🔴 Ich höre zu … tippe noch einmal auf 🎤 zum Beenden.',
+                mic_verweigert: 'Das Mikrofon ist für diese Seite nicht erlaubt. Bitte in den Browser-Einstellungen erlauben – oder das 🎤 der Tastatur nutzen.',
                 key_link: '🔗 Kostenlosen Schlüssel bei Google holen',
                 key_link_openai: '🔗 Schlüssel bei OpenAI holen',
                 key_link_claude: '🔗 Schlüssel bei Anthropic holen',
@@ -1089,6 +1093,9 @@
                 settings_title: 'Settings',
                 lbl_key: 'Your Gemini API key',
                 lbl_anbieter: 'Online AI',
+                mic_title: 'Speak instead of typing (your browser\'s speech recognition)',
+                mic_hoert: '🔴 Listening … tap 🎤 again to stop.',
+                mic_verweigert: 'The microphone is not allowed for this site. Please allow it in the browser settings – or use the keyboard 🎤.',
                 key_link: '🔗 Get a free key from Google',
                 key_link_openai: '🔗 Get a key from OpenAI',
                 key_link_claude: '🔗 Get a key from Anthropic',
@@ -1423,6 +1430,7 @@
             <div class="input-row">
                 <input type="file" id="fileInput" accept="image/*,application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.txt,.md,.csv,text/plain,text/markdown,text/csv" multiple hidden>
                 <button type="button" class="icon-btn attach-btn" id="attachBtn" data-i18n-title="attach" title="Bild oder PDF anhängen" aria-label="Bild oder PDF anhängen">📎</button>
+                <button type="button" class="icon-btn mic-btn" id="micBtn" hidden data-i18n-title="mic_title" title="Sprechen statt tippen" aria-label="Sprechen statt tippen">🎤</button>
                 <textarea id="input" rows="1" data-i18n-placeholder="ph_message" placeholder="Nachricht schreiben ..."></textarea>
                 <a class="icon-btn google-btn" id="googleBtn" href="https://www.google.com/search?udm=50" target="_blank" rel="noopener noreferrer"
                     data-i18n-title="google_btn_title" title="Frage im Google KI-Modus stellen" aria-label="Im Google KI-Modus fragen">G↗</a>
@@ -3494,6 +3502,48 @@
             $('settingsBtn').setAttribute('aria-expanded', offen ? 'true' : 'false');
         };
         $('saveKeyBtn').onclick = speichereKey;
+
+        // Sprechen statt tippen: Spracherkennung des Browsers (Chrome/Android
+        // ueber Google, Safari/iPhone ueber Apple). Ohne sie bleibt der Knopf weg.
+        (function mikrofon() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const btn = $('micBtn');
+            if (!SR) return;
+            btn.hidden = false;
+            let rec = null, aktiv = false, basis = '';
+            const ende = () => { aktiv = false; btn.classList.remove('aktiv'); zeigeDocStatus(''); try { rec && rec.stop(); } catch (e) { /* egal */ } };
+            const starten = () => {
+                rec = new SR();
+                rec.lang = (erkenneSprache($('input').value) || (window.SD_LANG === 'en' ? 'en' : 'de')) === 'en' ? 'en-US' : 'de-DE';
+                rec.continuous = true;
+                rec.interimResults = true;
+                basis = $('input').value ? $('input').value.replace(/\s*$/, ' ') : '';
+                rec.onresult = (ev) => {
+                    let fertig = '', vorl = '';
+                    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+                        if (ev.results[i].isFinal) fertig += ev.results[i][0].transcript; else vorl += ev.results[i][0].transcript;
+                    }
+                    if (fertig) basis += fertig.trim() + ' ';
+                    $('input').value = basis + vorl;
+                    passeHoeheAn();
+                    aktualisiereSendenKnopf();
+                };
+                rec.onerror = (ev) => {
+                    if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { ende(); zeigeFehler(t('mic_verweigert')); }
+                };
+                rec.onend = () => { if (aktiv) { try { starten(); } catch (e) { ende(); } } };
+                rec.start();
+            };
+            btn.onclick = () => {
+                if (aktiv) { ende(); return; }
+                aktiv = true;
+                btn.classList.add('aktiv');
+                zeigeDocStatus(t('mic_hoert'));
+                try { starten(); } catch (e) { ende(); }
+            };
+            // Beim Senden das Zuhoeren beenden
+            $('sendBtn').addEventListener('click', () => { if (aktiv) ende(); }, true);
+        })();
         $('anbieterWahl').onchange = () => {
             optionen.anbieter = $('anbieterWahl').value;
             speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
