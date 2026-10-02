@@ -134,6 +134,125 @@
             cursor: pointer;
         }
 
+        /* --- Umschalter Gemini / Llama --- */
+        .mode-bar {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: center;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 4px;
+            background: rgba(23, 42, 58, 0.06);
+            border-radius: 12px;
+            padding: 4px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            border: 0;
+            background: transparent;
+            border-radius: 9px;
+            padding: 6px 8px;
+            min-height: 44px;
+            font-family: inherit;
+            color: var(--muted);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+        }
+
+        .mode-btn strong {
+            font-size: 0.92rem;
+        }
+
+        .mode-btn small {
+            font-size: 0.7rem;
+        }
+
+        .mode-btn.active {
+            background: #fff;
+            color: var(--ink);
+            box-shadow: 0 1px 4px rgba(23, 42, 58, 0.15);
+        }
+
+        .llama-card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--accent);
+            border-radius: 14px;
+            padding: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .llama-card h2 {
+            font-family: Georgia, serif;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .llama-card select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 16px;
+            background: var(--paper);
+            font-family: inherit;
+        }
+
+        .progress {
+            height: 10px;
+            background: var(--accent-soft);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress > div {
+            height: 100%;
+            width: 0;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 0.78rem;
+            color: var(--muted);
+            overflow-wrap: anywhere;
+        }
+
+        .notice {
+            background: #fdf0ee;
+            border: 1px solid #f1c4bf;
+            color: var(--danger);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .src-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            padding: 4px 6px;
+        }
+
+        .send-btn.stop {
+            background: var(--danger);
+            font-size: 0.85rem;
+            font-weight: bold;
+            min-width: 72px;
+        }
+
         /* --- Einstellungen --- */
         .settings {
             display: none;
@@ -729,6 +848,32 @@
                 google_btn_title: 'Frage im Google KI-Modus stellen – öffnet sich daneben bzw. in einem neuen Tab, der Assistent bleibt offen',
                 google_hint: 'Die Frage wird dabei an Google gesendet und dort beantwortet. Die Antwort siehst du bei Google, nicht hier.',
                 google_footer: 'Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus – die Antwort erscheint dann bei Google, der Assistent bleibt offen.',
+                mode_gemini: '☁️ Gemini',
+                mode_gemini_sub: 'online · Schlüssel',
+                mode_llama: '🔒 Llama',
+                mode_llama_sub: 'lokal · ohne Schlüssel',
+                llama_h: '🔒 Llama läuft direkt auf deinem Gerät',
+                llama_p: 'Kein Schlüssel, keine Kosten, und deine Nachrichten verlassen das Gerät nicht. Dafür wird das Modell einmalig heruntergeladen und im Browser gespeichert. Llama ist kleiner und schwächer als Gemini, kann keine Bilder/PDFs ansehen und nicht rechnen.',
+                llama_model_lbl: 'Modell',
+                llama_1b: 'Llama 3.2 1B – schnell (ca. 1 GB)',
+                llama_3b: 'Llama 3.2 3B – bessere Antworten (ca. 2 GB)',
+                llama_start: '⬇️ Herunterladen & starten',
+                llama_start_cached: '▶️ Llama starten',
+                llama_wifi: 'Tipp: Am besten im WLAN herunterladen.',
+                llama_loading: 'Wird geladen …',
+                llama_ready: '✅ Llama ist bereit – schreib einfach los.',
+                llama_unsupported: 'Dein Browser oder Gerät kann Llama leider nicht lokal ausführen (WebGPU fehlt oder ist zu schwach). Am besten klappt es mit Chrome oder Edge am PC/Laptop. Auf iPhones und vielen Handys geht es derzeit nicht – dort bitte Gemini nutzen.',
+                llama_load_failed: 'Llama konnte nicht geladen werden: {msg}',
+                llama_not_started: 'Bitte starte Llama zuerst oben mit „Herunterladen & starten“.',
+                llama_no_attach: 'Das lokale Llama kann keine Bilder oder PDFs ansehen. Für Anhänge bitte oben auf ☁️ Gemini wechseln.',
+                llama_privacy: '🔒 Llama läuft komplett auf deinem Gerät – deine Nachrichten werden nicht gesendet. Nur das Modell wird einmalig heruntergeladen.',
+                llama_settings_lbl: 'Lokales Llama-Modell',
+                llama_delete: '🗑️ Llama-Modell vom Gerät löschen',
+                llama_deleted: 'Modell gelöscht – Speicher wieder frei.',
+                llama_delete_none: 'Es ist kein Llama-Modell gespeichert.',
+                stop: '■ Stopp',
+                src_gemini: '☁️ Gemini',
+                src_llama: '🔒 Llama (lokal)',
                 ab_google_h: '🔎 Google KI-Modus',
                 ab_google_p: 'Frage zusätzlich bei Google stellen – öffnet sich daneben, der Assistent bleibt offen.'
             },
@@ -789,6 +934,32 @@
                 google_btn_title: 'Ask this in Google AI Mode – opens next to it or in a new tab, the assistant stays open',
                 google_hint: 'Your question is sent to Google and answered there. You see the answer at Google, not here.',
                 google_footer: 'With "G↗" you also ask your question in Google AI Mode – the answer appears at Google, the assistant stays open.',
+                mode_gemini: '☁️ Gemini',
+                mode_gemini_sub: 'online · key',
+                mode_llama: '🔒 Llama',
+                mode_llama_sub: 'local · no key',
+                llama_h: '🔒 Llama runs directly on your device',
+                llama_p: 'No key, no cost, and your messages never leave the device. The model is downloaded once and stored in the browser. Llama is smaller and weaker than Gemini, cannot look at images/PDFs and cannot run code.',
+                llama_model_lbl: 'Model',
+                llama_1b: 'Llama 3.2 1B – fast (approx. 1 GB)',
+                llama_3b: 'Llama 3.2 3B – better answers (approx. 2 GB)',
+                llama_start: '⬇️ Download & start',
+                llama_start_cached: '▶️ Start Llama',
+                llama_wifi: 'Tip: best downloaded over Wi-Fi.',
+                llama_loading: 'Loading …',
+                llama_ready: '✅ Llama is ready – just start typing.',
+                llama_unsupported: 'Your browser or device cannot run Llama locally (WebGPU missing or too weak). It works best with Chrome or Edge on a PC/laptop. It currently does not work on iPhones and many phones – please use Gemini there.',
+                llama_load_failed: 'Llama could not be loaded: {msg}',
+                llama_not_started: 'Please start Llama first with "Download & start" at the top.',
+                llama_no_attach: 'The local Llama cannot look at images or PDFs. For attachments please switch to ☁️ Gemini at the top.',
+                llama_privacy: '🔒 Llama runs entirely on your device – your messages are not sent anywhere. Only the model is downloaded once.',
+                llama_settings_lbl: 'Local Llama model',
+                llama_delete: '🗑️ Delete Llama model from device',
+                llama_deleted: 'Model deleted – storage freed.',
+                llama_delete_none: 'No Llama model is stored.',
+                stop: '■ Stop',
+                src_gemini: '☁️ Gemini',
+                src_llama: '🔒 Llama (local)',
                 ab_google_h: '🔎 Google AI Mode',
                 ab_google_p: 'Also ask Google – opens next to this, the assistant stays open.'
             }
@@ -814,6 +985,17 @@
             data-i18n-title="settings_title" title="Einstellungen">⚙️</button>
     </header>
 
+    <nav class="mode-bar" aria-label="KI wählen">
+        <div class="mode-switch">
+            <button type="button" class="mode-btn active" data-mode="gemini" aria-pressed="true">
+                <strong data-i18n="mode_gemini">☁️ Gemini</strong><small data-i18n="mode_gemini_sub">online · Schlüssel</small>
+            </button>
+            <button type="button" class="mode-btn" data-mode="llama" aria-pressed="false">
+                <strong data-i18n="mode_llama">🔒 Llama</strong><small data-i18n="mode_llama_sub">lokal · ohne Schlüssel</small>
+            </button>
+        </div>
+    </nav>
+
     <section class="settings" id="settings" aria-label="Einstellungen">
         <div class="settings-inner">
             <h2 data-i18n="settings_title">Einstellungen</h2>
@@ -836,6 +1018,10 @@
             <label class="check"><input type="checkbox" id="optCode" checked>
                 <span data-i18n="opt_code">Python-Rechnen: die KI darf Python-Code ausführen</span></label>
             <div class="row">
+                <button type="button" class="btn btn-ghost" id="llamaDeleteBtn" data-i18n="llama_delete">🗑️ Llama-Modell vom Gerät löschen</button>
+                <span class="status" id="llamaDeleteStatus" role="status"></span>
+            </div>
+            <div class="row">
                 <button type="button" class="btn btn-danger" id="clearBtn" data-i18n="btn_clear">🗑️ Gespräch löschen</button>
                 <span class="status" id="clearStatus" role="status"></span>
             </div>
@@ -844,13 +1030,34 @@
 
     <main class="chat" id="chat" aria-live="polite">
         <div class="chat-inner" id="chatInner">
+            <div class="llama-card" id="llamaCard" hidden>
+                <h2 data-i18n="llama_h">🔒 Llama läuft direkt auf deinem Gerät</h2>
+                <p class="hint" data-i18n="llama_p">Kein Schlüssel, keine Kosten.</p>
+                <div class="field" id="llamaSetup">
+                    <label for="llamaModel" data-i18n="llama_model_lbl">Modell</label>
+                    <select id="llamaModel">
+                        <option value="1b" data-i18n="llama_1b">Llama 3.2 1B – schnell (ca. 1 GB)</option>
+                        <option value="3b" data-i18n="llama_3b">Llama 3.2 3B – bessere Antworten (ca. 2 GB)</option>
+                    </select>
+                </div>
+                <div class="row" id="llamaStartRow">
+                    <button type="button" class="btn btn-primary" id="llamaStartBtn" data-i18n="llama_start">⬇️ Herunterladen &amp; starten</button>
+                    <span class="hint" data-i18n="llama_wifi">Tipp: Am besten im WLAN herunterladen.</span>
+                </div>
+                <div id="llamaProgress" hidden>
+                    <div class="progress"><div id="llamaBar"></div></div>
+                    <div class="progress-text" id="llamaProgressText" role="status"></div>
+                </div>
+                <div class="status" id="llamaReady" hidden data-i18n="llama_ready">✅ Llama ist bereit.</div>
+                <div class="notice" id="llamaNotice" hidden></div>
+            </div>
             <div class="welcome" id="welcome">
                 <h1 data-i18n="welcome_h">Hallo! Wobei kann ich helfen?</h1>
                 <p data-i18n="welcome_p">Ich bin dein KI-Assistent im SD Bewerbungsstudio.</p>
                 <div class="abilities">
                     <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
-                    <div class="ability"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
-                    <div class="ability"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
+                    <div class="ability nur-gemini"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
+                    <div class="ability nur-gemini"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
                     <div class="ability"><strong data-i18n="ab_google_h">🔎 Google KI-Modus</strong><span data-i18n="ab_google_p">Frage zusätzlich bei Google stellen.</span></div>
                 </div>
                 <div class="suggestions">
@@ -875,7 +1082,8 @@
                     data-i18n-title="google_btn_title" title="Frage im Google KI-Modus stellen" aria-label="Im Google KI-Modus fragen">G↗</a>
                 <button type="button" class="send-btn" id="sendBtn" data-i18n-title="send" title="Senden" aria-label="Senden">➤</button>
             </div>
-            <p class="privacy-line"><span data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</span>
+            <p class="privacy-line" id="privacyLlama" hidden data-i18n="llama_privacy">🔒 Llama läuft komplett auf deinem Gerät.</p>
+            <p class="privacy-line" id="privacyGemini"><span data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</span>
                 <span data-i18n="google_footer">Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus.</span></p>
         </div>
     </footer>
@@ -941,7 +1149,7 @@
         let verlauf = [];
         let wartendeAnhaenge = [];   // [{ name, mime, data(base64), thumb }]
         let sendetGerade = false;
-        let optionen = { memory: true, code: true };
+        let optionen = { memory: true, code: true, modus: 'gemini', llamaModell: '1b' };
 
         // ------------------------------------------------------------
         // Schluessel
@@ -981,7 +1189,7 @@
         }
 
         function aktualisiereKeyHinweis() {
-            $('noKeyCallout').hidden = !!aktuellerKey();
+            $('noKeyCallout').hidden = !!aktuellerKey() || optionen.modus === 'llama';
         }
 
         // ------------------------------------------------------------
@@ -995,6 +1203,7 @@
         function verlaufFuerSpeicher() {
             return verlauf.map(e => ({
                 role: e.role,
+                quelle: e.quelle,
                 anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime })),
                 parts: e.parts.map(p => p.inlineData
                     ? { text: '[' + t('attachment_gone', { name: p._name || 'Datei' }) + ']', _hinweis: true }
@@ -1025,9 +1234,12 @@
                 const o = JSON.parse(speicherLesen(localStorage, OPTIONS_STORAGE) || '{}');
                 if (typeof o.memory === 'boolean') optionen.memory = o.memory;
                 if (typeof o.code === 'boolean') optionen.code = o.code;
+                if (o.modus === 'gemini' || o.modus === 'llama') optionen.modus = o.modus;
+                if (o.llamaModell === '1b' || o.llamaModell === '3b') optionen.llamaModell = o.llamaModell;
             } catch (e) { /* Standardwerte */ }
             $('optMemory').checked = optionen.memory;
             $('optCode').checked = optionen.code;
+            $('llamaModel').value = optionen.llamaModell;
         }
 
         function speichereOptionen() {
@@ -1256,6 +1468,10 @@
             copyBtn.textContent = t('copy');
             copyBtn.onclick = () => kopiere(textAusParts(eintrag.parts), copyBtn);
             actions.appendChild(copyBtn);
+            const quelle = document.createElement('span');
+            quelle.className = 'src-label';
+            quelle.textContent = eintrag.quelle === 'llama' ? t('src_llama') : t('src_gemini');
+            actions.appendChild(quelle);
             wrap.appendChild(actions);
             return wrap;
         }
@@ -1459,14 +1675,14 @@
             try {
                 const parts = await frageGemini();
                 entferneTippt();
-                const eintrag = { role: 'model', parts };
+                const eintrag = { role: 'model', parts, quelle: 'gemini' };
                 verlauf.push(eintrag);
                 $('chatInner').appendChild(baueNachricht(eintrag));
                 nachUntenScrollen();
                 speichereVerlauf();
             } catch (err) {
                 entferneTippt();
-                zeigeFehler(err.message || String(err), () => antworteAufLetzteNachricht());
+                zeigeFehler(err.message || String(err), () => antwortenErneut());
             } finally {
                 sendetGerade = false;
                 aktualisiereSendenKnopf();
@@ -1477,7 +1693,14 @@
             if (sendetGerade) return;
             const text = (textVorgabe != null ? textVorgabe : $('input').value).trim();
             if (!text && !wartendeAnhaenge.length) return;
-            if (!aktuellerKey()) {
+            if (optionen.modus === 'llama') {
+                if (wartendeAnhaenge.length) { zeigeFehler(t('llama_no_attach')); return; }
+                if (!llama.engine) {
+                    zeigeFehler(llama.gpu && !llama.gpu.ok ? t('llama_unsupported') : t('llama_not_started'));
+                    zeigeLlamaKarte(true);
+                    return;
+                }
+            } else if (!aktuellerKey()) {
                 zeigeFehler(t('err_no_key'));
                 $('settings').classList.add('open');
                 $('settingsBtn').setAttribute('aria-expanded', 'true');
@@ -1508,18 +1731,262 @@
             passeHoeheAn();
             rendereAlles();
             speichereVerlauf();
-            await antworteAufLetzteNachricht();
+            if (optionen.modus === 'llama') await antworteMitLlama();
+            else await antworteAufLetzteNachricht();
         }
 
         function aktualisiereSendenKnopf() {
+            const btn = $('sendBtn');
+            if (llama.generiert) {
+                btn.disabled = false;
+                btn.classList.add('stop');
+                btn.textContent = t('stop');
+                return;
+            }
+            btn.classList.remove('stop');
+            btn.textContent = '➤';
             const leer = !$('input').value.trim() && !wartendeAnhaenge.length;
-            $('sendBtn').disabled = sendetGerade || leer;
+            btn.disabled = sendetGerade || leer;
         }
 
         function passeHoeheAn() {
             const ta = $('input');
             ta.style.height = 'auto';
             ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
+        }
+
+        // ------------------------------------------------------------
+        // Llama lokal im Browser (WebLLM)
+        // ------------------------------------------------------------
+        // Das Modell laeuft komplett auf dem Geraet (WebGPU); Nachrichten
+        // werden nirgendwohin gesendet. Heruntergeladen werden nur die
+        // Modelldateien (einmalig, danach aus dem Browser-Speicher).
+        const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.83';
+        // q4f16 ist kleiner/schneller, braucht aber die GPU-Funktion
+        // "shader-f16"; sonst wird die f32-Variante genommen.
+        const LLAMA_MODELLE = {
+            '1b': { f16: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-1B-Instruct-q4f32_1-MLC' },
+            '3b': { f16: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-3B-Instruct-q4f32_1-MLC' }
+        };
+        const LLAMA_SYSTEM =
+            'Du bist der KI-Assistent der Web-App "SD Bewerbungsstudio" und hilfst bei Bewerbung, ' +
+            'Lebenslauf, Anschreiben und Briefen. Antworte freundlich, kurz und konkret in der Sprache ' +
+            'der Person (meist Deutsch). Erfinde keine Fakten; wenn du etwas nicht sicher weisst, sag es.';
+        const LLAMA_MAX_NACHRICHTEN = 10;   // Llama 3.2 im Browser hat nur ca. 4.000 Token Kontext
+        const LLAMA_MAX_ZEICHEN = 1500;     // pro Nachricht
+
+        const llama = { lib: null, engine: null, modellId: null, laedt: false, generiert: false, gpu: null };
+
+        async function pruefeWebGpu() {
+            if (llama.gpu) return llama.gpu;
+            try {
+                if (!('gpu' in navigator)) return (llama.gpu = { ok: false });
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) return (llama.gpu = { ok: false });
+                return (llama.gpu = { ok: true, f16: adapter.features.has('shader-f16') });
+            } catch (e) {
+                return (llama.gpu = { ok: false });
+            }
+        }
+
+        function llamaModellId() {
+            const m = LLAMA_MODELLE[optionen.llamaModell] || LLAMA_MODELLE['1b'];
+            return (llama.gpu && llama.gpu.f16) ? m.f16 : m.f32;
+        }
+
+        async function ladeWebLlm() {
+            if (!llama.lib) llama.lib = await import(WEBLLM_URL);
+            return llama.lib;
+        }
+
+        function zeigeLlamaKarte(nachObenScrollen) {
+            const aktiv = optionen.modus === 'llama';
+            $('llamaCard').hidden = !aktiv || (!!llama.engine && llama.modellId === llamaModellId());
+            if (aktiv && nachObenScrollen) $('chat').scrollTop = 0;
+        }
+
+        async function aktualisiereLlamaKarte() {
+            if (optionen.modus !== 'llama') { zeigeLlamaKarte(false); return; }
+            const gpu = await pruefeWebGpu();
+            const notice = $('llamaNotice');
+            if (!gpu.ok) {
+                notice.textContent = t('llama_unsupported');
+                notice.hidden = false;
+                $('llamaSetup').hidden = true;
+                $('llamaStartRow').hidden = true;
+                zeigeLlamaKarte(false);
+                return;
+            }
+            notice.hidden = true;
+            $('llamaSetup').hidden = !!llama.laedt;
+            $('llamaStartRow').hidden = !!llama.laedt;
+            // Schon heruntergeladen? Dann nur "starten" statt "herunterladen".
+            let imSpeicher = false;
+            try {
+                const lib = llama.lib || (await ladeWebLlm());
+                imSpeicher = await lib.hasModelInCache(llamaModellId());
+            } catch (e) { imSpeicher = false; }
+            $('llamaStartBtn').textContent = imSpeicher ? t('llama_start_cached') : t('llama_start');
+            zeigeLlamaKarte(false);
+        }
+
+        async function starteLlama() {
+            if (llama.laedt) return;
+            const gpu = await pruefeWebGpu();
+            if (!gpu.ok) { await aktualisiereLlamaKarte(); return; }
+            llama.laedt = true;
+            $('llamaSetup').hidden = true;
+            $('llamaStartRow').hidden = true;
+            $('llamaReady').hidden = true;
+            $('llamaNotice').hidden = true;
+            $('llamaProgress').hidden = false;
+            $('llamaBar').style.width = '0%';
+            $('llamaProgressText').textContent = t('llama_loading');
+            const fortschritt = (r) => {
+                $('llamaBar').style.width = Math.round((r.progress || 0) * 100) + '%';
+                $('llamaProgressText').textContent = r.text || t('llama_loading');
+            };
+            const id = llamaModellId();
+            try {
+                const lib = await ladeWebLlm();
+                if (llama.engine) { try { await llama.engine.unload(); } catch (e) { /* egal */ } llama.engine = null; }
+                let engine = null;
+                try {
+                    // Bevorzugt im Hintergrund-Thread, damit die Seite fluessig bleibt.
+                    const worker = new Worker(new URL('llama-worker.js', location.href), { type: 'module' });
+                    engine = await lib.CreateWebWorkerMLCEngine(worker, id, { initProgressCallback: fortschritt });
+                } catch (workerFehler) {
+                    engine = await lib.CreateMLCEngine(id, { initProgressCallback: fortschritt });
+                }
+                llama.engine = engine;
+                llama.modellId = id;
+                $('llamaProgress').hidden = true;
+                $('llamaReady').hidden = false;
+                setTimeout(() => zeigeLlamaKarte(false), 2500);
+            } catch (err) {
+                $('llamaProgress').hidden = true;
+                $('llamaSetup').hidden = false;
+                $('llamaStartRow').hidden = false;
+                $('llamaNotice').textContent = t('llama_load_failed', { msg: (err && err.message) || String(err) });
+                $('llamaNotice').hidden = false;
+            } finally {
+                llama.laedt = false;
+            }
+        }
+
+        // Verlauf in das Chat-Format von Llama umwandeln: nur Text, die
+        // letzten Nachrichten, abwechselnd Person/KI.
+        function llamaNachrichten() {
+            const liste = [];
+            verlauf.slice(-LLAMA_MAX_NACHRICHTEN).forEach(e => {
+                let text = e.parts.filter(p => typeof p.text === 'string' && !p.thought).map(p => p.text).join('\n').trim();
+                const hatAnhang = e.parts.some(p => p.inlineData || p._hinweis);
+                if (!text && hatAnhang) text = '(Anhang)';
+                if (!text) return;
+                if (text.length > LLAMA_MAX_ZEICHEN) text = text.slice(0, LLAMA_MAX_ZEICHEN) + ' …';
+                const role = e.role === 'model' ? 'assistant' : 'user';
+                const letzte = liste[liste.length - 1];
+                if (letzte && letzte.role === role) letzte.content += '\n\n' + text;
+                else liste.push({ role, content: text });
+            });
+            while (liste.length && liste[0].role !== 'user') liste.shift();
+            return [{ role: 'system', content: LLAMA_SYSTEM }].concat(liste);
+        }
+
+        async function antworteMitLlama() {
+            sendetGerade = true;
+            llama.generiert = true;
+            aktualisiereSendenKnopf();
+            const eintrag = { role: 'model', parts: [{ text: '' }], quelle: 'llama' };
+            const knoten = baueNachricht(eintrag);
+            const bubble = knoten.querySelector('.bubble');
+            bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+            $('chatInner').appendChild(knoten);
+            nachUntenScrollen();
+            let text = '';
+            let geplant = false;
+            const zeichne = () => {
+                geplant = false;
+                bubble.innerHTML = markdownZuHtml(text);
+                nachUntenScrollen();
+            };
+            try {
+                const stream = await llama.engine.chat.completions.create({
+                    messages: llamaNachrichten(),
+                    stream: true,
+                    temperature: 0.7,
+                    max_tokens: 1024
+                });
+                for await (const teil of stream) {
+                    const neu = (teil.choices && teil.choices[0] && teil.choices[0].delta && teil.choices[0].delta.content) || '';
+                    if (!neu) continue;
+                    text += neu;
+                    if (!geplant) { geplant = true; requestAnimationFrame(zeichne); }
+                }
+                zeichne();
+                if (!text.trim()) throw new Error(t('err_empty'));
+                eintrag.parts = [{ text }];
+                verlauf.push(eintrag);
+                speichereVerlauf();
+                // Kopieren-Knopf soll den fertigen Text nehmen
+                knoten.replaceWith(baueNachricht(eintrag));
+            } catch (err) {
+                if (text.trim()) {
+                    // Abgebrochen (Stopp) oder Fehler mitten im Text: Bisheriges behalten.
+                    eintrag.parts = [{ text }];
+                    verlauf.push(eintrag);
+                    speichereVerlauf();
+                    knoten.replaceWith(baueNachricht(eintrag));
+                } else {
+                    knoten.remove();
+                    zeigeFehler((err && err.message) || String(err), () => antwortenErneut());
+                }
+            } finally {
+                llama.generiert = false;
+                sendetGerade = false;
+                aktualisiereSendenKnopf();
+            }
+        }
+
+        function antwortenErneut() {
+            if (optionen.modus === 'llama') return antworteMitLlama();
+            return antworteAufLetzteNachricht();
+        }
+
+        function setzeModus(modus) {
+            optionen.modus = modus;
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                const an = b.dataset.mode === modus;
+                b.classList.toggle('active', an);
+                b.setAttribute('aria-pressed', an ? 'true' : 'false');
+            });
+            const istLlama = modus === 'llama';
+            $('attachBtn').hidden = istLlama;
+            document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = istLlama; });
+            $('privacyLlama').hidden = !istLlama;
+            $('privacyGemini').hidden = istLlama;
+            $('noKeyCallout').hidden = istLlama || !!aktuellerKey();
+            zeigeLlamaKarte(istLlama);
+            aktualisiereLlamaKarte();
+        }
+
+        async function loescheLlamaModell() {
+            const status = $('llamaDeleteStatus');
+            try {
+                const lib = await ladeWebLlm();
+                let geloescht = false;
+                for (const k of Object.keys(LLAMA_MODELLE)) {
+                    for (const id of [LLAMA_MODELLE[k].f16, LLAMA_MODELLE[k].f32]) {
+                        if (await lib.hasModelInCache(id)) { await lib.deleteModelAllInfoInCache(id); geloescht = true; }
+                    }
+                }
+                if (llama.engine) { try { await llama.engine.unload(); } catch (e) { /* egal */ } llama.engine = null; llama.modellId = null; }
+                status.textContent = geloescht ? t('llama_deleted') : t('llama_delete_none');
+                aktualisiereLlamaKarte();
+            } catch (err) {
+                status.textContent = (err && err.message) || String(err);
+            }
         }
 
         // ------------------------------------------------------------
@@ -1530,6 +1997,14 @@
             $('settingsBtn').setAttribute('aria-expanded', offen ? 'true' : 'false');
         };
         $('saveKeyBtn').onclick = speichereKey;
+        document.querySelectorAll('.mode-btn').forEach(b => { b.onclick = () => setzeModus(b.dataset.mode); });
+        $('llamaStartBtn').onclick = () => starteLlama();
+        $('llamaModel').onchange = () => {
+            optionen.llamaModell = $('llamaModel').value;
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            aktualisiereLlamaKarte();
+        };
+        $('llamaDeleteBtn').onclick = () => loescheLlamaModell();
         $('keyModeSession').onchange = speichereKey;
         $('keyModePermanent').onchange = speichereKey;
         $('optMemory').onchange = speichereOptionen;
@@ -1572,7 +2047,10 @@
             const dateien = [...(e.clipboardData ? e.clipboardData.files : [])];
             if (dateien.length) { e.preventDefault(); fuegeDateienHinzu(dateien); }
         });
-        $('sendBtn').onclick = () => sende();
+        $('sendBtn').onclick = () => {
+            if (llama.generiert && llama.engine) { try { llama.engine.interruptGenerate(); } catch (e) { /* egal */ } return; }
+            sende();
+        };
         // "G↗" neben dem Eingabefeld: nimmt den gerade getippten Text, sonst
         // die letzte eigene Frage.
         $('googleBtn').addEventListener('click', (e) => {
@@ -1595,6 +2073,8 @@
         document.addEventListener('sd-lang-changed', () => {
             rendereAlles();
             ladeKeyFeld();
+            aktualisiereSendenKnopf();
+            if (optionen.modus === 'llama') aktualisiereLlamaKarte();
         });
 
         // ------------------------------------------------------------
@@ -1604,6 +2084,7 @@
         if (optionen.memory) ladeVerlauf();
         ladeKeyFeld();
         rendereAlles();
+        setzeModus(optionen.modus);
         aktualisiereSendenKnopf();
     </script>
 </body>

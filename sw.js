@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v36';
+const CACHE_NAME = 'sd-bewerbungsstudio-v37';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -20,8 +20,16 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Grosse KI-Modelldateien (lokales Llama im KI-Assistenten) NICHT hier
+// zwischenspeichern: die Bibliothek legt sie schon selbst im Browser-
+// Speicher ab - sonst laegen ca. 1-2 GB doppelt auf dem Geraet.
+const NICHT_CACHEN = /(^|\.)(huggingface\.co|hf\.co|xethub\.hf\.co|raw\.githubusercontent\.com)$/;
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  try {
+    if (NICHT_CACHEN.test(new URL(event.request.url).hostname)) return;
+  } catch (e) { /* ungueltige URL: normal weiter */ }
   // Netzwerk zuerst, damit Änderungen sofort ankommen; nur erfolgreiche
   // Antworten werden zwischengespeichert (nie eine Fehlerseite/404), und nur
   // wenn das Netz nicht erreichbar ist, wird auf den Cache zurückgegriffen.
