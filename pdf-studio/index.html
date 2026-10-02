@@ -1107,6 +1107,13 @@
       display: none;
     }
 
+    /* Handy-Knopfleiste (Seiten/Werkzeuge) am Computer ausblenden - die
+       Ausblende-Regel stand bisher nur im Handy-Bereich, dadurch erschienen
+       die Knoepfe am PC als unformatierter Text unten links. */
+    .mobile-panel-toggles {
+      display: none;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .app-layout {
@@ -1512,6 +1519,7 @@
         tool_whiteout: '⬜ Überdecken', tool_whiteout_hint: 'Whiteout: Fehler oder Stellen weiß überdecken',
         btn_signature: '✍️ Unterschrift', btn_signature_hint: 'Unterschrift zeichnen und einfügen',
         btn_ocr_scan: '🔎 Scan OCR', btn_ocr_scan_hint: 'Scan-Text per OCR erkennen & korrigieren',
+        btn_ki_hilfe: '🤖 KI-Hilfe', btn_ki_hilfe_hint: 'Dokument zusammenfassen, erklären lassen oder eine Antwort entwerfen – mit SD Lotse (lokal) oder Gemini',
         empty_h2: 'Dein PDF & Dokumenten Studio',
         empty_p1_html: 'Lade <strong>PDFs, Word-, Excel- oder PowerPoint-Dateien</strong> sowie Fotos über "📂 Datei wählen" oder "📷 Scan / Foto" links hoch. Fülle Lücken handschriftlich mit dem <strong>Stift</strong> aus, schwärze Daten und konvertiere flexibel zwischen allen Formaten!',
         empty_p2: '💡 Melde dich oben rechts kostenlos an, um deine Seiten in deinem Konto zu speichern und von jedem Gerät wieder darauf zuzugreifen.',
@@ -1683,6 +1691,7 @@
         tool_whiteout: '⬜ Whiteout', tool_whiteout_hint: 'Whiteout: cover mistakes or areas in white',
         btn_signature: '✍️ Signature', btn_signature_hint: 'Draw and insert a signature',
         btn_ocr_scan: '🔎 Scan OCR', btn_ocr_scan_hint: 'Recognize & correct scanned text with OCR',
+        btn_ki_hilfe: '🤖 AI help', btn_ki_hilfe_hint: 'Summarize the document, have it explained or draft a reply – with SD Lotse (local) or Gemini',
         empty_h2: 'Your PDF & document studio',
         empty_p1_html: 'Upload <strong>PDF, Word, Excel or PowerPoint files</strong> as well as photos via "📂 Choose file" or "📷 Scan / Photo" on the left. Fill in gaps by hand with the <strong>pen</strong>, redact data and convert flexibly between all formats!',
         empty_p2: '💡 Sign in for free at the top right to save your pages to your account and access them from any device.',
@@ -1821,6 +1830,8 @@
       }
     };
   </script>
+  <script src="../gemini-modelle.js?v=1"></script>
+  <script src="../sd-ki.js?v=1"></script>
 </head>
 
 <body>
@@ -1966,6 +1977,10 @@
         <button id="btnOcrScan" class="tool-btn" style="padding:5px 9px;" data-i18n="btn_ocr_scan" data-i18n-title="btn_ocr_scan_hint"
           title="Scan-Text per OCR erkennen & korrigieren">
           🔎 Scan OCR
+        </button>
+        <button id="btnKiHilfe" class="tool-btn" style="padding:5px 9px;" data-i18n="btn_ki_hilfe" data-i18n-title="btn_ki_hilfe_hint"
+          title="Dokument zusammenfassen, erklären lassen oder eine Antwort entwerfen – mit SD Lotse (lokal) oder Gemini">
+          🤖 KI-Hilfe
         </button>
       </div>
 
@@ -4587,6 +4602,18 @@
       $('modalSignature').classList.remove('open');
       renderStage();
       showToast(t('toast_signature_placed'));
+    };
+
+    // --- KI-Hilfe zum Dokument (SD Lotse lokal oder Gemini, siehe ../sd-ki.js) ---
+    // Nutzt den Text, den das PDF selbst mitbringt bzw. den die Scan-OCR
+    // erkannt hat - zeilenweise in Lesereihenfolge, Seite fuer Seite.
+    $('btnKiHilfe').onclick = () => {
+      if (!window.sdKi) return;
+      const seiten = state.pages
+        .filter(p => p.rawTextItems && p.rawTextItems.length)
+        .map(p => gruppiereZeilen(p.rawTextItems).sort((a, b) => a.y - b.y).map(z => z.text).join('\n'));
+      const istScan = state.pages.some(p => (p.rawTextItems || []).length && !p.rawTextItems.some(i => i.cssFont || i.fontFamily));
+      window.sdKi.dokumentDialog({ text: seiten.join('\n\n'), ocr: istScan });
     };
 
     // --- OCR Scan Execution ---

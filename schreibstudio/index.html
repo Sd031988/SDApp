@@ -1786,6 +1786,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-ki.js?v=1"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -1919,6 +1920,7 @@
                 </p>
             </div>
         </div>
+        <script>if (window.sdKi) window.sdKi.baueAuswahl(document.getElementById('ki-panel-body'));</script>
         <div class="design-panel">
             <h2 data-i18n="design_h2">Design anpassen</h2>
             <div class="color-row"><label for="akzentfarbe" data-i18n="label_akzentfarbe">Akzentfarbe</label><input id="akzentfarbe" type="color"
@@ -2500,6 +2502,11 @@
         }
 
         async function rufeGeminiAuf(prompt) {
+            // Gewaehlte KI: SD Lotse (lokal, ohne Schluessel) oder Gemini.
+            // Die Auswahl gilt fuer alle SD-Apps (siehe sd-ki.js).
+            if (window.sdKi && window.sdKi.anbieter() === 'lotse') {
+                return await window.sdKi.lotseSchreibe(prompt, { maxTokens: 1200 });
+            }
             const key = sessionStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(GEMINI_KEY_STORAGE);
             if (!key) {
                 throw new Error('Kein Gemini-API-Schlüssel hinterlegt. Bitte zuerst oben unter "🤖 KI-Schreibhilfe" deinen kostenlosen Schlüssel eintragen und speichern.');

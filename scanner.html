@@ -41,6 +41,7 @@ window.SD_I18N = {
     btn_save_pdf: '📄 Als PDF speichern', btn_save_images: '🖼️ Als Bilder speichern (JPG)',
     btn_share_pdf: '📤 Teilen (auch zu Google Drive / Dropbox)', btn_save_to_library: '📁 In Bibliothek speichern',
     btn_run_ocr: '🔤 Text erkennen (OCR)', btn_save_txt: '📝 Als TXT speichern', btn_back: '← Zurück',
+    btn_ki_text: '🤖 KI-Hilfe zum Text',
     ocr_result_h2: 'Erkannter Text',
     markup_h1: 'Seite bearbeiten', markup_hint: 'Zeichnen, Text/Unterschrift einfügen oder störende Stellen mit dem Radiergummi entfernen.',
     tool_pen: '✏️ Stift', tool_signature: '✒️ Unterschrift', tool_eraser: '🧽 Radiergummi', tool_text: '🔤 Text', tool_highlight: '🖍️ Hervorheben',
@@ -92,6 +93,7 @@ window.SD_I18N = {
     btn_save_pdf: '📄 Save as PDF', btn_save_images: '🖼️ Save as images (JPG)',
     btn_share_pdf: '📤 Share (also to Google Drive / Dropbox)', btn_save_to_library: '📁 Save to library',
     btn_run_ocr: '🔤 Recognize text (OCR)', btn_save_txt: '📝 Save as TXT', btn_back: '← Back',
+    btn_ki_text: '🤖 AI help for this text',
     ocr_result_h2: 'Recognized text',
     markup_h1: 'Edit page', markup_hint: 'Draw, add text/signature, or remove distracting areas with the eraser.',
     tool_pen: '✏️ Pen', tool_signature: '✒️ Signature', tool_eraser: '🧽 Eraser', tool_text: '🔤 Text', tool_highlight: '🖍️ Highlight',
@@ -549,6 +551,8 @@ window.SD_I18N = {
   }
   .sd-lang-btn.active{ background:var(--primary); color:#06251f; }
 </style>
+<script src="gemini-modelle.js?v=1"></script>
+<script src="sd-ki.js?v=1"></script>
 </head>
 <body>
 <!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
@@ -728,6 +732,7 @@ window.SD_I18N = {
         <button class="btn secondary" id="btnSaveToLibrary" data-i18n="btn_save_to_library">📁 In Bibliothek speichern</button>
         <button class="btn secondary" id="btnRunOcr" data-i18n="btn_run_ocr">🔤 Text erkennen (OCR)</button>
         <button class="btn secondary" id="btnSaveTxt" style="display:none;" data-i18n="btn_save_txt">📝 Als TXT speichern</button>
+        <button class="btn secondary" id="btnKiText" style="display:none;" data-i18n="btn_ki_text">🤖 KI-Hilfe zum Text</button>
         <button class="btn ghost" id="btnBackToPages" data-i18n="btn_back">← Zurück</button>
       </div>
       <p class="status-bar" id="exportStatus"></p>
@@ -2380,6 +2385,7 @@ window.SD_I18N = {
     document.getElementById('ocrResult').style.display = 'none';
     document.getElementById('ocrText').value = '';
     document.getElementById('btnSaveTxt').style.display = 'none';
+    document.getElementById('btnKiText').style.display = 'none';
     document.getElementById('exportStatus').textContent = '';
     showStep('stepExport');
   });
@@ -2489,6 +2495,7 @@ window.SD_I18N = {
     const ocrBtn = document.getElementById('btnRunOcr');
     ocrBtn.disabled = true;
     ocrPageTexts = [];
+    textManuellGeaendert = false;
     try{
       for(let i = 0; i < pages.length; i++){
         statusEl.textContent = `Texterkennung: Seite ${i+1}/${pages.length} …`;
@@ -2507,6 +2514,7 @@ window.SD_I18N = {
       ocrResultBox.style.display = '';
       ocrTextArea.value = combined;
       document.getElementById('btnSaveTxt').style.display = '';
+      document.getElementById('btnKiText').style.display = '';
       statusEl.textContent = 'Text erkannt – siehe unten. Als TXT speicherbar.';
     } catch(err){
       statusEl.textContent = 'Fehler bei der Texterkennung: ' + err.message;
@@ -2515,9 +2523,25 @@ window.SD_I18N = {
     }
   });
 
+  // KI-Hilfe zum erkannten Text (SD Lotse lokal oder Gemini, siehe sd-ki.js).
+  // "Erkennungsfehler korrigieren" kann das Ergebnis direkt in den Text
+  // uebernehmen - der dann auch so als TXT gespeichert wird.
+  document.getElementById('btnKiText').addEventListener('click', () => {
+    if (!window.sdKi) return;
+    const feld = document.getElementById('ocrText');
+    window.sdKi.dokumentDialog({
+      text: feld.value,
+      ocr: true,
+      uebernehmen: (neu) => { feld.value = neu; textManuellGeaendert = true; }
+    });
+  });
+
+  let textManuellGeaendert = false;
   document.getElementById('btnSaveTxt').addEventListener('click', () => {
     if(!ocrPageTexts.length) return;
-    const combined = pages.map((p, i) => `--- ${p.label || ('Seite ' + (i+1))} ---\n${ocrPageTexts[i] || ''}`).join('\n\n');
+    const combined = textManuellGeaendert
+      ? document.getElementById('ocrText').value
+      : pages.map((p, i) => `--- ${p.label || ('Seite ' + (i+1))} ---\n${ocrPageTexts[i] || ''}`).join('\n\n');
     const blob = new Blob([combined], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-scanner-v4';
+const CACHE_NAME = 'sd-scanner-v5';
 const APP_FILES = ['./scanner.html', './manifest-scanner.json', './icon.svg', './sd-auth.js?v=3', './i18n.js?v=1'];
 
 self.addEventListener('install', event => {
@@ -14,8 +14,15 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Grosse KI-Modelldateien (SD Lotse) nicht doppelt speichern - die
+// Bibliothek legt sie schon selbst im Browser-Speicher ab.
+const NICHT_CACHEN = /(^|\.)(huggingface\.co|hf\.co|xethub\.hf\.co|raw\.githubusercontent\.com)$/;
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  try {
+    if (NICHT_CACHEN.test(new URL(event.request.url).hostname)) return;
+  } catch (e) { /* ungueltige URL: normal weiter */ }
   event.respondWith(
     fetch(event.request).then(response => {
       if (response && response.ok) {

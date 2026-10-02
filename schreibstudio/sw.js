@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-schreibstudio-v9';
+const CACHE_NAME = 'sd-schreibstudio-v10';
 const APP_FILES = ['./', './index.html', './manifest.json', './icon.svg', './sd-auth.js?v=5', '../i18n.js?v=1'];
 
 self.addEventListener('install', event => {
@@ -13,8 +13,15 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// Grosse KI-Modelldateien (SD Lotse) nicht doppelt speichern - die
+// Bibliothek legt sie schon selbst im Browser-Speicher ab.
+const NICHT_CACHEN = /(^|\.)(huggingface\.co|hf\.co|xethub\.hf\.co|raw\.githubusercontent\.com)$/;
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  try {
+    if (NICHT_CACHEN.test(new URL(event.request.url).hostname)) return;
+  } catch (e) { /* ungueltige URL: normal weiter */ }
   event.respondWith(
     fetch(event.request).then(response => {
       if (response && response.ok) {
