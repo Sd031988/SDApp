@@ -191,12 +191,40 @@
   // ------------------------------------------------------------
   const lotse = { lib: null, engine: null, modellId: null, gpu: null, ladeVersprechen: null, aktuellerStream: null };
 
+  // iPhone/iPad: Safari gibt einer Webseite zu wenig Arbeitsspeicher fuer
+  // das grosse Modell - die Seite stuerzt dann ab. Dort immer das kleine.
+  function istIos() {
+    const ua = navigator.userAgent || '';
+    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  }
+  // Merker gegen Absturz-Schleifen (gemeinsam mit dem KI-Assistenten):
+  // steht er beim naechsten Oeffnen noch da, ist das Laden abgestuerzt.
+  const START_KEY = 'sdLotseStartLaeuft';
+  const OK_KEY = 'sdLotseOkModelle';
+
   function variante() {
     try {
       const o = JSON.parse(lesen(localStorage, 'sdAssistentOptionen') || '{}');
+      if (o.llamaModell === '3b' && istIos()) return '1b';
       return MODELLE[o.llamaModell] ? o.llamaModell : '1b';
     } catch (e) { return '1b'; }
   }
+
+  // Ist das grosse Modell beim letzten Mal abgestuerzt, auf das kleine
+  // zurueckstellen (die Einstellung teilen sich alle Apps).
+  (function pruefeAbsturz() {
+    try {
+      const id = localStorage.getItem(START_KEY);
+      if (!id) return;
+      localStorage.removeItem(START_KEY);
+      if (/3B/.test(id)) {
+        const o = JSON.parse(lesen(localStorage, 'sdAssistentOptionen') || '{}');
+        o.llamaModell = '1b';
+        localStorage.setItem('sdAssistentOptionen', JSON.stringify(o));
+        localStorage.setItem('sdLotseAbsturz', id);
+      }
+    } catch (e) { /* egal */ }
+  })();
 
   function geraeteInfo() {
     const ua = navigator.userAgent || '';
@@ -281,6 +309,7 @@
       try {
         if (lotse.engine) { try { await lotse.engine.unload(); } catch (e) { /* egal */ } lotse.engine = null; }
         let engine;
+        try { localStorage.setItem(START_KEY, id); } catch (e) { /* egal */ }
         try {
           const worker = new Worker(WORKER_URL, { type: 'module' });
           engine = await lib.CreateWebWorkerMLCEngine(worker, id, { initProgressCallback: fortschritt });
@@ -289,10 +318,16 @@
         }
         lotse.engine = engine;
         lotse.modellId = id;
+        try {
+          localStorage.removeItem(START_KEY);
+          const ok = JSON.parse(localStorage.getItem(OK_KEY) || '[]');
+          if (!ok.includes(id)) { ok.push(id); localStorage.setItem(OK_KEY, JSON.stringify(ok)); }
+        } catch (e) { /* egal */ }
         // Browser bitten, die Modelldateien dauerhaft zu behalten
         try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* egal */ }
         return engine;
       } catch (err) {
+        try { localStorage.removeItem(START_KEY); } catch (e) { /* egal */ }
         throw new Error(tx('laden_fehler', { msg: (err && err.message) || String(err) }) + ' · ' + geraeteInfo());
       } finally {
         o.remove();

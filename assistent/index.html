@@ -950,6 +950,9 @@
                 llama_persist_no: '💾 SD Lotse ist auf diesem Gerät gespeichert und startet beim Öffnen automatisch. Der Browser hat dauerhaftes Speichern nicht bestätigt – bei vollem Speicher könnte er das Modell löschen, dann wird es neu geladen.',
                 llama_unsupported: 'Dein Browser oder Gerät kann SD Lotse leider nicht lokal ausführen (WebGPU fehlt oder ist zu schwach). Am besten klappt es mit Chrome oder Edge am PC/Laptop. Auf iPhones und vielen Handys geht es derzeit nicht – dort bitte Gemini nutzen.',
                 llama_load_failed: 'SD Lotse konnte nicht geladen werden: {msg}',
+                llama_crashed: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts für das starke Modell nicht. Ich habe auf „Kompakt“ umgestellt. Tippe auf Starten, um es damit zu versuchen.',
+                llama_crashed_1b: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts nicht. Schließe andere Apps und tippe dann noch einmal auf Starten.',
+                llama_3b_ios: 'Stark (ca. 2 GB) – auf iPhone/iPad nicht möglich',
                 llama_tech: 'Technischer Grund',
                 llama_not_started: 'Bitte starte SD Lotse zuerst oben mit „Herunterladen & starten“.',
                 llama_no_attach: 'SD Lotse kann keine Bilder oder PDFs ansehen. Für Anhänge bitte oben auf ☁️ Gemini wechseln.',
@@ -1078,6 +1081,9 @@
                 llama_persist_no: '💾 SD Lotse is stored on this device and starts automatically when you open the app. The browser did not confirm permanent storage – if storage runs full it might remove the model, then it will be downloaded again.',
                 llama_unsupported: 'Your browser or device cannot run SD Lotse locally (WebGPU missing or too weak). It works best with Chrome or Edge on a PC/laptop. It currently does not work on iPhones and many phones – please use Gemini there.',
                 llama_load_failed: 'SD Lotse could not be loaded: {msg}',
+                llama_crashed: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory for the strong model. I switched to "Compact". Tap Start to try with it.',
+                llama_crashed_1b: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory. Close other apps and tap Start again.',
+                llama_3b_ios: 'Strong (approx. 2 GB) – not possible on iPhone/iPad',
                 llama_tech: 'Technical reason',
                 llama_not_started: 'Please start SD Lotse first with "Download & start" at the top.',
                 llama_no_attach: 'SD Lotse cannot look at images or PDFs. For attachments please switch to ☁️ Gemini at the top.',
@@ -2628,6 +2634,52 @@
             return browser + (system ? ' · ' + system : '') + webview;
         }
 
+        // iPhone/iPad: Safari gibt einer Webseite zu wenig Arbeitsspeicher
+        // fuer das starke Modell - die Seite stuerzt beim Laden ab.
+        function istIos() {
+            const ua = navigator.userAgent || '';
+            return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        }
+        // Merker gegen Absturz-Schleifen (gemeinsam mit sd-ki.js): steht
+        // er beim naechsten Oeffnen noch da, ist das Laden abgestuerzt.
+        const LOTSE_START_KEY = 'sdLotseStartLaeuft';
+        const LOTSE_OK_KEY = 'sdLotseOkModelle';
+        const LOTSE_ABSTURZ_KEY = 'sdLotseAbsturz';
+        function okModelle() {
+            try { return JSON.parse(localStorage.getItem(LOTSE_OK_KEY) || '[]'); } catch (e) { return []; }
+        }
+        function pruefeLotseAbsturz() {
+            let id = null;
+            try {
+                id = localStorage.getItem(LOTSE_START_KEY) || localStorage.getItem(LOTSE_ABSTURZ_KEY);
+                localStorage.removeItem(LOTSE_START_KEY);
+                localStorage.removeItem(LOTSE_ABSTURZ_KEY);
+            } catch (e) { /* egal */ }
+            if (!id) return;
+            const warGross = /3B/.test(id);
+            if (warGross) optionen.llamaModell = '1b';
+            if (optionen.llamaModell === '3b' && istIos()) optionen.llamaModell = '1b';
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            $('llamaModel').value = optionen.llamaModell;
+            llama.absturzText = t(warGross ? 'llama_crashed' : 'llama_crashed_1b');
+            llama.autoVersucht = true;   // nach einem Absturz nie automatisch starten
+        }
+        function sperre3bAufIos() {
+            if (!istIos()) return;
+            const opt = document.querySelector('#llamaModel option[value="3b"]');
+            if (opt) {
+                opt.disabled = true;
+                opt.removeAttribute('data-i18n');
+                opt.textContent = t('llama_3b_ios');
+                document.addEventListener('sd-lang-changed', () => { opt.textContent = t('llama_3b_ios'); });
+            }
+            if (optionen.llamaModell === '3b') {
+                optionen.llamaModell = '1b';
+                speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            }
+            $('llamaModel').value = optionen.llamaModell;
+        }
+
         function llamaModellId() {
             const m = LLAMA_MODELLE[optionen.llamaModell] || LLAMA_MODELLE['1b'];
             return (llama.gpu && llama.gpu.f16) ? m.f16 : m.f32;
@@ -2656,7 +2708,8 @@
                 zeigeLlamaKarte(false);
                 return;
             }
-            notice.hidden = true;
+            notice.textContent = llama.absturzText || '';
+            notice.hidden = !llama.absturzText;
             $('llamaSetup').hidden = !!llama.laedt;
             $('llamaStartRow').hidden = !!llama.laedt;
             // Schon heruntergeladen? Dann nur "starten" statt "herunterladen".
@@ -2671,7 +2724,7 @@
             // Schon auf dem Geraet gespeichert: automatisch starten (kein
             // Download noetig). Nur einmal pro Seitenaufruf, damit ein
             // Fehler nicht endlos wiederholt wird.
-            if (imSpeicher && !llama.engine && !llama.laedt && !llama.autoVersucht && optionen.modus === 'llama') {
+            if (imSpeicher && okModelle().includes(llamaModellId()) && !llama.engine && !llama.laedt && !llama.autoVersucht && optionen.modus === 'llama') {
                 llama.autoVersucht = true;
                 starteLlama(true);
             }
@@ -2723,6 +2776,8 @@
             try {
                 const lib = await ladeWebLlm();
                 if (llama.engine) { try { await llama.engine.unload(); } catch (e) { /* egal */ } llama.engine = null; }
+                llama.absturzText = '';
+                try { localStorage.setItem(LOTSE_START_KEY, id); } catch (e) { /* egal */ }
                 let engine = null;
                 try {
                     // Bevorzugt im Hintergrund-Thread, damit die Seite fluessig bleibt.
@@ -2733,12 +2788,18 @@
                 }
                 llama.engine = engine;
                 llama.modellId = id;
+                try {
+                    localStorage.removeItem(LOTSE_START_KEY);
+                    const ok = okModelle();
+                    if (!ok.includes(id)) { ok.push(id); localStorage.setItem(LOTSE_OK_KEY, JSON.stringify(ok)); }
+                } catch (e) { /* egal */ }
                 await sichereSpeicher();
                 zeigeSpeicherInfo(true);
                 $('llamaProgress').hidden = true;
                 $('llamaReady').hidden = false;
                 setTimeout(() => zeigeLlamaKarte(false), 2500);
             } catch (err) {
+                try { localStorage.removeItem(LOTSE_START_KEY); } catch (e) { /* egal */ }
                 $('llamaProgress').hidden = true;
                 $('llamaSetup').hidden = false;
                 $('llamaStartRow').hidden = false;
@@ -3041,6 +3102,8 @@
         if (optionen.memory) ladeVerlauf();
         ladeKeyFeld();
         rendereAlles();
+        pruefeLotseAbsturz();
+        sperre3bAufIos();
         setzeModus(optionen.modus);
         aktualisiereSendenKnopf();
     </script>
