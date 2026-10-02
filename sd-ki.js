@@ -521,6 +521,15 @@
     return text.trim();
   }
 
+  // Der KI-Assistent hat SD Lotse evtl. schon geladen: dieselbe Instanz
+  // verwenden statt ein zweites Modell in den Speicher zu laden.
+  function teileLotse(info) {
+    if (!info || !info.engine) return;
+    lotse.engine = info.engine;
+    lotse.modellId = info.modellId;
+    if (info.gpu) lotse.gpu = info.gpu;
+  }
+
   function lotseStopp() {
     if (lotse.aktuellerStream) { try { lotse.aktuellerStream.interruptGenerate(); } catch (e) { /* egal */ } }
   }
@@ -630,6 +639,128 @@
     if (a === 'lotse') return lotseSchreibe(prompt, optionen);
     if (ONLINE[a]) return onlineSchreibe(prompt, optionen, a);
     return geminiSchreibe(prompt, optionen);
+  }
+
+  // ------------------------------------------------------------
+  // Lebenslauf: Felder (gemeinsam fuer Lebenslauf-App und KI-Assistent)
+  // ------------------------------------------------------------
+  function lebenslaufFelder() {
+    const en = sprache() === 'en';
+    return [
+      { id: 'vorname', label: en ? 'First name' : 'Vorname' },
+      { id: 'nachname', label: en ? 'Last name' : 'Nachname' },
+      { id: 'position', label: en ? 'Position / job title' : 'Position / Berufsbezeichnung', hinweis: 'angestrebte Position oder aktuelle Berufsbezeichnung, falls genannt' },
+      { id: 'email', label: 'E-Mail' },
+      { id: 'telefon', label: en ? 'Phone' : 'Telefon' },
+      { id: 'adresse', label: en ? 'Address' : 'Adresse', hinweis: 'Straße Hausnummer, PLZ Ort in einer Zeile' },
+      { id: 'geburtsdatum', label: en ? 'Date of birth' : 'Geburtsdatum', hinweis: 'Format TT.MM.JJJJ, ggf. mit Geburtsort' },
+      { id: 'familienstand', label: en ? 'Marital status' : 'Familienstand', optionen: ['ledig', 'verheiratet', 'geschieden', 'verwitwet'] },
+      { id: 'kinder', label: en ? 'Children' : 'Kinder', optionen: ['keine Kinder', '1 Kind', '2 Kinder', '3 oder mehr Kinder'] },
+      { id: 'staatsangehoerigkeit', label: en ? 'Nationality' : 'Staatsangehörigkeit' },
+      { id: 'fuehrerschein', label: en ? 'Driving licence' : 'Führerschein', hinweis: 'z. B. Klasse B' },
+      { id: 'verfuegbarkeit', label: en ? 'Availability' : 'Verfügbarkeit' },
+      { id: 'erfahrung', label: en ? 'Work experience' : 'Berufserfahrung', mehrzeilig: true, hinweis: 'je Station eine Zeile im Format "Zeitraum: Tätigkeit bei Firma, Ort" – Zeitraum wie im Dokument (z. B. 03/2019 - heute), neueste zuerst; Aufgaben kurz nach einem Gedankenstrich in derselben Zeile' },
+      { id: 'ausbildung', label: en ? 'Education' : 'Ausbildung', mehrzeilig: true, hinweis: 'je Station eine Zeile im Format "Zeitraum: Abschluss/Ausbildung, Schule/Hochschule, Ort", neueste zuerst' },
+      { id: 'kenntnisse', label: en ? 'Skills' : 'Kenntnisse', mehrzeilig: true, hinweis: 'kommagetrennt' },
+      { id: 'sprachen', label: en ? 'Languages' : 'Sprachen', hinweis: 'Format "Sprache: Niveau", kommagetrennt' }
+    ];
+  }
+
+  // Erkennung ohne KI anhand des typischen Aufbaus eines Lebenslaufs
+  // (E-Mail, Telefon, Geburtsdatum, Abschnitte wie "Berufserfahrung").
+  // Dient als Grundlage, falls die KI (v. a. das kleine SD Lotse)
+  // das Antwortformat nicht einhaelt.
+  function lebenslaufRegeln(text) {
+      const w = {};
+      const zeilen = String(text || '').split('\n').map(z => z.replace(/\s+/g, ' ').trim()).filter(Boolean);
+      const alles = zeilen.join('\n');
+      const mail = alles.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+      if (mail) w.email = mail[0];
+      const tel = alles.match(/(?:\+\d{1,3}[\s/-]?)?(?:\(0\)\s?)?0?\d{2,5}[\s/-]?\d{3,}(?:[\s-]?\d{2,})*/g);
+      if (tel) {
+          const t2 = tel.map(x => x.trim()).find(x => x.replace(/\D/g, '').length >= 8 && !/^\d{2}\.\d{2}/.test(x) && !/^(19|20)\d{2}\s?[-–]/.test(x));
+          if (t2) w.telefon = t2;
+      }
+      const geb = alles.match(/(?:geb(?:oren)?\.?(?:\s*am)?|geburtsdatum|date of birth|born)[:\s]*(\d{1,2}\.\s?\d{1,2}\.\s?\d{2,4}(?:\s*(?:in|,)\s*[A-ZÄÖÜ][\wäöüß-]+)?)/i);
+      if (geb) w.geburtsdatum = geb[1].replace(/\s+/g, ' ');
+      const plz = zeilen.findIndex(z => /\b\d{5}\s+[A-ZÄÖÜ][\wäöüß.-]+/.test(z) && !/@/.test(z));
+      if (plz >= 0) {
+          const z = zeilen[plz];
+          const strasseDavor = plz > 0 && /[A-Za-zäöüß.-]+\s+\d+\s*[a-z]?\s*$/.test(zeilen[plz - 1]) && zeilen[plz - 1].length < 50;
+          w.adresse = (/^[A-ZÄÖÜa-zäöüß.-]+.*\d+[a-z]?\s*,\s*\d{5}/.test(z) ? z : (strasseDavor ? zeilen[plz - 1] + ', ' + z : z))
+              .replace(/\s*(?:tel|telefon|mobil|e-?mail).*$/i, '').replace(/[·•|–-]\s*$/, '').trim();
+      }
+      const einzeilig = (re, feld) => {
+          const m = alles.match(re);
+          if (m && m[1].trim()) w[feld] = m[1].trim();
+      };
+      einzeilig(/(?:staatsangeh[öo]rigkeit|nationalit[äa]t|nationality)[:\s]+([^\n]{2,40})/i, 'staatsangehoerigkeit');
+      einzeilig(/(?:f[üu]hrerschein|fahrerlaubnis|driving licen[cs]e)[:\s]+([^\n]{1,40})/i, 'fuehrerschein');
+      const fam = alles.match(/\b(ledig|verheiratet|geschieden|verwitwet)\b/i);
+      if (fam) w.familienstand = fam[1].toLowerCase();
+      // Name: erste Zeile mit 2-3 Woertern in Grossschreibung, die keine Ueberschrift ist
+      const kopf = zeilen.slice(0, 8).find(z => /^[A-ZÄÖÜ][a-zäöüß-]+(?:\s+[A-ZÄÖÜ][a-zäöüß-]+){1,2}$/.test(z) && !/lebenslauf|curriculum|vitae|bewerbung|resume|pers[öo]nliche/i.test(z));
+      const nameZeile = alles.match(/^(?:name|vor- und nachname|full name)\s*:\s*([^\n]{3,60})$/im);
+      const vollerName = nameZeile ? nameZeile[1].trim() : kopf;
+      if (vollerName && /\s/.test(vollerName)) {
+          const teile = vollerName.split(/\s+/);
+          w.nachname = teile.pop();
+          w.vorname = teile.join(' ');
+      }
+      const vn = alles.match(/^vorname\s*:\s*([^\n]{2,40})$/im), nn = alles.match(/^(?:nachname|familienname)\s*:\s*([^\n]{2,40})$/im);
+      if (vn) w.vorname = vn[1].trim();
+      if (nn) w.nachname = nn[1].trim();
+      // Abschnitte anhand typischer Ueberschriften
+      const abschnitte = [
+          ['erfahrung', /^(berufserfahrung|berufliche(r)? (erfahrung|werdegang)|beruflicher werdegang|praktische erfahrung|berufspraxis|werdegang|t[äa]tigkeiten|work experience|experience|employment)\b/i],
+          ['ausbildung', /^(ausbildung|schulbildung|schul- und ausbildung|bildungsweg|schulischer werdegang|studium|aus- und weiterbildung|bildung|education)\b/i],
+          ['kenntnisse', /^(kenntnisse|f[äa]higkeiten|edv(-kenntnisse)?|it-kenntnisse|besondere kenntnisse|qualifikationen|kompetenzen|skills)\b/i],
+          ['sprachen', /^(sprachen|sprachkenntnisse|languages)\b/i]
+      ];
+      const stopp = /^(hobbys?|interessen|pers[öo]nliche (daten|angaben)|kontakt|referenzen|sonstiges|weiterbildung(en)?|zertifikate|ehrenamt)\b/i;
+      let aktuell = null;
+      const sammlung = {};
+      zeilen.forEach(z => {
+          const kopfzeile = abschnitte.find(([, re]) => re.test(z) && z.length < 60);
+          if (kopfzeile) {
+              aktuell = kopfzeile[0];
+              const rest = z.replace(kopfzeile[1], '').replace(/^\s*[:\-–]\s*/, '').trim();
+              sammlung[aktuell] = sammlung[aktuell] || [];
+              if (rest) sammlung[aktuell].push(rest);
+              return;
+          }
+          if (stopp.test(z) && z.length < 40) { aktuell = null; return; }
+          if (aktuell) sammlung[aktuell].push(z);
+      });
+      Object.keys(sammlung).forEach(k => {
+          let liste = sammlung[k].filter(Boolean);
+          if (!liste.length) return;
+          if (k === 'erfahrung' || k === 'ausbildung') {
+              // "03/2019 - heute  Lageristin" -> "03/2019 - heute: Lageristin"
+              liste = liste.map(z => z.replace(/^((?:seit|since|ab)?\s*(?:\d{1,2}[./])?\d{4}(?:\s*[-–]\s*(?:(?:\d{1,2}[./])?\d{4}|heute|jetzt|aktuell|today|present))?)\s*[:|]?\s+(?=\S)/i, (m, zeit) => zeit.trim() + ': '));
+              w[k] = liste.join('\n');
+          } else {
+              w[k] = liste.join(', ').replace(/\s*,\s*,/g, ',');
+          }
+      });
+      return w;
+  }
+
+  // Werte direkt in die gespeicherten Lebenslauf-Daten schreiben (fuer den
+  // KI-Assistenten, der das Formular nicht selbst offen hat). Beachtet die
+  // Speicher-Einstellung der Lebenslauf-App (dauerhaft / nur Sitzung).
+  function lebenslaufSpeichern(werte) {
+    const sitzung = lesen(localStorage, 'speicherModusEinstellung') === 'sitzung';
+    const ort = sitzung ? sessionStorage : localStorage;
+    let daten = {};
+    try { daten = JSON.parse(lesen(ort, 'lebenslaufDaten') || lesen(localStorage, 'lebenslaufDaten') || lesen(sessionStorage, 'lebenslaufDaten') || '{}') || {}; } catch (e) { daten = {}; }
+    let n = 0;
+    Object.keys(werte).forEach(id => { daten[id] = werte[id]; n++; });
+    schreiben(ort, 'lebenslaufDaten', JSON.stringify(daten));
+    // Die Lebenslauf-App raeumt beim allerersten Oeffnen alte Daten weg -
+    // die gerade uebernommenen Angaben duerfen dabei nicht verloren gehen.
+    schreiben(localStorage, 'pdfstudioBereinigtV2', '1');
+    return n;
   }
 
   // ------------------------------------------------------------
@@ -900,6 +1031,7 @@
     const startKnopf = $q(opt.modus === 'sprechen' ? '[data-eintragen]' : '[data-waehlen]');
     if (opt.modus === 'sprechen') {
       const feld = $q('[data-diktat]');
+      if (opt.vorgabeText) feld.value = opt.vorgabeText;
       diktat = diktatAnbinden(feld, $q('[data-mikro]'), (t) => { $q('[data-sp-info]').textContent = t || ''; });
       startKnopf.onclick = () => {
         if (diktat) diktat.stopp();
@@ -940,7 +1072,7 @@
         let kiFehler = null;
         // Online-KIs bekommen zusaetzlich das Original (PDF/Foto): sie sehen
         // dann auch das Layout (Spalten, Tabellen) statt nur den Rohtext.
-        let datei = null;
+        let datei = (!file && opt.vorgabeDatei && !istLotse) ? opt.vorgabeDatei : null;
         const typOk = !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(file.type || ''));
         if (!istLotse && typOk && file.size <= 12 * 1024 * 1024) {
           try {
@@ -1171,7 +1303,7 @@
     anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
     geminiSchreibe, onlineSchreibe, schreibe, dokumentDialog, einleseDialog, leseDatei,
-    diktatAnbinden, spracherkennungVorhanden,
+    diktatAnbinden, spracherkennungVorhanden, lebenslaufFelder, lebenslaufRegeln, lebenslaufSpeichern, teileLotse,
     _intern: { lotse }
   };
 })();
