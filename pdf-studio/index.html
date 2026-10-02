@@ -1545,7 +1545,7 @@
         btn_rotate_left: '↶ 90° Links', btn_rotate_right: '↷ 90° Rechts', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertikal',
         btn_duplicate_page: 'Seite duplizieren',
         toggle_pages: '📑 Seiten', toggle_tools: '⚙️ Werkzeuge',
-        font_from_document: 'aus dem Dokument', mtb_smaller: 'Schrift kleiner', mtb_bigger: 'Schrift größer', mtb_size: 'Schriftgröße (pt)', mtb_bold: 'Fett', mtb_font: 'Schriftart',
+        font_from_document: 'Original aus dem PDF', font_group_word: 'Word-Schriften', font_group_more: 'Weitere Schriften', font_group_hand: 'Handschrift', mtb_smaller: 'Schrift kleiner', mtb_bigger: 'Schrift größer', mtb_size: 'Schriftgröße (pt)', mtb_bold: 'Fett', mtb_font: 'Schriftart',
         toast_ready: 'Bereit',
         modal_convert_h3: '🔄 Dokumenten-Konverter',
         modal_convert_p: 'Konvertiere zwischen PDF, Word, Excel, PowerPoint und Bildern – 100% lokal & sicher im Browser.',
@@ -1716,7 +1716,7 @@
         btn_rotate_left: '↶ 90° left', btn_rotate_right: '↷ 90° right', btn_flip_h: '⇋ Horizontal', btn_flip_v: '⇵ Vertical',
         btn_duplicate_page: 'Duplicate page',
         toggle_pages: '📑 Pages', toggle_tools: '⚙️ Tools',
-        font_from_document: 'from the document', mtb_smaller: 'Smaller text', mtb_bigger: 'Larger text', mtb_size: 'Font size (pt)', mtb_bold: 'Bold', mtb_font: 'Font',
+        font_from_document: 'original from the PDF', font_group_word: 'Word fonts', font_group_more: 'More fonts', font_group_hand: 'Handwriting', mtb_smaller: 'Smaller text', mtb_bigger: 'Larger text', mtb_size: 'Font size (pt)', mtb_bold: 'Bold', mtb_font: 'Font',
         toast_ready: 'Ready',
         modal_convert_h3: '🔄 Document converter',
         modal_convert_p: 'Convert between PDF, Word, Excel, PowerPoint and images – 100% local & secure in your browser.',
@@ -2038,13 +2038,7 @@
         </div>
         <div class="form-row">
           <label for="textFont" data-i18n="label_font">Schriftart</label>
-          <select id="textFont">
-            <option value="Arial, sans-serif" data-i18n="font_arial">Arial (Klar & Modern)</option>
-            <option value="Georgia, serif" data-i18n="font_georgia">Georgia (Klassisch)</option>
-            <option value="'Times New Roman', serif" data-i18n="font_times">Times New Roman</option>
-            <option value="'Trebuchet MS', sans-serif" data-i18n="font_trebuchet">Trebuchet MS</option>
-            <option value="'Courier New', monospace" data-i18n="font_courier">Schreibmaschine / Courier</option>
-          </select>
+          <select id="textFont"></select>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" class="form-row">
           <div>
@@ -2507,27 +2501,168 @@
       return w.length % 2 ? w[m] : (w[m - 1] + w[m]) / 2;
     }
 
-    // Wandelt den internen PDF-Schriftnamen in eine nutzbare Schrift um,
-    // z. B. "ABCDEF+Calibri-Bold" -> Calibri, fett; "TimesNewRomanPSMT" ->
-    // Times New Roman. Ist die Schrift auf dem Geraet nicht installiert,
-    // greift eine passende Ersatzschrift (mit/ohne Serifen, Schreibmaschine).
+    // --- Schriften-Katalog (wie in Word) ---
+    // css:    die Schrift-Kette fuer Anzeige und PDF-Export. Zuerst die echte
+    //         Schrift (falls auf dem Geraet installiert), danach eine
+    //         kostenlose, moeglichst masseidentische Ersatzschrift, die bei
+    //         Bedarf von Google Fonts nachgeladen wird.
+    // google: Name der nachzuladenden Schrift (oder null).
+    // alias:  Schreibweisen, unter denen die Schrift in PDFs vorkommt.
+    const SCHRIFTEN = [
+      { gruppe: 'word', label: 'Calibri', css: "Calibri, Carlito, sans-serif", google: 'Carlito', alias: ['carlito'] },
+      { gruppe: 'word', label: 'Aptos', css: "Aptos, Calibri, Carlito, sans-serif", google: 'Carlito', alias: [] },
+      { gruppe: 'word', label: 'Cambria', css: "Cambria, Caladea, serif", google: 'Caladea', alias: ['caladea'] },
+      { gruppe: 'word', label: 'Arial', css: "Arial, Arimo, Helvetica, sans-serif", google: 'Arimo', alias: ['arimo', 'liberation sans', 'arial mt'] },
+      { gruppe: 'word', label: 'Helvetica', css: "Helvetica, Arial, Arimo, sans-serif", google: 'Arimo', alias: ['helvetica neue', 'nimbus sans', 'nimbus sans l'] },
+      { gruppe: 'word', label: 'Times New Roman', css: "'Times New Roman', Tinos, Times, serif", google: 'Tinos', alias: ['times', 'times roman', 'tinos', 'liberation serif', 'nimbus roman', 'nimbus rom no9 l'] },
+      { gruppe: 'word', label: 'Courier New', css: "'Courier New', Cousine, Courier, monospace", google: 'Cousine', alias: ['courier', 'cousine', 'liberation mono', 'nimbus mono'] },
+      { gruppe: 'word', label: 'Georgia', css: "Georgia, Gelasio, serif", google: 'Gelasio', alias: ['gelasio'] },
+      { gruppe: 'word', label: 'Verdana', css: "Verdana, 'Noto Sans', sans-serif", google: 'Noto Sans', alias: [] },
+      { gruppe: 'word', label: 'Tahoma', css: "Tahoma, 'Noto Sans', sans-serif", google: 'Noto Sans', alias: [] },
+      { gruppe: 'word', label: 'Trebuchet MS', css: "'Trebuchet MS', 'Fira Sans', sans-serif", google: 'Fira Sans', alias: ['trebuchet'] },
+      { gruppe: 'word', label: 'Segoe UI', css: "'Segoe UI', 'Open Sans', sans-serif", google: 'Open Sans', alias: ['segoe'] },
+      { gruppe: 'word', label: 'Garamond', css: "Garamond, 'EB Garamond', serif", google: 'EB Garamond', alias: ['eb garamond', 'adobe garamond pro'] },
+      { gruppe: 'word', label: 'Century Gothic', css: "'Century Gothic', 'Didact Gothic', sans-serif", google: 'Didact Gothic', alias: [] },
+      { gruppe: 'word', label: 'Book Antiqua / Palatino', css: "'Palatino Linotype', 'Book Antiqua', Palatino, 'EB Garamond', serif", google: 'EB Garamond', alias: ['palatino linotype', 'palatino', 'book antiqua'] },
+      { gruppe: 'word', label: 'Franklin Gothic', css: "'Franklin Gothic Book', 'Libre Franklin', sans-serif", google: 'Libre Franklin', alias: ['franklin gothic book', 'franklin gothic medium'] },
+      { gruppe: 'word', label: 'Gill Sans', css: "'Gill Sans MT', 'Gill Sans', 'Lato', sans-serif", google: 'Lato', alias: ['gill sans mt'] },
+      { gruppe: 'word', label: 'Comic Sans MS', css: "'Comic Sans MS', 'Comic Neue', cursive", google: 'Comic Neue', alias: ['comic sans'] },
+      { gruppe: 'word', label: 'Arial Narrow', css: "'Arial Narrow', 'Archivo Narrow', sans-serif", google: 'Archivo Narrow', alias: [] },
+      { gruppe: 'word', label: 'Lucida Sans', css: "'Lucida Sans', 'Lucida Grande', 'Noto Sans', sans-serif", google: 'Noto Sans', alias: ['lucida grande', 'lucida sans unicode'] },
+      { gruppe: 'mehr', label: 'Roboto', css: "Roboto, sans-serif", google: 'Roboto', alias: [] },
+      { gruppe: 'mehr', label: 'Open Sans', css: "'Open Sans', sans-serif", google: 'Open Sans', alias: [] },
+      { gruppe: 'mehr', label: 'Lato', css: "Lato, sans-serif", google: 'Lato', alias: [] },
+      { gruppe: 'mehr', label: 'Montserrat', css: "Montserrat, sans-serif", google: 'Montserrat', alias: [] },
+      { gruppe: 'mehr', label: 'Source Sans 3', css: "'Source Sans 3', 'Source Sans Pro', sans-serif", google: 'Source Sans 3', alias: ['source sans pro'] },
+      { gruppe: 'mehr', label: 'Inter', css: "Inter, sans-serif", google: 'Inter', alias: [] },
+      { gruppe: 'mehr', label: 'Noto Sans', css: "'Noto Sans', sans-serif", google: 'Noto Sans', alias: [] },
+      { gruppe: 'mehr', label: 'Noto Serif', css: "'Noto Serif', serif", google: 'Noto Serif', alias: [] },
+      { gruppe: 'mehr', label: 'Poppins', css: "Poppins, sans-serif", google: 'Poppins', alias: [] },
+      { gruppe: 'mehr', label: 'Nunito', css: "Nunito, sans-serif", google: 'Nunito', alias: [] },
+      { gruppe: 'mehr', label: 'Raleway', css: "Raleway, sans-serif", google: 'Raleway', alias: [] },
+      { gruppe: 'mehr', label: 'Ubuntu', css: "Ubuntu, sans-serif", google: 'Ubuntu', alias: [] },
+      { gruppe: 'mehr', label: 'Work Sans', css: "'Work Sans', sans-serif", google: 'Work Sans', alias: [] },
+      { gruppe: 'mehr', label: 'PT Sans', css: "'PT Sans', sans-serif", google: 'PT Sans', alias: [] },
+      { gruppe: 'mehr', label: 'PT Serif', css: "'PT Serif', serif", google: 'PT Serif', alias: [] },
+      { gruppe: 'mehr', label: 'Merriweather', css: "Merriweather, serif", google: 'Merriweather', alias: [] },
+      { gruppe: 'mehr', label: 'Lora', css: "Lora, serif", google: 'Lora', alias: [] },
+      { gruppe: 'mehr', label: 'Libre Baskerville', css: "'Libre Baskerville', Baskerville, serif", google: 'Libre Baskerville', alias: ['baskerville'] },
+      { gruppe: 'mehr', label: 'Playfair Display', css: "'Playfair Display', serif", google: 'Playfair Display', alias: [] },
+      { gruppe: 'mehr', label: 'Source Serif 4', css: "'Source Serif 4', 'Source Serif Pro', serif", google: 'Source Serif 4', alias: ['source serif pro'] },
+      { gruppe: 'mehr', label: 'Roboto Slab', css: "'Roboto Slab', serif", google: 'Roboto Slab', alias: [] },
+      { gruppe: 'mehr', label: 'Oswald', css: "Oswald, sans-serif", google: 'Oswald', alias: [] },
+      { gruppe: 'mehr', label: 'Roboto Mono', css: "'Roboto Mono', monospace", google: 'Roboto Mono', alias: [] },
+      { gruppe: 'mehr', label: 'DejaVu Sans', css: "'DejaVu Sans', Verdana, 'Noto Sans', sans-serif", google: 'Noto Sans', alias: [] },
+      { gruppe: 'mehr', label: 'DejaVu Serif', css: "'DejaVu Serif', 'Noto Serif', serif", google: 'Noto Serif', alias: [] },
+      { gruppe: 'hand', label: 'Dancing Script', css: "'Dancing Script', cursive", google: 'Dancing Script', alias: [] },
+      { gruppe: 'hand', label: 'Great Vibes', css: "'Great Vibes', cursive", google: 'Great Vibes', alias: [] },
+      { gruppe: 'hand', label: 'Caveat', css: "Caveat, cursive", google: 'Caveat', alias: [] },
+      { gruppe: 'hand', label: 'Satisfy', css: "Satisfy, cursive", google: 'Satisfy', alias: [] },
+      { gruppe: 'hand', label: 'Pacifico', css: "Pacifico, cursive", google: 'Pacifico', alias: [] }
+    ];
+    const STANDARD_SCHRIFT = SCHRIFTEN.find(f => f.label === 'Arial').css;
+
+    function schriftSchluessel(name) {
+      return String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    // Findet den Katalog-Eintrag zu einem Schriftnamen aus dem PDF
+    // (z. B. "TimesNewRomanPSMT", "Arial-BoldMT", "Calibri").
+    function findeKatalogSchrift(familie) {
+      const k = schriftSchluessel(familie);
+      if (!k) return null;
+      return SCHRIFTEN.find(f => schriftSchluessel(f.label) === k || f.alias.some(a => schriftSchluessel(a) === k))
+        || SCHRIFTEN.find(f => k.startsWith(schriftSchluessel(f.label)) && schriftSchluessel(f.label).length >= 5)
+        || null;
+    }
+
+    // Laedt die Ersatzschrift(en) einer Schrift-Kette einmalig nach
+    // (normal, fett, kursiv). Ohne Internet bleibt die naechste Schrift der
+    // Kette aktiv - es geht nichts kaputt.
+    const geladeneWebSchriften = new Set();
+    function ladeSchrift(fontCss) {
+      if (!fontCss) return Promise.resolve();
+      const eintraege = SCHRIFTEN.filter(f => f.css === fontCss || fontCss.endsWith(f.css));
+      const zuLaden = eintraege.map(f => f.google).filter(g => g && !geladeneWebSchriften.has(g));
+      zuLaden.forEach(g => {
+        geladeneWebSchriften.add(g);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(g).replace(/%20/g, '+') +
+          ':ital,wght@0,400;0,700;1,400;1,700&display=swap';
+        // Manche Schriften gibt es nicht in allen Schnitten - dann nur normal.
+        link.onerror = () => {
+          const l2 = document.createElement('link');
+          l2.rel = 'stylesheet';
+          l2.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(g).replace(/%20/g, '+') + '&display=swap';
+          document.head.appendChild(l2);
+        };
+        document.head.appendChild(link);
+      });
+      if (!document.fonts || !document.fonts.load) return Promise.resolve();
+      return Promise.all([
+        document.fonts.load(`16px ${fontCss}`),
+        document.fonts.load(`bold 16px ${fontCss}`)
+      ]).catch(() => {});
+    }
+
+    function fuelleSchriftAuswahl(sel) {
+      if (!sel) return;
+      const aktuell = sel.value;
+      sel.innerHTML = '';
+      [['word', t('font_group_word')], ['mehr', t('font_group_more')], ['hand', t('font_group_hand')]].forEach(([g, titel]) => {
+        const og = document.createElement('optgroup');
+        og.label = titel;
+        SCHRIFTEN.filter(f => f.gruppe === g).forEach(f => {
+          const o = document.createElement('option');
+          o.value = f.css;
+          o.textContent = f.label;
+          o.style.fontFamily = f.css;
+          og.appendChild(o);
+        });
+        sel.appendChild(og);
+      });
+      if (aktuell) sel.value = aktuell;
+    }
+
+    // Liest die Schrift einer Textstelle aus dem PDF:
+    // - Name (z. B. "ABCDEF+Calibri-Bold" -> Calibri, fett; "TimesNewRomanPSMT"
+    //   -> Times New Roman) und Fett/Kursiv.
+    // - Ist die Schrift im PDF eingebettet (bei Word-PDFs fast immer), wird
+    //   GENAU diese Schriftdatei verwendet (pdf.js hat sie beim Oeffnen schon
+    //   im Browser angemeldet, Name z. B. "g_d0_f2"). PDFs enthalten davon oft
+    //   nur die tatsaechlich benutzten Buchstaben - fehlt ein Zeichen, springt
+    //   fuer dieses Zeichen automatisch die naechste Schrift der Kette ein
+    //   (installiertes Original bzw. masseidentische Ersatzschrift).
     function leseSchriftAusPdf(fo, generisch) {
       const roh = String((fo && fo.name) || '').replace(/^[A-Z]{6}\+/, '');
       if (!roh) return null;
       const teile = roh.split(/[-,]/);
-      let familie = teile[0].replace(/(PSMT|PS|MT)$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
+      const familieRoh = teile[0];
+      let familie = familieRoh.replace(/(PSMT|PS|MT)$/, '').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
       const stil = teile.slice(1).join(' ') + ' ' + roh;
       const bold = !!(fo.bold || fo.black) || /bold|black|heavy|semibold|demi/i.test(stil);
       const italic = !!fo.italic || /italic|oblique/i.test(stil);
       if (!familie) return null;
-      const lc = familie.toLowerCase();
-      let ersatz = 'Arial, Helvetica, sans-serif';
-      if (generisch === 'serif' || /times|georgia|garamond|cambria|serif|roman|book/.test(lc)) ersatz = "'Times New Roman', Georgia, serif";
-      if (generisch === 'monospace' || /courier|mono|consol/.test(lc)) ersatz = "'Courier New', monospace";
-      if (lc === 'calibri') ersatz = 'Carlito, Arial, sans-serif';
-      if (lc === 'helvetica') ersatz = 'Arial, sans-serif';
-      if (lc === 'arial') ersatz = 'Helvetica, sans-serif';
-      return { name: familie, css: `'${familie}', ${ersatz}`, bold, italic };
+      // Angezeigt wird immer der echte Name aus dem PDF; der Katalog liefert
+      // nur die passende Ersatz-Kette, falls Zeichen fehlen.
+      const katalog = findeKatalogSchrift(familieRoh) || findeKatalogSchrift(familie);
+      let kette = katalog ? katalog.css : null;
+      if (!kette) {
+        const lc = familie.toLowerCase();
+        let ersatz = STANDARD_SCHRIFT;
+        if (generisch === 'serif' || /times|georgia|garamond|cambria|serif|roman|book|antiqua/.test(lc)) ersatz = SCHRIFTEN.find(f => f.label === 'Times New Roman').css;
+        if (generisch === 'monospace' || /courier|mono|consol/.test(lc)) ersatz = SCHRIFTEN.find(f => f.label === 'Courier New').css;
+        kette = `'${familie}', ${ersatz}`;
+      }
+      const eingebettet = fo.loadedName && !fo.missingFile;
+      return {
+        name: familie,
+        css: eingebettet ? `'${fo.loadedName}', ${kette}` : kette,
+        katalogCss: katalog ? katalog.css : kette,
+        eingebettet: !!eingebettet,
+        bold, italic
+      };
     }
 
     function createPageModel(src, name, width, height, scanMeta) {
@@ -2722,6 +2857,9 @@
             const sigH = 70 * (exportW / 650);
             ctx.drawImage(sImg, item.x * exportW, item.y * exportH, sigW, sigH);
           } else {
+            // Schrift vor dem Zeichnen sicher geladen haben, sonst landet im
+            // PDF eine Standardschrift statt der gewaehlten.
+            await ladeSchrift(item.font);
             ctx.save();
             ctx.fillStyle = item.color;
             const fontPx = item.size * (exportW / TEXT_REF_W);
@@ -3264,14 +3402,15 @@
     // festen Auswahlliste - sie wird dann als eigene Option ergaenzt, damit
     // das Feld nicht leer erscheint und man zwischen Original und anderen
     // Schriften wechseln kann.
-    function stelleSchriftOptionSicher(fontCss) {
+    function stelleSchriftOptionSicher(fontCss, label) {
       [$('textFont'), $('mtbFont')].forEach(sel => {
         if (!sel || !fontCss) return;
         if ([...sel.options].some(o => o.value === fontCss)) return;
         const opt = document.createElement('option');
         opt.value = fontCss;
-        const name = (fontCss.match(/^'([^']+)'/) || [])[1] || fontCss.split(',')[0];
-        opt.textContent = name + ' (' + t('font_from_document') + ')';
+        const name = label || (fontCss.match(/^'([^']+)'/) || [])[1] || fontCss.split(',')[0];
+        opt.textContent = name + ' – ' + t('font_from_document');
+        opt.style.fontFamily = fontCss;
         sel.insertBefore(opt, sel.firstChild);
       });
     }
@@ -3291,7 +3430,7 @@
       if (!overlay) return;
       if (document.activeElement !== $('mtbSize')) $('mtbSize').value = overlay.size;
       $('mtbBold').classList.toggle('active', !!overlay.bold);
-      stelleSchriftOptionSicher(overlay.font);
+      stelleSchriftOptionSicher(overlay.font, overlay.fontLabel);
       $('mtbFont').value = overlay.font;
     }
 
@@ -3303,7 +3442,13 @@
     (function initMobileTextBar() {
       const sel = $('mtbFont');
       if (!sel) return;
-      [...$('textFont').options].forEach(o => sel.appendChild(o.cloneNode(true)));
+      fuelleSchriftAuswahl($('textFont'));
+      fuelleSchriftAuswahl(sel);
+      document.addEventListener('sd-lang-changed', () => {
+        fuelleSchriftAuswahl($('textFont'));
+        fuelleSchriftAuswahl(sel);
+        updateInspector();
+      });
       const aktuelle = () => {
         const page = getSelectedPage();
         return page && state.selectedOverlayId ? page.overlays.find(o => o.id === state.selectedOverlayId) : null;
@@ -3347,7 +3492,7 @@
         if (overlay) {
           $('panelText').style.display = 'block';
           $('textInputVal').value = overlay.text;
-          stelleSchriftOptionSicher(overlay.font);
+          stelleSchriftOptionSicher(overlay.font, overlay.fontLabel);
           $('textFont').value = overlay.font;
           $('textSize').value = overlay.size;
           $('textColor').value = overlay.color;
@@ -3436,8 +3581,13 @@
       const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
       if (overlay) {
         overlay.font = e.target.value;
+        // Wer bewusst eine andere Schrift waehlt, verlaesst die Original-Schrift.
+        const katalog = SCHRIFTEN.find(f => f.css === overlay.font);
+        if (katalog) overlay.fontLabel = katalog.label;
         const el = document.getElementById(overlay.id);
         if (el) el.style.fontFamily = overlay.font;
+        ladeSchrift(overlay.font);
+        syncMobileTextBar();
       }
     };
 
@@ -3837,7 +3987,7 @@
         y: Math.max(0.02, Math.min(0.92, y)),
         width: 0.3,
         height: 0.06,
-        font: 'Arial, sans-serif',
+        font: STANDARD_SCHRIFT,
         size: 12,
         color: '#173b3f',
         bold: false
@@ -3872,6 +4022,7 @@
         el.style.height = (item.height * 100) + '%';
         el.style.fontFamily = item.font;
         el.style.fontSize = (item.size * textSkalierung()) + 'px';
+        ladeSchrift(item.font);
         el.style.color = item.color;
         el.style.fontWeight = item.bold ? 'bold' : 'normal';
         el.style.fontStyle = item.italic ? 'italic' : 'normal';
@@ -4157,7 +4308,8 @@
         // (z. B. bei Scans) Calibri - typische Firmen-/Behoerdenschrift
         // und Word-Standardschrift; Carlito ist die metrisch identische
         // freie Alternative, Arial/sans-serif nur als letzter Ausweg.
-        font: stueck.cssFont || 'Calibri, Carlito, Arial, sans-serif',
+        font: stueck.cssFont || SCHRIFTEN.find(f => f.label === 'Calibri').css,
+        fontLabel: stueck.cssFont ? stueck.fontFamily : 'Calibri',
         size: info.groesse,
         color: info.farbe,
         bold: stueck.bold !== undefined ? !!stueck.bold : !!info.fett,
