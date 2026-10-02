@@ -2110,7 +2110,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=9"></script>
+    <script src="sd-ki.js?v=10"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -3268,6 +3268,86 @@
             return text.trim();
         }
 
+        // Erkennung ohne KI anhand des typischen Aufbaus eines Lebenslaufs
+        // (E-Mail, Telefon, Geburtsdatum, Abschnitte wie "Berufserfahrung").
+        // Dient als Grundlage, falls die KI (v. a. das kleine SD Lotse)
+        // das Antwortformat nicht einhaelt.
+        function lebenslaufRegeln(text) {
+            const w = {};
+            const zeilen = String(text || '').split('\n').map(z => z.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            const alles = zeilen.join('\n');
+            const mail = alles.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+            if (mail) w.email = mail[0];
+            const tel = alles.match(/(?:\+\d{1,3}[\s/-]?)?(?:\(0\)\s?)?0?\d{2,5}[\s/-]?\d{3,}(?:[\s-]?\d{2,})*/g);
+            if (tel) {
+                const t2 = tel.map(x => x.trim()).find(x => x.replace(/\D/g, '').length >= 8 && !/^\d{2}\.\d{2}/.test(x) && !/^(19|20)\d{2}\s?[-–]/.test(x));
+                if (t2) w.telefon = t2;
+            }
+            const geb = alles.match(/(?:geb(?:oren)?\.?(?:\s*am)?|geburtsdatum|date of birth|born)[:\s]*(\d{1,2}\.\s?\d{1,2}\.\s?\d{2,4}(?:\s*(?:in|,)\s*[A-ZÄÖÜ][\wäöüß-]+)?)/i);
+            if (geb) w.geburtsdatum = geb[1].replace(/\s+/g, ' ');
+            const plz = zeilen.findIndex(z => /\b\d{5}\s+[A-ZÄÖÜ][\wäöüß.-]+/.test(z) && !/@/.test(z));
+            if (plz >= 0) {
+                const z = zeilen[plz];
+                const strasseDavor = plz > 0 && /[A-Za-zäöüß.-]+\s+\d+\s*[a-z]?\s*$/.test(zeilen[plz - 1]) && zeilen[plz - 1].length < 50;
+                w.adresse = (/^[A-ZÄÖÜa-zäöüß.-]+.*\d+[a-z]?\s*,\s*\d{5}/.test(z) ? z : (strasseDavor ? zeilen[plz - 1] + ', ' + z : z))
+                    .replace(/\s*(?:tel|telefon|mobil|e-?mail).*$/i, '').replace(/[·•|–-]\s*$/, '').trim();
+            }
+            const einzeilig = (re, feld) => {
+                const m = alles.match(re);
+                if (m && m[1].trim()) w[feld] = m[1].trim();
+            };
+            einzeilig(/(?:staatsangeh[öo]rigkeit|nationalit[äa]t|nationality)[:\s]+([^\n]{2,40})/i, 'staatsangehoerigkeit');
+            einzeilig(/(?:f[üu]hrerschein|fahrerlaubnis|driving licen[cs]e)[:\s]+([^\n]{1,40})/i, 'fuehrerschein');
+            const fam = alles.match(/\b(ledig|verheiratet|geschieden|verwitwet)\b/i);
+            if (fam) w.familienstand = fam[1].toLowerCase();
+            // Name: erste Zeile mit 2-3 Woertern in Grossschreibung, die keine Ueberschrift ist
+            const kopf = zeilen.slice(0, 8).find(z => /^[A-ZÄÖÜ][a-zäöüß-]+(?:\s+[A-ZÄÖÜ][a-zäöüß-]+){1,2}$/.test(z) && !/lebenslauf|curriculum|vitae|bewerbung|resume|pers[öo]nliche/i.test(z));
+            const nameZeile = alles.match(/^(?:name|vor- und nachname|full name)\s*:\s*([^\n]{3,60})$/im);
+            const vollerName = nameZeile ? nameZeile[1].trim() : kopf;
+            if (vollerName && /\s/.test(vollerName)) {
+                const teile = vollerName.split(/\s+/);
+                w.nachname = teile.pop();
+                w.vorname = teile.join(' ');
+            }
+            const vn = alles.match(/^vorname\s*:\s*([^\n]{2,40})$/im), nn = alles.match(/^(?:nachname|familienname)\s*:\s*([^\n]{2,40})$/im);
+            if (vn) w.vorname = vn[1].trim();
+            if (nn) w.nachname = nn[1].trim();
+            // Abschnitte anhand typischer Ueberschriften
+            const abschnitte = [
+                ['erfahrung', /^(berufserfahrung|berufliche(r)? (erfahrung|werdegang)|beruflicher werdegang|praktische erfahrung|berufspraxis|werdegang|t[äa]tigkeiten|work experience|experience|employment)\b/i],
+                ['ausbildung', /^(ausbildung|schulbildung|schul- und ausbildung|bildungsweg|schulischer werdegang|studium|aus- und weiterbildung|bildung|education)\b/i],
+                ['kenntnisse', /^(kenntnisse|f[äa]higkeiten|edv(-kenntnisse)?|it-kenntnisse|besondere kenntnisse|qualifikationen|kompetenzen|skills)\b/i],
+                ['sprachen', /^(sprachen|sprachkenntnisse|languages)\b/i]
+            ];
+            const stopp = /^(hobbys?|interessen|pers[öo]nliche (daten|angaben)|kontakt|referenzen|sonstiges|weiterbildung(en)?|zertifikate|ehrenamt)\b/i;
+            let aktuell = null;
+            const sammlung = {};
+            zeilen.forEach(z => {
+                const kopfzeile = abschnitte.find(([, re]) => re.test(z) && z.length < 60);
+                if (kopfzeile) {
+                    aktuell = kopfzeile[0];
+                    const rest = z.replace(kopfzeile[1], '').replace(/^\s*[:\-–]\s*/, '').trim();
+                    sammlung[aktuell] = sammlung[aktuell] || [];
+                    if (rest) sammlung[aktuell].push(rest);
+                    return;
+                }
+                if (stopp.test(z) && z.length < 40) { aktuell = null; return; }
+                if (aktuell) sammlung[aktuell].push(z);
+            });
+            Object.keys(sammlung).forEach(k => {
+                let liste = sammlung[k].filter(Boolean);
+                if (!liste.length) return;
+                if (k === 'erfahrung' || k === 'ausbildung') {
+                    // "03/2019 - heute  Lageristin" -> "03/2019 - heute: Lageristin"
+                    liste = liste.map(z => z.replace(/^((?:\d{1,2}[./])?\d{4}\s*[-–]\s*(?:(?:\d{1,2}[./])?\d{4}|heute|jetzt|aktuell|today|present))\s*[:|]?\s*/i, '$1: '));
+                    w[k] = liste.join('\n');
+                } else {
+                    w[k] = liste.join(', ').replace(/\s*,\s*,/g, ',');
+                }
+            });
+            return w;
+        }
+
         // ---- Alten Lebenslauf einlesen: KI verteilt die Angaben auf die Felder ----
         function lebenslaufEinlesen() {
             if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
@@ -3295,6 +3375,7 @@
                 beschreibung: t('import_beschreibung'),
                 dokumentArt: 'ein Lebenslauf',
                 felder,
+                heuristik: lebenslaufRegeln,
                 uebernehmen: (werte) => {
                     let n = 0;
                     Object.keys(werte).forEach(id => {

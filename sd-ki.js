@@ -84,6 +84,9 @@
       ein_pruefen: 'Bitte prüfen und bei Bedarf korrigieren. Nur angehakte Felder werden übernommen – bestehende Eingaben in diesen Feldern werden ersetzt.',
       ein_uebernehmen: '✅ Übernehmen', ein_gekuerzt: 'Hinweis: Das Dokument ist lang – SD Lotse hat nur den Anfang gelesen. Für das ganze Dokument eine Online-KI wählen.',
       ein_fertig: '✓ {n} Felder übernommen.',
+      ein_lotse_tipp: 'SD Lotse ist für diese Aufgabe oft zu klein – mit Gemini, ChatGPT oder Claude klappt die Zuordnung deutlich besser.',
+      ein_regeln: 'Hinweis: Ein Teil der Felder wurde ohne KI anhand des Aufbaus erkannt – bitte besonders genau prüfen. Mit Gemini, ChatGPT oder Claude wird die Zuordnung meist vollständiger.',
+      ein_ki_fehler: 'Die KI hat nicht geantwortet ({msg}). Die Felder unten wurden ohne KI anhand des Aufbaus erkannt – bitte genau prüfen.',
       ein_privat_lotse: '🔒 SD Lotse liest lokal – die Datei verlässt dein Gerät nicht.',
       ein_privat_online: '☁️ Der Text der Datei wird zur Zuordnung an {firma} gesendet.',
       dlg_titel: '🤖 KI-Hilfe zum Dokument',
@@ -148,6 +151,9 @@
       ein_pruefen: 'Please check and correct if needed. Only ticked fields are applied – existing entries in these fields will be replaced.',
       ein_uebernehmen: '✅ Apply', ein_gekuerzt: 'Note: the document is long – SD Lotse only read the beginning. Choose an online AI for the whole document.',
       ein_fertig: '✓ {n} fields applied.',
+      ein_lotse_tipp: 'SD Lotse is often too small for this task – Gemini, ChatGPT or Claude assign the details much better.',
+      ein_regeln: 'Note: some fields were recognized without AI from the layout – please check them carefully. Gemini, ChatGPT or Claude usually assign more completely.',
+      ein_ki_fehler: 'The AI did not answer ({msg}). The fields below were recognized without AI from the layout – please check carefully.',
       ein_privat_lotse: '🔒 SD Lotse reads locally – the file never leaves your device.',
       ein_privat_online: '☁️ The text of the file is sent to {firma} for sorting.',
       dlg_titel: '🤖 AI help for this document',
@@ -714,6 +720,39 @@
       if (!v || /^[-–—]+$/.test(v) || /^(keine angabe|nicht angegeben|unbekannt|n\/a|none|not stated)\.?$/i.test(v)) return;
       werte[id] = v;
     });
+    // Kleine Modelle halten sich oft nicht an "### feld". Dann auch
+    // Zeilen wie "Vorname: Anna" oder "- **vorname**: Anna" akzeptieren.
+    if (Object.keys(werte).length < 2) {
+      const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/[^a-z0-9]/g, '');
+      const namen = {};
+      felder.forEach(f => {
+        namen[norm(f.id)] = f.id;
+        namen[norm(f.label)] = f.id;
+        const kurz = String(f.label).split(/[:\/(]/).pop();
+        if (kurz) namen[norm(kurz)] = f.id;
+      });
+      let aktuell = null;
+      roh.split('\n').forEach(zeile => {
+        const m2 = zeile.match(/^\s*(?:[-*•]|\d+[.)])?\s*\**\s*([^:*\n]{2,40}?)\s*\**\s*:\s*(.*)$/);
+        const id = m2 ? namen[norm(m2[1])] : null;
+        if (id) {
+          aktuell = id;
+          const v = m2[2].replace(/\*\*/g, '').trim();
+          if (v && !/^[-–—]+$/.test(v) && werte[id] == null) werte[id] = v;
+          return;
+        }
+        // Folgezeilen gehoeren zum letzten mehrzeiligen Feld
+        const f = felder.find(x => x.id === aktuell);
+        if (f && f.mehrzeilig && zeile.trim() && !/^#{1,4}\s/.test(zeile)) {
+          werte[aktuell] = (werte[aktuell] ? werte[aktuell] + '\n' : '') + zeile.replace(/^\s*[-*•]\s*/, '').trim();
+        } else if (!zeile.trim()) {
+          aktuell = null;
+        }
+      });
+      Object.keys(werte).forEach(k => {
+        if (/^(-|–|—|keine angabe|nicht angegeben|unbekannt|n\/a)$/i.test(String(werte[k]).trim())) delete werte[k];
+      });
+    }
     felder.forEach(f => {
       if (!f.optionen || werte[f.id] == null) return;
       const treffer = f.optionen.find(o => o.toLowerCase() === werte[f.id].toLowerCase().replace(/[.\s]+$/, ''));
@@ -764,12 +803,28 @@
         const istLotse = anbieter() === 'lotse';
         const grenze = istLotse ? 3000 : GEMINI_MAX_ZEICHEN;
         if (text.length > grenze) { text = text.slice(0, grenze); gekuerzt = istLotse; }
+        // Einfache Regeln erkennen schon vieles ohne KI (E-Mail, Telefon,
+        // Abschnitte wie "Berufserfahrung"); die KI ergaenzt und ordnet.
+        const regeln = opt.heuristik ? (opt.heuristik(text) || {}) : {};
         status(tx('ein_ki_laeuft'));
-        const antwort = await schreibe(baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked), { maxTokens: istLotse ? 1100 : 2500 });
-        const werte = leseEinleseAntwort(antwort, opt.felder);
+        let werte = {};
+        let kiFehler = null;
+        try {
+          const antwort = await schreibe(baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked), { maxTokens: istLotse ? 1100 : 2500 });
+          werte = leseEinleseAntwort(antwort, opt.felder);
+        } catch (err) {
+          kiFehler = err;
+        }
+        let ausRegeln = 0;
+        Object.keys(regeln).forEach(k => {
+          if (werte[k] == null && regeln[k] && String(regeln[k]).trim()) { werte[k] = String(regeln[k]).trim(); ausRegeln++; }
+        });
         status('');
-        if (!Object.keys(werte).length) throw new Error(tx('ein_nichts'));
-        zeigeErgebnis(werte, gekuerzt);
+        if (!Object.keys(werte).length) {
+          if (kiFehler) throw kiFehler;
+          throw new Error(tx('ein_nichts') + (istLotse ? ' ' + tx('ein_lotse_tipp') : ''));
+        }
+        zeigeErgebnis(werte, gekuerzt, kiFehler ? tx('ein_ki_fehler', { msg: kiFehler.message || String(kiFehler) }) : (ausRegeln && istLotse ? tx('ein_regeln') : ''));
       } catch (err) {
         status('');
         fehler((err && err.message) || String(err));
@@ -777,9 +832,10 @@
         $q('[data-waehlen]').disabled = false;
       }
     };
-    function zeigeErgebnis(werte, gekuerzt) {
+    function zeigeErgebnis(werte, gekuerzt, notiz) {
       const box = $q('[data-ergebnis]');
       box.innerHTML = (gekuerzt ? '<p class="sdki-klein">' + esc(tx('ein_gekuerzt')) + '</p>' : '') +
+        (notiz ? '<p class="sdki-klein">' + esc(notiz) + '</p>' : '') +
         '<p class="sdki-klein">' + esc(tx('ein_pruefen')) + '</p><div class="sdki-felder"></div>' +
         '<div class="sdki-knoepfe" style="margin-top:8px"><button type="button" class="sdki-btn prim" data-ok>' + esc(tx('ein_uebernehmen')) + '</button>' +
         '<button type="button" class="sdki-btn" data-nein>' + esc(tx('abbrechen')) + '</button></div>';

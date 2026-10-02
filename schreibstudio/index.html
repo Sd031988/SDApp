@@ -1816,7 +1816,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-ki.js?v=9"></script>
+    <script src="../sd-ki.js?v=10"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2536,6 +2536,35 @@
             return teile.join('\n');
         }
 
+        // Erkennung ohne KI anhand des typischen Briefaufbaus (Anrede bis
+        // Grussformel = Text, Vertragsnummer, Betreff, E-Mail, Telefon).
+        function schreibenRegeln(text, modus) {
+            const w = {};
+            const zeilen = String(text || '').split('\n').map(z => z.replace(/\s+/g, ' ').trim());
+            const alles = zeilen.join('\n');
+            const mail = alles.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+            if (mail) w.email = mail[0];
+            const tel = (alles.match(/(?:tel(?:efon)?|mobil|handy)\.?[:\s]*([+\d][\d\s/()-]{6,})/i) || [])[1];
+            if (tel) w.telefon = tel.trim();
+            const anrede = zeilen.findIndex(z => /^(sehr geehrte|guten tag|hallo|liebe[rs]?\b|dear\b)/i.test(z));
+            const gruss = zeilen.findIndex((z, i) => i > anrede && /^(mit freundlichen gr[üu][ßs]en|freundliche gr[üu][ßs]e|viele gr[üu][ßs]e|beste gr[üu][ßs]e|hochachtungsvoll|kind regards|best regards|sincerely)/i.test(z));
+            if (anrede >= 0) {
+                const textZeilen = zeilen.slice(anrede + 1, gruss > anrede ? gruss : undefined);
+                const t2 = textZeilen.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+                const feld = { kuendigung: 'kuendigung-text', entschuldigung: 'entschuldigung-text', brief: 'brief-text' }[modus];
+                if (t2 && feld) w[feld] = t2;
+            }
+            if (modus === 'kuendigung') {
+                const nr = alles.match(/(?:vertrags|kunden|mitglieds|versicherungs)[-\s]?(?:nummer|nr\.?)[:\s]*([A-Za-z0-9][A-Za-z0-9./-]{2,})/i);
+                if (nr) w.vertragsnummer = nr[1];
+            }
+            if (modus === 'brief') {
+                const betreff = zeilen.find(z => /^(betreff|betr\.|subject)\s*:/i.test(z));
+                if (betreff) w['brief-betreff'] = betreff.replace(/^(betreff|betr\.|subject)\s*:\s*/i, '');
+            }
+            return w;
+        }
+
         // ---- Vorhandenes Schreiben einlesen: KI verteilt die Angaben auf die Felder ----
         function schreibenEinlesen() {
             if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
@@ -2572,6 +2601,7 @@
                 beschreibung: t('import_beschreibung'),
                 dokumentArt: bereiche[modus].art,
                 felder: absender.concat(bereiche[modus].felder),
+                heuristik: (text) => schreibenRegeln(text, modus),
                 uebernehmen: (werte) => {
                     let n = 0;
                     Object.keys(werte).forEach(id => {
