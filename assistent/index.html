@@ -373,6 +373,20 @@
             margin-bottom: 6px;
         }
 
+        .field select {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 16px;
+            background: var(--paper);
+            color: inherit;
+            font-family: inherit;
+            text-overflow: ellipsis;
+        }
+        .field { min-width: 0; }
         .field input[type="password"],
         .field input[type="text"] {
             width: 100%;
@@ -878,6 +892,45 @@
                 brand_tag: 'Dein Helfer für Bewerbung & Briefe',
                 settings_title: 'Einstellungen',
                 lbl_key: 'Dein Gemini-API-Schlüssel',
+                lbl_anbieter: 'Online-KI',
+                anbieter_gemini: 'Gemini (Google) – kostenloser Schlüssel',
+                anbieter_openai: 'ChatGPT (OpenAI) – eigener Schlüssel',
+                anbieter_claude: 'Claude (Anthropic) – eigener Schlüssel',
+                anbieter_hint: 'Bei OpenAI und Claude bezahlst du direkt beim Anbieter nur, was du nutzt (vorher Guthaben aufladen, meist ab 5 $). Bei normaler Nutzung sind das oft nur Cent-Beträge bis wenige Euro im Monat – je nach Modell und Menge.',
+                lbl_online_modell: 'Modell',
+                modell_openai_mini: 'GPT-5 mini – gut & günstig (empfohlen)',
+                modell_openai_nano: 'GPT-5 nano – am günstigsten, einfacher',
+                modell_claude_haiku: 'Haiku 4.5 – schnell & günstig (empfohlen)',
+                modell_claude_sonnet: 'Sonnet 5.5 – stärker, teurer',
+                mode_gemini_openai: '🟢 ChatGPT',
+                mode_gemini_sub_openai: 'OpenAI · eigener Schlüssel',
+                mode_gemini_claude: '🟠 Claude',
+                mode_gemini_sub_claude: 'Anthropic · eigener Schlüssel',
+                lbl_key_openai: 'Dein OpenAI-API-Schlüssel',
+                lbl_key_claude: 'Dein Anthropic-API-Schlüssel (Claude)',
+                key_hint_html_openai: 'Erstellen unter <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>, Guthaben unter „Billing“ aufladen. Der Schlüssel bleibt in deinem Browser und geht nur an OpenAI.',
+                key_hint_html_claude: 'Erstellen unter <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>, Guthaben unter „Billing“ aufladen. Der Schlüssel bleibt in deinem Browser und geht nur an Anthropic.',
+                no_key_html_openai: '🔑 Für ChatGPT brauchst du einen eigenen OpenAI-Schlüssel mit Guthaben. Tippe oben auf ⚙️ und trage ihn ein.',
+                no_key_html_claude: '🔑 Für Claude brauchst du einen eigenen Anthropic-Schlüssel mit Guthaben. Tippe oben auf ⚙️ und trage ihn ein.',
+                privacy_openai: 'Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an OpenAI gesendet. Bitte keine Passwörter oder Kontodaten eingeben.',
+                privacy_claude: 'Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Anthropic (Claude) gesendet. Bitte keine Passwörter oder Kontodaten eingeben.',
+                opt_search_openai: '🌐 Websuche: die KI darf bei Bedarf im Internet suchen (mit Quellen). Kostet bei OpenAI extra – laut Preisliste rund 1 Cent pro Suche.',
+                opt_search_claude: '🌐 Websuche: die KI darf bei Bedarf im Internet suchen (mit Quellen). Kostet bei Anthropic extra – laut Preisliste rund 1 Cent pro Suche; muss evtl. in der Anthropic-Konsole erlaubt werden.',
+                err_no_key_openai: 'Kein OpenAI-Schlüssel hinterlegt. Tippe oben auf ⚙️ und trage ihn ein.',
+                err_no_key_claude: 'Kein Anthropic-Schlüssel hinterlegt. Tippe oben auf ⚙️ und trage ihn ein.',
+                err_key_rejected_online: '{name} hat den Schlüssel abgelehnt. Bitte prüfe ihn unter ⚙️.',
+                err_guthaben_openai: 'Bei OpenAI ist kein Guthaben mehr vorhanden. Bitte unter platform.openai.com → Billing Guthaben aufladen.',
+                err_guthaben_claude: 'Bei Anthropic ist kein Guthaben mehr vorhanden. Bitte unter console.anthropic.com → Billing Guthaben aufladen.',
+                err_rate_online: '{name}: zu viele Anfragen in kurzer Zeit. Bitte kurz warten und noch einmal senden.',
+                err_ueberlastet: '{name} ist gerade überlastet. Bitte gleich noch einmal versuchen.',
+                err_anbieter: '{name}-Anfrage fehlgeschlagen (Status {status}).',
+                err_network_online: 'Keine Verbindung zu {name}. Bitte Internetverbindung prüfen.',
+                err_empty_online: '{name} hat keine Antwort geliefert.',
+                src_openai: '🟢 ChatGPT',
+                src_claude: '🟠 Claude',
+                search_unavailable_online: 'ℹ️ Die Websuche war mit deinem Schlüssel nicht verfügbar. Diese Antwort ist ohne Websuche entstanden.',
+                link_nur_gemini: 'ℹ️ Links direkt öffnen kann nur ☁️ Gemini. Diese KI konnte die Seite höchstens über die Websuche finden – füge im Zweifel den Text der Seite hier ein.',
+                antwort_gekuerzt: 'ℹ️ Die Antwort wurde abgeschnitten, weil sie sehr lang wurde. Schreib „weiter“, dann geht es weiter.',
                 ph_key: 'Schlüssel hier einfügen ...',
                 key_hint_html: 'Kostenlos erhältlich bei <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Derselbe Schlüssel gilt auch für die KI-Schreibhilfe im Lebenslauf und im Schreibstudio.',
                 key_session: 'Nur für diese Sitzung merken (empfohlen)',
@@ -997,6 +1050,7 @@
                 opt_wiki: '📚 Nachschlagen: SD Lotse darf bei Wissensfragen auf Wikipedia nachschlagen (die Frage wird dazu an Wikipedia gesendet).',
                 sources: 'Quellen',
                 search_used: '🌐 mit Google-Suche',
+                search_used_online: '🌐 mit Websuche',
                 search_unavailable: 'ℹ️ Die Google-Suche ist mit deinem Schlüssel gerade nicht verfügbar (vermutlich nicht im Gratis-Kontingent). Diese Antwort ist ohne Websuche entstanden.',
                 wiki_source: '📚 Nachgeschlagen bei Wikipedia',
                 ab_links_h: '🔗 Links lesen',
@@ -1024,6 +1078,45 @@
                 brand_tag: 'Your helper for applications & letters',
                 settings_title: 'Settings',
                 lbl_key: 'Your Gemini API key',
+                lbl_anbieter: 'Online AI',
+                anbieter_gemini: 'Gemini (Google) – free key',
+                anbieter_openai: 'ChatGPT (OpenAI) – own key',
+                anbieter_claude: 'Claude (Anthropic) – own key',
+                anbieter_hint: 'With OpenAI and Claude you pay the provider directly for what you use (top up credit first, usually from $5). For normal use that is often just cents up to a few euros per month – depending on model and amount.',
+                lbl_online_modell: 'Model',
+                modell_openai_mini: 'GPT-5 mini – good & cheap (recommended)',
+                modell_openai_nano: 'GPT-5 nano – cheapest, simpler',
+                modell_claude_haiku: 'Haiku 4.5 – fast & cheap (recommended)',
+                modell_claude_sonnet: 'Sonnet 5.5 – stronger, pricier',
+                mode_gemini_openai: '🟢 ChatGPT',
+                mode_gemini_sub_openai: 'OpenAI · own key',
+                mode_gemini_claude: '🟠 Claude',
+                mode_gemini_sub_claude: 'Anthropic · own key',
+                lbl_key_openai: 'Your OpenAI API key',
+                lbl_key_claude: 'Your Anthropic API key (Claude)',
+                key_hint_html_openai: 'Create it at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a> and top up credit under "Billing". The key stays in your browser and is only sent to OpenAI.',
+                key_hint_html_claude: 'Create it at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> and top up credit under "Billing". The key stays in your browser and is only sent to Anthropic.',
+                no_key_html_openai: '🔑 For ChatGPT you need your own OpenAI key with credit. Tap ⚙️ at the top and enter it.',
+                no_key_html_claude: '🔑 For Claude you need your own Anthropic key with credit. Tap ⚙️ at the top and enter it.',
+                privacy_openai: 'Messages and attachments are sent directly from your browser to OpenAI to answer them. Please do not enter passwords or bank details.',
+                privacy_claude: 'Messages and attachments are sent directly from your browser to Anthropic (Claude) to answer them. Please do not enter passwords or bank details.',
+                opt_search_openai: '🌐 Web search: the AI may search the internet when needed (with sources). Costs extra at OpenAI – about 1 cent per search according to their price list.',
+                opt_search_claude: '🌐 Web search: the AI may search the internet when needed (with sources). Costs extra at Anthropic – about 1 cent per search according to their price list; may need to be allowed in the Anthropic console.',
+                err_no_key_openai: 'No OpenAI key on file. Tap ⚙️ at the top and enter it.',
+                err_no_key_claude: 'No Anthropic key on file. Tap ⚙️ at the top and enter it.',
+                err_key_rejected_online: '{name} rejected the key. Please check it under ⚙️.',
+                err_guthaben_openai: 'Your OpenAI credit is used up. Please top up under platform.openai.com → Billing.',
+                err_guthaben_claude: 'Your Anthropic credit is used up. Please top up under console.anthropic.com → Billing.',
+                err_rate_online: '{name}: too many requests in a short time. Please wait a moment and send again.',
+                err_ueberlastet: '{name} is overloaded right now. Please try again shortly.',
+                err_anbieter: '{name} request failed (status {status}).',
+                err_network_online: 'No connection to {name}. Please check your internet connection.',
+                err_empty_online: '{name} returned no answer.',
+                src_openai: '🟢 ChatGPT',
+                src_claude: '🟠 Claude',
+                search_unavailable_online: 'ℹ️ Web search was not available with your key. This answer was created without web search.',
+                link_nur_gemini: 'ℹ️ Only ☁️ Gemini can open links directly. This AI could at most find the page via web search – if in doubt, paste the text of the page here.',
+                antwort_gekuerzt: 'ℹ️ The answer was cut off because it got very long. Write "continue" and it will go on.',
                 ph_key: 'Paste key here ...',
                 key_hint_html: 'Free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The same key also works for the AI writing help in the resume app and the Letter Studio.',
                 key_session: 'Remember only for this session (recommended)',
@@ -1143,6 +1236,7 @@
                 opt_wiki: '📚 Look-up: SD Lotse may look up knowledge questions on Wikipedia (the question is sent to Wikipedia for this).',
                 sources: 'Sources',
                 search_used: '🌐 with Google Search',
+                search_used_online: '🌐 with web search',
                 search_unavailable: 'ℹ️ Google Search is currently not available with your key (probably not in the free quota). This answer was created without web search.',
                 wiki_source: '📚 Looked up on Wikipedia',
                 ab_links_h: '🔗 Reads links',
@@ -1190,7 +1284,7 @@
     <nav class="mode-bar" aria-label="KI wählen">
         <div class="mode-switch">
             <button type="button" class="mode-btn active" data-mode="gemini" aria-pressed="true">
-                <strong data-i18n="mode_gemini">☁️ Gemini</strong><small data-i18n="mode_gemini_sub">online · Schlüssel</small>
+                <strong data-i18n="mode_gemini" data-anbieter-text="mode_gemini">☁️ Gemini</strong><small data-i18n="mode_gemini_sub" data-anbieter-text="mode_gemini_sub">online · Schlüssel</small>
             </button>
             <button type="button" class="mode-btn" data-mode="llama" aria-pressed="false">
                 <strong data-i18n="mode_llama">🔒 SD Lotse</strong><small data-i18n="mode_llama_sub">eigene KI · lokal · ohne Schlüssel</small>
@@ -1202,10 +1296,23 @@
         <div class="settings-inner">
             <h2 data-i18n="settings_title">Einstellungen</h2>
             <div class="field">
-                <label for="apiKey" data-i18n="lbl_key">Dein Gemini-API-Schlüssel</label>
+                <label for="anbieterWahl" data-i18n="lbl_anbieter">Online-KI</label>
+                <select id="anbieterWahl">
+                    <option value="gemini" data-i18n="anbieter_gemini">Gemini (Google) – kostenloser Schlüssel</option>
+                    <option value="openai" data-i18n="anbieter_openai">ChatGPT (OpenAI) – eigener Schlüssel</option>
+                    <option value="claude" data-i18n="anbieter_claude">Claude (Anthropic) – eigener Schlüssel</option>
+                </select>
+                <p class="hint" id="anbieterHint" data-i18n="anbieter_hint" hidden>Bei OpenAI und Claude bezahlst du direkt beim Anbieter nur, was du nutzt.</p>
+            </div>
+            <div class="field" id="onlineModellFeld" hidden>
+                <label for="onlineModell" data-i18n="lbl_online_modell">Modell</label>
+                <select id="onlineModell"></select>
+            </div>
+            <div class="field">
+                <label for="apiKey" data-i18n="lbl_key" data-anbieter-text="lbl_key">Dein Gemini-API-Schlüssel</label>
                 <input type="password" id="apiKey" autocomplete="off" data-i18n-placeholder="ph_key"
                     placeholder="Schlüssel hier einfügen ...">
-                <p class="hint" data-i18n="key_hint_html" data-i18n-html>Kostenlos erhältlich bei Google AI Studio.</p>
+                <p class="hint" data-i18n="key_hint_html" data-anbieter-text="key_hint_html" data-i18n-html>Kostenlos erhältlich bei Google AI Studio.</p>
             </div>
             <label class="check"><input type="radio" name="keyMode" id="keyModeSession" value="sitzung" checked>
                 <span data-i18n="key_session">Nur für diese Sitzung merken (empfohlen)</span></label>
@@ -1218,10 +1325,10 @@
             <label class="check"><input type="checkbox" id="optMemory" checked>
                 <span data-i18n="opt_memory">Gedächtnis: Gespräch in diesem Browser speichern</span></label>
             <label class="check"><input type="checkbox" id="optSearch" checked>
-                <span data-i18n="opt_search">🌐 Websuche: Gemini darf selbst bei Google suchen</span></label>
+                <span data-i18n="opt_search" data-anbieter-text="opt_search">🌐 Websuche: Gemini darf selbst bei Google suchen</span></label>
             <label class="check"><input type="checkbox" id="optWiki" checked>
                 <span data-i18n="opt_wiki">📚 Nachschlagen: SD Lotse darf auf Wikipedia nachschlagen</span></label>
-            <label class="check"><input type="checkbox" id="optCode" checked>
+            <label class="check" id="optCodeZeile"><input type="checkbox" id="optCode" checked>
                 <span data-i18n="opt_code">Python-Rechnen: die KI darf Python-Code ausführen</span></label>
             <div class="row">
                 <button type="button" class="btn btn-ghost" id="llamaDeleteBtn" data-i18n="llama_delete">🗑️ SD Lotse vom Gerät löschen</button>
@@ -1285,7 +1392,7 @@
                     <button type="button" class="suggestion nur-gemini" data-i18n="sug_link">Lies diese Stellenanzeige: </button>
                     <button type="button" class="suggestion" data-i18n="sug_4">Formuliere eine Absage</button>
                 </div>
-                <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span></div>
+                <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-anbieter-text="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span></div>
             </div>
         </div>
     </main>
@@ -1307,7 +1414,7 @@
                 <button type="button" class="send-btn" id="sendBtn" data-i18n-title="send" title="Senden" aria-label="Senden">➤</button>
             </div>
             <p class="privacy-line" id="privacyLlama" hidden data-i18n="llama_privacy">🔒 SD Lotse läuft komplett auf deinem Gerät.</p>
-            <p class="privacy-line" id="privacyGemini"><span data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</span>
+            <p class="privacy-line" id="privacyGemini"><span data-i18n="privacy" data-anbieter-text="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</span>
                 <span data-i18n="google_footer">Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus.</span></p>
         </div>
     </footer>
@@ -1384,13 +1491,36 @@
         let verlauf = [];
         let wartendeAnhaenge = [];   // [{ name, mime, data(base64), thumb }]
         let sendetGerade = false;
-        let optionen = { memory: true, code: true, suche: true, wiki: true, modus: 'gemini', llamaModell: 'auto' };
+        let optionen = { memory: true, code: true, suche: true, wiki: true, modus: 'gemini', llamaModell: 'auto',
+            anbieter: 'gemini', openaiModell: 'gpt-5-mini', claudeModell: 'claude-haiku-4-5-20251001' };
+
+        // Online-KI-Anbieter. Gemini: kostenloser Schluessel. OpenAI und
+        // Claude: eigener Schluessel der Person, Abrechnung nach Nutzung
+        // direkt beim Anbieter. Alle Anfragen gehen direkt vom Browser zum
+        // Anbieter - nicht ueber unseren Server.
+        const ANBIETER = {
+            gemini: { name: 'Gemini', keyStorage: 'biGeminiApiKey' },
+            openai: { name: 'ChatGPT (OpenAI)', keyStorage: 'sdOpenAiApiKey',
+                modelle: [['gpt-5-mini', 'modell_openai_mini'], ['gpt-5-nano', 'modell_openai_nano']] },
+            claude: { name: 'Claude', keyStorage: 'sdClaudeApiKey',
+                modelle: [['claude-haiku-4-5-20251001', 'modell_claude_haiku'], ['claude-sonnet-5-5', 'modell_claude_sonnet']] }
+        };
+        function anbieter() { return ANBIETER[optionen.anbieter] ? optionen.anbieter : 'gemini'; }
+        function anbieterName(a) { return ANBIETER[a || anbieter()].name; }
+        function tA(basis, vars) {
+            // Text passend zum Anbieter (z. B. lbl_key_openai), sonst der Gemini-Text
+            const a = anbieter();
+            const key = a === 'gemini' ? basis : basis + '_' + a;
+            const dict = window.SD_I18N[window.SD_LANG || 'de'] || window.SD_I18N.de;
+            return t(dict[key] != null ? key : basis, vars);
+        }
 
         // ------------------------------------------------------------
         // Schluessel
         // ------------------------------------------------------------
+        function keyStorage() { return ANBIETER[anbieter()].keyStorage; }
         function aktuellerKey() {
-            return speicherLesen(sessionStorage, KEY_STORAGE) || speicherLesen(localStorage, KEY_STORAGE) || '';
+            return speicherLesen(sessionStorage, keyStorage()) || speicherLesen(localStorage, keyStorage()) || '';
         }
 
         function keyOrt() {
@@ -1400,10 +1530,8 @@
         function ladeKeyFeld() {
             if (speicherLesen(localStorage, KEY_MODE_STORAGE) === 'dauerhaft') $('keyModePermanent').checked = true;
             const key = aktuellerKey();
-            if (key) {
-                $('apiKey').value = key;
-                $('keyStatus').textContent = speicherLesen(localStorage, KEY_STORAGE) ? t('key_saved_permanent') : t('key_saved_session');
-            }
+            $('apiKey').value = key;
+            $('keyStatus').textContent = key ? (speicherLesen(localStorage, keyStorage()) ? t('key_saved_permanent') : t('key_saved_session')) : '';
             aktualisiereKeyHinweis();
         }
 
@@ -1412,12 +1540,12 @@
             const ort = keyOrt();
             const anderer = ort === localStorage ? sessionStorage : localStorage;
             speicherSchreiben(localStorage, KEY_MODE_STORAGE, ort === localStorage ? 'dauerhaft' : 'sitzung');
-            speicherSchreiben(anderer, KEY_STORAGE, null);
+            speicherSchreiben(anderer, keyStorage(), null);
             if (!wert) {
-                speicherSchreiben(ort, KEY_STORAGE, null);
+                speicherSchreiben(ort, keyStorage(), null);
                 $('keyStatus').textContent = t('key_removed');
             } else {
-                speicherSchreiben(ort, KEY_STORAGE, wert);
+                speicherSchreiben(ort, keyStorage(), wert);
                 $('keyStatus').textContent = ort === localStorage ? t('key_saved_permanent') : t('key_saved_session');
             }
             aktualisiereKeyHinweis();
@@ -1425,6 +1553,40 @@
 
         function aktualisiereKeyHinweis() {
             $('noKeyCallout').hidden = !!aktuellerKey() || optionen.modus === 'llama';
+        }
+
+        // Texte, Modell-Auswahl und Schalter passend zum gewaehlten Anbieter
+        function aktualisiereAnbieter() {
+            const a = anbieter();
+            $('anbieterWahl').value = a;
+            $('anbieterHint').hidden = a === 'gemini';
+            document.querySelectorAll('[data-anbieter-text]').forEach(el => {
+                const basis = el.getAttribute('data-anbieter-text');
+                const dict = window.SD_I18N[window.SD_LANG || 'de'] || window.SD_I18N.de;
+                const key = a === 'gemini' || dict[basis + '_' + a] == null ? basis : basis + '_' + a;
+                el.setAttribute('data-i18n', key);
+                if (el.hasAttribute('data-i18n-html')) el.innerHTML = t(key); else el.textContent = t(key);
+            });
+            const feld = $('onlineModellFeld');
+            const sel = $('onlineModell');
+            if (ANBIETER[a].modelle) {
+                sel.innerHTML = '';
+                ANBIETER[a].modelle.forEach(([id, textKey]) => {
+                    const o = document.createElement('option');
+                    o.value = id; o.textContent = t(textKey);
+                    sel.appendChild(o);
+                });
+                sel.value = a === 'openai' ? optionen.openaiModell : optionen.claudeModell;
+                if (!sel.value) sel.selectedIndex = 0;
+                feld.hidden = false;
+            } else {
+                feld.hidden = true;
+            }
+            // Python-Rechnen und Link-Lesen gibt es nur bei Gemini
+            $('optCodeZeile').hidden = a !== 'gemini';
+            ladeKeyFeld();
+            aktualisiereLinkAktionen();
+            document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = optionen.modus === 'llama' || a !== 'gemini'; });
         }
 
         // ------------------------------------------------------------
@@ -1479,6 +1641,9 @@
                 if (typeof o.wiki === 'boolean') optionen.wiki = o.wiki;
                 if (o.modus === 'gemini' || o.modus === 'llama') optionen.modus = o.modus;
                 if (o.llamaModell === 'auto' || window.SDLotseModelle.KATALOG[o.llamaModell]) optionen.llamaModell = o.llamaModell;
+                if (ANBIETER[o.anbieter]) optionen.anbieter = o.anbieter;
+                if (ANBIETER.openai.modelle.some(m => m[0] === o.openaiModell)) optionen.openaiModell = o.openaiModell;
+                if (ANBIETER.claude.modelle.some(m => m[0] === o.claudeModell)) optionen.claudeModell = o.claudeModell;
             } catch (e) { /* Standardwerte */ }
             $('optMemory').checked = optionen.memory;
             $('optCode').checked = optionen.code;
@@ -1574,7 +1739,7 @@
 
         function aktualisiereLinkAktionen() {
             const links = findeLinks($('input').value);
-            const zeigen = links.length > 0 && optionen.modus !== 'llama' && !sendetGerade;
+            const zeigen = links.length > 0 && optionen.modus !== 'llama' && anbieter() === 'gemini' && !sendetGerade;
             $('linkActions').hidden = !zeigen;
             if (zeigen) {
                 const cv = lebenslaufAngaben();
@@ -1896,8 +2061,8 @@
             }
             const quelle = document.createElement('span');
             quelle.className = 'src-label';
-            quelle.textContent = (eintrag.quelle === 'llama' ? t('src_llama') : t('src_gemini')) +
-                (eintrag.grounding && eintrag.grounding.suchen && eintrag.grounding.suchen.length ? ' · ' + t('search_used') : '');
+            quelle.textContent = (eintrag.quelle === 'llama' ? t('src_llama') : eintrag.quelle === 'openai' ? t('src_openai') : eintrag.quelle === 'claude' ? t('src_claude') : t('src_gemini')) +
+                (eintrag.grounding && eintrag.grounding.suchen && eintrag.grounding.suchen.length ? ' · ' + t(eintrag.quelle === 'openai' || eintrag.quelle === 'claude' ? 'search_used_online' : 'search_used') : '');
             actions.appendChild(quelle);
             wrap.appendChild(actions);
             return wrap;
@@ -2348,6 +2513,186 @@
             });
         }
 
+        // ------------------------------------------------------------
+        // OpenAI (ChatGPT) und Anthropic (Claude) mit eigenem Schluessel
+        // ------------------------------------------------------------
+        // Verlauf in eine neutrale Form bringen: Text, Bilder, PDFs.
+        // Code-Teile von Gemini werden zu Text, damit andere KIs sie verstehen.
+        function neutralerVerlauf() {
+            const kontext = verlauf.slice(-MAX_HISTORY_SENT);
+            const liste = [];
+            kontext.forEach(e => {
+                const inhalt = [];
+                e.parts.forEach(p => {
+                    if (p.thought) return;
+                    if (typeof p.text === 'string' && p.text.trim()) inhalt.push({ typ: 'text', text: p.text });
+                    else if (p.inlineData && /^image\//.test(p.inlineData.mimeType || '')) inhalt.push({ typ: 'bild', mime: p.inlineData.mimeType, data: p.inlineData.data });
+                    else if (p.inlineData && p.inlineData.mimeType === 'application/pdf') inhalt.push({ typ: 'pdf', data: p.inlineData.data, name: p._name || 'dokument.pdf' });
+                    else if (p.executableCode) inhalt.push({ typ: 'text', text: '```python\n' + (p.executableCode.code || '') + '\n```' });
+                    else if (p.codeExecutionResult) inhalt.push({ typ: 'text', text: 'Ergebnis:\n' + (p.codeExecutionResult.output || '') });
+                });
+                if (!inhalt.length) return;
+                const role = e.role === 'model' ? 'assistant' : 'user';
+                const letzte = liste[liste.length - 1];
+                if (letzte && letzte.role === role) letzte.inhalt.push(...inhalt);
+                else liste.push({ role, inhalt });
+            });
+            while (liste.length && liste[0].role !== 'user') liste.shift();
+            return liste;
+        }
+
+        function onlineSystemPrompt(a, modell) {
+            return SYSTEM_PROMPT + '\n\nDu laeufst ueber ' + (a === 'openai' ? 'OpenAI (Modell ' + modell + ')' : 'Anthropic Claude (Modell ' + modell + ')') +
+                ' mit dem eigenen API-Schluessel der Person. Python-Code ausfuehren kannst du hier nicht - rechne sorgfaeltig und zeige den Rechenweg.' +
+                datumHinweis() + sprachHinweis();
+        }
+
+        // Gemeinsame Fehlerbehandlung fuer OpenAI und Claude
+        async function onlineFehler(a, antwort) {
+            let detail = '', code = '';
+            try {
+                const d = await antwort.json();
+                const err = d.error || {};
+                detail = err.message || '';
+                code = err.code || err.type || '';
+            } catch (e) { /* egal */ }
+            const name = anbieterName(a);
+            if (antwort.status === 401 || antwort.status === 403 || /invalid.?api.?key|authentication/i.test(code + ' ' + detail)) return new Error(t('err_key_rejected_online', { name }));
+            if (/insufficient_quota|credit balance|billing/i.test(code + ' ' + detail)) return new Error(t('err_guthaben_' + a));
+            if (antwort.status === 429) return new Error(t('err_rate_online', { name }));
+            if (antwort.status === 529 || antwort.status === 503) return new Error(t('err_ueberlastet', { name }));
+            return new Error(t('err_anbieter', { name, status: antwort.status }) + (detail ? ' – ' + detail : ''));
+        }
+
+        // Laesst die Websuche weg, wenn der Anbieter sie ablehnt (z. B. nicht
+        // freigeschaltet) - und schreibt das als Hinweis unter die Antwort.
+        async function mitSuchRueckfall(a, anfrageMitSuche) {
+            const hinweise = [];
+            let suche = optionen.suche;
+            let antwort;
+            try {
+                antwort = await anfrageMitSuche(suche);
+                if (!antwort.ok && suche && antwort.status === 400) {
+                    let detail = '';
+                    try { detail = JSON.stringify(await antwort.clone().json()); } catch (e) { /* egal */ }
+                    if (/web.?search|tool/i.test(detail)) {
+                        suche = false;
+                        hinweise.push('search_unavailable_online');
+                        antwort = await anfrageMitSuche(false);
+                    }
+                }
+            } catch (e) {
+                throw new Error(t('err_network_online', { name: anbieterName(a) }));
+            }
+            if (!antwort.ok) throw await onlineFehler(a, antwort);
+            return { daten: await antwort.json(), hinweise };
+        }
+
+        async function frageOpenAI() {
+            const key = aktuellerKey();
+            if (!key) throw new Error(t('err_no_key_openai'));
+            const modell = optionen.openaiModell;
+            const input = neutralerVerlauf().map(n => {
+                if (n.role === 'assistant') return { role: 'assistant', content: n.inhalt.filter(i => i.typ === 'text').map(i => i.text).join('\n\n') };
+                return {
+                    role: 'user',
+                    content: n.inhalt.map(i => i.typ === 'bild' ? { type: 'input_image', image_url: 'data:' + i.mime + ';base64,' + i.data }
+                        : i.typ === 'pdf' ? { type: 'input_file', filename: i.name, file_data: 'data:application/pdf;base64,' + i.data }
+                        : { type: 'input_text', text: i.text })
+                };
+            }).filter(n => n.content && n.content.length);
+            const { daten, hinweise } = await mitSuchRueckfall('openai', (suche) => fetch('https://api.openai.com/v1/responses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                body: JSON.stringify(Object.assign({
+                    model: modell,
+                    instructions: onlineSystemPrompt('openai', modell),
+                    input,
+                    reasoning: { effort: 'low' },
+                    max_output_tokens: 8000,
+                    store: false
+                }, suche ? { tools: [{ type: 'web_search' }] } : {}))
+            }));
+            let text = '';
+            const quellen = [];
+            let gesucht = false;
+            (daten.output || []).forEach(item => {
+                if (item.type === 'web_search_call') gesucht = true;
+                if (item.type !== 'message') return;
+                (item.content || []).forEach(c => {
+                    if (c.type !== 'output_text') return;
+                    text += (text ? '\n\n' : '') + (c.text || '');
+                    (c.annotations || []).forEach(an => {
+                        if (an.type === 'url_citation' && /^https?:\/\//.test(an.url || '') && !quellen.some(q => q.uri === an.url)) {
+                            quellen.push({ uri: an.url, title: an.title || an.url });
+                        }
+                    });
+                });
+            });
+            if (!text.trim()) throw new Error(t('err_empty_online', { name: anbieterName('openai') }));
+            if (daten.status === 'incomplete') hinweise.push('antwort_gekuerzt');
+            if (findeLinks(letzteNachrichtDerPerson()).length) hinweise.push('link_nur_gemini');
+            const grounding = (quellen.length || gesucht) ? { quellen: quellen.slice(0, 8), suchen: gesucht ? ['web'] : [], html: '' } : null;
+            return { parts: [{ text }], grounding, links: null, hinweise };
+        }
+
+        async function frageClaude() {
+            const key = aktuellerKey();
+            if (!key) throw new Error(t('err_no_key_claude'));
+            const modell = optionen.claudeModell;
+            const messages = neutralerVerlauf().map(n => {
+                if (n.role === 'assistant') return { role: 'assistant', content: n.inhalt.filter(i => i.typ === 'text').map(i => i.text).join('\n\n') || '…' };
+                return {
+                    role: 'user',
+                    content: n.inhalt.map(i => i.typ === 'bild' ? { type: 'image', source: { type: 'base64', media_type: i.mime, data: i.data } }
+                        : i.typ === 'pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: i.data } }
+                        : { type: 'text', text: i.text })
+                };
+            });
+            const { daten, hinweise } = await mitSuchRueckfall('claude', (suche) => fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': key,
+                    'anthropic-version': '2023-06-01',
+                    // Anthropic verlangt diese Angabe, wenn der Browser direkt anfragt
+                    // (der Schluessel ist der eigene Schluessel der Person).
+                    'anthropic-dangerous-direct-browser-access': 'true'
+                },
+                body: JSON.stringify(Object.assign({
+                    model: modell,
+                    max_tokens: 8000,
+                    system: onlineSystemPrompt('claude', modell),
+                    messages
+                }, suche ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }] } : {}))
+            }));
+            let text = '';
+            const quellen = [];
+            let gesucht = false;
+            const merke = (url, title) => {
+                if (/^https?:\/\//.test(url || '') && !quellen.some(q => q.uri === url)) quellen.push({ uri: url, title: title || url });
+            };
+            (daten.content || []).forEach(b => {
+                if (b.type === 'server_tool_use') gesucht = true;
+                if (b.type === 'text') {
+                    text += b.text || '';
+                    (b.citations || []).forEach(c => merke(c.url, c.title));
+                }
+            });
+            // Keine Zitate im Text, aber gesucht: die gefundenen Seiten nennen
+            if (!quellen.length) {
+                (daten.content || []).forEach(b => {
+                    if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) b.content.forEach(r => merke(r.url, r.title));
+                });
+            }
+            text = text.trim();
+            if (!text) throw new Error(t('err_empty_online', { name: anbieterName('claude') }));
+            if (daten.stop_reason === 'max_tokens') hinweise.push('antwort_gekuerzt');
+            if (findeLinks(letzteNachrichtDerPerson()).length) hinweise.push('link_nur_gemini');
+            const grounding = (quellen.length || gesucht) ? { quellen: quellen.slice(0, 8), suchen: gesucht ? ['web'] : [], html: '' } : null;
+            return { parts: [{ text }], grounding, links: null, hinweise };
+        }
+
         async function frageGemini() {
             const key = aktuellerKey();
             if (!key) throw new Error(t('err_no_key'));
@@ -2468,13 +2813,14 @@
             aktualisiereSendenKnopf();
             zeigeTippt();
             try {
-                const ergebnis = await frageGemini();
+                const a = anbieter();
+                const ergebnis = a === 'openai' ? await frageOpenAI() : a === 'claude' ? await frageClaude() : await frageGemini();
                 entferneTippt();
-                const eintrag = { role: 'model', parts: ergebnis.parts, quelle: 'gemini' };
+                const eintrag = { role: 'model', parts: ergebnis.parts, quelle: a };
                 if (ergebnis.grounding) eintrag.grounding = ergebnis.grounding;
                 if (ergebnis.links) eintrag.links = ergebnis.links;
                 // Wichtigster Hinweis zuerst (Link-Probleme betreffen die Antwort direkt)
-                const reihenfolge = ['link_unavailable', 'link_failed', 'search_unavailable'];
+                const reihenfolge = ['link_unavailable', 'link_failed', 'link_nur_gemini', 'antwort_gekuerzt', 'search_unavailable', 'search_unavailable_online'];
                 const h = reihenfolge.find(k => (ergebnis.hinweise || []).includes(k));
                 if (h) eintrag.hinweis = h;
                 verlauf.push(eintrag);
@@ -2512,7 +2858,7 @@
                     return;
                 }
             } else if (!aktuellerKey()) {
-                zeigeFehler(t('err_no_key'));
+                zeigeFehler(tA('err_no_key'));
                 $('settings').classList.add('open');
                 $('settingsBtn').setAttribute('aria-expanded', 'true');
                 $('apiKey').focus();
@@ -3087,7 +3433,7 @@
                 b.setAttribute('aria-pressed', an ? 'true' : 'false');
             });
             const istLlama = modus === 'llama';
-            document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = istLlama; });
+            document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = istLlama || anbieter() !== 'gemini'; });
             aktualisiereLinkAktionen();
             $('privacyLlama').hidden = !istLlama;
             $('privacyGemini').hidden = istLlama;
@@ -3121,6 +3467,17 @@
             $('settingsBtn').setAttribute('aria-expanded', offen ? 'true' : 'false');
         };
         $('saveKeyBtn').onclick = speichereKey;
+        $('anbieterWahl').onchange = () => {
+            optionen.anbieter = $('anbieterWahl').value;
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            aktualisiereAnbieter();
+            setzeModus('gemini');
+        };
+        $('onlineModell').onchange = () => {
+            if (anbieter() === 'openai') optionen.openaiModell = $('onlineModell').value;
+            if (anbieter() === 'claude') optionen.claudeModell = $('onlineModell').value;
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+        };
         document.querySelectorAll('.mode-btn').forEach(b => { b.onclick = () => setzeModus(b.dataset.mode); });
         $('llamaStartBtn').onclick = () => starteLlama(false);
         $('llamaModel').onchange = () => {
@@ -3202,7 +3559,7 @@
 
         document.addEventListener('sd-lang-changed', () => {
             rendereAlles();
-            ladeKeyFeld();
+            aktualisiereAnbieter();
             aktualisiereSendenKnopf();
             if (optionen.modus === 'llama') aktualisiereLlamaKarte();
         });
@@ -3212,7 +3569,7 @@
         // ------------------------------------------------------------
         ladeOptionen();
         if (optionen.memory) ladeVerlauf();
-        ladeKeyFeld();
+        aktualisiereAnbieter();
         rendereAlles();
         pruefeLotseAbsturz();
         setzeModus(optionen.modus);
