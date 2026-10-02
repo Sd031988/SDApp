@@ -88,7 +88,7 @@
       ein_regeln: 'Hinweis: Ein Teil der Felder wurde ohne KI anhand des Aufbaus erkannt – bitte besonders genau prüfen. Mit Gemini, ChatGPT oder Claude wird die Zuordnung meist vollständiger.',
       ein_ki_fehler: 'Die KI hat nicht geantwortet ({msg}). Die Felder unten wurden ohne KI anhand des Aufbaus erkannt – bitte genau prüfen.',
       ein_privat_lotse: '🔒 SD Lotse liest lokal – die Datei verlässt dein Gerät nicht.',
-      ein_privat_online: '☁️ Der Text der Datei wird zur Zuordnung an {firma} gesendet.',
+      ein_privat_online: '☁️ Die Datei und ihr Text werden zur Zuordnung an {firma} gesendet.',
       dlg_titel: '🤖 KI-Hilfe zum Dokument',
       dlg_quelle: 'Erkannter Text: {n} Zeichen',
       dlg_gekuerzt: ' (für SD Lotse auf den Anfang gekürzt)',
@@ -155,7 +155,7 @@
       ein_regeln: 'Note: some fields were recognized without AI from the layout – please check them carefully. Gemini, ChatGPT or Claude usually assign more completely.',
       ein_ki_fehler: 'The AI did not answer ({msg}). The fields below were recognized without AI from the layout – please check carefully.',
       ein_privat_lotse: '🔒 SD Lotse reads locally – the file never leaves your device.',
-      ein_privat_online: '☁️ The text of the file is sent to {firma} for sorting.',
+      ein_privat_online: '☁️ The file and its text are sent to {firma} for sorting.',
       dlg_titel: '🤖 AI help for this document',
       dlg_quelle: 'Recognized text: {n} characters',
       dlg_gekuerzt: ' (shortened to the beginning for SD Lotse)',
@@ -514,7 +514,9 @@
     const key = geminiKey();
     if (!key) throw new Error(tx('kein_key'));
     if (!window.sdGemini) throw new Error(tx('gemini_fehler', { status: 'gemini-modelle.js fehlt' }));
-    const body = { contents: [{ role: 'user', parts: [{ text: String(prompt) }] }] };
+    // opt.datei = { mime, data (Base64), name }: Original-PDF/Foto mitschicken
+    const teile = opt.datei ? [{ inlineData: { mimeType: opt.datei.mime, data: opt.datei.data } }] : [];
+    const body = { contents: [{ role: 'user', parts: teile.concat([{ text: String(prompt) }]) }] };
     if (opt.system) body.system_instruction = { parts: [{ text: opt.system }] };
     let antwort;
     try {
@@ -553,13 +555,24 @@
         antwort = await fetch('https://api.openai.com/v1/responses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-          body: JSON.stringify({ model: modell, instructions: system, input: String(prompt), reasoning: { effort: 'low' }, max_output_tokens: Math.max(2000, (opt.maxTokens || 1200) * 3), store: false })
+          body: JSON.stringify({ model: modell, instructions: system,
+            input: opt.datei ? [{ role: 'user', content: [
+              /^image\//.test(opt.datei.mime)
+                ? { type: 'input_image', image_url: 'data:' + opt.datei.mime + ';base64,' + opt.datei.data }
+                : { type: 'input_file', filename: opt.datei.name || 'dokument.pdf', file_data: 'data:' + opt.datei.mime + ';base64,' + opt.datei.data },
+              { type: 'input_text', text: String(prompt) }] }] : String(prompt),
+            reasoning: { effort: 'low' }, max_output_tokens: Math.max(2000, (opt.maxTokens || 1200) * 3), store: false })
         });
       } else {
         antwort = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-          body: JSON.stringify({ model: modell, max_tokens: Math.max(1500, opt.maxTokens || 1200), system, messages: [{ role: 'user', content: String(prompt) }] })
+          body: JSON.stringify({ model: modell, max_tokens: Math.max(1500, opt.maxTokens || 1200), system,
+            messages: [{ role: 'user', content: opt.datei ? [
+              /^image\//.test(opt.datei.mime)
+                ? { type: 'image', source: { type: 'base64', media_type: opt.datei.mime, data: opt.datei.data } }
+                : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: opt.datei.data } },
+              { type: 'text', text: String(prompt) }] : String(prompt) }] })
         });
       }
     } catch (e) {
@@ -655,14 +668,23 @@
       const seiten = [];
       for (let n = 1; n <= pdf.numPages; n++) {
         const inhalt = await (await pdf.getPage(n)).getTextContent();
-        let t = '', y = null;
+        let t = '', y = null, ende = null;
         inhalt.items.forEach(it => {
           if (typeof it.str !== 'string') return;
+          const x = it.transform ? it.transform[4] : null;
           const neuY = it.transform ? Math.round(it.transform[5]) : null;
-          if (y !== null && neuY !== null && Math.abs(neuY - y) > 2 && !t.endsWith('\n')) t += '\n';
+          if (y !== null && neuY !== null && Math.abs(neuY - y) > 2) {
+            if (!t.endsWith('\n')) t += '\n';
+          } else if (ende !== null && x !== null && it.str && !t.endsWith('\n')) {
+            // Luecken in einer Zeile: Leerzeichen bzw. " | " bei Tabellen/Spalten
+            const luecke = x - ende;
+            if (luecke > 25) t += ' | ';
+            else if (luecke > 1.5 && !/\s$/.test(t) && !/^\s/.test(it.str)) t += ' ';
+          }
           t += it.str;
           if (it.hasEOL) t += '\n';
           y = neuY;
+          ende = x !== null ? x + (it.width || 0) : null;
         });
         seiten.push(t);
       }
@@ -798,7 +820,9 @@
       $q('[data-waehlen]').disabled = true;
       try {
         let text = await leseDatei(file, status);
-        if (!text || !text.trim()) throw new Error(tx('ein_leer'));
+        const kannOriginal = anbieter() !== 'lotse' && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\//.test(file.type || ''));
+        if ((!text || !text.trim()) && !kannOriginal) throw new Error(tx('ein_leer'));
+        text = text || '';
         let gekuerzt = false;
         const istLotse = anbieter() === 'lotse';
         const grenze = istLotse ? 3000 : GEMINI_MAX_ZEICHEN;
@@ -809,8 +833,20 @@
         status(tx('ein_ki_laeuft'));
         let werte = {};
         let kiFehler = null;
+        // Online-KIs bekommen zusaetzlich das Original (PDF/Foto): sie sehen
+        // dann auch das Layout (Spalten, Tabellen) statt nur den Rohtext.
+        let datei = null;
+        const typOk = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '') || /^image\/(jpeg|png|webp|gif)$/.test(file.type || '');
+        if (!istLotse && typOk && file.size <= 12 * 1024 * 1024) {
+          try {
+            const url = await new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fehler; r.readAsDataURL(file); });
+            datei = { mime: /\.pdf$/i.test(file.name || '') ? 'application/pdf' : file.type, data: String(url).split(',')[1] || '', name: file.name };
+          } catch (e) { datei = null; }
+        }
         try {
-          const antwort = await schreibe(baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked), { maxTokens: istLotse ? 1100 : 2500 });
+          const prompt = baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked) +
+            (datei ? '\n\nDas Original-Dokument ist zusätzlich angehängt – nutze es, um Spalten und Tabellen richtig zuzuordnen.' : '');
+          const antwort = await schreibe(prompt, { maxTokens: istLotse ? 1100 : 2500, datei });
           werte = leseEinleseAntwort(antwort, opt.felder);
         } catch (err) {
           kiFehler = err;

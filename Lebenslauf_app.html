@@ -2110,7 +2110,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=10"></script>
+    <script src="sd-ki.js?v=11"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -3339,7 +3339,7 @@
                 if (!liste.length) return;
                 if (k === 'erfahrung' || k === 'ausbildung') {
                     // "03/2019 - heute  Lageristin" -> "03/2019 - heute: Lageristin"
-                    liste = liste.map(z => z.replace(/^((?:\d{1,2}[./])?\d{4}\s*[-–]\s*(?:(?:\d{1,2}[./])?\d{4}|heute|jetzt|aktuell|today|present))\s*[:|]?\s*/i, '$1: '));
+                    liste = liste.map(z => z.replace(/^((?:seit|since|ab)?\s*(?:\d{1,2}[./])?\d{4}(?:\s*[-–]\s*(?:(?:\d{1,2}[./])?\d{4}|heute|jetzt|aktuell|today|present))?)\s*[:|]?\s+(?=\S)/i, (m, zeit) => zeit.trim() + ': '));
                     w[k] = liste.join('\n');
                 } else {
                     w[k] = liste.join(', ').replace(/\s*,\s*,/g, ',');

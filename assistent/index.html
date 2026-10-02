@@ -2392,15 +2392,25 @@
         // Zeilen einer PDF-Seite wieder zusammensetzen (pdf.js liefert
         // einzelne Textstuecke mit Position).
         function seitenText(inhalt) {
+            // Zeilen nach der Hoehe trennen; innerhalb einer Zeile Luecken
+            // als Leerzeichen bzw. " | " (Tabellen, Spalten) wiedergeben.
             let text = '';
-            let letztesY = null;
+            let letztesY = null, letztesEnde = null;
             inhalt.items.forEach(it => {
                 if (typeof it.str !== 'string') return;
+                const x = it.transform ? it.transform[4] : null;
                 const y = it.transform ? Math.round(it.transform[5]) : null;
-                if (letztesY !== null && y !== null && Math.abs(y - letztesY) > 2 && !text.endsWith('\n')) text += '\n';
+                if (letztesY !== null && y !== null && Math.abs(y - letztesY) > 2) {
+                    if (!text.endsWith('\n')) text += '\n';
+                } else if (letztesEnde !== null && x !== null && it.str && !text.endsWith('\n')) {
+                    const luecke = x - letztesEnde;
+                    if (luecke > 25) text += ' | ';
+                    else if (luecke > 1.5 && !/\s$/.test(text) && !/^\s/.test(it.str)) text += ' ';
+                }
                 text += it.str;
                 if (it.hasEOL) text += '\n';
                 letztesY = y;
+                letztesEnde = x !== null ? x + (it.width || 0) : null;
             });
             return text;
         }
