@@ -1165,23 +1165,106 @@
             }
         }
 
+        /* Untere Umschaltleiste (Bearbeiten / Vorschau) - nur auf dem Handy
+           sichtbar, am Computer ausgeblendet. */
+        .mobile-tabbar {
+            display: none;
+        }
+
         @media (max-width: 680px) {
-            /* Auch auf dem Handy sollen Formular (Sidebar) und Vorschau
-               nebeneinander bleiben statt untereinander zu stehen - beide
-               Spalten scrollen dafuer unabhaengig voneinander senkrecht
-               (wie am Computer), nur schmaler. Die Formular-Spalte
-               schrumpft hier staerker als auf Laptop-Breiten, damit noch
-               spuerbar Platz fuer die Vorschau daneben bleibt. */
+            /* Eigenes Handy-Layout: statt Formular und Vorschau schmal
+               nebeneinander zu quetschen (PC-Ansicht), bekommt jede Ansicht
+               die volle Bildschirmbreite. Unten wechselt eine feste Leiste
+               zwischen "Bearbeiten" und "Vorschau", die Seite scrollt ganz
+               normal wie eine Handy-Seite. */
+            html, body {
+                height: auto;
+            }
+
+            html {
+                background: #e9eee9;
+            }
+
+            body {
+                display: block;
+                height: auto;
+                min-height: 100vh;
+                background-attachment: fixed;
+                overflow: visible;
+                padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+            }
+
             .editor-sidebar {
-                width: clamp(130px, 42vw, 220px);
-                flex: 0 0 clamp(130px, 42vw, 220px);
-                padding: 12px;
+                width: 100%;
+                flex: none;
+                height: auto;
+                overflow: visible;
+                padding: 16px;
+                border-right: 0;
+                box-shadow: none;
                 box-sizing: border-box;
             }
 
             .preview-area {
-                padding: 12px 8px;
+                display: block;
+                height: auto;
+                overflow: visible;
+                padding: 16px 12px;
                 box-sizing: border-box;
+            }
+
+            body.mobile-tab-edit .preview-area {
+                display: none;
+            }
+
+            body.mobile-tab-preview .editor-sidebar {
+                display: none;
+            }
+
+            .mobile-tabbar {
+                display: flex;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 50;
+                background: #ffffff;
+                border-top: 1px solid var(--line);
+                box-shadow: 0 -4px 16px rgba(23, 42, 58, 0.08);
+                padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+                gap: 8px;
+            }
+
+            .mobile-tabbar button {
+                flex: 1;
+                min-height: 48px;
+                border: 0;
+                border-radius: 10px;
+                background: transparent;
+                color: var(--muted);
+                font-family: inherit;
+                font-size: 0.95rem;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .mobile-tabbar button.active {
+                background: var(--accent-soft);
+                color: var(--accent);
+            }
+
+            /* Update-Hinweis ueber der Umschaltleiste anzeigen statt sie
+               zu verdecken. */
+            #sd-update-banner {
+                bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+
+            /* 16px verhindert, dass iPhones beim Antippen eines Feldes
+               automatisch hineinzoomen. */
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 16px;
             }
 
             /* Das A4-Blatt darf auf dem Handy nicht mehr in echten
@@ -1523,7 +1606,7 @@
                 cloud_load_fehler_alert: 'Fehler beim Laden aus der Cloud: ',
                 spellcheck_kein_text: 'Kein Text zum Prüfen vorhanden.', spellcheck_pruefe: 'Prüfe ...',
                 spellcheck_fehler: 'Prüfung gerade nicht möglich (Internetverbindung nötig). ',
-                update_verfuegbar: '🔄 Eine neue Version ist verfügbar. ', update_btn: 'Jetzt aktualisieren',
+                update_verfuegbar: '🔄 Eine neue Version ist verfügbar. ', update_btn: 'Jetzt aktualisieren', tab_bearbeiten: '✏️ Bearbeiten', tab_vorschau: '👁️ Vorschau',
                 dokument_default: 'Dokument', bewerbungsmappe: 'Bewerbungsmappe',
                 muster_kuendigung: {
                     arbeit: ['Personalabteilung Musterfirma GmbH\nMusterstraße 1\n12345 Musterstadt', 'ARB-2026-001', 'Hiermit kündige ich meinen Arbeitsvertrag fristgerecht zum nächstmöglichen Zeitpunkt. Bitte bestätigen Sie mir den Beendigungszeitpunkt schriftlich und stellen Sie mir ein qualifiziertes Arbeitszeugnis aus.'],
@@ -1657,7 +1740,7 @@
                 cloud_load_fehler_alert: 'Error loading from the cloud: ',
                 spellcheck_kein_text: 'No text to check.', spellcheck_pruefe: 'Checking ...',
                 spellcheck_fehler: 'Check currently unavailable (internet connection required). ',
-                update_verfuegbar: '🔄 A new version is available. ', update_btn: 'Update now',
+                update_verfuegbar: '🔄 A new version is available. ', update_btn: 'Update now', tab_bearbeiten: '✏️ Edit', tab_vorschau: '👁️ Preview',
                 dokument_default: 'Document', bewerbungsmappe: 'Application folder',
                 muster_kuendigung: {
                     arbeit: ['HR Department, Sample Company Ltd.\nSample Street 1\n12345 Sample City', 'ARB-2026-001', 'I hereby terminate my employment contract with proper notice, effective at the earliest possible date. Please confirm the termination date in writing and issue me a qualified reference letter.'],
@@ -1704,7 +1787,11 @@
     </script>
 </head>
 
-<body>
+<body class="mobile-tab-edit">
+    <nav class="mobile-tabbar" aria-label="Ansicht wechseln">
+        <button type="button" id="mobile-tab-edit" class="active" onclick="sdMobileTab('edit')" data-i18n="tab_bearbeiten">✏️ Bearbeiten</button>
+        <button type="button" id="mobile-tab-preview" onclick="sdMobileTab('preview')" data-i18n="tab_vorschau">👁️ Vorschau</button>
+    </nav>
     <!-- Host für den Konto-/Login-Button (siehe sd-auth.js) -->
     <div id="sdAuthHost" style="position:fixed;top:10px;right:10px;z-index:9999;"></div>
     <script>window.SD_APP = 'schreibstudio';</script>
@@ -2522,6 +2609,7 @@
                         style.textContent =
                             '.ghost-placeholder:empty::before{content:none !important;}' +
                             '.editor-sidebar{display:none !important;}' +
+                            '.preview-area{display:block !important;}' +
                             '.a4-page{box-shadow:none !important;border-top:none !important;' +
                             'width:210mm !important;min-height:297mm !important;margin:0 !important;padding:22mm !important;}' +
                             '.cv-section{break-inside:avoid;}';
@@ -2894,6 +2982,17 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
             navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
+        }
+        // Handy: zwischen Formular ("Bearbeiten") und Dokument ("Vorschau")
+        // umschalten. Am Computer ist die Leiste ausgeblendet und beide
+        // Bereiche stehen wie gewohnt nebeneinander.
+        function sdMobileTab(tab) {
+            document.body.classList.toggle('mobile-tab-edit', tab === 'edit');
+            document.body.classList.toggle('mobile-tab-preview', tab === 'preview');
+            document.getElementById('mobile-tab-edit').classList.toggle('active', tab === 'edit');
+            document.getElementById('mobile-tab-preview').classList.toggle('active', tab === 'preview');
+            if (tab === 'preview' && typeof updateVorschau === 'function') updateVorschau();
+            window.scrollTo(0, 0);
         }
         function sdUpdateBereit() {
             if (document.getElementById('sd-update-banner')) return;
