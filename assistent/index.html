@@ -241,6 +241,41 @@
             line-height: 1.5;
         }
 
+        .sources {
+            margin-top: 6px;
+            max-width: min(620px, 92%);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--muted);
+        }
+
+        .sources ol {
+            margin: 2px 0 0;
+            padding-left: 20px;
+        }
+
+        .sources a {
+            color: var(--accent);
+            overflow-wrap: anywhere;
+        }
+
+        .search-suggestions {
+            margin-top: 6px;
+            max-width: min(620px, 92%);
+            overflow-x: auto;
+        }
+
+        .msg-note {
+            margin-top: 6px;
+            max-width: min(620px, 92%);
+            font-size: 0.78rem;
+            color: var(--muted);
+            background: #fbf5e8;
+            border: 1px solid #ead9b6;
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+
         .credit {
             font-size: 0.74rem;
         }
@@ -873,7 +908,7 @@
                 llama_tech: 'Technischer Grund',
                 llama_not_started: 'Bitte starte SD Lotse zuerst oben mit „Herunterladen & starten“.',
                 llama_no_attach: 'SD Lotse kann keine Bilder oder PDFs ansehen. Für Anhänge bitte oben auf ☁️ Gemini wechseln.',
-                llama_privacy: '🔒 SD Lotse läuft komplett auf deinem Gerät – deine Nachrichten werden nicht gesendet. Nur das Modell wird einmalig heruntergeladen.',
+                llama_privacy: '🔒 SD Lotse läuft komplett auf deinem Gerät – deine Nachrichten werden nicht gesendet. Nur bei Wissensfragen schlägt er auf Wikipedia nach (abschaltbar unter ⚙️). Das Modell wird einmalig heruntergeladen.',
                 llama_settings_lbl: 'SD Lotse (lokal)',
                 llama_delete: '🗑️ SD Lotse vom Gerät löschen',
                 llama_deleted: 'SD Lotse gelöscht – Speicher wieder frei.',
@@ -881,6 +916,14 @@
                 stop: '■ Stopp',
                 src_gemini: '☁️ Gemini',
                 src_llama: '🔒 SD Lotse (lokal)',
+                opt_search: '🌐 Websuche: Gemini darf selbst bei Google suchen, wenn eine Frage aktuelle Infos braucht (mit Quellenangabe). Ohne hinterlegte Zahlungsart bei Google entstehen keine Kosten – ist die Suche nicht im Gratis-Kontingent, antwortet die KI ohne Suche.',
+                opt_wiki: '📚 Nachschlagen: SD Lotse darf bei Wissensfragen auf Wikipedia nachschlagen (die Frage wird dazu an Wikipedia gesendet).',
+                sources: 'Quellen',
+                search_used: '🌐 mit Google-Suche',
+                search_unavailable: 'ℹ️ Die Google-Suche ist mit deinem Schlüssel gerade nicht verfügbar (vermutlich nicht im Gratis-Kontingent). Diese Antwort ist ohne Websuche entstanden.',
+                wiki_source: '📚 Nachgeschlagen bei Wikipedia',
+                ab_search_h: '🌐 Selbst nachsuchen',
+                ab_search_p: 'Bei aktuellen Fragen sucht die KI selbst – Gemini bei Google, SD Lotse auf Wikipedia – und nennt die Quellen.',
                 ab_google_h: '🔎 Google KI-Modus',
                 ab_google_p: 'Frage zusätzlich bei Google stellen – öffnet sich daneben, der Assistent bleibt offen.'
             },
@@ -961,7 +1004,7 @@
                 llama_tech: 'Technical reason',
                 llama_not_started: 'Please start SD Lotse first with "Download & start" at the top.',
                 llama_no_attach: 'SD Lotse cannot look at images or PDFs. For attachments please switch to ☁️ Gemini at the top.',
-                llama_privacy: '🔒 SD Lotse runs entirely on your device – your messages are not sent anywhere. Only the model is downloaded once.',
+                llama_privacy: '🔒 SD Lotse runs entirely on your device – your messages are not sent anywhere. Only for knowledge questions it looks things up on Wikipedia (can be turned off under ⚙️). The model is downloaded once.',
                 llama_settings_lbl: 'SD Lotse (local)',
                 llama_delete: '🗑️ Delete SD Lotse from device',
                 llama_deleted: 'SD Lotse deleted – storage freed.',
@@ -969,6 +1012,14 @@
                 stop: '■ Stop',
                 src_gemini: '☁️ Gemini',
                 src_llama: '🔒 SD Lotse (local)',
+                opt_search: '🌐 Web search: Gemini may search Google itself when a question needs current information (with sources). Without a payment method on your Google account there are no costs – if search is not in the free quota, the AI answers without it.',
+                opt_wiki: '📚 Look-up: SD Lotse may look up knowledge questions on Wikipedia (the question is sent to Wikipedia for this).',
+                sources: 'Sources',
+                search_used: '🌐 with Google Search',
+                search_unavailable: 'ℹ️ Google Search is currently not available with your key (probably not in the free quota). This answer was created without web search.',
+                wiki_source: '📚 Looked up on Wikipedia',
+                ab_search_h: '🌐 Looks things up',
+                ab_search_p: 'For current questions the AI searches by itself – Gemini on Google, SD Lotse on Wikipedia – and names its sources.',
                 ab_google_h: '🔎 Google AI Mode',
                 ab_google_p: 'Also ask Google – opens next to this, the assistant stays open.'
             }
@@ -1024,6 +1075,10 @@
             </div>
             <label class="check"><input type="checkbox" id="optMemory" checked>
                 <span data-i18n="opt_memory">Gedächtnis: Gespräch in diesem Browser speichern</span></label>
+            <label class="check"><input type="checkbox" id="optSearch" checked>
+                <span data-i18n="opt_search">🌐 Websuche: Gemini darf selbst bei Google suchen</span></label>
+            <label class="check"><input type="checkbox" id="optWiki" checked>
+                <span data-i18n="opt_wiki">📚 Nachschlagen: SD Lotse darf auf Wikipedia nachschlagen</span></label>
             <label class="check"><input type="checkbox" id="optCode" checked>
                 <span data-i18n="opt_code">Python-Rechnen: die KI darf Python-Code ausführen</span></label>
             <div class="row">
@@ -1068,6 +1123,7 @@
                     <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
+                    <div class="ability"><strong data-i18n="ab_search_h">🌐 Selbst nachsuchen</strong><span data-i18n="ab_search_p">Bei aktuellen Fragen sucht die KI selbst.</span></div>
                     <div class="ability"><strong data-i18n="ab_google_h">🔎 Google KI-Modus</strong><span data-i18n="ab_google_p">Frage zusätzlich bei Google stellen.</span></div>
                 </div>
                 <div class="suggestions">
@@ -1126,7 +1182,10 @@
             'Firmen oder Zeugnisse; wenn du etwas nicht sicher weisst, sag das. Bei Steuer-, Rechts- ' +
             'oder Finanzfragen gib allgemeine Orientierung und weise darauf hin, dass du keine ' +
             'Beratung ersetzt. Wenn du rechnen musst und Code-Ausfuehrung verfuegbar ist, nutze sie ' +
-            'statt im Kopf zu rechnen. Halte Antworten uebersichtlich (kurze Absaetze, Listen wenn ' +
+            'statt im Kopf zu rechnen. Wenn eine Frage aktuelle oder ueberpruefbare Fakten braucht (Wetter, ' +
+            'Nachrichten, Preise, Termine, Oeffnungszeiten, Gesetze) und die Google-Suche verfuegbar ist, nutze ' +
+            'sie. Ohne Suche erfinde solche aktuellen Angaben NIE: sag ehrlich, dass du sie nicht aktuell weisst, ' +
+            'und empfiehl den Knopf "G↗" (Google KI-Modus). Halte Antworten uebersichtlich (kurze Absaetze, Listen wenn ' +
             'sinnvoll). Bei Bildern und PDFs beschreibe nur, was wirklich darin steht.';
 
         const $ = (id) => document.getElementById(id);
@@ -1160,7 +1219,7 @@
         let verlauf = [];
         let wartendeAnhaenge = [];   // [{ name, mime, data(base64), thumb }]
         let sendetGerade = false;
-        let optionen = { memory: true, code: true, modus: 'gemini', llamaModell: '1b' };
+        let optionen = { memory: true, code: true, suche: true, wiki: true, modus: 'gemini', llamaModell: '1b' };
 
         // ------------------------------------------------------------
         // Schluessel
@@ -1215,6 +1274,9 @@
             return verlauf.map(e => ({
                 role: e.role,
                 quelle: e.quelle,
+                grounding: e.grounding,
+                wiki: e.wiki,
+                hinweis: e.hinweis,
                 anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime })),
                 parts: e.parts.map(p => p.inlineData
                     ? { text: '[' + t('attachment_gone', { name: p._name || 'Datei' }) + ']', _hinweis: true }
@@ -1245,17 +1307,23 @@
                 const o = JSON.parse(speicherLesen(localStorage, OPTIONS_STORAGE) || '{}');
                 if (typeof o.memory === 'boolean') optionen.memory = o.memory;
                 if (typeof o.code === 'boolean') optionen.code = o.code;
+                if (typeof o.suche === 'boolean') optionen.suche = o.suche;
+                if (typeof o.wiki === 'boolean') optionen.wiki = o.wiki;
                 if (o.modus === 'gemini' || o.modus === 'llama') optionen.modus = o.modus;
                 if (o.llamaModell === '1b' || o.llamaModell === '3b') optionen.llamaModell = o.llamaModell;
             } catch (e) { /* Standardwerte */ }
             $('optMemory').checked = optionen.memory;
             $('optCode').checked = optionen.code;
+            $('optSearch').checked = optionen.suche;
+            $('optWiki').checked = optionen.wiki;
             $('llamaModel').value = optionen.llamaModell;
         }
 
         function speichereOptionen() {
             optionen.memory = $('optMemory').checked;
             optionen.code = $('optCode').checked;
+            optionen.suche = $('optSearch').checked;
+            optionen.wiki = $('optWiki').checked;
             speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
             if (optionen.memory) speichereVerlauf();
             else speicherSchreiben(localStorage, HISTORY_STORAGE, null);
@@ -1288,6 +1356,17 @@
                 return verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n');
             }
             return '';
+        }
+
+        // Aktuelles Datum/Uhrzeit fuer die KI (sonst kennt sie nur ihr
+        // Trainingsdatum und rechnet z. B. Fristen falsch).
+        function datumHinweis() {
+            try {
+                const jetzt = new Intl.DateTimeFormat(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE',
+                    { dateStyle: 'full', timeStyle: 'short' }).format(new Date());
+                const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                return '\n\nCurrent date and time for the user: ' + jetzt + (zone ? ' (' + zone + ')' : '') + '.';
+            } catch (e) { return ''; }
         }
 
         function sprachHinweis() {
@@ -1507,6 +1586,31 @@
             });
             wrap.appendChild(b);
 
+            if (eintrag.grounding && eintrag.grounding.quellen && eintrag.grounding.quellen.length) {
+                wrap.appendChild(quellenListe(t('sources'), eintrag.grounding.quellen));
+            }
+            if (eintrag.grounding && eintrag.grounding.html) {
+                // Von Google vorgeschriebene Anzeige der Suchvorschlaege. Das
+                // HTML/CSS kommt von Google und wird in einem abgeschotteten
+                // Bereich (Shadow DOM) angezeigt, damit es die Seite nicht verstellt.
+                const host = document.createElement('div');
+                host.className = 'search-suggestions';
+                const root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+                root.innerHTML = eintrag.grounding.html;
+                // Vorschlaege in neuem Tab oeffnen, damit der Assistent offen bleibt.
+                root.querySelectorAll('a').forEach(link => { link.target = '_blank'; link.rel = 'noopener noreferrer'; });
+                wrap.appendChild(host);
+            }
+            if (eintrag.wiki && eintrag.wiki.url) {
+                wrap.appendChild(quellenListe(t('wiki_source'), [{ uri: eintrag.wiki.url, title: eintrag.wiki.titel }]));
+            }
+            if (eintrag.hinweis) {
+                const note = document.createElement('div');
+                note.className = 'msg-note';
+                note.textContent = t(eintrag.hinweis);
+                wrap.appendChild(note);
+            }
+
             const actions = document.createElement('div');
             actions.className = 'msg-actions';
             const copyBtn = document.createElement('button');
@@ -1517,10 +1621,31 @@
             actions.appendChild(copyBtn);
             const quelle = document.createElement('span');
             quelle.className = 'src-label';
-            quelle.textContent = eintrag.quelle === 'llama' ? t('src_llama') : t('src_gemini');
+            quelle.textContent = (eintrag.quelle === 'llama' ? t('src_llama') : t('src_gemini')) +
+                (eintrag.grounding && eintrag.grounding.suchen && eintrag.grounding.suchen.length ? ' · ' + t('search_used') : '');
             actions.appendChild(quelle);
             wrap.appendChild(actions);
             return wrap;
+        }
+
+        function quellenListe(titel, quellen) {
+            const box = document.createElement('div');
+            box.className = 'sources';
+            const kopf = document.createElement('div');
+            kopf.textContent = titel + ':';
+            const ol = document.createElement('ol');
+            quellen.forEach(q => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = q.uri;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.textContent = q.title || q.uri;
+                li.appendChild(a);
+                ol.appendChild(li);
+            });
+            box.append(kopf, ol);
+            return box;
         }
 
         function zeigeFehler(text, wiederholen) {
@@ -1665,17 +1790,37 @@
             // Die Unterhaltung muss mit einer Nachricht der Person beginnen.
             while (kontext.length && kontext[0].role !== 'user') kontext.shift();
             const body = {
-                system_instruction: { parts: [{ text: SYSTEM_PROMPT + sprachHinweis() }] },
+                system_instruction: { parts: [{ text: SYSTEM_PROMPT + datumHinweis() + sprachHinweis() }] },
                 contents: kontext.map(e => ({ role: e.role, parts: bereinigeFuerApi(e.parts) }))
             };
-            if (optionen.code) body.tools = [{ code_execution: {} }];
+            const mitSuche = optionen.suche && !sucheHeuteNichtVerfuegbar();
+            const tools = [];
+            if (mitSuche) tools.push({ google_search: {} });
+            if (optionen.code) tools.push({ code_execution: {} });
+            if (tools.length) body.tools = tools;
 
             // Nur Gratis-Flash-Modelle; ist Flash fuer heute aufgebraucht,
             // wird automatisch Flash-Lite gefragt (siehe gemini-modelle.js).
-            // Kennt ein Modell die Code-Ausfuehrung nicht, wird ohne sie gefragt.
             let antwort;
+            let sucheNichtVerfuegbar = false;
             try {
-                ({ antwort } = await window.sdGemini.anfrage(key, body, { ohneToolsWiederholen: true }));
+                ({ antwort } = await window.sdGemini.anfrage(key, body, { ohneToolsWiederholen: !mitSuche }));
+                // Websuche abgelehnt (z. B. nicht im Gratis-Kontingent)? Dann
+                // dieselbe Frage ohne Suche stellen und das ehrlich dazuschreiben.
+                if (mitSuche && !antwort.ok && [400, 403, 429].includes(antwort.status)) {
+                    let detail = '';
+                    try { detail = JSON.stringify(await antwort.clone().json()); } catch (e) { /* egal */ }
+                    const schluesselProblem = /api key|API_KEY_INVALID/i.test(detail);
+                    const suchProblem = /search|grounding/i.test(detail) || (antwort.status !== 429 && !schluesselProblem);
+                    if (suchProblem && !schluesselProblem) {
+                        merkeSucheNichtVerfuegbar();
+                        sucheNichtVerfuegbar = true;
+                        const ohneSuche = Object.assign({}, body);
+                        const rest = tools.filter(tl => !tl.google_search);
+                        if (rest.length) ohneSuche.tools = rest; else delete ohneSuche.tools;
+                        ({ antwort } = await window.sdGemini.anfrage(key, ohneSuche, { ohneToolsWiederholen: true }));
+                    }
+                }
             } catch (e) {
                 throw new Error(t('err_network'));
             }
@@ -1698,7 +1843,34 @@
                 if (kandidat.finishReason === 'SAFETY') throw new Error(t('err_blocked'));
                 throw new Error(t('err_empty'));
             }
-            return parts;
+            return { parts, grounding: leseGrounding(kandidat.groundingMetadata), sucheNichtVerfuegbar };
+        }
+
+        // Quellen und die von Google vorgeschriebenen Suchvorschlaege aus
+        // der Antwort uebernehmen (nur wenn wirklich gesucht wurde).
+        function leseGrounding(gm) {
+            if (!gm) return null;
+            const quellen = [];
+            (gm.groundingChunks || []).forEach(c => {
+                const w = c && c.web;
+                if (w && /^https?:\/\//.test(w.uri || '') && !quellen.some(q => q.uri === w.uri)) {
+                    quellen.push({ uri: w.uri, title: w.title || w.uri });
+                }
+            });
+            const suchen = (gm.webSearchQueries || []).filter(q => q && q.trim());
+            const html = gm.searchEntryPoint && gm.searchEntryPoint.renderedContent ? gm.searchEntryPoint.renderedContent : '';
+            if (!quellen.length && !suchen.length && !html) return null;
+            return { quellen: quellen.slice(0, 8), suchen, html };
+        }
+
+        const SUCHE_AUS_STORAGE = 'sdAssistentSucheAus';
+        function sucheHeuteNichtVerfuegbar() {
+            const tag = window.sdGemini && window.sdGemini.googleTag ? window.sdGemini.googleTag() : '';
+            return speicherLesen(localStorage, SUCHE_AUS_STORAGE) === tag;
+        }
+        function merkeSucheNichtVerfuegbar() {
+            const tag = window.sdGemini && window.sdGemini.googleTag ? window.sdGemini.googleTag() : '';
+            speicherSchreiben(localStorage, SUCHE_AUS_STORAGE, tag);
         }
 
         function zeigeTippt() {
@@ -1720,9 +1892,11 @@
             aktualisiereSendenKnopf();
             zeigeTippt();
             try {
-                const parts = await frageGemini();
+                const ergebnis = await frageGemini();
                 entferneTippt();
-                const eintrag = { role: 'model', parts, quelle: 'gemini' };
+                const eintrag = { role: 'model', parts: ergebnis.parts, quelle: 'gemini' };
+                if (ergebnis.grounding) eintrag.grounding = ergebnis.grounding;
+                if (ergebnis.sucheNichtVerfuegbar) eintrag.hinweis = 'search_unavailable';
                 verlauf.push(eintrag);
                 $('chatInner').appendChild(baueNachricht(eintrag));
                 nachUntenScrollen();
@@ -1826,7 +2000,10 @@
             'You speak English, German and many other languages fluently. ALWAYS reply in the same ' +
             'language as the user\'s latest message. Be friendly, short and concrete. Never invent facts; ' +
             'if you are not sure about something, say so. If asked which model you are based on, say ' +
-            'honestly: Llama 3.2 by Meta, running locally in the browser.';
+            'honestly: Llama 3.2 by Meta, running locally in the browser. You have NO internet access: ' +
+            'for current information (weather, news, prices, opening hours, today\'s events) say honestly ' +
+            'that you cannot know it and suggest switching to "☁️ Gemini" or the "G↗" button. Never invent ' +
+            'such data. If a Wikipedia reference is given below, use it and mention Wikipedia as the source.';
         const LLAMA_MAX_NACHRICHTEN = 10;   // Llama 3.2 im Browser hat nur ca. 4.000 Token Kontext
         const LLAMA_MAX_ZEICHEN = 1500;     // pro Nachricht
 
@@ -1968,7 +2145,44 @@
                 else liste.push({ role, content: text });
             });
             while (liste.length && liste[0].role !== 'user') liste.shift();
-            return [{ role: 'system', content: LLAMA_SYSTEM + sprachHinweis() }].concat(liste);
+            return [{ role: 'system', content: LLAMA_SYSTEM + datumHinweis() + sprachHinweis() }].concat(liste);
+        }
+
+        // Wissensfrage? ("Was ist ...", "Wer ist ...", "What is ..."). Nur
+        // dann wird auf Wikipedia nachgeschlagen - bei normalen Bitten
+        // ("schreib mir ein Anschreiben") nicht.
+        const WISSENSFRAGE = /(^|\s)(was (ist|sind|war|waren|bedeutet|bedeuten|heisst|heißt)|wer (ist|sind|war|waren)|wann (ist|war|wurde|wurden|fand)|wo (ist|liegt|liegen)|erkläre?|erklär mir|what (is|are|was|were|does)|who (is|are|was|were)|when (is|was|did)|where (is|are)|explain)\b/i;
+
+        async function wikipediaNachschlagen(frage) {
+            if (!optionen.wiki || !WISSENSFRAGE.test(frage)) return null;
+            const sprache = erkenneSprache(frage) === 'en' ? 'en' : (erkenneSprache(frage) === 'de' ? 'de' : (window.SD_LANG === 'en' ? 'en' : 'de'));
+            const suchbegriff = frage
+                .replace(WISSENSFRAGE, ' ')
+                .replace(/\b(eigentlich|genau|bitte|please|mir|me|kurz|briefly|ein|eine|einen|der|die|das|the|a|an)\b/gi, ' ')
+                .replace(/[?!.„“"]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+            if (!suchbegriff) return null;
+            const kopf = { 'Api-User-Agent': 'SD-Bewerbungsstudio/1.0 (https://thesdhub.com; kontakt@thesdhub.com)' };
+            const mitZeitlimit = (url) => {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 6000);
+                return fetch(url, { headers: kopf, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+            };
+            try {
+                const basis = 'https://' + sprache + '.wikipedia.org';
+                const suche = await mitZeitlimit(basis + '/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=' + encodeURIComponent(suchbegriff));
+                if (!suche.ok) return null;
+                const treffer = (((await suche.json()).query || {}).search || [])[0];
+                if (!treffer) return null;
+                const zusammenfassung = await mitZeitlimit(basis + '/api/rest_v1/page/summary/' + encodeURIComponent(treffer.title.replace(/ /g, '_')));
+                if (!zusammenfassung.ok) return null;
+                const d = await zusammenfassung.json();
+                const text = String(d.extract || '').trim();
+                if (!text) return null;
+                const url = (d.content_urls && d.content_urls.desktop && d.content_urls.desktop.page) || (basis + '/wiki/' + encodeURIComponent(treffer.title));
+                return { titel: d.title || treffer.title, text: text.slice(0, 1200), url };
+            } catch (e) {
+                return null;   // offline, gesperrt oder zu langsam: einfach ohne Nachschlagen antworten
+            }
         }
 
         async function antworteMitLlama() {
@@ -1983,6 +2197,12 @@
             nachUntenScrollen();
             let text = '';
             let geplant = false;
+            const wiki = await wikipediaNachschlagen(letzteNachrichtDerPerson());
+            if (wiki) eintrag.wiki = { titel: wiki.titel, url: wiki.url };
+            const nachrichten = llamaNachrichten();
+            if (wiki) {
+                nachrichten[0].content += '\n\nWikipedia reference (article "' + wiki.titel + '"): ' + wiki.text;
+            }
             const zeichne = () => {
                 geplant = false;
                 bubble.innerHTML = markdownZuHtml(text);
@@ -1990,7 +2210,7 @@
             };
             try {
                 const stream = await llama.engine.chat.completions.create({
-                    messages: llamaNachrichten(),
+                    messages: nachrichten,
                     stream: true,
                     temperature: 0.7,
                     max_tokens: 1024
@@ -2087,6 +2307,8 @@
         $('keyModePermanent').onchange = speichereKey;
         $('optMemory').onchange = speichereOptionen;
         $('optCode').onchange = speichereOptionen;
+        $('optSearch').onchange = speichereOptionen;
+        $('optWiki').onchange = speichereOptionen;
 
         let loeschenBestaetigen = false;
         $('clearBtn').onclick = () => {
