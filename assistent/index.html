@@ -945,6 +945,9 @@
                 llama_wifi: 'Tipp: Am besten im WLAN herunterladen.',
                 llama_loading: 'Wird geladen …',
                 llama_ready: '✅ SD Lotse ist bereit – schreib einfach los.',
+                llama_auto: '⏳ SD Lotse wird vom Gerät gestartet (ohne neuen Download) …',
+                llama_persist_ok: '💾 SD Lotse ist dauerhaft auf diesem Gerät gespeichert und startet beim Öffnen automatisch.',
+                llama_persist_no: '💾 SD Lotse ist auf diesem Gerät gespeichert und startet beim Öffnen automatisch. Der Browser hat dauerhaftes Speichern nicht bestätigt – bei vollem Speicher könnte er das Modell löschen, dann wird es neu geladen.',
                 llama_unsupported: 'Dein Browser oder Gerät kann SD Lotse leider nicht lokal ausführen (WebGPU fehlt oder ist zu schwach). Am besten klappt es mit Chrome oder Edge am PC/Laptop. Auf iPhones und vielen Handys geht es derzeit nicht – dort bitte Gemini nutzen.',
                 llama_load_failed: 'SD Lotse konnte nicht geladen werden: {msg}',
                 llama_tech: 'Technischer Grund',
@@ -1070,6 +1073,9 @@
                 llama_wifi: 'Tip: best downloaded over Wi-Fi.',
                 llama_loading: 'Loading …',
                 llama_ready: '✅ SD Lotse is ready – just start typing.',
+                llama_auto: '⏳ Starting SD Lotse from this device (no new download) …',
+                llama_persist_ok: '💾 SD Lotse is stored permanently on this device and starts automatically when you open the app.',
+                llama_persist_no: '💾 SD Lotse is stored on this device and starts automatically when you open the app. The browser did not confirm permanent storage – if storage runs full it might remove the model, then it will be downloaded again.',
                 llama_unsupported: 'Your browser or device cannot run SD Lotse locally (WebGPU missing or too weak). It works best with Chrome or Edge on a PC/laptop. It currently does not work on iPhones and many phones – please use Gemini there.',
                 llama_load_failed: 'SD Lotse could not be loaded: {msg}',
                 llama_tech: 'Technical reason',
@@ -1183,6 +1189,7 @@
                 <button type="button" class="btn btn-ghost" id="llamaDeleteBtn" data-i18n="llama_delete">🗑️ SD Lotse vom Gerät löschen</button>
                 <span class="status" id="llamaDeleteStatus" role="status"></span>
             </div>
+            <p class="hint" id="llamaSpeicherInfo" hidden></p>
             <div class="row">
                 <button type="button" class="btn btn-danger" id="clearBtn" data-i18n="btn_clear">🗑️ Gespräch löschen</button>
                 <span class="status" id="clearStatus" role="status"></span>
@@ -2429,6 +2436,10 @@
             if (!text && !wartendeAnhaenge.length) return;
             if (optionen.modus === 'llama') {
                 if (findeLinks(text).length) { zeigeFehler(t('llama_no_links')); return; }
+                if (!llama.engine && llama.ladeVersprechen) {
+                    // SD Lotse startet gerade (z. B. automatisch) - kurz warten.
+                    await llama.ladeVersprechen;
+                }
                 if (!llama.engine) {
                     zeigeFehler(llama.gpu && !llama.gpu.ok
                         ? t('llama_unsupported') + '\n\n' + t('llama_tech') + ': ' + (llama.gpu.grund || '?') + ' · ' + geraeteInfo()
@@ -2580,7 +2591,7 @@
         const LLAMA_MAX_NACHRICHTEN = 10;   // Llama 3.2 im Browser hat nur ca. 4.000 Token Kontext
         const LLAMA_MAX_ZEICHEN = 1500;     // pro Nachricht
 
-        const llama = { lib: null, engine: null, modellId: null, laedt: false, generiert: false, gpu: null };
+        const llama = { lib: null, engine: null, modellId: null, laedt: false, generiert: false, gpu: null, autoVersucht: false, ladeVersprechen: null };
 
         async function pruefeWebGpu() {
             if (llama.gpu) return llama.gpu;
@@ -2656,9 +2667,43 @@
             } catch (e) { imSpeicher = false; }
             $('llamaStartBtn').textContent = imSpeicher ? t('llama_start_cached') : t('llama_start');
             zeigeLlamaKarte(false);
+            zeigeSpeicherInfo(imSpeicher);
+            // Schon auf dem Geraet gespeichert: automatisch starten (kein
+            // Download noetig). Nur einmal pro Seitenaufruf, damit ein
+            // Fehler nicht endlos wiederholt wird.
+            if (imSpeicher && !llama.engine && !llama.laedt && !llama.autoVersucht && optionen.modus === 'llama') {
+                llama.autoVersucht = true;
+                starteLlama(true);
+            }
         }
 
-        async function starteLlama() {
+        // Den Browser bitten, die Modelldateien dauerhaft zu behalten
+        // (sonst darf er sie bei Speichermangel loeschen).
+        async function sichereSpeicher() {
+            try {
+                if (!navigator.storage || !navigator.storage.persist) return false;
+                if (navigator.storage.persisted && await navigator.storage.persisted()) return true;
+                return await navigator.storage.persist();
+            } catch (e) { return false; }
+        }
+
+        async function zeigeSpeicherInfo(imSpeicher) {
+            const el = $('llamaSpeicherInfo');
+            if (!el) return;
+            if (!imSpeicher && !llama.engine) { el.hidden = true; return; }
+            let dauerhaft = false;
+            try { dauerhaft = !!(navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()); } catch (e) { /* egal */ }
+            el.textContent = t(dauerhaft ? 'llama_persist_ok' : 'llama_persist_no');
+            el.hidden = false;
+        }
+
+        function starteLlama(automatisch) {
+            if (llama.ladeVersprechen) return llama.ladeVersprechen;
+            llama.ladeVersprechen = ladeLlama(automatisch).finally(() => { llama.ladeVersprechen = null; });
+            return llama.ladeVersprechen;
+        }
+
+        async function ladeLlama(automatisch) {
             if (llama.laedt) return;
             const gpu = await pruefeWebGpu();
             if (!gpu.ok) { await aktualisiereLlamaKarte(); return; }
@@ -2669,7 +2714,7 @@
             $('llamaNotice').hidden = true;
             $('llamaProgress').hidden = false;
             $('llamaBar').style.width = '0%';
-            $('llamaProgressText').textContent = t('llama_loading');
+            $('llamaProgressText').textContent = automatisch ? t('llama_auto') : t('llama_loading');
             const fortschritt = (r) => {
                 $('llamaBar').style.width = Math.round((r.progress || 0) * 100) + '%';
                 $('llamaProgressText').textContent = r.text || t('llama_loading');
@@ -2688,6 +2733,8 @@
                 }
                 llama.engine = engine;
                 llama.modellId = id;
+                await sichereSpeicher();
+                zeigeSpeicherInfo(true);
                 $('llamaProgress').hidden = true;
                 $('llamaReady').hidden = false;
                 setTimeout(() => zeigeLlamaKarte(false), 2500);
@@ -2904,7 +2951,7 @@
         };
         $('saveKeyBtn').onclick = speichereKey;
         document.querySelectorAll('.mode-btn').forEach(b => { b.onclick = () => setzeModus(b.dataset.mode); });
-        $('llamaStartBtn').onclick = () => starteLlama();
+        $('llamaStartBtn').onclick = () => starteLlama(false);
         $('llamaModel').onchange = () => {
             optionen.llamaModell = $('llamaModel').value;
             speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));

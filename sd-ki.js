@@ -289,6 +289,8 @@
         }
         lotse.engine = engine;
         lotse.modellId = id;
+        // Browser bitten, die Modelldateien dauerhaft zu behalten
+        try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* egal */ }
         return engine;
       } catch (err) {
         throw new Error(tx('laden_fehler', { msg: (err && err.message) || String(err) }) + ' · ' + geraeteInfo());
