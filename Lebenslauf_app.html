@@ -880,6 +880,26 @@
             padding: 0;
         }
 
+        .import-card {
+            margin: 0 0 14px;
+            padding: 12px 14px;
+            border: 1px dashed var(--accent, #2f7d72);
+            border-radius: 10px;
+            background: #fbfdfc;
+        }
+        .import-card p { margin: 0 0 8px; font-size: .82rem; color: #4b5d6b; line-height: 1.45; }
+        .import-btn {
+            width: 100%;
+            min-height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--accent, #2f7d72);
+            color: #fff;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .import-status { margin-top: 6px; font-size: .8rem; color: #1c4a42; }
         .shared-panel {
             margin: 0 0 18px;
             padding: 14px;
@@ -1732,6 +1752,11 @@
                 "save_persist": "Ja, dauerhaft in diesem Browser (bis ich es selbst lösche)",
                 "save_session": "Nein, nur für diese Sitzung (weg beim Schließen)",
                 "personal_h2": "Persönliche Angaben",
+                "import_text": "Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – die KI trägt die Angaben in die richtigen Felder ein. Danach kannst du alles prüfen, verbessern und neu gestalten.",
+                "import_btn": "📥 Alten Lebenslauf einlesen",
+                "import_titel": "📥 Alten Lebenslauf einlesen",
+                "import_beschreibung": "Wähle deinen bisherigen Lebenslauf. Die KI verteilt die Angaben auf die Felder – du siehst vorher alles und entscheidest, was übernommen wird.",
+                "import_kein_sdki": "Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.",
                 "personal_sub": "Gilt für alle Bereiche (Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe).",
                 "lbl_vorname": "Vorname",
                 "ph_vorname": "z. B. Max",
@@ -1908,6 +1933,11 @@
                 "save_persist": "Yes, permanently in this browser (until I delete it myself)",
                 "save_session": "No, only for this session (gone when closed)",
                 "personal_h2": "Personal details",
+                "import_text": "Already have a resume? Upload it (PDF, Word or photo) – the AI puts the details into the right fields. Then you can check, improve and redesign everything.",
+                "import_btn": "📥 Import old resume",
+                "import_titel": "📥 Import old resume",
+                "import_beschreibung": "Choose your existing resume. The AI distributes the details to the fields – you see everything first and decide what is applied.",
+                "import_kein_sdki": "The AI components could not be loaded. Please reload the page.",
                 "personal_sub": "Applies to all areas (resume, cover letter, title page, application folder).",
                 "lbl_vorname": "First name",
                 "ph_vorname": "e.g. John",
@@ -2080,7 +2110,7 @@
         };
     </script>
     <script src="gemini-modelle.js?v=1"></script>
-    <script src="sd-ki.js?v=8"></script>
+    <script src="sd-ki.js?v=9"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2155,6 +2185,11 @@
              Lebenslauf-Bereich zu besuchen, kann Name/Adresse/Kontakt hier
              trotzdem einmal eintragen - alle Bereiche greifen auf dieselben
              Felder zu. -->
+        <div class="import-card">
+            <p data-i18n="import_text">Du hast schon einen Lebenslauf? Lade ihn hoch (PDF, Word oder Foto) – die KI trägt die Angaben in die richtigen Felder ein. Danach kannst du alles prüfen, verbessern und neu gestalten.</p>
+            <button type="button" class="import-btn" onclick="lebenslaufEinlesen()" data-i18n="import_btn">📥 Alten Lebenslauf einlesen</button>
+            <div class="import-status" id="import-status" aria-live="polite"></div>
+        </div>
         <div class="shared-panel">
             <h2 style="margin-top:0;" data-i18n="personal_h2">Persönliche Angaben</h2>
             <p class="ki-hint" style="margin-top:-6px;" data-i18n="personal_sub">Gilt für alle Bereiche (Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe).</p>
@@ -3233,6 +3268,53 @@
             return text.trim();
         }
 
+        // ---- Alten Lebenslauf einlesen: KI verteilt die Angaben auf die Felder ----
+        function lebenslaufEinlesen() {
+            if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
+            const en = window.SD_LANG === 'en';
+            const felder = [
+                { id: 'vorname', label: en ? 'First name' : 'Vorname' },
+                { id: 'nachname', label: en ? 'Last name' : 'Nachname' },
+                { id: 'position', label: en ? 'Position / job title' : 'Position / Berufsbezeichnung', hinweis: 'angestrebte Position oder aktuelle Berufsbezeichnung, falls genannt' },
+                { id: 'email', label: 'E-Mail' },
+                { id: 'telefon', label: en ? 'Phone' : 'Telefon' },
+                { id: 'adresse', label: en ? 'Address' : 'Adresse', hinweis: 'Straße Hausnummer, PLZ Ort in einer Zeile' },
+                { id: 'geburtsdatum', label: en ? 'Date of birth' : 'Geburtsdatum', hinweis: 'Format TT.MM.JJJJ, ggf. mit Geburtsort' },
+                { id: 'familienstand', label: en ? 'Marital status' : 'Familienstand', optionen: ['ledig', 'verheiratet', 'geschieden', 'verwitwet'] },
+                { id: 'kinder', label: en ? 'Children' : 'Kinder', optionen: ['keine Kinder', '1 Kind', '2 Kinder', '3 oder mehr Kinder'] },
+                { id: 'staatsangehoerigkeit', label: en ? 'Nationality' : 'Staatsangehörigkeit' },
+                { id: 'fuehrerschein', label: en ? 'Driving licence' : 'Führerschein', hinweis: 'z. B. Klasse B' },
+                { id: 'verfuegbarkeit', label: en ? 'Availability' : 'Verfügbarkeit' },
+                { id: 'erfahrung', label: en ? 'Work experience' : 'Berufserfahrung', mehrzeilig: true, hinweis: 'je Station eine Zeile im Format "Zeitraum: Tätigkeit bei Firma, Ort" – Zeitraum wie im Dokument (z. B. 03/2019 - heute), neueste zuerst; Aufgaben kurz nach einem Gedankenstrich in derselben Zeile' },
+                { id: 'ausbildung', label: en ? 'Education' : 'Ausbildung', mehrzeilig: true, hinweis: 'je Station eine Zeile im Format "Zeitraum: Abschluss/Ausbildung, Schule/Hochschule, Ort", neueste zuerst' },
+                { id: 'kenntnisse', label: en ? 'Skills' : 'Kenntnisse', mehrzeilig: true, hinweis: 'kommagetrennt' },
+                { id: 'sprachen', label: en ? 'Languages' : 'Sprachen', hinweis: 'Format "Sprache: Niveau", kommagetrennt' }
+            ];
+            window.sdKi.einleseDialog({
+                titel: t('import_titel'),
+                beschreibung: t('import_beschreibung'),
+                dokumentArt: 'ein Lebenslauf',
+                felder,
+                uebernehmen: (werte) => {
+                    let n = 0;
+                    Object.keys(werte).forEach(id => {
+                        const feld = document.getElementById(id);
+                        if (!feld) return;
+                        if (feld.tagName === 'SELECT' && ![...feld.options].some(o => o.value === werte[id])) return;
+                        feld.value = werte[id];
+                        n++;
+                    });
+                    updateVorschau();
+                    speichereDaten();
+                    return n;
+                },
+                fertig: (meldung) => {
+                    const el = document.getElementById('import-status');
+                    if (el) { el.textContent = meldung; setTimeout(() => { if (el.textContent === meldung) el.textContent = ''; }, 8000); }
+                }
+            });
+        }
+
         // Fuellt ein Feld (Textarea) per KI aus. buttonEl bekommt waehrend
         // des Ladens einen Sperr-/Lade-Zustand.
         async function kiSchreiben(feldId, aufgabe, buttonEl) {
@@ -3273,17 +3355,19 @@
             if (buttonEl) { buttonEl.disabled = true; buttonEl.textContent = t('status_ki_schreibt'); }
             try {
                 const kontext = sammleKiKontext();
-                const prompt = `Du hilfst beim Formulieren eines deutschen Lebenslaufs. Erstelle passende Inhalte ` +
-                    `für die angestrebte Position, auf Basis der bekannten Angaben (falls vorhanden, sonst plausibel ` +
-                    `und allgemein passend zur Position).\n\n` +
+                const prompt = `Du hilfst beim Formulieren eines deutschen Lebenslaufs für die angestrebte Position, ` +
+                    `auf Basis der bekannten Angaben. Formuliere vorhandene Angaben klar und professionell. ` +
+                    `WICHTIG: Erfinde KEINE Stationen, Firmen, Zeiträume, Abschlüsse oder Sprachkenntnisse. ` +
+                    `Fehlt etwas, schreibe einen Platzhalter in eckigen Klammern, z. B. "[Zeitraum]: [Tätigkeit] bei [Firma]", ` +
+                    `damit die Person ihn selbst ausfüllt.\n\n` +
                     (kontext ? `Bekannte Angaben zur Person:\n${kontext}\n\n` : '') +
                     `Antworte AUSSCHLIESSLICH in exakt diesem Format, mit genau diesen vier Überschriften in ` +
                     `Großbuchstaben, jede in einer eigenen Zeile, gefolgt vom jeweiligen Inhalt (keine ` +
                     `zusätzlichen Erklärungen, kein Markdown, keine Anführungszeichen):\n\n` +
-                    `BERUFSERFAHRUNG:\n(2-4 Zeilen, je Zeile: Zeitraum + Tätigkeit/Firma)\n\n` +
-                    `AUSBILDUNG:\n(1-3 Zeilen, je Zeile: Zeitraum + Ausbildungsgang/Schule)\n\n` +
-                    `KENNTNISSE:\n(eine Zeile, 4-8 passende Kenntnisse, kommagetrennt)\n\n` +
-                    `SPRACHEN:\n(eine Zeile, Format 'Sprache: Niveau, Sprache: Niveau', ohne Angabe Deutsch als Muttersprache annehmen)`;
+                    `BERUFSERFAHRUNG:\n(je bekannte Station eine Zeile: Zeitraum + Tätigkeit/Firma)\n\n` +
+                    `AUSBILDUNG:\n(je bekannte Station eine Zeile: Zeitraum + Ausbildungsgang/Schule)\n\n` +
+                    `KENNTNISSE:\n(eine Zeile, kommagetrennt – nur Kenntnisse, die aus den Angaben hervorgehen; sonst '[Kenntnisse]')\n\n` +
+                    `SPRACHEN:\n(eine Zeile, Format 'Sprache: Niveau, Sprache: Niveau'; ohne Angaben: '[Sprache]: [Niveau]')`;
                 const text = await rufeGeminiAuf(prompt);
 
                 // Antwort anhand der vier Überschriften in Abschnitte zerlegen.

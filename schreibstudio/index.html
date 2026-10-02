@@ -888,6 +888,26 @@
             padding: 0;
         }
 
+        .import-card {
+            margin: 0 0 14px;
+            padding: 12px 14px;
+            border: 1px dashed var(--accent, #2f7d72);
+            border-radius: 10px;
+            background: #fbfdfc;
+        }
+        .import-card p { margin: 0 0 8px; font-size: .82rem; color: #4b5d6b; line-height: 1.45; }
+        .import-btn {
+            width: 100%;
+            min-height: 44px;
+            border: 0;
+            border-radius: 10px;
+            background: var(--accent, #2f7d72);
+            color: #fff;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .import-status { margin-top: 6px; font-size: .8rem; color: #1c4a42; }
         .shared-panel {
             margin: 0 0 18px;
             padding: 14px;
@@ -1516,6 +1536,11 @@
                 speicher_dauerhaft: 'Ja, dauerhaft in diesem Browser (bis ich es selbst lösche)',
                 speicher_sitzung: 'Nein, nur für diese Sitzung (weg beim Schließen)',
                 shared_h2: 'Persönliche Angaben',
+                import_text: 'Du hast schon ein Schreiben (z. B. eine alte Kündigung oder einen Brief)? Lade es hoch (PDF, Word oder Foto) – die KI trägt Absender, Empfänger und Text in den gerade gewählten Bereich ein.',
+                import_btn: '📥 Vorhandenes Schreiben einlesen',
+                import_titel: '📥 Schreiben einlesen: {bereich}',
+                import_beschreibung: 'Wähle das vorhandene Schreiben. Die KI verteilt Absender, Empfänger und Text auf die Felder – du siehst vorher alles und entscheidest, was übernommen wird.',
+                import_kein_sdki: 'Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.',
                 shared_hint: 'Gilt für alle Bereiche (Kündigung, Entschuldigung, Brief).',
                 label_vorname: 'Vorname', ph_vorname: 'z. B. Max',
                 label_nachname: 'Nachname', ph_nachname: 'z. B. Mustermann',
@@ -1650,6 +1675,11 @@
                 speicher_dauerhaft: 'Yes, permanently in this browser (until I delete it myself)',
                 speicher_sitzung: 'No, only for this session (gone when closed)',
                 shared_h2: 'Personal details',
+                import_text: 'Already have a letter (e.g. an old termination letter)? Upload it (PDF, Word or photo) – the AI puts sender, recipient and text into the currently selected section.',
+                import_btn: '📥 Import existing letter',
+                import_titel: '📥 Import letter: {bereich}',
+                import_beschreibung: 'Choose the existing letter. The AI distributes sender, recipient and text to the fields – you see everything first and decide what is applied.',
+                import_kein_sdki: 'The AI components could not be loaded. Please reload the page.',
                 shared_hint: 'Applies to all sections (termination letter, excuse note, letter).',
                 label_vorname: 'First name', ph_vorname: 'e.g. Max',
                 label_nachname: 'Last name', ph_nachname: 'e.g. Mustermann',
@@ -1786,7 +1816,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-ki.js?v=8"></script>
+    <script src="../sd-ki.js?v=9"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -1846,6 +1876,11 @@
              Lebenslauf-Bereich zu besuchen, kann Name/Adresse/Kontakt hier
              trotzdem einmal eintragen - alle Bereiche greifen auf dieselben
              Felder zu. -->
+        <div class="import-card">
+            <p data-i18n="import_text">Du hast schon ein Schreiben (z. B. eine alte Kündigung oder einen Brief)? Lade es hoch (PDF, Word oder Foto) – die KI trägt Absender, Empfänger und Text in den gerade gewählten Bereich ein.</p>
+            <button type="button" class="import-btn" onclick="schreibenEinlesen()" data-i18n="import_btn">📥 Vorhandenes Schreiben einlesen</button>
+            <div class="import-status" id="import-status" aria-live="polite"></div>
+        </div>
         <div class="shared-panel">
             <h2 style="margin-top:0;" data-i18n="shared_h2">Persönliche Angaben</h2>
             <p class="ki-hint" style="margin-top:-6px;" data-i18n="shared_hint">Gilt für alle Bereiche (Kündigung, Entschuldigung, Brief).</p>
@@ -2499,6 +2534,61 @@
             if (val('entschuldigung-zeitraum')) teile.push(`Zeitraum der Entschuldigung: ${val('entschuldigung-zeitraum')}`);
             if (val('entschuldigung-klasse')) teile.push(`Klasse/Gruppe: ${val('entschuldigung-klasse')}`);
             return teile.join('\n');
+        }
+
+        // ---- Vorhandenes Schreiben einlesen: KI verteilt die Angaben auf die Felder ----
+        function schreibenEinlesen() {
+            if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
+            const en = window.SD_LANG === 'en';
+            const absender = [
+                { id: 'vorname', label: en ? 'Sender: first name' : 'Absender: Vorname', hinweis: 'der Person, die das Schreiben verfasst hat' },
+                { id: 'nachname', label: en ? 'Sender: last name' : 'Absender: Nachname' },
+                { id: 'adresse', label: en ? 'Sender: address' : 'Absender: Adresse', hinweis: 'Straße Hausnummer, PLZ Ort in einer Zeile' },
+                { id: 'telefon', label: en ? 'Sender: phone' : 'Absender: Telefon' },
+                { id: 'email', label: en ? 'Sender: e-mail' : 'Absender: E-Mail' }
+            ];
+            const empfHinweis = 'Name/Firma und Anschrift, je Angabe eine Zeile';
+            const textHinweis = 'nur der eigentliche Brieftext, ohne Anrede, ohne Grußformel und ohne Unterschrift';
+            const bereiche = {
+                kuendigung: { art: 'eine Kündigung', felder: [
+                    { id: 'kuendigung-empfaenger', label: en ? 'Recipient' : 'Empfänger', mehrzeilig: true, hinweis: empfHinweis },
+                    { id: 'vertragsnummer', label: en ? 'Contract / customer number' : 'Vertrags-/Kundennummer' },
+                    { id: 'kuendigung-text', label: en ? 'Letter text' : 'Kündigungstext', mehrzeilig: true, hinweis: textHinweis }] },
+                entschuldigung: { art: 'eine Entschuldigung (z. B. für Schule oder Kita)', felder: [
+                    { id: 'entschuldigung-empfaenger', label: en ? 'Recipient' : 'Empfänger', mehrzeilig: true, hinweis: empfHinweis },
+                    { id: 'entschuldigung-kind', label: en ? 'Name of the child' : 'Name des Kindes' },
+                    { id: 'entschuldigung-klasse', label: en ? 'Class / group' : 'Klasse / Gruppe' },
+                    { id: 'entschuldigung-zeitraum', label: en ? 'Period' : 'Zeitraum', hinweis: 'z. B. 03.03.2026 - 05.03.2026' },
+                    { id: 'entschuldigung-text', label: en ? 'Text' : 'Text der Entschuldigung', mehrzeilig: true, hinweis: textHinweis }] },
+                brief: { art: 'ein Brief', felder: [
+                    { id: 'brief-empfaenger', label: en ? 'Recipient' : 'Empfänger', mehrzeilig: true, hinweis: empfHinweis },
+                    { id: 'brief-betreff', label: en ? 'Subject' : 'Betreff' },
+                    { id: 'brief-text', label: en ? 'Letter text' : 'Brieftext', mehrzeilig: true, hinweis: textHinweis }] }
+            };
+            const modus = bereiche[aktuellerModus] ? aktuellerModus : 'brief';
+            const tab = document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`);
+            window.sdKi.einleseDialog({
+                titel: t('import_titel').replace('{bereich}', tab ? tab.textContent.trim() : modus),
+                beschreibung: t('import_beschreibung'),
+                dokumentArt: bereiche[modus].art,
+                felder: absender.concat(bereiche[modus].felder),
+                uebernehmen: (werte) => {
+                    let n = 0;
+                    Object.keys(werte).forEach(id => {
+                        const feld = document.getElementById(id);
+                        if (!feld) return;
+                        feld.value = werte[id];
+                        n++;
+                    });
+                    updateVorschau();
+                    speichereDaten();
+                    return n;
+                },
+                fertig: (meldung) => {
+                    const el = document.getElementById('import-status');
+                    if (el) { el.textContent = meldung; setTimeout(() => { if (el.textContent === meldung) el.textContent = ''; }, 8000); }
+                }
+            });
         }
 
         async function rufeGeminiAuf(prompt) {

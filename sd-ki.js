@@ -71,6 +71,21 @@
       gemini_key_falsch: 'Google hat den Gemini-Schlüssel abgelehnt.',
       gemini_kontingent: 'Das kostenlose Gemini-Kontingent ist gerade aufgebraucht – später nochmal versuchen oder 🔒 SD Lotse wählen.',
       netz: 'Keine Verbindung zu Google. Bitte Internetverbindung prüfen – oder 🔒 SD Lotse wählen.',
+      ein_titel: '📥 Vorhandenes Dokument einlesen',
+      ein_datei: '📎 Datei wählen (PDF, Word, Foto, Text)',
+      ein_verbessern: 'Formulierungen dabei verbessern (Fakten wie Daten, Firmen und Abschlüsse bleiben unverändert)',
+      ein_lesen: '📄 Lese „{name}“ …',
+      ein_ocr: '🔎 Texterkennung … {p} %',
+      ein_ki_laeuft: '🤖 Die KI ordnet die Angaben zu …',
+      ein_leer: 'In der Datei wurde kein lesbarer Text gefunden.',
+      ein_doc_alt: 'Alte Word-Dateien (.doc) gehen leider nicht – bitte als .docx oder PDF speichern.',
+      ein_typ: 'Dieser Dateityp wird nicht unterstützt. Bitte PDF, Word (.docx), Foto oder Textdatei wählen.',
+      ein_nichts: 'Die KI konnte keine Angaben zuordnen. Bitte eine andere Datei oder eine andere KI versuchen.',
+      ein_pruefen: 'Bitte prüfen und bei Bedarf korrigieren. Nur angehakte Felder werden übernommen – bestehende Eingaben in diesen Feldern werden ersetzt.',
+      ein_uebernehmen: '✅ Übernehmen', ein_gekuerzt: 'Hinweis: Das Dokument ist lang – SD Lotse hat nur den Anfang gelesen. Für das ganze Dokument eine Online-KI wählen.',
+      ein_fertig: '✓ {n} Felder übernommen.',
+      ein_privat_lotse: '🔒 SD Lotse liest lokal – die Datei verlässt dein Gerät nicht.',
+      ein_privat_online: '☁️ Der Text der Datei wird zur Zuordnung an {firma} gesendet.',
       dlg_titel: '🤖 KI-Hilfe zum Dokument',
       dlg_quelle: 'Erkannter Text: {n} Zeichen',
       dlg_gekuerzt: ' (für SD Lotse auf den Anfang gekürzt)',
@@ -120,6 +135,21 @@
       gemini_key_falsch: 'Google rejected the Gemini key.',
       gemini_kontingent: 'The free Gemini quota is used up for now – try again later or choose 🔒 SD Lotse.',
       netz: 'No connection to Google. Please check your internet connection – or choose 🔒 SD Lotse.',
+      ein_titel: '📥 Import an existing document',
+      ein_datei: '📎 Choose file (PDF, Word, photo, text)',
+      ein_verbessern: 'Improve the wording (facts like dates, companies and degrees stay unchanged)',
+      ein_lesen: '📄 Reading "{name}" …',
+      ein_ocr: '🔎 Recognizing text … {p} %',
+      ein_ki_laeuft: '🤖 The AI is sorting the details …',
+      ein_leer: 'No readable text was found in the file.',
+      ein_doc_alt: 'Old Word files (.doc) are not supported – please save as .docx or PDF.',
+      ein_typ: 'This file type is not supported. Please choose PDF, Word (.docx), photo or text file.',
+      ein_nichts: 'The AI could not assign any details. Please try another file or another AI.',
+      ein_pruefen: 'Please check and correct if needed. Only ticked fields are applied – existing entries in these fields will be replaced.',
+      ein_uebernehmen: '✅ Apply', ein_gekuerzt: 'Note: the document is long – SD Lotse only read the beginning. Choose an online AI for the whole document.',
+      ein_fertig: '✓ {n} fields applied.',
+      ein_privat_lotse: '🔒 SD Lotse reads locally – the file never leaves your device.',
+      ein_privat_online: '☁️ The text of the file is sent to {firma} for sorting.',
       dlg_titel: '🤖 AI help for this document',
       dlg_quelle: 'Recognized text: {n} characters',
       dlg_gekuerzt: ' (shortened to the beginning for SD Lotse)',
@@ -207,6 +237,12 @@
 .sdki-balken{height:10px;background:#dcece7;border-radius:999px;overflow:hidden}
 .sdki-balken>div{height:100%;width:0;background:#2f7d72;transition:width .3s}
 .sdki-ausgabe{white-space:pre-wrap;background:#fffdf8;border:1px solid #d8e0dc;border-radius:10px;padding:12px;min-height:80px;max-height:45dvh;overflow:auto;font-size:.92rem;line-height:1.55;overflow-wrap:anywhere}
+.sdki-felder{display:grid;gap:8px;max-height:48dvh;overflow:auto;padding-right:2px}
+.sdki-feld{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;border:1px solid #d8e0dc;border-radius:10px;padding:8px}
+.sdki-feld input[type=checkbox]{width:18px;height:18px;margin:0}
+.sdki-feld strong{font-size:.8rem}
+.sdki-feld textarea{grid-column:1/-1;width:100%;box-sizing:border-box;border:1px solid #d8e0dc;border-radius:8px;padding:6px 8px;font:inherit;font-size:.88rem;resize:vertical;min-height:38px}
+.sdki-check{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;line-height:1.4}
 .sdki-fehler{background:#fdf0ee;border:1px solid #f1c4bf;color:#b42318;border-radius:10px;padding:10px 12px;font-size:.88rem;white-space:pre-line}`;
     document.head.appendChild(st);
   }
@@ -555,6 +591,233 @@
   }
 
   // ------------------------------------------------------------
+  // Dokumente lesen (PDF, Word, Foto, Text) - alles im Browser
+  // ------------------------------------------------------------
+  const BIB = {
+    pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs',
+    pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs',
+    mammoth: 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+    tesseract: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'
+  };
+  const skripte = {};
+  function ladeSkript(url, globalName) {
+    if (window[globalName]) return Promise.resolve(window[globalName]);
+    if (!skripte[url]) {
+      skripte[url] = new Promise((ok, fehler) => {
+        const sc = document.createElement('script');
+        sc.src = url; sc.async = true;
+        sc.onload = () => window[globalName] ? ok(window[globalName]) : fehler(new Error(globalName));
+        sc.onerror = () => { delete skripte[url]; fehler(new Error(tx('netz'))); };
+        document.head.appendChild(sc);
+      });
+    }
+    return skripte[url];
+  }
+  let pdfjsVersprechen = null;
+  function ladePdfJs() {
+    if (!pdfjsVersprechen) {
+      pdfjsVersprechen = import(BIB.pdfjs).then(lib => { lib.GlobalWorkerOptions.workerSrc = BIB.pdfjsWorker; return lib; })
+        .catch(e => { pdfjsVersprechen = null; throw e; });
+    }
+    return pdfjsVersprechen;
+  }
+  function normalisiere(text) {
+    return String(text || '').replace(/\r\n?/g, '\n').replace(/[ \t ]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  async function ocr(quelle, status) {
+    const Tesseract = await ladeSkript(BIB.tesseract, 'Tesseract');
+    const { data } = await Tesseract.recognize(quelle, 'deu+eng', {
+      logger: m => { if (m.status === 'recognizing text' && status) status(tx('ein_ocr', { p: Math.round((m.progress || 0) * 100) })); }
+    });
+    return normalisiere(data.text);
+  }
+  // Liefert den Text einer Datei. status(text) zeigt den Fortschritt.
+  async function leseDatei(file, status) {
+    const name = (file.name || '').toLowerCase();
+    const typ = file.type || '';
+    if (status) status(tx('ein_lesen', { name: file.name }));
+    if (/\.doc$/.test(name) || typ === 'application/msword') throw new Error(tx('ein_doc_alt'));
+    if (/\.docx$/.test(name) || typ === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const mammoth = await ladeSkript(BIB.mammoth, 'mammoth');
+      return normalisiere((await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value);
+    }
+    if (/\.(txt|md|csv)$/.test(name) || /^text\//.test(typ)) return normalisiere(await file.text());
+    if (/^image\//.test(typ)) return ocr(file, status);
+    if (typ === 'application/pdf' || /\.pdf$/.test(name)) {
+      const pdfjs = await ladePdfJs();
+      const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const seiten = [];
+      for (let n = 1; n <= pdf.numPages; n++) {
+        const inhalt = await (await pdf.getPage(n)).getTextContent();
+        let t = '', y = null;
+        inhalt.items.forEach(it => {
+          if (typeof it.str !== 'string') return;
+          const neuY = it.transform ? Math.round(it.transform[5]) : null;
+          if (y !== null && neuY !== null && Math.abs(neuY - y) > 2 && !t.endsWith('\n')) t += '\n';
+          t += it.str;
+          if (it.hasEOL) t += '\n';
+          y = neuY;
+        });
+        seiten.push(t);
+      }
+      let text = normalisiere(seiten.join('\n\n'));
+      if (text.replace(/\s/g, '').length < 20) {
+        // Gescanntes PDF: die ersten Seiten per Texterkennung lesen
+        const teile = [];
+        for (let n = 1; n <= Math.min(pdf.numPages, 3); n++) {
+          const seite = await pdf.getPage(n);
+          const vp = seite.getViewport({ scale: 2 });
+          const c = document.createElement('canvas');
+          c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+          await seite.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+          teile.push(await ocr(c, status));
+        }
+        text = normalisiere(teile.join('\n\n'));
+      }
+      return text;
+    }
+    throw new Error(tx('ein_typ'));
+  }
+
+  // ------------------------------------------------------------
+  // Vorhandenes Dokument einlesen und auf Formularfelder verteilen
+  // ------------------------------------------------------------
+  // optionen: { titel, beschreibung, dokumentArt, felder: [{ id, label, hinweis, optionen, mehrzeilig }],
+  //             uebernehmen(werte) -> Anzahl, fertig(meldung) }
+  function baueEinlesePrompt(opt, text, verbessern) {
+    const liste = opt.felder.map(f => '### ' + f.id + '\n(' + f.label + (f.hinweis ? ' – ' + f.hinweis : '') +
+      (f.optionen ? ' – nur genau einer dieser Werte: ' + f.optionen.join(' | ') : '') + ')').join('\n');
+    return 'Hier ist der Text eines vorhandenen Dokuments (' + opt.dokumentArt + '). Übertrage die Angaben in die Felder unten.\n\n' +
+      'REGELN:\n' +
+      '- Übernimm nur, was wirklich im Dokument steht. Erfinde nichts und ergänze nichts.\n' +
+      '- Fehlt eine Angabe im Dokument, schreibe unter die Überschrift nur: -\n' +
+      '- ' + (verbessern
+        ? 'Formuliere Texte sprachlich klar und professionell, ändere aber keine Fakten (Daten, Namen, Firmen, Orte, Abschlüsse, Zahlen).'
+        : 'Übernimm den Wortlaut möglichst genau; korrigiere nur offensichtliche Tipp- und Erkennungsfehler.') + '\n' +
+      '- Schreibe in der Sprache des Dokuments.\n' +
+      '- Antworte NUR in diesem Format: jede Überschrift genau so wie unten (### feldname), darunter der Inhalt. Keine Einleitung, keine Erklärungen.\n\n' +
+      'FELDER:\n' + liste + '\n\n=== DOKUMENT ANFANG ===\n' + text + '\n=== DOKUMENT ENDE ===';
+  }
+  function leseEinleseAntwort(antwort, felder) {
+    const roh = String(antwort || '').replace(/```[a-z]*\n?/gi, '');
+    const ids = felder.map(f => f.id);
+    const marken = [];
+    const re = /^[ \t]*#{2,4}[ \t]*([A-Za-z0-9_-]+)[ \t]*:?[ \t]*(.*)$/gm;
+    let m;
+    while ((m = re.exec(roh)) !== null) marken.push({ id: m[1].toLowerCase(), rest: m[2], start: m.index, ende: re.lastIndex });
+    const werte = {};
+    marken.forEach((mk, i) => {
+      const id = ids.find(x => x.toLowerCase() === mk.id);
+      if (!id) return;
+      let v = (mk.rest ? mk.rest + '\n' : '') + roh.slice(mk.ende, i + 1 < marken.length ? marken[i + 1].start : undefined);
+      v = v.replace(/^\s*\([^)\n]*\)\s*$/m, '').trim();
+      if (!v || /^[-–—]+$/.test(v) || /^(keine angabe|nicht angegeben|unbekannt|n\/a|none|not stated)\.?$/i.test(v)) return;
+      werte[id] = v;
+    });
+    felder.forEach(f => {
+      if (!f.optionen || werte[f.id] == null) return;
+      const treffer = f.optionen.find(o => o.toLowerCase() === werte[f.id].toLowerCase().replace(/[.\s]+$/, ''));
+      if (treffer) werte[f.id] = treffer; else delete werte[f.id];
+    });
+    return werte;
+  }
+
+  function einleseDialog(opt) {
+    stylesEinfuegen();
+    const o = overlay(
+      '<h2>' + esc(opt.titel || tx('ein_titel')) + '</h2>' +
+      (opt.beschreibung ? '<p>' + esc(opt.beschreibung) + '</p>' : '') +
+      '<div data-auswahl></div>' +
+      '<label class="sdki-check"><input type="checkbox" data-verbessern> <span>' + esc(tx('ein_verbessern')) + '</span></label>' +
+      '<p class="sdki-klein" data-privat></p>' +
+      '<input type="file" data-datei hidden accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*,.txt,.md,text/plain">' +
+      '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-waehlen>' + esc(tx('ein_datei')) + '</button>' +
+      '<button type="button" class="sdki-btn" data-schliessen>' + esc(tx('abbrechen')) + '</button></div>' +
+      '<p class="sdki-klein" data-status aria-live="polite"></p>' +
+      '<div class="sdki-fehler" data-fehler hidden></div>' +
+      '<div data-ergebnis hidden></div>');
+    const $q = (sel) => o.querySelector(sel);
+    baueAuswahl($q('[data-auswahl]'));
+    const privat = () => {
+      const a = anbieter();
+      $q('[data-privat]').textContent = a === 'lotse' ? tx('ein_privat_lotse')
+        : tx('ein_privat_online', { firma: ONLINE[a] ? ONLINE[a].firma : 'Google (Gemini)' });
+    };
+    privat();
+    document.addEventListener('sd-ki-anbieter', privat);
+    const schliessen = () => { document.removeEventListener('sd-ki-anbieter', privat); lotseStopp(); o.remove(); };
+    $q('[data-schliessen]').onclick = schliessen;
+    const status = (t) => { $q('[data-status]').textContent = t || ''; };
+    const fehler = (t) => { const f = $q('[data-fehler]'); f.textContent = t || ''; f.hidden = !t; };
+    $q('[data-waehlen]').onclick = () => $q('[data-datei]').click();
+    $q('[data-datei]').onchange = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      fehler('');
+      $q('[data-ergebnis]').hidden = true;
+      $q('[data-waehlen]').disabled = true;
+      try {
+        let text = await leseDatei(file, status);
+        if (!text || !text.trim()) throw new Error(tx('ein_leer'));
+        let gekuerzt = false;
+        const istLotse = anbieter() === 'lotse';
+        const grenze = istLotse ? 3000 : GEMINI_MAX_ZEICHEN;
+        if (text.length > grenze) { text = text.slice(0, grenze); gekuerzt = istLotse; }
+        status(tx('ein_ki_laeuft'));
+        const antwort = await schreibe(baueEinlesePrompt(opt, text, $q('[data-verbessern]').checked), { maxTokens: istLotse ? 1100 : 2500 });
+        const werte = leseEinleseAntwort(antwort, opt.felder);
+        status('');
+        if (!Object.keys(werte).length) throw new Error(tx('ein_nichts'));
+        zeigeErgebnis(werte, gekuerzt);
+      } catch (err) {
+        status('');
+        fehler((err && err.message) || String(err));
+      } finally {
+        $q('[data-waehlen]').disabled = false;
+      }
+    };
+    function zeigeErgebnis(werte, gekuerzt) {
+      const box = $q('[data-ergebnis]');
+      box.innerHTML = (gekuerzt ? '<p class="sdki-klein">' + esc(tx('ein_gekuerzt')) + '</p>' : '') +
+        '<p class="sdki-klein">' + esc(tx('ein_pruefen')) + '</p><div class="sdki-felder"></div>' +
+        '<div class="sdki-knoepfe" style="margin-top:8px"><button type="button" class="sdki-btn prim" data-ok>' + esc(tx('ein_uebernehmen')) + '</button>' +
+        '<button type="button" class="sdki-btn" data-nein>' + esc(tx('abbrechen')) + '</button></div>';
+      const liste = box.querySelector('.sdki-felder');
+      opt.felder.forEach(f => {
+        if (werte[f.id] == null) return;
+        const zeile = document.createElement('div');
+        zeile.className = 'sdki-feld';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = true; cb.dataset.id = f.id; cb.id = 'sdki-ein-' + f.id;
+        const lbl = document.createElement('label');
+        lbl.htmlFor = cb.id;
+        lbl.innerHTML = '<strong>' + esc(f.label) + '</strong>';
+        const ta = document.createElement('textarea');
+        ta.value = werte[f.id];
+        ta.rows = f.mehrzeilig ? Math.min(8, Math.max(2, werte[f.id].split('\n').length)) : 1;
+        ta.dataset.wert = f.id;
+        zeile.append(cb, lbl, ta);
+        liste.appendChild(zeile);
+      });
+      box.hidden = false;
+      box.querySelector('[data-nein]').onclick = schliessen;
+      box.querySelector('[data-ok]').onclick = () => {
+        const auswahlWerte = {};
+        liste.querySelectorAll('input[type=checkbox][data-id]').forEach(cb => {
+          if (!cb.checked) return;
+          const ta = liste.querySelector('textarea[data-wert="' + cb.dataset.id + '"]');
+          auswahlWerte[cb.dataset.id] = ta ? ta.value.trim() : '';
+        });
+        const n = opt.uebernehmen ? opt.uebernehmen(auswahlWerte) : Object.keys(auswahlWerte).length;
+        schliessen();
+        if (opt.fertig) opt.fertig(tx('ein_fertig', { n: n == null ? Object.keys(auswahlWerte).length : n }));
+      };
+      box.scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  // ------------------------------------------------------------
   // Dialog "KI-Hilfe zum Dokument" (PDF-Studio, Scanner)
   // ------------------------------------------------------------
   // optionen: { text, ocr (bool: Korrektur-Aktion anbieten), uebernehmen(text) }
@@ -710,7 +973,7 @@
   window.sdKi = {
     anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
-    geminiSchreibe, onlineSchreibe, schreibe, dokumentDialog,
+    geminiSchreibe, onlineSchreibe, schreibe, dokumentDialog, einleseDialog, leseDatei,
     _intern: { lotse }
   };
 })();
