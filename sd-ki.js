@@ -3,7 +3,7 @@
    ==========================================================
    - SD Lotse: eigene KI, laeuft lokal im Browser (WebLLM, WebGPU),
      ohne Schluessel und ohne dass Texte das Geraet verlassen. Basiert auf
-     Llama 3.2 von Meta ("Built with Llama"). Das Modell wird nur EINMAL
+     offenen Modellen (Llama, Gemma, Qwen - siehe sd-lotse-modelle.js). Das Modell wird nur EINMAL
      heruntergeladen und steht dann allen SD-Apps auf thesdhub.com zur
      Verfuegung (gleicher Browser-Speicher).
    - Gemini: ueber gemini-modelle.js mit dem eigenen Gratis-Schluessel.
@@ -19,11 +19,17 @@
   const WORKER_URL = new URL('sd-lotse-worker.js', SKRIPT_URL).href;
   const INFO_URL = new URL('datenschutz.html#ki', SKRIPT_URL).href;
   const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.83';
-  // Gleiche Modelle wie im KI-Assistenten -> derselbe Download fuer alle Apps.
-  const MODELLE = {
-    '1b': { f16: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', groesse: '1 GB' },
-    '3b': { f16: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-3B-Instruct-q4f32_1-MLC', groesse: '2 GB' }
-  };
+  // Gleiche Modelle wie im KI-Assistenten -> derselbe Download fuer alle
+  // Apps. Katalog, automatische Auswahl und Absturz-Schutz: sd-lotse-modelle.js
+  const MODELLE_URL = new URL('sd-lotse-modelle.js?v=1', SKRIPT_URL).href;
+  const modelleBereit = window.SDLotseModelle ? Promise.resolve(window.SDLotseModelle) : new Promise((ok, fehler) => {
+    const sc = document.createElement('script');
+    sc.src = MODELLE_URL;
+    sc.onload = () => window.SDLotseModelle ? ok(window.SDLotseModelle) : fehler(new Error('sd-lotse-modelle.js'));
+    sc.onerror = () => fehler(new Error('sd-lotse-modelle.js konnte nicht geladen werden'));
+    (document.head || document.documentElement).appendChild(sc);
+  });
+  modelleBereit.catch(() => { /* Fehler zeigt sich erst beim Benutzen */ });
   const ANBIETER_STORAGE = 'sdKiAnbieter';
   const GEMINI_KEY_STORAGE = 'biGeminiApiKey';
   const LOTSE_MAX_ZEICHEN = 6000;   // ca. 2.000 Token - Llama 3.2 im Browser hat ~4.000 Token Kontext
@@ -191,40 +197,12 @@
   // ------------------------------------------------------------
   const lotse = { lib: null, engine: null, modellId: null, gpu: null, ladeVersprechen: null, aktuellerStream: null };
 
-  // iPhone/iPad: Safari gibt einer Webseite zu wenig Arbeitsspeicher fuer
-  // das grosse Modell - die Seite stuerzt dann ab. Dort immer das kleine.
-  function istIos() {
-    const ua = navigator.userAgent || '';
-    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  }
-  // Merker gegen Absturz-Schleifen (gemeinsam mit dem KI-Assistenten):
-  // steht er beim naechsten Oeffnen noch da, ist das Laden abgestuerzt.
-  const START_KEY = 'sdLotseStartLaeuft';
-  const OK_KEY = 'sdLotseOkModelle';
-
+  // Tatsaechlich benutztes Modell (Einstellung "Automatisch" oder fest gewaehlt)
   function variante() {
-    try {
-      const o = JSON.parse(lesen(localStorage, 'sdAssistentOptionen') || '{}');
-      if (o.llamaModell === '3b' && istIos()) return '1b';
-      return MODELLE[o.llamaModell] ? o.llamaModell : '1b';
-    } catch (e) { return '1b'; }
+    const LM = window.SDLotseModelle;
+    const gpu = lotse.gpu && lotse.gpu.ok ? lotse.gpu : null;
+    return LM.variante(LM.gewaehlteEinstellung(), gpu);
   }
-
-  // Ist das grosse Modell beim letzten Mal abgestuerzt, auf das kleine
-  // zurueckstellen (die Einstellung teilen sich alle Apps).
-  (function pruefeAbsturz() {
-    try {
-      const id = localStorage.getItem(START_KEY);
-      if (!id) return;
-      localStorage.removeItem(START_KEY);
-      if (/3B/.test(id)) {
-        const o = JSON.parse(lesen(localStorage, 'sdAssistentOptionen') || '{}');
-        o.llamaModell = '1b';
-        localStorage.setItem('sdAssistentOptionen', JSON.stringify(o));
-        localStorage.setItem('sdLotseAbsturz', id);
-      }
-    } catch (e) { /* egal */ }
-  })();
 
   function geraeteInfo() {
     const ua = navigator.userAgent || '';
@@ -255,8 +233,7 @@
   }
 
   function modellId() {
-    const m = MODELLE[variante()];
-    return (lotse.gpu && lotse.gpu.f16) ? m.f16 : m.f32;
+    return window.SDLotseModelle.modellId(variante(), lotse.gpu);
   }
 
   async function ladeBibliothek() {
@@ -273,11 +250,18 @@
     return o;
   }
 
+  function dlGroesse() {
+    const LM = window.SDLotseModelle;
+    const key = variante();
+    const gb = (LM.speicherBedarf(key, lotse.gpu) / 1000).toLocaleString(sprache() === 'en' ? 'en' : 'de', { maximumFractionDigits: 1 });
+    return gb + ' GB · ' + LM.KATALOG[key].name;
+  }
+
   function frageDownload() {
     return new Promise(resolve => {
       const o = overlay(
         '<h2>' + esc(tx('dl_titel')) + '</h2>' +
-        '<p>' + esc(tx('dl_text', { groesse: MODELLE[variante()].groesse })) + '</p>' +
+        '<p>' + esc(tx('dl_text', { groesse: dlGroesse() })) + '</p>' +
         '<p class="sdki-klein"><a href="' + INFO_URL + '" target="_blank" rel="noopener">' + esc(tx('info')) + '</a></p>' +
         '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-ok>' + esc(tx('dl_ok')) + '</button>' +
         '<button type="button" class="sdki-btn" data-nein>' + esc(tx('abbrechen')) + '</button></div>');
@@ -289,6 +273,7 @@
   // Stellt sicher, dass SD Lotse geladen ist (fragt vor dem ersten
   // Download, zeigt Fortschritt). Wirft verstaendliche Fehler.
   async function bereitmachen() {
+    await modelleBereit;
     if (lotse.engine && lotse.modellId === modellId()) return lotse.engine;
     if (lotse.ladeVersprechen) return lotse.ladeVersprechen;
     const gpu = await pruefeGeraet();
@@ -309,7 +294,7 @@
       try {
         if (lotse.engine) { try { await lotse.engine.unload(); } catch (e) { /* egal */ } lotse.engine = null; }
         let engine;
-        try { localStorage.setItem(START_KEY, id); } catch (e) { /* egal */ }
+        window.SDLotseModelle.startBeginnt(id);
         try {
           const worker = new Worker(WORKER_URL, { type: 'module' });
           engine = await lib.CreateWebWorkerMLCEngine(worker, id, { initProgressCallback: fortschritt });
@@ -318,16 +303,12 @@
         }
         lotse.engine = engine;
         lotse.modellId = id;
-        try {
-          localStorage.removeItem(START_KEY);
-          const ok = JSON.parse(localStorage.getItem(OK_KEY) || '[]');
-          if (!ok.includes(id)) { ok.push(id); localStorage.setItem(OK_KEY, JSON.stringify(ok)); }
-        } catch (e) { /* egal */ }
+        window.SDLotseModelle.startFertig(id, true);
         // Browser bitten, die Modelldateien dauerhaft zu behalten
         try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* egal */ }
         return engine;
       } catch (err) {
-        try { localStorage.removeItem(START_KEY); } catch (e) { /* egal */ }
+        window.SDLotseModelle.startFertig(id, false);
         throw new Error(tx('laden_fehler', { msg: (err && err.message) || String(err) }) + ' · ' + geraeteInfo());
       } finally {
         o.remove();
@@ -346,7 +327,7 @@
     'documents and write simple code. Follow the user\'s instructions exactly. Output only the ' +
     'requested text, without explanations or introductions. Never invent facts, numbers, names, degrees ' +
     'or experience; if information is missing, leave a gap in [square brackets]. If asked which model ' +
-    'you are based on, say honestly: Llama 3.2 by Meta, running locally in the browser.';
+    'you are based on, say honestly: {MODELL}, running locally in the browser.';
 
   /**
    * Text mit SD Lotse erzeugen.
@@ -356,24 +337,30 @@
     const opt = optionen || {};
     const engine = await bereitmachen();
     const spracheHinweis = sprache() === 'en' ? ' Write in English unless the task says otherwise.' : ' Write in German (Deutsch) unless the task says otherwise.';
-    const stream = await engine.chat.completions.create({
+    const LM = window.SDLotseModelle;
+    const k = LM.KATALOG[LM.keyVonId(lotse.modellId) || variante()];
+    const system = LOTSE_SYSTEM.replace('{MODELL}', k.name + ' by ' + k.firma);
+    const stream = await engine.chat.completions.create(Object.assign({
       messages: [
-        { role: 'system', content: LOTSE_SYSTEM + spracheHinweis + (opt.system ? '\n\n' + opt.system : '') },
+        { role: 'system', content: system + spracheHinweis + (opt.system ? '\n\n' + opt.system : '') },
         { role: 'user', content: String(prompt) }
       ],
       stream: true,
       temperature: 0.4,
       top_p: 0.9,
       max_tokens: opt.maxTokens || 900
-    });
+    }, LM.anfrageZusatz(lotse.modellId)));
     lotse.aktuellerStream = engine;
     let text = '';
+    let roh = '';
     try {
       for await (const teil of stream) {
         const neu = (teil.choices && teil.choices[0] && teil.choices[0].delta && teil.choices[0].delta.content) || '';
         if (!neu) continue;
-        text += neu;
-        if (opt.onToken) opt.onToken(neu, text);
+        roh += neu;
+        const vorher = text;
+        text = LM.bereinige(roh);
+        if (opt.onToken && text.length > vorher.length) opt.onToken(text.slice(vorher.length), text);
       }
     } finally {
       lotse.aktuellerStream = null;
@@ -578,6 +565,6 @@
     anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
     geminiSchreibe, schreibe, dokumentDialog,
-    _intern: { lotse, MODELLE }
+    _intern: { lotse }
   };
 })();

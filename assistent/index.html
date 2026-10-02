@@ -938,11 +938,21 @@
                 mode_llama: '🔒 SD Lotse',
                 mode_llama_sub: 'eigene KI · lokal · ohne Schlüssel',
                 llama_h: '🔒 SD Lotse – unsere eigene KI auf deinem Gerät',
-                llama_p: 'Kein Schlüssel, keine Kosten, und deine Nachrichten verlassen das Gerät nicht. Dafür wird SD Lotse einmalig heruntergeladen und im Browser gespeichert. Er ist kleiner und schwächer als Gemini, kann keine Bilder/PDFs ansehen und nicht rechnen.',
+                llama_p: 'Kein Schlüssel, keine Kosten, und deine Nachrichten verlassen das Gerät nicht. Dafür wird SD Lotse einmalig heruntergeladen und im Browser gespeichert. Er ist kleiner und schwächer als Gemini; angehängte Dokumente liest er als Text, Code ausführen kann er nicht.',
                 llama_credit_html: '<a href="../datenschutz.html#ki" target="_blank" rel="noopener">ℹ️ Datenschutz &amp; Lizenzen</a>',
                 llama_model_lbl: 'Variante',
-                llama_1b: 'Kompakt – schnell (ca. 1 GB)',
-                llama_3b: 'Stark – bessere Antworten (ca. 2 GB)',
+                llama_auto_opt: 'Automatisch – passend für dieses Gerät (empfohlen)',
+                llama_modell_opt: '{name} ({firma}) – {art}, ca. {gb} GB',
+                llama_art_gemma: 'sehr klein',
+                llama_art_1b: 'klein & schnell',
+                llama_art_qwen15: 'mittel',
+                llama_art_qwen3: 'stark',
+                llama_art_3b: 'stark, groß',
+                llama_nicht_hier: 'auf diesem Gerät nicht möglich',
+                llama_zu_gross: 'hier abgestürzt',
+                llama_auto_info: '🤖 Für dieses Gerät gewählt:',
+                llama_gewaehlt_info: 'Gewählt:',
+                llama_ca_gb: 'ca. {gb} GB',
                 llama_start: '⬇️ Herunterladen & starten',
                 llama_start_cached: '▶️ SD Lotse starten',
                 llama_wifi: 'Tipp: Am besten im WLAN herunterladen.',
@@ -953,13 +963,12 @@
                 llama_persist_no: '💾 SD Lotse ist auf diesem Gerät gespeichert und startet beim Öffnen automatisch. Der Browser hat dauerhaftes Speichern nicht bestätigt – bei vollem Speicher könnte er das Modell löschen, dann wird es neu geladen.',
                 llama_unsupported: 'Dein Browser oder Gerät kann SD Lotse leider nicht lokal ausführen (WebGPU fehlt oder ist zu schwach). Am besten klappt es mit Chrome oder Edge am PC/Laptop. Auf iPhones und vielen Handys geht es derzeit nicht – dort bitte Gemini nutzen.',
                 llama_load_failed: 'SD Lotse konnte nicht geladen werden: {msg}',
-                llama_crashed: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts für das starke Modell nicht. Ich habe auf „Kompakt“ umgestellt. Tippe auf Starten, um es damit zu versuchen.',
-                llama_crashed_1b: '⚠️ Beim letzten Start von SD Lotse ist die Seite abgestürzt – vermutlich reicht der Arbeitsspeicher dieses Geräts nicht. Schließe andere Apps und tippe dann noch einmal auf Starten.',
-                llama_3b_ios: 'Stark (ca. 2 GB) – auf iPhone/iPad nicht möglich',
-                llama_ios_3b: '📱 Auf iPhone/iPad läuft nur die Kompakt-Version – für die starke Version reicht der Speicher, den Safari einer Webseite gibt, nicht. Die starke Version liegt aber noch auf deinem Gerät (ca. 2 GB).',
-                llama_ios_del: '🗑️ Starke Version löschen (ca. 2 GB frei)',
+                llama_crashed: '⚠️ Beim letzten Start ist die Seite abgestürzt – {name} ist zu groß für dieses Gerät. Ich habe auf „Automatisch“ umgestellt, es wird jetzt ein kleineres Modell genommen. Tippe auf Starten.',
+                llama_crashed_1b: '⚠️ Beim letzten Start von SD Lotse ({name}) ist die Seite abgestürzt – vermutlich war zu wenig Arbeitsspeicher frei. Schließe andere Apps und tippe dann noch einmal auf Starten.',
+                llama_unbrauchbar: '📱 Auf deinem Gerät liegt noch ein Modell, das hier nicht läuft ({namen}). Es belegt nur Speicherplatz.',
+                llama_ios_del: '🗑️ Löschen und Speicher freigeben',
                 llama_ios_deleted: '✓ Gelöscht.',
-                llama_need_1b: 'Auf iPhone/iPad läuft nur die Kompakt-Version. Bitte oben einmal auf „Herunterladen & starten“ tippen (ca. 1 GB) – danach startet SD Lotse beim Öffnen von selbst.',
+                llama_need_1b: 'Bitte oben einmal auf „Herunterladen & starten“ tippen – „Automatisch“ wählt das passende Modell für dein iPhone/iPad. Danach startet SD Lotse beim Öffnen von selbst.',
                 llama_autostart_send: '⏳ SD Lotse wird gestartet …',
                 llama_tech: 'Technischer Grund',
                 llama_not_started: 'Bitte starte SD Lotse zuerst oben mit „Herunterladen & starten“.',
@@ -1075,11 +1084,21 @@
                 mode_llama: '🔒 SD Lotse',
                 mode_llama_sub: 'own AI · local · no key',
                 llama_h: '🔒 SD Lotse – our own AI on your device',
-                llama_p: 'No key, no cost, and your messages never leave the device. SD Lotse is downloaded once and stored in the browser. It is smaller and weaker than Gemini, cannot look at images/PDFs and cannot run code.',
+                llama_p: 'No key, no cost, and your messages never leave the device. SD Lotse is downloaded once and stored in the browser. It is smaller and weaker than Gemini; it reads attached documents as text but cannot run code.',
                 llama_credit_html: '<a href="../datenschutz.html#ki" target="_blank" rel="noopener">ℹ️ Privacy &amp; licenses</a>',
                 llama_model_lbl: 'Variant',
-                llama_1b: 'Compact – fast (approx. 1 GB)',
-                llama_3b: 'Strong – better answers (approx. 2 GB)',
+                llama_auto_opt: 'Automatic – suited to this device (recommended)',
+                llama_modell_opt: '{name} ({firma}) – {art}, approx. {gb} GB',
+                llama_art_gemma: 'very small',
+                llama_art_1b: 'small & fast',
+                llama_art_qwen15: 'medium',
+                llama_art_qwen3: 'strong',
+                llama_art_3b: 'strong, large',
+                llama_nicht_hier: 'not possible on this device',
+                llama_zu_gross: 'crashed here',
+                llama_auto_info: '🤖 Chosen for this device:',
+                llama_gewaehlt_info: 'Chosen:',
+                llama_ca_gb: 'approx. {gb} GB',
                 llama_start: '⬇️ Download & start',
                 llama_start_cached: '▶️ Start SD Lotse',
                 llama_wifi: 'Tip: best downloaded over Wi-Fi.',
@@ -1090,13 +1109,12 @@
                 llama_persist_no: '💾 SD Lotse is stored on this device and starts automatically when you open the app. The browser did not confirm permanent storage – if storage runs full it might remove the model, then it will be downloaded again.',
                 llama_unsupported: 'Your browser or device cannot run SD Lotse locally (WebGPU missing or too weak). It works best with Chrome or Edge on a PC/laptop. It currently does not work on iPhones and many phones – please use Gemini there.',
                 llama_load_failed: 'SD Lotse could not be loaded: {msg}',
-                llama_crashed: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory for the strong model. I switched to "Compact". Tap Start to try with it.',
-                llama_crashed_1b: '⚠️ The page crashed the last time SD Lotse started – this device probably does not have enough memory. Close other apps and tap Start again.',
-                llama_3b_ios: 'Strong (approx. 2 GB) – not possible on iPhone/iPad',
-                llama_ios_3b: '📱 On iPhone/iPad only the compact version works – Safari does not give a web page enough memory for the strong version. The strong version is still stored on your device though (approx. 2 GB).',
-                llama_ios_del: '🗑️ Delete strong version (frees approx. 2 GB)',
+                llama_crashed: '⚠️ The page crashed during the last start – {name} is too large for this device. I switched to "Automatic", a smaller model will be used now. Tap Start.',
+                llama_crashed_1b: '⚠️ The page crashed the last time SD Lotse ({name}) started – probably not enough free memory. Close other apps and tap Start again.',
+                llama_unbrauchbar: '📱 There is still a model on your device that cannot run here ({namen}). It only takes up storage.',
+                llama_ios_del: '🗑️ Delete and free up storage',
                 llama_ios_deleted: '✓ Deleted.',
-                llama_need_1b: 'On iPhone/iPad only the compact version works. Please tap "Download & start" at the top once (approx. 1 GB) – after that SD Lotse starts by itself when you open the app.',
+                llama_need_1b: 'Please tap "Download & start" at the top once – "Automatic" picks the right model for your iPhone/iPad. After that SD Lotse starts by itself when you open the app.',
                 llama_autostart_send: '⏳ Starting SD Lotse …',
                 llama_tech: 'Technical reason',
                 llama_not_started: 'Please start SD Lotse first with "Download & start" at the top.',
@@ -1224,18 +1242,18 @@
                 <p class="hint" data-i18n="llama_p">Kein Schlüssel, keine Kosten.</p>
                 <p class="hint credit" data-i18n="llama_credit_html" data-i18n-html><a href="../datenschutz.html#ki" target="_blank" rel="noopener">ℹ️ Datenschutz &amp; Lizenzen</a></p>
                 <div class="llama-ios" id="llamaIos" hidden>
-                    <p class="hint" data-i18n="llama_ios_3b">📱 Auf iPhone/iPad läuft nur die Kompakt-Version – für die starke Version reicht der Speicher, den Safari einer Webseite gibt, nicht. Die starke Version liegt aber noch auf deinem Gerät (ca. 2 GB).</p>
+                    <p class="hint" id="llamaIosText"></p>
                     <div class="row">
-                        <button type="button" class="btn btn-ghost" id="llamaIosLoeschen" data-i18n="llama_ios_del">🗑️ Starke Version löschen (ca. 2 GB frei)</button>
+                        <button type="button" class="btn btn-ghost" id="llamaIosLoeschen" data-i18n="llama_ios_del">🗑️ Löschen und Speicher freigeben</button>
                         <span class="status" id="llamaIosStatus" role="status"></span>
                     </div>
                 </div>
                 <div class="field" id="llamaSetup">
                     <label for="llamaModel" data-i18n="llama_model_lbl">Variante</label>
                     <select id="llamaModel">
-                        <option value="1b" data-i18n="llama_1b">Kompakt – schnell (ca. 1 GB)</option>
-                        <option value="3b" data-i18n="llama_3b">Stark – bessere Antworten (ca. 2 GB)</option>
+                        <option value="auto" data-i18n="llama_auto_opt">Automatisch – passend für dieses Gerät (empfohlen)</option>
                     </select>
+                    <p class="hint" id="llamaAutoInfo" hidden></p>
                 </div>
                 <div class="row" id="llamaStartRow">
                     <button type="button" class="btn btn-primary" id="llamaStartBtn" data-i18n="llama_start">⬇️ Herunterladen &amp; starten</button>
@@ -1295,6 +1313,7 @@
     </footer>
 
     <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
     <script>
         'use strict';
@@ -1365,7 +1384,7 @@
         let verlauf = [];
         let wartendeAnhaenge = [];   // [{ name, mime, data(base64), thumb }]
         let sendetGerade = false;
-        let optionen = { memory: true, code: true, suche: true, wiki: true, modus: 'gemini', llamaModell: '1b' };
+        let optionen = { memory: true, code: true, suche: true, wiki: true, modus: 'gemini', llamaModell: 'auto' };
 
         // ------------------------------------------------------------
         // Schluessel
@@ -1459,7 +1478,7 @@
                 if (typeof o.suche === 'boolean') optionen.suche = o.suche;
                 if (typeof o.wiki === 'boolean') optionen.wiki = o.wiki;
                 if (o.modus === 'gemini' || o.modus === 'llama') optionen.modus = o.modus;
-                if (o.llamaModell === '1b' || o.llamaModell === '3b') optionen.llamaModell = o.llamaModell;
+                if (o.llamaModell === 'auto' || window.SDLotseModelle.KATALOG[o.llamaModell]) optionen.llamaModell = o.llamaModell;
             } catch (e) { /* Standardwerte */ }
             $('optMemory').checked = optionen.memory;
             $('optCode').checked = optionen.code;
@@ -2488,7 +2507,7 @@
                 if (!llama.engine) {
                     zeigeFehler(llama.gpu && !llama.gpu.ok
                         ? t('llama_unsupported') + '\n\n' + t('llama_tech') + ': ' + (llama.gpu.grund || '?') + ' · ' + geraeteInfo()
-                        : (llama.absturzText ? llama.absturzText : (istIos() ? t('llama_need_1b') : t('llama_not_started'))));
+                        : (llama.absturzText ? llama.absturzText : (LM.istIos() ? t('llama_need_1b') : t('llama_not_started'))));
                     zeigeLlamaKarte(true);
                     return;
                 }
@@ -2593,10 +2612,7 @@
         const WEBLLM_URL = 'https://esm.run/@mlc-ai/web-llm@0.2.83';
         // q4f16 ist kleiner/schneller, braucht aber die GPU-Funktion
         // "shader-f16"; sonst wird die f32-Variante genommen.
-        const LLAMA_MODELLE = {
-            '1b': { f16: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-1B-Instruct-q4f32_1-MLC' },
-            '3b': { f16: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-3B-Instruct-q4f32_1-MLC' }
-        };
+        // Modelle: siehe ../sd-lotse-modelle.js
         // Auf Englisch formuliert: das kleine Modell befolgt englische
         // Anweisungen deutlich zuverlaessiger - mit deutscher Anweisung blieb
         // es oft bei Deutsch oder behauptete, kein Englisch zu koennen.
@@ -2620,7 +2636,7 @@
             'unless the user asks for a longer text. Use simple, correct, natural language. Reply in the language ' +
             'of the user\'s latest message. Never invent facts; if you are not sure, say so. If a Wikipedia ' +
             'reference is given below, use it and mention Wikipedia as the source. If asked which model you are ' +
-            'based on, say honestly: Llama 3.2 by Meta, running locally in the browser.';
+            'based on, say honestly: {MODELL}, running locally in the browser.';
         // Zwei kurze Beispiel-Dialoge in der Sprache der Person - zeigen dem
         // kleinen Modell Ton, Laenge und die eigenen Faehigkeiten.
         const LLAMA_BEISPIELE = {
@@ -2673,35 +2689,17 @@
             return browser + (system ? ' · ' + system : '') + webview;
         }
 
-        // iPhone/iPad: Safari gibt einer Webseite zu wenig Arbeitsspeicher
-        // fuer das starke Modell - die Seite stuerzt beim Laden ab.
-        function istIos() {
-            const ua = navigator.userAgent || '';
-            return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-        }
-        // Merker gegen Absturz-Schleifen (gemeinsam mit sd-ki.js): steht
-        // er beim naechsten Oeffnen noch da, ist das Laden abgestuerzt.
-        const LOTSE_START_KEY = 'sdLotseStartLaeuft';
-        const LOTSE_OK_KEY = 'sdLotseOkModelle';
-        const LOTSE_ABSTURZ_KEY = 'sdLotseAbsturz';
-        function okModelle() {
-            try { return JSON.parse(localStorage.getItem(LOTSE_OK_KEY) || '[]'); } catch (e) { return []; }
-        }
+        // Modell-Katalog, automatische Auswahl und Absturz-Schutz stehen in
+        // ../sd-lotse-modelle.js (gemeinsam mit den anderen Apps).
+        const LM = window.SDLotseModelle;
+
+        // Ist SD Lotse beim letzten Mal abgestuerzt? (stellt sd-lotse-modelle.js fest)
         function pruefeLotseAbsturz() {
-            let id = null;
-            try {
-                id = localStorage.getItem(LOTSE_START_KEY) || localStorage.getItem(LOTSE_ABSTURZ_KEY);
-                localStorage.removeItem(LOTSE_START_KEY);
-                localStorage.removeItem(LOTSE_ABSTURZ_KEY);
-            } catch (e) { /* egal */ }
-            if (!id) return;
-            const warGross = /3B/.test(id);
-            if (warGross) optionen.llamaModell = '1b';
-            if (optionen.llamaModell === '3b' && istIos()) optionen.llamaModell = '1b';
-            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
-            $('llamaModel').value = optionen.llamaModell;
-            llama.absturzText = t(warGross ? 'llama_crashed' : 'llama_crashed_1b');
+            const info = LM.holeAbsturzInfo();
+            if (!info) return;
+            llama.absturzText = t(info.gesperrt ? 'llama_crashed' : 'llama_crashed_1b', { name: info.name });
             llama.autoVersucht = true;   // nach einem Absturz nie automatisch starten
+            optionen.llamaModell = LM.gewaehlteEinstellung();
         }
         async function modellImSpeicher(id) {
             try {
@@ -2712,22 +2710,34 @@
             } catch (e) { return false; }
         }
 
-        // iPhone/iPad: liegt noch die (dort unbrauchbare) starke Version
-        // im Speicher, Hinweis + Knopf zum Loeschen zeigen.
-        async function pruefeIos3b() {
-            const box = $('llamaIos');
-            if (!istIos() || llama.engine) { box.hidden = true; return; }
-            const m = LLAMA_MODELLE['3b'];
-            box.hidden = !((await modellImSpeicher(m.f16)) || (await modellImSpeicher(m.f32)));
+        // Liegen Modelle im Speicher, die auf diesem Geraet nicht laufen
+        // (z. B. das grosse Llama auf dem iPhone)? Dann Hinweis + Loeschen.
+        async function unbrauchbareModelle() {
+            const gpu = await pruefeWebGpu();
+            const liste = [];
+            for (const key of LM.NACH_GROESSE) {
+                if (LM.erlaubt(key, gpu)) continue;
+                const k = LM.KATALOG[key];
+                for (const id of [k.f16, k.f32]) {
+                    if (id && await modellImSpeicher(id)) liste.push({ key, id });
+                }
+            }
+            return liste;
         }
-        async function loescheIos3b() {
+        async function pruefeUnbrauchbare() {
+            const box = $('llamaIos');
+            if (llama.engine) { box.hidden = true; return; }
+            const liste = await unbrauchbareModelle();
+            if (!liste.length) { box.hidden = true; return; }
+            const namen = [...new Set(liste.map(x => LM.KATALOG[x.key].name))].join(', ');
+            $('llamaIosText').textContent = t('llama_unbrauchbar', { namen });
+            box.hidden = false;
+        }
+        async function loescheUnbrauchbare() {
             const status = $('llamaIosStatus');
             try {
                 const lib = await ladeWebLlm();
-                const m = LLAMA_MODELLE['3b'];
-                for (const id of [m.f16, m.f32]) {
-                    if (await lib.hasModelInCache(id)) await lib.deleteModelAllInfoInCache(id);
-                }
+                for (const x of await unbrauchbareModelle()) await lib.deleteModelAllInfoInCache(x.id);
                 status.textContent = t('llama_ios_deleted');
                 setTimeout(() => { $('llamaIos').hidden = true; status.textContent = ''; }, 1500);
             } catch (err) {
@@ -2735,25 +2745,55 @@
             }
         }
 
-        function sperre3bAufIos() {
-            if (!istIos()) return;
-            const opt = document.querySelector('#llamaModel option[value="3b"]');
-            if (opt) {
-                opt.disabled = true;
-                opt.removeAttribute('data-i18n');
-                opt.textContent = t('llama_3b_ios');
-                document.addEventListener('sd-lang-changed', () => { opt.textContent = t('llama_3b_ios'); });
+        // Auswahlliste: "Automatisch" + alle Modelle; was hier nicht geht, ist gesperrt.
+        function fuelleModellAuswahl() {
+            const sel = $('llamaModel');
+            const gpu = llama.gpu && llama.gpu.ok ? llama.gpu : null;
+            sel.innerHTML = '';
+            const auto = document.createElement('option');
+            auto.value = 'auto';
+            auto.textContent = t('llama_auto_opt');
+            sel.appendChild(auto);
+            LM.NACH_GROESSE.forEach(key => {
+                const k = LM.KATALOG[key];
+                const o = document.createElement('option');
+                o.value = key;
+                const gb = (LM.speicherBedarf(key, gpu) / 1000).toLocaleString(window.SD_LANG === 'en' ? 'en' : 'de', { maximumFractionDigits: 1 });
+                let text = t('llama_modell_opt', { name: k.name, firma: k.firma, gb, art: t('llama_art_' + key) });
+                if (gpu && !LM.moeglich(key, gpu)) { o.disabled = true; text += ' – ' + t('llama_nicht_hier'); }
+                else if (LM.zuGrossListe().includes(key)) { o.disabled = true; text += ' – ' + t('llama_zu_gross'); }
+                o.textContent = text;
+                sel.appendChild(o);
+            });
+            sel.value = optionen.llamaModell;
+            if (sel.value !== optionen.llamaModell || (sel.selectedOptions[0] && sel.selectedOptions[0].disabled)) sel.value = 'auto';
+            const info = $('llamaAutoInfo');
+            if (gpu) {
+                const key = aktuelleVariante();
+                const k = LM.KATALOG[key];
+                info.textContent = (optionen.llamaModell === 'auto' || sel.value === 'auto' ? t('llama_auto_info') : t('llama_gewaehlt_info')) +
+                    ' ' + k.name + ' (' + k.firma + ', ' + t('llama_ca_gb', { gb: (LM.speicherBedarf(key, gpu) / 1000).toLocaleString(window.SD_LANG === 'en' ? 'en' : 'de', { maximumFractionDigits: 1 }) }) + ')';
+                info.hidden = false;
+            } else {
+                info.hidden = true;
             }
-            if (optionen.llamaModell === '3b') {
-                optionen.llamaModell = '1b';
-                speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
-            }
-            $('llamaModel').value = optionen.llamaModell;
+        }
+
+        function modellBeschreibung() {
+            const key = (llama.modellId && LM.keyVonId(llama.modellId)) || aktuelleVariante();
+            const k = LM.KATALOG[key];
+            return k.name + ' by ' + k.firma;
+        }
+
+        function aktuelleVariante() {
+            return LM.variante(optionen.llamaModell, llama.gpu && llama.gpu.ok ? llama.gpu : null);
+        }
+        function aktuellesModellName() {
+            return LM.KATALOG[aktuelleVariante()].name;
         }
 
         function llamaModellId() {
-            const m = LLAMA_MODELLE[optionen.llamaModell] || LLAMA_MODELLE['1b'];
-            return (llama.gpu && llama.gpu.f16) ? m.f16 : m.f32;
+            return LM.modellId(aktuelleVariante(), llama.gpu);
         }
 
         async function ladeWebLlm() {
@@ -2779,6 +2819,7 @@
                 zeigeLlamaKarte(false);
                 return;
             }
+            fuelleModellAuswahl();
             notice.textContent = llama.absturzText || '';
             notice.hidden = !llama.absturzText;
             $('llamaSetup').hidden = !!llama.laedt;
@@ -2792,11 +2833,11 @@
             $('llamaStartBtn').textContent = imSpeicher ? t('llama_start_cached') : t('llama_start');
             zeigeLlamaKarte(false);
             zeigeSpeicherInfo(imSpeicher);
-            pruefeIos3b();
+            pruefeUnbrauchbare();
             // Schon auf dem Geraet gespeichert: automatisch starten (kein
             // Download noetig). Nur einmal pro Seitenaufruf, damit ein
             // Fehler nicht endlos wiederholt wird.
-            if (imSpeicher && okModelle().includes(llamaModellId()) && !llama.engine && !llama.laedt && !llama.autoVersucht && optionen.modus === 'llama') {
+            if (imSpeicher && LM.okListe().includes(llamaModellId()) && !llama.engine && !llama.laedt && !llama.autoVersucht && optionen.modus === 'llama') {
                 llama.autoVersucht = true;
                 starteLlama(true);
             }
@@ -2849,7 +2890,7 @@
                 const lib = await ladeWebLlm();
                 if (llama.engine) { try { await llama.engine.unload(); } catch (e) { /* egal */ } llama.engine = null; }
                 llama.absturzText = '';
-                try { localStorage.setItem(LOTSE_START_KEY, id); } catch (e) { /* egal */ }
+                LM.startBeginnt(id);
                 let engine = null;
                 try {
                     // Bevorzugt im Hintergrund-Thread, damit die Seite fluessig bleibt.
@@ -2860,18 +2901,14 @@
                 }
                 llama.engine = engine;
                 llama.modellId = id;
-                try {
-                    localStorage.removeItem(LOTSE_START_KEY);
-                    const ok = okModelle();
-                    if (!ok.includes(id)) { ok.push(id); localStorage.setItem(LOTSE_OK_KEY, JSON.stringify(ok)); }
-                } catch (e) { /* egal */ }
+                LM.startFertig(id, true);
                 await sichereSpeicher();
                 zeigeSpeicherInfo(true);
                 $('llamaProgress').hidden = true;
                 $('llamaReady').hidden = false;
                 setTimeout(() => zeigeLlamaKarte(false), 2500);
             } catch (err) {
-                try { localStorage.removeItem(LOTSE_START_KEY); } catch (e) { /* egal */ }
+                LM.startFertig(id, false);
                 $('llamaProgress').hidden = true;
                 $('llamaSetup').hidden = false;
                 $('llamaStartRow').hidden = false;
@@ -2930,7 +2967,7 @@
             (LLAMA_BEISPIELE[sprache] || LLAMA_BEISPIELE.de).forEach(([frage, antwort]) => {
                 beispiele.push({ role: 'user', content: frage }, { role: 'assistant', content: antwort });
             });
-            return [{ role: 'system', content: LLAMA_SYSTEM + datumHinweis() + sprachHinweis() }].concat(beispiele, liste);
+            return [{ role: 'system', content: LLAMA_SYSTEM.replace('{MODELL}', modellBeschreibung()) + datumHinweis() + sprachHinweis() }].concat(beispiele, liste);
         }
 
         // Wissensfrage? ("Was ist ...", "Wer ist ...", "What is ..."). Nur
@@ -2995,18 +3032,20 @@
                 nachUntenScrollen();
             };
             try {
-                const stream = await llama.engine.chat.completions.create({
+                const stream = await llama.engine.chat.completions.create(Object.assign({
                     messages: nachrichten,
                     stream: true,
                     // Weniger Zufall: kleine Modelle "fantasieren" sonst schnell.
                     temperature: 0.4,
                     top_p: 0.9,
                     max_tokens: 1024
-                });
+                }, LM.anfrageZusatz(llama.modellId)));
+                let roh = '';
                 for await (const teil of stream) {
                     const neu = (teil.choices && teil.choices[0] && teil.choices[0].delta && teil.choices[0].delta.content) || '';
                     if (!neu) continue;
-                    text += neu;
+                    roh += neu;
+                    text = LM.bereinige(roh);
                     if (!geplant) { geplant = true; requestAnimationFrame(zeichne); }
                 }
                 zeichne();
@@ -3062,11 +3101,10 @@
             try {
                 const lib = await ladeWebLlm();
                 let geloescht = false;
-                for (const k of Object.keys(LLAMA_MODELLE)) {
-                    for (const id of [LLAMA_MODELLE[k].f16, LLAMA_MODELLE[k].f32]) {
-                        if (await lib.hasModelInCache(id)) { await lib.deleteModelAllInfoInCache(id); geloescht = true; }
-                    }
+                for (const id of LM.alleIds()) {
+                    if (await lib.hasModelInCache(id)) { await lib.deleteModelAllInfoInCache(id); geloescht = true; }
                 }
+                LM.sperrenZuruecksetzen();
                 if (llama.engine) { try { await llama.engine.unload(); } catch (e) { /* egal */ } llama.engine = null; llama.modellId = null; }
                 status.textContent = geloescht ? t('llama_deleted') : t('llama_delete_none');
                 aktualisiereLlamaKarte();
@@ -3091,7 +3129,7 @@
             aktualisiereLlamaKarte();
         };
         $('llamaDeleteBtn').onclick = () => loescheLlamaModell();
-        $('llamaIosLoeschen').onclick = () => loescheIos3b();
+        $('llamaIosLoeschen').onclick = () => loescheUnbrauchbare();
         $('keyModeSession').onchange = speichereKey;
         $('keyModePermanent').onchange = speichereKey;
         $('optMemory').onchange = speichereOptionen;
@@ -3177,7 +3215,6 @@
         ladeKeyFeld();
         rendereAlles();
         pruefeLotseAbsturz();
-        sperre3bAufIos();
         setzeModus(optionen.modus);
         aktualisiereSendenKnopf();
     </script>
