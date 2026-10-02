@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD KI-Assistent</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="KI-Assistent für Bewerbung, Briefe und Dokumente – mit Gedächtnis, Bild-/PDF-Verständnis und Python-Rechnen">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --ink: #172a3a;
+            --muted: #647482;
+            --accent: #2f7d72;
+            --accent-dark: #1c4a42;
+            --accent-soft: #dcece7;
+            --paper: #fffdf8;
+            --canvas: #e9eee9;
+            --line: #d8e0dc;
+            --gold: #c9a86a;
+            --danger: #b42318;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Trebuchet MS', Verdana, sans-serif;
+            background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%);
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* --- Kopfzeile --- */
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+            background: rgba(255, 255, 255, 0.94);
+            border-bottom: 1px solid var(--line);
+            flex: 0 0 auto;
+        }
+
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .sd-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #1c4a42, #10302b);
+            color: #f4ead0;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            box-shadow: 0 4px 12px rgba(16, 48, 43, 0.25);
+        }
+
+        .brand-text {
+            min-width: 0;
+        }
+
+        .brand-text strong {
+            font-family: Georgia, serif;
+            font-size: 1.05rem;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .brand-text small {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .sd-lang-switch {
+            display: flex;
+            gap: 4px;
+            background: rgba(23, 42, 58, 0.06);
+            border: 1px solid rgba(23, 42, 58, 0.14);
+            border-radius: 999px;
+            padding: 3px;
+        }
+
+        .sd-lang-btn {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .sd-lang-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .icon-btn {
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            border-radius: 10px;
+            min-width: 40px;
+            min-height: 40px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        /* --- Einstellungen --- */
+        .settings {
+            display: none;
+            flex: 0 0 auto;
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 14px 16px;
+            max-height: 60dvh;
+            overflow-y: auto;
+        }
+
+        .settings.open {
+            display: block;
+        }
+
+        .settings-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            display: grid;
+            gap: 14px;
+        }
+
+        .settings h2 {
+            font-family: Georgia, serif;
+            font-size: 1.05rem;
+            margin: 0;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .field input[type="password"],
+        .field input[type="text"] {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 16px;
+            background: var(--paper);
+            font-family: inherit;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .check {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .check input {
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .hint a {
+            color: var(--accent);
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            min-height: 42px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: #fff;
+            color: var(--ink);
+            border: 1px solid var(--line);
+        }
+
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border: 1px solid #f1c4bf;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            color: var(--accent-dark);
+            min-height: 1.2em;
+        }
+
+        /* --- Chatverlauf --- */
+        .chat {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 18px 16px 8px;
+        }
+
+        .chat-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .welcome {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .welcome h1 {
+            font-family: Georgia, serif;
+            font-size: 1.35rem;
+            margin: 0 0 6px;
+            text-wrap: balance;
+        }
+
+        .welcome p {
+            margin: 0 0 10px;
+            line-height: 1.55;
+            color: var(--muted);
+        }
+
+        .abilities {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .ability {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+        .ability strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .suggestion {
+            border: 1px solid var(--line);
+            background: #fff;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--ink);
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .suggestion:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .key-callout {
+            border: 1px solid #ead9b6;
+            background: #fbf5e8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .msg {
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+        }
+
+        .msg.user {
+            align-items: flex-end;
+        }
+
+        .bubble {
+            border-radius: 16px;
+            padding: 11px 14px;
+            line-height: 1.55;
+            font-size: 0.95rem;
+            max-width: min(620px, 92%);
+            overflow-wrap: anywhere;
+            min-width: 0;
+        }
+
+        .msg.user .bubble {
+            background: var(--accent);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+            white-space: pre-wrap;
+        }
+
+        .msg.model .bubble {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg.error .bubble {
+            background: #fdf0ee;
+            border: 1px solid #f1c4bf;
+            color: var(--danger);
+        }
+
+        .bubble p { margin: 0 0 8px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble ul, .bubble ol { margin: 4px 0 8px; padding-left: 22px; }
+        .bubble li { margin: 2px 0; }
+        .bubble h3, .bubble h4 { font-family: Georgia, serif; margin: 10px 0 6px; font-size: 1rem; }
+        .bubble a { color: var(--accent); }
+        .bubble code {
+            font-family: 'Courier New', monospace;
+            background: #eef3f1;
+            padding: 1px 5px;
+            border-radius: 5px;
+            font-size: 0.88em;
+        }
+
+        .bubble pre {
+            background: #10302b;
+            color: #e6f2ee;
+            padding: 10px 12px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            margin: 6px 0;
+        }
+
+        .bubble pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .tool-block {
+            margin: 8px 0;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--paper);
+            overflow: hidden;
+        }
+
+        .tool-block summary {
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            font-weight: bold;
+            color: var(--accent-dark);
+        }
+
+        .tool-block pre {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .tool-output {
+            padding: 8px 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            white-space: pre-wrap;
+            border-top: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .tool-output.failed {
+            color: var(--danger);
+        }
+
+        .msg-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-bottom: 6px;
+            max-width: min(620px, 92%);
+        }
+
+        .msg-attachments img {
+            max-width: 160px;
+            max-height: 160px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            object-fit: cover;
+        }
+
+        .file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            max-width: 220px;
+        }
+
+        .file-chip span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .msg-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .mini-btn {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.78rem;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        .mini-btn:hover {
+            background: rgba(23, 42, 58, 0.06);
+        }
+
+        .typing {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .typing span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--muted);
+            animation: blink 1.2s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.25; }
+            40% { opacity: 1; }
+        }
+
+        /* --- Eingabe --- */
+        .composer {
+            flex: 0 0 auto;
+            background: rgba(255, 255, 255, 0.96);
+            border-top: 1px solid var(--line);
+            padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .composer-inner {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .pending {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .pending:empty {
+            display: none;
+        }
+
+        .pending .file-chip img {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .pending .file-chip button {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 0 2px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .input-row textarea {
+            flex: 1;
+            min-width: 0;
+            resize: none;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 11px 13px;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1.4;
+            max-height: 160px;
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        .input-row textarea:focus {
+            outline: 2px solid var(--accent-soft);
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            background: var(--accent);
+            color: #fff;
+            border: 0;
+            border-radius: 12px;
+            min-width: 48px;
+            min-height: 46px;
+            font-size: 1.15rem;
+            cursor: pointer;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .attach-btn {
+            min-height: 46px;
+        }
+
+        .privacy-line {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin: 6px 2px 0;
+            line-height: 1.4;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 560px) {
+            .brand-text small,
+            .back-text {
+                display: none;
+            }
+
+            .topbar {
+                padding-left: 12px;
+                padding-right: 12px;
+                gap: 8px;
+            }
+
+            .chat {
+                padding: 14px 12px 8px;
+            }
+
+            .bubble {
+                max-width: 96%;
+            }
+        }
+    </style>
+    <script>
+        window.SD_I18N = {
+            de: {
+                back: 'Übersicht',
+                brand_tag: 'Dein Helfer für Bewerbung & Briefe',
+                settings_title: 'Einstellungen',
+                lbl_key: 'Dein Gemini-API-Schlüssel',
+                ph_key: 'Schlüssel hier einfügen ...',
+                key_hint_html: 'Kostenlos erhältlich bei <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Derselbe Schlüssel gilt auch für die KI-Schreibhilfe im Lebenslauf und im Schreibstudio.',
+                key_session: 'Nur für diese Sitzung merken (empfohlen)',
+                key_permanent: 'Dauerhaft in diesem Browser merken',
+                btn_save_key: 'Schlüssel speichern',
+                key_saved_session: '✅ Schlüssel für diese Sitzung gespeichert.',
+                key_saved_permanent: '✅ Schlüssel dauerhaft in diesem Browser gespeichert.',
+                key_removed: 'Schlüssel entfernt.',
+                opt_memory: 'Gedächtnis: Gespräch in diesem Browser speichern, damit es nach dem Schließen weitergeht',
+                opt_code: 'Python-Rechnen: die KI darf Python-Code ausführen (läuft bei Google, nicht auf deinem Gerät)',
+                btn_clear: '🗑️ Gespräch löschen',
+                clear_confirm: 'Wirklich löschen? Nochmal tippen zum Bestätigen.',
+                cleared: 'Gespräch gelöscht.',
+                welcome_h: 'Hallo! Wobei kann ich helfen?',
+                welcome_p: 'Ich bin dein KI-Assistent im SD Bewerbungsstudio – frag mich zu Bewerbung, Lebenslauf, Anschreiben, Briefen oder schick mir ein Foto oder PDF.',
+                ab_memory_h: '🧠 Gedächtnis',
+                ab_memory_p: 'Ich merke mir unser Gespräch – auch nach dem Schließen.',
+                ab_vision_h: '🖼️ Bilder & PDFs',
+                ab_vision_p: 'Hänge ein Foto oder PDF an und frag mich dazu.',
+                ab_code_h: '🐍 Python-Rechnen',
+                ab_code_p: 'Für Rechnungen schreibe und starte ich Python-Code.',
+                sug_1: 'Prüfe mein Anschreiben auf Fehler und Ton',
+                sug_2: 'Welche Stärken passen zu einer Stelle als Verkäuferin?',
+                sug_3: 'Rechne: 15 % von 2.450 € plus 19 % MwSt.',
+                sug_4: 'Formuliere eine höfliche Absage auf ein Vorstellungsgespräch',
+                no_key_html: '🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel. Tippe oben auf ⚙️ und trage ihn ein.',
+                ph_message: 'Nachricht schreiben ...',
+                attach: 'Bild oder PDF anhängen',
+                send: 'Senden',
+                privacy: 'Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet. Bitte keine Passwörter oder Kontodaten eingeben.',
+                copy: 'Kopieren',
+                copied: 'Kopiert ✓',
+                retry: 'Nochmal senden',
+                code_label: '🐍 Python-Code',
+                result_ok: 'Ergebnis',
+                result_fail: 'Fehler beim Ausführen',
+                attachment_gone: 'Anhang „{name}“ (in diesem Gespräch schon besprochen, Datei nicht mehr verfügbar)',
+                err_no_key: 'Kein Gemini-Schlüssel hinterlegt. Tippe oben auf ⚙️ und trage deinen kostenlosen Schlüssel ein.',
+                err_network: 'Keine Verbindung zu Google. Bitte Internetverbindung prüfen.',
+                err_key_rejected: 'Google hat den Schlüssel abgelehnt. Bitte prüfe ihn unter ⚙️.',
+                err_quota: 'Das kostenlose Kontingent ist gerade aufgebraucht. Bitte kurz warten und nochmal versuchen.',
+                err_google: 'Google-Anfrage fehlgeschlagen (Status {status}).',
+                err_empty: 'Google hat keine Antwort geliefert.',
+                err_blocked: 'Google hat die Antwort aus Sicherheitsgründen zurückgehalten. Bitte formuliere die Frage anders.',
+                err_file_type: '„{name}“ wird nicht unterstützt. Erlaubt sind Bilder und PDFs.',
+                err_file_size: '„{name}“ ist zu groß (max. 15 MB pro Nachricht).',
+                you: 'Du',
+                memory_on_hint: 'Gespräch wird in diesem Browser gespeichert.'
+            },
+            en: {
+                back: 'Overview',
+                brand_tag: 'Your helper for applications & letters',
+                settings_title: 'Settings',
+                lbl_key: 'Your Gemini API key',
+                ph_key: 'Paste key here ...',
+                key_hint_html: 'Free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The same key also works for the AI writing help in the resume app and the Letter Studio.',
+                key_session: 'Remember only for this session (recommended)',
+                key_permanent: 'Remember permanently in this browser',
+                btn_save_key: 'Save key',
+                key_saved_session: '✅ Key saved for this session.',
+                key_saved_permanent: '✅ Key saved permanently in this browser.',
+                key_removed: 'Key removed.',
+                opt_memory: 'Memory: save the conversation in this browser so it continues after closing',
+                opt_code: 'Python math: the AI may run Python code (runs at Google, not on your device)',
+                btn_clear: '🗑️ Delete conversation',
+                clear_confirm: 'Really delete? Tap again to confirm.',
+                cleared: 'Conversation deleted.',
+                welcome_h: 'Hi! How can I help?',
+                welcome_p: 'I am your AI assistant in SD Bewerbungsstudio – ask me about applications, resumes, cover letters, letters, or send me a photo or PDF.',
+                ab_memory_h: '🧠 Memory',
+                ab_memory_p: 'I remember our conversation – even after closing.',
+                ab_vision_h: '🖼️ Images & PDFs',
+                ab_vision_p: 'Attach a photo or PDF and ask me about it.',
+                ab_code_h: '🐍 Python math',
+                ab_code_p: 'For calculations I write and run Python code.',
+                sug_1: 'Check my cover letter for mistakes and tone',
+                sug_2: 'Which strengths fit a sales assistant job?',
+                sug_3: 'Calculate: 15% of 2,450 plus 19% VAT',
+                sug_4: 'Write a polite reply declining a job interview',
+                no_key_html: '🔑 To start you need a free Gemini key. Tap ⚙️ at the top and enter it.',
+                ph_message: 'Write a message ...',
+                attach: 'Attach image or PDF',
+                send: 'Send',
+                privacy: 'Messages and attachments are sent directly from your browser to Google Gemini to answer them. Please do not enter passwords or bank details.',
+                copy: 'Copy',
+                copied: 'Copied ✓',
+                retry: 'Send again',
+                code_label: '🐍 Python code',
+                result_ok: 'Result',
+                result_fail: 'Execution error',
+                attachment_gone: 'Attachment "{name}" (already discussed in this conversation, file no longer available)',
+                err_no_key: 'No Gemini key on file. Tap ⚙️ at the top and enter your free key.',
+                err_network: 'No connection to Google. Please check your internet connection.',
+                err_key_rejected: 'Google rejected the key. Please check it under ⚙️.',
+                err_quota: 'The free quota is used up for now. Please wait a moment and try again.',
+                err_google: 'Google request failed (status {status}).',
+                err_empty: 'Google returned no answer.',
+                err_blocked: 'Google withheld the answer for safety reasons. Please rephrase your question.',
+                err_file_type: '"{name}" is not supported. Images and PDFs are allowed.',
+                err_file_size: '"{name}" is too large (max. 15 MB per message).',
+                you: 'You',
+                memory_on_hint: 'Conversation is saved in this browser.'
+            }
+        };
+    </script>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche">← <span class="back-text" data-i18n="back">Übersicht</span></a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div class="brand-text">
+                <strong>KI-Assistent</strong>
+                <small data-i18n="brand_tag">Dein Helfer für Bewerbung &amp; Briefe</small>
+            </div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+        <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settings"
+            data-i18n-title="settings_title" title="Einstellungen">⚙️</button>
+    </header>
+
+    <section class="settings" id="settings" aria-label="Einstellungen">
+        <div class="settings-inner">
+            <h2 data-i18n="settings_title">Einstellungen</h2>
+            <div class="field">
+                <label for="apiKey" data-i18n="lbl_key">Dein Gemini-API-Schlüssel</label>
+                <input type="password" id="apiKey" autocomplete="off" data-i18n-placeholder="ph_key"
+                    placeholder="Schlüssel hier einfügen ...">
+                <p class="hint" data-i18n="key_hint_html" data-i18n-html>Kostenlos erhältlich bei Google AI Studio.</p>
+            </div>
+            <label class="check"><input type="radio" name="keyMode" id="keyModeSession" value="sitzung" checked>
+                <span data-i18n="key_session">Nur für diese Sitzung merken (empfohlen)</span></label>
+            <label class="check"><input type="radio" name="keyMode" id="keyModePermanent" value="dauerhaft">
+                <span data-i18n="key_permanent">Dauerhaft in diesem Browser merken</span></label>
+            <div class="row">
+                <button type="button" class="btn btn-primary" id="saveKeyBtn" data-i18n="btn_save_key">Schlüssel speichern</button>
+                <span class="status" id="keyStatus" role="status"></span>
+            </div>
+            <label class="check"><input type="checkbox" id="optMemory" checked>
+                <span data-i18n="opt_memory">Gedächtnis: Gespräch in diesem Browser speichern</span></label>
+            <label class="check"><input type="checkbox" id="optCode" checked>
+                <span data-i18n="opt_code">Python-Rechnen: die KI darf Python-Code ausführen</span></label>
+            <div class="row">
+                <button type="button" class="btn btn-danger" id="clearBtn" data-i18n="btn_clear">🗑️ Gespräch löschen</button>
+                <span class="status" id="clearStatus" role="status"></span>
+            </div>
+        </div>
+    </section>
+
+    <main class="chat" id="chat" aria-live="polite">
+        <div class="chat-inner" id="chatInner">
+            <div class="welcome" id="welcome">
+                <h1 data-i18n="welcome_h">Hallo! Wobei kann ich helfen?</h1>
+                <p data-i18n="welcome_p">Ich bin dein KI-Assistent im SD Bewerbungsstudio.</p>
+                <div class="abilities">
+                    <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
+                    <div class="ability"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
+                    <div class="ability"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
+                </div>
+                <div class="suggestions">
+                    <button type="button" class="suggestion" data-i18n="sug_1">Prüfe mein Anschreiben</button>
+                    <button type="button" class="suggestion" data-i18n="sug_2">Welche Stärken passen?</button>
+                    <button type="button" class="suggestion" data-i18n="sug_3">Rechne ...</button>
+                    <button type="button" class="suggestion" data-i18n="sug_4">Formuliere eine Absage</button>
+                </div>
+                <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="composer">
+        <div class="composer-inner">
+            <div class="pending" id="pending"></div>
+            <div class="input-row">
+                <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
+                <button type="button" class="icon-btn attach-btn" id="attachBtn" data-i18n-title="attach" title="Bild oder PDF anhängen" aria-label="Bild oder PDF anhängen">📎</button>
+                <textarea id="input" rows="1" data-i18n-placeholder="ph_message" placeholder="Nachricht schreiben ..."></textarea>
+                <button type="button" class="send-btn" id="sendBtn" data-i18n-title="send" title="Senden" aria-label="Senden">➤</button>
+            </div>
+            <p class="privacy-line" data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</p>
+        </div>
+    </footer>
+
+    <script src="../i18n.js?v=1"></script>
+    <script>
+        'use strict';
+
+        // ------------------------------------------------------------
+        // Grundeinstellungen
+        // ------------------------------------------------------------
+        // Gleicher Schluessel-Speicher wie die KI-Schreibhilfe im Lebenslauf
+        // und im Schreibstudio (gleiche Website = gleicher Browser-Speicher),
+        // damit man den Schluessel nur einmal eintragen muss.
+        const KEY_STORAGE = 'biGeminiApiKey';
+        const KEY_MODE_STORAGE = 'biGeminiSpeicherModus';
+        const MODEL = 'gemini-flash-latest';
+        const HISTORY_STORAGE = 'sdAssistentVerlauf';
+        const OPTIONS_STORAGE = 'sdAssistentOptionen';
+        const MAX_HISTORY_SENT = 40;          // so viele Nachrichten gehen als Kontext mit
+        const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+        const IMAGE_MAX_SIDE = 1600;          // grosse Fotos werden vorher verkleinert
+
+        const SYSTEM_PROMPT =
+            'Du bist der KI-Assistent der Web-App "SD Bewerbungsstudio" (Lebenslauf, Anschreiben, ' +
+            'Deckblatt, Bewerbungsmappe, Schreibstudio fuer Kuendigungen/Briefe, PDF-Werkzeuge, ' +
+            'Dokumenten-Scanner, Passfoto). Hilf freundlich, konkret und ehrlich. Antworte in der ' +
+            'Sprache, in der die Person schreibt (meist Deutsch). Erfinde keine Fakten, Zahlen, ' +
+            'Firmen oder Zeugnisse; wenn du etwas nicht sicher weisst, sag das. Bei Steuer-, Rechts- ' +
+            'oder Finanzfragen gib allgemeine Orientierung und weise darauf hin, dass du keine ' +
+            'Beratung ersetzt. Wenn du rechnen musst und Code-Ausfuehrung verfuegbar ist, nutze sie ' +
+            'statt im Kopf zu rechnen. Halte Antworten uebersichtlich (kurze Absaetze, Listen wenn ' +
+            'sinnvoll). Bei Bildern und PDFs beschreibe nur, was wirklich darin steht.';
+
+        const $ = (id) => document.getElementById(id);
+
+        function t(key, vars) {
+            const lang = window.SD_LANG || 'de';
+            const dict = (window.SD_I18N[lang] || window.SD_I18N.de);
+            let s = dict[key] != null ? dict[key] : (window.SD_I18N.de[key] || key);
+            if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
+            return s;
+        }
+
+        function speicherLesen(store, key) {
+            try { return store.getItem(key); } catch (e) { return null; }
+        }
+
+        function speicherSchreiben(store, key, value) {
+            try {
+                if (value == null) store.removeItem(key);
+                else store.setItem(key, value);
+                return true;
+            } catch (e) { return false; }
+        }
+
+        // ------------------------------------------------------------
+        // Zustand
+        // ------------------------------------------------------------
+        // verlauf: [{ role: 'user'|'model', parts: [...Gemini-Parts], anhaenge: [{name, mime, thumb}] }]
+        // parts entspricht genau dem Format der Gemini-API, damit der Verlauf
+        // unveraendert wieder mitgeschickt werden kann.
+        let verlauf = [];
+        let wartendeAnhaenge = [];   // [{ name, mime, data(base64), thumb }]
+        let sendetGerade = false;
+        let optionen = { memory: true, code: true };
+
+        // ------------------------------------------------------------
+        // Schluessel
+        // ------------------------------------------------------------
+        function aktuellerKey() {
+            return speicherLesen(sessionStorage, KEY_STORAGE) || speicherLesen(localStorage, KEY_STORAGE) || '';
+        }
+
+        function keyOrt() {
+            return $('keyModePermanent').checked ? localStorage : sessionStorage;
+        }
+
+        function ladeKeyFeld() {
+            if (speicherLesen(localStorage, KEY_MODE_STORAGE) === 'dauerhaft') $('keyModePermanent').checked = true;
+            const key = aktuellerKey();
+            if (key) {
+                $('apiKey').value = key;
+                $('keyStatus').textContent = speicherLesen(localStorage, KEY_STORAGE) ? t('key_saved_permanent') : t('key_saved_session');
+            }
+            aktualisiereKeyHinweis();
+        }
+
+        function speichereKey() {
+            const wert = ($('apiKey').value || '').trim();
+            const ort = keyOrt();
+            const anderer = ort === localStorage ? sessionStorage : localStorage;
+            speicherSchreiben(localStorage, KEY_MODE_STORAGE, ort === localStorage ? 'dauerhaft' : 'sitzung');
+            speicherSchreiben(anderer, KEY_STORAGE, null);
+            if (!wert) {
+                speicherSchreiben(ort, KEY_STORAGE, null);
+                $('keyStatus').textContent = t('key_removed');
+            } else {
+                speicherSchreiben(ort, KEY_STORAGE, wert);
+                $('keyStatus').textContent = ort === localStorage ? t('key_saved_permanent') : t('key_saved_session');
+            }
+            aktualisiereKeyHinweis();
+        }
+
+        function aktualisiereKeyHinweis() {
+            $('noKeyCallout').hidden = !!aktuellerKey();
+        }
+
+        // ------------------------------------------------------------
+        // Gedaechtnis (Verlauf speichern/laden)
+        // ------------------------------------------------------------
+        // Dateien (Bilder/PDFs) werden NICHT dauerhaft gespeichert - das
+        // wuerde den Browser-Speicher (ca. 5 MB) schnell sprengen. Im
+        // gespeicherten Verlauf steht stattdessen ein kurzer Hinweis, dass
+        // der Anhang schon besprochen wurde; die Antworten dazu bleiben
+        // erhalten, die KI "erinnert" sich also an das Besprochene.
+        function verlaufFuerSpeicher() {
+            return verlauf.map(e => ({
+                role: e.role,
+                anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime })),
+                parts: e.parts.map(p => p.inlineData
+                    ? { text: '[' + t('attachment_gone', { name: p._name || 'Datei' }) + ']', _hinweis: true }
+                    : p)
+            }));
+        }
+
+        function speichereVerlauf() {
+            if (!optionen.memory) return;
+            let daten = verlaufFuerSpeicher();
+            // Falls der Speicher voll ist: aelteste Nachrichten weglassen.
+            while (daten.length && !speicherSchreiben(localStorage, HISTORY_STORAGE, JSON.stringify(daten))) {
+                daten = daten.slice(2);
+            }
+        }
+
+        function ladeVerlauf() {
+            const roh = speicherLesen(localStorage, HISTORY_STORAGE);
+            if (!roh) return;
+            try {
+                const daten = JSON.parse(roh);
+                if (Array.isArray(daten)) verlauf = daten.filter(e => e && (e.role === 'user' || e.role === 'model') && Array.isArray(e.parts));
+            } catch (e) { verlauf = []; }
+        }
+
+        function ladeOptionen() {
+            try {
+                const o = JSON.parse(speicherLesen(localStorage, OPTIONS_STORAGE) || '{}');
+                if (typeof o.memory === 'boolean') optionen.memory = o.memory;
+                if (typeof o.code === 'boolean') optionen.code = o.code;
+            } catch (e) { /* Standardwerte */ }
+            $('optMemory').checked = optionen.memory;
+            $('optCode').checked = optionen.code;
+        }
+
+        function speichereOptionen() {
+            optionen.memory = $('optMemory').checked;
+            optionen.code = $('optCode').checked;
+            speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            if (optionen.memory) speichereVerlauf();
+            else speicherSchreiben(localStorage, HISTORY_STORAGE, null);
+        }
+
+        // ------------------------------------------------------------
+        // Darstellung
+        // ------------------------------------------------------------
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Kleiner, sicherer Markdown-Umwandler: zuerst wird ALLES escaped,
+        // danach werden nur bekannte Muster (Fett, Kursiv, Code, Listen,
+        // Ueberschriften, http(s)-Links) in HTML umgesetzt - die KI kann so
+        // kein eigenes HTML/JavaScript in die Seite schleusen.
+        function inlineMd(s) {
+            const codes = [];
+            s = s.replace(/`([^`\n]+)`/g, (_, c) => { codes.push(c); return '\u0000' + (codes.length - 1) + '\u0000'; });
+            s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+            s = s.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+            s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+            s = s.replace(/\u0000(\d+)\u0000/g, (_, i) => '<code>' + codes[+i] + '</code>');
+            return s;
+        }
+
+        function markdownZuHtml(text) {
+            const zeilen = escapeHtml(text).split('\n');
+            let html = '';
+            let liste = null;      // 'ul' | 'ol'
+            let absatz = [];
+            let imCode = false, code = [];
+            const schliesseAbsatz = () => {
+                if (absatz.length) { html += '<p>' + absatz.map(inlineMd).join('<br>') + '</p>'; absatz = []; }
+            };
+            const schliesseListe = () => { if (liste) { html += '</' + liste + '>'; liste = null; } };
+            for (const zeile of zeilen) {
+                if (/^```/.test(zeile.trim())) {
+                    if (imCode) {
+                        html += '<pre><code>' + code.join('\n') + '</code></pre>';
+                        code = []; imCode = false;
+                    } else {
+                        schliesseAbsatz(); schliesseListe(); imCode = true;
+                    }
+                    continue;
+                }
+                if (imCode) { code.push(zeile); continue; }
+                const ul = zeile.match(/^\s*[-*•]\s+(.*)$/);
+                const ol = zeile.match(/^\s*\d+[.)]\s+(.*)$/);
+                const h = zeile.match(/^\s*(#{1,4})\s+(.*)$/);
+                if (ul || ol) {
+                    schliesseAbsatz();
+                    const typ = ul ? 'ul' : 'ol';
+                    if (liste !== typ) { schliesseListe(); html += '<' + typ + '>'; liste = typ; }
+                    html += '<li>' + inlineMd((ul || ol)[1]) + '</li>';
+                } else if (h) {
+                    schliesseAbsatz(); schliesseListe();
+                    html += (h[1].length <= 2 ? '<h3>' : '<h4>') + inlineMd(h[2]) + (h[1].length <= 2 ? '</h3>' : '</h4>');
+                } else if (!zeile.trim()) {
+                    schliesseAbsatz(); schliesseListe();
+                } else {
+                    schliesseListe();
+                    absatz.push(zeile);
+                }
+            }
+            if (imCode) html += '<pre><code>' + code.join('\n') + '</code></pre>';
+            schliesseAbsatz(); schliesseListe();
+            return html;
+        }
+
+        function textAusParts(parts) {
+            return parts.filter(p => typeof p.text === 'string' && !p.thought).map(p => p.text).join('\n').trim();
+        }
+
+        function kopiere(text, btn) {
+            const fertig = () => { const alt = btn.textContent; btn.textContent = t('copied'); setTimeout(() => { btn.textContent = alt; }, 1500); };
+            const notfall = () => {
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); fertig(); } catch (e) { /* nichts */ }
+                ta.remove();
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(fertig, notfall);
+            else notfall();
+        }
+
+        function baueNachricht(eintrag) {
+            const wrap = document.createElement('div');
+            wrap.className = 'msg ' + eintrag.role;
+
+            if (eintrag.role === 'user') {
+                const anh = eintrag.anhaenge || [];
+                if (anh.length) {
+                    const box = document.createElement('div');
+                    box.className = 'msg-attachments';
+                    anh.forEach(a => {
+                        if (a.thumb) {
+                            const img = document.createElement('img');
+                            img.src = a.thumb; img.alt = a.name;
+                            box.appendChild(img);
+                        } else {
+                            const chip = document.createElement('span');
+                            chip.className = 'file-chip';
+                            chip.innerHTML = (a.mime === 'application/pdf' ? '📄 ' : '🖼️ ') + '<span></span>';
+                            chip.querySelector('span').textContent = a.name;
+                            box.appendChild(chip);
+                        }
+                    });
+                    wrap.appendChild(box);
+                }
+                const text = eintrag.parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n');
+                if (text) {
+                    const b = document.createElement('div');
+                    b.className = 'bubble';
+                    b.textContent = text;
+                    wrap.appendChild(b);
+                }
+                return wrap;
+            }
+
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            eintrag.parts.forEach(p => {
+                if (p.thought) return;
+                if (typeof p.text === 'string' && p.text.trim()) {
+                    const d = document.createElement('div');
+                    d.innerHTML = markdownZuHtml(p.text);
+                    b.appendChild(d);
+                } else if (p.executableCode) {
+                    const det = document.createElement('details');
+                    det.className = 'tool-block';
+                    const sum = document.createElement('summary');
+                    sum.textContent = t('code_label');
+                    const pre = document.createElement('pre');
+                    const c = document.createElement('code');
+                    c.textContent = p.executableCode.code || '';
+                    pre.appendChild(c);
+                    det.append(sum, pre);
+                    b.appendChild(det);
+                } else if (p.codeExecutionResult) {
+                    const ok = (p.codeExecutionResult.outcome || 'OUTCOME_OK') === 'OUTCOME_OK';
+                    const out = document.createElement('div');
+                    out.className = 'tool-block';
+                    const kopf = document.createElement('div');
+                    kopf.className = 'tool-output' + (ok ? '' : ' failed');
+                    kopf.textContent = (ok ? t('result_ok') : t('result_fail')) + ':\n' + (p.codeExecutionResult.output || '').trim();
+                    out.appendChild(kopf);
+                    b.appendChild(out);
+                } else if (p.inlineData && /^image\//.test(p.inlineData.mimeType || '')) {
+                    const img = document.createElement('img');
+                    img.src = 'data:' + p.inlineData.mimeType + ';base64,' + p.inlineData.data;
+                    img.style.maxWidth = '100%';
+                    img.style.borderRadius = '10px';
+                    b.appendChild(img);
+                }
+            });
+            wrap.appendChild(b);
+
+            const actions = document.createElement('div');
+            actions.className = 'msg-actions';
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.className = 'mini-btn';
+            copyBtn.textContent = t('copy');
+            copyBtn.onclick = () => kopiere(textAusParts(eintrag.parts), copyBtn);
+            actions.appendChild(copyBtn);
+            wrap.appendChild(actions);
+            return wrap;
+        }
+
+        function zeigeFehler(text, wiederholen) {
+            const wrap = document.createElement('div');
+            wrap.className = 'msg error';
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            b.textContent = text;
+            wrap.appendChild(b);
+            if (wiederholen) {
+                const actions = document.createElement('div');
+                actions.className = 'msg-actions';
+                const btn = document.createElement('button');
+                btn.type = 'button'; btn.className = 'mini-btn'; btn.textContent = t('retry');
+                btn.onclick = () => { wrap.remove(); wiederholen(); };
+                actions.appendChild(btn);
+                wrap.appendChild(actions);
+            }
+            $('chatInner').appendChild(wrap);
+            nachUntenScrollen();
+        }
+
+        function rendereAlles() {
+            const inner = $('chatInner');
+            [...inner.querySelectorAll('.msg')].forEach(n => n.remove());
+            verlauf.forEach(e => inner.appendChild(baueNachricht(e)));
+            $('welcome').hidden = verlauf.length > 0;
+            // Ohne Nachrichten oben bleiben, damit die Begruessung ganz sichtbar ist.
+            if (verlauf.length) nachUntenScrollen();
+        }
+
+        function nachUntenScrollen() {
+            const chat = $('chat');
+            requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+        }
+
+        // ------------------------------------------------------------
+        // Anhaenge
+        // ------------------------------------------------------------
+        function leseAlsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        // Fotos vom Handy sind oft 5-12 MB gross; fuer das Verstehen reicht
+        // eine kleinere Version voellig und die Anfrage geht deutlich schneller.
+        async function verkleinereBild(dataUrl) {
+            const img = await new Promise((resolve, reject) => {
+                const i = new Image();
+                i.onload = () => resolve(i);
+                i.onerror = reject;
+                i.src = dataUrl;
+            });
+            const faktor = Math.min(1, IMAGE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+            const c = document.createElement('canvas');
+            c.width = Math.max(1, Math.round(img.naturalWidth * faktor));
+            c.height = Math.max(1, Math.round(img.naturalHeight * faktor));
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            const gross = c.toDataURL('image/jpeg', 0.88);
+            const tf = Math.min(1, 160 / Math.max(c.width, c.height));
+            const tc = document.createElement('canvas');
+            tc.width = Math.max(1, Math.round(c.width * tf));
+            tc.height = Math.max(1, Math.round(c.height * tf));
+            tc.getContext('2d').drawImage(c, 0, 0, tc.width, tc.height);
+            return { dataUrl: gross, thumb: tc.toDataURL('image/jpeg', 0.8) };
+        }
+
+        async function fuegeDateienHinzu(dateien) {
+            for (const file of dateien) {
+                const istBild = /^image\//.test(file.type);
+                const istPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+                if (!istBild && !istPdf) { zeigeFehler(t('err_file_type', { name: file.name })); continue; }
+                try {
+                    let dataUrl = await leseAlsDataUrl(file);
+                    let thumb = null;
+                    let mime = istPdf ? 'application/pdf' : file.type;
+                    if (istBild) {
+                        try {
+                            const v = await verkleinereBild(dataUrl);
+                            dataUrl = v.dataUrl; thumb = v.thumb; mime = 'image/jpeg';
+                        } catch (e) { /* Format nicht darstellbar (z. B. HEIC): Original senden */ }
+                    }
+                    const data = dataUrl.split(',')[1] || '';
+                    const bytes = Math.floor(data.length * 3 / 4);
+                    const summe = wartendeAnhaenge.reduce((s, a) => s + a.bytes, 0) + bytes;
+                    if (summe > MAX_UPLOAD_BYTES) { zeigeFehler(t('err_file_size', { name: file.name })); continue; }
+                    wartendeAnhaenge.push({ name: file.name, mime, data, thumb, bytes });
+                } catch (e) {
+                    zeigeFehler(t('err_file_type', { name: file.name }));
+                }
+            }
+            zeigeWartendeAnhaenge();
+        }
+
+        function zeigeWartendeAnhaenge() {
+            const box = $('pending');
+            box.innerHTML = '';
+            wartendeAnhaenge.forEach((a, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'file-chip';
+                if (a.thumb) {
+                    const img = document.createElement('img');
+                    img.src = a.thumb; img.alt = '';
+                    chip.appendChild(img);
+                } else {
+                    chip.appendChild(document.createTextNode(a.mime === 'application/pdf' ? '📄' : '🖼️'));
+                }
+                const name = document.createElement('span');
+                name.textContent = a.name;
+                const x = document.createElement('button');
+                x.type = 'button'; x.textContent = '✕'; x.setAttribute('aria-label', 'Entfernen');
+                x.onclick = () => { wartendeAnhaenge.splice(i, 1); zeigeWartendeAnhaenge(); };
+                chip.append(name, x);
+                box.appendChild(chip);
+            });
+            aktualisiereSendenKnopf();
+        }
+
+        // ------------------------------------------------------------
+        // Gemini-Anfrage
+        // ------------------------------------------------------------
+        function bereinigeFuerApi(parts) {
+            // Interne Felder (z. B. _name) duerfen nicht mitgeschickt werden.
+            return parts.map(p => {
+                if (p.inlineData) return { inlineData: { mimeType: p.inlineData.mimeType, data: p.inlineData.data } };
+                const { _name, _hinweis, ...rest } = p;
+                return rest;
+            });
+        }
+
+        async function frageGemini() {
+            const key = aktuellerKey();
+            if (!key) throw new Error(t('err_no_key'));
+            const kontext = verlauf.slice(-MAX_HISTORY_SENT);
+            // Die Unterhaltung muss mit einer Nachricht der Person beginnen.
+            while (kontext.length && kontext[0].role !== 'user') kontext.shift();
+            const body = {
+                system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                contents: kontext.map(e => ({ role: e.role, parts: bereinigeFuerApi(e.parts) }))
+            };
+            if (optionen.code) body.tools = [{ code_execution: {} }];
+
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
+            let antwort;
+            try {
+                antwort = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+                    body: JSON.stringify(body)
+                });
+            } catch (e) {
+                throw new Error(t('err_network'));
+            }
+            if (!antwort.ok) {
+                if (antwort.status === 400 || antwort.status === 401 || antwort.status === 403) {
+                    let detail = '';
+                    try { detail = ((await antwort.json()).error || {}).message || ''; } catch (e) { /* egal */ }
+                    if (/api key|API_KEY|permission/i.test(detail) || antwort.status !== 400) throw new Error(t('err_key_rejected'));
+                    throw new Error(t('err_google', { status: antwort.status }) + (detail ? ' – ' + detail : ''));
+                }
+                if (antwort.status === 429) throw new Error(t('err_quota'));
+                throw new Error(t('err_google', { status: antwort.status }));
+            }
+            const daten = await antwort.json();
+            if (daten.promptFeedback && daten.promptFeedback.blockReason) throw new Error(t('err_blocked'));
+            const kandidat = (daten.candidates || [])[0];
+            if (!kandidat) throw new Error(t('err_empty'));
+            const parts = ((kandidat.content || {}).parts || []).filter(p => !p.thought);
+            if (!parts.length) {
+                if (kandidat.finishReason === 'SAFETY') throw new Error(t('err_blocked'));
+                throw new Error(t('err_empty'));
+            }
+            return parts;
+        }
+
+        function zeigeTippt() {
+            const wrap = document.createElement('div');
+            wrap.className = 'msg model';
+            wrap.id = 'typing';
+            wrap.innerHTML = '<div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>';
+            $('chatInner').appendChild(wrap);
+            nachUntenScrollen();
+        }
+
+        function entferneTippt() {
+            const n = $('typing');
+            if (n) n.remove();
+        }
+
+        async function antworteAufLetzteNachricht() {
+            sendetGerade = true;
+            aktualisiereSendenKnopf();
+            zeigeTippt();
+            try {
+                const parts = await frageGemini();
+                entferneTippt();
+                const eintrag = { role: 'model', parts };
+                verlauf.push(eintrag);
+                $('chatInner').appendChild(baueNachricht(eintrag));
+                nachUntenScrollen();
+                speichereVerlauf();
+            } catch (err) {
+                entferneTippt();
+                zeigeFehler(err.message || String(err), () => antworteAufLetzteNachricht());
+            } finally {
+                sendetGerade = false;
+                aktualisiereSendenKnopf();
+            }
+        }
+
+        async function sende(textVorgabe) {
+            if (sendetGerade) return;
+            const text = (textVorgabe != null ? textVorgabe : $('input').value).trim();
+            if (!text && !wartendeAnhaenge.length) return;
+            if (!aktuellerKey()) {
+                zeigeFehler(t('err_no_key'));
+                $('settings').classList.add('open');
+                $('settingsBtn').setAttribute('aria-expanded', 'true');
+                $('apiKey').focus();
+                return;
+            }
+            const parts = [];
+            wartendeAnhaenge.forEach(a => parts.push({ inlineData: { mimeType: a.mime, data: a.data }, _name: a.name }));
+            if (text) parts.push({ text });
+            const eintrag = {
+                role: 'user',
+                parts,
+                anhaenge: wartendeAnhaenge.map(a => ({ name: a.name, mime: a.mime, thumb: a.thumb }))
+            };
+            // Falls die letzte Nachricht der Person unbeantwortet blieb
+            // (z. B. Fehler), werden beide zusammengefasst - Gemini erwartet
+            // abwechselnd Person/KI.
+            const letzte = verlauf[verlauf.length - 1];
+            if (letzte && letzte.role === 'user') {
+                letzte.parts.push(...parts);
+                letzte.anhaenge = (letzte.anhaenge || []).concat(eintrag.anhaenge);
+            } else {
+                verlauf.push(eintrag);
+            }
+            wartendeAnhaenge = [];
+            zeigeWartendeAnhaenge();
+            $('input').value = '';
+            passeHoeheAn();
+            rendereAlles();
+            speichereVerlauf();
+            await antworteAufLetzteNachricht();
+        }
+
+        function aktualisiereSendenKnopf() {
+            const leer = !$('input').value.trim() && !wartendeAnhaenge.length;
+            $('sendBtn').disabled = sendetGerade || leer;
+        }
+
+        function passeHoeheAn() {
+            const ta = $('input');
+            ta.style.height = 'auto';
+            ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
+        }
+
+        // ------------------------------------------------------------
+        // Ereignisse
+        // ------------------------------------------------------------
+        $('settingsBtn').onclick = () => {
+            const offen = $('settings').classList.toggle('open');
+            $('settingsBtn').setAttribute('aria-expanded', offen ? 'true' : 'false');
+        };
+        $('saveKeyBtn').onclick = speichereKey;
+        $('keyModeSession').onchange = speichereKey;
+        $('keyModePermanent').onchange = speichereKey;
+        $('optMemory').onchange = speichereOptionen;
+        $('optCode').onchange = speichereOptionen;
+
+        let loeschenBestaetigen = false;
+        $('clearBtn').onclick = () => {
+            // Kein confirm()-Dialog: zweimal tippen zum Bestaetigen.
+            if (!loeschenBestaetigen) {
+                loeschenBestaetigen = true;
+                $('clearStatus').textContent = t('clear_confirm');
+                setTimeout(() => { loeschenBestaetigen = false; $('clearStatus').textContent = ''; }, 4000);
+                return;
+            }
+            loeschenBestaetigen = false;
+            verlauf = [];
+            speicherSchreiben(localStorage, HISTORY_STORAGE, null);
+            rendereAlles();
+            $('clearStatus').textContent = t('cleared');
+        };
+
+        $('attachBtn').onclick = () => $('fileInput').click();
+        $('fileInput').onchange = async (e) => {
+            await fuegeDateienHinzu([...e.target.files]);
+            e.target.value = '';
+        };
+
+        $('input').addEventListener('input', () => { passeHoeheAn(); aktualisiereSendenKnopf(); });
+        $('input').addEventListener('keydown', (e) => {
+            // Am Computer: Enter = senden, Umschalt+Enter = neue Zeile.
+            // Am Handy bleibt Enter eine neue Zeile (gesendet wird per Knopf).
+            const handy = window.matchMedia('(pointer: coarse)').matches;
+            if (e.key === 'Enter' && !e.shiftKey && !handy && !e.isComposing) {
+                e.preventDefault();
+                sende();
+            }
+        });
+        // Bilder direkt einfuegen (z. B. Screenshot mit Strg+V)
+        $('input').addEventListener('paste', (e) => {
+            const dateien = [...(e.clipboardData ? e.clipboardData.files : [])];
+            if (dateien.length) { e.preventDefault(); fuegeDateienHinzu(dateien); }
+        });
+        $('sendBtn').onclick = () => sende();
+
+        document.querySelectorAll('.suggestion').forEach(btn => {
+            btn.onclick = () => { $('input').value = btn.textContent; passeHoeheAn(); aktualisiereSendenKnopf(); $('input').focus(); };
+        });
+
+        // Ziehen & Ablegen von Dateien auf den Chat
+        ['dragover', 'drop'].forEach(typ => document.addEventListener(typ, (e) => {
+            if (!e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return;
+            e.preventDefault();
+            if (typ === 'drop') fuegeDateienHinzu([...e.dataTransfer.files]);
+        }));
+
+        document.addEventListener('sd-lang-changed', () => {
+            rendereAlles();
+            ladeKeyFeld();
+        });
+
+        // ------------------------------------------------------------
+        // Start
+        // ------------------------------------------------------------
+        ladeOptionen();
+        if (optionen.memory) ladeVerlauf();
+        ladeKeyFeld();
+        rendereAlles();
+        aktualisiereSendenKnopf();
+    </script>
+</body>
+
+</html>
