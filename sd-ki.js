@@ -40,6 +40,21 @@
       anbieter_titel: 'KI wählen',
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini-Schlüssel nötig · Texte gehen an Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'eigene KI · lokal auf diesem Gerät · ohne Schlüssel',
+      openai: '🟢 ChatGPT', openai_sub: 'OpenAI · eigener Schlüssel · Zahlung nach Nutzung',
+      claude: '🟠 Claude', claude_sub: 'Anthropic · eigener Schlüssel · Zahlung nach Nutzung',
+      key_link_openai: '🔗 Schlüssel bei OpenAI holen', key_link_claude: '🔗 Schlüssel bei Anthropic holen',
+      key_lbl_openai: 'Dein OpenAI-API-Schlüssel', key_lbl_claude: 'Dein Anthropic-API-Schlüssel (Claude)',
+      key_ph: 'Schlüssel hier einfügen …', key_speichern: 'Schlüssel speichern', key_dauerhaft: 'Dauerhaft in diesem Browser merken',
+      key_gespeichert: '✓ Gespeichert', key_entfernt: 'Schlüssel entfernt',
+      online_hinweis: 'Du zahlst direkt beim Anbieter nur, was du nutzt (vorher Guthaben aufladen, meist ab 5 $). Deine Texte gehen direkt von deinem Gerät an {firma} – nicht über uns. Derselbe Schlüssel gilt auch im KI-Assistenten.',
+      kein_key_online: 'Für {name} ist ein eigener Schlüssel nötig – bitte oben im KI-Bereich eintragen.',
+      online_key_falsch: '{name} hat den Schlüssel abgelehnt. Bitte prüfen.',
+      online_guthaben: 'Bei {firma} ist kein Guthaben mehr vorhanden. Bitte beim Anbieter Guthaben aufladen.',
+      online_rate: '{name}: zu viele Anfragen in kurzer Zeit. Bitte kurz warten.',
+      online_fehler: '{name}-Anfrage fehlgeschlagen (Status {status}).',
+      online_netz: 'Keine Verbindung zu {firma}. Bitte Internetverbindung prüfen.',
+      online_leer: '{name} hat keinen Text geliefert.',
+      dlg_privat_online: '☁️ Der Text wird zur Bearbeitung an {firma} gesendet.',
       lotse_hinweis: 'SD Lotse läuft komplett auf deinem Gerät (am besten PC/Laptop mit Chrome oder Edge). Er ist kleiner als Gemini – für kurze Texte gut, für lange Texte schwächer.',
       info: 'ℹ️ Datenschutz & Lizenzen',
       dl_titel: '🔒 SD Lotse einmalig herunterladen?',
@@ -74,6 +89,21 @@
       anbieter_titel: 'Choose AI',
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini key needed · text is sent to Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'own AI · local on this device · no key',
+      openai: '🟢 ChatGPT', openai_sub: 'OpenAI · own key · pay per use',
+      claude: '🟠 Claude', claude_sub: 'Anthropic · own key · pay per use',
+      key_link_openai: '🔗 Get a key from OpenAI', key_link_claude: '🔗 Get a key from Anthropic',
+      key_lbl_openai: 'Your OpenAI API key', key_lbl_claude: 'Your Anthropic API key (Claude)',
+      key_ph: 'Paste key here …', key_speichern: 'Save key', key_dauerhaft: 'Remember permanently in this browser',
+      key_gespeichert: '✓ Saved', key_entfernt: 'Key removed',
+      online_hinweis: 'You pay the provider directly for what you use (top up credit first, usually from $5). Your texts go directly from your device to {firma} – not through us. The same key also works in the AI assistant.',
+      kein_key_online: '{name} needs your own key – please enter it in the AI section above.',
+      online_key_falsch: '{name} rejected the key. Please check it.',
+      online_guthaben: 'Your {firma} credit is used up. Please top up with the provider.',
+      online_rate: '{name}: too many requests in a short time. Please wait a moment.',
+      online_fehler: '{name} request failed (status {status}).',
+      online_netz: 'No connection to {firma}. Please check your internet connection.',
+      online_leer: '{name} returned no text.',
+      dlg_privat_online: '☁️ The text is sent to {firma} for processing.',
       lotse_hinweis: 'SD Lotse runs entirely on your device (best on a PC/laptop with Chrome or Edge). It is smaller than Gemini – good for short texts, weaker for long ones.',
       info: 'ℹ️ Privacy & licenses',
       dl_titel: '🔒 Download SD Lotse once?',
@@ -122,9 +152,20 @@
   // ------------------------------------------------------------
   // Anbieter-Auswahl
   // ------------------------------------------------------------
-  function anbieter() { return lesen(localStorage, ANBIETER_STORAGE) === 'lotse' ? 'lotse' : 'gemini'; }
+  const ANBIETER_WERTE = ['gemini', 'openai', 'claude', 'lotse'];
+  // OpenAI/Claude: gleiche Schluessel und Modellwahl wie im KI-Assistenten
+  const ONLINE = {
+    openai: { name: 'ChatGPT', firma: 'OpenAI', keyStorage: 'sdOpenAiApiKey', link: 'https://platform.openai.com/api-keys',
+      modellOption: 'openaiModell', standardModell: 'gpt-5-mini', erlaubt: ['gpt-5-mini', 'gpt-5-nano'] },
+    claude: { name: 'Claude', firma: 'Anthropic', keyStorage: 'sdClaudeApiKey', link: 'https://console.anthropic.com/settings/keys',
+      modellOption: 'claudeModell', standardModell: 'claude-haiku-4-5-20251001', erlaubt: ['claude-haiku-4-5-20251001', 'claude-sonnet-5-5'] }
+  };
+  function anbieter() {
+    const w = lesen(localStorage, ANBIETER_STORAGE);
+    return ANBIETER_WERTE.includes(w) ? w : 'gemini';
+  }
   function setzeAnbieter(wert) {
-    schreiben(localStorage, ANBIETER_STORAGE, wert === 'lotse' ? 'lotse' : 'gemini');
+    schreiben(localStorage, ANBIETER_STORAGE, ANBIETER_WERTE.includes(wert) ? wert : 'gemini');
     document.dispatchEvent(new CustomEvent('sd-ki-anbieter', { detail: { anbieter: anbieter() } }));
   }
 
@@ -145,7 +186,13 @@
 .sdki-opt.aktiv{border-color:#2f7d72;background:#dcece7;box-shadow:inset 0 0 0 1px #2f7d72}
 .sdki-hinweis,.sdki-box .sdki-hinweis{font-size:.75rem;color:#647482;margin:6px 2px 0;line-height:1.45}
 .sdki-hinweis a{color:#2f7d72}
-@media (max-width:420px){.sdki-optionen{grid-template-columns:1fr}}
+.sdki-key{display:grid;gap:6px;margin-top:8px}
+.sdki-key a.sdki-keylink{display:inline-block;font-size:.85rem;font-weight:bold;color:#2f7d72}
+.sdki-key label{font-size:.78rem;font-weight:bold;color:#172a3a}
+.sdki-key input[type=password]{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d8e0dc;border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+.sdki-key .sdki-zeile{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.8rem;color:#647482}
+.sdki-key select{width:100%;max-width:100%;padding:8px 10px;border:1px solid #d8e0dc;border-radius:10px;font-size:15px;font-family:inherit;background:#fff}
+@media (max-width:420px){.sdki-opt{padding:7px 8px}.sdki-opt small{font-size:.66rem}}
 .sdki-badge{margin:0 auto 0 8px;font-size:.72rem;font-weight:bold;padding:2px 8px;border-radius:999px;background:#fff;color:#1c4a42;border:1px solid #2f7d72;white-space:nowrap}
 .sdki-overlay{position:fixed;inset:0;background:rgba(23,42,58,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Trebuchet MS',Verdana,sans-serif}
 .sdki-box{background:#fff;color:#172a3a;border-radius:16px;max-width:620px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:grid;gap:10px}
@@ -167,6 +214,45 @@
   // ------------------------------------------------------------
   // Auswahl-Baustein (fuer die KI-Bereiche der Apps)
   // ------------------------------------------------------------
+  // ------------------------------------------------------------
+  // OpenAI / Claude: Schluessel-Feld im KI-Bereich der Apps
+  // ------------------------------------------------------------
+  function onlineKey(a) {
+    const k = ONLINE[a].keyStorage;
+    return lesen(sessionStorage, k) || lesen(localStorage, k) || '';
+  }
+  function onlineModell(a) {
+    try {
+      const o = JSON.parse(lesen(localStorage, 'sdAssistentOptionen') || '{}');
+      const m = o[ONLINE[a].modellOption];
+      return ONLINE[a].erlaubt.includes(m) ? m : ONLINE[a].standardModell;
+    } catch (e) { return ONLINE[a].standardModell; }
+  }
+  function schluesselBoxHtml(a) {
+    const o = ONLINE[a];
+    const dauerhaft = !!lesen(localStorage, o.keyStorage);
+    return '<div class="sdki-key">' +
+      '<a class="sdki-keylink" href="' + o.link + '" target="_blank" rel="noopener">' + esc(tx('key_link_' + a)) + '</a>' +
+      '<label for="sdki-key-' + a + '">' + esc(tx('key_lbl_' + a)) + '</label>' +
+      '<input type="password" id="sdki-key-' + a + '" autocomplete="off" placeholder="' + esc(tx('key_ph')) + '" value="' + esc(onlineKey(a)) + '">' +
+      '<div class="sdki-zeile"><label style="font-weight:normal;display:flex;gap:6px;align-items:center"><input type="checkbox" data-dauerhaft' + (dauerhaft ? ' checked' : '') + '> ' + esc(tx('key_dauerhaft')) + '</label></div>' +
+      '<div class="sdki-zeile"><button type="button" class="sdki-btn prim" data-speichern>' + esc(tx('key_speichern')) + '</button><span data-status aria-live="polite"></span></div>' +
+      '<p class="sdki-hinweis">' + esc(tx('online_hinweis', { firma: o.firma })) + '</p>' +
+      '</div>';
+  }
+  function verbindeSchluesselBox(box, a) {
+    const o = ONLINE[a];
+    const feld = box.querySelector('#sdki-key-' + a);
+    const status = box.querySelector('[data-status]');
+    box.querySelector('[data-speichern]').onclick = () => {
+      const wert = (feld.value || '').trim();
+      const dauerhaft = box.querySelector('[data-dauerhaft]').checked;
+      try { sessionStorage.removeItem(o.keyStorage); localStorage.removeItem(o.keyStorage); } catch (e) { /* egal */ }
+      if (wert) schreiben(dauerhaft ? localStorage : sessionStorage, o.keyStorage, wert);
+      status.textContent = wert ? tx('key_gespeichert') : tx('key_entfernt');
+    };
+  }
+
   function baueAuswahl(container) {
     if (!container) return;
     stylesEinfuegen();
@@ -178,13 +264,14 @@
       box.innerHTML =
         '<div class="sdki-wahl-titel">' + esc(tx('anbieter_titel')) + '</div>' +
         '<div class="sdki-optionen" role="radiogroup">' +
-        '<button type="button" class="sdki-opt' + (a === 'gemini' ? ' aktiv' : '') + '" data-a="gemini" role="radio" aria-checked="' + (a === 'gemini') + '"><strong>' + esc(tx('gemini')) + '</strong><small>' + esc(tx('gemini_sub')) + '</small></button>' +
-        '<button type="button" class="sdki-opt' + (a === 'lotse' ? ' aktiv' : '') + '" data-a="lotse" role="radio" aria-checked="' + (a === 'lotse') + '"><strong>' + esc(tx('lotse')) + '</strong><small>' + esc(tx('lotse_sub')) + '</small></button>' +
+        ANBIETER_WERTE.map(w => '<button type="button" class="sdki-opt' + (a === w ? ' aktiv' : '') + '" data-a="' + w + '" role="radio" aria-checked="' + (a === w) + '"><strong>' + esc(tx(w)) + '</strong><small>' + esc(tx(w + '_sub')) + '</small></button>').join('') +
         '</div>' +
         (a === 'lotse'
           ? '<p class="sdki-hinweis">' + esc(tx('lotse_hinweis')) + ' <a href="' + INFO_URL + '" target="_blank" rel="noopener">' + esc(tx('info')) + '</a></p>'
-          : '');
+          : '') +
+        (ONLINE[a] ? schluesselBoxHtml(a) : '');
       box.querySelectorAll('.sdki-opt').forEach(b => { b.onclick = () => setzeAnbieter(b.dataset.a); });
+      if (ONLINE[a]) verbindeSchluesselBox(box, a);
     };
     zeichnen();
     document.addEventListener('sd-ki-anbieter', zeichnen);
@@ -405,8 +492,66 @@
     return ergebnis;
   }
 
+  // Text mit ChatGPT (OpenAI) oder Claude (Anthropic) erzeugen - direkt
+  // vom Browser zum Anbieter, mit dem eigenen Schluessel der Person.
+  async function onlineSchreibe(prompt, optionen, welcher) {
+    const opt = optionen || {};
+    const a = welcher || anbieter();
+    const o = ONLINE[a];
+    if (!o) throw new Error('Unbekannter Anbieter');
+    const key = onlineKey(a);
+    if (!key) throw new Error(tx('kein_key_online', { name: o.name }));
+    const modell = onlineModell(a);
+    const system = (opt.system ? opt.system + '\n\n' : '') + (sprache() === 'en'
+      ? 'Write in English unless the task says otherwise. Never invent facts; leave missing details as [gaps].'
+      : 'Schreibe auf Deutsch, außer die Aufgabe verlangt etwas anderes. Erfinde nichts; fehlende Angaben als [Lücke] in eckigen Klammern.');
+    let antwort;
+    try {
+      if (a === 'openai') {
+        antwort = await fetch('https://api.openai.com/v1/responses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ model: modell, instructions: system, input: String(prompt), reasoning: { effort: 'low' }, max_output_tokens: Math.max(2000, (opt.maxTokens || 1200) * 3), store: false })
+        });
+      } else {
+        antwort = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+          body: JSON.stringify({ model: modell, max_tokens: Math.max(1500, opt.maxTokens || 1200), system, messages: [{ role: 'user', content: String(prompt) }] })
+        });
+      }
+    } catch (e) {
+      throw new Error(tx('online_netz', { firma: o.firma }));
+    }
+    if (!antwort.ok) {
+      let detail = '', code = '';
+      try { const d = await antwort.json(); detail = (d.error && d.error.message) || ''; code = (d.error && (d.error.code || d.error.type)) || ''; } catch (e) { /* egal */ }
+      if (antwort.status === 401 || antwort.status === 403 || /invalid.?api.?key|authentication/i.test(code + ' ' + detail)) throw new Error(tx('online_key_falsch', { name: o.name }));
+      if (/insufficient_quota|credit balance|billing/i.test(code + ' ' + detail)) throw new Error(tx('online_guthaben', { firma: o.firma }));
+      if (antwort.status === 429) throw new Error(tx('online_rate', { name: o.name }));
+      throw new Error(tx('online_fehler', { name: o.name, status: antwort.status }) + (detail ? ' – ' + detail : ''));
+    }
+    const daten = await antwort.json();
+    let text = '';
+    if (a === 'openai') {
+      (daten.output || []).forEach(item => {
+        if (item.type !== 'message') return;
+        (item.content || []).forEach(c => { if (c.type === 'output_text') text += c.text || ''; });
+      });
+    } else {
+      (daten.content || []).forEach(b => { if (b.type === 'text') text += b.text || ''; });
+    }
+    text = text.trim();
+    if (!text) throw new Error(tx('online_leer', { name: o.name }));
+    if (opt.onToken) opt.onToken(text, text);
+    return text;
+  }
+
   async function schreibe(prompt, optionen) {
-    return anbieter() === 'lotse' ? lotseSchreibe(prompt, optionen) : geminiSchreibe(prompt, optionen);
+    const a = anbieter();
+    if (a === 'lotse') return lotseSchreibe(prompt, optionen);
+    if (ONLINE[a]) return onlineSchreibe(prompt, optionen, a);
+    return geminiSchreibe(prompt, optionen);
   }
 
   // ------------------------------------------------------------
@@ -459,7 +604,7 @@
     function zeichnen() {
       const { gekuerzt } = textFuerAnbieter();
       $q('[data-quelle]').textContent = voll ? tx('dlg_quelle', { n: voll.length.toLocaleString() }) + (gekuerzt ? tx('dlg_gekuerzt') : '') : '';
-      $q('[data-privat]').textContent = anbieter() === 'lotse' ? tx('dlg_privat_lotse') : tx('dlg_privat_gemini');
+      $q('[data-privat]').textContent = anbieter() === 'lotse' ? tx('dlg_privat_lotse') : ONLINE[anbieter()] ? tx('dlg_privat_online', { firma: ONLINE[anbieter()].firma }) : tx('dlg_privat_gemini');
       const box = $q('[data-aktionen]');
       box.innerHTML = '';
       if (!voll) {
@@ -549,11 +694,12 @@
       toggleButton.insertBefore(plakette, chev || null);
     }
     const aktualisieren = () => {
-      const istLotse = anbieter() === 'lotse';
-      if (plakette) plakette.textContent = istLotse ? tx('lotse') : tx('gemini');
+      const a = anbieter();
+      if (plakette) plakette.textContent = tx(a);
+      // Die Gemini-Felder der App nur bei Gemini zeigen
       [...panelBody.children].forEach(el => {
         if (el === auswahl || el.classList.contains('ki-hint')) return;
-        el.style.display = istLotse ? 'none' : '';
+        el.style.display = a === 'gemini' ? '' : 'none';
       });
     };
     aktualisieren();
@@ -564,7 +710,7 @@
   window.sdKi = {
     anbieter, setzeAnbieter, baueAuswahl, verbindeKiPanel,
     pruefeGeraet, bereitmachen, lotseSchreibe, lotseStopp,
-    geminiSchreibe, schreibe, dokumentDialog,
+    geminiSchreibe, onlineSchreibe, schreibe, dokumentDialog,
     _intern: { lotse }
   };
 })();

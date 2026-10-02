@@ -1525,7 +1525,7 @@
                 label_telefon: 'Telefon', ph_telefon: 'z. B. 0176 12345678',
                 mode_kuendigung: 'Kündigung', mode_entschuldigung: 'Entschuldigung', mode_brief: 'Brief',
                 ki_panel_toggle: '🤖 KI-Schreibhilfe <small>(optional)</small>',
-                ki_hint: 'Lass Texte (Kündigung, Entschuldigung, Brief) von einer KI vorformulieren – auf Basis deiner bereits ausgefüllten Angaben. Wähle oben: <strong>🔒 SD Lotse</strong>, unsere eigene KI – lokal auf deinem Gerät, ohne Schlüssel – oder <strong>☁️ Gemini</strong> von Google mit deinem <strong>eigenen, kostenlosen</strong> Gemini-Schlüssel.',
+                ki_hint: 'Lass Texte (Kündigung, Entschuldigung, Brief) von einer KI vorformulieren – auf Basis deiner bereits ausgefüllten Angaben. Wähle oben: <strong>🔒 SD Lotse</strong>, unsere eigene KI – lokal auf deinem Gerät, ohne Schlüssel – oder eine Online-KI: <strong>☁️ Gemini</strong> von Google mit <strong>kostenlosem</strong> Schlüssel, <strong>🟢 ChatGPT</strong> oder <strong>🟠 Claude</strong> mit eigenem Schlüssel (Bezahlung nach Nutzung direkt beim Anbieter).',
                 ki_key_link: '🔗 Kostenlosen Schlüssel bei Google holen',
                 label_gemini_key: 'Dein Gemini-API-Schlüssel', ph_gemini_key: 'Schlüssel hier einfügen ...',
                 gemini_speicher_sitzung: 'Nur für diese Sitzung merken (empfohlen)',
@@ -1659,7 +1659,7 @@
                 label_telefon: 'Phone', ph_telefon: 'e.g. 0176 12345678',
                 mode_kuendigung: 'Termination', mode_entschuldigung: 'Excuse note', mode_brief: 'Letter',
                 ki_panel_toggle: '🤖 AI writing help <small>(optional)</small>',
-                ki_hint: 'Have texts (termination letter, excuse note, letter) pre-drafted by an AI – based on the details you’ve already filled in. Choose above: <strong>🔒 SD Lotse</strong>, our own AI – local on your device, no key – or <strong>☁️ Gemini</strong> by Google with your <strong>own, free</strong> Gemini key.',
+                ki_hint: 'Have texts (termination letter, excuse note, letter) pre-drafted by an AI – based on the details you’ve already filled in. Choose above: <strong>🔒 SD Lotse</strong>, our own AI – local on your device, no key – or an online AI: <strong>☁️ Gemini</strong> by Google with a <strong>free</strong> key, <strong>🟢 ChatGPT</strong> or <strong>🟠 Claude</strong> with your own key (pay per use directly with the provider).',
                 ki_key_link: '🔗 Get a free key from Google',
                 label_gemini_key: 'Your Gemini API key', ph_gemini_key: 'Paste your key here ...',
                 gemini_speicher_sitzung: 'Remember only for this session (recommended)',
@@ -1786,7 +1786,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-ki.js?v=7"></script>
+    <script src="../sd-ki.js?v=8"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -2506,6 +2506,9 @@
             // Die Auswahl gilt fuer alle SD-Apps (siehe sd-ki.js).
             if (window.sdKi && window.sdKi.anbieter() === 'lotse') {
                 return await window.sdKi.lotseSchreibe(prompt, { maxTokens: 1200 });
+            }
+            if (window.sdKi && (window.sdKi.anbieter() === 'openai' || window.sdKi.anbieter() === 'claude')) {
+                return await window.sdKi.onlineSchreibe(prompt, { maxTokens: 1200 });
             }
             const key = sessionStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(GEMINI_KEY_STORAGE);
             if (!key) {

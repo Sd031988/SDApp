@@ -373,6 +373,13 @@
             margin-bottom: 6px;
         }
 
+        .key-link {
+            display: inline-block;
+            margin: 2px 0 6px;
+            font-weight: bold;
+            color: var(--accent, #2f7d72);
+        }
+        .key-callout .key-link { display: block; margin-top: 6px; }
         .field select {
             width: 100%;
             max-width: 100%;
@@ -893,6 +900,9 @@
                 settings_title: 'Einstellungen',
                 lbl_key: 'Dein Gemini-API-Schlüssel',
                 lbl_anbieter: 'Online-KI',
+                key_link: '🔗 Kostenlosen Schlüssel bei Google holen',
+                key_link_openai: '🔗 Schlüssel bei OpenAI holen',
+                key_link_claude: '🔗 Schlüssel bei Anthropic holen',
                 anbieter_gemini: 'Gemini (Google) – kostenloser Schlüssel',
                 anbieter_openai: 'ChatGPT (OpenAI) – eigener Schlüssel',
                 anbieter_claude: 'Claude (Anthropic) – eigener Schlüssel',
@@ -1079,6 +1089,9 @@
                 settings_title: 'Settings',
                 lbl_key: 'Your Gemini API key',
                 lbl_anbieter: 'Online AI',
+                key_link: '🔗 Get a free key from Google',
+                key_link_openai: '🔗 Get a key from OpenAI',
+                key_link_claude: '🔗 Get a key from Anthropic',
                 anbieter_gemini: 'Gemini (Google) – free key',
                 anbieter_openai: 'ChatGPT (OpenAI) – own key',
                 anbieter_claude: 'Claude (Anthropic) – own key',
@@ -1312,6 +1325,7 @@
                 <label for="apiKey" data-i18n="lbl_key" data-anbieter-text="lbl_key">Dein Gemini-API-Schlüssel</label>
                 <input type="password" id="apiKey" autocomplete="off" data-i18n-placeholder="ph_key"
                     placeholder="Schlüssel hier einfügen ...">
+                <a class="key-link" id="keyLink" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" data-i18n="key_link" data-anbieter-text="key_link">🔗 Kostenlosen Schlüssel bei Google holen</a>
                 <p class="hint" data-i18n="key_hint_html" data-anbieter-text="key_hint_html" data-i18n-html>Kostenlos erhältlich bei Google AI Studio.</p>
             </div>
             <label class="check"><input type="radio" name="keyMode" id="keyModeSession" value="sitzung" checked>
@@ -1392,7 +1406,8 @@
                     <button type="button" class="suggestion nur-gemini" data-i18n="sug_link">Lies diese Stellenanzeige: </button>
                     <button type="button" class="suggestion" data-i18n="sug_4">Formuliere eine Absage</button>
                 </div>
-                <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-anbieter-text="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span></div>
+                <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-anbieter-text="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span>
+                    <a class="key-link" id="keyLinkCallout" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" data-i18n="key_link" data-anbieter-text="key_link">🔗 Kostenlosen Schlüssel bei Google holen</a></div>
             </div>
         </div>
     </main>
@@ -1499,10 +1514,10 @@
         // direkt beim Anbieter. Alle Anfragen gehen direkt vom Browser zum
         // Anbieter - nicht ueber unseren Server.
         const ANBIETER = {
-            gemini: { name: 'Gemini', keyStorage: 'biGeminiApiKey' },
-            openai: { name: 'ChatGPT (OpenAI)', keyStorage: 'sdOpenAiApiKey',
+            gemini: { name: 'Gemini', keyStorage: 'biGeminiApiKey', link: 'https://aistudio.google.com/apikey' },
+            openai: { name: 'ChatGPT (OpenAI)', keyStorage: 'sdOpenAiApiKey', link: 'https://platform.openai.com/api-keys',
                 modelle: [['gpt-5-mini', 'modell_openai_mini'], ['gpt-5-nano', 'modell_openai_nano']] },
-            claude: { name: 'Claude', keyStorage: 'sdClaudeApiKey',
+            claude: { name: 'Claude', keyStorage: 'sdClaudeApiKey', link: 'https://console.anthropic.com/settings/keys',
                 modelle: [['claude-haiku-4-5-20251001', 'modell_claude_haiku'], ['claude-sonnet-5-5', 'modell_claude_sonnet']] }
         };
         function anbieter() { return ANBIETER[optionen.anbieter] ? optionen.anbieter : 'gemini'; }
@@ -1567,6 +1582,8 @@
                 el.setAttribute('data-i18n', key);
                 if (el.hasAttribute('data-i18n-html')) el.innerHTML = t(key); else el.textContent = t(key);
             });
+            $('keyLink').href = ANBIETER[a].link;
+            $('keyLinkCallout').href = ANBIETER[a].link;
             const feld = $('onlineModellFeld');
             const sel = $('onlineModell');
             if (ANBIETER[a].modelle) {
