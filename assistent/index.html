@@ -1120,8 +1120,9 @@
         const SYSTEM_PROMPT =
             'Du bist der KI-Assistent der Web-App "SD Bewerbungsstudio" (Lebenslauf, Anschreiben, ' +
             'Deckblatt, Bewerbungsmappe, Schreibstudio fuer Kuendigungen/Briefe, PDF-Werkzeuge, ' +
-            'Dokumenten-Scanner, Passfoto). Hilf freundlich, konkret und ehrlich. Antworte in der ' +
-            'Sprache, in der die Person schreibt (meist Deutsch). Erfinde keine Fakten, Zahlen, ' +
+            'Dokumenten-Scanner, Passfoto). Hilf freundlich, konkret und ehrlich. Du beherrschst ' +
+            'Deutsch, Englisch und viele weitere Sprachen. Antworte IMMER in der Sprache der letzten ' +
+            'Nachricht der Person (schreibt sie Englisch, antworte auf Englisch). Erfinde keine Fakten, Zahlen, ' +
             'Firmen oder Zeugnisse; wenn du etwas nicht sicher weisst, sag das. Bei Steuer-, Rechts- ' +
             'oder Finanzfragen gib allgemeine Orientierung und weise darauf hin, dass du keine ' +
             'Beratung ersetzt. Wenn du rechnen musst und Code-Ausfuehrung verfuegbar ist, nutze sie ' +
@@ -1258,6 +1259,42 @@
             speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
             if (optionen.memory) speichereVerlauf();
             else speicherSchreiben(localStorage, HISTORY_STORAGE, null);
+        }
+
+        // ------------------------------------------------------------
+        // Sprache der letzten Nachricht erkennen
+        // ------------------------------------------------------------
+        // Einfache Erkennung Deutsch/Englisch an haeufigen Woertern. Bei
+        // anderen Sprachen oder Unklarheit gibt es keinen festen Hinweis -
+        // dann gilt nur die Regel "gleiche Sprache wie die Person".
+        function erkenneSprache(text) {
+            const t = ' ' + String(text || '').toLowerCase().replace(/[^a-zäöüß' ]+/g, ' ') + ' ';
+            const zaehle = (woerter) => woerter.reduce((n, w) => n + (t.split(' ' + w + ' ').length - 1), 0);
+            const en = zaehle(['the', 'and', 'you', 'is', 'are', 'what', 'how', 'can', 'please', 'my', 'for', 'with',
+                'i', 'to', 'of', 'it', 'do', 'does', 'write', 'help', 'me', 'this', 'should', 'would', 'could', 'english', 'speak', "i'm", "don't",
+                'hello', 'hi', 'hey', 'thanks', 'thank', 'yes', 'good', 'morning', 'bye']);
+            const de = zaehle(['der', 'die', 'das', 'und', 'ich', 'ist', 'nicht', 'wie', 'bitte', 'mein', 'meine', 'für',
+                'mit', 'ein', 'eine', 'kann', 'kannst', 'schreib', 'schreibe', 'hilf', 'du', 'sie', 'mir', 'mich', 'auf', 'zu', 'den', 'dem', 'deutsch', 'sprechen',
+                'hallo', 'danke', 'ja', 'nein', 'guten', 'tag', 'moin', 'servus', 'tschüss'])
+                + (/[äöüß]/.test(t) ? 2 : 0);
+            if (en > de) return 'en';
+            if (de > en) return 'de';
+            return null;
+        }
+
+        function letzteNachrichtDerPerson() {
+            for (let i = verlauf.length - 1; i >= 0; i--) {
+                if (verlauf[i].role !== 'user') continue;
+                return verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n');
+            }
+            return '';
+        }
+
+        function sprachHinweis() {
+            const sprache = erkenneSprache(letzteNachrichtDerPerson());
+            if (sprache === 'en') return '\n\nThe user\'s latest message is in English. Reply in English.';
+            if (sprache === 'de') return '\n\nThe user\'s latest message is in German. Reply in German (Deutsch).';
+            return '';
         }
 
         // ------------------------------------------------------------
@@ -1628,7 +1665,7 @@
             // Die Unterhaltung muss mit einer Nachricht der Person beginnen.
             while (kontext.length && kontext[0].role !== 'user') kontext.shift();
             const body = {
-                system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                system_instruction: { parts: [{ text: SYSTEM_PROMPT + sprachHinweis() }] },
                 contents: kontext.map(e => ({ role: e.role, parts: bereinigeFuerApi(e.parts) }))
             };
             if (optionen.code) body.tools = [{ code_execution: {} }];
@@ -1780,12 +1817,16 @@
             '1b': { f16: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-1B-Instruct-q4f32_1-MLC' },
             '3b': { f16: 'Llama-3.2-3B-Instruct-q4f16_1-MLC', f32: 'Llama-3.2-3B-Instruct-q4f32_1-MLC' }
         };
+        // Auf Englisch formuliert: das kleine Modell befolgt englische
+        // Anweisungen deutlich zuverlaessiger - mit deutscher Anweisung blieb
+        // es oft bei Deutsch oder behauptete, kein Englisch zu koennen.
         const LLAMA_SYSTEM =
-            'Du heisst "SD Lotse" und bist die eigene KI der Web-App "SD Bewerbungsstudio". Du hilfst bei Bewerbung, ' +
-            'Lebenslauf, Anschreiben und Briefen. Antworte freundlich, kurz und konkret in der Sprache ' +
-            'der Person (meist Deutsch). Erfinde keine Fakten; wenn du etwas nicht sicher weisst, sag es. ' +
-            'Wenn man fragt, auf welchem Modell du basierst, sag ehrlich: auf Llama 3.2 von Meta, ' +
-            'lokal im Browser ausgefuehrt.';
+            'You are "SD Lotse", the built-in AI assistant of the web app "SD Bewerbungsstudio". ' +
+            'You help with job applications, CVs (Lebenslauf), cover letters (Anschreiben) and letters. ' +
+            'You speak English, German and many other languages fluently. ALWAYS reply in the same ' +
+            'language as the user\'s latest message. Be friendly, short and concrete. Never invent facts; ' +
+            'if you are not sure about something, say so. If asked which model you are based on, say ' +
+            'honestly: Llama 3.2 by Meta, running locally in the browser.';
         const LLAMA_MAX_NACHRICHTEN = 10;   // Llama 3.2 im Browser hat nur ca. 4.000 Token Kontext
         const LLAMA_MAX_ZEICHEN = 1500;     // pro Nachricht
 
@@ -1927,7 +1968,7 @@
                 else liste.push({ role, content: text });
             });
             while (liste.length && liste[0].role !== 'user') liste.shift();
-            return [{ role: 'system', content: LLAMA_SYSTEM }].concat(liste);
+            return [{ role: 'system', content: LLAMA_SYSTEM + sprachHinweis() }].concat(liste);
         }
 
         async function antworteMitLlama() {
