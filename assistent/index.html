@@ -931,6 +931,7 @@
                 google_ask: '🔎 Bei Google KI fragen ↗',
                 google_btn_title: 'Frage im Google KI-Modus stellen – öffnet sich daneben bzw. in einem neuen Tab, der Assistent bleibt offen',
                 google_hint: 'Die Frage wird dabei an Google gesendet und dort beantwortet. Die Antwort siehst du bei Google, nicht hier.',
+                google_tipp: '💡 Zeigt Google bei einer weiteren Frage einen Fehler: Frage hier eintippen und G↗ noch einmal tippen.',
                 google_footer: 'Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus – die Antwort erscheint dann bei Google, der Assistent bleibt offen.',
                 mode_gemini: '☁️ Gemini',
                 mode_gemini_sub: 'online · Schlüssel',
@@ -1067,6 +1068,7 @@
                 google_ask: '🔎 Ask Google AI ↗',
                 google_btn_title: 'Ask this in Google AI Mode – opens next to it or in a new tab, the assistant stays open',
                 google_hint: 'Your question is sent to Google and answered there. You see the answer at Google, not here.',
+                google_tipp: '💡 If Google shows an error for a follow-up question: type it here and tap G↗ again.',
                 google_footer: 'With "G↗" you also ask your question in Google AI Mode – the answer appears at Google, the assistant stays open.',
                 mode_gemini: '☁️ Gemini',
                 mode_gemini_sub: 'online · key',
@@ -1597,9 +1599,11 @@
         // beiden Faellen offen. Es wird nichts von Google ausgelesen; die
         // Antwort sieht man nur bei Google.
         function googleKiUrl(frage) {
+            // Bewusst ohne Sprach-Parameter (hl): Google nimmt dann die
+            // Sprache des Google-Kontos/der App. Ein erzwungenes hl kann
+            // sich mit der Sitzung bei Google beissen.
             const q = String(frage || '').trim().slice(0, 1500);
-            const hl = window.SD_LANG === 'en' ? 'en' : 'de';
-            return 'https://www.google.com/search?udm=50&hl=' + hl + (q ? '&q=' + encodeURIComponent(q) : '');
+            return 'https://www.google.com/search?udm=50' + (q ? '&q=' + encodeURIComponent(q) : '');
         }
 
         function letzteFrage() {
@@ -1632,6 +1636,18 @@
             }
         }
 
+        // Kurzer Tipp (die ersten Male): Folgefragen, die man direkt bei
+        // Google eintippt, laufen nur noch ueber Google - zeigt Google dort
+        // einen Fehler, hilft es, die Frage hier zu stellen und G↗ erneut
+        // zu tippen (dann kommt sie bei Google wieder als neue Frage an).
+        function googleTipp() {
+            let n = 0;
+            try { n = parseInt(localStorage.getItem('sdGoogleTipp') || '0', 10) || 0; localStorage.setItem('sdGoogleTipp', String(n + 1)); } catch (e) { /* egal */ }
+            if (n >= 3) return;
+            zeigeDocStatus(t('google_tipp'));
+            setTimeout(() => { if ($('docStatus').textContent === t('google_tipp')) zeigeDocStatus(''); }, 9000);
+        }
+
         function googleLink(frage) {
             const a = document.createElement('a');
             a.className = 'google-link';
@@ -1640,7 +1656,7 @@
             a.rel = 'noopener noreferrer';
             a.textContent = t('google_ask');
             a.title = t('google_hint');
-            a.addEventListener('click', (e) => oeffneGoogleKi(e, a.href));
+            a.addEventListener('click', (e) => { googleTipp(); oeffneGoogleKi(e, a.href); });
             return a;
         }
 
@@ -3129,6 +3145,7 @@
         // "G↗" neben dem Eingabefeld: nimmt den gerade getippten Text, sonst
         // die letzte eigene Frage.
         $('googleBtn').addEventListener('click', (e) => {
+            googleTipp();
             const url = googleKiUrl($('input').value.trim() || letzteFrage());
             $('googleBtn').href = url;
             oeffneGoogleKi(e, url);
