@@ -265,6 +265,31 @@
             overflow-x: auto;
         }
 
+        .link-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .link-actions button {
+            border: 1px solid var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            border-radius: 999px;
+            padding: 8px 12px;
+            min-height: 40px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .link-status {
+            list-style: none;
+            padding-left: 0 !important;
+        }
+
         .msg-note {
             margin-top: 6px;
             max-width: min(620px, 92%);
@@ -922,6 +947,21 @@
                 search_used: '🌐 mit Google-Suche',
                 search_unavailable: 'ℹ️ Die Google-Suche ist mit deinem Schlüssel gerade nicht verfügbar (vermutlich nicht im Gratis-Kontingent). Diese Antwort ist ohne Websuche entstanden.',
                 wiki_source: '📚 Nachgeschlagen bei Wikipedia',
+                ab_links_h: '🔗 Links lesen',
+                ab_links_p: 'Füge den Link einer Stellenanzeige ein – ich lese sie und schreibe dir ein passendes Anschreiben.',
+                sug_link: 'Lies diese Stellenanzeige: ',
+                act_summary: '📋 Anforderungen zusammenfassen',
+                act_letter: '✍️ Anschreiben mit meinem Lebenslauf',
+                act_letter_title: 'Dafür werden Angaben aus deinem Lebenslauf (Name, Wunschposition, Erfahrung, Ausbildung, Kenntnisse, Sprachen) an Google gesendet – keine Adresse, Telefonnummer oder E-Mail.',
+                act_letter_nocv: '✍️ Anschreiben entwerfen',
+                prompt_summary: 'Lies diese Stellenanzeige und fasse sie kurz und übersichtlich zusammen: Firma, Stelle, Ort, Arbeitszeit, Aufgaben, Anforderungen (Muss / Kann), was angeboten wird, Bewerbungsfrist und Ansprechpartner (nur falls angegeben). Link: {url}',
+                prompt_letter: 'Lies diese Stellenanzeige: {url}\n\nSchreibe mir dazu ein passendes, ehrliches Anschreiben auf Deutsch (etwa eine Seite, ohne Briefkopf). Nutze NUR diese Angaben aus meinem Lebenslauf und erfinde keine Erfahrungen, Abschlüsse oder Zahlen dazu. Wo etwas fehlt, lass eine Lücke in [eckigen Klammern].\n\n{cv}',
+                prompt_letter_nocv: 'Lies diese Stellenanzeige: {url}\n\nHilf mir, dazu ein passendes Anschreiben zu schreiben. Ich habe noch keinen Lebenslauf im SD Bewerbungsstudio ausgefüllt – frag mich zuerst kurz nach meiner Erfahrung, Ausbildung und meinen Stärken, bevor du schreibst.',
+                cv_name: 'Name', cv_position: 'Wunschposition', cv_experience: 'Berufserfahrung', cv_education: 'Ausbildung', cv_skills: 'Kenntnisse', cv_languages: 'Sprachen',
+                links_read: '🔗 Gelesene Links',
+                link_failed: 'ℹ️ Mindestens ein Link konnte nicht gelesen werden (z. B. Login, Bezahlschranke oder Seite gesperrt). Tipp: Kopiere den Text der Anzeige und füge ihn hier ein.',
+                link_unavailable: 'ℹ️ Das Lesen von Links ist mit deinem Schlüssel gerade nicht verfügbar. Tipp: Kopiere den Text der Seite und füge ihn hier ein.',
+                llama_no_links: 'SD Lotse kann keine Links öffnen (er läuft offline auf deinem Gerät). Wechsle oben zu ☁️ Gemini – der liest den Link selbst – oder kopiere den Text der Seite hier hinein.',
                 ab_search_h: '🌐 Selbst nachsuchen',
                 ab_search_p: 'Bei aktuellen Fragen sucht die KI selbst – Gemini bei Google, SD Lotse auf Wikipedia – und nennt die Quellen.',
                 ab_google_h: '🔎 Google KI-Modus',
@@ -1018,6 +1058,21 @@
                 search_used: '🌐 with Google Search',
                 search_unavailable: 'ℹ️ Google Search is currently not available with your key (probably not in the free quota). This answer was created without web search.',
                 wiki_source: '📚 Looked up on Wikipedia',
+                ab_links_h: '🔗 Reads links',
+                ab_links_p: 'Paste the link to a job ad – I read it and write a matching cover letter for you.',
+                sug_link: 'Read this job ad: ',
+                act_summary: '📋 Summarize requirements',
+                act_letter: '✍️ Cover letter from my resume',
+                act_letter_title: 'This sends details from your resume (name, desired position, experience, education, skills, languages) to Google – no address, phone number or email.',
+                act_letter_nocv: '✍️ Draft a cover letter',
+                prompt_summary: 'Read this job ad and summarize it briefly and clearly: company, position, location, working hours, tasks, requirements (must / nice to have), what is offered, application deadline and contact person (only if given). Link: {url}',
+                prompt_letter: 'Read this job ad: {url}\n\nWrite a matching, honest cover letter for it (about one page, without letterhead), in the language of the job ad. Use ONLY these details from my resume and do not invent experience, degrees or numbers. Where something is missing, leave a gap in [square brackets].\n\n{cv}',
+                prompt_letter_nocv: 'Read this job ad: {url}\n\nHelp me write a matching cover letter. I have not filled in a resume in SD Bewerbungsstudio yet – first briefly ask me about my experience, education and strengths before you write.',
+                cv_name: 'Name', cv_position: 'Desired position', cv_experience: 'Work experience', cv_education: 'Education', cv_skills: 'Skills', cv_languages: 'Languages',
+                links_read: '🔗 Links read',
+                link_failed: 'ℹ️ At least one link could not be read (e.g. login, paywall or blocked page). Tip: copy the text of the ad and paste it here.',
+                link_unavailable: 'ℹ️ Reading links is currently not available with your key. Tip: copy the text of the page and paste it here.',
+                llama_no_links: 'SD Lotse cannot open links (it runs offline on your device). Switch to ☁️ Gemini at the top – it reads the link itself – or paste the text of the page here.',
                 ab_search_h: '🌐 Looks things up',
                 ab_search_p: 'For current questions the AI searches by itself – Gemini on Google, SD Lotse on Wikipedia – and names its sources.',
                 ab_google_h: '🔎 Google AI Mode',
@@ -1123,6 +1178,7 @@
                     <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
                     <div class="ability nur-gemini"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
+                    <div class="ability nur-gemini"><strong data-i18n="ab_links_h">🔗 Links lesen</strong><span data-i18n="ab_links_p">Füge den Link einer Stellenanzeige ein.</span></div>
                     <div class="ability"><strong data-i18n="ab_search_h">🌐 Selbst nachsuchen</strong><span data-i18n="ab_search_p">Bei aktuellen Fragen sucht die KI selbst.</span></div>
                     <div class="ability"><strong data-i18n="ab_google_h">🔎 Google KI-Modus</strong><span data-i18n="ab_google_p">Frage zusätzlich bei Google stellen.</span></div>
                 </div>
@@ -1130,6 +1186,7 @@
                     <button type="button" class="suggestion" data-i18n="sug_1">Prüfe mein Anschreiben</button>
                     <button type="button" class="suggestion" data-i18n="sug_2">Welche Stärken passen?</button>
                     <button type="button" class="suggestion" data-i18n="sug_3">Rechne ...</button>
+                    <button type="button" class="suggestion nur-gemini" data-i18n="sug_link">Lies diese Stellenanzeige: </button>
                     <button type="button" class="suggestion" data-i18n="sug_4">Formuliere eine Absage</button>
                 </div>
                 <div class="key-callout" id="noKeyCallout" hidden><span data-i18n="no_key_html" data-i18n-html>🔑 Zum Starten brauchst du einen kostenlosen Gemini-Schlüssel.</span></div>
@@ -1140,6 +1197,10 @@
     <footer class="composer">
         <div class="composer-inner">
             <div class="pending" id="pending"></div>
+            <div class="link-actions" id="linkActions" hidden>
+                <button type="button" id="actSummary" data-i18n="act_summary">📋 Anforderungen zusammenfassen</button>
+                <button type="button" id="actLetter" data-i18n="act_letter">✍️ Anschreiben mit meinem Lebenslauf</button>
+            </div>
             <div class="input-row">
                 <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
                 <button type="button" class="icon-btn attach-btn" id="attachBtn" data-i18n-title="attach" title="Bild oder PDF anhängen" aria-label="Bild oder PDF anhängen">📎</button>
@@ -1275,6 +1336,7 @@
                 role: e.role,
                 quelle: e.quelle,
                 grounding: e.grounding,
+                links: e.links,
                 wiki: e.wiki,
                 hinweis: e.hinweis,
                 anhaenge: (e.anhaenge || []).map(a => ({ name: a.name, mime: a.mime })),
@@ -1374,6 +1436,71 @@
             if (sprache === 'en') return '\n\nThe user\'s latest message is in English. Reply in English.';
             if (sprache === 'de') return '\n\nThe user\'s latest message is in German. Reply in German (Deutsch).';
             return '';
+        }
+
+        // ------------------------------------------------------------
+        // Links in Nachrichten (Gemini liest sie per "URL context")
+        // ------------------------------------------------------------
+        const LINK_RE = /https?:\/\/[^\s<>"'„“]+/gi;
+        function findeLinks(text) {
+            return (String(text || '').match(LINK_RE) || []).map(u => u.replace(/[),.;:!?]+$/, '')).slice(0, 20);
+        }
+
+        // Angaben aus dem Lebenslauf-Bereich derselben Webseite (gleicher
+        // Browser-Speicher). Bewusst OHNE Adresse, Telefon und E-Mail.
+        function lebenslaufAngaben() {
+            let daten = null;
+            for (const ort of [sessionStorage, localStorage]) {
+                try {
+                    const roh = ort.getItem('lebenslaufDaten');
+                    if (roh) { daten = JSON.parse(roh); break; }
+                } catch (e) { /* weiter */ }
+            }
+            if (!daten) return '';
+            const name = [daten.vorname, daten.nachname].filter(Boolean).join(' ').trim();
+            const felder = [
+                ['cv_name', name], ['cv_position', daten.position], ['cv_experience', daten.erfahrung],
+                ['cv_education', daten.ausbildung], ['cv_skills', daten.kenntnisse], ['cv_languages', daten.sprachen]
+            ].filter(([, w]) => w && String(w).trim());
+            if (felder.length < 2) return '';
+            return felder.map(([k, w]) => t(k) + ': ' + String(w).trim()).join('\n');
+        }
+
+        function aktualisiereLinkAktionen() {
+            const links = findeLinks($('input').value);
+            const zeigen = links.length > 0 && optionen.modus !== 'llama' && !sendetGerade;
+            $('linkActions').hidden = !zeigen;
+            if (zeigen) {
+                const cv = lebenslaufAngaben();
+                $('actLetter').textContent = cv ? t('act_letter') : t('act_letter_nocv');
+                $('actLetter').title = cv ? t('act_letter_title') : '';
+            }
+        }
+
+        function linkAktion(art) {
+            const text = $('input').value;
+            const url = findeLinks(text)[0];
+            if (!url) return;
+            let nachricht;
+            if (art === 'summary') {
+                nachricht = t('prompt_summary', { url });
+            } else {
+                const cv = lebenslaufAngaben();
+                nachricht = cv ? t('prompt_letter', { url, cv }) : t('prompt_letter_nocv', { url });
+            }
+            $('input').value = '';
+            aktualisiereLinkAktionen();
+            sende(nachricht);
+        }
+
+        function leseLinkStatus(kandidat) {
+            const meta = kandidat.urlContextMetadata || kandidat.url_context_metadata;
+            const liste = meta && (meta.urlMetadata || meta.url_metadata);
+            if (!Array.isArray(liste) || !liste.length) return null;
+            return liste.map(m => ({
+                url: m.retrievedUrl || m.retrieved_url || '',
+                ok: /SUCCESS/.test(m.urlRetrievalStatus || m.url_retrieval_status || '')
+            })).filter(l => l.url);
         }
 
         // ------------------------------------------------------------
@@ -1601,6 +1728,25 @@
                 root.querySelectorAll('a').forEach(link => { link.target = '_blank'; link.rel = 'noopener noreferrer'; });
                 wrap.appendChild(host);
             }
+            if (eintrag.links && eintrag.links.length) {
+                const box = document.createElement('div');
+                box.className = 'sources';
+                const kopf = document.createElement('div');
+                kopf.textContent = t('links_read') + ':';
+                const ul = document.createElement('ul');
+                ul.className = 'link-status';
+                eintrag.links.forEach(l => {
+                    const li = document.createElement('li');
+                    li.textContent = (l.ok ? '✓ ' : '✗ ');
+                    const a = document.createElement('a');
+                    a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+                    a.textContent = l.url.replace(/^https?:\/\//, '').slice(0, 70);
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                });
+                box.append(kopf, ul);
+                wrap.appendChild(box);
+            }
             if (eintrag.wiki && eintrag.wiki.url) {
                 wrap.appendChild(quellenListe(t('wiki_source'), [{ uri: eintrag.wiki.url, title: eintrag.wiki.titel }]));
             }
@@ -1793,37 +1939,46 @@
                 system_instruction: { parts: [{ text: SYSTEM_PROMPT + datumHinweis() + sprachHinweis() }] },
                 contents: kontext.map(e => ({ role: e.role, parts: bereinigeFuerApi(e.parts) }))
             };
-            const mitSuche = optionen.suche && !sucheHeuteNichtVerfuegbar();
-            const tools = [];
-            if (mitSuche) tools.push({ google_search: {} });
-            if (optionen.code) tools.push({ code_execution: {} });
-            if (tools.length) body.tools = tools;
+            // Werkzeuge fuer diese Anfrage: Links lesen (nur wenn die letzte
+            // Nachricht Links enthaelt), Google-Suche und Python-Rechnen. Laut
+            // Google laesst sich das Link-Lesen mit der Suche kombinieren; die
+            // Code-Ausfuehrung lassen wir bei Links sicherheitshalber weg.
+            const hatLinks = findeLinks(letzteNachrichtDerPerson()).length > 0;
+            let werkzeuge = [];
+            if (hatLinks) werkzeuge.push('url_context');
+            if (optionen.suche && !sucheHeuteNichtVerfuegbar()) werkzeuge.push('google_search');
+            if (optionen.code && !hatLinks) werkzeuge.push('code_execution');
+            const hinweise = [];
 
             // Nur Gratis-Flash-Modelle; ist Flash fuer heute aufgebraucht,
             // wird automatisch Flash-Lite gefragt (siehe gemini-modelle.js).
+            // Lehnt Google ein Werkzeug ab (z. B. nicht im Gratis-Kontingent),
+            // wird ohne dieses Werkzeug erneut gefragt und das dazugeschrieben.
             let antwort;
-            let sucheNichtVerfuegbar = false;
             try {
-                ({ antwort } = await window.sdGemini.anfrage(key, body, { ohneToolsWiederholen: !mitSuche }));
-                // Websuche abgelehnt (z. B. nicht im Gratis-Kontingent)? Dann
-                // dieselbe Frage ohne Suche stellen und das ehrlich dazuschreiben.
-                if (mitSuche && !antwort.ok && [400, 403, 429].includes(antwort.status)) {
+                for (let versuch = 0; versuch < 4; versuch++) {
+                    const anfrage = Object.assign({}, body);
+                    if (werkzeuge.length) anfrage.tools = werkzeuge.map(w => ({ [w]: {} }));
+                    else delete anfrage.tools;
+                    const nurNochCode = werkzeuge.length === 1 && werkzeuge[0] === 'code_execution';
+                    ({ antwort } = await window.sdGemini.anfrage(key, anfrage, { ohneToolsWiederholen: nurNochCode }));
+                    if (antwort.ok || !werkzeuge.length || ![400, 403, 429].includes(antwort.status)) break;
                     let detail = '';
                     try { detail = JSON.stringify(await antwort.clone().json()); } catch (e) { /* egal */ }
-                    const schluesselProblem = /api key|API_KEY_INVALID/i.test(detail);
-                    const suchProblem = /search|grounding/i.test(detail) || (antwort.status !== 429 && !schluesselProblem);
-                    if (suchProblem && !schluesselProblem) {
-                        merkeSucheNichtVerfuegbar();
-                        sucheNichtVerfuegbar = true;
-                        const ohneSuche = Object.assign({}, body);
-                        const rest = tools.filter(tl => !tl.google_search);
-                        if (rest.length) ohneSuche.tools = rest; else delete ohneSuche.tools;
-                        ({ antwort } = await window.sdGemini.anfrage(key, ohneSuche, { ohneToolsWiederholen: true }));
-                    }
+                    if (/api key|API_KEY_INVALID/i.test(detail)) break;
+                    let weg = null;
+                    if (werkzeuge.includes('url_context') && /url|context/i.test(detail)) weg = 'url_context';
+                    else if (werkzeuge.includes('google_search') && /search|grounding/i.test(detail)) weg = 'google_search';
+                    else if (antwort.status === 429) break;   // normales Kontingent leer - kein Werkzeug-Problem
+                    else weg = werkzeuge.includes('url_context') ? 'url_context' : (werkzeuge.includes('google_search') ? 'google_search' : 'code_execution');
+                    werkzeuge = werkzeuge.filter(w => w !== weg);
+                    if (weg === 'google_search') { merkeSucheNichtVerfuegbar(); hinweise.push('search_unavailable'); }
+                    if (weg === 'url_context') hinweise.push('link_unavailable');
                 }
             } catch (e) {
                 throw new Error(t('err_network'));
             }
+            const sucheNichtVerfuegbar = hinweise.includes('search_unavailable');
             if (!antwort.ok) {
                 if (antwort.status === 400 || antwort.status === 401 || antwort.status === 403) {
                     let detail = '';
@@ -1843,7 +1998,9 @@
                 if (kandidat.finishReason === 'SAFETY') throw new Error(t('err_blocked'));
                 throw new Error(t('err_empty'));
             }
-            return { parts, grounding: leseGrounding(kandidat.groundingMetadata), sucheNichtVerfuegbar };
+            const links = leseLinkStatus(kandidat);
+            if (links && links.some(l => !l.ok)) hinweise.push('link_failed');
+            return { parts, grounding: leseGrounding(kandidat.groundingMetadata), links, hinweise, sucheNichtVerfuegbar };
         }
 
         // Quellen und die von Google vorgeschriebenen Suchvorschlaege aus
@@ -1896,7 +2053,11 @@
                 entferneTippt();
                 const eintrag = { role: 'model', parts: ergebnis.parts, quelle: 'gemini' };
                 if (ergebnis.grounding) eintrag.grounding = ergebnis.grounding;
-                if (ergebnis.sucheNichtVerfuegbar) eintrag.hinweis = 'search_unavailable';
+                if (ergebnis.links) eintrag.links = ergebnis.links;
+                // Wichtigster Hinweis zuerst (Link-Probleme betreffen die Antwort direkt)
+                const reihenfolge = ['link_unavailable', 'link_failed', 'search_unavailable'];
+                const h = reihenfolge.find(k => (ergebnis.hinweise || []).includes(k));
+                if (h) eintrag.hinweis = h;
                 verlauf.push(eintrag);
                 $('chatInner').appendChild(baueNachricht(eintrag));
                 nachUntenScrollen();
@@ -1916,6 +2077,7 @@
             if (!text && !wartendeAnhaenge.length) return;
             if (optionen.modus === 'llama') {
                 if (wartendeAnhaenge.length) { zeigeFehler(t('llama_no_attach')); return; }
+                if (findeLinks(text).length) { zeigeFehler(t('llama_no_links')); return; }
                 if (!llama.engine) {
                     zeigeFehler(llama.gpu && !llama.gpu.ok
                         ? t('llama_unsupported') + '\n\n' + t('llama_tech') + ': ' + (llama.gpu.grund || '?') + ' · ' + geraeteInfo()
@@ -2262,6 +2424,7 @@
             const istLlama = modus === 'llama';
             $('attachBtn').hidden = istLlama;
             document.querySelectorAll('.nur-gemini').forEach(el => { el.hidden = istLlama; });
+            aktualisiereLinkAktionen();
             $('privacyLlama').hidden = !istLlama;
             $('privacyGemini').hidden = istLlama;
             $('noKeyCallout').hidden = istLlama || !!aktuellerKey();
@@ -2332,7 +2495,9 @@
             e.target.value = '';
         };
 
-        $('input').addEventListener('input', () => { passeHoeheAn(); aktualisiereSendenKnopf(); });
+        $('input').addEventListener('input', () => { passeHoeheAn(); aktualisiereSendenKnopf(); aktualisiereLinkAktionen(); });
+        $('actSummary').onclick = () => linkAktion('summary');
+        $('actLetter').onclick = () => linkAktion('letter');
         $('input').addEventListener('keydown', (e) => {
             // Am Computer: Enter = senden, Umschalt+Enter = neue Zeile.
             // Am Handy bleibt Enter eine neue Zeile (gesendet wird per Knopf).
