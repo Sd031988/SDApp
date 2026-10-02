@@ -2079,6 +2079,7 @@
             }
         };
     </script>
+    <script src="gemini-modelle.js?v=1"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -3121,7 +3122,7 @@
         // sehen, speichern oder verarbeiten davon nichts.
         const GEMINI_KEY_STORAGE = 'biGeminiApiKey';
         const GEMINI_MODUS_STORAGE = 'biGeminiSpeicherModus';
-        const GEMINI_MODELL = 'gemini-flash-latest';
+        // Modelle: siehe gemini-modelle.js (Flash, bei leerem Kontingent Flash-Lite).
 
         // Manche Leute nutzen die App immer wieder und wollen ihren Schlüssel
         // nicht jedes Mal neu eintippen - andere wollen aus Datenschutzgruenden
@@ -3199,14 +3200,11 @@
             if (!key) {
                 throw new Error(t('err_kein_gemini_key'));
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODELL}:generateContent?key=${encodeURIComponent(key)}`;
+            // Nur Gratis-Flash-Modelle; ist Flash fuer heute aufgebraucht,
+            // wird automatisch Flash-Lite gefragt (siehe gemini-modelle.js).
             let antwort;
             try {
-                antwort = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+                ({ antwort } = await window.sdGemini.anfrage(key, { contents: [{ parts: [{ text: prompt }] }] }));
             } catch (netzwerkFehler) {
                 throw new Error(t('err_keine_verbindung'));
             }

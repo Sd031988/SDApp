@@ -689,7 +689,7 @@
                 err_no_key: 'Kein Gemini-Schlüssel hinterlegt. Tippe oben auf ⚙️ und trage deinen kostenlosen Schlüssel ein.',
                 err_network: 'Keine Verbindung zu Google. Bitte Internetverbindung prüfen.',
                 err_key_rejected: 'Google hat den Schlüssel abgelehnt. Bitte prüfe ihn unter ⚙️.',
-                err_quota: 'Das kostenlose Kontingent ist gerade aufgebraucht. Bitte kurz warten und nochmal versuchen.',
+                err_quota: 'Das kostenlose Kontingent bei Google ist gerade aufgebraucht (Flash und Flash-Lite). Bei zu vielen Fragen pro Minute hilft kurz warten; ist das Tageskontingent leer, geht es ab ca. 9 Uhr morgens wieder.',
                 err_google: 'Google-Anfrage fehlgeschlagen (Status {status}).',
                 err_empty: 'Google hat keine Antwort geliefert.',
                 err_blocked: 'Google hat die Antwort aus Sicherheitsgründen zurückgehalten. Bitte formuliere die Frage anders.',
@@ -743,7 +743,7 @@
                 err_no_key: 'No Gemini key on file. Tap ⚙️ at the top and enter your free key.',
                 err_network: 'No connection to Google. Please check your internet connection.',
                 err_key_rejected: 'Google rejected the key. Please check it under ⚙️.',
-                err_quota: 'The free quota is used up for now. Please wait a moment and try again.',
+                err_quota: 'The free Google quota is used up for now (Flash and Flash-Lite). If you sent too many questions per minute, wait a moment; if the daily quota is used up, it resets at midnight Pacific time.',
                 err_google: 'Google request failed (status {status}).',
                 err_empty: 'Google returned no answer.',
                 err_blocked: 'Google withheld the answer for safety reasons. Please rephrase your question.',
@@ -836,6 +836,7 @@
         </div>
     </footer>
 
+    <script src="../gemini-modelle.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
     <script>
         'use strict';
@@ -848,7 +849,6 @@
         // damit man den Schluessel nur einmal eintragen muss.
         const KEY_STORAGE = 'biGeminiApiKey';
         const KEY_MODE_STORAGE = 'biGeminiSpeicherModus';
-        const MODEL = 'gemini-flash-latest';
         const HISTORY_STORAGE = 'sdAssistentVerlauf';
         const OPTIONS_STORAGE = 'sdAssistentOptionen';
         const MAX_HISTORY_SENT = 40;          // so viele Nachrichten gehen als Kontext mit
@@ -1306,14 +1306,12 @@
             };
             if (optionen.code) body.tools = [{ code_execution: {} }];
 
-            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent';
+            // Nur Gratis-Flash-Modelle; ist Flash fuer heute aufgebraucht,
+            // wird automatisch Flash-Lite gefragt (siehe gemini-modelle.js).
+            // Kennt ein Modell die Code-Ausfuehrung nicht, wird ohne sie gefragt.
             let antwort;
             try {
-                antwort = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-                    body: JSON.stringify(body)
-                });
+                ({ antwort } = await window.sdGemini.anfrage(key, body, { ohneToolsWiederholen: true }));
             } catch (e) {
                 throw new Error(t('err_network'));
             }
