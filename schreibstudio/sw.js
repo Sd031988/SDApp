@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-schreibstudio-v12';
+const CACHE_NAME = 'sd-schreibstudio-v13';
 const APP_FILES = ['./', './index.html', './manifest.json', './icon.svg', './sd-auth.js?v=5', '../i18n.js?v=1'];
 
 self.addEventListener('install', event => {

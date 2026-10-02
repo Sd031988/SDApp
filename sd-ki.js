@@ -305,7 +305,8 @@
 
   const LOTSE_SYSTEM =
     'You are "SD Lotse", the built-in AI of the web app "SD Bewerbungsstudio" (job applications, ' +
-    'CVs, cover letters, letters, documents). Follow the user\'s instructions exactly. Output only the ' +
+    'CVs, cover letters, letters, documents). You can write, improve, shorten and translate texts, explain ' +
+    'documents and write simple code. Follow the user\'s instructions exactly. Output only the ' +
     'requested text, without explanations or introductions. Never invent facts, numbers, names, degrees ' +
     'or experience; if information is missing, leave a gap in [square brackets]. If asked which model ' +
     'you are based on, say honestly: Llama 3.2 by Meta, running locally in the browser.';
@@ -324,7 +325,8 @@
         { role: 'user', content: String(prompt) }
       ],
       stream: true,
-      temperature: 0.6,
+      temperature: 0.4,
+      top_p: 0.9,
       max_tokens: opt.maxTokens || 900
     });
     lotse.aktuellerStream = engine;

@@ -2156,16 +2156,36 @@
         // Auf Englisch formuliert: das kleine Modell befolgt englische
         // Anweisungen deutlich zuverlaessiger - mit deutscher Anweisung blieb
         // es oft bei Deutsch oder behauptete, kein Englisch zu koennen.
+        // Kleine Modelle brauchen kurze, konkrete Anweisungen: was sie
+        // koennen, was nicht, und wie eine gute Antwort aussieht (siehe
+        // LLAMA_BEISPIELE). Abstrakte Regeln allein fuehrten zu unsinnigen
+        // Antworten (z. B. auf "Hi") und falschen Aussagen ueber die eigenen
+        // Faehigkeiten ("kann nicht programmieren").
         const LLAMA_SYSTEM =
-            'You are "SD Lotse", the built-in AI assistant of the web app "SD Bewerbungsstudio". ' +
-            'You help with job applications, CVs (Lebenslauf), cover letters (Anschreiben) and letters. ' +
-            'You speak English, German and many other languages fluently. ALWAYS reply in the same ' +
-            'language as the user\'s latest message. Be friendly, short and concrete. Never invent facts; ' +
-            'if you are not sure about something, say so. If asked which model you are based on, say ' +
-            'honestly: Llama 3.2 by Meta, running locally in the browser. You have NO internet access: ' +
-            'for current information (weather, news, prices, opening hours, today\'s events) say honestly ' +
-            'that you cannot know it and suggest switching to "☁️ Gemini" or the "G↗" button. Never invent ' +
-            'such data. If a Wikipedia reference is given below, use it and mention Wikipedia as the source.';
+            'You are "SD Lotse", the friendly AI assistant inside the app "SD Bewerbungsstudio".\n' +
+            'You CAN: help with CVs (Lebenslauf), cover letters (Anschreiben), job applications, letters and emails; ' +
+            'write, shorten, improve and translate texts; explain things simply; answer general knowledge questions; ' +
+            'write and explain simple program code (for example Python, JavaScript or HTML) - but you cannot run it.\n' +
+            'You CANNOT: open links, see images or PDFs, browse the internet, access the user\'s device, or know ' +
+            'current news, weather or prices. For such current information say so honestly and suggest switching ' +
+            'to "☁️ Gemini" or the "G↗" button. Never invent such data.\n' +
+            'RULES: Answer the user\'s latest message directly and helpfully. Keep answers short (1-5 sentences) ' +
+            'unless the user asks for a longer text. Use simple, correct, natural language. Reply in the language ' +
+            'of the user\'s latest message. Never invent facts; if you are not sure, say so. If a Wikipedia ' +
+            'reference is given below, use it and mention Wikipedia as the source. If asked which model you are ' +
+            'based on, say honestly: Llama 3.2 by Meta, running locally in the browser.';
+        // Zwei kurze Beispiel-Dialoge in der Sprache der Person - zeigen dem
+        // kleinen Modell Ton, Laenge und die eigenen Faehigkeiten.
+        const LLAMA_BEISPIELE = {
+            de: [
+                ['Hallo', 'Hallo! Ich bin SD Lotse. Ich helfe dir gern bei Lebenslauf, Anschreiben, Briefen oder anderen Texten. Was möchtest du machen?'],
+                ['Kannst du mir beim Programmieren helfen?', 'Ja, gern! Ich kann einfachen Code schreiben und erklären, zum Beispiel in Python oder JavaScript – ausführen kann ich ihn aber nicht. Was soll dein Programm machen?']
+            ],
+            en: [
+                ['Hello', 'Hello! I am SD Lotse. I am happy to help with your CV, cover letter, letters or other texts. What would you like to do?'],
+                ['Can you help me with programming?', 'Yes, gladly! I can write and explain simple code, for example in Python or JavaScript – but I cannot run it. What should your program do?']
+            ]
+        };
         const LLAMA_MAX_NACHRICHTEN = 10;   // Llama 3.2 im Browser hat nur ca. 4.000 Token Kontext
         const LLAMA_MAX_ZEICHEN = 1500;     // pro Nachricht
 
@@ -2307,7 +2327,12 @@
                 else liste.push({ role, content: text });
             });
             while (liste.length && liste[0].role !== 'user') liste.shift();
-            return [{ role: 'system', content: LLAMA_SYSTEM + datumHinweis() + sprachHinweis() }].concat(liste);
+            const sprache = erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de');
+            const beispiele = [];
+            (LLAMA_BEISPIELE[sprache] || LLAMA_BEISPIELE.de).forEach(([frage, antwort]) => {
+                beispiele.push({ role: 'user', content: frage }, { role: 'assistant', content: antwort });
+            });
+            return [{ role: 'system', content: LLAMA_SYSTEM + datumHinweis() + sprachHinweis() }].concat(beispiele, liste);
         }
 
         // Wissensfrage? ("Was ist ...", "Wer ist ...", "What is ..."). Nur
@@ -2374,7 +2399,9 @@
                 const stream = await llama.engine.chat.completions.create({
                     messages: nachrichten,
                     stream: true,
-                    temperature: 0.7,
+                    // Weniger Zufall: kleine Modelle "fantasieren" sonst schnell.
+                    temperature: 0.4,
+                    top_p: 0.9,
                     max_tokens: 1024
                 });
                 for await (const teil of stream) {
