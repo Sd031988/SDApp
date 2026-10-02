@@ -610,6 +610,34 @@
             min-height: 46px;
         }
 
+        .google-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            color: var(--accent-dark);
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 8px;
+            margin-top: 4px;
+        }
+
+        .google-link:hover {
+            background: var(--accent-soft);
+        }
+
+        .google-btn {
+            min-height: 46px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #1a73e8;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+        }
+
         .privacy-line {
             font-size: 0.72rem;
             color: var(--muted);
@@ -696,7 +724,13 @@
                 err_file_type: '„{name}“ wird nicht unterstützt. Erlaubt sind Bilder und PDFs.',
                 err_file_size: '„{name}“ ist zu groß (max. 15 MB pro Nachricht).',
                 you: 'Du',
-                memory_on_hint: 'Gespräch wird in diesem Browser gespeichert.'
+                memory_on_hint: 'Gespräch wird in diesem Browser gespeichert.',
+                google_ask: '🔎 Bei Google KI fragen ↗',
+                google_btn_title: 'Frage im Google KI-Modus stellen – öffnet sich daneben bzw. in einem neuen Tab, der Assistent bleibt offen',
+                google_hint: 'Die Frage wird dabei an Google gesendet und dort beantwortet. Die Antwort siehst du bei Google, nicht hier.',
+                google_footer: 'Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus – die Antwort erscheint dann bei Google, der Assistent bleibt offen.',
+                ab_google_h: '🔎 Google KI-Modus',
+                ab_google_p: 'Frage zusätzlich bei Google stellen – öffnet sich daneben, der Assistent bleibt offen.'
             },
             en: {
                 back: 'Overview',
@@ -750,7 +784,13 @@
                 err_file_type: '"{name}" is not supported. Images and PDFs are allowed.',
                 err_file_size: '"{name}" is too large (max. 15 MB per message).',
                 you: 'You',
-                memory_on_hint: 'Conversation is saved in this browser.'
+                memory_on_hint: 'Conversation is saved in this browser.',
+                google_ask: '🔎 Ask Google AI ↗',
+                google_btn_title: 'Ask this in Google AI Mode – opens next to it or in a new tab, the assistant stays open',
+                google_hint: 'Your question is sent to Google and answered there. You see the answer at Google, not here.',
+                google_footer: 'With "G↗" you also ask your question in Google AI Mode – the answer appears at Google, the assistant stays open.',
+                ab_google_h: '🔎 Google AI Mode',
+                ab_google_p: 'Also ask Google – opens next to this, the assistant stays open.'
             }
         };
     </script>
@@ -811,6 +851,7 @@
                     <div class="ability"><strong data-i18n="ab_memory_h">🧠 Gedächtnis</strong><span data-i18n="ab_memory_p">Ich merke mir unser Gespräch.</span></div>
                     <div class="ability"><strong data-i18n="ab_vision_h">🖼️ Bilder &amp; PDFs</strong><span data-i18n="ab_vision_p">Hänge ein Foto oder PDF an.</span></div>
                     <div class="ability"><strong data-i18n="ab_code_h">🐍 Python-Rechnen</strong><span data-i18n="ab_code_p">Für Rechnungen schreibe ich Python-Code.</span></div>
+                    <div class="ability"><strong data-i18n="ab_google_h">🔎 Google KI-Modus</strong><span data-i18n="ab_google_p">Frage zusätzlich bei Google stellen.</span></div>
                 </div>
                 <div class="suggestions">
                     <button type="button" class="suggestion" data-i18n="sug_1">Prüfe mein Anschreiben</button>
@@ -830,9 +871,12 @@
                 <input type="file" id="fileInput" accept="image/*,application/pdf" multiple hidden>
                 <button type="button" class="icon-btn attach-btn" id="attachBtn" data-i18n-title="attach" title="Bild oder PDF anhängen" aria-label="Bild oder PDF anhängen">📎</button>
                 <textarea id="input" rows="1" data-i18n-placeholder="ph_message" placeholder="Nachricht schreiben ..."></textarea>
+                <a class="icon-btn google-btn" id="googleBtn" href="https://www.google.com/search?udm=50" target="_blank" rel="noopener noreferrer"
+                    data-i18n-title="google_btn_title" title="Frage im Google KI-Modus stellen" aria-label="Im Google KI-Modus fragen">G↗</a>
                 <button type="button" class="send-btn" id="sendBtn" data-i18n-title="send" title="Senden" aria-label="Senden">➤</button>
             </div>
-            <p class="privacy-line" data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</p>
+            <p class="privacy-line"><span data-i18n="privacy">Nachrichten und Anhänge werden zur Beantwortung direkt von deinem Browser an Google Gemini gesendet.</span>
+                <span data-i18n="google_footer">Mit „G↗“ stellst du deine Frage zusätzlich im Google KI-Modus.</span></p>
         </div>
     </footer>
 
@@ -995,6 +1039,62 @@
         }
 
         // ------------------------------------------------------------
+        // Google KI-Modus (daneben oeffnen)
+        // ------------------------------------------------------------
+        // Google erlaubt nicht, seine Suchseiten in eine andere Webseite
+        // einzubetten. Deshalb: am PC ein eigenes Fenster rechts neben dem
+        // Assistenten, am Handy ein neuer Tab - der Assistent bleibt in
+        // beiden Faellen offen. Es wird nichts von Google ausgelesen; die
+        // Antwort sieht man nur bei Google.
+        function googleKiUrl(frage) {
+            const q = String(frage || '').trim().slice(0, 1500);
+            const hl = window.SD_LANG === 'en' ? 'en' : 'de';
+            return 'https://www.google.com/search?udm=50&hl=' + hl + (q ? '&q=' + encodeURIComponent(q) : '');
+        }
+
+        function letzteFrage() {
+            for (let i = verlauf.length - 1; i >= 0; i--) {
+                if (verlauf[i].role !== 'user') continue;
+                const text = verlauf[i].parts.filter(p => typeof p.text === 'string' && !p._hinweis).map(p => p.text).join('\n').trim();
+                if (text) return text;
+            }
+            return '';
+        }
+
+        // Click-Handler fuer alle Google-Links (echte <a target="_blank">):
+        // gelingt am PC das Fenster daneben, wird der normale Tab-Aufruf
+        // verhindert; sonst (Handy, Popup-Blocker) oeffnet der Link ganz
+        // normal einen neuen Tab.
+        function oeffneGoogleKi(e, url) {
+            const grosserBildschirm = window.matchMedia('(pointer: fine)').matches && screen.availWidth >= 1100;
+            if (!grosserBildschirm) return;
+            const w = Math.round(Math.min(640, screen.availWidth * 0.42));
+            const h = Math.max(500, screen.availHeight - 40);
+            const left = (screen.availLeft || 0) + screen.availWidth - w;
+            const top = screen.availTop || 0;
+            let fenster = null;
+            try {
+                fenster = window.open(url, 'sdGoogleKI', 'popup,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top);
+            } catch (err) { fenster = null; }
+            if (fenster) {
+                try { fenster.opener = null; } catch (err) { /* egal */ }
+                e.preventDefault();
+            }
+        }
+
+        function googleLink(frage) {
+            const a = document.createElement('a');
+            a.className = 'google-link';
+            a.href = googleKiUrl(frage);
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.textContent = t('google_ask');
+            a.title = t('google_hint');
+            a.addEventListener('click', (e) => oeffneGoogleKi(e, a.href));
+            return a;
+        }
+
+        // ------------------------------------------------------------
         // Darstellung
         // ------------------------------------------------------------
         function escapeHtml(s) {
@@ -1105,6 +1205,7 @@
                     b.className = 'bubble';
                     b.textContent = text;
                     wrap.appendChild(b);
+                    wrap.appendChild(googleLink(text));
                 }
                 return wrap;
             }
@@ -1472,6 +1573,13 @@
             if (dateien.length) { e.preventDefault(); fuegeDateienHinzu(dateien); }
         });
         $('sendBtn').onclick = () => sende();
+        // "G↗" neben dem Eingabefeld: nimmt den gerade getippten Text, sonst
+        // die letzte eigene Frage.
+        $('googleBtn').addEventListener('click', (e) => {
+            const url = googleKiUrl($('input').value.trim() || letzteFrage());
+            $('googleBtn').href = url;
+            oeffneGoogleKi(e, url);
+        });
 
         document.querySelectorAll('.suggestion').forEach(btn => {
             btn.onclick = () => { $('input').value = btn.textContent; passeHoeheAn(); aktualisiereSendenKnopf(); $('input').focus(); };
