@@ -134,6 +134,9 @@
             cursor: pointer;
         }
 
+        .agent-link { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 9px; text-decoration: none; font-size: .9rem; font-weight: bold; }
+        @media (max-width: 420px) { .agent-link .agent-text { display: none; } }
+
         /* --- Umschalter Gemini / Llama --- */
         .mode-bar {
             flex: 0 0 auto;
@@ -907,7 +910,7 @@
             de: {
                 back: 'Übersicht',
                 brand_tag: 'Dein Helfer für Bewerbung & Briefe',
-                settings_title: 'Einstellungen',
+                settings_title: 'Einstellungen', agent_link: 'Agent', agent_title: 'KI-Agent: erledigt Aufgaben mit Werkzeugen',
                 lbl_key: 'Dein Gemini-API-Schlüssel',
                 lbl_anbieter: 'Online-KI',
                 act_cv: '📋 In meinen Lebenslauf übernehmen',
@@ -1105,7 +1108,7 @@
             en: {
                 back: 'Overview',
                 brand_tag: 'Your helper for applications & letters',
-                settings_title: 'Settings',
+                settings_title: 'Settings', agent_link: 'Agent', agent_title: 'AI agent: gets tasks done with tools',
                 lbl_key: 'Your Gemini API key',
                 lbl_anbieter: 'Online AI',
                 act_cv: '📋 Put into my resume',
@@ -1318,6 +1321,7 @@
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
             <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
         </div>
+        <a class="icon-btn agent-link" href="../agent/index.html" data-i18n-title="agent_title" title="KI-Agent: erledigt Aufgaben mit Werkzeugen"><span aria-hidden="true">🛠️</span><span class="agent-text" data-i18n="agent_link">Agent</span></a>
         <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settings"
             data-i18n-title="settings_title" title="Einstellungen">⚙️</button>
     </header>

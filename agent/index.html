@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD KI-Agent</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="KI-Agent: erledigt Aufgaben mit Werkzeugen – SD-Daten bearbeiten, Dateien und Webseiten erstellen, Code ausführen, Ordner am PC">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root { --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7; --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --danger: #b42318; --danger-bg: #fdf0ee; --code-bg: #0f1d1b; --code-ink: #d9efe8; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html, body { height: 100%; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); }
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; white-space: nowrap; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 560px) { .brand small, .sd-logo { display: none; } }
+
+        main { max-width: 1180px; margin: 0 auto; padding: 14px 16px 24px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+        @media (min-width: 980px) { main.mit-vorschau { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
+        .spalte { display: grid; gap: 14px; min-width: 0; }
+        .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+        .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.05rem; }
+        .info { color: var(--muted); font-size: .8rem; line-height: 1.5; margin: 0; }
+        details.einst > summary { cursor: pointer; font-weight: bold; font-size: .92rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        details.einst > summary::-webkit-details-marker { display: none; }
+        details.einst > summary .zusammen { font-weight: normal; color: var(--muted); font-size: .8rem; text-align: right; }
+        details.einst[open] > summary { margin-bottom: 10px; }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 8px 13px; min-height: 42px; font: inherit; font-weight: bold; font-size: .88rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.klein { min-height: 34px; padding: 4px 10px; font-size: .8rem; }
+        .btn.gefahr { color: var(--danger); }
+        .btn.aktiv { background: #fdecea; border-color: #e5484d; }
+        .btn:disabled { opacity: .5; cursor: default; }
+        label.check { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; cursor: pointer; }
+        label.check small { display: block; color: var(--muted); }
+        select, input[type=text], textarea { font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; max-width: 100%; }
+        .hinweis { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 9px 12px; font-size: .84rem; line-height: 1.5; }
+        .fehler { background: var(--danger-bg); border: 1px solid #f1c4bf; color: var(--danger); border-radius: 10px; padding: 9px 12px; font-size: .86rem; }
+
+        .ablage { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .84rem; }
+        .ablage .ort { font-weight: bold; }
+        .dateiliste { max-height: 200px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .78rem; }
+        .dateiliste div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 9px; border-bottom: 1px solid #eef2ef; }
+        .dateiliste div:last-child { border-bottom: 0; }
+        .dateiliste button { border: 0; background: none; color: var(--accent-dark); font: inherit; cursor: pointer; text-align: left; padding: 0; overflow-wrap: anywhere; }
+        .dateiliste .gr { color: var(--muted); white-space: nowrap; }
+
+        .verlauf { display: grid; gap: 10px; min-height: 120px; }
+        .leer { text-align: center; color: var(--muted); font-size: .88rem; padding: 10px 0; }
+        .beispiele { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+        .beispiel { border: 1px solid var(--accent); background: #fff; color: var(--accent-dark); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .8rem; cursor: pointer; text-align: left; }
+        .nachricht { border-radius: 12px; padding: 10px 12px; font-size: .92rem; line-height: 1.55; overflow-wrap: anywhere; min-width: 0; }
+        .nachricht.ich { background: var(--accent-soft); justify-self: end; max-width: 88%; white-space: pre-wrap; }
+        .nachricht.ki { background: #fff; border: 1px solid var(--line); }
+        .nachricht.ki p { margin: 0 0 8px; }
+        .nachricht.ki p:last-child { margin-bottom: 0; }
+        .nachricht.ki ul, .nachricht.ki ol { margin: 4px 0 8px; padding-left: 22px; }
+        .nachricht.ki pre { background: var(--code-bg); color: var(--code-ink); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: .8rem; white-space: pre; }
+        .nachricht.ki code { background: #eef3f0; border-radius: 4px; padding: 1px 4px; font-size: .85em; }
+        .nachricht.ki pre code { background: none; padding: 0; }
+        .schritt { border: 1px solid var(--line); border-radius: 10px; background: #fbfcfb; font-size: .84rem; min-width: 0; }
+        .schritt > summary { cursor: pointer; padding: 7px 10px; display: flex; gap: 8px; align-items: center; list-style: none; }
+        .schritt > summary::-webkit-details-marker { display: none; }
+        .schritt .was { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .schritt .st { font-size: .9rem; }
+        .schritt pre { margin: 0; padding: 8px 10px; border-top: 1px solid var(--line); background: #fff; font-size: .74rem; max-height: 260px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .frage { border: 2px solid var(--accent); border-radius: 12px; padding: 10px 12px; background: #fff; display: grid; gap: 8px; font-size: .88rem; }
+        .frage pre { margin: 0; background: #f5f8f6; border-radius: 8px; padding: 8px; font-size: .74rem; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .plan-aktion { display: flex; flex-wrap: wrap; gap: 8px; }
+        /* beim Hinscrollen nicht hinter dem festen Eingabefeld verschwinden */
+        .nachricht, .schritt, .frage, .plan-aktion { scroll-margin-bottom: 190px; scroll-margin-top: 80px; }
+
+        .eingabe { position: sticky; bottom: 0; background: rgba(255, 255, 255, .98); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: grid; gap: 8px; box-shadow: 0 -6px 18px rgba(23, 42, 58, .06); margin-bottom: env(safe-area-inset-bottom, 0px); }
+        .eingabe textarea { width: 100%; resize: vertical; min-height: 64px; max-height: 40vh; line-height: 1.45; }
+        .eingabe .zeile { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .eingabe .zeile .grow { flex: 1; min-width: 0; font-size: .78rem; color: var(--muted); }
+
+        .vorschau-karte { position: sticky; top: 72px; }
+        .vorschau-kopf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .vorschau-kopf strong { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .9rem; }
+        iframe.vorschau { width: 100%; height: 60vh; min-height: 320px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+        .vorschau-fehler { font-size: .78rem; color: var(--danger); white-space: pre-wrap; margin: 0; }
+        iframe#sandbox { display: none; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../assistent/index.html" data-i18n-title="zurueck_titel" title="Zum KI-Assistenten">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">KI-Agent</strong><small data-i18n="untertitel">Erledigt Aufgaben mit Werkzeugen – Schritt für Schritt</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main id="haupt">
+        <div class="spalte">
+            <section class="karte">
+                <details class="einst" id="einstKi" open>
+                    <summary><span data-i18n="ki_titel">🤖 KI &amp; Arbeitsweise</span><span class="zusammen" id="kiZusammen"></span></summary>
+                    <div id="kiWahl"></div>
+                    <div class="knoepfe" id="modellZeile"></div>
+                    <p class="hinweis" id="lotseHinweis" hidden data-i18n="lotse_hinweis">Der Agent braucht ein starkes Modell, das Werkzeuge zuverlässig bedient: bitte ☁️ Gemini, 🟢 ChatGPT oder 🟠 Claude wählen. SD Lotse ist dafür zu klein.</p>
+                    <label class="check"><input type="checkbox" id="planZuerst" checked> <span><b data-i18n="plan_zuerst">Erst Plan zeigen</b><small data-i18n="plan_zuerst_hilfe">Der Agent schreibt zuerst einen Plan, du bestätigst, dann führt er ihn aus.</small></span></label>
+                    <label class="check"><input type="checkbox" id="ohneNachfrage"> <span><b data-i18n="ohne_nachfrage">Änderungen ohne Nachfrage erlauben</b><small data-i18n="ohne_nachfrage_hilfe">Sonst fragt der Agent vor jeder Änderung an deinen Daten oder Dateien.</small></span></label>
+                    <p class="info" data-i18n="kosten_hinweis">Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini gilt das Gratis-Kontingent.</p>
+                </details>
+            </section>
+
+            <section class="karte">
+                <details class="einst" id="einstAblage">
+                    <summary><span data-i18n="ablage_titel">📁 Arbeitsbereich</span><span class="zusammen" id="ablageZusammen"></span></summary>
+                    <div class="ablage"><span data-i18n="ablage_ort">Dateien liegen:</span> <span class="ort" id="ablageOrt"></span></div>
+                    <div class="knoepfe">
+                        <button type="button" class="btn klein" id="ordnerBtn" data-i18n="ordner_oeffnen">📂 Ordner am PC öffnen</button>
+                        <button type="button" class="btn klein" id="ordnerWiederBtn" hidden></button>
+                        <button type="button" class="btn klein" id="browserBtn" hidden data-i18n="zurueck_browser">↩️ Zurück zum Browser-Speicher</button>
+                        <button type="button" class="btn klein" id="zipBtn" data-i18n="zip">⬇️ Alles als ZIP</button>
+                        <button type="button" class="btn klein gefahr" id="leerenBtn" data-i18n="leeren">🗑️ Browser-Speicher leeren</button>
+                    </div>
+                    <p class="info" id="ordnerInfo"></p>
+                    <div class="dateiliste" id="dateiliste"></div>
+                </details>
+            </section>
+
+            <section class="karte">
+                <div class="verlauf" id="verlauf" aria-live="polite">
+                    <div class="leer" id="leer">
+                        <div data-i18n="leer_text">Sag dem Agenten, was er erledigen soll. Er plant, nutzt Werkzeuge und fragt vor Änderungen.</div>
+                        <div class="beispiele" id="beispiele"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="eingabe">
+                <textarea id="eingabe" rows="3" data-i18n-placeholder="eingabe_ph" placeholder="Was soll der Agent erledigen?"></textarea>
+                <div class="zeile">
+                    <button type="button" class="btn" id="mikroBtn">🎤</button>
+                    <span class="grow" id="statusZeile" aria-live="polite"></span>
+                    <button type="button" class="btn klein" id="neuBtn" data-i18n="neu">🧹 Neuer Auftrag</button>
+                    <button type="button" class="btn prim" id="sendenBtn" data-i18n="senden">▶ Los</button>
+                    <button type="button" class="btn aktiv" id="stoppBtn" hidden data-i18n="stopp">⏹ Stopp</button>
+                </div>
+            </section>
+        </div>
+
+        <aside class="spalte" id="vorschauSpalte" hidden>
+            <section class="karte vorschau-karte">
+                <div class="vorschau-kopf">
+                    <strong id="vorschauTitel"></strong>
+                    <button type="button" class="btn klein" id="vorschauNeu" data-i18n="neu_laden">🔄</button>
+                    <button type="button" class="btn klein" id="vorschauDl" data-i18n="herunterladen">⬇️ Datei</button>
+                    <button type="button" class="btn klein" id="vorschauZu" data-i18n="schliessen">✕</button>
+                </div>
+                <iframe class="vorschau" id="vorschau" sandbox="allow-scripts allow-forms allow-modals" title="Vorschau"></iframe>
+                <p class="vorschau-fehler" id="vorschauFehler"></p>
+                <p class="info" data-i18n="vorschau_info">Die Vorschau läuft abgeschottet: sie kommt nicht an deine gespeicherten Daten oder Schlüssel.</p>
+            </section>
+        </aside>
+    </main>
+
+    <iframe id="sandbox" sandbox="allow-scripts" title="Code-Ausführung" aria-hidden="true"></iframe>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'KI-Agent', untertitel: 'Erledigt Aufgaben mit Werkzeugen – Schritt für Schritt', zurueck_titel: 'Zum KI-Assistenten',
+                ki_titel: '🤖 KI & Arbeitsweise', lotse_hinweis: 'Der Agent braucht ein starkes Modell, das Werkzeuge zuverlässig bedient: bitte ☁️ Gemini, 🟢 ChatGPT oder 🟠 Claude wählen. SD Lotse ist dafür zu klein.',
+                plan_zuerst: 'Erst Plan zeigen', plan_zuerst_hilfe: 'Der Agent schreibt zuerst einen Plan, du bestätigst, dann führt er ihn aus.',
+                ohne_nachfrage: 'Änderungen ohne Nachfrage erlauben', ohne_nachfrage_hilfe: 'Sonst fragt der Agent vor jeder Änderung an deinen Daten oder Dateien.',
+                kosten_hinweis: 'Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini gilt das Gratis-Kontingent.',
+                ablage_titel: '📁 Arbeitsbereich', ablage_ort: 'Dateien liegen:', ordner_oeffnen: '📂 Ordner am PC öffnen', zurueck_browser: '↩️ Zurück zum Browser-Speicher',
+                zip: '⬇️ Alles als ZIP', leeren: '🗑️ Browser-Speicher leeren', ort_browser: 'im Browser-Speicher dieses Geräts', ort_ordner: 'im Ordner „{n}“ auf deinem PC',
+                ordner_nicht: 'Ordner öffnen geht nur in Chrome oder Edge am PC. Hier arbeitet der Agent im Browser-Speicher – Ergebnisse als ZIP herunterladen.',
+                ordner_info: 'Der Agent sieht nur diesen Ordner (ohne node_modules, .git) und fragt vor jedem Schreiben.', ordner_wieder: '📂 „{n}“ wieder öffnen',
+                keine_dateien: 'Noch keine Dateien.', leeren_frage: 'Alle Dateien im Browser-Speicher löschen?',
+                leer_text: 'Sag dem Agenten, was er erledigen soll. Er plant, nutzt Werkzeuge und fragt vor Änderungen.',
+                beispiele: ['Trag diese Stelle in meinen Bewerbungs-Tracker ein: Lagerist bei Logistik Nord GmbH, Köln, beworben heute', 'Bau mir eine einfache Bewerbungs-Webseite aus meinem Lebenslauf', 'Rechne aus: 38 km Arbeitsweg, 220 Arbeitstage – wie viel Entfernungspauschale ist das 2026?', 'Welche Fristen und Bewerbungen sind diese Woche fällig?'],
+                eingabe_ph: 'Was soll der Agent erledigen? (sprechen oder tippen)', neu: '🧹 Neuer Auftrag', senden: '▶ Los', stopp: '⏹ Stopp',
+                neu_laden: '🔄', herunterladen: '⬇️ Datei', schliessen: '✕', vorschau_info: 'Die Vorschau läuft abgeschottet: sie kommt nicht an deine gespeicherten Daten oder Schlüssel.',
+                plan_ausfuehren: '▶ Plan ausführen', plan_aendern: 'Du kannst den Plan auch ändern: schreib unten, was anders sein soll.',
+                erlauben: '✅ Erlauben', ablehnen: '❌ Ablehnen', alle_erlauben: 'Für diesen Auftrag alles erlauben',
+                denkt: '🤖 Agent arbeitet … (Schritt {n})', fertig: '', gestoppt: '⏹ Gestoppt.', max_schritte: 'Nach {n} Schritten angehalten – schreib „weiter“, wenn er fortfahren soll.',
+                kein_key: 'Für {name} fehlt der Schlüssel – bitte oben im KI-Bereich eintragen.', lotse_nein: 'Bitte oben Gemini, ChatGPT oder Claude wählen – SD Lotse kann den Agent-Modus nicht.',
+                netz: 'Keine Verbindung zu {firma}. Bitte Internet prüfen.', key_falsch: 'Der Schlüssel für {name} wurde abgelehnt. Bitte prüfen.', guthaben: 'Bei {firma} ist kein Guthaben/Kontingent mehr frei.', rate: '{name}: zu viele Anfragen – bitte kurz warten.', anbieter_fehler: '{name} meldet Fehler {status}.',
+                modell: 'Modell',
+                w: { sd_daten_lesen: 'SD-Daten lesen', lebenslauf_aendern: 'Lebenslauf ändern', bewerbung_speichern: 'Bewerbung speichern', frist_speichern: 'Frist speichern', steuer_posten_hinzufuegen: 'Steuer-Posten hinzufügen', dateien_auflisten: 'Dateien auflisten', datei_lesen: 'Datei lesen', datei_schreiben: 'Datei schreiben', vorschau_zeigen: 'Vorschau zeigen', code_ausfuehren: 'Code ausführen' },
+                abgelehnt: 'Abgelehnt.', python_laedt: 'Python wird beim ersten Mal geladen (ca. 10 MB) …'
+            },
+            en: {
+                titel: 'AI agent', untertitel: 'Gets tasks done with tools – step by step', zurueck_titel: 'Back to the AI assistant',
+                ki_titel: '🤖 AI & way of working', lotse_hinweis: 'The agent needs a strong model that uses tools reliably: please choose ☁️ Gemini, 🟢 ChatGPT or 🟠 Claude. SD Lotse is too small for this.',
+                plan_zuerst: 'Show a plan first', plan_zuerst_hilfe: 'The agent writes a plan first, you confirm, then it carries it out.',
+                ohne_nachfrage: 'Allow changes without asking', ohne_nachfrage_hilfe: 'Otherwise the agent asks before every change to your data or files.',
+                kosten_hinweis: 'One task needs several AI requests (one per step). With ChatGPT and Claude you pay per use, Gemini uses the free quota.',
+                ablage_titel: '📁 Workspace', ablage_ort: 'Files are stored:', ordner_oeffnen: '📂 Open folder on PC', zurueck_browser: '↩️ Back to browser storage',
+                zip: '⬇️ All as ZIP', leeren: '🗑️ Clear browser storage', ort_browser: 'in this device\'s browser storage', ort_ordner: 'in the folder "{n}" on your PC',
+                ordner_nicht: 'Opening a folder only works in Chrome or Edge on a PC. Here the agent works in browser storage – download results as ZIP.',
+                ordner_info: 'The agent only sees this folder (without node_modules, .git) and asks before every write.', ordner_wieder: '📂 Reopen "{n}"',
+                keine_dateien: 'No files yet.', leeren_frage: 'Delete all files in browser storage?',
+                leer_text: 'Tell the agent what to do. It plans, uses tools and asks before changes.',
+                beispiele: ['Add this job to my application tracker: warehouse worker at Northern Logistics, Cologne, applied today', 'Build me a simple application website from my resume', 'Calculate: 38 km commute, 220 working days – how much commuting allowance is that in 2026?', 'Which deadlines and applications are due this week?'],
+                eingabe_ph: 'What should the agent do? (speak or type)', neu: '🧹 New task', senden: '▶ Go', stopp: '⏹ Stop',
+                neu_laden: '🔄', herunterladen: '⬇️ File', schliessen: '✕', vorschau_info: 'The preview runs isolated: it cannot access your saved data or keys.',
+                plan_ausfuehren: '▶ Run plan', plan_aendern: 'You can also change the plan: write below what should be different.',
+                erlauben: '✅ Allow', ablehnen: '❌ Decline', alle_erlauben: 'Allow everything for this task',
+                denkt: '🤖 Agent working … (step {n})', fertig: '', gestoppt: '⏹ Stopped.', max_schritte: 'Paused after {n} steps – write "continue" if it should go on.',
+                kein_key: 'The key for {name} is missing – please enter it in the AI section above.', lotse_nein: 'Please choose Gemini, ChatGPT or Claude above – SD Lotse cannot run the agent mode.',
+                netz: 'No connection to {firma}. Please check the internet.', key_falsch: 'The key for {name} was rejected. Please check it.', guthaben: 'No credit/quota left at {firma}.', rate: '{name}: too many requests – please wait a moment.', anbieter_fehler: '{name} reports error {status}.',
+                modell: 'Model',
+                w: { sd_daten_lesen: 'Read SD data', lebenslauf_aendern: 'Change resume', bewerbung_speichern: 'Save application', frist_speichern: 'Save deadline', steuer_posten_hinzufuegen: 'Add tax item', dateien_auflisten: 'List files', datei_lesen: 'Read file', datei_schreiben: 'Write file', vorschau_zeigen: 'Show preview', code_ausfuehren: 'Run code' },
+                abgelehnt: 'Declined.', python_laedt: 'Loading Python for the first time (approx. 10 MB) …'
+            }
+        };
+    </script>
+    <!-- Harness fuer die Code-Ausfuehrung: laeuft im abgeschotteten iframe
+         (eigener, leerer Ursprung - kein Zugriff auf Speicher/Schluessel dieser
+         Seite). Jeder Lauf bekommt einen Worker, der bei Zeitueberschreitung
+         beendet wird; Python (Pyodide) bleibt zwischen Laeufen geladen. -->
+    <script type="text/plain" id="harnessQuelle">
+        function workerMain() {
+            let py = null;
+            const fmt = (v) => { if (typeof v === 'string') return v; if (v === undefined) return 'undefined'; try { return JSON.stringify(v); } catch (e) { return String(v); } };
+            self.onmessage = async (e) => {
+                const d = e.data, out = [];
+                const log = (...a) => out.push(a.map(fmt).join(' '));
+                try {
+                    if (d.sprache === 'python') {
+                        if (!py) { importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js'); py = await loadPyodide(); }
+                        py.setStdout({ batched: (s) => out.push(s) });
+                        py.setStderr({ batched: (s) => out.push('stderr: ' + s) });
+                        try { await py.loadPackagesFromImports(d.code); } catch (e2) { out.push('Hinweis: Paket konnte nicht geladen werden: ' + e2.message); }
+                        const r = await py.runPythonAsync(d.code);
+                        if (r !== undefined && r !== null) out.push('=> ' + String(r));
+                    } else {
+                        const c = { log, info: log, debug: log, warn: (...a) => log('Warnung:', ...a), error: (...a) => log('Fehler:', ...a), table: (x) => log(x) };
+                        const fn = new Function('console', '"use strict";\nreturn (async () => {\n' + d.code + '\n})();');
+                        const r = await fn(c);
+                        if (r !== undefined) out.push('=> ' + fmt(r));
+                    }
+                    self.postMessage({ ok: true, out: out.join('\n') });
+                } catch (err) {
+                    self.postMessage({ ok: false, out: out.join('\n'), fehler: String((err && (err.stack || err.message)) || err) });
+                }
+            };
+        }
+        const quelle = '(' + workerMain.toString() + ')()';
+        let pyWorker = null;
+        const neuerWorker = () => new Worker(URL.createObjectURL(new Blob([quelle], { type: 'text/javascript' })));
+        window.addEventListener('message', (e) => {
+            const d = e.data || {};
+            if (d.typ !== 'run') return;
+            let w;
+            try { w = d.sprache === 'python' ? (pyWorker || (pyWorker = neuerWorker())) : neuerWorker(); }
+            catch (err) { parent.postMessage({ typ: 'ergebnis', id: d.id, ok: false, out: '', fehler: 'Worker nicht verfügbar: ' + err.message }, '*'); return; }
+            let fertig = false;
+            const ende = (daten) => {
+                if (fertig) return;
+                fertig = true;
+                clearTimeout(uhr);
+                if (w !== pyWorker) w.terminate();
+                parent.postMessage(Object.assign({ typ: 'ergebnis', id: d.id }, daten), '*');
+            };
+            const uhr = setTimeout(() => {
+                w.terminate();
+                if (w === pyWorker) pyWorker = null;
+                ende({ ok: false, out: '', fehler: 'Zeitlimit überschritten (' + Math.round(d.limit / 1000) + ' s) – abgebrochen.' });
+            }, d.limit);
+            w.onmessage = (m) => ende(m.data);
+            w.onerror = (ev) => { ev.preventDefault(); if (w === pyWorker) pyWorker = null; ende({ ok: false, out: '', fehler: ev.message || 'Fehler im Worker' }); };
+            w.postMessage({ sprache: d.sprache, code: d.code });
+        });
+        parent.postMessage({ typ: 'bereit' }, '*');
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
+    <script src="../sd-ki.js?v=17"></script>
+    <script>
+    (function () {
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const kuerze = (s, n) => { s = String(s == null ? '' : s); return s.length > n ? s.slice(0, n) + '\n… (' + (s.length - n) + ' Zeichen gekürzt)' : s; };
+        const heuteIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+        const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const lies = (ort, k) => { try { return ort.getItem(k); } catch (e) { return null; } };
+        const json = (s, std) => { try { const v = JSON.parse(s); return v == null ? std : v; } catch (e) { return std; } };
+
+        // ============================================================
+        // Arbeitsbereich: Browser-Speicher (IndexedDB) oder Ordner am PC
+        // ============================================================
+        const DB_NAME = 'sdAgent';
+        let dbPromise = null;
+        function db() {
+            if (!dbPromise) dbPromise = new Promise((ok, fehler) => {
+                const r = indexedDB.open(DB_NAME, 1);
+                r.onupgradeneeded = () => { r.result.createObjectStore('dateien'); r.result.createObjectStore('einstellungen'); };
+                r.onsuccess = () => ok(r.result);
+                r.onerror = () => fehler(r.error);
+            });
+            return dbPromise;
+        }
+        async function idb(store, art, ...args) {
+            const d = await db();
+            return new Promise((ok, fehler) => {
+                const tx = d.transaction(store, art === 'get' || art === 'getAllKeys' ? 'readonly' : 'readwrite');
+                const r = tx.objectStore(store)[art](...args);
+                r.onsuccess = () => ok(r.result);
+                r.onerror = () => fehler(r.error);
+            });
+        }
+        function normPfad(p) {
+            const teile = String(p || '').replace(/\\/g, '/').split('/').filter(x => x && x !== '.');
+            if (teile.some(x => x === '..')) throw new Error('Pfade mit ".." sind nicht erlaubt.');
+            return teile.join('/');
+        }
+        const UEBERSPRINGEN = new Set(['node_modules', '.git', 'dist', 'build', '.next', '__pycache__', '.venv', 'venv']);
+        const MAX_LESEN = 200000;
+
+        const browserAblage = {
+            art: 'browser',
+            async liste() {
+                const keys = await idb('dateien', 'getAllKeys');
+                const out = [];
+                for (const k of keys.sort()) { const v = await idb('dateien', 'get', k); out.push({ pfad: k, groesse: (v || '').length }); }
+                return out;
+            },
+            async lesen(p) { const v = await idb('dateien', 'get', normPfad(p)); return v == null ? null : v; },
+            async schreiben(p, inhalt) { await idb('dateien', 'put', String(inhalt), normPfad(p)); },
+            async leeren() { await idb('dateien', 'clear'); }
+        };
+
+        function ordnerAblage(handle) {
+            async function ordnerVon(teile, anlegen) {
+                let h = handle;
+                for (const t of teile) h = await h.getDirectoryHandle(t, { create: anlegen });
+                return h;
+            }
+            return {
+                art: 'ordner', name: handle.name, handle,
+                async liste() {
+                    const out = [];
+                    async function lauf(h, prefix, tiefe) {
+                        if (tiefe > 6 || out.length >= 400) return;
+                        for await (const [name, kind] of h.entries()) {
+                            if (out.length >= 400) break;
+                            if (kind.kind === 'directory') { if (!UEBERSPRINGEN.has(name) && !name.startsWith('.')) await lauf(kind, prefix + name + '/', tiefe + 1); }
+                            else { let gr = 0; try { gr = (await kind.getFile()).size; } catch (e) { /* egal */ } out.push({ pfad: prefix + name, groesse: gr }); }
+                        }
+                    }
+                    await lauf(handle, '', 0);
+                    return out.sort((a, b) => a.pfad.localeCompare(b.pfad));
+                },
+                async lesen(p) {
+                    const teile = normPfad(p).split('/');
+                    const name = teile.pop();
+                    try {
+                        const d = await ordnerVon(teile, false);
+                        const f = await (await d.getFileHandle(name)).getFile();
+                        if (f.size > MAX_LESEN * 4) return '(Datei zu groß zum Lesen: ' + Math.round(f.size / 1024) + ' KB)';
+                        const text = await f.text();
+                        if (/\u0000/.test(text.slice(0, 4000))) return '(Binärdatei, ' + Math.round(f.size / 1024) + ' KB – kann nicht als Text gelesen werden)';
+                        return text;
+                    } catch (e) { return null; }
+                },
+                async schreiben(p, inhalt) {
+                    const teile = normPfad(p).split('/');
+                    const name = teile.pop();
+                    if (!name) throw new Error('Kein Dateiname.');
+                    const d = await ordnerVon(teile, true);
+                    const w = await (await d.getFileHandle(name, { create: true })).createWritable();
+                    await w.write(String(inhalt));
+                    await w.close();
+                }
+            };
+        }
+        let ablage = browserAblage;
+        let gemerkterOrdner = null;
+
+        async function zeigeAblage() {
+            const ordnerMoeglich = 'showDirectoryPicker' in window;
+            $('ablageOrt').textContent = ablage.art === 'ordner' ? t('ort_ordner', { n: ablage.name }) : t('ort_browser');
+            $('ordnerBtn').hidden = !ordnerMoeglich || ablage.art === 'ordner';
+            $('browserBtn').hidden = ablage.art !== 'ordner';
+            $('zipBtn').hidden = ablage.art === 'ordner';
+            $('leerenBtn').hidden = ablage.art === 'ordner';
+            $('ordnerWiederBtn').hidden = !(ordnerMoeglich && gemerkterOrdner && ablage.art !== 'ordner');
+            if (gemerkterOrdner) $('ordnerWiederBtn').textContent = t('ordner_wieder', { n: gemerkterOrdner.name });
+            $('ordnerInfo').textContent = !ordnerMoeglich ? t('ordner_nicht') : (ablage.art === 'ordner' ? t('ordner_info') : '');
+            let liste = [];
+            try { liste = await ablage.liste(); } catch (e) { liste = []; }
+            $('ablageZusammen').textContent = (ablage.art === 'ordner' ? '📂 ' + ablage.name : '🌐') + ' · ' + liste.length;
+            $('dateiliste').innerHTML = liste.length
+                ? liste.map(f => '<div><button type="button" data-datei="' + esc(f.pfad) + '">' + esc(f.pfad) + '</button><span class="gr">' + (f.groesse > 1024 ? Math.round(f.groesse / 1024) + ' KB' : f.groesse + ' B') + '</span></div>').join('')
+                : '<div><span class="gr">' + esc(t('keine_dateien')) + '</span></div>';
+        }
+        $('dateiliste').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-datei]');
+            if (b) zeigeVorschauOderText(b.dataset.datei);
+        });
+        $('ordnerBtn').onclick = async () => {
+            try {
+                const h = await window.showDirectoryPicker({ mode: 'readwrite' });
+                ablage = ordnerAblage(h);
+                gemerkterOrdner = h;
+                try { await idb('einstellungen', 'put', h, 'ordner'); } catch (e) { /* Merken optional */ }
+                zeigeAblage();
+            } catch (e) { /* abgebrochen */ }
+        };
+        $('ordnerWiederBtn').onclick = async () => {
+            if (!gemerkterOrdner) return;
+            try {
+                const p = await gemerkterOrdner.requestPermission({ mode: 'readwrite' });
+                if (p === 'granted') { ablage = ordnerAblage(gemerkterOrdner); zeigeAblage(); }
+            } catch (e) { /* abgelehnt */ }
+        };
+        $('browserBtn').onclick = () => { ablage = browserAblage; zeigeAblage(); };
+        $('leerenBtn').onclick = async () => { if (confirm(t('leeren_frage'))) { await browserAblage.leeren(); zeigeAblage(); } };
+        $('zipBtn').onclick = async () => {
+            const liste = await browserAblage.liste();
+            if (!liste.length) return;
+            if (!window.JSZip) await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+            const zip = new window.JSZip();
+            for (const f of liste) zip.file(f.pfad, await browserAblage.lesen(f.pfad));
+            herunterladen(await zip.generateAsync({ type: 'blob' }), 'agent-dateien.zip');
+        };
+        function ladeSkript(src) {
+            return new Promise((ok, fehler) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fehler(new Error('Laden fehlgeschlagen: ' + src)); document.head.appendChild(s); });
+        }
+        function herunterladen(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+
+        // ============================================================
+        // Vorschau (abgeschottetes iframe, Fehler kommen per postMessage)
+        // ============================================================
+        let vorschauPfad = null;
+        let vorschauFehler = [];
+        const FEHLER_FAENGER = '<script>(function(){function s(t){try{parent.postMessage({typ:"vorschauFehler",text:String(t)},"*")}catch(e){}}' +
+            'window.addEventListener("error",function(e){s((e.message||"Fehler")+(e.lineno?" (Zeile "+e.lineno+")":""))});' +
+            'window.addEventListener("unhandledrejection",function(e){s("Promise: "+((e.reason&&e.reason.message)||e.reason))});' +
+            'var ce=console.error;console.error=function(){s([].slice.call(arguments).join(" "));ce.apply(console,arguments)};})();<\/script>';
+        async function baueVorschau(pfad) {
+            const html = await ablage.lesen(pfad);
+            if (html == null) return null;
+            const basis = normPfad(pfad).split('/').slice(0, -1).join('/');
+            const aufloesen = (rel) => normPfad((basis ? basis + '/' : '') + rel.split(/[?#]/)[0]);
+            let out = html;
+            // Lokale CSS/JS-Dateien aus dem Arbeitsbereich direkt einbetten
+            const links = [...out.matchAll(/<link\b[^>]*href=["']([^"':]+?\.css)["'][^>]*>/gi)];
+            for (const m of links) { const css = await ablage.lesen(aufloesen(m[1])); if (css != null) out = out.replace(m[0], '<style>\n' + css + '\n</style>'); }
+            const skripte = [...out.matchAll(/<script\b([^>]*)src=["']([^"':]+?\.js)["']([^>]*)><\/script>/gi)];
+            for (const m of skripte) { const js = await ablage.lesen(aufloesen(m[2])); if (js != null) out = out.replace(m[0], '<script' + m[1] + m[3] + '>\n' + js.replace(/<\/script/gi, '<\\/script') + '\n<\/script>'); }
+            if (/<head[^>]*>/i.test(out)) out = out.replace(/<head[^>]*>/i, (h) => h + FEHLER_FAENGER);
+            else out = FEHLER_FAENGER + out;
+            return out;
+        }
+        async function zeigeVorschau(pfad) {
+            const html = await baueVorschau(pfad);
+            if (html == null) return false;
+            vorschauPfad = normPfad(pfad);
+            vorschauFehler = [];
+            $('vorschauFehler').textContent = '';
+            $('vorschauTitel').textContent = vorschauPfad;
+            $('vorschauSpalte').hidden = false;
+            $('haupt').classList.add('mit-vorschau');
+            $('vorschau').srcdoc = html;
+            return true;
+        }
+        async function zeigeVorschauOderText(pfad) {
+            if (/\.html?$/i.test(pfad)) { zeigeVorschau(pfad); return; }
+            const text = await ablage.lesen(pfad);
+            vorschauPfad = normPfad(pfad);
+            $('vorschauTitel').textContent = vorschauPfad;
+            $('vorschauSpalte').hidden = false;
+            $('haupt').classList.add('mit-vorschau');
+            $('vorschauFehler').textContent = '';
+            $('vorschau').srcdoc = '<pre style="white-space:pre-wrap;font:13px ui-monospace,Menlo,Consolas,monospace;margin:12px">' + esc(text == null ? '' : text) + '</pre>';
+        }
+        $('vorschauNeu').onclick = () => { if (vorschauPfad) zeigeVorschauOderText(vorschauPfad); };
+        $('vorschauZu').onclick = () => { $('vorschauSpalte').hidden = true; $('haupt').classList.remove('mit-vorschau'); $('vorschau').srcdoc = ''; };
+        $('vorschauDl').onclick = async () => {
+            if (!vorschauPfad) return;
+            const text = await ablage.lesen(vorschauPfad);
+            if (text == null) return;
+            herunterladen(new Blob([text], { type: 'text/plain;charset=utf-8' }), vorschauPfad.split('/').pop());
+        };
+
+        // ============================================================
+        // Code ausfuehren (abgeschottetes iframe + Worker)
+        // ============================================================
+        let sandboxBereit = null;
+        const laeufe = new Map();
+        function starteSandbox() {
+            if (sandboxBereit) return sandboxBereit;
+            sandboxBereit = new Promise((ok) => {
+                const fertig = (e) => { if (e.source === $('sandbox').contentWindow && e.data && e.data.typ === 'bereit') { window.removeEventListener('message', fertig); ok(); } };
+                window.addEventListener('message', fertig);
+                $('sandbox').srcdoc = '<!doctype html><meta charset="utf-8"><script>' + $('harnessQuelle').textContent + '<\/script>';
+            });
+            return sandboxBereit;
+        }
+        window.addEventListener('message', (e) => {
+            const d = e.data || {};
+            if (e.source === $('sandbox').contentWindow && d.typ === 'ergebnis' && laeufe.has(d.id)) { laeufe.get(d.id)(d); laeufe.delete(d.id); }
+            if (e.source === $('vorschau').contentWindow && d.typ === 'vorschauFehler') {
+                vorschauFehler.push(String(d.text).slice(0, 300));
+                $('vorschauFehler').textContent = '⚠️ ' + vorschauFehler.slice(-5).join('\n⚠️ ');
+            }
+        });
+        let pythonGeladen = false;
+        async function fuehreAus(sprache, code) {
+            await starteSandbox();
+            const id = neueId();
+            const limit = sprache === 'python' ? (pythonGeladen ? 30000 : 120000) : 15000;
+            const r = await new Promise((ok) => { laeufe.set(id, ok); $('sandbox').contentWindow.postMessage({ typ: 'run', id, sprache, code, limit }, '*'); });
+            if (sprache === 'python' && r.ok) pythonGeladen = true;
+            return r;
+        }
+
+        // ============================================================
+        // SD-Daten (gleiche Speicherorte/Formate wie die Bereiche)
+        // ============================================================
+        function cvOrt() { return lies(localStorage, 'speicherModusEinstellung') === 'sitzung' ? sessionStorage : localStorage; }
+        function cvLesen() { return json(lies(cvOrt(), 'lebenslaufDaten') || lies(localStorage, 'lebenslaufDaten') || lies(sessionStorage, 'lebenslaufDaten'), {}) || {}; }
+        const CV_FELDER = ['vorname', 'nachname', 'position', 'email', 'telefon', 'adresse', 'geburtsdatum', 'familienstand', 'kinder', 'staatsangehoerigkeit', 'fuehrerschein', 'verfuegbarkeit', 'erfahrung', 'ausbildung', 'kenntnisse', 'sprachen', 'hobbys', 'unternehmen', 'ansprechperson'];
+        const STATUS = ['gemerkt', 'beworben', 'gespraech', 'zusage', 'absage'];
+        const TRACKER_FELDER = ['firma', 'position', 'ort', 'status', 'link', 'kontakt', 'kontaktInfo', 'beworbenAm', 'frist', 'naechsterSchritt', 'naechsterAm', 'kosten', 'fahrtKm', 'notizen'];
+        const STEUER_KAT = ['arbeitsmittel', 'bewerbung', 'vorstellung', 'fortbildung', 'sonstige_wk', 'spende', 'dienst', 'handwerk', 'krank', 'kinderbetreuung'];
+        const isoOk = (s) => !s || /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+        function sdLesen(a) {
+            if (a.bereich === 'lebenslauf') {
+                const d = cvLesen();
+                const out = {};
+                Object.keys(d).forEach(k => { if (typeof d[k] === 'string' && d[k].trim()) out[k] = kuerze(d[k], 2000); });
+                return Object.keys(out).length ? out : 'Lebenslauf ist leer.';
+            }
+            if (a.bereich === 'bewerbungen') {
+                const l = json(lies(localStorage, 'sdBewerbungen'), []);
+                return l.length ? l.map(b => { const o = {}; ['id'].concat(TRACKER_FELDER).forEach(k => { if (b[k]) o[k] = b[k]; }); return o; }) : 'Keine Bewerbungen gespeichert.';
+            }
+            if (a.bereich === 'fristen') {
+                const l = json(lies(localStorage, 'sdPost'), []);
+                return l.length ? l : 'Keine Fristen gespeichert.';
+            }
+            if (a.bereich === 'steuer') {
+                const s = json(lies(localStorage, 'sdSteuerHelfer'), {});
+                const jahre = Object.keys(s).filter(k => /^\d{4}$/.test(k));
+                if (a.jahr) return s[a.jahr] ? { jahr: a.jahr, posten: s[a.jahr].posten || [], anlageN: s[a.jahr].n || {} } : 'Für ' + a.jahr + ' gibt es noch keine Angaben.';
+                return jahre.length ? jahre.map(j => ({ jahr: j, anzahlPosten: ((s[j] || {}).posten || []).length })) : 'Steuer-Helfer ist leer.';
+            }
+            return 'Unbekannter Bereich.';
+        }
+
+        // ============================================================
+        // Werkzeuge (Beschreibung fuer die KI + Ausfuehrung)
+        // ============================================================
+        const s = (beschreibung, extra) => Object.assign({ type: 'string', description: beschreibung }, extra || {});
+        const WERKZEUGE = [
+            { name: 'sd_daten_lesen', lesend: true, beschreibung: 'Liest gespeicherte Daten der Person aus den SD-Bereichen: lebenslauf, bewerbungen (Bewerbungs-Tracker), fristen (Post-Assistent), steuer (Steuer-Helfer, optional mit jahr). Immer zuerst lesen statt raten.',
+              params: { type: 'object', properties: { bereich: s('Welcher Bereich', { enum: ['lebenslauf', 'bewerbungen', 'fristen', 'steuer'] }), jahr: s('Nur bei steuer: Jahr, z. B. 2025') }, required: ['bereich'] } },
+            { name: 'lebenslauf_aendern', beschreibung: 'Setzt Felder im Lebenslauf (nur angegebene Felder werden geändert). Mehrzeilige Felder (erfahrung, ausbildung) je Station eine Zeile "Zeitraum: Tätigkeit bei Firma, Ort". Nur Fakten, die die Person genannt hat.',
+              params: { type: 'object', properties: Object.fromEntries(CV_FELDER.map(k => [k, s('Lebenslauf-Feld ' + k)])), required: [] } },
+            { name: 'bewerbung_speichern', beschreibung: 'Legt eine Bewerbung im Bewerbungs-Tracker an oder ändert eine bestehende (mit id aus sd_daten_lesen). Datumsangaben als JJJJ-MM-TT. status: gemerkt, beworben, gespraech, zusage, absage.',
+              params: { type: 'object', properties: Object.assign({ id: s('Nur zum Ändern: id einer bestehenden Bewerbung') }, Object.fromEntries(TRACKER_FELDER.map(k => [k, k === 'status' ? s('Status', { enum: STATUS }) : s(k + (/Am$|frist/.test(k) ? ' (JJJJ-MM-TT)' : (k === 'kosten' ? ' (Euro, z. B. 12,50)' : (k === 'fahrtKm' ? ' (Kilometer gesamt)' : '')))) ]))), required: [] } },
+            { name: 'frist_speichern', beschreibung: 'Speichert eine Frist in der Fristenliste des Post-Assistenten.',
+              params: { type: 'object', properties: { art: s('z. B. Rechnung, Bescheid, Anhörung'), absender: s('Absender'), zeichen: s('Aktenzeichen/Nummer'), frist: s('Datum JJJJ-MM-TT'), fristWas: s('Was bis dahin zu tun ist'), zusammenfassung: s('Kurze Zusammenfassung') }, required: ['frist'] } },
+            { name: 'steuer_posten_hinzufuegen', beschreibung: 'Fügt im Steuer-Helfer einen Posten hinzu. kategorie: ' + STEUER_KAT.join(', ') + '. betrag in Euro mit Komma (z. B. 49,90); bei vorstellung stattdessen km.',
+              params: { type: 'object', properties: { jahr: s('Steuerjahr, z. B. 2025'), kategorie: s('Kategorie', { enum: STEUER_KAT }), text: s('Beschreibung'), betrag: s('Betrag in Euro, z. B. 49,90'), datum: s('Datum TT.MM.JJJJ'), km: s('Nur bei vorstellung: gefahrene km gesamt') }, required: ['jahr', 'kategorie', 'text'] } },
+            { name: 'dateien_auflisten', lesend: true, beschreibung: 'Listet die Dateien im Arbeitsbereich (Browser-Speicher oder freigegebener Ordner) mit Größe.',
+              params: { type: 'object', properties: {}, required: [] } },
+            { name: 'datei_lesen', lesend: true, beschreibung: 'Liest eine Textdatei aus dem Arbeitsbereich.',
+              params: { type: 'object', properties: { pfad: s('Pfad relativ zum Arbeitsbereich, z. B. index.html oder src/app.js') }, required: ['pfad'] } },
+            { name: 'datei_schreiben', beschreibung: 'Schreibt (erstellt oder überschreibt) eine Textdatei im Arbeitsbereich mit dem KOMPLETTEN neuen Inhalt. Ordner werden automatisch angelegt.',
+              params: { type: 'object', properties: { pfad: s('Pfad relativ zum Arbeitsbereich'), inhalt: s('Vollständiger Dateiinhalt') }, required: ['pfad', 'inhalt'] } },
+            { name: 'vorschau_zeigen', beschreibung: 'Zeigt eine HTML-Datei aus dem Arbeitsbereich live in der Vorschau (lokale .css/.js werden eingebettet) und liefert JavaScript-Fehler der Seite zurück. Nach dem Schreiben einer Webseite aufrufen und Fehler beheben.',
+              params: { type: 'object', properties: { pfad: s('Pfad der HTML-Datei') }, required: ['pfad'] } },
+            { name: 'code_ausfuehren', beschreibung: 'Führt JavaScript oder Python in einer abgeschotteten Umgebung aus (kein Zugriff auf Seite, Daten oder Dateien; Ausgabe über console.log bzw. print). Für Berechnungen, Datenumwandlung, Tests. Zeitlimit: JS 15 s, Python 30 s (erster Start lädt Python, bis 2 Min.).',
+              params: { type: 'object', properties: { sprache: s('Sprache', { enum: ['javascript', 'python'] }), code: s('Der Code') }, required: ['sprache', 'code'] } }
+        ];
+        const WERKZEUG = Object.fromEntries(WERKZEUGE.map(w => [w.name, w]));
+
+        // Nachfrage vor Aenderungen
+        let alleErlaubt = false;
+        function frage(titel, details) {
+            if ($('ohneNachfrage').checked || alleErlaubt) return Promise.resolve(true);
+            return new Promise((ok) => {
+                const box = document.createElement('div');
+                box.className = 'frage';
+                box.innerHTML = '<b>' + esc(titel) + '</b>' + (details ? '<pre>' + esc(kuerze(details, 3000)) + '</pre>' : '') +
+                    '<div class="knoepfe"><button type="button" class="btn prim klein" data-ja>' + esc(t('erlauben')) + '</button><button type="button" class="btn klein" data-nein>' + esc(t('ablehnen')) + '</button>' +
+                    '<label class="check" style="font-size:.8rem"><input type="checkbox" data-alle> ' + esc(t('alle_erlauben')) + '</label></div>';
+                $('verlauf').appendChild(box);
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const ende = (ja) => {
+                    if (ja && box.querySelector('[data-alle]').checked) alleErlaubt = true;
+                    box.querySelectorAll('button,input').forEach(x => { x.disabled = true; });
+                    box.style.opacity = '.7';
+                    box.querySelector('.knoepfe').insertAdjacentHTML('beforeend', '<span>' + (ja ? '✅' : '❌') + '</span>');
+                    stoppWarter = null;
+                    ok(ja);
+                };
+                box.querySelector('[data-ja]').onclick = () => ende(true);
+                box.querySelector('[data-nein]').onclick = () => ende(false);
+                stoppWarter = () => ende(false);
+            });
+        }
+        let stoppWarter = null;
+
+        async function fuehreWerkzeug(name, a) {
+            a = a || {};
+            const w = WERKZEUG[name];
+            if (!w) return { fehler: 'Unbekanntes Werkzeug: ' + name };
+            try {
+                switch (name) {
+                    case 'sd_daten_lesen': return sdLesen(a);
+                    case 'lebenslauf_aendern': {
+                        const werte = {};
+                        Object.keys(a).forEach(k => { if (CV_FELDER.includes(k) && typeof a[k] === 'string') werte[k] = a[k].trim(); });
+                        if (!Object.keys(werte).length) return { fehler: 'Keine gültigen Felder angegeben.' };
+                        const alt = cvLesen();
+                        const det = Object.keys(werte).map(k => k + ':\n  vorher: ' + kuerze(alt[k] || '–', 300) + '\n  neu:    ' + kuerze(werte[k], 300)).join('\n');
+                        if (!(await frage('📋 ' + t('w').lebenslauf_aendern, det))) return t('abgelehnt');
+                        if (window.sdKi && window.sdKi.lebenslaufSpeichern) window.sdKi.lebenslaufSpeichern(werte);
+                        return 'Gespeichert: ' + Object.keys(werte).join(', ') + '. Sichtbar in der Lebenslauf-App.';
+                    }
+                    case 'bewerbung_speichern': {
+                        const liste = json(lies(localStorage, 'sdBewerbungen'), []);
+                        let b = a.id ? liste.find(x => x.id === a.id) : null;
+                        if (a.id && !b) return { fehler: 'Keine Bewerbung mit id ' + a.id + '. Erst sd_daten_lesen(bewerbungen).' };
+                        const werte = {};
+                        TRACKER_FELDER.forEach(k => { if (a[k] != null && String(a[k]).trim() !== '') werte[k] = String(a[k]).trim(); });
+                        if (werte.status && !STATUS.includes(werte.status)) return { fehler: 'Ungültiger Status. Erlaubt: ' + STATUS.join(', ') };
+                        for (const k of ['beworbenAm', 'frist', 'naechsterAm']) if (!isoOk(werte[k])) return { fehler: k + ' muss JJJJ-MM-TT sein.' };
+                        if (!b && !werte.firma) return { fehler: 'Für eine neue Bewerbung ist firma nötig.' };
+                        const det = Object.keys(werte).map(k => k + ': ' + werte[k]).join('\n');
+                        if (!(await frage('📌 ' + t('w').bewerbung_speichern + (b ? ' (ändern: ' + (b.firma || '') + ')' : ' (neu)'), det))) return t('abgelehnt');
+                        const neu = !b;
+                        if (!b) { b = { id: neueId(), erstellt: Date.now(), status: 'gemerkt' }; liste.push(b); }
+                        const vorher = b.status;
+                        Object.assign(b, werte);
+                        if (b.status === 'beworben' && !b.beworbenAm) b.beworbenAm = heuteIso();
+                        b.geaendert = Date.now();
+                        if (neu || vorher !== b.status) (b.verlauf = b.verlauf || []).push({ datum: heuteIso(), status: b.status });
+                        localStorage.setItem('sdBewerbungen', JSON.stringify(liste));
+                        return (neu ? 'Neu angelegt' : 'Geändert') + ' (id ' + b.id + '). Sichtbar im Bewerbungs-Tracker.';
+                    }
+                    case 'frist_speichern': {
+                        if (!isoOk(a.frist) || !a.frist) return { fehler: 'frist muss JJJJ-MM-TT sein.' };
+                        const det = ['art', 'absender', 'zeichen', 'frist', 'fristWas', 'zusammenfassung'].filter(k => a[k]).map(k => k + ': ' + a[k]).join('\n');
+                        if (!(await frage('⏰ ' + t('w').frist_speichern, det))) return t('abgelehnt');
+                        const l = json(lies(localStorage, 'sdPost'), []);
+                        l.push({ id: 'post-' + Date.now(), erstellt: heuteIso(), erledigt: false, art: a.art || '', absender: a.absender || '', zeichen: a.zeichen || '', briefdatum: '', frist: a.frist, fristWas: a.fristWas || '', zusammenfassung: a.zusammenfassung || '', vorlauf: '3' });
+                        localStorage.setItem('sdPost', JSON.stringify(l));
+                        return 'Frist gespeichert. Sichtbar im Post-Assistenten unter „Meine Briefe & Fristen“.';
+                    }
+                    case 'steuer_posten_hinzufuegen': {
+                        if (!/^\d{4}$/.test(String(a.jahr || ''))) return { fehler: 'jahr muss vierstellig sein.' };
+                        if (!STEUER_KAT.includes(a.kategorie)) return { fehler: 'Ungültige kategorie. Erlaubt: ' + STEUER_KAT.join(', ') };
+                        const det = ['jahr', 'kategorie', 'text', 'betrag', 'km', 'datum'].filter(k => a[k]).map(k => k + ': ' + a[k]).join('\n');
+                        if (!(await frage('🧾 ' + t('w').steuer_posten_hinzufuegen, det))) return t('abgelehnt');
+                        const alle = json(lies(localStorage, 'sdSteuerHelfer'), {});
+                        const j = String(a.jahr);
+                        alle[j] = alle[j] || { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false }, haushalt: { minijob: '' }, kinder: [], posten: [] };
+                        alle[j].posten = alle[j].posten || [];
+                        alle[j].posten.push({ id: neueId(), kategorie: a.kategorie, text: a.text || '', betrag: a.betrag || '', datum: a.datum || '', km: a.km || '' });
+                        localStorage.setItem('sdSteuerHelfer', JSON.stringify(alle));
+                        return 'Posten im Steuer-Helfer (' + j + ') gespeichert.';
+                    }
+                    case 'dateien_auflisten': {
+                        const l = await ablage.liste();
+                        return l.length ? l.map(f => f.pfad + ' (' + f.groesse + ' B)').join('\n') : 'Arbeitsbereich ist leer.';
+                    }
+                    case 'datei_lesen': {
+                        const text = await ablage.lesen(a.pfad);
+                        return text == null ? { fehler: 'Datei nicht gefunden: ' + a.pfad } : kuerze(text, MAX_LESEN);
+                    }
+                    case 'datei_schreiben': {
+                        const pfad = normPfad(a.pfad);
+                        if (!pfad) return { fehler: 'pfad fehlt.' };
+                        const inhalt = String(a.inhalt == null ? '' : a.inhalt);
+                        const alt = await ablage.lesen(pfad);
+                        const ort = ablage.art === 'ordner' ? ' – Ordner „' + ablage.name + '“' : '';
+                        if (!(await frage('📝 ' + t('w').datei_schreiben + ': ' + pfad + (alt == null ? ' (neu)' : ' (überschreiben)') + ort, inhalt.length + ' Zeichen\n\n' + inhalt.slice(0, 1500)))) return t('abgelehnt');
+                        await ablage.schreiben(pfad, inhalt);
+                        zeigeAblage();
+                        if (vorschauPfad === pfad) zeigeVorschauOderText(pfad);
+                        return 'Geschrieben: ' + pfad + ' (' + inhalt.length + ' Zeichen).';
+                    }
+                    case 'vorschau_zeigen': {
+                        if (!(await zeigeVorschau(a.pfad))) return { fehler: 'Datei nicht gefunden: ' + a.pfad };
+                        await new Promise(r => setTimeout(r, 1500));
+                        return vorschauFehler.length ? 'Vorschau angezeigt. JavaScript-Fehler:\n' + vorschauFehler.join('\n') : 'Vorschau angezeigt, keine JavaScript-Fehler.';
+                    }
+                    case 'code_ausfuehren': {
+                        const sprache = a.sprache === 'python' ? 'python' : 'javascript';
+                        if (sprache === 'python' && !pythonGeladen) setStatus(t('python_laedt'));
+                        const r = await fuehreAus(sprache, String(a.code || ''));
+                        const text = (r.out ? 'Ausgabe:\n' + r.out : '(keine Ausgabe)') + (r.fehler ? '\nFehler:\n' + r.fehler : '');
+                        return r.ok ? kuerze(text, 8000) : { fehler: kuerze(text, 8000) };
+                    }
+                }
+            } catch (err) {
+                return { fehler: (err && err.message) || String(err) };
+            }
+            return { fehler: 'Nicht umgesetzt.' };
+        }
+        function alsText(erg) {
+            if (typeof erg === 'string') return erg;
+            if (erg && erg.fehler) return 'FEHLER: ' + erg.fehler;
+            try { return JSON.stringify(erg, null, 1); } catch (e) { return String(erg); }
+        }
+
+        // ============================================================
+        // KI-Anbieter mit Werkzeug-Aufrufen
+        // Gespraech intern: [{rolle:'user',text}, {rolle:'ki',text,aufrufe:[{id,name,args}],roh}, {rolle:'tool',ergebnisse:[{id,name,text,fehler}]}]
+        // ============================================================
+        const ANB = {
+            gemini: { name: 'Gemini', firma: 'Google' },
+            openai: { name: 'ChatGPT', firma: 'OpenAI', key: 'sdOpenAiApiKey', option: 'openaiModell', modelle: ['gpt-5-mini', 'gpt-5-nano'] },
+            claude: { name: 'Claude', firma: 'Anthropic', key: 'sdClaudeApiKey', option: 'claudeModell', modelle: ['claude-haiku-4-5-20251001', 'claude-sonnet-5-5'] }
+        };
+        const MODELL_NAME = { 'gpt-5-mini': 'GPT-5 mini', 'gpt-5-nano': 'GPT-5 nano (günstiger)', 'claude-haiku-4-5-20251001': 'Claude Haiku 4.5 (günstiger)', 'claude-sonnet-5-5': 'Claude Sonnet 5.5 (stärker)' };
+        const anbieter = () => (window.sdKi ? window.sdKi.anbieter() : 'gemini');
+        function schluessel(a) {
+            const k = a === 'gemini' ? 'biGeminiApiKey' : ANB[a].key;
+            return lies(sessionStorage, k) || lies(localStorage, k) || '';
+        }
+        function optionen() { return json(lies(localStorage, 'sdAssistentOptionen'), {}); }
+        function modell(a) { const m = optionen()[ANB[a].option]; return ANB[a].modelle.includes(m) ? m : ANB[a].modelle[0]; }
+        function fehlerAus(a, status, code, detail) {
+            const o = ANB[a];
+            if (status === 401 || status === 403 || /invalid.?api.?key|authentication|API_KEY_INVALID/i.test(code + ' ' + detail)) return t('key_falsch', { name: o.name });
+            if (/insufficient_quota|credit balance|billing/i.test(code + ' ' + detail)) return t('guthaben', { firma: o.firma });
+            if (status === 429) return a === 'gemini' ? t('guthaben', { firma: o.firma }) : t('rate', { name: o.name });
+            return t('anbieter_fehler', { name: o.name, status }) + (detail ? ' – ' + String(detail).slice(0, 200) : '');
+        }
+        function werkzeugListe(nurLesend) { return WERKZEUGE.filter(w => !nurLesend || w.lesend); }
+
+        async function frageClaude(gespraech, system, nurLesend, signal) {
+            const msgs = [];
+            const push = (rolle, inhalt) => {
+                const letzte = msgs[msgs.length - 1];
+                if (letzte && letzte.role === rolle) letzte.content = [].concat(typeof letzte.content === 'string' ? [{ type: 'text', text: letzte.content }] : letzte.content, inhalt);
+                else msgs.push({ role: rolle, content: inhalt });
+            };
+            gespraech.forEach(m => {
+                if (m.rolle === 'user') push('user', [{ type: 'text', text: m.text }]);
+                else if (m.rolle === 'ki') push('assistant', m.roh && m.roh.anbieter === 'claude' ? m.roh.content : [{ type: 'text', text: m.text || '…' }]);
+                else if (m.rolle === 'tool') push('user', m.ergebnisse.map(e => ({ type: 'tool_result', tool_use_id: e.id, content: e.text, is_error: !!e.fehler })));
+            });
+            let antwort;
+            try {
+                antwort = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST', signal,
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': schluessel('claude'), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+                    body: JSON.stringify({ model: modell('claude'), max_tokens: 8000, system, messages: msgs,
+                        tools: werkzeugListe(nurLesend).map(w => ({ name: w.name, description: w.beschreibung, input_schema: w.params })) })
+                });
+            } catch (e) { if (e.name === 'AbortError') throw e; throw new Error(t('netz', { firma: 'Anthropic' })); }
+            if (!antwort.ok) { let d = {}; try { d = await antwort.json(); } catch (e) { /* egal */ } throw new Error(fehlerAus('claude', antwort.status, (d.error && d.error.type) || '', (d.error && d.error.message) || '')); }
+            const d = await antwort.json();
+            const content = d.content || [];
+            return {
+                text: content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim(),
+                aufrufe: content.filter(b => b.type === 'tool_use').map(b => ({ id: b.id, name: b.name, args: b.input || {} })),
+                roh: { anbieter: 'claude', content }
+            };
+        }
+
+        async function frageOpenAI(gespraech, system, nurLesend, signal) {
+            const msgs = [{ role: 'system', content: system }];
+            gespraech.forEach(m => {
+                if (m.rolle === 'user') msgs.push({ role: 'user', content: m.text });
+                else if (m.rolle === 'ki') {
+                    const x = { role: 'assistant', content: m.text || null };
+                    if (m.aufrufe && m.aufrufe.length) x.tool_calls = m.aufrufe.map(c => ({ id: c.id, type: 'function', function: { name: c.name, arguments: JSON.stringify(c.args || {}) } }));
+                    msgs.push(x);
+                } else if (m.rolle === 'tool') m.ergebnisse.forEach(e => msgs.push({ role: 'tool', tool_call_id: e.id, content: e.text }));
+            });
+            let antwort;
+            try {
+                antwort = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST', signal,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + schluessel('openai') },
+                    body: JSON.stringify({ model: modell('openai'), messages: msgs, reasoning_effort: 'low', max_completion_tokens: 16000, store: false,
+                        tools: werkzeugListe(nurLesend).map(w => ({ type: 'function', function: { name: w.name, description: w.beschreibung, parameters: w.params } })) })
+                });
+            } catch (e) { if (e.name === 'AbortError') throw e; throw new Error(t('netz', { firma: 'OpenAI' })); }
+            if (!antwort.ok) { let d = {}; try { d = await antwort.json(); } catch (e) { /* egal */ } throw new Error(fehlerAus('openai', antwort.status, (d.error && (d.error.code || d.error.type)) || '', (d.error && d.error.message) || '')); }
+            const d = await antwort.json();
+            const m = ((d.choices || [])[0] || {}).message || {};
+            return {
+                text: (m.content || '').trim(),
+                aufrufe: (m.tool_calls || []).filter(c => c.type === 'function').map(c => ({ id: c.id, name: c.function.name, args: json(c.function.arguments, {}) })),
+                roh: { anbieter: 'openai' }
+            };
+        }
+
+        async function frageGemini(gespraech, system, nurLesend, signal) {
+            if (!window.sdGemini) throw new Error('gemini-modelle.js fehlt');
+            const contents = [];
+            const push = (rolle, parts) => {
+                const letzte = contents[contents.length - 1];
+                if (letzte && letzte.role === rolle) letzte.parts = letzte.parts.concat(parts);
+                else contents.push({ role: rolle, parts });
+            };
+            gespraech.forEach(m => {
+                if (m.rolle === 'user') push('user', [{ text: m.text }]);
+                // Antwort des Modells unveraendert zurueckgeben (enthaelt ggf. thoughtSignature)
+                else if (m.rolle === 'ki') push('model', m.roh && m.roh.anbieter === 'gemini' ? m.roh.parts : [{ text: m.text || '…' }]);
+                else if (m.rolle === 'tool') push('user', m.ergebnisse.map(e => ({ functionResponse: { name: e.name, response: e.fehler ? { fehler: e.text } : { ergebnis: e.text } } })));
+            });
+            const body = { systemInstruction: { parts: [{ text: system }] }, contents,
+                // Werkzeuge ohne Parameter: "parameters" weglassen (leeres Objekt lehnt Gemini ab)
+                tools: [{ functionDeclarations: werkzeugListe(nurLesend).map(w => Object.keys(w.params.properties).length
+                    ? { name: w.name, description: w.beschreibung, parameters: w.params }
+                    : { name: w.name, description: w.beschreibung }) }] };
+            if (signal && signal.aborted) throw Object.assign(new Error('abgebrochen'), { name: 'AbortError' });
+            let antwort;
+            try { ({ antwort } = await window.sdGemini.anfrage(schluessel('gemini'), body)); }
+            catch (e) { throw new Error(t('netz', { firma: 'Google' })); }
+            if (signal && signal.aborted) throw Object.assign(new Error('abgebrochen'), { name: 'AbortError' });
+            if (!antwort.ok) { let d = {}; try { d = await antwort.json(); } catch (e) { /* egal */ } throw new Error(fehlerAus('gemini', antwort.status, (d.error && d.error.status) || '', (d.error && d.error.message) || '')); }
+            const d = await antwort.json();
+            const parts = ((((d.candidates || [])[0] || {}).content) || {}).parts || [];
+            return {
+                text: parts.filter(p => p.text && !p.thought).map(p => p.text).join('').trim(),
+                aufrufe: parts.filter(p => p.functionCall).map((p, i) => ({ id: 'g' + Date.now().toString(36) + i, name: p.functionCall.name, args: p.functionCall.args || {} })),
+                roh: { anbieter: 'gemini', parts }
+            };
+        }
+
+        // ============================================================
+        // Agent-Schleife
+        // ============================================================
+        const MAX_SCHRITTE = 25;
+        let gespraech = [];
+        let gespraechAnbieter = null;
+        let laeuft = false;
+        let abbruch = null;
+        let wartetAufPlan = false;
+
+        function systemText(planPhase) {
+            const en = window.SD_LANG === 'en';
+            return [
+                'Du bist der KI-Agent im SD Bewerbungsstudio (thesdhub.com). Du erledigst Aufträge selbstständig mit Werkzeugen und arbeitest sorgfältig, Schritt für Schritt.',
+                en ? 'Answer the person in English.' : 'Antworte der Person auf Deutsch, freundlich und knapp, in der Du-Form.',
+                'Heute ist ' + heuteIso() + '.',
+                'Bereiche der Person: Lebenslauf, Bewerbungs-Tracker, Post-Assistent (Fristen), Steuer-Helfer. Lies Daten mit sd_daten_lesen, statt zu raten. Erfinde keine Fakten über die Person; fehlende Angaben als [Lücke] markieren oder nachfragen.',
+                'Arbeitsbereich für Dateien: ' + (ablage.art === 'ordner' ? 'der Ordner „' + ablage.name + '“ auf dem PC der Person.' : 'der Browser-Speicher dieses Geräts (die Person kann alles als ZIP herunterladen).'),
+                'Webseiten: am besten eine einzelne HTML-Datei mit eingebettetem CSS/JS, mobilfreundlich. Nach dem Schreiben vorschau_zeigen aufrufen und gemeldete Fehler beheben. Beim Ändern bestehender Dateien erst datei_lesen, dann den vollständigen neuen Inhalt schreiben.',
+                'Für Berechnungen code_ausfuehren nutzen statt im Kopf zu rechnen. Der Code läuft abgeschottet ohne Zugriff auf Seite, Daten oder Dateien.',
+                'Änderungen (Daten, Dateien) muss die Person meist bestätigen. Wurde etwas abgelehnt, nicht erneut versuchen, sondern nachfragen.',
+                'Steuer, Recht: du gibst Ausfüllhilfe, keine Steuer- oder Rechtsberatung.',
+                'Am Ende kurz zusammenfassen, was erledigt ist und wo die Person es findet.',
+                planPhase
+                    ? 'PLAN-PHASE: Ändere noch nichts. Lies bei Bedarf Daten oder Dateien, dann antworte mit einem kurzen, nummerierten Plan (welche Schritte, welche Dateien/Daten werden geändert). Die Person bestätigt danach.'
+                    : ''
+            ].filter(Boolean).join('\n');
+        }
+
+        function setStatus(text) { $('statusZeile').textContent = text || ''; }
+        function md(text) {
+            const bloecke = [];
+            let s0 = String(text || '').replace(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g, (_, c) => { bloecke.push(c); return '\u0000' + (bloecke.length - 1) + '\u0000'; });
+            s0 = esc(s0)
+                .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+            const zeilen = s0.split('\n');
+            let html = '', liste = null;
+            const schliesse = () => { if (liste) { html += '</' + liste + '>'; liste = null; } };
+            zeilen.forEach(z => {
+                const ul = z.match(/^\s*[-*•]\s+(.*)$/), ol = z.match(/^\s*\d+[.)]\s+(.*)$/), h = z.match(/^#{1,4}\s+(.*)$/);
+                if (ul || ol) { const art = ul ? 'ul' : 'ol'; if (liste !== art) { schliesse(); html += '<' + art + '>'; liste = art; } html += '<li>' + (ul || ol)[1] + '</li>'; }
+                else { schliesse(); if (h) html += '<p><b>' + h[1] + '</b></p>'; else if (z.trim()) html += '<p>' + z + '</p>'; }
+            });
+            schliesse();
+            return html.replace(/\u0000(\d+)\u0000/g, (_, i) => '<pre><code>' + esc(bloecke[+i]) + '</code></pre>');
+        }
+        function zeigeNachricht(art, inhalt) {
+            $('leer').hidden = true;
+            const d = document.createElement('div');
+            d.className = 'nachricht ' + art;
+            if (art === 'ki') d.innerHTML = md(inhalt); else d.textContent = inhalt;
+            $('verlauf').appendChild(d);
+            d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return d;
+        }
+        function kurzArgs(name, a) {
+            if (!a) return '';
+            if (a.pfad) return a.pfad;
+            if (name === 'sd_daten_lesen') return a.bereich + (a.jahr ? ' ' + a.jahr : '');
+            if (name === 'code_ausfuehren') return a.sprache;
+            if (name === 'bewerbung_speichern') return a.firma || a.id || '';
+            if (name === 'steuer_posten_hinzufuegen') return (a.kategorie || '') + ' ' + (a.betrag || a.km || '');
+            if (name === 'frist_speichern') return a.frist || '';
+            return '';
+        }
+        function zeigeSchritt(name, args) {
+            const d = document.createElement('details');
+            d.className = 'schritt';
+            const titel = (t('w')[name] || name) + (kurzArgs(name, args) ? ': ' + kurzArgs(name, args) : '');
+            d.innerHTML = '<summary><span>🔧</span><span class="was">' + esc(titel) + '</span><span class="st">⏳</span></summary><pre>' + esc(kuerze(JSON.stringify(args, null, 1), 4000)) + '</pre>';
+            $('verlauf').appendChild(d);
+            d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return {
+                fertig(text, fehler) {
+                    d.querySelector('.st').textContent = fehler ? '⚠️' : (text === t('abgelehnt') ? '❌' : '✓');
+                    d.insertAdjacentHTML('beforeend', '<pre>' + esc(kuerze(text, 4000)) + '</pre>');
+                }
+            };
+        }
+
+        function pruefeBereit() {
+            const a = anbieter();
+            if (!ANB[a]) return t('lotse_nein');
+            if (!schluessel(a)) return t('kein_key', { name: ANB[a].name });
+            return '';
+        }
+
+        async function lauf(nutzerText, planPhase) {
+            const problem = pruefeBereit();
+            if (problem) { zeigeNachricht('ki', '⚠️ ' + problem); $('einstKi').open = true; return; }
+            const a = anbieter();
+            if (gespraechAnbieter && gespraechAnbieter !== a) { gespraech = []; }
+            gespraechAnbieter = a;
+            gespraech.push({ rolle: 'user', text: nutzerText });
+            laeuft = true;
+            abbruch = new AbortController();
+            $('sendenBtn').hidden = true; $('stoppBtn').hidden = false;
+            const frageKi = a === 'claude' ? frageClaude : (a === 'openai' ? frageOpenAI : frageGemini);
+            let schritte = 0;
+            try {
+                while (laeuft) {
+                    schritte++;
+                    if (schritte > MAX_SCHRITTE) { zeigeNachricht('ki', t('max_schritte', { n: MAX_SCHRITTE })); break; }
+                    setStatus(t('denkt', { n: schritte }));
+                    const r = await frageKi(gespraech, systemText(planPhase), planPhase, abbruch.signal);
+                    gespraech.push({ rolle: 'ki', text: r.text, aufrufe: r.aufrufe, roh: r.roh });
+                    if (r.text) zeigeNachricht('ki', r.text);
+                    if (!r.aufrufe.length) {
+                        if (planPhase) zeigePlanKnopf();
+                        break;
+                    }
+                    const ergebnisse = [];
+                    for (const c of r.aufrufe) {
+                        if (!laeuft) { ergebnisse.push({ id: c.id, name: c.name, text: t('gestoppt'), fehler: true }); continue; }
+                        const anzeige = zeigeSchritt(c.name, c.args);
+                        let erg;
+                        if (planPhase && !(WERKZEUG[c.name] || {}).lesend) erg = { fehler: 'In der Plan-Phase sind nur lesende Werkzeuge erlaubt. Erst den Plan zeigen.' };
+                        else erg = await fuehreWerkzeug(c.name, c.args);
+                        const text = alsText(erg);
+                        anzeige.fertig(text, !!(erg && erg.fehler));
+                        ergebnisse.push({ id: c.id, name: c.name, text, fehler: !!(erg && erg.fehler) });
+                    }
+                    gespraech.push({ rolle: 'tool', ergebnisse });
+                }
+            } catch (err) {
+                if (err && err.name === 'AbortError') zeigeNachricht('ki', t('gestoppt'));
+                else zeigeNachricht('ki', '⚠️ ' + ((err && err.message) || String(err)));
+                // Unvollstaendige Werkzeug-Runde nicht im Gespraech lassen
+                const letzte = gespraech[gespraech.length - 1];
+                if (letzte && letzte.rolle === 'ki' && letzte.aufrufe && letzte.aufrufe.length) gespraech.pop();
+            } finally {
+                laeuft = false;
+                abbruch = null;
+                setStatus('');
+                $('sendenBtn').hidden = false; $('stoppBtn').hidden = true;
+                zeigeAblage();
+            }
+        }
+        function zeigePlanKnopf() {
+            wartetAufPlan = true;
+            const box = document.createElement('div');
+            box.className = 'plan-aktion';
+            box.innerHTML = '<button type="button" class="btn prim" data-plan>' + esc(t('plan_ausfuehren')) + '</button><span class="info" style="align-self:center">' + esc(t('plan_aendern')) + '</span>';
+            $('verlauf').appendChild(box);
+            box.querySelector('[data-plan]').onclick = () => {
+                box.remove();
+                wartetAufPlan = false;
+                const text = window.SD_LANG === 'en' ? 'Plan confirmed. Carry it out now.' : 'Plan bestätigt. Führe ihn jetzt aus.';
+                zeigeNachricht('ich', text);
+                lauf(text, false);
+            };
+        }
+
+        function senden() {
+            if (laeuft) return;
+            const text = $('eingabe').value.trim();
+            if (!text) return;
+            if (diktat) diktat.stopp();
+            document.querySelectorAll('.plan-aktion').forEach(x => x.remove());
+            $('eingabe').value = '';
+            zeigeNachricht('ich', text);
+            // Neuer Auftrag (oder Plan-Aenderung): mit "Erst Plan zeigen" zuerst planen
+            const istNeu = !gespraech.length || wartetAufPlan;
+            wartetAufPlan = false;
+            if (!gespraech.length) alleErlaubt = false;
+            lauf(text, $('planZuerst').checked && istNeu);
+        }
+        $('sendenBtn').onclick = senden;
+        $('eingabe').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); senden(); } });
+        $('stoppBtn').onclick = () => { laeuft = false; if (abbruch) abbruch.abort(); if (stoppWarter) stoppWarter(); };
+        $('neuBtn').onclick = () => {
+            if (laeuft) return;
+            gespraech = []; gespraechAnbieter = null; alleErlaubt = false; wartetAufPlan = false;
+            [...$('verlauf').children].forEach(x => { if (x.id !== 'leer') x.remove(); });
+            $('leer').hidden = false;
+            setStatus('');
+        };
+
+        // ============================================================
+        // Oberflaeche: KI-Auswahl, Modell, Beispiele, Sprache
+        // ============================================================
+        let diktat = null;
+        function zeigeModellZeile() {
+            const a = anbieter();
+            $('lotseHinweis').hidden = !!ANB[a];
+            const o = ANB[a];
+            if (!o || !o.modelle) { $('modellZeile').innerHTML = ''; }
+            else {
+                $('modellZeile').innerHTML = '<label class="info" for="modellWahl">' + esc(t('modell')) + '</label><select id="modellWahl">' +
+                    o.modelle.map(m => '<option value="' + m + '"' + (m === modell(a) ? ' selected' : '') + '>' + esc(MODELL_NAME[m] || m) + '</option>').join('') + '</select>';
+                $('modellWahl').onchange = () => { const opt = optionen(); opt[o.option] = $('modellWahl').value; try { localStorage.setItem('sdAssistentOptionen', JSON.stringify(opt)); } catch (e) { /* egal */ } zeigeModellZeile(); };
+            }
+            $('kiZusammen').textContent = o ? o.name + (o.modelle ? ' · ' + (MODELL_NAME[modell(a)] || modell(a)).replace(/ \(.*\)$/, '') : '') : 'SD Lotse ⚠️';
+        }
+        function zeigeBeispiele() {
+            $('beispiele').innerHTML = L().beispiele.map(b => '<button type="button" class="beispiel">' + esc(b) + '</button>').join('');
+        }
+        $('beispiele').addEventListener('click', (e) => {
+            const b = e.target.closest('.beispiel');
+            if (b) { $('eingabe').value = b.textContent; $('eingabe').focus(); }
+        });
+        function aktualisiereTexte() { zeigeBeispiele(); zeigeModellZeile(); zeigeAblage(); }
+
+        if (window.sdKi) {
+            window.sdKi.baueAuswahl($('kiWahl'), { geminiKeyFeld: true });
+            diktat = window.sdKi.diktatAnbinden($('eingabe'), $('mikroBtn'), (x) => setStatus(x || ''));
+        }
+        document.addEventListener('sd-ki-anbieter', zeigeModellZeile);
+        $('kiWahl').addEventListener('click', () => setTimeout(zeigeModellZeile, 0));
+        document.addEventListener('sd-lang-changed', aktualisiereTexte);
+        // Erster Besuch mit eingerichtetem Schluessel: Einstellungen zuklappen
+        if (!pruefeBereit()) $('einstKi').open = false;
+        (async () => {
+            try { const h = await idb('einstellungen', 'get', 'ordner'); if (h && h.kind === 'directory') gemerkterOrdner = h; } catch (e) { /* egal */ }
+            aktualisiereTexte();
+        })();
+        aktualisiereTexte();
+        // Test-Zugang (nur fuer automatische Tests der Seite)
+        window.__sdAgent = { setzeOrdner: (h) => { ablage = ordnerAblage(h); zeigeAblage(); }, fuehreAus, fuehreWerkzeug };
+    })();
+    </script>
+</body>
+
+</html>
