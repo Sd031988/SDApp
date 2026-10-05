@@ -1141,6 +1141,15 @@ window.SD_I18N = {
     document.getElementById('btnBatchDone').style.display = batchMode ? '' : 'none';
     els.liveCamBadge.style.display = batchMode ? 'flex' : 'none';
     updateBatchBadge();
+    // Ohne sichere Verbindung (http://) geben alle Browser die Kamera nicht frei.
+    // Dann nicht "Browser unterstuetzt das nicht" melden, sondern den echten Grund
+    // nennen und die sichere Adresse anbieten.
+    if (!window.isSecureContext && location.protocol === 'http:'){
+      const sicher = 'https://' + location.host + location.pathname + location.search;
+      els.liveCamHint.innerHTML = '🔒 Die Kamera funktioniert nur über eine sichere Verbindung (https). Die Seite ist gerade über http geöffnet. ' +
+        '<a href="' + sicher.replace(/"/g, '&quot;') + '" style="color:inherit;font-weight:800;text-decoration:underline">Sicher öffnen</a>';
+      return;
+    }
     try{
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
         // Passiert z.B. wenn die Seite nicht über HTTPS läuft (Mixed Content) oder der

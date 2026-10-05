@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-scanner-v22';
+const CACHE_NAME = 'sd-scanner-v23';
 const APP_FILES = ['./scanner.html', './scanner-vision.js?v=1', './manifest-scanner.json', './icon.svg', './sd-auth.js?v=3', './i18n.js?v=1'];
 
 self.addEventListener('install', event => {
