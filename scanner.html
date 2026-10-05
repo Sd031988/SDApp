@@ -33,7 +33,7 @@ window.SD_I18N = {
     btn_crop_reset: '↺ Zurücksetzen', btn_rotate_left: '⟲ Links', rotate_left_hint: '90° nach links drehen',
     btn_rotate_right: '⟳ Rechts', rotate_right_hint: '90° nach rechts drehen', btn_crop_next: 'Weiter →',
     filter_h1: 'Wie soll die Seite aussehen?', filter_hint: 'Wähle eine Variante. Du kannst jederzeit zum Original zurück.',
-    filter_original: 'Original', filter_auto_improved: 'Automatisch verbessert', filter_gray: 'Graustufen',
+    filter_original: 'Original (nur Licht ausgeglichen)', filter_clear: 'Klar (wie ClearScan)', filter_document: 'Dokument', filter_color: 'Farbe', filter_auto_improved: 'Automatisch verbessert', filter_gray: 'Graustufen',
     filter_bw: 'Schwarz-Weiß', filter_vivid: 'Farbe kräftig',
     btn_filter_back: '← Zurück', btn_filter_done: 'Seite übernehmen ✓',
     export_h1: 'Exportieren', export_hint: 'Alles bereit. Wähle das gewünschte Format.',
@@ -85,7 +85,7 @@ window.SD_I18N = {
     btn_crop_reset: '↺ Reset', btn_rotate_left: '⟲ Left', rotate_left_hint: 'Rotate 90° left',
     btn_rotate_right: '⟳ Right', rotate_right_hint: 'Rotate 90° right', btn_crop_next: 'Next →',
     filter_h1: 'How should the page look?', filter_hint: 'Choose a variant. You can always go back to the original.',
-    filter_original: 'Original', filter_auto_improved: 'Automatically enhanced', filter_gray: 'Grayscale',
+    filter_original: 'Original (lighting only)', filter_clear: 'Clear (like ClearScan)', filter_document: 'Document', filter_color: 'Colour', filter_auto_improved: 'Automatically enhanced', filter_gray: 'Grayscale',
     filter_bw: 'Black & white', filter_vivid: 'Vivid color',
     btn_filter_back: '← Back', btn_filter_done: 'Use this page ✓',
     export_h1: 'Export', export_hint: 'Everything is ready. Choose the format you want.',
@@ -489,8 +489,10 @@ window.SD_I18N = {
     background:rgba(3,11,20,.8); color:var(--text);
     font-size:.68rem; font-weight:700; text-align:center;
     padding:3px 4px;
+    pointer-events:none; /* darf die Knoepfe darueber (✏️ ✂️) nicht verdecken */
   }
   .page-thumb{ position:relative; }
+  .page-thumb .edit, .page-thumb .crop{ z-index:2; bottom:26px !important; }
   .page-thumb .reorder{
     position:absolute; top:2px; display:flex; gap:2px;
   }
@@ -699,11 +701,11 @@ window.SD_I18N = {
       <h1 data-i18n="filter_h1">Wie soll die Seite aussehen?</h1>
       <p class="hint" data-i18n="filter_hint">Wähle eine Variante. Du kannst jederzeit zum Original zurück.</p>
       <div class="filter-grid" id="filterGrid">
-        <div class="filter-card" data-filter="original"><canvas></canvas><span data-i18n="filter_original">Original</span></div>
-        <div class="filter-card" data-filter="auto"><canvas></canvas><span data-i18n="filter_auto_improved">Automatisch verbessert</span></div>
-        <div class="filter-card" data-filter="gray"><canvas></canvas><span data-i18n="filter_gray">Graustufen</span></div>
+        <div class="filter-card" data-filter="clear"><canvas></canvas><span data-i18n="filter_clear">Klar (wie ClearScan)</span></div>
+        <div class="filter-card" data-filter="document"><canvas></canvas><span data-i18n="filter_document">Dokument</span></div>
         <div class="filter-card" data-filter="bw"><canvas></canvas><span data-i18n="filter_bw">Schwarz-Weiß</span></div>
-        <div class="filter-card" data-filter="vivid"><canvas></canvas><span data-i18n="filter_vivid">Farbe kräftig</span></div>
+        <div class="filter-card" data-filter="color"><canvas></canvas><span data-i18n="filter_color">Farbe</span></div>
+        <div class="filter-card" data-filter="original"><canvas></canvas><span data-i18n="filter_original">Original</span></div>
       </div>
       <div class="btn-row">
         <button class="btn ghost" id="btnFilterBack" data-i18n="btn_filter_back">← Zurück</button>
@@ -799,8 +801,7 @@ window.SD_I18N = {
   <footer class="attrib" data-i18n="footer_attrib">SD Scanner · Teil von SD Bewerbungsstudio</footer>
 
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
-<script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>
+<script src="scanner-vision.js?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 (function(){
@@ -845,7 +846,7 @@ window.SD_I18N = {
   let currentImage = null; // HTMLImageElement of the raw captured photo
   let corners = []; // 4 points in canvas-natural coords {x,y}
   let cropScale = 1;
-  let selectedFilter = 'auto';
+  let selectedFilter = 'clear';
   let warpedCanvasCache = null; // canvas after perspective warp, before filter
 
   // ---------- Dokumenttyp (Dokument / Reisepass / Ausweis mit 2 Seiten) ----------
@@ -867,57 +868,12 @@ window.SD_I18N = {
     return 'Seite ' + (pages.length + 1);
   }
 
-  // ---------- Automatische Kantenerkennung (jscanify + OpenCV.js) ----------
-  // WICHTIG: opencv.js ist eine mehrere MB große WASM-Datei. Auf dem echten Handy kann es
-  // ein paar Sekunden dauern, bis sie geladen UND initialisiert ist. Bis dahin darf die App
-  // NICHT wie eine stumme Kamera wirken – der Nutzer muss sehen, dass der Scanner noch lädt.
-  // Außerdem: cv.onRuntimeInitialized kann (je nach Cache/Timing) schon gefeuert haben, BEVOR
-  // wir unseren eigenen Callback registrieren – deshalb zusätzlich per Polling auf cv.Mat prüfen,
-  // statt uns nur auf den einmaligen Callback zu verlassen.
-  // Erkennt bekannte eingebettete In-App-Browser anhand des User-Agents. Diese WebViews
-  // blockieren getUserMedia häufig vollständig (auch über HTTPS) – die Kamera-Warnung
-  // "nicht unterstützt" ist dann keine echte Browser-Einschränkung, sondern nur diese
-  // eingebettete Vorschau. Früh und sichtbar darauf hinweisen erspart lange Fehlersuche.
-  (function warnIfInAppBrowser(){
-    const ua = navigator.userAgent || '';
-    const isEmbedded = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|MicroMessenger|TikTok|Snapchat|Twitter/i.test(ua);
-    if (isEmbedded) {
-      const el = document.getElementById('inAppBrowserWarning');
-      if (el) el.style.display = 'block';
-    }
-  })();
-
-  let cvReady = false;
-  function markCvReady(){
-    if (cvReady) return;
-    cvReady = true;
-    if (els.liveCamBox && els.liveCamBox.style.display !== 'none' && els.liveCamHint){
-      if (!liveCaptured){
-        els.liveCamHint.textContent = batchMode
-          ? 'Scanner bereit – halte das Dokument ruhig in den Rahmen.'
-          : 'Scanner bereit – halte das Dokument ruhig in den Rahmen.';
-      }
-    }
-  }
-  (function waitForCv(){
-    if (typeof cv !== 'undefined') {
-      if (cv.Mat) { markCvReady(); return; }
-      cv['onRuntimeInitialized'] = markCvReady;
-      const pollId = setInterval(() => {
-        if (cvReady) { clearInterval(pollId); return; }
-        if (typeof cv !== 'undefined' && cv.Mat) { clearInterval(pollId); markCvReady(); }
-      }, 200);
-    } else {
-      setTimeout(waitForCv, 150);
-    }
-  })();
-  // Ehrliche Rückmeldung, falls die Scan-Engine gar nicht lädt (z. B. blockiertes Netzwerk).
-  // Manuelles Aufnehmen bleibt in dem Fall trotzdem möglich.
-  setTimeout(() => {
-    if (!cvReady && els.liveCamBox && els.liveCamBox.style.display !== 'none' && els.liveCamHint && !liveCaptured){
-      els.liveCamHint.textContent = '⚠️ Automatische Kantenerkennung nicht verfügbar – du kannst trotzdem manuell aufnehmen.';
-    }
-  }, 15000);
+  // ---------- Automatische Kantenerkennung (scanner-vision.js) ----------
+  // Reine JavaScript-Bildverarbeitung: Blattkanten finden, entzerren, Filter.
+  // Laedt sofort mit der Seite (statt mehrerer MB OpenCV). Fehlt die Datei,
+  // bleibt das manuelle Zuschneiden moeglich.
+  const V = window.Vision || null;
+  const cvReady = !!V; // Name beibehalten: "automatische Erkennung bereit"
 
   function polygonArea(pts){
     let area = 0;
@@ -966,113 +922,32 @@ window.SD_I18N = {
     return [tl, tr, br, bl];
   }
 
-  // ---- Eigene, genauere Kantenerkennung (Canny + Konturen + Vierecks-Prüfung) ----
-  // jscanify nimmt einfach die GRÖSSTE gefundene Kontur im Bild, egal ob sie
-  // wirklich ein Viereck ist – auf unruhigem Untergrund (Sofa, Bettdecke,
-  // Muster) wählt es dadurch leicht eine falsche, zu große Fläche statt der
-  // echten Dokumentkanten. Diese Funktion sucht stattdessen gezielt nach
-  // 4-eckigen, konvexen Konturen (wie es kommerzielle Scan-Apps machen) und
-  // ist deutlich zuverlässiger. Schwellenwerte für die Kantenerkennung werden
-  // zudem aus der Bildhelligkeit berechnet statt fest vorgegeben, damit es
-  // sowohl auf hellem als auch auf dunklem Hintergrund funktioniert.
-  function cvFindDocumentQuad(canvas){
-    if (!(cvReady && typeof cv !== 'undefined' && cv.Mat)) return null;
-    let src, gray, blurred, edges, kernel, contours, hierarchy, best = null;
-    try {
-      src = cv.imread(canvas);
-      gray = new cv.Mat();
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      blurred = new cv.Mat();
-      cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
-
-      const mean = cv.mean(blurred)[0];
-      const lower = Math.max(0, 0.66 * mean);
-      const upper = Math.min(255, 1.33 * mean);
-
-      edges = new cv.Mat();
-      cv.Canny(blurred, edges, lower, upper);
-      kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-      cv.dilate(edges, edges, kernel);
-
-      contours = new cv.MatVector();
-      hierarchy = new cv.Mat();
-      cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
-
-      const w = canvas.width, h = canvas.height;
-      const imgArea = w * h;
-      let bestArea = 0;
-
-      for (let i = 0; i < contours.size(); i++) {
-        const cnt = contours.get(i);
-        const peri = cv.arcLength(cnt, true);
-        const approx = new cv.Mat();
-        cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-        if (approx.rows === 4 && cv.isContourConvex(approx)) {
-          const area = Math.abs(cv.contourArea(approx));
-          // Wenn kein echter Dokumentrand gefunden wird (Muster im
-          // Hintergrund, Sofa, Bettdecke), findet Canny manchmal nur den
-          // Rand des ganzen Fotos selbst (oder schwarze Letterbox-Balken)
-          // als "Viereck" - das wurde bisher als Dokument akzeptiert und
-          // die Ecken landeten dann an den Bildrändern statt am Papier.
-          // Deshalb: kleinere Obergrenze UND explizite Ablehnung, wenn das
-          // Viereck bis an den Bildrand reicht (kein Rand = kein Dokument).
-          if (area > imgArea * 0.15 && area < imgArea * 0.9 && area > bestArea) {
-            const d = approx.data32S;
-            const margin = Math.min(w, h) * 0.01;
-            let touchesBorder = false;
-            for (let k = 0; k < 4; k++) {
-              const px = d[k * 2], py = d[k * 2 + 1];
-              if (px < margin || py < margin || px > w - margin || py > h - margin) {
-                touchesBorder = true;
-                break;
-              }
-            }
-            if (!touchesBorder) {
-              bestArea = area;
-              if (best) best.delete();
-              best = approx.clone();
-            }
-          }
-        }
-        approx.delete();
-        cnt.delete();
-      }
-
-      if (!best) return null;
-      const data = best.data32S;
-      const pts = [
-        { x: data[0], y: data[1] },
-        { x: data[2], y: data[3] },
-        { x: data[4], y: data[5] },
-        { x: data[6], y: data[7] },
-      ];
-      return orderDocumentCorners(pts);
-    } catch (e) {
-      return null;
-    } finally {
-      if (src) src.delete();
-      if (gray) gray.delete();
-      if (blurred) blurred.delete();
-      if (edges) edges.delete();
-      if (kernel) kernel.delete();
-      if (contours) contours.delete();
-      if (hierarchy) hierarchy.delete();
-      if (best) best.delete();
+  // Erkennung auf einem kleinen Bild (max. 420 px breit), Ergebnis in
+  // Koordinaten des uebergebenen Canvas. Liefert auch Graubild fuer die Schaerfepruefung.
+  function visionErkennung(canvas){
+    if(!V) return null;
+    const w = canvas.width, h = canvas.height;
+    if(!w || !h) return null;
+    const sw = Math.min(420, w), sh = Math.max(1, Math.round(h / w * sw));
+    let quelle = canvas;
+    if(sw !== w){
+      quelle = document.createElement('canvas');
+      quelle.width = sw; quelle.height = sh;
+      quelle.getContext('2d').drawImage(canvas, 0, 0, sw, sh);
     }
+    const d = quelle.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, sw, sh);
+    const g = V.luma(d.data, sw, sh);
+    const q = V.detectQuad(g, sw, sh);
+    return { q, g, sw, sh, kx: w / sw, ky: h / sh };
   }
 
   function tryAutoDetect(canvas){
     try {
-      const preciseQuad = cvFindDocumentQuad(canvas);
-      if (preciseQuad) return preciseQuad;
-      if (!cvReady || typeof jscanify === 'undefined' || typeof cv === 'undefined' || !cv.Mat) return null;
-      const scanner = new jscanify();
-      const mat = cv.imread(canvas);
-      const contour = scanner.findPaperContour(mat);
-      const pts = scanner.getCornerPoints(contour);
-      mat.delete();
-      if (!pts || !pts.topLeftCorner) return null;
-      return [pts.topLeftCorner, pts.topRightCorner, pts.bottomRightCorner, pts.bottomLeftCorner];
+      const r = visionErkennung(canvas);
+      if(!r || !r.q) return null;
+      const pts = [];
+      for(let i = 0; i < 4; i++) pts.push({ x: r.q[i*2] * r.kx, y: r.q[i*2+1] * r.ky });
+      return pts;
     } catch (e) {
       return null;
     }
@@ -1115,7 +990,7 @@ window.SD_I18N = {
     }
   }
 
-  // Wartet bis zu maxWaitMs darauf, dass OpenCV.js/jscanify fertig geladen ist, statt sofort
+  // Wartet bis zu maxWaitMs darauf, dass die Kantenerkennung bereit ist, statt sofort
   // mit "nicht bereit" aufzugeben. Auf dem Handy kann das WASM-Modul beim allerersten Foto
   // (direkt nach App-Start) noch ein paar Sekunden laden – ohne diese Wartezeit würde die
   // automatische Kantenerkennung in genau diesem, sehr häufigen Fall nie greifen.
@@ -1209,6 +1084,12 @@ window.SD_I18N = {
   let liveCaptured = false;
   let batchMode = false; // true = Batch-Scan: Kamera bleibt nach jeder Seite offen und scannt automatisch weiter
   let batchPauseUntil = 0; // Timestamp bis zu dem nach einer Aufnahme kurz pausiert wird (Flash-Feedback)
+  let liveSchaerfeMax = 20;
+  // Serien-Scan: nach jeder Aufnahme erst wieder ausloesen, wenn eine NEUE
+  // Seite daliegt (Blatt kurz weg oder deutlich anders im Bild) - sonst wuerde
+  // dieselbe Seite im Sekundentakt immer wieder aufgenommen.
+  let batchLetzteQuad = null;
+  let batchWartetAufWechsel = false;
   const LIVE_STABLE_NEEDED = 6; // ~6 Frames mit ähnlichem Quad => auto-auslösen
   const liveHiddenCanvas = document.createElement('canvas');
 
@@ -1243,6 +1124,8 @@ window.SD_I18N = {
 
   async function startLiveCam(isBatch){
     batchMode = !!isBatch;
+    batchWartetAufWechsel = false;
+    batchLetzteQuad = null;
     liveCaptured = false;
     liveStableCount = 0;
     liveLastQuad = null;
@@ -1393,9 +1276,9 @@ window.SD_I18N = {
     octx.clearRect(0, 0, overlay.width, overlay.height);
     drawViewfinderGuide(octx, overlay.width, overlay.height);
 
-    if(!cvReady || typeof jscanify === 'undefined'){
+    if(!cvReady){
       if(!liveCaptured){
-        els.liveCamHint.textContent = '🔄 Scanner wird geladen …';
+        els.liveCamHint.textContent = '⚠️ Automatische Kantenerkennung nicht verfügbar – tippe auf 📸 zum Aufnehmen.';
         els.liveCamHint.classList.remove('ready');
       }
       return;
@@ -1404,13 +1287,27 @@ window.SD_I18N = {
     liveDetectBusy = true;
 
     // Kantenerkennung auf einem verkleinerten Frame (Performance)
-    const detW = 480;
+    const detW = 400;
     const detH = Math.round(detW * video.videoHeight / video.videoWidth);
     liveHiddenCanvas.width = detW;
     liveHiddenCanvas.height = detH;
-    liveHiddenCanvas.getContext('2d').drawImage(video, 0, 0, detW, detH);
+    liveHiddenCanvas.getContext('2d', { willReadFrequently: true }).drawImage(video, 0, 0, detW, detH);
 
-    const quad = tryAutoDetect(liveHiddenCanvas);
+    // Blatt suchen und pruefen, ob das Bild scharf genug ist (Varianz des
+    // Laplace-Filters im Blatt, verglichen mit dem bisher schaerfsten Bild)
+    let quad = null, scharf = true;
+    try {
+      const r = visionErkennung(liveHiddenCanvas);
+      if(r){
+        const schaerfe = V.varianceOfLaplacian(r.g, r.sw, r.sh, r.q);
+        liveSchaerfeMax = Math.max(20, liveSchaerfeMax * 0.98, schaerfe);
+        if(r.q){
+          quad = [];
+          for(let i = 0; i < 4; i++) quad.push({ x: r.q[i*2] * r.kx, y: r.q[i*2+1] * r.ky });
+          scharf = schaerfe > Math.max(80, liveSchaerfeMax * 0.12);
+        }
+      }
+    } catch (e) { quad = null; }
     liveDetectBusy = false;
 
     if(quad && cornersLookValid(quad, detW, detH)){
@@ -1444,6 +1341,9 @@ window.SD_I18N = {
         octx.fill();
       });
 
+      if(batchMode && batchWartetAufWechsel){
+        if(!quadsClose(quad, batchLetzteQuad, detW * 0.06)) batchWartetAufWechsel = false;
+      }
       if(quadsClose(quad, liveLastQuad, Math.max(6, detW*0.02))){
         liveStableCount++;
       } else {
@@ -1452,9 +1352,15 @@ window.SD_I18N = {
       liveLastQuad = quad;
       lastDetQuad = quad; lastDetW = detW; lastDetH = detH;
 
-      if(captureMode === 'manuell'){
+      if(batchMode && batchWartetAufWechsel && captureMode !== 'manuell'){
+        els.liveCamHint.textContent = pages.length + '. Seite gescannt – jetzt die nächste Seite hinlegen …';
+        els.liveCamHint.classList.remove('ready');
+      } else if(captureMode === 'manuell'){
         els.liveCamHint.textContent = '✓ Dokument erkannt – tippe auf 📸 zum Aufnehmen.';
         els.liveCamHint.classList.add('ready');
+      } else if(liveStableCount >= LIVE_STABLE_NEEDED && !scharf){
+        els.liveCamHint.textContent = 'Etwas unscharf – Handy kurz ruhig halten …';
+        els.liveCamHint.classList.remove('ready');
       } else if(liveStableCount >= LIVE_STABLE_NEEDED){
         els.liveCamHint.textContent = '✓ Erkannt – wird automatisch aufgenommen …';
         els.liveCamHint.classList.add('ready');
@@ -1468,6 +1374,7 @@ window.SD_I18N = {
         els.liveCamHint.classList.add('ready');
       }
     } else {
+      if(batchMode) batchWartetAufWechsel = false;
       liveStableCount = 0;
       liveLastQuad = null;
       lastDetQuad = null; lastDetW = detW; lastDetH = detH;
@@ -1550,6 +1457,8 @@ window.SD_I18N = {
         // Batch-Scan soll man die ECHTE Erkennung sehen und nachjustieren können (wie im
         // Referenz-Video), nicht nochmal auf dem bereits fertig zugeschnittenen Bild raten.
         pages.push({ dataUrl, rawDataUrl: shot.toDataURL('image/jpeg', 0.9), quad: fullQuad, label: currentPageLabel() });
+        batchLetzteQuad = quad;
+        batchWartetAufWechsel = true;
         updateBatchBadge();
 
         els.liveCamHint.textContent = pages.length + '. Seite gescannt – nächste Seite bereithalten …';
@@ -1863,6 +1772,21 @@ window.SD_I18N = {
   }
 
   function warpToRect(srcCanvas, srcCorners, outW, outH){
+    if(V){
+      try {
+        const sw0 = srcCanvas.width, sh0 = srcCanvas.height;
+        const daten = srcCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, sw0, sh0).data;
+        const q = new Float32Array(8);
+        srcCorners.forEach((p, i) => { q[i*2] = p.x; q[i*2+1] = p.y; });
+        const rgba = V.warp(daten, sw0, sh0, q, outW, outH);
+        if(rgba){
+          const fertig = document.createElement('canvas');
+          fertig.width = outW; fertig.height = outH;
+          fertig.getContext('2d').putImageData(new ImageData(rgba, outW, outH), 0, 0);
+          return fertig;
+        }
+      } catch (e) { /* unten mit der alten Variante weiter */ }
+    }
     const dstCorners = [{x:0,y:0},{x:outW,y:0},{x:outW,y:outH},{x:0,y:outH}];
     const h = computeHomography(srcCorners, dstCorners); // dst(X,Y) -> src(u,v)
     const [a,bb,c,d,e,f,g,hh] = h;
@@ -1921,9 +1845,9 @@ window.SD_I18N = {
       if(singleEditIndex !== null){
         // Nachträglicher Zuschnitt einer einzelnen fertigen Seite: Ergebnis direkt
         // übernehmen und zur Übersicht zurück (keine Warteschlange fortsetzen).
-        const filtered = applyFilter(warpedCanvasCache, 'auto');
-        const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
         const page = pages[singleEditIndex];
+        const filtered = applyFilter(warpedCanvasCache, page.filter || STANDARD_FILTER);
+        const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
         page.dataUrl = dataUrl;
         page.rawDataUrl = els.cropCanvas.toDataURL('image/jpeg', 0.92);
         page.quad = corners.map(p => ({ x: p.x / cropScale, y: p.y / cropScale }));
@@ -1943,9 +1867,9 @@ window.SD_I18N = {
         // Viereck im aktuellen Zustand sichern, damit "Vorherige Seite" später wieder genau
         // hier ansetzt (inkl. eigener Korrekturen und Drehungen), statt auf die ursprüngliche
         // Auto-Erkennung zurückzuspringen.
-        const filtered = applyFilter(warpedCanvasCache, 'auto');
-        const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
         const page = pages[reviewIndex];
+        const filtered = applyFilter(warpedCanvasCache, page.filter || STANDARD_FILTER);
+        const dataUrl = filtered.toDataURL('image/jpeg', 0.9);
         page.rawDataUrl = els.cropCanvas.toDataURL('image/jpeg', 0.92);
         page.quad = corners.map(p => ({ x: p.x / cropScale, y: p.y / cropScale }));
         setStatus('');
@@ -1960,347 +1884,41 @@ window.SD_I18N = {
   });
 
   // ---------- Filters ----------
-  // ---- Beleuchtungsausgleich für den "auto"-Filter (Clear-Scan-Stil) ----
-  // Baut eine stark verkleinerte, weichgezeichnete Karte der lokalen Papier-
-  // Helligkeit (Text verschwindet beim Downscale, nur ungleiches Licht/
-  // Schatten bleibt übrig), damit jede Bildregion einzeln auf "weiß"
-  // normalisiert werden kann statt nur global – das macht den Unterschied
-  // zwischen einem fleckigen Handyfoto und einem sauberen "Clear Scan".
-  function buildBackgroundMap(srcCanvas, w, h){
-    const smallW = Math.max(20, Math.round(w/24));
-    const smallH = Math.max(20, Math.round(h/24));
-    const small = document.createElement('canvas');
-    small.width = smallW; small.height = smallH;
-    const sctx = small.getContext('2d');
-    sctx.imageSmoothingEnabled = true;
-    sctx.imageSmoothingQuality = 'high';
-    sctx.drawImage(srcCanvas, 0, 0, smallW, smallH);
-    const sdata = sctx.getImageData(0, 0, smallW, smallH).data;
-
-    const rMap = new Float32Array(smallW*smallH);
-    const gMap = new Float32Array(smallW*smallH);
-    const bMap = new Float32Array(smallW*smallH);
-    for(let p=0, i=0; i<sdata.length; i+=4, p++){
-      rMap[p] = sdata[i]; gMap[p] = sdata[i+1]; bMap[p] = sdata[i+2];
-    }
-
-    function boxBlur(src){
-      const out = new Float32Array(smallW*smallH);
-      const radius = 2;
-      for(let y=0; y<smallH; y++){
-        for(let x=0; x<smallW; x++){
-          let sum=0, count=0;
-          for(let dy=-radius; dy<=radius; dy++){
-            const yy = y+dy;
-            if(yy<0 || yy>=smallH) continue;
-            for(let dx=-radius; dx<=radius; dx++){
-              const xx = x+dx;
-              if(xx<0 || xx>=smallW) continue;
-              sum += src[yy*smallW+xx];
-              count++;
-            }
-          }
-          out[y*smallW+x] = sum/count;
-        }
-      }
-      return out;
-    }
-
-    return { w: smallW, h: smallH, r: boxBlur(rMap), g: boxBlur(gMap), b: boxBlur(bMap) };
-  }
-
-  function clearScanEnhance(srcCanvas, destCtx, w, h){
-    const bg = buildBackgroundMap(srcCanvas, w, h);
-    const imgData = destCtx.getImageData(0, 0, w, h);
-    const d = imgData.data;
-
-    function sampleMap(map, mw, mh, u, v){
-      const x = Math.min(mw-1, Math.max(0, u));
-      const y = Math.min(mh-1, Math.max(0, v));
-      const x0 = Math.floor(x), y0 = Math.floor(y);
-      const x1 = Math.min(mw-1, x0+1), y1 = Math.min(mh-1, y0+1);
-      const fx = x-x0, fy = y-y0;
-      const idx = (xx, yy) => yy*mw+xx;
-      const top = map[idx(x0,y0)]*(1-fx) + map[idx(x1,y0)]*fx;
-      const bot = map[idx(x0,y1)]*(1-fx) + map[idx(x1,y1)]*fx;
-      return top*(1-fy) + bot*fy;
-    }
-
-    let targetR = 180, targetG = 180, targetB = 180;
-    for(let i=0; i<bg.r.length; i++){
-      if(bg.r[i] > targetR) targetR = bg.r[i];
-      if(bg.g[i] > targetG) targetG = bg.g[i];
-      if(bg.b[i] > targetB) targetB = bg.b[i];
-    }
-
-    const contrast = 1.32;
-    const scaleU = bg.w/w, scaleV = bg.h/h;
-
-    for(let y=0; y<h; y++){
-      const v = y*scaleV;
-      const rowOff = y*w;
-      for(let x=0; x<w; x++){
-        const u = x*scaleU;
-        const bR = Math.max(35, sampleMap(bg.r, bg.w, bg.h, u, v));
-        const bG = Math.max(35, sampleMap(bg.g, bg.w, bg.h, u, v));
-        const bB = Math.max(35, sampleMap(bg.b, bg.w, bg.h, u, v));
-        const i = (rowOff+x)*4;
-
-        let r = d[i]   * (targetR/bR);
-        let g = d[i+1] * (targetG/bG);
-        let b = d[i+2] * (targetB/bB);
-
-        r = (r-128)*contrast+128;
-        g = (g-128)*contrast+128;
-        b = (b-128)*contrast+128;
-
-        d[i]   = Math.min(255, Math.max(0, r));
-        d[i+1] = Math.min(255, Math.max(0, g));
-        d[i+2] = Math.min(255, Math.max(0, b));
-      }
-    }
-    destCtx.putImageData(imgData, 0, 0);
-  }
-
-  // ---- Echte OpenCV.js-Filter (adaptive Binarisierung/CLAHE/Shading-Korrektur) ----
-  // Das ist die gleiche Technik, die Adobe Scan/CamScanner intern nutzen
-  // (lokale statt globale Schwellenwerte), ersetzt die einfache JS-Variante
-  // sobald OpenCV.js geladen und bereit ist; sonst JS-Fallback unten.
-  function cvMatToCanvas(mat){
-    const canvas = document.createElement('canvas');
-    canvas.width = mat.cols; canvas.height = mat.rows;
-    cv.imshow(canvas, mat);
-    mat.delete();
-    return canvas;
-  }
-
-  function cvShadingCorrectChannel(chMat, ksize, target){
-    const blurred = new cv.Mat();
-    cv.GaussianBlur(chMat, blurred, new cv.Size(ksize, ksize), 0);
-    const chF = new cv.Mat();
-    chMat.convertTo(chF, cv.CV_32F);
-    const bgF = new cv.Mat();
-    blurred.convertTo(bgF, cv.CV_32F, 1, 1);
-    blurred.delete();
-    const ratio = new cv.Mat();
-    cv.divide(chF, bgF, ratio);
-    chF.delete(); bgF.delete();
-    const out = new cv.Mat();
-    ratio.convertTo(out, cv.CV_8U, target);
-    ratio.delete();
-    return out;
-  }
-
-  // Unscharfe Maskierung (Standard-Schärfungstechnik): Original minus leicht
-  // geglättete Kopie verstärkt Kanten/Text, ohne Flächen wie Papierweiß zu
-  // verändern.
-  function cvSharpen(mat, amount){
-    // Erst ein sehr leichtes Entrauschen (JPEG-Blockartefakte vom Handyfoto),
-    // sonst verstärkt die unscharfe Maskierung genau dieses Rauschen statt
-    // nur die Schrift -> Text wirkt "schlimmer" statt schärfer.
-    const denoised = new cv.Mat();
-    cv.medianBlur(mat, denoised, 3);
-    const blurred = new cv.Mat();
-    cv.GaussianBlur(denoised, blurred, new cv.Size(0, 0), 1.4);
-    const sharpened = new cv.Mat();
-    cv.addWeighted(denoised, 1 + amount, blurred, -amount, 0, sharpened);
-    denoised.delete();
-    blurred.delete();
-    return sharpened;
-  }
-
-  function cvAutoEnhance(srcCanvas){
-    const src = cv.imread(srcCanvas);
-    const rgb = new cv.Mat();
-    cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
-    src.delete();
-
-    const w = rgb.cols, h = rgb.rows;
-    let k = Math.round(Math.min(w, h) / 10);
-    if (k % 2 === 0) k++;
-    if (k < 25) k = 25;
-
-    const channels = new cv.MatVector();
-    cv.split(rgb, channels);
-    rgb.delete();
-
-    let target = 180;
-    const blurredPeeks = [];
-    for (let i = 0; i < 3; i++) {
-      const blurred = new cv.Mat();
-      cv.GaussianBlur(channels.get(i), blurred, new cv.Size(k, k), 0);
-      const mm = cv.minMaxLoc(blurred);
-      if (mm.maxVal > target) target = mm.maxVal;
-      blurredPeeks.push(blurred);
-    }
-    blurredPeeks.forEach(m => m.delete());
-
-    const outChannels = new cv.MatVector();
-    for (let i = 0; i < 3; i++) {
-      outChannels.push_back(cvShadingCorrectChannel(channels.get(i), k, target));
-      channels.get(i).delete();
-    }
-    channels.delete();
-
-    const merged = new cv.Mat();
-    cv.merge(outChannels, merged);
-    outChannels.delete();
-
-    const finalMat = new cv.Mat();
-    cv.convertScaleAbs(merged, finalMat, 1.15, -12);
-    merged.delete();
-
-    const sharpMat = cvSharpen(finalMat, 0.35);
-    finalMat.delete();
-
-    return cvMatToCanvas(sharpMat);
-  }
-
-  function cvAdaptiveBW(srcCanvas){
-    const src = cv.imread(srcCanvas);
-    const gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    src.delete();
-
-    // Handyfotos haben Sensor-/JPEG-Rauschen, das eine adaptive
-    // Schwellenwert-Binarisierung sonst 1:1 in Salz-und-Pfeffer-Rauschen
-    // ("Schnee") auf Papier und in den Buchstaben übersetzt. Ein
-    // kantenerhaltender Weichzeichner (bilateral) vorher nimmt das Rauschen
-    // raus, ohne die Textkanten zu verwaschen.
-    const denoised = new cv.Mat();
-    cv.bilateralFilter(gray, denoised, 7, 50, 50);
-    gray.delete();
-
-    // Getestet an echten Fotos (nicht nur Videos): die alte Blockgröße
-    // (Bildgröße/18) und Schwelle 12 machten kleinere Schrift spürbar
-    // fetter/verklumpt, bis Buchstaben ineinanderliefen. Größerer Block
-    // (/50) + kleinere Schwelle (8) halten die Strichstärke nah am
-    // Original und die Schrift bleibt bei jeder Schriftgröße klar lesbar.
-    // Der zusätzliche 3x3-Weichzeichner nach dem Bilateral-Filter entfiel,
-    // weil er zusätzlich zur Verdickung beitrug.
-    const w = denoised.cols, h = denoised.rows;
-    let block = Math.round(Math.min(w, h) / 50);
-    if (block % 2 === 0) block++;
-    if (block < 15) block = 15;
-
-    const bw = new cv.Mat();
-    cv.adaptiveThreshold(denoised, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, block, 8);
-    denoised.delete();
-
-    return cvMatToCanvas(bw);
-  }
-
-  function cvClaheGray(srcCanvas){
-    const src = cv.imread(srcCanvas);
-    const gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    src.delete();
-
-    // Gleiches Problem wie bei Schwarz-Weiß: CLAHE hebt lokalen Kontrast
-    // an und verstärkt dabei jedes Bildrauschen zu deutlich sichtbaren
-    // Pünktchen/"Schnee" auf dem Papier. Erst entrauschen, dann CLAHE.
-    const denoised = new cv.Mat();
-    cv.bilateralFilter(gray, denoised, 7, 50, 50);
-    gray.delete();
-
-    const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
-    const out = new cv.Mat();
-    clahe.apply(denoised, out);
-    denoised.delete();
-    clahe.delete();
-
-    const sharpOut = cvSharpen(out, 0.3);
-    out.delete();
-
-    return cvMatToCanvas(sharpOut);
-  }
+  // Die fuenf Filter aus scanner-vision.js. Alle gleichen ungleichmaessiges
+  // Licht aus (Papierton pro Bildbereich), "Klar" ist der ClearScan-aehnliche
+  // Modus: weisses Papier, dunkler Text mit weichen Kanten, Staub entfernt.
+  // Alte Filternamen (gespeicherte Seiten, frueherer Standard) werden umgeleitet.
+  const FILTER_ALT = { auto: 'clear', gray: 'document', vivid: 'color' };
+  const STANDARD_FILTER = 'clear';
+  function filterId(mode){ return FILTER_ALT[mode] || mode || STANDARD_FILTER; }
 
   function applyFilter(srcCanvas, mode){
     const w = srcCanvas.width, h = srcCanvas.height;
-
-    if(mode === 'original'){
-      const out = document.createElement('canvas');
-      out.width = w; out.height = h;
-      out.getContext('2d').drawImage(srcCanvas, 0, 0);
-      return out;
-    }
-
-    const cvOk = cvReady && typeof cv !== 'undefined' && cv.Mat;
-    if(cvOk){
-      try {
-        if (mode === 'auto') return cvAutoEnhance(srcCanvas);
-        if (mode === 'bw') return cvAdaptiveBW(srcCanvas);
-        if (mode === 'gray') return cvClaheGray(srcCanvas);
-      } catch(e) {
-        // Bei einem OpenCV-Fehler unten mit der JS-Variante weitermachen.
-      }
-    }
-
     const out = document.createElement('canvas');
     out.width = w; out.height = h;
     const octx = out.getContext('2d');
-    octx.drawImage(srcCanvas, 0, 0);
-
-    if(mode === 'auto'){
-      // Clear-Scan-Stil: Beleuchtungs-/Schattenkorrektur pro Bildregion statt
-      // nur ein globaler Kontrast-Stretch – macht den Hintergrund gleichmäßig
-      // papierweiß und den Text kräftig, wie bei Adobe Scan/CamScanner.
-      clearScanEnhance(srcCanvas, octx, w, h);
+    if(!V){
+      octx.drawImage(srcCanvas, 0, 0);
       return out;
     }
-
-    const imgData = octx.getImageData(0,0,w,h);
-    const d = imgData.data;
-
-    if(mode === 'gray' || mode === 'bw'){
-      // compute grayscale + simple auto-contrast stats first
-      let min=255, max=0;
-      const gray = new Uint8ClampedArray(w*h);
-      for(let i=0, p=0; i<d.length; i+=4, p++){
-        const g = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-        gray[p] = g;
-        if(g<min) min=g;
-        if(g>max) max=g;
-      }
-      const range = Math.max(1, max-min);
-
-      if(mode === 'gray'){
-        for(let i=0, p=0; i<d.length; i+=4, p++){
-          const v = Math.min(255, Math.max(0, ((gray[p]-min)/range)*255));
-          d[i]=d[i+1]=d[i+2]=v;
-        }
-      } else if(mode === 'bw'){
-        const thresh = min + range*0.55;
-        for(let i=0, p=0; i<d.length; i+=4, p++){
-          const v = gray[p] > thresh ? 255 : 0;
-          d[i]=d[i+1]=d[i+2]=v;
-        }
-      }
-    } else if(mode === 'vivid'){
-      // "Magic Color" – kräftigere, gesättigtere Farben wie bei bekannten Scan-Apps
-      const contrast = 1.12, satBoost = 1.35;
-      for(let i=0;i<d.length;i+=4){
-        let r = d[i], g = d[i+1], b = d[i+2];
-        r = (r-128)*contrast+128; g = (g-128)*contrast+128; b = (b-128)*contrast+128;
-        const gray = 0.299*r + 0.587*g + 0.114*b;
-        r = gray + (r-gray)*satBoost;
-        g = gray + (g-gray)*satBoost;
-        b = gray + (b-gray)*satBoost;
-        d[i] = Math.min(255, Math.max(0, r));
-        d[i+1] = Math.min(255, Math.max(0, g));
-        d[i+2] = Math.min(255, Math.max(0, b));
-      }
-    }
-    octx.putImageData(imgData, 0, 0);
+    const daten = srcCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
+    const rgba = V.applyFilter(daten, w, h, filterId(mode), {});
+    octx.putImageData(new ImageData(rgba, w, h), 0, 0);
     return out;
   }
 
   function buildFilterPreviews(){
     const cards = els.filterGrid.querySelectorAll('.filter-card');
+    const k = Math.min(1, 480 / Math.max(warpedCanvasCache.width, warpedCanvasCache.height));
+    const klein = document.createElement('canvas');
+    klein.width = Math.max(1, Math.round(warpedCanvasCache.width * k));
+    klein.height = Math.max(1, Math.round(warpedCanvasCache.height * k));
+    klein.getContext('2d').drawImage(warpedCanvasCache, 0, 0, klein.width, klein.height);
+    selectedFilter = filterId(selectedFilter);
     cards.forEach(card => {
       const mode = card.dataset.filter;
       const canvas = card.querySelector('canvas');
-      const resultCanvas = applyFilter(warpedCanvasCache, mode);
+      const resultCanvas = applyFilter(klein, mode);
       const previewW = 220;
       const previewH = Math.round(resultCanvas.height * (previewW / resultCanvas.width));
       canvas.width = previewW; canvas.height = previewH;
@@ -2318,7 +1936,7 @@ window.SD_I18N = {
   document.getElementById('btnFilterNext').addEventListener('click', () => {
     const finalCanvas = applyFilter(warpedCanvasCache, selectedFilter);
     const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
-    finalizePage(dataUrl);
+    finalizePage(dataUrl, { filter: selectedFilter });
   });
 
   function renderPagesGrid(){
@@ -2397,6 +2015,26 @@ window.SD_I18N = {
     watermarkTextInput.style.display = chkWatermark.checked ? '' : 'none';
   });
 
+  // Unsichtbare Textebene: jedes erkannte Wort liegt deckungsgleich ueber dem
+  // Bild (Deckkraft 0). Das PDF wird dadurch durchsuchbar, der Text laesst sich
+  // markieren und kopieren; das sichtbare Bild bleibt unveraendert.
+  // Helvetica kennt nur westeuropaeische Zeichen - andere Woerter werden
+  // ausgelassen statt das ganze PDF scheitern zu lassen.
+  function textEbene(pdfPage, p, pageW, pageH, f){
+    const ow = (p.ocrW && p.ocrW.w) || pageW, oh = (p.ocrW && p.ocrW.h) || pageH;
+    const sx = pageW / ow, sy = pageH / oh;
+    for(const wd of p.ocrWords){
+      try {
+        const boxW = (wd.x1 - wd.x0) * sx, boxH = (wd.y1 - wd.y0) * sy;
+        if(boxW <= 0 || boxH <= 0) continue;
+        const breite1 = f.widthOfTextAtSize(wd.text, 1);
+        let size = breite1 > 0 ? boxW / breite1 : boxH;
+        size = Math.max(1, Math.min(size, boxH * 1.6));
+        pdfPage.drawText(wd.text, { x: wd.x0 * sx, y: pageH - wd.y1 * sy + boxH * 0.15, size, font: f, opacity: 0 });
+      } catch (e) { /* Zeichen nicht darstellbar: Wort auslassen */ }
+    }
+  }
+
   // Zentrale PDF-Erstellung (mit optionalem Wasserzeichen), damit "Speichern" und "Teilen"
   // exakt dasselbe Dokument erzeugen und Änderungen nur an einer Stelle gepflegt werden müssen.
   async function buildPdfBlob(){
@@ -2404,6 +2042,7 @@ window.SD_I18N = {
     const pdfDoc = await PDFDocument.create();
     const wantWatermark = chkWatermark.checked && watermarkTextInput.value.trim();
     let font = null;
+    let textFont = null;
     if(wantWatermark) font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     for(const p of pages){
       const imgBytes = await (await fetch(p.dataUrl)).arrayBuffer();
@@ -2411,6 +2050,10 @@ window.SD_I18N = {
       const pageW = img.width, pageH = img.height;
       const pdfPage = pdfDoc.addPage([pageW, pageH]);
       pdfPage.drawImage(img, { x:0, y:0, width:pageW, height:pageH });
+      if(p.ocrWords && p.ocrWords.length && p.ocrFuer === p.dataUrl){
+        if(!textFont) textFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        textEbene(pdfPage, p, pageW, pageH, textFont);
+      }
       if(wantWatermark){
         const text = watermarkTextInput.value.trim();
         const fontSize = Math.max(24, Math.round(Math.min(pageW, pageH) * 0.08));
@@ -2485,6 +2128,28 @@ window.SD_I18N = {
 
   // ---------- OCR (Tesseract.js) ----------
   let ocrPageTexts = [];
+  // Woerter mit Position aus dem Tesseract-Ergebnis (je nach Version direkt
+  // in data.words oder verschachtelt in blocks/paragraphs/lines/words)
+  function ocrWoerter(data){
+    const out = [];
+    const nimm = (wd) => {
+      const b = wd && wd.bbox;
+      const text = String(wd && wd.text != null ? wd.text : '').replace(/\s+/g, ' ').trim();
+      if(text && b && b.x1 > b.x0 && b.y1 > b.y0) out.push({ text, x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1 });
+    };
+    if(data && Array.isArray(data.words) && data.words.length){ data.words.forEach(nimm); return out; }
+    const besuche = (n) => {
+      if(!n || typeof n !== 'object') return;
+      const kinder = [].concat(n.blocks || [], n.paragraphs || [], n.lines || [], n.words || []);
+      if(kinder.length){ kinder.forEach(besuche); return; }
+      nimm(n);
+    };
+    besuche(data);
+    return out;
+  }
+  function bildBreiteHoehe(src){
+    return new Promise(res => { const im = new Image(); im.onload = () => res({ w: im.naturalWidth, h: im.naturalHeight }); im.onerror = () => res(null); im.src = src; });
+  }
   document.getElementById('btnRunOcr').addEventListener('click', async () => {
     if(!pages.length) return;
     if(typeof Tesseract === 'undefined'){
@@ -2507,6 +2172,11 @@ window.SD_I18N = {
           }
         });
         ocrPageTexts.push(data.text.trim());
+        // Wortpositionen fuer die unsichtbare Textebene im PDF merken
+        // (gilt nur, solange die Seite danach nicht mehr veraendert wird)
+        pages[i].ocrWords = ocrWoerter(data);
+        pages[i].ocrFuer = pages[i].dataUrl;
+        pages[i].ocrW = await bildBreiteHoehe(pages[i].dataUrl);
       }
       const combined = pages.map((p, i) => `--- ${p.label || ('Seite ' + (i+1))} ---\n${ocrPageTexts[i]}`).join('\n\n');
       const ocrResultBox = document.getElementById('ocrResult');
@@ -2515,7 +2185,10 @@ window.SD_I18N = {
       ocrTextArea.value = combined;
       document.getElementById('btnSaveTxt').style.display = '';
       document.getElementById('btnKiText').style.display = '';
-      statusEl.textContent = 'Text erkannt – siehe unten. Als TXT speicherbar.';
+      const mitEbene = pages.some(p => p.ocrWords && p.ocrWords.length);
+      statusEl.textContent = mitEbene
+        ? 'Text erkannt – siehe unten. Als TXT speicherbar. Das PDF enthält jetzt eine unsichtbare Textebene (durchsuchbar, Text kopierbar).'
+        : 'Text erkannt – siehe unten. Als TXT speicherbar.';
     } catch(err){
       statusEl.textContent = 'Fehler bei der Texterkennung: ' + err.message;
     } finally {
