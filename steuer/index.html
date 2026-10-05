@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Steuer-Helfer</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Steuer-Helfer: Werbungskosten, Bewerbungskosten, Kinderbetreuung, Spenden und haushaltsnahe Aufwendungen sammeln und berechnen – zum Übertragen in Mein ELSTER">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --ink: #172a3a;
+            --muted: #647482;
+            --accent: #2f7d72;
+            --accent-dark: #1c4a42;
+            --accent-soft: #dcece7;
+            --paper: #fffdf8;
+            --line: #d8e0dc;
+            --warn-bg: #fff8e6;
+            --warn-line: #f0d9a0;
+            --danger: #b42318;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Trebuchet MS', Verdana, sans-serif;
+            background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%);
+            color: var(--ink);
+            min-height: 100dvh;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+        }
+        @media (max-width: 520px) {
+            .brand small { display: none; }
+            .sd-logo { display: none; }
+            .topbar { gap: 8px; }
+        }
+
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; font-size: .9rem; white-space: nowrap; }
+        .brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .sd-logo {
+            width: 38px; height: 38px; border-radius: 10px; flex: 0 0 auto;
+            background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff;
+            display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold;
+        }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .jahr-wahl select {
+            font: inherit; font-weight: bold; padding: 7px 10px; border-radius: 10px;
+            border: 1px solid var(--line); background: #fff; color: var(--ink);
+        }
+
+        main { max-width: 860px; margin: 0 auto; padding: 14px 16px 120px; display: grid; gap: 12px; }
+
+        .hinweis {
+            background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 12px;
+            padding: 12px 14px; font-size: .88rem; line-height: 1.5;
+        }
+        .hinweis strong { display: block; margin-bottom: 2px; }
+
+        .karte {
+            background: rgba(255, 255, 255, .96); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+        }
+        .karte > summary {
+            list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+        }
+        .karte > summary::-webkit-details-marker { display: none; }
+        .karte > summary .titel { flex: 1; min-width: 0; }
+        .karte > summary h2 { font-family: Georgia, serif; font-size: 1.05rem; margin: 0; }
+        .karte > summary small { color: var(--muted); font-size: .78rem; }
+        .karte > summary .summe {
+            font-weight: bold; color: var(--accent-dark); background: var(--accent-soft);
+            border-radius: 999px; padding: 4px 10px; font-size: .85rem; white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .karte > summary::after { content: '▾'; color: var(--muted); transition: transform .2s; }
+        .karte[open] > summary::after { transform: rotate(180deg); }
+        .inhalt { padding: 0 16px 16px; display: grid; gap: 12px; }
+
+        .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 520px) { .zeile { grid-template-columns: 1fr; } }
+        label.feld { display: grid; gap: 4px; font-size: .82rem; font-weight: bold; min-width: 0; }
+        label.feld span.hilfe { font-weight: normal; color: var(--muted); font-size: .76rem; }
+        input[type=text], input[type=number], select, textarea {
+            width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line);
+            border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0;
+        }
+        .check { display: flex; gap: 8px; align-items: flex-start; font-size: .88rem; line-height: 1.4; }
+        .check input { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 auto; }
+
+        .ergebnis {
+            background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; font-size: .9rem; line-height: 1.5;
+            font-variant-numeric: tabular-nums;
+        }
+        .ergebnis b { color: var(--accent-dark); }
+        .warn { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 8px 10px; font-size: .82rem; line-height: 1.45; }
+        .info { color: var(--muted); font-size: .8rem; line-height: 1.5; margin: 0; }
+
+        .posten { display: grid; gap: 6px; }
+        .posten-zeile {
+            display: grid; grid-template-columns: 1fr 110px auto; gap: 6px; align-items: center;
+            border: 1px solid var(--line); border-radius: 10px; padding: 6px; background: #fff;
+        }
+        .posten-zeile.mit-extra { grid-template-columns: 1fr 100px 80px auto; }
+        .posten-zeile input { padding: 7px 9px; font-size: 15px; }
+        .posten-zeile .extra { display: flex; align-items: center; gap: 4px; font-size: .72rem; color: var(--muted); }
+        .posten-zeile .extra input[type=checkbox] { width: 16px; height: 16px; }
+        .posten-zeile .meta { grid-column: 1 / -1; font-size: .72rem; color: var(--muted); padding: 0 2px; }
+        @media (max-width: 520px) {
+            .posten-zeile, .posten-zeile.mit-extra { grid-template-columns: 1fr 96px auto; }
+            .posten-zeile .extra { grid-column: 1 / -1; }
+        }
+        .x-btn { border: 0; background: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; padding: 4px 6px; }
+
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn {
+            border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px;
+            padding: 9px 13px; min-height: 42px; font: inherit; font-weight: bold; font-size: .88rem; cursor: pointer;
+        }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.gefahr { color: var(--danger); }
+
+        .zus h3 { font-family: Georgia, serif; font-size: .98rem; margin: 6px 0 4px; }
+        .zus table { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums; }
+        .zus td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        .zus td:last-child { text-align: right; white-space: nowrap; font-weight: bold; }
+        .zus .wo { color: var(--muted); font-size: .76rem; display: block; }
+        .zus .leer { color: var(--muted); font-size: .85rem; }
+
+        footer.quellen { font-size: .76rem; color: var(--muted); line-height: 1.6; }
+        footer.quellen a { color: var(--accent); }
+
+        [hidden] { display: none !important; }
+        @media (max-width: 520px) { .sd-logo { display: none !important; } }
+
+        @media print {
+            .topbar, .knoepfe, .hinweis.nur-schirm, details:not(.zus-karte) { display: none !important; }
+            body { background: #fff; }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div>
+                <strong>Steuer-Helfer</strong>
+                <small>Hilfe zum Ausfüllen – Abgabe in Mein ELSTER</small>
+            </div>
+        </div>
+        <label class="jahr-wahl" title="Steuerjahr">
+            <select id="jahr" aria-label="Steuerjahr"></select>
+        </label>
+    </header>
+
+    <main>
+        <div class="hinweis">
+            <strong>ℹ️ So funktioniert der Steuer-Helfer</strong>
+            Hier sammelst und berechnest du deine Angaben, sortiert nach den Anlagen der Steuererklärung. Unten bekommst du eine Zusammenfassung mit den Beträgen und wo sie in <b>Mein ELSTER</b> hingehören. Die <b>Abgabe machst du selbst</b> in Mein ELSTER (kostenlos, <a href="https://www.elster.de" target="_blank" rel="noopener">elster.de</a>).
+            <br>🔒 Deine Angaben bleiben <b>nur auf diesem Gerät</b> gespeichert.
+            <br>⚠️ <b>Keine Steuerberatung</b> – Angaben und Berechnungen ohne Gewähr. Bei Unsicherheit hilft ein Lohnsteuerhilfeverein oder Steuerberater.
+            <div id="fristInfo" style="margin-top:6px"></div>
+        </div>
+
+        <!-- Anlage N -->
+        <details class="karte" id="karteN" open>
+            <summary><div class="titel"><h2>💼 Anlage N – Werbungskosten</h2><small>Arbeitsweg, Homeoffice, Arbeitsmittel, Bewerbungen …</small></div><span class="summe" id="sumN">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Werbungskosten sind Ausgaben für deinen Job. Bis zum Arbeitnehmer-Pauschbetrag (<span class="w-ap"></span>) zieht das Finanzamt sie automatisch ab – Einzelnachweise lohnen sich, wenn du darüber kommst.</p>
+
+                <h3 style="margin:4px 0 0;font-size:.95rem">🚗 Arbeitsweg (Entfernungspauschale)</h3>
+                <div class="zeile">
+                    <label class="feld">Arbeitstage im Büro/Betrieb <span class="hilfe">Tage, an denen du hingefahren bist (oft 200–230)</span>
+                        <input type="text" inputmode="numeric" data-f="n.arbeitstage" placeholder="z. B. 210"></label>
+                    <label class="feld">Einfache Entfernung in km <span class="hilfe">kürzeste Straßenverbindung, nur Hinweg</span>
+                        <input type="text" inputmode="decimal" data-f="n.entfernung" placeholder="z. B. 18"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld">Verkehrsmittel
+                        <select data-f="n.verkehrsmittel">
+                            <option value="auto">Eigenes Auto / Motorrad</option>
+                            <option value="oepnv">Bus & Bahn</option>
+                            <option value="rad">Fahrrad / zu Fuß / Mitfahrer</option>
+                        </select></label>
+                    <label class="feld" id="ticketFeld">Ticketkosten im Jahr (Bus & Bahn) <span class="hilfe">nur wenn höher als die Pauschale</span>
+                        <input type="text" inputmode="decimal" data-f="n.ticketkosten" placeholder="z. B. 696"></label>
+                </div>
+                <div class="ergebnis" id="ergWeg"></div>
+
+                <h3 style="margin:4px 0 0;font-size:.95rem">🏠 Homeoffice</h3>
+                <label class="feld">Tage überwiegend zu Hause gearbeitet <span class="hilfe">Tagespauschale, max. 210 Tage</span>
+                    <input type="text" inputmode="numeric" data-f="n.hoTage" placeholder="z. B. 40"></label>
+                <div class="ergebnis" id="ergHo"></div>
+
+                <h3 style="margin:4px 0 0;font-size:.95rem">🖥️ Arbeitsmittel</h3>
+                <p class="info">z. B. Laptop, Software, Fachbücher, Werkzeug, Berufskleidung. Bei teilweise privater Nutzung nur den beruflichen Anteil.</p>
+                <div class="posten" id="liste-arbeitsmittel"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="arbeitsmittel">＋ Arbeitsmittel</button></div>
+
+                <h3 style="margin:4px 0 0;font-size:.95rem">📨 Bewerbungskosten</h3>
+                <p class="info">Bewerbungsmappen, Druck, Porto, Fotos, Bewerbungs-Software – auch wenn die Bewerbung nicht geklappt hat. Belege aufheben!</p>
+                <div class="posten" id="liste-bewerbung"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="bewerbung">＋ Bewerbungskosten</button></div>
+                <p class="info">Fahrten zu Vorstellungsgesprächen: gefahrene Kilometer (hin + zurück) – mit dem Auto <span class="w-reise"></span> pro km.</p>
+                <div class="posten" id="liste-vorstellung"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="vorstellung">＋ Fahrt zum Vorstellungsgespräch</button></div>
+
+                <h3 style="margin:4px 0 0;font-size:.95rem">🎓 Fortbildung & Sonstiges</h3>
+                <div class="posten" id="liste-fortbildung"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="fortbildung">＋ Fortbildung</button><button type="button" class="btn" data-neu="sonstige_wk">＋ Sonstige Werbungskosten</button></div>
+                <div class="posten" id="liste-sonstige_wk"></div>
+                <div class="zeile">
+                    <label class="feld">Gewerkschaft / Berufsverband (Beiträge im Jahr)
+                        <input type="text" inputmode="decimal" data-f="n.gewerkschaft" placeholder="0"></label>
+                    <label class="check" style="align-self:end"><input type="checkbox" data-f="n.kontofuehrung"> <span>Kontoführungspauschale (<span class="w-konto"></span>) ansetzen – vom Finanzamt üblicherweise ohne Nachweis anerkannt</span></label>
+                </div>
+                <div class="ergebnis" id="ergN"></div>
+            </div>
+        </details>
+
+        <!-- Anlage Kind -->
+        <details class="karte" id="karteKind">
+            <summary><div class="titel"><h2>👶 Anlage Kind – Kinderbetreuung</h2><small>Kita, Tagesmutter, Hort, Babysitter</small></div><span class="summe" id="sumKind">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Betreuungskosten für Kinder unter 14 Jahren. Absetzbar: <span class="w-kb"></span>. Nicht absetzbar: Essen, Schulgeld, Nachhilfe. Bezahlung per Überweisung (keine Barzahlung) und Rechnung nötig.</p>
+                <div class="posten" id="liste-kinder"></div>
+                <div class="knoepfe"><button type="button" class="btn" id="neuKind">＋ Kind</button></div>
+                <div class="ergebnis" id="ergKind"></div>
+            </div>
+        </details>
+
+        <!-- Sonderausgaben -->
+        <details class="karte" id="karteSonder">
+            <summary><div class="titel"><h2>🎁 Anlage Sonderausgaben – Spenden</h2><small>Spenden und Mitgliedsbeiträge an gemeinnützige Organisationen</small></div><span class="summe" id="sumSonder">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Bis 300 € pro Spende reicht als Nachweis meist der Kontoauszug, darüber eine Zuwendungsbestätigung der Organisation. Spenden an politische Parteien gelten gesondert.</p>
+                <div class="posten" id="liste-spende"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="spende">＋ Spende</button></div>
+                <div class="ergebnis" id="ergSonder"></div>
+            </div>
+        </details>
+
+        <!-- Haushaltsnahe Aufwendungen -->
+        <details class="karte" id="karteHaushalt">
+            <summary><div class="titel"><h2>🧹 Haushaltsnahe Aufwendungen</h2><small>Putzhilfe, Gärtner, Handwerker, Nebenkosten</small></div><span class="summe" id="sumHaushalt">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Hier werden <b>20 % direkt von der Steuer</b> abgezogen. Nur <b>Arbeitskosten</b> zählen (kein Material), nur per <b>Überweisung</b> bezahlt, mit Rechnung. Mieter finden die Beträge oft in der Nebenkostenabrechnung.</p>
+                <h3 style="margin:4px 0 0;font-size:.95rem">Haushaltsnahe Dienstleistungen</h3>
+                <p class="info">z. B. Reinigung, Gartenpflege, Hausmeister, Treppenhausreinigung, Pflege- und Betreuungsleistungen.</p>
+                <div class="posten" id="liste-dienst"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="dienst">＋ Dienstleistung</button></div>
+                <h3 style="margin:4px 0 0;font-size:.95rem">Handwerkerleistungen</h3>
+                <p class="info">z. B. Reparaturen, Malerarbeiten, Wartung der Heizung, Schornsteinfeger – nur der Arbeitsanteil der Rechnung.</p>
+                <div class="posten" id="liste-handwerk"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="handwerk">＋ Handwerker</button></div>
+                <label class="feld">Minijob im Privathaushalt (Kosten im Jahr)
+                    <input type="text" inputmode="decimal" data-f="haushalt.minijob" placeholder="0"></label>
+                <div class="ergebnis" id="ergHaushalt"></div>
+            </div>
+        </details>
+
+        <!-- Außergewöhnliche Belastungen -->
+        <details class="karte" id="karteKrank">
+            <summary><div class="titel"><h2>🩺 Außergewöhnliche Belastungen – Krankheitskosten</h2><small>Zuzahlungen, Brille, Zahnersatz, Medikamente mit Rezept</small></div><span class="summe" id="sumKrank">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Selbst bezahlte Krankheitskosten (was die Kasse nicht übernommen hat). Das Finanzamt zieht davon eine „zumutbare Belastung“ ab, die von Einkommen, Familienstand und Kinderzahl abhängt – oft wirkt sich erst ein größerer Betrag aus. Eintragen lohnt sich trotzdem, die Berechnung macht das Finanzamt.</p>
+                <div class="posten" id="liste-krank"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-neu="krank">＋ Krankheitskosten</button></div>
+                <div class="ergebnis" id="ergKrank"></div>
+            </div>
+        </details>
+
+        <!-- Belege erfassen -->
+        <details class="karte" id="karteBelege">
+            <summary><div class="titel"><h2>📷 Beleg fotografieren & einordnen</h2><small>Quittung oder Rechnung – die KI liest Betrag, Datum und Art</small></div></summary>
+            <div class="inhalt">
+                <p class="info">Fotografiere einen Beleg oder wähle eine Datei (Foto, PDF). Die KI schlägt Betrag, Datum und Kategorie vor – du prüfst und übernimmst. Der Beleg selbst wird nicht gespeichert, nur die Angaben. <b>Belege bitte aufheben</b> – das Finanzamt kann sie anfordern.</p>
+                <div class="knoepfe"><button type="button" class="btn prim" id="belegBtn">📷 Beleg erfassen</button></div>
+                <p class="info" id="belegStatus" aria-live="polite"></p>
+            </div>
+        </details>
+
+        <!-- Zusammenfassung -->
+        <details class="karte zus-karte" id="karteZus" open>
+            <summary><div class="titel"><h2>📋 Zusammenfassung für Mein ELSTER</h2><small>Diese Beträge überträgst du in deine Steuererklärung</small></div></summary>
+            <div class="inhalt zus" id="zusammenfassung"></div>
+            <div class="inhalt">
+                <div class="knoepfe">
+                    <button type="button" class="btn prim" id="pdfBtn">📄 Als PDF speichern</button>
+                    <a class="btn" href="https://www.elster.de/eportal/start" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">🔗 Zu Mein ELSTER</a>
+                </div>
+                <p class="info">Bezeichnungen in Mein ELSTER können je Jahr leicht abweichen. Lohn, Lohnsteuer und Sozialversicherung stehen auf deiner Lohnsteuerbescheinigung – sie sind in Mein ELSTER meist schon vorausgefüllt („Belegabruf“).</p>
+            </div>
+        </details>
+
+        <details class="karte">
+            <summary><div class="titel"><h2>💾 Daten sichern & löschen</h2><small>Alles bleibt auf diesem Gerät</small></div></summary>
+            <div class="inhalt">
+                <p class="info">Deine Angaben werden nur in diesem Browser gespeichert. Mit einer Sicherung kannst du sie auf ein anderes Gerät mitnehmen.</p>
+                <div class="knoepfe">
+                    <button type="button" class="btn" id="exportBtn">⬇️ Sicherung herunterladen</button>
+                    <button type="button" class="btn" id="importBtn">⬆️ Sicherung laden</button>
+                    <input type="file" id="importDatei" accept="application/json,.json" hidden>
+                    <button type="button" class="btn gefahr" id="loeschBtn">🗑️ Dieses Jahr löschen</button>
+                </div>
+                <p class="info" id="datenStatus" aria-live="polite"></p>
+            </div>
+        </details>
+
+        <footer class="quellen" id="quellen"></footer>
+    </main>
+
+    <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
+    <script src="../sd-ki.js?v=15"></script>
+    <script>
+        'use strict';
+
+        // ------------------------------------------------------------
+        // Steuerwerte je Steuerjahr (Quellen siehe QUELLEN unten).
+        // Stand: Oktober 2026. Jedes Jahr pruefen und ergaenzen!
+        // ------------------------------------------------------------
+        const JAHRE = {
+            2024: {
+                ap: 1230,                    // Arbeitnehmer-Pauschbetrag (§ 9a EStG)
+                kmBis20: 0.30, kmAb21: 0.38, // Entfernungspauschale (§ 9 Abs. 1 Nr. 4 EStG)
+                kmEinheitlich: null,
+                hoTag: 6, hoMaxTage: 210,    // Tagespauschale Homeoffice (§ 4 Abs. 5 Nr. 6c EStG)
+                kbQuote: 2 / 3, kbMax: 4000, // Kinderbetreuungskosten (§ 10 Abs. 1 Nr. 5 EStG)
+                gewerkschaftExtra: false,
+                frist: '31.07.2025'
+            },
+            2025: {
+                ap: 1230, kmBis20: 0.30, kmAb21: 0.38, kmEinheitlich: null,
+                hoTag: 6, hoMaxTage: 210, kbQuote: 0.8, kbMax: 4800,
+                gewerkschaftExtra: false,
+                frist: '31.07.2026'
+            },
+            2026: {
+                ap: 1230, kmBis20: null, kmAb21: null, kmEinheitlich: 0.38, // Steueraenderungsgesetz 2025
+                hoTag: 6, hoMaxTage: 210, kbQuote: 0.8, kbMax: 4800,
+                gewerkschaftExtra: true,     // Gewerkschaftsbeitraege zusaetzlich zum Pauschbetrag
+                frist: '31.07.2027'
+            }
+        };
+        const FEST = {
+            kmHoechst: 4500,      // Hoechstbetrag Entfernungspauschale ohne eigenes Auto
+            reiseKm: 0.30,        // Dienstreise-Pauschale pro km mit dem Auto (Vorstellungsgespraech)
+            konto: 16,            // Kontofuehrungspauschale (Verwaltungspraxis)
+            gwg: 952,             // Sofortabzug Arbeitsmittel bis 800 € netto = 952 € brutto
+            hhDienstMax: 4000, hhHandwerkMax: 1200, hhMinijobMax: 510, hhQuote: 0.2 // § 35a EStG
+        };
+        const QUELLEN = [
+            ['Bundesfinanzministerium: Änderungen 2025 (Kinderbetreuungskosten 80 %, max. 4.800 €)', 'https://www.bundesfinanzministerium.de/Content/DE/Standardartikel/Themen/Steuern/das-aendert-sich-2025.html'],
+            ['Steueränderungsgesetz 2025: Entfernungspauschale 38 Cent ab dem 1. km ab 2026, Gewerkschaftsbeiträge zusätzlich', 'https://www.bakertilly.de/beitrag/steueraenderungsgesetz-2025-final-verabschiedet'],
+            ['§ 35a EStG – haushaltsnahe Aufwendungen (Gesetzestext)', 'https://www.gesetze-im-internet.de/estg/__35a.html'],
+            ['Mein ELSTER – Steuererklärung online abgeben', 'https://www.elster.de']
+        ];
+
+        const SPEICHER = 'sdSteuerHelfer';
+        const $ = (id) => document.getElementById(id);
+        const euro = (n) => (Math.round((n || 0) * 100) / 100).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+        const zahl = (v) => {
+            if (typeof v === 'number') return isFinite(v) ? v : 0;
+            const s = String(v || '').replace(/[€\s]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+            const n = parseFloat(s);
+            return isFinite(n) ? n : 0;
+        };
+
+        // ------------------------------------------------------------
+        // Daten (nur localStorage dieses Geraets)
+        // ------------------------------------------------------------
+        const KATEGORIEN = {
+            arbeitsmittel: 'Arbeitsmittel',
+            bewerbung: 'Bewerbungskosten',
+            vorstellung: 'Fahrt zum Vorstellungsgespräch',
+            fortbildung: 'Fortbildung',
+            sonstige_wk: 'Sonstige Werbungskosten',
+            spende: 'Spende',
+            dienst: 'Haushaltsnahe Dienstleistung',
+            handwerk: 'Handwerkerleistung',
+            krank: 'Krankheitskosten',
+            kinderbetreuung: 'Kinderbetreuung'
+        };
+        function leer() {
+            return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false },
+                haushalt: { minijob: '' }, kinder: [], posten: [] };
+        }
+        let alle = {};
+        try { alle = JSON.parse(localStorage.getItem(SPEICHER) || '{}') || {}; } catch (e) { alle = {}; }
+        const jahre = Object.keys(JAHRE).map(Number).sort((a, b) => b - a);
+        // Standard: das Jahr, fuer das gerade typischerweise die Erklaerung gemacht wird (Vorjahr)
+        let jahr = Number(alle._jahr) || Math.min(Math.max(new Date().getFullYear() - 1, jahre[jahre.length - 1]), jahre[0]);
+        function daten() {
+            if (!alle[jahr]) alle[jahr] = leer();
+            const d = alle[jahr];
+            d.n = Object.assign(leer().n, d.n || {});
+            d.haushalt = Object.assign(leer().haushalt, d.haushalt || {});
+            d.kinder = d.kinder || [];
+            d.posten = d.posten || [];
+            return d;
+        }
+        function speichern() {
+            alle._jahr = jahr;
+            try { localStorage.setItem(SPEICHER, JSON.stringify(alle)); } catch (e) { /* voll/gesperrt */ }
+        }
+        const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+        // ------------------------------------------------------------
+        // Berechnung
+        // ------------------------------------------------------------
+        function berechne() {
+            const W = JAHRE[jahr];
+            const d = daten();
+            const r = { hinweise: [] };
+            const summe = (kat) => d.posten.filter(p => p.kategorie === kat).reduce((s, p) => s + zahl(p.betrag), 0);
+
+            // Arbeitsweg
+            const tage = Math.max(0, Math.round(zahl(d.n.arbeitstage)));
+            const km = Math.max(0, Math.floor(zahl(d.n.entfernung)));   // nur volle Kilometer
+            let weg;
+            if (W.kmEinheitlich != null) weg = tage * km * W.kmEinheitlich;
+            else weg = tage * (Math.min(km, 20) * W.kmBis20 + Math.max(km - 20, 0) * W.kmAb21);
+            r.wegPauschale = weg;
+            r.wegGedeckelt = false;
+            if (d.n.verkehrsmittel !== 'auto' && weg > FEST.kmHoechst) { weg = FEST.kmHoechst; r.wegGedeckelt = true; }
+            r.wegTicket = false;
+            if (d.n.verkehrsmittel === 'oepnv' && zahl(d.n.ticketkosten) > weg) { weg = zahl(d.n.ticketkosten); r.wegTicket = true; }
+            r.weg = weg; r.tage = tage; r.km = km;
+
+            // Homeoffice
+            const hoTage = Math.max(0, Math.round(zahl(d.n.hoTage)));
+            r.hoTage = Math.min(hoTage, W.hoMaxTage);
+            r.ho = r.hoTage * W.hoTag;
+            r.hoGekappt = hoTage > W.hoMaxTage;
+
+            // Arbeitsmittel (ueber 952 € brutto nur Computer/Software sofort)
+            r.am = 0; r.amZuTeuer = [];
+            d.posten.filter(p => p.kategorie === 'arbeitsmittel').forEach(p => {
+                const b = zahl(p.betrag);
+                const anteil = Math.min(100, Math.max(0, p.anteil === '' || p.anteil == null ? 100 : zahl(p.anteil))) / 100;
+                if (b > FEST.gwg && !p.computer) { r.amZuTeuer.push(p.text || 'Arbeitsmittel'); return; }
+                r.am += b * anteil;
+            });
+
+            r.bewerbung = summe('bewerbung');
+            r.vorstellungKm = d.posten.filter(p => p.kategorie === 'vorstellung').reduce((s, p) => s + zahl(p.km), 0);
+            r.vorstellung = r.vorstellungKm * FEST.reiseKm + summe('vorstellung');
+            r.fortbildung = summe('fortbildung');
+            r.sonstigeWk = summe('sonstige_wk');
+            r.konto = d.n.kontofuehrung ? FEST.konto : 0;
+            r.gewerkschaft = zahl(d.n.gewerkschaft);
+
+            const ohneGew = r.weg + r.ho + r.am + r.bewerbung + r.vorstellung + r.fortbildung + r.sonstigeWk + r.konto;
+            r.wkSumme = ohneGew + r.gewerkschaft;
+            if (W.gewerkschaftExtra) {
+                r.wkAngesetzt = Math.max(ohneGew, W.ap) + r.gewerkschaft;
+                r.ueberPausch = ohneGew > W.ap;
+            } else {
+                r.wkAngesetzt = Math.max(r.wkSumme, W.ap);
+                r.ueberPausch = r.wkSumme > W.ap;
+            }
+            r.mehrAlsPausch = r.wkAngesetzt - W.ap;
+
+            // Kinderbetreuung (Kind unter 14: vor (Jahr - 14) geboren -> nein)
+            r.kinder = d.kinder.map(k => {
+                const kosten = zahl(k.kosten);
+                const gj = Math.round(zahl(k.geburtsjahr));
+                // Abziehbar bis zum Monat vor dem 14. Geburtstag
+                const zuAlt = gj > 0 && gj < jahr - 14;
+                const teilweise = gj > 0 && gj === jahr - 14;
+                return { name: k.name || 'Kind', kosten, zuAlt, teilweise, abziehbar: zuAlt ? 0 : Math.min(kosten * W.kbQuote, W.kbMax) };
+            });
+            r.kindSumme = r.kinder.reduce((s, k) => s + k.abziehbar, 0);
+
+            r.spenden = summe('spende');
+            r.krank = summe('krank');
+
+            r.dienst = summe('dienst');
+            r.handwerk = summe('handwerk');
+            r.minijob = zahl(d.haushalt.minijob);
+            r.ermDienst = Math.min(r.dienst * FEST.hhQuote, FEST.hhDienstMax);
+            r.ermHandwerk = Math.min(r.handwerk * FEST.hhQuote, FEST.hhHandwerkMax);
+            r.ermMinijob = Math.min(r.minijob * FEST.hhQuote, FEST.hhMinijobMax);
+            r.ermSumme = r.ermDienst + r.ermHandwerk + r.ermMinijob;
+            return r;
+        }
+
+        // ------------------------------------------------------------
+        // Anzeige
+        // ------------------------------------------------------------
+        function wegText(W) {
+            return W.kmEinheitlich != null
+                ? euro(W.kmEinheitlich).replace(' €', ' €') + ' pro km ab dem 1. km'
+                : euro(W.kmBis20) + ' pro km für die ersten 20 km, ab km 21 ' + euro(W.kmAb21);
+        }
+
+        function aktualisiere() {
+            const W = JAHRE[jahr];
+            const r = berechne();
+            const d = daten();
+
+            document.querySelectorAll('.w-ap').forEach(el => { el.textContent = euro(W.ap); });
+            document.querySelectorAll('.w-reise').forEach(el => { el.textContent = euro(FEST.reiseKm); });
+            document.querySelectorAll('.w-konto').forEach(el => { el.textContent = euro(FEST.konto); });
+            document.querySelectorAll('.w-kb').forEach(el => {
+                el.textContent = (W.kbQuote === 0.8 ? '80 %' : '2/3') + ' der Kosten, höchstens ' + euro(W.kbMax) + ' pro Kind';
+            });
+            $('fristInfo').innerHTML = '📅 Steuerjahr <b>' + jahr + '</b>: Wer zur Abgabe verpflichtet ist, gibt ohne Steuerberater bis <b>' + W.frist + '</b> ab. Freiwillig (z. B. für eine Erstattung) geht es bis zu 4 Jahre rückwirkend.';
+            $('ticketFeld').hidden = d.n.verkehrsmittel !== 'oepnv';
+
+            $('ergWeg').innerHTML = r.tage && r.km
+                ? 'Satz ' + jahr + ': ' + wegText(W) + '.<br>' + r.tage + ' Tage × ' + r.km + ' km = <b>' + euro(r.wegPauschale) + '</b>' +
+                  (r.wegGedeckelt ? '<br>⚠️ Ohne eigenes Auto höchstens ' + euro(FEST.kmHoechst) + ' im Jahr.' : '') +
+                  (r.wegTicket ? '<br>✓ Deine Ticketkosten sind höher – angesetzt: <b>' + euro(r.weg) + '</b>' : '')
+                : 'Trage Arbeitstage und Entfernung ein. Satz ' + jahr + ': ' + wegText(W) + '.';
+            $('ergHo').innerHTML = r.hoTage
+                ? r.hoTage + ' Tage × ' + euro(W.hoTag) + ' = <b>' + euro(r.ho) + '</b>' + (r.hoGekappt ? ' (höchstens ' + W.hoMaxTage + ' Tage)' : '') +
+                  '<br><span class="info">An Tagen, an denen du zur Arbeit gefahren bist, gibt es die Tagespauschale nur, wenn dir dort kein Arbeitsplatz zur Verfügung stand.</span>'
+                : euro(W.hoTag) + ' pro Tag, höchstens ' + W.hoMaxTage + ' Tage (' + euro(W.hoTag * W.hoMaxTage) + ').';
+
+            let nText = 'Deine Werbungskosten: <b>' + euro(r.wkSumme) + '</b><br>';
+            if (r.ueberPausch) nText += '✓ Das ist mehr als der Pauschbetrag (' + euro(W.ap) + ') – Eintragen lohnt sich: <b>' + euro(r.mehrAlsPausch) + '</b> mehr Werbungskosten.';
+            else nText += 'Noch unter dem Pauschbetrag (' + euro(W.ap) + '), den das Finanzamt sowieso abzieht' + (W.gewerkschaftExtra && r.gewerkschaft ? ' – Gewerkschaftsbeiträge zählen ab ' + jahr + ' aber zusätzlich.' : '. Eintragen schadet nicht.');
+            if (r.amZuTeuer.length) nText += '<div class="warn" style="margin-top:6px">⚠️ Über ' + euro(FEST.gwg) + ' (brutto) – nicht sofort voll absetzbar, sondern über mehrere Jahre (Abschreibung): ' + r.amZuTeuer.map(esc).join(', ') + '. Nicht mitgerechnet. Ausnahme: Computer & Software (Haken setzen).</div>';
+            $('ergN').innerHTML = nText;
+            $('sumN').textContent = euro(r.wkSumme);
+
+            $('ergKind').innerHTML = r.kinder.length
+                ? r.kinder.map(k => esc(k.name) + ': ' + (k.zuAlt ? '⚠️ ab 14 Jahren nicht mehr absetzbar' : euro(k.kosten) + ' → absetzbar <b>' + euro(k.abziehbar) + '</b>' + (k.teilweise ? ' <span class="info">(wird ' + jahr + ' 14 – nur Kosten bis vor dem 14. Geburtstag eintragen)</span>' : ''))).join('<br>')
+                : 'Füge ein Kind hinzu, wenn du Betreuungskosten hattest.';
+            $('sumKind').textContent = euro(r.kindSumme);
+
+            $('ergSonder').innerHTML = 'Spenden gesamt: <b>' + euro(r.spenden) + '</b>';
+            $('sumSonder').textContent = euro(r.spenden);
+
+            $('ergHaushalt').innerHTML =
+                'Dienstleistungen ' + euro(r.dienst) + ' → Steuerermäßigung <b>' + euro(r.ermDienst) + '</b> (max. ' + euro(FEST.hhDienstMax) + ')<br>' +
+                'Handwerker ' + euro(r.handwerk) + ' → <b>' + euro(r.ermHandwerk) + '</b> (max. ' + euro(FEST.hhHandwerkMax) + ')<br>' +
+                'Minijob ' + euro(r.minijob) + ' → <b>' + euro(r.ermMinijob) + '</b> (max. ' + euro(FEST.hhMinijobMax) + ')<br>' +
+                'Zusammen bis zu <b>' + euro(r.ermSumme) + '</b> weniger Steuer.';
+            $('sumHaushalt').textContent = euro(r.ermSumme);
+
+            $('ergKrank').innerHTML = 'Krankheitskosten gesamt: <b>' + euro(r.krank) + '</b> (davon zieht das Finanzamt die zumutbare Belastung ab)';
+            $('sumKrank').textContent = euro(r.krank);
+
+            zeigeZusammenfassung(r);
+            speichern();
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Zusammenfassung: was gehoert wohin in Mein ELSTER
+        function zusammenfassungDaten(r) {
+            const W = JAHRE[jahr];
+            const d = daten();
+            const gruppen = [];
+            const n = [];
+            if (r.weg) n.push(['Wege zwischen Wohnung und erster Tätigkeitsstätte', r.tage + ' Arbeitstage, ' + r.km + ' km einfache Entfernung, ' + ({ auto: 'eigenes Auto', oepnv: 'Bus & Bahn', rad: 'Fahrrad/zu Fuß/Mitfahrer' })[d.n.verkehrsmittel] + (r.wegTicket ? ' – Ticketkosten ' + euro(r.weg) + ' angeben' : ''), r.weg]);
+            if (r.ho) n.push(['Tagespauschale (Homeoffice)', r.hoTage + ' Tage', r.ho]);
+            if (r.am) n.push(['Arbeitsmittel', d.posten.filter(p => p.kategorie === 'arbeitsmittel' && zahl(p.betrag) && (zahl(p.betrag) <= FEST.gwg || p.computer)).map(p => {
+                const anteil = p.anteil === '' || p.anteil == null ? 100 : zahl(p.anteil);
+                return (p.text || 'Arbeitsmittel') + ' ' + euro(zahl(p.betrag)) + (anteil < 100 ? ' (' + anteil + ' % beruflich)' : '');
+            }).join('; ') + (r.amZuTeuer.length ? ' – nicht enthalten (Abschreibung nötig): ' + r.amZuTeuer.join(', ') : ''), r.am]);
+            if (r.fortbildung) n.push(['Fortbildungskosten', posten('fortbildung'), r.fortbildung]);
+            if (r.gewerkschaft) n.push(['Beiträge zu Berufsverbänden', 'Gewerkschaft/Berufsverband', r.gewerkschaft]);
+            const weitere = r.bewerbung + r.vorstellung + r.sonstigeWk + r.konto;
+            if (weitere) n.push(['Weitere Werbungskosten', [
+                r.bewerbung ? 'Bewerbungskosten ' + euro(r.bewerbung) : '',
+                r.vorstellung ? 'Fahrten zu Vorstellungsgesprächen ' + euro(r.vorstellung) + (r.vorstellungKm ? ' (' + r.vorstellungKm + ' km × ' + euro(FEST.reiseKm) + ')' : '') : '',
+                r.konto ? 'Kontoführung ' + euro(r.konto) : '',
+                r.sonstigeWk ? posten('sonstige_wk') : ''
+            ].filter(Boolean).join('; '), weitere]);
+            gruppen.push({ titel: 'Anlage N – Werbungskosten', zeilen: n, fuss: r.ueberPausch
+                ? 'Summe ' + euro(r.wkSumme) + ' – über dem Pauschbetrag von ' + euro(W.ap) + '.'
+                : 'Summe ' + euro(r.wkSumme) + ' – unter dem Pauschbetrag von ' + euro(W.ap) + ' (wird automatisch angesetzt).' });
+            gruppen.push({ titel: 'Anlage Kind – Kinderbetreuungskosten (je Kind eine eigene Anlage Kind)', zeilen: r.kinder.filter(k => k.kosten).map(k => [esc(k.name), k.zuAlt ? 'ab 14 Jahren – nicht absetzbar' : 'tatsächliche Kosten angeben – das Finanzamt rechnet ' + (W.kbQuote === 0.8 ? '80 %' : '2/3') + ' (hier geschätzt: ' + euro(k.abziehbar) + ')', k.kosten]) });
+            gruppen.push({ titel: 'Anlage Sonderausgaben – Zuwendungen (Spenden und Mitgliedsbeiträge)', zeilen: r.spenden ? [['Spenden an gemeinnützige Organisationen', posten('spende'), r.spenden]] : [] });
+            const hh = [];
+            if (r.minijob) hh.push(['Haushaltsnahe Beschäftigung (Minijob)', 'Aufwendungen im Jahr', r.minijob]);
+            if (r.dienst) hh.push(['Haushaltsnahe Dienstleistungen', 'nur Arbeitskosten – ' + posten('dienst'), r.dienst]);
+            if (r.handwerk) hh.push(['Handwerkerleistungen', 'nur Arbeitskosten – ' + posten('handwerk'), r.handwerk]);
+            gruppen.push({ titel: 'Anlage Haushaltsnahe Aufwendungen', zeilen: hh, fuss: hh.length ? 'Eingetragen werden die Kosten; die Ermäßigung (hier ca. ' + euro(r.ermSumme) + ') rechnet das Finanzamt.' : '' });
+            gruppen.push({ titel: 'Anlage Außergewöhnliche Belastungen – Krankheitskosten', zeilen: r.krank ? [['Krankheitskosten (selbst bezahlt)', posten('krank'), r.krank]] : [] });
+            return gruppen;
+        }
+        function posten(kat) {
+            return daten().posten.filter(p => p.kategorie === kat && zahl(p.betrag)).map(p => (p.text || KATEGORIEN[kat]) + ' ' + euro(zahl(p.betrag))).join('; ');
+        }
+
+        function zeigeZusammenfassung(r) {
+            const gruppen = zusammenfassungDaten(r);
+            const box = $('zusammenfassung');
+            let html = '<p class="info">Steuerjahr <b>' + jahr + '</b>. Trage diese Beträge in Mein ELSTER in die genannten Anlagen ein.</p>';
+            let irgendwas = false;
+            gruppen.forEach(g => {
+                if (!g.zeilen.length) return;
+                irgendwas = true;
+                html += '<h3>' + esc(g.titel) + '</h3><table>' + g.zeilen.map(z =>
+                    '<tr><td>' + esc(z[0]) + '<span class="wo">' + esc(z[1]) + '</span></td><td>' + euro(z[2]) + '</td></tr>').join('') + '</table>' +
+                    (g.fuss ? '<p class="info" style="margin-top:4px">' + esc(g.fuss) + '</p>' : '');
+            });
+            if (!irgendwas) html += '<p class="leer">Noch keine Angaben – fülle oben die passenden Bereiche aus.</p>';
+            box.innerHTML = html;
+        }
+
+        // ------------------------------------------------------------
+        // Eingabefelder (data-f="bereich.feld") und Posten-Listen
+        // ------------------------------------------------------------
+        function feldWert(pfad) {
+            const [a, b] = pfad.split('.');
+            return daten()[a][b];
+        }
+        function setzeFeld(pfad, wert) {
+            const [a, b] = pfad.split('.');
+            daten()[a][b] = wert;
+        }
+        function ladeFelder() {
+            document.querySelectorAll('[data-f]').forEach(el => {
+                const w = feldWert(el.dataset.f);
+                if (el.type === 'checkbox') el.checked = !!w;
+                else el.value = w == null ? '' : w;
+            });
+        }
+        document.querySelectorAll('[data-f]').forEach(el => {
+            const ev = el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input';
+            el.addEventListener(ev, () => {
+                setzeFeld(el.dataset.f, el.type === 'checkbox' ? el.checked : el.value);
+                aktualisiere();
+            });
+        });
+
+        const LISTEN = ['arbeitsmittel', 'bewerbung', 'vorstellung', 'fortbildung', 'sonstige_wk', 'spende', 'dienst', 'handwerk', 'krank'];
+        const PLATZHALTER = {
+            arbeitsmittel: 'z. B. Laptop', bewerbung: 'z. B. Mappen & Porto', vorstellung: 'z. B. Gespräch bei Firma X',
+            fortbildung: 'z. B. Sprachkurs', sonstige_wk: 'z. B. Fachzeitschrift', spende: 'z. B. Rotes Kreuz',
+            dienst: 'z. B. Treppenhausreinigung', handwerk: 'z. B. Malerarbeiten (Arbeitsanteil)', krank: 'z. B. Brille'
+        };
+
+        function zeichneListe(kat) {
+            const box = $('liste-' + kat);
+            if (!box) return;
+            box.innerHTML = '';
+            daten().posten.filter(p => p.kategorie === kat).forEach(p => {
+                const z = document.createElement('div');
+                z.className = 'posten-zeile' + (kat === 'arbeitsmittel' ? ' mit-extra' : '');
+                const text = document.createElement('input');
+                text.type = 'text'; text.value = p.text || ''; text.placeholder = PLATZHALTER[kat] || '';
+                text.setAttribute('aria-label', 'Bezeichnung');
+                text.oninput = () => { p.text = text.value; aktualisiere(); };
+                const betrag = document.createElement('input');
+                betrag.type = 'text'; betrag.inputMode = 'decimal';
+                if (kat === 'vorstellung') {
+                    betrag.value = p.km || ''; betrag.placeholder = 'km';
+                    betrag.setAttribute('aria-label', 'Kilometer hin und zurück');
+                    betrag.oninput = () => { p.km = betrag.value; aktualisiere(); };
+                } else {
+                    betrag.value = p.betrag || ''; betrag.placeholder = 'Betrag €';
+                    betrag.setAttribute('aria-label', 'Betrag in Euro');
+                    betrag.oninput = () => { p.betrag = betrag.value; aktualisiere(); };
+                }
+                z.append(text, betrag);
+                if (kat === 'arbeitsmittel') {
+                    const extra = document.createElement('div');
+                    extra.className = 'extra';
+                    extra.innerHTML = '<input type="text" inputmode="numeric" style="width:52px" aria-label="Beruflicher Anteil in Prozent"> % <label style="display:flex;gap:3px;align-items:center"><input type="checkbox"> PC/Software</label>';
+                    const [anteil, pc] = extra.querySelectorAll('input');
+                    anteil.value = p.anteil == null || p.anteil === '' ? '100' : p.anteil;
+                    anteil.oninput = () => { p.anteil = anteil.value; aktualisiere(); };
+                    pc.checked = !!p.computer;
+                    pc.onchange = () => { p.computer = pc.checked; aktualisiere(); };
+                    z.appendChild(extra);
+                }
+                const x = document.createElement('button');
+                x.type = 'button'; x.className = 'x-btn'; x.textContent = '✕'; x.setAttribute('aria-label', 'Entfernen');
+                x.onclick = () => { daten().posten = daten().posten.filter(q => q !== p); zeichneListe(kat); aktualisiere(); };
+                z.appendChild(x);
+                if (p.datum || p.anbieter) {
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.textContent = '📷 ' + [p.datum, p.anbieter].filter(Boolean).join(' · ');
+                    z.appendChild(meta);
+                }
+                box.appendChild(z);
+            });
+        }
+        function zeichneKinder() {
+            const box = $('liste-kinder');
+            box.innerHTML = '';
+            daten().kinder.forEach(k => {
+                const z = document.createElement('div');
+                z.className = 'posten-zeile mit-extra';
+                z.innerHTML = '<input type="text" placeholder="Vorname" aria-label="Vorname des Kindes">' +
+                    '<input type="text" inputmode="decimal" placeholder="Kosten €" aria-label="Betreuungskosten im Jahr">' +
+                    '<input type="text" inputmode="numeric" placeholder="Geb.-Jahr" aria-label="Geburtsjahr">' +
+                    '<button type="button" class="x-btn" aria-label="Entfernen">✕</button>';
+                const [name, kosten, gj] = z.querySelectorAll('input');
+                name.value = k.name || ''; kosten.value = k.kosten || ''; gj.value = k.geburtsjahr || '';
+                name.oninput = () => { k.name = name.value; aktualisiere(); };
+                kosten.oninput = () => { k.kosten = kosten.value; aktualisiere(); };
+                gj.oninput = () => { k.geburtsjahr = gj.value; aktualisiere(); };
+                z.querySelector('.x-btn').onclick = () => { daten().kinder = daten().kinder.filter(q => q !== k); zeichneKinder(); aktualisiere(); };
+                box.appendChild(z);
+            });
+        }
+        function zeichneAlles() {
+            ladeFelder();
+            LISTEN.forEach(zeichneListe);
+            zeichneKinder();
+            aktualisiere();
+        }
+
+        document.querySelectorAll('[data-neu]').forEach(b => {
+            b.onclick = () => {
+                const kat = b.dataset.neu;
+                daten().posten.push({ id: neueId(), kategorie: kat, text: '', betrag: '', km: '' });
+                zeichneListe(kat);
+                const felder = $('liste-' + kat).querySelectorAll('input[type=text]');
+                const letztes = $('liste-' + kat).lastElementChild;
+                if (letztes) letztes.querySelector('input').focus();
+                void felder;
+                aktualisiere();
+            };
+        });
+        $('neuKind').onclick = () => {
+            daten().kinder.push({ name: '', kosten: '', geburtsjahr: '' });
+            zeichneKinder();
+            const letztes = $('liste-kinder').lastElementChild;
+            if (letztes) letztes.querySelector('input').focus();
+            aktualisiere();
+        };
+
+        // ------------------------------------------------------------
+        // Steuerjahr
+        // ------------------------------------------------------------
+        jahre.forEach(j => {
+            const o = document.createElement('option');
+            o.value = j; o.textContent = 'Jahr ' + j;
+            $('jahr').appendChild(o);
+        });
+        $('jahr').value = jahr;
+        $('jahr').onchange = () => { jahr = Number($('jahr').value); zeichneAlles(); };
+
+        // ------------------------------------------------------------
+        // Beleg erfassen (KI liest Foto/PDF, siehe sd-ki.js)
+        // ------------------------------------------------------------
+        const BELEG_KATEGORIEN = ['arbeitsmittel', 'bewerbung', 'fortbildung', 'sonstige_wk', 'spende', 'dienst', 'handwerk', 'krank', 'kinderbetreuung'];
+        function belegRegeln(text) {
+            const w = {};
+            const datum = String(text).match(/\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/);
+            if (datum) w.datum = datum[0];
+            const summe = String(text).match(/(?:gesamt|summe|total|zu zahlen|endbetrag|betrag)[^\d\n]{0,20}(\d{1,5}(?:[.,]\d{3})*[.,]\d{2})/i);
+            if (summe) w.betrag = summe[1];
+            return w;
+        }
+        $('belegBtn').onclick = () => {
+            if (!window.sdKi || !window.sdKi.einleseDialog) { $('belegStatus').textContent = 'Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.'; return; }
+            window.sdKi.einleseDialog({
+                titel: '📷 Beleg erfassen',
+                beschreibung: 'Fotografiere den Beleg oder wähle eine Datei. Die KI schlägt die Angaben vor – du prüfst sie, bevor sie übernommen werden.',
+                ohneVerbessern: true,
+                dokumentArt: 'ein Kassenbon, eine Quittung oder Rechnung für die Steuererklärung (Steuerjahr ' + jahr + ')',
+                felder: [
+                    { id: 'betrag', label: 'Betrag (€)', hinweis: 'Endbetrag inkl. MwSt. als Zahl mit Komma, z. B. 49,90' },
+                    { id: 'datum', label: 'Datum', hinweis: 'TT.MM.JJJJ' },
+                    { id: 'kategorie', label: 'Kategorie', optionen: BELEG_KATEGORIEN, hinweis: 'arbeitsmittel = Dinge für den Job (Laptop, Bücher, Werkzeug); bewerbung = Bewerbungsmappen, Fotos, Porto; fortbildung = Kurse, Seminare; sonstige_wk = andere Ausgaben für den Job; spende = Spende an gemeinnützige Organisation; dienst = Reinigung, Garten, Pflege im Haushalt; handwerk = Handwerker im Haushalt (nur Arbeitskosten); krank = Arzt, Zahnarzt, Brille, Apotheke mit Rezept; kinderbetreuung = Kita, Tagesmutter' },
+                    { id: 'text', label: 'Beschreibung', hinweis: 'kurz, was gekauft/bezahlt wurde' },
+                    { id: 'anbieter', label: 'Geschäft / Anbieter' },
+                    { id: 'arbeitskosten', label: 'Davon Arbeitskosten (€)', hinweis: 'nur bei Handwerker- oder Dienstleistungs-Rechnungen, falls ausgewiesen' }
+                ],
+                heuristik: belegRegeln,
+                uebernehmen: (werte) => {
+                    let kat = BELEG_KATEGORIEN.includes(werte.kategorie) ? werte.kategorie : 'sonstige_wk';
+                    let betrag = werte.betrag || '';
+                    if ((kat === 'handwerk' || kat === 'dienst') && werte.arbeitskosten) betrag = werte.arbeitskosten;
+                    if (kat === 'kinderbetreuung') {
+                        // Betreuungskosten dem ersten Kind zuordnen (oder neues Kind anlegen)
+                        const d = daten();
+                        if (!d.kinder.length) d.kinder.push({ name: '', kosten: '', geburtsjahr: '' });
+                        d.kinder[0].kosten = String((zahl(d.kinder[0].kosten) + zahl(betrag)).toFixed(2)).replace('.', ',');
+                        zeichneKinder();
+                        $('karteKind').open = true;
+                    } else {
+                        daten().posten.push({ id: neueId(), kategorie: kat, text: werte.text || werte.anbieter || '', betrag, datum: werte.datum || '', anbieter: werte.anbieter || '' });
+                        zeichneListe(kat);
+                        const karte = { spende: 'karteSonder', dienst: 'karteHaushalt', handwerk: 'karteHaushalt', krank: 'karteKrank' }[kat] || 'karteN';
+                        $(karte).open = true;
+                    }
+                    aktualisiere();
+                    $('belegStatus').textContent = '✓ Beleg übernommen: ' + (KATEGORIEN[kat] || kat) + ', ' + euro(zahl(betrag)) + '.';
+                    return 1;
+                }
+            });
+        };
+
+        // ------------------------------------------------------------
+        // PDF (jsPDF, im Browser)
+        // ------------------------------------------------------------
+        function ladeSkript(url, name) {
+            return new Promise((ok, fehler) => {
+                if (window[name]) return ok(window[name]);
+                const s = document.createElement('script');
+                s.src = url;
+                s.onload = () => window[name] ? ok(window[name]) : fehler(new Error(name));
+                s.onerror = () => fehler(new Error('Keine Verbindung'));
+                document.head.appendChild(s);
+            });
+        }
+        // Standardschrift im PDF kennt nur westeuropaeische Zeichen
+        const pdfText = (s) => String(s).replace(/[–—]/g, '-').replace(/[^\x20-\x7E\xA0-\xFF€„“‚‘’…•\n]/g, '');
+        $('pdfBtn').onclick = async () => {
+            const btn = $('pdfBtn');
+            btn.disabled = true;
+            try {
+                const jspdf = await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
+                const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+                const R = 18, B = 210 - 2 * R;
+                let y = 20;
+                const neu = (h) => { if (y + h > 280) { doc.addPage(); y = 20; } };
+                const zeile = (t, { gr = 10, fett = false, rechts = null, farbe = 0 } = {}) => {
+                    doc.setFont('helvetica', fett ? 'bold' : 'normal');
+                    doc.setFontSize(gr);
+                    doc.setTextColor(farbe);
+                    const breite = rechts ? B - 34 : B;
+                    const teile = doc.splitTextToSize(pdfText(t), breite);
+                    neu(teile.length * gr * 0.45 + 1);
+                    doc.text(teile, R, y);
+                    if (rechts) { doc.setFont('helvetica', 'bold'); doc.text(pdfText(rechts), 210 - R, y, { align: 'right' }); }
+                    y += teile.length * gr * 0.45 + 1.5;
+                };
+                const r = berechne();
+                zeile('Steuer-Helfer – Zusammenfassung Steuerjahr ' + jahr, { gr: 15, fett: true });
+                zeile('Zum Übertragen in Mein ELSTER. Keine Steuerberatung, Angaben ohne Gewähr. Erstellt am ' + new Date().toLocaleDateString('de-DE') + '.', { gr: 8.5, farbe: 110 });
+                y += 3;
+                let irgendwas = false;
+                zusammenfassungDaten(r).forEach(g => {
+                    if (!g.zeilen.length) return;
+                    irgendwas = true;
+                    y += 2;
+                    zeile(g.titel, { gr: 11.5, fett: true });
+                    g.zeilen.forEach(z => {
+                        zeile(z[0], { gr: 10, fett: true, rechts: euro(z[2]) });
+                        if (z[1]) zeile(z[1], { gr: 8.5, farbe: 90 });
+                    });
+                    if (g.fuss) zeile(g.fuss, { gr: 8.5, farbe: 90 });
+                });
+                if (!irgendwas) zeile('Noch keine Angaben eingetragen.', { gr: 10 });
+                y += 4;
+                zeile('Belege aufbewahren – das Finanzamt kann sie anfordern. Abgabe: www.elster.de', { gr: 8.5, farbe: 110 });
+                doc.save('Steuer-Zusammenfassung-' + jahr + '.pdf');
+            } catch (e) {
+                alert('PDF konnte nicht erstellt werden: ' + (e.message || e));
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        // ------------------------------------------------------------
+        // Sichern / Laden / Loeschen
+        // ------------------------------------------------------------
+        $('exportBtn').onclick = () => {
+            const blob = new Blob([JSON.stringify(alle, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'steuer-helfer-sicherung.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+            $('datenStatus').textContent = '✓ Sicherung heruntergeladen.';
+        };
+        $('importBtn').onclick = () => $('importDatei').click();
+        $('importDatei').onchange = async (e) => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+                const neu = JSON.parse(await f.text());
+                if (!neu || typeof neu !== 'object') throw new Error('kein gültiges Format');
+                if (!confirm('Sicherung laden? Die Angaben auf diesem Gerät werden für die enthaltenen Jahre ersetzt.')) return;
+                Object.keys(neu).forEach(k => { alle[k] = neu[k]; });
+                zeichneAlles();
+                $('datenStatus').textContent = '✓ Sicherung geladen.';
+            } catch (err) {
+                $('datenStatus').textContent = 'Die Datei konnte nicht gelesen werden: ' + (err.message || err);
+            }
+        };
+        $('loeschBtn').onclick = () => {
+            if (!confirm('Alle Angaben für das Steuerjahr ' + jahr + ' auf diesem Gerät löschen?')) return;
+            delete alle[jahr];
+            zeichneAlles();
+            $('datenStatus').textContent = '✓ Steuerjahr ' + jahr + ' gelöscht.';
+        };
+
+        $('quellen').innerHTML = '<b>Quellen der Beträge</b> (Stand Oktober 2026): ' + QUELLEN.map(([t, u]) => '<a href="' + u + '" target="_blank" rel="noopener">' + esc(t) + '</a>').join(' · ') +
+            '. Arbeitnehmer-Pauschbetrag 1.230 € (§ 9a EStG), Tagespauschale Homeoffice 6 €/Tag bis 210 Tage, Entfernungspauschale bis 2025: 30 Cent bis km 20, 38 Cent ab km 21.';
+
+        zeichneAlles();
+    </script>
+</body>
+
+</html>
