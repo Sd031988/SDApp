@@ -2968,7 +2968,11 @@
             const aktiverTab = document.querySelector(`.mode-tab[onclick="zeigeModus('${modus}')"]`);
             aktiverTab.classList.add('active');
             const label = document.getElementById('mode-menu-label');
-            if (label) label.textContent = aktiverTab.textContent;
+            if (label) {
+                label.textContent = aktiverTab.textContent;
+                // Damit ein Sprachwechsel das Label nicht auf "Kündigung" zuruecksetzt
+                if (aktiverTab.dataset.i18n) label.dataset.i18n = aktiverTab.dataset.i18n;
+            }
             const menu = document.getElementById('mode-menu');
             if (menu) menu.classList.remove('open');
         }
@@ -3134,6 +3138,21 @@
             }
             updateVorschau();
             speichereDaten();
+            // Hinweis oben im Brief-Bereich und direkt dorthin springen
+            const fehltName = !document.getElementById('vorname').value.trim() || !document.getElementById('nachname').value.trim();
+            const box = document.createElement('div');
+            box.id = 'post-hinweis';
+            box.setAttribute('role', 'status');
+            box.style.cssText = 'background:#e8f3ef;border:1px solid #9cc9bb;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:.9rem;line-height:1.5';
+            const en = window.SD_LANG === 'en';
+            box.innerHTML = '<b>' + (en ? '📬 Reply from the letter assistant inserted.' : '📬 Antwort aus dem Post-Assistenten übernommen.') + '</b><br>' +
+                (en ? 'Read it carefully and fill in all [gaps].' : 'Bitte genau lesen und alle [Lücken] ausfüllen.') +
+                (fehltName ? ' <a href="#vorname" id="post-hinweis-name">' + (en ? 'Your name and address are still missing (top of the page) – enter them there.' : 'Oben fehlen noch dein Name und deine Adresse – bitte dort eintragen.') + '</a>' : '');
+            const panel = document.getElementById('brief-panel');
+            panel.insertBefore(box, panel.firstChild);
+            const link = document.getElementById('post-hinweis-name');
+            if (link) link.onclick = (e) => { e.preventDefault(); const f = document.getElementById('vorname'); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => f.focus({ preventScroll: true }), 400); };
+            setTimeout(() => { box.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300);
         })();
 
         document.querySelector('.editor-sidebar').addEventListener('input', speichereDaten);
