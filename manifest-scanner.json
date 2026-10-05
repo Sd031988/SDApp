@@ -3,7 +3,7 @@
   "name": "SD Scanner",
   "short_name": "SD Scanner",
   "description": "Dokumente mit der Kamera scannen, zuschneiden und mit Filtern verbessern",
-  "start_url": "./scanner.html",
+  "start_url": "./scanner/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#030b14",
