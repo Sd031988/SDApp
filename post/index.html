@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Post-Assistent</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Briefe fotografieren und verstehen: Erklärung in einfacher Sprache, Fristen erkennen, Kalender-Erinnerung, Antwort entwerfen">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root { --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7; --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --danger: #b42318; --danger-bg: #fdf0ee; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); min-height: 100dvh; }
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 520px) { .brand small, .sd-logo { display: none; } }
+
+        main { max-width: 760px; margin: 0 auto; padding: 14px 16px 110px; display: grid; gap: 14px; }
+        .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+        .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.1rem; }
+        .karte h3 { margin: 0; font-size: .92rem; }
+        .info { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 0; }
+        label.feld { display: grid; gap: 4px; font-size: .82rem; font-weight: bold; min-width: 0; }
+        label.feld small { font-weight: normal; color: var(--muted); }
+        input[type=text], input[type=date], select, textarea { width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; }
+        textarea { resize: vertical; line-height: 1.5; }
+        .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 520px) { .zeile { grid-template-columns: 1fr; } }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px 14px; min-height: 44px; font: inherit; font-weight: bold; font-size: .9rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.klein { min-height: 36px; padding: 5px 10px; font-size: .82rem; }
+        .btn.aktiv { background: #fdecea; border-color: #e5484d; }
+        .btn:disabled { opacity: .5; cursor: default; }
+        .status { font-size: .82rem; color: var(--muted); min-height: 1.2em; margin: 0; }
+        .fehler { background: var(--danger-bg); border: 1px solid #f1c4bf; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: .88rem; }
+        .hinweis { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 10px 12px; font-size: .84rem; line-height: 1.5; }
+        details.text-einfuegen summary { cursor: pointer; font-size: .85rem; font-weight: bold; color: var(--accent-dark); }
+        details.text-einfuegen textarea { margin-top: 8px; }
+
+        .seiten { display: flex; flex-wrap: wrap; gap: 8px; }
+        .seite { position: relative; width: 84px; height: 110px; border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; display: grid; place-items: center; font-size: .7rem; text-align: center; padding: 4px; overflow-wrap: anywhere; }
+        .seite img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+        .seite .nr { position: absolute; left: 4px; bottom: 4px; background: rgba(23, 42, 58, .75); color: #fff; border-radius: 6px; padding: 1px 6px; font-weight: bold; }
+        .seite button { position: absolute; right: 3px; top: 3px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(23, 42, 58, .8); color: #fff; cursor: pointer; font-size: .85rem; line-height: 1; }
+
+        .kopf { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .badge { background: var(--accent-soft); color: var(--accent-dark); border-radius: 999px; padding: 3px 10px; font-size: .78rem; font-weight: bold; }
+        .fakten { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: .88rem; margin: 0; }
+        .fakten dt { color: var(--muted); }
+        .fakten dd { margin: 0; white-space: pre-line; overflow-wrap: anywhere; min-width: 0; }
+        .text { font-size: .92rem; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; margin: 0; }
+        .frist-box { border: 2px solid var(--accent); border-radius: 12px; padding: 12px; display: grid; gap: 10px; background: #fff; }
+        .frist-box.dringend { border-color: var(--danger); background: var(--danger-bg); }
+        .frist-gross { font-family: Georgia, serif; font-size: 1.15rem; font-weight: bold; margin: 0; }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip { border: 1px solid var(--accent); background: #fff; color: var(--accent-dark); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .84rem; cursor: pointer; text-align: left; }
+        .chip.an { background: var(--accent); color: #fff; }
+
+        .liste { display: grid; gap: 8px; }
+        .eintrag { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; display: grid; gap: 6px; }
+        .eintrag.erledigt { opacity: .6; }
+        .eintrag .oben { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+        .eintrag b { overflow-wrap: anywhere; }
+        .tage { font-size: .8rem; font-weight: bold; border-radius: 999px; padding: 2px 9px; background: var(--accent-soft); color: var(--accent-dark); white-space: nowrap; }
+        .tage.bald { background: var(--warn-bg); color: #8a5a00; }
+        .tage.ueber { background: var(--danger-bg); color: var(--danger); }
+        .hilfe-liste { margin: 0; padding-left: 20px; font-size: .86rem; line-height: 1.6; }
+        [dir=rtl] { text-align: right; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Post-Assistent</strong><small data-i18n="untertitel">Briefe verstehen, Fristen nicht verpassen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Schritt 1: Brief erfassen -->
+        <section class="karte" id="erfassen">
+            <h2 data-i18n="s1_titel">📬 Welchen Brief hast du bekommen?</h2>
+            <p class="info" data-i18n="s1_info">Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) – oder wähle ein PDF. Bis zu 6 Seiten.</p>
+            <input type="file" id="kameraInput" accept="image/*" capture="environment" hidden>
+            <input type="file" id="dateiInput" accept="image/*,application/pdf,.pdf,.docx,.txt" multiple hidden>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="kameraBtn" data-i18n="foto">📷 Seite fotografieren</button>
+                <button type="button" class="btn" id="dateiBtn" data-i18n="datei">📎 Datei / Foto wählen</button>
+            </div>
+            <div class="seiten" id="seiten"></div>
+            <details class="text-einfuegen">
+                <summary data-i18n="text_summary">… oder Text des Briefs einfügen</summary>
+                <textarea id="briefText" rows="5" data-i18n-placeholder="text_ph" placeholder="Text hier einfügen (z. B. aus einer E-Mail oder einem PDF)"></textarea>
+            </details>
+            <label class="feld"><span data-i18n="sprache_lbl">Erklärung auf</span>
+                <select id="erklSprache"></select></label>
+            <div id="kiWahl"></div>
+            <div class="knoepfe"><button type="button" class="btn prim" id="erklaerenBtn" data-i18n="erklaeren">🔍 Brief erklären</button></div>
+            <p class="status" id="status1" aria-live="polite"></p>
+            <div class="fehler" id="fehler1" hidden></div>
+        </section>
+
+        <!-- Schritt 2: Ergebnis -->
+        <section class="karte" id="ergebnis" hidden>
+            <div class="kopf"><span class="badge" id="artBadge"></span><span class="info" id="sprachInfo"></span></div>
+            <h2 data-i18n="worum">📄 Worum geht es?</h2>
+            <p class="text" id="zusammenfassung" dir="auto"></p>
+            <dl class="fakten" id="fakten"></dl>
+
+            <div class="frist-box" id="fristBox">
+                <h3 data-i18n="frist_titel">⏰ Frist</h3>
+                <p class="frist-gross" id="fristText" dir="auto"></p>
+                <p class="text" id="fristWas" dir="auto"></p>
+                <div class="zeile">
+                    <label class="feld"><span data-i18n="frist_datum">Datum der Frist</span><input type="date" id="fristDatum"></label>
+                    <label class="feld"><span data-i18n="erinnern">Erinnern</span>
+                        <select id="vorlauf">
+                            <option value="1" data-i18n="vor1">1 Tag vorher</option>
+                            <option value="3" selected data-i18n="vor3">3 Tage vorher</option>
+                            <option value="7" data-i18n="vor7">1 Woche vorher</option>
+                        </select></label>
+                </div>
+                <p class="info" id="fristHinweis"></p>
+                <div class="knoepfe">
+                    <button type="button" class="btn prim" id="kalenderBtn" data-i18n="kalender">📅 Erinnerung in den Kalender</button>
+                    <button type="button" class="btn" id="merkenBtn" data-i18n="merken">📌 In meine Fristenliste</button>
+                </div>
+                <p class="status" id="fristStatus" aria-live="polite"></p>
+            </div>
+
+            <div id="aufgabenBlock">
+                <h3 data-i18n="aufgaben">✅ Was du jetzt tun solltest</h3>
+                <p class="text" id="aufgaben" dir="auto"></p>
+            </div>
+            <div class="hinweis" id="wichtigBlock">
+                <h3 data-i18n="wichtig">⚠️ Wichtig</h3>
+                <p class="text" id="wichtig" dir="auto"></p>
+            </div>
+            <div class="fehler" id="rohBlock" hidden></div>
+            <p class="info" data-i18n="ki_hinweis">Die Erklärung kommt von einer KI und kann Fehler enthalten. Prüfe Fristen, Beträge und Zeichen immer im Original-Brief. Keine Rechtsberatung.</p>
+        </section>
+
+        <!-- Schritt 3: Antwort -->
+        <section class="karte" id="antwortKarte" hidden>
+            <h2 data-i18n="antwort_titel">✍️ Antwort schreiben</h2>
+            <div class="chips" id="vorschlaege"></div>
+            <label class="feld"><span data-i18n="anliegen">Was möchtest du antworten?</span> <small data-i18n="anliegen_hilfe">In deinen Worten und in deiner Sprache – z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.</small>
+                <textarea id="anliegen" rows="3" dir="auto"></textarea></label>
+            <p class="status" id="spInfo"></p>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="mikroBtn">🎤</button>
+                <button type="button" class="btn prim" id="entwurfBtn" data-i18n="entwurf">✨ Antwort entwerfen</button>
+            </div>
+            <p class="status" id="status3" aria-live="polite"></p>
+            <div class="fehler" id="fehler3" hidden></div>
+            <div id="entwurfBlock" hidden>
+                <div style="display:grid;gap:10px">
+                    <label class="feld"><span data-i18n="betreff">Betreff</span><input type="text" id="entwurfBetreff"></label>
+                    <label class="feld"><span data-i18n="brieftext">Brieftext (auf Deutsch, an den Absender)</span>
+                        <textarea id="entwurfText" rows="10"></textarea></label>
+                    <div id="uebersetzungBlock" hidden>
+                        <h3 data-i18n="uebersetzung">🌍 Das steht in deiner Antwort</h3>
+                        <p class="text info" id="uebersetzung" dir="auto"></p>
+                    </div>
+                    <p class="info" data-i18n="entwurf_hinweis">Lies den Entwurf genau. Ergänze alle [Lücken] und streiche, was nicht stimmt. Wichtige Briefe (z. B. Widerspruch) per Einschreiben oder mit Eingangsbestätigung schicken und eine Kopie behalten.</p>
+                    <div class="knoepfe">
+                        <button type="button" class="btn prim" id="schreibstudioBtn" data-i18n="schreibstudio">📄 Im Schreibstudio als Brief öffnen</button>
+                        <button type="button" class="btn" id="kopierenBtn" data-i18n="kopieren">📋 Kopieren</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fristenliste -->
+        <section class="karte" id="listeKarte">
+            <h2 data-i18n="liste_titel">🗂️ Meine Briefe &amp; Fristen</h2>
+            <p class="info" id="listeLeer" data-i18n="liste_leer">Noch nichts gemerkt. Nach dem Erklären kannst du einen Brief mit „📌 In meine Fristenliste“ hier speichern – nur auf diesem Gerät.</p>
+            <div class="liste" id="liste"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="hilfe_titel">🤝 Hier gibt es kostenlose oder günstige Hilfe</h2>
+            <ul class="hilfe-liste" id="hilfeListe"></ul>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Post-Assistent', untertitel: 'Briefe verstehen, Fristen nicht verpassen', s1_titel: '📬 Welchen Brief hast du bekommen?',
+                s1_info: 'Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) – oder wähle ein PDF. Bis zu 6 Seiten.',
+                foto: '📷 Seite fotografieren', datei: '📎 Datei / Foto wählen', text_summary: '… oder Text des Briefs einfügen', text_ph: 'Text hier einfügen (z. B. aus einer E-Mail oder einem PDF)',
+                sprache_lbl: 'Erklärung auf', erklaeren: '🔍 Brief erklären', worum: '📄 Worum geht es?', frist_titel: '⏰ Frist', frist_datum: 'Datum der Frist', erinnern: 'Erinnern',
+                vor1: '1 Tag vorher', vor3: '3 Tage vorher', vor7: '1 Woche vorher', kalender: '📅 Erinnerung in den Kalender', merken: '📌 In meine Fristenliste',
+                aufgaben: '✅ Was du jetzt tun solltest', wichtig: '⚠️ Wichtig',
+                ki_hinweis: 'Die Erklärung kommt von einer KI und kann Fehler enthalten. Prüfe Fristen, Beträge und Zeichen immer im Original-Brief. Keine Rechtsberatung.',
+                antwort_titel: '✍️ Antwort schreiben', anliegen: 'Was möchtest du antworten?', anliegen_hilfe: 'In deinen Worten und in deiner Sprache – z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.',
+                entwurf: '✨ Antwort entwerfen', betreff: 'Betreff', brieftext: 'Brieftext (auf Deutsch, an den Absender)', uebersetzung: '🌍 Das steht in deiner Antwort',
+                entwurf_hinweis: 'Lies den Entwurf genau. Ergänze alle [Lücken] und streiche, was nicht stimmt. Wichtige Briefe (z. B. Widerspruch) per Einschreiben oder mit Eingangsbestätigung schicken und eine Kopie behalten.',
+                schreibstudio: '📄 Im Schreibstudio als Brief öffnen', kopieren: '📋 Kopieren', kopiert: '✓ Kopiert',
+                liste_titel: '🗂️ Meine Briefe & Fristen', liste_leer: 'Noch nichts gemerkt. Nach dem Erklären kannst du einen Brief mit „📌 In meine Fristenliste“ hier speichern – nur auf diesem Gerät.',
+                hilfe_titel: '🤝 Hier gibt es kostenlose oder günstige Hilfe',
+                hilfe: [
+                    'Verbraucherzentrale – Verträge, Rechnungen, Inkasso, Energie',
+                    'Schuldnerberatung (Caritas, Diakonie, AWO, Kommune) – bei Mahnungen und Schulden, kostenlos',
+                    'Mieterverein – Briefe vom Vermieter, Nebenkosten, Kündigung',
+                    'Sozialverband (VdK, SoVD) und unabhängige Erwerbslosenberatung – Jobcenter, Rente, Krankenkasse',
+                    'Amtsgericht (Rechtsantragstelle) – Beratungshilfeschein für eine günstige Anwalts-Beratung bei geringem Einkommen',
+                    'Migrationsberatung (MBE) und Jugendmigrationsdienst – Hilfe bei Behördenbriefen, auch in anderen Sprachen'
+                ],
+                seiten_max: 'Höchstens 6 Seiten.', seite_typ: 'Dieser Dateityp geht hier nicht. Bitte Foto, PDF, Word (.docx) oder Text.',
+                nichts: 'Bitte zuerst den Brief fotografieren, eine Datei wählen oder den Text einfügen.',
+                lese: '📖 Lese Seite {n} …', ki_laeuft: '🤖 Die KI liest und erklärt den Brief …', entwurf_laeuft: '🤖 Die KI entwirft die Antwort …',
+                f_absender: 'Absender', f_datum: 'Brief vom', f_zeichen: 'Zeichen / Nummer', f_betrag: 'Betrag',
+                keine_frist: 'Im Brief steht keine Frist.', frist_selbst: 'Kein festes Datum erkannt. Trag das Datum selbst ein – im Zweifel lieber ein paar Tage früher.',
+                frist_pruefen: 'Bitte das Datum mit dem Brief vergleichen.', frist_vorbei: '⚠️ Dieses Datum liegt schon in der Vergangenheit – handle sofort oder frag eine Beratungsstelle.',
+                datum_fehlt: 'Bitte zuerst das Datum der Frist eintragen.', gemerkt: '✓ In der Fristenliste gespeichert.', schon_gemerkt: '✓ Ist schon in der Fristenliste – aktualisiert.',
+                anliegen_fehlt: 'Bitte schreib oder sag kurz, was du antworten möchtest – oder tippe oben auf einen Vorschlag.',
+                nicht_verstanden: 'Die KI-Antwort hatte nicht das erwartete Format – hier ist sie:',
+                lotse_sprache: 'Hinweis: Mit 🔒 SD Lotse klappt die Erklärung am besten auf Deutsch oder Englisch.',
+                erklaert_auf: 'Erklärt auf {s}', heute: 'heute fällig', morgen: 'morgen fällig', noch: 'noch {n} Tage', ueber: 'seit {n} Tagen vorbei', ohne_datum: 'ohne Datum',
+                erledigt: '✅ Erledigt', wieder_offen: '↩️ Wieder offen', loeschen_frage: 'Diesen Eintrag löschen?', frist_von: 'Frist', aus_brief: 'Antwort auf',
+                kal_titel: 'Frist: {x}', unbekannt: 'Brief'
+            },
+            en: {
+                titel: 'Letter assistant', untertitel: 'Understand letters, never miss a deadline', s1_titel: '📬 Which letter did you receive?',
+                s1_info: 'Take a photo of each page (straight, bright, whole page) – or choose a PDF. Up to 6 pages.',
+                foto: '📷 Photograph page', datei: '📎 Choose file / photo', text_summary: '… or paste the text of the letter', text_ph: 'Paste text here (e.g. from an e-mail or PDF)',
+                sprache_lbl: 'Explain in', erklaeren: '🔍 Explain letter', worum: '📄 What is it about?', frist_titel: '⏰ Deadline', frist_datum: 'Deadline date', erinnern: 'Remind me',
+                vor1: '1 day before', vor3: '3 days before', vor7: '1 week before', kalender: '📅 Reminder to calendar', merken: '📌 Add to my deadlines',
+                aufgaben: '✅ What you should do now', wichtig: '⚠️ Important',
+                ki_hinweis: 'The explanation comes from an AI and can contain mistakes. Always check deadlines, amounts and reference numbers in the original letter. Not legal advice.',
+                antwort_titel: '✍️ Write a reply', anliegen: 'What do you want to reply?', anliegen_hilfe: 'In your own words and language – e.g. "I can only pay €50 a month". Speak or type.',
+                entwurf: '✨ Draft reply', betreff: 'Subject', brieftext: 'Letter text (in German, to the sender)', uebersetzung: '🌍 What your reply says',
+                entwurf_hinweis: 'Read the draft carefully. Fill in all [gaps] and delete anything that is not true. Send important letters (e.g. an objection) by registered mail or with proof of receipt and keep a copy.',
+                schreibstudio: '📄 Open as letter in the writing studio', kopieren: '📋 Copy', kopiert: '✓ Copied',
+                liste_titel: '🗂️ My letters & deadlines', liste_leer: 'Nothing saved yet. After explaining a letter you can save it here with "📌 Add to my deadlines" – only on this device.',
+                hilfe_titel: '🤝 Free or low-cost help (Germany)',
+                hilfe: [
+                    'Verbraucherzentrale (consumer advice centre) – contracts, bills, debt collection, energy',
+                    'Debt counselling (Caritas, Diakonie, AWO, municipality) – reminders and debts, free',
+                    'Mieterverein (tenants\' association) – letters from your landlord, service charges, notice',
+                    'Social associations (VdK, SoVD) and independent unemployment advice – Jobcenter, pension, health insurance',
+                    'Local court (Rechtsantragstelle) – "Beratungshilfeschein" for low-cost legal advice on a low income',
+                    'Migration advice (MBE) and youth migration services – help with official letters, also in other languages'
+                ],
+                seiten_max: 'At most 6 pages.', seite_typ: 'This file type does not work here. Please use a photo, PDF, Word (.docx) or text.',
+                nichts: 'Please photograph the letter, choose a file or paste the text first.',
+                lese: '📖 Reading page {n} …', ki_laeuft: '🤖 The AI is reading and explaining the letter …', entwurf_laeuft: '🤖 The AI is drafting the reply …',
+                f_absender: 'Sender', f_datum: 'Letter dated', f_zeichen: 'Reference / number', f_betrag: 'Amount',
+                keine_frist: 'The letter does not state a deadline.', frist_selbst: 'No fixed date found. Enter the date yourself – if in doubt, a few days earlier.',
+                frist_pruefen: 'Please compare the date with the letter.', frist_vorbei: '⚠️ This date is already in the past – act now or ask an advice centre.',
+                datum_fehlt: 'Please enter the deadline date first.', gemerkt: '✓ Saved to your deadlines.', schon_gemerkt: '✓ Already in your deadlines – updated.',
+                anliegen_fehlt: 'Please write or say briefly what you want to reply – or tap a suggestion above.',
+                nicht_verstanden: 'The AI answer was not in the expected format – here it is:',
+                lotse_sprache: 'Note: with 🔒 SD Lotse the explanation works best in German or English.',
+                erklaert_auf: 'Explained in {s}', heute: 'due today', morgen: 'due tomorrow', noch: '{n} days left', ueber: 'overdue by {n} days', ohne_datum: 'no date',
+                erledigt: '✅ Done', wieder_offen: '↩️ Reopen', loeschen_frage: 'Delete this entry?', frist_von: 'Deadline', aus_brief: 'Reply to',
+                kal_titel: 'Deadline: {x}', unbekannt: 'Letter'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
+    <script src="../sd-ki.js?v=17"></script>
+    <script>
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        // Sprachen fuer die Erklaerung: Anzeige in der eigenen Sprache, Name fuer den Prompt
+        const SPRACHEN = [
+            { code: 'de', anzeige: 'Deutsch (einfache Sprache)', prompt: 'Deutsch, in einfacher Sprache' },
+            { code: 'en', anzeige: 'English', prompt: 'Englisch' },
+            { code: 'tr', anzeige: 'Türkçe', prompt: 'Türkisch' },
+            { code: 'ar', anzeige: 'العربية', prompt: 'Arabisch', rtl: true },
+            { code: 'uk', anzeige: 'Українська', prompt: 'Ukrainisch' },
+            { code: 'ru', anzeige: 'Русский', prompt: 'Russisch' },
+            { code: 'pl', anzeige: 'Polski', prompt: 'Polnisch' },
+            { code: 'ro', anzeige: 'Română', prompt: 'Rumänisch' },
+            { code: 'fa', anzeige: 'فارسی', prompt: 'Persisch (Farsi)', rtl: true }
+        ];
+        const MAX_SEITEN = 6;
+        const LISTE_KEY = 'sdPost';
+
+        let seiten = [];        // [{ file, url (Vorschau), name }]
+        let analyse = null;     // Ergebnis der Erklaerung
+        let briefTextCache = ''; // gelesener Text (fuer SD Lotse / Antwort)
+        let gewaehlteSprache = null;
+        let diktat = null;
+
+        // ------------------------------------------------------------
+        // Seiten erfassen
+        // ------------------------------------------------------------
+        const erlaubt = (f) => /^image\//.test(f.type) || f.type === 'application/pdf' || /\.(pdf|docx|txt)$/i.test(f.name || '');
+        function fuegeHinzu(dateien) {
+            zeigeFehler('fehler1', '');
+            for (const f of dateien) {
+                if (seiten.length >= MAX_SEITEN) { zeigeFehler('fehler1', t('seiten_max')); break; }
+                if (!erlaubt(f)) { zeigeFehler('fehler1', t('seite_typ')); continue; }
+                seiten.push({ file: f, name: f.name || 'Seite', url: /^image\//.test(f.type) ? URL.createObjectURL(f) : null });
+            }
+            zeigeSeiten();
+        }
+        function zeigeSeiten() {
+            $('seiten').innerHTML = seiten.map((s, n) =>
+                '<div class="seite">' + (s.url ? '<img src="' + s.url + '" alt="">' : '📄<br>' + esc(s.name)) +
+                '<span class="nr">' + (n + 1) + '</span><button type="button" data-weg="' + n + '" aria-label="Entfernen">✕</button></div>').join('');
+        }
+        $('seiten').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-weg]');
+            if (!b) return;
+            const s = seiten.splice(Number(b.dataset.weg), 1)[0];
+            if (s && s.url) URL.revokeObjectURL(s.url);
+            zeigeSeiten();
+        });
+        $('kameraBtn').onclick = () => $('kameraInput').click();
+        $('dateiBtn').onclick = () => $('dateiInput').click();
+        $('kameraInput').onchange = (e) => { fuegeHinzu(Array.from(e.target.files || [])); e.target.value = ''; };
+        $('dateiInput').onchange = (e) => { fuegeHinzu(Array.from(e.target.files || [])); e.target.value = ''; };
+
+        // Handyfotos sind oft 5-10 MB gross: fuer die KI auf max. 2000 px verkleinern
+        function verkleinere(file) {
+            return new Promise((ok) => {
+                if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(file.type) && !/^image\//.test(file.type)) { ok(file); return; }
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    const max = 2000;
+                    const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+                    if (f === 1 && file.size < 3 * 1024 * 1024 && /^image\/(jpeg|png|webp)$/.test(file.type)) { URL.revokeObjectURL(url); ok(file); return; }
+                    const c = document.createElement('canvas');
+                    c.width = Math.round(img.naturalWidth * f); c.height = Math.round(img.naturalHeight * f);
+                    const g = c.getContext('2d');
+                    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+                    g.drawImage(img, 0, 0, c.width, c.height);
+                    URL.revokeObjectURL(url);
+                    c.toBlob(b => ok(b ? new File([b], (file.name || 'seite').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file), 'image/jpeg', 0.85);
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); ok(file); };
+                img.src = url;
+            });
+        }
+        function alsBase64(file) {
+            return new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = fehler; r.readAsDataURL(file); });
+        }
+
+        // ------------------------------------------------------------
+        // Antwort der KI in Abschnitte zerlegen (### schluessel)
+        // ------------------------------------------------------------
+        function abschnitte(text) {
+            const roh = String(text || '').replace(/```[a-z]*\n?/gi, '');
+            const re = /^[ \t]*#{2,4}[ \t]*([a-zäöü_]+)[ \t]*:?[ \t]*(.*)$/gim;
+            const marken = [];
+            let m;
+            while ((m = re.exec(roh)) !== null) marken.push({ k: m[1].toLowerCase(), rest: m[2], s: m.index, e: re.lastIndex });
+            const teile = {};
+            marken.forEach((mk, n) => {
+                teile[mk.k] = ((mk.rest ? mk.rest + '\n' : '') + roh.slice(mk.e, n + 1 < marken.length ? marken[n + 1].s : undefined)).trim();
+            });
+            return { teile, roh: roh.trim(), anzahl: marken.length };
+        }
+        const leer = (s) => !s || /^\(?\s*(nicht angegeben|keine?s?|nichts|none|not stated|n\/a|-|–)\s*\)?\.?$/i.test(String(s).trim());
+
+        // Datum TT.MM.JJJJ (oder TT.MM.JJ) -> JJJJ-MM-TT
+        function findeDatum(s) {
+            const m = String(s || '').match(/\b(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4}|\d{2})\b/);
+            if (!m) return '';
+            let j = Number(m[3]); if (j < 100) j += 2000;
+            const d = new Date(j, Number(m[2]) - 1, Number(m[1]));
+            if (d.getMonth() !== Number(m[2]) - 1 || j < 2000 || j > 2100) return '';
+            return j + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+        }
+        function heuteIso() { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+        function tageBis(iso) { const a = new Date(heuteIso() + 'T00:00:00'); const b = new Date(iso + 'T00:00:00'); return Math.round((b - a) / 86400000); }
+        function deDatum(iso) { const [j, m, d] = iso.split('-'); return d + '.' + m + '.' + j; }
+
+        // ------------------------------------------------------------
+        // Brief erklaeren
+        // ------------------------------------------------------------
+        function zeigeFehler(id, text) { const f = $(id); f.textContent = text || ''; f.hidden = !text; }
+        function sprache() { return SPRACHEN.find(s => s.code === $('erklSprache').value) || SPRACHEN[0]; }
+
+        // Liefert { text, dateien } - Online-KIs bekommen die Bilder/PDFs,
+        // SD Lotse (nur Text) bekommt den gelesenen Text.
+        async function bereiteBriefVor(istLotse) {
+            const eingefuegt = $('briefText').value.trim();
+            const texte = [];
+            const dateien = [];
+            let groesse = 0;
+            for (let n = 0; n < seiten.length; n++) {
+                const s = seiten[n];
+                const istBildOderPdf = /^image\//.test(s.file.type) || s.file.type === 'application/pdf' || /\.pdf$/i.test(s.name);
+                if (!istLotse && istBildOderPdf) {
+                    $('status1').textContent = t('lese', { n: n + 1 });
+                    const f = /^image\//.test(s.file.type) ? await verkleinere(s.file) : s.file;
+                    groesse += f.size;
+                    if (groesse > 15 * 1024 * 1024) throw new Error(window.SD_LANG === 'en' ? 'The files are too large together (max. approx. 15 MB). Please use fewer pages or smaller photos.' : 'Die Dateien sind zusammen zu groß (max. ca. 15 MB). Bitte weniger Seiten oder kleinere Fotos nehmen.');
+                    dateien.push({ mime: /\.pdf$/i.test(s.name) ? 'application/pdf' : f.type, data: await alsBase64(f), name: s.name });
+                } else {
+                    const text = await window.sdKi.leseDatei(s.file, (x) => { $('status1').textContent = (seiten.length > 1 ? '(' + (n + 1) + '/' + seiten.length + ') ' : '') + x; });
+                    if (text) texte.push(text);
+                }
+            }
+            if (eingefuegt) texte.push(eingefuegt);
+            return { text: texte.join('\n\n--- Seite ---\n\n'), dateien };
+        }
+
+        $('erklaerenBtn').onclick = async () => {
+            zeigeFehler('fehler1', '');
+            if (!seiten.length && !$('briefText').value.trim()) { zeigeFehler('fehler1', t('nichts')); return; }
+            const istLotse = window.sdKi && window.sdKi.anbieter() === 'lotse';
+            const sp = sprache();
+            $('erklaerenBtn').disabled = true;
+            try {
+                const { text, dateien } = await bereiteBriefVor(istLotse);
+                if (!text.trim() && !dateien.length) throw new Error(t('nichts'));
+                briefTextCache = text;
+                $('status1').textContent = t('ki_laeuft');
+                const prompt =
+                    'Du hilfst Menschen, Briefe zu verstehen (z. B. von Behörden, Jobcenter, Krankenkasse, Vermieter, Firmen, Inkasso). ' +
+                    'Schreibe alle Erklärungen auf ' + sp.prompt + ': kurze Sätze, keine Fachwörter ohne Erklärung, freundlich und ruhig. ' +
+                    'Erfinde nichts – was nicht im Brief steht, schreibe als "nicht angegeben". ' +
+                    'Rechne keine Fristen aus, wenn im Brief kein Datum genannt ist – nenne dann die Regel aus dem Brief (z. B. "innerhalb eines Monats nach Bekanntgabe"). ' +
+                    'Heute ist der ' + deDatum(heuteIso()) + '.\n' +
+                    'Antworte NUR in diesem Format; die Überschriften genau so (auf Deutsch, klein geschrieben):\n' +
+                    '### art\n(1-3 Wörter, z. B. Rechnung, Mahnung, Bescheid, Anhörung, Termin/Einladung, Vertrag, Kündigung, Information, Werbung)\n' +
+                    '### absender\n(Name und Anschrift des Absenders genau wie im Brief, mehrzeilig)\n' +
+                    '### briefdatum\n(TT.MM.JJJJ oder nicht angegeben)\n' +
+                    '### zeichen\n(Aktenzeichen, Kunden-, Rechnungs- oder BG-Nummer genau wie im Brief, oder nicht angegeben)\n' +
+                    '### betrag\n(genannter oder zu zahlender Betrag mit Währung, oder nicht angegeben)\n' +
+                    '### frist\n(Datum TT.MM.JJJJ, wenn im Brief genannt; sonst die Frist-Regel aus dem Brief; sonst keine)\n' +
+                    '### frist_was\n(was bis zu dieser Frist passieren muss, 1 Satz)\n' +
+                    '### zusammenfassung\n(3-5 Sätze: Worum geht es? Was will der Absender von der Person?)\n' +
+                    '### aufgaben\n(Stichpunkte mit "- ": was die Person jetzt tun sollte, in sinnvoller Reihenfolge)\n' +
+                    '### wichtig\n(Stichpunkte mit "- ": Folgen, wenn man nichts tut; Widerspruchs- oder Einspruchsmöglichkeit; Unterlagen, die verlangt werden – oder keine)\n' +
+                    '### antworten\n(bis zu 4 sinnvolle Antwortmöglichkeiten, je eine Zeile mit "- ", z. B. Widerspruch einlegen, Ratenzahlung anfragen, Unterlagen nachreichen, Termin verschieben – oder keine)' +
+                    (text.trim() ? '\n\nText des Briefs' + (dateien.length ? ' (zusätzlich sind Fotos/PDF angehängt)' : '') + ':\n' + text.slice(0, istLotse ? 6000 : 20000) : '\n\nDer Brief ist als Foto/PDF angehängt.');
+                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 1400, dateien });
+                const { teile, roh, anzahl } = abschnitte(antwort);
+                analyse = { teile, roh: anzahl < 3 ? roh : '', sprache: sp.code, dateien: istLotse ? [] : dateien };
+                gewaehlteSprache = sp;
+                zeigeAnalyse();
+                $('status1').textContent = '';
+            } catch (err) {
+                $('status1').textContent = '';
+                zeigeFehler('fehler1', (err && err.message) || String(err));
+            } finally {
+                $('erklaerenBtn').disabled = false;
+            }
+        };
+
+        function zeigeAnalyse() {
+            const a = analyse.teile;
+            const sp = gewaehlteSprache || SPRACHEN[0];
+            document.querySelectorAll('#ergebnis [dir=auto], #antwortKarte [dir=auto]').forEach(el => { el.style.textAlign = sp.rtl ? 'right' : ''; });
+            $('artBadge').textContent = leer(a.art) ? t('unbekannt') : a.art.split('\n')[0];
+            $('sprachInfo').textContent = t('erklaert_auf', { s: sp.anzeige });
+            $('zusammenfassung').textContent = a.zusammenfassung || '';
+            const fakten = [['f_absender', a.absender], ['f_datum', a.briefdatum], ['f_zeichen', a.zeichen], ['f_betrag', a.betrag]].filter(([, v]) => !leer(v));
+            $('fakten').innerHTML = fakten.map(([k, v]) => '<dt>' + esc(t(k)) + '</dt><dd dir="auto">' + esc(v) + '</dd>').join('');
+            // Frist
+            const fristRoh = a.frist || '';
+            const iso = findeDatum(fristRoh);
+            const keine = leer(fristRoh);
+            $('fristText').textContent = keine ? t('keine_frist') : (iso ? deDatum(iso) + (fristRoh.replace(/\b\d{1,2}\.\s?\d{1,2}\.\s?(\d{4}|\d{2})\b/, '').trim() ? ' – ' + fristRoh.replace(/\b\d{1,2}\.\s?\d{1,2}\.\s?(\d{4}|\d{2})\b/, '').replace(/^[\s,–-]+/, '').trim() : '') : fristRoh);
+            $('fristWas').textContent = leer(a.frist_was) ? '' : a.frist_was;
+            $('fristDatum').value = iso;
+            aktualisiereFristHinweis(keine);
+            $('fristStatus').textContent = '';
+            // Aufgaben und Hinweise
+            $('aufgaben').textContent = a.aufgaben || '';
+            $('aufgabenBlock').hidden = leer(a.aufgaben);
+            $('wichtig').textContent = a.wichtig || '';
+            $('wichtigBlock').hidden = leer(a.wichtig);
+            // Antwort nicht im erwarteten Format: keine Aussagen zu Frist usw. machen
+            const unklar = !!analyse.roh;
+            $('fristBox').hidden = unklar;
+            $('fakten').hidden = unklar;
+            if (unklar) { $('aufgabenBlock').hidden = true; $('wichtigBlock').hidden = true; }
+            $('rohBlock').hidden = !analyse.roh;
+            $('rohBlock').innerHTML = analyse.roh ? '<b>' + esc(t('nicht_verstanden')) + '</b><div class="text" style="color:var(--ink);margin-top:6px">' + esc(analyse.roh) + '</div>' : '';
+            // Antwort-Vorschlaege
+            const vorschlaege = leer(a.antworten) ? [] : a.antworten.split('\n').map(z => z.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(z => z && !leer(z)).slice(0, 4);
+            $('vorschlaege').innerHTML = vorschlaege.map(v => '<button type="button" class="chip" dir="auto">' + esc(v) + '</button>').join('');
+            $('anliegen').value = '';
+            $('entwurfBlock').hidden = true;
+            zeigeFehler('fehler3', '');
+            $('ergebnis').hidden = false;
+            $('antwortKarte').hidden = false;
+            $('ergebnis').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        function aktualisiereFristHinweis(keine) {
+            const iso = $('fristDatum').value;
+            let h = '';
+            if (iso) h = tageBis(iso) < 0 ? t('frist_vorbei') : t('frist_pruefen');
+            else if (!keine) h = t('frist_selbst');
+            $('fristHinweis').textContent = h;
+            $('fristBox').classList.toggle('dringend', !!iso && tageBis(iso) <= 3);
+        }
+        $('fristDatum').addEventListener('change', () => aktualisiereFristHinweis(false));
+
+        // ------------------------------------------------------------
+        // Kalender (.ics) und Fristenliste
+        // ------------------------------------------------------------
+        function icsText(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+        function herunterladen(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+        function kurzAbsender(s) { return leer(s) ? '' : String(s).split('\n')[0].replace(/[,;]\s*$/, '').trim(); }
+        function kalender(e) {
+            const tag = e.frist.replace(/-/g, '');
+            const d = new Date(e.frist + 'T00:00:00'); d.setDate(d.getDate() + 1);
+            const ende = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+            const titel = t('kal_titel', { x: [e.art, e.absender].filter(Boolean).join(' – ') || t('unbekannt') });
+            const vorlauf = Math.max(1, Number(e.vorlauf) || 3);
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Post-Assistent//DE', 'BEGIN:VEVENT',
+                'UID:' + e.id + '-' + tag + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+                'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(titel),
+                'DESCRIPTION:' + icsText([e.fristWas, e.zeichen ? t('f_zeichen') + ': ' + e.zeichen : '', e.zusammenfassung].filter(Boolean).join('\n\n')),
+                // Erinnerung um 9 Uhr x Tage vorher und um 8 Uhr am Tag der Frist
+                'BEGIN:VALARM', 'TRIGGER:-PT' + (vorlauf * 24 - 9) + 'H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(titel), 'END:VALARM',
+                'BEGIN:VALARM', 'TRIGGER:PT8H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(titel), 'END:VALARM',
+                'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+            herunterladen(new Blob([ics], { type: 'text/calendar' }), 'frist-' + (e.absender || 'brief').replace(/[^\wäöüÄÖÜß-]+/g, '-').slice(0, 40) + '.ics');
+        }
+        function eintragAusAnalyse() {
+            const a = analyse.teile;
+            return {
+                art: leer(a.art) ? '' : a.art.split('\n')[0], absender: kurzAbsender(a.absender), zeichen: leer(a.zeichen) ? '' : a.zeichen.split('\n')[0],
+                briefdatum: leer(a.briefdatum) ? '' : a.briefdatum, frist: $('fristDatum').value, fristWas: leer(a.frist_was) ? '' : a.frist_was,
+                zusammenfassung: a.zusammenfassung || '', vorlauf: $('vorlauf').value
+            };
+        }
+        $('kalenderBtn').onclick = () => {
+            if (!$('fristDatum').value) { $('fristStatus').textContent = t('datum_fehlt'); return; }
+            const e = eintragAusAnalyse();
+            e.id = analyse.id || ('post-' + Date.now());
+            kalender(e);
+        };
+        function liste() { try { return JSON.parse(localStorage.getItem(LISTE_KEY) || '[]') || []; } catch (e) { return []; } }
+        function speichereListe(l) { try { localStorage.setItem(LISTE_KEY, JSON.stringify(l)); } catch (e) { /* voll */ } zeigeListe(); }
+        $('merkenBtn').onclick = () => {
+            const l = liste();
+            const e = eintragAusAnalyse();
+            const vorhanden = analyse.id && l.find(x => x.id === analyse.id);
+            if (vorhanden) { Object.assign(vorhanden, e); $('fristStatus').textContent = t('schon_gemerkt'); }
+            else { analyse.id = 'post-' + Date.now(); l.push(Object.assign({ id: analyse.id, erstellt: heuteIso(), erledigt: false }, e)); $('fristStatus').textContent = t('gemerkt'); }
+            speichereListe(l);
+        };
+        function zeigeListe() {
+            const l = liste();
+            $('listeLeer').hidden = l.length > 0;
+            const sortiert = l.slice().sort((a, b) => (a.erledigt - b.erledigt) || ((a.frist ? 0 : 1) - (b.frist ? 0 : 1)) || String(a.frist).localeCompare(String(b.frist)));
+            $('liste').innerHTML = sortiert.map(e => {
+                let tage = '<span class="tage">' + esc(t('ohne_datum')) + '</span>';
+                if (e.frist && !e.erledigt) {
+                    const n = tageBis(e.frist);
+                    const txt = n < 0 ? t('ueber', { n: -n }) : n === 0 ? t('heute') : n === 1 ? t('morgen') : t('noch', { n });
+                    tage = '<span class="tage ' + (n < 0 ? 'ueber' : n <= 3 ? 'bald' : '') + '">' + esc(txt) + '</span>';
+                } else if (e.erledigt) tage = '<span class="tage">' + esc(t('erledigt')) + '</span>';
+                return '<div class="eintrag' + (e.erledigt ? ' erledigt' : '') + '">' +
+                    '<div class="oben"><b dir="auto">' + esc([e.art, e.absender].filter(Boolean).join(' · ') || t('unbekannt')) + '</b>' + tage + '</div>' +
+                    '<div class="info" dir="auto">' + esc([e.frist ? t('frist_von') + ': ' + deDatum(e.frist) : '', e.zeichen].filter(Boolean).join(' · ')) + '</div>' +
+                    (e.fristWas ? '<div class="info" dir="auto">' + esc(e.fristWas) + '</div>' : '') +
+                    '<div class="knoepfe">' +
+                    '<button type="button" class="btn klein" data-erledigt="' + esc(e.id) + '">' + esc(e.erledigt ? t('wieder_offen') : t('erledigt')) + '</button>' +
+                    (e.frist ? '<button type="button" class="btn klein" data-kal="' + esc(e.id) + '" aria-label="Kalender">📅</button>' : '') +
+                    '<button type="button" class="btn klein" data-loeschen="' + esc(e.id) + '" aria-label="Löschen">🗑️</button>' +
+                    '</div></div>';
+            }).join('');
+        }
+        $('liste').addEventListener('click', (ev) => {
+            const b = ev.target.closest('[data-erledigt],[data-kal],[data-loeschen]');
+            if (!b) return;
+            const l = liste();
+            const id = b.dataset.erledigt || b.dataset.kal || b.dataset.loeschen;
+            const e = l.find(x => x.id === id);
+            if (!e) return;
+            if (b.dataset.erledigt) { e.erledigt = !e.erledigt; speichereListe(l); }
+            else if (b.dataset.kal) kalender(e);
+            else if (b.dataset.loeschen && confirm(t('loeschen_frage'))) speichereListe(l.filter(x => x.id !== id));
+        });
+
+        // ------------------------------------------------------------
+        // Antwort entwerfen
+        // ------------------------------------------------------------
+        $('vorschlaege').addEventListener('click', (e) => {
+            const c = e.target.closest('.chip');
+            if (!c) return;
+            document.querySelectorAll('#vorschlaege .chip').forEach(x => x.classList.toggle('an', x === c && !c.classList.contains('an')));
+            if (c.classList.contains('an')) {
+                const alt = $('anliegen').value.trim();
+                $('anliegen').value = c.textContent + (alt ? '\n' + alt : '');
+            }
+        });
+        $('entwurfBtn').onclick = async () => {
+            if (diktat) diktat.stopp();
+            zeigeFehler('fehler3', '');
+            const anliegen = $('anliegen').value.trim();
+            if (!anliegen) { zeigeFehler('fehler3', t('anliegen_fehlt')); return; }
+            const a = analyse.teile;
+            const sp = gewaehlteSprache || SPRACHEN[0];
+            const mitUebersetzung = sp.code !== 'de';
+            const istLotse = window.sdKi.anbieter() === 'lotse';
+            $('entwurfBtn').disabled = true;
+            $('status3').textContent = t('entwurf_laeuft');
+            try {
+                const prompt =
+                    'Schreibe einen Antwortbrief auf Deutsch (Sie-Form, sachlich, höflich, klar, kurze Absätze) an den Absender des Briefs unten. ' +
+                    'Nur den Brieftext: ohne Absender, Empfänger, Ort/Datum, Betreff, Anrede und Grußformel. ' +
+                    'Beziehe dich im ersten Satz auf das Schreiben' + (leer(a.briefdatum) ? '' : ' vom ' + a.briefdatum) + (leer(a.zeichen) ? '' : ' (Zeichen: ' + a.zeichen.split('\n')[0] + ')') + '. ' +
+                    'Anliegen der Person (kann in einer anderen Sprache sein): "' + anliegen + '". ' +
+                    'Erfinde keine Fakten (keine Gründe, Daten, Beträge oder Unterlagen, die die Person nicht genannt hat) – fehlende Angaben als [Lücke]. ' +
+                    'Bei einem Widerspruch oder Einspruch: schreibe ausdrücklich "Hiermit lege ich gegen ... Widerspruch ein" bzw. "Einspruch ein", Begründung nur aus dem Anliegen (sonst: "Die Begründung reiche ich nach."), und bitte um eine schriftliche Eingangsbestätigung. ' +
+                    'Bei einer Bitte um Ratenzahlung: konkreten Betrag und Beginn nur, wenn genannt; sonst [Lücke].\n' +
+                    'Antworte NUR in diesem Format:\n### betreff\n(kurze Betreffzeile auf Deutsch, mit Zeichen falls bekannt)\n### anrede\n(passende Anrede auf Deutsch, z. B. Sehr geehrte Damen und Herren,)\n### text\n(der Brieftext)' +
+                    (mitUebersetzung ? '\n### uebersetzung\n(der gleiche Brieftext sinngemäß auf ' + sp.prompt + ', damit die Person versteht, was sie unterschreibt)' : '') +
+                    '\n\nDer Brief, auf den geantwortet wird' + (analyse.dateien.length ? ' (als Foto/PDF angehängt)' : '') + ':\n' +
+                    'Absender: ' + (a.absender || '-') + '\nArt: ' + (a.art || '-') + '\nInhalt (Zusammenfassung): ' + (a.zusammenfassung || '-') +
+                    (briefTextCache ? '\nText:\n' + briefTextCache.slice(0, istLotse ? 4000 : 15000) : '');
+                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 1500, dateien: analyse.dateien });
+                const { teile } = abschnitte(antwort);
+                const brieftext = (teile.text || (Object.keys(teile).length ? '' : antwort)).trim()
+                    .replace(/^(sehr geehrte[^\n]*|dear [^\n]*)\n+/i, '')
+                    .replace(/\n+(mit freundlichen grüßen|freundliche grüße|viele grüße)[\s\S]*$/i, '');
+                $('entwurfBetreff').value = (teile.betreff || '').split('\n')[0];
+                $('entwurfBetreff').dataset.anrede = (teile.anrede || '').split('\n')[0];
+                $('entwurfText').value = brieftext;
+                $('uebersetzung').textContent = mitUebersetzung ? (teile.uebersetzung || '') : '';
+                $('uebersetzungBlock').hidden = !(mitUebersetzung && teile.uebersetzung);
+                $('entwurfBlock').hidden = false;
+                $('status3').textContent = '';
+                $('entwurfBlock').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                $('status3').textContent = '';
+                zeigeFehler('fehler3', (err && err.message) || String(err));
+            } finally {
+                $('entwurfBtn').disabled = false;
+            }
+        };
+        $('schreibstudioBtn').onclick = () => {
+            const a = analyse.teile;
+            try {
+                sessionStorage.setItem('sdPostAntwort', JSON.stringify({
+                    empfaenger: leer(a.absender) ? '' : a.absender, betreff: $('entwurfBetreff').value, anrede: $('entwurfBetreff').dataset.anrede || '', text: $('entwurfText').value
+                }));
+            } catch (e) { /* egal */ }
+            location.href = '../schreibstudio/index.html';
+        };
+        $('kopierenBtn').onclick = async () => {
+            const text = [$('entwurfBetreff').value, '', $('entwurfBetreff').dataset.anrede || 'Sehr geehrte Damen und Herren,', '', $('entwurfText').value, '', 'Mit freundlichen Grüßen'].join('\n');
+            try { await navigator.clipboard.writeText(text); $('kopierenBtn').textContent = t('kopiert'); setTimeout(() => { $('kopierenBtn').textContent = t('kopieren'); }, 1500); }
+            catch (e) { $('entwurfText').select(); }
+        };
+
+        // ------------------------------------------------------------
+        // Start der Seite
+        // ------------------------------------------------------------
+        function fuelleSprachen() {
+            const sel = $('erklSprache');
+            const alt = sel.value || (window.SD_LANG === 'en' ? 'en' : 'de');
+            sel.innerHTML = SPRACHEN.map(s => '<option value="' + s.code + '">' + esc(s.anzeige) + '</option>').join('');
+            sel.value = alt;
+        }
+        function lotseHinweis() {
+            const istLotse = window.sdKi && window.sdKi.anbieter() === 'lotse';
+            const sp = sprache();
+            const el = $('status1');
+            if (istLotse && !['de', 'en'].includes(sp.code)) el.textContent = t('lotse_sprache');
+            else if (el.textContent === t('lotse_sprache')) el.textContent = '';
+        }
+        $('erklSprache').addEventListener('change', lotseHinweis);
+        $('kiWahl').addEventListener('click', () => setTimeout(lotseHinweis, 0));
+        function aktualisiereTexte() {
+            fuelleSprachen();
+            $('hilfeListe').innerHTML = L().hilfe.map(x => '<li>' + esc(x) + '</li>').join('');
+            zeigeListe();
+        }
+        if (window.sdKi) {
+            window.sdKi.baueAuswahl($('kiWahl'), { geminiKeyFeld: true });
+            diktat = window.sdKi.diktatAnbinden($('anliegen'), $('mikroBtn'), (x) => { $('spInfo').textContent = x || ''; });
+        }
+        document.addEventListener('sd-lang-changed', aktualisiereTexte);
+        aktualisiereTexte();
+    </script>
+</body>
+
+</html>

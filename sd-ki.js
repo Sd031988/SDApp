@@ -558,13 +558,18 @@
     return lesen(sessionStorage, GEMINI_KEY_STORAGE) || lesen(localStorage, GEMINI_KEY_STORAGE) || '';
   }
 
+  function dateiListe(opt) {
+    return (opt.dateien && opt.dateien.length ? opt.dateien : (opt.datei ? [opt.datei] : [])).filter(d => d && d.data);
+  }
+
   async function geminiSchreibe(prompt, optionen) {
     const opt = optionen || {};
     const key = geminiKey();
     if (!key) throw new Error(tx('kein_key'));
     if (!window.sdGemini) throw new Error(tx('gemini_fehler', { status: 'gemini-modelle.js fehlt' }));
     // opt.datei = { mime, data (Base64), name }: Original-PDF/Foto mitschicken
-    const teile = opt.datei ? [{ inlineData: { mimeType: opt.datei.mime, data: opt.datei.data } }] : [];
+    // (opt.dateien = mehrere davon, z. B. mehrere Seiten eines Briefs)
+    const teile = dateiListe(opt).map(d => ({ inlineData: { mimeType: d.mime, data: d.data } }));
     const body = { contents: [{ role: 'user', parts: teile.concat([{ text: String(prompt) }]) }] };
     if (opt.system) body.system_instruction = { parts: [{ text: opt.system }] };
     // Links in der Anfrage (z. B. Stellenanzeige): Gemini darf sie oeffnen
@@ -601,6 +606,7 @@
     const key = onlineKey(a);
     if (!key) throw new Error(tx('kein_key_online', { name: o.name }));
     const modell = onlineModell(a);
+    const dateien = dateiListe(opt);
     const system = (opt.system ? opt.system + '\n\n' : '') + (sprache() === 'en'
       ? 'Write in English unless the task says otherwise. Never invent facts; leave missing details as [gaps].'
       : 'Schreibe auf Deutsch, außer die Aufgabe verlangt etwas anderes. Erfinde nichts; fehlende Angaben als [Lücke] in eckigen Klammern.');
@@ -611,11 +617,10 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
           body: JSON.stringify({ model: modell, instructions: system,
-            input: opt.datei ? [{ role: 'user', content: [
-              /^image\//.test(opt.datei.mime)
-                ? { type: 'input_image', image_url: 'data:' + opt.datei.mime + ';base64,' + opt.datei.data }
-                : { type: 'input_file', filename: opt.datei.name || 'dokument.pdf', file_data: 'data:' + opt.datei.mime + ';base64,' + opt.datei.data },
-              { type: 'input_text', text: String(prompt) }] }] : String(prompt),
+            input: dateien.length ? [{ role: 'user', content: dateien.map(d => /^image\//.test(d.mime)
+                ? { type: 'input_image', image_url: 'data:' + d.mime + ';base64,' + d.data }
+                : { type: 'input_file', filename: d.name || 'dokument.pdf', file_data: 'data:' + d.mime + ';base64,' + d.data }
+              ).concat([{ type: 'input_text', text: String(prompt) }]) }] : String(prompt),
             reasoning: { effort: 'low' }, max_output_tokens: Math.max(2000, (opt.maxTokens || 1200) * 3), store: false })
         });
       } else {
@@ -623,11 +628,10 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
           body: JSON.stringify({ model: modell, max_tokens: Math.max(1500, opt.maxTokens || 1200), system,
-            messages: [{ role: 'user', content: opt.datei ? [
-              /^image\//.test(opt.datei.mime)
-                ? { type: 'image', source: { type: 'base64', media_type: opt.datei.mime, data: opt.datei.data } }
-                : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: opt.datei.data } },
-              { type: 'text', text: String(prompt) }] : String(prompt) }] })
+            messages: [{ role: 'user', content: dateien.length ? dateien.map(d => /^image\//.test(d.mime)
+                ? { type: 'image', source: { type: 'base64', media_type: d.mime, data: d.data } }
+                : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: d.data } }
+              ).concat([{ type: 'text', text: String(prompt) }]) : String(prompt) }] })
         });
       }
     } catch (e) {

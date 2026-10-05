@@ -1827,7 +1827,7 @@
         }
     </script>
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-ki.js?v=16"></script>
+    <script src="../sd-ki.js?v=17"></script>
 </head>
 
 <body class="mobile-tab-edit">
@@ -3114,6 +3114,27 @@
         zeigeModus('kuendigung');
         updateVorschau();
         bereinigeArchiv();
+
+        // Antwort aus dem Post-Assistenten uebernehmen (einmalig per sessionStorage)
+        (function postUebernahme() {
+            let d = null;
+            try { d = JSON.parse(sessionStorage.getItem('sdPostAntwort') || 'null'); sessionStorage.removeItem('sdPostAntwort'); } catch (e) { d = null; }
+            if (!d || !d.text) return;
+            zeigeModus('brief');
+            if (aktuellerModus !== 'brief') return;
+            document.getElementById('brief-empfaenger').value = d.empfaenger || '';
+            document.getElementById('brief-betreff').value = d.betreff || '';
+            document.getElementById('brief-text').value = d.text;
+            const anrede = String(d.anrede || '').trim();
+            if (anrede && !/^sehr geehrte damen und herren,?$/i.test(anrede) && !/^dear sir or madam,?$/i.test(anrede)) {
+                document.getElementById('brief-anrede').value = 'custom';
+                document.getElementById('brief-custom-anrede').value = /,$/.test(anrede) ? anrede : anrede + ',';
+            } else {
+                document.getElementById('brief-anrede').value = 'damen-herren';
+            }
+            updateVorschau();
+            speichereDaten();
+        })();
 
         document.querySelector('.editor-sidebar').addEventListener('input', speichereDaten);
         document.querySelector('.editor-sidebar').addEventListener('change', speichereDaten);
