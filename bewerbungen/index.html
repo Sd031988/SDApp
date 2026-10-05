@@ -197,7 +197,7 @@
                 alle: 'Alle', z_gesamt: 'Bewerbungen', z_gespraech: 'Gespräche', z_zusage: 'Zusagen', z_antwort: 'Antwortquote',
                 leer: 'Noch nichts hier.', leer_start: 'Noch keine Bewerbungen. Tippe auf „＋ Neue Bewerbung“.',
                 beworben_am: 'beworben am {d}', frist_bis: 'Frist bis {d}', heute: 'heute', ueberfaellig: 'überfällig',
-                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Anschreiben',
+                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Anschreiben', b_ueben: '🎤 Üben', t_ueben: 'Vorstellungsgespräch für diese Stelle üben',
                 t_bearbeiten: 'Bearbeiten', t_kalender: 'Termin in den Kalender', t_anzeige: 'Stellenanzeige öffnen', t_anschreiben: 'Anschreiben für diese Stelle in der Lebenslauf-App schreiben',
                 er_titel: '🔔 Erinnerungen', er_faellig: '{firma}: „{schritt}“ – {wann}', er_nachfassen: '{firma}: seit {tage} Tagen keine Antwort – nachfragen?',
                 er_frist: '{firma}: Bewerbungsfrist {wann}', er_oeffnen: 'öffnen', in_tagen: 'in {n} Tagen', morgen: 'morgen',
@@ -225,7 +225,7 @@
                 alle: 'All', z_gesamt: 'Applications', z_gespraech: 'Interviews', z_zusage: 'Offers', z_antwort: 'Response rate',
                 leer: 'Nothing here yet.', leer_start: 'No applications yet. Tap "＋ New application".',
                 beworben_am: 'applied on {d}', frist_bis: 'deadline {d}', heute: 'today', ueberfaellig: 'overdue',
-                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Cover letter',
+                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Cover letter', b_ueben: '🎤 Practise', t_ueben: 'Practise the interview for this job',
                 t_bearbeiten: 'Edit', t_kalender: 'Add date to calendar', t_anzeige: 'Open job ad', t_anschreiben: 'Write a cover letter for this job in the resume app',
                 er_titel: '🔔 Reminders', er_faellig: '{firma}: "{schritt}" – {wann}', er_nachfassen: '{firma}: no answer for {tage} days – follow up?',
                 er_frist: '{firma}: application deadline {wann}', er_oeffnen: 'open', in_tagen: 'in {n} days', morgen: 'tomorrow',
@@ -335,6 +335,7 @@
                 (termin ? '<button type="button" class="btn klein" data-kalender="' + b.id + '" title="' + esc(t('t_kalender')) + '">' + t('b_kalender') + '</button>' : '') +
                 (b.link ? '<a class="btn klein" href="' + esc(b.link) + '" target="_blank" rel="noopener" title="' + esc(t('t_anzeige')) + '">' + t('b_anzeige') + '</a>' : '') +
                 (['gemerkt', 'beworben'].includes(b.status) ? '<button type="button" class="btn klein" data-anschreiben="' + b.id + '" title="' + esc(t('t_anschreiben')) + '">' + esc(t('b_anschreiben')) + '</button>' : '') +
+                (['beworben', 'gespraech'].includes(b.status) ? '<a class="btn klein" href="../training/index.html?bewerbung=' + encodeURIComponent(b.id) + '" title="' + esc(t('t_ueben')) + '">' + esc(t('b_ueben')) + '</a>' : '') +
                 '</div></article>';
         }
 

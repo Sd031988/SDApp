@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Gesprächstraining</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Vorstellungsgespräch üben: Fragen passend zur Stelle, Antworten per Sprache oder Text, ehrliche Rückmeldung der KI">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root { --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7; --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --danger: #b42318; --gold: #c9a86a; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); min-height: 100dvh; }
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 520px) { .brand small, .sd-logo { display: none; } }
+
+        main { max-width: 760px; margin: 0 auto; padding: 14px 16px 110px; display: grid; gap: 14px; }
+        .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+        .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.1rem; }
+        .info { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 0; }
+        label.feld { display: grid; gap: 4px; font-size: .82rem; font-weight: bold; min-width: 0; }
+        label.feld small { font-weight: normal; color: var(--muted); }
+        input[type=text], select, textarea { width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; }
+        textarea { resize: vertical; line-height: 1.5; }
+        .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 520px) { .zeile { grid-template-columns: 1fr; } }
+        .wahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media (max-width: 520px) { .wahl { grid-template-columns: 1fr; } }
+        .wahl label { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; cursor: pointer; background: #fff; }
+        .wahl label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+        .wahl small { display: block; color: var(--muted); font-size: .75rem; }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px 14px; min-height: 44px; font: inherit; font-weight: bold; font-size: .9rem; cursor: pointer; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.aktiv { background: #fdecea; border-color: #e5484d; }
+        .btn:disabled { opacity: .5; cursor: default; }
+
+        .fortschritt { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); }
+        .balken { height: 6px; background: var(--accent-soft); border-radius: 999px; overflow: hidden; }
+        .balken > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+        .frage { font-family: Georgia, serif; font-size: 1.25rem; line-height: 1.4; margin: 0; }
+        .status { font-size: .82rem; color: var(--muted); min-height: 1.2em; margin: 0; }
+        .fehler { background: #fdf0ee; border: 1px solid #f1c4bf; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: .88rem; }
+
+        .feedback { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; background: #fff; }
+        .sterne { font-size: 1.2rem; letter-spacing: 2px; color: var(--gold); }
+        .feedback h3 { margin: 0; font-size: .88rem; }
+        .feedback .text { font-size: .9rem; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+        .feedback .beispiel { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; }
+
+        .ergebnis-liste { display: grid; gap: 10px; }
+        .ergebnis-liste details { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; }
+        .ergebnis-liste summary { cursor: pointer; font-weight: bold; font-size: .9rem; }
+        .ergebnis-liste .antwort { font-size: .88rem; white-space: pre-line; margin: 8px 0; color: var(--ink); overflow-wrap: anywhere; }
+        .tipps { margin: 0; padding-left: 20px; font-size: .88rem; line-height: 1.6; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Gesprächstraining</strong><small data-i18n="untertitel">Vorstellungsgespräch üben – mit ehrlicher Rückmeldung</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Schritt 1: Vorbereitung -->
+        <section class="karte" id="schritt1">
+            <h2 data-i18n="s1_titel">🎯 Worauf bereitest du dich vor?</h2>
+            <label class="feld" id="trackerFeld" hidden><span data-i18n="aus_tracker">Aus dem Bewerbungs-Tracker</span>
+                <select id="trackerWahl"></select></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="stelle">Stelle</span><input type="text" id="stelle" data-i18n-placeholder="stelle_ph" placeholder="z. B. Lagerist (m/w/d)"></label>
+                <label class="feld"><span data-i18n="firma">Firma</span><input type="text" id="firma" data-i18n-placeholder="firma_ph" placeholder="z. B. Logistik Nord GmbH"></label>
+            </div>
+            <label class="feld"><span data-i18n="anzeige">Stellenanzeige (optional)</span> <small data-i18n="anzeige_hilfe">Text einfügen – dann passen die Fragen genauer zur Stelle.</small>
+                <textarea id="anzeige" rows="4"></textarea></label>
+            <div class="wahl">
+                <label><input type="radio" name="art" value="ki" checked> <span><b data-i18n="art_ki">KI-Fragen zur Stelle</b><small data-i18n="art_ki_hilfe">passend zu Stelle, Anzeige und deinem Lebenslauf</small></span></label>
+                <label><input type="radio" name="art" value="standard"> <span><b data-i18n="art_std">Typische Standardfragen</b><small data-i18n="art_std_hilfe">die Klassiker – auch ohne KI</small></span></label>
+            </div>
+            <label class="feld"><span data-i18n="anzahl">Anzahl Fragen</span>
+                <select id="anzahl"><option>5</option><option selected>8</option><option>10</option></select></label>
+            <div id="kiWahl"></div>
+            <p class="info" id="cvInfo"></p>
+            <div class="knoepfe"><button type="button" class="btn prim" id="startBtn" data-i18n="start">▶️ Training starten</button></div>
+            <p class="status" id="status1" aria-live="polite"></p>
+            <div class="fehler" id="fehler1" hidden></div>
+        </section>
+
+        <!-- Schritt 2: Fragen -->
+        <section class="karte" id="schritt2" hidden>
+            <div class="fortschritt"><span id="nummer"></span><span id="stelleAnzeige"></span></div>
+            <div class="balken"><div id="balken"></div></div>
+            <p class="frage" id="frage"></p>
+            <div class="knoepfe"><button type="button" class="btn" id="vorlesenBtn" data-i18n="vorlesen">🔊 Vorlesen</button></div>
+            <label class="feld"><span data-i18n="deine_antwort">Deine Antwort</span>
+                <textarea id="antwort" rows="6" data-i18n-placeholder="antwort_ph" placeholder="Antworte so, wie du es im Gespräch sagen würdest – sprechen oder tippen."></textarea></label>
+            <p class="status" id="spInfo"></p>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="mikroBtn">🎤</button>
+                <button type="button" class="btn prim" id="feedbackBtn" data-i18n="feedback">💬 Rückmeldung</button>
+                <button type="button" class="btn" id="weiterBtn" data-i18n="weiter">Weiter ➡️</button>
+            </div>
+            <p class="status" id="status2" aria-live="polite"></p>
+            <div class="fehler" id="fehler2" hidden></div>
+            <div class="feedback" id="feedback" hidden></div>
+        </section>
+
+        <!-- Schritt 3: Auswertung -->
+        <section class="karte" id="schritt3" hidden>
+            <h2 data-i18n="s3_titel">🏁 Geschafft!</h2>
+            <p class="info" id="zusammenfassung"></p>
+            <div class="ergebnis-liste" id="ergebnisse"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="kopierenBtn" data-i18n="kopieren">📋 Alles kopieren</button>
+                <button type="button" class="btn prim" id="nochmalBtn" data-i18n="nochmal">🔁 Neues Training</button>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="tipps_titel">✅ Checkliste für den Gesprächstag</h2>
+            <ul class="tipps" id="tipps"></ul>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Gesprächstraining', untertitel: 'Vorstellungsgespräch üben – mit ehrlicher Rückmeldung', s1_titel: '🎯 Worauf bereitest du dich vor?',
+                aus_tracker: 'Aus dem Bewerbungs-Tracker', eigene: '– eigene Angaben –', stelle: 'Stelle', stelle_ph: 'z. B. Lagerist (m/w/d)', firma: 'Firma', firma_ph: 'z. B. Logistik Nord GmbH',
+                anzeige: 'Stellenanzeige (optional)', anzeige_hilfe: 'Text einfügen – dann passen die Fragen genauer zur Stelle.',
+                art_ki: 'KI-Fragen zur Stelle', art_ki_hilfe: 'passend zu Stelle, Anzeige und deinem Lebenslauf', art_std: 'Typische Standardfragen', art_std_hilfe: 'die Klassiker – auch ohne KI',
+                anzahl: 'Anzahl Fragen', start: '▶️ Training starten', vorlesen: '🔊 Vorlesen', deine_antwort: 'Deine Antwort',
+                antwort_ph: 'Antworte so, wie du es im Gespräch sagen würdest – sprechen oder tippen.', feedback: '💬 Rückmeldung', weiter: 'Weiter ➡️', fertig_btn: 'Auswertung 🏁',
+                s3_titel: '🏁 Geschafft!', kopieren: '📋 Alles kopieren', kopiert: '✓ Kopiert', nochmal: '🔁 Neues Training', tipps_titel: '✅ Checkliste für den Gesprächstag',
+                cv_ok: '✓ Dein Lebenslauf wird für passende Fragen und Rückmeldungen genutzt.', cv_leer: 'Tipp: Mit ausgefülltem Lebenslauf (Lebenslauf-App) werden Fragen und Rückmeldungen persönlicher.',
+                fragen_laeuft: '🤖 Die KI überlegt sich Fragen …', feedback_laeuft: '🤖 Die KI bewertet deine Antwort …', frage_x: 'Frage {i} von {n}',
+                bitte_antwort: 'Bitte zuerst antworten (sprechen oder tippen).', fragen_fallback: 'Die KI hat keine brauchbaren Fragen geliefert – du übst jetzt mit den Standardfragen.',
+                gut: '👍 Das war gut', besser: '🔧 Das geht besser', beispiel: '💡 So könntest du es sagen', bewertung: 'Bewertung',
+                ohne_feedback: '(ohne Rückmeldung)', uebersprungen: '(übersprungen)', zus: 'Du hast {a} von {n} Fragen beantwortet{s}.', zus_schnitt: ', Durchschnitt {d} von 5 Sternen',
+                hinweis_ki: 'Die Rückmeldung kommt von einer KI – sie kann sich irren. Die Beispielantwort nutzt nur deine Angaben; [Lücken] füllst du selbst.',
+                fehler_feld: 'Rückmeldung nicht verstanden – hier die Antwort der KI:',
+                std: [
+                    'Erzählen Sie uns bitte etwas über sich.',
+                    'Warum haben Sie sich bei uns beworben?',
+                    'Was wissen Sie über unser Unternehmen?',
+                    'Was sind Ihre größten Stärken?',
+                    'Welche Schwäche haben Sie, und wie gehen Sie damit um?',
+                    'Erzählen Sie von einer schwierigen Situation bei der Arbeit und wie Sie sie gelöst haben.',
+                    'Warum möchten Sie Ihre jetzige Stelle wechseln – oder was haben Sie zuletzt gemacht?',
+                    'Wie arbeiten Sie im Team? Nennen Sie ein Beispiel.',
+                    'Wo sehen Sie sich in fünf Jahren?',
+                    'Was sind Ihre Gehaltsvorstellungen?',
+                    'Wann könnten Sie bei uns anfangen?',
+                    'Haben Sie noch Fragen an uns?'
+                ],
+                tipps: [
+                    'Anzeige und eigenen Lebenslauf noch einmal lesen – zu jeder Anforderung ein Beispiel parat haben.',
+                    '10–15 Minuten früher da sein; Anfahrt vorher prüfen. Bei Videogesprächen Technik vorher testen.',
+                    'Unterlagen mitnehmen: Lebenslauf, Anschreiben, Zeugnisse, Ausweis, Stift und Notizblock.',
+                    '2–3 eigene Fragen vorbereiten (z. B. Einarbeitung, Team, nächste Schritte).',
+                    'Gehaltsvorstellung vorher überlegen – als Spanne und als Jahres-Brutto.',
+                    'Nach dem Gespräch: kurze Dankes-Mail am selben oder nächsten Tag; Termin im Bewerbungs-Tracker eintragen.'
+                ]
+            },
+            en: {
+                titel: 'Interview training', untertitel: 'Practise your job interview – with honest feedback', s1_titel: '🎯 What are you preparing for?',
+                aus_tracker: 'From the application tracker', eigene: '– own details –', stelle: 'Job', stelle_ph: 'e.g. Warehouse worker', firma: 'Company', firma_ph: 'e.g. Northern Logistics Ltd',
+                anzeige: 'Job ad (optional)', anzeige_hilfe: 'Paste the text – then the questions fit the job more closely.',
+                art_ki: 'AI questions for this job', art_ki_hilfe: 'tailored to the job, ad and your resume', art_std: 'Typical standard questions', art_std_hilfe: 'the classics – also without AI',
+                anzahl: 'Number of questions', start: '▶️ Start training', vorlesen: '🔊 Read aloud', deine_antwort: 'Your answer',
+                antwort_ph: 'Answer the way you would in the interview – speak or type.', feedback: '💬 Feedback', weiter: 'Next ➡️', fertig_btn: 'Results 🏁',
+                s3_titel: '🏁 Done!', kopieren: '📋 Copy all', kopiert: '✓ Copied', nochmal: '🔁 New training', tipps_titel: '✅ Checklist for interview day',
+                cv_ok: '✓ Your resume is used for matching questions and feedback.', cv_leer: 'Tip: with a filled-in resume (resume app) questions and feedback become more personal.',
+                fragen_laeuft: '🤖 The AI is thinking of questions …', feedback_laeuft: '🤖 The AI is rating your answer …', frage_x: 'Question {i} of {n}',
+                bitte_antwort: 'Please answer first (speak or type).', fragen_fallback: 'The AI returned no usable questions – you are now practising with the standard questions.',
+                gut: '👍 What was good', besser: '🔧 What could be better', beispiel: '💡 How you could say it', bewertung: 'Rating',
+                ohne_feedback: '(no feedback)', uebersprungen: '(skipped)', zus: 'You answered {a} of {n} questions{s}.', zus_schnitt: ', average {d} of 5 stars',
+                hinweis_ki: 'The feedback comes from an AI – it can be wrong. The sample answer only uses your details; you fill in [gaps] yourself.',
+                fehler_feld: 'Feedback not understood – here is the AI\'s answer:',
+                std: [
+                    'Please tell us a little about yourself.',
+                    'Why did you apply to us?',
+                    'What do you know about our company?',
+                    'What are your greatest strengths?',
+                    'What is a weakness of yours, and how do you deal with it?',
+                    'Tell us about a difficult situation at work and how you solved it.',
+                    'Why do you want to leave your current job – or what have you been doing recently?',
+                    'How do you work in a team? Give an example.',
+                    'Where do you see yourself in five years?',
+                    'What are your salary expectations?',
+                    'When could you start?',
+                    'Do you have any questions for us?'
+                ],
+                tipps: [
+                    'Read the job ad and your own resume again – have an example ready for each requirement.',
+                    'Arrive 10–15 minutes early; check the route beforehand. For video calls, test your setup first.',
+                    'Bring documents: resume, cover letter, certificates, ID, pen and notepad.',
+                    'Prepare 2–3 questions of your own (e.g. onboarding, team, next steps).',
+                    'Think about your salary expectation beforehand – as a range and as annual gross.',
+                    'After the interview: a short thank-you e-mail the same or next day; note the date in the application tracker.'
+                ]
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
+    <script src="../sd-ki.js?v=16"></script>
+    <script>
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        let fragen = [];
+        let i = 0;
+        let ergebnisse = [];   // [{ frage, antwort, feedback: {sterne, gut, besser, beispiel, roh} }]
+        let diktat = null;
+
+        // ------------------------------------------------------------
+        // Lebenslauf und Bewerbungs-Tracker (lokal gespeichert)
+        // ------------------------------------------------------------
+        function lebenslauf() {
+            let d = null;
+            for (const ort of [sessionStorage, localStorage]) {
+                try { const r = ort.getItem('lebenslaufDaten'); if (r) { d = JSON.parse(r); break; } } catch (e) { /* weiter */ }
+            }
+            if (!d) return '';
+            const teile = [];
+            if (d.position) teile.push('Beruf/Wunschposition: ' + d.position);
+            if (d.erfahrung) teile.push('Berufserfahrung:\n' + d.erfahrung);
+            if (d.ausbildung) teile.push('Ausbildung:\n' + d.ausbildung);
+            if (d.kenntnisse) teile.push('Kenntnisse: ' + d.kenntnisse);
+            if (d.sprachen) teile.push('Sprachen: ' + d.sprachen);
+            return teile.join('\n');
+        }
+        function trackerListe() {
+            try { return (JSON.parse(localStorage.getItem('sdBewerbungen') || '[]') || []).filter(b => b.firma && b.status !== 'absage'); } catch (e) { return []; }
+        }
+        function fuelleTracker() {
+            const liste = trackerListe();
+            $('trackerFeld').hidden = !liste.length;
+            const sel = $('trackerWahl');
+            const alt = sel.value;
+            sel.innerHTML = '<option value="">' + esc(t('eigene')) + '</option>' +
+                liste.map(b => '<option value="' + esc(b.id) + '">' + esc(b.firma + (b.position ? ' – ' + b.position : '')) + '</option>').join('');
+            sel.value = alt;
+        }
+        $('trackerWahl').onchange = () => {
+            const b = trackerListe().find(x => x.id === $('trackerWahl').value);
+            if (!b) return;
+            $('stelle').value = b.position || '';
+            $('firma').value = b.firma || '';
+        };
+
+        // ------------------------------------------------------------
+        // Start: Fragen erstellen
+        // ------------------------------------------------------------
+        function zeigeFehler(id, text) { const f = $(id); f.textContent = text || ''; f.hidden = !text; }
+        function standardFragen(n) {
+            const std = L().std.slice();
+            // Einstieg zuerst, "Fragen an uns" zuletzt, Mitte gemischt
+            const mitte = std.slice(1, -1).sort(() => Math.random() - 0.5).slice(0, Math.max(0, n - 2));
+            return [std[0]].concat(mitte, [std[std.length - 1]]).slice(0, n);
+        }
+        function leseFragen(text) {
+            return String(text || '').split('\n')
+                .map(z => z.replace(/^\s*(?:\d+[.)]|[-*•]|frage\s*\d+\s*:|question\s*\d+\s*:)\s*/i, '').replace(/\*\*/g, '').trim())
+                .filter(z => z.length > 12 && /\?\s*$/.test(z))
+                .slice(0, 12);
+        }
+        $('startBtn').onclick = async () => {
+            zeigeFehler('fehler1', '');
+            const n = Number($('anzahl').value) || 8;
+            const art = document.querySelector('input[name=art]:checked').value;
+            $('startBtn').disabled = true;
+            try {
+                if (art === 'standard') {
+                    fragen = standardFragen(n);
+                } else {
+                    $('status1').textContent = t('fragen_laeuft');
+                    const en = window.SD_LANG === 'en';
+                    const cv = lebenslauf();
+                    const prompt = (en ? 'Write the questions in English.\n' : 'Schreibe die Fragen auf Deutsch (Sie-Form).\n') +
+                        'Erstelle genau ' + n + ' Fragen, die in einem Vorstellungsgespräch für diese Stelle wahrscheinlich gestellt werden: ' +
+                        'eine Einstiegsfrage, Fragen zur Motivation, Fach- und Erfahrungsfragen passend zu den Anforderungen der Anzeige, ' +
+                        '1-2 Verhaltensfragen ("Erzählen Sie von einer Situation, in der ..."), und falls im Lebenslauf eine Lücke oder eine fehlende Anforderung erkennbar ist, eine faire kritische Frage dazu. ' +
+                        'Die letzte Frage: ob die Person noch Fragen hat. Antworte NUR mit den Fragen, eine pro Zeile, nummeriert, ohne weitere Erklärungen.\n\n' +
+                        'Stelle: ' + ($('stelle').value || '(nicht angegeben)') + '\nFirma: ' + ($('firma').value || '(nicht angegeben)') +
+                        ($('anzeige').value.trim() ? '\n\nStellenanzeige:\n' + $('anzeige').value.trim().slice(0, 6000) : '') +
+                        (cv ? '\n\nLebenslauf der Person:\n' + cv : '');
+                    const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 700 });
+                    fragen = leseFragen(antwort).slice(0, n);
+                    if (fragen.length < 3) { fragen = standardFragen(n); $('status2').textContent = t('fragen_fallback'); }
+                }
+                ergebnisse = fragen.map(f => ({ frage: f, antwort: '', feedback: null }));
+                i = 0;
+                $('status1').textContent = '';
+                $('schritt1').hidden = true;
+                $('schritt3').hidden = true;
+                $('schritt2').hidden = false;
+                zeigeFrage();
+            } catch (err) {
+                $('status1').textContent = '';
+                zeigeFehler('fehler1', (err && err.message) || String(err));
+            } finally {
+                $('startBtn').disabled = false;
+            }
+        };
+
+        // ------------------------------------------------------------
+        // Fragen beantworten
+        // ------------------------------------------------------------
+        function zeigeFrage() {
+            const e = ergebnisse[i];
+            $('nummer').textContent = t('frage_x', { i: i + 1, n: ergebnisse.length });
+            $('stelleAnzeige').textContent = [$('stelle').value, $('firma').value].filter(Boolean).join(' · ');
+            $('balken').style.width = Math.round(i / ergebnisse.length * 100) + '%';
+            $('frage').textContent = e.frage;
+            $('antwort').value = e.antwort || '';
+            $('feedback').hidden = !e.feedback;
+            if (e.feedback) zeigeFeedback(e.feedback);
+            $('weiterBtn').textContent = i === ergebnisse.length - 1 ? t('fertig_btn') : t('weiter');
+            zeigeFehler('fehler2', '');
+            if (i > 0) $('status2').textContent = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        $('antwort').addEventListener('input', () => { ergebnisse[i].antwort = $('antwort').value; });
+
+        $('vorlesenBtn').onclick = () => {
+            if (!('speechSynthesis' in window)) return;
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance($('frage').textContent);
+            u.lang = window.SD_LANG === 'en' ? 'en-US' : 'de-DE';
+            u.rate = 0.95;
+            speechSynthesis.speak(u);
+        };
+        if (!('speechSynthesis' in window)) $('vorlesenBtn').hidden = true;
+
+        function parseFeedback(text) {
+            const roh = String(text || '').replace(/```[a-z]*\n?/gi, '');
+            const teile = {};
+            const re = /^[ \t]*#{2,4}[ \t]*(bewertung|rating|gut|good|besser|better|beispiel|example)[ \t]*:?[ \t]*(.*)$/gim;
+            const marken = [];
+            let m;
+            while ((m = re.exec(roh)) !== null) marken.push({ k: m[1].toLowerCase(), rest: m[2], s: m.index, e: re.lastIndex });
+            marken.forEach((mk, n) => {
+                const k = { rating: 'bewertung', good: 'gut', better: 'besser', example: 'beispiel' }[mk.k] || mk.k;
+                teile[k] = ((mk.rest ? mk.rest + '\n' : '') + roh.slice(mk.e, n + 1 < marken.length ? marken[n + 1].s : undefined)).trim();
+            });
+            const sterne = Math.max(1, Math.min(5, parseInt((teile.bewertung || '').match(/\d/) || [0], 10) || 0));
+            return { sterne: teile.bewertung ? sterne : 0, gut: teile.gut || '', besser: teile.besser || '', beispiel: teile.beispiel || '', roh: (teile.gut || teile.besser || teile.beispiel) ? '' : roh.trim() };
+        }
+        function zeigeFeedback(f) {
+            const box = $('feedback');
+            box.innerHTML = (f.sterne ? '<div><span class="sterne" aria-label="' + esc(t('bewertung')) + ' ' + f.sterne + '/5">' + '★'.repeat(f.sterne) + '☆'.repeat(5 - f.sterne) + '</span></div>' : '') +
+                (f.gut ? '<h3>' + esc(t('gut')) + '</h3><div class="text">' + esc(f.gut) + '</div>' : '') +
+                (f.besser ? '<h3>' + esc(t('besser')) + '</h3><div class="text">' + esc(f.besser) + '</div>' : '') +
+                (f.beispiel ? '<h3>' + esc(t('beispiel')) + '</h3><div class="text beispiel">' + esc(f.beispiel) + '</div>' : '') +
+                (f.roh ? '<h3>' + esc(t('fehler_feld')) + '</h3><div class="text">' + esc(f.roh) + '</div>' : '') +
+                '<p class="info">' + esc(t('hinweis_ki')) + '</p>';
+            box.hidden = false;
+        }
+        $('feedbackBtn').onclick = async () => {
+            if (diktat) diktat.stopp();
+            const antwort = $('antwort').value.trim();
+            if (!antwort) { zeigeFehler('fehler2', t('bitte_antwort')); return; }
+            zeigeFehler('fehler2', '');
+            ergebnisse[i].antwort = antwort;
+            $('feedbackBtn').disabled = true;
+            $('status2').textContent = t('feedback_laeuft');
+            try {
+                const en = window.SD_LANG === 'en';
+                const cv = lebenslauf();
+                const prompt = (en ? 'Answer in English.\n' : 'Antworte auf Deutsch, in der Du-Form.\n') +
+                    'Du bist eine erfahrene, freundliche Personalerin und trainierst eine Person für ihr Vorstellungsgespräch. ' +
+                    'Bewerte ehrlich die Antwort auf die Interviewfrage: Inhalt, Bezug zur Stelle, Struktur, konkrete Beispiele, Länge. ' +
+                    'Erfinde keine Fakten über die Person – nutze nur ihre Antwort und den Lebenslauf. ' +
+                    'Antworte NUR in diesem Format:\n### bewertung\n(Zahl 1-5)\n### gut\n(1-3 kurze Stichpunkte)\n### besser\n(1-3 kurze, konkrete Stichpunkte)\n### beispiel\n' +
+                    '(eine verbesserte Antwort in Ich-Form, 60-120 Wörter, gesprochene Sprache, nur mit Fakten der Person; fehlende Details als [Lücke])\n\n' +
+                    'Stelle: ' + ($('stelle').value || '-') + ' bei ' + ($('firma').value || '-') +
+                    (cv ? '\nLebenslauf:\n' + cv : '') +
+                    '\n\nFrage: ' + ergebnisse[i].frage + '\nAntwort der Person: ' + antwort;
+                const text = await window.sdKi.schreibe(prompt, { maxTokens: 700 });
+                ergebnisse[i].feedback = parseFeedback(text);
+                zeigeFeedback(ergebnisse[i].feedback);
+                $('status2').textContent = '';
+                $('feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                $('status2').textContent = '';
+                zeigeFehler('fehler2', (err && err.message) || String(err));
+            } finally {
+                $('feedbackBtn').disabled = false;
+            }
+        };
+        $('weiterBtn').onclick = () => {
+            if (diktat) diktat.stopp();
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
+            ergebnisse[i].antwort = $('antwort').value.trim();
+            if (i < ergebnisse.length - 1) { i++; zeigeFrage(); } else zeigeAuswertung();
+        };
+
+        // ------------------------------------------------------------
+        // Auswertung
+        // ------------------------------------------------------------
+        function zeigeAuswertung() {
+            $('schritt2').hidden = true;
+            $('schritt3').hidden = false;
+            const beantwortet = ergebnisse.filter(e => e.antwort).length;
+            const mitSternen = ergebnisse.filter(e => e.feedback && e.feedback.sterne);
+            const schnitt = mitSternen.length ? (mitSternen.reduce((s, e) => s + e.feedback.sterne, 0) / mitSternen.length).toFixed(1).replace('.', window.SD_LANG === 'en' ? '.' : ',') : '';
+            $('zusammenfassung').textContent = t('zus', { a: beantwortet, n: ergebnisse.length, s: schnitt ? t('zus_schnitt', { d: schnitt }) : '' });
+            $('ergebnisse').innerHTML = ergebnisse.map((e, n) =>
+                '<details' + (n === 0 ? ' open' : '') + '><summary>' + (n + 1) + '. ' + esc(e.frage) + (e.feedback && e.feedback.sterne ? ' · ' + '★'.repeat(e.feedback.sterne) : '') + '</summary>' +
+                '<div class="antwort">' + esc(e.antwort || t('uebersprungen')) + '</div>' +
+                (e.feedback ? (e.feedback.besser ? '<div class="info"><b>' + esc(t('besser')) + ':</b> ' + esc(e.feedback.besser) + '</div>' : '') +
+                    (e.feedback.beispiel ? '<div class="info" style="margin-top:6px"><b>' + esc(t('beispiel')) + ':</b> ' + esc(e.feedback.beispiel) + '</div>' : '')
+                    : (e.antwort ? '<div class="info">' + esc(t('ohne_feedback')) + '</div>' : '')) +
+                '</details>').join('');
+            $('balken').style.width = '100%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        $('kopierenBtn').onclick = async () => {
+            const text = ergebnisse.map((e, n) => (n + 1) + '. ' + e.frage + '\n' + (e.antwort || t('uebersprungen')) +
+                (e.feedback ? (e.feedback.besser ? '\n' + t('besser') + ': ' + e.feedback.besser : '') + (e.feedback.beispiel ? '\n' + t('beispiel') + ': ' + e.feedback.beispiel : '') : '')).join('\n\n');
+            try { await navigator.clipboard.writeText(text); $('kopierenBtn').textContent = t('kopiert'); setTimeout(() => { $('kopierenBtn').textContent = t('kopieren'); }, 1500); }
+            catch (e) { /* Zwischenablage nicht erlaubt */ }
+        };
+        $('nochmalBtn').onclick = () => { $('schritt3').hidden = true; $('schritt1').hidden = false; fuelleTracker(); window.scrollTo({ top: 0 }); };
+
+        // ------------------------------------------------------------
+        // Start der Seite
+        // ------------------------------------------------------------
+        function aktualisiereTexte() {
+            $('cvInfo').textContent = lebenslauf() ? t('cv_ok') : t('cv_leer');
+            $('tipps').innerHTML = L().tipps.map(x => '<li>' + esc(x) + '</li>').join('');
+            fuelleTracker();
+            if (!$('schritt2').hidden && ergebnisse.length) $('weiterBtn').textContent = i === ergebnisse.length - 1 ? t('fertig_btn') : t('weiter');
+        }
+        if (window.sdKi) {
+            window.sdKi.baueAuswahl($('kiWahl'), { geminiKeyFeld: true });
+            diktat = window.sdKi.diktatAnbinden($('antwort'), $('mikroBtn'), (x) => { $('spInfo').textContent = x || ''; });
+        } else {
+            document.querySelector('input[name=art][value=standard]').checked = true;
+        }
+        // Aus dem Tracker mit ?bewerbung=ID aufgerufen: Stelle vorbelegen
+        const vorwahl = new URLSearchParams(location.search).get('bewerbung');
+        fuelleTracker();
+        if (vorwahl) { $('trackerWahl').value = vorwahl; $('trackerWahl').onchange(); }
+        document.addEventListener('sd-lang-changed', aktualisiereTexte);
+        aktualisiereTexte();
+    </script>
+</body>
+
+</html>

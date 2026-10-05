@@ -43,6 +43,8 @@
       openai: '🟢 ChatGPT', openai_sub: 'OpenAI · eigener Schlüssel · Zahlung nach Nutzung',
       claude: '🟠 Claude', claude_sub: 'Anthropic · eigener Schlüssel · Zahlung nach Nutzung',
       key_link_openai: '🔗 Schlüssel bei OpenAI holen', key_link_claude: '🔗 Schlüssel bei Anthropic holen',
+      key_link_gemini: '🔗 Kostenlosen Schlüssel bei Google holen', key_lbl_gemini: 'Dein Gemini-API-Schlüssel',
+      gemini_key_hinweis: 'Kostenlos bei Google AI Studio. Deine Texte gehen direkt von deinem Gerät an Google – nicht über uns. Derselbe Schlüssel gilt in allen SD-Apps.',
       key_lbl_openai: 'Dein OpenAI-API-Schlüssel', key_lbl_claude: 'Dein Anthropic-API-Schlüssel (Claude)',
       key_ph: 'Schlüssel hier einfügen …', key_speichern: 'Schlüssel speichern', key_dauerhaft: 'Dauerhaft in diesem Browser merken',
       key_gespeichert: '✓ Gespeichert', key_entfernt: 'Schlüssel entfernt',
@@ -66,7 +68,7 @@
       tech: 'Technischer Grund',
       laden_fehler: 'SD Lotse konnte nicht geladen werden: {msg}',
       kein_text: 'SD Lotse hat keinen Text geliefert. Bitte nochmal versuchen.',
-      kein_key: 'Für ☁️ Gemini ist ein Gemini-Schlüssel nötig (z. B. im KI-Assistenten unter ⚙️ eintragen) – oder wähle 🔒 SD Lotse.',
+      kein_key: 'Für ☁️ Gemini ist ein Gemini-Schlüssel nötig – bitte im KI-Bereich eintragen (kostenlos bei Google AI Studio) – oder wähle 🔒 SD Lotse.',
       gemini_fehler: 'Google-Anfrage fehlgeschlagen (Status {status}).',
       gemini_key_falsch: 'Google hat den Gemini-Schlüssel abgelehnt.',
       gemini_kontingent: 'Das kostenlose Gemini-Kontingent ist gerade aufgebraucht – später nochmal versuchen oder 🔒 SD Lotse wählen.',
@@ -123,6 +125,8 @@
       openai: '🟢 ChatGPT', openai_sub: 'OpenAI · own key · pay per use',
       claude: '🟠 Claude', claude_sub: 'Anthropic · own key · pay per use',
       key_link_openai: '🔗 Get a key from OpenAI', key_link_claude: '🔗 Get a key from Anthropic',
+      key_link_gemini: '🔗 Get a free key from Google', key_lbl_gemini: 'Your Gemini API key',
+      gemini_key_hinweis: 'Free at Google AI Studio. Your texts go directly from your device to Google – not through us. The same key works in all SD apps.',
       key_lbl_openai: 'Your OpenAI API key', key_lbl_claude: 'Your Anthropic API key (Claude)',
       key_ph: 'Paste key here …', key_speichern: 'Save key', key_dauerhaft: 'Remember permanently in this browser',
       key_gespeichert: '✓ Saved', key_entfernt: 'Key removed',
@@ -146,7 +150,7 @@
       tech: 'Technical reason',
       laden_fehler: 'SD Lotse could not be loaded: {msg}',
       kein_text: 'SD Lotse returned no text. Please try again.',
-      kein_key: '☁️ Gemini needs a Gemini key (e.g. enter it in the AI assistant under ⚙️) – or choose 🔒 SD Lotse.',
+      kein_key: '☁️ Gemini needs a Gemini key – please enter it in the AI section (free at Google AI Studio) – or choose 🔒 SD Lotse.',
       gemini_fehler: 'Google request failed (status {status}).',
       gemini_key_falsch: 'Google rejected the Gemini key.',
       gemini_kontingent: 'The free Gemini quota is used up for now – try again later or choose 🔒 SD Lotse.',
@@ -288,8 +292,12 @@
   // ------------------------------------------------------------
   // OpenAI / Claude: Schluessel-Feld im KI-Bereich der Apps
   // ------------------------------------------------------------
+  // Schluessel-Feld auch fuer Gemini (auf Seiten ohne eigenes Gemini-Feld)
+  const SCHLUESSEL = Object.assign({
+    gemini: { name: 'Gemini', firma: 'Google', keyStorage: GEMINI_KEY_STORAGE, link: 'https://aistudio.google.com/apikey' }
+  }, ONLINE);
   function onlineKey(a) {
-    const k = ONLINE[a].keyStorage;
+    const k = SCHLUESSEL[a].keyStorage;
     return lesen(sessionStorage, k) || lesen(localStorage, k) || '';
   }
   function onlineModell(a) {
@@ -300,7 +308,7 @@
     } catch (e) { return ONLINE[a].standardModell; }
   }
   function schluesselBoxHtml(a) {
-    const o = ONLINE[a];
+    const o = SCHLUESSEL[a];
     const dauerhaft = !!lesen(localStorage, o.keyStorage);
     return '<div class="sdki-key">' +
       '<a class="sdki-keylink" href="' + o.link + '" target="_blank" rel="noopener">' + esc(tx('key_link_' + a)) + '</a>' +
@@ -308,11 +316,11 @@
       '<input type="password" id="sdki-key-' + a + '" autocomplete="off" placeholder="' + esc(tx('key_ph')) + '" value="' + esc(onlineKey(a)) + '">' +
       '<div class="sdki-zeile"><label style="font-weight:normal;display:flex;gap:6px;align-items:center"><input type="checkbox" data-dauerhaft' + (dauerhaft ? ' checked' : '') + '> ' + esc(tx('key_dauerhaft')) + '</label></div>' +
       '<div class="sdki-zeile"><button type="button" class="sdki-btn prim" data-speichern>' + esc(tx('key_speichern')) + '</button><span data-status aria-live="polite"></span></div>' +
-      '<p class="sdki-hinweis">' + esc(tx('online_hinweis', { firma: o.firma })) + '</p>' +
+      '<p class="sdki-hinweis">' + esc(a === 'gemini' ? tx('gemini_key_hinweis') : tx('online_hinweis', { firma: o.firma })) + '</p>' +
       '</div>';
   }
   function verbindeSchluesselBox(box, a) {
-    const o = ONLINE[a];
+    const o = SCHLUESSEL[a];
     const feld = box.querySelector('#sdki-key-' + a);
     const status = box.querySelector('[data-status]');
     box.querySelector('[data-speichern]').onclick = () => {
@@ -324,7 +332,10 @@
     };
   }
 
-  function baueAuswahl(container) {
+  // optionen.geminiKeyFeld: auch fuer Gemini ein Schluessel-Feld zeigen
+  // (Dialoge und Seiten ohne eigenes Gemini-Feld)
+  function baueAuswahl(container, optionen) {
+    const geminiFeld = !!(optionen && optionen.geminiKeyFeld);
     if (!container) return;
     stylesEinfuegen();
     const box = document.createElement('div');
@@ -340,9 +351,9 @@
         (a === 'lotse'
           ? '<p class="sdki-hinweis">' + esc(tx('lotse_hinweis')) + ' <a href="' + INFO_URL + '" target="_blank" rel="noopener">' + esc(tx('info')) + '</a></p>'
           : '') +
-        (ONLINE[a] ? schluesselBoxHtml(a) : '');
+        (ONLINE[a] || (a === 'gemini' && geminiFeld) ? schluesselBoxHtml(a) : '');
       box.querySelectorAll('.sdki-opt').forEach(b => { b.onclick = () => setzeAnbieter(b.dataset.a); });
-      if (ONLINE[a]) verbindeSchluesselBox(box, a);
+      if (ONLINE[a] || (a === 'gemini' && geminiFeld)) verbindeSchluesselBox(box, a);
     };
     zeichnen();
     document.addEventListener('sd-ki-anbieter', zeichnen);
@@ -1029,7 +1040,7 @@
       '<div class="sdki-fehler" data-fehler hidden></div>' +
       '<div data-ergebnis hidden></div>');
     const $q = (sel) => o.querySelector(sel);
-    baueAuswahl($q('[data-auswahl]'));
+    baueAuswahl($q('[data-auswahl]'), { geminiKeyFeld: true });
     if (opt.modus === 'sprechen') $q('[data-verbessern]').checked = true;
     const privat = () => {
       const a = anbieter();
@@ -1226,7 +1237,7 @@
       '<p class="sdki-klein">' + esc(tx('dlg_hinweis_recht')) + '</p>' +
       '<div class="sdki-knoepfe" data-unten></div>');
     const $q = (sel) => o.querySelector(sel);
-    baueAuswahl($q('[data-wahl]'));
+    baueAuswahl($q('[data-wahl]'), { geminiKeyFeld: true });
     const ausgabe = $q('[data-ausgabe]');
     const fehler = $q('[data-fehler]');
     let laeuft = false;
