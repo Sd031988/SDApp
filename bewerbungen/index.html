@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Bewerbungs-Tracker</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Bewerbungs-Tracker: alle Bewerbungen mit Status, Fristen, Erinnerungen und Kosten im Blick">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7;
+            --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --danger: #b42318;
+            --s-gemerkt: #8a94a6; --s-beworben: #2f6fb5; --s-gespraech: #b7791f; --s-zusage: #2f7d72; --s-absage: #a0525a;
+        }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); min-height: 100dvh; }
+
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; font-size: 1rem; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 520px) { .brand small, .sd-logo { display: none; } }
+
+        main { max-width: 1200px; margin: 0 auto; padding: 14px 16px 110px; display: grid; gap: 14px; }
+
+        .kopf { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+        .zahlen { display: flex; flex-wrap: wrap; gap: 8px; }
+        .zahl { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; min-width: 92px; }
+        .zahl b { display: block; font-size: 1.25rem; font-family: Georgia, serif; font-variant-numeric: tabular-nums; }
+        .zahl span { font-size: .74rem; color: var(--muted); }
+        @media (max-width: 520px) {
+            .kopf { display: grid; }
+            .zahlen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+            .zahl { min-width: 0; padding: 6px 8px; }
+            .zahl b { font-size: 1.05rem; }
+            .zahl span { font-size: .66rem; }
+        }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px 13px; min-height: 42px; font: inherit; font-weight: bold; font-size: .88rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.klein { min-height: 34px; padding: 5px 9px; font-size: .8rem; }
+        .btn.gefahr { color: var(--danger); }
+
+        .erinnerungen { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 12px; padding: 10px 14px; font-size: .88rem; display: grid; gap: 6px; }
+        .erinnerungen strong { font-size: .9rem; }
+        .erinnerung { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+        .erinnerung button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: bold; cursor: pointer; padding: 0; text-decoration: underline; }
+
+        .filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .82rem; font-weight: bold; cursor: pointer; color: var(--ink); }
+        .chip.an { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .suche { flex: 1 1 180px; min-width: 0; font: inherit; font-size: 16px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
+
+        .brett { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; align-items: start; }
+        @media (max-width: 1100px) { .brett { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 760px) { .brett { grid-template-columns: 1fr; } }
+        .spalte { background: rgba(255, 255, 255, .55); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+        .spalte h2 { margin: 0 2px 2px; font-size: .9rem; display: flex; align-items: center; gap: 6px; }
+        .spalte h2 .punkt { width: 10px; height: 10px; border-radius: 50%; }
+        .spalte h2 .anz { margin-left: auto; color: var(--muted); font-weight: normal; font-size: .8rem; }
+        .spalte .leer { color: var(--muted); font-size: .8rem; padding: 4px 2px; }
+
+        .karte { background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--farbe, var(--line)); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+        .karte h3 { margin: 0; font-size: .98rem; overflow-wrap: anywhere; }
+        .karte .pos { font-size: .86rem; overflow-wrap: anywhere; }
+        .karte .meta { font-size: .76rem; color: var(--muted); }
+        .karte .schritt { font-size: .8rem; background: var(--accent-soft); border-radius: 8px; padding: 5px 8px; }
+        .karte .schritt.faellig { background: #fdecea; color: var(--danger); font-weight: bold; }
+        .karte .aktionen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .karte select { font: inherit; font-size: .8rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper); }
+
+        .werkzeuge { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; }
+        .werkzeuge h2 { margin: 0; font-family: Georgia, serif; font-size: 1rem; }
+        .info { color: var(--muted); font-size: .8rem; line-height: 1.5; margin: 0; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(23, 42, 58, .45); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .dialog { background: #fff; border-radius: 16px; max-width: 640px; width: 100%; max-height: calc(100dvh - 32px); overflow: auto; padding: 18px; display: grid; gap: 10px; }
+        .dialog h2 { margin: 0; font-family: Georgia, serif; font-size: 1.15rem; }
+        .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 520px) { .zeile { grid-template-columns: 1fr; } }
+        label.feld { display: grid; gap: 4px; font-size: .8rem; font-weight: bold; min-width: 0; }
+        label.feld span { font-weight: normal; color: var(--muted); font-size: .74rem; }
+        .dialog input, .dialog select, .dialog textarea { width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; }
+        .dialog textarea { min-height: 80px; resize: vertical; }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Bewerbungs-Tracker</strong><small data-i18n="untertitel">Alle Bewerbungen, Termine und Kosten im Blick</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="kopf">
+            <div class="zahlen" id="zahlen"></div>
+            <button type="button" class="btn prim" id="neuBtn" data-i18n="neu">＋ Neue Bewerbung</button>
+        </div>
+
+        <div class="erinnerungen" id="erinnerungen" hidden></div>
+
+        <div class="filter">
+            <div id="chips" class="filter"></div>
+            <input type="search" class="suche" id="suche" data-i18n-placeholder="suche" placeholder="Firma oder Stelle suchen …">
+        </div>
+
+        <div class="brett" id="brett"></div>
+
+        <section class="werkzeuge">
+            <h2 data-i18n="werkzeuge">🧰 Werkzeuge</h2>
+            <p class="info" data-i18n="steuer_info">Bewerbungskosten (Mappen, Porto, Fotos) und Fahrten zu Vorstellungsgesprächen kannst du von der Steuer absetzen. Mit einem Tipp landen sie im Steuer-Helfer – nach Jahr sortiert.</p>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="steuerBtn" data-i18n="steuer_btn">🧾 Kosten in den Steuer-Helfer übernehmen</button>
+                <a class="btn" href="../steuer/index.html" data-i18n="steuer_oeffnen">Steuer-Helfer öffnen</a>
+            </div>
+            <p class="info" id="steuerStatus" aria-live="polite"></p>
+            <p class="info" data-i18n="daten_info">🔒 Deine Bewerbungen werden nur in diesem Browser auf deinem Gerät gespeichert. Mit einer Sicherung kannst du sie mitnehmen; als Tabelle (CSV) öffnen sie sich auch in Excel.</p>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="csvBtn" data-i18n="csv">📊 Als Tabelle (CSV)</button>
+                <button type="button" class="btn" id="exportBtn" data-i18n="export">⬇️ Sicherung</button>
+                <button type="button" class="btn" id="importBtn" data-i18n="import">⬆️ Sicherung laden</button>
+                <input type="file" id="importDatei" accept="application/json,.json" hidden>
+                <button type="button" class="btn gefahr" id="alleLoeschen" data-i18n="alle_loeschen">🗑️ Alle löschen</button>
+            </div>
+            <p class="info" id="datenStatus" aria-live="polite"></p>
+        </section>
+    </main>
+
+    <div class="overlay" id="dialog" hidden>
+        <form class="dialog" id="formular" autocomplete="off">
+            <h2 id="dialogTitel" data-i18n="dlg_neu">Neue Bewerbung</h2>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_firma_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Firma</span><input name="firma" required></label>
+                <label class="feld"><span data-i18n="f_position_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Stelle</span><input name="position"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_ort_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Ort</span><input name="ort"></label>
+                <label class="feld"><span data-i18n="f_status_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Status</span><select name="status" id="statusWahl"></select></label>
+            </div>
+            <label class="feld"><span data-i18n="f_link_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Link zur Stellenanzeige</span><input name="link" type="url" inputmode="url" placeholder="https://"></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_kontakt_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Ansprechperson</span><input name="kontakt" data-i18n-placeholder="f_kontakt_ph" placeholder="z. B. Frau Müller"></label>
+                <label class="feld"><span data-i18n="f_kontaktinfo_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">E-Mail / Telefon</span><input name="kontaktInfo"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_beworben_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Beworben am</span><input name="beworbenAm" type="date"></label>
+                <label class="feld"><span data-i18n="f_frist_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Bewerbungsfrist</span><input name="frist" type="date"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_schritt_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Nächster Schritt</span><input name="naechsterSchritt" data-i18n-placeholder="f_schritt_ph" placeholder="z. B. Vorstellungsgespräch, nachfragen"></label>
+                <label class="feld"><span data-i18n="f_schrittam_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">am</span><input name="naechsterAm" type="date"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_kosten_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Kosten der Bewerbung (€)</span><input name="kosten" inputmode="decimal" data-i18n-placeholder="f_kosten_ph" placeholder="Mappe, Porto, Fotos"></label>
+                <label class="feld"><span data-i18n="f_km_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Fahrt zum Gespräch (km hin + zurück)</span><input name="fahrtKm" inputmode="decimal"></label>
+            </div>
+            <label class="feld"><span data-i18n="f_notizen_l" style="font-weight:bold;color:var(--ink);font-size:.8rem">Notizen</span><textarea name="notizen"></textarea></label>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" id="abbrechen" data-i18n="abbrechen">Abbrechen</button>
+                <button type="button" class="btn gefahr" id="loeschen" data-i18n="loeschen" style="margin-left:auto">Löschen</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Bewerbungs-Tracker', untertitel: 'Alle Bewerbungen, Termine und Kosten im Blick', neu: '＋ Neue Bewerbung',
+                suche: 'Firma oder Stelle suchen …', werkzeuge: '🧰 Werkzeuge',
+                steuer_info: 'Bewerbungskosten (Mappen, Porto, Fotos) und Fahrten zu Vorstellungsgesprächen kannst du von der Steuer absetzen. Mit einem Tipp landen sie im Steuer-Helfer – nach Jahr sortiert.',
+                steuer_btn: '🧾 Kosten in den Steuer-Helfer übernehmen', steuer_oeffnen: 'Steuer-Helfer öffnen',
+                daten_info: '🔒 Deine Bewerbungen werden nur in diesem Browser auf deinem Gerät gespeichert. Mit einer Sicherung kannst du sie mitnehmen; als Tabelle (CSV) öffnen sie sich auch in Excel.',
+                csv: '📊 Als Tabelle (CSV)', export: '⬇️ Sicherung', import: '⬆️ Sicherung laden', alle_loeschen: '🗑️ Alle löschen',
+                dlg_neu: 'Neue Bewerbung', dlg_bearbeiten: 'Bewerbung bearbeiten',
+                f_firma_l: 'Firma', f_position_l: 'Stelle', f_ort_l: 'Ort', f_status_l: 'Status', f_link_l: 'Link zur Stellenanzeige',
+                f_kontakt_l: 'Ansprechperson', f_kontakt_ph: 'z. B. Frau Müller', f_kontaktinfo_l: 'E-Mail / Telefon',
+                f_beworben_l: 'Beworben am', f_frist_l: 'Bewerbungsfrist', f_schritt_l: 'Nächster Schritt', f_schritt_ph: 'z. B. Vorstellungsgespräch, nachfragen',
+                f_schrittam_l: 'am', f_kosten_l: 'Kosten der Bewerbung (€)', f_kosten_ph: 'Mappe, Porto, Fotos', f_km_l: 'Fahrt zum Gespräch (km hin + zurück)',
+                f_notizen_l: 'Notizen', speichern: 'Speichern', abbrechen: 'Abbrechen', loeschen: 'Löschen',
+                st_gemerkt: 'Gemerkt', st_beworben: 'Beworben', st_gespraech: 'Gespräch', st_zusage: 'Zusage', st_absage: 'Absage',
+                alle: 'Alle', z_gesamt: 'Bewerbungen', z_gespraech: 'Gespräche', z_zusage: 'Zusagen', z_antwort: 'Antwortquote',
+                leer: 'Noch nichts hier.', leer_start: 'Noch keine Bewerbungen. Tippe auf „＋ Neue Bewerbung“.',
+                beworben_am: 'beworben am {d}', frist_bis: 'Frist bis {d}', heute: 'heute', ueberfaellig: 'überfällig',
+                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Anschreiben',
+                t_bearbeiten: 'Bearbeiten', t_kalender: 'Termin in den Kalender', t_anzeige: 'Stellenanzeige öffnen', t_anschreiben: 'Anschreiben für diese Stelle in der Lebenslauf-App schreiben',
+                er_titel: '🔔 Erinnerungen', er_faellig: '{firma}: „{schritt}“ – {wann}', er_nachfassen: '{firma}: seit {tage} Tagen keine Antwort – nachfragen?',
+                er_frist: '{firma}: Bewerbungsfrist {wann}', er_oeffnen: 'öffnen', in_tagen: 'in {n} Tagen', morgen: 'morgen',
+                steuer_ok: '✓ Übernommen: {n} Posten für {jahre}. Bereits übernommene Einträge wurden aktualisiert, nicht doppelt angelegt.',
+                steuer_leer: 'Keine Bewerbung mit Kosten oder Fahrt-km und Datum „Beworben am“ gefunden.',
+                loeschen_frage: 'Diese Bewerbung löschen?', alle_frage: 'Wirklich ALLE Bewerbungen auf diesem Gerät löschen?',
+                import_frage: 'Sicherung laden? Bewerbungen mit gleicher Kennung werden ersetzt, andere bleiben erhalten.',
+                import_ok: '✓ Sicherung geladen ({n} Bewerbungen).', import_fehler: 'Die Datei konnte nicht gelesen werden.',
+                export_ok: '✓ Sicherung heruntergeladen.', geloescht: '✓ Gelöscht.'
+            },
+            en: {
+                titel: 'Application tracker', untertitel: 'All applications, dates and costs at a glance', neu: '＋ New application',
+                suche: 'Search company or job …', werkzeuge: '🧰 Tools',
+                steuer_info: 'Application costs (folders, postage, photos) and trips to interviews are tax-deductible in Germany. One tap puts them into the tax helper – sorted by year.',
+                steuer_btn: '🧾 Put costs into the tax helper', steuer_oeffnen: 'Open tax helper',
+                daten_info: '🔒 Your applications are stored only in this browser on your device. A backup lets you take them along; as a table (CSV) they also open in Excel.',
+                csv: '📊 As table (CSV)', export: '⬇️ Backup', import: '⬆️ Load backup', alle_loeschen: '🗑️ Delete all',
+                dlg_neu: 'New application', dlg_bearbeiten: 'Edit application',
+                f_firma_l: 'Company', f_position_l: 'Job', f_ort_l: 'Location', f_status_l: 'Status', f_link_l: 'Link to job ad',
+                f_kontakt_l: 'Contact person', f_kontakt_ph: 'e.g. Ms Miller', f_kontaktinfo_l: 'E-mail / phone',
+                f_beworben_l: 'Applied on', f_frist_l: 'Application deadline', f_schritt_l: 'Next step', f_schritt_ph: 'e.g. interview, follow up',
+                f_schrittam_l: 'on', f_kosten_l: 'Application costs (€)', f_kosten_ph: 'folder, postage, photos', f_km_l: 'Trip to interview (km there + back)',
+                f_notizen_l: 'Notes', speichern: 'Save', abbrechen: 'Cancel', loeschen: 'Delete',
+                st_gemerkt: 'Saved', st_beworben: 'Applied', st_gespraech: 'Interview', st_zusage: 'Offer', st_absage: 'Rejected',
+                alle: 'All', z_gesamt: 'Applications', z_gespraech: 'Interviews', z_zusage: 'Offers', z_antwort: 'Response rate',
+                leer: 'Nothing here yet.', leer_start: 'No applications yet. Tap "＋ New application".',
+                beworben_am: 'applied on {d}', frist_bis: 'deadline {d}', heute: 'today', ueberfaellig: 'overdue',
+                b_bearbeiten: '✏️', b_kalender: '📅', b_anzeige: '🔗', b_anschreiben: '✍️ Cover letter',
+                t_bearbeiten: 'Edit', t_kalender: 'Add date to calendar', t_anzeige: 'Open job ad', t_anschreiben: 'Write a cover letter for this job in the resume app',
+                er_titel: '🔔 Reminders', er_faellig: '{firma}: "{schritt}" – {wann}', er_nachfassen: '{firma}: no answer for {tage} days – follow up?',
+                er_frist: '{firma}: application deadline {wann}', er_oeffnen: 'open', in_tagen: 'in {n} days', morgen: 'tomorrow',
+                steuer_ok: '✓ Done: {n} items for {jahre}. Items already transferred were updated, not duplicated.',
+                steuer_leer: 'No application with costs or trip km and an "Applied on" date found.',
+                loeschen_frage: 'Delete this application?', alle_frage: 'Really delete ALL applications on this device?',
+                import_frage: 'Load backup? Applications with the same ID will be replaced, others are kept.',
+                import_ok: '✓ Backup loaded ({n} applications).', import_fehler: 'The file could not be read.',
+                export_ok: '✓ Backup downloaded.', geloescht: '✓ Deleted.'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script>
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const t = (k, v) => {
+            let s = ((window.SD_I18N[window.SD_LANG || 'de'] || window.SD_I18N.de)[k]) ?? window.SD_I18N.de[k] ?? k;
+            if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(v[x]); });
+            return s;
+        };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const zahl = (v) => { const n = parseFloat(String(v || '').replace(/[€\s]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
+
+        const STATUS = ['gemerkt', 'beworben', 'gespraech', 'zusage', 'absage'];
+        const SPEICHER = 'sdBewerbungen';
+        const NACHFASSEN_TAGE = 14;
+
+        let liste = [];
+        try { liste = JSON.parse(localStorage.getItem(SPEICHER) || '[]') || []; } catch (e) { liste = []; }
+        if (!Array.isArray(liste)) liste = [];
+        let filter = 'alle';
+        let bearbeiteId = null;
+
+        function speichern() { try { localStorage.setItem(SPEICHER, JSON.stringify(liste)); } catch (e) { /* voll */ } }
+        const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+        // Datum: intern ISO (JJJJ-MM-TT), Anzeige je Sprache
+        const heuteIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+        const zeigeDatum = (iso) => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return window.SD_LANG === 'en' ? d + '/' + m + '/' + y : d + '.' + m + '.' + y; };
+        const tageBis = (iso) => Math.round((new Date(iso + 'T00:00:00') - new Date(heuteIso() + 'T00:00:00')) / 86400000);
+        const wann = (iso) => { const n = tageBis(iso); return n < 0 ? t('ueberfaellig') + ' (' + zeigeDatum(iso) + ')' : n === 0 ? t('heute') : n === 1 ? t('morgen') : t('in_tagen', { n }) + ' (' + zeigeDatum(iso) + ')'; };
+
+        // ------------------------------------------------------------
+        // Anzeige
+        // ------------------------------------------------------------
+        function zeichne() {
+            // Zahlen
+            const beworbenOderWeiter = liste.filter(b => b.status !== 'gemerkt');
+            const antworten = liste.filter(b => ['gespraech', 'zusage', 'absage'].includes(b.status)).length;
+            const quote = beworbenOderWeiter.length ? Math.round(antworten / beworbenOderWeiter.length * 100) + ' %' : '–';
+            $('zahlen').innerHTML = [
+                [beworbenOderWeiter.length, t('z_gesamt')], [liste.filter(b => b.status === 'gespraech').length, t('z_gespraech')],
+                [liste.filter(b => b.status === 'zusage').length, t('z_zusage')], [quote, t('z_antwort')]
+            ].map(([z, l]) => '<div class="zahl"><b>' + z + '</b><span>' + esc(l) + '</span></div>').join('');
+
+            // Erinnerungen
+            const er = [];
+            liste.forEach(b => {
+                if (b.naechsterAm && tageBis(b.naechsterAm) <= 3 && !['zusage', 'absage'].includes(b.status)) {
+                    er.push([tageBis(b.naechsterAm), t('er_faellig', { firma: esc(b.firma), schritt: esc(b.naechsterSchritt || '…'), wann: wann(b.naechsterAm) }), b.id]);
+                } else if (b.status === 'beworben' && b.beworbenAm && !b.naechsterAm && -tageBis(b.beworbenAm) >= NACHFASSEN_TAGE && -tageBis(b.beworbenAm) <= 60) {
+                    er.push([0, t('er_nachfassen', { firma: esc(b.firma), tage: -tageBis(b.beworbenAm) }), b.id]);
+                }
+                if (b.status === 'gemerkt' && b.frist && tageBis(b.frist) >= 0 && tageBis(b.frist) <= 7) {
+                    er.push([tageBis(b.frist), t('er_frist', { firma: esc(b.firma), wann: wann(b.frist) }), b.id]);
+                }
+            });
+            er.sort((a, b) => a[0] - b[0]);
+            $('erinnerungen').hidden = !er.length;
+            $('erinnerungen').innerHTML = '<strong>' + esc(t('er_titel')) + '</strong>' +
+                er.map(([, text, id]) => '<div class="erinnerung"><span>' + text + '</span><button type="button" data-oeffnen="' + id + '">' + esc(t('er_oeffnen')) + '</button></div>').join('');
+
+            // Filter-Chips
+            $('chips').innerHTML = ['alle'].concat(STATUS).map(s =>
+                '<button type="button" class="chip' + (filter === s ? ' an' : '') + '" data-filter="' + s + '">' + esc(s === 'alle' ? t('alle') : t('st_' + s)) +
+                (s === 'alle' ? '' : ' (' + liste.filter(b => b.status === s).length + ')') + '</button>').join('');
+
+            // Brett
+            const q = ($('suche').value || '').toLowerCase().trim();
+            const passt = (b) => !q || [b.firma, b.position, b.ort, b.kontakt, b.notizen].join(' ').toLowerCase().includes(q);
+            const spalten = filter === 'alle' ? STATUS : [filter];
+            const brett = $('brett');
+            brett.style.gridTemplateColumns = filter === 'alle' ? '' : '1fr';
+            if (!liste.length) { brett.innerHTML = '<div class="spalte"><p class="leer">' + esc(t('leer_start')) + '</p></div>'; return; }
+            brett.innerHTML = spalten.map(s => {
+                const eintraege = liste.filter(b => b.status === s && passt(b)).sort((a, b) =>
+                    (a.naechsterAm || a.frist || '9999').localeCompare(b.naechsterAm || b.frist || '9999') || (b.geaendert || 0) - (a.geaendert || 0));
+                return '<section class="spalte"><h2><span class="punkt" style="background:var(--s-' + s + ')"></span>' + esc(t('st_' + s)) +
+                    '<span class="anz">' + eintraege.length + '</span></h2>' +
+                    (eintraege.length ? eintraege.map(karte).join('') : '<p class="leer">' + esc(t('leer')) + '</p>') + '</section>';
+            }).join('');
+        }
+
+        function karte(b) {
+            const optionen = STATUS.map(s => '<option value="' + s + '"' + (b.status === s ? ' selected' : '') + '>' + esc(t('st_' + s)) + '</option>').join('');
+            const termin = b.naechsterAm || (b.status === 'gemerkt' ? b.frist : '');
+            const faellig = b.naechsterAm && tageBis(b.naechsterAm) <= 0 && !['zusage', 'absage'].includes(b.status);
+            return '<article class="karte" style="--farbe:var(--s-' + b.status + ')">' +
+                '<h3>' + esc(b.firma || '–') + '</h3>' +
+                (b.position ? '<div class="pos">' + esc(b.position) + '</div>' : '') +
+                '<div class="meta">' + [b.ort, b.beworbenAm ? t('beworben_am', { d: zeigeDatum(b.beworbenAm) }) : '', b.status === 'gemerkt' && b.frist ? t('frist_bis', { d: zeigeDatum(b.frist) }) : ''].filter(Boolean).map(esc).join(' · ') + '</div>' +
+                (b.naechsterSchritt || b.naechsterAm ? '<div class="schritt' + (faellig ? ' faellig' : '') + '">➡️ ' + esc(b.naechsterSchritt || '') + (b.naechsterAm ? ' – ' + esc(wann(b.naechsterAm)) : '') + '</div>' : '') +
+                '<div class="aktionen">' +
+                '<select data-status="' + b.id + '" aria-label="Status">' + optionen + '</select>' +
+                '<button type="button" class="btn klein" data-bearbeiten="' + b.id + '" title="' + esc(t('t_bearbeiten')) + '">' + t('b_bearbeiten') + '</button>' +
+                (termin ? '<button type="button" class="btn klein" data-kalender="' + b.id + '" title="' + esc(t('t_kalender')) + '">' + t('b_kalender') + '</button>' : '') +
+                (b.link ? '<a class="btn klein" href="' + esc(b.link) + '" target="_blank" rel="noopener" title="' + esc(t('t_anzeige')) + '">' + t('b_anzeige') + '</a>' : '') +
+                (['gemerkt', 'beworben'].includes(b.status) ? '<button type="button" class="btn klein" data-anschreiben="' + b.id + '" title="' + esc(t('t_anschreiben')) + '">' + esc(t('b_anschreiben')) + '</button>' : '') +
+                '</div></article>';
+        }
+
+        // ------------------------------------------------------------
+        // Bearbeiten
+        // ------------------------------------------------------------
+        const FELDER = ['firma', 'position', 'ort', 'status', 'link', 'kontakt', 'kontaktInfo', 'beworbenAm', 'frist', 'naechsterSchritt', 'naechsterAm', 'kosten', 'fahrtKm', 'notizen'];
+        function oeffne(id) {
+            bearbeiteId = id || null;
+            const b = liste.find(x => x.id === id) || { status: 'gemerkt' };
+            $('statusWahl').innerHTML = STATUS.map(s => '<option value="' + s + '">' + esc(t('st_' + s)) + '</option>').join('');
+            const f = $('formular');
+            FELDER.forEach(k => { f.elements[k].value = b[k] == null ? '' : b[k]; });
+            $('dialogTitel').textContent = t(id ? 'dlg_bearbeiten' : 'dlg_neu');
+            $('loeschen').hidden = !id;
+            $('dialog').hidden = false;
+            setTimeout(() => f.elements.firma.focus(), 50);
+        }
+        function schliesse() { $('dialog').hidden = true; bearbeiteId = null; }
+        $('formular').onsubmit = (e) => {
+            e.preventDefault();
+            const f = $('formular');
+            let b = liste.find(x => x.id === bearbeiteId);
+            if (!b) { b = { id: neueId(), erstellt: Date.now() }; liste.push(b); }
+            const vorher = b.status;
+            FELDER.forEach(k => { b[k] = (f.elements[k].value || '').trim(); });
+            setzeStatus(b, b.status, vorher);
+            speichern(); schliesse(); zeichne();
+        };
+        function setzeStatus(b, neu, vorher) {
+            b.status = neu;
+            b.geaendert = Date.now();
+            if (neu === 'beworben' && !b.beworbenAm) b.beworbenAm = heuteIso();
+            if (vorher !== neu) (b.verlauf = b.verlauf || []).push({ datum: heuteIso(), status: neu });
+        }
+        $('abbrechen').onclick = schliesse;
+        $('dialog').addEventListener('click', (e) => { if (e.target === $('dialog')) schliesse(); });
+        $('loeschen').onclick = () => {
+            if (!confirm(t('loeschen_frage'))) return;
+            liste = liste.filter(x => x.id !== bearbeiteId);
+            speichern(); schliesse(); zeichne();
+        };
+        $('neuBtn').onclick = () => oeffne(null);
+
+        document.addEventListener('click', (e) => {
+            const el = e.target.closest('[data-filter],[data-bearbeiten],[data-kalender],[data-anschreiben],[data-oeffnen]');
+            if (!el) return;
+            if (el.dataset.filter) { filter = el.dataset.filter; zeichne(); }
+            else if (el.dataset.bearbeiten) oeffne(el.dataset.bearbeiten);
+            else if (el.dataset.oeffnen) oeffne(el.dataset.oeffnen);
+            else if (el.dataset.kalender) kalender(liste.find(x => x.id === el.dataset.kalender));
+            else if (el.dataset.anschreiben) anschreiben(liste.find(x => x.id === el.dataset.anschreiben));
+        });
+        document.addEventListener('change', (e) => {
+            const id = e.target.dataset && e.target.dataset.status;
+            if (!id) return;
+            const b = liste.find(x => x.id === id);
+            if (!b) return;
+            setzeStatus(b, e.target.value, b.status);
+            speichern(); zeichne();
+        });
+        $('suche').addEventListener('input', zeichne);
+
+        // ------------------------------------------------------------
+        // Kalender (.ics) – Termin ins Handy-/PC-Kalender
+        // ------------------------------------------------------------
+        function kalender(b) {
+            if (!b) return;
+            const datum = b.naechsterAm || b.frist;
+            if (!datum) return;
+            const titel = (b.naechsterAm ? (b.naechsterSchritt || t('f_schritt_l')) : t('f_frist_l')) + ' – ' + (b.firma || '');
+            const tag = datum.replace(/-/g, '');
+            const folgetag = new Date(datum + 'T00:00:00'); folgetag.setDate(folgetag.getDate() + 1);
+            const ende = folgetag.getFullYear() + String(folgetag.getMonth() + 1).padStart(2, '0') + String(folgetag.getDate()).padStart(2, '0');
+            const icsText = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, m => '\\' + m);
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Tracker//DE', 'BEGIN:VEVENT',
+                'UID:' + b.id + '-' + tag + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+                'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(titel),
+                'DESCRIPTION:' + icsText([b.position, b.kontakt, b.kontaktInfo, b.link].filter(Boolean).join('\n')),
+                'BEGIN:VALARM', 'TRIGGER:-PT15H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(titel), 'END:VALARM',
+                'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+            herunterladen(new Blob([ics], { type: 'text/calendar' }), 'termin-' + (b.firma || 'bewerbung').replace(/[^\wäöüÄÖÜß-]+/g, '-') + '.ics');
+        }
+        function herunterladen(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+
+        // ------------------------------------------------------------
+        // Anschreiben: Angaben in die Lebenslauf-App uebernehmen
+        // ------------------------------------------------------------
+        function anschreiben(b) {
+            if (!b) return;
+            const sitzung = localStorage.getItem('speicherModusEinstellung') === 'sitzung';
+            const ort = sitzung ? sessionStorage : localStorage;
+            let daten = {};
+            try { daten = JSON.parse(ort.getItem('lebenslaufDaten') || localStorage.getItem('lebenslaufDaten') || '{}') || {}; } catch (e) { daten = {}; }
+            daten.unternehmen = b.firma || '';
+            if (b.position) daten.position = b.position;
+            daten.ansprechperson = b.kontakt || '';
+            try {
+                ort.setItem('lebenslaufDaten', JSON.stringify(daten));
+                localStorage.setItem('pdfstudioBereinigtV2', '1');
+                if (b.link) sessionStorage.setItem('sdStellenLink', b.link);
+            } catch (e) { /* egal */ }
+            location.href = '../Lebenslauf_app.html#anschreiben';
+        }
+
+        // ------------------------------------------------------------
+        // Kosten -> Steuer-Helfer (nach Jahr von "Beworben am")
+        // ------------------------------------------------------------
+        $('steuerBtn').onclick = () => {
+            let steuer = {};
+            try { steuer = JSON.parse(localStorage.getItem('sdSteuerHelfer') || '{}') || {}; } catch (e) { steuer = {}; }
+            // Frueher uebernommene Tracker-Posten entfernen (keine Doppelten)
+            Object.keys(steuer).forEach(j => {
+                if (steuer[j] && Array.isArray(steuer[j].posten)) steuer[j].posten = steuer[j].posten.filter(p => !String(p.id || '').startsWith('trk-'));
+            });
+            let n = 0;
+            const jahre = new Set();
+            liste.forEach(b => {
+                const jahr = (b.beworbenAm || '').slice(0, 4);
+                if (!/^\d{4}$/.test(jahr)) return;
+                const kosten = zahl(b.kosten), km = zahl(b.fahrtKm);
+                if (!kosten && !km) return;
+                steuer[jahr] = steuer[jahr] || {};
+                steuer[jahr].posten = steuer[jahr].posten || [];
+                const name = [b.firma, b.position].filter(Boolean).join(' – ');
+                if (kosten) { steuer[jahr].posten.push({ id: 'trk-' + b.id + '-k', kategorie: 'bewerbung', text: 'Bewerbung ' + name, betrag: kosten.toFixed(2).replace('.', ','), datum: zeigeDatum(b.beworbenAm) }); n++; }
+                if (km) { steuer[jahr].posten.push({ id: 'trk-' + b.id + '-f', kategorie: 'vorstellung', text: 'Vorstellungsgespräch ' + name, km: String(km).replace('.', ',') }); n++; }
+                jahre.add(jahr);
+            });
+            try { localStorage.setItem('sdSteuerHelfer', JSON.stringify(steuer)); } catch (e) { /* voll */ }
+            $('steuerStatus').textContent = n ? t('steuer_ok', { n, jahre: [...jahre].sort().join(', ') }) : t('steuer_leer');
+        };
+
+        // ------------------------------------------------------------
+        // Sichern / Tabelle / Loeschen
+        // ------------------------------------------------------------
+        $('exportBtn').onclick = () => {
+            herunterladen(new Blob([JSON.stringify(liste, null, 2)], { type: 'application/json' }), 'bewerbungen-sicherung.json');
+            $('datenStatus').textContent = t('export_ok');
+        };
+        $('csvBtn').onclick = () => {
+            const spalten = ['firma', 'position', 'ort', 'status', 'beworbenAm', 'frist', 'naechsterSchritt', 'naechsterAm', 'kontakt', 'kontaktInfo', 'link', 'kosten', 'fahrtKm', 'notizen'];
+            const kopf = [t('f_firma_l'), t('f_position_l'), t('f_ort_l'), t('f_status_l'), t('f_beworben_l'), t('f_frist_l'), t('f_schritt_l'), t('f_schrittam_l'), t('f_kontakt_l'), t('f_kontaktinfo_l'), t('f_link_l'), t('f_kosten_l'), t('f_km_l'), t('f_notizen_l')];
+            const zelle = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+            const zeilen = [kopf.map(zelle).join(';')].concat(liste.map(b => spalten.map(k =>
+                zelle(k === 'status' ? t('st_' + b.status) : /Am$|frist/.test(k) ? zeigeDatum(b[k]) : b[k])).join(';')));
+            // BOM, damit Excel Umlaute richtig anzeigt; Semikolon fuer deutsches Excel
+            herunterladen(new Blob(['\ufeff' + zeilen.join('\r\n')], { type: 'text/csv;charset=utf-8' }), 'bewerbungen.csv');
+        };
+        $('importBtn').onclick = () => $('importDatei').click();
+        $('importDatei').onchange = async (e) => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+                const neu = JSON.parse(await f.text());
+                if (!Array.isArray(neu)) throw new Error();
+                if (!confirm(t('import_frage'))) return;
+                neu.forEach(b => { if (!b || !b.id) return; const i = liste.findIndex(x => x.id === b.id); if (i >= 0) liste[i] = b; else liste.push(b); });
+                speichern(); zeichne();
+                $('datenStatus').textContent = t('import_ok', { n: neu.length });
+            } catch (err) { $('datenStatus').textContent = t('import_fehler'); }
+        };
+        $('alleLoeschen').onclick = () => {
+            if (!confirm(t('alle_frage'))) return;
+            liste = []; speichern(); zeichne();
+            $('datenStatus').textContent = t('geloescht');
+        };
+
+        // Von anderen Apps hinzugefuegte Eintraege (z. B. aus dem Anschreiben) beim Zurueckkehren anzeigen
+        window.addEventListener('storage', (e) => {
+            if (e.key !== SPEICHER) return;
+            try { liste = JSON.parse(e.newValue || '[]') || []; } catch (err) { /* egal */ }
+            zeichne();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('dialog').hidden) schliesse(); });
+        document.addEventListener('sd-lang-changed', zeichne);
+        zeichne();
+    </script>
+</body>
+
+</html>

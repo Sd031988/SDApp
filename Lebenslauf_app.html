@@ -1773,7 +1773,7 @@
                 "stelle_cv_ok": "✓ Dein Lebenslauf wird verwendet: {felder}.",
                 "stelle_cv_leer": "⚠️ Dein Lebenslauf ist noch fast leer – das Anschreiben wird dann sehr allgemein und enthält Lücken in [eckigen Klammern]. Tipp: zuerst den Lebenslauf ausfüllen oder einlesen.",
                 "stelle_nur_link": "Links kann nur ☁️ Gemini öffnen. Bitte füge den Text der Anzeige ein oder hänge ein Foto/PDF an – oder wähle oben Gemini.",
-                "stelle_fertig": "✓ Anschreiben eingetragen – bitte durchlesen und bei Bedarf anpassen.",
+                "stelle_fertig": "✓ Anschreiben eingetragen und im Bewerbungs-Tracker vorgemerkt – bitte durchlesen und bei Bedarf anpassen.",
                 "lbl_tipps": "💡 Tipps zur Passung (wird nicht übernommen)",
                 "personal_sub": "Gilt für alle Bereiche (Lebenslauf, Anschreiben, Deckblatt, Bewerbungsmappe).",
                 "lbl_vorname": "Vorname",
@@ -1969,7 +1969,7 @@
                 "stelle_cv_ok": "✓ Your resume is used: {felder}.",
                 "stelle_cv_leer": "⚠️ Your resume is still almost empty – the letter will be very general and contain gaps in [square brackets]. Tip: fill in or import your resume first.",
                 "stelle_nur_link": "Only ☁️ Gemini can open links. Please paste the text of the ad or attach a photo/PDF – or choose Gemini above.",
-                "stelle_fertig": "✓ Cover letter filled in – please read it and adjust if needed.",
+                "stelle_fertig": "✓ Cover letter filled in and saved in the application tracker – please read it and adjust if needed.",
                 "lbl_tipps": "💡 Tips on the fit (not applied)",
                 "personal_sub": "Applies to all areas (resume, cover letter, title page, application folder).",
                 "lbl_vorname": "First name",
@@ -3325,6 +3325,22 @@
             return teile.join('\n');
         }
 
+        // Bewerbung im Bewerbungs-Tracker vormerken (falls noch nicht vorhanden)
+        function trackerMerken() {
+            try {
+                const firma = (document.getElementById('unternehmen').value || '').trim();
+                const position = (document.getElementById('position').value || '').trim();
+                if (!firma) return;
+                const liste = JSON.parse(localStorage.getItem('sdBewerbungen') || '[]') || [];
+                const gleich = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+                if (liste.some(b => gleich(b.firma, firma) && gleich(b.position, position))) return;
+                liste.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), erstellt: Date.now(), geaendert: Date.now(),
+                    firma, position, kontakt: (document.getElementById('ansprechperson').value || '').trim(), status: 'gemerkt',
+                    naechsterSchritt: window.SD_LANG === 'en' ? 'Send application' : 'Bewerbung abschicken' });
+                localStorage.setItem('sdBewerbungen', JSON.stringify(liste));
+            } catch (e) { /* egal */ }
+        }
+
         function anschreibenZurStelle() {
             if (!window.sdKi || !window.sdKi.einleseDialog) { alert(t('import_kein_sdki')); return; }
             const en = window.SD_LANG === 'en';
@@ -3341,8 +3357,12 @@
                 { id: 'anschreiben', label: en ? 'Cover letter text' : 'Text des Anschreibens', mehrzeilig: true },
                 { id: 'tipps', label: t('lbl_tipps'), nurAnzeige: true }
             ];
+            // Aus dem Bewerbungs-Tracker: Link der Anzeige schon eintragen
+            let vorgabe = '';
+            try { vorgabe = sessionStorage.getItem('sdStellenLink') || ''; sessionStorage.removeItem('sdStellenLink'); } catch (e) { vorgabe = ''; }
             window.sdKi.einleseDialog({
                 modus: 'beides',
+                vorgabeText: vorgabe,
                 ohneVerbessern: true,
                 titel: t('stelle_titel'),
                 beschreibung: t('stelle_beschreibung'),
@@ -3397,6 +3417,7 @@
                     }
                     updateVorschau();
                     speichereDaten();
+                    trackerMerken();
                     return n;
                 },
                 fertig: () => {
@@ -4021,7 +4042,13 @@
         ladeDaten();
         ladeGeminiKey();
         wechsleDesign('klassisch');
-        zeigeModus('lebenslauf');
+        zeigeModus(location.hash === '#anschreiben' ? 'anschreiben' : 'lebenslauf');
+        if (location.hash === '#anschreiben') {
+            const el = document.getElementById('stelle-status');
+            if (el) el.textContent = window.SD_LANG === 'en'
+                ? '📋 Company and job were taken from the application tracker. Tap "📌 Cover letter for a job ad" to write the letter.'
+                : '📋 Firma und Stelle wurden aus dem Bewerbungs-Tracker übernommen. Tippe auf „📌 Anschreiben zur Stellenanzeige“, um das Anschreiben schreiben zu lassen.';
+        }
         updateVorschau();
         bereinigeArchiv();
         sdAktualisiereGhostPlaceholders();
