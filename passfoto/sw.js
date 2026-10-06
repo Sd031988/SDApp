@@ -4,7 +4,7 @@
  * ersetzt: der Versions-Hash, der Basis-Pfad und die Liste der gebauten Assets.
  */
 
-const VERSION = 'muvqobu3-sd3'
+const VERSION = 'muvqobu3-sd4'
 const BASE = '/passfoto/'
 const APP_SHELL = `${BASE}index.html`
 const SHELL_CACHE = `passfoto-shell-${VERSION}`
@@ -17,7 +17,7 @@ const SHELL_ASSETS = [
   "/passfoto/favicon.svg",
   "/passfoto/icons/icon-192.png",
   "/passfoto/icons/icon-512.png",
-  "/passfoto/assets/index-0b043d97.js",
+  "/passfoto/assets/index-c592f6a7.js",
   "/passfoto/assets/index-CTopiuh8.css"
 ]
 
