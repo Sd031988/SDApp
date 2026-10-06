@@ -565,6 +565,12 @@
                 const l = json(lies(localStorage, 'sdPost'), []);
                 return l.length ? l : 'Keine Fristen gespeichert.';
             }
+            if (a.bereich === 'rechnungen') {
+                const r = json(lies(localStorage, 'sdRechnungen'), {});
+                const aus = (r.ausgang || []).map(x => ({ nr: x.nr, datum: x.datum, kunde: x.kunde && x.kunde.name, summe: x.summe, status: x.status, faellig: x.faellig }));
+                const ein = (r.eingang || []).map(x => ({ von: x.absender, nr: x.nr, betrag: x.betrag, faellig: x.faellig, bezahlt: !!x.bezahlt, art: x.kategorie }));
+                return (aus.length || ein.length) ? { geschrieben: aus, erhalten: ein } : 'Noch keine Rechnungen gespeichert.';
+            }
             if (a.bereich === 'steuer') {
                 const s = json(lies(localStorage, 'sdSteuerHelfer'), {});
                 const jahre = Object.keys(s).filter(k => /^\d{4}$/.test(k));
@@ -579,8 +585,8 @@
         // ============================================================
         const s = (beschreibung, extra) => Object.assign({ type: 'string', description: beschreibung }, extra || {});
         const WERKZEUGE = [
-            { name: 'sd_daten_lesen', lesend: true, beschreibung: 'Liest gespeicherte Daten der Person aus den SD-Bereichen: lebenslauf, bewerbungen (Bewerbungs-Tracker), fristen (Post-Assistent), steuer (Steuer-Helfer, optional mit jahr). Immer zuerst lesen statt raten.',
-              params: { type: 'object', properties: { bereich: s('Welcher Bereich', { enum: ['lebenslauf', 'bewerbungen', 'fristen', 'steuer'] }), jahr: s('Nur bei steuer: Jahr, z. B. 2025') }, required: ['bereich'] } },
+            { name: 'sd_daten_lesen', lesend: true, beschreibung: 'Liest gespeicherte Daten der Person aus den SD-Bereichen: lebenslauf, bewerbungen (Bewerbungs-Tracker), fristen (Post-Assistent), steuer (Steuer-Helfer, optional mit jahr), rechnungen (geschriebene und erhaltene Rechnungen). Immer zuerst lesen statt raten.',
+              params: { type: 'object', properties: { bereich: s('Welcher Bereich', { enum: ['lebenslauf', 'bewerbungen', 'fristen', 'steuer', 'rechnungen'] }), jahr: s('Nur bei steuer: Jahr, z. B. 2025') }, required: ['bereich'] } },
             { name: 'lebenslauf_aendern', beschreibung: 'Setzt Felder im Lebenslauf (nur angegebene Felder werden geändert). Mehrzeilige Felder (erfahrung, ausbildung) je Station eine Zeile "Zeitraum: Tätigkeit bei Firma, Ort". Nur Fakten, die die Person genannt hat.',
               params: { type: 'object', properties: Object.fromEntries(CV_FELDER.map(k => [k, s('Lebenslauf-Feld ' + k)])), required: [] } },
             { name: 'bewerbung_speichern', beschreibung: 'Legt eine Bewerbung im Bewerbungs-Tracker an oder ändert eine bestehende (mit id aus sd_daten_lesen). Datumsangaben als JJJJ-MM-TT. status: gemerkt, beworben, gespraech, zusage, absage.',

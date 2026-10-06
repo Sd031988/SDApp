@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Rechnungen</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Rechnungen schreiben (auch für Kleinunternehmer) und erhaltene Rechnungen im Blick behalten – mit Fälligkeiten, Erinnerungen und Steuer-Helfer">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root { --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7; --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --warn-ink: #8a5a00; --danger: #b42318; --danger-bg: #fdf0ee; --ok: #1f7a4d; --ok-bg: #e5f4ec; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); min-height: 100dvh; }
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 520px) { .brand small, .sd-logo { display: none; } }
+
+        .tabs { display: flex; gap: 6px; max-width: 900px; margin: 14px auto 0; padding: 0 16px; }
+        .tab { flex: 1; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 10px; font: inherit; font-weight: bold; font-size: .95rem; cursor: pointer; color: var(--ink); }
+        .tab.an { background: var(--accent); color: #fff; border-color: var(--accent); }
+        main { max-width: 900px; margin: 0 auto; padding: 14px 16px 90px; display: grid; gap: 14px; }
+        .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+        .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.1rem; }
+        .karte h3 { margin: 0; font-size: .95rem; }
+        details.karte > summary { cursor: pointer; font-family: Georgia, serif; font-weight: bold; font-size: 1.05rem; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+        details.karte > summary::-webkit-details-marker { display: none; }
+        details.karte > summary small { font-family: 'Trebuchet MS', Verdana, sans-serif; font-weight: normal; color: var(--muted); font-size: .8rem; }
+        .info { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 0; }
+        .hinweis { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 10px 12px; font-size: .84rem; line-height: 1.55; }
+        .hinweis ul { margin: 4px 0 0; padding-left: 18px; }
+        .fehler { background: var(--danger-bg); border: 1px solid #f1c4bf; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: .86rem; }
+        .ok { background: var(--ok-bg); border: 1px solid #b6dcc7; color: var(--ok); border-radius: 10px; padding: 10px 12px; font-size: .86rem; }
+        label.feld { display: grid; gap: 4px; font-size: .8rem; font-weight: bold; min-width: 0; }
+        label.feld small { font-weight: normal; color: var(--muted); }
+        input[type=text], input[type=date], input[type=number], input[type=email], select, textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; }
+        textarea { resize: vertical; line-height: 1.45; }
+        label.check { display: flex; gap: 8px; align-items: flex-start; font-size: .86rem; cursor: pointer; }
+        label.check small { display: block; color: var(--muted); }
+        .raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .raster3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        @media (max-width: 600px) { .raster, .raster3 { grid-template-columns: 1fr; } }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 8px 13px; min-height: 42px; font: inherit; font-weight: bold; font-size: .88rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.klein { min-height: 34px; padding: 4px 10px; font-size: .8rem; }
+        .btn.gefahr { color: var(--danger); }
+        .btn:disabled { opacity: .5; cursor: default; }
+        .status { font-size: .84rem; color: var(--muted); min-height: 1.2em; margin: 0; }
+
+        .zahlen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .zahl { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
+        .zahl b { display: block; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+        .zahl span { font-size: .74rem; color: var(--muted); }
+        .zahl.warn b { color: var(--danger); }
+        .filter { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 12px; font: inherit; font-size: .8rem; cursor: pointer; }
+        .chip.an { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); font-weight: bold; }
+        .liste { display: grid; gap: 8px; }
+        .eintrag { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; display: grid; gap: 6px; }
+        .eintrag .oben { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+        .eintrag .titel { font-weight: bold; overflow-wrap: anywhere; min-width: 0; }
+        .eintrag .betrag { font-weight: bold; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .eintrag .meta { font-size: .8rem; color: var(--muted); }
+        .badge { font-size: .74rem; font-weight: bold; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+        .b-entwurf { background: #eef1f4; color: #4a5866; }
+        .b-offen { background: var(--accent-soft); color: var(--accent-dark); }
+        .b-bald { background: var(--warn-bg); color: var(--warn-ink); }
+        .b-ueber { background: var(--danger-bg); color: var(--danger); }
+        .b-bezahlt { background: var(--ok-bg); color: var(--ok); }
+        .b-storniert { background: #f1f1f1; color: #888; text-decoration: line-through; }
+        .leer { text-align: center; color: var(--muted); font-size: .88rem; padding: 6px 0; }
+
+        .positionen { display: grid; gap: 8px; }
+        .pos { display: grid; grid-template-columns: minmax(0, 3fr) 70px 80px 100px 78px 34px; gap: 6px; align-items: end; }
+        .pos-kopf { display: grid; grid-template-columns: minmax(0, 3fr) 70px 80px 100px 78px 34px; gap: 6px; font-size: .74rem; color: var(--muted); font-weight: bold; }
+        .pos input, .pos select { padding: 7px 8px; }
+        .pos .weg { border: 0; background: none; font-size: 1.1rem; cursor: pointer; color: var(--danger); min-height: 38px; }
+        .pos .summe-zeile { display: none; }
+        @media (max-width: 700px) {
+            .pos-kopf { display: none; }
+            .pos { grid-template-columns: 1fr 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #fbfcfb; }
+            .pos .beschr { grid-column: 1 / -1; }
+            .pos .weg { grid-column: 3; justify-self: end; }
+            .pos label.mob { display: grid; gap: 2px; font-size: .72rem; color: var(--muted); }
+        }
+        @media (min-width: 701px) { .pos label.mob > span { display: none; } }
+        .summen { justify-self: end; min-width: min(320px, 100%); font-variant-numeric: tabular-nums; font-size: .92rem; display: grid; gap: 4px; }
+        .summen div { display: flex; justify-content: space-between; gap: 16px; }
+        .summen .gesamt { font-weight: bold; font-size: 1.05rem; border-top: 2px solid var(--ink); padding-top: 4px; }
+        .pruefung { display: grid; gap: 3px; font-size: .84rem; margin: 0; padding: 0; list-style: none; }
+
+        .dialog { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: grid; place-items: center; padding: 16px; z-index: 50; }
+        .dialog .karte { width: min(560px, 100%); max-height: 90dvh; overflow: auto; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Rechnungen</strong><small data-i18n="untertitel">Rechnungen schreiben und erhaltene im Blick behalten</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+        <button type="button" class="tab an" id="tabAus" role="tab" data-i18n="tab_aus">✍️ Schreiben</button>
+        <button type="button" class="tab" id="tabEin" role="tab" data-i18n="tab_ein">📥 Erhalten</button>
+    </nav>
+
+    <!-- ============================ SCHREIBEN ============================ -->
+    <main id="seiteAus">
+        <section class="karte" id="ausListeKarte">
+            <div class="zahlen" id="ausZahlen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="neueRechnungBtn" data-i18n="neue_rechnung">＋ Neue Rechnung</button>
+                <button type="button" class="btn" id="csvAusBtn" data-i18n="csv">⬇️ CSV (für die Steuer)</button>
+            </div>
+            <div class="filter" id="ausFilter"></div>
+            <div class="liste" id="ausListe"></div>
+        </section>
+
+        <!-- Editor -->
+        <section class="karte" id="editor" hidden>
+            <h2 id="editorTitel"></h2>
+            <div class="fehler" id="absenderFehlt" hidden><span data-i18n="absender_fehlt">Bitte zuerst unten „Meine Angaben“ ausfüllen – sie stehen auf jeder Rechnung.</span></div>
+            <h3 data-i18n="kunde">Kunde / Rechnungsempfänger</h3>
+            <label class="feld"><span data-i18n="kunde_gespeichert">Gespeicherter Kunde</span><select id="kundeWahl"></select></label>
+            <div class="raster">
+                <label class="feld"><span data-i18n="kunde_name">Name / Firma</span><input type="text" id="kName"></label>
+                <label class="feld"><span data-i18n="kunde_email">E-Mail (optional)</span><input type="email" id="kEmail"></label>
+            </div>
+            <label class="feld"><span data-i18n="kunde_adresse">Anschrift</span><textarea id="kAdresse" rows="2" data-i18n-placeholder="adresse_ph" placeholder="Straße Nr.&#10;PLZ Ort"></textarea></label>
+            <label class="check"><input type="checkbox" id="kPrivat" checked> <span><b data-i18n="kunde_privat">Privatperson (Verbraucher)</b><small data-i18n="kunde_privat_hilfe">Dann kommt automatisch der Hinweis auf den Zahlungsverzug nach 30 Tagen auf die Rechnung (§ 286 Abs. 3 BGB).</small></span></label>
+
+            <h3 data-i18n="rechnung">Rechnung</h3>
+            <div class="raster3">
+                <label class="feld"><span data-i18n="r_datum">Rechnungsdatum</span><input type="date" id="rDatum"></label>
+                <label class="feld"><span data-i18n="r_leistung">Leistungsdatum / -zeitraum</span><input type="text" id="rLeistung" data-i18n-placeholder="leistung_ph" placeholder="z. B. 06.10.2026 oder September 2026"></label>
+                <label class="feld"><span data-i18n="r_ziel">Zahlungsziel (Tage)</span><input type="number" id="rZiel" min="0" max="120" step="1"></label>
+            </div>
+            <p class="info" id="rNrInfo"></p>
+
+            <h3 data-i18n="positionen">Positionen</h3>
+            <div class="pos-kopf"><span data-i18n="p_text">Beschreibung</span><span data-i18n="p_menge">Menge</span><span data-i18n="p_einheit">Einheit</span><span id="pPreisKopf"></span><span data-i18n="p_ust">USt</span><span></span></div>
+            <div class="positionen" id="positionen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn klein" id="posNeuBtn" data-i18n="pos_neu">＋ Position</button>
+                <button type="button" class="btn klein" id="kiPosBtn" data-i18n="ki_pos">✨ Positionen mit KI (sprechen/tippen)</button>
+            </div>
+            <div class="summen" id="summen"></div>
+            <label class="feld"><span data-i18n="r_text">Zusatztext (optional)</span><textarea id="rText" rows="2" data-i18n-placeholder="text_ph" placeholder="z. B. Vielen Dank für Ihren Auftrag!"></textarea></label>
+            <div class="hinweis" id="pruefBox"><b data-i18n="pruef_titel">Pflichtangaben-Check</b><ul class="pruefung" id="pruefung"></ul></div>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="entwurfBtn" data-i18n="entwurf_speichern">💾 Entwurf speichern</button>
+                <button type="button" class="btn" id="vorschauBtn" data-i18n="vorschau">👁 PDF-Vorschau</button>
+                <button type="button" class="btn prim" id="fertigBtn" data-i18n="fertig">✅ Fertigstellen &amp; PDF</button>
+                <button type="button" class="btn" id="abbrechenBtn" data-i18n="abbrechen">Abbrechen</button>
+            </div>
+            <p class="status" id="editorStatus" aria-live="polite"></p>
+        </section>
+
+        <details class="karte" id="angabenKarte">
+            <summary><span data-i18n="angaben_titel">🏷️ Meine Angaben (Absender)</span><small id="angabenZusammen"></small></summary>
+            <div class="raster">
+                <label class="feld"><span data-i18n="a_name">Name / Firma</span><input type="text" id="aName"></label>
+                <label class="feld"><span data-i18n="a_zusatz">Zusatz (optional)</span><input type="text" id="aZusatz" data-i18n-placeholder="zusatz_ph" placeholder="z. B. Malerarbeiten · Nachhilfe"></label>
+                <label class="feld"><span data-i18n="a_strasse">Straße, Nr.</span><input type="text" id="aStrasse"></label>
+                <label class="feld"><span data-i18n="a_ort">PLZ Ort</span><input type="text" id="aOrt"></label>
+                <label class="feld"><span data-i18n="a_tel">Telefon</span><input type="text" id="aTel"></label>
+                <label class="feld"><span data-i18n="a_email">E-Mail</span><input type="email" id="aEmail"></label>
+                <label class="feld"><span data-i18n="a_steuernr">Steuernummer</span><input type="text" id="aSteuernr" data-i18n-placeholder="steuernr_ph" placeholder="vom Finanzamt"></label>
+                <label class="feld"><span data-i18n="a_ustid">USt-IdNr. (falls vorhanden)</span><input type="text" id="aUstid" placeholder="DE…"></label>
+                <label class="feld"><span data-i18n="a_iban">IBAN</span><input type="text" id="aIban"></label>
+                <label class="feld"><span data-i18n="a_bank">Bank / BIC (optional)</span><input type="text" id="aBank"></label>
+                <label class="feld"><span data-i18n="a_praefix">Rechnungsnummer: Vorsilbe</span><input type="text" id="aPraefix"></label>
+                <label class="feld"><span data-i18n="a_naechste">Nächste laufende Nummer</span><input type="number" id="aNaechste" min="1" step="1"></label>
+            </div>
+            <label class="check"><input type="checkbox" id="aKlein"> <span><b data-i18n="a_klein">Ich bin Kleinunternehmer (§ 19 UStG)</b><small data-i18n="a_klein_hilfe">Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.</small></span></label>
+            <label class="feld" style="max-width:220px"><span data-i18n="a_ziel">Standard-Zahlungsziel (Tage)</span><input type="number" id="aZiel" min="0" max="120" step="1"></label>
+            <p class="info" data-i18n="angaben_info">Wird nur auf diesem Gerät gespeichert und erscheint auf deinen Rechnungen.</p>
+        </details>
+
+        <section class="karte">
+            <h2 data-i18n="wissen_titel">ℹ️ Gut zu wissen</h2>
+            <ul class="info" id="wissenAus" style="padding-left:18px;margin:0"></ul>
+        </section>
+    </main>
+
+    <!-- ============================ ERHALTEN ============================ -->
+    <main id="seiteEin" hidden>
+        <section class="karte">
+            <div class="zahlen" id="einZahlen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="einlesenBtn" data-i18n="einlesen">📷 Rechnung einlesen (Foto/PDF)</button>
+                <button type="button" class="btn" id="einNeuBtn" data-i18n="ein_neu">＋ Von Hand</button>
+                <button type="button" class="btn" id="steuerBtn" data-i18n="steuer_uebernehmen">🧾 Handwerker/Dienstleister in den Steuer-Helfer</button>
+            </div>
+            <p class="status" id="einStatus" aria-live="polite"></p>
+            <div class="filter" id="einFilter"></div>
+            <div class="liste" id="einListe"></div>
+        </section>
+        <section class="karte">
+            <h2 data-i18n="wissen_titel">ℹ️ Gut zu wissen</h2>
+            <ul class="info" id="wissenEin" style="padding-left:18px;margin:0"></ul>
+        </section>
+    </main>
+
+    <!-- Dialog: erhaltene Rechnung bearbeiten -->
+    <div class="dialog" id="einDialog" hidden>
+        <form class="karte" id="einForm">
+            <h2 data-i18n="ein_dialog">📥 Erhaltene Rechnung</h2>
+            <div class="raster">
+                <label class="feld"><span data-i18n="e_absender">Von (Firma/Absender)</span><input type="text" name="absender" required></label>
+                <label class="feld"><span data-i18n="e_nr">Rechnungsnummer</span><input type="text" name="nr"></label>
+                <label class="feld"><span data-i18n="e_betrag">Betrag (€)</span><input type="text" name="betrag" inputmode="decimal" placeholder="0,00" required></label>
+                <label class="feld"><span data-i18n="e_datum">Rechnungsdatum</span><input type="date" name="datum"></label>
+                <label class="feld"><span data-i18n="e_faellig">Zahlen bis</span><input type="date" name="faellig"></label>
+                <label class="feld"><span data-i18n="e_kategorie">Art</span><select name="kategorie"></select></label>
+                <label class="feld"><span data-i18n="e_arbeit">Davon Arbeitskosten (€)</span><input type="text" name="arbeitskosten" inputmode="decimal" placeholder="nur Handwerker/Dienstleister"></label>
+                <label class="feld"><span data-i18n="e_zweck">Verwendungszweck</span><input type="text" name="zweck"></label>
+            </div>
+            <label class="feld"><span data-i18n="e_iban">IBAN des Empfängers</span><input type="text" name="iban"></label>
+            <label class="feld"><span data-i18n="e_notiz">Notiz</span><textarea name="notiz" rows="2"></textarea></label>
+            <label class="check"><input type="checkbox" name="bezahlt"> <span><b data-i18n="e_bezahlt">Schon bezahlt</b></span></label>
+            <div class="knoepfe"><button type="submit" class="btn prim" data-i18n="speichern">💾 Speichern</button><button type="button" class="btn" id="einAbbrechen" data-i18n="abbrechen">Abbrechen</button></div>
+        </form>
+    </div>
+
+    <!-- Dialog: Positionen mit KI -->
+    <div class="dialog" id="kiDialog" hidden>
+        <div class="karte">
+            <h2 data-i18n="ki_titel">✨ Positionen mit KI</h2>
+            <p class="info" data-i18n="ki_info">Beschreibe, was du gemacht oder verkauft hast – mit Mengen und Preisen. Die KI macht daraus Rechnungspositionen. Du prüfst sie danach.</p>
+            <textarea id="kiText" rows="4" data-i18n-placeholder="ki_ph" placeholder="z. B. 3 Stunden Nachhilfe Mathe à 25 Euro und 1 Arbeitsheft für 12,90"></textarea>
+            <p class="status" id="kiSp"></p>
+            <div id="kiWahl"></div>
+            <div class="knoepfe"><button type="button" class="btn" id="kiMikro">🎤</button><button type="button" class="btn prim" id="kiLos" data-i18n="ki_los">✨ Positionen erstellen</button><button type="button" class="btn" id="kiZu" data-i18n="abbrechen">Abbrechen</button></div>
+            <p class="status" id="kiStatus" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Rechnungen', untertitel: 'Rechnungen schreiben und erhaltene im Blick behalten', tab_aus: '✍️ Schreiben', tab_ein: '📥 Erhalten',
+                neue_rechnung: '＋ Neue Rechnung', csv: '⬇️ CSV (für die Steuer)', absender_fehlt: 'Bitte zuerst unten „Meine Angaben“ ausfüllen – sie stehen auf jeder Rechnung.',
+                kunde: 'Kunde / Rechnungsempfänger', kunde_gespeichert: 'Gespeicherter Kunde', kunde_neu: '– neuer Kunde –', kunde_name: 'Name / Firma', kunde_email: 'E-Mail (optional)', kunde_adresse: 'Anschrift', adresse_ph: 'Straße Nr.\nPLZ Ort',
+                kunde_privat: 'Privatperson (Verbraucher)', kunde_privat_hilfe: 'Dann kommt automatisch der Hinweis auf den Zahlungsverzug nach 30 Tagen auf die Rechnung (§ 286 Abs. 3 BGB).',
+                rechnung: 'Rechnung', r_datum: 'Rechnungsdatum', r_leistung: 'Leistungsdatum / -zeitraum', leistung_ph: 'z. B. 06.10.2026 oder September 2026', r_ziel: 'Zahlungsziel (Tage)',
+                positionen: 'Positionen', p_text: 'Beschreibung', p_menge: 'Menge', p_einheit: 'Einheit', p_preis_netto: 'Einzelpreis netto €', p_preis: 'Einzelpreis €', p_ust: 'USt', pos_neu: '＋ Position', ki_pos: '✨ Positionen mit KI (sprechen/tippen)',
+                r_text: 'Zusatztext (optional)', text_ph: 'z. B. Vielen Dank für Ihren Auftrag!', pruef_titel: 'Pflichtangaben-Check',
+                entwurf_speichern: '💾 Entwurf speichern', vorschau: '👁 PDF-Vorschau', fertig: '✅ Fertigstellen & PDF', abbrechen: 'Abbrechen', speichern: '💾 Speichern',
+                neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
+                angaben_titel: '🏷️ Meine Angaben (Absender)', a_name: 'Name / Firma', a_zusatz: 'Zusatz (optional)', zusatz_ph: 'z. B. Malerarbeiten · Nachhilfe', a_strasse: 'Straße, Nr.', a_ort: 'PLZ Ort', a_tel: 'Telefon', a_email: 'E-Mail',
+                a_steuernr: 'Steuernummer', steuernr_ph: 'vom Finanzamt', a_ustid: 'USt-IdNr. (falls vorhanden)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Rechnungsnummer: Vorsilbe', a_naechste: 'Nächste laufende Nummer',
+                a_klein: 'Ich bin Kleinunternehmer (§ 19 UStG)', a_klein_hilfe: 'Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.',
+                a_ziel: 'Standard-Zahlungsziel (Tage)', angaben_info: 'Wird nur auf diesem Gerät gespeichert und erscheint auf deinen Rechnungen.', angaben_fehlen: 'noch nicht ausgefüllt', klein_kurz: 'Kleinunternehmer',
+                wissen_titel: 'ℹ️ Gut zu wissen',
+                wissen_aus: [
+                    'Diese App erstellt die Rechnung als PDF. Das reicht für Rechnungen an Privatpersonen, für Kleinunternehmer (§ 19 UStG) und für Beträge bis 250 € immer.',
+                    'E-Rechnung zwischen Firmen (B2B): Empfangen müssen alle Unternehmen sie seit 2025. Ausstellen müssen sie Firmen mit mehr als 800.000 € Vorjahresumsatz ab 2027, alle anderen ab 2028 (Kleinunternehmer ausgenommen). Ein PDF ist keine E-Rechnung – dafür braucht es XRechnung oder ZUGFeRD, das diese App (noch) nicht erstellt.',
+                    'Rechnungen musst du aufbewahren – seit 2025 grundsätzlich 8 Jahre. Speichere die PDFs außerhalb des Browsers (z. B. in einem Ordner oder in der Cloud).',
+                    'Eine fertige Rechnung nicht mehr ändern: bei Fehlern stornieren und eine neue Rechnung schreiben.',
+                    'Keine Steuer- oder Rechtsberatung. Bei Unsicherheit: Steuerberatung oder IHK/Handwerkskammer fragen.'
+                ],
+                wissen_ein: [
+                    'Handwerker und haushaltsnahe Dienstleistungen (z. B. Reinigung, Garten): 20 % der Arbeitskosten mindern deine Steuer – nur wenn du per Überweisung bezahlt hast, nicht bar.',
+                    'Mit „In den Steuer-Helfer“ werden die Arbeitskosten bezahlter Rechnungen ins richtige Jahr übernommen.',
+                    'Daten bleiben auf diesem Gerät. Beim Einlesen mit einer Online-KI wird das Foto zur Auswertung an den gewählten Anbieter gesendet.'
+                ],
+                z_offen: 'offen', z_ueber: 'überfällig', z_bezahlt_jahr: 'bezahlt {j}', z_bald: 'fällig in 7 Tagen',
+                f_alle: 'Alle', f_entwurf: 'Entwürfe', f_offen: 'Offen', f_bezahlt: 'Bezahlt', f_storniert: 'Storniert',
+                s_entwurf: 'Entwurf', s_offen: 'offen', s_bezahlt: 'bezahlt', s_storniert: 'storniert', s_ueber: 'überfällig seit {n} T.', s_heute: 'heute fällig', s_bald: 'fällig in {n} T.', s_faellig: 'fällig {d}',
+                b_pdf: '📄 PDF', b_bearbeiten: '✏️ Bearbeiten', b_bezahlt: '✅ Bezahlt', b_offen: '↩️ Offen', b_erinnerung: '🔔 Zahlungserinnerung', b_kopie: '📋 Kopie', b_storno: '✖ Stornieren', b_loeschen: '🗑️', b_kalender: '📅',
+                leer_aus: 'Noch keine Rechnungen. Leg los mit „＋ Neue Rechnung“.', leer_ein: 'Noch keine erhaltenen Rechnungen erfasst.',
+                loeschen_frage: 'Diesen Eintrag wirklich löschen?', storno_frage: 'Rechnung {nr} stornieren? Sie bleibt in der Liste, gilt aber als ungültig. Für eine Korrektur danach eine neue Rechnung schreiben.',
+                gespeichert: '✓ Entwurf gespeichert.', fertig_ok: '✓ Rechnung {nr} erstellt – PDF wurde heruntergeladen. Bitte die Datei aufbewahren.', pruef_fehlt: 'Bitte zuerst die rot markierten Pflichtangaben ergänzen.',
+                p_absender: 'Dein Name und deine Anschrift', p_steuer: 'Steuernummer oder USt-IdNr.', p_kunde: 'Name und Anschrift des Kunden', p_datum: 'Rechnungsdatum', p_leistung: 'Leistungsdatum oder -zeitraum', p_pos: 'Mindestens eine Position mit Beschreibung und Preis', p_nr: 'Fortlaufende Rechnungsnummer (wird automatisch vergeben)', p_klein: 'Hinweis „Kleinunternehmer, keine Umsatzsteuer“ (automatisch)', p_ustcheck: 'Steuersatz und Steuerbetrag je Satz (automatisch)',
+                netto: 'Summe netto', ust_x: 'zzgl. {s} % USt', gesamt: 'Gesamtbetrag', gesamt_klein: 'Gesamtbetrag',
+                einlesen: '📷 Rechnung einlesen (Foto/PDF)', ein_neu: '＋ Von Hand', steuer_uebernehmen: '🧾 Handwerker/Dienstleister in den Steuer-Helfer', ein_dialog: '📥 Erhaltene Rechnung',
+                e_absender: 'Von (Firma/Absender)', e_nr: 'Rechnungsnummer', e_betrag: 'Betrag (€)', e_datum: 'Rechnungsdatum', e_faellig: 'Zahlen bis', e_kategorie: 'Art', e_arbeit: 'Davon Arbeitskosten (€)', e_zweck: 'Verwendungszweck', e_iban: 'IBAN des Empfängers', e_notiz: 'Notiz', e_bezahlt: 'Schon bezahlt',
+                kat: { haushalt: 'Haushalt / Leben', handwerk: 'Handwerker (Haushalt)', dienst: 'Haushaltsnahe Dienstleistung', energie: 'Strom, Gas, Wasser', telefon: 'Telefon / Internet', versicherung: 'Versicherung', gesundheit: 'Gesundheit', beruf: 'Beruf / Arbeitsmittel', sonstiges: 'Sonstiges' },
+                steuer_ok: '✓ {n} Posten in den Steuer-Helfer übernommen ({jahre}). Öffne den Steuer-Helfer zum Prüfen.', steuer_keine: 'Keine bezahlten Handwerker-/Dienstleister-Rechnungen mit Arbeitskosten gefunden.',
+                ein_uebernommen: '✓ Rechnung übernommen – bitte kurz prüfen.', ki_titel: '✨ Positionen mit KI', ki_info: 'Beschreibe, was du gemacht oder verkauft hast – mit Mengen und Preisen. Die KI macht daraus Rechnungspositionen. Du prüfst sie danach.',
+                ki_ph: 'z. B. 3 Stunden Nachhilfe Mathe à 25 Euro und 1 Arbeitsheft für 12,90', ki_los: '✨ Positionen erstellen', ki_laeuft: '🤖 Die KI erstellt Positionen …', ki_keine: 'Die KI hat keine Positionen erkannt. Bitte genauer beschreiben oder von Hand eintragen.', ki_ok: '✓ {n} Position(en) übernommen – bitte prüfen.',
+                erinnerung_text: 'sicher ist es Ihnen im Alltag nur durchgerutscht: Für meine Rechnung Nr. {nr} vom {datum} über {betrag} ist bis heute noch keine Zahlung bei mir eingegangen. Die Zahlung war fällig am {faellig}.\n\nBitte überweisen Sie den offenen Betrag bis zum {neu} auf das folgende Konto:\nIBAN: {iban}\nVerwendungszweck: Rechnung {nr}\n\nSollten Sie die Zahlung inzwischen veranlasst haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.',
+                erinnerung_betreff: 'Zahlungserinnerung zur Rechnung Nr. {nr}', pdf_fehler: 'Das PDF konnte nicht erstellt werden (keine Verbindung zur PDF-Bibliothek?).'
+            },
+            en: {
+                titel: 'Invoices', untertitel: 'Write invoices and keep track of received ones', tab_aus: '✍️ Write', tab_ein: '📥 Received',
+                neue_rechnung: '＋ New invoice', csv: '⬇️ CSV (for taxes)', absender_fehlt: 'Please fill in "My details" below first – they appear on every invoice.',
+                kunde: 'Customer / recipient', kunde_gespeichert: 'Saved customer', kunde_neu: '– new customer –', kunde_name: 'Name / company', kunde_email: 'E-mail (optional)', kunde_adresse: 'Address', adresse_ph: 'Street no.\nPostcode city',
+                kunde_privat: 'Private person (consumer)', kunde_privat_hilfe: 'Then the note on default after 30 days is added automatically (§ 286 (3) BGB).',
+                rechnung: 'Invoice', r_datum: 'Invoice date', r_leistung: 'Date / period of service', leistung_ph: 'e.g. 06.10.2026 or September 2026', r_ziel: 'Payment term (days)',
+                positionen: 'Items', p_text: 'Description', p_menge: 'Qty', p_einheit: 'Unit', p_preis_netto: 'Unit price net €', p_preis: 'Unit price €', p_ust: 'VAT', pos_neu: '＋ Item', ki_pos: '✨ Items with AI (speak/type)',
+                r_text: 'Additional text (optional)', text_ph: 'e.g. Thank you for your order!', pruef_titel: 'Mandatory details check',
+                entwurf_speichern: '💾 Save draft', vorschau: '👁 PDF preview', fertig: '✅ Finalise & PDF', abbrechen: 'Cancel', speichern: '💾 Save',
+                neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
+                angaben_titel: '🏷️ My details (sender)', a_name: 'Name / company', a_zusatz: 'Addition (optional)', zusatz_ph: 'e.g. Painting · Tutoring', a_strasse: 'Street, no.', a_ort: 'Postcode city', a_tel: 'Phone', a_email: 'E-mail',
+                a_steuernr: 'Tax number', steuernr_ph: 'from the tax office', a_ustid: 'VAT ID (if any)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Invoice number: prefix', a_naechste: 'Next sequential number',
+                a_klein: 'I am a small business (§ 19 UStG)', a_klein_hilfe: 'No VAT is charged and the invoice states the exemption. Limits since 2025: previous year max. €25,000, current year max. €100,000 turnover.',
+                a_ziel: 'Default payment term (days)', angaben_info: 'Stored only on this device and printed on your invoices.', angaben_fehlen: 'not filled in yet', klein_kurz: 'small business',
+                wissen_titel: 'ℹ️ Good to know',
+                wissen_aus: [
+                    'This app creates the invoice as a PDF. That is always enough for invoices to private persons, for small businesses (§ 19 UStG) and for amounts up to €250.',
+                    'E-invoices between businesses (B2B): all companies must be able to receive them since 2025. Companies with more than €800,000 prior-year turnover must issue them from 2027, all others from 2028 (small businesses exempt). A PDF is not an e-invoice – that requires XRechnung or ZUGFeRD, which this app does not (yet) create.',
+                    'You must keep invoices – since 2025 generally for 8 years. Save the PDFs outside the browser (e.g. in a folder or cloud).',
+                    'Do not change a finalised invoice: cancel it and write a new one.',
+                    'Not tax or legal advice. If unsure, ask a tax adviser or your chamber.'
+                ],
+                wissen_ein: [
+                    'Tradesmen and household services (e.g. cleaning, garden): 20 % of the labour costs reduce your tax – only if paid by bank transfer, not cash.',
+                    '"To the tax helper" copies the labour costs of paid invoices into the right year.',
+                    'Data stays on this device. When reading with an online AI, the photo is sent to the chosen provider for analysis.'
+                ],
+                z_offen: 'open', z_ueber: 'overdue', z_bezahlt_jahr: 'paid {j}', z_bald: 'due within 7 days',
+                f_alle: 'All', f_entwurf: 'Drafts', f_offen: 'Open', f_bezahlt: 'Paid', f_storniert: 'Cancelled',
+                s_entwurf: 'draft', s_offen: 'open', s_bezahlt: 'paid', s_storniert: 'cancelled', s_ueber: 'overdue {n} d', s_heute: 'due today', s_bald: 'due in {n} d', s_faellig: 'due {d}',
+                b_pdf: '📄 PDF', b_bearbeiten: '✏️ Edit', b_bezahlt: '✅ Paid', b_offen: '↩️ Open', b_erinnerung: '🔔 Payment reminder', b_kopie: '📋 Copy', b_storno: '✖ Cancel', b_loeschen: '🗑️', b_kalender: '📅',
+                leer_aus: 'No invoices yet. Start with "＋ New invoice".', leer_ein: 'No received invoices yet.',
+                loeschen_frage: 'Really delete this entry?', storno_frage: 'Cancel invoice {nr}? It stays in the list but is invalid. For a correction, write a new invoice afterwards.',
+                gespeichert: '✓ Draft saved.', fertig_ok: '✓ Invoice {nr} created – the PDF was downloaded. Please keep the file.', pruef_fehlt: 'Please complete the mandatory details marked in red first.',
+                p_absender: 'Your name and address', p_steuer: 'Tax number or VAT ID', p_kunde: 'Customer name and address', p_datum: 'Invoice date', p_leistung: 'Date or period of service', p_pos: 'At least one item with description and price', p_nr: 'Sequential invoice number (assigned automatically)', p_klein: 'Small business note, no VAT (automatic)', p_ustcheck: 'VAT rate and amount per rate (automatic)',
+                netto: 'Net total', ust_x: 'plus {s} % VAT', gesamt: 'Total', gesamt_klein: 'Total',
+                einlesen: '📷 Read invoice (photo/PDF)', ein_neu: '＋ Manually', steuer_uebernehmen: '🧾 Tradesmen/services to the tax helper', ein_dialog: '📥 Received invoice',
+                e_absender: 'From (company/sender)', e_nr: 'Invoice number', e_betrag: 'Amount (€)', e_datum: 'Invoice date', e_faellig: 'Pay by', e_kategorie: 'Type', e_arbeit: 'Of which labour costs (€)', e_zweck: 'Payment reference', e_iban: 'Recipient IBAN', e_notiz: 'Note', e_bezahlt: 'Already paid',
+                kat: { haushalt: 'Household / living', handwerk: 'Tradesman (household)', dienst: 'Household service', energie: 'Electricity, gas, water', telefon: 'Phone / internet', versicherung: 'Insurance', gesundheit: 'Health', beruf: 'Work / equipment', sonstiges: 'Other' },
+                steuer_ok: '✓ {n} items copied to the tax helper ({jahre}). Open the tax helper to check.', steuer_keine: 'No paid tradesman/service invoices with labour costs found.',
+                ein_uebernommen: '✓ Invoice added – please check briefly.', ki_titel: '✨ Items with AI', ki_info: 'Describe what you did or sold – with quantities and prices. The AI turns it into invoice items. You check them afterwards.',
+                ki_ph: 'e.g. 3 hours of maths tutoring at 25 euros and 1 workbook for 12.90', ki_los: '✨ Create items', ki_laeuft: '🤖 The AI is creating items …', ki_keine: 'The AI found no items. Please describe more precisely or enter them manually.', ki_ok: '✓ {n} item(s) added – please check.',
+                erinnerung_text: 'sicher ist es Ihnen im Alltag nur durchgerutscht: Für meine Rechnung Nr. {nr} vom {datum} über {betrag} ist bis heute noch keine Zahlung bei mir eingegangen. Die Zahlung war fällig am {faellig}.\n\nBitte überweisen Sie den offenen Betrag bis zum {neu} auf das folgende Konto:\nIBAN: {iban}\nVerwendungszweck: Rechnung {nr}\n\nSollten Sie die Zahlung inzwischen veranlasst haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.',
+                erinnerung_betreff: 'Zahlungserinnerung zur Rechnung Nr. {nr}', pdf_fehler: 'The PDF could not be created (no connection to the PDF library?).'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../gemini-modelle.js?v=1"></script>
+    <script src="../sd-lotse-modelle.js?v=2"></script>
+    <script src="../sd-ki.js?v=17"></script>
+    <script>
+    (function () {
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const heuteIso = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+        const plusTage = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + Number(n || 0)); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+        const tageBis = (iso) => Math.round((new Date(iso + 'T00:00:00') - new Date(heuteIso() + 'T00:00:00')) / 86400000);
+        const deDatum = (iso) => { if (!iso) return ''; const [j, m, d] = iso.split('-'); return d + '.' + m + '.' + j; };
+        // Zahlen: deutsches Format (1.234,56) und 12.50 verstehen
+        const zahl = (s) => {
+            let x = String(s == null ? '' : s).replace(/[€\s]/g, '');
+            if (!x) return 0;
+            if (/,\d{1,2}$/.test(x)) x = x.replace(/\./g, '').replace(',', '.');
+            else if (/^\d{1,3}(\.\d{3})+$/.test(x)) x = x.replace(/\./g, '');
+            const n = parseFloat(x.replace(',', '.'));
+            return isFinite(n) ? n : 0;
+        };
+        const runde = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+        const euro = (n) => (window.SD_LANG === 'en' ? '€' : '') + Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (window.SD_LANG === 'en' ? '' : ' €');
+        const euroPdf = (n) => Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' EUR';
+
+        // ------------------------------------------------------------
+        // Daten (nur lokal)
+        // ------------------------------------------------------------
+        const KEY = 'sdRechnungen';
+        function standard() {
+            return { absender: { name: '', zusatz: '', strasse: '', ort: '', tel: '', email: '', steuernr: '', ustid: '', iban: '', bank: '', klein: false, ziel: 14, praefix: new Date().getFullYear() + '-', naechste: 1 }, kunden: [], ausgang: [], eingang: [] };
+        }
+        let D;
+        try { D = Object.assign(standard(), JSON.parse(localStorage.getItem(KEY) || '{}') || {}); } catch (e) { D = standard(); }
+        D.absender = Object.assign(standard().absender, D.absender || {});
+        ['kunden', 'ausgang', 'eingang'].forEach(k => { if (!Array.isArray(D[k])) D[k] = []; });
+        function speichern() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { /* voll */ } }
+        function herunterladen(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        }
+        const dateiname = (s) => String(s || 'rechnung').replace(/[^\wäöüÄÖÜß.-]+/g, '-').slice(0, 60);
+
+        // ------------------------------------------------------------
+        // Tabs
+        // ------------------------------------------------------------
+        function zeigeTab(welcher) {
+            $('tabAus').classList.toggle('an', welcher === 'aus');
+            $('tabEin').classList.toggle('an', welcher === 'ein');
+            $('seiteAus').hidden = welcher !== 'aus';
+            $('seiteEin').hidden = welcher !== 'ein';
+            try { sessionStorage.setItem('sdRechnungenTab', welcher); } catch (e) { /* egal */ }
+        }
+        $('tabAus').onclick = () => zeigeTab('aus');
+        $('tabEin').onclick = () => zeigeTab('ein');
+
+        // ------------------------------------------------------------
+        // Meine Angaben
+        // ------------------------------------------------------------
+        const ANGABEN = { aName: 'name', aZusatz: 'zusatz', aStrasse: 'strasse', aOrt: 'ort', aTel: 'tel', aEmail: 'email', aSteuernr: 'steuernr', aUstid: 'ustid', aIban: 'iban', aBank: 'bank', aPraefix: 'praefix', aNaechste: 'naechste', aZiel: 'ziel' };
+        function fuelleAngaben() {
+            Object.keys(ANGABEN).forEach(id => { $(id).value = D.absender[ANGABEN[id]] == null ? '' : D.absender[ANGABEN[id]]; });
+            $('aKlein').checked = !!D.absender.klein;
+            zeigeAngabenZusammen();
+        }
+        function angabenVollstaendig() { const a = D.absender; return !!(a.name && a.strasse && a.ort && (a.steuernr || a.ustid)); }
+        function zeigeAngabenZusammen() {
+            $('angabenZusammen').textContent = angabenVollstaendig() ? (D.absender.name + (D.absender.klein ? ' · ' + t('klein_kurz') : '')) : t('angaben_fehlen');
+        }
+        Object.keys(ANGABEN).forEach(id => $(id).addEventListener('input', () => {
+            let v = $(id).value;
+            if (id === 'aNaechste') v = Math.max(1, parseInt(v, 10) || 1);
+            if (id === 'aZiel') v = Math.max(0, parseInt(v, 10) || 0);
+            D.absender[ANGABEN[id]] = v;
+            speichern(); zeigeAngabenZusammen(); if (!$('editor').hidden) aktualisiereEditor();
+        }));
+        $('aKlein').onchange = () => { D.absender.klein = $('aKlein').checked; speichern(); zeigeAngabenZusammen(); if (!$('editor').hidden) { zeichnePositionen(); aktualisiereEditor(); } };
+        const naechsteNr = () => (D.absender.praefix || '') + String(D.absender.naechste || 1).padStart(3, '0');
+
+        // ------------------------------------------------------------
+        // Berechnung
+        // ------------------------------------------------------------
+        function berechne(r, klein) {
+            const proSatz = {};
+            let netto = 0;
+            (r.positionen || []).forEach(p => {
+                const b = runde(zahl(p.menge) * zahl(p.preis));
+                netto += b;
+                const s = klein ? 0 : Number(p.ust || 0);
+                proSatz[s] = (proSatz[s] || 0) + b;
+            });
+            netto = runde(netto);
+            const steuern = Object.keys(proSatz).map(Number).filter(s => s > 0).sort((a, b) => b - a).map(s => ({ satz: s, basis: runde(proSatz[s]), betrag: runde(proSatz[s] * s / 100) }));
+            const ust = runde(steuern.reduce((x, s) => x + s.betrag, 0));
+            return { netto, steuern, ust, brutto: runde(netto + ust) };
+        }
+
+        // ------------------------------------------------------------
+        // Liste: geschriebene Rechnungen
+        // ------------------------------------------------------------
+        let ausFilter = 'alle';
+        function statusAus(r) {
+            if (r.status === 'entwurf') return { k: 'entwurf', text: t('s_entwurf') };
+            if (r.status === 'bezahlt') return { k: 'bezahlt', text: t('s_bezahlt') };
+            if (r.status === 'storniert') return { k: 'storniert', text: t('s_storniert') };
+            const n = r.faellig ? tageBis(r.faellig) : 99;
+            if (n < 0) return { k: 'ueber', text: t('s_ueber', { n: -n }) };
+            if (n === 0) return { k: 'bald', text: t('s_heute') };
+            if (n <= 7) return { k: 'bald', text: t('s_bald', { n }) };
+            return { k: 'offen', text: t('s_offen') + ' · ' + t('s_faellig', { d: deDatum(r.faellig) }) };
+        }
+        function zeichneAus() {
+            const jahr = String(new Date().getFullYear());
+            const offen = D.ausgang.filter(r => r.status === 'offen');
+            const ueber = offen.filter(r => r.faellig && tageBis(r.faellig) < 0);
+            const bezahltJahr = D.ausgang.filter(r => r.status === 'bezahlt' && String(r.bezahltAm || r.datum || '').startsWith(jahr));
+            $('ausZahlen').innerHTML =
+                '<div class="zahl"><b>' + euro(offen.reduce((s, r) => s + r.summe, 0)) + '</b><span>' + esc(t('z_offen')) + ' (' + offen.length + ')</span></div>' +
+                '<div class="zahl' + (ueber.length ? ' warn' : '') + '"><b>' + ueber.length + '</b><span>' + esc(t('z_ueber')) + '</span></div>' +
+                '<div class="zahl"><b>' + euro(bezahltJahr.reduce((s, r) => s + r.summe, 0)) + '</b><span>' + esc(t('z_bezahlt_jahr', { j: jahr })) + '</span></div>';
+            $('ausFilter').innerHTML = ['alle', 'entwurf', 'offen', 'bezahlt', 'storniert'].map(f => '<button type="button" class="chip' + (ausFilter === f ? ' an' : '') + '" data-f="' + f + '">' + esc(t('f_' + f)) + '</button>').join('');
+            const liste = D.ausgang.filter(r => ausFilter === 'alle' || r.status === ausFilter).slice().sort((a, b) => String(b.datum || '').localeCompare(String(a.datum || '')) || (b.erstellt || 0) - (a.erstellt || 0));
+            $('ausListe').innerHTML = liste.length ? liste.map(r => {
+                const st = statusAus(r);
+                const knoepfe = [];
+                if (r.status === 'entwurf') knoepfe.push(['bearbeiten', t('b_bearbeiten')]);
+                knoepfe.push(['pdf', t('b_pdf')]);
+                if (r.status === 'offen') { knoepfe.push(['bezahlt', t('b_bezahlt')]); if (r.faellig && tageBis(r.faellig) < 0) knoepfe.push(['erinnerung', t('b_erinnerung')]); }
+                if (r.status === 'bezahlt') knoepfe.push(['offen', t('b_offen')]);
+                knoepfe.push(['kopie', t('b_kopie')]);
+                if (r.status === 'offen') knoepfe.push(['storno', t('b_storno')]);
+                if (r.status === 'entwurf') knoepfe.push(['loeschen', t('b_loeschen')]);
+                return '<div class="eintrag"><div class="oben"><span class="titel">' + esc((r.nr ? r.nr + ' · ' : '') + (r.kunde.name || '–')) + '</span><span class="betrag">' + euro(r.summe) + '</span></div>' +
+                    '<div class="oben"><span class="meta">' + esc(deDatum(r.datum)) + (r.leistung ? ' · ' + esc(r.leistung) : '') + '</span><span class="badge b-' + st.k + '">' + esc(st.text) + '</span></div>' +
+                    '<div class="knoepfe">' + knoepfe.map(([a, txt]) => '<button type="button" class="btn klein' + (a === 'loeschen' || a === 'storno' ? ' gefahr' : '') + '" data-a="' + a + '" data-id="' + esc(r.id) + '">' + esc(txt) + '</button>').join('') + '</div></div>';
+            }).join('') : '<p class="leer">' + esc(t('leer_aus')) + '</p>';
+        }
+        $('ausFilter').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { ausFilter = b.dataset.f; zeichneAus(); } });
+        $('ausListe').addEventListener('click', async (e) => {
+            const b = e.target.closest('[data-a]');
+            if (!b) return;
+            const r = D.ausgang.find(x => x.id === b.dataset.id);
+            if (!r) return;
+            const a = b.dataset.a;
+            if (a === 'bearbeiten') oeffneEditor(r);
+            else if (a === 'pdf') { const blob = await rechnungPdf(r); if (blob) herunterladen(blob, 'Rechnung-' + dateiname(r.nr || 'Entwurf') + '.pdf'); }
+            else if (a === 'bezahlt') { r.status = 'bezahlt'; r.bezahltAm = heuteIso(); speichern(); zeichneAus(); }
+            else if (a === 'offen') { r.status = 'offen'; r.bezahltAm = ''; speichern(); zeichneAus(); }
+            else if (a === 'kopie') { const k = JSON.parse(JSON.stringify(r)); Object.assign(k, { id: neueId(), erstellt: Date.now(), nr: '', status: 'entwurf', datum: heuteIso(), faellig: '', bezahltAm: '', leistung: '' }); D.ausgang.push(k); speichern(); oeffneEditor(k); }
+            else if (a === 'storno') { if (confirm(t('storno_frage', { nr: r.nr }))) { r.status = 'storniert'; r.storniertAm = heuteIso(); speichern(); zeichneAus(); } }
+            else if (a === 'loeschen') { if (confirm(t('loeschen_frage'))) { D.ausgang = D.ausgang.filter(x => x.id !== r.id); speichern(); zeichneAus(); } }
+            else if (a === 'erinnerung') erinnerung(r);
+        });
+
+        // Zahlungserinnerung: als Brief ins Schreibstudio (Absender kommt von dort)
+        function erinnerung(r) {
+            const neu = plusTage(heuteIso(), 10);
+            const text = t('erinnerung_text', { nr: r.nr, datum: deDatum(r.datum), betrag: euro(r.summe).replace('€', 'Euro').trim(), faellig: deDatum(r.faellig), neu: deDatum(neu), iban: D.absender.iban || '[IBAN]' });
+            try {
+                sessionStorage.setItem('sdPostAntwort', JSON.stringify({ empfaenger: [r.kunde.name, r.kunde.adresse].filter(Boolean).join('\n'), betreff: t('erinnerung_betreff', { nr: r.nr }), anrede: r.kunde.privat ? '' : 'Sehr geehrte Damen und Herren,', text, hinweis: window.SD_LANG === 'en' ? '🧾 Payment reminder from "Invoices" inserted.' : '🧾 Zahlungserinnerung aus „Rechnungen“ übernommen.' }));
+            } catch (e) { /* egal */ }
+            location.href = '../schreibstudio/index.html';
+        }
+
+        // CSV aller fertigen Rechnungen (Einnahmen)
+        $('csvAusBtn').onclick = () => {
+            const zeilen = [['Rechnungsnummer', 'Rechnungsdatum', 'Kunde', 'Netto', 'USt', 'Brutto', 'Status', 'Bezahlt am']];
+            D.ausgang.filter(r => r.status !== 'entwurf').sort((a, b) => String(a.datum).localeCompare(String(b.datum))).forEach(r => {
+                const s = berechne(r, r.klein);
+                zeilen.push([r.nr, deDatum(r.datum), r.kunde.name, s.netto, s.ust, s.brutto, t('s_' + r.status), deDatum(r.bezahltAm || '')].map(v => typeof v === 'number' ? v.toFixed(2).replace('.', ',') : v));
+            });
+            const csv = '\uFEFF' + zeilen.map(z => z.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+            herunterladen(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'rechnungen-ausgang.csv');
+        };
+
+        // ------------------------------------------------------------
+        // Editor
+        // ------------------------------------------------------------
+        let aktuell = null;
+        function leereRechnung() {
+            return { id: neueId(), erstellt: Date.now(), status: 'entwurf', nr: '', datum: heuteIso(), leistung: deDatum(heuteIso()), ziel: D.absender.ziel, kundeId: '', kunde: { name: '', adresse: '', email: '', privat: true }, positionen: [{ text: '', menge: '1', einheit: 'Stück', preis: '', ust: D.absender.klein ? 0 : 19 }], text: '' };
+        }
+        function fuelleKundenWahl() {
+            $('kundeWahl').innerHTML = '<option value="">' + esc(t('kunde_neu')) + '</option>' + D.kunden.map(k => '<option value="' + esc(k.id) + '">' + esc(k.name) + '</option>').join('');
+        }
+        function oeffneEditor(r) {
+            aktuell = r || leereRechnung();
+            $('ausListeKarte').hidden = true;
+            $('editor').hidden = false;
+            $('editorTitel').textContent = r ? t('bearbeiten_titel') : t('neu_titel');
+            fuelleKundenWahl();
+            $('kundeWahl').value = aktuell.kundeId || '';
+            $('kName').value = aktuell.kunde.name; $('kAdresse').value = aktuell.kunde.adresse; $('kEmail').value = aktuell.kunde.email || ''; $('kPrivat').checked = aktuell.kunde.privat !== false;
+            $('rDatum').value = aktuell.datum; $('rLeistung').value = aktuell.leistung; $('rZiel').value = aktuell.ziel; $('rText').value = aktuell.text || '';
+            $('editorStatus').textContent = '';
+            zeichnePositionen();
+            aktualisiereEditor();
+            if (!angabenVollstaendig()) $('angabenKarte').open = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function schliesseEditor() { aktuell = null; $('editor').hidden = true; $('ausListeKarte').hidden = false; zeichneAus(); }
+        $('neueRechnungBtn').onclick = () => oeffneEditor(null);
+        $('abbrechenBtn').onclick = schliesseEditor;
+        $('kundeWahl').onchange = () => {
+            const k = D.kunden.find(x => x.id === $('kundeWahl').value);
+            if (k) { $('kName').value = k.name; $('kAdresse').value = k.adresse; $('kEmail').value = k.email || ''; $('kPrivat').checked = k.privat !== false; }
+            else { $('kName').value = ''; $('kAdresse').value = ''; $('kEmail').value = ''; $('kPrivat').checked = true; }
+            leseEditor(); aktualisiereEditor();
+        };
+        ['kName', 'kAdresse', 'kEmail', 'rLeistung', 'rText'].forEach(id => $(id).addEventListener('input', () => { leseEditor(); aktualisiereEditor(); }));
+        ['kPrivat', 'rDatum', 'rZiel'].forEach(id => $(id).addEventListener('change', () => { leseEditor(); aktualisiereEditor(); }));
+
+        function zeichnePositionen() {
+            const klein = !!D.absender.klein;
+            $('pPreisKopf').textContent = klein ? t('p_preis') : t('p_preis_netto');
+            $('positionen').innerHTML = aktuell.positionen.map((p, i) =>
+                '<div class="pos" data-i="' + i + '">' +
+                '<label class="mob beschr"><span>' + esc(t('p_text')) + '</span><input type="text" data-k="text" value="' + esc(p.text) + '" aria-label="' + esc(t('p_text')) + '"></label>' +
+                '<label class="mob"><span>' + esc(t('p_menge')) + '</span><input type="text" inputmode="decimal" data-k="menge" value="' + esc(p.menge) + '" aria-label="' + esc(t('p_menge')) + '"></label>' +
+                '<label class="mob"><span>' + esc(t('p_einheit')) + '</span><input type="text" data-k="einheit" value="' + esc(p.einheit) + '" aria-label="' + esc(t('p_einheit')) + '"></label>' +
+                '<label class="mob"><span>' + esc(klein ? t('p_preis') : t('p_preis_netto')) + '</span><input type="text" inputmode="decimal" data-k="preis" value="' + esc(p.preis) + '" placeholder="0,00" aria-label="' + esc(t('p_preis')) + '"></label>' +
+                '<label class="mob"><span>' + esc(t('p_ust')) + '</span><select data-k="ust"' + (klein ? ' disabled' : '') + '>' + [19, 7, 0].map(s => '<option value="' + s + '"' + (Number(klein ? 0 : p.ust) === s ? ' selected' : '') + '>' + s + ' %</option>').join('') + '</select></label>' +
+                '<button type="button" class="weg" data-weg="' + i + '" aria-label="Entfernen">✕</button></div>').join('');
+        }
+        $('positionen').addEventListener('input', (e) => {
+            const f = e.target.closest('[data-k]');
+            if (!f) return;
+            const i = Number(f.closest('.pos').dataset.i);
+            aktuell.positionen[i][f.dataset.k] = f.dataset.k === 'ust' ? Number(f.value) : f.value;
+            aktualisiereEditor();
+        });
+        $('positionen').addEventListener('change', (e) => { if (e.target.dataset.k === 'ust') { aktuell.positionen[Number(e.target.closest('.pos').dataset.i)].ust = Number(e.target.value); aktualisiereEditor(); } });
+        $('positionen').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-weg]');
+            if (!b) return;
+            aktuell.positionen.splice(Number(b.dataset.weg), 1);
+            if (!aktuell.positionen.length) aktuell.positionen.push({ text: '', menge: '1', einheit: 'Stück', preis: '', ust: D.absender.klein ? 0 : 19 });
+            zeichnePositionen(); aktualisiereEditor();
+        });
+        $('posNeuBtn').onclick = () => { aktuell.positionen.push({ text: '', menge: '1', einheit: 'Stück', preis: '', ust: D.absender.klein ? 0 : 19 }); zeichnePositionen(); aktualisiereEditor(); const inp = $('positionen').querySelectorAll('[data-k=text]'); inp[inp.length - 1].focus(); };
+
+        function leseEditor() {
+            if (!aktuell) return;
+            aktuell.kundeId = $('kundeWahl').value;
+            aktuell.kunde = { name: $('kName').value.trim(), adresse: $('kAdresse').value.trim(), email: $('kEmail').value.trim(), privat: $('kPrivat').checked };
+            aktuell.datum = $('rDatum').value || heuteIso();
+            aktuell.leistung = $('rLeistung').value.trim();
+            aktuell.ziel = Math.max(0, parseInt($('rZiel').value, 10) || 0);
+            aktuell.text = $('rText').value.trim();
+        }
+        function pruefe() {
+            const a = D.absender, r = aktuell, klein = !!a.klein;
+            const posOk = r.positionen.some(p => p.text.trim() && zahl(p.preis) !== 0);
+            const liste = [
+                [!!(a.name && a.strasse && a.ort), t('p_absender')],
+                [!!(a.steuernr || a.ustid), t('p_steuer')],
+                [!!(r.kunde.name && r.kunde.adresse), t('p_kunde')],
+                [!!r.datum, t('p_datum')],
+                [!!r.leistung, t('p_leistung')],
+                [posOk, t('p_pos')],
+                [true, t('p_nr')],
+                [true, klein ? t('p_klein') : t('p_ustcheck')]
+            ];
+            return { ok: liste.every(x => x[0]), liste };
+        }
+        function aktualisiereEditor() {
+            if (!aktuell) return;
+            const klein = !!D.absender.klein;
+            const s = berechne(aktuell, klein);
+            $('summen').innerHTML = klein
+                ? '<div class="gesamt"><span>' + esc(t('gesamt_klein')) + '</span><span>' + euro(s.brutto) + '</span></div>'
+                : '<div><span>' + esc(t('netto')) + '</span><span>' + euro(s.netto) + '</span></div>' +
+                  s.steuern.map(x => '<div><span>' + esc(t('ust_x', { s: x.satz })) + '</span><span>' + euro(x.betrag) + '</span></div>').join('') +
+                  '<div class="gesamt"><span>' + esc(t('gesamt')) + '</span><span>' + euro(s.brutto) + '</span></div>';
+            const p = pruefe();
+            $('pruefung').innerHTML = p.liste.map(([ok, txt]) => '<li style="color:' + (ok ? 'var(--ok)' : 'var(--danger)') + '">' + (ok ? '✓ ' : '✗ ') + esc(txt) + '</li>').join('');
+            $('absenderFehlt').hidden = angabenVollstaendig();
+            $('rNrInfo').textContent = aktuell.nr ? t('nr_info', { nr: aktuell.nr }) : t('nr_info_neu', { nr: naechsteNr() });
+        }
+        function kundeMerken() {
+            const k = aktuell.kunde;
+            if (!k.name) return;
+            let gespeichert = D.kunden.find(x => x.id === aktuell.kundeId) || D.kunden.find(x => x.name.toLowerCase() === k.name.toLowerCase());
+            if (!gespeichert) { gespeichert = { id: neueId() }; D.kunden.push(gespeichert); }
+            Object.assign(gespeichert, { name: k.name, adresse: k.adresse, email: k.email, privat: k.privat });
+            aktuell.kundeId = gespeichert.id;
+        }
+        function sichereAktuell() {
+            leseEditor();
+            kundeMerken();
+            aktuell.klein = !!D.absender.klein;
+            aktuell.summe = berechne(aktuell, aktuell.klein).brutto;
+            if (!D.ausgang.find(x => x.id === aktuell.id)) D.ausgang.push(aktuell);
+            speichern();
+        }
+        $('entwurfBtn').onclick = () => { sichereAktuell(); $('editorStatus').textContent = t('gespeichert'); fuelleKundenWahl(); $('kundeWahl').value = aktuell.kundeId; };
+        $('vorschauBtn').onclick = async () => {
+            leseEditor();
+            const blob = await rechnungPdf(Object.assign({}, aktuell, { klein: !!D.absender.klein, nr: aktuell.nr || naechsteNr() + ' (Vorschau)' }), D.absender);
+            if (blob) herunterladen(blob, 'Rechnung-Vorschau.pdf');
+        };
+        $('fertigBtn').onclick = async () => {
+            leseEditor();
+            if (!pruefe().ok) { $('editorStatus').textContent = t('pruef_fehlt'); aktualisiereEditor(); return; }
+            sichereAktuell();
+            aktuell.nr = naechsteNr();
+            D.absender.naechste = (parseInt(D.absender.naechste, 10) || 1) + 1;
+            aktuell.status = 'offen';
+            aktuell.faellig = plusTage(aktuell.datum, aktuell.ziel);
+            aktuell.absender = Object.assign({}, D.absender);   // so bleibt die Rechnung auch nach Adressaenderung gleich
+            speichern();
+            $('aNaechste').value = D.absender.naechste;
+            const blob = await rechnungPdf(aktuell);
+            if (blob) herunterladen(blob, 'Rechnung-' + dateiname(aktuell.nr) + '.pdf');
+            const nr = aktuell.nr;
+            schliesseEditor();
+            ausFilter = 'alle'; zeichneAus();
+            $('ausListe').insertAdjacentHTML('beforebegin', '<p class="ok" id="fertigMeldung">' + esc(t('fertig_ok', { nr })) + '</p>');
+            setTimeout(() => { const m = $('fertigMeldung'); if (m) m.remove(); }, 8000);
+        };
+
+        // ------------------------------------------------------------
+        // PDF (jsPDF)
+        // ------------------------------------------------------------
+        function ladeSkript(url, name) {
+            return new Promise((ok, fehler) => {
+                if (window[name]) return ok(window[name]);
+                const s = document.createElement('script');
+                s.src = url;
+                s.onload = () => window[name] ? ok(window[name]) : fehler(new Error(name));
+                s.onerror = () => fehler(new Error('Keine Verbindung'));
+                document.head.appendChild(s);
+            });
+        }
+        const pdfText = (s) => String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[^\x20-\x7E\xA0-\xFF€„“‚‘’…•\n]/g, '');
+        async function rechnungPdf(r, absenderJetzt) {
+            let jspdf;
+            try { jspdf = await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf'); }
+            catch (e) { alert(t('pdf_fehler')); return null; }
+            const a = r.absender || absenderJetzt || D.absender;
+            const klein = r.klein != null ? !!r.klein : !!a.klein;
+            const s = berechne(r, klein);
+            const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+            const L0 = 25, R0 = 190;
+            doc.setFont('helvetica', 'normal');
+            // Absenderzeile (DIN 5008, Rücksendeangabe)
+            doc.setFontSize(7.5); doc.setTextColor(90);
+            doc.text(pdfText([a.name, a.strasse, a.ort].filter(Boolean).join(' · ')), L0, 47);
+            doc.setTextColor(0);
+            // Kopf rechts
+            doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+            doc.text(pdfText(a.name), R0, 22, { align: 'right' });
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+            let y = 27;
+            [a.zusatz, a.strasse, a.ort, a.tel ? 'Tel. ' + a.tel : '', a.email].filter(Boolean).forEach(z => { doc.text(pdfText(z), R0, y, { align: 'right' }); y += 4.3; });
+            // Empfänger
+            doc.setFontSize(11);
+            y = 54;
+            [r.kunde.name].concat(String(r.kunde.adresse || '').split('\n')).filter(Boolean).forEach(z => { doc.text(pdfText(z), L0, y); y += 5.2; });
+            // Rechnungsdaten rechts
+            doc.setFontSize(9.5);
+            const info = [['Rechnungsnummer', r.nr || '-'], ['Rechnungsdatum', deDatum(r.datum)], ['Leistungsdatum', r.leistung || '-']];
+            if (a.steuernr) info.push(['Steuernummer', a.steuernr]);
+            if (a.ustid) info.push(['USt-IdNr.', a.ustid]);
+            let yi = 54;
+            info.forEach(([k, v]) => { doc.setTextColor(90); doc.text(pdfText(k), 128, yi); doc.setTextColor(0); doc.text(pdfText(v), R0, yi, { align: 'right' }); yi += 5; });
+            // Titel
+            y = Math.max(y, yi) + 12;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+            doc.text(pdfText('Rechnung' + (r.status === 'storniert' ? ' (STORNIERT)' : '')), L0, y);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+            y += 9;
+            // Tabelle
+            const sp = { pos: L0, text: L0 + 9, menge: 128, preis: 156, summe: R0 };
+            const kopf = () => {
+                doc.setFillColor(236, 242, 239); doc.rect(L0 - 1, y - 4.5, R0 - L0 + 2, 7, 'F');
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+                doc.text('Pos.', sp.pos, y); doc.text('Beschreibung', sp.text, y); doc.text('Menge', sp.menge, y, { align: 'right' });
+                doc.text(klein ? 'Einzelpreis' : 'Einzelpreis netto', sp.preis, y, { align: 'right' }); doc.text('Gesamt', sp.summe, y, { align: 'right' });
+                doc.setFont('helvetica', 'normal'); y += 7;
+            };
+            kopf();
+            doc.setFontSize(9.5);
+            r.positionen.filter(p => p.text.trim() || zahl(p.preis)).forEach((p, i) => {
+                const zeilen = doc.splitTextToSize(pdfText(p.text + (!klein && s.steuern.length > 1 ? ' (' + Number(p.ust) + ' % USt)' : '')), sp.menge - sp.text - 18);
+                if (y + zeilen.length * 4.6 > 255) { doc.addPage(); y = 25; kopf(); }
+                doc.text(String(i + 1), sp.pos, y);
+                doc.text(zeilen, sp.text, y);
+                doc.text(pdfText(String(p.menge).replace('.', ',') + ' ' + (p.einheit || '')), sp.menge, y, { align: 'right' });
+                doc.text(euroPdf(zahl(p.preis)), sp.preis, y, { align: 'right' });
+                doc.text(euroPdf(runde(zahl(p.menge) * zahl(p.preis))), sp.summe, y, { align: 'right' });
+                y += Math.max(1, zeilen.length) * 4.6 + 2.4;
+            });
+            doc.setDrawColor(180); doc.line(L0, y - 2, R0, y - 2);
+            y += 4;
+            const summenZeile = (k, v, fett) => { if (fett) doc.setFont('helvetica', 'bold'); doc.text(pdfText(k), 150, y, { align: 'right' }); doc.text(pdfText(v), R0, y, { align: 'right' }); if (fett) doc.setFont('helvetica', 'normal'); y += 5.4; };
+            if (y > 240) { doc.addPage(); y = 25; }
+            if (!klein) {
+                summenZeile('Summe netto', euroPdf(s.netto));
+                s.steuern.forEach(x => summenZeile('zzgl. ' + x.satz + ' % USt auf ' + euroPdf(x.basis), euroPdf(x.betrag)));
+                if (s.netto && !s.steuern.length) summenZeile('USt 0 %', euroPdf(0));
+            }
+            doc.setFontSize(11); summenZeile('Gesamtbetrag', euroPdf(s.brutto), true); doc.setFontSize(9.5);
+            y += 4;
+            // Hinweise
+            const hinweise = [];
+            if (klein) hinweise.push('Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Steuerbefreiung für Kleinunternehmer).');
+            if (r.faellig || r.ziel != null) {
+                const faellig = r.faellig || plusTage(r.datum, r.ziel);
+                hinweise.push(Number(r.ziel) === 0 ? 'Der Rechnungsbetrag ist sofort ohne Abzug fällig.' : 'Bitte überweisen Sie den Rechnungsbetrag bis zum ' + deDatum(faellig) + ' ohne Abzug' + (a.iban ? ' auf das unten genannte Konto' : '') + '. Verwendungszweck: ' + (r.nr || 'Rechnungsnummer') + '.');
+            }
+            if (r.kunde.privat) hinweise.push('Hinweis gemäß § 286 Abs. 3 BGB: Sie kommen spätestens in Verzug, wenn Sie nicht innerhalb von 30 Tagen nach Fälligkeit und Zugang dieser Rechnung zahlen.');
+            if (r.text) hinweise.push(r.text);
+            hinweise.forEach(h => {
+                const z = doc.splitTextToSize(pdfText(h), R0 - L0);
+                if (y + z.length * 4.6 > 262) { doc.addPage(); y = 25; }
+                doc.text(z, L0, y); y += z.length * 4.6 + 2.5;
+            });
+            // Fußzeile auf jeder Seite
+            const seiten = doc.getNumberOfPages();
+            for (let i = 1; i <= seiten; i++) {
+                doc.setPage(i);
+                doc.setDrawColor(200); doc.line(L0, 274, R0, 274);
+                doc.setFontSize(7.5); doc.setTextColor(90);
+                const fuss = [[a.name, a.strasse, a.ort].filter(Boolean).join(' · '), [a.iban ? 'IBAN ' + a.iban : '', a.bank].filter(Boolean).join(' · '), [a.steuernr ? 'Steuernr. ' + a.steuernr : '', a.ustid ? 'USt-IdNr. ' + a.ustid : ''].filter(Boolean).join(' · ')].filter(Boolean);
+                fuss.forEach((z, k) => doc.text(pdfText(z), 105, 278.5 + k * 3.8, { align: 'center' }));
+                if (seiten > 1) doc.text('Seite ' + i + ' von ' + seiten, R0, 290, { align: 'right' });
+                doc.setTextColor(0);
+            }
+            return doc.output('blob');
+        }
+
+        // ------------------------------------------------------------
+        // KI: Positionen aus Text
+        // ------------------------------------------------------------
+        let kiDiktat = null;
+        $('kiPosBtn').onclick = () => {
+            $('kiDialog').hidden = false; $('kiStatus').textContent = '';
+            if (window.sdKi && !$('kiWahl').dataset.fertig) {
+                window.sdKi.baueAuswahl($('kiWahl'), { geminiKeyFeld: true });
+                kiDiktat = window.sdKi.diktatAnbinden($('kiText'), $('kiMikro'), (x) => { $('kiSp').textContent = x || ''; });
+                $('kiWahl').dataset.fertig = '1';
+            }
+            $('kiText').focus();
+        };
+        $('kiZu').onclick = () => { if (kiDiktat) kiDiktat.stopp(); $('kiDialog').hidden = true; };
+        function lesePositionen(text) {
+            return String(text || '').split('\n').map(z => z.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').replace(/\*\*/g, '').trim()).filter(z => z.includes('|')).map(z => {
+                const t0 = z.split('|').map(x => x.trim());
+                return { text: t0[0] || '', menge: (t0[1] || '1').replace('.', ','), einheit: t0[2] || 'Stück', preis: (t0[3] || '').replace(/[€\s]|EUR/gi, ''), ust: D.absender.klein ? 0 : ([19, 7, 0].includes(parseInt(t0[4], 10)) ? parseInt(t0[4], 10) : 19) };
+            }).filter(p => p.text && /^(beschreibung|description)$/i.test(p.text) === false && zahl(p.preis) !== 0);
+        }
+        $('kiLos').onclick = async () => {
+            const text = $('kiText').value.trim();
+            if (!text) return;
+            if (kiDiktat) kiDiktat.stopp();
+            $('kiLos').disabled = true; $('kiStatus').textContent = t('ki_laeuft');
+            try {
+                const klein = !!D.absender.klein;
+                const prompt = 'Mache aus dieser Beschreibung Rechnungspositionen. Antworte NUR mit einer Zeile pro Position im Format:\nBeschreibung | Menge | Einheit | Einzelpreis | USt-Satz\n' +
+                    '- Beschreibung: kurz, sachlich, auf Deutsch (wie auf einer Rechnung, z. B. "Nachhilfe Mathematik").\n- Menge als Zahl mit Komma, Einheit z. B. Std., Stück, pauschal, m², km.\n' +
+                    (klein ? '- Einzelpreis: der genannte Preis (Kleinunternehmer, keine Umsatzsteuer), USt-Satz immer 0.\n' : '- Einzelpreis: NETTO-Preis ohne Umsatzsteuer. Wenn die Person ausdrücklich Brutto-Preise nennt, rechne sie auf netto um. USt-Satz 19 (Regelfall) oder 7 (z. B. Bücher, Lebensmittel), sonst 0.\n') +
+                    '- Preise als Zahl mit Komma, ohne Euro-Zeichen. Erfinde keine Preise: fehlt ein Preis, lass die Position weg.\n\nBeschreibung der Person:\n' + text;
+                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 600 });
+                const pos = lesePositionen(antwort);
+                if (!pos.length) { $('kiStatus').textContent = t('ki_keine'); return; }
+                aktuell.positionen = aktuell.positionen.filter(p => p.text.trim() || zahl(p.preis)).concat(pos);
+                zeichnePositionen(); aktualisiereEditor();
+                $('kiDialog').hidden = true;
+                $('editorStatus').textContent = t('ki_ok', { n: pos.length });
+            } catch (err) {
+                $('kiStatus').textContent = (err && err.message) || String(err);
+            } finally { $('kiLos').disabled = false; }
+        };
+
+        // ------------------------------------------------------------
+        // ERHALTEN
+        // ------------------------------------------------------------
+        const KATS = ['haushalt', 'handwerk', 'dienst', 'energie', 'telefon', 'versicherung', 'gesundheit', 'beruf', 'sonstiges'];
+        let einFilter = 'offen';
+        let einBearbeiten = null;
+        function statusEin(r) {
+            if (r.bezahlt) return { k: 'bezahlt', text: t('s_bezahlt') + (r.bezahltAm ? ' ' + deDatum(r.bezahltAm) : '') };
+            if (!r.faellig) return { k: 'offen', text: t('s_offen') };
+            const n = tageBis(r.faellig);
+            if (n < 0) return { k: 'ueber', text: t('s_ueber', { n: -n }) };
+            if (n === 0) return { k: 'bald', text: t('s_heute') };
+            if (n <= 7) return { k: 'bald', text: t('s_bald', { n }) };
+            return { k: 'offen', text: t('s_faellig', { d: deDatum(r.faellig) }) };
+        }
+        function zeichneEin() {
+            const offen = D.eingang.filter(r => !r.bezahlt);
+            const ueber = offen.filter(r => r.faellig && tageBis(r.faellig) < 0);
+            const bald = offen.filter(r => r.faellig && tageBis(r.faellig) >= 0 && tageBis(r.faellig) <= 7);
+            $('einZahlen').innerHTML =
+                '<div class="zahl"><b>' + euro(offen.reduce((s, r) => s + zahl(r.betrag), 0)) + '</b><span>' + esc(t('z_offen')) + ' (' + offen.length + ')</span></div>' +
+                '<div class="zahl"><b>' + bald.length + '</b><span>' + esc(t('z_bald')) + '</span></div>' +
+                '<div class="zahl' + (ueber.length ? ' warn' : '') + '"><b>' + ueber.length + '</b><span>' + esc(t('z_ueber')) + '</span></div>';
+            $('einFilter').innerHTML = ['offen', 'bezahlt', 'alle'].map(f => '<button type="button" class="chip' + (einFilter === f ? ' an' : '') + '" data-f="' + f + '">' + esc(t('f_' + f)) + '</button>').join('');
+            const liste = D.eingang.filter(r => einFilter === 'alle' || (einFilter === 'offen' ? !r.bezahlt : r.bezahlt))
+                .slice().sort((a, b) => (a.bezahlt - b.bezahlt) || String(a.faellig || '9999').localeCompare(String(b.faellig || '9999')));
+            $('einListe').innerHTML = liste.length ? liste.map(r => {
+                const st = statusEin(r);
+                return '<div class="eintrag"><div class="oben"><span class="titel">' + esc(r.absender || '–') + '</span><span class="betrag">' + euro(zahl(r.betrag)) + '</span></div>' +
+                    '<div class="oben"><span class="meta">' + esc([(L().kat || {})[r.kategorie] || '', r.nr ? 'Nr. ' + r.nr : '', r.datum ? deDatum(r.datum) : '', zahl(r.arbeitskosten) ? 'Arbeitskosten ' + euro(zahl(r.arbeitskosten)) : ''].filter(Boolean).join(' · ')) + '</span><span class="badge b-' + st.k + '">' + esc(st.text) + '</span></div>' +
+                    (r.iban || r.zweck ? '<div class="meta">' + esc([r.iban ? 'IBAN ' + r.iban : '', r.zweck ? 'Zweck: ' + r.zweck : ''].filter(Boolean).join(' · ')) + '</div>' : '') +
+                    '<div class="knoepfe">' +
+                    (r.bezahlt ? '<button type="button" class="btn klein" data-e="offen" data-id="' + esc(r.id) + '">' + esc(t('b_offen')) + '</button>' : '<button type="button" class="btn klein" data-e="bezahlt" data-id="' + esc(r.id) + '">' + esc(t('b_bezahlt')) + '</button>') +
+                    (!r.bezahlt && r.faellig ? '<button type="button" class="btn klein" data-e="kalender" data-id="' + esc(r.id) + '" aria-label="Kalender">' + esc(t('b_kalender')) + '</button>' : '') +
+                    '<button type="button" class="btn klein" data-e="bearbeiten" data-id="' + esc(r.id) + '">' + esc(t('b_bearbeiten')) + '</button>' +
+                    '<button type="button" class="btn klein gefahr" data-e="loeschen" data-id="' + esc(r.id) + '" aria-label="Löschen">' + esc(t('b_loeschen')) + '</button></div></div>';
+            }).join('') : '<p class="leer">' + esc(t('leer_ein')) + '</p>';
+        }
+        $('einFilter').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { einFilter = b.dataset.f; zeichneEin(); } });
+        $('einListe').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-e]');
+            if (!b) return;
+            const r = D.eingang.find(x => x.id === b.dataset.id);
+            if (!r) return;
+            const a = b.dataset.e;
+            if (a === 'bezahlt') { r.bezahlt = true; r.bezahltAm = heuteIso(); }
+            else if (a === 'offen') { r.bezahlt = false; r.bezahltAm = ''; }
+            else if (a === 'bearbeiten') { oeffneEin(r); return; }
+            else if (a === 'loeschen') { if (!confirm(t('loeschen_frage'))) return; D.eingang = D.eingang.filter(x => x.id !== r.id); }
+            else if (a === 'kalender') { kalender(r); return; }
+            speichern(); zeichneEin();
+        });
+        function icsText(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+        function kalender(r) {
+            const tag = r.faellig.replace(/-/g, '');
+            const ende = plusTage(r.faellig, 1).replace(/-/g, '');
+            const titel = 'Rechnung bezahlen: ' + (r.absender || '') + ' ' + euroPdf(zahl(r.betrag));
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Rechnungen//DE', 'BEGIN:VEVENT',
+                'UID:rch-' + r.id + '-' + tag + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+                'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(titel),
+                'DESCRIPTION:' + icsText([r.nr ? 'Rechnungsnummer: ' + r.nr : '', r.iban ? 'IBAN: ' + r.iban : '', r.zweck ? 'Verwendungszweck: ' + r.zweck : ''].filter(Boolean).join('\n')),
+                'BEGIN:VALARM', 'TRIGGER:-PT63H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(titel), 'END:VALARM',
+                'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+            herunterladen(new Blob([ics], { type: 'text/calendar' }), 'rechnung-' + dateiname(r.absender) + '.ics');
+        }
+        function oeffneEin(r) {
+            einBearbeiten = r ? r.id : null;
+            const f = $('einForm');
+            f.elements.kategorie.innerHTML = KATS.map(k => '<option value="' + k + '">' + esc(L().kat[k]) + '</option>').join('');
+            const w = r || { kategorie: 'haushalt' };
+            ['absender', 'nr', 'betrag', 'datum', 'faellig', 'kategorie', 'arbeitskosten', 'zweck', 'iban', 'notiz'].forEach(k => { f.elements[k].value = w[k] || (k === 'kategorie' ? 'haushalt' : ''); });
+            f.elements.bezahlt.checked = !!w.bezahlt;
+            $('einDialog').hidden = false;
+            setTimeout(() => f.elements.absender.focus(), 50);
+        }
+        $('einNeuBtn').onclick = () => oeffneEin(null);
+        $('einAbbrechen').onclick = () => { $('einDialog').hidden = true; };
+        $('einForm').onsubmit = (e) => {
+            e.preventDefault();
+            const f = $('einForm');
+            let r = D.eingang.find(x => x.id === einBearbeiten);
+            if (!r) { r = { id: neueId(), erstellt: Date.now() }; D.eingang.push(r); }
+            ['absender', 'nr', 'betrag', 'datum', 'faellig', 'kategorie', 'arbeitskosten', 'zweck', 'iban', 'notiz'].forEach(k => { r[k] = (f.elements[k].value || '').trim(); });
+            const warBezahlt = r.bezahlt;
+            r.bezahlt = f.elements.bezahlt.checked;
+            if (r.bezahlt && !warBezahlt) r.bezahltAm = heuteIso();
+            if (!r.bezahlt) r.bezahltAm = '';
+            speichern(); $('einDialog').hidden = true; zeichneEin();
+        };
+
+        // Einlesen per Foto/PDF (gleicher Baustein wie Lebenslauf/Steuer)
+        const isoAus = (s) => { const m = String(s || '').match(/(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4}|\d{2})/); if (m) { let j = Number(m[3]); if (j < 100) j += 2000; return j + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0'); } return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? s : ''; };
+        function rechnungRegeln(text) {
+            const w = {};
+            const iban = text.match(/\b([A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){3,7}(?:\s?[A-Z0-9]{1,3})?)\b/);
+            if (iban) w.iban = iban[1].replace(/\s+/g, ' ');
+            const nr = text.match(/Rechnungs?-?\s?(?:nummer|nr\.?)\s*:?\s*([A-Z0-9][\w\-/]{2,})/i);
+            if (nr) w.nr = nr[1];
+            const summe = text.match(/(?:Gesamtbetrag|Rechnungsbetrag|zu zahlen(?:der Betrag)?|Endbetrag|Summe brutto)\s*:?\s*(?:EUR|€)?\s*([\d.]+,\d{2})/i);
+            if (summe) w.betrag = summe[1];
+            return w;
+        }
+        $('einlesenBtn').onclick = () => {
+            if (!window.sdKi || !window.sdKi.einleseDialog) { $('einStatus').textContent = 'Die KI-Bausteine konnten nicht geladen werden. Bitte Seite neu laden.'; return; }
+            window.sdKi.einleseDialog({
+                titel: '📷 Rechnung einlesen',
+                beschreibung: 'Fotografiere die Rechnung oder wähle ein PDF. Die KI schlägt die Angaben vor – du prüfst sie, bevor sie übernommen werden.',
+                ohneVerbessern: true,
+                dokumentArt: 'eine erhaltene Rechnung (z. B. von Handwerker, Stadtwerken, Telefonanbieter, Versicherung)',
+                felder: [
+                    { id: 'absender', label: 'Von (Firma)', hinweis: 'Name der Firma, die die Rechnung stellt' },
+                    { id: 'nr', label: 'Rechnungsnummer' },
+                    { id: 'betrag', label: 'Betrag (€)', hinweis: 'zu zahlender Endbetrag inkl. MwSt. als Zahl mit Komma, z. B. 249,90' },
+                    { id: 'datum', label: 'Rechnungsdatum', hinweis: 'TT.MM.JJJJ' },
+                    { id: 'faellig', label: 'Zahlen bis', hinweis: 'Fälligkeitsdatum TT.MM.JJJJ, nur wenn im Dokument genannt oder eindeutig berechenbar (Rechnungsdatum + genanntes Zahlungsziel)' },
+                    { id: 'kategorie', label: 'Art', optionen: KATS, hinweis: 'haushalt = allgemeiner Einkauf; handwerk = Handwerker im eigenen Haushalt; dienst = Reinigung, Garten, Pflege im Haushalt; energie = Strom, Gas, Wasser; telefon = Telefon/Internet; versicherung; gesundheit = Arzt, Apotheke; beruf = Arbeitsmittel; sonstiges' },
+                    { id: 'arbeitskosten', label: 'Davon Arbeitskosten (€)', hinweis: 'nur bei Handwerker-/Dienstleister-Rechnungen: ausgewiesene Lohn-/Arbeitskosten inkl. MwSt.; sonst leer' },
+                    { id: 'iban', label: 'IBAN des Empfängers', hinweis: 'IBAN, auf die gezahlt werden soll, falls angegeben' },
+                    { id: 'zweck', label: 'Verwendungszweck', hinweis: 'falls angegeben, sonst Rechnungsnummer' }
+                ],
+                heuristik: rechnungRegeln,
+                uebernehmen: (werte) => {
+                    const r = { id: neueId(), erstellt: Date.now(), absender: werte.absender || '', nr: werte.nr || '', betrag: werte.betrag || '', datum: isoAus(werte.datum), faellig: isoAus(werte.faellig),
+                        kategorie: KATS.includes(werte.kategorie) ? werte.kategorie : 'sonstiges', arbeitskosten: werte.arbeitskosten || '', iban: werte.iban || '', zweck: werte.zweck || werte.nr || '', notiz: '', bezahlt: false };
+                    D.eingang.push(r);
+                    speichern(); einFilter = 'offen'; zeichneEin();
+                    $('einStatus').textContent = t('ein_uebernommen');
+                    oeffneEin(r);
+                    return 1;
+                }
+            });
+        };
+
+        // In den Steuer-Helfer: bezahlte Handwerker-/Dienstleister-Rechnungen (Arbeitskosten), ohne Doppelte
+        $('steuerBtn').onclick = () => {
+            let steuer = {};
+            try { steuer = JSON.parse(localStorage.getItem('sdSteuerHelfer') || '{}') || {}; } catch (e) { steuer = {}; }
+            Object.keys(steuer).forEach(j => { if (steuer[j] && Array.isArray(steuer[j].posten)) steuer[j].posten = steuer[j].posten.filter(p => !String(p.id || '').startsWith('rch-')); });
+            let n = 0;
+            const jahre = new Set();
+            D.eingang.forEach(r => {
+                if (!r.bezahlt || !['handwerk', 'dienst'].includes(r.kategorie) || !zahl(r.arbeitskosten)) return;
+                const jahr = String(r.bezahltAm || r.datum || '').slice(0, 4);
+                if (!/^\d{4}$/.test(jahr)) return;
+                steuer[jahr] = steuer[jahr] || { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false }, haushalt: { minijob: '' }, kinder: [], posten: [] };
+                steuer[jahr].posten = steuer[jahr].posten || [];
+                steuer[jahr].posten.push({ id: 'rch-' + r.id, kategorie: r.kategorie, text: (r.absender || 'Rechnung') + (r.nr ? ' (Nr. ' + r.nr + ')' : ''), betrag: zahl(r.arbeitskosten).toFixed(2).replace('.', ','), datum: deDatum(r.bezahltAm || r.datum), anbieter: r.absender || '' });
+                n++; jahre.add(jahr);
+            });
+            try { localStorage.setItem('sdSteuerHelfer', JSON.stringify(steuer)); } catch (e) { /* voll */ }
+            $('einStatus').innerHTML = n ? esc(t('steuer_ok', { n, jahre: [...jahre].sort().join(', ') })) + ' <a href="../steuer/index.html">→ Steuer-Helfer</a>' : esc(t('steuer_keine'));
+        };
+
+        // ------------------------------------------------------------
+        // Start
+        // ------------------------------------------------------------
+        function aktualisiereTexte() {
+            $('wissenAus').innerHTML = L().wissen_aus.map(x => '<li>' + esc(x) + '</li>').join('');
+            $('wissenEin').innerHTML = L().wissen_ein.map(x => '<li>' + esc(x) + '</li>').join('');
+            zeigeAngabenZusammen();
+            zeichneAus(); zeichneEin();
+            if (aktuell) { zeichnePositionen(); aktualisiereEditor(); $('editorTitel').textContent = D.ausgang.find(x => x.id === aktuell.id) ? t('bearbeiten_titel') : t('neu_titel'); }
+        }
+        fuelleAngaben();
+        // Aus dem Post-Assistenten uebergebene Rechnung (sessionStorage)
+        try {
+            const p = JSON.parse(sessionStorage.getItem('sdRechnungNeu') || 'null');
+            if (p) {
+                sessionStorage.removeItem('sdRechnungNeu');
+                D.eingang.push({ id: neueId(), erstellt: Date.now(), absender: p.absender || '', nr: p.nr || '', betrag: p.betrag || '', datum: isoAus(p.datum), faellig: p.faellig || '', kategorie: 'sonstiges', arbeitskosten: '', iban: '', zweck: p.nr || '', notiz: p.notiz || '', bezahlt: false });
+                speichern();
+                sessionStorage.setItem('sdRechnungenTab', 'ein');
+            }
+        } catch (e) { /* egal */ }
+        let tab = 'aus';
+        try { tab = sessionStorage.getItem('sdRechnungenTab') || (location.hash === '#erhalten' ? 'ein' : 'aus'); } catch (e) { /* egal */ }
+        zeigeTab(tab === 'ein' ? 'ein' : 'aus');
+        document.addEventListener('sd-lang-changed', aktualisiereTexte);
+        aktualisiereTexte();
+    })();
+    </script>
+</body>
+
+</html>

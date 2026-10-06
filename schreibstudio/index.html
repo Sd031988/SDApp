@@ -3139,13 +3139,14 @@
             updateVorschau();
             speichereDaten();
             // Hinweis oben im Brief-Bereich und direkt dorthin springen
+            const esc2 = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
             const fehltName = !document.getElementById('vorname').value.trim() || !document.getElementById('nachname').value.trim();
             const box = document.createElement('div');
             box.id = 'post-hinweis';
             box.setAttribute('role', 'status');
             box.style.cssText = 'background:#e8f3ef;border:1px solid #9cc9bb;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:.9rem;line-height:1.5';
             const en = window.SD_LANG === 'en';
-            box.innerHTML = '<b>' + (en ? '📬 Reply from the letter assistant inserted.' : '📬 Antwort aus dem Post-Assistenten übernommen.') + '</b><br>' +
+            box.innerHTML = '<b>' + esc2(d.hinweis || (en ? '📬 Reply from the letter assistant inserted.' : '📬 Antwort aus dem Post-Assistenten übernommen.')) + '</b><br>' +
                 (en ? 'Read it carefully and fill in all [gaps].' : 'Bitte genau lesen und alle [Lücken] ausfüllen.') +
                 (fehltName ? ' <a href="#vorname" id="post-hinweis-name">' + (en ? 'Your name and address are still missing (top of the page) – enter them there.' : 'Oben fehlen noch dein Name und deine Adresse – bitte dort eintragen.') + '</a>' : '');
             const panel = document.getElementById('brief-panel');

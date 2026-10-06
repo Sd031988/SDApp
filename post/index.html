@@ -140,6 +140,7 @@
                 <div class="knoepfe">
                     <button type="button" class="btn prim" id="kalenderBtn" data-i18n="kalender">📅 Erinnerung in den Kalender</button>
                     <button type="button" class="btn" id="merkenBtn" data-i18n="merken">📌 In meine Fristenliste</button>
+                    <button type="button" class="btn" id="rechnungBtn" hidden data-i18n="in_rechnungen">🧾 In „Rechnungen“ übernehmen</button>
                 </div>
                 <p class="status" id="fristStatus" aria-live="polite"></p>
             </div>
@@ -236,7 +237,7 @@
                 lotse_sprache: 'Hinweis: Mit 🔒 SD Lotse klappt die Erklärung am besten auf Deutsch oder Englisch.',
                 erklaert_auf: 'Erklärt auf {s}', heute: 'heute fällig', morgen: 'morgen fällig', noch: 'noch {n} Tage', ueber: 'seit {n} Tagen vorbei', ohne_datum: 'ohne Datum',
                 erledigt: '✅ Erledigt', wieder_offen: '↩️ Wieder offen', loeschen_frage: 'Diesen Eintrag löschen?', frist_von: 'Frist', aus_brief: 'Antwort auf',
-                kal_titel: 'Frist: {x}', unbekannt: 'Brief'
+                kal_titel: 'Frist: {x}', unbekannt: 'Brief', in_rechnungen: '🧾 In „Rechnungen“ übernehmen'
             },
             en: {
                 titel: 'Letter assistant', untertitel: 'Understand letters, never miss a deadline', s1_titel: '📬 Which letter did you receive?',
@@ -272,7 +273,7 @@
                 lotse_sprache: 'Note: with 🔒 SD Lotse the explanation works best in German or English.',
                 erklaert_auf: 'Explained in {s}', heute: 'due today', morgen: 'due tomorrow', noch: '{n} days left', ueber: 'overdue by {n} days', ohne_datum: 'no date',
                 erledigt: '✅ Done', wieder_offen: '↩️ Reopen', loeschen_frage: 'Delete this entry?', frist_von: 'Deadline', aus_brief: 'Reply to',
-                kal_titel: 'Deadline: {x}', unbekannt: 'Letter'
+                kal_titel: 'Deadline: {x}', unbekannt: 'Letter', in_rechnungen: '🧾 Add to "Invoices"'
             }
         };
     </script>
@@ -487,6 +488,8 @@
             $('fristDatum').value = iso;
             aktualisiereFristHinweis(keine);
             $('fristStatus').textContent = '';
+            // Brief mit Betrag (Rechnung, Mahnung …): in den Bereich "Rechnungen" uebernehmen
+            $('rechnungBtn').hidden = leer(a.betrag) || !!analyse.roh;
             // Aufgaben und Hinweise
             $('aufgaben').textContent = a.aufgaben || '';
             $('aufgabenBlock').hidden = leer(a.aufgaben);
@@ -570,6 +573,15 @@
             if (vorhanden) { Object.assign(vorhanden, e); $('fristStatus').textContent = t('schon_gemerkt'); }
             else { analyse.id = 'post-' + Date.now(); l.push(Object.assign({ id: analyse.id, erstellt: heuteIso(), erledigt: false }, e)); $('fristStatus').textContent = t('gemerkt'); }
             speichereListe(l);
+        };
+        $('rechnungBtn').onclick = () => {
+            const a = analyse.teile;
+            const betrag = (String(a.betrag || '').match(/\d{1,3}(?:\.\d{3})*,\d{2}|\d+(?:,\d{1,2})?/) || [''])[0];
+            try {
+                sessionStorage.setItem('sdRechnungNeu', JSON.stringify({ absender: kurzAbsender(a.absender), nr: leer(a.zeichen) ? '' : a.zeichen.split('\n')[0], betrag,
+                    datum: leer(a.briefdatum) ? '' : a.briefdatum, faellig: $('fristDatum').value, notiz: leer(a.art) ? '' : a.art.split('\n')[0] }));
+            } catch (e) { /* egal */ }
+            location.href = '../rechnungen/index.html#erhalten';
         };
         function zeigeListe() {
             const l = liste();
