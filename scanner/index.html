@@ -14,13 +14,11 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png" />
 <link rel="stylesheet" href="app.css" />
 <script>
-/* Ohne sichere Verbindung (http) sperren Browser die Kamera. Ist dieselbe Seite
-   per https erreichbar, dorthin wechseln - sonst auf http bleiben. */
 (function () {
   if (location.protocol !== "http:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
   var ziel = "https://" + location.host + location.pathname + location.search + location.hash;
   try {
-    fetch("https://" + location.host + "/icon.svg?https-test=" + Date.now(), { mode: "no-cors", cache: "no-store" })
+    fetch("https://" + location.host + location.pathname + "?https-test=" + Date.now(), { mode: "no-cors", cache: "no-store" })
       .then(function () { location.replace(ziel); }, function () {});
   } catch (e) {}
 })();
@@ -42,15 +40,28 @@
 
   <p id="liveHint" class="live-hint" hidden>Blatt ruhig halten</p>
 
+  <div id="noCam" class="no-cam" hidden>
+    <p class="no-cam-title">Keine Kamera verfügbar</p>
+    <p id="noCamText" class="no-cam-text">Fotos oder Bilder vom Gerät importieren und wie einen Scan bearbeiten.</p>
+    <div class="no-cam-actions">
+      <button id="btnPhotoBig" class="act" type="button">Foto aufnehmen</button>
+      <button id="btnImportBig" class="act" type="button">Bilder importieren</button>
+    </div>
+  </div>
+
   <div class="cam-bottom">
     <button id="btnPages" class="last-page" type="button" aria-label="Seitenliste">
       <img id="lastPreview" alt="" />
       <span id="pagesBadge" class="badge" hidden>0</span>
     </button>
     <button id="btnShutter" class="shutter" type="button" aria-label="Aufnehmen"></button>
-    <input id="fotoInput" type="file" accept="image/*" capture="environment" hidden />
-    <span class="cam-spacer"></span>
+    <button id="btnImport" class="import" type="button" aria-label="Bilder importieren">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4zM4 15l4.5-4.5 4 4 3-3L20 15M15.5 9.2a1.2 1.2 0 1 0 0-.01"/></svg>
+      <span>Import</span>
+    </button>
   </div>
+  <input id="fileInput" type="file" accept="image/*" multiple hidden />
+  <input id="photoInput" type="file" accept="image/*" capture="environment" hidden />
 </section>
 
 <section id="reviewScreen" class="screen">
@@ -80,14 +91,34 @@
   <div class="sheet-inner">
     <div class="sheet-bar">
       <span id="sheetTitle" class="sheet-title">Seiten</span>
+      <button id="btnNewDoc" class="ghost" type="button">Neu</button>
       <button id="btnSheetClose" class="ghost" type="button" aria-label="Schließen">Fertig</button>
     </div>
+    <label class="doc-name-row" for="docName">
+      <span>Dateiname</span>
+      <input id="docName" class="doc-name" type="text" maxlength="80" autocomplete="off" spellcheck="false" />
+    </label>
     <div id="pageGrid" class="page-grid"></div>
     <div class="sheet-actions">
       <button id="btnMakePdf" class="act" type="button">PDF</button>
       <button id="btnSharePdf" class="act" type="button">Teilen</button>
       <button id="btnPrint" class="act" type="button">Drucken</button>
       <button id="btnOcr" class="act" type="button" title="Text erkennen, als TXT speichern und als unsichtbare Textebene ins PDF legen">Text</button>
+    </div>
+  </div>
+</div>
+
+<div id="textSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span class="sheet-title">Erkannter Text</span>
+      <button id="btnTextClose" class="ghost" type="button">Fertig</button>
+    </div>
+    <textarea id="textOut" class="text-out" spellcheck="false"></textarea>
+    <p id="textNote" class="text-note"></p>
+    <div class="sheet-actions two">
+      <button id="btnCopyText" class="act" type="button">Kopieren</button>
+      <button id="btnSaveText" class="act" type="button">Als TXT speichern</button>
     </div>
   </div>
 </div>
