@@ -138,7 +138,11 @@
   }
 
   async function startCamera() {
-    if (state.stream) return;
+    if (state.stream || state.fotoModus) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      fotoModus(window.isSecureContext ? "Live-Kamera nicht verfügbar – tippe auf den Auslöser für ein Foto" : "Live-Kamera nur über https – tippe auf den Auslöser für ein Foto");
+      return;
+    }
     try {
       state.stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -158,9 +162,42 @@
       state.lastDetect = 0;
       loop();
     } catch (e) {
-      toast("Kamera nicht verfügbar: " + String(e.message || e).slice(0, 60), 5000);
+      fotoModus("Kamera nicht verfügbar – tippe auf den Auslöser für ein Foto");
     }
   }
+
+  function fotoModus(meldung) {
+    state.fotoModus = true;
+    toast(meldung, 6000);
+  }
+
+  el("fotoInput").addEventListener("change", async (ev) => {
+    const datei = ev.target.files && ev.target.files[0];
+    ev.target.value = "";
+    if (!datei) return;
+    busy("Foto wird geladen", 0.2);
+    try {
+      const url = URL.createObjectURL(datei);
+      const img = await loadImage(url);
+      URL.revokeObjectURL(url);
+      const max = 3000;
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.max(1, Math.round(img.naturalWidth * k));
+      const h = Math.max(1, Math.round(img.naturalHeight * k));
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, w, h);
+      const d = ctx.getImageData(0, 0, w, h);
+      const quad = detectFromRGBA(d.data, w, h, 420) || insetQuad(w, h, 0.06);
+      busyHide();
+      openReview({ rgba: d.data, w, h }, quad, null);
+    } catch (e) {
+      busyHide();
+      toast("Foto nicht lesbar");
+    }
+  });
 
   function stopCamera() {
     if (state.stream) {
@@ -357,7 +394,7 @@
     applyStageTransform();
   });
 
-  ui.shutter.addEventListener("click", () => capture());
+  ui.shutter.addEventListener("click", () => (state.fotoModus ? el("fotoInput").click() : capture()));
 
   function setScreen(name) {
     el("cameraScreen").classList.toggle("is-active", name === "camera");

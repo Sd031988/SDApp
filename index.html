@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+/* Ohne sichere Verbindung (http) sperren Browser Kamera und Mikrofon. Ist dieselbe Seite
+   per https erreichbar, dorthin wechseln - sonst auf http bleiben. */
+(function () {
+  if (location.protocol !== "http:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+  var ziel = "https://" + location.host + location.pathname + location.search + location.hash;
+  try {
+    fetch("https://" + location.host + "/icon.svg?https-test=" + Date.now(), { mode: "no-cors", cache: "no-store" })
+      .then(function () { location.replace(ziel); }, function () {});
+  } catch (e) {}
+})();
+</script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />

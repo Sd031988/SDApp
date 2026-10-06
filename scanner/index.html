@@ -13,6 +13,18 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-180.png" />
 <link rel="stylesheet" href="app.css" />
+<script>
+/* Ohne sichere Verbindung (http) sperren Browser die Kamera. Ist dieselbe Seite
+   per https erreichbar, dorthin wechseln - sonst auf http bleiben. */
+(function () {
+  if (location.protocol !== "http:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+  var ziel = "https://" + location.host + location.pathname + location.search + location.hash;
+  try {
+    fetch("https://" + location.host + "/icon.svg?https-test=" + Date.now(), { mode: "no-cors", cache: "no-store" })
+      .then(function () { location.replace(ziel); }, function () {});
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
@@ -36,6 +48,7 @@
       <span id="pagesBadge" class="badge" hidden>0</span>
     </button>
     <button id="btnShutter" class="shutter" type="button" aria-label="Aufnehmen"></button>
+    <input id="fotoInput" type="file" accept="image/*" capture="environment" hidden />
     <span class="cam-spacer"></span>
   </div>
 </section>
