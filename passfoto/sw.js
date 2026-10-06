@@ -4,7 +4,7 @@
  * ersetzt: der Versions-Hash, der Basis-Pfad und die Liste der gebauten Assets.
  */
 
-const VERSION = 'muvqobu3-sd1'
+const VERSION = 'muvqobu3-sd2'
 const BASE = '/passfoto/'
 const APP_SHELL = `${BASE}index.html`
 const SHELL_CACHE = `passfoto-shell-${VERSION}`
