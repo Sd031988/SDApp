@@ -373,26 +373,13 @@
     w * m, h * m, w * (1 - m), h * m, w * (1 - m), h * (1 - m), w * m, h * (1 - m)
   ];
 
-  function detectFromRGBA(rgba, w, h, workWidth) {
-    const src = clampBox(rgba, w, h);
-    const sw = Math.min(workWidth || 420, w);
-    const sh = Math.max(1, Math.round((h / w) * sw));
-    const c = document.createElement("canvas");
-    c.width = sw;
-    c.height = sh;
-    const ctx = c.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(src, 0, 0, sw, sh);
-    const d = ctx.getImageData(0, 0, sw, sh);
-    const g = Vision.luma(d.data, sw, sh);
-    const q = Vision.detectQuad(g, sw, sh);
-    if (!q) return null;
-    const kx = w / sw, ky = h / sh;
-    const out = new Float32Array(8);
-    for (let i = 0; i < 4; i++) {
-      out[i * 2] = q[i * 2] * kx;
-      out[i * 2 + 1] = q[i * 2 + 1] * ky;
+  // Blatt im Foto finden (js/docdetect.js). null = nicht sicher erkannt.
+  function detectFromRGBA(rgba, w, h) {
+    try {
+      return Vision.detectDocument(rgba, w, h);
+    } catch (e) {
+      return null;
     }
-    return Vision.refineQuad(rgba, w, h, out, Math.round(3 * Math.max(kx, ky) + 2));
   }
 
   function coverMap(vw, vh, sw, sh) {
@@ -470,7 +457,7 @@
       drawCodeOverlay();
       return;
     }
-    if (now - state.lastDetect > 110 && !state.editing) {
+    if (now - state.lastDetect > 240 && !state.editing) {
       state.lastDetect = now;
       runDetection();
     }
@@ -493,7 +480,10 @@
     ctx.drawImage(v, 0, 0, w, h);
     const d = ctx.getImageData(0, 0, w, h);
     const g = Vision.luma(d.data, w, h);
-    const q = Vision.detectQuad(g, w, h);
+    let q = null;
+    try {
+      q = Vision.detectDocument(d.data, w, h, { workWidth: 180, maxLines: 24, refine: false });
+    } catch (e) {}
     const det = state.det;
     det.sharpMax = Math.max(20, det.sharpMax * 0.98, Vision.varianceOfLaplacian(g, w, h, q));
     if (!q) {
@@ -506,7 +496,7 @@
     det.hist.push(q);
     if (det.hist.length > 8) det.hist.shift();
     const dev = Vision.deviation(det.hist);
-    const still = det.hist.length >= 5 && dev.avg < 2.2 && dev.max < 6;
+    const still = det.hist.length >= 3 && dev.avg < 2.6 && dev.max < 7;
     const sharp = Vision.varianceOfLaplacian(g, w, h, q) > Math.max(80, det.sharpMax * 0.12);
     det.locked = still && sharp;
   }
@@ -670,9 +660,13 @@
     const ctx = c.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(v, 0, 0, w, h);
     const d = ctx.getImageData(0, 0, w, h);
-    const found = detectFromRGBA(d.data, w, h, 420);
+    busy("Blatt wird gesucht");
+    await new Promise((r) => setTimeout(r, 0));
+    const found = detectFromRGBA(d.data, w, h);
+    busyHide();
     setScreen("review");
     openReview({ rgba: d.data, w, h }, found || insetQuad(w, h, 0.06), null, !!found);
+    if (!found) toast("Blatt nicht sicher erkannt – bitte die grünen Ecken auf die Blattecken ziehen", 4500);
   }
 
   function rectify(quad, maxDim) {
@@ -936,7 +930,7 @@
 
   el("btnAuto").addEventListener("click", () => {
     const b = state.editing.base;
-    const q = detectFromRGBA(b.rgba, b.w, b.h, 460);
+    const q = detectFromRGBA(b.rgba, b.w, b.h);
     state.editing.quad = Float32Array.from(q || insetQuad(b.w, b.h, 0.06));
     state.editing.trim = !!q;
     rebuild();
@@ -967,7 +961,7 @@
     const e = state.editing;
     if (!e) return;
     busy("Seite wird übernommen", 0.3);
-    const quad = e.trim ? Vision.shrinkQuad(e.quad, 0.008) : e.quad;
+    const quad = e.trim ? Vision.shrinkQuad(e.quad, 0.012) : e.quad;
     const size = Vision.outputSize(quad, 2400);
     const rgba = Vision.warp(e.base.rgba, e.base.w, e.base.h, quad, size.w, size.h);
     busyHide();
@@ -2583,12 +2577,12 @@
         ctx.drawImage(img, 0, 0, w, h);
         if (img.close) img.close();
         const d = ctx.getImageData(0, 0, w, h);
-        const found = detectFromRGBA(d.data, w, h, 420);
+        const found = detectFromRGBA(d.data, w, h);
         busyHide();
         stopCamera();
         openReview({ rgba: d.data, w, h }, found || insetQuad(w, h, 0), null, !!found);
         const left = state.importQueue.length;
-        toast(found ? "Blatt erkannt" + (left ? ` · noch ${left}` : "") : "Ganzes Bild übernommen, Ecken bei Bedarf ziehen" + (left ? ` · noch ${left}` : ""), 2600);
+        toast(found ? "Blatt erkannt" + (left ? ` · noch ${left}` : "") : "Blatt nicht sicher erkannt – bitte die grünen Ecken auf die Blattecken ziehen" + (left ? ` · noch ${left}` : ""), found ? 2600 : 4500);
         return true;
       } catch (e) {
         busyHide();
