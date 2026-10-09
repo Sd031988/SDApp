@@ -1620,7 +1620,8 @@
         toast_textbox_deleted: 'Textfeld gelöscht',
         toast_stroke_removed: 'Strich entfernt',
         toast_textbox_added: 'Textfeld hinzugefügt – ziehe zum Verschieben',
-        toast_signature_placed: 'Unterschrift auf der Seite platziert',
+        toast_signature_placed: 'Unterschrift auf der Seite platziert – zum Verschieben ziehen, an den Rändern vergrößern',
+        toast_signature_empty: 'Bitte zuerst im Feld unterschreiben',
         toast_ocr_recognized: '{n} Textstellen erkannt – klicke auf Wörter zum Ändern',
         toast_ocr_failed: 'Texterkennung fehlgeschlagen (Internetverbindung prüfen)',
         toast_pdf_generating: 'PDF wird generiert...',
@@ -1792,7 +1793,8 @@
         toast_textbox_deleted: 'Text box deleted',
         toast_stroke_removed: 'Stroke removed',
         toast_textbox_added: 'Text box added – drag to move',
-        toast_signature_placed: 'Signature placed on the page',
+        toast_signature_placed: 'Signature placed on the page – drag to move, use the edges to resize',
+        toast_signature_empty: 'Please sign in the box first',
         toast_ocr_recognized: '{n} text elements recognized – click words to change them',
         toast_ocr_failed: 'Text recognition failed (check your internet connection)',
         toast_pdf_generating: 'Generating PDF...',
@@ -2868,9 +2870,12 @@
         for (const item of page.overlays) {
           if (item.isSignature && item.imgSrc) {
             const sImg = await loadImage(item.imgSrc);
-            const sigW = 180 * (exportW / 650);
-            const sigH = 70 * (exportW / 650);
-            ctx.drawImage(sImg, item.x * exportW, item.y * exportH, sigW, sigH);
+            // Gleiche Lage und Groesse wie auf dem Bildschirm, Seitenverhaeltnis bleibt erhalten.
+            const boxW = (item.width ?? 0.28) * exportW;
+            const boxH = (item.height ?? 0.28 * (180 / 460)) * exportH;
+            const scale = Math.min(boxW / sImg.width, boxH / sImg.height);
+            const sigW = sImg.width * scale, sigH = sImg.height * scale;
+            ctx.drawImage(sImg, item.x * exportW + (boxW - sigW) / 2, item.y * exportH + (boxH - sigH) / 2, sigW, sigH);
           } else {
             // Schrift vor dem Zeichnen sicher geladen haben, sonst landet im
             // PDF eine Standardschrift statt der gewaehlten.
@@ -3504,7 +3509,7 @@
       const page = getSelectedPage();
       if (page && state.selectedOverlayId) {
         const overlay = page.overlays.find(o => o.id === state.selectedOverlayId);
-        if (overlay) {
+        if (overlay && !overlay.isSignature) {
           $('panelText').style.display = 'block';
           $('textInputVal').value = overlay.text;
           stelleSchriftOptionSicher(overlay.font, overlay.fontLabel);
@@ -4025,6 +4030,14 @@
         // einmalig eine sinnvolle Startgroesse nachtragen, damit sie sich
         // wie alle anderen Felder per Ziehen vergroessern/verkleinern lassen.
         const anzeigeGroesse = item.size * textSkalierung();
+        // Unterschrift: Groesse aus dem Seitenverhaeltnis des Bildes ableiten
+        // (aeltere Unterschriften ohne Angabe: 460 x 180 Zeichenfeld).
+        if (item.isSignature && item.width === undefined) {
+          item.width = 0.28;
+          item.height = Math.min(0.5, item.width * baseWidth / baseHeight * (item.aspect || 180 / 460));
+          item.x = Math.max(0, Math.min(1 - item.width, item.x));
+          item.y = Math.max(0, Math.min(1 - item.height, item.y));
+        }
         if (item.width === undefined) item.width = Math.max(OVERLAY_MIN_WIDTH, Math.min(0.9, (item.text.length * anzeigeGroesse * 0.55) / baseWidth));
         if (item.height === undefined) item.height = Math.max(OVERLAY_MIN_HEIGHT, (anzeigeGroesse * 1.35) / baseHeight);
 
@@ -4045,7 +4058,19 @@
         const content = document.createElement('div');
         content.className = 'overlay-content';
         if (item.lineHeight) content.style.lineHeight = String(item.lineHeight);
-        content.textContent = item.text;
+        if (item.isSignature && item.imgSrc) {
+          // Die Unterschrift als Bild zeigen (vorher stand hier nur der Platzhaltertext).
+          const bild = document.createElement('img');
+          bild.src = item.imgSrc;
+          bild.alt = '';
+          bild.draggable = false;
+          bild.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;';
+          content.style.padding = '0';
+          content.style.height = '100%';
+          content.appendChild(bild);
+        } else {
+          content.textContent = item.text;
+        }
         el.appendChild(content);
 
         const delBtn = document.createElement('div');
@@ -4156,7 +4181,7 @@
         }
         el.ondblclick = (e) => {
           e.stopPropagation();
-          starteBearbeitung();
+          if (!item.isSignature) starteBearbeitung();
         };
         el._starteBearbeitung = starteBearbeitung;
         content.oninput = () => { item.text = content.textContent; };
@@ -4545,6 +4570,9 @@
         sigCtx.strokeStyle = sigPenColor;
         sigCtx.beginPath();
         sigCtx.moveTo(x, y);
+        // Auch ein einzelner Tipp (Punkt) soll sichtbar sein.
+        sigCtx.lineTo(x + 0.1, y + 0.1);
+        sigCtx.stroke();
       };
 
       sigCanvas.onpointermove = (e) => {
@@ -4584,12 +4612,36 @@
         alert('Bitte wähle zuerst eine Seite aus.');
         return;
       }
+      // Nur den gezeichneten Bereich uebernehmen (ohne leeren Rand), damit
+      // die Unterschrift auf der Seite nicht winzig in einem leeren Kasten sitzt.
+      const pix = sigCtx.getImageData(0, 0, sigCanvas.width, sigCanvas.height).data;
+      let minX = sigCanvas.width, minY = sigCanvas.height, maxX = -1, maxY = -1;
+      for (let y = 0; y < sigCanvas.height; y++) {
+        for (let x = 0; x < sigCanvas.width; x++) {
+          if (pix[(y * sigCanvas.width + x) * 4 + 3] > 10) {
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < 0) {
+        showToast(t('toast_signature_empty'));
+        return;
+      }
+      const rand = 6;
+      minX = Math.max(0, minX - rand); minY = Math.max(0, minY - rand);
+      maxX = Math.min(sigCanvas.width - 1, maxX + rand); maxY = Math.min(sigCanvas.height - 1, maxY + rand);
+      const zuschnitt = document.createElement('canvas');
+      zuschnitt.width = maxX - minX + 1;
+      zuschnitt.height = maxY - minY + 1;
+      zuschnitt.getContext('2d').drawImage(sigCanvas, minX, minY, zuschnitt.width, zuschnitt.height, 0, 0, zuschnitt.width, zuschnitt.height);
       pushUndoState();
-      const sigData = sigCanvas.toDataURL('image/png');
+      const sigData = zuschnitt.toDataURL('image/png');
       const overlay = {
         id: 'sig_' + Date.now(),
         type: 'text',
         text: '✍️ Unterschrift',
+        aspect: zuschnitt.height / zuschnitt.width,
         x: 0.60,
         y: 0.78,
         font: 'Georgia, serif',
@@ -4600,7 +4652,11 @@
       };
       page.overlays.push(overlay);
       $('modalSignature').classList.remove('open');
+      state.selectedOverlayId = overlay.id;
       renderStage();
+      updateInspector();
+      const sigEl = document.getElementById(overlay.id);
+      if (sigEl) sigEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
       showToast(t('toast_signature_placed'));
     };
 
