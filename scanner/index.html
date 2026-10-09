@@ -35,6 +35,7 @@
   <div class="cam-top">
     <button id="btnLibrary" class="ghost" type="button">Ablage</button>
     <span id="pageCount" class="pill">0 Seiten</span>
+    <span id="idStep" class="pill" hidden></span>
     <button id="btnCodeHistory" class="ghost" type="button" hidden>Verlauf</button>
     <span class="grow"></span>
     <button id="btnTorch" class="ghost" type="button" hidden aria-label="Licht">Licht</button>
@@ -54,8 +55,14 @@
 
   <div id="modeBar" class="mode-bar" role="tablist" aria-label="Scan-Art">
     <button type="button" role="tab" data-mode="doc">Dokument</button>
-    <button type="button" role="tab" data-mode="code">QR / Barcode</button>
+    <button type="button" role="tab" data-mode="code">QR-Code</button>
     <button type="button" role="tab" data-mode="card">Visitenkarte</button>
+    <button type="button" role="tab" data-mode="id">Ausweis</button>
+  </div>
+
+  <div id="idBar" class="id-bar" hidden>
+    <button type="button" data-idtype="card">Ausweis / Karte</button>
+    <button type="button" data-idtype="passport">Reisepass</button>
   </div>
 
   <div class="cam-bottom">
@@ -198,6 +205,25 @@
       <button id="btnCardKi" class="act" type="button">Mit KI ausfüllen</button>
       <button id="btnCardVcf" class="act" type="button">Als Kontakt (.vcf)</button>
       <button id="btnCardShare" class="act" type="button">Teilen</button>
+    </div>
+  </div>
+</div>
+
+<div id="idSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span id="idTitle" class="sheet-title">Ausweiskopie</span>
+      <button id="btnIdRetake" class="ghost" type="button">Neu aufnehmen</button>
+    </div>
+    <div class="card-body">
+      <img id="idPreview" class="id-preview" alt="Vorschau der A4-Seite" />
+      <label class="id-label" for="idMark">Aufdruck auf der Kopie</label>
+      <input id="idMark" class="doc-name" type="text" maxlength="60" autocomplete="off" spellcheck="false" />
+      <p class="text-note">Eine Ausweiskopie muss als Kopie erkennbar sein. Du kannst den Zweck dazuschreiben, z. B. „KOPIE – nur für Vermieter“. Leer lassen = kein Aufdruck. Die Seite wird in Originalgröße auf A4 gelegt.</p>
+    </div>
+    <div class="sheet-actions two">
+      <button id="btnIdCancel" class="act" type="button">Verwerfen</button>
+      <button id="btnIdSave" class="act" type="button">Übernehmen</button>
     </div>
   </div>
 </div>

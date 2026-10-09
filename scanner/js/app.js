@@ -57,7 +57,13 @@
     cardSheet: el("cardSheet"),
     cardImg: el("cardImg"),
     cardForm: el("cardForm"),
-    cardNote: el("cardNote")
+    cardNote: el("cardNote"),
+    idBar: el("idBar"),
+    idStep: el("idStep"),
+    idSheet: el("idSheet"),
+    idTitle: el("idTitle"),
+    idPreview: el("idPreview"),
+    idMark: el("idMark")
   };
 
   const state = {
@@ -190,7 +196,7 @@
       key: docId + ":" + p.id, docId,
       id: p.id, src: p.src, w: p.w, h: p.h, filter: p.filter, thumb: p.thumb,
       text: p.text == null ? null : p.text, words: p.words || null,
-      ocrW: p.ocrW || 0, ocrH: p.ocrH || 0, order
+      ocrW: p.ocrW || 0, ocrH: p.ocrH || 0, a4: !!p.a4, order
     };
   }
 
@@ -376,6 +382,11 @@
   // Blatt im Foto finden (js/docdetect.js). null = nicht sicher erkannt.
   function detectFromRGBA(rgba, w, h) {
     try {
+      // Ausweis/Pass: Inneres darf Foto und Farbe haben, Format muss passen
+      if (state.mode === "id") {
+        const f = idFormat();
+        return Vision.detectDocument(rgba, w, h, { aspect: f.wmm / f.hmm, anyInside: true });
+      }
       return Vision.detectDocument(rgba, w, h);
     } catch (e) {
       return null;
@@ -482,7 +493,12 @@
     const g = Vision.luma(d.data, w, h);
     let q = null;
     try {
-      q = Vision.detectDocument(d.data, w, h, { workWidth: 180, maxLines: 24, refine: false });
+      const live = { workWidth: 180, maxLines: 24, refine: false };
+      if (state.mode === "id") {
+        live.aspect = idFormat().wmm / idFormat().hmm;
+        live.anyInside = true;
+      }
+      q = Vision.detectDocument(d.data, w, h, live);
     } catch (e) {}
     const det = state.det;
     det.sharpMax = Math.max(20, det.sharpMax * 0.98, Vision.varianceOfLaplacian(g, w, h, q));
@@ -574,6 +590,13 @@
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
+    } else if (state.mode === "id") {
+      const g = idGuideRect(sw, sh);
+      ctx.strokeStyle = "rgba(47,224,138,0.75)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 7]);
+      ctx.strokeRect(g.x, g.y, g.w, g.h);
+      ctx.setLineDash([]);
     } else {
       ctx.strokeStyle = "rgba(255,255,255,0.22)";
       ctx.lineWidth = 1.5;
@@ -660,9 +683,17 @@
     const ctx = c.getContext("2d", { willReadFrequently: true });
     ctx.drawImage(v, 0, 0, w, h);
     const d = ctx.getImageData(0, 0, w, h);
-    busy("Blatt wird gesucht");
+    busy(state.mode === "id" ? "Karte wird gesucht" : "Blatt wird gesucht");
     await new Promise((r) => setTimeout(r, 0));
-    const found = detectFromRGBA(d.data, w, h);
+    let found = detectFromRGBA(d.data, w, h);
+    if (state.mode === "id") {
+      if (found && !plausibleIdQuad(found)) found = null;
+      busyHide();
+      setScreen("review");
+      openReview({ rgba: d.data, w, h }, found || guideQuadInImage(w, h, k), null, !!found);
+      toast(found ? "Ecken prüfen, dann ✓" : "Ecken bitte genau auf die Ecken des Ausweises ziehen, dann ✓", 4500);
+      return;
+    }
     busyHide();
     setScreen("review");
     openReview({ rgba: d.data, w, h }, found || insetQuad(w, h, 0.06), null, !!found);
@@ -961,6 +992,11 @@
     const e = state.editing;
     if (!e) return;
     busy("Seite wird übernommen", 0.3);
+    if (e.pageId == null && state.mode === "id") {
+      busyHide();
+      await acceptIdSide(e);
+      return;
+    }
     const quad = e.trim ? Vision.shrinkQuad(e.quad, 0.012) : e.quad;
     const size = Vision.outputSize(quad, 2400);
     const rgba = Vision.warp(e.base.rgba, e.base.w, e.base.h, quad, size.w, size.h);
@@ -979,6 +1015,7 @@
         p.thumb = thumb;
         p.text = null;
         p.words = null;
+        p.a4 = false;
       }
     } else if (state.mode === "card") {
       const page = { id: newId(), src, w: size.w, h: size.h, filter: e.filter, thumb, text: null };
@@ -1279,6 +1316,7 @@
       page.thumb = await makeThumb(page.src);
       page.text = null;
       page.words = null;
+      page.a4 = false;
       busyHide();
       renderGrid();
       renderCounts();
@@ -1325,15 +1363,17 @@
     const { jsPDF } = window.jspdf;
     let doc = null;
     for (let i = 0; i < state.pages.length; i++) {
-      const { url, w, h } = await pageDataUrl(state.pages[i], 2200);
-      const landscape = w > h;
+      const { url, w, h } = await pageDataUrl(state.pages[i], state.pages[i].a4 ? 3508 : 2200);
+      const landscape = !state.pages[i].a4 && w > h;
       if (!doc) doc = new jsPDF({ unit: "mm", format: "a4", orientation: landscape ? "landscape" : "portrait" });
       else doc.addPage("a4", landscape ? "landscape" : "portrait");
       const pw = doc.internal.pageSize.getWidth();
       const ph = doc.internal.pageSize.getHeight();
-      const m = 7;
+      const m = state.pages[i].a4 ? 0 : 7;
       const s = Math.min((pw - 2 * m) / w, (ph - 2 * m) / h);
-      const geom = { dx: (pw - w * s) / 2, dy: (ph - h * s) / 2, dw: w * s, dh: h * s, ow: w, oh: h };
+      const geom = state.pages[i].a4
+        ? { dx: 0, dy: 0, dw: pw, dh: ph, ow: w, oh: h }
+        : { dx: (pw - w * s) / 2, dy: (ph - h * s) / 2, dw: w * s, dh: h * s, ow: w, oh: h };
       doc.addImage(url, "JPEG", geom.dx, geom.dy, geom.dw, geom.dh, undefined, "FAST");
       addTextLayer(doc, state.pages[i], geom);
       busy(`PDF Seite ${i + 1} von ${state.pages.length}`, (i + 1) / (state.pages.length + 1));
@@ -1379,7 +1419,7 @@
     try {
       const imgs = [];
       for (let i = 0; i < state.pages.length; i++) {
-        const { url } = await pageDataUrl(state.pages[i], 1800);
+        const { url } = await pageDataUrl(state.pages[i], state.pages[i].a4 ? 3508 : 1800);
         imgs.push(url);
         busy(`Seite ${i + 1} von ${state.pages.length}`, i / state.pages.length);
       }
@@ -1387,8 +1427,13 @@
       if (!imgs.length) return;
       const w = window.open("", "_blank");
       if (!w) { toast("Popup blockiert"); return; }
+      // Reine A4-Seiten (z. B. Ausweiskopie) randlos in Originalgroesse drucken
+      const allA4 = state.pages.every((p) => p.a4);
+      const css = allA4
+        ? "@page{size:A4;margin:0}body{margin:0}img{width:210mm;height:297mm;page-break-after:always;display:block}@media screen{img{width:100%;height:auto;max-width:600px;margin:0 auto 8px;box-shadow:0 2px 8px #0003}}"
+        : "@page{margin:8mm}body{margin:0}img{width:100%;page-break-after:always;display:block}@media screen{img{max-width:100%;margin-bottom:8px}}";
       const html =
-        "<!doctype html><html><head><meta charset='utf-8'><title>" + fileBase().replace(/[<>&]/g, "") + "</title><style>@page{margin:8mm}body{margin:0}img{width:100%;page-break-after:always;display:block}@media screen{img{max-width:100%;margin-bottom:8px}}</style></head><body>" +
+        "<!doctype html><html><head><meta charset='utf-8'><title>" + fileBase().replace(/[<>&]/g, "") + "</title><style>" + css + "</style></head><body>" +
         imgs.map((u) => `<img src="${u}">`).join("") +
         "</body></html>";
       w.document.write(html);
@@ -1577,23 +1622,30 @@
   const MODE_KEY = "sdScanModus";
 
   function anySheetOpen() {
-    return [ui.pagesSheet, ui.textSheet, ui.libSheet, ui.codeSheet, ui.codeHistSheet, ui.cardSheet].some((x) => !x.hidden);
+    return [ui.pagesSheet, ui.textSheet, ui.libSheet, ui.codeSheet, ui.codeHistSheet, ui.cardSheet, ui.idSheet].some((x) => !x.hidden);
   }
 
   function setMode(mode) {
-    if (!["doc", "code", "card"].includes(mode)) mode = "doc";
+    if (!["doc", "code", "card", "id"].includes(mode)) mode = "doc";
     state.mode = mode;
     try { localStorage.setItem(MODE_KEY, mode); } catch (e) {}
     document.body.classList.toggle("mode-code", mode === "code");
     document.body.classList.toggle("mode-card", mode === "card");
+    document.body.classList.toggle("mode-id", mode === "id");
+    ui.idBar.hidden = mode !== "id";
+    if (mode !== "id") resetIdCapture();
+    renderIdStep();
     ui.modeBar.querySelectorAll("button").forEach((b) => {
       const on = b.dataset.mode === mode;
       b.classList.toggle("is-active", on);
       b.setAttribute("aria-selected", String(on));
+      if (on && b.scrollIntoView) {
+        try { b.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {}
+      }
     });
     ui.codeHistBtn.hidden = mode !== "code";
     ui.codeHint.hidden = mode !== "code";
-    ui.hint.textContent = mode === "card" ? "Karte ruhig halten" : "Blatt ruhig halten";
+    ui.hint.textContent = mode === "card" || mode === "id" ? "Karte ruhig halten" : "Blatt ruhig halten";
     ui.hint.hidden = true;
     state.det.quad = null;
     state.det.hist.length = 0;
@@ -2546,6 +2598,228 @@
     });
   });
 
+  // =====================================================================
+  // Ausweis / Reisepass: Vorder- und Rueckseite in Originalgroesse auf A4
+  // =====================================================================
+  // Masse nach ISO/IEC 7810: ID-1 (Personalausweis, Fuehrerschein, Karten)
+  // und ID-3 (Datenseite Reisepass).
+  const ID_FORMATS = {
+    card: { wmm: 85.6, hmm: 54, sides: 2, name: "Ausweis" },
+    passport: { wmm: 125, hmm: 88, sides: 1, name: "Reisepass" }
+  };
+  const PX_PER_MM = 300 / 25.4; // 300 dpi
+  const A4W = Math.round(210 * PX_PER_MM), A4H = Math.round(297 * PX_PER_MM);
+  const ID_TYPE_KEY = "sdScanAusweisArt";
+  const idState = { type: "card", sides: [], markTimer: null };
+
+  try {
+    const t = localStorage.getItem(ID_TYPE_KEY);
+    if (ID_FORMATS[t]) idState.type = t;
+  } catch (e) {}
+
+  function idFormat() {
+    return ID_FORMATS[idState.type];
+  }
+
+  function resetIdCapture() {
+    idState.sides = [];
+    renderIdStep();
+  }
+
+  function renderIdStep() {
+    const on = state.mode === "id";
+    ui.idStep.hidden = !on;
+    ui.idBar.querySelectorAll("button").forEach((b) => b.classList.toggle("is-active", b.dataset.idtype === idState.type));
+    if (!on) return;
+    const f = idFormat();
+    if (f.sides === 1) ui.idStep.textContent = "Datenseite (mit Foto)";
+    else ui.idStep.textContent = idState.sides.length === 0 ? "1/2 · Vorderseite" : "2/2 · Rückseite";
+  }
+
+  ui.idBar.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-idtype]");
+    if (!b || !ID_FORMATS[b.dataset.idtype]) return;
+    idState.type = b.dataset.idtype;
+    try { localStorage.setItem(ID_TYPE_KEY, idState.type); } catch (e2) {}
+    resetIdCapture();
+  });
+
+  // Rahmen auf dem Bildschirm im richtigen Seitenverhaeltnis
+  function idGuideRect(sw, sh) {
+    const f = idFormat();
+    const aspect = f.wmm / f.hmm;
+    let w = sw * 0.86;
+    let h = w / aspect;
+    if (h > sh * 0.42) {
+      h = sh * 0.42;
+      w = h * aspect;
+    }
+    return { x: (sw - w) / 2, y: sh * 0.42 - h / 2, w, h };
+  }
+
+  // Rahmen vom Bildschirm in Bildkoordinaten der Aufnahme (k = Aufnahme/Video)
+  function guideQuadInImage(w, h, k) {
+    const sw = ui.stage.clientWidth, sh = ui.stage.clientHeight;
+    const v = ui.cam;
+    if (!sw || !sh || !v.videoWidth) return insetQuad(w, h, 0.1);
+    const m = coverMap(v.videoWidth, v.videoHeight, sw, sh);
+    const g = idGuideRect(sw, sh);
+    const toImg = (x, y) => [clamp(((x - m.ox) / m.s) * k, 0, w), clamp(((y - m.oy) / m.s) * k, 0, h)];
+    const a = toImg(g.x, g.y), b = toImg(g.x + g.w, g.y), c = toImg(g.x + g.w, g.y + g.h), d = toImg(g.x, g.y + g.h);
+    return [a[0], a[1], b[0], b[1], c[0], c[1], d[0], d[1]];
+  }
+
+  function sideLen(q, i) {
+    const j = (i + 1) % 4;
+    return Math.hypot(q[j * 2] - q[i * 2], q[j * 2 + 1] - q[i * 2 + 1]);
+  }
+
+  // Passt ein erkanntes Viereck ungefaehr zum Kartenformat?
+  function plausibleIdQuad(q) {
+    const a = (sideLen(q, 0) + sideLen(q, 2)) / 2, b = (sideLen(q, 1) + sideLen(q, 3)) / 2;
+    const r = Math.max(a, b) / Math.max(1, Math.min(a, b));
+    const want = idFormat().wmm / idFormat().hmm;
+    return Math.abs(r - want) / want < 0.22;
+  }
+
+  // Querformat erzwingen: lange Seite oben
+  function landscapeQuad(q) {
+    const top = (sideLen(q, 0) + sideLen(q, 2)) / 2, left = (sideLen(q, 1) + sideLen(q, 3)) / 2;
+    if (top >= left) return Array.from(q);
+    return [q[6], q[7], q[0], q[1], q[2], q[3], q[4], q[5]];
+  }
+
+  async function acceptIdSide(e) {
+    const f = idFormat();
+    const ow = Math.round(f.wmm * PX_PER_MM), oh = Math.round(f.hmm * PX_PER_MM);
+    busy("Seite wird übernommen", 0.4);
+    await new Promise((r) => setTimeout(r, 0));
+    const quad = landscapeQuad(e.quad);
+    const rgba = Vision.warp(e.base.rgba, e.base.w, e.base.h, quad, ow, oh);
+    if (!rgba) {
+      busyHide();
+      toast("Zuschneiden fehlgeschlagen");
+      return;
+    }
+    const out = Vision.applyFilter(rgba, ow, oh, e.filter, {});
+    idState.sides.push(clampBox(out, ow, oh).toDataURL("image/jpeg", 0.92));
+    busyHide();
+    state.editing = null;
+    state.view = null;
+    state.preview = null;
+    if (idState.sides.length < f.sides) {
+      renderIdStep();
+      await afterReview();
+      toast("Vorderseite übernommen – jetzt die Rückseite", 3200);
+      return;
+    }
+    await afterReview();
+    openIdSheet();
+  }
+
+  // A4-Seite (300 dpi) mit den Seiten in Originalgroesse und optionalem Aufdruck
+  async function composeIdPage(mark) {
+    const f = idFormat();
+    const c = document.createElement("canvas");
+    c.width = A4W;
+    c.height = A4H;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, A4W, A4H);
+    const w = Math.round(f.wmm * PX_PER_MM), h = Math.round(f.hmm * PX_PER_MM);
+    const x = Math.round((A4W - w) / 2);
+    let y = Math.round(25 * PX_PER_MM);
+    for (const src of idState.sides) {
+      const img = await loadImage(src);
+      ctx.drawImage(img, x, y, w, h);
+      // feine Schnittkante
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+      if (mark) drawMark(ctx, mark, x, y, w, h);
+      y += h + Math.round(15 * PX_PER_MM);
+    }
+    return c.toDataURL("image/jpeg", 0.9);
+  }
+
+  function drawMark(ctx, text, x, y, w, h) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.translate(x + w / 2, y + h / 2);
+    ctx.rotate(-Math.atan2(h, w));
+    const diag = Math.hypot(w, h);
+    let size = h * 0.24;
+    ctx.font = `800 ${size}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+    const tw = ctx.measureText(text).width;
+    if (tw > diag * 0.85) {
+      size *= (diag * 0.85) / tw;
+      ctx.font = `800 ${size}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = Math.max(2, size * 0.06);
+    ctx.strokeStyle = "rgba(255,255,255,0.55)";
+    ctx.strokeText(text, 0, 0);
+    ctx.fillStyle = "rgba(200,20,20,0.5)";
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
+
+  async function renderIdPreview() {
+    const src = await composeIdPage(ui.idMark.value.trim());
+    ui.idPreview.src = src;
+    return src;
+  }
+
+  function openIdSheet() {
+    ui.idTitle.textContent = idState.type === "passport" ? "Reisepass-Kopie" : "Ausweiskopie";
+    if (!ui.idMark.value) ui.idMark.value = "KOPIE";
+    ui.idSheet.hidden = false;
+    renderIdPreview();
+  }
+
+  ui.idMark.addEventListener("input", () => {
+    clearTimeout(idState.markTimer);
+    idState.markTimer = setTimeout(renderIdPreview, 300);
+  });
+
+  function closeIdSheet() {
+    ui.idSheet.hidden = true;
+    resetIdCapture();
+  }
+
+  el("btnIdRetake").addEventListener("click", closeIdSheet);
+  el("btnIdCancel").addEventListener("click", () => {
+    if (!window.confirm("Aufnahmen verwerfen?")) return;
+    closeIdSheet();
+  });
+
+  el("btnIdSave").addEventListener("click", async () => {
+    busy("Seite wird erstellt");
+    try {
+      const src = await composeIdPage(ui.idMark.value.trim());
+      const thumb = await makeThumb(src);
+      await flush();
+      startNewDocState();
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      state.docName = `${idFormat().name} Kopie ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+      state.pages = [{ id: newId(), src, w: A4W, h: A4H, filter: "original", thumb, text: null, a4: true }];
+      await writeAll();
+      busyHide();
+      ui.idSheet.hidden = true;
+      resetIdCapture();
+      renderCounts();
+      openSheet();
+      toast("Gespeichert – als PDF in Originalgröße oder direkt drucken", 3500);
+    } catch (e) {
+      busyHide();
+      toast("Erstellen fehlgeschlagen");
+    }
+  });
+
   function decodeImage(file) {
     if (window.createImageBitmap) {
       return createImageBitmap(file, { imageOrientation: "from-image" }).catch(() => decodeViaImg(file));
@@ -2577,12 +2851,14 @@
         ctx.drawImage(img, 0, 0, w, h);
         if (img.close) img.close();
         const d = ctx.getImageData(0, 0, w, h);
-        const found = detectFromRGBA(d.data, w, h);
+        let found = detectFromRGBA(d.data, w, h);
+        if (state.mode === "id" && found && !plausibleIdQuad(found)) found = null;
         busyHide();
         stopCamera();
         openReview({ rgba: d.data, w, h }, found || insetQuad(w, h, 0), null, !!found);
         const left = state.importQueue.length;
-        toast(found ? "Blatt erkannt" + (left ? ` · noch ${left}` : "") : "Blatt nicht sicher erkannt – bitte die grünen Ecken auf die Blattecken ziehen" + (left ? ` · noch ${left}` : ""), found ? 2600 : 4500);
+        const what = state.mode === "id" ? "Ausweis" : "Blatt";
+        toast(found ? what + " erkannt" + (left ? ` · noch ${left}` : "") : what + " nicht sicher erkannt – bitte die grünen Ecken auf die Ecken ziehen" + (left ? ` · noch ${left}` : ""), found ? 2600 : 4500);
         return true;
       } catch (e) {
         busyHide();
@@ -2608,7 +2884,7 @@
       await decodeCodeFromFile(files[0]);
       return;
     }
-    if (state.mode === "card" && files.length > 1) {
+    if ((state.mode === "card" || state.mode === "id") && files.length > 1) {
       toast("Visitenkarten bitte einzeln importieren – die erste wird geöffnet", 3000);
       files.length = 1;
     }

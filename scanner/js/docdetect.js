@@ -157,7 +157,10 @@
   }
 
   // Bewertet ein Viereck (Arbeitskoordinaten, im Uhrzeigersinn geordnet)
-  function scoreQuad(q, P, G, edgeThr, paperThr) {
+  // opt.aspect: gewuenschtes Seitenverhaeltnis (lang/kurz), z. B. Ausweis 1,585
+  // opt.anyInside: Inneres muss nicht wie Papier aussehen (Ausweis mit Foto)
+  function scoreQuad(q, P, G, edgeThr, paperThr, opt) {
+    opt = opt || {};
     const w = P.w, h = P.h;
     const area = V.quadArea(q);
     const imgArea = w * h;
@@ -191,7 +194,7 @@
         // nur zaehlen, wenn innen direkt daneben Papier liegt (hell, farbarm)
         const pin = bil(P.L, w, h, px - nx * 4, py - ny * 4);
         const sin = bil(P.S, w, h, px - nx * 4, py - ny * 4);
-        if (best >= edgeThr * 0.7 && pin >= paperThr - 0.04 && sin < 0.32) hits++;
+        if (best >= edgeThr * 0.7 && (opt.anyInside || (pin >= paperThr - 0.04 && sin < 0.32))) hits++;
         const li = bil(P.L, w, h, px - nx * 3, py - ny * 3);
         const lo = bil(P.L, w, h, px + nx * 3, py + ny * 3);
         if (!isNaN(li) && !isNaN(lo)) { insideSum += li; outsideSum += lo; ringN++; }
@@ -220,11 +223,20 @@
     const paperFrac = cnt ? paper / cnt : 0;
     const contrast = ringN ? (insideSum - outsideSum) / ringN : 0;
     const aFrac = area / imgArea;
+    let aspectFit = 1;
+    if (opt.aspect) {
+      const sl = (i) => Math.hypot(q[((i + 1) % 4) * 2] - q[i * 2], q[((i + 1) % 4) * 2 + 1] - q[i * 2 + 1]);
+      const a = (sl(0) + sl(2)) / 2, b = (sl(1) + sl(3)) / 2;
+      const r = Math.max(a, b) / Math.max(1, Math.min(a, b));
+      const d = (r - opt.aspect) / opt.aspect;
+      aspectFit = Math.exp(-(d * d) / 0.012);
+    }
     const score =
       Math.pow(0.35 * minSup + 0.65 * meanSup, 2) *
       Math.pow(aFrac, 0.35) *
-      (0.25 + paperFrac) *
-      (0.35 + Math.min(1, Math.max(0, contrast) * 2.5));
+      (opt.anyInside ? 0.8 + 0.2 * paperFrac : 0.25 + paperFrac) *
+      (0.35 + Math.min(1, Math.abs(opt.anyInside ? contrast : Math.max(0, contrast)) * 2.5)) *
+      aspectFit;
     return { score, minSup, meanSup, paperFrac, contrast, aFrac };
   }
 
@@ -398,7 +410,7 @@
         if (q[i * 2] < -mx || q[i * 2] > P.w + mx || q[i * 2 + 1] < -my || q[i * 2 + 1] > P.h + my) return;
       }
       if (!convexOrdered(q) || !cornerAnglesOk(q)) return;
-      const s = scoreQuad(q, P2, G, edgeThr, paperThr);
+      const s = scoreQuad(q, P2, G, edgeThr, paperThr, opt);
       if (!s) return;
       cands.push({ q, s, src });
     };
@@ -431,7 +443,7 @@
     if (opt.debug) opt.debug.best = best;
     const s = best.s;
     // Mindestqualitaet: Kanten muessen ueberwiegend belegt sein
-    if (s.meanSup < 0.5 || s.minSup < 0.22 || s.paperFrac < 0.35) return null;
+    if (s.meanSup < 0.5 || s.minSup < 0.22 || (!opt.anyInside && s.paperFrac < 0.35)) return null;
     const out = new Float32Array(8);
     for (let i = 0; i < 8; i++) out[i] = best.q[i] * (i % 2 === 0 ? w / P.w : h / P.h);
     if (opt.refine === false) return out;
