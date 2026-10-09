@@ -38,7 +38,26 @@
     newDoc: el("btnNewDoc"),
     textSheet: el("textSheet"),
     textOut: el("textOut"),
-    textNote: el("textNote")
+    textNote: el("textNote"),
+    modeBar: el("modeBar"),
+    codeHint: el("codeHint"),
+    libBtn: el("btnLibrary"),
+    libSheet: el("libSheet"),
+    libList: el("libList"),
+    libSearch: el("libSearch"),
+    libNote: el("libNote"),
+    codeHistBtn: el("btnCodeHistory"),
+    codeSheet: el("codeSheet"),
+    codeType: el("codeType"),
+    codeValue: el("codeValue"),
+    codeNote: el("codeNote"),
+    codeOpen: el("btnCodeOpen"),
+    codeHistSheet: el("codeHistSheet"),
+    codeList: el("codeList"),
+    cardSheet: el("cardSheet"),
+    cardImg: el("cardImg"),
+    cardForm: el("cardForm"),
+    cardNote: el("cardNote")
   };
 
   const state = {
@@ -63,8 +82,14 @@
     hintShown: false,
     importQueue: [],
     docName: "",
-    persistWarned: false
+    persistWarned: false,
+    docId: "",
+    docCreated: 0,
+    mode: "doc",
+    libFilter: "all"
   };
+
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
   let toastTimer = null;
   function toast(msg, ms = 2200) {
@@ -110,7 +135,12 @@
       i.src = src;
     });
 
+  // ---------- Speicher (IndexedDB) ----------
+  // v1: "pages" + "meta" (nur EIN Dokument). v2: "docs" + "docpages" = Ablage mit
+  // beliebig vielen Dokumenten und Visitenkarten, "codes" = QR-/Barcode-Verlauf.
+  // Die v1-Seiten werden beim ersten Start einmalig in die Ablage übernommen.
   const DB_NAME = "dokumentenscanner";
+  const DB_VERSION = 2;
   let dbPromise = null;
   let saveTimer = null;
 
@@ -118,23 +148,118 @@
     if (dbPromise) return dbPromise;
     dbPromise = new Promise((res, rej) => {
       if (!("indexedDB" in window)) return rej(new Error("kein Speicher"));
-      const r = indexedDB.open(DB_NAME, 1);
+      const r = indexedDB.open(DB_NAME, DB_VERSION);
       r.onupgradeneeded = () => {
         const db = r.result;
         if (!db.objectStoreNames.contains("pages")) db.createObjectStore("pages", { keyPath: "id" });
         if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
+        if (!db.objectStoreNames.contains("docs")) db.createObjectStore("docs", { keyPath: "id" });
+        if (!db.objectStoreNames.contains("docpages")) {
+          db.createObjectStore("docpages", { keyPath: "key" }).createIndex("docId", "docId");
+        }
+        if (!db.objectStoreNames.contains("codes")) db.createObjectStore("codes", { keyPath: "id" });
       };
       r.onsuccess = () => res(r.result);
       r.onerror = () => rej(r.error);
     });
+    dbPromise.catch(() => (dbPromise = null));
     return dbPromise;
   }
 
-  function storedPage(p, order) {
+  // Fuehrt fn(transaction) aus; liefert das Ergebnis einer zurueckgegebenen Anfrage.
+  async function dbRun(stores, mode, fn) {
+    const db = await openDb();
+    return new Promise((res, rej) => {
+      const t = db.transaction(stores, mode);
+      let out;
+      try {
+        out = fn(t);
+      } catch (e) {
+        try { t.abort(); } catch (e2) {}
+        rej(e);
+        return;
+      }
+      t.oncomplete = () => res(out instanceof IDBRequest ? out.result : out);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error || new Error("abgebrochen"));
+    });
+  }
+
+  function storedPage(p, order, docId) {
     return {
+      key: docId + ":" + p.id, docId,
       id: p.id, src: p.src, w: p.w, h: p.h, filter: p.filter, thumb: p.thumb,
       text: p.text == null ? null : p.text, words: p.words || null,
       ocrW: p.ocrW || 0, ocrH: p.ocrH || 0, order
+    };
+  }
+
+  function plainPage(stored) {
+    const copy = Object.assign({}, stored);
+    delete copy.order;
+    delete copy.key;
+    delete copy.docId;
+    return copy;
+  }
+
+  // Suchtext fuer die Ablage (erkannter Text, gekuerzt)
+  function searchText(pages) {
+    return pages.map((p) => String(p.text || "")).join(" ").replace(/\s+/g, " ").trim().slice(0, 4000);
+  }
+
+  // Schreibt ein Dokument samt Seiten; ersetzt vorhandene Seiten dieses Dokuments.
+  // Ohne Seiten wird das Dokument aus der Ablage entfernt.
+  function putDocTx(t, record, pages) {
+    const docs = t.objectStore("docs");
+    const dp = t.objectStore("docpages");
+    const cur = dp.index("docId").openKeyCursor(IDBKeyRange.only(record.id));
+    cur.onsuccess = () => {
+      const c = cur.result;
+      if (c) {
+        dp.delete(c.primaryKey);
+        c.continue();
+        return;
+      }
+      if (!pages.length) {
+        docs.delete(record.id);
+        return;
+      }
+      docs.put(record);
+      pages.forEach((p, i) => dp.put(storedPage(p, i, record.id)));
+    };
+  }
+
+  function putDoc(record, pages) {
+    return dbRun(["docs", "docpages"], "readwrite", (t) => putDocTx(t, record, pages));
+  }
+
+  function deleteDoc(id) {
+    return dbRun(["docs", "docpages"], "readwrite", (t) => putDocTx(t, { id }, []));
+  }
+
+  function getDoc(id) {
+    return dbRun(["docs"], "readonly", (t) => t.objectStore("docs").get(id));
+  }
+
+  async function getDocPages(id) {
+    const list = await dbRun(["docpages"], "readonly", (t) => t.objectStore("docpages").index("docId").getAll(IDBKeyRange.only(id)));
+    return (list || []).sort((a, b) => a.order - b.order).map(plainPage);
+  }
+
+  function getAllDocs() {
+    return dbRun(["docs"], "readonly", (t) => t.objectStore("docs").getAll());
+  }
+
+  function workingRecord() {
+    return {
+      id: state.docId,
+      kind: "doc",
+      name: String(state.docName || "").trim() || defaultDocName(),
+      created: state.docCreated || Date.now(),
+      updated: Date.now(),
+      pageCount: state.pages.length,
+      thumb: state.pages.length ? state.pages[0].thumb || "" : "",
+      text: searchText(state.pages)
     };
   }
 
@@ -143,18 +268,20 @@
     saveTimer = setTimeout(writeAll, 250);
   }
 
+  // Ausstehende Speicherung sofort ausfuehren (vor Dokumentwechsel)
+  async function flush() {
+    clearTimeout(saveTimer);
+    await writeAll();
+  }
+
   async function writeAll() {
+    if (!state.docId) return;
+    const record = workingRecord();
+    const pages = state.pages.slice();
     try {
-      const db = await openDb();
-      await new Promise((res, rej) => {
-        const tx = db.transaction(["pages", "meta"], "readwrite");
-        const store = tx.objectStore("pages");
-        store.clear();
-        state.pages.forEach((p, i) => store.put(storedPage(p, i)));
-        tx.objectStore("meta").put(state.docName, "docName");
-        tx.oncomplete = () => res();
-        tx.onerror = () => rej(tx.error);
-        tx.onabort = () => rej(tx.error);
+      await dbRun(["docs", "docpages", "meta"], "readwrite", (t) => {
+        putDocTx(t, record, pages);
+        t.objectStore("meta").put(record.id, "currentDocId");
       });
     } catch (e) {
       if (!state.persistWarned) {
@@ -164,24 +291,65 @@
     }
   }
 
+  // Einmalig: Seiten aus Version 1 als Dokument in die Ablage uebernehmen
+  async function migrateV1() {
+    const done = await dbRun(["meta"], "readonly", (t) => t.objectStore("meta").get("migratedV2"));
+    if (done) return;
+    let pagesReq = null;
+    let nameReq = null;
+    await dbRun(["pages", "meta"], "readonly", (t) => {
+      pagesReq = t.objectStore("pages").getAll();
+      nameReq = t.objectStore("meta").get("docName");
+    });
+    const name = nameReq.result;
+    const list = (pagesReq.result || []).sort((x, y) => x.order - y.order).map(plainPage);
+    const id = newId();
+    const now = Date.now();
+    await dbRun(["docs", "docpages", "meta", "pages"], "readwrite", (t) => {
+      if (list.length) {
+        putDocTx(t, {
+          id, kind: "doc",
+          name: typeof name === "string" && name.trim() ? name.trim() : defaultDocName(),
+          created: now, updated: now, pageCount: list.length,
+          thumb: list[0].thumb || "", text: searchText(list)
+        }, list);
+        t.objectStore("meta").put(id, "currentDocId");
+      }
+      t.objectStore("pages").clear();
+      t.objectStore("meta").put(true, "migratedV2");
+    });
+  }
+
+  function startNewDocState() {
+    state.docId = newId();
+    state.docCreated = Date.now();
+    state.docName = defaultDocName();
+    state.pages = [];
+  }
+
+  async function loadDocIntoState(id) {
+    const rec = await getDoc(id);
+    if (!rec || rec.kind !== "doc") return false;
+    const pages = await getDocPages(id);
+    state.docId = rec.id;
+    state.docCreated = rec.created || Date.now();
+    state.docName = rec.name || defaultDocName();
+    state.pages = pages;
+    return true;
+  }
+
   async function restore() {
+    // Seiten, die vor dem Laden schon aufgenommen wurden, nicht verlieren
+    const early = state.pages.slice();
     try {
-      const db = await openDb();
-      const [pages, name] = await new Promise((res, rej) => {
-        const tx = db.transaction(["pages", "meta"], "readonly");
-        const a = tx.objectStore("pages").getAll();
-        const b = tx.objectStore("meta").get("docName");
-        tx.oncomplete = () => res([a.result || [], b.result]);
-        tx.onerror = () => rej(tx.error);
-      });
-      pages.sort((x, y) => x.order - y.order);
-      const restored = pages.map((p) => {
-        const copy = Object.assign({}, p);
-        delete copy.order;
-        return copy;
-      });
-      state.pages = restored.concat(state.pages);
-      if (typeof name === "string" && name.trim()) state.docName = name;
+      await migrateV1();
+      const cur = await dbRun(["meta"], "readonly", (t) => t.objectStore("meta").get("currentDocId"));
+      if (cur && (await loadDocIntoState(cur))) {
+        if (early.length) {
+          state.pages = state.pages.concat(early);
+          persist();
+        }
+      }
     } catch (e) {}
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   }
@@ -297,6 +465,11 @@
     const v = ui.cam;
     if (!v.videoWidth) return;
     const now = performance.now();
+    if (state.mode === "code") {
+      tickCode(now);
+      drawCodeOverlay();
+      return;
+    }
     if (now - state.lastDetect > 110 && !state.editing) {
       state.lastDetect = now;
       runDetection();
@@ -813,9 +986,17 @@
         p.text = null;
         p.words = null;
       }
+    } else if (state.mode === "card") {
+      const page = { id: newId(), src, w: size.w, h: size.h, filter: e.filter, thumb, text: null };
+      state.editing = null;
+      state.view = null;
+      state.preview = null;
+      await afterReview();
+      await createCard(page);
+      return;
     } else {
       state.pages.push({
-        id: Date.now() + Math.random().toString(36).slice(2, 6),
+        id: newId(),
         src,
         w: size.w,
         h: size.h,
@@ -866,7 +1047,7 @@
 
   function updateSheetButtons() {
     const empty = !state.pages.length;
-    ["btnMakePdf", "btnSharePdf", "btnPrint", "btnOcr"].forEach((id) => (el(id).disabled = empty));
+    ["btnMakePdf", "btnSharePdf", "btnPrint", "btnOcr", "btnKi"].forEach((id) => (el(id).disabled = empty));
   }
 
   function openSheet() {
@@ -881,34 +1062,20 @@
     persist();
   });
 
-  let newDocArmed = 0;
-  let newDocTimer = null;
-  const resetNewDocButton = () => {
-    newDocArmed = 0;
-    ui.newDoc.textContent = "Neu";
-    ui.newDoc.classList.remove("danger");
-  };
-
-  ui.newDoc.addEventListener("click", () => {
-    if (state.pages.length && Date.now() - newDocArmed > 3000) {
-      newDocArmed = Date.now();
-      ui.newDoc.textContent = "Alle Seiten löschen?";
-      ui.newDoc.classList.add("danger");
-      clearTimeout(newDocTimer);
-      newDocTimer = setTimeout(resetNewDocButton, 3000);
-      return;
-    }
-    clearTimeout(newDocTimer);
-    resetNewDocButton();
-    state.pages = [];
-    state.docName = defaultDocName();
+  // "Neu": neues leeres Dokument beginnen. Das bisherige bleibt in der Ablage.
+  async function beginNewDocument() {
+    const hadPages = state.pages.length > 0;
+    await flush();
+    startNewDocState();
     ui.docName.value = state.docName;
     renderGrid();
     renderCounts();
     updateSheetButtons();
-    persist();
-    toast("Neues Dokument");
-  });
+    await writeAll();
+    toast(hadPages ? "Neues Dokument. Das bisherige liegt in der Ablage." : "Neues Dokument", 2600);
+  }
+
+  ui.newDoc.addEventListener("click", beginNewDocument);
 
   const closeSheet = () => (ui.pagesSheet.hidden = true);
 
@@ -1297,8 +1464,10 @@
     return out;
   }
 
-  el("btnOcr").addEventListener("click", async () => {
-    if (!state.pages.length) return;
+  // Texterkennung fuer alle Seiten ohne Text. Liefert die Zahl der Seiten mit
+  // Wortpositionen, oder null wenn die Erkennung nicht laeuft.
+  async function runOcr() {
+    if (!state.pages.length) return null;
     let worker;
     busy("Sprachdaten werden vorbereitet");
     try {
@@ -1306,7 +1475,7 @@
     } catch (e) {
       busyHide();
       toast("Texterkennung nicht verfügbar");
-      return;
+      return null;
     }
     let withWords = 0;
     try {
@@ -1320,21 +1489,48 @@
         const img = await pageDataUrl(page, 2000);
         const res = await worker.recognize(img.url, {}, { text: true, blocks: true });
         const data = (res && res.data) || {};
-        const text = String(data.text == null ? "" : data.text).trim();
-        const words = collectOcrWords(data);
-        page.text = text;
-        page.words = words;
+        page.text = String(data.text == null ? "" : data.text).trim();
+        page.words = collectOcrWords(data);
         page.ocrW = img.w;
         page.ocrH = img.h;
-        if (words.length) withWords++;
+        if (page.words.length) withWords++;
       }
       busyHide();
       persist();
-      showText(withWords);
+      return withWords;
     } catch (e) {
       busyHide();
       toast("Texterkennung fehlgeschlagen");
+      return null;
     }
+  }
+
+  el("btnOcr").addEventListener("click", async () => {
+    const withWords = await runOcr();
+    if (withWords != null) showText(withWords);
+  });
+
+  // KI-Hilfe (SD Lotse lokal oder Online-KI, siehe ../sd-ki.js)
+  function openKi(text, onTake) {
+    if (!window.sdKi || !window.sdKi.dokumentDialog) {
+      toast("KI nicht verfügbar. Sie braucht beim ersten Mal eine Internetverbindung.", 4000);
+      return;
+    }
+    window.sdKi.dokumentDialog({ text, ocr: true, uebersetzen: true, uebernehmen: onTake });
+  }
+
+  el("btnKi").addEventListener("click", async () => {
+    const withWords = await runOcr();
+    if (withWords == null) return;
+    const text = allText();
+    openKi(text, (t) => {
+      showText(withWords);
+      ui.textOut.value = t;
+    });
+  });
+
+  el("btnTextKi").addEventListener("click", () => {
+    openKi(ui.textOut.value, (t) => (ui.textOut.value = t));
   });
 
   function allText() {
@@ -1379,6 +1575,981 @@
     const blob = new Blob([ui.textOut.value], { type: "text/plain;charset=utf-8" });
     download(blob, `${fileBase()}.txt`);
     toast("Textdatei gespeichert");
+  });
+
+  // =====================================================================
+  // Scan-Art: Dokument / QR-Barcode / Visitenkarte
+  // =====================================================================
+  const MODE_KEY = "sdScanModus";
+
+  function anySheetOpen() {
+    return [ui.pagesSheet, ui.textSheet, ui.libSheet, ui.codeSheet, ui.codeHistSheet, ui.cardSheet].some((x) => !x.hidden);
+  }
+
+  function setMode(mode) {
+    if (!["doc", "code", "card"].includes(mode)) mode = "doc";
+    state.mode = mode;
+    try { localStorage.setItem(MODE_KEY, mode); } catch (e) {}
+    document.body.classList.toggle("mode-code", mode === "code");
+    document.body.classList.toggle("mode-card", mode === "card");
+    ui.modeBar.querySelectorAll("button").forEach((b) => {
+      const on = b.dataset.mode === mode;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", String(on));
+    });
+    ui.codeHistBtn.hidden = mode !== "code";
+    ui.codeHint.hidden = mode !== "code";
+    ui.hint.textContent = mode === "card" ? "Karte ruhig halten" : "Blatt ruhig halten";
+    ui.hint.hidden = true;
+    state.det.quad = null;
+    state.det.hist.length = 0;
+    state.det.locked = false;
+    code.box = null;
+    code.paused = false;
+  }
+
+  function initMode() {
+    let saved = "doc";
+    try { saved = localStorage.getItem(MODE_KEY) || "doc"; } catch (e) {}
+    setMode(saved);
+  }
+
+  ui.modeBar.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-mode]");
+    if (b) setMode(b.dataset.mode);
+  });
+
+  // =====================================================================
+  // QR-Codes und Barcodes
+  // Chrome/Edge/Android: eingebauter BarcodeDetector (QR + viele Barcodes).
+  // Sonst (z. B. iPhone/Firefox): jsQR aus vendor/ – kann nur QR-Codes.
+  // =====================================================================
+  const code = { detector: null, tried: false, formats: [], busy: false, last: 0, box: null, paused: false, canvas: null, current: null };
+
+  async function getDetector() {
+    if (code.tried) return code.detector;
+    code.tried = true;
+    try {
+      if ("BarcodeDetector" in window) {
+        const formats = await window.BarcodeDetector.getSupportedFormats();
+        if (formats && formats.length) {
+          code.formats = formats;
+          code.detector = new window.BarcodeDetector({ formats });
+        }
+      }
+    } catch (e) {
+      code.detector = null;
+    }
+    return code.detector;
+  }
+
+  async function getJsQR() {
+    if (!window.jsQR) await loadScript("vendor/jsQR.js");
+    return window.jsQR;
+  }
+
+  // src: Video, Canvas oder Bild. sw/sh: Pixelgroesse der Quelle.
+  // maxDim/canvas: nur fuer jsQR (Arbeitsgroesse und eigene Zeichenflaeche)
+  async function decodeSource(src, sw, sh, maxDim, canvas) {
+    const det = await getDetector();
+    if (det) {
+      try {
+        const found = await det.detect(src);
+        if (!found || !found.length) return null;
+        const b = found[0];
+        return { text: String(b.rawValue || ""), format: b.format || "", points: (b.cornerPoints || []).map((p) => [p.x, p.y]) };
+      } catch (e) {
+        // weiter mit jsQR
+      }
+    }
+    const jsQR = await getJsQR();
+    const k = Math.min(1, (maxDim || 900) / Math.max(sw, sh));
+    const w = Math.max(1, Math.round(sw * k));
+    const h = Math.max(1, Math.round(sh * k));
+    if (!canvas && !code.canvas) code.canvas = document.createElement("canvas");
+    const c = canvas || code.canvas;
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(src, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h);
+    const r = jsQR(d.data, w, h, { inversionAttempts: "attemptBoth" });
+    if (!r || !r.data) return null;
+    const L = r.location;
+    const pts = [L.topLeftCorner, L.topRightCorner, L.bottomRightCorner, L.bottomLeftCorner].map((p) => [p.x / k, p.y / k]);
+    return { text: String(r.data), format: "qr_code", points: pts };
+  }
+
+  function tickCode(now) {
+    if (code.busy || code.paused || anySheetOpen() || now - code.last < 220) return;
+    const v = ui.cam;
+    if (!v.videoWidth) return;
+    code.last = now;
+    code.busy = true;
+    decodeSource(v, v.videoWidth, v.videoHeight)
+      .then((hit) => {
+        code.busy = false;
+        if (!hit || !hit.text || code.paused || state.mode !== "code") {
+          code.box = null;
+          return;
+        }
+        code.box = hit.points;
+        onCodeFound(hit);
+      })
+      .catch(() => {
+        code.busy = false;
+      });
+  }
+
+  function drawCodeOverlay() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const sw = ui.stage.clientWidth;
+    const sh = ui.stage.clientHeight;
+    if (!sw || !sh) return;
+    const cv = ui.overlay;
+    if (cv.width !== Math.round(sw * dpr) || cv.height !== Math.round(sh * dpr)) {
+      cv.width = Math.round(sw * dpr);
+      cv.height = Math.round(sh * dpr);
+    }
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, sw, sh);
+    // Sucher-Ecken
+    const size = Math.min(sw, sh) * 0.62;
+    const x = (sw - size) / 2;
+    const y = (sh - size) / 2 - sh * 0.04;
+    const L = size * 0.16;
+    ctx.strokeStyle = "rgba(47,224,138,0.9)";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    [[x, y, 1, 1], [x + size, y, -1, 1], [x + size, y + size, -1, -1], [x, y + size, 1, -1]].forEach(([cx, cy, dx, dy]) => {
+      ctx.moveTo(cx + dx * L, cy);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx, cy + dy * L);
+    });
+    ctx.stroke();
+    // Gefundener Code
+    const pts = code.box;
+    if (pts && pts.length >= 4 && ui.cam.videoWidth) {
+      const m = coverMap(ui.cam.videoWidth, ui.cam.videoHeight, sw, sh);
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const sx = pts[i][0] * m.s + m.ox;
+        const sy = pts[i][1] * m.s + m.oy;
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.closePath();
+      ctx.fillStyle = "rgba(47,224,138,0.18)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(70,255,170,0.98)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  const FORMAT_NAMES = {
+    qr_code: "QR-Code", ean_13: "EAN-13", ean_8: "EAN-8", upc_a: "UPC-A", upc_e: "UPC-E",
+    code_128: "Code 128", code_39: "Code 39", code_93: "Code 93", codabar: "Codabar", itf: "ITF",
+    data_matrix: "Data Matrix", aztec: "Aztec", pdf417: "PDF417"
+  };
+
+  function formatName(f) {
+    return FORMAT_NAMES[f] || String(f || "Code").replace(/_/g, " ").toUpperCase();
+  }
+
+  // Was steckt im Code? Liefert Art + ggf. Link
+  function interpretCode(text) {
+    const t = String(text).trim();
+    if (/^https?:\/\/\S+$/i.test(t)) {
+      let host = "";
+      try { host = new URL(t).host; } catch (e) {}
+      return { kind: "link", url: t, label: "Link öffnen", note: host ? "Öffnet die Seite " + host + " in einem neuen Tab. Nur öffnen, wenn du der Quelle vertraust." : "" };
+    }
+    if (/^mailto:/i.test(t)) return { kind: "mail", url: t, label: "E-Mail schreiben", note: "" };
+    if (/^tel:/i.test(t)) return { kind: "tel", url: t, label: "Anrufen", note: "" };
+    if (/^(sms|smsto):/i.test(t)) return { kind: "sms", url: t.replace(/^smsto:/i, "sms:"), label: "SMS schreiben", note: "" };
+    if (/^BEGIN:VCARD/i.test(t)) return { kind: "vcard", label: "Als Kontakt speichern", note: "Der Code enthält einen Kontakt." };
+    if (/^WIFI:/i.test(t)) {
+      const get = (k) => {
+        const m = t.match(new RegExp("[:;]" + k + ":((?:\\\\.|[^;])*)", "i"));
+        return m ? m[1].replace(/\\(.)/g, "$1") : "";
+      };
+      const ssid = get("S");
+      const pass = get("P");
+      return { kind: "wifi", label: "Passwort kopieren", copyText: pass, note: "WLAN: " + (ssid || "(ohne Namen)") + (pass ? " · Passwort: " + pass : " · ohne Passwort") };
+    }
+    return { kind: "text", label: "Öffnen", note: "" };
+  }
+
+  async function saveCodeToHistory(hit) {
+    try {
+      const list = await dbRun(["codes"], "readonly", (t) => t.objectStore("codes").getAll());
+      list.sort((a, b) => b.time - a.time);
+      const last = list[0];
+      // Gleicher Code direkt hintereinander: nur Zeit aktualisieren
+      const rec = last && last.text === hit.text
+        ? Object.assign({}, last, { time: Date.now() })
+        : { id: newId(), text: hit.text, format: hit.format, time: Date.now() };
+      await dbRun(["codes"], "readwrite", (t) => t.objectStore("codes").put(rec));
+    } catch (e) {}
+  }
+
+  function onCodeFound(hit) {
+    code.paused = true;
+    if (navigator.vibrate) {
+      try { navigator.vibrate(40); } catch (e) {}
+    }
+    saveCodeToHistory(hit);
+    showCode(hit);
+  }
+
+  function showCode(hit) {
+    code.current = hit;
+    const info = interpretCode(hit.text);
+    ui.codeType.textContent = formatName(hit.format);
+    ui.codeValue.textContent = hit.text;
+    ui.codeNote.textContent = info.note || "";
+    const canAct = info.kind !== "text";
+    ui.codeOpen.hidden = !canAct;
+    ui.codeOpen.textContent = info.label;
+    ui.codeSheet.querySelector(".sheet-actions").classList.toggle("two", !canAct);
+    ui.codeSheet.querySelector(".sheet-actions").classList.toggle("three", canAct);
+    ui.codeSheet.hidden = false;
+  }
+
+  function closeCodeSheet() {
+    ui.codeSheet.hidden = true;
+    code.box = null;
+    code.current = null;
+    // kurze Pause, damit derselbe Code nicht sofort wieder aufgeht
+    setTimeout(() => (code.paused = false), 700);
+  }
+
+  el("btnCodeNext").addEventListener("click", closeCodeSheet);
+  ui.codeSheet.addEventListener("click", (e) => {
+    if (e.target === ui.codeSheet) closeCodeSheet();
+  });
+
+  ui.codeOpen.addEventListener("click", async () => {
+    const hit = code.current;
+    if (!hit) return;
+    const info = interpretCode(hit.text);
+    if (info.kind === "vcard") {
+      download(new Blob([hit.text], { type: "text/vcard;charset=utf-8" }), "Kontakt.vcf");
+      toast("Kontakt gespeichert");
+      return;
+    }
+    if (info.kind === "wifi") {
+      await copyText(info.copyText || "");
+      return;
+    }
+    if (info.url) {
+      const w = window.open(info.url, "_blank", "noopener,noreferrer");
+      if (!w && info.kind === "link") toast("Popup blockiert");
+    }
+  });
+
+  async function copyText(t, okMsg) {
+    try {
+      await navigator.clipboard.writeText(t);
+      toast(okMsg || "Kopiert");
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = t;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        toast(okMsg || "Kopiert");
+      } catch (e2) {
+        toast("Kopieren nicht möglich");
+      }
+      ta.remove();
+    }
+  }
+
+  el("btnCodeCopy").addEventListener("click", () => code.current && copyText(code.current.text));
+
+  el("btnCodeShare").addEventListener("click", async () => {
+    if (!code.current) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: code.current.text });
+      } catch (e) {
+        if (e && e.name !== "AbortError") toast("Teilen fehlgeschlagen");
+      }
+    } else {
+      copyText(code.current.text, "Teilen nicht verfügbar – Inhalt kopiert");
+    }
+  });
+
+  async function decodeCodeFromFile(file) {
+    busy("Code wird gesucht");
+    try {
+      const img = await decodeImage(file);
+      const iw = img.width || img.naturalWidth;
+      const ih = img.height || img.naturalHeight;
+      const k = Math.min(1, 2000 / Math.max(iw, ih));
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(iw * k));
+      c.height = Math.max(1, Math.round(ih * k));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      if (img.close) img.close();
+      // Mehrere Arbeitsgroessen: kleine Codes brauchen viele Pixel, verrauschte Fotos weniger
+      let hit = null;
+      const work = document.createElement("canvas");
+      for (const dim of [1400, 900, 600]) {
+        hit = await decodeSource(c, c.width, c.height, dim, work);
+        if ((hit && hit.text) || code.detector) break;
+      }
+      busyHide();
+      if (!hit || !hit.text) {
+        toast(code.detector ? "Kein Code im Bild gefunden" : "Kein QR-Code im Bild gefunden (Barcodes nur in Chrome/Edge)", 3500);
+        return;
+      }
+      code.paused = true;
+      saveCodeToHistory(hit);
+      showCode(hit);
+    } catch (e) {
+      busyHide();
+      toast("Bild nicht lesbar");
+    }
+  }
+
+  // ---------- Code-Verlauf ----------
+  async function renderCodeHistory() {
+    let list = [];
+    try {
+      list = await dbRun(["codes"], "readonly", (t) => t.objectStore("codes").getAll());
+    } catch (e) {}
+    list.sort((a, b) => b.time - a.time);
+    ui.codeList.innerHTML = "";
+    el("btnCodeClear").disabled = !list.length;
+    if (!list.length) {
+      const p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = "Noch keine Codes gescannt";
+      ui.codeList.appendChild(p);
+      return;
+    }
+    list.forEach((rec) => {
+      const row = document.createElement("div");
+      row.className = "lib-item";
+      row.setAttribute("role", "button");
+      row.tabIndex = 0;
+      const icon = document.createElement("div");
+      icon.className = "lib-thumb code";
+      icon.textContent = rec.format === "qr_code" ? "QR" : "|||";
+      const main = document.createElement("div");
+      main.className = "lib-main";
+      const name = document.createElement("div");
+      name.className = "lib-name";
+      name.textContent = rec.text;
+      const meta = document.createElement("div");
+      meta.className = "lib-meta";
+      meta.textContent = formatName(rec.format) + " · " + fmtDate(rec.time);
+      main.append(name, meta);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "lib-del";
+      del.textContent = "✕";
+      del.setAttribute("aria-label", "Eintrag löschen");
+      del.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        await dbRun(["codes"], "readwrite", (t) => t.objectStore("codes").delete(rec.id));
+        renderCodeHistory();
+      });
+      row.append(icon, main, del);
+      const open = () => {
+        ui.codeHistSheet.hidden = true;
+        code.paused = true;
+        showCode({ text: rec.text, format: rec.format });
+      };
+      row.addEventListener("click", open);
+      row.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") open();
+      });
+      ui.codeList.appendChild(row);
+    });
+  }
+
+  function openCodeHistory() {
+    ui.codeSheet.hidden = true;
+    code.paused = true;
+    ui.codeHistSheet.hidden = false;
+    renderCodeHistory();
+  }
+
+  ui.codeHistBtn.addEventListener("click", openCodeHistory);
+  el("btnCodeHist2").addEventListener("click", openCodeHistory);
+  el("btnCodeHistClose").addEventListener("click", () => {
+    ui.codeHistSheet.hidden = true;
+    setTimeout(() => (code.paused = false), 500);
+  });
+  ui.codeHistSheet.addEventListener("click", (e) => {
+    if (e.target === ui.codeHistSheet) el("btnCodeHistClose").click();
+  });
+  el("btnCodeClear").addEventListener("click", async () => {
+    if (!window.confirm("Den ganzen Code-Verlauf löschen?")) return;
+    await dbRun(["codes"], "readwrite", (t) => t.objectStore("codes").clear());
+    renderCodeHistory();
+  });
+
+  function fmtDate(ms) {
+    const d = new Date(ms);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  // =====================================================================
+  // Ablage: alle Dokumente und Visitenkarten
+  // =====================================================================
+  async function renderLibrary() {
+    let docs = [];
+    try {
+      docs = await getAllDocs();
+    } catch (e) {
+      ui.libList.innerHTML = '<p class="empty">Ablage nicht verfügbar (Browser-Speicher gesperrt).</p>';
+      return;
+    }
+    // Das offene Dokument mit aktuellem Stand zeigen
+    if (state.pages.length) {
+      const cur = workingRecord();
+      docs = docs.filter((d) => d.id !== cur.id).concat([cur]);
+    }
+    const q = ui.libSearch.value.trim().toLowerCase();
+    const shown = docs
+      .filter((d) => state.libFilter === "all" || d.kind === state.libFilter)
+      .filter((d) => {
+        if (!q) return true;
+        const c = d.contact || {};
+        const hay = [d.name, d.text, c.name, c.company, c.email, c.phone, c.mobile, c.city].join(" ").toLowerCase();
+        return hay.includes(q);
+      })
+      .sort((a, b) => b.updated - a.updated);
+
+    ui.libList.innerHTML = "";
+    if (!shown.length) {
+      const p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = docs.length ? "Nichts gefunden" : "Noch nichts gespeichert. Gescannte Dokumente und Visitenkarten landen automatisch hier.";
+      ui.libList.appendChild(p);
+    }
+    shown.forEach((d) => {
+      const row = document.createElement("div");
+      row.className = "lib-item" + (d.id === state.docId ? " is-current" : "");
+      row.setAttribute("role", "button");
+      row.tabIndex = 0;
+      let thumb;
+      if (d.thumb) {
+        thumb = document.createElement("img");
+        thumb.src = d.thumb;
+        thumb.alt = "";
+      } else {
+        thumb = document.createElement("div");
+        thumb.textContent = d.kind === "card" ? "@" : "?";
+      }
+      thumb.className = "lib-thumb" + (d.kind === "card" ? " card" : "");
+      const main = document.createElement("div");
+      main.className = "lib-main";
+      const name = document.createElement("div");
+      name.className = "lib-name";
+      name.textContent = d.name;
+      const meta = document.createElement("div");
+      meta.className = "lib-meta";
+      const tag = document.createElement("span");
+      tag.className = "lib-tag";
+      tag.textContent = d.kind === "card" ? "Visitenkarte" : d.id === state.docId ? "Offen" : "Dokument";
+      const extra = d.kind === "card"
+        ? [d.contact && d.contact.company, fmtDate(d.updated)].filter(Boolean).join(" · ")
+        : (d.pageCount === 1 ? "1 Seite" : d.pageCount + " Seiten") + " · " + fmtDate(d.updated);
+      meta.append(tag, document.createTextNode(" · " + extra));
+      main.append(name, meta);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "lib-del";
+      del.textContent = "✕";
+      del.setAttribute("aria-label", d.name + " löschen");
+      del.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        if (!window.confirm(`„${d.name}“ endgültig löschen?`)) return;
+        await removeFromLibrary(d);
+      });
+      row.append(thumb, main, del);
+      const open = () => openFromLibrary(d);
+      row.addEventListener("click", open);
+      row.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") open();
+      });
+      ui.libList.appendChild(row);
+    });
+    showStorageInfo();
+  }
+
+  async function showStorageInfo() {
+    ui.libNote.textContent = "Alles bleibt nur in diesem Browser auf diesem Gerät.";
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        const e = await navigator.storage.estimate();
+        if (e && e.usage != null) {
+          const mb = (e.usage / 1048576).toLocaleString("de-DE", { maximumFractionDigits: 1 });
+          ui.libNote.textContent = `Alles bleibt nur in diesem Browser auf diesem Gerät · belegt: ${mb} MB`;
+        }
+      }
+    } catch (e) {}
+  }
+
+  async function removeFromLibrary(d) {
+    try {
+      if (d.id === state.docId) {
+        clearTimeout(saveTimer);
+        startNewDocState();
+        renderCounts();
+      }
+      await deleteDoc(d.id);
+      if (!state.pages.length) await writeAll();
+      toast("Gelöscht");
+    } catch (e) {
+      toast("Löschen fehlgeschlagen");
+    }
+    renderLibrary();
+  }
+
+  async function openFromLibrary(d) {
+    if (d.kind === "card") {
+      ui.libSheet.hidden = true;
+      await openCardById(d.id);
+      return;
+    }
+    if (d.id !== state.docId) {
+      busy("Dokument wird geöffnet");
+      try {
+        await flush();
+        const ok = await loadDocIntoState(d.id);
+        await writeAll();
+        busyHide();
+        if (!ok) {
+          toast("Dokument nicht gefunden");
+          return;
+        }
+      } catch (e) {
+        busyHide();
+        toast("Öffnen fehlgeschlagen");
+        return;
+      }
+    }
+    ui.libSheet.hidden = true;
+    setMode("doc");
+    renderCounts();
+    openSheet();
+  }
+
+  function openLibrary() {
+    ui.libSearch.value = "";
+    ui.libSheet.hidden = false;
+    renderLibrary();
+  }
+
+  ui.libBtn.addEventListener("click", openLibrary);
+  el("btnLibClose").addEventListener("click", () => (ui.libSheet.hidden = true));
+  ui.libSheet.addEventListener("click", (e) => {
+    if (e.target === ui.libSheet) ui.libSheet.hidden = true;
+  });
+  el("btnLibNew").addEventListener("click", async () => {
+    ui.libSheet.hidden = true;
+    setMode("doc");
+    await beginNewDocument();
+  });
+  ui.libSearch.addEventListener("input", renderLibrary);
+  ui.libSheet.querySelectorAll(".chip").forEach((chip) =>
+    chip.addEventListener("click", () => {
+      state.libFilter = chip.dataset.filter;
+      ui.libSheet.querySelectorAll(".chip").forEach((c) => c.classList.toggle("is-active", c === chip));
+      renderLibrary();
+    })
+  );
+
+  // =====================================================================
+  // Visitenkarten
+  // =====================================================================
+  const CARD_FIELDS = [
+    ["name", "Name", "text", true],
+    ["title", "Position", "text"],
+    ["company", "Firma", "text"],
+    ["phone", "Telefon", "tel"],
+    ["mobile", "Mobil", "tel"],
+    ["email", "E-Mail", "email", true],
+    ["web", "Webseite", "url", true],
+    ["street", "Straße", "text", true],
+    ["zip", "PLZ", "text"],
+    ["city", "Ort", "text"]
+  ];
+
+  const card = { record: null, page: null, saveTimer: null };
+
+  // Ohne KI: Regeln fuer die typischen Angaben einer Visitenkarte
+  function parseCard(text) {
+    const out = {};
+    CARD_FIELDS.forEach(([k]) => (out[k] = ""));
+    const lines = String(text || "")
+      .split(/\r?\n/)
+      .map((l) => l.replace(/\s+/g, " ").replace(/^[|•·\-–\s]+|[|•·\s]+$/g, "").trim())
+      .filter((l) => l.length > 1);
+    const used = new Set();
+
+    const mail = String(text).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    if (mail) out.email = mail[0];
+
+    for (let i = 0; i < lines.length && !out.web; i++) {
+      const m = lines[i].match(/\b((?:https?:\/\/)?(?:www\.)[a-z0-9.-]+\.[a-z]{2,}(?:\/\S*)?)/i) ||
+        lines[i].match(/\b(https?:\/\/[^\s]+)/i);
+      if (m && !/@/.test(m[1])) out.web = m[1];
+    }
+
+    lines.forEach((l, i) => {
+      if (out.email && l.includes(out.email)) used.add(i);
+      if (out.web && l.includes(out.web)) used.add(i);
+    });
+
+    // Telefonnummern (Fax wird uebersprungen)
+    lines.forEach((l, i) => {
+      const nums = l.match(/(\+?\d[\d\s()/.\-]{5,}\d)/g);
+      if (!nums) return;
+      const label = l.toLowerCase();
+      if (/\bfax\b/.test(label)) {
+        used.add(i);
+        return;
+      }
+      nums.forEach((n) => {
+        const digits = n.replace(/\D/g, "");
+        if (digits.length < 6 || digits.length > 16) return;
+        if (/^\d{5}$/.test(n.trim())) return;
+        const isMobile = /mobil|handy|mobile|cell/.test(label) || /^(\+?49|0049|0)?1[5-7]\d/.test(digits);
+        const nice = n.replace(/\s+/g, " ").trim();
+        if (isMobile && !out.mobile) out.mobile = nice;
+        else if (!out.phone) out.phone = nice;
+        else if (!out.mobile) out.mobile = nice;
+        used.add(i);
+      });
+    });
+
+    // Adresse: Zeile mit PLZ + Ort, Strasse davor oder davor in derselben Zeile
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(/(?:^|[,\s])(?:D-|A-|CH-)?(\d{4,5})\s+([A-ZÄÖÜ][\wÄÖÜäöüß.\- ]{1,40})$/);
+      if (!m) continue;
+      out.zip = m[1];
+      out.city = m[2].trim();
+      used.add(i);
+      const before = lines[i].slice(0, m.index).replace(/[,\s]+$/, "").trim();
+      const streetRe = /(str\.?|straße|strasse|weg|platz|allee|gasse|ring|damm|ufer|chaussee)\b|\s\d+\s?[a-z]?$/i;
+      if (before && streetRe.test(before)) out.street = before;
+      else if (i > 0 && streetRe.test(lines[i - 1]) && !used.has(i - 1)) {
+        out.street = lines[i - 1];
+        used.add(i - 1);
+      }
+      break;
+    }
+
+    // Firma: Rechtsform oder Domain
+    const companyRe = /\b(gmbh|ag|ug|kg|ohg|gbr|e\.\s?k\.|e\.\s?v\.|mbh|ltd|inc|llc|s\.a\.|sarl|b\.v\.|co\.)\b/i;
+    lines.forEach((l, i) => {
+      if (!out.company && !used.has(i) && companyRe.test(l)) {
+        out.company = l;
+        used.add(i);
+      }
+    });
+
+    // Position: typische Berufsbezeichnungen
+    const titleRe = /(geschäftsführ|inhaber|leiter|manager|berater|beraterin|direktor|consultant|engineer|ingenieur|entwickler|developer|vertrieb|sales|assistent|referent|meister|dipl\.|dr\.|ceo|cto|cfo|founder|gründer|head of|partner|steuerberater|rechtsanwalt|architekt|designer|makler)/i;
+    lines.forEach((l, i) => {
+      if (!out.title && !used.has(i) && titleRe.test(l) && !/\d{3,}/.test(l)) {
+        out.title = l;
+        used.add(i);
+      }
+    });
+
+    // Name: 2-4 Woerter, gross geschrieben, ohne Ziffern
+    for (let i = 0; i < lines.length; i++) {
+      if (used.has(i)) continue;
+      const l = lines[i];
+      const words = l.split(" ");
+      if (words.length < 2 || words.length > 4 || /\d|@|:/.test(l)) continue;
+      if (!words.every((w) => /^[A-ZÄÖÜ][\wÄÖÜäöüßéèáàçñ'.\-]*$/.test(w) || /^(von|van|de|der|zu|di|da|el|al)$/i.test(w))) continue;
+      out.name = l;
+      used.add(i);
+      break;
+    }
+
+    if (!out.company && out.web) {
+      const host = out.web.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split(/[/.]/)[0];
+      if (host) out.company = host.charAt(0).toUpperCase() + host.slice(1);
+    }
+    return out;
+  }
+
+  function cardTitle(c) {
+    return (c && (c.name || c.company)) || "Visitenkarte";
+  }
+
+  async function createCard(page) {
+    busy("Text auf der Karte wird erkannt");
+    let text = "";
+    let ocrOk = true;
+    try {
+      const worker = await getOcr();
+      const img = await pageDataUrl(page, 2000);
+      const res = await worker.recognize(img.url);
+      text = String((res && res.data && res.data.text) || "").trim();
+    } catch (e) {
+      ocrOk = false;
+    }
+    page.text = text;
+    const contact = parseCard(text);
+    const now = Date.now();
+    const record = { id: newId(), kind: "card", name: cardTitle(contact), created: now, updated: now, pageCount: 1, thumb: page.thumb, text, contact };
+    try {
+      await putDoc(record, [page]);
+    } catch (e) {
+      toast("Speichern auf dem Gerät nicht möglich", 3500);
+    }
+    busyHide();
+    openCardSheet(record, page);
+    if (!ocrOk) ui.cardNote.textContent = "Texterkennung nicht verfügbar – bitte die Felder selbst ausfüllen.";
+    else if (!text) ui.cardNote.textContent = "Kein Text erkannt. Felder selbst ausfüllen oder die Karte nochmal schärfer aufnehmen.";
+  }
+
+  async function openCardById(id) {
+    try {
+      const rec = await getDoc(id);
+      const pages = await getDocPages(id);
+      if (!rec) {
+        toast("Visitenkarte nicht gefunden");
+        return;
+      }
+      openCardSheet(rec, pages[0] || null);
+    } catch (e) {
+      toast("Öffnen fehlgeschlagen");
+    }
+  }
+
+  function openCardSheet(record, page) {
+    card.record = record;
+    card.page = page;
+    record.contact = record.contact || {};
+    if (page) ui.cardImg.src = page.src;
+    else ui.cardImg.removeAttribute("src");
+    ui.cardImg.hidden = !page;
+    ui.cardForm.innerHTML = "";
+    CARD_FIELDS.forEach(([key, label, type, wide]) => {
+      const lab = document.createElement("label");
+      if (wide) lab.className = "wide";
+      lab.textContent = label;
+      const input = document.createElement("input");
+      input.type = type;
+      input.value = record.contact[key] || "";
+      input.dataset.key = key;
+      input.autocomplete = "off";
+      input.addEventListener("input", () => {
+        record.contact[key] = input.value.trim();
+        scheduleCardSave();
+      });
+      lab.appendChild(input);
+      ui.cardForm.appendChild(lab);
+    });
+    ui.cardNote.textContent = record.text
+      ? "Felder wurden automatisch erkannt – bitte kurz prüfen."
+      : "";
+    ui.cardSheet.hidden = false;
+  }
+
+  function scheduleCardSave() {
+    clearTimeout(card.saveTimer);
+    card.saveTimer = setTimeout(saveCard, 300);
+  }
+
+  async function saveCard() {
+    clearTimeout(card.saveTimer);
+    const r = card.record;
+    if (!r) return;
+    r.name = cardTitle(r.contact);
+    r.updated = Date.now();
+    try {
+      await dbRun(["docs"], "readwrite", (t) => t.objectStore("docs").put(r));
+    } catch (e) {}
+  }
+
+  function fillCardForm(contact) {
+    ui.cardForm.querySelectorAll("input").forEach((inp) => (inp.value = contact[inp.dataset.key] || ""));
+  }
+
+  async function closeCardSheet() {
+    await saveCard();
+    ui.cardSheet.hidden = true;
+    card.record = null;
+    card.page = null;
+  }
+
+  el("btnCardClose").addEventListener("click", closeCardSheet);
+  ui.cardSheet.addEventListener("click", (e) => {
+    if (e.target === ui.cardSheet) closeCardSheet();
+  });
+
+  el("btnCardDelete").addEventListener("click", async () => {
+    const r = card.record;
+    if (!r || !window.confirm(`Visitenkarte „${r.name}“ löschen?`)) return;
+    clearTimeout(card.saveTimer);
+    try {
+      await deleteDoc(r.id);
+      toast("Visitenkarte gelöscht");
+    } catch (e) {
+      toast("Löschen fehlgeschlagen");
+    }
+    ui.cardSheet.hidden = true;
+    card.record = null;
+  });
+
+  // ---------- vCard ----------
+  function vEsc(s) {
+    return String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/[,;]/g, (m) => "\\" + m);
+  }
+
+  function buildVcard(c) {
+    const name = String(c.name || "").trim();
+    const parts = name.split(/\s+/).filter(Boolean);
+    const last = parts.length > 1 ? parts[parts.length - 1] : name;
+    const first = parts.length > 1 ? parts.slice(0, -1).join(" ") : "";
+    const lines = ["BEGIN:VCARD", "VERSION:3.0", `N:${vEsc(last)};${vEsc(first)};;;`, `FN:${vEsc(name || c.company || "Kontakt")}`];
+    if (c.company) lines.push(`ORG:${vEsc(c.company)}`);
+    if (c.title) lines.push(`TITLE:${vEsc(c.title)}`);
+    if (c.phone) lines.push(`TEL;TYPE=WORK,VOICE:${vEsc(c.phone)}`);
+    if (c.mobile) lines.push(`TEL;TYPE=CELL:${vEsc(c.mobile)}`);
+    if (c.email) lines.push(`EMAIL;TYPE=INTERNET:${vEsc(c.email)}`);
+    if (c.web) lines.push(`URL:${vEsc(/^https?:\/\//i.test(c.web) ? c.web : "https://" + c.web)}`);
+    if (c.street || c.zip || c.city) lines.push(`ADR;TYPE=WORK:;;${vEsc(c.street)};${vEsc(c.city)};;${vEsc(c.zip)};`);
+    lines.push("END:VCARD");
+    return lines.join("\r\n") + "\r\n";
+  }
+
+  function vcardFileName(c) {
+    return (cardTitle(c).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "-").trim() || "Kontakt") + ".vcf";
+  }
+
+  el("btnCardVcf").addEventListener("click", async () => {
+    const r = card.record;
+    if (!r) return;
+    await saveCard();
+    download(new Blob([buildVcard(r.contact)], { type: "text/vcard;charset=utf-8" }), vcardFileName(r.contact));
+    toast("Kontaktdatei gespeichert – öffnen, um sie ins Adressbuch zu übernehmen", 3500);
+  });
+
+  el("btnCardShare").addEventListener("click", async () => {
+    const r = card.record;
+    if (!r) return;
+    await saveCard();
+    const file = new File([buildVcard(r.contact)], vcardFileName(r.contact), { type: "text/vcard" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: cardTitle(r.contact) });
+      } else {
+        download(file, file.name);
+        toast("Teilen nicht verfügbar – Kontaktdatei gespeichert", 3000);
+      }
+    } catch (e) {
+      if (e && e.name !== "AbortError") toast("Teilen fehlgeschlagen");
+    }
+  });
+
+  // ---------- Visitenkarte mit KI ausfuellen ----------
+  function parseJsonObject(text) {
+    const s = String(text || "");
+    const a = s.indexOf("{");
+    const b = s.lastIndexOf("}");
+    if (a < 0 || b <= a) return null;
+    try {
+      const o = JSON.parse(s.slice(a, b + 1));
+      return o && typeof o === "object" ? o : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  el("btnCardKi").addEventListener("click", () => {
+    const r = card.record;
+    if (!r) return;
+    if (!r.text) {
+      toast("Kein erkannter Text – die KI hat nichts zum Auswerten", 3000);
+      return;
+    }
+    const ki = window.sdKi;
+    if (!ki || !ki.baueAuswahl || !ki.schreibe) {
+      toast("KI nicht verfügbar. Sie braucht beim ersten Mal eine Internetverbindung.", 4000);
+      return;
+    }
+    const o = document.createElement("div");
+    o.className = "sdki-overlay";
+    o.innerHTML =
+      '<div class="sdki-box" role="dialog" aria-modal="true">' +
+      "<h2>Visitenkarte mit KI ausfüllen</h2>" +
+      '<div data-wahl></div>' +
+      '<p class="sdki-klein" data-privat></p>' +
+      '<div class="sdki-fehler" data-fehler hidden style="color:#b3261e;font-size:.85rem"></div>' +
+      '<div class="sdki-knoepfe"><button type="button" class="sdki-btn prim" data-los>Auswerten</button>' +
+      '<button type="button" class="sdki-btn" data-zu>Abbrechen</button></div></div>';
+    document.body.appendChild(o);
+    ki.baueAuswahl(o.querySelector("[data-wahl]"), { geminiKeyFeld: true });
+    const privat = o.querySelector("[data-privat]");
+    const zeigePrivat = () => {
+      privat.textContent = ki.anbieter() === "lotse"
+        ? "SD Lotse arbeitet lokal – der Kartentext verlässt dein Gerät nicht."
+        : "Der erkannte Kartentext wird zur Auswertung an den gewählten Online-Dienst gesendet.";
+    };
+    zeigePrivat();
+    document.addEventListener("sd-ki-anbieter", zeigePrivat);
+    const zu = () => {
+      document.removeEventListener("sd-ki-anbieter", zeigePrivat);
+      try { ki.lotseStopp(); } catch (e) {}
+      o.remove();
+    };
+    o.querySelector("[data-zu]").addEventListener("click", zu);
+    const los = o.querySelector("[data-los]");
+    const fehler = o.querySelector("[data-fehler]");
+    los.addEventListener("click", async () => {
+      los.disabled = true;
+      los.textContent = "Wird ausgewertet …";
+      fehler.hidden = true;
+      const prompt =
+        "Hier ist der per automatischer Texterkennung (OCR) gelesene Text einer Visitenkarte. " +
+        "Ordne die Angaben zu und antworte NUR mit einem JSON-Objekt (ohne Codeblock) mit genau diesen Schlüsseln: " +
+        "name, title, company, phone, mobile, email, web, street, zip, city. " +
+        "Fehlende Angaben als leerer String. Erfinde nichts; korrigiere nur offensichtliche Erkennungsfehler.\n\n---\n" +
+        String(r.text).slice(0, 3000) + "\n---";
+      try {
+        const antwort = await ki.schreibe(prompt, { maxTokens: 500 });
+        const data = parseJsonObject(antwort);
+        if (!data) throw new Error("Die KI hat keine verwertbare Antwort geliefert. Bitte nochmal versuchen.");
+        let changed = 0;
+        CARD_FIELDS.forEach(([k]) => {
+          const v = data[k] == null ? "" : String(data[k]).trim();
+          if (v && v !== r.contact[k]) {
+            r.contact[k] = v;
+            changed++;
+          }
+        });
+        fillCardForm(r.contact);
+        await saveCard();
+        ui.cardNote.textContent = changed
+          ? `Die KI hat ${changed} Feld${changed === 1 ? "" : "er"} ausgefüllt oder verbessert – bitte prüfen.`
+          : "Die KI hat nichts geändert.";
+        zu();
+      } catch (e) {
+        fehler.textContent = (e && e.message) || String(e);
+        fehler.hidden = false;
+        los.disabled = false;
+        los.textContent = "Auswerten";
+      }
+    });
   });
 
   function decodeImage(file) {
@@ -1439,6 +2610,14 @@
       toast("Bitte Bilddateien wählen (JPG, PNG, WebP)");
       return;
     }
+    if (state.mode === "code") {
+      await decodeCodeFromFile(files[0]);
+      return;
+    }
+    if (state.mode === "card" && files.length > 1) {
+      toast("Visitenkarten bitte einzeln importieren – die erste wird geöffnet", 3000);
+      files.length = 1;
+    }
     state.importQueue.push.apply(state.importQueue, files);
     if (!state.editing) await openNextImport();
   };
@@ -1447,7 +2626,7 @@
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stopCamera();
-    else if (!ui.review.classList.contains("is-active") && ui.pagesSheet.hidden && ui.textSheet.hidden) startCamera();
+    else if (!ui.review.classList.contains("is-active") && !anySheetOpen()) startCamera();
   });
   window.addEventListener("pagehide", stopCamera);
   window.addEventListener("resize", () => {
@@ -1460,11 +2639,16 @@
     });
   }
 
-  state.docName = defaultDocName();
+  startNewDocState();
+  initMode();
   renderCounts();
   startCamera();
   restore().then(() => {
     renderCounts();
-    if (!ui.pagesSheet.hidden) renderGrid();
+    if (!ui.pagesSheet.hidden) {
+      ui.docName.value = state.docName;
+      renderGrid();
+      updateSheetButtons();
+    }
   });
 })();

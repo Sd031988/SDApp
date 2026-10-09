@@ -1,4 +1,4 @@
-const VERSION = "dokument-scanner-v9";
+const VERSION = "dokument-scanner-v10";
 const SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const SHELL = [
   "./js/vision.js",
   "./manifest.webmanifest",
   "./vendor/jspdf.umd.min.js",
+  "./vendor/jsQR.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-180.png",

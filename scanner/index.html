@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Dokumentenscanner</title>
+<title>SD Scanner</title>
 <meta name="theme-color" content="#05070a" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="description" content="Dokumentenscanner. Kamerabild, PDF und Texterkennung direkt auf dem Gerät." />
+<meta name="description" content="SD Scanner: Dokumente, QR-Codes, Barcodes und Visitenkarten scannen. PDF und Texterkennung direkt auf dem Gerät." />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-180.png" />
@@ -33,12 +33,15 @@
   </div>
 
   <div class="cam-top">
+    <button id="btnLibrary" class="ghost" type="button">Ablage</button>
     <span id="pageCount" class="pill">0 Seiten</span>
+    <button id="btnCodeHistory" class="ghost" type="button" hidden>Verlauf</button>
     <span class="grow"></span>
     <button id="btnTorch" class="ghost" type="button" hidden aria-label="Licht">Licht</button>
   </div>
 
   <p id="liveHint" class="live-hint" hidden>Blatt ruhig halten</p>
+  <p id="codeHint" class="live-hint" hidden>QR-Code oder Barcode ins Bild halten</p>
 
   <div id="noCam" class="no-cam" hidden>
     <p class="no-cam-title">Keine Kamera verfügbar</p>
@@ -47,6 +50,12 @@
       <button id="btnPhotoBig" class="act" type="button">Foto aufnehmen</button>
       <button id="btnImportBig" class="act" type="button">Bilder importieren</button>
     </div>
+  </div>
+
+  <div id="modeBar" class="mode-bar" role="tablist" aria-label="Scan-Art">
+    <button type="button" role="tab" data-mode="doc">Dokument</button>
+    <button type="button" role="tab" data-mode="code">QR / Barcode</button>
+    <button type="button" role="tab" data-mode="card">Visitenkarte</button>
   </div>
 
   <div class="cam-bottom">
@@ -104,6 +113,7 @@
       <button id="btnSharePdf" class="act" type="button">Teilen</button>
       <button id="btnPrint" class="act" type="button">Drucken</button>
       <button id="btnOcr" class="act" type="button" title="Text erkennen, als TXT speichern und als unsichtbare Textebene ins PDF legen">Text</button>
+      <button id="btnKi" class="act" type="button" title="Zusammenfassen, übersetzen und mehr – mit SD Lotse oder Gemini">KI</button>
     </div>
   </div>
 </div>
@@ -116,9 +126,78 @@
     </div>
     <textarea id="textOut" class="text-out" spellcheck="false"></textarea>
     <p id="textNote" class="text-note"></p>
-    <div class="sheet-actions two">
+    <div class="sheet-actions three">
       <button id="btnCopyText" class="act" type="button">Kopieren</button>
-      <button id="btnSaveText" class="act" type="button">Als TXT speichern</button>
+      <button id="btnSaveText" class="act" type="button">Als TXT</button>
+      <button id="btnTextKi" class="act" type="button">KI</button>
+    </div>
+  </div>
+</div>
+
+<div id="libSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span class="sheet-title">Ablage</span>
+      <button id="btnLibNew" class="ghost" type="button">Neues Dokument</button>
+      <button id="btnLibClose" class="ghost" type="button">Fertig</button>
+    </div>
+    <div class="search-row">
+      <input id="libSearch" class="doc-name" type="search" placeholder="Suchen (Name oder erkannter Text)" autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="chip-row" role="tablist" aria-label="Filter">
+      <button type="button" class="chip is-active" data-filter="all">Alle</button>
+      <button type="button" class="chip" data-filter="doc">Dokumente</button>
+      <button type="button" class="chip" data-filter="card">Visitenkarten</button>
+    </div>
+    <div id="libList" class="lib-list"></div>
+    <p id="libNote" class="text-note lib-note"></p>
+  </div>
+</div>
+
+<div id="codeSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span id="codeType" class="sheet-title">Code erkannt</span>
+      <button id="btnCodeHist2" class="ghost" type="button">Verlauf</button>
+      <button id="btnCodeNext" class="ghost" type="button">Weiter scannen</button>
+    </div>
+    <div id="codeValue" class="code-value"></div>
+    <p id="codeNote" class="text-note"></p>
+    <div class="sheet-actions three">
+      <button id="btnCodeOpen" class="act" type="button">Öffnen</button>
+      <button id="btnCodeCopy" class="act" type="button">Kopieren</button>
+      <button id="btnCodeShare" class="act" type="button">Teilen</button>
+    </div>
+  </div>
+</div>
+
+<div id="codeHistSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span class="sheet-title">Code-Verlauf</span>
+      <button id="btnCodeClear" class="ghost" type="button">Alle löschen</button>
+      <button id="btnCodeHistClose" class="ghost" type="button">Fertig</button>
+    </div>
+    <div id="codeList" class="lib-list"></div>
+  </div>
+</div>
+
+<div id="cardSheet" class="sheet" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-bar">
+      <span class="sheet-title">Visitenkarte</span>
+      <button id="btnCardDelete" class="ghost danger" type="button">Löschen</button>
+      <button id="btnCardClose" class="ghost" type="button">Fertig</button>
+    </div>
+    <div class="card-body">
+      <img id="cardImg" class="card-img" alt="Visitenkarte" />
+      <div id="cardForm" class="card-form"></div>
+      <p id="cardNote" class="text-note"></p>
+    </div>
+    <div class="sheet-actions three">
+      <button id="btnCardKi" class="act" type="button">Mit KI ausfüllen</button>
+      <button id="btnCardVcf" class="act" type="button">Als Kontakt (.vcf)</button>
+      <button id="btnCardShare" class="act" type="button">Teilen</button>
     </div>
   </div>
 </div>
@@ -133,6 +212,7 @@
 <div id="toast" class="toast" hidden></div>
 
 <script src="vendor/jspdf.umd.min.js"></script>
+<script src="../sd-ki.js?v=18"></script>
 <script src="js/vision.js"></script>
 <script src="js/app.js"></script>
 </body>

@@ -116,7 +116,9 @@
       p_zusammenfassen: 'Fasse dieses Dokument kurz und verständlich in Stichpunkten zusammen: Worum geht es, wer schreibt an wen, was wird verlangt, wichtige Fristen, Beträge und Aktenzeichen (nur falls im Text vorhanden). Erfinde nichts dazu.',
       p_erklaeren: 'Erkläre in einfacher Sprache, was dieses Schreiben von mir möchte und was ich jetzt konkret tun sollte (mit Frist, falls im Text genannt). Wenn etwas unklar ist oder im Text fehlt, sag das ehrlich.',
       p_antwort: 'Entwirf eine höfliche, kurze Antwort auf dieses Schreiben (nur den Brieftext, ohne Briefkopf). Lass Angaben, die du nicht kennst, als [Lücke] in eckigen Klammern.',
-      p_korrigieren: 'Dieser Text stammt aus einer automatischen Texterkennung (OCR). Korrigiere nur offensichtliche Erkennungs- und Rechtschreibfehler, ohne Inhalt, Zahlen oder Namen zu verändern. Gib ausschließlich den korrigierten Text aus.'
+      p_korrigieren: 'Dieser Text stammt aus einer automatischen Texterkennung (OCR). Korrigiere nur offensichtliche Erkennungs- und Rechtschreibfehler, ohne Inhalt, Zahlen oder Namen zu verändern. Gib ausschließlich den korrigierten Text aus.',
+      act_uebersetzen: '🌐 Übersetzen', uebersetzen_nach: 'Übersetzen nach',
+      p_uebersetzen: 'Übersetze den folgenden Text vollständig und sinngetreu in diese Sprache: {sprache}. Behalte Absätze, Aufzählungen, Zahlen, Beträge, Daten und Namen bei. Gib ausschließlich die Übersetzung aus, ohne Einleitung oder Kommentar.'
     },
     en: {
       anbieter_titel: 'Choose AI',
@@ -198,7 +200,9 @@
       p_zusammenfassen: 'Summarize this document briefly and clearly in bullet points: what it is about, who writes to whom, what is requested, important deadlines, amounts and reference numbers (only if present in the text). Do not invent anything.',
       p_erklaeren: 'Explain in plain language what this letter wants from me and what I should do now (with the deadline, if stated in the text). If something is unclear or missing in the text, say so honestly.',
       p_antwort: 'Draft a short, polite reply to this letter (letter body only, no letterhead). Leave details you do not know as a [gap] in square brackets.',
-      p_korrigieren: 'This text comes from automatic text recognition (OCR). Fix only obvious recognition and spelling errors without changing content, numbers or names. Output only the corrected text.'
+      p_korrigieren: 'This text comes from automatic text recognition (OCR). Fix only obvious recognition and spelling errors without changing content, numbers or names. Output only the corrected text.',
+      act_uebersetzen: '🌐 Translate', uebersetzen_nach: 'Translate into',
+      p_uebersetzen: 'Translate the following text completely and faithfully into {sprache}. Keep paragraphs, lists, numbers, amounts, dates and names. Output only the translation, without any introduction or comment.'
     }
   };
 
@@ -270,6 +274,8 @@
 .sdki-btn.prim{background:#2f7d72;border-color:#2f7d72;color:#fff}
 .sdki-btn.akt{background:#dcece7;border-color:#2f7d72;color:#1c4a42}
 .sdki-btn:disabled{opacity:.5;cursor:default}
+.sdki-uebersetzen{display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%}
+.sdki-uebersetzen select{flex:1;min-width:140px;padding:9px 10px;border:1px solid #d8e0dc;border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:#172a3a}
 .sdki-balken{height:10px;background:#dcece7;border-radius:999px;overflow:hidden}
 .sdki-balken>div{height:100%;width:0;background:#2f7d72;transition:width .3s}
 .sdki-ausgabe{white-space:pre-wrap;background:#fffdf8;border:1px solid #d8e0dc;border-radius:10px;padding:12px;min-height:80px;max-height:45dvh;overflow:auto;font-size:.92rem;line-height:1.55;overflow-wrap:anywhere}
@@ -1227,6 +1233,15 @@
   // Dialog "KI-Hilfe zum Dokument" (PDF-Studio, Scanner)
   // ------------------------------------------------------------
   // optionen: { text, ocr (bool: Korrektur-Aktion anbieten), uebernehmen(text) }
+  // Zielsprachen fuer "Uebersetzen" (Anzeige je UI-Sprache, Prompt nutzt den Namen der UI-Sprache)
+  const ZIELSPRACHEN = [
+    ['de', 'Deutsch', 'German'], ['en', 'Englisch', 'English'], ['tr', 'Türkisch', 'Turkish'],
+    ['ar', 'Arabisch', 'Arabic'], ['fa', 'Persisch (Dari/Farsi)', 'Persian (Dari/Farsi)'], ['ps', 'Paschtu', 'Pashto'],
+    ['uk', 'Ukrainisch', 'Ukrainian'], ['ru', 'Russisch', 'Russian'], ['pl', 'Polnisch', 'Polish'],
+    ['fr', 'Französisch', 'French'], ['es', 'Spanisch', 'Spanish'], ['it', 'Italienisch', 'Italian']
+  ];
+  const ZIELSPRACHE_STORAGE = 'sdKiZielsprache';
+
   function dokumentDialog(optionen) {
     const opt = optionen || {};
     const voll = String(opt.text || '').replace(/[ \t]+\n/g, '\n').trim();
@@ -1285,16 +1300,43 @@
         b.type = 'button'; b.className = 'sdki-btn akt';
         b.textContent = tx(label);
         b.disabled = !voll || laeuft;
-        b.onclick = () => ausfuehren(prompt, label === 'act_korrigieren');
+        b.onclick = () => ausfuehren(tx(prompt), label === 'act_korrigieren');
         box.appendChild(b);
       });
+      if (opt.uebersetzen) {
+        const reihe = document.createElement('div');
+        reihe.className = 'sdki-uebersetzen';
+        const wahl = document.createElement('select');
+        wahl.setAttribute('aria-label', tx('uebersetzen_nach'));
+        const gemerkt = lesen(localStorage, ZIELSPRACHE_STORAGE) || (sprache() === 'de' ? 'en' : 'de');
+        ZIELSPRACHEN.forEach(([code, de, en]) => {
+          const o2 = document.createElement('option');
+          o2.value = code; o2.textContent = sprache() === 'en' ? en : de;
+          if (code === gemerkt) o2.selected = true;
+          wahl.appendChild(o2);
+        });
+        wahl.disabled = !voll || laeuft;
+        wahl.onchange = () => schreiben(localStorage, ZIELSPRACHE_STORAGE, wahl.value);
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'sdki-btn akt';
+        b.textContent = tx('act_uebersetzen');
+        b.disabled = !voll || laeuft;
+        b.onclick = () => {
+          const z = ZIELSPRACHEN.find(x => x[0] === wahl.value) || ZIELSPRACHEN[1];
+          schreiben(localStorage, ZIELSPRACHE_STORAGE, z[0]);
+          ausfuehren(tx('p_uebersetzen', { sprache: sprache() === 'en' ? z[2] : z[1] }), true);
+        };
+        reihe.append(wahl, b);
+        box.appendChild(reihe);
+      }
       kopieren.textContent = tx('dlg_kopieren');
       uebernehmen.textContent = tx('dlg_uebernehmen');
       stopp.textContent = tx('dlg_stopp');
       schliessen.textContent = tx('dlg_schliessen');
     }
 
-    async function ausfuehren(promptKey, istKorrektur) {
+    // istLang: Ausgabe ist etwa so lang wie die Eingabe (Korrektur, Uebersetzung)
+    async function ausfuehren(promptText, istLang) {
       if (laeuft) return;
       laeuft = true;
       ergebnis = '';
@@ -1306,15 +1348,15 @@
       stopp.hidden = anbieter() !== 'lotse';
       zeichnen();
       const { text } = textFuerAnbieter();
-      const prompt = tx(promptKey) + '\n\n---\n' + text + '\n---';
+      const prompt = promptText + '\n\n---\n' + text + '\n---';
       try {
         ergebnis = await schreibe(prompt, {
-          maxTokens: istKorrektur ? 1500 : 900,
+          maxTokens: istLang ? 1500 : 900,
           onToken: (_, gesamt) => { ausgabe.textContent = gesamt; ausgabe.scrollTop = ausgabe.scrollHeight; }
         });
         ausgabe.textContent = ergebnis;
         kopieren.hidden = false;
-        uebernehmen.hidden = !(istKorrektur && typeof opt.uebernehmen === 'function');
+        uebernehmen.hidden = !(istLang && typeof opt.uebernehmen === 'function');
       } catch (err) {
         if (ausgabe.textContent === '…') ausgabe.hidden = true;
         fehler.textContent = (err && err.message) || String(err);
