@@ -13,1038 +13,496 @@
   } catch (e) {}
 })();
 </script>
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f3d3a" />
+    <meta name="description" content="19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch." />
     <link rel="manifest" href="manifest-hub.json" />
-    <title>SD Bewerbungsstudio | Premium App</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <title>SD Bewerbungsstudio – Papierkram in Deutschland, einfach erledigt</title>
     <style>
         :root {
-            --bg: #030b14;
-            --bg-2: #0f172a;
-            --panel: rgba(17, 24, 39, 0.84);
-            --panel-strong: rgba(15, 23, 42, 0.96);
-            --primary: #62f0d4;
-            --primary-2: #5bb8ff;
-            --gold: #f8d779;
-            --success: #4ade80;
-            --text: #edf6ff;
-            --muted: #bfd2e8;
-            --border: rgba(191, 210, 232, 0.18);
-            --shadow: rgba(0, 0, 0, 0.38);
+            --grund: #eef2f1;
+            --papier: #ffffff;
+            --tinte: #12212b;
+            --leise: #56666f;
+            --linie: #d9e2df;
+            --marke: #0f3d3a;
+            --marke-tief: #0a2b29;
+            --hell: #e3f0ec;
+            --fokus: #f2c14e;
+            --schrift: "Segoe UI Variable Text", "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
         }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Inter, Arial, sans-serif;
-            color: var(--text);
-            background: radial-gradient(circle at top left, rgba(98, 240, 212, 0.16), transparent 22%), radial-gradient(circle at bottom right, rgba(91, 184, 255, 0.15), transparent 28%), linear-gradient(135deg, #020812 0%, #081827 30%, #0f172a 100%);
-            min-height: 100vh;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        .container {
-            width: min(1200px, calc(100% - 28px));
-            margin: 0 auto;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 22px 0 12px;
-            gap: 18px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        .brand-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, var(--gold), var(--primary));
-            display: grid;
-            place-items: center;
-            color: #0b1625;
-            font-weight: 900;
-            box-shadow: 0 12px 26px rgba(98, 240, 212, 0.4);
-        }
-
-        .nav {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-            .nav a {
-                color: var(--muted);
-                font-size: 0.96rem;
-            }
-
-        .sd-lang-switch {
-            display: flex;
-            gap: 4px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.14);
-            border-radius: 999px;
-            padding: 3px;
-        }
-
-        .sd-lang-btn {
-            border: 0;
-            background: transparent;
-            color: var(--muted);
-            font-size: 0.82rem;
-            font-weight: 700;
-            padding: 5px 11px;
-            border-radius: 999px;
-            cursor: pointer;
-        }
-
-        .sd-lang-btn.active {
-            background: var(--primary);
-            color: #06251f;
-        }
-
-        .hero {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 34px;
-            align-items: center;
-            padding: 32px 0 18px;
-        }
-
-        .eyebrow {
-            display: inline-block;
-            padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid rgba(98, 240, 212, 0.35);
-            background: rgba(98, 240, 212, 0.08);
-            color: var(--primary);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-
-        h1 {
-            margin: 18px 0 16px;
-            font-size: clamp(2.8rem, 6vw, 5.2rem);
-            line-height: 0.94;
-            letter-spacing: -0.07em;
-        }
-
-        .lead {
-            color: var(--muted);
-            font-size: 1.08rem;
-            line-height: 1.78;
-            max-width: 620px;
-        }
-
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 28px;
-        }
-
-        .button {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 52px;
-            padding: 0 24px;
-            border-radius: 12px;
-            font-weight: 800;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-            .button:hover {
-                transform: translateY(-2px);
-            }
-
-            .button.primary {
-                background: linear-gradient(135deg, var(--primary), var(--primary-2));
-                color: #041926;
-                box-shadow: 0 18px 30px rgba(91, 184, 255, 0.25);
-            }
-
-            .button.secondary {
-                background: rgba(15, 23, 42, 0.65);
-                border: 1px solid var(--border);
-                color: var(--text);
-            }
-
-        .stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 28px;
-        }
-
-        .stat {
-            min-width: 142px;
-            border: 1px solid var(--border);
-            background: rgba(17, 24, 39, 0.6);
-            border-radius: 16px;
-            padding: 14px 16px;
-        }
-
-            .stat strong {
-                display: block;
-                font-size: 1.35rem;
-                margin-bottom: 4px;
-                color: var(--gold);
-            }
-
-            .stat span {
-                color: var(--muted);
-                font-size: 0.85rem;
-            }
-
-        .visual {
-            position: relative;
-            padding: 18px;
-            border-radius: 28px;
-            background: linear-gradient(180deg, rgba(18, 29, 43, 0.94), rgba(2, 8, 18, 0.96));
-            border: 1px solid var(--border);
-            box-shadow: 0 28px 60px var(--shadow);
-        }
-
-            .visual:before {
-                content: "";
-                position: absolute;
-                inset: -1px;
-                background: linear-gradient(135deg, rgba(98, 240, 212, 0.25), rgba(91, 184, 255, 0.12), transparent 75%);
-                border-radius: inherit;
-                z-index: 0;
-            }
-
-        .visual-inner {
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-            border-radius: 22px;
-            border: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(11, 17, 28, 0.95), rgba(15, 23, 42, 0.98));
-        }
-
-        .window-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(11, 17, 28, 0.7);
-            color: var(--muted);
-            font-size: 0.78rem;
-        }
-
-        .window-dots {
-            display: flex;
-            gap: 8px;
-        }
-
-            .window-dots span {
-                width: 10px;
-                height: 10px;
-                display: block;
-                border-radius: 50%;
-            }
-
-                .window-dots span:nth-child(1) {
-                    background: #ff6b6b;
-                }
-
-                .window-dots span:nth-child(2) {
-                    background: #ffd166;
-                }
-
-                .window-dots span:nth-child(3) {
-                    background: #4ade80;
-                }
-
-        .screen {
-            padding: 22px;
-            min-height: 340px;
-            background: radial-gradient(circle at top left, rgba(98, 240, 212, 0.15), transparent 25%), rgba(15, 23, 42, 0.96);
-        }
-
-        .card-mini {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-bottom: 14px;
-            padding: 14px 16px;
-        }
-
-        .label {
-            display: block;
-            color: var(--primary);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            font-size: 0.72rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .progress {
-            height: 11px;
-            border-radius: 999px;
-            background: rgba(148, 163, 184, 0.15);
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-            .progress > span {
-                display: block;
-                height: 100%;
-                border-radius: inherit;
-                background: linear-gradient(90deg, var(--primary), var(--primary-2));
-            }
-
-        .section {
-            padding: 80px 0 10px;
-        }
-
-        .section-head {
-            text-align: center;
-            margin-bottom: 22px;
-        }
-
-            .section-head h2 {
-                margin: 0 0 10px;
-                font-size: clamp(2rem, 4vw, 3.2rem);
-                letter-spacing: -0.05em;
-            }
-
-            .section-head p {
-                margin: 0;
-                color: var(--muted);
-                line-height: 1.7;
-            }
-
-        .intro-band {
-            max-width: 780px;
-            margin: 0 auto;
-            text-align: center;
-            padding: 8px 16px 32px;
-        }
-
-            .intro-band h2 {
-                margin: 0 0 18px;
-                font-size: clamp(1.7rem, 3.4vw, 2.6rem);
-                letter-spacing: -0.03em;
-            }
-
-            .intro-band p {
-                margin: 0 0 14px;
-                color: var(--muted);
-                line-height: 1.75;
-                font-size: 1.05rem;
-            }
-
-            .intro-band p:last-child {
-                margin-bottom: 0;
-            }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 22px;
-            margin-top: 24px;
-        }
-
-        .feature {
-            background: rgba(15, 23, 42, 0.76);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px 22px;
-            min-height: 220px;
-            box-shadow: 0 12px 25px rgba(2, 10, 17, 0.18);
-        }
-
-        .feature-badge {
-            display: inline-grid;
-            place-items: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: rgba(98, 240, 212, 0.12);
-            color: var(--primary);
-            font-size: 1.3rem;
-            margin-bottom: 16px;
-        }
-
-        .feature h3 {
-            margin: 0 0 10px;
-            font-size: 1.2rem;
-        }
-
-        .feature p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.72;
-        }
-
-        .dept-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 22px;
-            margin-top: 24px;
-        }
-
-        .dept-card {
-            display: block;
-            background: rgba(15, 23, 42, 0.78);
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            padding: 28px 24px;
-            color: var(--text);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            box-shadow: 0 14px 30px rgba(2, 10, 17, 0.22);
-        }
-
-            .dept-card:hover {
-                transform: translateY(-4px);
-                border-color: rgba(98, 240, 212, 0.4);
-                box-shadow: 0 20px 40px rgba(2, 10, 17, 0.32);
-            }
-
-            .dept-card--soon {
-                opacity: 0.72;
-                cursor: default;
-            }
-
-                .dept-card--soon:hover {
-                    transform: none;
-                    border-color: var(--border);
-                    box-shadow: 0 14px 30px rgba(2, 10, 17, 0.22);
-                }
-
-        .dept-icon {
-            width: 56px;
-            height: 56px;
-            display: grid;
-            place-items: center;
-            border-radius: 16px;
-            background: rgba(98, 240, 212, 0.12);
-            font-size: 1.7rem;
-            margin-bottom: 18px;
-        }
-
-        .dept-card h3 {
-            margin: 0 0 10px;
-            font-size: 1.25rem;
-        }
-
-        .dept-card p {
-            margin: 0 0 18px;
-            color: var(--muted);
-            line-height: 1.65;
-            min-height: 76px;
-        }
-
-        .dept-link {
-            display: inline-block;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .dept-link--soon {
-            color: var(--gold);
-        }
-
-        .download-wrap {
-            margin-top: 26px;
-            background: rgba(15, 23, 42, 0.78);
-            border: 1px solid var(--border);
-            border-radius: 26px;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-        }
-
-        .download-card {
-            background: rgba(30, 41, 59, 0.92);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 22px 18px;
-        }
-
-            .download-card h3 {
-                margin: 0 0 10px;
-                color: var(--primary);
-                font-size: 1.15rem;
-            }
-
-            .download-card p {
-                margin: 0 0 16px;
-                color: var(--muted);
-                line-height: 1.6;
-                min-height: 52px;
-            }
-
-            .download-card a {
-                display: block;
-                text-align: center;
-                padding: 12px 16px;
-                border-radius: 12px;
-                font-weight: 800;
-                background: linear-gradient(135deg, var(--success), #22c55e);
-                color: #041f13;
-            }
-
-        .cta-row {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-top: 26px;
-        }
-
-        .footer {
-            padding: 38px 0 52px;
-            color: var(--muted);
-            text-align: center;
-            font-size: 0.95rem;
-        }
-
-        @media (max-width: 880px) {
-            .hero {
-                grid-template-columns: 1fr;
-            }
-
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .dept-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+        body { margin: 0; font-family: var(--schrift); color: var(--tinte); background: var(--grund); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        a { color: inherit; }
+        :focus-visible { outline: 3px solid var(--fokus); outline-offset: 2px; border-radius: 6px; }
+        .breite { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+
+        /* Kopf */
+        .kopf { background: var(--marke); color: #fff; padding-top: env(safe-area-inset-top, 0px); }
+        .leiste { display: flex; align-items: center; gap: 12px; padding-block: 14px; }
+        .marke { display: flex; align-items: center; gap: 10px; flex: 1; text-decoration: none; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+        .marke i { font-style: normal; width: 36px; height: 36px; border-radius: 10px; background: #fff; color: var(--marke); display: grid; place-items: center; font-family: Georgia, "Times New Roman", serif; font-size: .95rem; }
+        .sprache { display: flex; gap: 2px; background: rgba(255, 255, 255, .12); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: #cfe4de; font: inherit; font-size: .8rem; font-weight: 700; padding: 6px 11px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: #fff; color: var(--marke); }
+
+        .held { padding-block: 34px 0; }
+        .held h1 { margin: 0; font-size: clamp(2rem, 5.6vw, 3.5rem); line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; max-width: 15ch; text-wrap: balance; }
+        .held p { margin: 14px 0 0; font-size: clamp(1rem, 2.2vw, 1.15rem); color: #cfe4de; max-width: 52ch; }
+        .suche { margin-top: 24px; position: relative; max-width: 620px; }
+        .suche svg { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: var(--leise); pointer-events: none; }
+        .suche input { width: 100%; font: inherit; font-size: 1.05rem; padding: 17px 18px 17px 52px; border: 0; border-radius: 16px; background: #fff; color: var(--tinte); box-shadow: 0 10px 30px rgba(0, 0, 0, .18); }
+        .suche input::placeholder { color: #7d8a91; }
+        .suche input:focus { outline: 3px solid var(--fokus); outline-offset: 0; }
+        .schnell { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .chip { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #fff; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 8px 14px; font-size: .9rem; font-weight: 600; }
+        .chip:hover { background: rgba(255, 255, 255, .2); }
+
+        /* Register-Reiter: die sechs Themen als Ordnerreiter am unteren Rand */
+        .reiter { display: flex; gap: 6px; margin-top: 30px; overflow-x: auto; scrollbar-width: none; padding-top: 6px; }
+        .reiter::-webkit-scrollbar { display: none; }
+        .reiter a { flex: 0 0 auto; text-decoration: none; color: #fff; background: var(--farbe); padding: 10px 16px 12px; border-radius: 12px 12px 0 0; font-weight: 700; font-size: .9rem; white-space: nowrap; transform: translateY(4px); transition: transform .15s ease; }
+        .reiter a:hover, .reiter a:focus-visible { transform: translateY(0); }
+
+        /* Themen und Kacheln */
+        main { padding-block: 36px 40px; }
+        .thema { scroll-margin-top: 16px; }
+        .thema + .thema { margin-top: 30px; }
+        .thema h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 1.25rem; letter-spacing: -0.01em; }
+        .punkt { width: 14px; height: 14px; border-radius: 4px; background: var(--farbe); flex: 0 0 auto; }
+        .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+        .kachel { display: flex; align-items: center; gap: 14px; text-decoration: none; background: var(--papier); border: 1px solid var(--linie); border-radius: 14px; padding: 12px 14px; min-height: 76px; transition: border-color .15s ease, box-shadow .15s ease; }
+        .kachel:hover { border-color: var(--farbe); box-shadow: 0 4px 14px rgba(18, 33, 43, .08); }
+        .symbol { width: 50px; height: 50px; flex: 0 0 auto; border-radius: 13px; display: grid; place-items: center; font-size: 1.55rem; background: color-mix(in srgb, var(--farbe) 14%, #fff); border: 1px solid color-mix(in srgb, var(--farbe) 30%, #fff); }
+        .text { display: grid; gap: 1px; min-width: 0; }
+        .text b { font-size: 1.02rem; line-height: 1.25; }
+        .text small { font-size: .88rem; color: var(--leise); line-height: 1.35; }
+        .hinweis-badge { justify-self: start; margin-top: 4px; background: #fff4d6; color: #7a5300; border-radius: 999px; padding: 1px 9px; font-size: .78rem; font-weight: 700; }
+        .nichts { background: var(--papier); border: 1px dashed var(--linie); border-radius: 14px; padding: 18px; color: var(--leise); text-align: center; margin: 0; }
+
+        /* Versprechen */
+        .versprechen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 40px; border-top: 2px solid var(--tinte); }
+        .versprechen div { padding: 16px 18px 4px 0; }
+        .versprechen h3 { margin: 0 0 4px; font-size: 1rem; }
+        .versprechen p { margin: 0; color: var(--leise); font-size: .92rem; max-width: 34ch; }
+
+        .mitnehmen { margin-top: 34px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 16px 18px; background: var(--hell); border-radius: 14px; }
+        .mitnehmen div { flex: 1 1 260px; }
+        .mitnehmen h3 { margin: 0; font-size: 1rem; }
+        .mitnehmen p { margin: 2px 0 0; color: var(--leise); font-size: .9rem; }
+        .mitnehmen a { text-decoration: none; font-weight: 700; color: var(--marke); background: #fff; border: 1px solid #b9d6cd; border-radius: 10px; padding: 8px 12px; font-size: .9rem; }
+
+        footer { border-top: 1px solid var(--linie); padding-block: 18px calc(18px + env(safe-area-inset-bottom, 0px)); color: var(--leise); font-size: .88rem; }
+        footer .breite { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+        footer a { color: var(--leise); }
+
+        @media (max-width: 640px) {
+            .breite { padding-inline: 16px; }
+            .schnell { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+            .schnell::-webkit-scrollbar { display: none; }
+            .chip { flex: 0 0 auto; }
+            .held { padding-top: 22px; }
+            .kacheln { grid-template-columns: 1fr; gap: 8px; }
+            .kachel { min-height: 68px; padding: 10px 12px; }
+            .symbol { width: 44px; height: 44px; font-size: 1.35rem; border-radius: 12px; }
+            .versprechen { grid-template-columns: 1fr; }
+            .versprechen div { padding-bottom: 12px; border-bottom: 1px solid var(--linie); }
         }
     </style>
-    <script>
-        window.SD_I18N = {
-            de: {
-                brand: 'SD Bewerbungsstudio',
-                nav_ueber: 'Über uns', nav_bereiche: 'Bereiche', nav_features: 'Features',
-                nav_downloads: 'Downloads', nav_start: 'Start',
-                hero_eyebrow: 'Premium • Lokal • Plattformübergreifend',
-                hero_h1: 'Starke Bewerbung. Moderne Präsentation.',
-                hero_lead: 'SD Bewerbungsstudio ist eine elegante, portable Bewerbungs-App für digitale Profile, Lebenslauf, Projekte und professionelle Präsentationen. Die Lösung läuft lokal im Browser und ist für Windows, macOS und Linux verfügbar.',
-                hero_download_btn: 'Jetzt herunterladen', hero_apps_btn: 'Apps öffnen',
-                stat_systeme: 'Systeme', stat_lokal: 'Lokaler Start', stat_browser: 'Browserfunktionen',
-                mini_profil: 'Profil', mini_profil_txt: 'Lebenslauf & Kompetenzen',
-                mini_portfolio: 'Portfolio', mini_portfolio_txt: 'Projekte & Referenzen',
-                mini_praesentation: 'Präsentation', mini_praesentation_txt: 'Professioneller Aufbau',
-                intro_h2: 'Deine Werkzeuge. Deine Daten. Dein Tempo.',
-                intro_p1: 'thesdhub.com ist der zentrale Ort für praktische Werkzeuge rund um Bewerbung und Dokumente – heute mit Lebenslauf, Anschreiben, PDF-Bearbeitung, Dokumenten-Scanner und Passfoto-Tool, in Zukunft wachsend um weitere Anwendungen, die nahtlos miteinander verbunden sind.',
-                intro_p2: 'Alles läuft direkt in deinem Browser – deine Daten bleiben auf deinem Gerät, nicht auf fremden Servern. Datenschutz ist dabei kein Zusatz, sondern Grundprinzip: im Einklang mit der europäischen Datenschutz-Grundverordnung (DSGVO) und mit dem Anspruch, weltweit vertrauenswürdig zu funktionieren – ganz gleich, wo du diese Seite nutzt.',
-                bereiche_h2: 'Wähle deinen Bereich',
-                bereiche_lead: 'Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.',
-                card_bewerbung_h3: 'Bewerbung schreiben',
-                card_bewerbung_p: 'Lebenslauf, Anschreiben, Deckblatt & Bewerbungsmappe – mit KI-Schreibhilfe und frei wählbarem Design.',
-                card_schreib_h3: 'Schreibstudio',
-                card_schreib_p: 'Kündigung, Entschuldigung & formeller Brief – mit KI-Schreibhilfe, fertigen Mustern und PDF-Export.',
-                card_pdf_h3: 'PDF-Werkzeuge',
-                card_pdf_p: 'PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.',
-                card_scanner_h3: 'Scanner',
-                card_scanner_p: 'Kamera startet sofort: der grüne Rahmen findet das Blatt, oder Fotos und Bilder importieren. Ecken mit Lupe nachziehen, fünf Filter (u. a. „Klar“ wie ClearScan), Seiten sortieren und drehen. Mehrere Seiten als PDF – mit Texterkennung durchsuchbar. Dazu QR-Codes und Barcodes lesen (Barcodes in Chrome, Edge und Android), Visitenkarten als Kontakt (.vcf) speichern, eine Ablage mit Suche und KI-Hilfe zum Zusammenfassen und Übersetzen. Scans bleiben auf dem Gerät gespeichert.',
-                card_foto_h3: 'Passfoto Studio',
-                card_foto_p: 'Pass- und Visumfotos für über 60 Dokumente (u. a. Deutschland/EU, Türkei, Afghanistan, Syrien, USA, UK): aufnehmen oder hochladen, automatischer Zuschnitt, Prüfung von Kopfgröße, Haltung, Augen, Licht und Hintergrund, Export als JPEG oder Druckbogen. Alles im Browser, kein Upload.',
-                card_assistent_h3: 'KI-Assistent',
-                card_assistent_p: 'Chatte mit einer KI zu Bewerbung, Lebenslauf, Briefen & mehr – liest Dokumente, erstellt PDFs, übernimmt Angaben in deinen Lebenslauf. Wahlweise SD Lotse (lokal, ohne Schlüssel) oder Gemini, ChatGPT bzw. Claude mit eigenem Schlüssel.',
-                card_tracker_h3: 'Bewerbungs-Tracker',
-                card_tracker_p: 'Alle Bewerbungen auf einen Blick: Status von „gemerkt“ bis „Zusage“, Fristen, Erinnerungen ans Nachfassen, Termine in den Kalender – und die Kosten mit einem Tipp in den Steuer-Helfer.',
-                card_fristen_h3: 'Fristen-Übersicht',
-                card_fristen_p: 'Alle Termine an einem Ort: Fristen aus Briefen, Bewerbungen, offene Rechnungen, ablaufende Dokumente und letzte Kündigungstage – plus eigene Fristen. Mit einem Tipp alles in den Kalender.',
-                card_vertraege_h3: 'Verträge & Kündigungen',
-                card_vertraege_p: 'Handy, Strom, Internet, Fitness, Versicherungen: Kosten pro Monat und bis wann du kündigen musst. Kündigungsschreiben mit einem Tipp im Schreibstudio.',
-                card_haushalt_h3: 'Haushaltsbuch',
-                card_haushalt_p: 'Einnahmen und Ausgaben pro Monat, nach Kategorien – feste Verträge werden automatisch mitgerechnet. Export als CSV.',
-                card_stunden_h3: 'Stundenzettel & Lohn',
-                card_stunden_p: 'Arbeitszeiten erfassen, Pausen nach Arbeitszeitgesetz prüfen, Brutto berechnen und mit Mindestlohn und Lohnabrechnung vergleichen.',
-                card_wohnung_h3: 'Wohnungsbewerbung',
-                card_wohnung_p: 'Anschreiben an den Vermieter, Mieterselbstauskunft und Unterlagen aus der Dokumenten-Mappe als eine PDF – mit Hinweisen, was Vermieter fragen dürfen.',
-                card_anerkennung_h3: 'Anerkennung von Abschlüssen',
-                card_anerkennung_p: 'Ausländische Ausbildung, Studium oder Schulabschluss anerkennen lassen: Wegweiser mit offiziellen Quellen, Checkliste und kostenloser Beratung.',
-                card_mappe_h3: 'Dokumenten-Mappe',
-                card_mappe_p: 'Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.',
-                mappe_faellig: '⏰ {n} Dokument(e) bald fällig',
-                card_rechnung_h3: 'Rechnungen',
-                card_rechnung_p: 'Rechnungen schreiben – mit Pflichtangaben-Check, Kleinunternehmer-Hinweis und PDF – und erhaltene Rechnungen mit Fälligkeit im Blick behalten. Handwerker-Arbeitskosten mit einem Tipp in den Steuer-Helfer.',
-                card_agent_h3: 'KI-Agent',
-                card_agent_p: 'Erledigt Aufgaben Schritt für Schritt: trägt Bewerbungen, Fristen und Steuer-Posten ein, baut Webseiten mit Live-Vorschau, rechnet mit Code, arbeitet auf Wunsch in einem Ordner am PC. Fragt vor jeder Änderung. Mit Gemini, ChatGPT oder Claude.',
-                card_post_h3: 'Post-Assistent',
-                card_post_p: 'Brief fotografieren und verstehen – auch auf Türkisch, Arabisch, Ukrainisch u. a. Frist erkennen, Erinnerung in den Kalender, Antwort entwerfen und im Schreibstudio als Brief fertig machen.',
-                card_training_h3: 'Gesprächstraining',
-                card_training_p: 'Vorstellungsgespräch üben: Fragen passend zur Stelle, antworten per Sprache oder Text – und ehrliche Rückmeldung mit Beispielantwort. Standardfragen auch ohne KI.',
-                card_steuer_h3: 'Steuer-Helfer',
-                card_steuer_p: 'Werbungskosten, Bewerbungskosten, Kinderbetreuung, Spenden und Handwerker sammeln und berechnen – mit Zusammenfassung für Mein ELSTER. Belege per Foto erfassen. Daten bleiben auf deinem Gerät; keine Steuerberatung.',
-                features_h2: 'Warum SD Bewerbungsstudio?',
-                features_lead: 'Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.',
-                feat1_h3: 'Schneller Einstieg', feat1_p: 'Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.',
-                feat2_h3: 'Für alle Geräte', feat2_p: 'Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.',
-                feat3_h3: 'Lokale Sicherheit', feat3_p: 'Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.',
-                downloads_h2: 'Downloads',
-                downloads_lead: 'Wähle die passende Version für dein System und starte sofort in die Bewerbung.',
-                dl_win_h3: 'Windows', dl_win_p: 'PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.',
-                dl_mac_h3: 'macOS', dl_mac_p: 'Startskript für macOS mit Python 3 und Direktzugriff zur App.',
-                dl_linux_h3: 'Linux', dl_linux_p: 'Linux-Startskript für die lokale App-Öffnung im Browser.',
-                start_h2: 'Direkt starten',
-                start_lead: 'Öffne die App sofort oder nutze die passende Download-Version für dein System.',
-                start_app_btn: 'App auswählen', start_anleitung_btn: 'Anleitung lesen',
-                footer_txt: 'SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux',
-                footer_datenschutz: 'Datenschutz'
-            },
-            en: {
-                brand: 'SD Bewerbungsstudio',
-                nav_ueber: 'About', nav_bereiche: 'Tools', nav_features: 'Features',
-                nav_downloads: 'Downloads', nav_start: 'Start',
-                hero_eyebrow: 'Premium • Local • Cross-platform',
-                hero_h1: 'Stronger applications. Modern presentation.',
-                hero_lead: 'SD Bewerbungsstudio is an elegant, portable app for job applications: digital profiles, resumes, projects and professional presentations. It runs locally in your browser and is available for Windows, macOS and Linux.',
-                hero_download_btn: 'Download now', hero_apps_btn: 'Open apps',
-                stat_systeme: 'Systems', stat_lokal: 'Local start', stat_browser: 'Browser-based',
-                mini_profil: 'Profile', mini_profil_txt: 'Resume & skills',
-                mini_portfolio: 'Portfolio', mini_portfolio_txt: 'Projects & references',
-                mini_praesentation: 'Presentation', mini_praesentation_txt: 'Professional layout',
-                intro_h2: 'Your tools. Your data. Your pace.',
-                intro_p1: 'thesdhub.com is the central place for practical job-application and document tools – today with resume, cover letter, PDF editing, a document scanner and a passport-photo tool, and growing with more apps that connect seamlessly.',
-                intro_p2: 'Everything runs directly in your browser – your data stays on your device, not on someone else’s server. Privacy isn’t an add-on here, it’s the foundation: in line with the European General Data Protection Regulation (GDPR), and built to be trustworthy wherever in the world you use this site.',
-                bereiche_h2: 'Choose your tool',
-                bereiche_lead: 'Everything you need for your job application, in one place.',
-                card_bewerbung_h3: 'Write your application',
-                card_bewerbung_p: 'Resume, cover letter, title page & full application folder – with AI writing help and a design of your choice.',
-                card_schreib_h3: 'Letter Studio',
-                card_schreib_p: 'Termination letters, excuse notes & formal letters – with AI writing help, ready-made templates and PDF export.',
-                card_pdf_h3: 'PDF tools',
-                card_pdf_p: 'Merge, edit and annotate PDFs and get them ready for your application – right in the browser.',
-                card_scanner_h3: 'Scanner',
-                card_scanner_p: 'Camera starts right away: the green frame finds the sheet – or import photos and images. Adjust corners with a magnifier, five filters (incl. "Clear" like ClearScan), reorder and rotate pages. Several pages as one PDF – searchable with text recognition. Plus reading QR codes and barcodes (barcodes in Chrome, Edge and Android), saving business cards as contacts (.vcf), a searchable archive and AI help to summarize and translate. Scans stay saved on your device. (In German.)',
-                card_foto_h3: 'Passport Photo Studio',
-                card_foto_p: 'Passport and visa photos for more than 60 documents (incl. Germany/EU, Turkey, Afghanistan, Syria, USA, UK): take or upload a photo, automatic cropping, checks for head size, pose, eyes, lighting and background, export as JPEG or print sheet. All in the browser, no upload.',
-                card_assistent_h3: 'AI assistant',
-                card_assistent_p: 'Chat with an AI about applications, resumes, letters & more – reads documents, creates PDFs, puts details into your resume. Choose SD Lotse (local, no key) or Gemini, ChatGPT or Claude with your own key.',
-                card_tracker_h3: 'Application tracker',
-                card_tracker_p: 'All applications at a glance: status from "saved" to "offer", deadlines, follow-up reminders, dates to your calendar – and costs into the tax helper with one tap.',
-                card_fristen_h3: 'Deadline overview',
-                card_fristen_p: 'All dates in one place: deadlines from letters, applications, open invoices, expiring documents and last cancellation days – plus your own. Everything to your calendar with one tap.',
-                card_vertraege_h3: 'Contracts & Cancellations',
-                card_vertraege_p: 'Mobile, electricity, internet, gym, insurance: monthly costs and the date by which you must cancel. Cancellation letter in the writing studio with one tap.',
-                card_haushalt_h3: 'Household budget',
-                card_haushalt_p: 'Income and expenses per month, by category – fixed contracts are included automatically. Export as CSV.',
-                card_stunden_h3: 'Timesheet & Pay',
-                card_stunden_p: 'Track working hours, check breaks under the Working Hours Act, calculate gross pay and compare with the minimum wage and your payslip.',
-                card_wohnung_h3: 'Flat application',
-                card_wohnung_p: 'Cover letter to the landlord, tenant self-disclosure and documents from the document folder as one PDF – with notes on what landlords may ask.',
-                card_anerkennung_h3: 'Recognition of qualifications',
-                card_anerkennung_p: 'Get foreign vocational training, degrees or school certificates recognised: guide with official sources, checklist and free advice.',
-                card_mappe_h3: 'Document Folder',
-                card_mappe_p: 'ID card, passport, residence permit, certificates and contracts in one place – only on your device. Scan with the SD Scanner, reminders before something expires, calendar entry and backup as a file.',
-                mappe_faellig: '⏰ {n} document(s) due soon',
-                card_rechnung_h3: 'Invoices',
-                card_rechnung_p: 'Write invoices – with mandatory-details check, small-business note and PDF – and keep track of received invoices and due dates. Tradesmen labour costs to the tax helper with one tap. (Invoices in German.)',
-                card_agent_h3: 'AI agent',
-                card_agent_p: 'Gets tasks done step by step: adds applications, deadlines and tax items, builds web pages with live preview, calculates with code, can work in a folder on your PC. Asks before every change. With Gemini, ChatGPT or Claude.',
-                card_post_h3: 'Letter assistant',
-                card_post_p: 'Photograph a letter and understand it – also in Turkish, Arabic, Ukrainian and more. Spot the deadline, add a calendar reminder, draft a reply and finish it as a letter in the writing studio.',
-                card_training_h3: 'Interview training',
-                card_training_p: 'Practise your job interview: questions tailored to the job, answer by voice or text – and honest feedback with a sample answer. Standard questions work without AI too.',
-                card_steuer_h3: 'Tax helper (Germany)',
-                card_steuer_p: 'Collect and calculate work expenses, application costs, childcare, donations and tradesmen – with a summary for Mein ELSTER. Capture receipts by photo. Data stays on your device; not tax advice. (In German.)',
-                features_h2: 'Why SD Bewerbungsstudio?',
-                features_lead: 'Modern, simple, professional design with a quick, local start.',
-                feat1_h3: 'Quick start', feat1_p: 'The app starts instantly and is ready to use right in your browser. No lengthy setup required.',
-                feat2_h3: 'Works everywhere', feat2_p: 'Optimized for desktop use and compatible with different operating systems.',
-                feat3_h3: 'Local & private', feat3_p: 'Everything runs locally on your machine, keeping your workflow clear, fast and under your control.',
-                downloads_h2: 'Downloads',
-                downloads_lead: 'Choose the right version for your system and get started right away.',
-                dl_win_h3: 'Windows', dl_win_p: 'PowerShell version with automatic browser launch and easy use.',
-                dl_mac_h3: 'macOS', dl_mac_p: 'Startup script for macOS with Python 3 and direct access to the app.',
-                dl_linux_h3: 'Linux', dl_linux_p: 'Linux startup script to open the app locally in your browser.',
-                start_h2: 'Get started',
-                start_lead: 'Open the app right away or use the matching download for your system.',
-                start_app_btn: 'Choose an app', start_anleitung_btn: 'Read the guide',
-                footer_txt: 'SD Bewerbungsstudio • Professional application solution for Windows, macOS and Linux',
-                footer_datenschutz: 'Privacy'
-            }
-        };
-    </script>
 </head>
 <body>
-    <div class="container">
-        <header class="topbar">
-            <div class="brand">
-                <div class="brand-mark">SD</div>
-                <span data-i18n="brand">SD Bewerbungsstudio</span>
+    <header class="kopf">
+        <div class="breite">
+            <div class="leiste">
+                <a class="marke" href="index.html"><i>SD</i><span>SD Bewerbungsstudio</span></a>
+                <div class="sprache" role="group" aria-label="Sprache">
+                    <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+                    <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+                </div>
             </div>
-            <nav class="nav">
-                <a href="#einleitung" data-i18n="nav_ueber">Über uns</a>
-                <a href="#bereiche" data-i18n="nav_bereiche">Bereiche</a>
-                <a href="#features" data-i18n="nav_features">Features</a>
-                <a href="#downloads" data-i18n="nav_downloads">Downloads</a>
-                <a href="#start" data-i18n="nav_start">Start</a>
-            </nav>
-            <div class="sd-lang-switch">
-                <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
-                <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+            <div class="held">
+                <h1 data-i18n="h1">Papierkram in Deutschland – einfach erledigt.</h1>
+                <p data-i18n="lead">19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch.</p>
+                <div class="suche" role="search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen">
+                </div>
+                <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true">📷</span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
+                <nav class="reiter" id="reiter" aria-label="Themen"></nav>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <main>
-            <section class="hero">
-                <div>
-                    <span class="eyebrow" data-i18n="hero_eyebrow">Premium • Lokal • Plattformübergreifend</span>
-                    <h1 data-i18n="hero_h1">Starke Bewerbung. Moderne Präsentation.</h1>
-                    <p class="lead" data-i18n="hero_lead">
-                        SD Bewerbungsstudio ist eine elegante, portable Bewerbungs-App für digitale Profile, Lebenslauf, Projekte und professionelle Präsentationen. Die Lösung läuft lokal im Browser und ist für Windows, macOS und Linux verfügbar.
-                    </p>
-
-                    <div class="actions">
-                        <a class="button primary" href="#downloads" data-i18n="hero_download_btn">Jetzt herunterladen</a>
-                        <a class="button secondary" href="#bereiche" data-i18n="hero_apps_btn">Apps öffnen</a>
-                    </div>
-
-                    <div class="stats">
-                        <div class="stat">
-                            <strong>3</strong>
-                            <span data-i18n="stat_systeme">Systeme</span>
-                        </div>
-                        <div class="stat">
-                            <strong>1</strong>
-                            <span data-i18n="stat_lokal">Lokaler Start</span>
-                        </div>
-                        <div class="stat">
-                            <strong>100%</strong>
-                            <span data-i18n="stat_browser">Browserfunktionen</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="visual" aria-label="App-Vorschau">
-                    <div class="visual-inner">
-                        <div class="window-bar">
-                            <span data-i18n="brand">SD Bewerbungsstudio</span>
-                            <div class="window-dots">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                        </div>
-                        <div class="screen">
-                            <div class="card-mini">
-                                <span class="label" data-i18n="mini_profil">Profil</span>
-                                <div data-i18n="mini_profil_txt">Lebenslauf &amp; Kompetenzen</div>
-                                <div class="progress"><span style="width: 86%;"></span></div>
-                            </div>
-                            <div class="card-mini">
-                                <span class="label" data-i18n="mini_portfolio">Portfolio</span>
-                                <div data-i18n="mini_portfolio_txt">Projekte &amp; Referenzen</div>
-                                <div class="progress"><span style="width: 72%;"></span></div>
-                            </div>
-                            <div class="card-mini">
-                                <span class="label" data-i18n="mini_praesentation">Präsentation</span>
-                                <div data-i18n="mini_praesentation_txt">Professioneller Aufbau</div>
-                                <div class="progress"><span style="width: 92%;"></span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section" id="einleitung">
-                <div class="intro-band">
-                    <h2 data-i18n="intro_h2">Deine Werkzeuge. Deine Daten. Dein Tempo.</h2>
-                    <p data-i18n="intro_p1">
-                        thesdhub.com ist der zentrale Ort für praktische Werkzeuge rund um Bewerbung und Dokumente –
-                        heute mit Lebenslauf, Anschreiben, PDF-Bearbeitung, Dokumenten-Scanner und Passfoto-Tool,
-                        in Zukunft wachsend um weitere Anwendungen, die nahtlos miteinander verbunden sind.
-                    </p>
-                    <p data-i18n="intro_p2">
-                        Alles läuft direkt in deinem Browser – deine Daten bleiben auf deinem Gerät, nicht auf
-                        fremden Servern. Datenschutz ist dabei kein Zusatz, sondern Grundprinzip: im Einklang mit
-                        der europäischen Datenschutz-Grundverordnung (DSGVO) und mit dem Anspruch, weltweit
-                        vertrauenswürdig zu funktionieren – ganz gleich, wo du diese Seite nutzt.
-                    </p>
-                </div>
-            </section>
-
-            <section class="section" id="bereiche">
-                <div class="section-head">
-                    <h2 data-i18n="bereiche_h2">Wähle deinen Bereich</h2>
-                    <p data-i18n="bereiche_lead">Alles, was du für deine Bewerbung brauchst, an einem Ort gebündelt.</p>
-                </div>
-
-                <div class="dept-grid">
-                    <a class="dept-card" href="Lebenslauf_app.html">
-                        <div class="dept-icon">📝</div>
-                        <h3 data-i18n="card_bewerbung_h3">Bewerbung schreiben</h3>
-                        <p data-i18n="card_bewerbung_p">Lebenslauf, Anschreiben, Deckblatt &amp; Bewerbungsmappe – mit KI-Schreibhilfe und frei wählbarem Design.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
+    <main class="breite" id="bereiche">
+            <section class="thema" style="--farbe:#2f5fd0" data-thema="arbeit">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="Lebenslauf_app.html" data-such="cv lebenslauf resume anschreiben deckblatt bewerbungsmappe job bewerbung schreiben write an application lebenslauf, anschreiben, deckblatt cv, cover letter, cover page">
+                        <span class="symbol" aria-hidden="true">📝</span>
+                        <span class="text"><b data-i18n="a_bewerbung">Bewerbung schreiben</b><small data-i18n="k_bewerbung">Lebenslauf, Anschreiben, Deckblatt</small></span>
                     </a>
-
-                    <a class="dept-card" href="schreibstudio/index.html">
-                        <div class="dept-icon">✉️</div>
-                        <h3 data-i18n="card_schreib_h3">Schreibstudio</h3>
-                        <p data-i18n="card_schreib_p">Kündigung, Entschuldigung &amp; formeller Brief – mit KI-Schreibhilfe, fertigen Mustern und PDF-Export.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
+                    <a class="kachel" href="bewerbungen/index.html" data-such="tracker status zusage absage nachfassen bewerbungs-tracker application tracker alle bewerbungen im blick keep track of all applications">
+                        <span class="symbol" aria-hidden="true">📌</span>
+                        <span class="text"><b data-i18n="a_tracker">Bewerbungs-Tracker</b><small data-i18n="k_tracker">Alle Bewerbungen im Blick</small></span>
                     </a>
-
-                    <a class="dept-card" href="pdf-studio/index.html">
-                        <div class="dept-icon">📄</div>
-                        <h3 data-i18n="card_pdf_h3">PDF-Werkzeuge</h3>
-                        <p data-i18n="card_pdf_p">PDFs zusammenfügen, bearbeiten, beschriften und für deine Bewerbung fertig machen – direkt im Browser.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="scanner/">
-                        <div class="dept-icon">📷</div>
-                        <h3 data-i18n="card_scanner_h3">Scanner</h3>
-                        <p data-i18n="card_scanner_p">Kamera startet sofort: der grüne Rahmen findet das Blatt, oder Fotos und Bilder importieren. Ecken mit Lupe nachziehen, fünf Filter (u. a. „Klar“ wie ClearScan), Seiten sortieren und drehen. Mehrere Seiten als PDF – mit Texterkennung durchsuchbar. Dazu QR-Codes und Barcodes lesen (Barcodes in Chrome, Edge und Android), Visitenkarten als Kontakt (.vcf) speichern, eine Ablage mit Suche und KI-Hilfe zum Zusammenfassen und Übersetzen. Scans bleiben auf dem Gerät gespeichert.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="passfoto/">
-                        <div class="dept-icon">🪪</div>
-                        <h3 data-i18n="card_foto_h3">Passfoto Studio</h3>
-                        <p data-i18n="card_foto_p">Pass- und Visumfotos für über 60 Dokumente (u. a. Deutschland/EU, Türkei, Afghanistan, Syrien, USA, UK): aufnehmen oder hochladen, automatischer Zuschnitt, Prüfung von Kopfgröße, Haltung, Augen, Licht und Hintergrund, Export als JPEG oder Druckbogen. Alles im Browser, kein Upload.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="assistent/index.html">
-                        <div class="dept-icon">🤖</div>
-                        <h3 data-i18n="card_assistent_h3">KI-Assistent</h3>
-                        <p data-i18n="card_assistent_p">Chatte mit einer KI zu Bewerbung, Lebenslauf, Briefen &amp; mehr – liest Dokumente, erstellt PDFs, übernimmt Angaben in deinen Lebenslauf. Wahlweise SD Lotse (lokal, ohne Schlüssel) oder Gemini, ChatGPT bzw. Claude mit eigenem Schlüssel.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="agent/index.html">
-                        <div class="dept-icon">🛠️</div>
-                        <h3 data-i18n="card_agent_h3">KI-Agent</h3>
-                        <p data-i18n="card_agent_p">Erledigt Aufgaben Schritt für Schritt: trägt Bewerbungen, Fristen und Steuer-Posten ein, baut Webseiten mit Live-Vorschau, rechnet mit Code, arbeitet auf Wunsch in einem Ordner am PC. Fragt vor jeder Änderung. Mit Gemini, ChatGPT oder Claude.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="bewerbungen/index.html">
-                        <div class="dept-icon">📌</div>
-                        <h3 data-i18n="card_tracker_h3">Bewerbungs-Tracker</h3>
-                        <p data-i18n="card_tracker_p">Alle Bewerbungen auf einen Blick: Status von „gemerkt“ bis „Zusage“, Fristen, Erinnerungen ans Nachfassen, Termine in den Kalender – und die Kosten mit einem Tipp in den Steuer-Helfer.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="post/index.html">
-                        <div class="dept-icon">📬</div>
-                        <h3 data-i18n="card_post_h3">Post-Assistent</h3>
-                        <p data-i18n="card_post_p">Brief fotografieren und verstehen – auch auf Türkisch, Arabisch, Ukrainisch u. a. Frist erkennen, Erinnerung in den Kalender, Antwort entwerfen und im Schreibstudio als Brief fertig machen.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="training/index.html">
-                        <div class="dept-icon">🎤</div>
-                        <h3 data-i18n="card_training_h3">Gesprächstraining</h3>
-                        <p data-i18n="card_training_p">Vorstellungsgespräch üben: Fragen passend zur Stelle, antworten per Sprache oder Text – und ehrliche Rückmeldung mit Beispielantwort. Standardfragen auch ohne KI.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="mappe/index.html">
-                        <div class="dept-icon">🗂️</div>
-                        <h3 data-i18n="card_mappe_h3">Dokumenten-Mappe</h3>
-                        <p data-i18n="card_mappe_p">Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.</p>
-                        <span id="mappeFaellig" hidden style="align-self:flex-start;background:#fff8e6;border:1px solid #f0d9a0;color:#8a5a00;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:bold;"></span>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="fristen/index.html">
-                        <div class="dept-icon">⏰</div>
-                        <h3 data-i18n="card_fristen_h3">Fristen-Übersicht</h3>
-                        <p data-i18n="card_fristen_p">Alle Termine an einem Ort: Fristen aus Briefen, Bewerbungen, offene Rechnungen, ablaufende Dokumente und letzte Kündigungstage – plus eigene Fristen. Mit einem Tipp alles in den Kalender.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="vertraege/index.html">
-                        <div class="dept-icon">📝</div>
-                        <h3 data-i18n="card_vertraege_h3">Verträge & Kündigungen</h3>
-                        <p data-i18n="card_vertraege_p">Handy, Strom, Internet, Fitness, Versicherungen: Kosten pro Monat und bis wann du kündigen musst. Kündigungsschreiben mit einem Tipp im Schreibstudio.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="haushalt/index.html">
-                        <div class="dept-icon">💶</div>
-                        <h3 data-i18n="card_haushalt_h3">Haushaltsbuch</h3>
-                        <p data-i18n="card_haushalt_p">Einnahmen und Ausgaben pro Monat, nach Kategorien – feste Verträge werden automatisch mitgerechnet. Export als CSV.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="stunden/index.html">
-                        <div class="dept-icon">⏱️</div>
-                        <h3 data-i18n="card_stunden_h3">Stundenzettel & Lohn</h3>
-                        <p data-i18n="card_stunden_p">Arbeitszeiten erfassen, Pausen nach Arbeitszeitgesetz prüfen, Brutto berechnen und mit Mindestlohn und Lohnabrechnung vergleichen.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="wohnung/index.html">
-                        <div class="dept-icon">🏠</div>
-                        <h3 data-i18n="card_wohnung_h3">Wohnungsbewerbung</h3>
-                        <p data-i18n="card_wohnung_p">Anschreiben an den Vermieter, Mieterselbstauskunft und Unterlagen aus der Dokumenten-Mappe als eine PDF – mit Hinweisen, was Vermieter fragen dürfen.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="anerkennung/index.html">
-                        <div class="dept-icon">🎓</div>
-                        <h3 data-i18n="card_anerkennung_h3">Anerkennung von Abschlüssen</h3>
-                        <p data-i18n="card_anerkennung_p">Ausländische Ausbildung, Studium oder Schulabschluss anerkennen lassen: Wegweiser mit offiziellen Quellen, Checkliste und kostenloser Beratung.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="rechnungen/index.html">
-                        <div class="dept-icon">🧾</div>
-                        <h3 data-i18n="card_rechnung_h3">Rechnungen</h3>
-                        <p data-i18n="card_rechnung_p">Rechnungen schreiben – mit Pflichtangaben-Check, Kleinunternehmer-Hinweis und PDF – und erhaltene Rechnungen mit Fälligkeit im Blick behalten. Handwerker-Arbeitskosten mit einem Tipp in den Steuer-Helfer.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
-                    </a>
-
-                    <a class="dept-card" href="steuer/index.html">
-                        <div class="dept-icon">🧾</div>
-                        <h3 data-i18n="card_steuer_h3">Steuer-Helfer</h3>
-                        <p data-i18n="card_steuer_p">Werbungskosten, Bewerbungskosten, Kinderbetreuung, Spenden und Handwerker sammeln und berechnen – mit Zusammenfassung für Mein ELSTER. Belege per Foto erfassen. Daten bleiben auf deinem Gerät; keine Steuerberatung.</p>
-                        <span class="dept-link">Bereich öffnen →</span>
+                    <a class="kachel" href="training/index.html" data-such="interview vorstellungsgespräch üben fragen gesprächstraining interview practice vorstellungsgespräch üben practise your job interview">
+                        <span class="symbol" aria-hidden="true">🎤</span>
+                        <span class="text"><b data-i18n="a_training">Gesprächstraining</b><small data-i18n="k_training">Vorstellungsgespräch üben</small></span>
                     </a>
                 </div>
             </section>
-
-            <section class="section" id="features">
-                <div class="section-head">
-                    <h2 data-i18n="features_h2">Warum SD Bewerbungsstudio?</h2>
-                    <p data-i18n="features_lead">Moderne, einfache, professionelle Gestaltung mit lokalem, unkompliziertem Start.</p>
-                </div>
-
-                <div class="feature-grid">
-                    <article class="feature">
-                        <div class="feature-badge">⚡</div>
-                        <h3 data-i18n="feat1_h3">Schneller Einstieg</h3>
-                        <p data-i18n="feat1_p">Die App startet direkt und ist sofort im Browser nutzbar. Keine aufwendige Einrichtung erforderlich.</p>
-                    </article>
-
-                    <article class="feature">
-                        <div class="feature-badge">🧩</div>
-                        <h3 data-i18n="feat2_h3">Für alle Geräte</h3>
-                        <p data-i18n="feat2_p">Optimiert für Desktop-Nutzung und kompatibel mit verschiedenen Betriebssystemen.</p>
-                    </article>
-
-                    <article class="feature">
-                        <div class="feature-badge">🛡️</div>
-                        <h3 data-i18n="feat3_h3">Lokale Sicherheit</h3>
-                        <p data-i18n="feat3_p">Alles läuft lokal auf dem Rechner. So bleibt der Workflow klar, schnell und kontrolliert.</p>
-                    </article>
+            <section class="thema" style="--farbe:#c2410c" data-thema="post">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_post">Briefe &amp; Ämter</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="post/index.html" data-such="brief behörde amt jobcenter frist mahnung verstehen übersetzen letter post-assistent letter assistant briefe verstehen – in deiner sprache understand letters – in your language">
+                        <span class="symbol" aria-hidden="true">📬</span>
+                        <span class="text"><b data-i18n="a_post">Post-Assistent</b><small data-i18n="k_post">Briefe verstehen – in deiner Sprache</small></span>
+                    </a>
+                    <a class="kachel" href="schreibstudio/index.html" data-such="brief kündigung schreiben entschuldigung widerspruch letter schreibstudio writing studio kündigung und briefe schreiben write cancellations and letters">
+                        <span class="symbol" aria-hidden="true">✉️</span>
+                        <span class="text"><b data-i18n="a_schreib">Schreibstudio</b><small data-i18n="k_schreib">Kündigung und Briefe schreiben</small></span>
+                    </a>
+                    <a class="kachel" href="fristen/index.html" data-such="frist termin kalender erinnerung deadline fristen-übersicht deadline overview alle termine an einem ort all dates in one place">
+                        <span class="symbol" aria-hidden="true">⏰</span>
+                        <span class="text"><b data-i18n="a_fristen">Fristen-Übersicht</b><small data-i18n="k_fristen">Alle Termine an einem Ort</small></span>
+                    </a>
                 </div>
             </section>
-
-            <section class="section" id="downloads">
-                <div class="section-head">
-                    <h2 data-i18n="downloads_h2">Downloads</h2>
-                    <p data-i18n="downloads_lead">Wähle die passende Version für dein System und starte sofort in die Bewerbung.</p>
-                </div>
-
-                <div class="download-wrap">
-                    <div class="download-card">
-                        <h3 data-i18n="dl_win_h3">Windows</h3>
-                        <p data-i18n="dl_win_p">PowerShell-Version mit automatischem Browser-Start und einfacher Nutzung.</p>
-                        <a href="SD-Bewerbungsstudio-Windows.zip">Windows ZIP</a>
-                    </div>
-
-                    <div class="download-card">
-                        <h3 data-i18n="dl_mac_h3">macOS</h3>
-                        <p data-i18n="dl_mac_p">Startskript für macOS mit Python 3 und Direktzugriff zur App.</p>
-                        <a href="SD-Bewerbungsstudio-macOS.zip">macOS ZIP</a>
-                    </div>
-
-                    <div class="download-card">
-                        <h3 data-i18n="dl_linux_h3">Linux</h3>
-                        <p data-i18n="dl_linux_p">Linux-Startskript für die lokale App-Öffnung im Browser.</p>
-                        <a href="SD-Bewerbungsstudio-Linux.zip">Linux ZIP</a>
-                    </div>
+            <section class="thema" style="--farbe:#1f7a4d" data-thema="geld">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_geld">Geld</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="stunden/index.html" data-such="stunden lohn mindestlohn minijob pause arbeitszeit gehalt wage hours stundenzettel &amp; lohn timesheet &amp; pay arbeitszeit und lohn prüfen check working hours and pay">
+                        <span class="symbol" aria-hidden="true">⏱️</span>
+                        <span class="text"><b data-i18n="a_stunden">Stundenzettel &amp; Lohn</b><small data-i18n="k_stunden">Arbeitszeit und Lohn prüfen</small></span>
+                    </a>
+                    <a class="kachel" href="steuer/index.html" data-such="steuer elster werbungskosten finanzamt tax steuer-helfer tax helper steuererklärung vorbereiten prepare your tax return">
+                        <span class="symbol" aria-hidden="true">🧮</span>
+                        <span class="text"><b data-i18n="a_steuer">Steuer-Helfer</b><small data-i18n="k_steuer">Steuererklärung vorbereiten</small></span>
+                    </a>
+                    <a class="kachel" href="rechnungen/index.html" data-such="rechnung invoice kleinunternehmer bezahlen rechnungen invoices rechnungen schreiben und bezahlen write and pay invoices">
+                        <span class="symbol" aria-hidden="true">🧾</span>
+                        <span class="text"><b data-i18n="a_rechnungen">Rechnungen</b><small data-i18n="k_rechnungen">Rechnungen schreiben und bezahlen</small></span>
+                    </a>
+                    <a class="kachel" href="haushalt/index.html" data-such="haushalt budget geld ausgaben einnahmen sparen money haushaltsbuch household budget einnahmen und ausgaben income and expenses">
+                        <span class="symbol" aria-hidden="true">💶</span>
+                        <span class="text"><b data-i18n="a_haushalt">Haushaltsbuch</b><small data-i18n="k_haushalt">Einnahmen und Ausgaben</small></span>
+                    </a>
+                    <a class="kachel" href="vertraege/index.html" data-such="vertrag kündigen handy strom fitness versicherung contract cancel verträge contracts kosten und kündigungsfristen costs and notice periods">
+                        <span class="symbol" aria-hidden="true">📑</span>
+                        <span class="text"><b data-i18n="a_vertraege">Verträge</b><small data-i18n="k_vertraege">Kosten und Kündigungsfristen</small></span>
+                    </a>
                 </div>
             </section>
-
-            <section class="section" id="start">
-                <div class="section-head">
-                    <h2 data-i18n="start_h2">Direkt starten</h2>
-                    <p data-i18n="start_lead">Öffne die App sofort oder nutze die passende Download-Version für dein System.</p>
-                </div>
-
-                <div class="cta-row">
-                    <a class="button primary" href="#bereiche" data-i18n="start_app_btn">App auswählen</a>
-                    <a class="button secondary" href="anleitung.html" data-i18n="start_anleitung_btn">Anleitung lesen</a>
+            <section class="thema" style="--farbe:#6d3fd4" data-thema="doku">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_doku">Dokumente &amp; Fotos</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="scanner/" data-such="scan scannen kamera qr barcode visitenkarte scanner scanner dokumente mit dem handy scannen scan documents with your phone">
+                        <span class="symbol" aria-hidden="true">📷</span>
+                        <span class="text"><b data-i18n="a_scanner">Scanner</b><small data-i18n="k_scanner">Dokumente mit dem Handy scannen</small></span>
+                    </a>
+                    <a class="kachel" href="pdf-studio/index.html" data-such="pdf bearbeiten unterschrift unterschreiben zusammenfügen word excel pdf-studio pdf studio pdfs bearbeiten und unterschreiben edit and sign pdfs">
+                        <span class="symbol" aria-hidden="true">📄</span>
+                        <span class="text"><b data-i18n="a_pdf">PDF-Studio</b><small data-i18n="k_pdf">PDFs bearbeiten und unterschreiben</small></span>
+                    </a>
+                    <a class="kachel" href="passfoto/" data-such="passfoto passbild biometrisch visum ausweis photo passfoto passport photo passbilder für viele länder passport photos for many countries">
+                        <span class="symbol" aria-hidden="true">📸</span>
+                        <span class="text"><b data-i18n="a_passfoto">Passfoto</b><small data-i18n="k_passfoto">Passbilder für viele Länder</small></span>
+                    </a>
+                    <a class="kachel" href="mappe/index.html" data-such="mappe dokumente ausweis pass aufenthaltstitel ablauf documents dokumenten-mappe document folder ausweis &amp; co. mit ablauf-erinnerung id &amp; more with expiry reminders">
+                        <span class="symbol" aria-hidden="true">🗂️</span>
+                        <span class="text"><b data-i18n="a_mappe">Dokumenten-Mappe</b><small data-i18n="k_mappe">Ausweis &amp; Co. mit Ablauf-Erinnerung</small><span class="hinweis-badge" id="mappeFaellig" hidden></span></span>
+                    </a>
                 </div>
             </section>
-        </main>
+            <section class="thema" style="--farbe:#b4235a" data-thema="wohnen">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="anerkennung/index.html" data-such="abschluss diplom zeugnis studium ausbildung anerkennung zab recognition degree anerkennung recognition ausländische abschlüsse anerkennen get foreign qualifications recognised">
+                        <span class="symbol" aria-hidden="true">🎓</span>
+                        <span class="text"><b data-i18n="a_anerkennung">Anerkennung</b><small data-i18n="k_anerkennung">Ausländische Abschlüsse anerkennen</small></span>
+                    </a>
+                    <a class="kachel" href="wohnung/index.html" data-such="wohnung miete vermieter selbstauskunft schufa flat rent wohnungsbewerbung flat application bewerbung beim vermieter apply to a landlord">
+                        <span class="symbol" aria-hidden="true">🏠</span>
+                        <span class="text"><b data-i18n="a_wohnung">Wohnungsbewerbung</b><small data-i18n="k_wohnung">Bewerbung beim Vermieter</small></span>
+                    </a>
+                </div>
+            </section>
+            <section class="thema" style="--farbe:#0e7490" data-thema="ki">
+                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_ki">KI-Helfer</span></h2>
+                <div class="kacheln">
+                    <a class="kachel" href="assistent/index.html" data-such="ki chat assistent lotse gemini chatgpt claude ai ki-assistent ai assistant fragen stellen, texte verbessern ask questions, improve texts">
+                        <span class="symbol" aria-hidden="true">💬</span>
+                        <span class="text"><b data-i18n="a_assistent">KI-Assistent</b><small data-i18n="k_assistent">Fragen stellen, Texte verbessern</small></span>
+                    </a>
+                    <a class="kachel" href="agent/index.html" data-such="agent ki automatisch code ai ki-agent ai agent erledigt aufgaben schritt für schritt does tasks step by step">
+                        <span class="symbol" aria-hidden="true">🤖</span>
+                        <span class="text"><b data-i18n="a_agent">KI-Agent</b><small data-i18n="k_agent">Erledigt Aufgaben Schritt für Schritt</small></span>
+                    </a>
+                </div>
+            </section>
+            <p class="nichts" id="nichts" hidden data-i18n="nichts">Dazu haben wir noch keinen Helfer. Versuch ein anderes Wort – oder frag den KI-Assistenten.</p>
 
-        <footer class="footer">
-            <span data-i18n="footer_txt">SD Bewerbungsstudio • Professionelle Bewerbungslösung für Windows, macOS und Linux</span>
-            · <a href="datenschutz.html" style="color:inherit;text-decoration:underline;" data-i18n="footer_datenschutz">Datenschutz</a>
-        </footer>
-    </div>
+            <section class="versprechen" aria-label="So funktioniert die Seite">
+                <div><h3 data-i18n="v1_h">Ohne Installation</h3><p data-i18n="v1_p">Läuft im Browser – am Handy und am Computer.</p></div>
+                <div><h3 data-i18n="v2_h">Ohne Anmeldung</h3><p data-i18n="v2_p">Ein Konto brauchst du nur, wenn du Daten in der Cloud sichern willst.</p></div>
+                <div><h3 data-i18n="v3_h">Deine Daten bleiben bei dir</h3><p data-i18n="v3_p">Gespeichert wird auf deinem Gerät. Nur wenn du eine Online-KI oder die Cloud nutzt, wird etwas gesendet.</p></div>
+            </section>
+
+            <section class="mitnehmen" id="downloads">
+                <div><h3 data-i18n="dl_h">Für den Computer zum Mitnehmen</h3><p data-i18n="dl_p">Die Bewerbungs-App als Download – startet lokal im Browser.</p></div>
+                <a href="SD-Bewerbungsstudio-Windows.zip">Windows</a>
+                <a href="SD-Bewerbungsstudio-macOS.zip">macOS</a>
+                <a href="SD-Bewerbungsstudio-Linux.zip">Linux</a>
+            </section>
+    </main>
+
+    <footer>
+        <div class="breite">
+            <span>SD Bewerbungsstudio · thesdhub.com</span>
+            <a href="anleitung.html" data-i18n="anleitung">Anleitung</a>
+            <a href="datenschutz.html" data-i18n="datenschutz">Datenschutz</a>
+            <a href="impressum.html" data-i18n="impressum">Impressum</a>
+            <a href="agb.html" data-i18n="agb">AGB</a>
+        </div>
+    </footer>
+
+    <script>
+        window.SD_I18N = {
+ "de": {
+  "titel": "SD Bewerbungsstudio – Papierkram in Deutschland, einfach erledigt",
+  "h1": "Papierkram in Deutschland – einfach erledigt.",
+  "lead": "19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch.",
+  "suche_ph": "Was möchtest du tun?",
+  "suche_label": "Helfer suchen",
+  "q_cv": "Lebenslauf schreiben",
+  "q_brief": "Brief verstehen",
+  "q_foto": "Passfoto machen",
+  "q_scan": "Dokument scannen",
+  "q_kuendigen": "Vertrag kündigen",
+  "nichts": "Dazu haben wir noch keinen Helfer. Versuch ein anderes Wort – oder frag den KI-Assistenten.",
+  "v1_h": "Ohne Installation",
+  "v1_p": "Läuft im Browser – am Handy und am Computer.",
+  "v2_h": "Ohne Anmeldung",
+  "v2_p": "Ein Konto brauchst du nur, wenn du Daten in der Cloud sichern willst.",
+  "v3_h": "Deine Daten bleiben bei dir",
+  "v3_p": "Gespeichert wird auf deinem Gerät. Nur wenn du eine Online-KI oder die Cloud nutzt, wird etwas gesendet.",
+  "dl_h": "Für den Computer zum Mitnehmen",
+  "dl_p": "Die Bewerbungs-App als Download – startet lokal im Browser.",
+  "anleitung": "Anleitung",
+  "datenschutz": "Datenschutz",
+  "impressum": "Impressum",
+  "agb": "AGB",
+  "mappe_faellig": "⏰ {n} bald fällig",
+  "lang_hint": "Sprache",
+  "update": "Eine neue Version ist da.",
+  "update_btn": "Neu laden",
+  "oeffnen": "öffnen",
+  "t_arbeit": "Arbeit & Bewerbung",
+  "t_post": "Briefe & Ämter",
+  "t_geld": "Geld",
+  "t_doku": "Dokumente & Fotos",
+  "t_wohnen": "Wohnen & Ankommen",
+  "t_ki": "KI-Helfer",
+  "a_bewerbung": "Bewerbung schreiben",
+  "k_bewerbung": "Lebenslauf, Anschreiben, Deckblatt",
+  "a_tracker": "Bewerbungs-Tracker",
+  "k_tracker": "Alle Bewerbungen im Blick",
+  "a_training": "Gesprächstraining",
+  "k_training": "Vorstellungsgespräch üben",
+  "a_anerkennung": "Anerkennung",
+  "k_anerkennung": "Ausländische Abschlüsse anerkennen",
+  "a_stunden": "Stundenzettel & Lohn",
+  "k_stunden": "Arbeitszeit und Lohn prüfen",
+  "a_post": "Post-Assistent",
+  "k_post": "Briefe verstehen – in deiner Sprache",
+  "a_schreib": "Schreibstudio",
+  "k_schreib": "Kündigung und Briefe schreiben",
+  "a_fristen": "Fristen-Übersicht",
+  "k_fristen": "Alle Termine an einem Ort",
+  "a_steuer": "Steuer-Helfer",
+  "k_steuer": "Steuererklärung vorbereiten",
+  "a_rechnungen": "Rechnungen",
+  "k_rechnungen": "Rechnungen schreiben und bezahlen",
+  "a_haushalt": "Haushaltsbuch",
+  "k_haushalt": "Einnahmen und Ausgaben",
+  "a_vertraege": "Verträge",
+  "k_vertraege": "Kosten und Kündigungsfristen",
+  "a_scanner": "Scanner",
+  "k_scanner": "Dokumente mit dem Handy scannen",
+  "a_pdf": "PDF-Studio",
+  "k_pdf": "PDFs bearbeiten und unterschreiben",
+  "a_passfoto": "Passfoto",
+  "k_passfoto": "Passbilder für viele Länder",
+  "a_mappe": "Dokumenten-Mappe",
+  "k_mappe": "Ausweis & Co. mit Ablauf-Erinnerung",
+  "a_wohnung": "Wohnungsbewerbung",
+  "k_wohnung": "Bewerbung beim Vermieter",
+  "a_assistent": "KI-Assistent",
+  "k_assistent": "Fragen stellen, Texte verbessern",
+  "a_agent": "KI-Agent",
+  "k_agent": "Erledigt Aufgaben Schritt für Schritt"
+ },
+ "en": {
+  "titel": "SD Bewerbungsstudio – paperwork in Germany, made easy",
+  "h1": "Paperwork in Germany – made easy.",
+  "lead": "19 helpers for applications, letters, money and documents. Right in your browser, in German and English.",
+  "suche_ph": "What do you want to do?",
+  "suche_label": "Search helpers",
+  "q_cv": "Write a CV",
+  "q_brief": "Understand a letter",
+  "q_foto": "Passport photo",
+  "q_scan": "Scan a document",
+  "q_kuendigen": "Cancel a contract",
+  "nichts": "We don’t have a helper for that yet. Try another word – or ask the AI assistant.",
+  "v1_h": "No installation",
+  "v1_p": "Runs in the browser – on your phone and computer.",
+  "v2_h": "No sign-up",
+  "v2_p": "You only need an account if you want to back up data in the cloud.",
+  "v3_h": "Your data stays with you",
+  "v3_p": "Saved on your device. Only when you use an online AI or the cloud is anything sent.",
+  "dl_h": "Take it to your computer",
+  "dl_p": "The application app as a download – starts locally in your browser.",
+  "anleitung": "Guide",
+  "datenschutz": "Privacy",
+  "impressum": "Legal notice",
+  "agb": "Terms",
+  "mappe_faellig": "⏰ {n} due soon",
+  "lang_hint": "Language",
+  "update": "A new version is available.",
+  "update_btn": "Reload",
+  "oeffnen": "open",
+  "t_arbeit": "Work & applications",
+  "t_post": "Letters & authorities",
+  "t_geld": "Money",
+  "t_doku": "Documents & photos",
+  "t_wohnen": "Housing & settling in",
+  "t_ki": "AI helpers",
+  "a_bewerbung": "Write an application",
+  "k_bewerbung": "CV, cover letter, cover page",
+  "a_tracker": "Application tracker",
+  "k_tracker": "Keep track of all applications",
+  "a_training": "Interview practice",
+  "k_training": "Practise your job interview",
+  "a_anerkennung": "Recognition",
+  "k_anerkennung": "Get foreign qualifications recognised",
+  "a_stunden": "Timesheet & pay",
+  "k_stunden": "Check working hours and pay",
+  "a_post": "Letter assistant",
+  "k_post": "Understand letters – in your language",
+  "a_schreib": "Writing studio",
+  "k_schreib": "Write cancellations and letters",
+  "a_fristen": "Deadline overview",
+  "k_fristen": "All dates in one place",
+  "a_steuer": "Tax helper",
+  "k_steuer": "Prepare your tax return",
+  "a_rechnungen": "Invoices",
+  "k_rechnungen": "Write and pay invoices",
+  "a_haushalt": "Household budget",
+  "k_haushalt": "Income and expenses",
+  "a_vertraege": "Contracts",
+  "k_vertraege": "Costs and notice periods",
+  "a_scanner": "Scanner",
+  "k_scanner": "Scan documents with your phone",
+  "a_pdf": "PDF studio",
+  "k_pdf": "Edit and sign PDFs",
+  "a_passfoto": "Passport photo",
+  "k_passfoto": "Passport photos for many countries",
+  "a_mappe": "Document folder",
+  "k_mappe": "ID & more with expiry reminders",
+  "a_wohnung": "Flat application",
+  "k_wohnung": "Apply to a landlord",
+  "a_assistent": "AI assistant",
+  "k_assistent": "Ask questions, improve texts",
+  "a_agent": "AI agent",
+  "k_agent": "Does tasks step by step"
+ }
+};
+    </script>
     <script src="./i18n.js?v=1"></script>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-            // Zeigt einen Hinweis, sobald im Hintergrund eine neue Version geladen wurde,
-            // damit der Besucher die Seite aktualisieren kann statt eine alte Version zu behalten.
-            navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
-        }
-        function sdUpdateBereit() {
-            if (document.getElementById('sd-update-banner')) return;
-            const b = document.createElement('div');
-            b.id = 'sd-update-banner';
-            b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#1c4a42;color:#f4ead0;padding:12px 16px;text-align:center;font-family:inherit;font-size:0.95rem;box-shadow:0 -2px 10px rgba(0,0,0,.35);';
-            b.innerHTML = '🔄 Eine neue Version ist verfügbar. <button id="sd-update-btn" style="margin-left:10px;padding:6px 14px;border:0;border-radius:6px;background:#c9a86a;color:#1c2e2a;font-weight:bold;cursor:pointer;">Jetzt aktualisieren</button>';
-            document.body.appendChild(b);
-            document.getElementById('sd-update-btn').onclick = () => location.reload();
-        }
-    </script>
-    <script>
-        // Hinweis auf der Mappe-Karte: wie viele Dokumente bald ablaufen (Zahl legt die Mappe selbst ab)
         (function () {
-            function zeige() {
+            'use strict';
+            const T = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+
+            // Register-Reiter aus den Themen bauen
+            const reiter = document.getElementById('reiter');
+            function baueReiter() {
+                reiter.innerHTML = '';
+                document.querySelectorAll('.thema').forEach(function (s) {
+                    s.id = 'thema-' + s.dataset.thema;
+                    const a = document.createElement('a');
+                    a.href = '#' + s.id;
+                    a.style.setProperty('--farbe', getComputedStyle(s).getPropertyValue('--farbe'));
+                    a.textContent = T()['t_' + s.dataset.thema];
+                    reiter.appendChild(a);
+                });
+            }
+
+            // Suche: Kacheln nach Wort filtern (Name, Kurztext, Stichwoerter in beiden Sprachen)
+            const feld = document.getElementById('suche');
+            function filtern() {
+                const q = feld.value.trim().toLowerCase();
+                const woerter = q.split(/\s+/).filter(Boolean);
+                let treffer = 0;
+                document.querySelectorAll('.thema').forEach(function (s) {
+                    let sichtbar = 0;
+                    s.querySelectorAll('.kachel').forEach(function (k) {
+                        const text = (k.dataset.such + ' ' + k.textContent).toLowerCase();
+                        const ok = woerter.every(function (w) { return text.indexOf(w) !== -1; });
+                        k.hidden = !ok;
+                        if (ok) sichtbar++;
+                    });
+                    s.hidden = sichtbar === 0;
+                    treffer += sichtbar;
+                });
+                document.getElementById('nichts').hidden = treffer > 0;
+            }
+            feld.addEventListener('input', filtern);
+            feld.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter') return;
+                const erste = document.querySelector('.kachel:not([hidden])');
+                if (erste && feld.value.trim()) { e.preventDefault(); erste.click(); }
+            });
+
+            // Hinweis auf der Mappe-Kachel: wie viele Dokumente bald ablaufen (Zahl legt die Mappe selbst ab)
+            function mappeHinweis() {
                 const el = document.getElementById('mappeFaellig');
                 if (!el) return;
                 let n = 0;
                 try { n = parseInt(localStorage.getItem('sdMappeFaellig') || '0', 10) || 0; } catch (e) { /* ok */ }
-                const d = (window.SD_I18N && window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de']) || {};
                 el.hidden = n < 1;
-                el.textContent = String(d.mappe_faellig || '⏰ {n}').split('{n}').join(n);
+                el.textContent = String(T().mappe_faellig).split('{n}').join(n);
             }
-            document.addEventListener('sd-lang-changed', zeige);
-            zeige();
+
+            document.addEventListener('sd-lang-changed', function () { baueReiter(); mappeHinweis(); });
+            baueReiter();
+            mappeHinweis();
         })();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+            // Hinweis, sobald im Hintergrund eine neue Version geladen wurde
+            navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
+        }
+        function sdUpdateBereit() {
+            if (document.getElementById('sd-update-banner')) return;
+            const d = window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+            const b = document.createElement('div');
+            b.id = 'sd-update-banner';
+            b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#0f3d3a;color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));text-align:center;font-size:0.95rem;';
+            b.textContent = '🔄 ' + d.update + ' ';
+            const knopf = document.createElement('button');
+            knopf.textContent = d.update_btn;
+            knopf.style.cssText = 'margin-left:10px;padding:7px 14px;border:0;border-radius:8px;background:#f2c14e;color:#12212b;font-weight:bold;cursor:pointer;';
+            knopf.onclick = function () { location.reload(); };
+            b.appendChild(knopf);
+            document.body.appendChild(b);
+        }
     </script>
 </body>
 </html>
