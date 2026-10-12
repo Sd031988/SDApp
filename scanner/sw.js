@@ -1,4 +1,4 @@
-const VERSION = "dokument-scanner-v12";
+const VERSION = "dokument-scanner-v13";
 const SHELL = [
   "./",
   "./index.html",

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Dokumenten-Mappe</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Wichtige Dokumente sicher auf dem eigenen Gerät: Ausweis, Pass, Aufenthaltstitel, Zeugnisse, Verträge – mit Erinnerung, bevor etwas abläuft.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <style>
+        :root { --ink: #172a3a; --muted: #647482; --accent: #2f7d72; --accent-dark: #1c4a42; --accent-soft: #dcece7; --paper: #fffdf8; --line: #d8e0dc; --warn-bg: #fff8e6; --warn-line: #f0d9a0; --warn-ink: #8a5a00; --danger: #b42318; --danger-bg: #fdf0ee; }
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        body { margin: 0; font-family: 'Trebuchet MS', Verdana, sans-serif; background: linear-gradient(135deg, #e9eee9 0%, #f7f4ee 100%); color: var(--ink); min-height: 100dvh; }
+        .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; background: #fff; border-bottom: 1px solid var(--line); }
+        .back-link { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .sd-logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #1c4a42, #0f2e29); color: #fff; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; flex: 0 0 auto; }
+        .brand strong { font-family: Georgia, serif; font-size: 1.1rem; display: block; }
+        .brand small { color: var(--muted); font-size: .75rem; }
+        .sd-lang-switch { display: flex; gap: 4px; background: rgba(23, 42, 58, .06); border: 1px solid rgba(23, 42, 58, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--muted); font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+        .sd-lang-btn.active { background: var(--accent); color: #fff; }
+        @media (max-width: 520px) { .brand small, .sd-logo { display: none; } }
+
+        main { max-width: 820px; margin: 0 auto; padding: 14px 16px 110px; display: grid; gap: 14px; }
+        .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+        .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.1rem; }
+        .info { color: var(--muted); font-size: .82rem; line-height: 1.5; margin: 0; }
+        label.feld { display: grid; gap: 4px; font-size: .82rem; font-weight: bold; min-width: 0; }
+        label.feld small { font-weight: normal; color: var(--muted); }
+        input[type=text], input[type=date], input[type=search], select, textarea { width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); min-width: 0; }
+        textarea { resize: vertical; line-height: 1.5; }
+        .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 560px) { .zeile { grid-template-columns: 1fr; } }
+        .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .btn { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: 9px 14px; min-height: 44px; font: inherit; font-weight: bold; font-size: .9rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn.prim { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn.klein { min-height: 36px; padding: 5px 10px; font-size: .82rem; }
+        .btn.gefahr { color: var(--danger); border-color: #f1c4bf; }
+        .btn:disabled { opacity: .5; cursor: default; }
+        .hinweis { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 10px; padding: 10px 12px; font-size: .84rem; line-height: 1.5; margin: 0; }
+        .fehler { background: var(--danger-bg); border: 1px solid #f1c4bf; color: var(--danger); border-radius: 10px; padding: 10px 12px; font-size: .88rem; }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .84rem; cursor: pointer; }
+        .chip.an { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        .liste { display: grid; gap: 10px; }
+        .doc { border: 1px solid var(--line); border-radius: 12px; background: #fff; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 10px; cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+        .doc:hover { border-color: var(--accent); }
+        .doc .vorschau { width: 64px; height: 64px; border-radius: 8px; background: var(--accent-soft); display: grid; place-items: center; font-size: 1.7rem; overflow: hidden; }
+        .doc .vorschau img { width: 100%; height: 100%; object-fit: cover; }
+        .doc .text { min-width: 0; display: grid; gap: 4px; align-content: start; }
+        .doc b { overflow-wrap: anywhere; }
+        .doc .meta { color: var(--muted); font-size: .8rem; overflow-wrap: anywhere; }
+        .ampel { justify-self: start; font-size: .78rem; font-weight: bold; border-radius: 999px; padding: 2px 9px; background: var(--accent-soft); color: var(--accent-dark); }
+        .ampel.bald { background: var(--warn-bg); color: var(--warn-ink); }
+        .ampel.ab { background: var(--danger-bg); color: var(--danger); }
+        .ampel.ohne { background: #eef1f3; color: var(--muted); }
+        .leer { text-align: center; color: var(--muted); font-size: .9rem; padding: 18px 8px; }
+
+        .faellig { border: 2px solid var(--warn-line); background: var(--warn-bg); }
+        .faellig.ab { border-color: #f1c4bf; background: var(--danger-bg); }
+        .faellig-zeile { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .9rem; }
+
+        dialog { border: 0; border-radius: 16px; padding: 0; width: min(680px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); color: var(--ink); }
+        dialog::backdrop { background: rgba(15, 23, 42, .55); }
+        .dlg { display: grid; gap: 12px; padding: 16px; }
+        .dlg-kopf { display: flex; align-items: center; gap: 10px; }
+        .dlg-kopf h2 { margin: 0; flex: 1; font-family: Georgia, serif; font-size: 1.1rem; overflow-wrap: anywhere; }
+        .x { border: 0; background: #eef1f3; width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; flex: 0 0 auto; }
+        .dateien { display: flex; flex-wrap: wrap; gap: 8px; }
+        .datei { position: relative; width: 92px; height: 116px; border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; display: grid; place-items: center; font-size: .72rem; text-align: center; padding: 4px; overflow-wrap: anywhere; cursor: pointer; }
+        .datei img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .datei .weg { position: absolute; right: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(23, 42, 58, .8); color: #fff; cursor: pointer; font-size: .9rem; line-height: 1; z-index: 1; }
+        .fakten { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: .9rem; margin: 0; }
+        .fakten dt { color: var(--muted); }
+        .fakten dd { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
+        #scannerRahmen { position: fixed; inset: 0; z-index: 50; background: #05070a; }
+        #scannerRahmen iframe { border: 0; width: 100%; height: 100%; display: block; }
+        #bildAnsicht { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .9); display: grid; place-items: center; padding: 12px; }
+        #bildAnsicht img { max-width: 100%; max-height: calc(100dvh - 90px); border-radius: 6px; background: #fff; }
+        #bildAnsicht .knoepfe { position: absolute; left: 0; right: 0; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); justify-content: center; }
+        .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: #172a3a; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: .88rem; z-index: 70; max-width: calc(100vw - 32px); text-align: center; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Dokumenten-Mappe</strong><small data-i18n="untertitel">Wichtige Papiere an einem Ort – mit Ablauf-Erinnerung</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte faellig" id="faelligKarte" hidden>
+            <h2 data-i18n="faellig_titel">⏰ Bald fällig</h2>
+            <div class="liste" id="faelligListe"></div>
+        </section>
+
+        <section class="karte">
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="neuBtn" data-i18n="neu">＋ Dokument hinzufügen</button>
+                <input type="search" id="suche" data-i18n-placeholder="suche_ph" placeholder="Suchen …" style="flex:1; min-width:160px;">
+            </div>
+            <div class="chips" id="filterChips"></div>
+            <div class="liste" id="liste"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="sicher_titel">🔒 Wo liegen meine Dokumente?</h2>
+            <p class="info" data-i18n="sicher_text">Nur in diesem Browser auf diesem Gerät. Nichts wird hochgeladen. Löschst du die Browserdaten oder wechselst das Gerät, sind die Dokumente weg – mach deshalb ab und zu eine Sicherung.</p>
+            <p class="info" id="speicherInfo"></p>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="sichernBtn" data-i18n="sichern">💾 Sicherung speichern</button>
+                <button type="button" class="btn" id="ladenBtn" data-i18n="laden">📂 Sicherung laden</button>
+                <input type="file" id="ladenInput" accept=".json,application/json" hidden>
+            </div>
+        </section>
+    </main>
+
+    <!-- Dokument ansehen -->
+    <dialog id="ansicht">
+        <div class="dlg">
+            <div class="dlg-kopf"><h2 id="ansTitel"></h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <span class="ampel" id="ansAmpel"></span>
+            <dl class="fakten" id="ansFakten"></dl>
+            <div class="dateien" id="ansDateien"></div>
+            <div class="knoepfe" id="ansAktionen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="ansBearbeiten" data-i18n="bearbeiten">✏️ Bearbeiten</button>
+                <button type="button" class="btn" id="ansKalender" data-i18n="kalender">📅 Erinnerung in den Kalender</button>
+                <button type="button" class="btn gefahr" id="ansLoeschen" data-i18n="loeschen">🗑 Löschen</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Dokument bearbeiten -->
+    <dialog id="editor">
+        <form class="dlg" id="editorForm">
+            <div class="dlg-kopf"><h2 id="edTitel" data-i18n="ed_neu">Dokument hinzufügen</h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_art">Art</span><select id="fArt"></select></label>
+                <label class="feld"><span data-i18n="f_person">Für wen?</span><input type="text" id="fPerson" list="personen" maxlength="60" data-i18n-placeholder="f_person_ph" placeholder="z. B. ich, Tochter Aylin"></label>
+            </div>
+            <datalist id="personen"></datalist>
+            <label class="feld"><span data-i18n="f_titel">Bezeichnung</span><input type="text" id="fTitel" maxlength="100" data-i18n-placeholder="f_titel_ph" placeholder="z. B. Reisepass, Arbeitsvertrag Firma X"></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_ausgestellt">Ausgestellt am</span><input type="date" id="fAusgestellt"></label>
+                <label class="feld"><span data-i18n="f_gueltig">Gültig bis / endet am</span><small data-i18n="f_gueltig_hilfe">leer lassen, wenn unbefristet</small><input type="date" id="fGueltig"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_erinnern">Erinnern</span><select id="fErinnern"></select></label>
+                <label class="feld"><span data-i18n="f_nummer">Nummer / Aktenzeichen</span><small data-i18n="f_nummer_hilfe">freiwillig</small><input type="text" id="fNummer" maxlength="60" autocomplete="off"></label>
+            </div>
+            <label class="feld"><span data-i18n="f_notiz">Notiz</span><textarea id="fNotiz" rows="2" maxlength="1000" data-i18n-placeholder="f_notiz_ph" placeholder="z. B. Original liegt im Ordner „Wohnung“"></textarea></label>
+            <div class="feld" style="display:grid; gap:6px;">
+                <b style="font-size:.82rem;" data-i18n="f_dateien">Fotos / Dateien</b>
+                <div class="dateien" id="edDateien"></div>
+                <div class="knoepfe">
+                    <button type="button" class="btn klein" id="scanBtn" data-i18n="scannen">📷 Scannen</button>
+                    <button type="button" class="btn klein" id="dateiBtn" data-i18n="datei">📎 Foto / PDF wählen</button>
+                    <input type="file" id="dateiInput" accept="image/*,application/pdf,.pdf" multiple hidden>
+                </div>
+            </div>
+            <div class="fehler" id="edFehler" hidden></div>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" data-zu data-i18n="abbrechen">Abbrechen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="scannerRahmen" hidden><iframe id="scannerFrame" title="SD Scanner" allow="camera"></iframe></div>
+    <div id="bildAnsicht" hidden>
+        <img id="bildGross" alt="">
+        <div class="knoepfe">
+            <button type="button" class="btn" id="bildTeilen" data-i18n="teilen">📤 Teilen</button>
+            <button type="button" class="btn" id="bildLaden" data-i18n="herunterladen">⬇️ Herunterladen</button>
+            <button type="button" class="btn" id="bildZu" data-i18n="schliessen">Schließen</button>
+        </div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Dokumenten-Mappe', untertitel: 'Wichtige Papiere an einem Ort – mit Ablauf-Erinnerung',
+                faellig_titel: '⏰ Bald fällig', neu: '＋ Dokument hinzufügen', suche_ph: 'Suchen …', alle: 'Alle',
+                sicher_titel: '🔒 Wo liegen meine Dokumente?',
+                sicher_text: 'Nur in diesem Browser auf diesem Gerät. Nichts wird hochgeladen. Löschst du die Browserdaten oder wechselst das Gerät, sind die Dokumente weg – mach deshalb ab und zu eine Sicherung.',
+                sichern: '💾 Sicherung speichern', laden: '📂 Sicherung laden',
+                bearbeiten: '✏️ Bearbeiten', kalender: '📅 Erinnerung in den Kalender', loeschen: '🗑 Löschen',
+                ed_neu: 'Dokument hinzufügen', ed_bearbeiten: 'Dokument bearbeiten',
+                f_art: 'Art', f_person: 'Für wen?', f_person_ph: 'z. B. ich, Tochter Aylin', f_titel: 'Bezeichnung', f_titel_ph: 'z. B. Reisepass, Arbeitsvertrag Firma X',
+                f_ausgestellt: 'Ausgestellt am', f_gueltig: 'Gültig bis / endet am', f_gueltig_hilfe: 'leer lassen, wenn unbefristet',
+                f_erinnern: 'Erinnern', f_nummer: 'Nummer / Aktenzeichen', f_nummer_hilfe: 'freiwillig', f_notiz: 'Notiz', f_notiz_ph: 'z. B. Original liegt im Ordner „Wohnung“',
+                f_dateien: 'Fotos / Dateien', scannen: '📷 Scannen', datei: '📎 Foto / PDF wählen', speichern: 'Speichern', abbrechen: 'Abbrechen',
+                teilen: '📤 Teilen', herunterladen: '⬇️ Herunterladen', schliessen: 'Schließen', oeffnen: '📄 Öffnen',
+                err_titel: 'Bitte eine Bezeichnung eingeben.', err_speichern: 'Speichern hat nicht geklappt: {x}',
+                tage_vorher: '{n} Tage vorher', monate_vorher: '{n} Monate vorher', nicht_erinnern: 'nicht erinnern',
+                ab_seit: 'abgelaufen seit {d}', ab_heute: 'läuft heute ab', laeuft_in: 'läuft in {n} Tagen ab', laeuft_in1: 'läuft morgen ab',
+                gueltig_bis: 'gültig bis {d}', unbefristet: 'unbefristet', keine_datei: 'keine Datei',
+                leer: 'Noch keine Dokumente. Tippe auf „Dokument hinzufügen“ – z. B. für Ausweis, Pass oder Aufenthaltstitel.',
+                nichts_gefunden: 'Nichts gefunden.',
+                d_person: 'Für', d_nummer: 'Nummer', d_ausgestellt: 'Ausgestellt', d_gueltig: 'Gültig bis', d_erinnern: 'Erinnerung', d_notiz: 'Notiz',
+                loeschen_frage: '„{x}“ wirklich löschen? Das geht nicht rückgängig.', loeschen_ja: 'Ja, löschen', geloescht: 'Gelöscht',
+                gespeichert: 'Gespeichert', uebernommen: '{n} Seite(n) aus dem Scanner übernommen',
+                passfoto: '📸 Passfoto für das neue Dokument machen', termin_info: 'Tipp: Termin bei der zuständigen Stelle rechtzeitig vereinbaren – Wartezeiten sind oft lang.',
+                kal_titel: '{x} läuft ab', kal_vorher: 'Erinnerung: {x} läuft am {d} ab',
+                kein_ablauf: 'Für die Kalender-Erinnerung bitte „Gültig bis“ eintragen.',
+                speicher: 'Belegt: {x} von etwa {y} verfügbarem Browser-Speicher.', speicher_fest: 'Der Browser hat zugesagt, die Daten nicht automatisch zu löschen.',
+                sicherung_ok: 'Sicherung gespeichert ({n} Dokumente)', sicherung_geladen: '{n} Dokumente aus der Sicherung geladen', sicherung_fehler: 'Diese Datei ist keine gültige Sicherung der Dokumenten-Mappe.',
+                sicherung_hinweis: 'Die Sicherungsdatei enthält alle Dokumente und Fotos. Bewahre sie sicher auf (z. B. auf einem USB-Stick) und schicke sie nicht unverschlüsselt per E-Mail.',
+                teilen_nicht: 'Teilen ist hier nicht möglich – Datei wird heruntergeladen.',
+                kat: { personalausweis: 'Personalausweis', reisepass: 'Reisepass', aufenthaltstitel: 'Aufenthaltstitel', fuehrerschein: 'Führerschein', krankenkarte: 'Gesundheitskarte', zeugnis: 'Zeugnis / Abschluss', vertrag: 'Vertrag', versicherung: 'Versicherung', bescheid: 'Bescheid / Behörde', bank: 'Bank / Finanzen', gesundheit: 'Gesundheit', sonstiges: 'Sonstiges' }
+            },
+            en: {
+                titel: 'Document Folder', untertitel: 'Important papers in one place – with expiry reminders',
+                faellig_titel: '⏰ Due soon', neu: '＋ Add document', suche_ph: 'Search …', alle: 'All',
+                sicher_titel: '🔒 Where are my documents stored?',
+                sicher_text: 'Only in this browser on this device. Nothing is uploaded. If you clear your browser data or switch devices, the documents are gone – so make a backup now and then.',
+                sichern: '💾 Save backup', laden: '📂 Load backup',
+                bearbeiten: '✏️ Edit', kalender: '📅 Add reminder to calendar', loeschen: '🗑 Delete',
+                ed_neu: 'Add document', ed_bearbeiten: 'Edit document',
+                f_art: 'Type', f_person: 'For whom?', f_person_ph: 'e.g. me, daughter Aylin', f_titel: 'Name', f_titel_ph: 'e.g. passport, employment contract company X',
+                f_ausgestellt: 'Issued on', f_gueltig: 'Valid until / ends on', f_gueltig_hilfe: 'leave empty if unlimited',
+                f_erinnern: 'Remind me', f_nummer: 'Number / reference', f_nummer_hilfe: 'optional', f_notiz: 'Note', f_notiz_ph: 'e.g. original is in the “Flat” folder',
+                f_dateien: 'Photos / files', scannen: '📷 Scan', datei: '📎 Choose photo / PDF', speichern: 'Save', abbrechen: 'Cancel',
+                teilen: '📤 Share', herunterladen: '⬇️ Download', schliessen: 'Close', oeffnen: '📄 Open',
+                err_titel: 'Please enter a name.', err_speichern: 'Saving failed: {x}',
+                tage_vorher: '{n} days before', monate_vorher: '{n} months before', nicht_erinnern: 'no reminder',
+                ab_seit: 'expired since {d}', ab_heute: 'expires today', laeuft_in: 'expires in {n} days', laeuft_in1: 'expires tomorrow',
+                gueltig_bis: 'valid until {d}', unbefristet: 'unlimited', keine_datei: 'no file',
+                leer: 'No documents yet. Tap “Add document” – e.g. for your ID card, passport or residence permit.',
+                nichts_gefunden: 'Nothing found.',
+                d_person: 'For', d_nummer: 'Number', d_ausgestellt: 'Issued', d_gueltig: 'Valid until', d_erinnern: 'Reminder', d_notiz: 'Note',
+                loeschen_frage: 'Really delete “{x}”? This cannot be undone.', loeschen_ja: 'Yes, delete', geloescht: 'Deleted',
+                gespeichert: 'Saved', uebernommen: '{n} page(s) added from the scanner',
+                passfoto: '📸 Take a passport photo for the new document', termin_info: 'Tip: book an appointment with the responsible office early – waiting times are often long.',
+                kal_titel: '{x} expires', kal_vorher: 'Reminder: {x} expires on {d}',
+                kein_ablauf: 'Please enter “Valid until” for a calendar reminder.',
+                speicher: 'Used: {x} of about {y} available browser storage.', speicher_fest: 'The browser has promised not to delete the data automatically.',
+                sicherung_ok: 'Backup saved ({n} documents)', sicherung_geladen: '{n} documents loaded from the backup', sicherung_fehler: 'This file is not a valid Document Folder backup.',
+                sicherung_hinweis: 'The backup file contains all documents and photos. Keep it safe (e.g. on a USB stick) and do not send it unencrypted by e-mail.',
+                teilen_nicht: 'Sharing is not available here – the file will be downloaded.',
+                kat: { personalausweis: 'ID card', reisepass: 'Passport', aufenthaltstitel: 'Residence permit', fuehrerschein: 'Driving licence', krankenkarte: 'Health insurance card', zeugnis: 'Certificate / degree', vertrag: 'Contract', versicherung: 'Insurance', bescheid: 'Official notice', bank: 'Bank / finances', gesundheit: 'Health', sonstiges: 'Other' }
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script>
+        'use strict';
+        const $ = (id) => document.getElementById(id);
+        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        // Arten mit Symbol und voreingestellter Erinnerung (Tage vorher, 0 = keine)
+        const ARTEN = [
+            { id: 'personalausweis', icon: '🪪', tage: 90, foto: true },
+            { id: 'reisepass', icon: '🛂', tage: 180, foto: true },
+            { id: 'aufenthaltstitel', icon: '📇', tage: 90, foto: true },
+            { id: 'fuehrerschein', icon: '🚗', tage: 90, foto: true },
+            { id: 'krankenkarte', icon: '💳', tage: 30 },
+            { id: 'zeugnis', icon: '🎓', tage: 0 },
+            { id: 'vertrag', icon: '📝', tage: 90 },
+            { id: 'versicherung', icon: '🛡️', tage: 60 },
+            { id: 'bescheid', icon: '🏛️', tage: 30 },
+            { id: 'bank', icon: '🏦', tage: 30 },
+            { id: 'gesundheit', icon: '🩺', tage: 30 },
+            { id: 'sonstiges', icon: '📁', tage: 30 }
+        ];
+        const ERINNERN = [0, 7, 14, 30, 60, 90, 180, 270];
+        const art = (id) => ARTEN.find(a => a.id === id) || ARTEN[ARTEN.length - 1];
+        const artName = (id) => (L().kat || {})[id] || id;
+
+        // ------------------------------------------------------------
+        // Speicher: IndexedDB (Dateien als Blob), alles nur auf dem Geraet
+        // ------------------------------------------------------------
+        const DB_NAME = 'sdMappe', STORE = 'dokumente';
+        let dbVersprechen = null;
+        function db() {
+            if (!dbVersprechen) dbVersprechen = new Promise((ok, fehler) => {
+                const r = indexedDB.open(DB_NAME, 1);
+                r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE, { keyPath: 'id' }); };
+                r.onsuccess = () => ok(r.result);
+                r.onerror = () => fehler(r.error);
+            });
+            return dbVersprechen;
+        }
+        async function tx(modus, arbeit) {
+            const d = await db();
+            return new Promise((ok, fehler) => {
+                const x = d.transaction(STORE, modus);
+                const store = x.objectStore(STORE);
+                let ergebnis;
+                Promise.resolve(arbeit(store)).then(r => { ergebnis = r; });
+                x.oncomplete = () => ok(ergebnis);
+                x.onerror = () => fehler(x.error);
+                x.onabort = () => fehler(x.error || new Error('abgebrochen'));
+            });
+        }
+        const alleLaden = () => tx('readonly', s => new Promise(ok => { const r = s.getAll(); r.onsuccess = () => ok(r.result || []); }));
+        const speichereDok = (dok) => tx('readwrite', s => { s.put(dok); });
+        const loescheDok = (id) => tx('readwrite', s => { s.delete(id); });
+
+        let dokumente = [];
+        let filterArt = '';
+        const urls = new Map(); // Blob -> Object-URL fuer Vorschauen
+        function blobUrl(blob) {
+            if (!urls.has(blob)) urls.set(blob, URL.createObjectURL(blob));
+            return urls.get(blob);
+        }
+        const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+        // ------------------------------------------------------------
+        // Datum und Ablauf
+        // ------------------------------------------------------------
+        function heute() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+        function datum(iso) { return iso ? new Date(iso + 'T00:00:00') : null; }
+        function fmt(iso) {
+            const d = datum(iso);
+            return d ? d.toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+        }
+        function tageBis(iso) { const d = datum(iso); return d ? Math.round((d - heute()) / 86400000) : null; }
+        // Zustand: ab (abgelaufen), bald (im Erinnerungszeitraum), ok, ohne (kein Ablaufdatum)
+        function zustand(dok) {
+            const n = tageBis(dok.gueltigBis);
+            if (n === null) return { stufe: 'ohne', text: t('unbefristet'), n: null };
+            if (n < 0) return { stufe: 'ab', text: t('ab_seit', { d: fmt(dok.gueltigBis) }), n };
+            if (n === 0) return { stufe: 'ab', text: t('ab_heute'), n };
+            if (dok.erinnernTage > 0 && n <= dok.erinnernTage) return { stufe: 'bald', text: n === 1 ? t('laeuft_in1') : t('laeuft_in', { n }), n };
+            return { stufe: 'ok', text: t('gueltig_bis', { d: fmt(dok.gueltigBis) }), n };
+        }
+        function erinnernText(tage) {
+            if (!tage) return t('nicht_erinnern');
+            return tage >= 60 && tage % 30 === 0 ? t('monate_vorher', { n: tage / 30 }) : t('tage_vorher', { n: tage });
+        }
+
+        // Fuer die Startseite: Anzahl faelliger/abgelaufener Dokumente merken
+        function merkeFaellige() {
+            const n = dokumente.filter(d => ['ab', 'bald'].includes(zustand(d).stufe)).length;
+            try { localStorage.setItem('sdMappeFaellig', String(n)); } catch (e) { /* ok */ }
+        }
+
+        // ------------------------------------------------------------
+        // Liste
+        // ------------------------------------------------------------
+        function vorschauHtml(dok) {
+            const bild = (dok.dateien || []).find(f => f.type && f.type.startsWith('image/'));
+            if (bild) return '<img alt="" src="' + blobUrl(bild.blob) + '">';
+            return esc(art(dok.art).icon);
+        }
+        function dokKarte(dok) {
+            const z = zustand(dok);
+            const meta = [artName(dok.art), dok.person, (dok.dateien || []).length ? (dok.dateien.length + ' 📎') : t('keine_datei')].filter(Boolean).join(' · ');
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'doc';
+            b.innerHTML = '<span class="vorschau">' + vorschauHtml(dok) + '</span><span class="text"><b>' + esc(dok.titel) + '</b>' +
+                '<span class="meta">' + esc(meta) + '</span><span class="ampel ' + z.stufe + '">' + esc(z.text) + '</span></span>';
+            b.addEventListener('click', () => zeigeDok(dok.id));
+            return b;
+        }
+        function sortiert(liste) {
+            const rang = { ab: 0, bald: 1, ok: 2, ohne: 3 };
+            return liste.slice().sort((a, b) => {
+                const za = zustand(a), zb = zustand(b);
+                if (rang[za.stufe] !== rang[zb.stufe]) return rang[za.stufe] - rang[zb.stufe];
+                if (za.n !== null && zb.n !== null && za.n !== zb.n) return za.n - zb.n;
+                return String(a.titel).localeCompare(String(b.titel));
+            });
+        }
+        function zeigeListe() {
+            merkeFaellige();
+            // Bald faellig
+            const faellig = sortiert(dokumente.filter(d => ['ab', 'bald'].includes(zustand(d).stufe)));
+            $('faelligKarte').hidden = !faellig.length;
+            $('faelligKarte').classList.toggle('ab', faellig.some(d => zustand(d).stufe === 'ab'));
+            $('faelligListe').replaceChildren(...faellig.map(dokKarte));
+
+            // Filter-Chips: nur Arten, die vorkommen
+            const vorhanden = ARTEN.filter(a => dokumente.some(d => d.art === a.id));
+            if (filterArt && !vorhanden.some(a => a.id === filterArt)) filterArt = '';
+            $('filterChips').innerHTML = vorhanden.length > 1
+                ? ['<button type="button" class="chip' + (filterArt ? '' : ' an') + '" data-art="">' + esc(t('alle')) + '</button>']
+                    .concat(vorhanden.map(a => '<button type="button" class="chip' + (filterArt === a.id ? ' an' : '') + '" data-art="' + a.id + '">' + esc(a.icon + ' ' + artName(a.id)) + '</button>')).join('')
+                : '';
+
+            const q = $('suche').value.trim().toLowerCase();
+            const treffer = sortiert(dokumente.filter(d => (!filterArt || d.art === filterArt) &&
+                (!q || [d.titel, d.person, d.nummer, d.notiz, artName(d.art)].join(' ').toLowerCase().includes(q))));
+            if (!dokumente.length) $('liste').innerHTML = '<p class="leer">' + esc(t('leer')) + '</p>';
+            else if (!treffer.length) $('liste').innerHTML = '<p class="leer">' + esc(t('nichts_gefunden')) + '</p>';
+            else $('liste').replaceChildren(...treffer.map(dokKarte));
+
+            // Personen-Vorschlaege fuer das Eingabefeld
+            const personen = [...new Set(dokumente.map(d => d.person).filter(Boolean))];
+            $('personen').innerHTML = personen.map(p => '<option value="' + esc(p) + '">').join('');
+        }
+        $('filterChips').addEventListener('click', (e) => {
+            const c = e.target.closest('.chip');
+            if (!c) return;
+            filterArt = c.dataset.art;
+            zeigeListe();
+        });
+        $('suche').addEventListener('input', zeigeListe);
+
+        // ------------------------------------------------------------
+        // Dateien ansehen, teilen, herunterladen
+        // ------------------------------------------------------------
+        function herunterladen(blob, name) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+        async function teilen(datei) {
+            const f = new File([datei.blob], datei.name, { type: datei.type });
+            if (navigator.canShare && navigator.canShare({ files: [f] })) {
+                try { await navigator.share({ files: [f], title: datei.name }); } catch (e) { /* abgebrochen */ }
+            } else {
+                toast(t('teilen_nicht'));
+                herunterladen(datei.blob, datei.name);
+            }
+        }
+        let bildDatei = null;
+        function oeffneDatei(datei) {
+            if (datei.type && datei.type.startsWith('image/')) {
+                bildDatei = datei;
+                $('bildGross').src = blobUrl(datei.blob);
+                $('bildAnsicht').hidden = false;
+            } else {
+                // PDF: im Browser-Betrachter oeffnen, sonst herunterladen
+                const w = window.open(blobUrl(datei.blob), '_blank');
+                if (!w) herunterladen(datei.blob, datei.name);
+            }
+        }
+        $('bildZu').addEventListener('click', () => { $('bildAnsicht').hidden = true; bildDatei = null; });
+        $('bildTeilen').addEventListener('click', () => bildDatei && teilen(bildDatei));
+        $('bildLaden').addEventListener('click', () => bildDatei && herunterladen(bildDatei.blob, bildDatei.name));
+
+        function dateiKachel(datei, mitWeg, beimWeg) {
+            const d = document.createElement('div');
+            d.className = 'datei';
+            d.innerHTML = (datei.type && datei.type.startsWith('image/') ? '<img alt="" src="' + blobUrl(datei.blob) + '">' : '<span>📄<br>' + esc(datei.name) + '</span>') +
+                (mitWeg ? '<button type="button" class="weg" aria-label="Entfernen">✕</button>' : '');
+            d.addEventListener('click', (e) => {
+                if (e.target.closest('.weg')) { beimWeg(); return; }
+                oeffneDatei(datei);
+            });
+            return d;
+        }
+
+        // ------------------------------------------------------------
+        // Ansicht eines Dokuments
+        // ------------------------------------------------------------
+        let aktuell = null;
+        function zeigeDok(id) {
+            const dok = dokumente.find(d => d.id === id);
+            if (!dok) return;
+            aktuell = dok;
+            const z = zustand(dok);
+            $('ansTitel').textContent = art(dok.art).icon + ' ' + dok.titel;
+            $('ansAmpel').className = 'ampel ' + z.stufe;
+            $('ansAmpel').textContent = z.text;
+            const zeilen = [
+                [t('f_art'), artName(dok.art)], [t('d_person'), dok.person], [t('d_nummer'), dok.nummer],
+                [t('d_ausgestellt'), fmt(dok.ausgestellt)], [t('d_gueltig'), dok.gueltigBis ? fmt(dok.gueltigBis) : t('unbefristet')],
+                [t('d_erinnern'), dok.gueltigBis ? erinnernText(dok.erinnernTage) : ''], [t('d_notiz'), dok.notiz]
+            ].filter(z => z[1]);
+            $('ansFakten').innerHTML = zeilen.map(z => '<dt>' + esc(z[0]) + '</dt><dd>' + esc(z[1]) + '</dd>').join('');
+            $('ansDateien').replaceChildren(...(dok.dateien || []).map(f => dateiKachel(f, false)));
+            const aktionen = [];
+            if ((dok.dateien || []).length) {
+                aktionen.push('<button type="button" class="btn klein" data-akt="teilen">' + esc(t('teilen')) + '</button>');
+                aktionen.push('<button type="button" class="btn klein" data-akt="laden">' + esc(t('herunterladen')) + '</button>');
+            }
+            if (art(dok.art).foto && ['ab', 'bald'].includes(z.stufe)) {
+                aktionen.push('<a class="btn klein" href="../passfoto/?preset=de-personalausweis">' + esc(t('passfoto')) + '</a>');
+            }
+            $('ansAktionen').innerHTML = aktionen.join('') + (art(dok.art).foto && ['ab', 'bald'].includes(z.stufe) ? '<p class="hinweis" style="width:100%">' + esc(t('termin_info')) + '</p>' : '');
+            $('ansicht').showModal();
+        }
+        $('ansAktionen').addEventListener('click', async (e) => {
+            const b = e.target.closest('[data-akt]');
+            if (!b || !aktuell) return;
+            const dateien = aktuell.dateien || [];
+            if (b.dataset.akt === 'teilen') {
+                const files = dateien.map(d => new File([d.blob], d.name, { type: d.type }));
+                if (navigator.canShare && navigator.canShare({ files })) {
+                    try { await navigator.share({ files, title: aktuell.titel }); } catch (err) { /* abgebrochen */ }
+                } else {
+                    toast(t('teilen_nicht'));
+                    dateien.forEach((d, i) => setTimeout(() => herunterladen(d.blob, d.name), i * 400));
+                }
+            } else {
+                dateien.forEach((d, i) => setTimeout(() => herunterladen(d.blob, d.name), i * 400));
+            }
+        });
+        $('ansBearbeiten').addEventListener('click', () => { $('ansicht').close(); oeffneEditor(aktuell); });
+        $('ansKalender').addEventListener('click', () => aktuell && kalender(aktuell));
+        $('ansLoeschen').addEventListener('click', async () => {
+            if (!aktuell) return;
+            const b = $('ansLoeschen');
+            // Zweistufig statt confirm(): erst fragen, dann beim zweiten Tipp loeschen
+            if (!b.dataset.sicher) {
+                b.dataset.sicher = '1';
+                b.textContent = t('loeschen_ja');
+                toast(t('loeschen_frage', { x: aktuell.titel }), 4000);
+                setTimeout(() => { delete b.dataset.sicher; b.textContent = t('loeschen'); }, 4000);
+                return;
+            }
+            delete b.dataset.sicher;
+            b.textContent = t('loeschen');
+            await loescheDok(aktuell.id);
+            dokumente = dokumente.filter(d => d.id !== aktuell.id);
+            $('ansicht').close();
+            zeigeListe();
+            toast(t('geloescht'));
+        });
+
+        // ------------------------------------------------------------
+        // Kalender (.ics) mit Erinnerung
+        // ------------------------------------------------------------
+        function icsText(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+        function icsTag(d) { return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); }
+        function kalender(dok) {
+            if (!dok.gueltigBis) { toast(t('kein_ablauf')); return; }
+            const name = [dok.titel, dok.person].filter(Boolean).join(' – ');
+            const tag = datum(dok.gueltigBis);
+            const ende = new Date(tag); ende.setDate(ende.getDate() + 1);
+            const vorher = Math.max(0, Number(dok.erinnernTage) || 0);
+            const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Dokumenten-Mappe//DE', 'BEGIN:VEVENT',
+                'UID:mappe-' + dok.id + '-' + icsTag(tag) + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+                'DTSTART;VALUE=DATE:' + icsTag(tag), 'DTEND;VALUE=DATE:' + icsTag(ende), 'SUMMARY:' + icsText(t('kal_titel', { x: name })),
+                'DESCRIPTION:' + icsText([artName(dok.art), dok.notiz].filter(Boolean).join('\n'))];
+            // Erinnerung x Tage vorher um 9 Uhr und am Ablauftag um 8 Uhr
+            if (vorher > 0) zeilen.push('BEGIN:VALARM', 'TRIGGER:-PT' + (vorher * 24 - 9) + 'H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(t('kal_vorher', { x: name, d: fmt(dok.gueltigBis) })), 'END:VALARM');
+            zeilen.push('BEGIN:VALARM', 'TRIGGER:PT8H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(t('kal_titel', { x: name })), 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
+            herunterladen(new Blob([zeilen.join('\r\n')], { type: 'text/calendar' }), 'ablauf-' + name.replace(/[^\wäöüÄÖÜß-]+/g, '-').slice(0, 40) + '.ics');
+        }
+
+        // ------------------------------------------------------------
+        // Editor
+        // ------------------------------------------------------------
+        let entwurf = null; // { ...dok, dateien: [...] }
+        function fuelleAuswahl() {
+            const a = $('fArt').value;
+            $('fArt').innerHTML = ARTEN.map(x => '<option value="' + x.id + '">' + esc(x.icon + ' ' + artName(x.id)) + '</option>').join('');
+            if (a) $('fArt').value = a;
+            const e = $('fErinnern').value;
+            $('fErinnern').innerHTML = ERINNERN.map(n => '<option value="' + n + '">' + esc(erinnernText(n)) + '</option>').join('');
+            if (e) $('fErinnern').value = e;
+        }
+        function zeigeEntwurfDateien() {
+            $('edDateien').replaceChildren(...entwurf.dateien.map((f, i) => dateiKachel(f, true, () => { entwurf.dateien.splice(i, 1); zeigeEntwurfDateien(); })));
+        }
+        function oeffneEditor(dok) {
+            entwurf = dok ? Object.assign({}, dok, { dateien: (dok.dateien || []).slice() }) : { id: '', art: 'personalausweis', erinnernTage: 90, dateien: [] };
+            fuelleAuswahl();
+            $('edTitel').textContent = dok ? t('ed_bearbeiten') : t('ed_neu');
+            $('fArt').value = entwurf.art;
+            $('fPerson').value = entwurf.person || '';
+            $('fTitel').value = entwurf.titel || '';
+            $('fAusgestellt').value = entwurf.ausgestellt || '';
+            $('fGueltig').value = entwurf.gueltigBis || '';
+            $('fErinnern').value = String(entwurf.erinnernTage || 0);
+            $('fNummer').value = entwurf.nummer || '';
+            $('fNotiz').value = entwurf.notiz || '';
+            $('edFehler').hidden = true;
+            zeigeEntwurfDateien();
+            $('editor').showModal();
+        }
+        // Art waehlen: Erinnerung und Bezeichnung vorschlagen, solange noch nichts eigenes eingetragen ist
+        $('fArt').addEventListener('change', () => {
+            const a = art($('fArt').value);
+            $('fErinnern').value = String(a.tage);
+            const titel = $('fTitel').value.trim();
+            if (!titel || ARTEN.some(x => artName(x.id) === titel)) $('fTitel').value = artName(a.id);
+        });
+        $('neuBtn').addEventListener('click', () => { oeffneEditor(null); $('fTitel').value = artName('personalausweis'); });
+        document.querySelectorAll('dialog [data-zu]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+
+        $('dateiBtn').addEventListener('click', () => $('dateiInput').click());
+        $('dateiInput').addEventListener('change', (e) => {
+            Array.from(e.target.files || []).forEach(f => {
+                if (!(f.type.startsWith('image/') || f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) return;
+                entwurf.dateien.push({ id: neueId(), name: f.name, type: f.type || 'application/pdf', blob: f });
+            });
+            e.target.value = '';
+            zeigeEntwurfDateien();
+        });
+
+        $('editorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titel = $('fTitel').value.trim();
+            if (!titel) { $('edFehler').textContent = t('err_titel'); $('edFehler').hidden = false; return; }
+            const neu = !entwurf.id;
+            const dok = {
+                id: entwurf.id || neueId(), art: $('fArt').value, person: $('fPerson').value.trim(), titel,
+                ausgestellt: $('fAusgestellt').value, gueltigBis: $('fGueltig').value, erinnernTage: Number($('fErinnern').value) || 0,
+                nummer: $('fNummer').value.trim(), notiz: $('fNotiz').value.trim(), dateien: entwurf.dateien,
+                erstellt: entwurf.erstellt || new Date().toISOString(), geaendert: new Date().toISOString()
+            };
+            try {
+                await speichereDok(dok);
+            } catch (err) {
+                $('edFehler').textContent = t('err_speichern', { x: (err && err.message) || err });
+                $('edFehler').hidden = false;
+                return;
+            }
+            dokumente = dokumente.filter(d => d.id !== dok.id).concat(dok);
+            $('editor').close();
+            zeigeListe();
+            toast(t('gespeichert'));
+            if (neu) dauerhaftSpeichern();
+        });
+
+        // ------------------------------------------------------------
+        // Scanner (gleiche App wie /scanner/) im Rahmen
+        // ------------------------------------------------------------
+        function scannerZu() {
+            const f = $('scannerFrame');
+            try { f.contentWindow && f.contentWindow.postMessage({ type: 'sd-scan-stop' }, location.origin); } catch (e) { /* ok */ }
+            $('scannerRahmen').hidden = true;
+            f.src = 'about:blank';
+            // Editor wieder zeigen – die Eingaben bleiben erhalten
+            if (entwurf && !$('editor').open) $('editor').showModal();
+        }
+        $('scanBtn').addEventListener('click', () => {
+            // Ein offenes Modal-Fenster liegt immer ganz oben; deshalb waehrend des Scannens schliessen
+            $('editor').close();
+            $('scannerRahmen').hidden = false;
+            $('scannerFrame').src = '../scanner/?ziel=mappe';
+        });
+        window.addEventListener('message', async (e) => {
+            if (e.origin !== location.origin || !e.data || e.source !== $('scannerFrame').contentWindow) return;
+            if (e.data.type === 'sd-scan-close') { scannerZu(); return; }
+            if (e.data.type !== 'sd-scan-pages' || !Array.isArray(e.data.pages)) return;
+            scannerZu();
+            let n = 0;
+            for (const seite of e.data.pages) {
+                if (typeof seite.url !== 'string' || !seite.url.startsWith('data:image/')) continue;
+                const blob = await (await fetch(seite.url)).blob();
+                const name = (($('fTitel').value.trim() || 'Scan') + ' ' + (entwurf.dateien.length + 1)).replace(/[\\/:*?"<>|]+/g, '-') + '.jpg';
+                entwurf.dateien.push({ id: neueId(), name, type: blob.type || 'image/jpeg', blob });
+                n++;
+            }
+            zeigeEntwurfDateien();
+            if (n) toast(t('uebernommen', { n }));
+        });
+
+        // ------------------------------------------------------------
+        // Sicherung als Datei (JSON mit eingebetteten Dateien)
+        // ------------------------------------------------------------
+        const blobZuDataUrl = (blob) => new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => fehler(r.error); r.readAsDataURL(blob); });
+        $('sichernBtn').addEventListener('click', async () => {
+            const daten = [];
+            for (const d of dokumente) {
+                const dateien = [];
+                for (const f of d.dateien || []) dateien.push({ id: f.id, name: f.name, type: f.type, data: await blobZuDataUrl(f.blob) });
+                daten.push(Object.assign({}, d, { dateien }));
+            }
+            const inhalt = JSON.stringify({ format: 'sd-dokumenten-mappe', version: 1, gesichert: new Date().toISOString(), dokumente: daten });
+            herunterladen(new Blob([inhalt], { type: 'application/json' }), 'dokumenten-mappe-' + new Date().toISOString().slice(0, 10) + '.json');
+            toast(t('sicherung_ok', { n: daten.length }), 3500);
+            setTimeout(() => toast(t('sicherung_hinweis'), 6500), 3600);
+        });
+        $('ladenBtn').addEventListener('click', () => $('ladenInput').click());
+        $('ladenInput').addEventListener('change', async (e) => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+                const j = JSON.parse(await f.text());
+                if (!j || j.format !== 'sd-dokumenten-mappe' || !Array.isArray(j.dokumente)) throw new Error('format');
+                let n = 0;
+                for (const d of j.dokumente) {
+                    if (!d || !d.id || !d.titel) continue;
+                    const dateien = [];
+                    for (const x of d.dateien || []) {
+                        if (typeof x.data !== 'string' || !x.data.startsWith('data:')) continue;
+                        dateien.push({ id: x.id || neueId(), name: String(x.name || 'Datei'), type: String(x.type || ''), blob: await (await fetch(x.data)).blob() });
+                    }
+                    const dok = Object.assign({}, d, { dateien });
+                    await speichereDok(dok);
+                    dokumente = dokumente.filter(y => y.id !== dok.id).concat(dok);
+                    n++;
+                }
+                zeigeListe();
+                toast(t('sicherung_geladen', { n }));
+                dauerhaftSpeichern();
+            } catch (err) {
+                toast(t('sicherung_fehler'), 4000);
+            }
+        });
+
+        // Browser bitten, die Daten nicht bei Speicherknappheit zu loeschen
+        async function dauerhaftSpeichern() {
+            try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* ok */ }
+            zeigeSpeicher();
+        }
+        function groesse(b) { return b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB'; }
+        async function zeigeSpeicher() {
+            const teile = [];
+            try {
+                if (navigator.storage && navigator.storage.estimate) {
+                    const s = await navigator.storage.estimate();
+                    if (s && s.quota) teile.push(t('speicher', { x: groesse(s.usage || 0), y: groesse(s.quota) }));
+                }
+                if (navigator.storage && navigator.storage.persisted && await navigator.storage.persisted()) teile.push(t('speicher_fest'));
+            } catch (e) { /* ok */ }
+            $('speicherInfo').textContent = teile.join(' ');
+        }
+
+        let toastTimer = null;
+        function toast(text, ms) {
+            $('toast').textContent = text;
+            $('toast').hidden = false;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { $('toast').hidden = true; }, ms || 2600);
+        }
+
+        document.addEventListener('sd-lang-changed', () => { fuelleAuswahl(); zeigeListe(); });
+        (async () => {
+            try {
+                dokumente = await alleLaden();
+            } catch (e) {
+                $('liste').innerHTML = '<div class="fehler">' + esc(t('err_speichern', { x: (e && e.message) || e })) + '</div>';
+                return;
+            }
+            fuelleAuswahl();
+            zeigeListe();
+            zeigeSpeicher();
+        })();
+    </script>
+</body>
+
+</html>

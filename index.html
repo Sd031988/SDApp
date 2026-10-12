@@ -583,6 +583,9 @@
                 card_assistent_p: 'Chatte mit einer KI zu Bewerbung, Lebenslauf, Briefen & mehr – liest Dokumente, erstellt PDFs, übernimmt Angaben in deinen Lebenslauf. Wahlweise SD Lotse (lokal, ohne Schlüssel) oder Gemini, ChatGPT bzw. Claude mit eigenem Schlüssel.',
                 card_tracker_h3: 'Bewerbungs-Tracker',
                 card_tracker_p: 'Alle Bewerbungen auf einen Blick: Status von „gemerkt“ bis „Zusage“, Fristen, Erinnerungen ans Nachfassen, Termine in den Kalender – und die Kosten mit einem Tipp in den Steuer-Helfer.',
+                card_mappe_h3: 'Dokumenten-Mappe',
+                card_mappe_p: 'Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.',
+                mappe_faellig: '⏰ {n} Dokument(e) bald fällig',
                 card_rechnung_h3: 'Rechnungen',
                 card_rechnung_p: 'Rechnungen schreiben – mit Pflichtangaben-Check, Kleinunternehmer-Hinweis und PDF – und erhaltene Rechnungen mit Fälligkeit im Blick behalten. Handwerker-Arbeitskosten mit einem Tipp in den Steuer-Helfer.',
                 card_agent_h3: 'KI-Agent',
@@ -640,6 +643,9 @@
                 card_assistent_p: 'Chat with an AI about applications, resumes, letters & more – reads documents, creates PDFs, puts details into your resume. Choose SD Lotse (local, no key) or Gemini, ChatGPT or Claude with your own key.',
                 card_tracker_h3: 'Application tracker',
                 card_tracker_p: 'All applications at a glance: status from "saved" to "offer", deadlines, follow-up reminders, dates to your calendar – and costs into the tax helper with one tap.',
+                card_mappe_h3: 'Document Folder',
+                card_mappe_p: 'ID card, passport, residence permit, certificates and contracts in one place – only on your device. Scan with the SD Scanner, reminders before something expires, calendar entry and backup as a file.',
+                mappe_faellig: '⏰ {n} document(s) due soon',
                 card_rechnung_h3: 'Invoices',
                 card_rechnung_p: 'Write invoices – with mandatory-details check, small-business note and PDF – and keep track of received invoices and due dates. Tradesmen labour costs to the tax helper with one tap. (Invoices in German.)',
                 card_agent_h3: 'AI agent',
@@ -844,6 +850,14 @@
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 
+                    <a class="dept-card" href="mappe/index.html">
+                        <div class="dept-icon">🗂️</div>
+                        <h3 data-i18n="card_mappe_h3">Dokumenten-Mappe</h3>
+                        <p data-i18n="card_mappe_p">Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.</p>
+                        <span id="mappeFaellig" hidden style="align-self:flex-start;background:#fff8e6;border:1px solid #f0d9a0;color:#8a5a00;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:bold;"></span>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
                     <a class="dept-card" href="rechnungen/index.html">
                         <div class="dept-icon">🧾</div>
                         <h3 data-i18n="card_rechnung_h3">Rechnungen</h3>
@@ -949,6 +963,22 @@
             document.body.appendChild(b);
             document.getElementById('sd-update-btn').onclick = () => location.reload();
         }
+    </script>
+    <script>
+        // Hinweis auf der Mappe-Karte: wie viele Dokumente bald ablaufen (Zahl legt die Mappe selbst ab)
+        (function () {
+            function zeige() {
+                const el = document.getElementById('mappeFaellig');
+                if (!el) return;
+                let n = 0;
+                try { n = parseInt(localStorage.getItem('sdMappeFaellig') || '0', 10) || 0; } catch (e) { /* ok */ }
+                const d = (window.SD_I18N && window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de']) || {};
+                el.hidden = n < 1;
+                el.textContent = String(d.mappe_faellig || '⏰ {n}').split('{n}').join(n);
+            }
+            document.addEventListener('sd-lang-changed', zeige);
+            zeige();
+        })();
     </script>
 </body>
 </html>

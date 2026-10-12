@@ -2636,7 +2636,10 @@
   // --- Einbettung im PDF-Studio (scanner/?ziel=pdf-studio im Rahmen) ---
   // Statt PDF zu speichern, werden die fertigen Seiten als Bilder an das
   // PDF-Studio uebergeben. Das Dokument bleibt zusaetzlich in der Ablage.
-  const imPdfStudio = new URLSearchParams(location.search).get("ziel") === "pdf-studio" && window.parent !== window;
+  // Ziele, die den Scanner im Rahmen einbetten: PDF-Studio und Dokumenten-Mappe
+  const ZIELE = { "pdf-studio": "✓ Ins PDF-Studio", mappe: "✓ In die Mappe" };
+  const zielName = new URLSearchParams(location.search).get("ziel");
+  const imPdfStudio = Object.prototype.hasOwnProperty.call(ZIELE, zielName) && window.parent !== window;
   let zielFertig = null;
   if (imPdfStudio) {
     const sende = (nachricht) => window.parent.postMessage(nachricht, location.origin);
@@ -2657,7 +2660,7 @@
     sheetBtn.id = "btnZuPdfStudio";
     sheetBtn.className = "act";
     sheetBtn.type = "button";
-    sheetBtn.textContent = "✓ Ins PDF-Studio";
+    sheetBtn.textContent = ZIELE[zielName];
     el("btnMakePdf").parentNode.insertBefore(sheetBtn, el("btnMakePdf"));
 
     const uebergeben = async () => {
