@@ -15,128 +15,163 @@
 </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f3d3a" />
+    <meta name="theme-color" content="#0c3533" />
     <meta name="description" content="19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch." />
     <link rel="manifest" href="manifest-hub.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="preload" href="fonts/bricolage-extrabold.woff2" as="font" type="font/woff2" crossorigin />
     <title>SD Bewerbungsstudio – Papierkram in Deutschland, einfach erledigt</title>
     <style>
+        /* Schriften liegen auf dieser Website (keine Verbindung zu Google Fonts) – Lizenz: SIL OFL, siehe fonts/ */
+        @font-face { font-family: "Bricolage"; src: url("fonts/bricolage-extrabold.woff2") format("woff2"); font-weight: 800; font-display: swap; }
+        @font-face { font-family: "Bricolage"; src: url("fonts/bricolage-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+        @font-face { font-family: "Atkinson Next"; src: url("fonts/atkinson-next-regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+        @font-face { font-family: "Atkinson Next"; src: url("fonts/atkinson-next-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
         :root {
-            --grund: #eef2f1;
+            --grund: #eef1ee;
             --papier: #ffffff;
-            --tinte: #12212b;
-            --leise: #56666f;
-            --linie: #d9e2df;
-            --marke: #0f3d3a;
-            --marke-tief: #0a2b29;
-            --hell: #e3f0ec;
-            --fokus: #f2c14e;
-            --schrift: "Segoe UI Variable Text", "Segoe UI", "SF Pro Text", -apple-system, BlinkMacSystemFont, Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+            --tinte: #13221f;
+            --leise: #55655f;
+            --linie: #d6dfdb;
+            --marke: #0c3533;
+            --marke-licht: #17504b;
+            --fokus: #f4c54f;
+            --kopf-text: #cfe3dc;
+            --titel: "Bricolage", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+            --text: "Atkinson Next", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
         }
         * { box-sizing: border-box; }
         [hidden] { display: none !important; }
         html { scroll-behavior: smooth; }
-        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
-        body { margin: 0; font-family: var(--schrift); color: var(--tinte); background: var(--grund); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; font-family: var(--text); color: var(--tinte); background: var(--grund); font-size: 16.5px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
         a { color: inherit; }
-        :focus-visible { outline: 3px solid var(--fokus); outline-offset: 2px; border-radius: 6px; }
-        .breite { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+        :focus-visible { outline: 3px solid var(--fokus); outline-offset: 3px; border-radius: 8px; }
+        .breite { max-width: 1160px; margin: 0 auto; padding-inline: 24px; }
 
-        /* Kopf */
-        .kopf { background: var(--marke); color: #fff; padding-top: env(safe-area-inset-top, 0px); overflow: hidden; }
-        .leiste { display: flex; align-items: center; gap: 12px; padding-block: 14px; }
-        .marke { display: flex; align-items: center; gap: 10px; flex: 1; text-decoration: none; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
-        .marke i { font-style: normal; width: 36px; height: 36px; border-radius: 10px; background: #fff; color: var(--marke); display: grid; place-items: center; font-family: Georgia, "Times New Roman", serif; font-size: .95rem; }
-        .sprache { display: flex; gap: 2px; background: rgba(255, 255, 255, .12); border-radius: 999px; padding: 3px; }
-        .sd-lang-btn { border: 0; background: transparent; color: #cfe4de; font: inherit; font-size: .8rem; font-weight: 700; padding: 6px 11px; border-radius: 999px; cursor: pointer; }
+        /* ---------- Kopf: dunkles Gruen mit Lichtkegel und feinem Korn ---------- */
+        .kopf {
+            position: relative; color: #fff; padding-top: env(safe-area-inset-top, 0px); overflow: hidden;
+            background:
+                radial-gradient(900px 520px at 78% 38%, rgba(84, 182, 160, .32), transparent 62%),
+                radial-gradient(700px 400px at 8% 0%, rgba(255, 255, 255, .07), transparent 60%),
+                var(--marke);
+        }
+        .kopf::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .kopf > * { position: relative; }
+        .leiste { display: flex; align-items: center; gap: 12px; padding-block: 16px; }
+        .marke { display: flex; align-items: center; gap: 11px; flex: 1; text-decoration: none; font-family: var(--titel); font-weight: 700; font-size: 1.12rem; letter-spacing: -0.01em; }
+        .marke i { font-style: normal; width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(145deg, #fff, #dbe9e4); color: var(--marke); display: grid; place-items: center; font-family: var(--titel); font-weight: 800; font-size: .92rem; box-shadow: 0 6px 14px rgba(0, 0, 0, .25), inset 0 -2px 0 rgba(12, 53, 51, .18); }
+        .sprache { display: flex; gap: 2px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; padding: 3px; }
+        .sd-lang-btn { border: 0; background: transparent; color: var(--kopf-text); font: inherit; font-size: .82rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
         .sd-lang-btn.active { background: #fff; color: var(--marke); }
 
-        .held { padding-block: 34px 0; }
-        .held h1 { margin: 0; font-size: clamp(2rem, 5.6vw, 3.5rem); line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; max-width: 15ch; text-wrap: balance; }
-        .held p { margin: 14px 0 0; font-size: clamp(1rem, 2.2vw, 1.15rem); color: #cfe4de; max-width: 52ch; }
-        .suche { margin-top: 24px; position: relative; max-width: 620px; }
-        .suche svg { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: var(--leise); pointer-events: none; }
-        .suche input { width: 100%; font: inherit; font-size: 1.05rem; padding: 17px 18px 17px 52px; border: 0; border-radius: 16px; background: #fff; color: var(--tinte); box-shadow: 0 10px 30px rgba(0, 0, 0, .18); }
-        .suche input::placeholder { color: #7d8a91; }
-        .suche input:focus { outline: 3px solid var(--fokus); outline-offset: 0; }
-        .schnell { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-        .chip { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #fff; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 8px 14px; font-size: .9rem; font-weight: 600; }
-        .chip:hover { background: rgba(255, 255, 255, .2); }
+        .held { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 24px; align-items: center; padding-block: 30px 0; }
+        .held h1 { margin: 0; font-family: var(--titel); font-weight: 800; font-size: clamp(2.3rem, 6.2vw, 4.4rem); line-height: .98; letter-spacing: -0.035em; max-width: 13ch; text-wrap: balance; }
+        .held p.unter { margin: 18px 0 0; font-size: clamp(1.02rem, 2.1vw, 1.2rem); color: var(--kopf-text); max-width: 46ch; }
+        .suche { margin-top: 26px; position: relative; max-width: 600px; }
+        .suche svg { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; color: #63736d; pointer-events: none; }
+        .suche input { width: 100%; font: inherit; font-size: 1.08rem; padding: 19px 20px 19px 54px; border: 0; border-radius: 18px; background: #fff; color: var(--tinte); box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset, 0 18px 40px rgba(0, 0, 0, .28), 0 0 0 6px rgba(255, 255, 255, .06); transition: box-shadow .2s ease; }
+        .suche input::placeholder { color: #7b8a84; }
+        .suche input:focus { outline: none; box-shadow: 0 18px 40px rgba(0, 0, 0, .28), 0 0 0 4px var(--fokus); }
+        .treffer { min-height: 1.4em; margin: 8px 0 0 4px; font-size: .9rem; color: var(--kopf-text); }
+        .schnell { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; color: #fff; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; padding: 8px 15px; font-size: .92rem; font-weight: 700; backdrop-filter: blur(4px); transition: background .15s ease, transform .15s ease; }
+        .chip:hover { background: rgba(255, 255, 255, .18); transform: translateY(-1px); }
 
-        /* Register-Reiter: die sechs Themen als Ordnerreiter am unteren Rand */
-        .reiter { display: flex; gap: 6px; margin-top: 30px; overflow-x: auto; scrollbar-width: none; padding-top: 6px; }
-        .reiter::-webkit-scrollbar { display: none; }
-        .reiter a { flex: 0 0 auto; text-decoration: none; color: #fff; background: var(--farbe); padding: 10px 16px 12px; border-radius: 12px 12px 0 0; font-weight: 700; font-size: .9rem; white-space: nowrap; transform: translateY(4px); transition: transform .15s ease; }
-        .reiter a:hover, .reiter a:focus-visible { transform: translateY(0); }
-
-        /* 3D-Szene: Aktenstapel in den Themenfarben, oben ein Blatt mit Stempel */
-        .held-raster { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 20px; align-items: center; }
-        .szene { height: 330px; perspective: 1100px; display: grid; place-items: center; }
-        .stapel { position: relative; width: 230px; height: 290px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-34deg); --z: 150px; --abstand: 20px; }
-        .lage { position: absolute; inset: 0; border-radius: 14px; background: var(--farbe); transform: translateZ(calc(var(--i) * var(--abstand))); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 0 0 1px rgba(0,0,0,.08); }
-        .lage::before { content: ""; position: absolute; top: -16px; left: calc(14px + var(--i) * 30px); width: 64px; height: 20px; border-radius: 8px 8px 0 0; background: var(--farbe); }
-        .lage::after { content: ""; position: absolute; inset: 0; border-radius: 14px; background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(0,0,0,.12)); }
-        .blatt { position: absolute; inset: 14px 18px 22px 14px; border-radius: 6px; background: #fff; transform: translateZ(var(--z)); box-shadow: 0 30px 40px rgba(0,0,0,.35); padding: 22px 20px; display: grid; gap: 10px; align-content: start; }
-        .blatt i { display: block; height: 9px; border-radius: 5px; background: #d8e1de; }
-        .blatt i:nth-child(1) { width: 60%; height: 13px; background: #9fb3ad; }
-        .blatt i:nth-child(3) { width: 85%; } .blatt i:nth-child(5) { width: 70%; }
-        .stempel { position: absolute; right: 16px; bottom: 18px; width: 70px; height: 70px; border-radius: 50%; border: 4px solid #1f7a4d; color: #1f7a4d; display: grid; place-items: center; font-weight: 800; font-size: 1.3rem; transform: rotate(-14deg); opacity: .9; }
+        /* ---------- 3D-Aktenstapel: jede Lage ist ein Thema ---------- */
+        .szene { height: 420px; perspective: 1200px; display: grid; place-items: center; touch-action: pan-y; }
+        .stapel { --z: 168px; --abstand: 22px; --rx: 58deg; --rz: -34deg; position: relative; width: 250px; height: 310px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(var(--rz)); transition: transform .25s ease-out; }
+        .lage { position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); transform: translateZ(calc(var(--i) * var(--abstand))); transition: transform .45s cubic-bezier(.2, .8, .2, 1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 0 1px rgba(0, 0, 0, .1); }
+        .lage::after { content: ""; position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .24), rgba(0, 0, 0, .14)); }
+        .lage span { position: absolute; left: 16px; bottom: 12px; font-family: var(--titel); font-weight: 800; font-size: 1.05rem; color: #fff; opacity: 0; transition: opacity .3s ease; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); z-index: 1; }
+        .lage.raus { transform: translateZ(calc(var(--i) * var(--abstand))) translateY(48%); }
+        .lage.raus span { opacity: 1; }
+        .blatt { position: absolute; inset: 14px 20px 26px 14px; border-radius: 8px; background: linear-gradient(170deg, #fff 70%, #f2f5f3); transform: translateZ(var(--z)); box-shadow: 0 34px 44px rgba(0, 0, 0, .38); padding: 24px 22px; display: grid; gap: 11px; align-content: start; transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+        .blatt i { display: block; height: 9px; border-radius: 5px; background: #d9e2de; }
+        .blatt i:nth-child(1) { width: 58%; height: 14px; background: #9db2ab; }
+        .blatt i:nth-child(3) { width: 84%; } .blatt i:nth-child(5) { width: 66%; }
+        .stempel { position: absolute; right: 18px; bottom: 20px; width: 74px; height: 74px; border-radius: 50%; border: 4px solid #1f7a4d; color: #1f7a4d; display: grid; place-items: center; font-family: var(--titel); font-weight: 800; font-size: 1.35rem; transform: rotate(-14deg); opacity: .92; }
+        .stapel.zieht .blatt { transform: translateZ(calc(var(--z) + 46px)); }
         @media (prefers-reduced-motion: no-preference) {
-            .blatt { animation: schweben 6s ease-in-out infinite; }
-            @keyframes schweben { 0%, 100% { transform: translateZ(var(--z)); } 50% { transform: translateZ(calc(var(--z) + 22px)); } }
+            .blatt { animation: schweben 6s ease-in-out 1.4s infinite; }
+            @keyframes schweben { 0%, 100% { translate: 0 0 0; } 50% { translate: 0 0 20px; } }
+            /* Einmaliger Auftritt: Lagen fallen nacheinander auf den Stapel */
+            .lage { animation: landen .7s cubic-bezier(.2, .9, .3, 1.2) backwards; animation-delay: calc((5 - var(--i)) * 70ms + 100ms); }
+            .blatt { animation-name: landen-blatt, schweben; animation-duration: .8s, 6s; animation-delay: .6s, 1.4s; animation-iteration-count: 1, infinite; animation-fill-mode: backwards, none; animation-timing-function: cubic-bezier(.2, .9, .3, 1.2), ease-in-out; }
+            @keyframes landen { from { opacity: 0; translate: 0 0 160px; } }
+            @keyframes landen-blatt { from { opacity: 0; translate: 0 0 220px; } }
         }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-        /* Themen und Kacheln */
-        main { padding-block: 36px 40px; }
-        .thema { scroll-margin-top: 16px; }
-        .thema + .thema { margin-top: 30px; }
-        .thema h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 1.25rem; letter-spacing: -0.01em; }
-        .punkt { width: 14px; height: 14px; border-radius: 4px; background: var(--farbe); flex: 0 0 auto; }
-        .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
-        .kacheln { perspective: 900px; }
-        .kachel { display: flex; align-items: center; gap: 14px; text-decoration: none; background: linear-gradient(180deg, #ffffff, #f6f9f8); border: 1px solid var(--linie); border-radius: 16px; padding: 12px 14px; min-height: 76px; box-shadow: 0 1px 0 #fff inset, 0 3px 0 color-mix(in srgb, var(--farbe) 22%, #dfe7e4), 0 10px 20px rgba(18, 33, 43, .07); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; transform-origin: center bottom; }
-        .kachel:hover, .kachel:focus-visible { border-color: var(--farbe); transform: translateY(-3px) rotateX(6deg); box-shadow: 0 1px 0 #fff inset, 0 6px 0 color-mix(in srgb, var(--farbe) 35%, #dfe7e4), 0 18px 28px rgba(18, 33, 43, .14); }
-        .kachel:active { transform: translateY(1px); box-shadow: 0 1px 0 #fff inset, 0 1px 0 color-mix(in srgb, var(--farbe) 35%, #dfe7e4), 0 4px 10px rgba(18, 33, 43, .08); }
-        .symbol { width: 50px; height: 50px; flex: 0 0 auto; border-radius: 14px; display: grid; place-items: center; font-size: 1.55rem; background: radial-gradient(circle at 30% 25%, #fff 0%, color-mix(in srgb, var(--farbe) 18%, #fff) 45%, color-mix(in srgb, var(--farbe) 40%, #fff) 100%); box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--farbe) 35%, transparent), inset 0 2px 2px rgba(255,255,255,.9), 0 4px 8px color-mix(in srgb, var(--farbe) 30%, transparent); }
-        .text { display: grid; gap: 1px; min-width: 0; }
-        .text b { font-size: 1.02rem; line-height: 1.25; }
-        .text small { font-size: .88rem; color: var(--leise); line-height: 1.35; }
-        .hinweis-badge { justify-self: start; margin-top: 4px; background: #fff4d6; color: #7a5300; border-radius: 999px; padding: 1px 9px; font-size: .78rem; font-weight: 700; }
-        .nichts { background: var(--papier); border: 1px dashed var(--linie); border-radius: 14px; padding: 18px; color: var(--leise); text-align: center; margin: 0; }
+        /* Ordnerreiter am unteren Rand des Kopfes */
+        .reiter { display: flex; gap: 6px; margin-top: 18px; overflow-x: auto; scrollbar-width: none; padding-top: 8px; }
+        .reiter::-webkit-scrollbar { display: none; }
+        .reiter a { flex: 0 0 auto; text-decoration: none; color: #fff; background: var(--farbe); padding: 11px 18px 14px; border-radius: 14px 14px 0 0; font-family: var(--titel); font-weight: 700; font-size: .95rem; white-space: nowrap; transform: translateY(6px); transition: transform .2s ease; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3); }
+        .reiter a:hover, .reiter a:focus-visible, .reiter a.an { transform: translateY(0); }
 
-        /* Versprechen */
-        .versprechen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 40px; border-top: 2px solid var(--tinte); }
-        .versprechen div { padding: 16px 18px 4px 0; }
-        .versprechen h3 { margin: 0 0 4px; font-size: 1rem; }
-        .versprechen p { margin: 0; color: var(--leise); font-size: .92rem; max-width: 34ch; }
+        /* ---------- Themen als offene Ordner ---------- */
+        main { padding-block: 40px 30px; }
+        .thema { scroll-margin-top: 12px; }
+        .thema + .thema { margin-top: 34px; }
+        .reiterkopf { display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 10px 18px 12px; background: var(--farbe); color: #fff; border-radius: 14px 14px 0 0; font-family: var(--titel); font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3); }
+        .anzahl { font-family: var(--text); font-weight: 700; font-size: .78rem; background: rgba(255, 255, 255, .22); border-radius: 999px; padding: 1px 8px; }
+        .mappe-flaeche { background: var(--papier); border-radius: 0 18px 18px 18px; padding: 14px; border-top: 4px solid var(--farbe); box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset, 0 14px 30px rgba(19, 34, 31, .07); }
+        .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 10px; perspective: 900px; }
+        .kachel { display: flex; align-items: center; gap: 14px; text-decoration: none; background: linear-gradient(180deg, #fbfcfb, #f2f6f4); border: 1px solid #e3eae7; border-radius: 15px; padding: 12px 14px; min-height: 78px; box-shadow: 0 1px 0 #fff inset, 0 3px 0 color-mix(in srgb, var(--farbe) 20%, #e2e9e6); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease; transform-origin: center bottom; }
+        .kachel:hover, .kachel:focus-visible { background: #fff; border-color: color-mix(in srgb, var(--farbe) 55%, #fff); transform: translateY(-3px) rotateX(7deg); box-shadow: 0 1px 0 #fff inset, 0 6px 0 color-mix(in srgb, var(--farbe) 38%, #e2e9e6), 0 18px 26px rgba(19, 34, 31, .12); }
+        .kachel:active { transform: translateY(1px); box-shadow: 0 1px 0 #fff inset, 0 1px 0 color-mix(in srgb, var(--farbe) 38%, #e2e9e6); }
+        .symbol { width: 52px; height: 52px; flex: 0 0 auto; border-radius: 15px; display: grid; place-items: center; font-size: 1.6rem; background: radial-gradient(circle at 30% 22%, #fff 0%, color-mix(in srgb, var(--farbe) 16%, #fff) 42%, color-mix(in srgb, var(--farbe) 42%, #fff) 100%); box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--farbe) 34%, transparent), inset 0 2px 2px rgba(255, 255, 255, .95), 0 5px 10px color-mix(in srgb, var(--farbe) 28%, transparent); }
+        .text { display: grid; gap: 2px; min-width: 0; }
+        .text b { font-family: var(--titel); font-weight: 700; font-size: 1.06rem; line-height: 1.2; letter-spacing: -0.005em; }
+        .text small { font-size: .9rem; color: var(--leise); line-height: 1.35; }
+        .hinweis-badge { justify-self: start; margin-top: 4px; background: #fff3d1; color: #714c00; border-radius: 999px; padding: 1px 9px; font-size: .78rem; font-weight: 700; }
+        .nichts { background: var(--papier); border: 2px dashed var(--linie); border-radius: 18px; padding: 22px; color: var(--leise); text-align: center; margin: 0; }
 
-        .mitnehmen { margin-top: 34px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 16px 18px; background: var(--hell); border-radius: 14px; }
+        /* ---------- Versprechen ---------- */
+        .versprechen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 46px; }
+        .versprechen div { display: grid; grid-template-columns: 44px 1fr; gap: 4px 14px; align-content: start; padding: 4px 0; }
+        .versprechen svg { grid-row: span 2; width: 44px; height: 44px; padding: 10px; border-radius: 13px; background: #dceae5; color: var(--marke); }
+        .versprechen h3 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 1.05rem; }
+        .versprechen p { margin: 0; color: var(--leise); font-size: .93rem; max-width: 34ch; }
+
+        .mitnehmen { margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 18px 20px; background: linear-gradient(120deg, #dcebe6, #e9f1ee); border-radius: 18px; }
         .mitnehmen div { flex: 1 1 260px; }
-        .mitnehmen h3 { margin: 0; font-size: 1rem; }
-        .mitnehmen p { margin: 2px 0 0; color: var(--leise); font-size: .9rem; }
-        .mitnehmen a { text-decoration: none; font-weight: 700; color: var(--marke); background: #fff; border: 1px solid #b9d6cd; border-radius: 10px; padding: 8px 12px; font-size: .9rem; }
+        .mitnehmen h3 { margin: 0; font-family: var(--titel); font-weight: 700; font-size: 1.05rem; }
+        .mitnehmen p { margin: 2px 0 0; color: var(--leise); font-size: .92rem; }
+        .mitnehmen a { text-decoration: none; font-weight: 700; color: var(--marke); background: #fff; border: 1px solid #b8d5cc; border-radius: 11px; padding: 9px 14px; font-size: .92rem; box-shadow: 0 2px 0 #b8d5cc; }
 
-        footer { border-top: 1px solid var(--linie); padding-block: 18px calc(18px + env(safe-area-inset-bottom, 0px)); color: var(--leise); font-size: .88rem; }
-        footer .breite { display: flex; flex-wrap: wrap; gap: 6px 18px; }
-        footer a { color: var(--leise); }
+        footer { margin-top: 10px; background: var(--marke); color: var(--kopf-text); padding-block: 22px calc(22px + env(safe-area-inset-bottom, 0px)); font-size: .9rem; }
+        footer .breite { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+        footer a { color: #fff; }
+        footer span { flex: 1 1 auto; }
 
+        @media (max-width: 860px) {
+            .held { grid-template-columns: minmax(0, 1fr); gap: 0; }
+            .szene { height: 250px; margin-top: 6px; }
+            .stapel { width: 160px; height: 200px; --z: 92px; --abstand: 12px; margin-top: 46px; }
+            .blatt { inset: 10px 13px 16px 10px; padding: 15px 13px; gap: 7px; }
+            .blatt i { height: 6px; } .blatt i:nth-child(1) { height: 9px; }
+            .stempel { width: 46px; height: 46px; font-size: .88rem; border-width: 3px; right: 10px; bottom: 11px; }
+            .lage span { font-size: .78rem; left: 10px; bottom: 8px; }
+        }
         @media (max-width: 640px) {
             .breite { padding-inline: 16px; }
+            .held { padding-top: 18px; }
             .schnell { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
             .schnell::-webkit-scrollbar { display: none; }
+            .schnell, .reiter { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); }
+            .szene { height: 210px; }
+            .stapel { margin-top: 30px; }
             .chip { flex: 0 0 auto; }
-            .held { padding-top: 22px; }
+            main { padding-top: 30px; }
+            .mappe-flaeche { padding: 10px; border-radius: 0 16px 16px 16px; }
             .kacheln { grid-template-columns: 1fr; gap: 8px; }
-            .kachel { min-height: 68px; padding: 10px 12px; }
-            .symbol { width: 44px; height: 44px; font-size: 1.35rem; border-radius: 12px; }
+            .kachel { min-height: 70px; padding: 10px 12px; }
+            .symbol { width: 46px; height: 46px; font-size: 1.4rem; border-radius: 13px; }
             .versprechen { grid-template-columns: 1fr; }
-            .held-raster { grid-template-columns: minmax(0, 1fr); gap: 0; }
-            .szene { height: 210px; margin-top: 10px; }
-            .stapel { width: 150px; height: 190px; --z: 80px; --abstand: 11px; margin-top: 50px; }
-            .blatt { inset: 10px 12px 14px 10px; padding: 14px 12px; gap: 7px; }
-            .stempel { width: 46px; height: 46px; font-size: .9rem; border-width: 3px; right: 10px; bottom: 10px; }
-            .lage::before { width: 40px; left: calc(10px + var(--i) * 18px); }
-            .versprechen div { padding-bottom: 12px; border-bottom: 1px solid var(--linie); }
         }
     </style>
 </head>
@@ -151,37 +186,31 @@
                 </div>
             </div>
             <div class="held">
-              <div class="held-raster">
-               <div>
-                <h1 data-i18n="h1">Papierkram in Deutschland – einfach erledigt.</h1>
-                <p data-i18n="lead">19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch.</p>
-                <div class="suche" role="search">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                    <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen">
+                <div>
+                    <h1 data-i18n="h1">Papierkram in Deutschland – einfach erledigt.</h1>
+                    <p class="unter" data-i18n="lead">19 Helfer für Bewerbung, Briefe, Geld und Dokumente. Direkt im Browser, auf Deutsch und Englisch.</p>
+                    <div class="suche" role="search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen" aria-describedby="treffer">
+                    </div>
+                    <p class="treffer" id="treffer" aria-live="polite"></p>
+                    <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true">📷</span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
                 </div>
-                <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true">📷</span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
-               </div>
-               <div class="szene" aria-hidden="true">
-                <div class="stapel">
-                    <div class="lage" style="--i:0;--farbe:#0e7490"></div>
-                    <div class="lage" style="--i:1;--farbe:#b4235a"></div>
-                    <div class="lage" style="--i:2;--farbe:#6d3fd4"></div>
-                    <div class="lage" style="--i:3;--farbe:#1f7a4d"></div>
-                    <div class="lage" style="--i:4;--farbe:#c2410c"></div>
-                    <div class="lage" style="--i:5;--farbe:#2f5fd0"></div>
-                    <div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
+                <div class="szene" id="szene" aria-hidden="true">
+                    <div class="stapel" id="stapel">
+                        <div class="lage" data-thema="arbeit" style="--i:5;--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></div><div class="lage" data-thema="post" style="--i:4;--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" data-thema="geld" style="--i:3;--farbe:#1f7a4d"><span data-i18n="t_geld">Geld</span></div><div class="lage" data-thema="doku" style="--i:2;--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" data-thema="wohnen" style="--i:1;--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></div><div class="lage" data-thema="ki" style="--i:0;--farbe:#0e7490"><span data-i18n="t_ki">KI-Helfer</span></div>
+                        <div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
+                    </div>
                 </div>
-               </div>
-              </div>
-                <nav class="reiter" id="reiter" aria-label="Themen"></nav>
             </div>
+            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Geld</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI-Helfer</span></a></nav>
         </div>
     </header>
 
     <main class="breite" id="bereiche">
-            <section class="thema" style="--farbe:#2f5fd0" data-thema="arbeit">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#2f5fd0" data-thema="arbeit" id="thema-arbeit">
+                <h2 class="reiterkopf"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span><small class="anzahl">3</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="Lebenslauf_app.html" data-such="cv lebenslauf resume anschreiben deckblatt bewerbungsmappe job bewerbung schreiben write an application lebenslauf, anschreiben, deckblatt cv, cover letter, cover page">
                         <span class="symbol" aria-hidden="true">📝</span>
                         <span class="text"><b data-i18n="a_bewerbung">Bewerbung schreiben</b><small data-i18n="k_bewerbung">Lebenslauf, Anschreiben, Deckblatt</small></span>
@@ -194,11 +223,11 @@
                         <span class="symbol" aria-hidden="true">🎤</span>
                         <span class="text"><b data-i18n="a_training">Gesprächstraining</b><small data-i18n="k_training">Vorstellungsgespräch üben</small></span>
                     </a>
-                </div>
+                </div></div>
             </section>
-            <section class="thema" style="--farbe:#c2410c" data-thema="post">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_post">Briefe &amp; Ämter</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#c2410c" data-thema="post" id="thema-post">
+                <h2 class="reiterkopf"><span data-i18n="t_post">Briefe &amp; Ämter</span><small class="anzahl">3</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="post/index.html" data-such="brief behörde amt jobcenter frist mahnung verstehen übersetzen letter post-assistent letter assistant briefe verstehen – in deiner sprache understand letters – in your language">
                         <span class="symbol" aria-hidden="true">📬</span>
                         <span class="text"><b data-i18n="a_post">Post-Assistent</b><small data-i18n="k_post">Briefe verstehen – in deiner Sprache</small></span>
@@ -211,11 +240,11 @@
                         <span class="symbol" aria-hidden="true">⏰</span>
                         <span class="text"><b data-i18n="a_fristen">Fristen-Übersicht</b><small data-i18n="k_fristen">Alle Termine an einem Ort</small></span>
                     </a>
-                </div>
+                </div></div>
             </section>
-            <section class="thema" style="--farbe:#1f7a4d" data-thema="geld">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_geld">Geld</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#1f7a4d" data-thema="geld" id="thema-geld">
+                <h2 class="reiterkopf"><span data-i18n="t_geld">Geld</span><small class="anzahl">5</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="stunden/index.html" data-such="stunden lohn mindestlohn minijob pause arbeitszeit gehalt wage hours stundenzettel &amp; lohn timesheet &amp; pay arbeitszeit und lohn prüfen check working hours and pay">
                         <span class="symbol" aria-hidden="true">⏱️</span>
                         <span class="text"><b data-i18n="a_stunden">Stundenzettel &amp; Lohn</b><small data-i18n="k_stunden">Arbeitszeit und Lohn prüfen</small></span>
@@ -236,11 +265,11 @@
                         <span class="symbol" aria-hidden="true">📑</span>
                         <span class="text"><b data-i18n="a_vertraege">Verträge</b><small data-i18n="k_vertraege">Kosten und Kündigungsfristen</small></span>
                     </a>
-                </div>
+                </div></div>
             </section>
-            <section class="thema" style="--farbe:#6d3fd4" data-thema="doku">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_doku">Dokumente &amp; Fotos</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#6d3fd4" data-thema="doku" id="thema-doku">
+                <h2 class="reiterkopf"><span data-i18n="t_doku">Dokumente &amp; Fotos</span><small class="anzahl">4</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="scanner/" data-such="scan scannen kamera qr barcode visitenkarte scanner scanner dokumente mit dem handy scannen scan documents with your phone">
                         <span class="symbol" aria-hidden="true">📷</span>
                         <span class="text"><b data-i18n="a_scanner">Scanner</b><small data-i18n="k_scanner">Dokumente mit dem Handy scannen</small></span>
@@ -257,11 +286,11 @@
                         <span class="symbol" aria-hidden="true">🗂️</span>
                         <span class="text"><b data-i18n="a_mappe">Dokumenten-Mappe</b><small data-i18n="k_mappe">Ausweis &amp; Co. mit Ablauf-Erinnerung</small><span class="hinweis-badge" id="mappeFaellig" hidden></span></span>
                     </a>
-                </div>
+                </div></div>
             </section>
-            <section class="thema" style="--farbe:#b4235a" data-thema="wohnen">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#b4235a" data-thema="wohnen" id="thema-wohnen">
+                <h2 class="reiterkopf"><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span><small class="anzahl">2</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="anerkennung/index.html" data-such="abschluss diplom zeugnis studium ausbildung anerkennung zab recognition degree anerkennung recognition ausländische abschlüsse anerkennen get foreign qualifications recognised">
                         <span class="symbol" aria-hidden="true">🎓</span>
                         <span class="text"><b data-i18n="a_anerkennung">Anerkennung</b><small data-i18n="k_anerkennung">Ausländische Abschlüsse anerkennen</small></span>
@@ -270,11 +299,11 @@
                         <span class="symbol" aria-hidden="true">🏠</span>
                         <span class="text"><b data-i18n="a_wohnung">Wohnungsbewerbung</b><small data-i18n="k_wohnung">Bewerbung beim Vermieter</small></span>
                     </a>
-                </div>
+                </div></div>
             </section>
-            <section class="thema" style="--farbe:#0e7490" data-thema="ki">
-                <h2><span class="punkt" aria-hidden="true"></span><span data-i18n="t_ki">KI-Helfer</span></h2>
-                <div class="kacheln">
+            <section class="thema" style="--farbe:#0e7490" data-thema="ki" id="thema-ki">
+                <h2 class="reiterkopf"><span data-i18n="t_ki">KI-Helfer</span><small class="anzahl">2</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="assistent/index.html" data-such="ki chat assistent lotse gemini chatgpt claude ai ki-assistent ai assistant fragen stellen, texte verbessern ask questions, improve texts">
                         <span class="symbol" aria-hidden="true">💬</span>
                         <span class="text"><b data-i18n="a_assistent">KI-Assistent</b><small data-i18n="k_assistent">Fragen stellen, Texte verbessern</small></span>
@@ -283,14 +312,14 @@
                         <span class="symbol" aria-hidden="true">🤖</span>
                         <span class="text"><b data-i18n="a_agent">KI-Agent</b><small data-i18n="k_agent">Erledigt Aufgaben Schritt für Schritt</small></span>
                     </a>
-                </div>
+                </div></div>
             </section>
             <p class="nichts" id="nichts" hidden data-i18n="nichts">Dazu haben wir noch keinen Helfer. Versuch ein anderes Wort – oder frag den KI-Assistenten.</p>
 
             <section class="versprechen" aria-label="So funktioniert die Seite">
-                <div><h3 data-i18n="v1_h">Ohne Installation</h3><p data-i18n="v1_p">Läuft im Browser – am Handy und am Computer.</p></div>
-                <div><h3 data-i18n="v2_h">Ohne Anmeldung</h3><p data-i18n="v2_p">Ein Konto brauchst du nur, wenn du Daten in der Cloud sichern willst.</p></div>
-                <div><h3 data-i18n="v3_h">Deine Daten bleiben bei dir</h3><p data-i18n="v3_p">Gespeichert wird auf deinem Gerät. Nur wenn du eine Online-KI oder die Cloud nutzt, wird etwas gesendet.</p></div>
+                <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><h3 data-i18n="v1_h">Ohne Installation</h3><p data-i18n="v1_p">Läuft im Browser – am Handy und am Computer.</p></div>
+                <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/><path d="m3 3 18 18"/></svg><h3 data-i18n="v2_h">Ohne Anmeldung</h3><p data-i18n="v2_p">Ein Konto brauchst du nur, wenn du Daten in der Cloud sichern willst.</p></div>
+                <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><h3 data-i18n="v3_h">Deine Daten bleiben bei dir</h3><p data-i18n="v3_p">Gespeichert wird auf deinem Gerät. Nur wenn du eine Online-KI oder die Cloud nutzt, wird etwas gesendet.</p></div>
             </section>
 
             <section class="mitnehmen" id="downloads">
@@ -338,6 +367,8 @@
   "impressum": "Impressum",
   "agb": "AGB",
   "mappe_faellig": "⏰ {n} bald fällig",
+  "treffer": "{n} passende Helfer",
+  "treffer1": "1 passender Helfer",
   "lang_hint": "Sprache",
   "update": "Eine neue Version ist da.",
   "update_btn": "Neu laden",
@@ -412,6 +443,8 @@
   "impressum": "Legal notice",
   "agb": "Terms",
   "mappe_faellig": "⏰ {n} due soon",
+  "treffer": "{n} matching helpers",
+  "treffer1": "1 matching helper",
   "lang_hint": "Language",
   "update": "A new version is available.",
   "update_btn": "Reload",
@@ -468,19 +501,41 @@
         (function () {
             'use strict';
             const T = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+            const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const stapel = document.getElementById('stapel');
+            const szene = document.getElementById('szene');
 
-            // Register-Reiter aus den Themen bauen
-            const reiter = document.getElementById('reiter');
-            function baueReiter() {
-                reiter.innerHTML = '';
-                document.querySelectorAll('.thema').forEach(function (s) {
-                    s.id = 'thema-' + s.dataset.thema;
-                    const a = document.createElement('a');
-                    a.href = '#' + s.id;
-                    a.style.setProperty('--farbe', getComputedStyle(s).getPropertyValue('--farbe'));
-                    a.textContent = T()['t_' + s.dataset.thema];
-                    reiter.appendChild(a);
+            // Reiter <-> Aktenstapel: Fahren oder Fokus auf einen Reiter zieht die passende Mappe heraus
+            function ziehe(thema) {
+                stapel.classList.toggle('zieht', !!thema);
+                stapel.querySelectorAll('.lage').forEach(function (l) { l.classList.toggle('raus', l.dataset.thema === thema); });
+                document.querySelectorAll('#reiter a').forEach(function (a) { a.classList.toggle('an', a.dataset.thema === thema); });
+            }
+            document.querySelectorAll('#reiter a').forEach(function (a) {
+                a.addEventListener('pointerenter', function () { ziehe(a.dataset.thema); });
+                a.addEventListener('focus', function () { ziehe(a.dataset.thema); });
+                a.addEventListener('pointerleave', function () { ziehe(null); });
+                a.addEventListener('blur', function () { ziehe(null); });
+            });
+            // Klick auf eine Mappe im Stapel springt zum Thema
+            stapel.querySelectorAll('.lage').forEach(function (l) {
+                l.style.cursor = 'pointer';
+                l.addEventListener('pointerenter', function () { ziehe(l.dataset.thema); });
+                l.addEventListener('pointerleave', function () { ziehe(null); });
+                l.addEventListener('click', function () { const z = document.getElementById('thema-' + l.dataset.thema); if (z) z.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' }); });
+            });
+            // Der Stapel folgt leicht dem Zeiger (nur mit Maus/Stift, nicht beim Wischen am Handy)
+            if (!ruhig) {
+                const kopf = document.querySelector('.kopf');
+                kopf.addEventListener('pointermove', function (e) {
+                    if (e.pointerType === 'touch') return;
+                    const r = szene.getBoundingClientRect();
+                    const dx = (e.clientX - (r.left + r.width / 2)) / window.innerWidth;
+                    const dy = (e.clientY - (r.top + r.height / 2)) / window.innerHeight;
+                    stapel.style.setProperty('--rz', (-34 + dx * 16).toFixed(2) + 'deg');
+                    stapel.style.setProperty('--rx', (58 - dy * 12).toFixed(2) + 'deg');
                 });
+                kopf.addEventListener('pointerleave', function () { stapel.style.removeProperty('--rz'); stapel.style.removeProperty('--rx'); });
             }
 
             // Suche: Kacheln nach Wort filtern (Name, Kurztext, Stichwoerter in beiden Sprachen)
@@ -501,6 +556,7 @@
                     treffer += sichtbar;
                 });
                 document.getElementById('nichts').hidden = treffer > 0;
+                document.getElementById('treffer').textContent = q ? (treffer === 1 ? T().treffer1 : String(T().treffer).split('{n}').join(treffer)) : '';
             }
             feld.addEventListener('input', filtern);
             feld.addEventListener('keydown', function (e) {
@@ -508,6 +564,8 @@
                 const erste = document.querySelector('.kachel:not([hidden])');
                 if (erste && feld.value.trim()) { e.preventDefault(); erste.click(); }
             });
+            // Mit Tippen in der Suche springt die Ansicht zu den Treffern (am Handy wichtig)
+            feld.addEventListener('search', filtern);
 
             // Hinweis auf der Mappe-Kachel: wie viele Dokumente bald ablaufen (Zahl legt die Mappe selbst ab)
             function mappeHinweis() {
@@ -518,9 +576,7 @@
                 el.hidden = n < 1;
                 el.textContent = String(T().mappe_faellig).split('{n}').join(n);
             }
-
-            document.addEventListener('sd-lang-changed', function () { baueReiter(); mappeHinweis(); });
-            baueReiter();
+            document.addEventListener('sd-lang-changed', function () { mappeHinweis(); filtern(); });
             mappeHinweis();
         })();
 
@@ -534,11 +590,11 @@
             const d = window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
             const b = document.createElement('div');
             b.id = 'sd-update-banner';
-            b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#0f3d3a;color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));text-align:center;font-size:0.95rem;';
+            b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#0c3533;color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));text-align:center;font-size:0.95rem;';
             b.textContent = '🔄 ' + d.update + ' ';
             const knopf = document.createElement('button');
             knopf.textContent = d.update_btn;
-            knopf.style.cssText = 'margin-left:10px;padding:7px 14px;border:0;border-radius:8px;background:#f2c14e;color:#12212b;font-weight:bold;cursor:pointer;';
+            knopf.style.cssText = 'margin-left:10px;padding:7px 14px;border:0;border-radius:8px;background:#f4c54f;color:#13221f;font-weight:bold;cursor:pointer;';
             knopf.onclick = function () { location.reload(); };
             b.appendChild(knopf);
             document.body.appendChild(b);
