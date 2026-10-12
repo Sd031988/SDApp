@@ -1063,6 +1063,8 @@
       border-radius: 6px;
     }
 
+    .link-btn-klein { display:block; width:100%; margin:-2px 0 8px; padding:2px 0; border:0; background:none; color:var(--muted); font-size:.74rem; text-decoration:underline; cursor:pointer; text-align:center; }
+
     /* Signature pad */
     .sig-canvas-wrap {
       border: 1.5px dashed var(--line);
@@ -1622,6 +1624,8 @@
         toast_textbox_added: 'Textfeld hinzugefügt – ziehe zum Verschieben',
         toast_signature_placed: 'Unterschrift auf der Seite platziert – zum Verschieben ziehen, an den Rändern vergrößern',
         toast_signature_empty: 'Bitte zuerst im Feld unterschreiben',
+        toast_scan_uebernommen: '{n} gescannte Seite(n) übernommen',
+        btn_alt_foto_scan: 'Einfacher Foto-Scan (z. B. Ausweis Vorder- & Rückseite)',
         toast_ocr_recognized: '{n} Textstellen erkannt – klicke auf Wörter zum Ändern',
         toast_ocr_failed: 'Texterkennung fehlgeschlagen (Internetverbindung prüfen)',
         toast_pdf_generating: 'PDF wird generiert...',
@@ -1795,6 +1799,8 @@
         toast_textbox_added: 'Text box added – drag to move',
         toast_signature_placed: 'Signature placed on the page – drag to move, use the edges to resize',
         toast_signature_empty: 'Please sign in the box first',
+        toast_scan_uebernommen: '{n} scanned page(s) added',
+        btn_alt_foto_scan: 'Simple photo scan (e.g. ID card front & back)',
         toast_ocr_recognized: '{n} text elements recognized – click words to change them',
         toast_ocr_failed: 'Text recognition failed (check your internet connection)',
         toast_pdf_generating: 'Generating PDF...',
@@ -1912,6 +1918,7 @@
         <button id="btnChooseFiles" class="tool-btn" data-i18n="btn_choose_files">📂 Datei wählen</button>
         <button id="btnCameraScan" class="tool-btn" data-i18n="btn_camera_scan">📷 Scan / Foto</button>
       </div>
+      <button id="btnAltFotoScan" type="button" class="link-btn-klein" data-i18n="btn_alt_foto_scan">Einfacher Foto-Scan (z. B. Ausweis Vorder- &amp; Rückseite)</button>
       <div id="scanPendingBar" style="display:none; align-items:center; gap:8px; flex-wrap:wrap; background:var(--accent-soft,#eef4ff); border:1px solid var(--accent,#3366ff); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
         <span style="font-weight:600;"><span id="scanPendingCount">0</span> <span data-i18n="scan_pending_suffix">Seite(n) aufgenommen</span></span>
         <button id="btnScanPendingMore" class="tool-btn" style="margin:0;" data-i18n="btn_scan_pending_more">📷 Weitere Seite</button>
@@ -2426,6 +2433,11 @@
         <button id="btnLiveCamDone" class="btn-primary" style="display:none; background:var(--success,#2e9e4f);" data-i18n="btn_livecam_done">✅ Fertig – Seiten bearbeiten</button>
       </div>
     </div>
+  </div>
+
+  <!-- SD Scanner im Rahmen (gleiche App wie /scanner/) -->
+  <div id="sdScannerOverlay" style="display:none; position:fixed; inset:0; z-index:3000; background:#05070a;">
+    <iframe id="sdScannerFrame" title="SD Scanner" allow="camera; clipboard-write" style="border:0; width:100%; height:100%; display:block;"></iframe>
   </div>
 
   <!-- Modal: Unterschrift zeichnen -->
@@ -5315,13 +5327,53 @@
       fi.click();
     };
 
-    $('btnCameraScan').onclick = () => {
+    // Bisheriger Foto-Scan (Datei-/Kamera-Auswahl des Geraets + eigener Zuschnitt).
+    // Bleibt fuer Ausweis Vorder-/Rueckseite und weitere Seiten im alten Ablauf.
+    function altFotoScan() {
       const fi = $('fileInput');
       fi.accept = 'image/*';
       fi.setAttribute('capture', 'environment');
       state.scanCaptureMode = true;
       fi.click();
+    }
+    $('btnAltFotoScan').onclick = altFotoScan;
+
+    // "Scan / Foto" oeffnet den SD Scanner (dieselbe App wie /scanner/) im
+    // Vollbild. Fertige Seiten kommen per postMessage zurueck und werden hier
+    // als normale Seiten angehaengt.
+    function schliesseSdScanner() {
+      const frame = $('sdScannerFrame');
+      try { frame.contentWindow && frame.contentWindow.postMessage({ type: 'sd-scan-stop' }, location.origin); } catch (e) {}
+      $('sdScannerOverlay').style.display = 'none';
+      frame.src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+    $('btnCameraScan').onclick = () => {
+      $('sdScannerOverlay').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      $('sdScannerFrame').src = '../scanner/?ziel=pdf-studio';
     };
+    window.addEventListener('message', async (e) => {
+      if (e.origin !== location.origin || !e.data || e.source !== $('sdScannerFrame').contentWindow) return;
+      if (e.data.type === 'sd-scan-close') { schliesseSdScanner(); return; }
+      if (e.data.type !== 'sd-scan-pages' || !Array.isArray(e.data.pages) || !e.data.pages.length) return;
+      schliesseSdScanner();
+      pushUndoState();
+      let erste = null;
+      for (const seite of e.data.pages) {
+        if (typeof seite.url !== 'string' || !seite.url.startsWith('data:image/')) continue;
+        const page = createPageModel(seite.url, String(seite.name || 'Scan'), seite.w, seite.h);
+        state.pages.push(page);
+        if (!erste) erste = page;
+      }
+      if (!erste) return;
+      state.selectedPageId = erste.id;
+      $('btnExport').disabled = false;
+      renderSidebarPages();
+      renderStage();
+      updateInspector();
+      showToast(t('toast_scan_uebernommen', { n: e.data.pages.length }));
+    });
 
     // Seiten, die per Kamera/Live-Kamera bereits aufgenommen, aber noch nicht
     // zugeschnitten/gefiltert wurden. So kann man erst mehrere Seiten
@@ -5348,7 +5400,7 @@
       if (doneBtn) doneBtn.style.display = scanPendingCaptures.length > 0 ? '' : 'none';
     }
 
-    $('btnScanPendingMore').onclick = () => { $('btnCameraScan').click(); };
+    $('btnScanPendingMore').onclick = () => { altFotoScan(); };
     $('btnScanPendingDone').onclick = () => {
       const files = scanPendingCaptures;
       scanPendingCaptures = [];
@@ -6472,7 +6524,7 @@
         renderSidebarPages();
         renderStage();
         showToast(t('toast_ausweis_front_saved'));
-        setTimeout(() => { $('btnCameraScan').click(); }, 350);
+        setTimeout(() => { altFotoScan(); }, 350);
       } else {
         if (scanDocType === 'ausweis') scanAusweisSide = 'front';
         $('scanAusweisBanner').classList.remove('show');

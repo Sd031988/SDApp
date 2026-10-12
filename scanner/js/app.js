@@ -2633,11 +2633,75 @@
     });
   }
 
+  // --- Einbettung im PDF-Studio (scanner/?ziel=pdf-studio im Rahmen) ---
+  // Statt PDF zu speichern, werden die fertigen Seiten als Bilder an das
+  // PDF-Studio uebergeben. Das Dokument bleibt zusaetzlich in der Ablage.
+  const imPdfStudio = new URLSearchParams(location.search).get("ziel") === "pdf-studio" && window.parent !== window;
+  let zielFertig = null;
+  if (imPdfStudio) {
+    const sende = (nachricht) => window.parent.postMessage(nachricht, location.origin);
+    const top = document.querySelector(".cam-top");
+    const zu = document.createElement("button");
+    zu.className = "ghost";
+    zu.type = "button";
+    zu.textContent = "✕";
+    zu.setAttribute("aria-label", "Scanner schließen");
+    zu.addEventListener("click", () => sende({ type: "sd-scan-close" }));
+    top.insertBefore(zu, top.firstChild);
+    zielFertig = document.createElement("button");
+    zielFertig.className = "ghost accent";
+    zielFertig.type = "button";
+    zielFertig.hidden = true;
+    top.appendChild(zielFertig);
+    const sheetBtn = document.createElement("button");
+    sheetBtn.id = "btnZuPdfStudio";
+    sheetBtn.className = "act";
+    sheetBtn.type = "button";
+    sheetBtn.textContent = "✓ Ins PDF-Studio";
+    el("btnMakePdf").parentNode.insertBefore(sheetBtn, el("btnMakePdf"));
+
+    const uebergeben = async () => {
+      if (!state.pages.length) return;
+      busy("Seiten werden übergeben");
+      try {
+        const seiten = [];
+        for (let i = 0; i < state.pages.length; i++) {
+          const { url, w, h } = await pageDataUrl(state.pages[i], 2200);
+          seiten.push({ url, w, h, name: `${fileBase()} – Seite ${i + 1}` });
+          busy(`Seite ${i + 1} von ${state.pages.length}`, (i + 1) / state.pages.length);
+        }
+        busyHide();
+        sende({ type: "sd-scan-pages", pages: seiten });
+        ui.pagesSheet.hidden = true;
+        await beginNewDocument();
+      } catch (e) {
+        busyHide();
+        toast("Übergabe fehlgeschlagen");
+      }
+    };
+    zielFertig.addEventListener("click", uebergeben);
+    sheetBtn.addEventListener("click", uebergeben);
+    const alteZaehlung = renderCounts;
+    renderCounts = function () {
+      alteZaehlung();
+      const n = state.pages.length;
+      zielFertig.hidden = n === 0;
+      zielFertig.textContent = `✓ Fertig (${n})`;
+      sheetBtn.disabled = n === 0;
+    };
+    // Kamera freigeben, wenn das PDF-Studio den Rahmen schliesst
+    window.addEventListener("message", (e) => {
+      if (e.origin === location.origin && e.data && e.data.type === "sd-scan-stop") stopCamera();
+    });
+  }
+
   startNewDocState();
   initMode();
   renderCounts();
   startCamera();
-  restore().then(() => {
+  restore().then(async () => {
+    // Im PDF-Studio immer mit leerem Dokument starten; ein angefangenes liegt in der Ablage.
+    if (imPdfStudio && state.pages.length) await beginNewDocument();
     renderCounts();
     if (!ui.pagesSheet.hidden) {
       ui.docName.value = state.docName;
