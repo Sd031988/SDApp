@@ -80,7 +80,10 @@
         .nachricht, .schritt, .frage, .plan-aktion { scroll-margin-bottom: 190px; scroll-margin-top: 80px; }
 
         .eingabe { position: sticky; bottom: 0; background: rgba(255, 255, 255, .98); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: grid; gap: 8px; box-shadow: 0 -6px 18px rgba(23, 42, 58, .06); margin-bottom: env(safe-area-inset-bottom, 0px); }
-        .eingabe textarea { width: 100%; resize: vertical; min-height: 64px; max-height: 40vh; line-height: 1.45; }
+        .eingabe textarea { width: 100%; resize: vertical; min-height: 52px; max-height: 40vh; line-height: 1.45; }
+        .eingabe .status { font-size: .78rem; color: var(--muted); margin: 0; }
+        .eingabe .status:empty { display: none; }
+        @media (max-width: 560px) { .eingabe .zeile { flex-wrap: nowrap; gap: 6px; } .eingabe .zeile .btn { padding: 8px 9px; min-height: 42px; white-space: nowrap; } .eingabe .nur-breit { display: none; } .eingabe .zeile .grow { display: none; } #sendenBtn, #stoppBtn { margin-left: auto; } }
         .eingabe .zeile { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .eingabe .zeile .grow { flex: 1; min-width: 0; font-size: .78rem; color: var(--muted); }
 
@@ -207,13 +210,14 @@
 
             <section class="eingabe">
                 <div class="bilder" id="bilderZeile" hidden></div>
-                <textarea id="eingabe" rows="3" data-i18n-placeholder="eingabe_ph" placeholder="Was soll der Agent erledigen?"></textarea>
+                <textarea id="eingabe" rows="2" data-i18n-placeholder="eingabe_ph" placeholder="Was soll der Agent erledigen?"></textarea>
+                <p class="status" id="statusZeile" aria-live="polite"></p>
                 <div class="zeile">
                     <button type="button" class="btn" id="bildBtn" data-i18n-title="foto" title="Foto aufnehmen">📷</button>
                     <button type="button" class="btn" id="mikroBtn" data-i18n-title="sprechen" title="Diktieren">🎤</button>
                     <button type="button" class="btn" id="stimmeBtn" data-i18n-title="vorlesen" title="Antworten vorlesen" aria-pressed="false">🔇</button>
-                    <span class="grow" id="statusZeile" aria-live="polite"></span>
-                    <button type="button" class="btn klein" id="neuBtn" data-i18n="neu">🧹 Neuer Auftrag</button>
+                    <span class="grow"></span>
+                    <button type="button" class="btn klein" id="neuBtn" data-i18n-title="neu" title="Neuer Auftrag">🧹<span class="nur-breit" data-i18n="neu_kurz"> Neuer Auftrag</span></button>
                     <button type="button" class="btn prim" id="sendenBtn" data-i18n="senden">▶ Los</button>
                     <button type="button" class="btn aktiv" id="stoppBtn" hidden data-i18n="stopp">⏹ Stopp</button>
                 </div>
@@ -253,12 +257,12 @@
                 keine_dateien: 'Noch keine Dateien.', leeren_frage: 'Alle Dateien im Browser-Speicher löschen?',
                 leer_text: 'Sag SD Lotze, was er erledigen soll. Er plant, nutzt Werkzeuge und fragt vor Änderungen.',
                 beispiele: ['Trag diese Stelle in meinen Bewerbungs-Tracker ein: Lagerist bei Logistik Nord GmbH, Köln, beworben heute', 'Bau mir eine einfache Bewerbungs-Webseite aus meinem Lebenslauf', 'Rechne aus: 38 km Arbeitsweg, 220 Arbeitstage – wie viel Entfernungspauschale ist das 2026?', 'Welche Fristen und Bewerbungen sind diese Woche fällig?'],
-                eingabe_ph: 'Was soll der Agent erledigen? (sprechen oder tippen)', neu: '🧹 Neuer Auftrag', senden: '▶ Los', stopp: '⏹ Stopp',
+                eingabe_ph: 'Was soll der Agent erledigen? (sprechen oder tippen)', neu: '🧹 Neuer Auftrag', neu_kurz: ' Neuer Auftrag', senden: '▶ Los', stopp: '⏹ Stopp',
                 neu_laden: '🔄', herunterladen: '⬇️ Datei', schliessen: '✕', vorschau_info: 'Die Vorschau läuft abgeschottet: sie kommt nicht an deine gespeicherten Daten oder Schlüssel.',
                 plan_ausfuehren: '▶ Plan ausführen', plan_aendern: 'Du kannst den Plan auch ändern: schreib unten, was anders sein soll.',
                 erlauben: '✅ Erlauben', ablehnen: '❌ Ablehnen', alle_erlauben: 'Für diesen Auftrag alles erlauben',
                 denkt: '🤖 SD Lotze arbeitet … (Schritt {n})', fertig: '', gestoppt: '⏹ Gestoppt.', max_schritte: 'Nach {n} Schritten angehalten – schreib „weiter“, wenn er fortfahren soll.',
-                kein_key: 'Für {name} fehlt der Schlüssel – bitte oben im KI-Bereich eintragen.', lotse_nein: 'Bitte oben Gemini, ChatGPT oder Claude wählen – das lokale Modell kann den Agent-Modus nicht.',
+                kein_key: 'Für {name} fehlt der Schlüssel – bitte oben im KI-Bereich eintragen.', lotse_nein: 'Der Agent braucht eine Online-KI – SD Lotse ist dafür zu klein. Am einfachsten: Gemini mit kostenlosem Schlüssel von Google (dauert ca. 2 Minuten).', zu_gemini: '☁️ Auf Gemini umstellen',
                 netz: 'Keine Verbindung zu {firma}. Bitte Internet prüfen.', key_falsch: 'Der Schlüssel für {name} wurde abgelehnt. Bitte prüfen.', guthaben: 'Bei {firma} ist kein Guthaben/Kontingent mehr frei.', rate: '{name}: zu viele Anfragen – bitte kurz warten.', anbieter_fehler: '{name} meldet Fehler {status}.',
                 modell: 'Modell',
                 w: { sd_daten_lesen: 'SD-Daten lesen', lebenslauf_aendern: 'Lebenslauf ändern', bewerbung_speichern: 'Bewerbung speichern', frist_speichern: 'Frist speichern', steuer_posten_hinzufuegen: 'Steuer-Posten hinzufügen', dateien_auflisten: 'Dateien auflisten', datei_lesen: 'Datei lesen', datei_schreiben: 'Datei schreiben', vorschau_zeigen: 'Vorschau zeigen', code_ausfuehren: 'Code ausführen' },
@@ -282,12 +286,12 @@
                 keine_dateien: 'No files yet.', leeren_frage: 'Delete all files in browser storage?',
                 leer_text: 'Tell SD Lotze what to do. It plans, uses tools and asks before changes.',
                 beispiele: ['Add this job to my application tracker: warehouse worker at Northern Logistics, Cologne, applied today', 'Build me a simple application website from my resume', 'Calculate: 38 km commute, 220 working days – how much commuting allowance is that in 2026?', 'Which deadlines and applications are due this week?'],
-                eingabe_ph: 'What should the agent do? (speak or type)', neu: '🧹 New task', senden: '▶ Go', stopp: '⏹ Stop',
+                eingabe_ph: 'What should the agent do? (speak or type)', neu: '🧹 New task', neu_kurz: ' New task', senden: '▶ Go', stopp: '⏹ Stop',
                 neu_laden: '🔄', herunterladen: '⬇️ File', schliessen: '✕', vorschau_info: 'The preview runs isolated: it cannot access your saved data or keys.',
                 plan_ausfuehren: '▶ Run plan', plan_aendern: 'You can also change the plan: write below what should be different.',
                 erlauben: '✅ Allow', ablehnen: '❌ Decline', alle_erlauben: 'Allow everything for this task',
                 denkt: '🤖 SD Lotze working … (step {n})', fertig: '', gestoppt: '⏹ Stopped.', max_schritte: 'Paused after {n} steps – write "continue" if it should go on.',
-                kein_key: 'The key for {name} is missing – please enter it in the AI section above.', lotse_nein: 'Please choose Gemini, ChatGPT or Claude above – the local model cannot run the agent mode.',
+                kein_key: 'The key for {name} is missing – please enter it in the AI section above.', lotse_nein: 'The agent needs an online AI – SD Lotse is too small for it. Easiest: Gemini with a free key from Google (takes about 2 minutes).', zu_gemini: '☁️ Switch to Gemini',
                 netz: 'No connection to {firma}. Please check the internet.', key_falsch: 'The key for {name} was rejected. Please check it.', guthaben: 'No credit/quota left at {firma}.', rate: '{name}: too many requests – please wait a moment.', anbieter_fehler: '{name} reports error {status}.',
                 modell: 'Model',
                 w: { sd_daten_lesen: 'Read SD data', lebenslauf_aendern: 'Change resume', bewerbung_speichern: 'Save application', frist_speichern: 'Save deadline', steuer_posten_hinzufuegen: 'Add tax item', dateien_auflisten: 'List files', datei_lesen: 'Read file', datei_schreiben: 'Write file', vorschau_zeigen: 'Show preview', code_ausfuehren: 'Run code' },
@@ -649,6 +653,40 @@
                 if (a.jahr) return s[a.jahr] ? { jahr: a.jahr, posten: s[a.jahr].posten || [], anlageN: s[a.jahr].n || {} } : 'Für ' + a.jahr + ' gibt es noch keine Angaben.';
                 return jahre.length ? jahre.map(j => ({ jahr: j, anzahlPosten: ((s[j] || {}).posten || []).length })) : 'Steuer-Helfer ist leer.';
             }
+            if (a.bereich === 'vertraege') {
+                const l = json(lies(localStorage, 'sdVertraege'), []);
+                return l.length ? l.map(v => ({ id: v.id, art: v.art, anbieter: v.anbieter, kosten: v.kosten, proMonate: v.intervall, beginn: v.beginn, mindestlaufzeitMonate: v.mindest,
+                    kuendigungsfrist: v.fristZahl + ' ' + v.fristEinheit, gekuendigtZum: v.gekuendigt || '' })) : 'Keine Verträge gespeichert.';
+            }
+            if (a.bereich === 'haushalt') {
+                const h = json(lies(localStorage, 'sdHaushalt'), {});
+                const b = (h && h.buchungen) || [];
+                return b.length ? b.map(x => ({ datum: x.datum, art: x.typ === 'ein' ? 'Einnahme' : 'Ausgabe', kategorie: x.kategorie, betrag: x.betrag, text: x.text, monatlich: !!x.monatlich })) : 'Haushaltsbuch ist leer.';
+            }
+            if (a.bereich === 'stunden') {
+                const h = json(lies(localStorage, 'sdStunden'), {});
+                const tage = (h && h.tage) || [];
+                return tage.length ? { arbeitgeber: h.arbeitgeber, stundenlohn: h.lohn, minijob: !!h.minijob, tage: tage.map(x => ({ datum: x.datum, von: x.von, bis: x.bis, pauseMin: x.pause, notiz: x.notiz })) } : 'Noch keine Arbeitszeiten eingetragen.';
+            }
+            if (a.bereich === 'eigene_fristen') {
+                const l = json(lies(localStorage, 'sdFristenEigene'), []);
+                return l.length ? l : 'Keine eigenen Fristen gespeichert.';
+            }
+            if (a.bereich === 'dokumente') {
+                // Nur Angaben, keine Dateien (die liegen in IndexedDB)
+                return new Promise((ok) => {
+                    try {
+                        const r = indexedDB.open('sdMappe', 1);
+                        r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('dokumente')) r.result.createObjectStore('dokumente', { keyPath: 'id' }); };
+                        r.onerror = () => ok('Dokumenten-Mappe nicht lesbar.');
+                        r.onsuccess = () => {
+                            const q = r.result.transaction('dokumente', 'readonly').objectStore('dokumente').getAll();
+                            q.onsuccess = () => { const l = (q.result || []).map(d => ({ art: d.art, titel: d.titel, person: d.person, gueltigBis: d.gueltigBis || 'unbefristet', anzahlDateien: (d.dateien || []).length })); ok(l.length ? l : 'Dokumenten-Mappe ist leer.'); };
+                            q.onerror = () => ok('Dokumenten-Mappe nicht lesbar.');
+                        };
+                    } catch (e) { ok('Dokumenten-Mappe nicht lesbar.'); }
+                });
+            }
             return 'Unbekannter Bereich.';
         }
 
@@ -657,8 +695,8 @@
         // ============================================================
         const s = (beschreibung, extra) => Object.assign({ type: 'string', description: beschreibung }, extra || {});
         const WERKZEUGE = [
-            { name: 'sd_daten_lesen', lesend: true, beschreibung: 'Liest gespeicherte Daten der Person aus den SD-Bereichen: lebenslauf, bewerbungen (Bewerbungs-Tracker), fristen (Post-Assistent), steuer (Steuer-Helfer, optional mit jahr), rechnungen (geschriebene und erhaltene Rechnungen). Immer zuerst lesen statt raten.',
-              params: { type: 'object', properties: { bereich: s('Welcher Bereich', { enum: ['lebenslauf', 'bewerbungen', 'fristen', 'steuer', 'rechnungen'] }), jahr: s('Nur bei steuer: Jahr, z. B. 2025') }, required: ['bereich'] } },
+            { name: 'sd_daten_lesen', lesend: true, beschreibung: 'Liest gespeicherte Daten der Person aus den SD-Bereichen: lebenslauf, bewerbungen (Bewerbungs-Tracker), fristen (Post-Assistent), eigene_fristen (Fristen-Übersicht), steuer (Steuer-Helfer, optional mit jahr), rechnungen (geschriebene und erhaltene Rechnungen), vertraege (Verträge & Kündigungen), haushalt (Haushaltsbuch), stunden (Stundenzettel), dokumente (Dokumenten-Mappe, nur Angaben). Immer zuerst lesen statt raten.',
+              params: { type: 'object', properties: { bereich: s('Welcher Bereich', { enum: ['lebenslauf', 'bewerbungen', 'fristen', 'eigene_fristen', 'steuer', 'rechnungen', 'vertraege', 'haushalt', 'stunden', 'dokumente'] }), jahr: s('Nur bei steuer: Jahr, z. B. 2025') }, required: ['bereich'] } },
             { name: 'lebenslauf_aendern', beschreibung: 'Setzt Felder im Lebenslauf (nur angegebene Felder werden geändert). Mehrzeilige Felder (erfahrung, ausbildung) je Station eine Zeile "Zeitraum: Tätigkeit bei Firma, Ort". Nur Fakten, die die Person genannt hat.',
               params: { type: 'object', properties: Object.fromEntries(CV_FELDER.map(k => [k, s('Lebenslauf-Feld ' + k)])), required: [] } },
             { name: 'bewerbung_speichern', beschreibung: 'Legt eine Bewerbung im Bewerbungs-Tracker an oder ändert eine bestehende (mit id aus sd_daten_lesen). Datumsangaben als JJJJ-MM-TT. status: gemerkt, beworben, gespraech, zusage, absage.',
@@ -954,7 +992,7 @@
                 'Du bist SD Lotze, der Agent im SD Bewerbungsstudio (thesdhub.com). Du erledigst Aufträge selbstständig mit Werkzeugen und arbeitest sorgfältig, Schritt für Schritt.',
                 en ? 'Answer the person in English.' : 'Antworte der Person auf Deutsch, freundlich und knapp, in der Du-Form.',
                 'Heute ist ' + heuteIso() + '.',
-                'Bereiche der Person: Lebenslauf, Bewerbungs-Tracker, Post-Assistent (Fristen), Steuer-Helfer, Rechnungen. Lies Daten mit sd_daten_lesen, statt zu raten. Erfinde keine Fakten über die Person; fehlende Angaben als [Lücke] markieren oder nachfragen.',
+                'Bereiche der Person: Lebenslauf, Bewerbungs-Tracker, Post-Assistent (Fristen), Fristen-Übersicht, Steuer-Helfer, Rechnungen, Verträge, Haushaltsbuch, Stundenzettel, Dokumenten-Mappe. Lies Daten mit sd_daten_lesen, statt zu raten. Erfinde keine Fakten über die Person; fehlende Angaben als [Lücke] markieren oder nachfragen.',
                 'Bilder: du siehst Fotos, die die Person mitgeschickt hat. Beschreibe genau, was darauf zu sehen ist, und arbeite damit weiter. Sag offen, wenn etwas nicht erkennbar ist.',
                 'Arbeitsbereich für Dateien: ' + (ablage.art === 'ordner' ? 'der Ordner „' + ablage.name + '“ auf dem PC der Person.' : 'der Browser-Speicher dieses Geräts (die Person kann alles als ZIP herunterladen).'),
                 'Webseiten: am besten eine einzelne HTML-Datei mit eingebettetem CSS/JS, mobilfreundlich. Nach dem Schreiben vorschau_zeigen aufrufen und gemeldete Fehler beheben. Beim Ändern bestehender Dateien erst datei_lesen, dann den vollständigen neuen Inhalt schreiben.',
@@ -1043,7 +1081,17 @@
 
         async function lauf(nutzerText, planPhase, bilder) {
             const problem = pruefeBereit();
-            if (problem) { zeigeNachricht('ki', '⚠️ ' + problem); $('einstKi').open = true; setzeStimmung('fehler'); return; }
+            if (problem) {
+                const n = zeigeNachricht('ki', '⚠️ ' + problem);
+                // Mit SD Lotse geht der Agent nicht: direkt auf Gemini (kostenloser Schluessel) umstellen anbieten
+                if (anbieter() === 'lotse' && window.sdKi) {
+                    const k = document.createElement('button');
+                    k.type = 'button'; k.className = 'btn klein'; k.textContent = t('zu_gemini');
+                    k.onclick = () => { window.sdKi.setzeAnbieter('gemini'); $('einstKi').open = true; $('einstKi').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+                    n.appendChild(k);
+                }
+                $('einstKi').open = true; setzeStimmung('fehler'); return;
+            }
             const a = anbieter();
             if (gespraechAnbieter && gespraechAnbieter !== a) { gespraech = []; }
             gespraechAnbieter = a;
@@ -1246,6 +1294,8 @@
 
         if (window.sdKi) {
             window.sdKi.baueAuswahl($('kiWahl'), { geminiKeyFeld: true });
+            // Ist schon alles eingerichtet, die Einstellungen zuklappen – mehr Platz fuer den Auftrag (vor allem am Handy)
+            if (!pruefeBereit()) $('einstKi').open = false;
             diktat = window.sdKi.diktatAnbinden($('eingabe'), $('mikroBtn'), (x) => setStatus(x || ''));
         }
         document.addEventListener('sd-ki-anbieter', zeigeModellZeile);

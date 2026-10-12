@@ -1700,6 +1700,11 @@
                 if (ANBIETER.openai.modelle.some(m => m[0] === o.openaiModell)) optionen.openaiModell = o.openaiModell;
                 if (ANBIETER.claude.modelle.some(m => m[0] === o.claudeModell)) optionen.claudeModell = o.claudeModell;
             } catch (e) { /* Standardwerte */ }
+            // Gemeinsame KI-Wahl aller SD-Apps (z. B. im KI-Agenten auf ChatGPT gestellt)
+            // hat Vorrang - sonst fragt der Assistent eine andere KI als gewaehlt.
+            const geteilt = speicherLesen(localStorage, 'sdKiAnbieter');
+            if (geteilt === 'lotse') optionen.modus = 'llama';
+            else if (ANBIETER[geteilt]) { optionen.anbieter = geteilt; optionen.modus = 'gemini'; }
             $('optMemory').checked = optionen.memory;
             $('optCode').checked = optionen.code;
             $('optSearch').checked = optionen.suche;
@@ -3570,6 +3575,8 @@
         function setzeModus(modus) {
             optionen.modus = modus;
             speicherSchreiben(localStorage, OPTIONS_STORAGE, JSON.stringify(optionen));
+            // Wahl fuer alle SD-Apps merken (KI-Agent, Post-Assistent usw.)
+            if (window.sdKi && window.sdKi.setzeAnbieter) window.sdKi.setzeAnbieter(modus === 'llama' ? 'lotse' : anbieter());
             document.querySelectorAll('.mode-btn').forEach(b => {
                 const an = b.dataset.mode === modus;
                 b.classList.toggle('active', an);
