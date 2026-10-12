@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Wohnungsbewerbung</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Bewerbung für eine Mietwohnung: Anschreiben, Mieterselbstauskunft und Unterlagen als eine PDF-Mappe – nur auf dem eigenen Gerät.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .anhang { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #fff; }
+        .anhang img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; }
+        .anhang .sym { width: 44px; height: 44px; display: grid; place-items: center; background: var(--accent-soft); border-radius: 6px; flex: 0 0 auto; }
+        .anhang span { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: .88rem; }
+        .mappe-wahl { display: grid; gap: 6px; max-height: 50vh; overflow: auto; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Wohnungsbewerbung</strong><small data-i18n="untertitel">Anschreiben, Selbstauskunft und Unterlagen als eine PDF</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <p class="hinweis" data-i18n="wichtig">Gib nur an, was für den Mietvertrag nötig ist. Fragen nach Religion, Herkunft, Staatsangehörigkeit, Schwangerschaft, Kinderwunsch, Partei- oder Mietervereinsmitgliedschaft sind laut den Datenschutzbehörden nicht erlaubt – die musst du nicht beantworten. Ausweiskopie und Gehaltsnachweise erst, wenn du die Wohnung wirklich mieten willst (nach der Besichtigung).</p>
+
+        <section class="karte" id="angaben">
+            <h2 data-i18n="s1">1 · Deine Angaben (Mieterselbstauskunft)</h2>
+            <p class="info" id="lebenslaufHinweis" hidden data-i18n="aus_lebenslauf">Name und Kontaktdaten wurden aus deinem Lebenslauf übernommen.</p>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="vorname">Vorname</span><input type="text" data-f="vorname" maxlength="60"></label>
+                <label class="feld"><span data-i18n="nachname">Nachname</span><input type="text" data-f="nachname" maxlength="60"></label>
+            </div>
+            <label class="feld"><span data-i18n="anschrift">Aktuelle Anschrift</span><textarea data-f="anschrift" rows="2" maxlength="200"></textarea></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="telefon">Telefon</span><input type="tel" data-f="telefon" maxlength="40"></label>
+                <label class="feld"><span data-i18n="email">E-Mail</span><input type="email" data-f="email" maxlength="80"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="beruf">Beruf / Tätigkeit</span><input type="text" data-f="beruf" maxlength="80"></label>
+                <label class="feld"><span data-i18n="arbeitgeber">Arbeitgeber</span><input type="text" data-f="arbeitgeber" maxlength="80"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="seit">Beschäftigt seit</span><input type="text" data-f="seit" maxlength="30" data-i18n-placeholder="seit_ph" placeholder="z. B. 03/2023"></label>
+                <label class="feld"><span data-i18n="netto">Nettoeinkommen des Haushalts (€/Monat)</span><input type="text" data-f="netto" inputmode="decimal" maxlength="20"></label>
+            </div>
+            <div class="zeile3">
+                <label class="feld"><span data-i18n="erwachsene">Erwachsene</span><input type="number" data-f="erwachsene" min="1" max="12"></label>
+                <label class="feld"><span data-i18n="kinder">Kinder</span><input type="number" data-f="kinder" min="0" max="12"></label>
+                <label class="feld"><span data-i18n="einzug">Einzug ab</span><input type="text" data-f="einzug" maxlength="30" data-i18n-placeholder="einzug_ph" placeholder="z. B. sofort, 01.12."></label>
+            </div>
+            <label class="feld"><span data-i18n="haustiere">Haustiere</span><input type="text" data-f="haustiere" maxlength="80" data-i18n-placeholder="haustiere_ph" placeholder="z. B. keine, 1 Katze"></label>
+            <label class="check"><input type="checkbox" data-f="keineInsolvenz"> <span data-i18n="keine_insolvenz">Gegen mich läuft kein Insolvenzverfahren.</span></label>
+            <label class="check"><input type="checkbox" data-f="keineRueckstaende"> <span data-i18n="keine_rueckstaende">Aus meinem bisherigen Mietverhältnis bestehen keine Mietrückstände.</span></label>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s2">2 · Wohnung &amp; Anschreiben</h2>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="objekt">Wohnung (Adresse oder Anzeige)</span><input type="text" data-f="objekt" maxlength="120" data-i18n-placeholder="objekt_ph" placeholder="z. B. 3-Zimmer-Wohnung, Hauptstr. 5, Heidelberg"></label>
+                <label class="feld"><span data-i18n="miete">Miete laut Anzeige</span><input type="text" data-f="miete" maxlength="40" data-i18n-placeholder="miete_ph" placeholder="z. B. 950 € warm"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="vermieter">Vermieter / Hausverwaltung</span><input type="text" data-f="vermieter" maxlength="80"></label>
+                <label class="feld"><span data-i18n="anrede">Anrede</span><select data-f="anrede">
+                        <option value="neutral" data-i18n="an_neutral">Sehr geehrte Damen und Herren</option>
+                        <option value="frau" data-i18n="an_frau">Sehr geehrte Frau …</option>
+                        <option value="herr" data-i18n="an_herr">Sehr geehrter Herr …</option>
+                    </select></label>
+            </div>
+            <label class="feld"><span data-i18n="ueber_uns">Ein, zwei Sätze über dich / euch</span><small data-i18n="ueber_uns_hilfe">freiwillig, z. B. ruhig, Nichtraucher, warum diese Wohnung</small><textarea data-f="ueberUns" rows="2" maxlength="500"></textarea></label>
+            <label class="feld"><span data-i18n="anschreiben">Anschreiben</span><small data-i18n="anschreiben_hilfe">Wird aus deinen Angaben erzeugt – du kannst alles ändern. Das Anschreiben ist auf Deutsch.</small><textarea id="anschreiben" rows="12"></textarea></label>
+            <div class="knoepfe"><button type="button" class="btn klein" id="neuTextBtn" data-i18n="neu_text">↻ Text neu aus den Angaben erzeugen</button></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s3">3 · Unterlagen</h2>
+            <ul class="punkte">
+                <li data-i18n="u_einkommen">Einkommensnachweise, meist die letzten 3 Gehaltsabrechnungen (oder Bescheid vom Jobcenter, Rentenbescheid).</li>
+                <li data-i18n="u_schufa">SCHUFA: Für Vermieter gedacht ist der kostenpflichtige „BonitätsCheck“. Die kostenlose Datenkopie (Art. 15 DSGVO) enthält alle über dich gespeicherten Daten und ist nicht zur Weitergabe gedacht.</li>
+                <li data-i18n="u_miete">Mietschuldenfreiheitsbescheinigung: freiwillig – pauschal verlangen dürfen Vermieter sie laut Datenschutzbehörden nicht.</li>
+                <li data-i18n="u_ausweis">Ausweiskopie: erst bei Vertragsabschluss.</li>
+            </ul>
+            <div class="liste" id="anhaenge"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="ausMappeBtn" data-i18n="aus_mappe">🗂️ Aus der Dokumenten-Mappe</button>
+                <button type="button" class="btn" id="dateiBtn" data-i18n="datei">📎 Foto / PDF vom Gerät</button>
+                <input type="file" id="dateiInput" accept="image/*,application/pdf,.pdf" multiple hidden>
+            </div>
+            <p class="quelle"><span data-i18n="quellen">Quellen:</span> <a href="https://www.datenschutzkonferenz-online.de/media/oh/OH_Einholung_von_Selbstauskuenften_Mietinteressenten_V2.pdf" target="_blank" rel="noopener">Datenschutzkonferenz – Orientierungshilfe Selbstauskünfte bei Mietinteressenten</a> · <a href="https://datenschutz.hessen.de/datenschutz/bauen-und-wohnen/einholung-von-selbstauskuenften-bei-mietinteressentinnen-und-interessenten" target="_blank" rel="noopener">HBDI Hessen</a></p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s4">4 · Bewerbungsmappe</h2>
+            <p class="info" data-i18n="s4_info">Eine PDF mit Anschreiben, Mieterselbstauskunft und allen Unterlagen in dieser Reihenfolge. Sie wird auf deinem Gerät erstellt.</p>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="pdfBtn" data-i18n="pdf">📄 PDF erstellen</button>
+                <button type="button" class="btn" id="teilenBtn" data-i18n="teilen">📤 PDF teilen</button>
+            </div>
+            <p class="status info" id="status" aria-live="polite"></p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="sicher_titel">🔒 Deine Daten</h2>
+            <p class="info" data-i18n="sicher_text">Deine Angaben bleiben nur in diesem Browser. Angehängte Dateien werden nicht gespeichert – nach dem Neuladen bitte neu hinzufügen. Nichts wird hochgeladen.</p>
+            <div class="knoepfe"><button type="button" class="btn klein gefahr" id="leerenBtn" data-i18n="leeren">Angaben löschen</button></div>
+        </section>
+    </main>
+
+    <dialog id="mappeDlg">
+        <div class="dlg">
+            <div class="dlg-kopf"><h2 data-i18n="mappe_titel">Aus der Dokumenten-Mappe</h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <div class="mappe-wahl" id="mappeWahl"></div>
+            <div class="knoepfe"><button type="button" class="btn prim" id="mappeOk" data-i18n="hinzufuegen">Hinzufügen</button><a class="btn" href="../mappe/index.html" data-i18n="zur_mappe">Zur Mappe</a></div>
+        </div>
+    </dialog>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Wohnungsbewerbung', untertitel: 'Anschreiben, Selbstauskunft und Unterlagen als eine PDF',
+                wichtig: 'Gib nur an, was für den Mietvertrag nötig ist. Fragen nach Religion, Herkunft, Staatsangehörigkeit, Schwangerschaft, Kinderwunsch, Partei- oder Mietervereinsmitgliedschaft sind laut den Datenschutzbehörden nicht erlaubt – die musst du nicht beantworten. Ausweiskopie und Gehaltsnachweise erst, wenn du die Wohnung wirklich mieten willst (nach der Besichtigung).',
+                s1: '1 · Deine Angaben (Mieterselbstauskunft)', aus_lebenslauf: 'Name und Kontaktdaten wurden aus deinem Lebenslauf übernommen.',
+                vorname: 'Vorname', nachname: 'Nachname', anschrift: 'Aktuelle Anschrift', telefon: 'Telefon', email: 'E-Mail', beruf: 'Beruf / Tätigkeit', arbeitgeber: 'Arbeitgeber',
+                seit: 'Beschäftigt seit', seit_ph: 'z. B. 03/2023', netto: 'Nettoeinkommen des Haushalts (€/Monat)', erwachsene: 'Erwachsene', kinder: 'Kinder', einzug: 'Einzug ab', einzug_ph: 'z. B. sofort, 01.12.',
+                haustiere: 'Haustiere', haustiere_ph: 'z. B. keine, 1 Katze', keine_insolvenz: 'Gegen mich läuft kein Insolvenzverfahren.', keine_rueckstaende: 'Aus meinem bisherigen Mietverhältnis bestehen keine Mietrückstände.',
+                s2: '2 · Wohnung & Anschreiben', objekt: 'Wohnung (Adresse oder Anzeige)', objekt_ph: 'z. B. 3-Zimmer-Wohnung, Hauptstr. 5, Heidelberg', miete: 'Miete laut Anzeige', miete_ph: 'z. B. 950 € warm',
+                vermieter: 'Vermieter / Hausverwaltung', anrede: 'Anrede', an_neutral: 'Sehr geehrte Damen und Herren', an_frau: 'Sehr geehrte Frau …', an_herr: 'Sehr geehrter Herr …',
+                ueber_uns: 'Ein, zwei Sätze über dich / euch', ueber_uns_hilfe: 'freiwillig, z. B. ruhig, Nichtraucher, warum diese Wohnung',
+                anschreiben: 'Anschreiben', anschreiben_hilfe: 'Wird aus deinen Angaben erzeugt – du kannst alles ändern. Das Anschreiben ist auf Deutsch.', neu_text: '↻ Text neu aus den Angaben erzeugen',
+                s3: '3 · Unterlagen',
+                u_einkommen: 'Einkommensnachweise, meist die letzten 3 Gehaltsabrechnungen (oder Bescheid vom Jobcenter, Rentenbescheid).',
+                u_schufa: 'SCHUFA: Für Vermieter gedacht ist der kostenpflichtige „BonitätsCheck“. Die kostenlose Datenkopie (Art. 15 DSGVO) enthält alle über dich gespeicherten Daten und ist nicht zur Weitergabe gedacht.',
+                u_miete: 'Mietschuldenfreiheitsbescheinigung: freiwillig – pauschal verlangen dürfen Vermieter sie laut Datenschutzbehörden nicht.',
+                u_ausweis: 'Ausweiskopie: erst bei Vertragsabschluss.',
+                aus_mappe: '🗂️ Aus der Dokumenten-Mappe', datei: '📎 Foto / PDF vom Gerät', quellen: 'Quellen:',
+                s4: '4 · Bewerbungsmappe', s4_info: 'Eine PDF mit Anschreiben, Mieterselbstauskunft und allen Unterlagen in dieser Reihenfolge. Sie wird auf deinem Gerät erstellt.',
+                pdf: '📄 PDF erstellen', teilen: '📤 PDF teilen', sicher_titel: '🔒 Deine Daten',
+                sicher_text: 'Deine Angaben bleiben nur in diesem Browser. Angehängte Dateien werden nicht gespeichert – nach dem Neuladen bitte neu hinzufügen. Nichts wird hochgeladen.',
+                leeren: 'Angaben löschen', leeren_ja: 'Wirklich alle Angaben löschen?', geleert: 'Angaben gelöscht',
+                mappe_titel: 'Aus der Dokumenten-Mappe', hinzufuegen: 'Hinzufügen', zur_mappe: 'Zur Mappe', mappe_leer: 'In der Dokumenten-Mappe sind noch keine Dateien.',
+                keine_anhaenge: 'Noch keine Unterlagen angehängt.', entfernen: 'Entfernen', hoch: 'Nach oben',
+                st_lade: 'PDF wird erstellt …', st_ok: 'PDF erstellt ({n} Seiten).', st_fehler: 'PDF konnte nicht erstellt werden: {x}', st_zeichen: 'Hinweis: Einige Sonderzeichen konnten im PDF nicht dargestellt werden und wurden durch „?“ ersetzt.',
+                st_anhang_fehler: '„{x}“ konnte nicht eingefügt werden (Datei beschädigt oder geschützt).', teilen_nicht: 'Teilen ist hier nicht möglich – PDF wird heruntergeladen.',
+                ma_titel: 'Mieterselbstauskunft', ma_fuer: 'für die Wohnung: {x}', ma_haushalt: 'Erwachsene: {e}, Kinder: {k}',
+                ma_ort_datum: 'Ort, Datum', ma_unterschrift: 'Unterschrift', ma_versicherung: 'Ich versichere, dass die Angaben vollständig und richtig sind.'
+            },
+            en: {
+                titel: 'Flat application', untertitel: 'Cover letter, tenant self-disclosure and documents as one PDF',
+                wichtig: 'Only give what is needed for the tenancy. Questions about religion, origin, nationality, pregnancy, wish for children, party or tenants’ association membership are not allowed according to the data protection authorities – you do not have to answer them. Only provide an ID copy and pay slips when you really want to rent the flat (after the viewing).',
+                s1: '1 · Your details (tenant self-disclosure)', aus_lebenslauf: 'Name and contact details were taken from your CV.',
+                vorname: 'First name', nachname: 'Last name', anschrift: 'Current address', telefon: 'Phone', email: 'E-mail', beruf: 'Occupation', arbeitgeber: 'Employer',
+                seit: 'Employed since', seit_ph: 'e.g. 03/2023', netto: 'Household net income (€/month)', erwachsene: 'Adults', kinder: 'Children', einzug: 'Move-in from', einzug_ph: 'e.g. immediately, 01.12.',
+                haustiere: 'Pets', haustiere_ph: 'e.g. none, 1 cat', keine_insolvenz: 'There are no insolvency proceedings against me.', keine_rueckstaende: 'There are no rent arrears from my current tenancy.',
+                s2: '2 · Flat & cover letter', objekt: 'Flat (address or listing)', objekt_ph: 'e.g. 3-room flat, Hauptstr. 5, Heidelberg', miete: 'Rent as advertised', miete_ph: 'e.g. €950 incl. utilities',
+                vermieter: 'Landlord / property management', anrede: 'Salutation', an_neutral: 'Sehr geehrte Damen und Herren', an_frau: 'Sehr geehrte Frau …', an_herr: 'Sehr geehrter Herr …',
+                ueber_uns: 'One or two sentences about you', ueber_uns_hilfe: 'optional, e.g. quiet, non-smoker, why this flat (in German)',
+                anschreiben: 'Cover letter', anschreiben_hilfe: 'Generated from your details – you can change everything. The letter is in German.', neu_text: '↻ Regenerate text from details',
+                s3: '3 · Documents',
+                u_einkommen: 'Proof of income, usually the last 3 pay slips (or Jobcenter notice, pension notice).',
+                u_schufa: 'SCHUFA: the paid “BonitätsCheck” is meant for landlords. The free data copy (Art. 15 GDPR) contains all data stored about you and is not meant to be passed on.',
+                u_miete: 'Certificate of no rent arrears: voluntary – according to the data protection authorities landlords may not demand it across the board.',
+                u_ausweis: 'ID copy: only when signing the contract.',
+                aus_mappe: '🗂️ From the document folder', datei: '📎 Photo / PDF from device', quellen: 'Sources:',
+                s4: '4 · Application folder', s4_info: 'One PDF with cover letter, self-disclosure and all documents in this order. It is created on your device.',
+                pdf: '📄 Create PDF', teilen: '📤 Share PDF', sicher_titel: '🔒 Your data',
+                sicher_text: 'Your details stay only in this browser. Attached files are not stored – please add them again after reloading. Nothing is uploaded.',
+                leeren: 'Delete details', leeren_ja: 'Really delete all details?', geleert: 'Details deleted',
+                mappe_titel: 'From the document folder', hinzufuegen: 'Add', zur_mappe: 'Open folder', mappe_leer: 'There are no files in the document folder yet.',
+                keine_anhaenge: 'No documents attached yet.', entfernen: 'Remove', hoch: 'Move up',
+                st_lade: 'Creating PDF …', st_ok: 'PDF created ({n} pages).', st_fehler: 'The PDF could not be created: {x}', st_zeichen: 'Note: some special characters could not be shown in the PDF and were replaced by “?”.',
+                st_anhang_fehler: '“{x}” could not be added (file damaged or protected).', teilen_nicht: 'Sharing is not available here – the PDF will be downloaded.',
+                ma_titel: 'Mieterselbstauskunft', ma_fuer: 'für die Wohnung: {x}', ma_haushalt: 'Erwachsene: {e}, Kinder: {k}',
+                ma_ort_datum: 'Ort, Datum', ma_unterschrift: 'Unterschrift', ma_versicherung: 'Ich versichere, dass die Angaben vollständig und richtig sind.'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script src="../vendor/pdf-lib-1.17.1.min.js"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdWohnung';
+        let d = SD.lesen(KEY, null);
+        const erstesMal = !d;
+        d = Object.assign({ erwachsene: 1, kinder: 0, anrede: 'neutral' }, d || {});
+        const felder = () => document.querySelectorAll('[data-f]');
+
+        // Aus dem Lebenslauf vorbelegen (nur leere Felder, nur beim ersten Mal)
+        if (erstesMal) {
+            const cv = SD.lebenslauf();
+            const map = { vorname: cv.vorname, nachname: cv.nachname, anschrift: cv.adresse, telefon: cv.telefon, email: cv.email, beruf: cv.position };
+            let uebernommen = false;
+            Object.keys(map).forEach(k => { if (map[k] && !d[k]) { d[k] = map[k]; uebernommen = true; } });
+            $('lebenslaufHinweis').hidden = !uebernommen;
+        }
+        felder().forEach(el => {
+            const k = el.dataset.f;
+            if (el.type === 'checkbox') el.checked = !!d[k];
+            else if (d[k] != null) el.value = d[k];
+            el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => {
+                d[k] = el.type === 'checkbox' ? el.checked : el.value;
+                speichern();
+                if (!d.anschreibenGeaendert) { $('anschreiben').value = anschreibenText(); d.anschreiben = $('anschreiben').value; speichern(); }
+            });
+        });
+        function speichern() { SD.schreiben(KEY, d); }
+
+        // ---------------- Anschreiben (immer Deutsch) ----------------
+        function anrede() {
+            const n = (d.vermieter || '').trim();
+            if (d.anrede === 'frau' && n) return 'Sehr geehrte Frau ' + n.replace(/^(frau)\s+/i, '') + ',';
+            if (d.anrede === 'herr' && n) return 'Sehr geehrter Herr ' + n.replace(/^(herr)\s+/i, '') + ',';
+            return 'Sehr geehrte Damen und Herren,';
+        }
+        function anschreibenText() {
+            const name = [d.vorname, d.nachname].filter(Boolean).join(' ');
+            const e = Number(d.erwachsene) || 1, k = Number(d.kinder) || 0;
+            const haushalt = e === 1 && !k ? 'Ich würde die Wohnung allein beziehen.'
+                : 'Wir sind ' + [e === 1 ? 'eine erwachsene Person' : e + ' Erwachsene', k ? (k === 1 ? 'ein Kind' : k + ' Kinder') : ''].filter(Boolean).join(' und ') + '.';
+            const beruf = d.beruf ? 'Ich arbeite als ' + d.beruf + (d.arbeitgeber ? ' bei ' + d.arbeitgeber : '') + (d.seit ? ' (seit ' + d.seit + ')' : '') + '.' : '';
+            const netto = d.netto ? 'Das monatliche Nettoeinkommen ' + (e === 1 && !k ? 'meines' : 'unseres') + ' Haushalts beträgt ' + SD.zahl(d.netto).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) + '.' : '';
+            const zeilen = [anrede(), '',
+            'mit großem Interesse habe ich Ihre Anzeige ' + (d.objekt ? 'für die Wohnung „' + d.objekt + '“ ' : '') + 'gelesen und bewerbe mich hiermit um diese Wohnung.', '',
+            [beruf, haushalt, netto].filter(Boolean).join(' ')];
+            if (d.ueberUns) zeilen.push('', d.ueberUns.trim());
+            zeilen.push('', [d.miete ? 'Die Miete (' + d.miete + ') kann ich zuverlässig bezahlen.' : 'Die Miete kann ich zuverlässig bezahlen.', d.einzug ? 'Einziehen könnte ich ab ' + String(d.einzug).trim().replace(/\.$/, '') + '.' : ''].filter(Boolean).join(' '),
+                '', 'Über eine Einladung zur Besichtigung freue ich mich. Sie erreichen mich ' + [d.telefon ? 'telefonisch unter ' + d.telefon : '', d.email ? 'per E-Mail an ' + d.email : ''].filter(Boolean).join(' oder ') + (d.telefon || d.email ? '.' : 'jederzeit gern.'),
+                '', 'Meine Mieterselbstauskunft und Unterlagen finden Sie in der Anlage.', '', 'Mit freundlichen Grüßen', name);
+            return zeilen.join('\n').replace(/Sie erreichen mich jederzeit gern\./, 'Ich freue mich auf Ihre Antwort.');
+        }
+        $('anschreiben').value = d.anschreiben || anschreibenText();
+        $('anschreiben').addEventListener('input', () => { d.anschreiben = $('anschreiben').value; d.anschreibenGeaendert = true; speichern(); });
+        $('neuTextBtn').addEventListener('click', () => { $('anschreiben').value = anschreibenText(); d.anschreiben = $('anschreiben').value; d.anschreibenGeaendert = false; speichern(); });
+
+        // ---------------- Unterlagen ----------------
+        let anhaenge = []; // { id, name, type, blob }
+        const urls = new Map();
+        const url = (b) => { if (!urls.has(b)) urls.set(b, URL.createObjectURL(b)); return urls.get(b); };
+        function zeigeAnhaenge() {
+            if (!anhaenge.length) { $('anhaenge').innerHTML = '<p class="leer">' + esc(t('keine_anhaenge')) + '</p>'; return; }
+            $('anhaenge').innerHTML = anhaenge.map((a, i) => '<div class="anhang">' +
+                (a.type.startsWith('image/') ? '<img alt="" src="' + url(a.blob) + '">' : '<span class="sym">📄</span>') +
+                '<span>' + esc(a.name) + '</span>' +
+                (i > 0 ? '<button type="button" class="btn klein" data-hoch="' + i + '" aria-label="' + esc(t('hoch')) + '">↑</button>' : '') +
+                '<button type="button" class="btn klein" data-weg="' + i + '" aria-label="' + esc(t('entfernen')) + '">✕</button></div>').join('');
+        }
+        $('anhaenge').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-weg],[data-hoch]');
+            if (!b) return;
+            if (b.dataset.weg != null) anhaenge.splice(Number(b.dataset.weg), 1);
+            else { const i = Number(b.dataset.hoch); [anhaenge[i - 1], anhaenge[i]] = [anhaenge[i], anhaenge[i - 1]]; }
+            zeigeAnhaenge();
+        });
+        $('dateiBtn').addEventListener('click', () => $('dateiInput').click());
+        $('dateiInput').addEventListener('change', (e) => {
+            Array.from(e.target.files || []).forEach(f => {
+                const istPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+                if (f.type.startsWith('image/') || istPdf) anhaenge.push({ id: SD.neueId(), name: f.name, type: istPdf ? 'application/pdf' : f.type, blob: f });
+            });
+            e.target.value = '';
+            zeigeAnhaenge();
+        });
+
+        // Dokumenten-Mappe (IndexedDB, gleiche Datenbank wie mappe/index.html)
+        let mappeDateien = [];
+        function mappeLaden() {
+            return new Promise((ok) => {
+                if (!window.indexedDB) return ok([]);
+                const r = indexedDB.open('sdMappe', 1);
+                r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('dokumente')) r.result.createObjectStore('dokumente', { keyPath: 'id' }); };
+                r.onerror = () => ok([]);
+                r.onsuccess = () => {
+                    try {
+                        const q = r.result.transaction('dokumente', 'readonly').objectStore('dokumente').getAll();
+                        q.onsuccess = () => {
+                            const liste = [];
+                            (q.result || []).forEach(doc => (doc.dateien || []).forEach(f => liste.push({ id: f.id, name: (doc.titel || '') + ' – ' + f.name, type: f.type || '', blob: f.blob })));
+                            ok(liste);
+                        };
+                        q.onerror = () => ok([]);
+                    } catch (e) { ok([]); }
+                };
+            });
+        }
+        $('ausMappeBtn').addEventListener('click', async () => {
+            mappeDateien = (await mappeLaden()).filter(f => f.blob && (f.type.startsWith('image/') || f.type === 'application/pdf'));
+            $('mappeWahl').innerHTML = mappeDateien.length ? mappeDateien.map((f, i) => '<label class="check anhang"><input type="checkbox" value="' + i + '"' + (anhaenge.some(a => a.id === f.id) ? ' checked disabled' : '') + '>' +
+                (f.type.startsWith('image/') ? '<img alt="" src="' + url(f.blob) + '">' : '<span class="sym">📄</span>') + '<span>' + esc(f.name) + '</span></label>').join('')
+                : '<p class="leer">' + esc(t('mappe_leer')) + '</p>';
+            $('mappeOk').hidden = !mappeDateien.length;
+            $('mappeDlg').showModal();
+        });
+        $('mappeOk').addEventListener('click', () => {
+            $('mappeWahl').querySelectorAll('input:checked:not(:disabled)').forEach(c => { const f = mappeDateien[Number(c.value)]; if (f) anhaenge.push(f); });
+            $('mappeDlg').close();
+            zeigeAnhaenge();
+        });
+
+        // ---------------- PDF ----------------
+        // Standardschrift (WinAnsi): Zeichen ausserhalb werden ersetzt
+        const ERLAUBT = /[ -~ -ÿ€„“”‚‘’–—…•]/;
+        let ersetzt = false;
+        const sauber = (s) => Array.from(String(s || '')).map(c => ERLAUBT.test(c) ? c : (ersetzt = true, '?')).join('');
+        function umbrechen(text, font, groesse, breite) {
+            const zeilen = [];
+            String(text || '').split('\n').forEach(absatz => {
+                const woerter = sauber(absatz).split(/\s+/).filter(Boolean);
+                if (!woerter.length) { zeilen.push(''); return; }
+                let z = '';
+                woerter.forEach(w => {
+                    const probe = z ? z + ' ' + w : w;
+                    if (font.widthOfTextAtSize(probe, groesse) <= breite || !z) z = probe;
+                    else { zeilen.push(z); z = w; }
+                });
+                zeilen.push(z);
+            });
+            return zeilen;
+        }
+        async function bauePdf() {
+            const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+            ersetzt = false;
+            const pdf = await PDFDocument.create();
+            const font = await pdf.embedFont(StandardFonts.Helvetica);
+            const fett = await pdf.embedFont(StandardFonts.HelveticaBold);
+            const W = 595.28, H = 841.89, R = 64, B = W - 2 * R, farbe = rgb(0.09, 0.16, 0.23);
+            let seite, y;
+            const neueSeite = () => { seite = pdf.addPage([W, H]); y = H - 60; };
+            const schreibe = (text, opt = {}) => {
+                const g = opt.groesse || 10.5, f = opt.fett ? fett : font, lh = g * 1.45;
+                umbrechen(text, f, g, opt.breite || B).forEach(z => {
+                    if (y < 70) neueSeite();
+                    seite.drawText(z, { x: opt.x || R, y, size: g, font: f, color: farbe });
+                    y -= lh;
+                });
+            };
+            const name = [d.vorname, d.nachname].filter(Boolean).join(' ');
+            const heute = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            // Seite 1: Anschreiben
+            neueSeite();
+            schreibe([name, d.anschrift, d.telefon, d.email].filter(Boolean).join('\n'), { groesse: 9.5 });
+            y -= 18;
+            if (d.vermieter) schreibe(d.vermieter);
+            y -= 10;
+            const datumBreite = font.widthOfTextAtSize(heute, 10.5);
+            seite.drawText(heute, { x: W - R - datumBreite, y, size: 10.5, font, color: farbe });
+            y -= 28;
+            schreibe('Bewerbung um die Wohnung' + (d.objekt ? ': ' + d.objekt : ''), { fett: true, groesse: 12 });
+            y -= 10;
+            schreibe($('anschreiben').value);
+
+            // Seite 2: Mieterselbstauskunft
+            neueSeite();
+            schreibe(window.SD_I18N.de.ma_titel, { fett: true, groesse: 15 });
+            if (d.objekt) schreibe(window.SD_I18N.de.ma_fuer.replace('{x}', d.objekt), { groesse: 10 });
+            y -= 12;
+            const zeilen = [
+                ['Name', name], ['Anschrift', d.anschrift], ['Telefon', d.telefon], ['E-Mail', d.email],
+                ['Beruf / Tätigkeit', d.beruf], ['Arbeitgeber', d.arbeitgeber], ['Beschäftigt seit', d.seit],
+                ['Nettoeinkommen Haushalt', d.netto ? SD.zahl(d.netto).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) + ' / Monat' : ''],
+                ['Personen im Haushalt', window.SD_I18N.de.ma_haushalt.replace('{e}', Number(d.erwachsene) || 1).replace('{k}', Number(d.kinder) || 0)],
+                ['Haustiere', d.haustiere], ['Einzug ab', d.einzug]
+            ].filter(z => z[1]);
+            zeilen.forEach(([k, v]) => {
+                const vor = y;
+                schreibe(k, { fett: true, groesse: 10, breite: 170 });
+                const nach = y;
+                y = vor;
+                schreibe(v, { groesse: 10, x: R + 180, breite: B - 180 });
+                y = Math.min(y, nach) - 6;
+                seite.drawLine({ start: { x: R, y: y + 12 }, end: { x: W - R, y: y + 12 }, thickness: 0.4, color: rgb(0.8, 0.84, 0.82) });
+            });
+            y -= 8;
+            if (d.keineInsolvenz) schreibe('• Gegen mich läuft kein Insolvenzverfahren.');
+            if (d.keineRueckstaende) schreibe('• Aus meinem bisherigen Mietverhältnis bestehen keine Mietrückstände.');
+            y -= 10;
+            schreibe(window.SD_I18N.de.ma_versicherung, { groesse: 10 });
+            y -= 40;
+            seite.drawLine({ start: { x: R, y }, end: { x: R + 200, y }, thickness: 0.6, color: farbe });
+            seite.drawLine({ start: { x: W - R - 200, y }, end: { x: W - R, y }, thickness: 0.6, color: farbe });
+            seite.drawText(window.SD_I18N.de.ma_ort_datum, { x: R, y: y - 14, size: 9, font, color: farbe });
+            seite.drawText(window.SD_I18N.de.ma_unterschrift, { x: W - R - 200, y: y - 14, size: 9, font, color: farbe });
+
+            // Anlagen
+            const fehler = [];
+            for (const a of anhaenge) {
+                try {
+                    const bytes = new Uint8Array(await a.blob.arrayBuffer());
+                    if (a.type === 'application/pdf') {
+                        const quelle = await PDFDocument.load(bytes, { ignoreEncryption: true });
+                        (await pdf.copyPages(quelle, quelle.getPageIndices())).forEach(p => pdf.addPage(p));
+                    } else {
+                        // Bild ueber Canvas als JPEG (deckt PNG, HEIC-Vorschau, WebP ab)
+                        const bild = await createImageBitmap(a.blob);
+                        const max = 2000, k = Math.min(1, max / Math.max(bild.width, bild.height));
+                        const c = document.createElement('canvas');
+                        c.width = Math.round(bild.width * k); c.height = Math.round(bild.height * k);
+                        const ctx = c.getContext('2d');
+                        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                        ctx.drawImage(bild, 0, 0, c.width, c.height);
+                        const jpg = await pdf.embedJpg(await (await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.88))).arrayBuffer());
+                        const p = pdf.addPage([W, H]);
+                        const s = Math.min((W - 60) / jpg.width, (H - 60) / jpg.height);
+                        p.drawImage(jpg, { x: (W - jpg.width * s) / 2, y: (H - jpg.height * s) / 2, width: jpg.width * s, height: jpg.height * s });
+                    }
+                } catch (e) { fehler.push(t('st_anhang_fehler', { x: a.name })); }
+            }
+            pdf.setTitle('Wohnungsbewerbung ' + name);
+            const bytes = await pdf.save();
+            return { blob: new Blob([bytes], { type: 'application/pdf' }), seiten: pdf.getPageCount(), fehler };
+        }
+        async function erstelle() {
+            $('status').textContent = t('st_lade');
+            try {
+                if (!window.PDFLib) throw new Error('pdf-lib');
+                const r = await bauePdf();
+                $('status').textContent = [t('st_ok', { n: r.seiten }), ersetzt ? t('st_zeichen') : ''].concat(r.fehler).filter(Boolean).join(' ');
+                return r;
+            } catch (e) {
+                $('status').textContent = t('st_fehler', { x: (e && e.message) || e });
+                return null;
+            }
+        }
+        const pdfName = () => SD.dateiname('Wohnungsbewerbung-' + [d.vorname, d.nachname].filter(Boolean).join('-'), '.pdf');
+        $('pdfBtn').addEventListener('click', async () => { const r = await erstelle(); if (r) SD.herunterladen(r.blob, pdfName()); });
+        $('teilenBtn').addEventListener('click', async () => {
+            const r = await erstelle();
+            if (!r) return;
+            const f = new File([r.blob], pdfName(), { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f], title: f.name }); } catch (e) { /* abgebrochen */ } }
+            else { SD.toast(t('teilen_nicht')); SD.herunterladen(r.blob, f.name); }
+        });
+        $('leerenBtn').addEventListener('click', () => SD.sicherFragen($('leerenBtn'), t('leeren_ja'), () => {
+            try { localStorage.removeItem(KEY); } catch (e) { /* ok */ }
+            d = { erwachsene: 1, kinder: 0, anrede: 'neutral' };
+            felder().forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = d[el.dataset.f] != null ? d[el.dataset.f] : ''; });
+            $('anschreiben').value = anschreibenText();
+            anhaenge = [];
+            zeigeAnhaenge();
+            SD.toast(t('geleert'));
+        }));
+        if (!d.anschreiben) { d.anschreiben = $('anschreiben').value; speichern(); }
+        zeigeAnhaenge();
+    </script>
+</body>
+
+</html>

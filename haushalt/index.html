@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Haushaltsbuch</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Einnahmen und Ausgaben pro Monat, nach Kategorien – mit festen Verträgen, nur auf dem eigenen Gerät.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Haushaltsbuch</strong><small data-i18n="untertitel">Wohin geht mein Geld?</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <div class="knoepfe">
+                <button type="button" class="btn klein" id="vorBtn" aria-label="Vormonat">◀</button>
+                <input type="month" id="monat" style="flex:1; min-width:150px; font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--paper);">
+                <button type="button" class="btn klein" id="nachBtn" aria-label="Nächster Monat">▶</button>
+            </div>
+            <div class="zahlen" id="zahlen"></div>
+            <label class="check"><input type="checkbox" id="mitVertraegen" checked> <span data-i18n="mit_vertraegen">Feste Kosten aus „Verträge &amp; Kündigungen“ mitrechnen</span></label>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="ausgabeBtn" data-i18n="ausgabe">－ Ausgabe</button>
+                <button type="button" class="btn prim" id="einnahmeBtn" data-i18n="einnahme">＋ Einnahme</button>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="kat_titel">📊 Ausgaben nach Kategorie</h2>
+            <div class="liste" id="kategorien"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="buchungen_titel">🧾 Buchungen im Monat</h2>
+            <div class="liste" id="liste"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn klein" id="csvBtn" data-i18n="csv">⬇️ Monat als CSV</button>
+                <button type="button" class="btn klein" id="csvAlleBtn" data-i18n="csv_alle">⬇️ Alles als CSV</button>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="sicher_titel">🔒 Deine Daten</h2>
+            <p class="info" data-i18n="sicher_text">Alles bleibt nur in diesem Browser auf deinem Gerät. Eine Kopie für Excel bekommst du mit „Alles als CSV“.</p>
+        </section>
+    </main>
+
+    <dialog id="editor">
+        <form class="dlg" id="form">
+            <div class="dlg-kopf"><h2 id="edTitel"></h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_betrag">Betrag (€)</span><input type="text" id="fBetrag" inputmode="decimal" placeholder="0,00" required></label>
+                <label class="feld"><span data-i18n="f_datum">Datum</span><input type="date" id="fDatum" required></label>
+            </div>
+            <label class="feld"><span data-i18n="f_kategorie">Kategorie</span><select id="fKategorie"></select></label>
+            <label class="feld"><span data-i18n="f_text">Beschreibung</span><input type="text" id="fText" maxlength="100" data-i18n-placeholder="f_text_ph" placeholder="z. B. Wocheneinkauf"></label>
+            <label class="check"><input type="checkbox" id="fMonatlich"> <span data-i18n="f_monatlich">Wiederholt sich jeden Monat (z. B. Gehalt, Kindergeld, Sparrate)</span></label>
+            <label class="feld" id="bisFeld"><span data-i18n="f_bis">… bis einschließlich</span><small data-i18n="f_bis_hilfe">leer lassen = ohne Ende</small><input type="month" id="fBis" style="font:inherit;font-size:16px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);"></label>
+            <p class="fehler" id="fFehler" hidden></p>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" data-zu data-i18n="abbrechen">Abbrechen</button>
+                <button type="button" class="btn gefahr" id="loeschenBtn" data-i18n="loeschen" hidden>🗑 Löschen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Haushaltsbuch', untertitel: 'Wohin geht mein Geld?', mit_vertraegen: 'Feste Kosten aus „Verträge & Kündigungen“ mitrechnen',
+                ausgabe: '－ Ausgabe', einnahme: '＋ Einnahme', kat_titel: '📊 Ausgaben nach Kategorie', buchungen_titel: '🧾 Buchungen im Monat',
+                csv: '⬇️ Monat als CSV', csv_alle: '⬇️ Alles als CSV', sicher_titel: '🔒 Deine Daten', sicher_text: 'Alles bleibt nur in diesem Browser auf deinem Gerät. Eine Kopie für Excel bekommst du mit „Alles als CSV“.',
+                z_ein: 'Einnahmen', z_aus: 'Ausgaben', z_rest: 'Übrig', z_minus: 'Minus',
+                ed_aus: 'Ausgabe', ed_ein: 'Einnahme', f_betrag: 'Betrag (€)', f_datum: 'Datum', f_kategorie: 'Kategorie', f_text: 'Beschreibung', f_text_ph: 'z. B. Wocheneinkauf',
+                f_monatlich: 'Wiederholt sich jeden Monat (z. B. Gehalt, Kindergeld, Sparrate)', f_bis: '… bis einschließlich', f_bis_hilfe: 'leer lassen = ohne Ende',
+                speichern: 'Speichern', abbrechen: 'Abbrechen', loeschen: '🗑 Löschen', loeschen_ja: 'Wirklich löschen?', gespeichert: 'Gespeichert', geloescht: 'Gelöscht',
+                err_betrag: 'Bitte einen Betrag größer 0 eingeben.',
+                leer: 'In diesem Monat noch keine Buchungen.', leer_kat: 'Noch keine Ausgaben in diesem Monat.',
+                monatlich: 'monatlich', vertrag: 'Vertrag', aus_vertraegen: 'aus „Verträge“', anteil: '{p} % der Ausgaben',
+                csv_kopf: 'Datum;Art;Kategorie;Beschreibung;Betrag;monatlich',
+                kat_aus: { lebensmittel: '🛒 Lebensmittel', wohnen: '🏠 Miete & Nebenkosten', energie: '⚡ Strom & Heizung', mobil: '🚗 Auto & Fahrkarten', kommunikation: '📱 Handy & Internet', versicherung: '🛡️ Versicherungen', kinder: '🧸 Kinder', gesundheit: '🩺 Gesundheit', kleidung: '👕 Kleidung', freizeit: '🎉 Freizeit & Abos', bildung: '🎓 Bildung & Kurse', geschenke: '🎁 Geschenke & Spenden', ueberweisung: '💸 Geld an Familie', kredit: '🏦 Kredit & Raten', sparen: '🐖 Sparen', sonstiges: '📦 Sonstiges' },
+                kat_ein: { lohn: '💼 Lohn / Gehalt', sozial: '🏛️ Bürgergeld / Leistungen', kindergeld: '👶 Kindergeld', nebenjob: '🧾 Nebenjob / Minijob', erstattung: '↩️ Erstattung', sonstiges_ein: '💶 Sonstige Einnahme' },
+                v_kat: { handy: 'kommunikation', internet: 'kommunikation', strom: 'energie', gas: 'energie', fitness: 'freizeit', streaming: 'freizeit', zeitung: 'freizeit', versicherung: 'versicherung', kfz: 'versicherung', miete: 'wohnen', sonstiges: 'sonstiges' }
+            },
+            en: {
+                titel: 'Household budget', untertitel: 'Where does my money go?', mit_vertraegen: 'Include fixed costs from “Contracts & Cancellations”',
+                ausgabe: '－ Expense', einnahme: '＋ Income', kat_titel: '📊 Expenses by category', buchungen_titel: '🧾 Entries this month',
+                csv: '⬇️ Month as CSV', csv_alle: '⬇️ Everything as CSV', sicher_titel: '🔒 Your data', sicher_text: 'Everything stays only in this browser on your device. Get a copy for Excel with “Everything as CSV”.',
+                z_ein: 'Income', z_aus: 'Expenses', z_rest: 'Left over', z_minus: 'Deficit',
+                ed_aus: 'Expense', ed_ein: 'Income', f_betrag: 'Amount (€)', f_datum: 'Date', f_kategorie: 'Category', f_text: 'Description', f_text_ph: 'e.g. weekly shopping',
+                f_monatlich: 'Repeats every month (e.g. salary, child benefit, savings)', f_bis: '… until and including', f_bis_hilfe: 'leave empty = no end',
+                speichern: 'Save', abbrechen: 'Cancel', loeschen: '🗑 Delete', loeschen_ja: 'Really delete?', gespeichert: 'Saved', geloescht: 'Deleted',
+                err_betrag: 'Please enter an amount greater than 0.',
+                leer: 'No entries this month yet.', leer_kat: 'No expenses this month yet.',
+                monatlich: 'monthly', vertrag: 'Contract', aus_vertraegen: 'from “Contracts”', anteil: '{p} % of expenses',
+                csv_kopf: 'Date;Type;Category;Description;Amount;monthly',
+                kat_aus: { lebensmittel: '🛒 Groceries', wohnen: '🏠 Rent & utilities', energie: '⚡ Electricity & heating', mobil: '🚗 Car & tickets', kommunikation: '📱 Phone & internet', versicherung: '🛡️ Insurance', kinder: '🧸 Children', gesundheit: '🩺 Health', kleidung: '👕 Clothing', freizeit: '🎉 Leisure & subscriptions', bildung: '🎓 Education & courses', geschenke: '🎁 Gifts & donations', ueberweisung: '💸 Money to family', kredit: '🏦 Loans & instalments', sparen: '🐖 Savings', sonstiges: '📦 Other' },
+                kat_ein: { lohn: '💼 Wages / salary', sozial: '🏛️ Benefits', kindergeld: '👶 Child benefit', nebenjob: '🧾 Side job / mini-job', erstattung: '↩️ Refund', sonstiges_ein: '💶 Other income' },
+                v_kat: { handy: 'kommunikation', internet: 'kommunikation', strom: 'energie', gas: 'energie', fitness: 'freizeit', streaming: 'freizeit', zeitung: 'freizeit', versicherung: 'versicherung', kfz: 'versicherung', miete: 'wohnen', sonstiges: 'sonstiges' }
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdHaushalt';
+        let daten = SD.lesen(KEY, { buchungen: [], mitVertraegen: true });
+        if (!daten || !Array.isArray(daten.buchungen)) daten = { buchungen: [], mitVertraegen: true };
+        const speichern = () => SD.schreiben(KEY, daten);
+        const monatVon = (iso) => String(iso || '').slice(0, 7);
+        let monat = monatVon(SD.heuteIso());
+        $('monat').value = monat;
+        $('mitVertraegen').checked = daten.mitVertraegen !== false;
+
+        function katName(typ, k) {
+            const tab = typ === 'ein' ? t('kat_ein') : t('kat_aus');
+            return tab[k] || k;
+        }
+        // Buchungen, die in diesem Monat zaehlen: einmalige im Monat, monatliche ab Startmonat bis Endmonat
+        function imMonat(m) {
+            return daten.buchungen.filter(b => b.monatlich
+                ? monatVon(b.datum) <= m && (!b.bis || b.bis >= m)
+                : monatVon(b.datum) === m);
+        }
+        // Feste Kosten aus den Vertraegen (umgerechnet auf den Monat), nur laufende
+        function vertraegeImMonat(m) {
+            if (!$('mitVertraegen').checked) return [];
+            const liste = SD.lesen('sdVertraege', []);
+            if (!Array.isArray(liste)) return [];
+            const monatsEnde = m + '-31', monatsAnfang = m + '-01';
+            return liste.filter(v => SD.zahl(v.kosten) > 0 && (!v.beginn || v.beginn <= monatsEnde) && (!v.gekuendigt || v.gekuendigt >= monatsAnfang))
+                .map(v => ({
+                    id: 'v-' + v.id, vertrag: true, typ: 'aus', betrag: SD.zahl(v.kosten) / (Number(v.intervall) || 1),
+                    kategorie: (t('v_kat') || {})[v.art] || 'sonstiges', text: v.anbieter, datum: m + '-01'
+                }));
+        }
+
+        function zeige() {
+            const posten = imMonat(monat).concat(vertraegeImMonat(monat));
+            const ein = posten.filter(b => b.typ === 'ein').reduce((s, b) => s + SD.zahl(b.betrag), 0);
+            const aus = posten.filter(b => b.typ === 'aus').reduce((s, b) => s + SD.zahl(b.betrag), 0);
+            const rest = ein - aus;
+            $('zahlen').innerHTML = [[SD.euro(ein), t('z_ein')], [SD.euro(aus), t('z_aus')], [SD.euro(rest), rest < 0 ? t('z_minus') : t('z_rest')]]
+                .map((z, i) => '<div class="zahl"' + (i === 2 && rest < 0 ? ' style="border-color:#f1c4bf;background:var(--danger-bg)"' : '') + '><b>' + esc(z[0]) + '</b><span>' + esc(z[1]) + '</span></div>').join('');
+
+            // Kategorien
+            const proKat = {};
+            posten.filter(b => b.typ === 'aus').forEach(b => { proKat[b.kategorie] = (proKat[b.kategorie] || 0) + SD.zahl(b.betrag); });
+            const kat = Object.keys(proKat).sort((a, b) => proKat[b] - proKat[a]);
+            $('kategorien').innerHTML = kat.length ? kat.map(k => {
+                const p = aus > 0 ? Math.round(proKat[k] / aus * 100) : 0;
+                return '<div style="display:grid;gap:4px;"><div class="oben" style="display:flex;justify-content:space-between;gap:8px;"><span>' + esc(katName('aus', k)) + '</span><span class="betrag">' + esc(SD.euro(proKat[k])) + '</span></div>' +
+                    '<div class="balken" title="' + esc(t('anteil', { p })) + '"><span style="width:' + p + '%"></span></div></div>';
+            }).join('') : '<p class="leer">' + esc(t('leer_kat')) + '</p>';
+
+            // Buchungen
+            const sortiert = posten.slice().sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+            $('liste').innerHTML = sortiert.length ? sortiert.map(b => {
+                const betrag = (b.typ === 'ein' ? '+ ' : '− ') + SD.euro(SD.zahl(b.betrag));
+                const meta = [b.monatlich ? t('monatlich') : SD.fmt(b.datum), b.vertrag ? t('aus_vertraegen') : ''].filter(Boolean).join(' · ');
+                return '<div class="eintrag"' + (b.vertrag ? '' : ' data-id="' + b.id + '" style="cursor:pointer"') + '><div class="oben"><b>' + esc(katName(b.typ, b.kategorie) + (b.text ? ' · ' + b.text : '')) + '</b>' +
+                    '<span class="betrag" style="color:' + (b.typ === 'ein' ? 'var(--ok)' : 'var(--ink)') + '">' + esc(betrag) + '</span></div><div class="meta">' + esc(meta) + '</div></div>';
+            }).join('') : '<p class="leer">' + esc(t('leer')) + '</p>';
+        }
+
+        function wechsleMonat(d) {
+            const [j, m] = monat.split('-').map(Number);
+            const x = new Date(j, m - 1 + d, 1);
+            monat = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0');
+            $('monat').value = monat;
+            zeige();
+        }
+        $('vorBtn').addEventListener('click', () => wechsleMonat(-1));
+        $('nachBtn').addEventListener('click', () => wechsleMonat(1));
+        $('monat').addEventListener('change', () => { if ($('monat').value) { monat = $('monat').value; zeige(); } });
+        $('mitVertraegen').addEventListener('change', () => { daten.mitVertraegen = $('mitVertraegen').checked; speichern(); zeige(); });
+
+        // ---------------- Editor ----------------
+        let aktuell = null, typ = 'aus';
+        function fuelleKategorien() {
+            const tab = typ === 'ein' ? t('kat_ein') : t('kat_aus');
+            const alt = $('fKategorie').value;
+            $('fKategorie').innerHTML = Object.keys(tab).map(k => '<option value="' + k + '">' + esc(tab[k]) + '</option>').join('');
+            if (alt && tab[alt]) $('fKategorie').value = alt;
+        }
+        function oeffne(b, neuerTyp) {
+            aktuell = b || null;
+            typ = b ? b.typ : neuerTyp;
+            $('edTitel').textContent = typ === 'ein' ? t('ed_ein') : t('ed_aus');
+            $('fKategorie').value = '';
+            fuelleKategorien();
+            $('fBetrag').value = b ? String(SD.zahl(b.betrag).toFixed(2)).replace('.', ',') : '';
+            // Neue Buchung: im angezeigten Monat (heute, wenn es der aktuelle Monat ist)
+            $('fDatum').value = b ? b.datum : (monat === monatVon(SD.heuteIso()) ? SD.heuteIso() : monat + '-01');
+            $('fKategorie').value = b ? b.kategorie : (typ === 'ein' ? 'lohn' : 'lebensmittel');
+            $('fText').value = b ? b.text || '' : '';
+            $('fMonatlich').checked = !!(b && b.monatlich);
+            $('fBis').value = b && b.bis ? b.bis : '';
+            $('bisFeld').hidden = !$('fMonatlich').checked;
+            $('fFehler').hidden = true;
+            $('loeschenBtn').hidden = !b;
+            $('editor').showModal();
+        }
+        $('fMonatlich').addEventListener('change', () => { $('bisFeld').hidden = !$('fMonatlich').checked; });
+        $('ausgabeBtn').addEventListener('click', () => oeffne(null, 'aus'));
+        $('einnahmeBtn').addEventListener('click', () => oeffne(null, 'ein'));
+        $('liste').addEventListener('click', (e) => {
+            const el = e.target.closest('[data-id]');
+            if (!el) return;
+            const b = daten.buchungen.find(x => x.id === el.dataset.id);
+            if (b) oeffne(b);
+        });
+        $('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const betrag = SD.zahl($('fBetrag').value);
+            if (!(betrag > 0)) { $('fFehler').textContent = t('err_betrag'); $('fFehler').hidden = false; return; }
+            const b = Object.assign(aktuell || { id: SD.neueId() }, {
+                typ, betrag: Math.round(betrag * 100) / 100, datum: $('fDatum').value || SD.heuteIso(), kategorie: $('fKategorie').value,
+                text: $('fText').value.trim(), monatlich: $('fMonatlich').checked, bis: $('fMonatlich').checked ? $('fBis').value : ''
+            });
+            if (!aktuell) daten.buchungen.push(b);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('gespeichert'));
+        });
+        $('loeschenBtn').addEventListener('click', () => SD.sicherFragen($('loeschenBtn'), t('loeschen_ja'), () => {
+            daten.buchungen = daten.buchungen.filter(x => x !== aktuell);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('geloescht'));
+        }));
+
+        function csvZeile(b) {
+            return [SD.fmt(b.datum), b.typ === 'ein' ? t('z_ein') : t('z_aus'), katName(b.typ, b.kategorie).replace(/^\S+\s/, ''), b.text || '',
+            String(SD.zahl(b.betrag).toFixed(2)).replace('.', ','), b.monatlich ? t('monatlich') + (b.bis ? ' bis ' + b.bis : '') : (b.vertrag ? t('vertrag') : '')];
+        }
+        $('csvBtn').addEventListener('click', () => SD.csv([t('csv_kopf').split(';')].concat(imMonat(monat).concat(vertraegeImMonat(monat)).map(csvZeile)), 'haushalt-' + monat + '.csv'));
+        $('csvAlleBtn').addEventListener('click', () => SD.csv([t('csv_kopf').split(';')].concat(daten.buchungen.slice().sort((a, b) => String(a.datum).localeCompare(String(b.datum))).map(csvZeile)), 'haushaltsbuch.csv'));
+
+        document.addEventListener('sd-lang-changed', zeige);
+        zeige();
+    </script>
+</body>
+
+</html>

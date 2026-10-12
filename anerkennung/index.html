@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Anerkennung ausländischer Abschlüsse</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Wegweiser zur Anerkennung ausländischer Berufs-, Hochschul- und Schulabschlüsse in Deutschland – mit offiziellen Quellen, Checkliste und Beratung.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .wahl { display: grid; gap: 8px; }
+        .wahl button { text-align: left; justify-content: flex-start; min-height: 52px; }
+        .wahl button.an { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .ergebnis { border: 2px solid var(--accent); }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Anerkennung von Abschlüssen</strong><small data-i18n="untertitel">Ausländische Ausbildung, Studium, Schule – Schritt für Schritt</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <h2 data-i18n="f1">1 · Was möchtest du anerkennen lassen?</h2>
+            <div class="wahl" id="wahlArt">
+                <button type="button" class="btn" data-art="beruf" data-i18n="a_beruf">🛠️ Berufsausbildung / Berufsabschluss</button>
+                <button type="button" class="btn" data-art="studium" data-i18n="a_studium">🎓 Studium / Hochschulabschluss</button>
+                <button type="button" class="btn" data-art="schule" data-i18n="a_schule">🏫 Schulabschluss (z. B. für Ausbildung oder Studium)</button>
+            </div>
+        </section>
+
+        <section class="karte" id="frage2" hidden>
+            <h2 data-i18n="f2">2 · Ist dein Beruf in Deutschland „reglementiert“?</h2>
+            <p class="info" data-i18n="f2_info">Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben – z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.</p>
+            <div class="wahl" id="wahlReg">
+                <button type="button" class="btn" data-reg="ja" data-i18n="r_ja">Ja, reglementiert (z. B. Gesundheit, Erziehung, Lehramt)</button>
+                <button type="button" class="btn" data-reg="nein" data-i18n="r_nein">Nein, nicht reglementiert</button>
+                <button type="button" class="btn" data-reg="weiss" data-i18n="r_weiss">Weiß ich nicht</button>
+            </div>
+        </section>
+
+        <section class="karte ergebnis" id="ergebnis" hidden>
+            <h2 id="erTitel"></h2>
+            <div id="erText" style="display:grid;gap:10px;"></div>
+        </section>
+
+        <section class="karte" id="checkKarte" hidden>
+            <h2 data-i18n="check_titel">✅ Deine Checkliste</h2>
+            <p class="info" data-i18n="check_info">Typische Schritte und Unterlagen. Welche Unterlagen genau nötig sind, sagt dir die zuständige Stelle. Dein Fortschritt wird auf dem Gerät gespeichert.</p>
+            <div id="checkliste" style="display:grid;gap:8px;"></div>
+            <div class="knoepfe">
+                <a class="btn klein" href="../mappe/index.html" data-i18n="zur_mappe">🗂️ Unterlagen in der Dokumenten-Mappe sammeln</a>
+                <a class="btn klein" href="../Lebenslauf_app.html" data-i18n="zum_lebenslauf">📄 Lebenslauf erstellen</a>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="hilfe_titel">🤝 Kostenlose Beratung</h2>
+            <ul class="punkte">
+                <li><span data-i18n="hotline">Hotline „Arbeiten und Leben in Deutschland“:</span> <b>+49 30 1815-1111</b> – <span data-i18n="hotline_zeit">Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch</span></li>
+                <li data-i18n="iq">IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ – Beratungsstellen in allen Bundesländern.</li>
+                <li data-i18n="ba">Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden – vorher fragen, nachträglich geht es nicht.</li>
+            </ul>
+            <div class="knoepfe">
+                <a class="btn klein" href="https://www.anerkennung-in-deutschland.de/" target="_blank" rel="noopener" data-i18n="link_portal">🔎 Anerkennungs-Finder (offizielles Portal)</a>
+                <a class="btn klein" href="https://www.netzwerk-iq.de/" target="_blank" rel="noopener" data-i18n="link_iq">IQ-Beratung finden</a>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="quellen_titel">📚 Quellen</h2>
+            <ul class="punkte quelle">
+                <li><a href="https://www.anerkennung-in-deutschland.de/html/en/hotline.php" target="_blank" rel="noopener">Anerkennung in Deutschland – Hotline</a></li>
+                <li><a href="https://www.bamf.de/DE/Themen/Integration/ZugewanderteTeilnehmende/AnerkennungBerufsabschluesse/anerkennungberufsabschluesse-node.html" target="_blank" rel="noopener">BAMF – Anerkennung ausländischer Berufsabschlüsse</a></li>
+                <li><a href="https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/anerkennung-abschluss" target="_blank" rel="noopener">Bundesagentur für Arbeit – Anerkennung von Abschluss und Zeugnis</a></li>
+                <li><a href="https://zab.kmk.org/en/statement-comparability/fees" target="_blank" rel="noopener">ZAB – Gebühren der Zeugnisbewertung</a></li>
+                <li><a href="https://anabin.kmk.org/rechercheanleitung-hochschulabschluss" target="_blank" rel="noopener">anabin – Bewertung ausländischer Hochschulabschlüsse</a></li>
+            </ul>
+            <p class="quelle" data-i18n="stand">Stand der Angaben: Oktober 2026. Keine Rechtsberatung – verbindlich ist immer die zuständige Stelle.</p>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Anerkennung von Abschlüssen', untertitel: 'Ausländische Ausbildung, Studium, Schule – Schritt für Schritt',
+                f1: '1 · Was möchtest du anerkennen lassen?', a_beruf: '🛠️ Berufsausbildung / Berufsabschluss', a_studium: '🎓 Studium / Hochschulabschluss', a_schule: '🏫 Schulabschluss (z. B. für Ausbildung oder Studium)',
+                f2: '2 · Ist dein Beruf in Deutschland „reglementiert“?',
+                f2_info: 'Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben – z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.',
+                r_ja: 'Ja, reglementiert (z. B. Gesundheit, Erziehung, Lehramt)', r_nein: 'Nein, nicht reglementiert', r_weiss: 'Weiß ich nicht',
+                check_titel: '✅ Deine Checkliste', check_info: 'Typische Schritte und Unterlagen. Welche Unterlagen genau nötig sind, sagt dir die zuständige Stelle. Dein Fortschritt wird auf dem Gerät gespeichert.',
+                zur_mappe: '🗂️ Unterlagen in der Dokumenten-Mappe sammeln', zum_lebenslauf: '📄 Lebenslauf erstellen',
+                hilfe_titel: '🤝 Kostenlose Beratung', hotline: 'Hotline „Arbeiten und Leben in Deutschland“:', hotline_zeit: 'Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch',
+                iq: 'IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ – Beratungsstellen in allen Bundesländern.',
+                ba: 'Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden – vorher fragen, nachträglich geht es nicht.',
+                link_portal: '🔎 Anerkennungs-Finder (offizielles Portal)', link_iq: 'IQ-Beratung finden', quellen_titel: '📚 Quellen',
+                stand: 'Stand der Angaben: Oktober 2026. Keine Rechtsberatung – verbindlich ist immer die zuständige Stelle.',
+                e_reg_titel: '➡️ Anerkennung ist für dich Pflicht',
+                e_reg: ['Ohne Anerkennung darfst du in diesem Beruf in Deutschland nicht arbeiten.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de – sie hängt vom Beruf und vom Bundesland ab.', 'Die Stelle vergleicht deinen Abschluss mit dem deutschen Referenzberuf. Gibt es große Unterschiede, können Berufserfahrung oder eine Qualifikationsanalyse sie ausgleichen.', 'Ist der Abschluss nur teilweise gleichwertig, bekommst du einen Bescheid und kannst eine Anpassungsqualifizierung machen (z. B. mit Praktikum).', 'Dauer: bis zu 4 Monate, gerechnet ab dem Zeitpunkt, an dem alle Unterlagen vollständig sind. Die Kosten legt die zuständige Stelle fest – vorher dort fragen.'],
+                e_frei_titel: '➡️ Anerkennung ist freiwillig – kann sich aber lohnen',
+                e_frei: ['Du darfst in diesem Beruf auch ohne Anerkennung arbeiten.', 'Ein Anerkennungsbescheid hilft Arbeitgebern, deinen Abschluss einzuschätzen – das kann bei Bewerbung und Gehalt helfen.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de.', 'Dauer: bis zu 4 Monate ab vollständigen Unterlagen. Die Kosten legt die zuständige Stelle fest.'],
+                e_weiss_titel: '➡️ Erst klären: reglementiert oder nicht?',
+                e_weiss: ['Gib deinen Beruf im Anerkennungs-Finder auf anerkennung-in-deutschland.de ein. Dort steht, ob er reglementiert ist und welche Stelle zuständig ist.', 'Oder ruf die Hotline „Arbeiten und Leben in Deutschland“ an (siehe unten).', 'Danach hier oben die passende Antwort wählen.'],
+                e_studium_frei_titel: '➡️ Zeugnisbewertung bei der ZAB',
+                e_studium_frei: ['Für Studienabschlüsse in nicht reglementierten Berufen gibt es keine formale Anerkennung, aber eine Zeugnisbewertung der Zentralstelle für ausländisches Bildungswesen (ZAB).', 'Sie beschreibt deinen Abschluss und vergleicht ihn mit deutschen Abschlüssen – hilfreich bei Bewerbungen.', 'Kosten laut ZAB: 208 € (Ersatz-Ausfertigung 104 €). Eine finanzielle Förderung muss vor dem Antrag beantragt werden.', 'Vorab kannst du in der Datenbank anabin nachsehen, wie deine Hochschule und dein Abschluss eingestuft sind.'],
+                e_schule_titel: '➡️ Zeugnisanerkennungsstelle deines Bundeslandes',
+                e_schule: ['Ausländische Schulabschlüsse (z. B. vergleichbar mit Haupt- oder Realschulabschluss oder Hochschulreife) bewerten die Zeugnisanerkennungsstellen der Bundesländer – für ein Studium teils auch direkt die Hochschulen.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de.', 'Übersetzungen der Zeugnisse sind nötig; ob beglaubigte Kopien oder Übersetzungen von gerichtlich ermächtigten Übersetzern verlangt werden, sagt die Stelle.'],
+                cl: {
+                    stelle: 'Zuständige Stelle herausfinden (Anerkennungs-Finder oder Hotline)',
+                    beratung: 'Kostenlose Beratung nutzen (IQ-Anerkennungsberatung) – vor allem, wenn Unterlagen fehlen',
+                    kosten: 'Kosten bei der Stelle erfragen; bei Arbeitsuche vorher bei Agentur für Arbeit / Jobcenter fragen, ob Übersetzungskosten übernommen werden',
+                    zeugnis: 'Abschlusszeugnis / Diplom (Kopie)',
+                    inhalte: 'Nachweise über Inhalte und Dauer der Ausbildung bzw. des Studiums (z. B. Fächer- und Notenübersicht)',
+                    erfahrung: 'Nachweise über Berufserfahrung (Arbeitszeugnisse, Bescheinigungen)',
+                    lebenslauf: 'Lebenslauf (tabellarisch, auf Deutsch)',
+                    ausweis: 'Ausweis oder Pass (Kopie)',
+                    uebersetzung: 'Übersetzungen ins Deutsche – teils von gerichtlich ermächtigten Übersetzern; teils beglaubigte Kopien',
+                    antrag: 'Antrag mit allen Unterlagen einreichen',
+                    bescheid: 'Bescheid abwarten (bis zu 4 Monate ab vollständigen Unterlagen) – ggf. Anpassungsqualifizierung planen',
+                    anabin: 'In anabin nachsehen, wie Hochschule und Abschluss eingestuft sind',
+                    zab: 'Zeugnisbewertung bei der ZAB online beantragen (208 €)'
+                }
+            },
+            en: {
+                titel: 'Recognition of qualifications', untertitel: 'Foreign vocational training, degree, school – step by step',
+                f1: '1 · What do you want to have recognised?', a_beruf: '🛠️ Vocational training / qualification', a_studium: '🎓 University degree', a_schule: '🏫 School-leaving certificate (e.g. for training or studies)',
+                f2: '2 · Is your profession “regulated” in Germany?',
+                f2_info: 'Regulated means: you may only work in this profession in Germany with state approval or recognition – e.g. doctor, nurse, educator. Not regulated are e.g. retail employees or IT specialists.',
+                r_ja: 'Yes, regulated (e.g. health, childcare, teaching)', r_nein: 'No, not regulated', r_weiss: 'I don’t know',
+                check_titel: '✅ Your checklist', check_info: 'Typical steps and documents. The responsible office tells you exactly which documents are needed. Your progress is saved on your device.',
+                zur_mappe: '🗂️ Collect documents in the document folder', zum_lebenslauf: '📄 Create a CV',
+                hilfe_titel: '🤝 Free advice', hotline: 'Hotline “Working and Living in Germany”:', hotline_zeit: 'Mon–Thu 9:00–16:00, Fri 9:00–12:00 (German time), in German and English',
+                iq: 'IQ recognition counselling in the programme “Integration through Qualification” – advice centres in all federal states.',
+                ba: 'Employment agency / Jobcenter: if you are looking for work, translation and certification costs may be covered under certain conditions – ask beforehand, it is not possible afterwards.',
+                link_portal: '🔎 Recognition Finder (official portal)', link_iq: 'Find IQ counselling', quellen_titel: '📚 Sources',
+                stand: 'Information as of October 2026. Not legal advice – the responsible office always decides.',
+                e_reg_titel: '➡️ Recognition is mandatory for you',
+                e_reg: ['Without recognition you may not work in this profession in Germany.', 'You can find the responsible office with the Recognition Finder on anerkennung-in-deutschland.de – it depends on the profession and the federal state.', 'The office compares your qualification with the German reference profession. If there are major differences, work experience or a skills analysis can compensate.', 'If your qualification is only partly equivalent, you receive a notice and can do an adaptation qualification (e.g. with an internship).', 'Duration: up to 4 months, counted from when all documents are complete. The responsible office sets the fees – ask there first.'],
+                e_frei_titel: '➡️ Recognition is voluntary – but can be worth it',
+                e_frei: ['You may work in this profession without recognition.', 'A recognition notice helps employers assess your qualification – this can help with applications and salary.', 'You can find the responsible office with the Recognition Finder on anerkennung-in-deutschland.de.', 'Duration: up to 4 months from complete documents. The responsible office sets the fees.'],
+                e_weiss_titel: '➡️ First find out: regulated or not?',
+                e_weiss: ['Enter your profession in the Recognition Finder on anerkennung-in-deutschland.de. It shows whether it is regulated and which office is responsible.', 'Or call the hotline “Working and Living in Germany” (see below).', 'Then choose the matching answer above.'],
+                e_studium_frei_titel: '➡️ Statement of comparability from the ZAB',
+                e_studium_frei: ['For degrees in non-regulated professions there is no formal recognition, but a statement of comparability from the Central Office for Foreign Education (ZAB).', 'It describes your degree and compares it with German degrees – helpful for job applications.', 'Fee according to the ZAB: €208 (replacement copy €104). Financial assistance must be requested before you apply.', 'Beforehand you can check in the anabin database how your university and degree are classified.'],
+                e_schule_titel: '➡️ Certificate recognition office of your federal state',
+                e_schule: ['Foreign school-leaving certificates are assessed by the certificate recognition offices of the federal states – for university admission sometimes directly by the universities.', 'You can find the responsible office with the Recognition Finder on anerkennung-in-deutschland.de.', 'Translations of the certificates are required; the office tells you whether certified copies or translations by court-authorised translators are needed.'],
+                cl: {
+                    stelle: 'Find the responsible office (Recognition Finder or hotline)',
+                    beratung: 'Use free counselling (IQ recognition counselling) – especially if documents are missing',
+                    kosten: 'Ask the office about fees; if you are looking for work, ask the employment agency / Jobcenter beforehand whether translation costs are covered',
+                    zeugnis: 'Final certificate / diploma (copy)',
+                    inhalte: 'Proof of content and duration of the training or studies (e.g. transcript of subjects and grades)',
+                    erfahrung: 'Proof of work experience (references, certificates)',
+                    lebenslauf: 'CV (tabular, in German)',
+                    ausweis: 'ID card or passport (copy)',
+                    uebersetzung: 'Translations into German – sometimes by court-authorised translators; sometimes certified copies',
+                    antrag: 'Submit the application with all documents',
+                    bescheid: 'Wait for the notice (up to 4 months from complete documents) – plan an adaptation qualification if needed',
+                    anabin: 'Check in anabin how your university and degree are classified',
+                    zab: 'Apply online for a statement of comparability at the ZAB (€208)'
+                }
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdAnerkennung';
+        let d = SD.lesen(KEY, {}) || {};
+        if (!d.erledigt) d.erledigt = {};
+        const speichern = () => SD.schreiben(KEY, d);
+
+        const PFAD = {
+            reg: { titel: 'e_reg_titel', text: 'e_reg', check: ['stelle', 'beratung', 'kosten', 'zeugnis', 'inhalte', 'erfahrung', 'lebenslauf', 'ausweis', 'uebersetzung', 'antrag', 'bescheid'] },
+            frei: { titel: 'e_frei_titel', text: 'e_frei', check: ['stelle', 'beratung', 'kosten', 'zeugnis', 'inhalte', 'erfahrung', 'lebenslauf', 'ausweis', 'uebersetzung', 'antrag', 'bescheid'] },
+            weiss: { titel: 'e_weiss_titel', text: 'e_weiss', check: [] },
+            studium: { titel: 'e_studium_frei_titel', text: 'e_studium_frei', check: ['anabin', 'zeugnis', 'inhalte', 'ausweis', 'zab'] },
+            schule: { titel: 'e_schule_titel', text: 'e_schule', check: ['stelle', 'zeugnis', 'ausweis', 'uebersetzung', 'antrag'] }
+        };
+        function pfad() {
+            if (d.art === 'schule') return 'schule';
+            if (!d.reg) return null;
+            if (d.reg === 'weiss') return 'weiss';
+            if (d.reg === 'ja') return 'reg';
+            return d.art === 'studium' ? 'studium' : 'frei';
+        }
+        function zeige() {
+            document.querySelectorAll('#wahlArt [data-art]').forEach(b => b.classList.toggle('an', b.dataset.art === d.art));
+            document.querySelectorAll('#wahlReg [data-reg]').forEach(b => b.classList.toggle('an', b.dataset.reg === d.reg));
+            $('frage2').hidden = !d.art || d.art === 'schule';
+            const p = pfad();
+            $('ergebnis').hidden = !p;
+            $('checkKarte').hidden = !p || !PFAD[p].check.length;
+            if (!p) return;
+            $('erTitel').textContent = t(PFAD[p].titel);
+            $('erText').innerHTML = '<ol class="schritte">' + t(PFAD[p].text).map(x => '<li>' + esc(x) + '</li>').join('') + '</ol>';
+            const cl = t('cl');
+            $('checkliste').innerHTML = PFAD[p].check.map(k => '<label class="check"><input type="checkbox" data-k="' + k + '"' + (d.erledigt[k] ? ' checked' : '') + '> <span>' + esc(cl[k]) + '</span></label>').join('');
+        }
+        $('wahlArt').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-art]');
+            if (!b) return;
+            if (d.art !== b.dataset.art) { d.art = b.dataset.art; d.reg = ''; }
+            speichern(); zeige();
+            const ziel = d.art === 'schule' ? $('ergebnis') : $('frage2');
+            setTimeout(() => ziel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        });
+        $('wahlReg').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-reg]');
+            if (!b) return;
+            d.reg = b.dataset.reg;
+            speichern(); zeige();
+            setTimeout(() => $('ergebnis').scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        });
+        $('checkliste').addEventListener('change', (e) => {
+            const c = e.target.closest('[data-k]');
+            if (!c) return;
+            d.erledigt[c.dataset.k] = c.checked;
+            speichern();
+        });
+        document.addEventListener('sd-lang-changed', zeige);
+        zeige();
+    </script>
+</body>
+
+</html>

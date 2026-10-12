@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Verträge &amp; Kündigungen</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Alle Verträge im Blick: Kosten pro Monat, bis wann man kündigen muss, Kündigungsschreiben mit einem Tipp.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Verträge &amp; Kündigungen</strong><small data-i18n="untertitel">Kosten im Blick, keine Kündigungsfrist verpassen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <div class="zahlen" id="zahlen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="neuBtn" data-i18n="neu">＋ Vertrag hinzufügen</button>
+                <button type="button" class="btn" id="kalAlleBtn" data-i18n="kal_alle">📅 Alle Kündigungstermine in den Kalender</button>
+                <button type="button" class="btn" id="csvBtn" data-i18n="csv">⬇️ Liste (CSV)</button>
+            </div>
+            <div class="liste" id="liste"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="regeln_titel">📘 Gut zu wissen</h2>
+            <ul class="punkte">
+                <li data-i18n="regel1">Für viele Verbraucherverträge, die ab dem 1. März 2022 geschlossen wurden (z. B. Handy, Internet, Strom, Fitnessstudio, Streaming): Nach der Mindestlaufzeit verlängern sie sich nur noch auf unbestimmte Zeit und sind dann mit höchstens einem Monat Frist kündbar. Vor dem Ende der Mindestlaufzeit beträgt die Frist höchstens einen Monat.</li>
+                <li data-i18n="regel2">Versicherungen sind von dieser Regel ausgenommen – hier gilt die Frist aus deinem Vertrag.</li>
+                <li data-i18n="regel3">Online abgeschlossene Verträge kann man über den Knopf „Verträge hier kündigen“ auf der Website des Anbieters kündigen; danach muss sofort eine Eingangsbestätigung kommen.</li>
+                <li data-i18n="regel4">Die Fristen hier sind Vorschläge. Maßgeblich ist immer dein Vertrag – bitte die eingetragene Frist mit den Vertragsunterlagen vergleichen. Keine Rechtsberatung.</li>
+            </ul>
+            <p class="quelle"><span data-i18n="quelle">Quelle:</span> <a href="https://www.verbraucherzentrale.de/wissen/vertraege-reklamation/kundenrechte/gesetz-fuer-fairere-vertraege-mehr-schutz-bei-kosten-und-laufzeiten-55274" target="_blank" rel="noopener">Verbraucherzentrale – Gesetz für fairere Verträge</a></p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="sicher_titel">🔒 Deine Daten</h2>
+            <p class="info" data-i18n="sicher_text">Alles bleibt nur in diesem Browser auf deinem Gerät.</p>
+        </section>
+    </main>
+
+    <dialog id="editor">
+        <form class="dlg" id="form">
+            <div class="dlg-kopf"><h2 id="edTitel" data-i18n="ed_neu">Vertrag hinzufügen</h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_art">Art</span><select id="fArt"></select></label>
+                <label class="feld"><span data-i18n="f_anbieter">Anbieter</span><input type="text" id="fAnbieter" maxlength="80" data-i18n-placeholder="f_anbieter_ph" placeholder="z. B. Telekom, Stadtwerke"></label>
+            </div>
+            <label class="feld"><span data-i18n="f_anschrift">Anschrift des Anbieters</span><small data-i18n="f_anschrift_hilfe">für das Kündigungsschreiben (steht meist auf der Rechnung)</small><textarea id="fAnschrift" rows="3" maxlength="300"></textarea></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_nummer">Kunden- / Vertragsnummer</span><input type="text" id="fNummer" maxlength="60" autocomplete="off"></label>
+                <label class="feld"><span data-i18n="f_person">Für wen?</span><input type="text" id="fPerson" maxlength="60" data-i18n-placeholder="f_person_ph" placeholder="z. B. ich"></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_kosten">Kosten (€)</span><input type="text" id="fKosten" inputmode="decimal" placeholder="0,00"></label>
+                <label class="feld"><span data-i18n="f_intervall">pro</span><select id="fIntervall">
+                        <option value="1" data-i18n="iv_monat">Monat</option>
+                        <option value="3" data-i18n="iv_quartal">Vierteljahr</option>
+                        <option value="6" data-i18n="iv_halbjahr">Halbjahr</option>
+                        <option value="12" data-i18n="iv_jahr">Jahr</option>
+                    </select></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_beginn">Vertragsbeginn</span><input type="date" id="fBeginn"></label>
+                <label class="feld"><span data-i18n="f_mindest">Mindestlaufzeit</span><select id="fMindest">
+                        <option value="0" data-i18n="ml_0">keine</option>
+                        <option value="1">1 Monat</option>
+                        <option value="3">3 Monate</option>
+                        <option value="6">6 Monate</option>
+                        <option value="12">12 Monate</option>
+                        <option value="24">24 Monate</option>
+                        <option value="36">36 Monate</option>
+                    </select></label>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_danach">Danach</span><select id="fDanach">
+                        <option value="0" data-i18n="da_unbefristet">läuft unbefristet weiter</option>
+                        <option value="1" data-i18n="da_1">verlängert sich um 1 Monat</option>
+                        <option value="12" data-i18n="da_12">verlängert sich um 12 Monate</option>
+                        <option value="24" data-i18n="da_24">verlängert sich um 24 Monate</option>
+                    </select></label>
+                <label class="feld"><span data-i18n="f_frist">Kündigungsfrist</span><span style="display:flex;gap:6px;"><input type="number" id="fFristZahl" min="0" max="36" style="width:90px;"><select id="fFristEinheit">
+                            <option value="tage" data-i18n="fe_tage">Tage</option>
+                            <option value="wochen" data-i18n="fe_wochen">Wochen</option>
+                            <option value="monate" data-i18n="fe_monate">Monate</option>
+                        </select></span></label>
+            </div>
+            <p class="info" id="fVorschlag"></p>
+            <label class="feld"><span data-i18n="f_gekuendigt">Schon gekündigt zum</span><small data-i18n="f_gekuendigt_hilfe">leer lassen, wenn der Vertrag weiterläuft</small><input type="date" id="fGekuendigt"></label>
+            <label class="feld"><span data-i18n="f_notiz">Notiz</span><textarea id="fNotiz" rows="2" maxlength="600"></textarea></label>
+            <p class="fehler" id="fFehler" hidden></p>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" data-zu data-i18n="abbrechen">Abbrechen</button>
+                <button type="button" class="btn gefahr" id="loeschenBtn" data-i18n="loeschen" hidden>🗑 Löschen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Verträge & Kündigungen', untertitel: 'Kosten im Blick, keine Kündigungsfrist verpassen',
+                neu: '＋ Vertrag hinzufügen', kal_alle: '📅 Alle Kündigungstermine in den Kalender', csv: '⬇️ Liste (CSV)',
+                z_monat: 'pro Monat (umgerechnet)', z_jahr: 'pro Jahr', z_anzahl: 'laufende Verträge', z_bald: 'Kündigung bald fällig',
+                regeln_titel: '📘 Gut zu wissen',
+                regel1: 'Für viele Verbraucherverträge, die ab dem 1. März 2022 geschlossen wurden (z. B. Handy, Internet, Strom, Fitnessstudio, Streaming): Nach der Mindestlaufzeit verlängern sie sich nur noch auf unbestimmte Zeit und sind dann mit höchstens einem Monat Frist kündbar. Vor dem Ende der Mindestlaufzeit beträgt die Frist höchstens einen Monat.',
+                regel2: 'Versicherungen sind von dieser Regel ausgenommen – hier gilt die Frist aus deinem Vertrag.',
+                regel3: 'Online abgeschlossene Verträge kann man über den Knopf „Verträge hier kündigen“ auf der Website des Anbieters kündigen; danach muss sofort eine Eingangsbestätigung kommen.',
+                regel4: 'Die Fristen hier sind Vorschläge. Maßgeblich ist immer dein Vertrag – bitte die eingetragene Frist mit den Vertragsunterlagen vergleichen. Keine Rechtsberatung.',
+                quelle: 'Quelle:', sicher_titel: '🔒 Deine Daten', sicher_text: 'Alles bleibt nur in diesem Browser auf deinem Gerät.',
+                ed_neu: 'Vertrag hinzufügen', ed_bearbeiten: 'Vertrag bearbeiten',
+                f_art: 'Art', f_anbieter: 'Anbieter', f_anbieter_ph: 'z. B. Telekom, Stadtwerke', f_anschrift: 'Anschrift des Anbieters', f_anschrift_hilfe: 'für das Kündigungsschreiben (steht meist auf der Rechnung)',
+                f_nummer: 'Kunden- / Vertragsnummer', f_person: 'Für wen?', f_person_ph: 'z. B. ich', f_kosten: 'Kosten (€)', f_intervall: 'pro',
+                iv_monat: 'Monat', iv_quartal: 'Vierteljahr', iv_halbjahr: 'Halbjahr', iv_jahr: 'Jahr',
+                f_beginn: 'Vertragsbeginn', f_mindest: 'Mindestlaufzeit', ml_0: 'keine', f_danach: 'Danach',
+                da_unbefristet: 'läuft unbefristet weiter', da_1: 'verlängert sich um 1 Monat', da_12: 'verlängert sich um 12 Monate', da_24: 'verlängert sich um 24 Monate',
+                f_frist: 'Kündigungsfrist', fe_tage: 'Tage', fe_wochen: 'Wochen', fe_monate: 'Monate', fe1_tage: 'Tag', fe1_wochen: 'Woche', fe1_monate: 'Monat',
+                f_gekuendigt: 'Schon gekündigt zum', f_gekuendigt_hilfe: 'leer lassen, wenn der Vertrag weiterläuft', f_notiz: 'Notiz',
+                speichern: 'Speichern', abbrechen: 'Abbrechen', loeschen: '🗑 Löschen', loeschen_ja: 'Wirklich löschen?',
+                err_anbieter: 'Bitte den Anbieter eintragen.', gespeichert: 'Gespeichert', geloescht: 'Gelöscht',
+                leer: 'Noch keine Verträge. Tippe auf „Vertrag hinzufügen“ – z. B. Handy, Strom, Internet, Fitnessstudio, Versicherungen.',
+                vorschlag: 'Vorschlag für „{art}“: {text} – bitte mit deinem Vertrag vergleichen.',
+                s_gekuendigt: 'gekündigt zum {d}', s_beendet: 'beendet am {d}', s_ohne: 'Beginn fehlt – Kündigungstermin nicht berechenbar',
+                s_bis: 'kündigen bis {d}', s_ende: 'endet dann am {d}', s_jederzeit: 'jederzeit kündbar · frühestes Ende {d}',
+                s_heute: 'heute letzter Tag zum Kündigen', s_noch: 'noch {n} Tage',
+                b_kuendigen: '✍️ Kündigung schreiben', b_bearbeiten: '✏️ Bearbeiten', b_kal: '📅',
+                k_betreff: 'Kündigung meines Vertrags{nr}', k_hinweis: '📝 Kündigung aus „Verträge & Kündigungen“ übernommen.',
+                k_text: 'hiermit kündige ich meinen Vertrag{nr} fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir die Kündigung und das Datum des Vertragsendes schriftlich.\n\nEine erteilte Einzugsermächtigung (SEPA-Lastschriftmandat) widerrufe ich zum Vertragsende.',
+                k_nr: ' (Kunden-/Vertragsnummer: {nr})', k_naechst: 'zum nächstmöglichen Zeitpunkt',
+                kal_titel: 'Letzter Tag: {x} kündigen', kal_text: 'Vertrag endet dann am {d}. Kündigungsfrist: {f}.',
+                kal_keine: 'Kein Kündigungstermin zu berechnen (Vertragsbeginn eintragen).',
+                csv_kopf: 'Art;Anbieter;Für;Nummer;Kosten;pro Monate;Beginn;Mindestlaufzeit;Kündigungsfrist;Kündigen bis;Ende',
+                frist_text: '{n} {e}',
+                arten: {
+                    handy: ['📱', 'Handy / Mobilfunk'], internet: ['🌐', 'Internet / Festnetz'], strom: ['⚡', 'Strom'], gas: ['🔥', 'Gas / Heizung'],
+                    fitness: ['🏋️', 'Fitnessstudio'], streaming: ['📺', 'Streaming / Abo'], zeitung: ['📰', 'Zeitung / Zeitschrift'],
+                    versicherung: ['🛡️', 'Versicherung'], miete: ['🏠', 'Miete (als Mieter)'], kfz: ['🚗', 'Kfz-Versicherung'], sonstiges: ['📄', 'Sonstiges']
+                }
+            },
+            en: {
+                titel: 'Contracts & Cancellations', untertitel: 'Know your costs, never miss a notice period',
+                neu: '＋ Add contract', kal_alle: '📅 All cancellation dates to calendar', csv: '⬇️ List (CSV)',
+                z_monat: 'per month (converted)', z_jahr: 'per year', z_anzahl: 'active contracts', z_bald: 'cancellation due soon',
+                regeln_titel: '📘 Good to know',
+                regel1: 'For many consumer contracts concluded from 1 March 2022 (e.g. mobile, internet, electricity, gym, streaming): after the minimum term they only continue for an indefinite period and can then be cancelled with at most one month’s notice. Before the end of the minimum term the notice period is at most one month.',
+                regel2: 'Insurance contracts are excluded from this rule – the notice period in your contract applies.',
+                regel3: 'Contracts concluded online can be cancelled with the “cancel contracts here” button on the provider’s website; you must then receive a confirmation immediately.',
+                regel4: 'The notice periods here are suggestions. Your contract always applies – please compare the entered period with your contract documents. Not legal advice.',
+                quelle: 'Source:', sicher_titel: '🔒 Your data', sicher_text: 'Everything stays only in this browser on your device.',
+                ed_neu: 'Add contract', ed_bearbeiten: 'Edit contract',
+                f_art: 'Type', f_anbieter: 'Provider', f_anbieter_ph: 'e.g. Telekom, Stadtwerke', f_anschrift: 'Provider address', f_anschrift_hilfe: 'for the cancellation letter (usually on the invoice)',
+                f_nummer: 'Customer / contract number', f_person: 'For whom?', f_person_ph: 'e.g. me', f_kosten: 'Cost (€)', f_intervall: 'per',
+                iv_monat: 'month', iv_quartal: 'quarter', iv_halbjahr: 'half-year', iv_jahr: 'year',
+                f_beginn: 'Start date', f_mindest: 'Minimum term', ml_0: 'none', f_danach: 'Afterwards',
+                da_unbefristet: 'continues indefinitely', da_1: 'renews for 1 month', da_12: 'renews for 12 months', da_24: 'renews for 24 months',
+                f_frist: 'Notice period', fe_tage: 'days', fe_wochen: 'weeks', fe_monate: 'months', fe1_tage: 'day', fe1_wochen: 'week', fe1_monate: 'month',
+                f_gekuendigt: 'Already cancelled as of', f_gekuendigt_hilfe: 'leave empty if the contract continues', f_notiz: 'Note',
+                speichern: 'Save', abbrechen: 'Cancel', loeschen: '🗑 Delete', loeschen_ja: 'Really delete?',
+                err_anbieter: 'Please enter the provider.', gespeichert: 'Saved', geloescht: 'Deleted',
+                leer: 'No contracts yet. Tap “Add contract” – e.g. mobile, electricity, internet, gym, insurance.',
+                vorschlag: 'Suggestion for “{art}”: {text} – please compare with your contract.',
+                s_gekuendigt: 'cancelled as of {d}', s_beendet: 'ended on {d}', s_ohne: 'start date missing – cancellation date cannot be calculated',
+                s_bis: 'cancel by {d}', s_ende: 'then ends on {d}', s_jederzeit: 'can be cancelled any time · earliest end {d}',
+                s_heute: 'today is the last day to cancel', s_noch: '{n} days left',
+                b_kuendigen: '✍️ Write cancellation', b_bearbeiten: '✏️ Edit', b_kal: '📅',
+                k_betreff: 'Kündigung meines Vertrags{nr}', k_hinweis: '📝 Cancellation from “Contracts & Cancellations” inserted.',
+                k_text: 'hiermit kündige ich meinen Vertrag{nr} fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir die Kündigung und das Datum des Vertragsendes schriftlich.\n\nEine erteilte Einzugsermächtigung (SEPA-Lastschriftmandat) widerrufe ich zum Vertragsende.',
+                k_nr: ' (Kunden-/Vertragsnummer: {nr})', k_naechst: 'zum nächstmöglichen Zeitpunkt',
+                kal_titel: 'Last day: cancel {x}', kal_text: 'The contract then ends on {d}. Notice period: {f}.',
+                kal_keine: 'No cancellation date to calculate (enter the start date).',
+                csv_kopf: 'Type;Provider;For;Number;Cost;per months;Start;Minimum term;Notice;Cancel by;End',
+                frist_text: '{n} {e}',
+                arten: {
+                    handy: ['📱', 'Mobile phone'], internet: ['🌐', 'Internet / landline'], strom: ['⚡', 'Electricity'], gas: ['🔥', 'Gas / heating'],
+                    fitness: ['🏋️', 'Gym'], streaming: ['📺', 'Streaming / subscription'], zeitung: ['📰', 'Newspaper / magazine'],
+                    versicherung: ['🛡️', 'Insurance'], miete: ['🏠', 'Rent (as tenant)'], kfz: ['🚗', 'Car insurance'], sonstiges: ['📄', 'Other']
+                }
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdVertraege';
+        // Vorschlaege je Art: Mindestlaufzeit, danach (0 = unbefristet / n Monate), Frist
+        const VORSCHLAG = {
+            handy: { mindest: 24, danach: 0, frist: [1, 'monate'] },
+            internet: { mindest: 24, danach: 0, frist: [1, 'monate'] },
+            strom: { mindest: 12, danach: 0, frist: [1, 'monate'] },
+            gas: { mindest: 12, danach: 0, frist: [1, 'monate'] },
+            fitness: { mindest: 12, danach: 0, frist: [1, 'monate'] },
+            streaming: { mindest: 0, danach: 0, frist: [1, 'monate'] },
+            zeitung: { mindest: 12, danach: 0, frist: [1, 'monate'] },
+            versicherung: { mindest: 12, danach: 12, frist: [3, 'monate'] },
+            kfz: { mindest: 12, danach: 12, frist: [1, 'monate'] },
+            miete: { mindest: 0, danach: 0, frist: [3, 'monate'] },
+            sonstiges: { mindest: 12, danach: 0, frist: [1, 'monate'] }
+        };
+        const ARTEN = Object.keys(VORSCHLAG);
+        const artInfo = (a) => (t('arten')[a] || t('arten').sonstiges);
+        let liste = SD.lesen(KEY, []);
+        if (!Array.isArray(liste)) liste = [];
+        const speichern = () => SD.schreiben(KEY, liste);
+
+        function fristText(v) {
+            const n = Number(v.fristZahl) || 0;
+            const e = v.fristEinheit || 'monate';
+            return t('frist_text', { n, e: t(n === 1 ? 'fe1_' + e : 'fe_' + e) });
+        }
+        const termin = SD.vertragTermin;
+        const proMonat = (v) => SD.zahl(v.kosten) / (Number(v.intervall) || 1);
+        const laeuft = (v) => !(v.gekuendigt && v.gekuendigt < SD.heuteIso());
+
+        function zeige() {
+            const aktiv = liste.filter(laeuft);
+            const monat = aktiv.reduce((s, v) => s + proMonat(v), 0);
+            const bald = aktiv.filter(v => { const x = termin(v); return x.art === 'bis' && SD.tageBis(x.bis) <= 30; }).length;
+            $('zahlen').innerHTML = [[SD.euro(monat), t('z_monat')], [SD.euro(monat * 12), t('z_jahr')], [aktiv.length, t('z_anzahl')], [bald, t('z_bald')]]
+                .map(z => '<div class="zahl"><b>' + esc(z[0]) + '</b><span>' + esc(z[1]) + '</span></div>').join('');
+            if (!liste.length) { $('liste').innerHTML = '<p class="leer">' + esc(t('leer')) + '</p>'; return; }
+            const rang = (v) => { const x = termin(v); return x.art === 'bis' ? x.bis : x.art === 'jederzeit' ? '8' : '9'; };
+            const sortiert = liste.slice().sort((a, b) => rang(a).localeCompare(rang(b)));
+            $('liste').innerHTML = sortiert.map(v => {
+                const x = termin(v);
+                const info = artInfo(v.art);
+                let marke = '', zeile = '';
+                if (x.art === 'gekuendigt') { marke = '<span class="marke grau">' + esc(x.ende < SD.heuteIso() ? t('s_beendet', { d: SD.fmt(x.ende) }) : t('s_gekuendigt', { d: SD.fmt(x.ende) })) + '</span>'; }
+                else if (x.art === 'ohne') { marke = '<span class="marke grau">' + esc(t('s_ohne')) + '</span>'; }
+                else if (x.art === 'jederzeit') { marke = '<span class="marke">' + esc(t('s_jederzeit', { d: SD.fmt(x.ende) })) + '</span>'; }
+                else {
+                    const n = SD.tageBis(x.bis);
+                    marke = '<span class="marke ' + (n <= 7 ? 'ab' : n <= 30 ? 'bald' : '') + '">' + esc(t('s_bis', { d: SD.fmt(x.bis) })) + '</span>';
+                    zeile = esc(t('s_ende', { d: SD.fmt(x.ende) })) + ' · ' + esc(n === 0 ? t('s_heute') : t('s_noch', { n }));
+                }
+                const intervall = { 1: t('iv_monat'), 3: t('iv_quartal'), 6: t('iv_halbjahr'), 12: t('iv_jahr') }[v.intervall] || t('iv_monat');
+                return '<div class="eintrag' + (laeuft(v) ? '' : ' erledigt') + '"><div class="oben"><b>' + esc(info[0] + ' ' + (v.anbieter || '')) + '</b>' +
+                    (v.kosten ? '<span class="betrag">' + esc(SD.euro(SD.zahl(v.kosten))) + ' / ' + esc(intervall) + '</span>' : '') + '</div>' +
+                    '<div class="meta">' + esc([info[1], v.person, v.nummer, t('f_frist') + ': ' + fristText(v)].filter(Boolean).join(' · ')) + '</div>' +
+                    '<div>' + marke + '</div>' + (zeile ? '<div class="meta">' + zeile + '</div>' : '') +
+                    '<div class="knoepfe">' +
+                    (x.art !== 'gekuendigt' ? '<button type="button" class="btn klein" data-k="' + v.id + '">' + esc(t('b_kuendigen')) + '</button>' : '') +
+                    (x.art === 'bis' ? '<button type="button" class="btn klein" data-kal="' + v.id + '" aria-label="Kalender">' + t('b_kal') + '</button>' : '') +
+                    '<button type="button" class="btn klein" data-e="' + v.id + '">' + esc(t('b_bearbeiten')) + '</button></div></div>';
+            }).join('');
+        }
+
+        $('liste').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-k],[data-kal],[data-e]');
+            if (!b) return;
+            const v = liste.find(x => x.id === (b.dataset.k || b.dataset.kal || b.dataset.e));
+            if (!v) return;
+            if (b.dataset.e) oeffne(v);
+            else if (b.dataset.kal) kalender([v]);
+            else kuendigen(v);
+        });
+
+        function kuendigen(v) {
+            const x = termin(v);
+            const nr = v.nummer ? t('k_nr', { nr: v.nummer }) : '';
+            // Das Schreiben ist immer auf Deutsch (Empfaenger ist ein deutscher Anbieter)
+            const de = window.SD_I18N.de;
+            const zum = x.art === 'bis' || x.art === 'jederzeit' ? SD.datum(x.ende).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : de.k_naechst;
+            const text = de.k_text.split('{nr}').join(nr ? de.k_nr.split('{nr}').join(v.nummer) : '').split('{d}').join(zum)
+                .replace('fristgerecht zum zum nächstmöglichen Zeitpunkt, hilfsweise zum nächstmöglichen Zeitpunkt', 'fristgerecht zum nächstmöglichen Zeitpunkt');
+            SD.anSchreibstudio({
+                empfaenger: [v.anbieter, v.anschrift].filter(Boolean).join('\n'),
+                betreff: de.k_betreff.split('{nr}').join(nr ? de.k_nr.split('{nr}').join(v.nummer) : ''),
+                anrede: 'Sehr geehrte Damen und Herren,',
+                text, hinweis: t('k_hinweis')
+            });
+        }
+
+        function kalender(vs) {
+            const ev = vs.map(v => ({ v, x: termin(v) })).filter(o => o.x.art === 'bis').map(o => ({
+                uid: 'vertrag-' + o.v.id, datum: o.x.bis, vorher: 7,
+                titel: t('kal_titel', { x: o.v.anbieter || artInfo(o.v.art)[1] }),
+                text: t('kal_text', { d: SD.fmt(o.x.ende), f: fristText(o.v) })
+            }));
+            if (!ev.length) { SD.toast(t('kal_keine')); return; }
+            SD.icsDatei(ev, ev.length === 1 ? SD.dateiname('kuendigen-' + (vs[0].anbieter || 'vertrag'), '.ics') : 'kuendigungstermine.ics');
+        }
+        $('kalAlleBtn').addEventListener('click', () => kalender(liste.filter(laeuft)));
+        $('csvBtn').addEventListener('click', () => {
+            const zeilen = [t('csv_kopf').split(';')].concat(liste.map(v => {
+                const x = termin(v);
+                return [artInfo(v.art)[1], v.anbieter, v.person, v.nummer, String(SD.zahl(v.kosten).toFixed(2)).replace('.', ','), v.intervall, SD.fmt(v.beginn), v.mindest, fristText(v), x.bis ? SD.fmt(x.bis) : '', x.ende ? SD.fmt(x.ende) : ''];
+            }));
+            SD.csv(zeilen, 'vertraege.csv');
+        });
+
+        // ---------------- Editor ----------------
+        let aktuell = null;
+        function fuelleArten() {
+            const a = $('fArt').value;
+            $('fArt').innerHTML = ARTEN.map(x => '<option value="' + x + '">' + esc(artInfo(x)[0] + ' ' + artInfo(x)[1]) + '</option>').join('');
+            if (a) $('fArt').value = a;
+        }
+        function zeigeVorschlag() {
+            const a = $('fArt').value, v = VORSCHLAG[a];
+            const teile = [t('f_mindest') + ' ' + (v.mindest ? v.mindest + ' ' + t('fe_monate') : t('ml_0')),
+            v.danach ? t('da_' + v.danach) : t('da_unbefristet'), t('f_frist') + ' ' + v.frist[0] + ' ' + t((v.frist[0] === 1 ? 'fe1_' : 'fe_') + v.frist[1])];
+            $('fVorschlag').textContent = t('vorschlag', { art: artInfo(a)[1], text: teile.join(', ') });
+        }
+        function setzeVorschlag() {
+            const v = VORSCHLAG[$('fArt').value];
+            $('fMindest').value = String(v.mindest);
+            $('fDanach').value = String(v.danach);
+            $('fFristZahl').value = v.frist[0];
+            $('fFristEinheit').value = v.frist[1];
+            zeigeVorschlag();
+        }
+        function oeffne(v) {
+            aktuell = v || null;
+            fuelleArten();
+            $('edTitel').textContent = v ? t('ed_bearbeiten') : t('ed_neu');
+            $('fArt').value = v ? v.art : 'handy';
+            if (v) {
+                $('fAnbieter').value = v.anbieter || ''; $('fAnschrift').value = v.anschrift || ''; $('fNummer').value = v.nummer || ''; $('fPerson').value = v.person || '';
+                $('fKosten').value = v.kosten || ''; $('fIntervall').value = String(v.intervall || 1); $('fBeginn').value = v.beginn || '';
+                $('fMindest').value = String(v.mindest || 0); $('fDanach').value = String(v.danach || 0);
+                $('fFristZahl').value = v.fristZahl != null ? v.fristZahl : 1; $('fFristEinheit').value = v.fristEinheit || 'monate';
+                $('fGekuendigt').value = v.gekuendigt || ''; $('fNotiz').value = v.notiz || '';
+                zeigeVorschlag();
+            } else {
+                $('form').reset();
+                $('fArt').value = 'handy';
+                setzeVorschlag();
+            }
+            $('fFehler').hidden = true;
+            $('loeschenBtn').hidden = !v;
+            $('editor').showModal();
+        }
+        $('fArt').addEventListener('change', () => { if (aktuell) zeigeVorschlag(); else setzeVorschlag(); });
+        $('neuBtn').addEventListener('click', () => oeffne(null));
+        $('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const anbieter = $('fAnbieter').value.trim();
+            if (!anbieter) { $('fFehler').textContent = t('err_anbieter'); $('fFehler').hidden = false; return; }
+            const v = Object.assign(aktuell || { id: SD.neueId(), erstellt: Date.now() }, {
+                art: $('fArt').value, anbieter, anschrift: $('fAnschrift').value.trim(), nummer: $('fNummer').value.trim(), person: $('fPerson').value.trim(),
+                kosten: $('fKosten').value.trim(), intervall: Number($('fIntervall').value) || 1, beginn: $('fBeginn').value,
+                mindest: Number($('fMindest').value) || 0, danach: Number($('fDanach').value) || 0,
+                fristZahl: Math.max(0, Number($('fFristZahl').value) || 0), fristEinheit: $('fFristEinheit').value,
+                gekuendigt: $('fGekuendigt').value, notiz: $('fNotiz').value.trim(), geaendert: Date.now()
+            });
+            if (!aktuell) liste.push(v);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('gespeichert'));
+        });
+        $('loeschenBtn').addEventListener('click', () => SD.sicherFragen($('loeschenBtn'), t('loeschen_ja'), () => {
+            liste = liste.filter(x => x !== aktuell);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('geloescht'));
+        }));
+
+        document.addEventListener('sd-lang-changed', () => { fuelleArten(); zeige(); });
+        fuelleArten();
+        zeige();
+    </script>
+</body>
+
+</html>

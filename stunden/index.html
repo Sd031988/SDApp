@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Stundenzettel</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Arbeitszeiten erfassen, Pausen nach Arbeitszeitgesetz prüfen, Brutto berechnen und mit Mindestlohn und Lohnabrechnung vergleichen.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Stundenzettel &amp; Lohn</strong><small data-i18n="untertitel">Arbeitszeit erfassen, Abrechnung prüfen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <div class="zeile">
+                <label class="feld"><span data-i18n="arbeitgeber">Arbeitgeber</span><input type="text" id="arbeitgeber" maxlength="80"></label>
+                <label class="feld"><span data-i18n="lohn">Stundenlohn brutto (€)</span><input type="text" id="lohn" inputmode="decimal" placeholder="0,00"></label>
+            </div>
+            <label class="check"><input type="checkbox" id="minijob"> <span data-i18n="minijob">Minijob</span></label>
+            <p id="lohnHinweis" class="hinweis" hidden></p>
+        </section>
+
+        <section class="karte">
+            <div class="knoepfe">
+                <button type="button" class="btn klein" id="vorBtn" aria-label="Vormonat">◀</button>
+                <input type="month" id="monat" style="flex:1; min-width:150px; font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--paper);">
+                <button type="button" class="btn klein" id="nachBtn" aria-label="Nächster Monat">▶</button>
+            </div>
+            <div class="zahlen" id="zahlen"></div>
+            <p id="minijobHinweis" class="hinweis" hidden></p>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="neuBtn" data-i18n="neu">＋ Arbeitstag eintragen</button>
+                <button type="button" class="btn" id="csvBtn" data-i18n="csv">⬇️ Monat als CSV</button>
+            </div>
+            <div class="tabelle-wrap">
+                <table class="tab" id="tabelle"></table>
+            </div>
+            <p class="leer" id="leer" data-i18n="leer">In diesem Monat noch nichts eingetragen.</p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="pruef_titel">🔎 Lohnabrechnung prüfen</h2>
+            <p class="info" data-i18n="pruef_info">Trage ein, was auf deiner Lohnabrechnung für diesen Monat steht. Wir vergleichen mit deinen Einträgen.</p>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="ab_stunden">Bezahlte Stunden laut Abrechnung</span><input type="text" id="abStunden" inputmode="decimal"></label>
+                <label class="feld"><span data-i18n="ab_brutto">Brutto laut Abrechnung (€)</span><input type="text" id="abBrutto" inputmode="decimal"></label>
+            </div>
+            <div id="pruefung"></div>
+            <p class="quelle" data-i18n="pruef_grenze">Verglichen wird nur Stunden × Stundenlohn. Zuschläge, Urlaub, Krankheit, Feiertage und Sonderzahlungen sind darin nicht enthalten – Unterschiede können also auch dadurch entstehen. Keine Rechtsberatung.</p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="regeln_titel">📘 Gut zu wissen</h2>
+            <ul class="punkte">
+                <li data-i18n="regel_ml">Gesetzlicher Mindestlohn: 13,90 € brutto pro Stunde ab 1. Januar 2026, 14,60 € ab 1. Januar 2027. Er gilt auch im Minijob. Ausnahmen gibt es u. a. für Auszubildende, Ehrenamtliche und Langzeitarbeitslose in den ersten sechs Monaten einer neuen Arbeit.</li>
+                <li data-i18n="regel_mj">Minijob-Grenze: 603 € im Monat (2026), 633 € ab Januar 2027 – gerechnet im Jahresdurchschnitt.</li>
+                <li data-i18n="regel_pause">Pausen: Bei mehr als 6 bis 9 Stunden Arbeit mindestens 30 Minuten, bei mehr als 9 Stunden mindestens 45 Minuten. Pausen dürfen in Abschnitte von mindestens 15 Minuten geteilt werden; länger als 6 Stunden am Stück ohne Pause ist nicht erlaubt.</li>
+                <li data-i18n="regel_max">Die Arbeitszeit am Tag darf 8 Stunden nicht überschreiten; bis zu 10 Stunden sind möglich, wenn im Durchschnitt wieder 8 Stunden erreicht werden.</li>
+            </ul>
+            <p class="quelle"><span data-i18n="quellen">Quellen:</span> <a href="https://www.bundesregierung.de/breg-de/aktuelles/mindestlohn-faq-1688186" target="_blank" rel="noopener">Bundesregierung – Fragen und Antworten zum Mindestlohn</a> · <a href="https://www.gesetze-im-internet.de/arbzg/BJNR117100994.html" target="_blank" rel="noopener">Arbeitszeitgesetz §§ 3, 4</a></p>
+        </section>
+    </main>
+
+    <dialog id="editor">
+        <form class="dlg" id="form">
+            <div class="dlg-kopf"><h2 data-i18n="ed_titel">Arbeitstag</h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <label class="feld"><span data-i18n="f_datum">Datum</span><input type="date" id="fDatum" required></label>
+            <div class="zeile3">
+                <label class="feld"><span data-i18n="f_von">Beginn</span><input type="time" id="fVon" required></label>
+                <label class="feld"><span data-i18n="f_bis">Ende</span><input type="time" id="fBis" required></label>
+                <label class="feld"><span data-i18n="f_pause">Pause (Min.)</span><input type="number" id="fPause" min="0" max="600" step="5" value="0"></label>
+            </div>
+            <label class="feld"><span data-i18n="f_notiz">Notiz</span><input type="text" id="fNotiz" maxlength="100" data-i18n-placeholder="f_notiz_ph" placeholder="z. B. Spätschicht, Filiale Nord"></label>
+            <p class="info" id="fVorschau"></p>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" data-zu data-i18n="abbrechen">Abbrechen</button>
+                <button type="button" class="btn gefahr" id="loeschenBtn" data-i18n="loeschen" hidden>🗑 Löschen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Stundenzettel & Lohn', untertitel: 'Arbeitszeit erfassen, Abrechnung prüfen', arbeitgeber: 'Arbeitgeber', lohn: 'Stundenlohn brutto (€)', minijob: 'Minijob',
+                neu: '＋ Arbeitstag eintragen', csv: '⬇️ Monat als CSV', leer: 'In diesem Monat noch nichts eingetragen.',
+                z_stunden: 'Stunden', z_tage: 'Arbeitstage', z_brutto: 'Brutto (Stunden × Lohn)', z_schnitt: 'Ø Stunden pro Tag',
+                pruef_titel: '🔎 Lohnabrechnung prüfen', pruef_info: 'Trage ein, was auf deiner Lohnabrechnung für diesen Monat steht. Wir vergleichen mit deinen Einträgen.',
+                ab_stunden: 'Bezahlte Stunden laut Abrechnung', ab_brutto: 'Brutto laut Abrechnung (€)',
+                pruef_grenze: 'Verglichen wird nur Stunden × Stundenlohn. Zuschläge, Urlaub, Krankheit, Feiertage und Sonderzahlungen sind darin nicht enthalten – Unterschiede können also auch dadurch entstehen. Keine Rechtsberatung.',
+                p_stunden_weniger: 'Laut deinen Einträgen hast du {d} Stunden mehr gearbeitet, als bezahlt wurden.', p_stunden_ok: 'Die bezahlten Stunden passen zu deinen Einträgen.', p_stunden_mehr: 'Es wurden {d} Stunden mehr bezahlt, als du eingetragen hast.',
+                p_brutto_weniger: 'Das Brutto laut Abrechnung ist {d} niedriger als Stunden × Stundenlohn.', p_brutto_ok: 'Das Brutto passt zu Stunden × Stundenlohn.', p_brutto_mehr: 'Das Brutto laut Abrechnung ist {d} höher (z. B. Zuschläge).',
+                p_tipp: 'Tipp: Sprich zuerst deinen Arbeitgeber an und frag nach. Kostenlose Hilfe gibt es z. B. bei Gewerkschaften (für Mitglieder) und bei Beratungsstellen für Beschäftigte.',
+                regeln_titel: '📘 Gut zu wissen',
+                regel_ml: 'Gesetzlicher Mindestlohn: 13,90 € brutto pro Stunde ab 1. Januar 2026, 14,60 € ab 1. Januar 2027. Er gilt auch im Minijob. Ausnahmen gibt es u. a. für Auszubildende, Ehrenamtliche und Langzeitarbeitslose in den ersten sechs Monaten einer neuen Arbeit.',
+                regel_mj: 'Minijob-Grenze: 603 € im Monat (2026), 633 € ab Januar 2027 – gerechnet im Jahresdurchschnitt.',
+                regel_pause: 'Pausen: Bei mehr als 6 bis 9 Stunden Arbeit mindestens 30 Minuten, bei mehr als 9 Stunden mindestens 45 Minuten. Pausen dürfen in Abschnitte von mindestens 15 Minuten geteilt werden; länger als 6 Stunden am Stück ohne Pause ist nicht erlaubt.',
+                regel_max: 'Die Arbeitszeit am Tag darf 8 Stunden nicht überschreiten; bis zu 10 Stunden sind möglich, wenn im Durchschnitt wieder 8 Stunden erreicht werden.',
+                quellen: 'Quellen:',
+                ml_unter: 'Dein Stundenlohn ({x}) liegt unter dem gesetzlichen Mindestlohn von {m} (gültig ab {d}). Prüfe, ob eine Ausnahme gilt – sonst steht dir mehr zu.',
+                mj_ueber: 'Im {monat} liegt dein Brutto ({x}) über der Minijob-Grenze von {g}. Einzelne Monate dürfen darüber liegen, entscheidend ist der Jahresdurchschnitt – bei regelmäßigem Überschreiten ist es kein Minijob mehr.',
+                ed_titel: 'Arbeitstag', f_datum: 'Datum', f_von: 'Beginn', f_bis: 'Ende', f_pause: 'Pause (Min.)', f_notiz: 'Notiz', f_notiz_ph: 'z. B. Spätschicht, Filiale Nord',
+                speichern: 'Speichern', abbrechen: 'Abbrechen', loeschen: '🗑 Löschen', loeschen_ja: 'Wirklich löschen?', gespeichert: 'Gespeichert', geloescht: 'Gelöscht',
+                vorschau: 'Arbeitszeit: {h} Std.', w_pause: '⚠️ Zu wenig Pause: Bei {h} Std. Arbeit sind mindestens {p} Minuten vorgeschrieben.', w_lang: '⚠️ Mehr als 10 Stunden Arbeitszeit an einem Tag.',
+                th_datum: 'Datum', th_zeit: 'Zeit', th_pause: 'Pause', th_std: 'Std.', th_betrag: 'Brutto', th_notiz: 'Notiz',
+                csv_kopf: 'Datum;Beginn;Ende;Pause (Min.);Stunden;Brutto;Notiz;Hinweis', min: 'Min.'
+            },
+            en: {
+                titel: 'Timesheet & Pay', untertitel: 'Track working hours, check your payslip', arbeitgeber: 'Employer', lohn: 'Gross hourly wage (€)', minijob: 'Mini-job',
+                neu: '＋ Add working day', csv: '⬇️ Month as CSV', leer: 'Nothing entered this month yet.',
+                z_stunden: 'Hours', z_tage: 'Working days', z_brutto: 'Gross (hours × wage)', z_schnitt: 'Ø hours per day',
+                pruef_titel: '🔎 Check your payslip', pruef_info: 'Enter what your payslip says for this month. We compare it with your entries.',
+                ab_stunden: 'Paid hours on payslip', ab_brutto: 'Gross on payslip (€)',
+                pruef_grenze: 'Only hours × hourly wage is compared. Bonuses, holiday, sick pay, public holidays and special payments are not included – differences can also come from these. Not legal advice.',
+                p_stunden_weniger: 'According to your entries you worked {d} hours more than were paid.', p_stunden_ok: 'The paid hours match your entries.', p_stunden_mehr: '{d} hours more were paid than you entered.',
+                p_brutto_weniger: 'The gross on the payslip is {d} lower than hours × hourly wage.', p_brutto_ok: 'The gross matches hours × hourly wage.', p_brutto_mehr: 'The gross on the payslip is {d} higher (e.g. bonuses).',
+                p_tipp: 'Tip: talk to your employer first and ask. Free help is available e.g. from trade unions (for members) and advice centres for employees.',
+                regeln_titel: '📘 Good to know',
+                regel_ml: 'Statutory minimum wage: €13.90 gross per hour from 1 January 2026, €14.60 from 1 January 2027. It also applies to mini-jobs. Exceptions apply e.g. to apprentices, volunteers and long-term unemployed people in the first six months of a new job.',
+                regel_mj: 'Mini-job limit: €603 per month (2026), €633 from January 2027 – calculated as an annual average.',
+                regel_pause: 'Breaks: at least 30 minutes for more than 6 up to 9 hours of work, at least 45 minutes for more than 9 hours. Breaks may be split into parts of at least 15 minutes; working more than 6 hours in a row without a break is not allowed.',
+                regel_max: 'Daily working time must not exceed 8 hours; up to 10 hours are possible if an average of 8 hours is reached again.',
+                quellen: 'Sources:',
+                ml_unter: 'Your hourly wage ({x}) is below the statutory minimum wage of {m} (valid from {d}). Check whether an exception applies – otherwise you are entitled to more.',
+                mj_ueber: 'In {monat} your gross ({x}) is above the mini-job limit of {g}. Single months may be above it; the annual average counts – if you regularly exceed it, it is no longer a mini-job.',
+                ed_titel: 'Working day', f_datum: 'Date', f_von: 'Start', f_bis: 'End', f_pause: 'Break (min.)', f_notiz: 'Note', f_notiz_ph: 'e.g. late shift, north branch',
+                speichern: 'Save', abbrechen: 'Cancel', loeschen: '🗑 Delete', loeschen_ja: 'Really delete?', gespeichert: 'Saved', geloescht: 'Deleted',
+                vorschau: 'Working time: {h} h', w_pause: '⚠️ Not enough break: with {h} h of work at least {p} minutes are required.', w_lang: '⚠️ More than 10 hours of work in one day.',
+                th_datum: 'Date', th_zeit: 'Time', th_pause: 'Break', th_std: 'h', th_betrag: 'Gross', th_notiz: 'Note',
+                csv_kopf: 'Date;Start;End;Break (min.);Hours;Gross;Note;Warning', min: 'min.'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdStunden';
+        // Mindestlohn je Stichtag (Quelle: Bundesregierung, Stand 2026) und Minijob-Grenze
+        const MINDESTLOHN = [['2026-01-01', 13.90], ['2027-01-01', 14.60]];
+        const MINIJOB = [['2026-01-01', 603], ['2027-01-01', 633]];
+        const gilt = (tabelle, iso) => { let w = null; tabelle.forEach(([ab, v]) => { if (iso >= ab) w = [ab, v]; }); return w; };
+
+        let daten = SD.lesen(KEY, { arbeitgeber: '', lohn: '', minijob: false, tage: [], abrechnung: {} });
+        if (!daten || !Array.isArray(daten.tage)) daten = { arbeitgeber: '', lohn: '', minijob: false, tage: [], abrechnung: {} };
+        if (!daten.abrechnung) daten.abrechnung = {};
+        const speichern = () => SD.schreiben(KEY, daten);
+        let monat = SD.heuteIso().slice(0, 7);
+
+        const minuten = (hhmm) => { const [h, m] = String(hhmm || '0:0').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+        // Arbeitszeit in Minuten (ueber Mitternacht moeglich)
+        function arbeitsMin(e) {
+            let d = minuten(e.bis) - minuten(e.von);
+            if (d <= 0) d += 24 * 60;
+            return Math.max(0, d - (Number(e.pause) || 0));
+        }
+        // Pausenregel § 4 ArbZG
+        function pflichtPause(arbMin) { return arbMin > 9 * 60 ? 45 : arbMin > 6 * 60 ? 30 : 0; }
+        function warnungen(e) {
+            const a = arbeitsMin(e), w = [];
+            // Pausenpflicht bezieht sich auf die Arbeitszeit (ohne Pause)
+            if ((Number(e.pause) || 0) < pflichtPause(a)) w.push(t('w_pause', { h: std(a), p: pflichtPause(a) }));
+            if (a > 10 * 60) w.push(t('w_lang'));
+            return w;
+        }
+        const std = (min) => (Math.round(min / 60 * 100) / 100).toLocaleString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE');
+        const lohn = () => SD.zahl(daten.lohn);
+
+        function zeige() {
+            $('monat').value = monat;
+            const tage = daten.tage.filter(e => e.datum.slice(0, 7) === monat).sort((a, b) => (a.datum + a.von).localeCompare(b.datum + b.von));
+            const summeMin = tage.reduce((s, e) => s + arbeitsMin(e), 0);
+            const brutto = summeMin / 60 * lohn();
+            const anzahlTage = new Set(tage.map(e => e.datum)).size;
+            $('zahlen').innerHTML = [[std(summeMin), t('z_stunden')], [anzahlTage, t('z_tage')], [lohn() ? SD.euro(brutto) : '–', t('z_brutto')], [anzahlTage ? std(summeMin / anzahlTage) : '–', t('z_schnitt')]]
+                .map(z => '<div class="zahl"><b>' + esc(z[0]) + '</b><span>' + esc(z[1]) + '</span></div>').join('');
+
+            // Mindestlohn (Stand am Monatsende bzw. heute)
+            const stichtag = monat + '-28';
+            const ml = gilt(MINDESTLOHN, stichtag);
+            const unter = ml && lohn() > 0 && lohn() < ml[1];
+            $('lohnHinweis').hidden = !unter;
+            if (unter) $('lohnHinweis').textContent = t('ml_unter', { x: SD.euro(lohn()), m: SD.euro(ml[1]), d: SD.fmt(ml[0]) });
+            const mj = gilt(MINIJOB, stichtag);
+            const mjUeber = daten.minijob && mj && brutto > mj[1];
+            $('minijobHinweis').hidden = !mjUeber;
+            if (mjUeber) $('minijobHinweis').textContent = t('mj_ueber', { monat: SD.datum(monat + '-01').toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'long', year: 'numeric' }), x: SD.euro(brutto), g: SD.euro(mj[1]) });
+
+            $('leer').hidden = tage.length > 0;
+            $('tabelle').innerHTML = tage.length ? '<thead><tr><th>' + esc(t('th_datum')) + '</th><th>' + esc(t('th_zeit')) + '</th><th class="zahl-r">' + esc(t('th_pause')) + '</th><th class="zahl-r">' + esc(t('th_std')) + '</th>' + (lohn() ? '<th class="zahl-r">' + esc(t('th_betrag')) + '</th>' : '') + '<th>' + esc(t('th_notiz')) + '</th></tr></thead><tbody>' +
+                tage.map(e => {
+                    const w = warnungen(e);
+                    return '<tr data-id="' + e.id + '" style="cursor:pointer"><td>' + esc(SD.datum(e.datum).toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })) + '</td>' +
+                        '<td>' + esc(e.von + '–' + e.bis) + '</td><td class="zahl-r">' + esc((Number(e.pause) || 0) + ' ' + t('min')) + '</td><td class="zahl-r">' + esc(std(arbeitsMin(e))) + '</td>' +
+                        (lohn() ? '<td class="zahl-r">' + esc(SD.euro(arbeitsMin(e) / 60 * lohn())) + '</td>' : '') +
+                        '<td>' + esc(e.notiz || '') + (w.length ? ' <span class="marke ab" title="' + esc(w.join(' ')) + '">⚠️</span>' : '') + '</td></tr>';
+                }).join('') + '</tbody>' : '';
+
+            // Abrechnung
+            const ab = daten.abrechnung[monat] || {};
+            if (document.activeElement !== $('abStunden')) $('abStunden').value = ab.stunden || '';
+            if (document.activeElement !== $('abBrutto')) $('abBrutto').value = ab.brutto || '';
+            const zeilen = [];
+            const stdIst = summeMin / 60;
+            if (ab.stunden) {
+                const d = Math.round((stdIst - SD.zahl(ab.stunden)) * 100) / 100;
+                zeilen.push(Math.abs(d) < 0.01 ? ['gut', t('p_stunden_ok')] : d > 0 ? ['hinweis', t('p_stunden_weniger', { d: std(d * 60) })] : ['info', t('p_stunden_mehr', { d: std(-d * 60) })]);
+            }
+            if (ab.brutto && lohn()) {
+                const soll = (ab.stunden ? SD.zahl(ab.stunden) : stdIst) * lohn();
+                const d = Math.round((soll - SD.zahl(ab.brutto)) * 100) / 100;
+                zeilen.push(Math.abs(d) < 0.5 ? ['gut', t('p_brutto_ok')] : d > 0 ? ['hinweis', t('p_brutto_weniger', { d: SD.euro(d) })] : ['info', t('p_brutto_mehr', { d: SD.euro(-d) })]);
+            }
+            if (zeilen.some(z => z[0] === 'hinweis')) zeilen.push(['info', t('p_tipp')]);
+            $('pruefung').innerHTML = zeilen.map(z => '<p class="' + z[0] + '">' + esc(z[1]) + '</p>').join('');
+            $('pruefung').style.display = zeilen.length ? 'grid' : 'none';
+            $('pruefung').style.gap = '8px';
+        }
+
+        $('arbeitgeber').value = daten.arbeitgeber || '';
+        $('lohn').value = daten.lohn || '';
+        $('minijob').checked = !!daten.minijob;
+        $('arbeitgeber').addEventListener('input', () => { daten.arbeitgeber = $('arbeitgeber').value; speichern(); });
+        $('lohn').addEventListener('input', () => { daten.lohn = $('lohn').value; speichern(); zeige(); });
+        $('minijob').addEventListener('change', () => { daten.minijob = $('minijob').checked; speichern(); zeige(); });
+        ['abStunden', 'abBrutto'].forEach(id => $(id).addEventListener('input', () => {
+            daten.abrechnung[monat] = { stunden: $('abStunden').value, brutto: $('abBrutto').value };
+            speichern(); zeige();
+        }));
+        function wechsleMonat(d) {
+            const [j, m] = monat.split('-').map(Number);
+            const x = new Date(j, m - 1 + d, 1);
+            monat = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0');
+            zeige();
+        }
+        $('vorBtn').addEventListener('click', () => wechsleMonat(-1));
+        $('nachBtn').addEventListener('click', () => wechsleMonat(1));
+        $('monat').addEventListener('change', () => { if ($('monat').value) { monat = $('monat').value; zeige(); } });
+
+        // ---------------- Editor ----------------
+        let aktuell = null;
+        function vorschau() {
+            if (!$('fVon').value || !$('fBis').value) { $('fVorschau').textContent = ''; return; }
+            const e = { von: $('fVon').value, bis: $('fBis').value, pause: $('fPause').value };
+            $('fVorschau').textContent = [t('vorschau', { h: std(arbeitsMin(e)) })].concat(warnungen(e)).join(' ');
+        }
+        ['fVon', 'fBis', 'fPause'].forEach(id => $(id).addEventListener('input', vorschau));
+        function oeffne(e) {
+            aktuell = e || null;
+            const letzter = daten.tage[daten.tage.length - 1];
+            $('fDatum').value = e ? e.datum : (monat === SD.heuteIso().slice(0, 7) ? SD.heuteIso() : monat + '-01');
+            $('fVon').value = e ? e.von : (letzter ? letzter.von : '08:00');
+            $('fBis').value = e ? e.bis : (letzter ? letzter.bis : '16:30');
+            $('fPause').value = e ? e.pause : (letzter ? letzter.pause : 30);
+            $('fNotiz').value = e ? e.notiz || '' : '';
+            $('loeschenBtn').hidden = !e;
+            vorschau();
+            $('editor').showModal();
+        }
+        $('neuBtn').addEventListener('click', () => oeffne(null));
+        $('tabelle').addEventListener('click', (ev) => {
+            const tr = ev.target.closest('tr[data-id]');
+            if (!tr) return;
+            const e = daten.tage.find(x => x.id === tr.dataset.id);
+            if (e) oeffne(e);
+        });
+        $('form').addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            const e = Object.assign(aktuell || { id: SD.neueId() }, {
+                datum: $('fDatum').value, von: $('fVon').value, bis: $('fBis').value, pause: Math.max(0, Number($('fPause').value) || 0), notiz: $('fNotiz').value.trim()
+            });
+            if (!aktuell) daten.tage.push(e);
+            monat = e.datum.slice(0, 7);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('gespeichert'));
+        });
+        $('loeschenBtn').addEventListener('click', () => SD.sicherFragen($('loeschenBtn'), t('loeschen_ja'), () => {
+            daten.tage = daten.tage.filter(x => x !== aktuell);
+            speichern();
+            $('editor').close();
+            zeige();
+            SD.toast(t('geloescht'));
+        }));
+        $('csvBtn').addEventListener('click', () => {
+            const tage = daten.tage.filter(e => e.datum.slice(0, 7) === monat).sort((a, b) => (a.datum + a.von).localeCompare(b.datum + b.von));
+            SD.csv([t('csv_kopf').split(';')].concat(tage.map(e => [SD.fmt(e.datum), e.von, e.bis, e.pause, String(Math.round(arbeitsMin(e) / 60 * 100) / 100).replace('.', ','),
+            lohn() ? String((arbeitsMin(e) / 60 * lohn()).toFixed(2)).replace('.', ',') : '', e.notiz || '', warnungen(e).join(' ')])), SD.dateiname('stunden-' + (daten.arbeitgeber || '') + '-' + monat, '.csv'));
+        });
+
+        document.addEventListener('sd-lang-changed', zeige);
+        zeige();
+    </script>
+</body>
+
+</html>

@@ -583,6 +583,18 @@
                 card_assistent_p: 'Chatte mit einer KI zu Bewerbung, Lebenslauf, Briefen & mehr – liest Dokumente, erstellt PDFs, übernimmt Angaben in deinen Lebenslauf. Wahlweise SD Lotse (lokal, ohne Schlüssel) oder Gemini, ChatGPT bzw. Claude mit eigenem Schlüssel.',
                 card_tracker_h3: 'Bewerbungs-Tracker',
                 card_tracker_p: 'Alle Bewerbungen auf einen Blick: Status von „gemerkt“ bis „Zusage“, Fristen, Erinnerungen ans Nachfassen, Termine in den Kalender – und die Kosten mit einem Tipp in den Steuer-Helfer.',
+                card_fristen_h3: 'Fristen-Übersicht',
+                card_fristen_p: 'Alle Termine an einem Ort: Fristen aus Briefen, Bewerbungen, offene Rechnungen, ablaufende Dokumente und letzte Kündigungstage – plus eigene Fristen. Mit einem Tipp alles in den Kalender.',
+                card_vertraege_h3: 'Verträge & Kündigungen',
+                card_vertraege_p: 'Handy, Strom, Internet, Fitness, Versicherungen: Kosten pro Monat und bis wann du kündigen musst. Kündigungsschreiben mit einem Tipp im Schreibstudio.',
+                card_haushalt_h3: 'Haushaltsbuch',
+                card_haushalt_p: 'Einnahmen und Ausgaben pro Monat, nach Kategorien – feste Verträge werden automatisch mitgerechnet. Export als CSV.',
+                card_stunden_h3: 'Stundenzettel & Lohn',
+                card_stunden_p: 'Arbeitszeiten erfassen, Pausen nach Arbeitszeitgesetz prüfen, Brutto berechnen und mit Mindestlohn und Lohnabrechnung vergleichen.',
+                card_wohnung_h3: 'Wohnungsbewerbung',
+                card_wohnung_p: 'Anschreiben an den Vermieter, Mieterselbstauskunft und Unterlagen aus der Dokumenten-Mappe als eine PDF – mit Hinweisen, was Vermieter fragen dürfen.',
+                card_anerkennung_h3: 'Anerkennung von Abschlüssen',
+                card_anerkennung_p: 'Ausländische Ausbildung, Studium oder Schulabschluss anerkennen lassen: Wegweiser mit offiziellen Quellen, Checkliste und kostenloser Beratung.',
                 card_mappe_h3: 'Dokumenten-Mappe',
                 card_mappe_p: 'Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.',
                 mappe_faellig: '⏰ {n} Dokument(e) bald fällig',
@@ -643,6 +655,18 @@
                 card_assistent_p: 'Chat with an AI about applications, resumes, letters & more – reads documents, creates PDFs, puts details into your resume. Choose SD Lotse (local, no key) or Gemini, ChatGPT or Claude with your own key.',
                 card_tracker_h3: 'Application tracker',
                 card_tracker_p: 'All applications at a glance: status from "saved" to "offer", deadlines, follow-up reminders, dates to your calendar – and costs into the tax helper with one tap.',
+                card_fristen_h3: 'Deadline overview',
+                card_fristen_p: 'All dates in one place: deadlines from letters, applications, open invoices, expiring documents and last cancellation days – plus your own. Everything to your calendar with one tap.',
+                card_vertraege_h3: 'Contracts & Cancellations',
+                card_vertraege_p: 'Mobile, electricity, internet, gym, insurance: monthly costs and the date by which you must cancel. Cancellation letter in the writing studio with one tap.',
+                card_haushalt_h3: 'Household budget',
+                card_haushalt_p: 'Income and expenses per month, by category – fixed contracts are included automatically. Export as CSV.',
+                card_stunden_h3: 'Timesheet & Pay',
+                card_stunden_p: 'Track working hours, check breaks under the Working Hours Act, calculate gross pay and compare with the minimum wage and your payslip.',
+                card_wohnung_h3: 'Flat application',
+                card_wohnung_p: 'Cover letter to the landlord, tenant self-disclosure and documents from the document folder as one PDF – with notes on what landlords may ask.',
+                card_anerkennung_h3: 'Recognition of qualifications',
+                card_anerkennung_p: 'Get foreign vocational training, degrees or school certificates recognised: guide with official sources, checklist and free advice.',
                 card_mappe_h3: 'Document Folder',
                 card_mappe_p: 'ID card, passport, residence permit, certificates and contracts in one place – only on your device. Scan with the SD Scanner, reminders before something expires, calendar entry and backup as a file.',
                 mappe_faellig: '⏰ {n} document(s) due soon',
@@ -855,6 +879,48 @@
                         <h3 data-i18n="card_mappe_h3">Dokumenten-Mappe</h3>
                         <p data-i18n="card_mappe_p">Ausweis, Pass, Aufenthaltstitel, Zeugnisse und Verträge an einem Ort – nur auf deinem Gerät. Scannen mit dem SD Scanner, Erinnerung bevor etwas abläuft, Kalender-Eintrag und Sicherung als Datei.</p>
                         <span id="mappeFaellig" hidden style="align-self:flex-start;background:#fff8e6;border:1px solid #f0d9a0;color:#8a5a00;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:bold;"></span>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="fristen/index.html">
+                        <div class="dept-icon">⏰</div>
+                        <h3 data-i18n="card_fristen_h3">Fristen-Übersicht</h3>
+                        <p data-i18n="card_fristen_p">Alle Termine an einem Ort: Fristen aus Briefen, Bewerbungen, offene Rechnungen, ablaufende Dokumente und letzte Kündigungstage – plus eigene Fristen. Mit einem Tipp alles in den Kalender.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="vertraege/index.html">
+                        <div class="dept-icon">📝</div>
+                        <h3 data-i18n="card_vertraege_h3">Verträge & Kündigungen</h3>
+                        <p data-i18n="card_vertraege_p">Handy, Strom, Internet, Fitness, Versicherungen: Kosten pro Monat und bis wann du kündigen musst. Kündigungsschreiben mit einem Tipp im Schreibstudio.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="haushalt/index.html">
+                        <div class="dept-icon">💶</div>
+                        <h3 data-i18n="card_haushalt_h3">Haushaltsbuch</h3>
+                        <p data-i18n="card_haushalt_p">Einnahmen und Ausgaben pro Monat, nach Kategorien – feste Verträge werden automatisch mitgerechnet. Export als CSV.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="stunden/index.html">
+                        <div class="dept-icon">⏱️</div>
+                        <h3 data-i18n="card_stunden_h3">Stundenzettel & Lohn</h3>
+                        <p data-i18n="card_stunden_p">Arbeitszeiten erfassen, Pausen nach Arbeitszeitgesetz prüfen, Brutto berechnen und mit Mindestlohn und Lohnabrechnung vergleichen.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="wohnung/index.html">
+                        <div class="dept-icon">🏠</div>
+                        <h3 data-i18n="card_wohnung_h3">Wohnungsbewerbung</h3>
+                        <p data-i18n="card_wohnung_p">Anschreiben an den Vermieter, Mieterselbstauskunft und Unterlagen aus der Dokumenten-Mappe als eine PDF – mit Hinweisen, was Vermieter fragen dürfen.</p>
+                        <span class="dept-link">Bereich öffnen →</span>
+                    </a>
+
+                    <a class="dept-card" href="anerkennung/index.html">
+                        <div class="dept-icon">🎓</div>
+                        <h3 data-i18n="card_anerkennung_h3">Anerkennung von Abschlüssen</h3>
+                        <p data-i18n="card_anerkennung_p">Ausländische Ausbildung, Studium oder Schulabschluss anerkennen lassen: Wegweiser mit offiziellen Quellen, Checkliste und kostenloser Beratung.</p>
                         <span class="dept-link">Bereich öffnen →</span>
                     </a>
 

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Fristen-Übersicht</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Alle Fristen und Termine aus allen Bereichen an einem Ort: Briefe, Bewerbungen, Rechnungen, Dokumente, Verträge.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Fristen-Übersicht</strong><small data-i18n="untertitel">Alle Termine aus allen Bereichen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <div class="zahlen" id="zahlen"></div>
+            <div class="chips" id="quellen"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="neuBtn" data-i18n="neu">＋ Eigene Frist</button>
+                <button type="button" class="btn" id="kalBtn" data-i18n="kal">📅 Alle in den Kalender</button>
+                <label class="check" style="align-items:center;"><input type="checkbox" id="spaeter"> <span data-i18n="spaeter">auch Termine in mehr als 3 Monaten</span></label>
+            </div>
+        </section>
+        <div id="gruppen" style="display:grid;gap:14px;"></div>
+        <section class="karte">
+            <h2 data-i18n="woher_titel">🔗 Woher kommen die Termine?</h2>
+            <p class="info" data-i18n="woher_text">Aus dem Post-Assistenten (Fristenliste), dem Bewerbungs-Tracker (nächster Schritt, Bewerbungsfristen), den Rechnungen (offene Rechnungen), der Dokumenten-Mappe (Ablaufdaten) und den Verträgen (letzter Kündigungstag). Ändern oder erledigen kannst du sie im jeweiligen Bereich – tippe auf „öffnen“. Alles bleibt auf deinem Gerät.</p>
+        </section>
+    </main>
+
+    <dialog id="editor">
+        <form class="dlg" id="form">
+            <div class="dlg-kopf"><h2 data-i18n="ed_titel">Eigene Frist</h2><button type="button" class="x" data-zu aria-label="Schließen">✕</button></div>
+            <label class="feld"><span data-i18n="f_titel">Was?</span><input type="text" id="fTitel" maxlength="100" required data-i18n-placeholder="f_titel_ph" placeholder="z. B. Antrag Wohngeld abgeben"></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_datum">Bis wann?</span><input type="date" id="fDatum" required></label>
+                <label class="feld"><span data-i18n="f_vorher">Erinnern</span><select id="fVorher">
+                        <option value="0" data-i18n="v0">nur am Tag</option>
+                        <option value="1" data-i18n="v1">1 Tag vorher</option>
+                        <option value="3" data-i18n="v3">3 Tage vorher</option>
+                        <option value="7" data-i18n="v7">1 Woche vorher</option>
+                        <option value="14" data-i18n="v14">2 Wochen vorher</option>
+                    </select></label>
+            </div>
+            <label class="feld"><span data-i18n="f_notiz">Notiz</span><textarea id="fNotiz" rows="2" maxlength="500"></textarea></label>
+            <div class="knoepfe">
+                <button type="submit" class="btn prim" data-i18n="speichern">Speichern</button>
+                <button type="button" class="btn" data-zu data-i18n="abbrechen">Abbrechen</button>
+                <button type="button" class="btn gefahr" id="loeschenBtn" data-i18n="loeschen" hidden>🗑 Löschen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Fristen-Übersicht', untertitel: 'Alle Termine aus allen Bereichen', neu: '＋ Eigene Frist', kal: '📅 Alle in den Kalender', spaeter: 'auch Termine in mehr als 3 Monaten',
+                woher_titel: '🔗 Woher kommen die Termine?',
+                woher_text: 'Aus dem Post-Assistenten (Fristenliste), dem Bewerbungs-Tracker (nächster Schritt, Bewerbungsfristen), den Rechnungen (offene Rechnungen), der Dokumenten-Mappe (Ablaufdaten) und den Verträgen (letzter Kündigungstag). Ändern oder erledigen kannst du sie im jeweiligen Bereich – tippe auf „öffnen“. Alles bleibt auf deinem Gerät.',
+                z_ueber: 'überfällig', z_woche: 'in den nächsten 7 Tagen', z_monat: 'in den nächsten 30 Tagen',
+                g_ueber: '🔴 Überfällig', g_woche: '🟠 Diese Woche', g_monat: '🟡 In den nächsten 30 Tagen', g_bald: '🟢 In den nächsten 3 Monaten', g_spaeter: '⚪ Später',
+                leer: 'Keine anstehenden Fristen. 🎉', leer_info: 'Fristen erscheinen hier automatisch, sobald du sie in einem Bereich einträgst – oder lege eine eigene an.',
+                q_alle: 'Alle', q_post: '📬 Briefe', q_bewerbung: '📌 Bewerbungen', q_rechnung: '🧾 Rechnungen', q_mappe: '🗂️ Dokumente', q_vertrag: '📝 Verträge', q_eigen: '✏️ Eigene',
+                heute: 'heute', morgen: 'morgen', in_tagen: 'in {n} Tagen', vor_tagen: 'seit {n} Tagen', oeffnen: 'öffnen', erledigt: '✓ erledigt', bearbeiten: '✏️',
+                post_titel: 'Brief: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Bewerbungsfrist: {firma}', re_zahlen: 'Rechnung bezahlen: {x}', re_eingang: 'Zahlung erwartet: Rechnung {x}',
+                mappe_titel: '{x} läuft ab', vertrag_titel: 'Letzter Tag zum Kündigen: {x}', betrag: '{b}',
+                ed_titel: 'Eigene Frist', f_titel: 'Was?', f_titel_ph: 'z. B. Antrag Wohngeld abgeben', f_datum: 'Bis wann?', f_vorher: 'Erinnern', f_notiz: 'Notiz',
+                v0: 'nur am Tag', v1: '1 Tag vorher', v3: '3 Tage vorher', v7: '1 Woche vorher', v14: '2 Wochen vorher',
+                speichern: 'Speichern', abbrechen: 'Abbrechen', loeschen: '🗑 Löschen', loeschen_ja: 'Wirklich löschen?', gespeichert: 'Gespeichert', geloescht: 'Gelöscht', als_erledigt: 'Als erledigt markiert',
+                kal_leer: 'Keine Termine für den Kalender.'
+            },
+            en: {
+                titel: 'Deadline overview', untertitel: 'All dates from all areas', neu: '＋ Own deadline', kal: '📅 All to calendar', spaeter: 'also dates more than 3 months ahead',
+                woher_titel: '🔗 Where do the dates come from?',
+                woher_text: 'From the letter assistant (deadline list), the application tracker (next step, application deadlines), invoices (open invoices), the document folder (expiry dates) and contracts (last day to cancel). Change or complete them in the respective area – tap “open”. Everything stays on your device.',
+                z_ueber: 'overdue', z_woche: 'in the next 7 days', z_monat: 'in the next 30 days',
+                g_ueber: '🔴 Overdue', g_woche: '🟠 This week', g_monat: '🟡 Next 30 days', g_bald: '🟢 Next 3 months', g_spaeter: '⚪ Later',
+                leer: 'No upcoming deadlines. 🎉', leer_info: 'Deadlines appear here automatically as soon as you enter them in an area – or add your own.',
+                q_alle: 'All', q_post: '📬 Letters', q_bewerbung: '📌 Applications', q_rechnung: '🧾 Invoices', q_mappe: '🗂️ Documents', q_vertrag: '📝 Contracts', q_eigen: '✏️ Own',
+                heute: 'today', morgen: 'tomorrow', in_tagen: 'in {n} days', vor_tagen: '{n} days ago', oeffnen: 'open', erledigt: '✓ done', bearbeiten: '✏️',
+                post_titel: 'Letter: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Application deadline: {firma}', re_zahlen: 'Pay invoice: {x}', re_eingang: 'Payment expected: invoice {x}',
+                mappe_titel: '{x} expires', vertrag_titel: 'Last day to cancel: {x}', betrag: '{b}',
+                ed_titel: 'Own deadline', f_titel: 'What?', f_titel_ph: 'e.g. submit housing benefit application', f_datum: 'By when?', f_vorher: 'Remind me', f_notiz: 'Note',
+                v0: 'on the day only', v1: '1 day before', v3: '3 days before', v7: '1 week before', v14: '2 weeks before',
+                speichern: 'Save', abbrechen: 'Cancel', loeschen: '🗑 Delete', loeschen_ja: 'Really delete?', gespeichert: 'Saved', geloescht: 'Deleted', als_erledigt: 'Marked as done',
+                kal_leer: 'No dates for the calendar.'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=1"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdFristenEigene';
+        let eigene = SD.lesen(KEY, []);
+        if (!Array.isArray(eigene)) eigene = [];
+        let quelle = '';
+        let mappe = [];
+
+        // Dokumenten-Mappe liegt in IndexedDB (gleiche Datenbank wie mappe/index.html)
+        function mappeLaden() {
+            return new Promise((ok) => {
+                if (!window.indexedDB) return ok([]);
+                const r = indexedDB.open('sdMappe', 1);
+                r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('dokumente')) r.result.createObjectStore('dokumente', { keyPath: 'id' }); };
+                r.onerror = () => ok([]);
+                r.onsuccess = () => {
+                    try {
+                        const q = r.result.transaction('dokumente', 'readonly').objectStore('dokumente').getAll();
+                        q.onsuccess = () => ok((q.result || []).map(d => ({ id: d.id, titel: d.titel, person: d.person, gueltigBis: d.gueltigBis, erinnernTage: d.erinnernTage })));
+                        q.onerror = () => ok([]);
+                    } catch (e) { ok([]); }
+                };
+            });
+        }
+
+        // Alle Termine einsammeln: { quelle, id, datum, titel, info, link, vorher }
+        function sammle() {
+            const x = [];
+            const post = SD.lesen('sdPost', []);
+            (Array.isArray(post) ? post : []).filter(e => e.frist && !e.erledigt).forEach(e => x.push({
+                quelle: 'post', id: 'post-' + e.id, datum: e.frist, vorher: Number(e.vorlauf) || 3,
+                titel: t('post_titel', { x: [e.art, e.absender].filter(Boolean).join(' – ') || '…' }), info: e.fristWas || '', link: '../post/index.html'
+            }));
+            const bew = SD.lesen('sdBewerbungen', []);
+            (Array.isArray(bew) ? bew : []).filter(b => !['zusage', 'absage'].includes(b.status)).forEach(b => {
+                if (b.naechsterAm) x.push({ quelle: 'bewerbung', id: 'bew-' + b.id, datum: b.naechsterAm, vorher: 1, titel: t('bew_schritt', { firma: b.firma || '…', schritt: b.naechsterSchritt || '…' }), info: b.position || '', link: '../bewerbungen/index.html' });
+                if (b.status === 'gemerkt' && b.frist) x.push({ quelle: 'bewerbung', id: 'bewf-' + b.id, datum: b.frist, vorher: 3, titel: t('bew_frist', { firma: b.firma || '…' }), info: b.position || '', link: '../bewerbungen/index.html' });
+            });
+            const re = SD.lesen('sdRechnungen', {});
+            ((re && re.eingang) || []).filter(r => !r.bezahlt && r.faellig).forEach(r => x.push({
+                quelle: 'rechnung', id: 're-' + r.id, datum: r.faellig, vorher: 3, titel: t('re_zahlen', { x: r.absender || r.nr || '…' }),
+                info: r.betrag ? SD.euro(SD.zahl(r.betrag)) : '', link: '../rechnungen/index.html#erhalten'
+            }));
+            ((re && re.ausgang) || []).filter(r => r.status === 'offen' && r.faellig).forEach(r => x.push({
+                quelle: 'rechnung', id: 'ra-' + r.id, datum: r.faellig, vorher: 0, titel: t('re_eingang', { x: (r.nr || '') + (r.kunde && r.kunde.name ? ' · ' + r.kunde.name : '') }),
+                info: r.summe ? SD.euro(r.summe) : '', link: '../rechnungen/index.html'
+            }));
+            mappe.filter(d => d.gueltigBis).forEach(d => x.push({
+                quelle: 'mappe', id: 'mappe-' + d.id, datum: d.gueltigBis, vorher: Number(d.erinnernTage) || 0,
+                titel: t('mappe_titel', { x: [d.titel, d.person].filter(Boolean).join(' – ') }), info: '', link: '../mappe/index.html'
+            }));
+            const vertraege = SD.lesen('sdVertraege', []);
+            (Array.isArray(vertraege) ? vertraege : []).forEach(v => {
+                const z = SD.vertragTermin(v);
+                if (z.art === 'bis') x.push({ quelle: 'vertrag', id: 'vertrag-' + v.id, datum: z.bis, vorher: 7, titel: t('vertrag_titel', { x: v.anbieter || '…' }), info: '', link: '../vertraege/index.html' });
+            });
+            eigene.filter(e => !e.erledigt && e.datum).forEach(e => x.push({ quelle: 'eigen', id: 'eigen-' + e.id, eigenId: e.id, datum: e.datum, vorher: Number(e.vorher) || 0, titel: e.titel, info: e.notiz || '' }));
+            return x.sort((a, b) => a.datum.localeCompare(b.datum));
+        }
+
+        function wann(n) {
+            if (n === 0) return t('heute');
+            if (n === 1) return t('morgen');
+            return n < 0 ? t('vor_tagen', { n: -n }) : t('in_tagen', { n });
+        }
+        function zeige() {
+            const alle = sammle();
+            const n = (e) => SD.tageBis(e.datum);
+            // Dokumente: nur zeigen, wenn abgelaufen oder im Erinnerungszeitraum (sonst stehen Ausweise jahrelang in der Liste)
+            const relevant = alle.filter(e => e.quelle !== 'mappe' || n(e) <= Math.max(30, e.vorher));
+            $('zahlen').innerHTML = [[relevant.filter(e => n(e) < 0).length, t('z_ueber')], [relevant.filter(e => n(e) >= 0 && n(e) <= 7).length, t('z_woche')], [relevant.filter(e => n(e) >= 0 && n(e) <= 30).length, t('z_monat')]]
+                .map(z => '<div class="zahl"><b>' + esc(z[0]) + '</b><span>' + esc(z[1]) + '</span></div>').join('');
+            const vorhanden = ['post', 'bewerbung', 'rechnung', 'mappe', 'vertrag', 'eigen'].filter(q => relevant.some(e => e.quelle === q));
+            if (quelle && !vorhanden.includes(quelle)) quelle = '';
+            $('quellen').innerHTML = vorhanden.length > 1 ? ['<button type="button" class="chip' + (quelle ? '' : ' an') + '" data-q="">' + esc(t('q_alle')) + '</button>']
+                .concat(vorhanden.map(q => '<button type="button" class="chip' + (quelle === q ? ' an' : '') + '" data-q="' + q + '">' + esc(t('q_' + q)) + '</button>')).join('') : '';
+
+            const sicht = relevant.filter(e => (!quelle || e.quelle === quelle) && ($('spaeter').checked || n(e) <= 92));
+            const gruppen = [['g_ueber', e => n(e) < 0], ['g_woche', e => n(e) >= 0 && n(e) <= 7], ['g_monat', e => n(e) > 7 && n(e) <= 30], ['g_bald', e => n(e) > 30 && n(e) <= 92], ['g_spaeter', e => n(e) > 92]];
+            const html = gruppen.map(([k, f]) => {
+                const g = sicht.filter(f);
+                if (!g.length) return '';
+                return '<section class="karte"><h2>' + esc(t(k)) + '</h2><div class="liste">' + g.map(e => {
+                    const tage = n(e);
+                    const marke = '<span class="marke ' + (tage < 0 ? 'ab' : tage <= 7 ? 'bald' : '') + '">' + esc(SD.fmt(e.datum) + ' · ' + wann(tage)) + '</span>';
+                    const knoepfe = e.quelle === 'eigen'
+                        ? '<button type="button" class="btn klein" data-erledigt="' + e.eigenId + '">' + esc(t('erledigt')) + '</button><button type="button" class="btn klein" data-bearbeiten="' + e.eigenId + '" aria-label="Bearbeiten">' + t('bearbeiten') + '</button>'
+                        : '<a class="btn klein" href="' + esc(e.link) + '">' + esc(t('oeffnen')) + ' →</a>';
+                    return '<div class="eintrag"><div class="oben"><b>' + esc(e.titel) + '</b><span class="meta">' + esc(t('q_' + e.quelle)) + '</span></div>' +
+                        (e.info ? '<div class="meta">' + esc(e.info) + '</div>' : '') + '<div>' + marke + '</div><div class="knoepfe">' + knoepfe + '</div></div>';
+                }).join('') + '</div></section>';
+            }).join('');
+            $('gruppen').innerHTML = html || '<section class="karte"><p class="leer">' + esc(t('leer')) + '</p><p class="info" style="text-align:center">' + esc(t('leer_info')) + '</p></section>';
+            window.__fristen = sicht;
+        }
+
+        $('quellen').addEventListener('click', (e) => { const c = e.target.closest('[data-q]'); if (c) { quelle = c.dataset.q; zeige(); } });
+        $('spaeter').addEventListener('change', zeige);
+        $('gruppen').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-erledigt],[data-bearbeiten]');
+            if (!b) return;
+            const f = eigene.find(x => x.id === (b.dataset.erledigt || b.dataset.bearbeiten));
+            if (!f) return;
+            if (b.dataset.erledigt) { f.erledigt = true; SD.schreiben(KEY, eigene); zeige(); SD.toast(t('als_erledigt')); }
+            else oeffne(f);
+        });
+        $('kalBtn').addEventListener('click', () => {
+            const liste = (window.__fristen || []).filter(e => SD.tageBis(e.datum) >= 0);
+            if (!liste.length) { SD.toast(t('kal_leer')); return; }
+            SD.icsDatei(liste.map(e => ({ uid: 'frist-' + e.id, datum: e.datum, titel: e.titel, text: e.info, vorher: e.vorher })), 'fristen.ics');
+        });
+
+        let aktuell = null;
+        function oeffne(f) {
+            aktuell = f || null;
+            $('fTitel').value = f ? f.titel : '';
+            $('fDatum').value = f ? f.datum : '';
+            $('fVorher').value = String(f ? f.vorher || 0 : 3);
+            $('fNotiz').value = f ? f.notiz || '' : '';
+            $('loeschenBtn').hidden = !f;
+            $('editor').showModal();
+        }
+        $('neuBtn').addEventListener('click', () => oeffne(null));
+        $('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const f = Object.assign(aktuell || { id: SD.neueId() }, { titel: $('fTitel').value.trim(), datum: $('fDatum').value, vorher: Number($('fVorher').value) || 0, notiz: $('fNotiz').value.trim(), erledigt: false });
+            if (!aktuell) eigene.push(f);
+            SD.schreiben(KEY, eigene);
+            $('editor').close();
+            zeige();
+            SD.toast(t('gespeichert'));
+        });
+        $('loeschenBtn').addEventListener('click', () => SD.sicherFragen($('loeschenBtn'), t('loeschen_ja'), () => {
+            eigene = eigene.filter(x => x !== aktuell);
+            SD.schreiben(KEY, eigene);
+            $('editor').close();
+            zeige();
+            SD.toast(t('geloescht'));
+        }));
+
+        document.addEventListener('sd-lang-changed', zeige);
+        zeige();
+        mappeLaden().then(d => { mappe = d; zeige(); });
+    </script>
+</body>
+
+</html>
