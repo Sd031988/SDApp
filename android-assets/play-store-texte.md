@@ -6,33 +6,49 @@ Diese Texte kannst du 1:1 in die Play Console einfügen (Store-Eintrag).
 SD Hub
 
 ## Kurzbeschreibung (max. 80 Zeichen)
-Lebenslauf, Anschreiben, PDF-Tools, Scanner & Passfoto – alles in einer App.
+Bewerbung, Briefe, Steuer & Dokumente – 20 Helfer für den Alltag in Deutschland
 
-(78 Zeichen)
+(79 Zeichen)
 
 ## Ausführliche Beschreibung (max. 4000 Zeichen)
 
-SD Hub vereint die wichtigsten Werkzeuge für deine Bewerbung und deine Dokumente in einer App – schnell, übersichtlich und ohne Cloud-Zwang.
+SD Hub hilft dir beim Papierkram in Deutschland – von der Bewerbung über Briefe vom Amt bis zur Steuererklärung. 20 Helfer in einer App, auf Deutsch und Englisch.
 
-🖋️ Lebenslauf & Anschreiben
-Erstelle Lebenslauf, Anschreiben, Deckblatt und komplette Bewerbungsmappen mit professionellen Vorlagen – als fertiges PDF zum Versenden.
+📝 BEWERBUNG & ARBEIT
+• Lebenslauf, Anschreiben und Deckblatt mit professionellen Vorlagen – als PDF
+• Bewerbungs-Tracker: alle Bewerbungen und ihr Status im Blick
+• Gesprächstraining: Vorstellungsgespräch üben
+• Arbeiten in Deutschland: Wegweiser zu Visum und Job – Blaue Karte EU, Chancenkarte, Fachkräfte-Visum, Ausbildung – mit Checkliste und offiziellen Quellen
+• Anerkennung: Schritt für Schritt zur Anerkennung ausländischer Abschlüsse
 
-📄 PDF Studio
-Bearbeite, kombiniere und exportiere PDF-Dateien direkt auf deinem Gerät.
+📬 BRIEFE & ÄMTER
+• Post-Assistent: Briefe von Behörden verstehen – mit Fristen, Beträgen und Erklärung in deiner Sprache
+• Schreibstudio: Kündigungen und Briefe schreiben
+• Fristen-Übersicht: alle Termine an einem Ort
 
-📷 SD Scanner
-Scanne Dokumente mit der Kamera und wandle sie in saubere, ausgerichtete PDFs um.
+💶 FINANZEN & VERTRÄGE
+• Steuer-Helfer: Erstattung ausrechnen, Pauschalen nutzen und die amtlichen Vordrucke 2024 und 2025 automatisch ausfüllen – zum Ausdrucken, Unterschreiben und Abgeben
+• Stundenzettel & Lohn, Rechnungen, Haushaltsbuch
+• Verträge: Kosten und Kündigungsfristen im Blick
 
-🪪 Passfoto Studio
-Erstelle biometrische Passfotos in den gängigen Formaten – direkt zum Ausdrucken oder Hochladen.
+📄 DOKUMENTE & FOTOS
+• Scanner: Dokumente mit der Kamera scannen
+• PDF-Studio: PDFs bearbeiten, zusammenfügen und unterschreiben
+• Passfoto: biometrische Passbilder für viele Länder
+• Dokumenten-Mappe: Ausweis, Aufenthaltstitel & Co. mit Erinnerung vor dem Ablauf
 
-🔒 Datenschutz an erster Stelle
-Alle Inhalte werden lokal auf deinem Gerät verarbeitet, nicht auf fremden Servern gespeichert. Es gibt kein Tracking und keine Werbung.
+🏠 WOHNEN
+• Wohnungsbewerbung mit Mieterselbstauskunft
 
-⚡ Ein Konto, alle Werkzeuge
-Nach der kostenlosen Testphase kannst du wählen: einzelne Werkzeuge freischalten oder das Komplettpaket für alle Apps zusammen.
+🤖 KI-HELFER
+• KI-Assistent und KI-Agent – mit SD Lotse direkt auf dem Gerät oder wahlweise mit einer Online-KI
 
-Ideal für Berufseinsteiger, Bewerber, Freiberufler und alle, die schnell professionelle Bewerbungsunterlagen und Dokumente brauchen – ohne Papierkram und ohne Cloud-Abo.
+🔒 DEINE DATEN BLEIBEN BEI DIR
+Deine Angaben werden auf deinem Gerät gespeichert. Ein Konto brauchst du nur, wenn du Daten in der Cloud sichern willst. Nur wenn du selbst eine Online-KI oder die Cloud nutzt, werden Daten übertragen. Keine Werbung, kein Tracking.
+
+Hinweis: SD Hub ersetzt keine Rechts- oder Steuerberatung. Die Steuererklärung reichst du selbst beim Finanzamt ein.
+
+(Stand 13.10.2026, ca. 1.900 Zeichen)
 
 ## Kategorie
 Business (alternativ: Produktivität)
@@ -53,7 +69,6 @@ https://thesdhub.com
 - **Mindestens 2 Handy-Screenshots (hoch, z. B. 1080×1920):** am einfachsten machst du 3–4 Screenshots direkt aus der App (Startseite, Lebenslauf-Editor, PDF Studio, Scanner) – sag Bescheid, wenn du dabei Hilfe brauchst.
 
 ## Data-Safety-Formular (kurz zum Ausfüllen)
-- Sammelt die App Nutzerdaten? **Nein** (alles läuft lokal im Browser/Gerät)
-- Werden Daten an Dritte weitergegeben? **Nein**
+- Achtung: Wenn Nutzer ein Cloud-Konto oder eine Online-KI nutzen, werden Daten übertragen – das muss im Formular angegeben werden (siehe Datenschutzerklärung 8.x). Ohne diese Funktionen bleibt alles auf dem Gerät.
 - Verschlüsselte Übertragung? Ja, HTTPS
 - Löschung durch Nutzer möglich? Ja, jederzeit über "Website-Daten löschen" / App-Speicher leeren
