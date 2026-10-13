@@ -19,6 +19,7 @@
     <meta name="description" content="20 Helfer für Bewerbung, Briefe, Finanzen und Dokumente. Direkt im Browser, auf Deutsch und Englisch." />
     <link rel="manifest" href="manifest-hub.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="android-assets/icon-180.png" />
     <link rel="preload" href="fonts/bricolage-extrabold.woff2" as="font" type="font/woff2" crossorigin />
     <title>SD Hub – Papierkram in Deutschland, einfach erledigt</title>
     <style>
@@ -63,7 +64,7 @@
         .kopf > * { position: relative; }
         .leiste { display: flex; align-items: center; gap: 12px; padding-block: 16px; }
         .marke { display: flex; align-items: center; gap: 11px; flex: 1; text-decoration: none; font-family: var(--titel); font-weight: 700; font-size: 1.12rem; letter-spacing: -0.01em; }
-        .marke i { font-style: normal; width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(145deg, #fff, #dbe9e4); color: var(--marke); display: grid; place-items: center; font-family: var(--titel); font-weight: 800; font-size: .92rem; box-shadow: 0 6px 14px rgba(0, 0, 0, .25), inset 0 -2px 0 rgba(12, 53, 51, .18); }
+        .marke img { width: 38px; height: 38px; border-radius: 11px; display: block; flex: 0 0 auto; box-shadow: 0 0 0 1px rgba(255, 255, 255, .22), 0 6px 14px rgba(0, 0, 0, .3); }
         .sprache { display: flex; gap: 2px; background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; padding: 3px; }
         .sd-lang-btn { border: 0; background: transparent; color: var(--kopf-text); font: inherit; font-size: .82rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
         .sd-lang-btn.active { background: #fff; color: var(--marke); }
@@ -224,7 +225,7 @@
     <header class="kopf">
         <div class="breite">
             <div class="leiste">
-                <a class="marke" href="index.html"><i>SD</i><span>SD Hub</span></a>
+                <a class="marke" href="index.html"><img src="icon.svg" alt="" width="38" height="38"><span>SD Hub</span></a>
                 <div class="sprache" role="group" aria-label="Sprache">
                     <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
                     <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>

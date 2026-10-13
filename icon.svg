@@ -1,13 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <title>SD Hub</title>
   <defs>
-    <linearGradient id="sdGrad" x1="10%" y1="0%" x2="90%" y2="100%">
-      <stop offset="0%" stop-color="#0e2422"/>
-      <stop offset="48%" stop-color="#1c4a42"/>
-      <stop offset="100%" stop-color="#2f7d72"/>
+    <linearGradient id="sdHubGrund" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f7d72"/>
+      <stop offset=".55" stop-color="#1c4a42"/>
+      <stop offset="1" stop-color="#0e2724"/>
+    </linearGradient>
+    <linearGradient id="sdHubGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecd5a0"/>
+      <stop offset="1" stop-color="#b8924f"/>
     </linearGradient>
   </defs>
-  <rect x="0" y="0" width="192" height="192" rx="54" fill="url(#sdGrad)"/>
-  <rect x="17" y="17" width="158" height="158" rx="38" fill="none" stroke="#c9a86a" stroke-opacity="0.55" stroke-width="4"/>
-  <text x="96" y="117" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="84" font-weight="700" letter-spacing="-4" fill="#f4ead0">SD</text>
-  <line x1="50" y1="138" x2="142" y2="138" stroke="#c9a86a" stroke-width="6"/>
+  <rect width="192" height="192" rx="44" fill="url(#sdHubGrund)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" transform="translate(-3 0)">
+    <path d="M90 68C85 61 76 57 66 57C53 57 44 64 44 75C44 87 54 91 67 95C80 99 91 104 91 117C91 129 81 136 67 136C56 136 47 131 42 123" stroke="#f6efdf"/>
+    <path d="M112 57V136H122C143 136 156 120 156 96.5C156 73 143 57 122 57Z" stroke="url(#sdHubGold)"/>
+  </g>
 </svg>
