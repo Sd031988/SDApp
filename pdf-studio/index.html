@@ -1580,7 +1580,7 @@
         label_brightness: 'Helligkeit', label_contrast: 'Kontrast',
         btn_scan_filter_back: '← Zurück', btn_scan_filter_done: 'Seite übernehmen ✓',
         modal_phonescan_h3: '📱 Mit Handy scannen',
-        phonescan_p: 'Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet sich eine Scan-Seite im Handy-Browser – keine App nötig.',
+        phonescan_p: 'Scanne den QR-Code mit der Kamera-App deines Handys. Auf dem Handy öffnet sich der SD Scanner mit Live-Kamera und automatischer Kantenerkennung – keine App nötig. Fertige Seiten mit „✓ An PC“ senden.',
         phonescan_qr_wait: 'QR-Code wird erstellt …', phonescan_status_prep: 'Verbindung wird vorbereitet …',
         btn_close_modal: 'Schließen',
         modal_livecam_h3: '🎥 Live-Kamera (Auto-Scan)',
@@ -1755,7 +1755,7 @@
         label_brightness: 'Brightness', label_contrast: 'Contrast',
         btn_scan_filter_back: '← Back', btn_scan_filter_done: 'Use this page ✓',
         modal_phonescan_h3: '📱 Scan with phone',
-        phonescan_p: 'Scan the QR code with your phone\'s camera app. A scan page opens in your phone\'s browser – no app needed.',
+        phonescan_p: 'Scan the QR code with your phone\'s camera app. The SD Scanner opens on your phone with live camera and automatic edge detection – no app needed. Send finished pages with “✓ An PC”.',
         phonescan_qr_wait: 'Generating QR code …', phonescan_status_prep: 'Preparing connection …',
         btn_close_modal: 'Close',
         modal_livecam_h3: '🎥 Live camera (auto-scan)',
@@ -2384,8 +2384,7 @@
   <div id="modalPhoneScan" class="modal-backdrop">
     <div class="modal-box" style="width:min(420px,100%); text-align:center;">
       <h3 data-i18n="modal_phonescan_h3">📱 Mit Handy scannen</h3>
-      <p style="color:var(--muted); font-size:.9rem;" data-i18n="phonescan_p">Scanne den QR-Code mit der Kamera-App deines Handys. Es öffnet
-        sich eine Scan-Seite im Handy-Browser – keine App nötig.</p>
+      <p style="color:var(--muted); font-size:.9rem;" data-i18n="phonescan_p">Scanne den QR-Code mit der Kamera-App deines Handys. Auf dem Handy öffnet sich der SD Scanner mit Live-Kamera und automatischer Kantenerkennung – keine App nötig. Fertige Seiten mit „✓ An PC“ senden.</p>
       <div id="phoneScanQr" style="display:flex; justify-content:center; margin:16px 0; min-height:220px; align-items:center;">
         <span style="color:var(--muted); font-size:.85rem;" data-i18n="phonescan_qr_wait">QR-Code wird erstellt …</span>
       </div>
@@ -6544,7 +6543,8 @@
 
     function buildRemoteScanUrl(peerId) {
       const base = window.location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
-      return base + 'remote-scan.html?p=' + encodeURIComponent(peerId);
+      // Das Handy oeffnet den SD Scanner (Live-Scan mit Kantenerkennung) im Modus "an PC senden"
+      return base.replace(/pdf-studio\/$/, '') + 'scanner/?pc=' + encodeURIComponent(peerId);
     }
 
     // Appends a photo (from phone or elsewhere) to the existing scan queue.
@@ -6599,6 +6599,20 @@
         $('phoneScanStatus').textContent = 'Handy verbunden ✓ – jetzt auf dem Handy fotografieren.';
 
         conn.on('data', (data) => {
+          // Neuer Weg: der SD Scanner am Handy schickt fertig zugeschnittene Seiten
+          if (data && data.type === 'seite' && typeof data.url === 'string' && data.url.startsWith('data:image/')) {
+            pushUndoState();
+            const page = createPageModel(data.url, String(data.name || 'Scan'), data.w, data.h);
+            state.pages.push(page);
+            state.selectedPageId = page.id;
+            phoneScanCount++;
+            $('btnExport').disabled = false;
+            renderSidebarPages();
+            renderStage();
+            updateInspector();
+            $('phoneScanStatus').textContent = `Handy verbunden ✓ – ${phoneScanCount} Seite(n) empfangen.`;
+            return;
+          }
           if (!data || data.type !== 'photo' || !data.data) return;
           // WICHTIG: Fehler hier NICHT stillschweigend verschlucken (früher:
           // ".catch(() => {})") – dadurch verschwand ein empfangenes Foto

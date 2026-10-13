@@ -2698,13 +2698,126 @@
     });
   }
 
+  // --- Handy als Scanner fuer das PDF-Studio am PC (scanner/?pc=<Verbindungs-ID>) ---
+  // Der PC zeigt einen QR-Code mit diesem Link. Das Handy scannt hier mit der
+  // normalen Live-Kamera (Kantenerkennung, Zuschnitt, Filter) und schickt die
+  // fertigen Seiten per PeerJS (WebRTC) direkt an den PC. Die Kamera startet
+  // sofort - unabhaengig davon, ob die Verbindung schon steht.
+  const pcId = new URLSearchParams(location.search).get("pc");
+  const fuerPc = !!pcId && !imPdfStudio;
+  if (fuerPc) {
+    const pc = { peer: null, conn: null, offen: false, gesendet: 0, sendet: false, timer: null };
+    const top = document.querySelector(".cam-top");
+    const status = document.createElement("span");
+    status.className = "pill pc-status";
+    status.textContent = "Verbinde mit PC …";
+    top.insertBefore(status, top.querySelector(".grow"));
+    const senden = document.createElement("button");
+    senden.className = "ghost accent";
+    senden.type = "button";
+    senden.hidden = true;
+    top.appendChild(senden);
+    const sheetBtn = document.createElement("button");
+    sheetBtn.className = "act";
+    sheetBtn.type = "button";
+    sheetBtn.textContent = "✓ An PC senden";
+    el("btnMakePdf").parentNode.insertBefore(sheetBtn, el("btnMakePdf"));
+    // Nur Dokument-Scan ist hier sinnvoll (Modus wird nach initMode() gesetzt, siehe unten)
+    ui.modeBar.style.display = "none";
+    el("btnLibrary").style.display = "none";
+
+    const zeigeStatus = () => {
+      if (pc.sendet) return;
+      status.textContent = pc.offen
+        ? (pc.gesendet ? `✓ PC · ${pc.gesendet} gesendet` : "✓ Mit PC verbunden")
+        : (pc.peer ? "Verbinde mit PC …" : "Keine Verbindung zum PC");
+      status.classList.toggle("is-ok", pc.offen);
+    };
+    const verbinde = () => {
+      if (!pc.peer || pc.peer.destroyed) return;
+      pc.conn = pc.peer.connect(pcId, { reliable: true });
+      pc.conn.on("open", () => { pc.offen = true; zeigeStatus(); });
+      const weg = () => {
+        pc.offen = false;
+        zeigeStatus();
+        clearTimeout(pc.timer);
+        pc.timer = setTimeout(() => { if (!pc.offen) verbinde(); }, 2000);
+      };
+      pc.conn.on("close", weg);
+      pc.conn.on("error", weg);
+    };
+    const ladePeer = () => new Promise((ok, fehler) => {
+      if (window.Peer) return ok();
+      const sc = document.createElement("script");
+      sc.src = "../pdf-studio/vendor/peerjs.min.js";
+      sc.onload = ok;
+      sc.onerror = fehler;
+      document.head.appendChild(sc);
+    });
+    ladePeer().then(() => {
+      pc.peer = new window.Peer();
+      pc.peer.on("open", verbinde);
+      pc.peer.on("disconnected", () => { try { pc.peer.reconnect(); } catch (e) {} });
+      pc.peer.on("error", () => { pc.offen = false; zeigeStatus(); });
+      zeigeStatus();
+    }).catch(() => {
+      status.textContent = "Keine Internetverbindung";
+    });
+
+    const uebertragen = async () => {
+      if (!state.pages.length || pc.sendet) return;
+      if (!pc.offen || !pc.conn || !pc.conn.open) {
+        toast("Noch keine Verbindung zum PC – Seiten bleiben hier, bitte gleich nochmal tippen.", 3200);
+        return;
+      }
+      pc.sendet = true;
+      busy("Seiten werden an den PC gesendet");
+      try {
+        const n = state.pages.length;
+        for (let i = 0; i < n; i++) {
+          const { url, w, h } = await pageDataUrl(state.pages[i], 2200);
+          // fertig zugeschnittene Seite – der PC uebernimmt sie direkt, ohne erneuten Zuschnitt
+          pc.conn.send({ type: "seite", name: `${fileBase()} – Seite ${i + 1}`, url, w, h });
+          busy(`Seite ${i + 1} von ${n} gesendet`, (i + 1) / n);
+        }
+        pc.gesendet += n;
+        busyHide();
+        ui.pagesSheet.hidden = true;
+        await beginNewDocument();
+        toast(n === 1 ? "1 Seite an den PC gesendet" : n + " Seiten an den PC gesendet", 2600);
+      } catch (e) {
+        busyHide();
+        toast("Senden fehlgeschlagen – die Seiten bleiben hier, bitte erneut versuchen.", 3200);
+      }
+      pc.sendet = false;
+      zeigeStatus();
+    };
+    senden.addEventListener("click", uebertragen);
+    sheetBtn.addEventListener("click", uebertragen);
+    const alteZaehlung = renderCounts;
+    renderCounts = function () {
+      alteZaehlung();
+      const n = state.pages.length;
+      senden.hidden = n === 0;
+      senden.textContent = `✓ An PC (${n})`;
+      sheetBtn.disabled = n === 0;
+    };
+  }
+
   startNewDocState();
   initMode();
+  if (fuerPc && state.mode !== "doc") {
+    // Modus nur fuer diese Sitzung umstellen, gespeicherte Wahl des Scanners behalten
+    let gemerkt = null;
+    try { gemerkt = localStorage.getItem(MODE_KEY); } catch (e) {}
+    setMode("doc");
+    try { if (gemerkt != null) localStorage.setItem(MODE_KEY, gemerkt); } catch (e) {}
+  }
   renderCounts();
   startCamera();
   restore().then(async () => {
     // Im PDF-Studio immer mit leerem Dokument starten; ein angefangenes liegt in der Ablage.
-    if (imPdfStudio && state.pages.length) await beginNewDocument();
+    if ((imPdfStudio || fuerPc) && state.pages.length) await beginNewDocument();
     renderCounts();
     if (!ui.pagesSheet.hidden) {
       ui.docName.value = state.docName;

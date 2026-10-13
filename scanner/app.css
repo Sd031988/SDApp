@@ -835,3 +835,8 @@ body.mode-card #pageCount { visibility: hidden; }
 .cam-bottom .last-page { justify-self: start; }
 .cam-bottom .import { justify-self: end; margin-left: 0; }
 .badge[hidden] { display: none; }
+
+/* Handy als Scanner fuer den PC (scanner/?pc=...) */
+.pc-status { color: #ffb648; border-color: rgba(255, 182, 72, .45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52vw; }
+.pc-status.is-ok { color: var(--g); border-color: var(--g-dim); }
+#lastPreview:not([src]) { visibility: hidden; }
