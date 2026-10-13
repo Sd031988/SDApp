@@ -82,25 +82,56 @@
         .chip:hover { background: rgba(255, 255, 255, .18); transform: translateY(-1px); }
 
         /* ---------- 3D-Aktenstapel: jede Lage ist ein Thema ---------- */
-        .szene { height: 420px; perspective: 1200px; display: grid; place-items: center; touch-action: pan-y; }
-        .stapel { --z: 168px; --abstand: 22px; --rx: 58deg; --rz: -34deg; position: relative; width: 250px; height: 310px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(var(--rz)); transition: transform .25s ease-out; }
-        .lage { position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); transform: translateZ(calc(var(--i) * var(--abstand))); transition: transform .45s cubic-bezier(.2, .8, .2, 1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 0 1px rgba(0, 0, 0, .1); }
-        .lage::after { content: ""; position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .24), rgba(0, 0, 0, .14)); }
-        .lage span { position: absolute; left: 16px; bottom: 12px; font-family: var(--titel); font-weight: 800; font-size: 1.05rem; color: #fff; opacity: 0; transition: opacity .3s ease; text-shadow: 0 1px 2px rgba(0, 0, 0, .25); z-index: 1; }
-        .lage.raus { transform: translateZ(calc(var(--i) * var(--abstand))) translateY(48%); }
-        .lage.raus span { opacity: 1; }
-        .blatt { position: absolute; inset: 14px 20px 26px 14px; border-radius: 8px; background: linear-gradient(170deg, #fff 70%, #f2f5f3); transform: translateZ(var(--z)); box-shadow: 0 34px 44px rgba(0, 0, 0, .38); padding: 24px 22px; display: grid; gap: 11px; align-content: start; transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
+        .szene { position: relative; height: 440px; perspective: 1100px; perspective-origin: 50% 35%; display: grid; place-items: center; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+        /* Lichtkranz und Bodenschatten hinter dem Stapel */
+        .szene::before { content: ""; position: absolute; width: min(420px, 92%); aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from 0deg, rgba(126, 231, 196, 0), rgba(126, 231, 196, .28), rgba(120, 160, 255, .22), rgba(255, 170, 120, .2), rgba(126, 231, 196, 0)); filter: blur(34px); opacity: .9; }
+        .szene::after { content: ""; position: absolute; left: 50%; top: 74%; width: 62%; height: 70px; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .42), transparent); filter: blur(6px); }
+        .stapel { --z: 168px; --abstand: 22px; --rx: 58deg; --rz: -34deg; --dreh: 0deg; position: relative; z-index: 1; width: 250px; height: 310px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(calc(var(--rz) + var(--dreh))); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+        .stapel.zieht-hand { transition: none; }
+        .lage { position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); transform-style: preserve-3d; transform: translateZ(calc(var(--i) * var(--abstand))); transition: transform .55s cubic-bezier(.2, .9, .25, 1.15); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 0 1px rgba(0, 0, 0, .1); cursor: pointer; }
+        /* Materialdicke: dunklere Unterkante */
+        .lage::before { content: ""; position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); filter: brightness(.55) saturate(1.2); transform: translateZ(-8px); }
+        .lage::after { content: ""; position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, .18)); }
+        /* Reiter oben an der Mappe, versetzt wie im Aktenschrank */
+        .lage .tab { position: absolute; top: -15px; left: calc(14px + (5 - var(--i)) * 30px); width: 62px; height: 22px; border-radius: 9px 9px 0 0; background: var(--farbe); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+        /* Papier, das aus der Mappe schaut */
+        .lage .papier { position: absolute; left: 10%; right: 12%; top: -7px; height: 30px; border-radius: 4px; background: linear-gradient(#fff, #eef2f0); transform: translateZ(3px); box-shadow: 0 2px 4px rgba(0, 0, 0, .12); }
+        .lage span { position: absolute; left: 16px; bottom: 14px; font-family: var(--titel); font-weight: 800; font-size: 1.15rem; color: #fff; opacity: 0; translate: 0 6px; transition: opacity .3s ease, translate .3s ease; text-shadow: 0 1px 2px rgba(0, 0, 0, .3); z-index: 1; transform: translateZ(2px); }
+        .lage.raus { transform: translateZ(calc(var(--i) * var(--abstand) + 18px)) translateY(46%) rotateX(-8deg); }
+        .lage.raus span { opacity: 1; translate: 0 0; }
+        .blatt { position: absolute; inset: 14px 20px 26px 14px; border-radius: 8px; overflow: hidden; background: linear-gradient(170deg, #fff 70%, #f2f5f3); transform: translateZ(var(--z)); box-shadow: 0 34px 44px rgba(0, 0, 0, .38); padding: 24px 22px; display: grid; gap: 11px; align-content: start; transition: transform .55s cubic-bezier(.2, .8, .2, 1); }
         .blatt i { display: block; height: 9px; border-radius: 5px; background: #d9e2de; }
         .blatt i:nth-child(1) { width: 58%; height: 14px; background: #9db2ab; }
         .blatt i:nth-child(3) { width: 84%; } .blatt i:nth-child(5) { width: 66%; }
+        /* Glanzstreifen, der ueber das Blatt wandert */
+        .blatt::after { content: ""; position: absolute; inset: -40% -60%; background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .85) 50%, transparent 58%); translate: -70% 0; pointer-events: none; }
         .stempel { position: absolute; right: 18px; bottom: 20px; width: 74px; height: 74px; border-radius: 50%; border: 4px solid #1f7a4d; color: #1f7a4d; display: grid; place-items: center; font-family: var(--titel); font-weight: 800; font-size: 1.35rem; transform: rotate(-14deg); opacity: .92; }
-        .stapel.zieht .blatt { transform: translateZ(calc(var(--z) + 46px)); }
+        /* Schwebende Teile rund um den Stapel (liegen mit im 3D-Raum, schauen aber zur Kamera) */
+        .schwebt { position: absolute; display: grid; place-items: center; font-family: var(--titel); font-weight: 800; transform-style: preserve-3d; pointer-events: none; }
+        .schwebt > b { display: grid; place-items: center; transform: rotateZ(calc(-1 * (var(--rz) + var(--dreh)))) rotateX(calc(-1 * var(--rx))); }
+        .muenze { left: -46px; top: 34px; width: 58px; height: 58px; transform: translateZ(118px); }
+        .muenze b { width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #f2c230 45%, #b8860b); color: #7a5600; font-size: 1.6rem; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18), 0 10px 18px rgba(0, 0, 0, .3); }
+        .kalender { right: -58px; top: 84px; width: 64px; height: 70px; transform: translateZ(205px); }
+        .kalender b { width: 64px; height: 70px; border-radius: 12px; background: #fff; box-shadow: 0 12px 22px rgba(0, 0, 0, .3); overflow: hidden; display: grid; grid-template-rows: 22px 1fr; place-items: stretch; }
+        .kalender b::before { content: ""; background: #e5484d; }
+        .kalender b em { font-style: normal; display: grid; place-items: center; color: #172a3a; font-size: 1.55rem; }
+        .haken { right: -44px; bottom: -50px; width: 52px; height: 52px; transform: translateZ(205px); }
+        .haken b { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(145deg, #3ccf8e, #1f7a4d); color: #fff; font-size: 1.5rem; box-shadow: 0 10px 18px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .5); }
         @media (prefers-reduced-motion: no-preference) {
-            .blatt { animation: schweben 6s ease-in-out 1.4s infinite; }
+            .szene::before { animation: kranz 18s linear infinite; }
+            @keyframes kranz { to { rotate: 360deg; } }
+            .blatt::after { animation: glanz 5.5s ease-in-out 2.2s infinite; }
+            @keyframes glanz { 0% { translate: -70% 0; } 30%, 100% { translate: 70% 0; } }
             @keyframes schweben { 0%, 100% { translate: 0 0 0; } 50% { translate: 0 0 20px; } }
+            .schwebt > b { animation: wippen 5s ease-in-out infinite; }
+            .kalender > b { animation-delay: -1.6s; } .haken > b { animation-delay: -3.1s; }
+            @keyframes wippen { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
             /* Einmaliger Auftritt: Lagen fallen nacheinander auf den Stapel */
             .lage { animation: landen .7s cubic-bezier(.2, .9, .3, 1.2) backwards; animation-delay: calc((5 - var(--i)) * 70ms + 100ms); }
             .blatt { animation-name: landen-blatt, schweben; animation-duration: .8s, 6s; animation-delay: .6s, 1.4s; animation-iteration-count: 1, infinite; animation-fill-mode: backwards, none; animation-timing-function: cubic-bezier(.2, .9, .3, 1.2), ease-in-out; }
+            .schwebt { animation: auftauchen .7s cubic-bezier(.2, .9, .3, 1.3) 1s backwards; }
+            .kalender { animation-delay: 1.15s; } .haken { animation-delay: 1.3s; }
+            @keyframes auftauchen { from { opacity: 0; scale: .3; } }
             @keyframes landen { from { opacity: 0; translate: 0 0 160px; } }
             @keyframes landen-blatt { from { opacity: 0; translate: 0 0 220px; } }
         }
@@ -150,12 +181,23 @@
 
         @media (max-width: 860px) {
             .held { grid-template-columns: minmax(0, 1fr); gap: 0; }
-            .szene { height: 250px; margin-top: 6px; }
-            .stapel { width: 160px; height: 200px; --z: 92px; --abstand: 12px; margin-top: 46px; }
+            .szene { height: 300px; margin-top: 4px; }
+            .stapel { width: 170px; height: 212px; --z: 96px; --abstand: 13px; margin-top: 40px; }
+            .lage .tab { top: -11px; left: calc(10px + (5 - var(--i)) * 20px); width: 42px; height: 16px; border-radius: 7px 7px 0 0; }
+            .lage .papier { top: -5px; height: 20px; }
+            .lage::before { transform: translateZ(-5px); }
+            .muenze { left: -34px; top: 18px; width: 44px; height: 44px; transform: translateZ(84px); }
+            .muenze b { width: 44px; height: 44px; font-size: 1.2rem; }
+            .kalender { right: -40px; top: 62px; width: 48px; height: 52px; transform: translateZ(130px); }
+            .kalender b { width: 48px; height: 52px; border-radius: 10px; grid-template-rows: 16px 1fr; }
+            .kalender b em { font-size: 1.15rem; }
+            .haken { right: -36px; bottom: 4px; width: 40px; height: 40px; transform: translateZ(130px); }
+            .haken b { width: 40px; height: 40px; font-size: 1.15rem; }
             .blatt { inset: 10px 13px 16px 10px; padding: 15px 13px; gap: 7px; }
             .blatt i { height: 6px; } .blatt i:nth-child(1) { height: 9px; }
             .stempel { width: 46px; height: 46px; font-size: .88rem; border-width: 3px; right: 10px; bottom: 11px; }
-            .lage span { font-size: .78rem; left: 10px; bottom: 8px; }
+            .lage span { font-size: .86rem; left: 11px; bottom: 9px; }
+            .lage.raus { transform: translateZ(calc(var(--i) * var(--abstand) + 14px)) translateY(64%) rotateX(-8deg); }
         }
         @media (max-width: 640px) {
             .breite { padding-inline: 16px; }
@@ -163,8 +205,8 @@
             .schnell { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
             .schnell::-webkit-scrollbar { display: none; }
             .schnell, .reiter { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); }
-            .szene { height: 210px; }
-            .stapel { margin-top: 30px; }
+            .szene { height: 290px; margin-top: 10px; }
+            .stapel { margin-top: 34px; }
             .chip { flex: 0 0 auto; }
             main { padding-top: 30px; }
             .mappe-flaeche { padding: 10px; border-radius: 0 16px 16px 16px; }
@@ -198,8 +240,11 @@
                 </div>
                 <div class="szene" id="szene" aria-hidden="true">
                     <div class="stapel" id="stapel">
-                        <div class="lage" data-thema="arbeit" style="--i:5;--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></div><div class="lage" data-thema="post" style="--i:4;--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" data-thema="geld" style="--i:3;--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" data-thema="doku" style="--i:2;--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" data-thema="wohnen" style="--i:1;--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></div><div class="lage" data-thema="ki" style="--i:0;--farbe:#0e7490"><span data-i18n="t_ki">KI-Helfer</span></div>
+                        <div class="lage" data-thema="arbeit" style="--i:5;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></div><div class="lage" data-thema="post" style="--i:4;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" data-thema="geld" style="--i:3;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" data-thema="doku" style="--i:2;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" data-thema="wohnen" style="--i:1;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Ankommen</span></div><div class="lage" data-thema="ki" style="--i:0;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI-Helfer</span></div>
                         <div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
+                        <div class="schwebt muenze"><b>€</b></div>
+                        <div class="schwebt kalender"><b><em id="kalTag">1</em></b></div>
+                        <div class="schwebt haken"><b>✓</b></div>
                     </div>
                 </div>
             </div>
@@ -504,6 +549,8 @@
             const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const stapel = document.getElementById('stapel');
             const szene = document.getElementById('szene');
+            // Kalenderblatt zeigt den heutigen Tag
+            document.getElementById('kalTag').textContent = String(new Date().getDate());
 
             // Reiter <-> Aktenstapel: Fahren oder Fokus auf einen Reiter zieht die passende Mappe heraus
             function ziehe(thema) {
@@ -522,8 +569,51 @@
                 l.style.cursor = 'pointer';
                 l.addEventListener('pointerenter', function () { ziehe(l.dataset.thema); });
                 l.addEventListener('pointerleave', function () { ziehe(null); });
-                l.addEventListener('click', function () { const z = document.getElementById('thema-' + l.dataset.thema); if (z) z.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' }); });
+                l.addEventListener('click', function () { pausiere(); const z = document.getElementById('thema-' + l.dataset.thema); if (z) z.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' }); });
             });
+            // Von selbst: alle paar Sekunden zieht sich die naechste Mappe heraus
+            // und zeigt ihr Thema. Pausiert, sobald jemand selbst zeigt/tippt,
+            // wenn der Kopf nicht sichtbar ist oder der Tab im Hintergrund liegt.
+            const lagen = Array.prototype.slice.call(stapel.querySelectorAll('.lage')).reverse();
+            let autoNr = 0, pauseBis = 0, sichtbar = true;
+            function pausiere(ms) { pauseBis = Date.now() + (ms || 7000); }
+            function autoSchritt() {
+                if (ruhig || !sichtbar || document.hidden || Date.now() < pauseBis) return;
+                const l = lagen[autoNr % lagen.length];
+                autoNr++;
+                ziehe(l.dataset.thema);
+                setTimeout(function () { if (Date.now() >= pauseBis) ziehe(null); }, 1900);
+            }
+            if (!ruhig) {
+                setTimeout(function () { autoSchritt(); setInterval(autoSchritt, 2600); }, 2300);
+                if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { sichtbar = e[0].isIntersecting; }).observe(szene);
+            }
+            document.querySelectorAll('#reiter a, .lage').forEach(function (el) { el.addEventListener('pointerenter', function () { pausiere(); }); });
+            // Am Handy: mit dem Finger seitlich drehen; Neigen des Handys bewegt den Stapel
+            if (!ruhig) {
+                let startX = null, startDreh = 0, dreh = 0;
+                szene.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'touch') return; startX = e.clientX; startDreh = dreh; pausiere(9000); });
+                szene.addEventListener('pointermove', function (e) {
+                    if (startX === null || e.pointerType !== 'touch') return;
+                    dreh = Math.max(-45, Math.min(45, startDreh + (e.clientX - startX) * 0.35));
+                    stapel.classList.add('zieht-hand');
+                    stapel.style.setProperty('--dreh', dreh.toFixed(1) + 'deg');
+                });
+                const loslassen = function () { if (startX === null) return; startX = null; dreh = 0; stapel.classList.remove('zieht-hand'); stapel.style.setProperty('--dreh', '0deg'); };
+                szene.addEventListener('pointerup', loslassen);
+                szene.addEventListener('pointercancel', loslassen);
+                let neigFrame = 0;
+                window.addEventListener('deviceorientation', function (e) {
+                    if (e.gamma == null || startX !== null || neigFrame) return;
+                    neigFrame = requestAnimationFrame(function () {
+                        neigFrame = 0;
+                        const g = Math.max(-30, Math.min(30, e.gamma || 0));
+                        const b = Math.max(-25, Math.min(25, (e.beta == null ? 45 : e.beta) - 45));
+                        stapel.style.setProperty('--rz', (-34 + g * 0.6).toFixed(1) + 'deg');
+                        stapel.style.setProperty('--rx', (58 - b * 0.35).toFixed(1) + 'deg');
+                    });
+                });
+            }
             // Der Stapel folgt leicht dem Zeiger (nur mit Maus/Stift, nicht beim Wischen am Handy)
             if (!ruhig) {
                 const kopf = document.querySelector('.kopf');
