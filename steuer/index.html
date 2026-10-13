@@ -144,10 +144,36 @@
         footer.quellen a { color: var(--accent); }
 
         [hidden] { display: none !important; }
+        /* Erstattung (Schätzung) */
+        .erg-karte { background: linear-gradient(140deg, #123f38, #1c4a42 55%, #245e54); color: #fff; border-radius: 16px; padding: 18px 18px 16px; display: grid; gap: 10px; box-shadow: 0 10px 28px rgba(28, 74, 66, .28); }
+        .erg-karte .label { font-size: .82rem; opacity: .85; font-weight: bold; letter-spacing: .02em; }
+        .erg-karte .gross { font-size: clamp(2rem, 9vw, 2.8rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .erg-karte .gross.minus { color: #ffb4a8; }
+        .erg-karte .unter { font-size: .86rem; opacity: .9; line-height: 1.45; }
+        .erg-karte details { background: rgba(255, 255, 255, .08); border-radius: 12px; padding: 8px 12px; }
+        .erg-karte summary { cursor: pointer; font-weight: bold; font-size: .88rem; }
+        .rechenweg { width: 100%; border-collapse: collapse; font-size: .84rem; margin-top: 8px; font-variant-numeric: tabular-nums; }
+        .rechenweg td { padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, .12); vertical-align: top; }
+        .rechenweg td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+        .rechenweg tr.summe td { font-weight: bold; border-bottom: 0; border-top: 1px solid rgba(255, 255, 255, .45); }
+        .rechenweg .klein { opacity: .75; font-size: .76rem; display: block; }
+        .erg-hinweise { margin: 0; padding-left: 18px; font-size: .82rem; line-height: 1.5; opacity: .95; }
+        .erg-btn { justify-self: start; border: 0; border-radius: 10px; background: #fff; color: #1c4a42; font: inherit; font-weight: bold; padding: 9px 14px; cursor: pointer; }
+        .lsb-gefunden { font-size: .8rem; color: var(--muted); }
+        .zeilen-nr { display: inline-block; min-width: 2.6em; font-size: .72rem; font-weight: bold; color: var(--accent-dark); background: var(--accent-soft); border-radius: 6px; padding: 1px 5px; margin-right: 4px; text-align: center; }
+        .kind-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -2px 0 8px; }
+        .kind-extra label { font-size: .75rem; color: var(--muted); display: grid; gap: 3px; }
+        .kind-extra select, .kind-extra input { padding: 6px 8px; font-size: 15px; }
+        .leiste-erstattung { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; align-items: center; gap: 10px; justify-content: space-between;
+            background: #123f38; color: #fff; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 18px rgba(0, 0, 0, .18); font-size: .9rem; }
+        .leiste-erstattung b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+        .leiste-erstattung button { border: 1px solid rgba(255, 255, 255, .4); background: transparent; color: #fff; border-radius: 10px; padding: 7px 12px; font: inherit; font-weight: bold; cursor: pointer; }
+        main { padding-bottom: 90px !important; }
+        body.erg-sichtbar .leiste-erstattung { display: none; }
         @media (max-width: 520px) { .sd-logo { display: none !important; } }
 
         @media print {
-            .topbar, .knoepfe, .hinweis.nur-schirm, details:not(.zus-karte) { display: none !important; }
+            .topbar, .knoepfe, .hinweis.nur-schirm, details:not(.zus-karte), .leiste-erstattung { display: none !important; }
             body { background: #fff; }
         }
     </style>
@@ -176,6 +202,113 @@
             <br>⚠️ <b>Keine Steuerberatung</b> – Angaben und Berechnungen ohne Gewähr. Bei Unsicherheit hilft ein Lohnsteuerhilfeverein oder Steuerberater.
             <div id="fristInfo" style="margin-top:6px"></div>
         </div>
+
+        <!-- Erstattung (Schätzung) -->
+        <section class="erg-karte" id="ergKarte" aria-live="polite">
+            <span class="label" id="ergLabel">💶 Geschätzte Erstattung</span>
+            <span class="gross" id="ergBetrag">–</span>
+            <span class="unter" id="ergUnter">Trage unten deine Lohnsteuerbescheinigung ein (oder fotografiere sie) – dann rechnet der Helfer live mit.</span>
+            <details id="ergDetails"><summary>So wurde gerechnet</summary><table class="rechenweg" id="rechenweg"></table></details>
+            <ul class="erg-hinweise" id="ergHinweise"></ul>
+            <span class="unter" style="font-size:.76rem;opacity:.75">Schätzung für Arbeitnehmer nach den Steuerwerten <span class="w-jahr"></span>. Andere Einkünfte (Rente, Vermietung, Selbstständigkeit, Kapitalerträge) sind nicht enthalten. Den verbindlichen Betrag nennt dein Steuerbescheid.</span>
+        </section>
+
+        <!-- Persönliche Angaben -->
+        <details class="karte" id="karteAngaben" open>
+            <summary><div class="titel"><h2>👤 Deine Angaben</h2><small>Allein oder gemeinsam, Bundesland, Kirche, Lohnersatz</small></div></summary>
+            <div class="inhalt">
+                <div class="zeile">
+                    <label class="feld">Steuererklärung
+                        <select data-f="p.zusammen">
+                            <option value="">allein</option>
+                            <option value="ja">gemeinsam mit Ehe-/Lebenspartner/in</option>
+                        </select></label>
+                    <label class="feld">Bundesland (Wohnsitz) <span class="hilfe">für den Kirchensteuersatz</span>
+                        <select data-f="p.land"><option value="">– bitte wählen –</option><option value="BW">Baden-Württemberg</option><option value="BY">Bayern</option><option value="BE">Berlin</option><option value="BB">Brandenburg</option><option value="HB">Bremen</option><option value="HH">Hamburg</option><option value="HE">Hessen</option><option value="MV">Mecklenburg-Vorpommern</option><option value="NI">Niedersachsen</option><option value="NW">Nordrhein-Westfalen</option><option value="RP">Rheinland-Pfalz</option><option value="SL">Saarland</option><option value="SN">Sachsen</option><option value="ST">Sachsen-Anhalt</option><option value="SH">Schleswig-Holstein</option><option value="TH">Thüringen</option></select></label>
+                </div>
+                <label class="check"><input type="checkbox" data-f="p.kirche1"> <span>Ich bin Mitglied einer Kirche (Kirchensteuer)</span></label>
+                <label class="check" id="kirche2Zeile"><input type="checkbox" data-f="p.kirche2"> <span>Mein Partner / meine Partnerin ist Kirchenmitglied</span></label>
+                <label class="check" id="aeZeile"><input type="checkbox" data-f="p.alleinerziehend"> <span>Ich bin alleinerziehend (Kind lebt bei mir, kein anderer Erwachsener im Haushalt) – Entlastungsbetrag</span></label>
+                <label class="check"><input type="checkbox" data-f="p.krankengeld"> <span>Anspruch auf Krankengeld (normal bei Angestellten mit gesetzlicher Krankenversicherung)</span></label>
+                <div class="zeile">
+                    <label class="feld">Lohnersatz im Jahr: Arbeitslosengeld I, Elterngeld, Krankengeld, Mutterschaftsgeld <span class="hilfe">steuerfrei, erhöht aber den Steuersatz (Progressionsvorbehalt)</span>
+                        <input type="text" inputmode="decimal" data-f="p.lohnersatz" placeholder="z. B. 3.600"></label>
+                    <label class="feld" id="lohnersatz2Feld">Lohnersatz Partner/in
+                        <input type="text" inputmode="decimal" data-f="p.lohnersatz2" placeholder="z. B. 0"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld">Weitere Versicherungen im Jahr <span class="hilfe">Haftpflicht, Unfall, Berufsunfähigkeit, Risiko-Lebensversicherung, Kfz-Haftpflicht-Anteil</span>
+                        <input type="text" inputmode="decimal" data-f="p.versicherung" placeholder="z. B. 240"></label>
+                    <label class="feld">Basisrente (Rürup) im Jahr <span class="hilfe">eigene Beiträge zu einer Rürup-Rente</span>
+                        <input type="text" inputmode="decimal" data-f="p.ruerup" placeholder="meist 0"></label>
+                </div>
+            </div>
+        </details>
+
+        <!-- Lohnsteuerbescheinigung -->
+        <details class="karte" id="karteLsb" open>
+            <summary><div class="titel"><h2>🧾 Lohnsteuerbescheinigung</h2><small>Bekommst du vom Arbeitgeber – Foto/PDF genügt</small></div><span class="summe" id="sumLsb">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Die Zahlen stehen auf deiner Lohnsteuerbescheinigung (die „Z.“-Nummern sind die Zeilen darauf). Mehrere Arbeitgeber im Jahr: Beträge zusammenzählen.</p>
+                <div class="knoepfe">
+                    <button type="button" class="btn prim" id="lsbFotoBtn">📷 Fotografieren / PDF wählen</button>
+                    <input type="file" id="lsbDatei" accept="image/*,application/pdf,.pdf" hidden>
+                </div>
+                <p class="status" id="lsbStatus" aria-live="polite"></p>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 3</span>Bruttoarbeitslohn</span><input type="text" inputmode="decimal" data-f="l1.brutto" placeholder="z. B. 45.000,00"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 4</span>Einbehaltene Lohnsteuer</span><input type="text" inputmode="decimal" data-f="l1.lst" placeholder="z. B. 6.180,00"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 5</span>Solidaritätszuschlag</span><input type="text" inputmode="decimal" data-f="l1.soli" placeholder="oft 0,00"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 6</span>Kirchensteuer</span><input type="text" inputmode="decimal" data-f="l1.kist" placeholder="leer, wenn keine"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 15</span>Kurzarbeitergeld, Zuschuss Mutterschaftsgeld</span><input type="text" inputmode="decimal" data-f="l1.lohnersatzZ15" placeholder="meist leer"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 22a</span>Arbeitgeberanteil Rentenversicherung</span><input type="text" inputmode="decimal" data-f="l1.rvAG" placeholder=""></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 23a</span>Arbeitnehmeranteil Rentenversicherung</span><input type="text" inputmode="decimal" data-f="l1.rvAN" placeholder=""></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 25</span>Krankenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l1.kv" placeholder=""></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 26</span>Pflegeversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l1.pv" placeholder=""></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 27</span>Arbeitslosenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l1.av" placeholder=""></label>
+                </div>
+
+                <div id="partnerBlock">
+                    <h3 style="margin:10px 0 0;font-size:.95rem">👥 Lohnsteuerbescheinigung Partner/in</h3>
+                    <div class="knoepfe">
+                        <button type="button" class="btn" id="lsb2FotoBtn">📷 Fotografieren / PDF wählen</button>
+                        <input type="file" id="lsb2Datei" accept="image/*,application/pdf,.pdf" hidden>
+                    </div>
+                    <p class="status" id="lsb2Status" aria-live="polite"></p>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 3</span>Bruttoarbeitslohn</span><input type="text" inputmode="decimal" data-f="l2.brutto" placeholder="z. B. 45.000,00"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 4</span>Einbehaltene Lohnsteuer</span><input type="text" inputmode="decimal" data-f="l2.lst" placeholder="z. B. 6.180,00"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 5</span>Solidaritätszuschlag</span><input type="text" inputmode="decimal" data-f="l2.soli" placeholder="oft 0,00"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 6</span>Kirchensteuer</span><input type="text" inputmode="decimal" data-f="l2.kist" placeholder="leer, wenn keine"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 15</span>Kurzarbeitergeld, Zuschuss Mutterschaftsgeld</span><input type="text" inputmode="decimal" data-f="l2.lohnersatzZ15" placeholder="meist leer"></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 22a</span>Arbeitgeberanteil Rentenversicherung</span><input type="text" inputmode="decimal" data-f="l2.rvAG" placeholder=""></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 23a</span>Arbeitnehmeranteil Rentenversicherung</span><input type="text" inputmode="decimal" data-f="l2.rvAN" placeholder=""></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 25</span>Krankenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l2.kv" placeholder=""></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span><span class="zeilen-nr">Z. 26</span>Pflegeversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l2.pv" placeholder=""></label>
+                    <label class="feld"><span><span class="zeilen-nr">Z. 27</span>Arbeitslosenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l2.av" placeholder=""></label>
+                </div>
+
+                    <label class="feld">Werbungskosten Partner/in im Jahr <span class="hilfe">leer lassen = Pauschbetrag <span class="w-ap"></span></span>
+                        <input type="text" inputmode="decimal" data-f="l2.wk" placeholder="z. B. 1.800"></label>
+                </div>
+            </div>
+        </details>
 
         <!-- Anlage N -->
         <details class="karte" id="karteN" open>
@@ -235,9 +368,9 @@
 
         <!-- Anlage Kind -->
         <details class="karte" id="karteKind">
-            <summary><div class="titel"><h2>👶 Anlage Kind – Kinderbetreuung</h2><small>Kita, Tagesmutter, Hort, Babysitter</small></div><span class="summe" id="sumKind">0 €</span></summary>
+            <summary><div class="titel"><h2>👶 Kinder</h2><small>Kindergeld oder Kinderfreibetrag, Kita, Tagesmutter, Hort</small></div><span class="summe" id="sumKind">0 €</span></summary>
             <div class="inhalt">
-                <p class="info">Betreuungskosten für Kinder unter 14 Jahren. Absetzbar: <span class="w-kb"></span>. Nicht absetzbar: Essen, Schulgeld, Nachhilfe. Bezahlung per Überweisung (keine Barzahlung) und Rechnung nötig.</p>
+                <p class="info">Trage jedes Kind ein, für das du Kindergeld bekommst – der Helfer prüft, ob Kindergeld oder Kinderfreibetrag besser ist (das macht das Finanzamt auch). Betreuungskosten für Kinder unter 14 Jahren. Absetzbar: <span class="w-kb"></span>. Nicht absetzbar: Essen, Schulgeld, Nachhilfe. Bezahlung per Überweisung (keine Barzahlung) und Rechnung nötig.</p>
                 <div class="posten" id="liste-kinder"></div>
                 <div class="knoepfe"><button type="button" class="btn" id="neuKind">＋ Kind</button></div>
                 <div class="ergebnis" id="ergKind"></div>
@@ -324,10 +457,12 @@
 
         <footer class="quellen" id="quellen"></footer>
     </main>
+    <div class="leiste-erstattung" id="leiste" hidden><span id="leisteText">Geschätzte Erstattung</span><b id="leisteBetrag"></b><button type="button" id="leisteBtn">Details</button></div>
 
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
+    <script src="steuer-rechner.js?v=1"></script>
     <script>
         'use strict';
 
@@ -369,6 +504,11 @@
             ['Bundesfinanzministerium: Änderungen 2025 (Kinderbetreuungskosten 80 %, max. 4.800 €)', 'https://www.bundesfinanzministerium.de/Content/DE/Standardartikel/Themen/Steuern/das-aendert-sich-2025.html'],
             ['Steueränderungsgesetz 2025: Entfernungspauschale 38 Cent ab dem 1. km ab 2026, Gewerkschaftsbeiträge zusätzlich', 'https://www.bakertilly.de/beitrag/steueraenderungsgesetz-2025-final-verabschiedet'],
             ['§ 35a EStG – haushaltsnahe Aufwendungen (Gesetzestext)', 'https://www.gesetze-im-internet.de/estg/__35a.html'],
+            ['Einkommensteuer-Formeln 2024, 2025, 2026 nach § 32a EStG (finanz-tools.de)', 'https://www.finanz-tools.de/einkommensteuer/berechnung-formeln/2025'],
+            ['Grund- und Splittingtabelle 2025 zum Abgleich (lohn-info.de)', 'https://www.lohn-info.de/grundtabelle_splittingtabelle_2025.html'],
+            ['Soli-Freigrenzen 2024–2026 (Techniker Krankenkasse)', 'https://www.tk.de/firmenkunden/service/fachthemen/fachthema-beitraege/solidaritaetszuschlag-2075802'],
+            ['Kinderfreibetrag und Kindergeld 2024–2026 (VLH)', 'https://www.vlh.de/wissen-service/steuer-abc/wie-funktioniert-das-mit-dem-kinderfreibetrag.html'],
+            ['Höchstbeträge Vorsorgeaufwendungen 2026 (steuerschroeder.de)', 'https://www.steuerschroeder.de/Steuerrechner/Sonderausgaben-Hoechstbetrag.html'],
             ['Mein ELSTER – Steuererklärung online abgeben', 'https://www.elster.de']
         ];
 
@@ -397,9 +537,12 @@
             krank: 'Krankheitskosten',
             kinderbetreuung: 'Kinderbetreuung'
         };
+        const LSB_LEER = { brutto: '', lst: '', soli: '', kist: '', lohnersatzZ15: '', rvAG: '', rvAN: '', kv: '', pv: '', av: '' };
         function leer() {
             return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false },
-                haushalt: { minijob: '' }, kinder: [], posten: [] };
+                haushalt: { minijob: '' }, kinder: [], posten: [],
+                p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '' },
+                l1: Object.assign({}, LSB_LEER), l2: Object.assign({ wk: '' }, LSB_LEER) };
         }
         let alle = {};
         try { alle = JSON.parse(localStorage.getItem(SPEICHER) || '{}') || {}; } catch (e) { alle = {}; }
@@ -411,6 +554,9 @@
             const d = alle[jahr];
             d.n = Object.assign(leer().n, d.n || {});
             d.haushalt = Object.assign(leer().haushalt, d.haushalt || {});
+            d.p = Object.assign(leer().p, d.p || {});
+            d.l1 = Object.assign(leer().l1, d.l1 || {});
+            d.l2 = Object.assign(leer().l2, d.l2 || {});
             d.kinder = d.kinder || [];
             d.posten = d.posten || [];
             return d;
@@ -560,8 +706,113 @@
             $('sumKrank').textContent = euro(r.krank);
 
             zeigeZusammenfassung(r);
+            zeigeErstattung(r, d);
             speichern();
         }
+
+        // ------------------------------------------------------------
+        // Erstattung schätzen (steuer-rechner.js)
+        // ------------------------------------------------------------
+        function lsbWerte(l) { const o = {}; Object.keys(LSB_LEER).forEach(k => { o[k] = zahl(l[k]); }); return o; }
+        function steuerEingabe(r, d) {
+            const zus = d.p.zusammen === 'ja';
+            // Kinderfreibetrag automatisch: gemeinsam oder alleinerziehend voll, sonst halb (der andere Elternteil bekommt die andere Hälfte)
+            const kinder = d.kinder.map(k => {
+                const f = k.faktor && k.faktor !== 'auto' ? Number(k.faktor) : (zus || d.p.alleinerziehend ? 1 : 0.5);
+                return { faktor: f, kgMonate: k.kgMonate === '' || k.kgMonate == null ? 12 : zahl(k.kgMonate) };
+            });
+            return {
+                jahr, zusammen: zus, land: d.p.land, alleinerziehend: !!d.p.alleinerziehend,
+                p1: Object.assign(lsbWerte(d.l1), { wk: r.wkAngesetzt, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup) }),
+                p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2) }) : null,
+                sonstVersicherung: zahl(d.p.versicherung), spenden: r.spenden, kinderbetreuung: r.kindSumme, krankheit: r.krank,
+                ermaessigung35a: r.ermSumme, kinder
+            };
+        }
+        const HINWEISE = {
+            pflicht_lohnersatz: 'Mehr als 410 € Lohnersatz (z. B. Elterngeld, Arbeitslosengeld): Du musst eine Steuererklärung abgeben.',
+            progression: 'Lohnersatzleistungen sind steuerfrei, erhöhen aber den Steuersatz auf dein übriges Einkommen (Progressionsvorbehalt) – deshalb kann eine Nachzahlung entstehen.',
+            kindergeld_besser: 'Für deine Kinder ist das Kindergeld günstiger als der Kinderfreibetrag – das Finanzamt prüft das automatisch.',
+            kfb_besser: 'Der Kinderfreibetrag spart dir mehr als das Kindergeld: Er wird angesetzt und das Kindergeld dafür verrechnet.',
+            zusammen: 'Gemeinsame Erklärung: Ihr bekommt den Splittingtarif. Bei Steuerklassen III/V oder IV mit Faktor ist die Erklärung Pflicht.',
+            kein_lohn: ''
+        };
+        function zeigeErstattung(r, d) {
+            const S = window.SDSteuer;
+            document.querySelectorAll('.w-jahr').forEach(el => { el.textContent = jahr; });
+            const zus = d.p.zusammen === 'ja';
+            $('partnerBlock').hidden = !zus;
+            $('kirche2Zeile').hidden = !zus;
+            $('lohnersatz2Feld').hidden = !zus;
+            $('aeZeile').hidden = zus;
+            $('sumLsb').textContent = euro(zahl(d.l1.brutto) + (zus ? zahl(d.l2.brutto) : 0));
+            if (!S || !S.JAHR[jahr]) { $('ergUnter').textContent = 'Für dieses Jahr gibt es noch keine Steuerwerte.'; return; }
+            const e = S.berechne(steuerEingabe(r, d));
+            const hatLohn = zahl(d.l1.brutto) > 0 || (zus && zahl(d.l2.brutto) > 0);
+            const erstattung = e.ergebnis >= 0;
+            $('ergLabel').textContent = hatLohn ? (erstattung ? '💶 Geschätzte Erstattung ' + jahr : '⚠️ Geschätzte Nachzahlung ' + jahr) : '💶 Geschätzte Erstattung ' + jahr;
+            $('ergBetrag').textContent = hatLohn ? euro(Math.abs(e.ergebnis)) : '–';
+            $('ergBetrag').classList.toggle('minus', hatLohn && !erstattung);
+            $('ergUnter').textContent = !hatLohn ? 'Trage unten deine Lohnsteuerbescheinigung ein (oder fotografiere sie) – dann rechnet der Helfer live mit.' :
+                (!d.p.land && (d.p.kirche1 || d.p.kirche2) ? 'Bitte noch das Bundesland wählen (Kirchensteuer 8 % oder 9 %).' :
+                    (erstattung ? 'So viel bekommst du voraussichtlich zurück. Jede weitere Angabe unten kann den Betrag erhöhen.' : 'Voraussichtlich musst du nachzahlen. Prüfe, ob du alle Ausgaben eingetragen hast.'));
+            $('ergDetails').hidden = !hatLohn;
+            const zeile = (t, w, klein, summe) => '<tr' + (summe ? ' class="summe"' : '') + '><td>' + esc(t) + (klein ? '<span class="klein">' + esc(klein) + '</span>' : '') + '</td><td>' + w + '</td></tr>';
+            let h = '';
+            h += zeile('Einkünfte aus Arbeit', euro(e.einkuenfte), 'Bruttolohn minus Werbungskosten' + (zus ? ' (beide)' : ''));
+            if (e.entlastungAE) h += zeile('− Entlastungsbetrag Alleinerziehende', euro(e.entlastungAE));
+            h += zeile('− Vorsorge (Rente, Kranken-, Pflegeversicherung …)', euro(e.vorsorge));
+            h += zeile('− weitere Sonderausgaben', euro(e.sonderWeitere), e.saPausch ? 'Pauschbetrag' : 'Kirchensteuer, Spenden, Kinderbetreuung');
+            if (e.agb) h += zeile('− Krankheitskosten über der zumutbaren Belastung', euro(e.agb), 'zumutbar: ' + euro(e.zumutbar));
+            if (e.kfbGuenstiger) h += zeile('− Kinderfreibeträge', euro(e.kfbSumme));
+            h += zeile('= zu versteuerndes Einkommen', euro(e.zvE), null, true);
+            h += zeile('Einkommensteuer' + (e.zusammen ? ' (Splitting)' : ''), euro(e.estTariflich), e.lohnersatz ? 'mit Progressionsvorbehalt (' + euro(e.lohnersatz) + ' Lohnersatz)' : null);
+            if (e.erm35a) h += zeile('− Steuerermäßigung Haushalt/Handwerker', euro(e.erm35a));
+            if (e.kfbGuenstiger) h += zeile('+ verrechnetes Kindergeld', euro(e.kindergeld));
+            h += zeile('Solidaritätszuschlag', euro(e.soli));
+            h += zeile('Kirchensteuer', euro(e.kist), e.kist || d.p.kirche1 || d.p.kirche2 ? (e.kistSatz * 100) + ' %' : null);
+            h += zeile('= Steuer laut Schätzung', euro(e.festgesetzt.est + e.soli + e.kist), null, true);
+            h += zeile('Schon gezahlt (Lohnsteuerbescheinigung)', euro(e.gezahlt.est + e.gezahlt.soli + e.gezahlt.kist));
+            h += zeile(erstattung ? '= Erstattung' : '= Nachzahlung', euro(Math.abs(e.ergebnis)), null, true);
+            $('rechenweg').innerHTML = h;
+            const hw = hatLohn ? e.hinweise.map(k => HINWEISE[k]).filter(Boolean) : [];
+            $('ergHinweise').innerHTML = hw.map(x => '<li>' + esc(x) + '</li>').join('');
+            $('ergHinweise').hidden = !hw.length;
+            // Leiste unten
+            $('leiste').hidden = !hatLohn;
+            $('leisteText').textContent = erstattung ? 'Geschätzte Erstattung' : 'Geschätzte Nachzahlung';
+            $('leisteBetrag').textContent = euro(Math.abs(e.ergebnis));
+        }
+        $('leisteBtn').onclick = () => { $('ergKarte').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('ergDetails').open = true; };
+        // Leiste nur zeigen, wenn die Ergebnis-Karte nicht zu sehen ist
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver((e) => { document.body.classList.toggle('erg-sichtbar', e[0].isIntersecting); }).observe($('ergKarte'));
+        }
+
+        // Lohnsteuerbescheinigung per Foto/PDF einlesen (Texterkennung im Browser, Regeln nach Zeilennummern)
+        function lsbImport(knopf, eingabe, status, ziel) {
+            $(knopf).onclick = () => $(eingabe).click();
+            $(eingabe).onchange = async (ev) => {
+                const datei = ev.target.files && ev.target.files[0];
+                ev.target.value = '';
+                if (!datei || !window.sdKi) return;
+                $(status).textContent = '📖 Lese die Lohnsteuerbescheinigung …';
+                try {
+                    const text = await window.sdKi.leseDatei(datei, (x) => { $(status).textContent = x; });
+                    const { felder, gefunden } = window.SDSteuer.leseLohnsteuerbescheinigung(text);
+                    const d = daten();
+                    Object.keys(felder).forEach(k => { d[ziel][k] = felder[k].toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); });
+                    ladeFelder(); aktualisiere();
+                    $(status).textContent = gefunden.length
+                        ? '✓ ' + gefunden.length + ' Werte übernommen – bitte jede Zahl mit deiner Bescheinigung vergleichen.'
+                        : '⚠️ Keine Werte erkannt. Bitte gerades, helles Foto der ganzen Seite – oder die Zahlen von Hand eintragen.';
+                } catch (err) {
+                    $(status).textContent = '⚠️ ' + ((err && err.message) || String(err));
+                }
+            };
+        }
+        lsbImport('lsbFotoBtn', 'lsbDatei', 'lsbStatus', 'l1');
+        lsbImport('lsb2FotoBtn', 'lsb2Datei', 'lsb2Status', 'l2');
 
         function esc(s) {
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -718,6 +969,16 @@
                 gj.oninput = () => { k.geburtsjahr = gj.value; aktualisiere(); };
                 z.querySelector('.x-btn').onclick = () => { daten().kinder = daten().kinder.filter(q => q !== k); zeichneKinder(); aktualisiere(); };
                 box.appendChild(z);
+                // Kindergeld-Monate und Kinderfreibetrag (voll/halb)
+                const x = document.createElement('div');
+                x.className = 'kind-extra';
+                x.innerHTML = '<label>Kindergeld im Jahr (Monate)<input type="text" inputmode="numeric" placeholder="12"></label>' +
+                    '<label>Kinderfreibetrag<select><option value="auto">automatisch</option><option value="1">voll (100 %)</option><option value="0.5">halb (50 %)</option><option value="0">kein Kindergeld/Freibetrag</option></select></label>';
+                const mon = x.querySelector('input'), fb = x.querySelector('select');
+                mon.value = k.kgMonate == null ? '' : k.kgMonate; fb.value = k.faktor || 'auto';
+                mon.oninput = () => { k.kgMonate = mon.value; aktualisiere(); };
+                fb.onchange = () => { k.faktor = fb.value; aktualisiere(); };
+                box.appendChild(x);
             });
         }
         function zeichneAlles() {
@@ -740,7 +1001,7 @@
             };
         });
         $('neuKind').onclick = () => {
-            daten().kinder.push({ name: '', kosten: '', geburtsjahr: '' });
+            daten().kinder.push({ name: '', kosten: '', geburtsjahr: '', kgMonate: '', faktor: 'auto' });
             zeichneKinder();
             const letztes = $('liste-kinder').lastElementChild;
             if (letztes) letztes.querySelector('input').focus();
