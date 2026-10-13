@@ -76,6 +76,12 @@
         .tage.ueber { background: var(--danger-bg); color: var(--danger); }
         .hilfe-liste { margin: 0; padding-left: 20px; font-size: .86rem; line-height: 1.6; }
         [dir=rtl] { text-align: right; }
+        .pruef { display: inline-block; font-size: .72rem; font-weight: bold; border-radius: 999px; padding: 1px 8px; margin: 2px 0 0 6px; white-space: nowrap; vertical-align: middle; }
+        .pruef.ok { background: #e3f4ec; color: #1f6b45; }
+        .pruef.warn { background: var(--warn-bg); color: #8a5a00; border: 1px solid var(--warn-line); }
+        .pruef.ki { background: #eef1f4; color: var(--muted); }
+        .beleg { font-size: .84rem; color: var(--ink); background: #f6f8f7; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 6px 10px; margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+        .beleg b { color: var(--muted); font-weight: normal; font-size: .76rem; display: block; }
     </style>
 </head>
 
@@ -122,11 +128,18 @@
             <h2 data-i18n="worum">📄 Worum geht es?</h2>
             <p class="text" id="zusammenfassung" dir="auto"></p>
             <dl class="fakten" id="fakten"></dl>
+            <div class="hinweis" id="zahlungBlock" hidden>
+                <h3 data-i18n="zahlung">💶 Zahlung</h3>
+                <dl class="fakten" id="zahlung"></dl>
+            </div>
+            <p class="status" id="pruefStatus" aria-live="polite"></p>
 
             <div class="frist-box" id="fristBox">
                 <h3 data-i18n="frist_titel">⏰ Frist</h3>
                 <p class="frist-gross" id="fristText" dir="auto"></p>
                 <p class="text" id="fristWas" dir="auto"></p>
+                <p class="beleg" id="fristBeleg" hidden></p>
+                <p class="info" id="weitereFristen" hidden></p>
                 <div class="zeile">
                     <label class="feld"><span data-i18n="frist_datum">Datum der Frist</span><input type="date" id="fristDatum"></label>
                     <label class="feld"><span data-i18n="erinnern">Erinnern</span>
@@ -154,6 +167,7 @@
                 <p class="text" id="wichtig" dir="auto"></p>
             </div>
             <div class="fehler" id="rohBlock" hidden></div>
+            <div class="hinweis" id="kiFehlerBlock" hidden></div>
             <p class="info" data-i18n="ki_hinweis">Die Erklärung kommt von einer KI und kann Fehler enthalten. Prüfe Fristen, Beträge und Zeichen immer im Original-Brief. Keine Rechtsberatung.</p>
         </section>
 
@@ -237,7 +251,16 @@
                 lotse_sprache: 'Hinweis: Mit 🔒 SD Lotse klappt die Erklärung am besten auf Deutsch oder Englisch.',
                 erklaert_auf: 'Erklärt auf {s}', heute: 'heute fällig', morgen: 'morgen fällig', noch: 'noch {n} Tage', ueber: 'seit {n} Tagen vorbei', ohne_datum: 'ohne Datum',
                 erledigt: '✅ Erledigt', wieder_offen: '↩️ Wieder offen', loeschen_frage: 'Diesen Eintrag löschen?', frist_von: 'Frist', aus_brief: 'Antwort auf',
-                kal_titel: 'Frist: {x}', unbekannt: 'Brief', in_rechnungen: '🧾 In „Rechnungen“ übernehmen'
+                kal_titel: 'Frist: {x}', unbekannt: 'Brief', in_rechnungen: '🧾 In „Rechnungen“ übernehmen',
+                ok_brief: '✓ steht so im Brief', warn_brief: '⚠ nicht im Brieftext gefunden – bitte prüfen', ki_gelesen: '🤖 von der KI gelesen – bitte prüfen',
+                im_brief: 'So steht es im Brief:', weitere: 'Weitere Daten im Brief: {x}', zahlung: '💶 Zahlung', f_iban: 'IBAN', f_vz: 'Verwendungszweck',
+                termin_titel: '📅 Termin', uhr: ' um {u} Uhr', pruefe_laeuft: '🔎 Prüfe die Angaben mit dem Brieftext …', pruef_fertig: '🔎 Angaben mit dem Brieftext verglichen.',
+                zweiter_versuch: '🤖 Die KI versucht es noch einmal …',
+                ki_fehler: 'Die KI konnte den Brief diesmal nicht erklären ({x}). Datum, Frist, Betrag und Nummern unten wurden ohne KI direkt aus dem Brieftext gelesen.',
+                r_frist: 'Bis {d} erledigen: „{x}“', r_termin: 'Termin am {d}{u} wahrnehmen: „{x}“', r_zahlen: '{b} überweisen an IBAN {i}{v} – vorher prüfen, ob die Forderung stimmt.',
+                r_vz: ', Verwendungszweck: {v}', r_rechtsbehelf: 'Im Brief steht eine Rechtsbehelfsbelehrung: Du kannst Widerspruch bzw. Einspruch einlegen. Die Frist dafür steht im Brief.',
+                r_vollstreckung: 'Es geht um Vollstreckung oder Pfändung – reagiere schnell und hol dir Hilfe, z. B. bei einer Schuldnerberatung.',
+                r_gericht: 'Im Brief wird ein Gericht genannt – Fristen hier unbedingt einhalten.', r_regel: 'Frist laut Brief: „{x}“'
             },
             en: {
                 titel: 'Letter assistant', untertitel: 'Understand letters, never miss a deadline', s1_titel: '📬 Which letter did you receive?',
@@ -273,7 +296,16 @@
                 lotse_sprache: 'Note: with 🔒 SD Lotse the explanation works best in German or English.',
                 erklaert_auf: 'Explained in {s}', heute: 'due today', morgen: 'due tomorrow', noch: '{n} days left', ueber: 'overdue by {n} days', ohne_datum: 'no date',
                 erledigt: '✅ Done', wieder_offen: '↩️ Reopen', loeschen_frage: 'Delete this entry?', frist_von: 'Deadline', aus_brief: 'Reply to',
-                kal_titel: 'Deadline: {x}', unbekannt: 'Letter', in_rechnungen: '🧾 Add to "Invoices"'
+                kal_titel: 'Deadline: {x}', unbekannt: 'Letter', in_rechnungen: '🧾 Add to "Invoices"',
+                ok_brief: '✓ appears in the letter', warn_brief: '⚠ not found in the letter text – please check', ki_gelesen: '🤖 read by the AI – please check',
+                im_brief: 'This is what the letter says:', weitere: 'Other dates in the letter: {x}', zahlung: '💶 Payment', f_iban: 'IBAN', f_vz: 'Payment reference',
+                termin_titel: '📅 Appointment', uhr: ' at {u}', pruefe_laeuft: '🔎 Checking the details against the letter text …', pruef_fertig: '🔎 Details compared with the letter text.',
+                zweiter_versuch: '🤖 The AI is trying again …',
+                ki_fehler: 'The AI could not explain the letter this time ({x}). Date, deadline, amount and numbers below were read directly from the letter text without AI.',
+                r_frist: 'Do this by {d}: "{x}"', r_termin: 'Attend the appointment on {d}{u}: "{x}"', r_zahlen: 'Transfer {b} to IBAN {i}{v} – check first that the claim is correct.',
+                r_vz: ', reference: {v}', r_rechtsbehelf: 'The letter contains information on legal remedies (Rechtsbehelfsbelehrung): you can file an objection. The deadline is stated in the letter.',
+                r_vollstreckung: 'This is about enforcement or seizure – act quickly and get help, e.g. from a debt counselling service.',
+                r_gericht: 'The letter mentions a court – be sure to meet the deadlines.', r_regel: 'Deadline according to the letter: "{x}"'
             }
         };
     </script>
@@ -281,6 +313,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=2"></script>
     <script src="../sd-ki.js?v=19"></script>
+    <script src="brief-regeln.js?v=1"></script>
     <script>
         'use strict';
         const $ = (id) => document.getElementById(id);
@@ -367,19 +400,42 @@
         }
 
         // ------------------------------------------------------------
-        // Antwort der KI in Abschnitte zerlegen (### schluessel)
-        // ------------------------------------------------------------
-        function abschnitte(text) {
-            const roh = String(text || '').replace(/```[a-z]*\n?/gi, '');
+        // Antwort der KI in Abschnitte zerlegen (### schluessel).
+        // Kleine Modelle halten das Format oft nicht genau ein: "**Art:** …",
+        // "Art: …", "1. Zusammenfassung" oder englische Überschriften werden
+        // deshalb ebenfalls erkannt (jeder Schlüssel nur beim ersten Mal).
+        const SCHLUESSEL = {
+            art: 'art', type: 'art', briefart: 'art', absender: 'absender', sender: 'absender', briefdatum: 'briefdatum', datum: 'briefdatum', date: 'briefdatum',
+            zeichen: 'zeichen', aktenzeichen: 'zeichen', reference: 'zeichen', betrag: 'betrag', amount: 'betrag', frist: 'frist', deadline: 'frist',
+            frist_was: 'frist_was', zusammenfassung: 'zusammenfassung', summary: 'zusammenfassung', erklärung: 'zusammenfassung', erklaerung: 'zusammenfassung',
+            aufgaben: 'aufgaben', tasks: 'aufgaben', todo: 'aufgaben', wichtig: 'wichtig', important: 'wichtig', antworten: 'antworten', antwortmöglichkeiten: 'antworten', replies: 'antworten',
+            betreff: 'betreff', subject: 'betreff', anrede: 'anrede', salutation: 'anrede', text: 'text', brieftext: 'text', uebersetzung: 'uebersetzung', übersetzung: 'uebersetzung', translation: 'uebersetzung'
+        };
+        const ERKL_KEYS = ['art', 'absender', 'briefdatum', 'zeichen', 'betrag', 'frist', 'frist_was', 'zusammenfassung', 'aufgaben', 'wichtig', 'antworten'];
+        const ENTW_KEYS = ['betreff', 'anrede', 'text', 'uebersetzung'];
+        function abschnitte(text, erlaubt) {
+            const gesehen = new Set();
+            let roh = String(text || '').replace(/```[a-z]*\n?/gi, '');
+            roh = roh.replace(/^[ \t]*(#{1,4})?[ \t]*(?:\d+[.)][ \t]*)?(\*\*)?[ \t]*([A-Za-zÄÖÜäöüß_]{2,22})(?![A-Za-zÄÖÜäöüß_])[ \t]*(\*\*)?[ \t]*(:)?[ \t]*(\*\*)?[ \t]*(.*)$/gm, (zeile, raute, f1, wort, f2, dp, f3, rest) => {
+                const key = SCHLUESSEL[wort.trim().toLowerCase().replace(/\s+/g, '_')];
+                if (!key || (erlaubt && !erlaubt.includes(key)) || gesehen.has(key)) return zeile;
+                // ohne ### nur, wenn fett oder mit Doppelpunkt
+                if (!raute && !f1 && !dp) return zeile;
+                if (!raute && !dp && !f2) return zeile;
+                gesehen.add(key);
+                return '### ' + key + (rest.trim() ? '\n' + rest.trim().replace(/^\*\*\s*/, '') : '');
+            });
             const re = /^[ \t]*#{2,4}[ \t]*([a-zäöü_]+)[ \t]*:?[ \t]*(.*)$/gim;
             const marken = [];
             let m;
             while ((m = re.exec(roh)) !== null) marken.push({ k: m[1].toLowerCase(), rest: m[2], s: m.index, e: re.lastIndex });
             const teile = {};
             marken.forEach((mk, n) => {
-                teile[mk.k] = ((mk.rest ? mk.rest + '\n' : '') + roh.slice(mk.e, n + 1 < marken.length ? marken[n + 1].s : undefined)).trim();
+                const wert = ((mk.rest ? mk.rest + '\n' : '') + roh.slice(mk.e, n + 1 < marken.length ? marken[n + 1].s : undefined)).trim()
+                    .replace(/^\((.*)\)$/s, '$1').trim();
+                if (!teile[mk.k]) teile[mk.k] = wert;
             });
-            return { teile, roh: roh.trim(), anzahl: marken.length };
+            return { teile, roh: roh.trim(), anzahl: Object.keys(teile).length };
         }
         const leer = (s) => !s || /^\(?\s*(nicht angegeben|keine?s?|nichts|none|not stated|n\/a|-|–)\s*\)?\.?$/i.test(String(s).trim());
 
@@ -427,42 +483,161 @@
             return { text: texte.join('\n\n--- Seite ---\n\n'), dateien };
         }
 
+        // ------------------------------------------------------------
+        // Fakten: KI-Angaben mit den Regeln (brief-regeln.js) zusammenführen
+        // und gegen den Brieftext prüfen
+        // ------------------------------------------------------------
+        const R = window.SDBriefRegeln;
+        function erste(s) { return leer(s) ? '' : String(s).split('\n')[0].trim(); }
+        function fakten(teile, regeln, pruefText) {
+            const chk = (w, typ) => (pruefText && w) ? R.stehtImBrief(w, pruefText, typ) : null;
+            const f = { regeln };
+            f.art = erste(teile.art) || (regeln && regeln.art) || '';
+            f.absender = leer(teile.absender) ? '' : teile.absender.trim();
+            f.absenderOk = f.absender ? chk(erste(f.absender), 'text') : null;
+            // Briefdatum: KI-Wert, wenn er im Brief steht – sonst Regel
+            const kiBd = erste(teile.briefdatum), kiBdOk = chk(kiBd, 'datum');
+            if (kiBd && kiBdOk !== false && !(kiBdOk === null && regeln && regeln.briefdatum)) { f.briefdatum = kiBd; f.briefdatumOk = kiBdOk; }
+            else if (regeln && regeln.briefdatum) { f.briefdatum = deDatum(regeln.briefdatum); f.briefdatumOk = true; }
+            else if (kiBd) { f.briefdatum = kiBd; f.briefdatumOk = kiBdOk; }
+            // Zeichen / Nummern
+            const kiZ = erste(teile.zeichen), kiZOk = chk(kiZ, 'nummer');
+            const regZ = regeln ? regeln.nummern : [];
+            if (regZ.length) {
+                f.zeichenListe = regZ.map(n => ({ text: n.name + ': ' + n.wert, ok: true }));
+                if (kiZ && kiZOk && !regZ.some(n => kiZ.replace(/\s/g, '').includes(n.wert.replace(/\s/g, '')))) f.zeichenListe.unshift({ text: kiZ, ok: true });
+                f.zeichen = kiZ && kiZOk ? kiZ : regZ[0].wert;
+            } else if (kiZ) { f.zeichenListe = [{ text: kiZ, ok: kiZOk }]; f.zeichen = kiZ; }
+            else f.zeichenListe = [];
+            // Betrag
+            const kiB = erste(teile.betrag), kiBOk = chk(kiB, 'betrag');
+            if (kiB && kiBOk) { f.betrag = kiB; f.betragOk = true; }
+            else if (regeln && regeln.betrag) { f.betrag = regeln.betrag.text; f.betragOk = true; f.betragBeleg = regeln.betrag.beleg; }
+            else if (kiB) { f.betrag = kiB; f.betragOk = kiBOk; }
+            // Frist / Termin
+            const kiF = leer(teile.frist) ? '' : teile.frist.trim();
+            const kiIso = findeDatum(kiF), kiFOk = kiIso ? chk(kiF, 'datum') : null;
+            const regF = regeln && regeln.frist;
+            const belegZu = (iso) => regeln ? (regeln.fristen.find(x => x.iso === iso) || null) : null;
+            if (kiIso && kiFOk !== false && !(kiFOk === null && regF)) {
+                const b = belegZu(kiIso);
+                Object.assign(f, { fristIso: kiIso, fristOk: kiFOk, fristText: kiF, fristWas: erste(teile.frist_was), fristBeleg: b ? b.beleg : '', fristArt: b ? b.art : 'frist', uhrzeit: b ? b.uhrzeit : '' });
+            } else if (regF) {
+                Object.assign(f, { fristIso: regF.iso, fristOk: true, fristText: deDatum(regF.iso), fristWas: kiIso === regF.iso ? erste(teile.frist_was) : '', fristBeleg: regF.beleg, fristArt: regF.art, uhrzeit: regF.uhrzeit });
+            } else if (kiIso) {
+                Object.assign(f, { fristIso: kiIso, fristOk: kiFOk, fristText: kiF, fristWas: erste(teile.frist_was), fristArt: 'frist' });
+            } else {
+                const regel = kiF || (regeln && regeln.fristRegeln[0]) || '';
+                Object.assign(f, { fristIso: '', fristText: regel, fristWas: erste(teile.frist_was), keineFrist: !regel, fristArt: 'frist' });
+                if (!kiF && regel) f.fristBeleg = regel;
+            }
+            f.weitere = regeln ? regeln.fristen.filter(x => x.iso !== f.fristIso && R.tageBis(x.iso) >= 0).map(x => deDatum(x.iso) + (x.uhrzeit ? t('uhr', { u: x.uhrzeit }) : '')) : [];
+            f.ibans = regeln ? regeln.ibans : [];
+            f.vz = regeln ? regeln.verwendungszweck : '';
+            return f;
+        }
+        // Aufgaben/Hinweise ohne KI (nur Zitate aus dem Brief), falls die KI nichts liefert
+        function regelAufgaben(f) {
+            const z = [];
+            if (f.fristIso && f.fristBeleg) z.push('- ' + (f.fristArt === 'termin' ? t('r_termin', { d: deDatum(f.fristIso), u: f.uhrzeit ? t('uhr', { u: f.uhrzeit }) : '', x: f.fristBeleg }) : t('r_frist', { d: deDatum(f.fristIso), x: f.fristBeleg })));
+            else if (!f.fristIso && f.fristBeleg) z.push('- ' + t('r_regel', { x: f.fristBeleg }));
+            if (f.betrag && f.ibans.length) z.push('- ' + t('r_zahlen', { b: f.betrag, i: f.ibans[0], v: f.vz ? t('r_vz', { v: f.vz }) : '' }));
+            return z.join('\n');
+        }
+        function regelWichtig(f) {
+            const h = (f.regeln && f.regeln.hinweise) || {};
+            return [h.vollstreckung ? t('r_vollstreckung') : '', h.gericht ? t('r_gericht') : '', h.rechtsbehelf ? t('r_rechtsbehelf') : ''].filter(Boolean).map(x => '- ' + x).join('\n');
+        }
+
+        // ------------------------------------------------------------
+        // KI-Erklärung
+        // ------------------------------------------------------------
+        function grossesPrompt(sp, text, dateien, istLotse) {
+            return 'Du hilfst Menschen, Briefe zu verstehen (z. B. von Behörden, Jobcenter, Krankenkasse, Vermieter, Firmen, Inkasso). ' +
+                'Schreibe alle Erklärungen auf ' + sp.prompt + ': kurze Sätze, keine Fachwörter ohne Erklärung, freundlich und ruhig. ' +
+                'Erfinde nichts – was nicht im Brief steht, schreibe als "nicht angegeben". Übernimm Daten, Beträge und Nummern Zeichen für Zeichen aus dem Brief. ' +
+                'Rechne keine Fristen aus, wenn im Brief kein Datum genannt ist – nenne dann die Regel aus dem Brief (z. B. "innerhalb eines Monats nach Bekanntgabe"). ' +
+                'Heute ist der ' + deDatum(heuteIso()) + '.\n' +
+                'Antworte NUR in diesem Format; die Überschriften genau so (auf Deutsch, klein geschrieben):\n' +
+                '### art\n(1-3 Wörter, z. B. Rechnung, Mahnung, Bescheid, Anhörung, Termin/Einladung, Vertrag, Kündigung, Information, Werbung)\n' +
+                '### absender\n(Name und Anschrift des Absenders genau wie im Brief, mehrzeilig)\n' +
+                '### briefdatum\n(TT.MM.JJJJ oder nicht angegeben)\n' +
+                '### zeichen\n(Aktenzeichen, Kunden-, Rechnungs- oder BG-Nummer genau wie im Brief, oder nicht angegeben)\n' +
+                '### betrag\n(genannter oder zu zahlender Betrag mit Währung, oder nicht angegeben)\n' +
+                '### frist\n(Datum TT.MM.JJJJ, wenn im Brief genannt; sonst die Frist-Regel aus dem Brief; sonst keine)\n' +
+                '### frist_was\n(was bis zu dieser Frist passieren muss, 1 Satz)\n' +
+                '### zusammenfassung\n(3-5 Sätze: Worum geht es? Was will der Absender von der Person?)\n' +
+                '### aufgaben\n(Stichpunkte mit "- ": was die Person jetzt tun sollte, in sinnvoller Reihenfolge)\n' +
+                '### wichtig\n(Stichpunkte mit "- ": Folgen, wenn man nichts tut; Widerspruchs- oder Einspruchsmöglichkeit; Unterlagen, die verlangt werden – oder keine)\n' +
+                '### antworten\n(bis zu 4 sinnvolle Antwortmöglichkeiten, je eine Zeile mit "- ", z. B. Widerspruch einlegen, Ratenzahlung anfragen, Unterlagen nachreichen, Termin verschieben – oder keine)' +
+                (text.trim() ? '\n\nText des Briefs' + (dateien.length ? ' (zusätzlich sind Fotos/PDF angehängt)' : '') + ':\n' + text.slice(0, 20000) : '\n\nDer Brief ist als Foto/PDF angehängt.');
+        }
+        // Online-KI: ein Aufruf, bei falschem Format ein zweiter Versuch
+        async function onlineErklaeren(sp, text, dateien) {
+            const prompt = grossesPrompt(sp, text, dateien);
+            let e = abschnitte(await window.sdKi.schreibe(prompt, { maxTokens: 1400, dateien }), ERKL_KEYS);
+            if (e.anzahl < 4) {
+                $('status1').textContent = t('zweiter_versuch');
+                const e2 = abschnitte(await window.sdKi.schreibe('WICHTIG: Antworte genau im verlangten Format mit den ###-Überschriften.\n\n' + prompt, { maxTokens: 1400, dateien }), ERKL_KEYS);
+                if (e2.anzahl > e.anzahl) e = e2;
+            }
+            return e;
+        }
+        // SD Lotse (kleines Modell im Gerät): Fakten kommen aus den Regeln,
+        // die KI soll nur erklären – kurze Aufgabe, kurzer Text, wenig Format.
+        async function lotseErklaeren(sp, text, regeln) {
+            const bekannt = [];
+            if (regeln.art) bekannt.push('Art des Briefs: ' + regeln.art);
+            if (regeln.frist) bekannt.push((regeln.frist.art === 'termin' ? 'Termin: ' : 'Frist: ') + deDatum(regeln.frist.iso) + (regeln.frist.uhrzeit ? ', ' + regeln.frist.uhrzeit + ' Uhr' : '') + ' – „' + regeln.frist.beleg.slice(0, 180) + '“');
+            if (regeln.betrag) bekannt.push('Betrag: ' + regeln.betrag.text);
+            const prompt = 'Erkläre den Brief unten auf ' + sp.prompt + ' für eine Person, die wenig Deutsch versteht. Kurze, einfache Sätze. Erfinde nichts.\n' +
+                (bekannt.length ? 'Diese Angaben stehen sicher im Brief:\n' + bekannt.join('\n') + '\n' : '') +
+                'Antworte genau in diesem Format:\n### zusammenfassung\n3 bis 4 Sätze: Worum geht es? Was will der Absender?\n### aufgaben\n- was die Person jetzt tun soll\n### wichtig\n- was passiert, wenn man nichts tut\n### antworten\n- 1 bis 3 mögliche Antworten (z. B. Widerspruch einlegen, Ratenzahlung anfragen, Unterlagen schicken)\n\n' +
+                'Brief:\n' + R.kuerze(text, 3200);
+            const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 650 });
+            const e = abschnitte(antwort, ERKL_KEYS);
+            if (!leer(e.teile.zusammenfassung)) return e;
+            // Ohne Überschriften, aber brauchbarer Text: als Erklärung nehmen
+            const nurText = e.roh.replace(/^#+.*$/gm, '').trim();
+            if (nurText.length > 60) { e.teile.zusammenfassung = nurText.slice(0, 1200); return e; }
+            // Zweiter Versuch ganz ohne Format
+            $('status1').textContent = t('zweiter_versuch');
+            const kurz = await window.sdKi.schreibe('Erkläre in 3 bis 4 kurzen, einfachen Sätzen auf ' + sp.prompt + ', worum es in diesem Brief geht und was die Person tun soll. Schreibe nur die Erklärung.\n\nBrief:\n' + R.kuerze(text, 2400), { maxTokens: 350 });
+            e.teile.zusammenfassung = kurz.replace(/^#+.*$/gm, '').trim();
+            return e;
+        }
+
+        let laufNr = 0;
         $('erklaerenBtn').onclick = async () => {
             zeigeFehler('fehler1', '');
             if (!seiten.length && !$('briefText').value.trim()) { zeigeFehler('fehler1', t('nichts')); return; }
             const istLotse = window.sdKi && window.sdKi.anbieter() === 'lotse';
             const sp = sprache();
+            const nr = ++laufNr;
             $('erklaerenBtn').disabled = true;
             try {
                 const { text, dateien } = await bereiteBriefVor(istLotse);
                 if (!text.trim() && !dateien.length) throw new Error(t('nichts'));
                 briefTextCache = text;
+                const regeln = text.trim() ? R.lies(text) : null;
                 $('status1').textContent = t('ki_laeuft');
-                const prompt =
-                    'Du hilfst Menschen, Briefe zu verstehen (z. B. von Behörden, Jobcenter, Krankenkasse, Vermieter, Firmen, Inkasso). ' +
-                    'Schreibe alle Erklärungen auf ' + sp.prompt + ': kurze Sätze, keine Fachwörter ohne Erklärung, freundlich und ruhig. ' +
-                    'Erfinde nichts – was nicht im Brief steht, schreibe als "nicht angegeben". ' +
-                    'Rechne keine Fristen aus, wenn im Brief kein Datum genannt ist – nenne dann die Regel aus dem Brief (z. B. "innerhalb eines Monats nach Bekanntgabe"). ' +
-                    'Heute ist der ' + deDatum(heuteIso()) + '.\n' +
-                    'Antworte NUR in diesem Format; die Überschriften genau so (auf Deutsch, klein geschrieben):\n' +
-                    '### art\n(1-3 Wörter, z. B. Rechnung, Mahnung, Bescheid, Anhörung, Termin/Einladung, Vertrag, Kündigung, Information, Werbung)\n' +
-                    '### absender\n(Name und Anschrift des Absenders genau wie im Brief, mehrzeilig)\n' +
-                    '### briefdatum\n(TT.MM.JJJJ oder nicht angegeben)\n' +
-                    '### zeichen\n(Aktenzeichen, Kunden-, Rechnungs- oder BG-Nummer genau wie im Brief, oder nicht angegeben)\n' +
-                    '### betrag\n(genannter oder zu zahlender Betrag mit Währung, oder nicht angegeben)\n' +
-                    '### frist\n(Datum TT.MM.JJJJ, wenn im Brief genannt; sonst die Frist-Regel aus dem Brief; sonst keine)\n' +
-                    '### frist_was\n(was bis zu dieser Frist passieren muss, 1 Satz)\n' +
-                    '### zusammenfassung\n(3-5 Sätze: Worum geht es? Was will der Absender von der Person?)\n' +
-                    '### aufgaben\n(Stichpunkte mit "- ": was die Person jetzt tun sollte, in sinnvoller Reihenfolge)\n' +
-                    '### wichtig\n(Stichpunkte mit "- ": Folgen, wenn man nichts tut; Widerspruchs- oder Einspruchsmöglichkeit; Unterlagen, die verlangt werden – oder keine)\n' +
-                    '### antworten\n(bis zu 4 sinnvolle Antwortmöglichkeiten, je eine Zeile mit "- ", z. B. Widerspruch einlegen, Ratenzahlung anfragen, Unterlagen nachreichen, Termin verschieben – oder keine)' +
-                    (text.trim() ? '\n\nText des Briefs' + (dateien.length ? ' (zusätzlich sind Fotos/PDF angehängt)' : '') + ':\n' + text.slice(0, istLotse ? 6000 : 20000) : '\n\nDer Brief ist als Foto/PDF angehängt.');
-                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 1400, dateien });
-                const { teile, roh, anzahl } = abschnitte(antwort);
-                analyse = { teile, roh: anzahl < 3 ? roh : '', sprache: sp.code, dateien: istLotse ? [] : dateien };
+                let e = { teile: {}, roh: '', anzahl: 0 }, kiFehler = '';
+                try {
+                    e = istLotse ? await lotseErklaeren(sp, text, regeln) : await onlineErklaeren(sp, text, dateien);
+                } catch (err) {
+                    // Ohne Text und ohne KI gibt es nichts zu zeigen
+                    if (!regeln) throw err;
+                    kiFehler = (err && err.message) || String(err);
+                }
+                const unklar = !kiFehler && !istLotse && e.anzahl < 4;
+                analyse = { teile: e.teile, roh: unklar ? e.roh : '', kiFehler, regeln, pruefText: text, sprache: sp.code, dateien: istLotse ? [] : dateien, nr };
+                analyse.f = fakten(e.teile, regeln, text);
                 gewaehlteSprache = sp;
                 zeigeAnalyse();
                 $('status1').textContent = '';
+                // Fotos/PDF gingen direkt an die Online-KI: Brieftext im Hintergrund
+                // lesen und die Angaben damit prüfen bzw. ergänzen.
+                if (!istLotse && dateien.length) hintergrundPruefung(nr);
             } catch (err) {
                 $('status1').textContent = '';
                 zeigeFehler('fehler1', (err && err.message) || String(err));
@@ -470,39 +645,94 @@
                 $('erklaerenBtn').disabled = false;
             }
         };
+        async function hintergrundPruefung(nr) {
+            $('pruefStatus').textContent = t('pruefe_laeuft');
+            try {
+                const texte = [];
+                for (const s of seiten) {
+                    const x = await window.sdKi.leseDatei(s.file, () => {});
+                    if (x) texte.push(x);
+                    if (nr !== laufNr) return;
+                }
+                if ($('briefText').value.trim()) texte.push($('briefText').value.trim());
+                const text = texte.join('\n\n--- Seite ---\n\n');
+                if (nr !== laufNr || !analyse || !text.trim()) { $('pruefStatus').textContent = ''; return; }
+                briefTextCache = briefTextCache || text;
+                analyse.pruefText = text;
+                analyse.regeln = R.lies(text);
+                const datumVorher = $('fristDatum').value;
+                const geaendert = analyse.f && datumVorher !== (analyse.f.fristIso || '');
+                analyse.f = fakten(analyse.teile, analyse.regeln, text);
+                zeigeFakten(geaendert ? datumVorher : null);
+                $('pruefStatus').textContent = t('pruef_fertig');
+            } catch (err) {
+                if (nr === laufNr) $('pruefStatus').textContent = '';
+            }
+        }
 
+        function marke(ok) {
+            if (ok === true) return ' <span class="pruef ok">' + esc(t('ok_brief')) + '</span>';
+            if (ok === false) return ' <span class="pruef warn">' + esc(t('warn_brief')) + '</span>';
+            return ' <span class="pruef ki">' + esc(t('ki_gelesen')) + '</span>';
+        }
+        // Fakten, Frist und Zahlung (wird nach der Hintergrund-Prüfung erneut aufgerufen)
+        function zeigeFakten(fristBehalten) {
+            const f = analyse.f;
+            $('artBadge').textContent = f.art || t('unbekannt');
+            const zeilen = [];
+            if (f.absender) zeilen.push([t('f_absender'), esc(f.absender) + marke(f.absenderOk)]);
+            if (f.briefdatum) zeilen.push([t('f_datum'), esc(f.briefdatum) + marke(f.briefdatumOk)]);
+            if (f.zeichenListe.length) zeilen.push([t('f_zeichen'), f.zeichenListe.map(z => esc(z.text) + marke(z.ok)).join('<br>')]);
+            if (f.betrag) zeilen.push([t('f_betrag'), esc(f.betrag) + marke(f.betragOk)]);
+            $('fakten').innerHTML = zeilen.map(([k, v]) => '<dt>' + esc(k) + '</dt><dd dir="auto">' + v + '</dd>').join('');
+            $('fakten').hidden = !zeilen.length;
+            // Zahlung
+            $('zahlungBlock').hidden = !f.ibans.length;
+            $('zahlung').innerHTML = f.ibans.length ? ('<dt>' + esc(t('f_iban')) + '</dt><dd>' + f.ibans.map(esc).join('<br>') + marke(true) + '</dd>' +
+                (f.vz ? '<dt>' + esc(t('f_vz')) + '</dt><dd>' + esc(f.vz) + marke(true) + '</dd>' : '') + (f.betrag ? '<dt>' + esc(t('f_betrag')) + '</dt><dd>' + esc(f.betrag) + '</dd>' : '')) : '';
+            // Frist / Termin
+            $('fristBox').querySelector('h3').textContent = f.fristArt === 'termin' ? t('termin_titel') : t('frist_titel');
+            const iso = f.fristIso || '';
+            $('fristText').innerHTML = f.keineFrist ? esc(t('keine_frist')) :
+                iso ? esc(deDatum(iso) + (f.uhrzeit ? t('uhr', { u: f.uhrzeit }) : '')) + marke(f.fristOk) : esc(f.fristText);
+            $('fristWas').textContent = f.fristWas || '';
+            $('fristBeleg').hidden = !f.fristBeleg;
+            $('fristBeleg').innerHTML = f.fristBeleg ? '<b>' + esc(t('im_brief')) + '</b>„' + esc(f.fristBeleg) + '“' : '';
+            $('weitereFristen').hidden = !f.weitere.length;
+            $('weitereFristen').textContent = f.weitere.length ? t('weitere', { x: f.weitere.join(', ') }) : '';
+            $('fristDatum').value = fristBehalten != null ? fristBehalten : iso;
+            aktualisiereFristHinweis(!!f.keineFrist);
+            // Brief mit Betrag (Rechnung, Mahnung …): in den Bereich "Rechnungen" uebernehmen
+            $('rechnungBtn').hidden = !f.betrag;
+            // Aufgaben/Hinweise aus dem Brief, wenn die KI keine geliefert hat
+            const a = analyse.teile;
+            const aufg = leer(a.aufgaben) ? regelAufgaben(f) : a.aufgaben;
+            $('aufgaben').textContent = aufg || '';
+            $('aufgabenBlock').hidden = !aufg;
+            const wicht = leer(a.wichtig) ? regelWichtig(f) : a.wichtig;
+            $('wichtig').textContent = wicht || '';
+            $('wichtigBlock').hidden = !wicht;
+        }
+        // Zusammengeführte Fakten in der Form, die Liste/Rechnung/Antwort erwarten
+        function altFakten() {
+            const f = analyse.f || {};
+            return { art: f.art || '', absender: f.absender || '', zeichen: f.zeichen || '', briefdatum: f.briefdatum || '', betrag: f.betrag || '',
+                frist_was: f.fristWas || '', zusammenfassung: analyse.teile.zusammenfassung || '' };
+        }
         function zeigeAnalyse() {
             const a = analyse.teile;
             const sp = gewaehlteSprache || SPRACHEN[0];
             document.querySelectorAll('#ergebnis [dir=auto], #antwortKarte [dir=auto]').forEach(el => { el.style.textAlign = sp.rtl ? 'right' : ''; });
-            $('artBadge').textContent = leer(a.art) ? t('unbekannt') : a.art.split('\n')[0];
             $('sprachInfo').textContent = t('erklaert_auf', { s: sp.anzeige });
             $('zusammenfassung').textContent = a.zusammenfassung || '';
-            const fakten = [['f_absender', a.absender], ['f_datum', a.briefdatum], ['f_zeichen', a.zeichen], ['f_betrag', a.betrag]].filter(([, v]) => !leer(v));
-            $('fakten').innerHTML = fakten.map(([k, v]) => '<dt>' + esc(t(k)) + '</dt><dd dir="auto">' + esc(v) + '</dd>').join('');
-            // Frist
-            const fristRoh = a.frist || '';
-            const iso = findeDatum(fristRoh);
-            const keine = leer(fristRoh);
-            $('fristText').textContent = keine ? t('keine_frist') : (iso ? deDatum(iso) + (fristRoh.replace(/\b\d{1,2}\.\s?\d{1,2}\.\s?(\d{4}|\d{2})\b/, '').trim() ? ' – ' + fristRoh.replace(/\b\d{1,2}\.\s?\d{1,2}\.\s?(\d{4}|\d{2})\b/, '').replace(/^[\s,–-]+/, '').trim() : '') : fristRoh);
-            $('fristWas').textContent = leer(a.frist_was) ? '' : a.frist_was;
-            $('fristDatum').value = iso;
-            aktualisiereFristHinweis(keine);
+            $('pruefStatus').textContent = '';
             $('fristStatus').textContent = '';
-            // Brief mit Betrag (Rechnung, Mahnung …): in den Bereich "Rechnungen" uebernehmen
-            $('rechnungBtn').hidden = leer(a.betrag) || !!analyse.roh;
-            // Aufgaben und Hinweise
-            $('aufgaben').textContent = a.aufgaben || '';
-            $('aufgabenBlock').hidden = leer(a.aufgaben);
-            $('wichtig').textContent = a.wichtig || '';
-            $('wichtigBlock').hidden = leer(a.wichtig);
-            // Antwort nicht im erwarteten Format: keine Aussagen zu Frist usw. machen
-            const unklar = !!analyse.roh;
-            $('fristBox').hidden = unklar;
-            $('fakten').hidden = unklar;
-            if (unklar) { $('aufgabenBlock').hidden = true; $('wichtigBlock').hidden = true; }
+            zeigeFakten(null);
+            $('kiFehlerBlock').hidden = !analyse.kiFehler;
+            $('kiFehlerBlock').textContent = analyse.kiFehler ? t('ki_fehler', { x: analyse.kiFehler }) : '';
             $('rohBlock').hidden = !analyse.roh;
             $('rohBlock').innerHTML = analyse.roh ? '<b>' + esc(t('nicht_verstanden')) + '</b><div class="text" style="color:var(--ink);margin-top:6px">' + esc(analyse.roh) + '</div>' : '';
+            if (analyse.roh) $('zusammenfassung').textContent = '';
             // Antwort-Vorschlaege
             const vorschlaege = leer(a.antworten) ? [] : a.antworten.split('\n').map(z => z.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(z => z && !leer(z)).slice(0, 4);
             $('vorschlaege').innerHTML = vorschlaege.map(v => '<button type="button" class="chip" dir="auto">' + esc(v) + '</button>').join('');
@@ -552,7 +782,7 @@
             herunterladen(new Blob([ics], { type: 'text/calendar' }), 'frist-' + (e.absender || 'brief').replace(/[^\wäöüÄÖÜß-]+/g, '-').slice(0, 40) + '.ics');
         }
         function eintragAusAnalyse() {
-            const a = analyse.teile;
+            const a = altFakten();
             return {
                 art: leer(a.art) ? '' : a.art.split('\n')[0], absender: kurzAbsender(a.absender), zeichen: leer(a.zeichen) ? '' : a.zeichen.split('\n')[0],
                 briefdatum: leer(a.briefdatum) ? '' : a.briefdatum, frist: $('fristDatum').value, fristWas: leer(a.frist_was) ? '' : a.frist_was,
@@ -576,7 +806,7 @@
             speichereListe(l);
         };
         $('rechnungBtn').onclick = () => {
-            const a = analyse.teile;
+            const a = altFakten();
             const betrag = (String(a.betrag || '').match(/\d{1,3}(?:\.\d{3})*,\d{2}|\d+(?:,\d{1,2})?/) || [''])[0];
             try {
                 sessionStorage.setItem('sdRechnungNeu', JSON.stringify({ absender: kurzAbsender(a.absender), nr: leer(a.zeichen) ? '' : a.zeichen.split('\n')[0], betrag,
@@ -635,7 +865,7 @@
             zeigeFehler('fehler3', '');
             const anliegen = $('anliegen').value.trim();
             if (!anliegen) { zeigeFehler('fehler3', t('anliegen_fehlt')); return; }
-            const a = analyse.teile;
+            const a = altFakten();
             const sp = gewaehlteSprache || SPRACHEN[0];
             const mitUebersetzung = sp.code !== 'de';
             const istLotse = window.sdKi.anbieter() === 'lotse';
@@ -654,9 +884,9 @@
                     (mitUebersetzung ? '\n### uebersetzung\n(der gleiche Brieftext sinngemäß auf ' + sp.prompt + ', damit die Person versteht, was sie unterschreibt)' : '') +
                     '\n\nDer Brief, auf den geantwortet wird' + (analyse.dateien.length ? ' (als Foto/PDF angehängt)' : '') + ':\n' +
                     'Absender: ' + (a.absender || '-') + '\nArt: ' + (a.art || '-') + '\nInhalt (Zusammenfassung): ' + (a.zusammenfassung || '-') +
-                    (briefTextCache ? '\nText:\n' + briefTextCache.slice(0, istLotse ? 4000 : 15000) : '');
-                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: 1500, dateien: analyse.dateien });
-                const { teile } = abschnitte(antwort);
+                    (briefTextCache ? '\nText:\n' + (istLotse ? R.kuerze(briefTextCache, 2500) : briefTextCache.slice(0, 15000)) : '');
+                const antwort = await window.sdKi.schreibe(prompt, { maxTokens: istLotse ? 1000 : 1500, dateien: analyse.dateien });
+                const { teile } = abschnitte(antwort, ENTW_KEYS);
                 const brieftext = (teile.text || (Object.keys(teile).length ? '' : antwort)).trim()
                     .replace(/^(sehr geehrte[^\n]*|dear [^\n]*)\n+/i, '')
                     .replace(/\n+(mit freundlichen grüßen|freundliche grüße|viele grüße)[\s\S]*$/i, '');
@@ -676,7 +906,7 @@
             }
         };
         $('schreibstudioBtn').onclick = () => {
-            const a = analyse.teile;
+            const a = altFakten();
             try {
                 sessionStorage.setItem('sdPostAntwort', JSON.stringify({
                     empfaenger: leer(a.absender) ? '' : a.absender, betreff: $('entwurfBetreff').value, anrede: $('entwurfBetreff').dataset.anrede || '', text: $('entwurfText').value
