@@ -39,7 +39,9 @@
       // Lage der Anker-Kennzahlen prüfen (Toleranz 2 pt waagerecht, 14 pt senkrecht)
       const lageOk = f.anker.every(a => {
         const s = seiten[a.s];
-        return s && s.items.some(it => it.str === a.text && Math.abs(it.x - a.x0) < 2 && Math.abs((s.h - it.y) - a.top) < 14);
+        // Kennzahlen wie „210/410“ zerlegt pdf.js manchmal in „210“, „/“, „410“
+        const teil = a.text.split('/')[0];
+        return s && s.items.some(it => (it.str === a.text || it.str === teil) && Math.abs(it.x - a.x0) < 2 && Math.abs((s.h - it.y) - a.top) < 14);
       });
       return { name, ok: lageOk };
     }
@@ -52,7 +54,8 @@
     if (art === 'x') return wert ? ['X'] : null;
     if (art === 'zahl') {
       const s = String(Math.round(Number(wert)));
-      if (!/^\d+$/.test(s) || Number(s) === 0) return null;
+      // 0 wird nur geschrieben, wenn ausdrücklich '0' übergeben wird (Formular verlangt dort „0“)
+      if (!/^\d+$/.test(s) || (Number(s) === 0 && wert !== '0')) return null;
       if (s.length > anzahl) throw new Error('zu_gross');
       return Array(anzahl - s.length).fill('').concat(s.split(''));
     }
@@ -90,7 +93,7 @@
       bericht.push({ datei: d.name, formular: e.name, status: 'ok' });
     }
     // Reihenfolge: Hauptvordruck zuerst, dann Anlagen; mehrere Datensätze (Person A/B) = Formular mehrfach
-    const reihenfolge = ['ESt1A', 'N'];
+    const reihenfolge = ['ESt1A', 'N', 'VOR', 'SA', 'AgB', 'HA', 'Kind', 'KAP', 'R'];
     for (const name of reihenfolge) {
       if (!erkannt[name] || !werte[name]) continue;
       const f = spec.formulare[name];
@@ -109,8 +112,10 @@
           const seite = seitenMap[def.s];
           const h = seite.getHeight();
           const voll = String(satz[feld]).replace(/\s+/g, ' ').trim();
-          // Zu langer Text: nicht abschneiden, sondern verkleinert über die ganze Feldbreite schreiben
-          if (def.art === 'text' && voll.length > def.z.length) {
+          // Zu langer Text: nicht abschneiden, sondern (ggf. verkleinert) über die ganze Feldbreite schreiben
+          // Felder ohne sichtbare Kästchen (Zellen ohne Abstand) wie eine Textzeile beschriften
+          const durchgehend = def.z.length > 1 && def.z.every((c, i) => i === 0 || c[0] - def.z[i - 1][2] < 0.5);
+          if (def.art === 'text' && (voll.length > def.z.length || durchgehend)) {
             const [x0, top] = def.z[0], [, , x1, bottom] = def.z[def.z.length - 1];
             let groesse = 10;
             while (groesse > 6 && schrift.widthOfTextAtSize(voll, groesse) > x1 - x0 - 4) groesse -= 0.5;
@@ -134,8 +139,11 @@
         });
       }
     }
-    if (!ziel.getPageCount()) return { pdf: null, bericht, gekuerzt };
-    return { pdf: await ziel.save(), bericht, gekuerzt };
+    // Anlagen mit Werten, deren Vordruck nicht dabei war
+    const leer = (w) => !w || (Array.isArray(w) && !w.filter(Boolean).length);
+    const fehlend = reihenfolge.filter(n => spec.formulare[n] && !leer(werte[n]) && !erkannt[n]);
+    if (!ziel.getPageCount()) return { pdf: null, bericht, gekuerzt, fehlend };
+    return { pdf: await ziel.save(), bericht, gekuerzt, fehlend };
   }
 
   const api = { fuelle, erkenne, seitenText, zeichenFuerFeld };

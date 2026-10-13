@@ -683,11 +683,12 @@
 
         <!-- Formulare ausfuellen -->
         <details class="karte" id="karteFormulare">
-            <summary><div class="titel"><h2>🖨️ Auf Papier abgeben – Formulare ausfüllen</h2><small>Hauptvordruck und Anlage N automatisch ausfüllen, ausdrucken, unterschreiben</small></div></summary>
+            <summary><div class="titel"><h2>🖨️ Auf Papier abgeben – Formulare ausfüllen</h2><small>Hauptvordruck und Anlagen automatisch ausfüllen, ausdrucken, unterschreiben</small></div></summary>
             <div class="inhalt">
-                <p class="info">So geht’s: 1. Formulare als PDF herunterladen (bisher unterstützt: <b>Hauptvordruck ESt 1 A 2025</b> und <b>Anlage N 2025</b> von <a href="https://www.lohnsteuer-kompakt.de/steuerwissen/formulare-fuer-die-steuererklaerung-2025" target="_blank" rel="noopener">lohnsteuer-kompakt.de</a>). 2. Unten deine Angaben eintragen. 3. PDFs auswählen – der Helfer prüft, ob es genau diese Formularversion ist, und füllt sie aus. 4. Ausdrucken, <b>alles prüfen</b>, auf Seite 2 des Hauptvordrucks <b>unterschreiben</b> (Ehepaare beide) und beim Finanzamt abgeben.</p>
-                <div class="warn" id="formularJahrHinweis" hidden>Für dieses Steuerjahr sind noch keine Formulare hinterlegt – bisher nur 2025.</div>
-                <div class="warn">Wer selbstständig ist oder ein Gewerbe hat, muss elektronisch abgeben (Mein ELSTER). Weitere Anlagen (z. B. Vorsorgeaufwand, Kind, Sonderausgaben) folgen – bis dahin diese Beträge von Hand eintragen (siehe Zusammenfassung).</div>
+                <p class="info">So geht’s: 1. Die Vordrucke als PDF herunterladen – von <a href="https://www.lohnsteuer-kompakt.de/steuerwissen/formulare-fuer-die-steuererklaerung-2025" target="_blank" rel="noopener">lohnsteuer-kompakt.de</a> (dort gibt es auch die Vordrucke für 2024). 2. Unten deine Angaben eintragen. 3. Alle PDFs <b>zusammen</b> auswählen – der Helfer prüft bei jedem, ob es genau diese Formularversion ist, und füllt sie aus. 4. Ausdrucken, <b>alles prüfen</b>, auf Seite 2 des Hauptvordrucks <b>unterschreiben</b> (Ehepaare beide) und beim Finanzamt abgeben.</p>
+                <p class="info">Unterstützt für <b>2024 und 2025</b>: Hauptvordruck ESt 1 A, Anlage N, Vorsorgeaufwand, Sonderausgaben (Spenden), Außergewöhnliche Belastungen, Haushaltsnahe Aufwendungen, Kind, KAP und R (gesetzliche und private Renten). Nur die Anlagen, für die du etwas eingetragen hast, kommen ins fertige PDF.</p>
+                <div class="warn" id="formularJahrHinweis" hidden>Für dieses Steuerjahr sind noch keine Formulare hinterlegt – bisher für 2024 und 2025.</div>
+                <div class="warn">Wer selbstständig ist oder ein Gewerbe hat, muss elektronisch abgeben (Mein ELSTER). Noch nicht automatisch: Anlage V, SO, AUS, R-AV/bAV sowie selbst bezahlte Kranken-/Pflegeversicherung – diese Beträge bitte von Hand eintragen (siehe Zusammenfassung).</div>
                 <h3 style="margin:6px 0 0;font-size:.95rem">Deine Angaben für das Formular</h3>
                 <p class="info">🔒 Diese Daten werden nur zum Ausfüllen genutzt und <b>nicht gespeichert</b> – außer du setzt unten den Haken.</p>
                 <div class="zeile"><label class="feld">An das Finanzamt<input type="text" data-pf="finanzamt" placeholder="z. B. Heidelberg" ></label><label class="feld">Steuernummer <span class="hilfe">wie im letzten Bescheid</span><input type="text" data-pf="stnr" placeholder="z. B. 32/123/45678" ></label></div>
@@ -708,6 +709,7 @@
                 <div class="zeile"><label class="feld">Erste Tätigkeitsstätte (PLZ, Ort, Straße)<input type="text" data-pf="arbeitsstaette" placeholder="z. B. 69115 Heidelberg, Industriestr. 5" ></label><label class="feld">Arbeitstage pro Woche<input type="text" data-pf="tage_woche" placeholder="5" inputmode="numeric"></label></div>
                 <label class="feld">Homeoffice-Tage gehören in
                     <select data-pf="ho_art"><option value="58">Zeile 58 – es gab einen anderen Arbeitsplatz, ich war an diesen Tagen nicht im Betrieb</option><option value="59">Zeile 59 – mir stand dauerhaft kein anderer Arbeitsplatz zur Verfügung</option></select></label>
+                <div id="pfKinder"></div>
                 <label class="check"><input type="checkbox" id="pfMerken"> <span>Diese Angaben auf diesem Gerät merken (sonst nach dem Schließen weg)</span></label>
                 <div class="knoepfe">
                     <button type="button" class="btn prim" id="formularBtn">📄 Formular-PDFs wählen und ausfüllen</button>
@@ -740,7 +742,7 @@
     <script src="../sd-ki.js?v=20"></script>
     <script src="steuer-rechner.js?v=4"></script>
     <script src="../vendor/pdf-lib-1.17.1.min.js"></script>
-    <script src="formular-druck.js?v=1"></script>
+    <script src="formular-druck.js?v=2"></script>
     <script>
         'use strict';
 
@@ -1229,7 +1231,8 @@
             $('ergVerlust').innerHTML = (e.verlustAbzug ? 'Dieses Jahr abgezogen: <b>' + euro(e.verlustAbzug) + '</b><br>' : '') + (e.verlustRest ? 'Bleibt für nächstes Jahr: <b>' + euro(e.verlustRest) + '</b>' : (zahl(d.verlust.vortrag) ? 'Der Verlustvortrag ist dieses Jahr ganz verbraucht.' : 'Kein Verlustvortrag eingetragen.'));
             $('kvSelbst2Feld').hidden = d.p.zusammen !== 'ja';
             $('pfPartner').hidden = d.p.zusammen !== 'ja';
-            $('formularJahrHinweis').hidden = jahr === 2025;
+            $('formularJahrHinweis').hidden = FORMULAR_JAHRE.includes(jahr);
+            zeichnePfKinder(d);
             $('geb2Feld').hidden = d.p.zusammen !== 'ja';
             $('p23Partner').hidden = d.p.zusammen !== 'ja';
             $('sumAusland').textContent = euro(e.veraeusserung + e.auslandPflichtig);
@@ -1254,6 +1257,39 @@
         });
         function pfSpeichern() { try { if ($('pfMerken').checked) localStorage.setItem(PF_KEY, JSON.stringify(pf)); else localStorage.removeItem(PF_KEY); } catch (e) { /* egal */ } }
         $('pfMerken').onchange = pfSpeichern;
+        // Angaben je Kind für die Anlage Kind (Steuer-ID, Geburtsdatum, Kindschaftsverhältnis)
+        let pfKinderSig = null;
+        function zeichnePfKinder(d) {
+            const box = $('pfKinder');
+            if (!box) return;
+            const sig = d.kinder.map(k => k.name).join('|') + '#' + d.p.zusammen;
+            if (sig === pfKinderSig) return;
+            pfKinderSig = sig;
+            box.innerHTML = '';
+            if (!d.kinder.length) return;
+            const VERH = [['1', '1 – leibliches Kind / Adoptivkind'], ['2', '2 – Pflegekind'], ['3', '3 – Enkel- / Stiefkind'], ['', '– kein Kindschaftsverhältnis –']];
+            const h = document.createElement('h3'); h.style.cssText = 'margin:6px 0 0;font-size:.92rem'; h.textContent = '👶 Für die Anlage Kind'; box.appendChild(h);
+            d.kinder.forEach((k, i) => {
+                const wrap = document.createElement('div');
+                const t = document.createElement('p'); t.className = 'info'; t.style.margin = '6px 0 0'; t.innerHTML = '<b>' + esc(k.name || ('Kind ' + (i + 1))) + '</b>'; wrap.appendChild(t);
+                const zeile = (felder) => { const z = document.createElement('div'); z.className = 'zeile'; felder.forEach(f => z.appendChild(f)); wrap.appendChild(z); };
+                const feld = (titel, key, typ, opts) => {
+                    const l = document.createElement('label'); l.className = 'feld'; l.textContent = titel;
+                    let el;
+                    if (opts) { el = document.createElement('select'); opts.forEach(([v, txt]) => { const o = document.createElement('option'); o.value = v; o.textContent = txt; el.appendChild(o); }); }
+                    else { el = document.createElement('input'); el.type = typ; if (typ === 'text') el.inputMode = 'numeric'; }
+                    const name = 'kind' + i + '_' + key;
+                    el.dataset.pfKind = name;
+                    el.value = pf[name] != null ? pf[name] : (opts ? '1' : '');
+                    if (opts && pf[name] == null) pf[name] = '1';
+                    el.addEventListener(opts ? 'change' : 'input', () => { pf[name] = el.value; pfSpeichern(); });
+                    l.appendChild(el); return l;
+                };
+                zeile([feld('Steuer-ID des Kindes', 'idnr', 'text'), feld('Geburtsdatum', 'geb', 'date')]);
+                zeile([feld('Kindschaftsverhältnis zu dir', 'verh_a', null, VERH)].concat(d.p.zusammen === 'ja' ? [feld('… zu Partner/in', 'verh_b', null, VERH)] : []));
+                box.appendChild(wrap);
+            });
+        }
         const nurZiffern = (s) => String(s || '').replace(/\D/g, '');
         const datum8 = (iso) => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + m[2] + m[1] : ''; };
         const auf = (x) => Math.ceil(Number(x) || 0), ab = (x) => Math.floor(Number(x) || 0);
@@ -1309,12 +1345,94 @@
                 if (zahl(l2.wk) > W_AP()) Object.assign(nB, { so1_text: 'Werbungskosten lt. Aufstellung', so1: auf(zahl(l2.wk)), so_summe: auf(zahl(l2.wk)) });
                 n.push(nB);
             }
-            return { ESt1A: est, N: n };
+            // ---- weitere Anlagen ----
+            const kopfA = { name: pf.a_name, vorname: pf.a_vorname, stnr: est.stnr };
+            const kopf = (wer) => (zus && String(wer) === '2') ? { name: pf.b_name, vorname: pf.b_vorname, stnr: est.stnr } : kopfA;
+            const hatWert = (o) => Object.entries(o).some(([k, v]) => !['name', 'vorname', 'stnr', 'lfd'].includes(k) && v !== '' && v != null && v !== false && v !== 0);
+            const nur = (o) => hatWert(o) ? o : null;
+            const werte = { ESt1A: est, N: n };
+            // Vorsorgeaufwand (eine Anlage für beide)
+            const vor = Object.assign({}, kopfA, { rv_a: auf(zahl(l.rvAN)), rvag_a: ab(zahl(l.rvAG)), kv_a: auf(zahl(l.kv)), pv_a: auf(zahl(l.pv)), av_a: auf(zahl(l.av)),
+                ruerup_a: auf(zahl(d.p.ruerup)), versich: auf(zahl(d.p.versicherung)) });
+            if (zus) Object.assign(vor, { rv_b: auf(zahl(d.l2.rvAN)), rvag_b: ab(zahl(d.l2.rvAG)), kv_b: auf(zahl(d.l2.kv)), pv_b: auf(zahl(d.l2.pv)), av_b: auf(zahl(d.l2.av)) });
+            werte.VOR = nur(vor);
+            // Sonderausgaben: Spenden
+            werte.SA = nur(Object.assign({}, kopfA, { spenden: auf(r.spenden) }));
+            // Außergewöhnliche Belastungen
+            const agb = Object.assign({}, kopfA);
+            const beh = (gdb, mz, x) => {
+                const g = Number(gdb) || 0;
+                if (g) agb[x + '_gdb'] = g;
+                if (mz === 'G' || mz === 'aG') agb[x + '_g'] = 1;
+                if (['Bl', 'TBl', 'H'].includes(mz)) agb[x + '_h'] = 1;
+                if (g >= 80 || (g >= 70 && mz === 'G')) agb['fahrt80_' + x] = 1;
+                if (['aG', 'Bl', 'TBl', 'H'].includes(mz)) agb['fahrtag_' + x] = 1;
+            };
+            beh(d.pb.gdb1, d.pb.mz1, 'a');
+            if (zus) beh(d.pb.gdb2, d.pb.mz2, 'b');
+            if (d.pb.hinter1) agb.hinter_a = 1;
+            if (zus && d.pb.hinter2) agb.hinter_b = 1;
+            if (r.pflege) {
+                agb.pflegegrad = Number(d.pb.pflegegrad);
+                agb.pflege_weitere = String(Math.max(0, (Math.round(zahl(d.pb.pflegeAnzahl)) || 1) - 1));
+                if (!zus) agb.pflege_wer = 1;
+            }
+            if (r.krank) Object.assign(agb, { krank_text: 'Krankheitskosten lt. beigefügter Aufstellung', krank: auf(r.krank), krank_erstattet: '0' });
+            werte.AgB = nur(agb);
+            // Haushaltsnahe Aufwendungen (nur Arbeitskosten werden erfasst)
+            const ha = Object.assign({}, kopfA);
+            if (r.minijob) Object.assign(ha, { minijob_text: 'Minijob im Privathaushalt', minijob: auf(r.minijob) });
+            if (r.dienst) Object.assign(ha, { dienst_text: d.posten.filter(p => p.kategorie === 'dienst' && zahl(p.betrag)).map(p => p.text || 'Dienstleistung').join(', '), dienst: auf(r.dienst) });
+            const hw = d.posten.filter(p => p.kategorie === 'handwerk' && zahl(p.betrag));
+            const hwZeilen = hw.length <= 3 ? hw.map(p => [p.text || 'Handwerkerleistung', zahl(p.betrag)]) : [['Handwerkerleistungen lt. Aufstellung', r.handwerk]];
+            hwZeilen.forEach(([t, b], i) => { ha['hw' + (i + 1) + '_text'] = t; ha['hw' + (i + 1) + '_lohn'] = auf(b); });
+            if (hw.length) ha.hw_summe = hwZeilen.reduce((s, x) => s + auf(x[1]), 0);
+            werte.HA = nur(ha);
+            // Anlage Kind – je Kind eine Anlage
+            werte.Kind = d.kinder.map((k, i) => {
+                const rk = r.kinder[i] || {};
+                const o = Object.assign({}, kopfA, { lfd: i + 1, vorname_kind: k.name, idnr: nurZiffern(pf['kind' + i + '_idnr']), geb: datum8(pf['kind' + i + '_geb']),
+                    verh_a: Number(pf['kind' + i + '_verh_a']) || '', verh_b: zus ? (Number(pf['kind' + i + '_verh_b']) || '') : '' });
+                if (zahl(k.kosten) && !rk.zuAlt) Object.assign(o, { kb_text: 'Kinderbetreuung lt. Belegen', kb: auf(zahl(k.kosten)) });
+                return (k.name || o.idnr || o.kb) ? o : null;
+            }).filter(Boolean);
+            // Anlage KAP (gemeinsame Angaben -> Person A)
+            const kp = d.kap;
+            const kapWert = ['ertraege', 'kapest', 'aktienGewinne', 'aktienVerluste', 'sonstVerluste', 'quellensteuer'].some(x => zahl(kp[x]));
+            werte.KAP = kapWert ? Object.assign({}, kopfA, { est_x: true, person_a: true, guenstiger: 1, pruefung: 1, ertraege: ab(zahl(kp.ertraege) + zahl(kp.aktienGewinne)), aktien: ab(zahl(kp.aktienGewinne)),
+                verl_sonst: auf(zahl(kp.sonstVerluste)), verl_aktien: auf(zahl(kp.aktienVerluste)), kapest: zahl(kp.kapest), soli: zahl(kp.soli), kist: zahl(kp.kist), quellen: zahl(kp.quellensteuer) }) : null;
+            // Anlage R – je Person; gesetzliche Renten (Zeile 4) und private Renten (Zeile 13), je 2 pro Anlage
+            werte.R = [];
+            ['1', '2'].forEach(wer => {
+                if (wer === '2' && !zus) return;
+                const meine = d.renten.filter(x => String(x.wer || '1') === wer && zahl(x.betrag));
+                const ges = meine.filter(x => (x.art || 'gesetzlich') === 'gesetzlich'), pri = meine.filter(x => x.art === 'privat');
+                for (let i = 0; i < Math.max(ges.length, pri.length); i += 2) {
+                    werte.R.push(Object.assign({}, kopf(wer), { lfd: i / 2 + 1, [wer === '2' ? 'person_b' : 'person_a']: true, r1: ges[i] ? ab(zahl(ges[i].betrag)) : '', r2: ges[i + 1] ? ab(zahl(ges[i + 1].betrag)) : '',
+                        p1: pri[i] ? ab(zahl(pri[i].betrag)) : '', p2: pri[i + 1] ? ab(zahl(pri[i + 1].betrag)) : '' }));
+                }
+            });
+            return werte;
+        }
+        // Was der Helfer (noch) nicht in Vordrucke schreibt – zum Hinweis nach dem Ausfüllen
+        function nichtAutomatisch() {
+            const d = daten(), x = [];
+            if (d.renten.some(r => r.art === 'betrieb' && zahl(r.betrag))) x.push('Betriebsrente / Riester (Anlage R-AV/bAV)');
+            if (d.renten.some(r => zahl(r.kvpv))) x.push('Kranken-/Pflegeversicherung auf Renten (Anlage Vorsorgeaufwand, Zeilen 16–18)');
+            if (zahl(d.p.kvSelbst1) || zahl(d.p.kvSelbst2)) x.push('selbst bezahlte Kranken-/Pflegeversicherung (Anlage Vorsorgeaufwand – gesetzlich oder privat, getrennt nach KV und PV)');
+            if (d.vermietung.length) x.push('Vermietung (Anlage V)');
+            if (d.betriebe.length) x.push('Selbstständig / Gewerbe (Anlage S/G, EÜR – nur elektronisch)');
+            if (zahl(d.ausland.g1) || zahl(d.ausland.g2)) x.push('Private Veräußerungsgeschäfte (Anlage SO)');
+            if (zahl(d.ausland.frei) || zahl(d.ausland.pflichtig)) x.push('Ausländische Einkünfte (Anlage AUS / N-AUS)');
+            if (zahl(d.pb.ausbildung)) x.push('Ausbildungsfreibetrag (Anlage Kind, Zeilen zur auswärtigen Unterbringung)');
+            if (zahl(d.p.lohnersatz) || zahl(d.p.lohnersatz2)) x.push('Lohnersatzleistungen: im Hauptvordruck eingetragen – Bescheinigung beilegen');
+            return x;
         }
         const W_AP = () => JAHRE[jahr].ap;
-        let formularSpec = null;
+        const FORMULAR_JAHRE = [2024, 2025];
+        const formularSpec = {};
         $('formularBtn').onclick = () => {
-            if (jahr !== 2025) { $('formularStatus').textContent = '⚠️ Bisher gibt es die Formulare nur für 2025 – oben das Jahr 2025 wählen.'; return; }
+            if (!FORMULAR_JAHRE.includes(jahr)) { $('formularStatus').textContent = '⚠️ Vordrucke gibt es bisher für ' + FORMULAR_JAHRE.join(' und ') + ' – oben eines dieser Jahre wählen.'; return; }
             $('formularDateien').click();
         };
         $('formularDateien').onchange = async (ev) => {
@@ -1324,14 +1442,19 @@
             const st = $('formularStatus');
             st.textContent = '⏳ Prüfe die Formulare …';
             try {
-                if (!formularSpec) formularSpec = await (await fetch('formulare-2025.json')).json();
+                if (!formularSpec[jahr]) formularSpec[jahr] = await (await fetch('formulare-' + jahr + '.json?v=2')).json();
                 const geladen = await Promise.all(dateien.map(async f => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })));
-                const erg = await window.SDFormularDruck.fuelle(geladen, formularWerte(), formularSpec);
-                const NAMEN = { ESt1A: 'Hauptvordruck ESt 1 A 2025', N: 'Anlage N 2025' };
+                const erg = await window.SDFormularDruck.fuelle(geladen, formularWerte(), formularSpec[jahr]);
+                const NAMEN = { ESt1A: 'Hauptvordruck ESt 1 A', N: 'Anlage N', VOR: 'Anlage Vorsorgeaufwand', SA: 'Anlage Sonderausgaben', AgB: 'Anlage Außergewöhnliche Belastungen',
+                    HA: 'Anlage Haushaltsnahe Aufwendungen', Kind: 'Anlage Kind', KAP: 'Anlage KAP', R: 'Anlage R' };
+                Object.keys(NAMEN).forEach(k => { NAMEN[k] += ' ' + jahr; });
                 const zeilen = erg.bericht.map(b => b.status === 'ok' ? '✓ ' + NAMEN[b.formular] + ' erkannt (' + b.datei + ')'
                     : b.status === 'andere_version' ? '⚠️ ' + b.datei + ': andere Version von „' + NAMEN[b.formular] + '“ – nicht ausgefüllt (Positionen passen nicht sicher)'
                     : '⚠️ ' + b.datei + ': kein unterstütztes Formular');
                 if (erg.gekuerzt.length) zeilen.push('ℹ️ Zu lang für das Feld (gekürzt): ' + erg.gekuerzt.join(', '));
+                if (erg.fehlend && erg.fehlend.length) zeilen.push('📎 Dafür hast du Angaben, aber das PDF fehlte: ' + erg.fehlend.map(k => NAMEN[k]).join(', ') + ' – herunterladen und noch einmal alle zusammen wählen.');
+                const na = nichtAutomatisch();
+                if (na.length) zeilen.push('✍️ Nicht automatisch ausgefüllt – bitte von Hand (Beträge siehe Zusammenfassung): ' + na.join('; '));
                 if (!erg.pdf) { st.innerHTML = zeilen.map(esc).join('<br>') + '<br>Es wurde nichts ausgefüllt.'; return; }
                 const blob = new Blob([erg.pdf], { type: 'application/pdf' });
                 const a = document.createElement('a');
