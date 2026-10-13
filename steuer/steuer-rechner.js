@@ -313,7 +313,10 @@
     // 5. Außergewöhnliche Belastungen
     r.zumutbar = zumutbar(r.gde, zus, anzKinder);
     r.krankheit = n(e.krankheit);
-    r.agb = Math.max(0, r.krankheit - r.zumutbar);
+    // Pauschbeträge nach § 33b/§ 33a (Behinderung, Pflege, Hinterbliebene, Ausbildungsfreibetrag): ohne zumutbare Belastung
+    r.pauschAgb = n(e.pauschbetraege);
+    r.agbKrank = Math.max(0, r.krankheit - r.zumutbar);
+    r.agb = r.agbKrank + r.pauschAgb;
 
     r.einkommen = r.gde - r.sonderausgaben - r.agb;
     r.leistungen = leute.reduce((s, x) => s + x.lohnersatz, 0);

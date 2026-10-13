@@ -161,6 +161,16 @@
         .erg-btn { justify-self: start; border: 0; border-radius: 10px; background: #fff; color: #1c4a42; font: inherit; font-weight: bold; padding: 9px 14px; cursor: pointer; }
         .lsb-gefunden { font-size: .8rem; color: var(--muted); }
         .zeilen-nr { display: inline-block; min-width: 2.6em; font-size: .72rem; font-weight: bold; color: var(--accent-dark); background: var(--accent-soft); border-radius: 6px; padding: 1px 5px; margin-right: 4px; text-align: center; }
+        .pausch { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; background: #fff; }
+        .pausch.aktiv { border-color: var(--accent); background: #f4faf8; }
+        .pausch-kopf { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pausch-kopf b { font-size: .92rem; flex: 1 1 auto; }
+        .pausch-betrag { font-weight: bold; color: var(--accent-dark); font-variant-numeric: tabular-nums; }
+        .pill { font-size: .68rem; font-weight: bold; border-radius: 999px; padding: 2px 8px; letter-spacing: .02em; }
+        .pill.gesetz { background: #e3f4ec; color: #1f6b45; }
+        .pill.praxis { background: var(--warn-bg); color: #8a5a00; border: 1px solid var(--warn-line); }
+        .pausch-info summary { cursor: pointer; font-size: .8rem; color: var(--accent-dark); font-weight: bold; }
+        .pausch-info p { margin: 6px 0 0; font-size: .82rem; line-height: 1.5; color: var(--muted); }
         .unter-details { border: 1px dashed var(--line); border-radius: 12px; padding: 8px 12px; display: grid; gap: 10px; }
         .unter-details summary { cursor: pointer; font-weight: bold; font-size: .88rem; color: var(--accent-dark); }
         .unter-details[open] { background: #fbfcfb; }
@@ -354,6 +364,86 @@
             </div>
         </details>
 
+        <!-- Pauschalen -->
+        <details class="karte" id="kartePausch" open>
+            <summary><div class="titel"><h2>💡 Pauschalen – Geld ohne viele Belege</h2><small>Feste Beträge, die das Finanzamt ansetzt – kurz erklärt</small></div><span class="summe" id="sumPausch">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Bei <b>Gesetz</b> steht dir der Betrag zu, wenn die Voraussetzung stimmt. <b>Verwaltungspraxis</b> heißt: Das Finanzamt erkennt es meist ohne Belege an, muss aber nicht – heb Rechnungen trotzdem auf. Automatisch dabei (nichts zu tun): Arbeitnehmer-Pauschbetrag <span class="w-ap"></span>, Sonderausgaben-Pauschbetrag 36 €, Sparer-Pauschbetrag 1.000 €.</p>
+                <div class="pausch" id="pa-konto">
+                    <div class="pausch-kopf"><b>🏦 Kontoführung</b><span class="pill praxis">Verwaltungspraxis</span><span class="pausch-betrag" id="pb-konto">0 €</span></div>
+                    <label class="check"><input type="checkbox" data-f="n.kontofuehrung"> <span>Ich habe ein Konto, auf das mein Lohn kommt</span></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>16 € im Jahr für Kontoführungsgebühren – ohne Nachweis, weil das Gehaltskonto auch beruflich genutzt wird. Keine gesetzliche Regel, aber jahrzehntelange Praxis der Finanzämter.</p></details>
+                </div>
+                <div class="pausch" id="pa-tel">
+                    <div class="pausch-kopf"><b>📱 Telefon & Internet</b><span class="pill praxis">Verwaltungspraxis</span><span class="pausch-betrag" id="pb-tel">0 €</span></div>
+                    <label class="feld">Deine Handy- und Internetrechnung im Monat (zusammen) <input type="text" inputmode="decimal" data-f="n.telefonMonat" placeholder="z. B. 60"></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Wenn du privates Handy/Internet auch beruflich nutzt: 20 % der Rechnung, höchstens 20 € im Monat (240 € im Jahr) – ohne Einzelverbindungsnachweis. Grundlage: Lohnsteuer-Richtlinien (R 9.1 Abs. 5 LStR). Rechnungen (z. B. von 3 Monaten) aufbewahren.</p></details>
+                </div>
+                <div class="pausch" id="pa-am">
+                    <div class="pausch-kopf"><b>🖊️ Arbeitsmittel ohne Belege</b><span class="pill praxis">Verwaltungspraxis</span><span class="pausch-betrag" id="pb-am">0 €</span></div>
+                    <label class="check"><input type="checkbox" data-f="n.amPausch"> <span>Kleine Arbeitsmittel ohne Belege ansetzen (110 €)</span></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Für Kleinkram wie Stifte, Ordner, Fachliteratur erkennen viele Finanzämter etwa 110 € ohne Nachweis an (z. B. Baden-Württemberg). Es gibt aber <b>keinen Anspruch</b>: Sachsen etwa erkennt nichts ohne Beleg an. Wird nur angesetzt, wenn du oben keine einzelnen Arbeitsmittel eingetragen hast.</p></details>
+                </div>
+                <div class="pausch" id="pa-vma">
+                    <div class="pausch-kopf"><b>🍽️ Verpflegung bei Dienstreisen / Auswärtstätigkeit</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-vma">0 €</span></div>
+                    <div class="zeile">
+                        <label class="feld">Tage mehr als 8 Std. unterwegs <span class="hilfe">auch An-/Abreisetage mit Übernachtung</span><input type="text" inputmode="numeric" data-f="n.vma8" placeholder="z. B. 20"></label>
+                        <label class="feld">Tage ganze 24 Std. unterwegs <input type="text" inputmode="numeric" data-f="n.vma24" placeholder="z. B. 0"></label>
+                    </div>
+                    <label class="feld">Davon vom Arbeitgeber steuerfrei erstattet <input type="text" inputmode="decimal" data-f="n.vmaErstattet" placeholder="z. B. 0"></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Wer beruflich außerhalb der Wohnung und der ersten Tätigkeitsstätte arbeitet (Dienstreise, Montage, Außendienst): 14 € pro Tag bei mehr als 8 Stunden Abwesenheit, 28 € bei 24 Stunden (§ 9 Abs. 4a EStG). Die ersten 3 Monate am selben Ort. Was der Arbeitgeber steuerfrei erstattet hat, wird abgezogen.</p></details>
+                </div>
+                <div class="pausch" id="pa-lkw">
+                    <div class="pausch-kopf"><b>🚛 Übernachtung im Lkw (Berufskraftfahrer)</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-lkw">0 €</span></div>
+                    <label class="feld">Tage mit Übernachtung im Fahrzeug <input type="text" inputmode="numeric" data-f="n.lkwTage" placeholder="z. B. 180"></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Berufskraftfahrer, die im Lkw übernachten: Pauschale pro Kalendertag (ab 2024: 9 €, vorher 8 €) für Duschen, Parken, Toilette – zusätzlich zur Verpflegungspauschale (§ 9 Abs. 1 Nr. 5b EStG).</p></details>
+                </div>
+                <div class="pausch" id="pa-umzug">
+                    <div class="pausch-kopf"><b>📦 Beruflicher Umzug</b><span class="pill praxis">Verwaltungspraxis</span><span class="pausch-betrag" id="pb-umzug">0 €</span></div>
+                    <label class="check"><input type="checkbox" data-f="n.umzug"> <span>Ich bin aus beruflichen Gründen umgezogen (z. B. neuer Job, Arbeitsweg mind. 1 Std. kürzer)</span></label>
+                    <div class="zeile">
+                        <label class="feld">Weitere Personen im Haushalt <span class="hilfe">Ehe-/Lebenspartner, Kinder</span><input type="text" inputmode="numeric" data-f="n.umzugPersonen" placeholder="z. B. 2"></label>
+                        <label class="check" style="align-self:end"><input type="checkbox" data-f="n.umzugOhneWohnung"> <span>Ich hatte vorher / danach keine eigene Wohnung</span></label>
+                    </div>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Für sonstige Umzugskosten (Lampen, Gardinen, Ummeldung …) gibt es ohne Belege eine Pauschale nach dem Bundesumzugskostengesetz – ab 03/2024: 964 € für dich, 643 € für jede weitere Person, 193 € ohne eigene Wohnung. Transport-/Maklerkosten zusätzlich mit Belegen (oben unter sonstige Werbungskosten). Maßgeblich ist der Tag vor dem Einladen.</p></details>
+                </div>
+                <div class="pausch" id="pa-beh">
+                    <div class="pausch-kopf"><b>♿ Behinderung</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-beh">0 €</span></div>
+                    <div class="zeile">
+                        <label class="feld">Grad der Behinderung (du) <select data-f="pb.gdb1"><option value="0">keine / unter 20</option><option value="20">GdB 20</option><option value="30">GdB 30</option><option value="40">GdB 40</option><option value="50">GdB 50</option><option value="60">GdB 60</option><option value="70">GdB 70</option><option value="80">GdB 80</option><option value="90">GdB 90</option><option value="100">GdB 100</option></select></label>
+                        <label class="feld">Merkzeichen (du) <select data-f="pb.mz1"><option value="">kein Merkzeichen</option><option value="G">G</option><option value="aG">aG</option><option value="Bl">Bl</option><option value="TBl">TBl</option><option value="H">H</option></select></label>
+                    </div>
+                    <div class="zeile" id="behPartner">
+                        <label class="feld">GdB Partner/in <select data-f="pb.gdb2"><option value="0">keine / unter 20</option><option value="20">GdB 20</option><option value="30">GdB 30</option><option value="40">GdB 40</option><option value="50">GdB 50</option><option value="60">GdB 60</option><option value="70">GdB 70</option><option value="80">GdB 80</option><option value="90">GdB 90</option><option value="100">GdB 100</option></select></label>
+                        <label class="feld">Merkzeichen Partner/in <select data-f="pb.mz2"><option value="">kein Merkzeichen</option><option value="G">G</option><option value="aG">aG</option><option value="Bl">Bl</option><option value="TBl">TBl</option><option value="H">H</option></select></label>
+                    </div>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Behinderten-Pauschbetrag (§ 33b EStG) statt Einzelnachweis: GdB 20: 384 € … GdB 50: 1.140 € … GdB 100: 2.840 €; Merkzeichen H, Bl oder TBl: 7.400 €. Dazu Fahrtkostenpauschale: 900 € (GdB ab 80 oder ab 70 mit G), 4.500 € (aG, Bl, TBl, H) – darauf wird die zumutbare Belastung angerechnet. Nachweis: Schwerbehindertenausweis/Bescheid.</p></details>
+                </div>
+                <div class="pausch" id="pa-pflege">
+                    <div class="pausch-kopf"><b>🤲 Pflege eines Angehörigen</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-pflege">0 €</span></div>
+                    <div class="zeile">
+                        <label class="feld">Pflegegrad der gepflegten Person <select data-f="pb.pflegegrad"><option value="">keine Pflege</option><option value="2">Pflegegrad 2</option><option value="3">Pflegegrad 3</option><option value="4">Pflegegrad 4 oder 5 / Merkzeichen H</option></select></label>
+                        <label class="feld">Wie viele Personen pflegen? <span class="hilfe">der Betrag wird geteilt</span><input type="text" inputmode="numeric" data-f="pb.pflegeAnzahl" placeholder="1"></label>
+                    </div>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>Pflege-Pauschbetrag (§ 33b Abs. 6 EStG), wenn du jemanden unentgeltlich in seiner oder deiner Wohnung pflegst: Pflegegrad 2: 600 €, 3: 1.100 €, 4 oder 5: 1.800 €. Kein Anspruch, wenn du Pflegegeld bekommst und es nicht an die gepflegte Person zurückgibt (bei Eltern für ein Kind ist Pflegegeld unschädlich).</p></details>
+                </div>
+                <div class="pausch" id="pa-hinter">
+                    <div class="pausch-kopf"><b>🕯️ Hinterbliebene</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-hinter">0 €</span></div>
+                    <label class="check"><input type="checkbox" data-f="pb.hinter1"> <span>Ich bekomme Hinterbliebenenbezüge (z. B. nach Bundesversorgungsgesetz, gesetzlicher Unfallversicherung)</span></label>
+                    <label class="check" id="hinterPartner"><input type="checkbox" data-f="pb.hinter2"> <span>… Partner/in ebenso</span></label>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>370 € Hinterbliebenen-Pauschbetrag (§ 33b Abs. 4 EStG) – nur bei Bezügen nach bestimmten Gesetzen (Versorgungsgesetze, gesetzliche Unfallversicherung, Dienstunfall). Eine normale Witwenrente der Rentenversicherung reicht nicht.</p></details>
+                </div>
+                <div class="pausch" id="pa-ausb">
+                    <div class="pausch-kopf"><b>🎓 Ausbildungsfreibetrag</b><span class="pill gesetz">Gesetz</span><span class="pausch-betrag" id="pb-ausb">0 €</span></div>
+                    <div class="zeile">
+                        <label class="feld">Volljährige Kinder in Ausbildung, auswärts untergebracht <input type="text" inputmode="numeric" data-f="pb.ausbildung" placeholder="z. B. 1"></label>
+                        <label class="feld">Anteil <select data-f="pb.ausbildungAnteil"><option value="1">voll (verheiratet zusammen / allein zuständig)</option><option value="0.5">halb (Eltern getrennt)</option></select></label>
+                    </div>
+                    <details class="pausch-info"><summary>ℹ️ Was ist das?</summary><p>1.200 € pro Jahr und Kind (§ 33a Abs. 2 EStG), wenn das Kind volljährig ist, studiert oder eine Ausbildung macht, auswärts wohnt und du Kindergeld bekommst. Für Monate ohne diese Voraussetzungen anteilig weniger.</p></details>
+                </div>
+            </div>
+        </details>
+
         <!-- Renten -->
         <details class="karte" id="karteRente">
             <summary><div class="titel"><h2>👴 Renten (Anlage R)</h2><small>Gesetzliche Rente, Betriebsrente, Riester, private Rente</small></div><span class="summe" id="sumRente">0 €</span></summary>
@@ -510,7 +600,7 @@
                 <div class="zeile">
                     <label class="feld">Gewerkschaft / Berufsverband (Beiträge im Jahr)
                         <input type="text" inputmode="decimal" data-f="n.gewerkschaft" placeholder="0"></label>
-                    <label class="check" style="align-self:end"><input type="checkbox" data-f="n.kontofuehrung"> <span>Kontoführungspauschale (<span class="w-konto"></span>) ansetzen – vom Finanzamt üblicherweise ohne Nachweis anerkannt</span></label>
+                    <p class="info" style="align-self:end">Kontoführung, Telefon, Verpflegung: siehe 💡 Pauschalen oben.</p>
                 </div>
                 <div class="ergebnis" id="ergN"></div>
             </div>
@@ -612,7 +702,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
-    <script src="steuer-rechner.js?v=3"></script>
+    <script src="steuer-rechner.js?v=4"></script>
     <script>
         'use strict';
 
@@ -689,7 +779,9 @@
         };
         const LSB_LEER = { brutto: '', lst: '', soli: '', kist: '', lohnersatzZ15: '', rvAG: '', rvAN: '', kv: '', pv: '', av: '', versorgung: '', vBmg: '', vJahr: '', vMonate: '' };
         function leer() {
-            return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false },
+            return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false,
+                    telefonMonat: '', amPausch: false, vma8: '', vma24: '', vmaErstattet: '', lkwTage: '', umzug: false, umzugPersonen: '', umzugOhneWohnung: false },
+                pb: { gdb1: '0', mz1: '', gdb2: '0', mz2: '', pflegegrad: '', pflegeAnzahl: '', hinter1: false, hinter2: false, ausbildung: '', ausbildungAnteil: '1' },
                 haushalt: { minijob: '' }, kinder: [], posten: [],
                 p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '', kvSelbst1: '', kvSelbst2: '', geb1: '', geb2: '' },
                 kap: { ertraege: '', kapest: '', soli: '', kist: '', aktienGewinne: '', aktienVerluste: '', sonstVerluste: '', quellensteuer: '', vortragAktien: '', vortragSonst: '' },
@@ -714,6 +806,7 @@
             d.kap = Object.assign(leer().kap, d.kap || {});
             d.verlust = Object.assign(leer().verlust, d.verlust || {});
             d.ausland = Object.assign(leer().ausland, d.ausland || {});
+            d.pb = Object.assign(leer().pb, d.pb || {});
             d.renten = d.renten || []; d.vermietung = d.vermietung || []; d.betriebe = d.betriebe || [];
             d.kinder = d.kinder || [];
             d.posten = d.posten || [];
@@ -768,9 +861,16 @@
             r.fortbildung = summe('fortbildung');
             r.sonstigeWk = summe('sonstige_wk');
             r.konto = d.n.kontofuehrung ? FEST.konto : 0;
+            // Pauschalen (Werbungskosten)
+            r.telefon = Math.min(zahl(d.n.telefonMonat) * 0.2, 20) * 12;
+            r.amPausch = d.n.amPausch && r.am === 0 ? 110 : 0;
+            r.vma = Math.max(0, Math.round(zahl(d.n.vma8)) * 14 + Math.round(zahl(d.n.vma24)) * 28 - zahl(d.n.vmaErstattet));
+            r.lkw = Math.round(zahl(d.n.lkwTage)) * (jahr >= 2024 ? 9 : 8);
+            r.umzug = d.n.umzug ? (d.n.umzugOhneWohnung ? 193 : 964) + Math.max(0, Math.round(zahl(d.n.umzugPersonen))) * 643 : 0;
+            r.pauschWk = r.telefon + r.amPausch + r.vma + r.lkw + r.umzug;
             r.gewerkschaft = zahl(d.n.gewerkschaft);
 
-            const ohneGew = r.weg + r.ho + r.am + r.bewerbung + r.vorstellung + r.fortbildung + r.sonstigeWk + r.konto;
+            const ohneGew = r.weg + r.ho + r.am + r.bewerbung + r.vorstellung + r.fortbildung + r.sonstigeWk + r.konto + r.pauschWk;
             r.wkSumme = ohneGew + r.gewerkschaft;
             if (W.gewerkschaftExtra) {
                 r.wkAngesetzt = Math.max(ohneGew, W.ap) + r.gewerkschaft;
@@ -794,6 +894,16 @@
 
             r.spenden = summe('spende');
             r.krank = summe('krank');
+            const BEH = { 0: 0, 20: 384, 30: 620, 40: 860, 50: 1140, 60: 1440, 70: 1780, 80: 2120, 90: 2460, 100: 2840 };
+            const beh = (gdb, mz) => ['H', 'Bl', 'TBl'].includes(mz) ? 7400 : (BEH[Number(gdb) || 0] || 0);
+            const fahrt = (gdb, mz) => ['aG', 'Bl', 'TBl', 'H'].includes(mz) ? 4500 : ((Number(gdb) >= 80 || (Number(gdb) >= 70 && mz === 'G')) ? 900 : 0);
+            const zus = d.p && d.p.zusammen === 'ja';
+            r.behPausch = beh(d.pb.gdb1, d.pb.mz1) + (zus ? beh(d.pb.gdb2, d.pb.mz2) : 0);
+            r.behFahrt = fahrt(d.pb.gdb1, d.pb.mz1) + (zus ? fahrt(d.pb.gdb2, d.pb.mz2) : 0);
+            r.pflege = ({ 2: 600, 3: 1100, 4: 1800 }[d.pb.pflegegrad] || 0) / Math.max(1, Math.round(zahl(d.pb.pflegeAnzahl)) || 1);
+            r.hinter = (d.pb.hinter1 ? 370 : 0) + (zus && d.pb.hinter2 ? 370 : 0);
+            r.ausbildung = Math.max(0, Math.round(zahl(d.pb.ausbildung))) * 1200 * (Number(d.pb.ausbildungAnteil) || 1);
+            r.pauschAgb = r.behPausch + r.pflege + r.hinter + r.ausbildung;
 
             r.dienst = summe('dienst');
             r.handwerk = summe('handwerk');
@@ -883,7 +993,8 @@
                 jahr, zusammen: zus, land: d.p.land, alleinerziehend: !!d.p.alleinerziehend,
                 p1: Object.assign(lsbWerte(d.l1), { wk: zahl(d.l1.brutto) > 0 ? r.wkAngesetzt : 0, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup), kvSelbst: zahl(d.p.kvSelbst1), geburtsjahr: zahl(d.p.geb1), gewinn23: zahl(d.ausland.g1), vortrag23: zahl(d.ausland.v1), auslandPflichtig: zahl(d.ausland.pflichtig) }),
                 p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2), kvSelbst: zahl(d.p.kvSelbst2), geburtsjahr: zahl(d.p.geb2), gewinn23: zahl(d.ausland.g2), vortrag23: zahl(d.ausland.v2) }) : null,
-                sonstVersicherung: zahl(d.p.versicherung), spenden: r.spenden, kinderbetreuung: r.kindSumme, krankheit: r.krank,
+                sonstVersicherung: zahl(d.p.versicherung), spenden: r.spenden, kinderbetreuung: r.kindSumme, krankheit: r.krank + r.behFahrt,
+                pauschbetraege: r.pauschAgb,
                 ermaessigung35a: r.ermSumme, kinder,
                 renten: d.renten.map(x => ({ wer: x.wer, art: x.art, betrag: zahl(x.betrag), beginn: zahl(x.beginn), alter: zahl(x.alter), anteil: zahl(x.anteil), freibetrag: zahl(x.freibetrag), kvpv: zahl(x.kvpv) })),
                 vermietung: d.vermietung.map(x => ({ wer: x.wer, miete: zahl(x.miete), gebaeude: zahl(x.gebaeude), baujahr: zahl(x.baujahr), afa: zahl(x.afa), zinsen: zahl(x.zinsen), erhaltung: zahl(x.erhaltung), sonstige: zahl(x.sonstige) })),
@@ -951,7 +1062,8 @@
             if (e.entlastungAE) h += zeile('− Entlastungsbetrag Alleinerziehende', euro(e.entlastungAE));
             h += zeile('− Vorsorge (Rente, Kranken-, Pflegeversicherung …)', euro(e.vorsorge));
             h += zeile('− weitere Sonderausgaben', euro(e.sonderWeitere), e.saPausch ? 'Pauschbetrag' : 'Kirchensteuer, Spenden, Kinderbetreuung');
-            if (e.agb) h += zeile('− Krankheitskosten über der zumutbaren Belastung', euro(e.agb), 'zumutbar: ' + euro(e.zumutbar));
+            if (e.agbKrank) h += zeile('− Krankheitskosten über der zumutbaren Belastung', euro(e.agbKrank), 'zumutbar: ' + euro(e.zumutbar));
+            if (e.pauschAgb) h += zeile('− Pauschbeträge (Behinderung, Pflege, Hinterbliebene, Ausbildung)', euro(e.pauschAgb));
             if (e.kfbGuenstiger) h += zeile('− Kinderfreibeträge', euro(e.kfbSumme));
             h += zeile('= zu versteuerndes Einkommen', euro(e.zvE), null, true);
             h += zeile('Einkommensteuer' + (e.zusammen ? ' (Splitting)' : ''), euro(e.estTariflich), e.lohnersatz ? 'mit Progressionsvorbehalt (' + euro(e.lohnersatz) + ' steuerfreie Einnahmen' + (e.auslandFrei ? ', davon Ausland ' + euro(e.auslandFrei) : '') + ')' : null);
@@ -974,6 +1086,7 @@
             $('ergHinweise').innerHTML = hw.map(x => '<li>' + esc(x) + '</li>').join('');
             $('ergHinweise').hidden = !hw.length;
             zeigeTeilErgebnisse(e, d);
+            zeigePauschalen(r, d);
             // Leiste unten
             $('leiste').hidden = !hatLohn;
             $('leisteText').textContent = erstattung ? 'Geschätzte Erstattung' : 'Geschätzte Nachzahlung';
@@ -1041,6 +1154,18 @@
         document.querySelectorAll('[data-obj-neu]').forEach(b => {
             b.onclick = () => { const name = b.dataset.objNeu; daten()[name].push(OBJ[name].neu()); zeichneObjListe(name); aktualisiere(); };
         });
+        function zeigePauschalen(r, d) {
+            const werte = { konto: r.konto, tel: r.telefon, am: r.amPausch, vma: r.vma, lkw: r.lkw, umzug: r.umzug, beh: r.behPausch + r.behFahrt, pflege: r.pflege, hinter: r.hinter, ausb: r.ausbildung };
+            Object.keys(werte).forEach(k => {
+                $('pb-' + k).textContent = euro(werte[k]);
+                $('pa-' + k).classList.toggle('aktiv', werte[k] > 0);
+            });
+            if (d.n.amPausch && r.am > 0) $('pb-am').textContent = 'nicht nötig – Einzelbelege eingetragen';
+            const zus = d.p.zusammen === 'ja';
+            $('behPartner').hidden = !zus; $('hinterPartner').hidden = !zus;
+            const summe = Object.values(werte).reduce((a, b) => a + b, 0);
+            $('sumPausch').textContent = euro(summe);
+        }
         function zeigeTeilErgebnisse(e, d) {
             const S = window.SDSteuer;
             // Renten
@@ -1144,6 +1269,19 @@
             if (r.handwerk) hh.push(['Handwerkerleistungen', 'nur Arbeitskosten – ' + posten('handwerk'), r.handwerk]);
             gruppen.push({ titel: 'Anlage Haushaltsnahe Aufwendungen', zeilen: hh, fuss: hh.length ? 'Eingetragen werden die Kosten; die Ermäßigung (hier ca. ' + euro(r.ermSumme) + ') rechnet das Finanzamt.' : '' });
             gruppen.push({ titel: 'Anlage Außergewöhnliche Belastungen – Krankheitskosten', zeilen: r.krank ? [['Krankheitskosten (selbst bezahlt)', posten('krank'), r.krank]] : [] });
+            const pw = [];
+            if (r.telefon) pw.push(['Telefon- und Internetkosten', '20 % der Rechnung, höchstens 20 € im Monat (Anlage N, weitere Werbungskosten)', r.telefon]);
+            if (r.amPausch) pw.push(['Arbeitsmittel (ohne Einzelnachweis)', 'Anlage N – kann vom Finanzamt gestrichen werden', r.amPausch]);
+            if (r.vma) pw.push(['Verpflegungsmehraufwendungen', zahl(d.n.vma8) + ' Tage × 14 € + ' + zahl(d.n.vma24) + ' Tage × 28 € (Anlage N, Auswärtstätigkeit)', r.vma]);
+            if (r.lkw) pw.push(['Übernachtungspauschale Berufskraftfahrer', zahl(d.n.lkwTage) + ' Tage', r.lkw]);
+            if (r.umzug) pw.push(['Umzugskosten – Pauschale sonstige Umzugsauslagen', 'Anlage N, weitere Werbungskosten', r.umzug]);
+            gruppen.push({ titel: 'Anlage N – Pauschalen', zeilen: pw });
+            const pa = [];
+            if (r.behPausch || r.behFahrt) pa.push(['Behinderten-Pauschbetrag' + (r.behFahrt ? ' und Fahrtkostenpauschale ' + euro(r.behFahrt) : ''), 'Anlage Außergewöhnliche Belastungen – GdB und Merkzeichen angeben', r.behPausch + r.behFahrt]);
+            if (r.pflege) pa.push(['Pflege-Pauschbetrag', 'Anlage Außergewöhnliche Belastungen – Name, Pflegegrad, Zahl der Pflegepersonen', r.pflege]);
+            if (r.hinter) pa.push(['Hinterbliebenen-Pauschbetrag', 'Anlage Außergewöhnliche Belastungen', r.hinter]);
+            if (r.ausbildung) pa.push(['Ausbildungsfreibetrag', 'Anlage Kind – Ausbildung und auswärtige Unterbringung', r.ausbildung]);
+            gruppen.push({ titel: 'Pauschbeträge (Außergewöhnliche Belastungen / Anlage Kind)', zeilen: pa });
             // Weitere Anlagen
             const wer = (x) => d.p.zusammen === 'ja' && String(x.wer) === '2' ? ' (Partner/in)' : '';
             const ARTEN = { gesetzlich: 'Leibrente aus gesetzlicher Rentenversicherung / Rürup / Versorgungswerk', betrieb: 'Leistungen aus Altersvorsorgevertrag / Betriebsrente (Anlage R-AV/bAV)', privat: 'Private Leibrente (Ertragsanteil)' };
