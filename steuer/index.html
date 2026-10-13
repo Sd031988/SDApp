@@ -681,6 +681,42 @@
             </div>
         </details>
 
+        <!-- Formulare ausfuellen -->
+        <details class="karte" id="karteFormulare">
+            <summary><div class="titel"><h2>🖨️ Auf Papier abgeben – Formulare ausfüllen</h2><small>Hauptvordruck und Anlage N automatisch ausfüllen, ausdrucken, unterschreiben</small></div></summary>
+            <div class="inhalt">
+                <p class="info">So geht’s: 1. Formulare als PDF herunterladen (bisher unterstützt: <b>Hauptvordruck ESt 1 A 2025</b> und <b>Anlage N 2025</b> von <a href="https://www.lohnsteuer-kompakt.de/steuerwissen/formulare-fuer-die-steuererklaerung-2025" target="_blank" rel="noopener">lohnsteuer-kompakt.de</a>). 2. Unten deine Angaben eintragen. 3. PDFs auswählen – der Helfer prüft, ob es genau diese Formularversion ist, und füllt sie aus. 4. Ausdrucken, <b>alles prüfen</b>, auf Seite 2 des Hauptvordrucks <b>unterschreiben</b> (Ehepaare beide) und beim Finanzamt abgeben.</p>
+                <div class="warn" id="formularJahrHinweis" hidden>Für dieses Steuerjahr sind noch keine Formulare hinterlegt – bisher nur 2025.</div>
+                <div class="warn">Wer selbstständig ist oder ein Gewerbe hat, muss elektronisch abgeben (Mein ELSTER). Weitere Anlagen (z. B. Vorsorgeaufwand, Kind, Sonderausgaben) folgen – bis dahin diese Beträge von Hand eintragen (siehe Zusammenfassung).</div>
+                <h3 style="margin:6px 0 0;font-size:.95rem">Deine Angaben für das Formular</h3>
+                <p class="info">🔒 Diese Daten werden nur zum Ausfüllen genutzt und <b>nicht gespeichert</b> – außer du setzt unten den Haken.</p>
+                <div class="zeile"><label class="feld">An das Finanzamt<input type="text" data-pf="finanzamt" placeholder="z. B. Heidelberg" ></label><label class="feld">Steuernummer <span class="hilfe">wie im letzten Bescheid</span><input type="text" data-pf="stnr" placeholder="z. B. 32/123/45678" ></label></div>
+                <div class="zeile"><label class="feld">Steuer-ID (11 Ziffern) <span class="hilfe">steht auf der Lohnsteuerbescheinigung</span><input type="text" data-pf="a_idnr" placeholder="z. B. 12 345 678 901" inputmode="numeric"></label><label class="feld">Geburtsdatum<input type="date" data-pf="a_geb" placeholder="" ></label></div>
+                <div class="zeile"><label class="feld">Name<input type="text" data-pf="a_name" placeholder="Mustermann" ></label><label class="feld">Vorname<input type="text" data-pf="a_vorname" placeholder="Max" ></label></div>
+                <div class="zeile"><label class="feld">Ausgeübter Beruf<input type="text" data-pf="a_beruf" placeholder="z. B. Lagerist" ></label><label class="feld">Religion am 31.12.<select data-pf="a_religion"><option value="">– wählen –</option><option value="VD">VD – nicht kirchensteuerpflichtig</option><option value="EV">EV – evangelisch</option><option value="RK">RK – römisch-katholisch</option><option value="AK">AK – altkatholisch</option><option value="IS">IS – israelitisch/jüdisch</option></select></label></div>
+                <div class="zeile"><label class="feld">Straße<input type="text" data-pf="strasse" placeholder="Hauptstraße" ></label><label class="feld">Hausnummer (+ Zusatz)<input type="text" data-pf="hausnr" placeholder="12a" ></label></div>
+                <div class="zeile"><label class="feld">PLZ<input type="text" data-pf="plz" placeholder="69115" inputmode="numeric"></label><label class="feld">Wohnort<input type="text" data-pf="ort" placeholder="Heidelberg" ></label></div>
+                <div class="zeile"><label class="feld">Telefon tagsüber<input type="text" data-pf="telefon" placeholder="optional" inputmode="tel"></label><label class="feld">IBAN für die Erstattung<input type="text" data-pf="iban" placeholder="DE.." ></label></div>
+                <div id="pfPartner">
+                    <h3 style="margin:6px 0 0;font-size:.92rem">👥 Partner/in</h3>
+                    <div class="zeile"><label class="feld">Steuer-ID Partner/in<input type="text" data-pf="b_idnr" placeholder="" inputmode="numeric"></label><label class="feld">Geburtsdatum Partner/in<input type="date" data-pf="b_geb" placeholder="" ></label></div>
+                    <div class="zeile"><label class="feld">Name<input type="text" data-pf="b_name" placeholder="" ></label><label class="feld">Vorname<input type="text" data-pf="b_vorname" placeholder="" ></label></div>
+                    <div class="zeile"><label class="feld">Ausgeübter Beruf<input type="text" data-pf="b_beruf" placeholder="" ></label><label class="feld">Religion am 31.12.<select data-pf="b_religion"><option value="">– wählen –</option><option value="VD">VD – nicht kirchensteuerpflichtig</option><option value="EV">EV – evangelisch</option><option value="RK">RK – römisch-katholisch</option><option value="AK">AK – altkatholisch</option><option value="IS">IS – israelitisch/jüdisch</option></select></label></div>
+                    <div class="zeile"><label class="feld">Verheiratet / Lebenspartnerschaft seit<input type="date" data-pf="verheiratet_seit" placeholder="" ></label><label class="feld">Kontoinhaber/in<select data-pf="inhaber"><option value="a">ich (Person A)</option><option value="b">Partner/in (Person B)</option></select></label></div>
+                </div>
+                <h3 style="margin:6px 0 0;font-size:.92rem">💼 Für die Anlage N</h3>
+                <div class="zeile"><label class="feld">Erste Tätigkeitsstätte (PLZ, Ort, Straße)<input type="text" data-pf="arbeitsstaette" placeholder="z. B. 69115 Heidelberg, Industriestr. 5" ></label><label class="feld">Arbeitstage pro Woche<input type="text" data-pf="tage_woche" placeholder="5" inputmode="numeric"></label></div>
+                <label class="feld">Homeoffice-Tage gehören in
+                    <select data-pf="ho_art"><option value="58">Zeile 58 – es gab einen anderen Arbeitsplatz, ich war an diesen Tagen nicht im Betrieb</option><option value="59">Zeile 59 – mir stand dauerhaft kein anderer Arbeitsplatz zur Verfügung</option></select></label>
+                <label class="check"><input type="checkbox" id="pfMerken"> <span>Diese Angaben auf diesem Gerät merken (sonst nach dem Schließen weg)</span></label>
+                <div class="knoepfe">
+                    <button type="button" class="btn prim" id="formularBtn">📄 Formular-PDFs wählen und ausfüllen</button>
+                    <input type="file" id="formularDateien" accept="application/pdf,.pdf" multiple hidden>
+                </div>
+                <p class="status" id="formularStatus" aria-live="polite"></p>
+            </div>
+        </details>
+
         <details class="karte">
             <summary><div class="titel"><h2>💾 Daten sichern & löschen</h2><small>Alles bleibt auf diesem Gerät</small></div></summary>
             <div class="inhalt">
@@ -703,6 +739,8 @@
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
     <script src="steuer-rechner.js?v=4"></script>
+    <script src="../vendor/pdf-lib-1.17.1.min.js"></script>
+    <script src="formular-druck.js?v=1"></script>
     <script>
         'use strict';
 
@@ -1190,6 +1228,8 @@
             // Verlust
             $('ergVerlust').innerHTML = (e.verlustAbzug ? 'Dieses Jahr abgezogen: <b>' + euro(e.verlustAbzug) + '</b><br>' : '') + (e.verlustRest ? 'Bleibt für nächstes Jahr: <b>' + euro(e.verlustRest) + '</b>' : (zahl(d.verlust.vortrag) ? 'Der Verlustvortrag ist dieses Jahr ganz verbraucht.' : 'Kein Verlustvortrag eingetragen.'));
             $('kvSelbst2Feld').hidden = d.p.zusammen !== 'ja';
+            $('pfPartner').hidden = d.p.zusammen !== 'ja';
+            $('formularJahrHinweis').hidden = jahr === 2025;
             $('geb2Feld').hidden = d.p.zusammen !== 'ja';
             $('p23Partner').hidden = d.p.zusammen !== 'ja';
             $('sumAusland').textContent = euro(e.veraeusserung + e.auslandPflichtig);
@@ -1202,6 +1242,108 @@
             if (e.kapRestAktien || e.kapRestSonst) $('ergKap').innerHTML += '<br>Verlustvortrag ins nächste Jahr: ' + (e.kapRestAktien ? 'Aktien ' + euro(e.kapRestAktien) : '') + (e.kapRestAktien && e.kapRestSonst ? ', ' : '') + (e.kapRestSonst ? 'sonstige ' + euro(e.kapRestSonst) : '');
             void S;
         }
+        // ------------------------------------------------------------
+        // Amtliche Vordrucke ausfüllen (formular-druck.js + formulare-<jahr>.json)
+        // ------------------------------------------------------------
+        const PF_KEY = 'sdSteuerFormularAngaben';
+        let pf = {};
+        try { const g = JSON.parse(localStorage.getItem(PF_KEY) || 'null'); if (g) { pf = g; $('pfMerken').checked = true; } } catch (e) { /* egal */ }
+        document.querySelectorAll('[data-pf]').forEach(el => {
+            if (pf[el.dataset.pf] != null) el.value = pf[el.dataset.pf];
+            el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => { pf[el.dataset.pf] = el.value; pfSpeichern(); });
+        });
+        function pfSpeichern() { try { if ($('pfMerken').checked) localStorage.setItem(PF_KEY, JSON.stringify(pf)); else localStorage.removeItem(PF_KEY); } catch (e) { /* egal */ } }
+        $('pfMerken').onchange = pfSpeichern;
+        const nurZiffern = (s) => String(s || '').replace(/\D/g, '');
+        const datum8 = (iso) => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + m[2] + m[1] : ''; };
+        const auf = (x) => Math.ceil(Number(x) || 0), ab = (x) => Math.floor(Number(x) || 0);
+        function formularWerte() {
+            const d = daten(), r = berechne();
+            const zus = d.p.zusammen === 'ja';
+            const iban = String(pf.iban || '').replace(/\s+/g, '').toUpperCase();
+            const hausnr = String(pf.hausnr || '').trim();
+            const est = {
+                est_erkl: true, stnr: String(pf.stnr || '').replace(/\s+/g, ''), finanzamt: pf.finanzamt, telefon: String(pf.telefon || '').replace(/[^\d+]/g, ''),
+                a_idnr: nurZiffern(pf.a_idnr), a_geb: datum8(pf.a_geb), a_name: pf.a_name, a_vorname: pf.a_vorname, a_religion: pf.a_religion, a_beruf: pf.a_beruf,
+                strasse: pf.strasse, hausnr: (hausnr.match(/^\d+/) || [''])[0], hauszusatz: hausnr.replace(/^\d+\s*/, ''), plz: nurZiffern(pf.plz), ort: pf.ort,
+                iban: iban.startsWith('DE') ? iban.slice(2) : '', ersatz_a: ab(zahl(d.p.lohnersatz))
+            };
+            if (zus) Object.assign(est, { zusammen: true, verheiratet_seit: datum8(pf.verheiratet_seit), b_idnr: nurZiffern(pf.b_idnr), b_geb: datum8(pf.b_geb), b_name: pf.b_name, b_vorname: pf.b_vorname,
+                b_religion: pf.b_religion, b_beruf: pf.b_beruf, ersatz_b: ab(zahl(d.p.lohnersatz2)) });
+            if (iban.startsWith('DE')) est[(zus && pf.inhaber === 'b') ? 'inhaber_b' : 'inhaber_a'] = true;
+            // Anlage N – Person A mit allen Werbungskosten
+            const l = d.l1;
+            const nA = { name: pf.a_name, vorname: pf.a_vorname, stnr: est.stnr, person_a: true,
+                brutto: ab(zahl(l.brutto)), lst: zahl(l.lst), soli: zahl(l.soli), kist: zahl(l.kist), kug: ab(zahl(l.lohnersatzZ15)),
+                versorgung: ab(zahl(l.versorgung)), vbmg: ab(zahl(l.vBmg)), vjahr: zahl(l.vJahr) ? String(Math.round(zahl(l.vJahr))) : '' };
+            if (r.tage && r.km) {
+                Object.assign(nA, { wt_art: '1', wt_adresse: pf.arbeitsstaette, wt_tage_woche: String(pf.tage_woche || '5'), wt_tage: r.tage, wt_km: r.km });
+                if (d.n.verkehrsmittel === 'auto') nA.wt_km_pkw = r.km; else nA.wt_km_oeff = r.km;
+                if (d.n.verkehrsmittel === 'oepnv' && zahl(d.n.ticketkosten)) nA.wt_ticket = auf(zahl(d.n.ticketkosten));
+            }
+            if (r.gewerkschaft) Object.assign(nA, { verband_text: 'Gewerkschaft / Berufsverband', verband: auf(r.gewerkschaft) });
+            const am = d.posten.filter(p => p.kategorie === 'arbeitsmittel' && zahl(p.betrag) && (zahl(p.betrag) <= FEST.gwg || p.computer)).map(p => {
+                const anteil = p.anteil === '' || p.anteil == null ? 100 : zahl(p.anteil);
+                return { text: (p.text || 'Arbeitsmittel') + (anteil < 100 ? ' (' + anteil + ' %)' : ''), betrag: zahl(p.betrag) * anteil / 100 };
+            });
+            if (r.amPausch) am.push({ text: 'Arbeitsmittel ohne Einzelnachweis', betrag: r.amPausch });
+            if (am.length === 1) Object.assign(nA, { am1_text: am[0].text, am1: auf(am[0].betrag) });
+            else if (am.length === 2) Object.assign(nA, { am1_text: am[0].text, am1: auf(am[0].betrag), am2_text: am[1].text, am2: auf(am[1].betrag) });
+            else if (am.length > 2) Object.assign(nA, { am1_text: 'Arbeitsmittel lt. beigefügter Aufstellung', am1: auf(am.reduce((s, x) => s + x.betrag, 0)) });
+            if (am.length) nA.am_summe = auf(am.reduce((s, x) => s + x.betrag, 0));
+            if (r.hoTage) nA[pf.ho_art === '59' ? 'ho59' : 'ho58'] = r.hoTage;
+            if (r.fortbildung) Object.assign(nA, { fb_text: 'Fortbildung', fb: auf(r.fortbildung) });
+            const so1 = r.bewerbung + r.vorstellung + r.sonstigeWk, so2 = r.konto + r.telefon + r.umzug;
+            if (so1) Object.assign(nA, { so1_text: 'Bewerbungen / Sonstiges lt. Aufstellung', so1: auf(so1) });
+            if (so2) Object.assign(nA, { so2_text: 'Kontoführung / Telefon / Umzug', so2: auf(so2) });
+            if (so1 || so2) nA.so_summe = auf(so1) + auf(so2);
+            if (r.lkw) nA.lkw = Math.round(zahl(d.n.lkwTage));
+            if (zahl(d.n.vma8)) nA.vma8 = Math.round(zahl(d.n.vma8));
+            if (zahl(d.n.vma24)) nA.vma24 = Math.round(zahl(d.n.vma24));
+            if (zahl(d.n.vmaErstattet)) nA.vma_ersetzt = auf(zahl(d.n.vmaErstattet));
+            const n = [nA];
+            if (zus && (zahl(d.l2.brutto) || zahl(d.l2.versorgung))) {
+                const l2 = d.l2;
+                const nB = { name: pf.b_name, vorname: pf.b_vorname, stnr: est.stnr, person_b: true, brutto: ab(zahl(l2.brutto)), lst: zahl(l2.lst), soli: zahl(l2.soli), kist: zahl(l2.kist),
+                    kug: ab(zahl(l2.lohnersatzZ15)), versorgung: ab(zahl(l2.versorgung)), vbmg: ab(zahl(l2.vBmg)), vjahr: zahl(l2.vJahr) ? String(Math.round(zahl(l2.vJahr))) : '' };
+                if (zahl(l2.wk) > W_AP()) Object.assign(nB, { so1_text: 'Werbungskosten lt. Aufstellung', so1: auf(zahl(l2.wk)), so_summe: auf(zahl(l2.wk)) });
+                n.push(nB);
+            }
+            return { ESt1A: est, N: n };
+        }
+        const W_AP = () => JAHRE[jahr].ap;
+        let formularSpec = null;
+        $('formularBtn').onclick = () => {
+            if (jahr !== 2025) { $('formularStatus').textContent = '⚠️ Bisher gibt es die Formulare nur für 2025 – oben das Jahr 2025 wählen.'; return; }
+            $('formularDateien').click();
+        };
+        $('formularDateien').onchange = async (ev) => {
+            const dateien = Array.from(ev.target.files || []);
+            ev.target.value = '';
+            if (!dateien.length) return;
+            const st = $('formularStatus');
+            st.textContent = '⏳ Prüfe die Formulare …';
+            try {
+                if (!formularSpec) formularSpec = await (await fetch('formulare-2025.json')).json();
+                const geladen = await Promise.all(dateien.map(async f => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })));
+                const erg = await window.SDFormularDruck.fuelle(geladen, formularWerte(), formularSpec);
+                const NAMEN = { ESt1A: 'Hauptvordruck ESt 1 A 2025', N: 'Anlage N 2025' };
+                const zeilen = erg.bericht.map(b => b.status === 'ok' ? '✓ ' + NAMEN[b.formular] + ' erkannt (' + b.datei + ')'
+                    : b.status === 'andere_version' ? '⚠️ ' + b.datei + ': andere Version von „' + NAMEN[b.formular] + '“ – nicht ausgefüllt (Positionen passen nicht sicher)'
+                    : '⚠️ ' + b.datei + ': kein unterstütztes Formular');
+                if (erg.gekuerzt.length) zeilen.push('ℹ️ Zu lang für das Feld (gekürzt): ' + erg.gekuerzt.join(', '));
+                if (!erg.pdf) { st.innerHTML = zeilen.map(esc).join('<br>') + '<br>Es wurde nichts ausgefüllt.'; return; }
+                const blob = new Blob([erg.pdf], { type: 'application/pdf' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = 'Steuererklaerung-' + jahr + '-ausgefuellt.pdf';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+                zeilen.push('📄 Ausgefülltes PDF heruntergeladen. Bitte jede Zeile prüfen, fehlende Angaben von Hand ergänzen, unterschreiben.');
+                st.innerHTML = zeilen.map(esc).join('<br>');
+            } catch (err) {
+                st.textContent = '⚠️ ' + ((err && err.message) || String(err));
+            }
+        };
         $('leisteBtn').onclick = () => { $('ergKarte').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('ergDetails').open = true; };
         // Leiste nur zeigen, wenn die Ergebnis-Karte nicht zu sehen ist
         if ('IntersectionObserver' in window) {
