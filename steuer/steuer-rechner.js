@@ -4,8 +4,10 @@
    Sonderausgaben, außergewöhnliche Belastungen, Entlastungsbetrag für
    Alleinerziehende, Günstigerprüfung Kindergeld/Kinderfreibeträge,
    Progressionsvorbehalt (Lohnersatzleistungen), § 35a, Soli, Kirchensteuer.
-   Nicht enthalten: andere Einkunftsarten (Rente, Vermietung, Selbstständigkeit,
-   Kapitalerträge), Verlustvorträge, Sonderfälle. Ergebnis = Schätzung.
+   Dazu: Renten (Anlage R), Vermietung (V), Selbstständige/Gewerbe (S/G mit
+   Gewerbesteuer und § 35), Kapitalerträge (KAP mit Günstigerprüfung),
+   Verlustvortrag (§ 10d), Kirchensteuer bei nur einem Kirchenmitglied inkl.
+   besonderem Kirchgeld. Ergebnis = Schätzung.
 
    Quellen der Jahreswerte (geprüft am 13.10.2026):
    - § 32a EStG Tarifformeln 2024/2025/2026 (Steuerfortentwicklungsgesetz, BGBl. 2024 I Nr. 449)
@@ -86,27 +88,68 @@
     return cent(Math.min(est * FEST.soliSatz, (est - frei) * FEST.soliMilderung));
   }
 
+  // Besteuerungsanteil gesetzliche Rente nach Jahr des Rentenbeginns (§ 22 Nr. 1 S. 3 a aa EStG,
+  // ab 2023 +0,5 Prozentpunkte je Jahr – Wachstumschancengesetz)
+  function besteuerungsanteil(beginn) {
+    const b = Math.round(n(beginn));
+    if (!b || b <= 2005) return 0.50;
+    if (b <= 2020) return 0.50 + (b - 2005) * 0.02;
+    if (b <= 2022) return 0.80 + (b - 2020) * 0.01;
+    return Math.min(1, 0.82 + (b - 2022) * 0.005);
+  }
+  // Ertragsanteil private Leibrente nach Alter bei Rentenbeginn (§ 22 Nr. 1 S. 3 a bb EStG)
+  // Geprüft (Tabelle lohnsteuer-kompakt.de) für 50 bis 75 Jahre; andere Alter: Prozentsatz selbst eintragen
+  function ertragsanteil(alter) {
+    const t = { 50: 30, 51: 29, 52: 29, 53: 28, 54: 27, 55: 26, 56: 26, 57: 25, 58: 24, 59: 23, 60: 22, 61: 22, 62: 21, 63: 20, 64: 19, 65: 18, 66: 18,
+      67: 17, 68: 16, 69: 15, 70: 15, 71: 14, 72: 13, 73: 13, 74: 12, 75: 11 };
+    const x = Math.round(n(alter));
+    return t[x] != null ? t[x] / 100 : null;
+  }
+  // AfA-Satz Gebäude (§ 7 Abs. 4 EStG): vor 1925 2,5 %, 1925–2022 2 %, ab 2023 fertiggestellt 3 %
+  function afaSatz(baujahr) {
+    const b = Math.round(n(baujahr));
+    if (b && b < 1925) return 0.025;
+    if (b >= 2023) return 0.03;
+    return 0.02;
+  }
+  // Besonderes Kirchgeld in glaubensverschiedener Ehe (Stufen nach gemeinsamem zvE)
+  const KIRCHGELD_BIS_2024 = [[40000, 96], [47500, 156], [60000, 276], [72500, 396], [85000, 540], [97500, 696], [110000, 840], [135000, 1200], [160000, 1560], [185000, 1860], [210000, 2220], [260000, 2940], [310000, 3600]];
+  const KIRCHGELD_AB_2025 = [[50000, 96], [57500, 156], [70000, 276], [82500, 396], [95000, 540], [107500, 696], [120000, 840], [145000, 1200], [170000, 1560], [195000, 1860], [220000, 2220], [270000, 2940], [320000, 3600]];
+  function kirchgeld(zvE, j) {
+    const t = j >= 2025 ? KIRCHGELD_AB_2025 : KIRCHGELD_BIS_2024;
+    let w = 0;
+    t.forEach(([ab, betrag]) => { if (zvE >= ab) w = betrag; });
+    return w;
+  }
+
   function person(p, j) {
     p = p || {};
     const brutto = n(p.brutto);
     const wkTat = n(p.wk);
     const ap = JAHR[j].ap;
     // Pauschbetrag höchstens bis zur Höhe der Einnahmen; höhere tatsächliche Kosten auch mit Verlust
-    const wk = wkTat > ap ? wkTat : Math.min(ap, brutto);
+    const wk = brutto > 0 || wkTat > 0 ? (wkTat > ap ? wkTat : Math.min(ap, brutto)) : 0;
     return {
-      brutto, wk, wkPausch: !(wkTat > ap), einkuenfte: brutto - wk,
+      brutto, wk, wkPausch: !(wkTat > ap), arbeit: brutto - wk,
+      rente: 0, vermietung: 0, betrieb: 0, gewerbe: 0, renteGesetzlich: false,
       lst: n(p.lst), soli: n(p.soli), kist: n(p.kist),
-      rvAN: n(p.rvAN), rvAG: n(p.rvAG), kv: n(p.kv), pv: n(p.pv), av: n(p.av), ruerup: n(p.ruerup),
+      rvAN: n(p.rvAN), rvAG: n(p.rvAG), kv: n(p.kv), pv: n(p.pv), av: n(p.av), ruerup: n(p.ruerup), kvSelbst: n(p.kvSelbst),
       krankengeld: p.krankengeld !== false,
       lohnersatz: n(p.lohnersatzZ15) + n(p.lohnersatz),
-      kirche: !!p.kirche
+      kirche: !!p.kirche,
+      get summe() { return this.arbeit + this.rente + this.vermietung + this.betrieb + this.gewerbe; }
     };
   }
 
   /**
    * e: { jahr, zusammen, land, alleinerziehend, p1, p2,
-   *      sonstVersicherung (Haftpflicht, Unfall, BU, Risiko-LV …), spenden, kinderbetreuung (abziehbar),
-   *      krankheit, ermaessigung35a, kinder: [{ faktor: 1|0.5, kgMonate }] }
+   *      sonstVersicherung, spenden, kinderbetreuung (abziehbar), krankheit, ermaessigung35a,
+   *      kinder: [{ faktor, kgMonate }],
+   *      renten: [{ wer: 1|2, art: 'gesetzlich'|'privat'|'betrieb', betrag, beginn, alter, freibetrag, kvpv }],
+   *      kap: { ertraege, kapest, soli, kist },
+   *      vermietung: [{ wer, miete, gebaeude, baujahr, afa, zinsen, erhaltung, sonstige }],
+   *      betriebe: [{ wer, art: 'frei'|'gewerbe', einnahmen, ausgaben, hebesatz }],
+   *      verlustvortrag, vorauszahlung: { est, soli, kist } }
    */
   function berechne(e) {
     const j = JAHR[e.jahr] ? e.jahr : 2025;
@@ -115,27 +158,100 @@
     const a = person(e.p1, j);
     const b = zus ? person(e.p2, j) : null;
     const leute = b ? [a, b] : [a];
-    const r = { jahr: j, zusammen: zus, hinweise: [] };
+    const wer = (w) => (zus && Number(w) === 2) ? b : a;
+    const r = { jahr: j, zusammen: zus, hinweise: [], renten: [], vermietung: [], betriebe: [] };
 
-    // 1. Einkünfte und Gesamtbetrag der Einkünfte
-    r.einkuenfte = leute.reduce((s, x) => s + x.einkuenfte, 0);
+    // 1a. Renten (Anlage R): gesetzlich mit Besteuerungsanteil, privat mit Ertragsanteil, Betriebsrente/Riester voll
+    const mitSonstigen = new Set();
+    (e.renten || []).forEach(x => {
+      const p = wer(x.wer);
+      const betrag = n(x.betrag);
+      if (!betrag) return;
+      let pflichtig, info;
+      if (x.art === 'privat') {
+        // eigener Prozentsatz (z. B. aus der Mitteilung der Versicherung) hat Vorrang
+        const ea = n(x.anteil) > 0 ? n(x.anteil) / 100 : ertragsanteil(x.alter);
+        if (ea == null) { r.hinweise.push('ertragsanteil_fehlt'); return; }
+        pflichtig = betrag * ea;
+        info = { anteil: ea };
+      } else if (x.art === 'betrieb') {
+        pflichtig = betrag; info = { anteil: 1 };
+      } else {
+        const anteil = besteuerungsanteil(x.beginn);
+        const frei = n(x.freibetrag) > 0 ? n(x.freibetrag) : betrag * (1 - anteil);
+        pflichtig = Math.max(0, betrag - frei);
+        info = { anteil, freibetrag: frei, geschaetzt: !(n(x.freibetrag) > 0) && Math.round(n(x.beginn)) < j };
+        p.renteGesetzlich = true;
+      }
+      p.rente += pflichtig;
+      p.kvSelbst += n(x.kvpv);
+      mitSonstigen.add(p);
+      r.renten.push(Object.assign({ art: x.art || 'gesetzlich', betrag, pflichtig }, info));
+    });
+    // Werbungskosten-Pauschbetrag 102 € für sonstige Einkünfte (§ 9a Nr. 3 EStG), je Person
+    mitSonstigen.forEach(p => { p.rente = Math.max(0, p.rente - Math.min(102, p.rente)); });
+
+    // 1b. Vermietung (Anlage V)
+    (e.vermietung || []).forEach(x => {
+      const p = wer(x.wer);
+      const afa = n(x.afa) > 0 ? n(x.afa) : n(x.gebaeude) * afaSatz(x.baujahr);
+      const ueberschuss = n(x.miete) - afa - n(x.zinsen) - n(x.erhaltung) - n(x.sonstige);
+      p.vermietung += ueberschuss;
+      r.vermietung.push({ afa, satz: n(x.afa) > 0 ? null : afaSatz(x.baujahr), ueberschuss });
+    });
+
+    // 1c. Selbstständige Arbeit (Anlage S) und Gewerbebetrieb (Anlage G) mit Gewerbesteuer
+    r.gewerbesteuer = 0; r.messbetrag = 0;
+    (e.betriebe || []).forEach(x => {
+      const p = wer(x.wer);
+      const gewinn = n(x.einnahmen) - n(x.ausgaben);
+      if (x.art === 'gewerbe') {
+        p.gewerbe += gewinn;
+        // Gewerbeertrag vereinfacht = Gewinn; Freibetrag 24.500 €, auf volle 100 € abrunden, Messzahl 3,5 %
+        const ertrag = Math.floor(Math.max(0, gewinn - 24500) / 100) * 100;
+        const mess = Math.floor(ertrag * 0.035 * 100) / 100;
+        const hebesatz = n(x.hebesatz) > 0 ? n(x.hebesatz) : 400;
+        const gewst = Math.round(mess * hebesatz) / 100;
+        r.messbetrag += mess; r.gewerbesteuer += gewst;
+        r.betriebe.push({ art: 'gewerbe', gewinn, messbetrag: mess, hebesatz, gewerbesteuer: gewst });
+      } else {
+        p.betrieb += gewinn;
+        r.betriebe.push({ art: 'frei', gewinn });
+      }
+    });
+
+    // 2. Summe der Einkünfte, Entlastungsbetrag, Verlustvortrag (§ 10d EStG) -> Gesamtbetrag der Einkünfte
+    r.arbeit = leute.reduce((s, x) => s + x.arbeit, 0);
+    r.rente = leute.reduce((s, x) => s + x.rente, 0);
+    r.vermietungSumme = leute.reduce((s, x) => s + x.vermietung, 0);
+    r.betriebSumme = leute.reduce((s, x) => s + x.betrieb + x.gewerbe, 0);
+    r.einkuenfte = leute.reduce((s, x) => s + x.summe, 0);
     const kinder = (e.kinder || []).filter(k => k && n(k.faktor) > 0);
     const anzKinder = kinder.length;
-    r.entlastungAE = (!zus && e.alleinerziehend && anzKinder > 0) ? FEST.alleinerziehend + FEST.alleinerziehendJeWeiteres * (anzKinder - 1) : 0;
-    r.gde = r.einkuenfte - r.entlastungAE;
+    r.entlastungAE = (!zus && e.alleinerziehend && anzKinder > 0) ? Math.min(Math.max(0, r.einkuenfte), FEST.alleinerziehend + FEST.alleinerziehendJeWeiteres * (anzKinder - 1)) : 0;
+    const vorVerlust = r.einkuenfte - r.entlastungAE;
+    const vortrag = Math.max(0, n(e.verlustvortrag));
+    const sockel = 1000000 * (zus ? 2 : 1);
+    const maxAbzug = vorVerlust > 0 ? Math.min(vorVerlust, sockel) + Math.max(0, vorVerlust - sockel) * 0.7 : 0;
+    r.verlustAbzug = Math.min(vortrag, maxAbzug);
+    r.gde = vorVerlust - r.verlustAbzug;
+    // Verbleibender bzw. neuer Verlust (Sonderausgaben gehen bei negativem Gesamtbetrag verloren)
+    r.verlustRest = cent(vortrag - r.verlustAbzug + (r.gde < 0 ? -r.gde : 0));
 
-    // 2. Sonderausgaben – Vorsorge
+    // 3. Vorsorge
     const rvGes = leute.reduce((s, x) => s + x.rvAN + x.rvAG + x.ruerup, 0);
     const rvAG = leute.reduce((s, x) => s + x.rvAG, 0);
     r.altersvorsorge = Math.max(0, Math.min(rvGes, P.avHoechst * (zus ? 2 : 1)) - rvAG);
-    const basisKV = leute.reduce((s, x) => s + x.kv * (x.krankengeld ? 1 - FEST.krankengeldAbschlag : 1) + x.pv, 0);
-    const alleSonst = leute.reduce((s, x) => s + x.kv + x.pv + x.av, 0) + n(e.sonstVersicherung);
+    const basisKV = leute.reduce((s, x) => s + x.kv * (x.krankengeld ? 1 - FEST.krankengeldAbschlag : 1) + x.pv + x.kvSelbst, 0);
+    const alleSonst = leute.reduce((s, x) => s + x.kv + x.pv + x.av + x.kvSelbst, 0) + n(e.sonstVersicherung);
+    // 1.900 € mit Zuschuss (Arbeitnehmer, Rentner), sonst 2.800 € (z. B. Selbstständige)
+    const grenze = leute.reduce((s, x) => s + ((x.brutto > 0 || x.renteGesetzlich) ? FEST.sonstVorsorge : 2800), 0);
     r.basisKV = basisKV;
-    r.sonstigeVorsorge = Math.max(basisKV, Math.min(alleSonst, FEST.sonstVorsorge * (zus ? 2 : 1)));
+    r.sonstigeVorsorge = Math.max(basisKV, Math.min(alleSonst, grenze));
     r.vorsorge = Math.floor(r.altersvorsorge + r.sonstigeVorsorge);
 
-    // 3. Weitere Sonderausgaben: gezahlte Kirchensteuer, Spenden (bis 20 %), Kinderbetreuung
-    r.kistGezahlt = leute.reduce((s, x) => s + x.kist, 0);
+    // 4. Weitere Sonderausgaben
+    r.kistGezahlt = leute.reduce((s, x) => s + x.kist, 0) + n((e.kap || {}).kist) + n((e.vorauszahlung || {}).kist);
     r.spenden = Math.min(n(e.spenden), Math.max(0, r.gde) * FEST.spendenQuote);
     r.kinderbetreuung = n(e.kinderbetreuung);
     const weitere = r.kistGezahlt + r.spenden + r.kinderbetreuung;
@@ -143,57 +259,98 @@
     r.sonderWeitere = r.saPausch ? FEST.saPausch * (zus ? 2 : 1) : weitere;
     r.sonderausgaben = r.vorsorge + r.sonderWeitere;
 
-    // 4. Außergewöhnliche Belastungen (Krankheitskosten abzüglich zumutbarer Belastung)
+    // 5. Außergewöhnliche Belastungen
     r.zumutbar = zumutbar(r.gde, zus, anzKinder);
     r.krankheit = n(e.krankheit);
     r.agb = Math.max(0, r.krankheit - r.zumutbar);
 
-    // 5. Einkommen und zu versteuerndes Einkommen
     r.einkommen = r.gde - r.sonderausgaben - r.agb;
     r.lohnersatz = leute.reduce((s, x) => s + x.lohnersatz, 0);
-    const zvEOhne = Math.max(0, Math.floor(r.einkommen));
     r.kfbSumme = kinder.reduce((s, k) => s + (P.kfb + P.bea) * Math.min(1, n(k.faktor)), 0);
     r.kindergeld = kinder.reduce((s, k) => s + P.kg * Math.max(0, Math.min(12, n(k.kgMonate == null ? 12 : k.kgMonate))) * Math.min(1, n(k.faktor)), 0);
-    const zvEMit = Math.max(0, Math.floor(r.einkommen - r.kfbSumme));
-    const estOhne = steuer(zvEOhne, j, zus, r.lohnersatz);
-    const estMit = steuer(zvEMit, j, zus, r.lohnersatz);
 
-    // 6. Günstigerprüfung: Kinderfreibeträge nur, wenn die Steuerersparnis höher ist als das Kindergeld
-    r.kfbErsparnis = estOhne - estMit;
-    r.kfbGuenstiger = anzKinder > 0 && r.kfbErsparnis > r.kindergeld;
-    r.zvE = r.kfbGuenstiger ? zvEMit : zvEOhne;
-    r.estTariflich = r.kfbGuenstiger ? estMit : estOhne;
-
-    // 7. Steuerermäßigung § 35a (haushaltsnahe Dienstleistungen, Handwerker) – höchstens bis 0
-    r.erm35a = Math.min(n(e.ermaessigung35a), r.estTariflich);
-    r.est = r.estTariflich - r.erm35a;
-    // Kindergeld wird hinzugerechnet, wenn die Freibeträge angesetzt wurden
-    r.estFestzusetzen = r.est + (r.kfbGuenstiger ? r.kindergeld : 0);
-
-    // 8. Soli und Kirchensteuer: Bemessung immer mit Kinderfreibeträgen (§ 51a EStG)
-    const basisZuschlag = Math.max(0, estMit - Math.min(n(e.ermaessigung35a), estMit));
-    r.soli = soliAus(basisZuschlag, j, zus);
+    // 6. Kapitalerträge: Abgeltungsteuer 25 % oder – wenn günstiger – persönlicher Steuersatz (§ 32d Abs. 6 EStG)
+    const kap = e.kap || {};
+    r.kapErtraege = n(kap.ertraege);
+    r.sparerPausch = 1000 * (zus ? 2 : 1);
+    r.kapPflichtig = Math.max(0, r.kapErtraege - r.sparerPausch);
     const satz = kistSatz(e.land);
-    const kirchenAnteil = (() => {
-      if (!b) return a.kirche ? 1 : 0;
-      if (a.kirche && b.kirche) return 1;
-      if (!a.kirche && !b.kirche) return 0;
-      // Nur eine Person in der Kirche: Anteil nach Einkünften (vereinfacht)
-      const summe = Math.max(1, a.einkuenfte + b.einkuenfte);
-      return Math.max(0, (a.kirche ? a.einkuenfte : b.einkuenfte) / summe);
-    })();
-    r.kist = cent(basisZuschlag * satz * kirchenAnteil);
-    r.kistSatz = satz;
+    const kirchenAnteilKap = leute.some(x => x.kirche) ? 1 : 0;
 
-    // 9. Vergleich mit dem bereits Gezahlten (Lohnsteuerbescheinigung)
-    r.gezahlt = { est: leute.reduce((s, x) => s + x.lst, 0), soli: leute.reduce((s, x) => s + x.soli, 0), kist: r.kistGezahlt };
-    // Werden die Kinderfreibeträge angesetzt, rechnet das Finanzamt das Kindergeld zur Steuer
-    // hinzu (§ 31 Satz 4 EStG) – das bereits ausgezahlte Kindergeld bleibt bei dir.
-    r.festgesetzt = { est: r.estFestzusetzen, soli: r.soli, kist: r.kist };
+    const ermWunsch = n(e.ermaessigung35a);
+    // Ein kompletter Rechenfall; kapImTarif = Kapitalerträge mit dem persönlichen Steuersatz
+    const fall = (kapImTarif) => {
+      const f = {};
+      const extra = kapImTarif ? r.kapPflichtig : 0;
+      const zvEOhne = Math.max(0, Math.floor(r.einkommen + extra));
+      const zvEMit = Math.max(0, Math.floor(r.einkommen + extra - r.kfbSumme));
+      const estOhne = steuer(zvEOhne, j, zus, r.lohnersatz);
+      const estMit = steuer(zvEMit, j, zus, r.lohnersatz);
+      f.kfbErsparnis = estOhne - estMit;
+      f.kfbGuenstiger = anzKinder > 0 && f.kfbErsparnis > r.kindergeld;
+      f.zvE = f.kfbGuenstiger ? zvEMit : zvEOhne;
+      f.zvEMitKfb = zvEMit;
+      f.estTariflich = f.kfbGuenstiger ? estMit : estOhne;
+      // § 35 EStG: Ermäßigung für gewerbliche Einkünfte (4,0 × Messbetrag, höchstens Gewerbesteuer und anteilige ESt)
+      const gewerbeAnteil = r.einkuenfte > 0 ? Math.max(0, leute.reduce((s, x) => s + x.gewerbe, 0)) / Math.max(1, leute.reduce((s, x) => s + Math.max(0, x.summe), 0)) : 0;
+      f.erm35 = Math.floor(Math.min(4 * r.messbetrag, r.gewerbesteuer, f.estTariflich * Math.min(1, gewerbeAnteil)) * 100) / 100;
+      f.erm35a = Math.min(ermWunsch, Math.max(0, f.estTariflich - f.erm35));
+      f.est = Math.max(0, f.estTariflich - f.erm35 - f.erm35a);
+      f.estFestzusetzen = f.est + (f.kfbGuenstiger ? r.kindergeld : 0);
+      // Soli/Kirchensteuer immer mit Kinderfreibeträgen gerechnet (§ 51a EStG)
+      const basis = Math.max(0, estMit - Math.min(4 * r.messbetrag, r.gewerbesteuer, estMit * Math.min(1, gewerbeAnteil)) - Math.min(ermWunsch, estMit));
+      f.soli = soliAus(basis, j, zus);
+      // Kirchensteuer: beide Mitglied (auch verschiedene Kirchen, Halbteilung) = voll;
+      // nur eine Person: Anteil im Verhältnis der Grundtabellen-Steuer auf die eigene Summe der Einkünfte
+      if (!b) f.kistAnteil = a.kirche ? 1 : 0;
+      else if (a.kirche && b.kirche) f.kistAnteil = 1;
+      else if (!a.kirche && !b.kirche) f.kistAnteil = 0;
+      else {
+        const sa = tarif(Math.max(0, a.summe), j), sb = tarif(Math.max(0, b.summe), j);
+        const mitglied = a.kirche ? sa : sb;
+        f.kistAnteil = (sa + sb) > 0 ? mitglied / (sa + sb) : ((a.kirche ? a.summe : b.summe) / Math.max(1, a.summe + b.summe));
+      }
+      f.kist = cent(basis * satz * f.kistAnteil);
+      f.kirchgeld = 0;
+      if (b && (a.kirche !== b.kirche)) {
+        const kg = kirchgeld(zvEMit, j);
+        if (kg > f.kist) { f.kirchgeld = kg; f.kist = kg; }
+      }
+      // Kapitalerträge getrennt mit Abgeltungsteuer (bei Kirchenmitgliedschaft: e / (4 + k))
+      if (kapImTarif || !r.kapPflichtig) { f.kapESt = 0; f.kapSoli = 0; f.kapKist = 0; }
+      else {
+        const k = kirchenAnteilKap ? satz * 100 : 0;
+        f.kapESt = Math.floor(r.kapPflichtig / (4 + k / 100) * 100) / 100;
+        f.kapSoli = cent(f.kapESt * FEST.soliSatz);
+        f.kapKist = cent(f.kapESt * (kirchenAnteilKap ? satz : 0));
+      }
+      f.summe = f.estFestzusetzen + f.soli + f.kist + f.kapESt + f.kapSoli + f.kapKist;
+      return f;
+    };
+    const getrennt = fall(false);
+    const imTarif = r.kapPflichtig > 0 ? fall(true) : null;
+    // Nur wenn auch die Summe (inkl. Kindergeld-Verrechnung) niedriger ist
+    r.kapGuenstiger = !!(imTarif && imTarif.summe < getrennt.summe);
+    const f = r.kapGuenstiger ? imTarif : getrennt;
+    Object.assign(r, {
+      zvE: f.zvE, estTariflich: f.estTariflich, kfbErsparnis: f.kfbErsparnis, kfbGuenstiger: f.kfbGuenstiger,
+      erm35: f.erm35, erm35a: f.erm35a, est: f.est, estFestzusetzen: f.estFestzusetzen,
+      soli: f.soli, kist: f.kist, kistAnteil: f.kistAnteil, kirchgeld: f.kirchgeld, kistSatz: satz,
+      kapESt: f.kapESt, kapSoli: f.kapSoli, kapKist: f.kapKist
+    });
+
+    // 7. Vergleich mit dem Gezahlten (Lohnsteuer, Kapitalertragsteuer, Vorauszahlungen)
+    const vz = e.vorauszahlung || {};
+    r.gezahlt = {
+      est: leute.reduce((s, x) => s + x.lst, 0) + n(kap.kapest) + n(vz.est),
+      soli: leute.reduce((s, x) => s + x.soli, 0) + n(kap.soli) + n(vz.soli),
+      kist: r.kistGezahlt
+    };
+    r.festgesetzt = { est: r.estFestzusetzen + r.kapESt, soli: r.soli + r.kapSoli, kist: r.kist + r.kapKist };
     r.differenz = {
-      est: cent(r.gezahlt.est - r.estFestzusetzen),
-      soli: cent(r.gezahlt.soli - r.soli),
-      kist: cent(r.gezahlt.kist - r.kist)
+      est: cent(r.gezahlt.est - r.festgesetzt.est),
+      soli: cent(r.gezahlt.soli - r.festgesetzt.soli),
+      kist: cent(r.gezahlt.kist - r.festgesetzt.kist)
     };
     r.ergebnis = cent(r.differenz.est + r.differenz.soli + r.differenz.kist);
 
@@ -203,7 +360,16 @@
     if (anzKinder && !r.kfbGuenstiger) r.hinweise.push('kindergeld_besser');
     if (r.kfbGuenstiger) r.hinweise.push('kfb_besser');
     if (zus) r.hinweise.push('zusammen');
-    if (a.brutto === 0 && (!b || b.brutto === 0)) r.hinweise.push('kein_lohn');
+    if (r.kapGuenstiger) r.hinweise.push('kap_tarif');
+    if (r.kapErtraege > 0 && !r.kapGuenstiger && n(kap.kapest) > r.kapESt + 0.01) r.hinweise.push('kap_erstattung');
+    if (r.verlustRest > 0) r.hinweise.push('verlust_rest');
+    if (r.gewerbesteuer > 0) r.hinweise.push('gewerbesteuer');
+    if (r.renten.some(x => x.geschaetzt)) r.hinweise.push('rente_freibetrag');
+    if (r.kirchgeld) r.hinweise.push('kirchgeld');
+    if (r.betriebSumme !== 0 || r.vermietungSumme !== 0 || r.rente > 0) r.hinweise.push('pflicht_weitere');
+    const nurLohn = leute.every(x => x.brutto === 0) && r.rente === 0 && r.vermietungSumme === 0 && r.betriebSumme === 0 && r.kapErtraege === 0;
+    if (nurLohn) r.hinweise.push('kein_lohn');
+    r.hatEinkuenfte = !nurLohn;
     return r;
   }
 
@@ -240,7 +406,7 @@
     return { felder: out, gefunden };
   }
 
-  const api = { leseLohnsteuerbescheinigung, JAHR, FEST, LAENDER, tarif, tarifVeranlagung, steuer, zumutbar, soliAus, berechne, kistSatz };
+  const api = { besteuerungsanteil, ertragsanteil, afaSatz, kirchgeld, leseLohnsteuerbescheinigung, JAHR, FEST, LAENDER, tarif, tarifVeranlagung, steuer, zumutbar, soliAus, berechne, kistSatz };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   g.SDSteuer = api;
 })(typeof window !== 'undefined' ? window : globalThis);

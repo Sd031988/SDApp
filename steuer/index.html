@@ -161,6 +161,15 @@
         .erg-btn { justify-self: start; border: 0; border-radius: 10px; background: #fff; color: #1c4a42; font: inherit; font-weight: bold; padding: 9px 14px; cursor: pointer; }
         .lsb-gefunden { font-size: .8rem; color: var(--muted); }
         .zeilen-nr { display: inline-block; min-width: 2.6em; font-size: .72rem; font-weight: bold; color: var(--accent-dark); background: var(--accent-soft); border-radius: 6px; padding: 1px 5px; margin-right: 4px; text-align: center; }
+        .obj-liste { display: grid; gap: 10px; }
+        .obj { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; background: #fbfcfb; }
+        .obj-kopf { display: flex; align-items: center; gap: 8px; }
+        .obj-kopf b { flex: 1; font-size: .9rem; }
+        .obj-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .obj-felder label { font-size: .76rem; font-weight: bold; display: grid; gap: 3px; min-width: 0; }
+        .obj-felder label small { font-weight: normal; color: var(--muted); }
+        .obj-felder input, .obj-felder select { padding: 7px 9px; font-size: 15px; width: 100%; }
+        .obj-erg { font-size: .82rem; color: var(--accent-dark); }
         .kind-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -2px 0 8px; }
         .kind-extra label { font-size: .75rem; color: var(--muted); display: grid; gap: 3px; }
         .kind-extra select, .kind-extra input { padding: 6px 8px; font-size: 15px; }
@@ -207,10 +216,10 @@
         <section class="erg-karte" id="ergKarte" aria-live="polite">
             <span class="label" id="ergLabel">💶 Geschätzte Erstattung</span>
             <span class="gross" id="ergBetrag">–</span>
-            <span class="unter" id="ergUnter">Trage unten deine Lohnsteuerbescheinigung ein (oder fotografiere sie) – dann rechnet der Helfer live mit.</span>
+            <span class="unter" id="ergUnter">Trage unten deine Lohnsteuerbescheinigung, Rente oder andere Einkünfte ein – dann rechnet der Helfer live mit.</span>
             <details id="ergDetails"><summary>So wurde gerechnet</summary><table class="rechenweg" id="rechenweg"></table></details>
             <ul class="erg-hinweise" id="ergHinweise"></ul>
-            <span class="unter" style="font-size:.76rem;opacity:.75">Schätzung für Arbeitnehmer nach den Steuerwerten <span class="w-jahr"></span>. Andere Einkünfte (Rente, Vermietung, Selbstständigkeit, Kapitalerträge) sind nicht enthalten. Den verbindlichen Betrag nennt dein Steuerbescheid.</span>
+            <span class="unter" style="font-size:.76rem;opacity:.75">Schätzung nach den Steuerwerten <span class="w-jahr"></span> – Arbeit, Rente, Kapital, Vermietung, Selbstständigkeit und Gewerbe, mit Verlustvortrag. Nicht enthalten: Beamtenpensionen (Versorgungsfreibetrag), Altersentlastungsbetrag, Auslandseinkünfte, Veräußerungsgewinne. Den verbindlichen Betrag nennt dein Steuerbescheid.</span>
         </section>
 
         <!-- Persönliche Angaben -->
@@ -241,6 +250,12 @@
                         <input type="text" inputmode="decimal" data-f="p.versicherung" placeholder="z. B. 240"></label>
                     <label class="feld">Basisrente (Rürup) im Jahr <span class="hilfe">eigene Beiträge zu einer Rürup-Rente</span>
                         <input type="text" inputmode="decimal" data-f="p.ruerup" placeholder="meist 0"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld">Kranken- und Pflegeversicherung selbst bezahlt <span class="hilfe">nur Basis-Absicherung, z. B. selbstständig, privat versichert oder freiwillig versichert – nicht, was auf der Lohnsteuerbescheinigung steht</span>
+                        <input type="text" inputmode="decimal" data-f="p.kvSelbst1" placeholder="z. B. 5.400"></label>
+                    <label class="feld" id="kvSelbst2Feld">… Partner/in selbst bezahlt
+                        <input type="text" inputmode="decimal" data-f="p.kvSelbst2" placeholder="z. B. 0"></label>
                 </div>
             </div>
         </details>
@@ -307,6 +322,71 @@
                     <label class="feld">Werbungskosten Partner/in im Jahr <span class="hilfe">leer lassen = Pauschbetrag <span class="w-ap"></span></span>
                         <input type="text" inputmode="decimal" data-f="l2.wk" placeholder="z. B. 1.800"></label>
                 </div>
+            </div>
+        </details>
+
+        <!-- Renten -->
+        <details class="karte" id="karteRente">
+            <summary><div class="titel"><h2>👴 Renten (Anlage R)</h2><small>Gesetzliche Rente, Betriebsrente, Riester, private Rente</small></div><span class="summe" id="sumRente">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Gesetzliche Rente: steuerpflichtig ist nur ein Teil (je nach Rentenbeginn, z. B. 2015 = 70 %, 2025 = 83,5 %). Den genauen <b>steuerfreien Teil der Rente</b> findest du im Steuerbescheid des Vorjahres – trag ihn ein, dann rechnet der Helfer genau. Betriebsrente und Riester sind voll steuerpflichtig, private Renten mit dem Ertragsanteil.</p>
+                <div id="liste-renten" class="obj-liste"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-obj-neu="renten">＋ Rente</button></div>
+                <div class="ergebnis" id="ergRente"></div>
+            </div>
+        </details>
+
+        <!-- Kapitalerträge -->
+        <details class="karte" id="karteKap">
+            <summary><div class="titel"><h2>📈 Kapitalerträge (Anlage KAP)</h2><small>Zinsen, Dividenden, Fonds – Jahressteuerbescheinigung der Bank</small></div><span class="summe" id="sumKap">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Banken ziehen meist schon 25 % Abgeltungsteuer ab. Über die Steuererklärung bekommst du Geld zurück, wenn der Sparer-Pauschbetrag (<span id="spbText">1.000 €</span>) nicht ausgeschöpft wurde oder dein persönlicher Steuersatz niedriger als 25 % ist – der Helfer prüft das automatisch (Günstigerprüfung).</p>
+                <div class="zeile">
+                    <label class="feld">Kapitalerträge im Jahr (alle Banken) <span class="hilfe">vor Abzug von Steuer und Freistellungsauftrag</span><input type="text" inputmode="decimal" data-f="kap.ertraege" placeholder="z. B. 1.400"></label>
+                    <label class="feld">Einbehaltene Kapitalertragsteuer <input type="text" inputmode="decimal" data-f="kap.kapest" placeholder="z. B. 100,00"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld">Einbehaltener Soli <input type="text" inputmode="decimal" data-f="kap.soli" placeholder="z. B. 5,50"></label>
+                    <label class="feld">Einbehaltene Kirchensteuer <input type="text" inputmode="decimal" data-f="kap.kist" placeholder="leer, wenn keine"></label>
+                </div>
+                <div class="ergebnis" id="ergKap"></div>
+            </div>
+        </details>
+
+        <!-- Vermietung -->
+        <details class="karte" id="karteV">
+            <summary><div class="titel"><h2>🏠 Vermietung (Anlage V)</h2><small>Wohnung oder Haus vermietet – Einnahmen und Kosten</small></div><span class="summe" id="sumV">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Je Wohnung/Haus: Mieteinnahmen (inkl. Nebenkosten-Vorauszahlungen der Mieter) minus Kosten. Die Abschreibung (AfA) rechnet der Helfer aus dem Gebäudewert: 2 % (gebaut 1925–2022), 2,5 % (vor 1925), 3 % (ab 2023). Grundstück ist nicht abschreibbar – nur den Gebäudeanteil eintragen.</p>
+                <div id="liste-vermietung" class="obj-liste"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-obj-neu="vermietung">＋ Wohnung / Haus</button></div>
+                <div class="ergebnis" id="ergV"></div>
+            </div>
+        </details>
+
+        <!-- Selbststaendig / Gewerbe -->
+        <details class="karte" id="karteS">
+            <summary><div class="titel"><h2>💼 Selbstständig &amp; Gewerbe (Anlage S/G, EÜR)</h2><small>Freiberuflich oder Gewerbe – Gewinn, Gewerbesteuer</small></div><span class="summe" id="sumS">0 €</span></summary>
+            <div class="inhalt">
+                <p class="info">Gewinn = Betriebseinnahmen minus Betriebsausgaben (Einnahmen-Überschuss-Rechnung, netto ohne Umsatzsteuer, falls du Umsatzsteuer abführst). Bei Gewerbe rechnet der Helfer die Gewerbesteuer (Freibetrag 24.500 €) und ihre Anrechnung auf die Einkommensteuer. Umsatzsteuer- und Gewerbesteuererklärung sind eigene Erklärungen.</p>
+                <div id="liste-betriebe" class="obj-liste"></div>
+                <div class="knoepfe"><button type="button" class="btn" data-obj-neu="betriebe">＋ Tätigkeit</button></div>
+                <div class="ergebnis" id="ergS"></div>
+            </div>
+        </details>
+
+        <!-- Verlustvortrag & Vorauszahlungen -->
+        <details class="karte" id="karteVerlust">
+            <summary><div class="titel"><h2>📉 Verlustvortrag &amp; Vorauszahlungen</h2><small>Verluste aus Vorjahren, schon gezahlte Einkommensteuer</small></div></summary>
+            <div class="inhalt">
+                <label class="feld">Verlustvortrag aus dem Vorjahr <span class="hilfe">steht im „Bescheid über die gesonderte Feststellung des verbleibenden Verlustvortrags“ – z. B. aus einer Ausbildung oder Vermietung</span>
+                    <input type="text" inputmode="decimal" data-f="verlust.vortrag" placeholder="z. B. 4.200"></label>
+                <div class="zeile">
+                    <label class="feld">Einkommensteuer-Vorauszahlungen im Jahr <span class="hilfe">laut Vorauszahlungsbescheid, tatsächlich bezahlt</span><input type="text" inputmode="decimal" data-f="verlust.vzEst" placeholder="z. B. 4 × 1.000"></label>
+                    <label class="feld">Soli-Vorauszahlungen <span class="hilfe">nur, wenn im Vorauszahlungsbescheid Soli steht</span><input type="text" inputmode="decimal" data-f="verlust.vzSoli" placeholder="meist 0"></label>
+                </div>
+                <label class="feld">Kirchensteuer-Vorauszahlungen <input type="text" inputmode="decimal" data-f="verlust.vzKist" placeholder="leer, wenn keine"></label>
+                <div class="ergebnis" id="ergVerlust"></div>
             </div>
         </details>
 
@@ -462,7 +542,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
-    <script src="steuer-rechner.js?v=1"></script>
+    <script src="steuer-rechner.js?v=2"></script>
     <script>
         'use strict';
 
@@ -541,7 +621,9 @@
         function leer() {
             return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false },
                 haushalt: { minijob: '' }, kinder: [], posten: [],
-                p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '' },
+                p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '', kvSelbst1: '', kvSelbst2: '' },
+                kap: { ertraege: '', kapest: '', soli: '', kist: '' }, verlust: { vortrag: '', vzEst: '', vzSoli: '', vzKist: '' },
+                renten: [], vermietung: [], betriebe: [],
                 l1: Object.assign({}, LSB_LEER), l2: Object.assign({ wk: '' }, LSB_LEER) };
         }
         let alle = {};
@@ -557,6 +639,9 @@
             d.p = Object.assign(leer().p, d.p || {});
             d.l1 = Object.assign(leer().l1, d.l1 || {});
             d.l2 = Object.assign(leer().l2, d.l2 || {});
+            d.kap = Object.assign(leer().kap, d.kap || {});
+            d.verlust = Object.assign(leer().verlust, d.verlust || {});
+            d.renten = d.renten || []; d.vermietung = d.vermietung || []; d.betriebe = d.betriebe || [];
             d.kinder = d.kinder || [];
             d.posten = d.posten || [];
             return d;
@@ -723,10 +808,16 @@
             });
             return {
                 jahr, zusammen: zus, land: d.p.land, alleinerziehend: !!d.p.alleinerziehend,
-                p1: Object.assign(lsbWerte(d.l1), { wk: r.wkAngesetzt, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup) }),
-                p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2) }) : null,
+                p1: Object.assign(lsbWerte(d.l1), { wk: zahl(d.l1.brutto) > 0 ? r.wkAngesetzt : 0, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup), kvSelbst: zahl(d.p.kvSelbst1) }),
+                p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2), kvSelbst: zahl(d.p.kvSelbst2) }) : null,
                 sonstVersicherung: zahl(d.p.versicherung), spenden: r.spenden, kinderbetreuung: r.kindSumme, krankheit: r.krank,
-                ermaessigung35a: r.ermSumme, kinder
+                ermaessigung35a: r.ermSumme, kinder,
+                renten: d.renten.map(x => ({ wer: x.wer, art: x.art, betrag: zahl(x.betrag), beginn: zahl(x.beginn), alter: zahl(x.alter), anteil: zahl(x.anteil), freibetrag: zahl(x.freibetrag), kvpv: zahl(x.kvpv) })),
+                vermietung: d.vermietung.map(x => ({ wer: x.wer, miete: zahl(x.miete), gebaeude: zahl(x.gebaeude), baujahr: zahl(x.baujahr), afa: zahl(x.afa), zinsen: zahl(x.zinsen), erhaltung: zahl(x.erhaltung), sonstige: zahl(x.sonstige) })),
+                betriebe: d.betriebe.map(x => ({ wer: x.wer, art: x.art, einnahmen: zahl(x.einnahmen), ausgaben: zahl(x.ausgaben), hebesatz: zahl(x.hebesatz) })),
+                kap: { ertraege: zahl(d.kap.ertraege), kapest: zahl(d.kap.kapest), soli: zahl(d.kap.soli), kist: zahl(d.kap.kist) },
+                verlustvortrag: zahl(d.verlust.vortrag),
+                vorauszahlung: { est: zahl(d.verlust.vzEst), soli: zahl(d.verlust.vzSoli), kist: zahl(d.verlust.vzKist) }
             };
         }
         const HINWEISE = {
@@ -735,6 +826,14 @@
             kindergeld_besser: 'Für deine Kinder ist das Kindergeld günstiger als der Kinderfreibetrag – das Finanzamt prüft das automatisch.',
             kfb_besser: 'Der Kinderfreibetrag spart dir mehr als das Kindergeld: Er wird angesetzt und das Kindergeld dafür verrechnet.',
             zusammen: 'Gemeinsame Erklärung: Ihr bekommt den Splittingtarif. Bei Steuerklassen III/V oder IV mit Faktor ist die Erklärung Pflicht.',
+            kap_tarif: 'Dein persönlicher Steuersatz ist niedriger als 25 %: Die Kapitalerträge werden günstiger mit deinem Satz besteuert (Günstigerprüfung in Anlage KAP ankreuzen).',
+            kap_erstattung: 'Die Bank hat mehr Kapitalertragsteuer abgezogen als nötig (z. B. Sparer-Pauschbetrag nicht genutzt) – Anlage KAP ausfüllen lohnt sich.',
+            verlust_rest: 'Es bleibt ein Verlust übrig, der ins nächste Jahr vorgetragen wird – dafür die Steuererklärung unbedingt abgeben.',
+            gewerbesteuer: 'Die Gewerbesteuer zahlst du an die Gemeinde; sie wird bis zum 4-fachen Messbetrag auf deine Einkommensteuer angerechnet.',
+            rente_freibetrag: 'Ohne den genauen steuerfreien Teil der Rente aus dem Vorjahres-Bescheid ist die Rente nur geschätzt (Rentenerhöhungen seit Rentenbeginn sind voll steuerpflichtig – die Steuer kann höher sein).',
+            kirchgeld: 'Besonderes Kirchgeld: Das Kirchenmitglied hat wenig eigenes Einkommen, der Partner ist kein Mitglied. Höhe nach gemeinsamem Einkommen – die Stufen können je Landeskirche abweichen.',
+            ertragsanteil_fehlt: 'Bei einer privaten Rente fehlt das Alter bei Rentenbeginn (50–75 Jahre) oder der Ertragsanteil – sie ist nicht mitgerechnet.',
+            pflicht_weitere: 'Mit Rente, Vermietung oder Selbstständigkeit bist du in der Regel zur Abgabe einer Steuererklärung verpflichtet.',
             kein_lohn: ''
         };
         function zeigeErstattung(r, d) {
@@ -748,7 +847,7 @@
             $('sumLsb').textContent = euro(zahl(d.l1.brutto) + (zus ? zahl(d.l2.brutto) : 0));
             if (!S || !S.JAHR[jahr]) { $('ergUnter').textContent = 'Für dieses Jahr gibt es noch keine Steuerwerte.'; return; }
             const e = S.berechne(steuerEingabe(r, d));
-            const hatLohn = zahl(d.l1.brutto) > 0 || (zus && zahl(d.l2.brutto) > 0);
+            const hatLohn = e.hatEinkuenfte;
             const erstattung = e.ergebnis >= 0;
             $('ergLabel').textContent = hatLohn ? (erstattung ? '💶 Geschätzte Erstattung ' + jahr : '⚠️ Geschätzte Nachzahlung ' + jahr) : '💶 Geschätzte Erstattung ' + jahr;
             $('ergBetrag').textContent = hatLohn ? euro(Math.abs(e.ergebnis)) : '–';
@@ -759,7 +858,12 @@
             $('ergDetails').hidden = !hatLohn;
             const zeile = (t, w, klein, summe) => '<tr' + (summe ? ' class="summe"' : '') + '><td>' + esc(t) + (klein ? '<span class="klein">' + esc(klein) + '</span>' : '') + '</td><td>' + w + '</td></tr>';
             let h = '';
-            h += zeile('Einkünfte aus Arbeit', euro(e.einkuenfte), 'Bruttolohn minus Werbungskosten' + (zus ? ' (beide)' : ''));
+            if (e.arbeit) h += zeile('Einkünfte aus Arbeit', euro(e.arbeit), 'Bruttolohn minus Werbungskosten' + (zus ? ' (beide)' : ''));
+            if (e.rente) h += zeile('+ Renten (steuerpflichtiger Teil)', euro(e.rente), 'minus 102 € Werbungskosten-Pauschbetrag');
+            if (e.vermietungSumme) h += zeile((e.vermietungSumme < 0 ? '− Verlust' : '+ Überschuss') + ' aus Vermietung', euro(Math.abs(e.vermietungSumme)));
+            if (e.betriebSumme) h += zeile((e.betriebSumme < 0 ? '− Verlust' : '+ Gewinn') + ' Selbstständigkeit/Gewerbe', euro(Math.abs(e.betriebSumme)));
+            if (e.arbeit !== e.einkuenfte) h += zeile('= Summe der Einkünfte', euro(e.einkuenfte), null, true);
+            if (e.verlustAbzug) h += zeile('− Verlustvortrag', euro(e.verlustAbzug));
             if (e.entlastungAE) h += zeile('− Entlastungsbetrag Alleinerziehende', euro(e.entlastungAE));
             h += zeile('− Vorsorge (Rente, Kranken-, Pflegeversicherung …)', euro(e.vorsorge));
             h += zeile('− weitere Sonderausgaben', euro(e.sonderWeitere), e.saPausch ? 'Pauschbetrag' : 'Kirchensteuer, Spenden, Kinderbetreuung');
@@ -767,21 +871,116 @@
             if (e.kfbGuenstiger) h += zeile('− Kinderfreibeträge', euro(e.kfbSumme));
             h += zeile('= zu versteuerndes Einkommen', euro(e.zvE), null, true);
             h += zeile('Einkommensteuer' + (e.zusammen ? ' (Splitting)' : ''), euro(e.estTariflich), e.lohnersatz ? 'mit Progressionsvorbehalt (' + euro(e.lohnersatz) + ' Lohnersatz)' : null);
+            if (e.erm35) h += zeile('− Anrechnung Gewerbesteuer (§ 35)', euro(e.erm35));
             if (e.erm35a) h += zeile('− Steuerermäßigung Haushalt/Handwerker', euro(e.erm35a));
             if (e.kfbGuenstiger) h += zeile('+ verrechnetes Kindergeld', euro(e.kindergeld));
             h += zeile('Solidaritätszuschlag', euro(e.soli));
-            h += zeile('Kirchensteuer', euro(e.kist), e.kist || d.p.kirche1 || d.p.kirche2 ? (e.kistSatz * 100) + ' %' : null);
+            h += zeile(e.kirchgeld ? 'Besonderes Kirchgeld' : 'Kirchensteuer', euro(e.kist), e.kirchgeld ? 'statt Kirchensteuer (glaubensverschiedene Ehe)' :
+                (e.kist || d.p.kirche1 || d.p.kirche2 ? (e.kistSatz * 100) + ' %' + (e.kistAnteil > 0 && e.kistAnteil < 1 ? ', Anteil des Kirchenmitglieds ' + Math.round(e.kistAnteil * 100) + ' %' : '') : null));
+            if (e.kapESt) h += zeile('Abgeltungsteuer auf Kapitalerträge', euro(e.kapESt + e.kapSoli + e.kapKist), euro(e.kapPflichtig) + ' über dem Sparer-Pauschbetrag × 25 % (+ Soli/KiSt)');
+            if (e.kapGuenstiger) h += zeile('Kapitalerträge im persönlichen Tarif', euro(e.kapPflichtig), 'Günstigerprüfung');
             h += zeile('= Steuer laut Schätzung', euro(e.festgesetzt.est + e.soli + e.kist), null, true);
-            h += zeile('Schon gezahlt (Lohnsteuerbescheinigung)', euro(e.gezahlt.est + e.gezahlt.soli + e.gezahlt.kist));
+            h += zeile('Schon gezahlt', euro(e.gezahlt.est + e.gezahlt.soli + e.gezahlt.kist), 'Lohnsteuer, Kapitalertragsteuer, Vorauszahlungen, Kirchensteuer');
+            if (e.gewerbesteuer) h += zeile('Info: Gewerbesteuer an die Gemeinde', euro(e.gewerbesteuer), 'nicht im Ergebnis – wird separat festgesetzt');
+            if (e.verlustRest) h += zeile('Info: Verlustvortrag ins nächste Jahr', euro(e.verlustRest));
             h += zeile(erstattung ? '= Erstattung' : '= Nachzahlung', euro(Math.abs(e.ergebnis)), null, true);
             $('rechenweg').innerHTML = h;
             const hw = hatLohn ? e.hinweise.map(k => HINWEISE[k]).filter(Boolean) : [];
             $('ergHinweise').innerHTML = hw.map(x => '<li>' + esc(x) + '</li>').join('');
             $('ergHinweise').hidden = !hw.length;
+            zeigeTeilErgebnisse(e, d);
             // Leiste unten
             $('leiste').hidden = !hatLohn;
             $('leisteText').textContent = erstattung ? 'Geschätzte Erstattung' : 'Geschätzte Nachzahlung';
             $('leisteBetrag').textContent = euro(Math.abs(e.ergebnis));
+        }
+        // ------------------------------------------------------------
+        // Listen: Renten, Vermietung, Selbststaendig/Gewerbe
+        // ------------------------------------------------------------
+        const OBJ = {
+            renten: { titel: 'Rente', neu: () => ({ wer: '1', art: 'gesetzlich', betrag: '', beginn: '', alter: '', anteil: '', freibetrag: '', kvpv: '' }), felder: (x) => [
+                ['art', 'Art der Rente', 'select', [['gesetzlich', 'Gesetzliche Rente / Rürup / Versorgungswerk'], ['betrieb', 'Betriebsrente / Riester (voll steuerpflichtig)'], ['privat', 'Private Rentenversicherung (Ertragsanteil)']]],
+                ['betrag', 'Rente im Jahr (brutto)', 'zahl', 'z. B. 14.400', 'vor Abzug von Kranken-/Pflegeversicherung'],
+                ...(x.art === 'gesetzlich' ? [['beginn', 'Jahr des Rentenbeginns', 'zahl', 'z. B. 2019'], ['freibetrag', 'Steuerfreier Teil der Rente', 'zahl', 'aus Vorjahres-Bescheid', 'leer = geschätzt'], ['kvpv', 'Kranken-/Pflegeversicherung auf die Rente', 'zahl', 'z. B. 1.650', 'steht in der Rentenbezugsmitteilung']] : []),
+                ...(x.art === 'privat' ? [['alter', 'Alter bei Rentenbeginn', 'zahl', 'z. B. 65'], ['anteil', 'oder Ertragsanteil in %', 'zahl', 'z. B. 18']] : []),
+                ...(x.art === 'betrieb' ? [['kvpv', 'Kranken-/Pflegeversicherung darauf', 'zahl', 'z. B. 380']] : [])
+            ] },
+            vermietung: { titel: 'Wohnung / Haus', neu: () => ({ wer: '1', name: '', miete: '', gebaeude: '', baujahr: '', afa: '', zinsen: '', erhaltung: '', sonstige: '' }), felder: () => [
+                ['name', 'Bezeichnung', 'text', 'z. B. Wohnung Hauptstr. 5'],
+                ['miete', 'Mieteinnahmen im Jahr', 'zahl', 'z. B. 9.600', 'inkl. Nebenkosten-Vorauszahlungen'],
+                ['gebaeude', 'Gebäudewert (ohne Grundstück)', 'zahl', 'z. B. 180.000', 'Kaufpreis-Anteil Gebäude + Nebenkosten'],
+                ['baujahr', 'Baujahr (Fertigstellung)', 'zahl', 'z. B. 1995'],
+                ['afa', 'oder AfA selbst eintragen', 'zahl', 'leer = automatisch'],
+                ['zinsen', 'Schuldzinsen', 'zahl', 'z. B. 4.200'],
+                ['erhaltung', 'Reparaturen / Renovierung', 'zahl', 'z. B. 800'],
+                ['sonstige', 'Sonstige Kosten', 'zahl', 'z. B. 1.900', 'Nebenkosten, Grundsteuer, Versicherung, Verwaltung']
+            ] },
+            betriebe: { titel: 'Tätigkeit', neu: () => ({ wer: '1', name: '', art: 'frei', einnahmen: '', ausgaben: '', hebesatz: '' }), felder: (x) => [
+                ['name', 'Bezeichnung', 'text', 'z. B. Übersetzungen'],
+                ['art', 'Art', 'select', [['frei', 'Freiberuflich (Anlage S)'], ['gewerbe', 'Gewerbe (Anlage G)']]],
+                ['einnahmen', 'Betriebseinnahmen im Jahr', 'zahl', 'z. B. 38.000'],
+                ['ausgaben', 'Betriebsausgaben im Jahr', 'zahl', 'z. B. 9.500'],
+                ...(x.art === 'gewerbe' ? [['hebesatz', 'Gewerbesteuer-Hebesatz der Gemeinde (%)', 'zahl', 'z. B. 400', 'leer = 400 %']] : [])
+            ] }
+        };
+        function zeichneObjListe(name) {
+            const box = $('liste-' + name);
+            if (!box) return;
+            const d = daten();
+            const zus = d.p.zusammen === 'ja';
+            box.innerHTML = '';
+            d[name].forEach((x, i) => {
+                const el = document.createElement('div');
+                el.className = 'obj';
+                let h = '<div class="obj-kopf"><b>' + esc(OBJ[name].titel + ' ' + (i + 1)) + '</b>' +
+                    (zus ? '<select data-k="wer" aria-label="Wem gehört das?"><option value="1">Du</option><option value="2">Partner/in</option></select>' : '') +
+                    '<button type="button" class="x-btn" aria-label="Entfernen">✕</button></div><div class="obj-felder">';
+                OBJ[name].felder(x).forEach(([k, label, typ, ph, hilfe]) => {
+                    if (typ === 'select') h += '<label>' + esc(label) + '<select data-k="' + k + '">' + ph.map(([v, t]) => '<option value="' + v + '">' + esc(t) + '</option>').join('') + '</select></label>';
+                    else h += '<label>' + esc(label) + (hilfe ? ' <small>' + esc(hilfe) + '</small>' : '') + '<input type="text" ' + (typ === 'zahl' ? 'inputmode="decimal" ' : '') + 'data-k="' + k + '" placeholder="' + esc(ph) + '"></label>';
+                });
+                h += '</div><div class="obj-erg" data-erg="' + i + '"></div>';
+                el.innerHTML = h;
+                el.querySelectorAll('[data-k]').forEach(f => {
+                    f.value = x[f.dataset.k] == null ? '' : x[f.dataset.k];
+                    f.addEventListener(f.tagName === 'SELECT' ? 'change' : 'input', () => {
+                        x[f.dataset.k] = f.value;
+                        if (f.dataset.k === 'art') zeichneObjListe(name);   // andere Felder je Art
+                        aktualisiere();
+                    });
+                });
+                el.querySelector('.x-btn').onclick = () => { d[name].splice(d[name].indexOf(x), 1); zeichneObjListe(name); aktualisiere(); };
+                box.appendChild(el);
+            });
+        }
+        document.querySelectorAll('[data-obj-neu]').forEach(b => {
+            b.onclick = () => { const name = b.dataset.objNeu; daten()[name].push(OBJ[name].neu()); zeichneObjListe(name); aktualisiere(); };
+        });
+        function zeigeTeilErgebnisse(e, d) {
+            const S = window.SDSteuer;
+            // Renten
+            $('sumRente').textContent = euro(e.rente);
+            $('ergRente').innerHTML = e.renten.length ? e.renten.map((x, i) => (i + 1) + '. ' + euro(x.betrag) + ' → steuerpflichtig <b>' + euro(x.pflichtig) + '</b>' +
+                (x.art === 'gesetzlich' ? ' (Anteil ' + String(Math.round(x.anteil * 1000) / 10).replace('.', ',') + ' %' + (x.geschaetzt ? ', steuerfreier Teil geschätzt' : '') + ')' : x.art === 'privat' ? ' (Ertragsanteil ' + Math.round(x.anteil * 100) + ' %)' : ' (voll)')).join('<br>') +
+                '<br>Abzüglich 102 € Werbungskosten-Pauschbetrag: <b>' + euro(e.rente) + '</b>' : 'Füge eine Rente hinzu, wenn du (oder dein Partner) eine bekommst.';
+            // Kapital
+            $('spbText').textContent = euro(e.sparerPausch);
+            $('sumKap').textContent = euro(e.kapErtraege);
+            $('ergKap').innerHTML = e.kapErtraege ? 'Über dem Sparer-Pauschbetrag: <b>' + euro(e.kapPflichtig) + '</b><br>' +
+                (e.kapGuenstiger ? '✓ Günstiger mit deinem persönlichen Steuersatz' : 'Abgeltungsteuer: ' + euro(e.kapESt) + ' + Soli ' + euro(e.kapSoli) + (e.kapKist ? ' + KiSt ' + euro(e.kapKist) : '')) +
+                '<br>Von der Bank einbehalten: ' + euro(zahl(d.kap.kapest) + zahl(d.kap.soli) + zahl(d.kap.kist)) : 'Trag die Werte aus der Jahressteuerbescheinigung deiner Bank(en) ein.';
+            // Vermietung
+            $('sumV').textContent = euro(e.vermietungSumme);
+            e.vermietung.forEach((x, i) => { const el = document.querySelector('#liste-vermietung [data-erg="' + i + '"]'); if (el) el.innerHTML = 'AfA ' + euro(x.afa) + (x.satz ? ' (' + String(x.satz * 100).replace('.', ',') + ' %)' : '') + ' → ' + (x.ueberschuss < 0 ? 'Verlust ' : 'Überschuss ') + '<b>' + euro(Math.abs(x.ueberschuss)) + '</b>'; });
+            $('ergV').innerHTML = d.vermietung.length ? 'Einkünfte aus Vermietung gesamt: <b>' + euro(e.vermietungSumme) + '</b>' + (e.vermietungSumme < 0 ? ' – der Verlust senkt deine Steuer auf andere Einkünfte.' : '') : 'Füge eine vermietete Wohnung oder ein Haus hinzu.';
+            // Selbststaendig/Gewerbe
+            $('sumS').textContent = euro(e.betriebSumme);
+            e.betriebe.forEach((x, i) => { const el = document.querySelector('#liste-betriebe [data-erg="' + i + '"]'); if (el) el.innerHTML = (x.gewinn < 0 ? 'Verlust ' : 'Gewinn ') + '<b>' + euro(Math.abs(x.gewinn)) + '</b>' + (x.art === 'gewerbe' ? ' · Messbetrag ' + euro(x.messbetrag) + ' · Gewerbesteuer ' + euro(x.gewerbesteuer) + ' (Hebesatz ' + x.hebesatz + ' %)' : ''); });
+            $('ergS').innerHTML = d.betriebe.length ? 'Gewinn gesamt: <b>' + euro(e.betriebSumme) + '</b>' + (e.gewerbesteuer ? '<br>Gewerbesteuer ' + euro(e.gewerbesteuer) + ', davon auf die Einkommensteuer angerechnet: <b>' + euro(e.erm35) + '</b>' : '') : 'Füge deine selbstständige oder gewerbliche Tätigkeit hinzu.';
+            // Verlust
+            $('ergVerlust').innerHTML = (e.verlustAbzug ? 'Dieses Jahr abgezogen: <b>' + euro(e.verlustAbzug) + '</b><br>' : '') + (e.verlustRest ? 'Bleibt für nächstes Jahr: <b>' + euro(e.verlustRest) + '</b>' : (zahl(d.verlust.vortrag) ? 'Der Verlustvortrag ist dieses Jahr ganz verbraucht.' : 'Kein Verlustvortrag eingetragen.'));
+            $('kvSelbst2Feld').hidden = d.p.zusammen !== 'ja';
+            void S;
         }
         $('leisteBtn').onclick = () => { $('ergKarte').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('ergDetails').open = true; };
         // Leiste nur zeigen, wenn die Ergebnis-Karte nicht zu sehen ist
@@ -850,6 +1049,26 @@
             if (r.handwerk) hh.push(['Handwerkerleistungen', 'nur Arbeitskosten – ' + posten('handwerk'), r.handwerk]);
             gruppen.push({ titel: 'Anlage Haushaltsnahe Aufwendungen', zeilen: hh, fuss: hh.length ? 'Eingetragen werden die Kosten; die Ermäßigung (hier ca. ' + euro(r.ermSumme) + ') rechnet das Finanzamt.' : '' });
             gruppen.push({ titel: 'Anlage Außergewöhnliche Belastungen – Krankheitskosten', zeilen: r.krank ? [['Krankheitskosten (selbst bezahlt)', posten('krank'), r.krank]] : [] });
+            // Weitere Anlagen
+            const wer = (x) => d.p.zusammen === 'ja' && String(x.wer) === '2' ? ' (Partner/in)' : '';
+            const ARTEN = { gesetzlich: 'Leibrente aus gesetzlicher Rentenversicherung / Rürup / Versorgungswerk', betrieb: 'Leistungen aus Altersvorsorgevertrag / Betriebsrente (Anlage R-AV/bAV)', privat: 'Private Leibrente (Ertragsanteil)' };
+            gruppen.push({ titel: 'Anlage R – Renten (je Person eine Anlage)', zeilen: d.renten.filter(x => zahl(x.betrag)).map(x => [ARTEN[x.art] || 'Rente', 'Rentenbetrag laut Rentenbezugsmitteilung' + (x.beginn ? ', Rentenbeginn ' + zahl(x.beginn) : '') + (x.art === 'privat' && x.alter ? ', Alter bei Beginn ' + zahl(x.alter) : '') + (zahl(x.kvpv) ? '; Kranken-/Pflegeversicherung ' + euro(zahl(x.kvpv)) + ' in Anlage Vorsorgeaufwand' : '') + wer(x), zahl(x.betrag)]) });
+            const kap = [];
+            if (zahl(d.kap.ertraege)) {
+                kap.push(['Kapitalerträge laut Jahressteuerbescheinigung', 'inländische Erträge, die dem Steuerabzug unterlegen haben', zahl(d.kap.ertraege)]);
+                if (zahl(d.kap.kapest)) kap.push(['Einbehaltene Kapitalertragsteuer', 'Soli ' + euro(zahl(d.kap.soli)) + (zahl(d.kap.kist) ? ', Kirchensteuer ' + euro(zahl(d.kap.kist)) : ''), zahl(d.kap.kapest)]);
+            }
+            gruppen.push({ titel: 'Anlage KAP – Kapitalerträge', zeilen: kap, fuss: kap.length ? 'Ankreuzen: „Günstigerprüfung“ und „Überprüfung des Steuereinbehalts“ – das Finanzamt nimmt dann automatisch die günstigere Variante.' : '' });
+            gruppen.push({ titel: 'Anlage V – Vermietung (je Objekt eine Anlage)', zeilen: d.vermietung.map((x, i) => [(x.name || 'Objekt ' + (i + 1)) + wer(x), 'Mieteinnahmen ' + euro(zahl(x.miete)) + '; Schuldzinsen ' + euro(zahl(x.zinsen)) + '; Erhaltung ' + euro(zahl(x.erhaltung)) + '; sonstige ' + euro(zahl(x.sonstige)) + '; AfA ' + (zahl(x.afa) ? euro(zahl(x.afa)) : euro(zahl(x.gebaeude) * window.SDSteuer.afaSatz(x.baujahr)) + ' (' + String(window.SDSteuer.afaSatz(x.baujahr) * 100).replace('.', ',') + ' % von ' + euro(zahl(x.gebaeude)) + ')'),
+                zahl(x.miete) - zahl(x.zinsen) - zahl(x.erhaltung) - zahl(x.sonstige) - (zahl(x.afa) || zahl(x.gebaeude) * window.SDSteuer.afaSatz(x.baujahr))]) });
+            gruppen.push({ titel: 'Anlage S / Anlage G und Anlage EÜR', zeilen: d.betriebe.map((x, i) => [(x.name || 'Tätigkeit ' + (i + 1)) + wer(x), (x.art === 'gewerbe' ? 'Gewerbebetrieb (Anlage G)' : 'Freiberufliche Tätigkeit (Anlage S)') + ' – Einnahmen ' + euro(zahl(x.einnahmen)) + ', Ausgaben ' + euro(zahl(x.ausgaben)) + ' in der Anlage EÜR', zahl(x.einnahmen) - zahl(x.ausgaben)]),
+                fuss: d.betriebe.some(x => x.art === 'gewerbe') ? 'Für die Anrechnung der Gewerbesteuer in Anlage G den Gewerbesteuer-Messbetrag und die tatsächlich zu zahlende Gewerbesteuer angeben (stehen im Gewerbesteuerbescheid).' : '' });
+            const sonst = [];
+            if (zahl(d.p.kvSelbst1) || zahl(d.p.kvSelbst2)) sonst.push(['Kranken-/Pflegeversicherung (Basis, selbst gezahlt)', 'Anlage Vorsorgeaufwand', zahl(d.p.kvSelbst1) + zahl(d.p.kvSelbst2)]);
+            if (zahl(d.p.ruerup)) sonst.push(['Beiträge zu einer Basisrente (Rürup)', 'Anlage Vorsorgeaufwand', zahl(d.p.ruerup)]);
+            if (zahl(d.p.versicherung)) sonst.push(['Weitere Versicherungen', 'Haftpflicht, Unfall, BU, Risiko-LV – Anlage Vorsorgeaufwand', zahl(d.p.versicherung)]);
+            if (zahl(d.verlust.vzEst)) sonst.push(['Geleistete Vorauszahlungen', 'werden vom Finanzamt automatisch angerechnet', zahl(d.verlust.vzEst)]);
+            gruppen.push({ titel: 'Vorsorgeaufwand und Sonstiges', zeilen: sonst });
             return gruppen;
         }
         function posten(kat) {
@@ -894,6 +1113,7 @@
             const ev = el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input';
             el.addEventListener(ev, () => {
                 setzeFeld(el.dataset.f, el.type === 'checkbox' ? el.checked : el.value);
+                if (el.dataset.f === 'p.zusammen' && typeof OBJ !== 'undefined') Object.keys(OBJ).forEach(zeichneObjListe);
                 aktualisiere();
             });
         });
@@ -985,6 +1205,7 @@
             ladeFelder();
             LISTEN.forEach(zeichneListe);
             zeichneKinder();
+            Object.keys(OBJ).forEach(zeichneObjListe);
             aktualisiere();
         }
 
