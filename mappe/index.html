@@ -541,7 +541,7 @@
             const tag = datum(dok.gueltigBis);
             const ende = new Date(tag); ende.setDate(ende.getDate() + 1);
             const vorher = Math.max(0, Number(dok.erinnernTage) || 0);
-            const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Dokumenten-Mappe//DE', 'BEGIN:VEVENT',
+            const zeilen = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Hub//Dokumenten-Mappe//DE', 'BEGIN:VEVENT',
                 'UID:mappe-' + dok.id + '-' + icsTag(tag) + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
                 'DTSTART;VALUE=DATE:' + icsTag(tag), 'DTEND;VALUE=DATE:' + icsTag(ende), 'SUMMARY:' + icsText(t('kal_titel', { x: name })),
                 'DESCRIPTION:' + icsText([artName(dok.art), dok.notiz].filter(Boolean).join('\n'))];

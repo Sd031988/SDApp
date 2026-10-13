@@ -76,7 +76,7 @@
     return z;
   }
   function icsDatei(ereignisse, name) {
-    const z = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//DE'];
+    const z = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Hub//DE'];
     ereignisse.forEach((e) => z.push.apply(z, icsEreignis(e)));
     z.push('END:VCALENDAR');
     herunterladen(new Blob([z.join('\r\n')], { type: 'text/calendar' }), name);

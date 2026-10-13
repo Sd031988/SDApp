@@ -1,9 +1,9 @@
-# Play-Store-Texte – SD Bewerbungsstudio (Variante A: eine App)
+# Play-Store-Texte – SD Hub (Variante A: eine App)
 
 Diese Texte kannst du 1:1 in die Play Console einfügen (Store-Eintrag).
 
 ## App-Name
-SD Bewerbungsstudio
+SD Hub
 
 ## Kurzbeschreibung (max. 80 Zeichen)
 Lebenslauf, Anschreiben, PDF-Tools, Scanner & Passfoto – alles in einer App.
@@ -12,7 +12,7 @@ Lebenslauf, Anschreiben, PDF-Tools, Scanner & Passfoto – alles in einer App.
 
 ## Ausführliche Beschreibung (max. 4000 Zeichen)
 
-SD Bewerbungsstudio vereint die wichtigsten Werkzeuge für deine Bewerbung und deine Dokumente in einer App – schnell, übersichtlich und ohne Cloud-Zwang.
+SD Hub vereint die wichtigsten Werkzeuge für deine Bewerbung und deine Dokumente in einer App – schnell, übersichtlich und ohne Cloud-Zwang.
 
 🖋️ Lebenslauf & Anschreiben
 Erstelle Lebenslauf, Anschreiben, Deckblatt und komplette Bewerbungsmappen mit professionellen Vorlagen – als fertiges PDF zum Versenden.

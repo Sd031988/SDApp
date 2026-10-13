@@ -1,8 +1,8 @@
 {
   "id": "/?app=hub",
-  "name": "SD Bewerbungsstudio",
-  "short_name": "SD Studio",
-  "description": "Übersicht: Bewerbung schreiben, PDF-Werkzeuge und mehr",
+  "name": "SD Hub",
+  "short_name": "SD Hub",
+  "description": "19 Helfer für Bewerbung, Briefe, Finanzen und Dokumente",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

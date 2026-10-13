@@ -411,7 +411,7 @@
             const folgetag = new Date(datum + 'T00:00:00'); folgetag.setDate(folgetag.getDate() + 1);
             const ende = folgetag.getFullYear() + String(folgetag.getMonth() + 1).padStart(2, '0') + String(folgetag.getDate()).padStart(2, '0');
             const icsText = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, m => '\\' + m);
-            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Bewerbungsstudio//Tracker//DE', 'BEGIN:VEVENT',
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Hub//Tracker//DE', 'BEGIN:VEVENT',
                 'UID:' + b.id + '-' + tag + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
                 'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(titel),
                 'DESCRIPTION:' + icsText([b.position, b.kontakt, b.kontaktInfo, b.link].filter(Boolean).join('\n')),
