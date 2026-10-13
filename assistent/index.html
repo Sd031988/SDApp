@@ -136,6 +136,8 @@
 
         .agent-link { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 9px; text-decoration: none; font-size: .9rem; font-weight: bold; }
         @media (max-width: 420px) { .agent-link .agent-text { display: none; } }
+        /* Viele Knoepfe im Kopf: am schmalen Handy nur das Logo statt Titel */
+        @media (max-width: 480px) { .brand-text { display: none; } }
 
         /* --- Umschalter Gemini / Llama --- */
         .mode-bar {
@@ -973,7 +975,7 @@
                 key_removed: 'Schlüssel entfernt.',
                 opt_memory: 'Gedächtnis: Gespräch in diesem Browser speichern, damit es nach dem Schließen weitergeht',
                 opt_code: 'Python-Rechnen: die KI darf Python-Code ausführen (läuft bei Google, nicht auf deinem Gerät)',
-                btn_clear: '🗑️ Gespräch löschen',
+                btn_clear: '🗑️ Diesen Chat löschen', chats_title: 'Meine Chats', neu_chat_title: 'Neuer Chat', neu_chat_ok: 'Neuer Chat – das alte Gespräch findest du unter 💬.',
                 clear_confirm: 'Wirklich löschen? Nochmal tippen zum Bestätigen.',
                 cleared: 'Gespräch gelöscht.',
                 welcome_h: 'Hallo! Wobei kann ich helfen?',
@@ -1171,7 +1173,7 @@
                 key_removed: 'Key removed.',
                 opt_memory: 'Memory: save the conversation in this browser so it continues after closing',
                 opt_code: 'Python math: the AI may run Python code (runs at Google, not on your device)',
-                btn_clear: '🗑️ Delete conversation',
+                btn_clear: '🗑️ Delete this chat', chats_title: 'My chats', neu_chat_title: 'New chat', neu_chat_ok: 'New chat – find the previous one under 💬.',
                 clear_confirm: 'Really delete? Tap again to confirm.',
                 cleared: 'Conversation deleted.',
                 welcome_h: 'Hi! How can I help?',
@@ -1321,6 +1323,8 @@
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
             <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
         </div>
+        <button type="button" class="icon-btn" id="chatsBtn" data-i18n-title="chats_title" title="Meine Chats">💬</button>
+        <button type="button" class="icon-btn" id="neuChatBtn" data-i18n-title="neu_chat_title" title="Neuer Chat">＋</button>
         <a class="icon-btn agent-link" href="../agent/index.html" data-i18n-title="agent_title" title="KI-Agent: erledigt Aufgaben mit Werkzeugen"><span aria-hidden="true">🛠️</span><span class="agent-text" data-i18n="agent_link">Agent</span></a>
         <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settings"
             data-i18n-title="settings_title" title="Einstellungen">⚙️</button>
@@ -1474,6 +1478,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
+    <script src="../sd-chats.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
     <script>
         'use strict';
@@ -1669,22 +1674,40 @@
             }));
         }
 
+        // Mehrere Chats (sd-chats.js): jeder Chat hat seinen eigenen Verlauf
+        const chats = window.SDChats.erstelle({
+            praefix: 'sdAssistentChat',
+            darfWechseln: () => !sendetGerade,
+            beimNeu: () => { verlauf = []; wartendeAnhaenge = []; zeigeWartendeAnhaenge(); rendereAlles(); },
+            beimWechsel: (id, daten) => { verlauf = pruefeVerlauf(daten); wartendeAnhaenge = []; zeigeWartendeAnhaenge(); rendereAlles(); }
+        });
+        function pruefeVerlauf(daten) {
+            return Array.isArray(daten) ? daten.filter(e => e && (e.role === 'user' || e.role === 'model') && Array.isArray(e.parts)) : [];
+        }
+        function chatTitel(daten) {
+            const erste = daten.find(e => e.role === 'user');
+            if (!erste) return '';
+            const text = erste.parts.filter(p => typeof p.text === 'string' && !p._doc && !p._hinweis).map(p => p.text).join(' ').trim();
+            return text || (erste.anhaenge && erste.anhaenge[0] && ('📎 ' + erste.anhaenge[0].name)) || '';
+        }
+
         function speichereVerlauf() {
             if (!optionen.memory) return;
             let daten = verlaufFuerSpeicher();
-            // Falls der Speicher voll ist: aelteste Nachrichten weglassen.
-            while (daten.length && !speicherSchreiben(localStorage, HISTORY_STORAGE, JSON.stringify(daten))) {
-                daten = daten.slice(2);
-            }
+            if (!daten.length) return;
+            const titel = chatTitel(daten);
+            // Falls der Speicher trotz Aufraeumen voll ist: aelteste Nachrichten weglassen.
+            while (!chats.speichere(daten, titel) && daten.length > 2) daten = daten.slice(2);
         }
 
         function ladeVerlauf() {
+            // Frueherer Einzel-Verlauf -> einmalig als erster Chat uebernehmen
             const roh = speicherLesen(localStorage, HISTORY_STORAGE);
-            if (!roh) return;
-            try {
-                const daten = JSON.parse(roh);
-                if (Array.isArray(daten)) verlauf = daten.filter(e => e && (e.role === 'user' || e.role === 'model') && Array.isArray(e.parts));
-            } catch (e) { verlauf = []; }
+            if (roh) {
+                try { const alt = pruefeVerlauf(JSON.parse(roh)); if (alt.length) chats.uebernimm(alt, chatTitel(alt)); } catch (e) { /* kaputt */ }
+                speicherSchreiben(localStorage, HISTORY_STORAGE, null);
+            }
+            verlauf = pruefeVerlauf(chats.lade(chats.aktiv()));
         }
 
         function ladeOptionen() {
@@ -3713,8 +3736,10 @@
                 return;
             }
             loeschenBestaetigen = false;
+            const aktiv = chats.aktiv();
+            if (aktiv) chats.loesche(aktiv);
+            chats.neu();
             verlauf = [];
-            speicherSchreiben(localStorage, HISTORY_STORAGE, null);
             rendereAlles();
             $('clearStatus').textContent = t('cleared');
         };
@@ -3772,6 +3797,16 @@
             aktualisiereSendenKnopf();
             if (optionen.modus === 'llama') aktualisiereLlamaKarte();
         });
+
+        $('chatsBtn').onclick = () => chats.oeffne();
+        $('neuChatBtn').onclick = () => {
+            if (sendetGerade) return;
+            if (!verlauf.length) { $('input').focus(); return; }
+            chats.neu();
+            verlauf = []; wartendeAnhaenge = []; zeigeWartendeAnhaenge();
+            rendereAlles();
+            $('input').focus();
+        };
 
         // ------------------------------------------------------------
         // Start

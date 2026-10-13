@@ -217,7 +217,8 @@
                     <button type="button" class="btn" id="mikroBtn" data-i18n-title="sprechen" title="Diktieren">🎤</button>
                     <button type="button" class="btn" id="stimmeBtn" data-i18n-title="vorlesen" title="Antworten vorlesen" aria-pressed="false">🔇</button>
                     <span class="grow"></span>
-                    <button type="button" class="btn klein" id="neuBtn" data-i18n-title="neu" title="Neuer Auftrag">🧹<span class="nur-breit" data-i18n="neu_kurz"> Neuer Auftrag</span></button>
+                    <button type="button" class="btn klein" id="chatsBtn" data-i18n-title="chats" title="Meine Chats">💬<span class="nur-breit" data-i18n="chats_kurz"> Chats</span></button>
+                    <button type="button" class="btn klein" id="neuBtn" data-i18n-title="neu" title="Neuer Chat">＋<span class="nur-breit" data-i18n="neu_kurz"> Neuer Chat</span></button>
                     <button type="button" class="btn prim" id="sendenBtn" data-i18n="senden">▶ Los</button>
                     <button type="button" class="btn aktiv" id="stoppBtn" hidden data-i18n="stopp">⏹ Stopp</button>
                 </div>
@@ -257,7 +258,7 @@
                 keine_dateien: 'Noch keine Dateien.', leeren_frage: 'Alle Dateien im Browser-Speicher löschen?',
                 leer_text: 'Sag SD Lotze, was er erledigen soll. Er plant, nutzt Werkzeuge und fragt vor Änderungen.',
                 beispiele: ['Trag diese Stelle in meinen Bewerbungs-Tracker ein: Lagerist bei Logistik Nord GmbH, Köln, beworben heute', 'Bau mir eine einfache Bewerbungs-Webseite aus meinem Lebenslauf', 'Rechne aus: 38 km Arbeitsweg, 220 Arbeitstage – wie viel Entfernungspauschale ist das 2026?', 'Welche Fristen und Bewerbungen sind diese Woche fällig?'],
-                eingabe_ph: 'Was soll der Agent erledigen? (sprechen oder tippen)', neu: '🧹 Neuer Auftrag', neu_kurz: ' Neuer Auftrag', senden: '▶ Los', stopp: '⏹ Stopp',
+                eingabe_ph: 'Was soll der Agent erledigen? (sprechen oder tippen)', neu: '＋ Neuer Chat', neu_kurz: ' Neuer Chat', chats: 'Meine Chats', chats_kurz: ' Chats', senden: '▶ Los', stopp: '⏹ Stopp',
                 neu_laden: '🔄', herunterladen: '⬇️ Datei', schliessen: '✕', vorschau_info: 'Die Vorschau läuft abgeschottet: sie kommt nicht an deine gespeicherten Daten oder Schlüssel.',
                 plan_ausfuehren: '▶ Plan ausführen', plan_aendern: 'Du kannst den Plan auch ändern: schreib unten, was anders sein soll.',
                 erlauben: '✅ Erlauben', ablehnen: '❌ Ablehnen', alle_erlauben: 'Für diesen Auftrag alles erlauben',
@@ -286,7 +287,7 @@
                 keine_dateien: 'No files yet.', leeren_frage: 'Delete all files in browser storage?',
                 leer_text: 'Tell SD Lotze what to do. It plans, uses tools and asks before changes.',
                 beispiele: ['Add this job to my application tracker: warehouse worker at Northern Logistics, Cologne, applied today', 'Build me a simple application website from my resume', 'Calculate: 38 km commute, 220 working days – how much commuting allowance is that in 2026?', 'Which deadlines and applications are due this week?'],
-                eingabe_ph: 'What should the agent do? (speak or type)', neu: '🧹 New task', neu_kurz: ' New task', senden: '▶ Go', stopp: '⏹ Stop',
+                eingabe_ph: 'What should the agent do? (speak or type)', neu: '＋ New chat', neu_kurz: ' New chat', chats: 'My chats', chats_kurz: ' Chats', senden: '▶ Go', stopp: '⏹ Stop',
                 neu_laden: '🔄', herunterladen: '⬇️ File', schliessen: '✕', vorschau_info: 'The preview runs isolated: it cannot access your saved data or keys.',
                 plan_ausfuehren: '▶ Run plan', plan_aendern: 'You can also change the plan: write below what should be different.',
                 erlauben: '✅ Allow', ablehnen: '❌ Decline', alle_erlauben: 'Allow everything for this task',
@@ -367,6 +368,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
+    <script src="../sd-chats.js?v=1"></script>
     <script>
     (function () {
         'use strict';
@@ -1024,8 +1026,13 @@
             schliesse();
             return html.replace(/\u0000(\d+)\u0000/g, (_, i) => '<pre><code>' + esc(bloecke[+i]) + '</code></pre>');
         }
+        // Was im Chat zu sehen ist, wird mitgeschrieben, damit ein Chat
+        // spaeter wieder geoeffnet werden kann (sd-chats.js)
+        let anzeige = [];
+        let wiederherstellen = false;
         function zeigeNachricht(art, inhalt, bilder) {
             $('leer').hidden = true;
+            if (!wiederherstellen) anzeige.push({ art, text: String(inhalt || ''), fotos: bilder && bilder.length ? bilder.length : 0 });
             const d = document.createElement('div');
             d.className = 'nachricht ' + art;
             let vorne = '';
@@ -1033,6 +1040,7 @@
                 vorne = '<div class="bilder-anzeige">' + bilder.map(b => '<img alt="" src="data:' + b.mediatype + ';base64,' + b.data + '">').join('') + '</div>';
             }
             if (art === 'ki') d.innerHTML = vorne + md(inhalt); else { d.textContent = inhalt; if (vorne) d.insertAdjacentHTML('afterbegin', vorne); }
+            if (wiederherstellen && art !== 'ki' && bilder && bilder.fotos) d.insertAdjacentHTML('afterbegin', '<div class="info">📷 × ' + bilder.fotos + '</div>');
             $('verlauf').appendChild(d);
             d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             return d;
@@ -1048,11 +1056,14 @@
             return '';
         }
         function zeigeSchritt(name, args) {
+            const merk = { art: 'schritt', name, titel: '', json: '', text: '', st: '' };
+            if (!wiederherstellen) anzeige.push(merk);
             const d = document.createElement('details');
             d.className = 'schritt laeuft';
             const start = Date.now();
             const titel = (t('w')[name] || name) + (kurzArgs(name, args) ? ': ' + kurzArgs(name, args) : '');
-            d.innerHTML = '<summary><span>🔧</span><span class="was">' + esc(titel) + '</span><span class="dauer"></span><span class="st">⏳</span></summary><pre>' + esc(kuerze(JSON.stringify(args, null, 1), 4000)) + '</pre>';
+            merk.titel = titel; merk.json = kuerze(JSON.stringify(args, null, 1), 4000);
+            d.innerHTML = '<summary><span>🔧</span><span class="was">' + esc(titel) + '</span><span class="dauer"></span><span class="st">⏳</span></summary><pre>' + esc(merk.json) + '</pre>';
             $('verlauf').appendChild(d);
             d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             setStatus((t('w')[name] || name) + ' …');
@@ -1068,6 +1079,7 @@
                     if (dauer) dauer.textContent = (((Date.now() - start) / 1000).toFixed(1)).replace('.', ',') + ' s';
                     if (st) st.textContent = fehler ? '⚠️' : (abgelehnt ? '❌' : '✓');
                     d.insertAdjacentHTML('beforeend', '<pre>' + esc(kuerze(text, 4000)) + '</pre>');
+                    merk.text = kuerze(text, 4000); merk.st = st ? st.textContent : ''; merk.fehler = !!fehler;
                 }
             };
         }
@@ -1139,6 +1151,7 @@
                 abbruch = null;
                 setStatus('');
                 $('sendenBtn').hidden = false; $('stoppBtn').hidden = true;
+                speichereChat();
                 zeigeAblage();
                 if (fehlerStimmung) setzeStimmung('fehler'); else sprich(letzteAntwort);
             }
@@ -1256,16 +1269,61 @@
         $('sendenBtn').onclick = senden;
         $('eingabe').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); senden(); } });
         $('stoppBtn').onclick = () => { laeuft = false; if (abbruch) abbruch.abort(); if (stoppWarter) stoppWarter(); };
-        $('neuBtn').onclick = () => {
-            if (laeuft) return;
-            gespraech = []; gespraechAnbieter = null; alleErlaubt = false; wartetAufPlan = false;
+        function leereAnsicht() {
+            gespraech = []; gespraechAnbieter = null; alleErlaubt = false; wartetAufPlan = false; anzeige = [];
             anhaenge = []; zeigeBilder();
             [...$('verlauf').children].forEach(x => { if (x.id !== 'leer') x.remove(); });
             $('leer').hidden = false;
             setStatus('');
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             setzeStimmung('ruhe');
+        }
+        // Chats speichern: Gespraech fuer die KI (ohne Fotos, die waeren zu gross) + Anzeige
+        function speichereChat() {
+            if (!gespraech.length || !chats) return;
+            const erste = gespraech.find(g => g.rolle === 'user');
+            chats.speichere({
+                anbieter: gespraechAnbieter,
+                gespraech: gespraech.map(g => g.rolle === 'user' ? Object.assign({}, g, { bilder: [] }) : g),
+                anzeige
+            }, erste ? erste.text : '');
+        }
+        function oeffneChat(daten) {
+            leereAnsicht();
+            if (!daten) return;
+            gespraech = Array.isArray(daten.gespraech) ? daten.gespraech : [];
+            gespraechAnbieter = daten.anbieter || null;
+            anzeige = Array.isArray(daten.anzeige) ? daten.anzeige : [];
+            wiederherstellen = true;
+            try {
+                anzeige.forEach(e => {
+                    if (e.art === 'schritt') {
+                        const d = document.createElement('details');
+                        d.className = 'schritt ' + (e.fehler ? 'abgebrochen' : 'erledigt');
+                        d.innerHTML = '<summary><span>🔧</span><span class="was">' + esc(e.titel || e.name) + '</span><span class="dauer"></span><span class="st">' + esc(e.st || '✓') + '</span></summary><pre>' + esc(e.json || '') + '</pre>' + (e.text ? '<pre>' + esc(e.text) + '</pre>' : '');
+                        $('verlauf').appendChild(d);
+                    } else zeigeNachricht(e.art, e.text, { length: 0, fotos: e.fotos || 0 });
+                });
+            } finally { wiederherstellen = false; }
+            $('leer').hidden = anzeige.length > 0;
+            const letzte = $('verlauf').lastElementChild;
+            if (letzte) letzte.scrollIntoView({ block: 'nearest' });
+        }
+        const chats = window.SDChats ? window.SDChats.erstelle({
+            praefix: 'sdAgentChat',
+            darfWechseln: () => !laeuft,
+            beimNeu: leereAnsicht,
+            beimWechsel: (id, daten) => oeffneChat(daten)
+        }) : null;
+        $('neuBtn').onclick = () => {
+            if (laeuft) return;
+            if (chats) chats.neu();
+            leereAnsicht();
+            $('eingabe').focus();
         };
+        $('chatsBtn').onclick = () => { if (chats) chats.oeffne(); };
+        // Die Seite startet immer mit einem neuen Chat; alte Chats stehen unter 💬
+        if (chats) chats.neu();
 
         // ============================================================
         // Oberflaeche: KI-Auswahl, Modell, Beispiele, Sprache
