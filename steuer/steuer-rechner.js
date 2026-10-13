@@ -62,9 +62,9 @@
   // Mit Progressionsvorbehalt (§ 32b EStG): besonderer Steuersatz aus zvE + Lohnersatz
   function steuer(zvE, j, zusammen, lohnersatz) {
     zvE = Math.max(0, Math.floor(zvE));
-    if (!lohnersatz || lohnersatz <= 0) return tarifVeranlagung(zvE, j, zusammen);
+    if (!lohnersatz) return tarifVeranlagung(zvE, j, zusammen);
     const basis = zvE + lohnersatz;
-    if (basis <= 0) return 0;
+    if (basis <= 0 || zvE <= 0) return 0;
     const satz = tarifVeranlagung(basis, j, zusammen) / basis;
     return Math.floor(zvE * satz + 1e-7);
   }
@@ -122,22 +122,57 @@
     return w;
   }
 
+  // Versorgungsfreibetrag (§ 19 Abs. 2 EStG) nach Jahr des Versorgungsbeginns; ab 2023 -0,4 Punkte/Jahr
+  function versorgungsTabelle(jahr) {
+    const y = Math.max(2005, Math.round(n(jahr)) || 2005);
+    if (y <= 2020) return { satz: 0.40 - (y - 2005) * 0.016, hoechst: 3000 - (y - 2005) * 120, zuschlag: 900 - (y - 2005) * 36 };
+    if (y === 2021) return { satz: 0.152, hoechst: 1140, zuschlag: 342 };
+    if (y === 2022) return { satz: 0.144, hoechst: 1080, zuschlag: 324 };
+    const k = y - 2023;
+    return { satz: Math.max(0, 0.14 - k * 0.004), hoechst: Math.max(0, 1050 - k * 30), zuschlag: Math.max(0, 315 - k * 9) };
+  }
+  // Altersentlastungsbetrag (§ 24a EStG) nach dem Jahr, das auf den 64. Geburtstag folgt
+  function altersTabelle(jahr) {
+    const y = Math.max(2005, Math.round(n(jahr)));
+    if (y <= 2020) return { satz: 0.40 - (y - 2005) * 0.016, hoechst: 1900 - (y - 2005) * 76 };
+    if (y === 2021) return { satz: 0.152, hoechst: 722 };
+    if (y === 2022) return { satz: 0.144, hoechst: 684 };
+    const k = y - 2023;
+    return { satz: Math.max(0, 0.14 - k * 0.004), hoechst: Math.max(0, 665 - k * 19) };
+  }
+
   function person(p, j) {
     p = p || {};
     const brutto = n(p.brutto);
     const wkTat = n(p.wk);
     const ap = JAHR[j].ap;
-    // Pauschbetrag höchstens bis zur Höhe der Einnahmen; höhere tatsächliche Kosten auch mit Verlust
-    const wk = brutto > 0 || wkTat > 0 ? (wkTat > ap ? wkTat : Math.min(ap, brutto)) : 0;
+    // Versorgungsbezüge (Beamtenpension, Werkspension): Z. 8 ist in Z. 3 enthalten
+    const versorgung = Math.min(brutto, n(p.versorgung));
+    const aktiv = brutto - versorgung;
+    let vfb = 0, wkVers = 0;
+    if (versorgung > 0) {
+      const t = versorgungsTabelle(p.vJahr);
+      const monate = Math.max(1, Math.min(12, n(p.vMonate) || 12));
+      const bmg = n(p.vBmg) > 0 ? n(p.vBmg) : versorgung * 12 / monate;
+      vfb = Math.min(versorgung, Math.ceil((Math.min(bmg * t.satz, t.hoechst) + t.zuschlag) * monate / 12));
+      wkVers = Math.min(102, versorgung - vfb);   // Werbungskosten-Pauschbetrag für Versorgungsbezüge
+    }
+    // Arbeitnehmer-Pauschbetrag nur auf aktiven Lohn, höchstens bis zur Höhe der Einnahmen
+    const wk = aktiv > 0 || wkTat > 0 ? (wkTat > ap ? wkTat : Math.min(ap, aktiv)) : 0;
+    // Private Veräußerungsgeschäfte (§ 23 EStG): Freigrenze 1.000 € je Person (ab 2024)
+    const v23 = n(p.gewinn23) - n(p.vortrag23);
+    const veraeusserung = v23 >= 1000 ? v23 : 0;
     return {
-      brutto, wk, wkPausch: !(wkTat > ap), arbeit: brutto - wk,
+      brutto, aktiv, versorgung, vfb, wkVers, wk, wkPausch: !(wkTat > ap), arbeit: aktiv - wk + versorgung - vfb - wkVers,
+      geburtsjahr: Math.round(n(p.geburtsjahr)), veraeusserung, rest23: v23 < 0 ? -v23 : 0, renteNr5: 0, aeb: 0,
       rente: 0, vermietung: 0, betrieb: 0, gewerbe: 0, renteGesetzlich: false,
       lst: n(p.lst), soli: n(p.soli), kist: n(p.kist),
       rvAN: n(p.rvAN), rvAG: n(p.rvAG), kv: n(p.kv), pv: n(p.pv), av: n(p.av), ruerup: n(p.ruerup), kvSelbst: n(p.kvSelbst),
       krankengeld: p.krankengeld !== false,
       lohnersatz: n(p.lohnersatzZ15) + n(p.lohnersatz),
       kirche: !!p.kirche,
-      get summe() { return this.arbeit + this.rente + this.vermietung + this.betrieb + this.gewerbe; }
+      ausland: n(p.auslandPflichtig),
+      get summe() { return this.arbeit + this.rente + this.vermietung + this.betrieb + this.gewerbe + this.veraeusserung + this.ausland; }
     };
   }
 
@@ -176,6 +211,7 @@
         info = { anteil: ea };
       } else if (x.art === 'betrieb') {
         pflichtig = betrag; info = { anteil: 1 };
+        p.renteNr5 += betrag;
       } else {
         const anteil = besteuerungsanteil(x.beginn);
         const frei = n(x.freibetrag) > 0 ? n(x.freibetrag) : betrag * (1 - anteil);
@@ -226,10 +262,25 @@
     r.vermietungSumme = leute.reduce((s, x) => s + x.vermietung, 0);
     r.betriebSumme = leute.reduce((s, x) => s + x.betrieb + x.gewerbe, 0);
     r.einkuenfte = leute.reduce((s, x) => s + x.summe, 0);
+    r.veraeusserung = leute.reduce((s, x) => s + x.veraeusserung, 0);
+    r.rest23 = leute.reduce((s, x) => s + x.rest23, 0);
+    r.versorgungsfreibetrag = leute.reduce((s, x) => s + x.vfb, 0);
+    r.auslandPflichtig = leute.reduce((s, x) => s + x.ausland, 0);
+    // Altersentlastungsbetrag: wer vor Beginn des Jahres 64 geworden ist; Basis = Arbeitslohn ohne
+    // Versorgungsbezüge + positive übrige Einkünfte (ohne Leibrenten, ohne Abgeltungsteuer-Erträge)
+    leute.forEach(x => {
+      if (!x.geburtsjahr || x.geburtsjahr > j - 65) return;
+      const t = altersTabelle(x.geburtsjahr + 65);
+      const uebrige = Math.max(0, x.vermietung + x.betrieb + x.gewerbe + x.veraeusserung + x.ausland + Math.max(0, x.renteNr5 - 0));
+      const basis = Math.max(0, x.aktiv) + uebrige;
+      x.aeb = Math.min(Math.round(basis * t.satz * 100) / 100, t.hoechst);
+      x.aeb = Math.ceil(x.aeb);
+    });
+    r.altersentlastung = leute.reduce((s, x) => s + x.aeb, 0);
     const kinder = (e.kinder || []).filter(k => k && n(k.faktor) > 0);
     const anzKinder = kinder.length;
     r.entlastungAE = (!zus && e.alleinerziehend && anzKinder > 0) ? Math.min(Math.max(0, r.einkuenfte), FEST.alleinerziehend + FEST.alleinerziehendJeWeiteres * (anzKinder - 1)) : 0;
-    const vorVerlust = r.einkuenfte - r.entlastungAE;
+    const vorVerlust = r.einkuenfte - r.altersentlastung - r.entlastungAE;
     const vortrag = Math.max(0, n(e.verlustvortrag));
     const sockel = 1000000 * (zus ? 2 : 1);
     const maxAbzug = vorVerlust > 0 ? Math.min(vorVerlust, sockel) + Math.max(0, vorVerlust - sockel) * 0.7 : 0;
@@ -265,15 +316,24 @@
     r.agb = Math.max(0, r.krankheit - r.zumutbar);
 
     r.einkommen = r.gde - r.sonderausgaben - r.agb;
-    r.lohnersatz = leute.reduce((s, x) => s + x.lohnersatz, 0);
+    r.leistungen = leute.reduce((s, x) => s + x.lohnersatz, 0);
+    r.auslandFrei = n(e.auslandFrei);
+    r.lohnersatz = r.leistungen + r.auslandFrei;   // alles, was dem Progressionsvorbehalt unterliegt
     r.kfbSumme = kinder.reduce((s, k) => s + (P.kfb + P.bea) * Math.min(1, n(k.faktor)), 0);
     r.kindergeld = kinder.reduce((s, k) => s + P.kg * Math.max(0, Math.min(12, n(k.kgMonate == null ? 12 : k.kgMonate))) * Math.min(1, n(k.faktor)), 0);
 
     // 6. Kapitalerträge: Abgeltungsteuer 25 % oder – wenn günstiger – persönlicher Steuersatz (§ 32d Abs. 6 EStG)
     const kap = e.kap || {};
-    r.kapErtraege = n(kap.ertraege);
+    // Verlusttöpfe: Aktienverluste nur mit Aktiengewinnen, sonstige Verluste mit allen Erträgen
+    const aktienSaldo = n(kap.aktienGewinne) - n(kap.aktienVerluste) - n(kap.vortragAktien);
+    r.kapRestAktien = aktienSaldo < 0 ? -aktienSaldo : 0;
+    const allgemein = n(kap.ertraege) + Math.max(0, aktienSaldo) - n(kap.sonstVerluste) - n(kap.vortragSonst);
+    r.kapRestSonst = allgemein < 0 ? -allgemein : 0;
+    r.kapErtraege = Math.max(0, allgemein);
+    r.kapBrutto = n(kap.ertraege) + n(kap.aktienGewinne);
     r.sparerPausch = 1000 * (zus ? 2 : 1);
     r.kapPflichtig = Math.max(0, r.kapErtraege - r.sparerPausch);
+    const quelle = n(kap.quellensteuer);
     const satz = kistSatz(e.land);
     const kirchenAnteilKap = leute.some(x => x.kirche) ? 1 : 0;
 
@@ -295,10 +355,14 @@
       const gewerbeAnteil = r.einkuenfte > 0 ? Math.max(0, leute.reduce((s, x) => s + x.gewerbe, 0)) / Math.max(1, leute.reduce((s, x) => s + Math.max(0, x.summe), 0)) : 0;
       f.erm35 = Math.floor(Math.min(4 * r.messbetrag, r.gewerbesteuer, f.estTariflich * Math.min(1, gewerbeAnteil)) * 100) / 100;
       f.erm35a = Math.min(ermWunsch, Math.max(0, f.estTariflich - f.erm35));
-      f.est = Math.max(0, f.estTariflich - f.erm35 - f.erm35a);
+      // § 34c: ausländische Steuer höchstens bis zur deutschen Steuer auf diese Einkünfte (vereinfacht anteilig)
+      const posSumme = Math.max(1, leute.reduce((s, x) => s + Math.max(0, x.summe), 0) + (kapImTarif ? r.kapPflichtig : 0));
+      f.anrechnung = Math.min(n(e.auslandSteuer) + (kapImTarif ? quelle : 0), Math.max(0, f.estTariflich - f.erm35 - f.erm35a) * Math.min(1, (r.auslandPflichtig + (kapImTarif ? r.kapPflichtig : 0)) / posSumme));
+      f.anrechnung = Math.floor(f.anrechnung * 100) / 100;
+      f.est = Math.max(0, f.estTariflich - f.erm35 - f.erm35a - f.anrechnung);
       f.estFestzusetzen = f.est + (f.kfbGuenstiger ? r.kindergeld : 0);
       // Soli/Kirchensteuer immer mit Kinderfreibeträgen gerechnet (§ 51a EStG)
-      const basis = Math.max(0, estMit - Math.min(4 * r.messbetrag, r.gewerbesteuer, estMit * Math.min(1, gewerbeAnteil)) - Math.min(ermWunsch, estMit));
+      const basis = Math.max(0, estMit - Math.min(4 * r.messbetrag, r.gewerbesteuer, estMit * Math.min(1, gewerbeAnteil)) - Math.min(ermWunsch, estMit) - f.anrechnung);
       f.soli = soliAus(basis, j, zus);
       // Kirchensteuer: beide Mitglied (auch verschiedene Kirchen, Halbteilung) = voll;
       // nur eine Person: Anteil im Verhältnis der Grundtabellen-Steuer auf die eigene Summe der Einkünfte
@@ -320,7 +384,8 @@
       if (kapImTarif || !r.kapPflichtig) { f.kapESt = 0; f.kapSoli = 0; f.kapKist = 0; }
       else {
         const k = kirchenAnteilKap ? satz * 100 : 0;
-        f.kapESt = Math.floor(r.kapPflichtig / (4 + k / 100) * 100) / 100;
+        // § 32d Abs. 1 EStG: (e − 4q) / (4 + k), q = anrechenbare ausländische Steuer
+        f.kapESt = Math.max(0, Math.floor((r.kapPflichtig - 4 * quelle) / (4 + k / 100) * 100) / 100);
         f.kapSoli = cent(f.kapESt * FEST.soliSatz);
         f.kapKist = cent(f.kapESt * (kirchenAnteilKap ? satz : 0));
       }
@@ -334,7 +399,7 @@
     const f = r.kapGuenstiger ? imTarif : getrennt;
     Object.assign(r, {
       zvE: f.zvE, estTariflich: f.estTariflich, kfbErsparnis: f.kfbErsparnis, kfbGuenstiger: f.kfbGuenstiger,
-      erm35: f.erm35, erm35a: f.erm35a, est: f.est, estFestzusetzen: f.estFestzusetzen,
+      erm35: f.erm35, erm35a: f.erm35a, anrechnung: f.anrechnung, est: f.est, estFestzusetzen: f.estFestzusetzen,
       soli: f.soli, kist: f.kist, kistAnteil: f.kistAnteil, kirchgeld: f.kirchgeld, kistSatz: satz,
       kapESt: f.kapESt, kapSoli: f.kapSoli, kapKist: f.kapKist
     });
@@ -355,8 +420,8 @@
     r.ergebnis = cent(r.differenz.est + r.differenz.soli + r.differenz.kist);
 
     // Hinweise
-    if (r.lohnersatz > FEST.pflichtLohnersatz) r.hinweise.push('pflicht_lohnersatz');
-    if (r.lohnersatz > 0) r.hinweise.push('progression');
+    if (r.leistungen > FEST.pflichtLohnersatz) r.hinweise.push('pflicht_lohnersatz');
+    if (r.leistungen > 0) r.hinweise.push('progression');
     if (anzKinder && !r.kfbGuenstiger) r.hinweise.push('kindergeld_besser');
     if (r.kfbGuenstiger) r.hinweise.push('kfb_besser');
     if (zus) r.hinweise.push('zusammen');
@@ -366,8 +431,14 @@
     if (r.gewerbesteuer > 0) r.hinweise.push('gewerbesteuer');
     if (r.renten.some(x => x.geschaetzt)) r.hinweise.push('rente_freibetrag');
     if (r.kirchgeld) r.hinweise.push('kirchgeld');
+    if (r.altersentlastung) r.hinweise.push('altersentlastung');
+    if (r.versorgungsfreibetrag) r.hinweise.push('versorgung');
+    if (r.rest23 > 0) r.hinweise.push('verlust23');
+    if (r.kapRestAktien > 0 || r.kapRestSonst > 0) r.hinweise.push('verlust_kap');
+    if (n(e.auslandFrei) || r.auslandPflichtig) r.hinweise.push('ausland');
+    if (leute.some(x => !x.veraeusserung && x.rest23 === 0) && [e.p1, e.p2].some(p => p && n(p.gewinn23) > 0 && n(p.gewinn23) - n(p.vortrag23) < 1000 && n(p.gewinn23) - n(p.vortrag23) > 0)) r.hinweise.push('freigrenze23');
     if (r.betriebSumme !== 0 || r.vermietungSumme !== 0 || r.rente > 0) r.hinweise.push('pflicht_weitere');
-    const nurLohn = leute.every(x => x.brutto === 0) && r.rente === 0 && r.vermietungSumme === 0 && r.betriebSumme === 0 && r.kapErtraege === 0;
+    const nurLohn = leute.every(x => x.brutto === 0) && r.rente === 0 && r.vermietungSumme === 0 && r.betriebSumme === 0 && r.kapBrutto === 0 && r.veraeusserung === 0 && r.auslandPflichtig === 0 && !n(e.auslandFrei);
     if (nurLohn) r.hinweise.push('kein_lohn');
     r.hatEinkuenfte = !nurLohn;
     return r;
@@ -393,6 +464,8 @@
       const t = z.toLowerCase();
       if (/zuschu/.test(t) || ctx === 24) return;               // Zeile 24: steuerfreie Arbeitgeberzuschüsse
       if (/bruttoarbeitslohn/.test(t) || (ctx === 3 && !out.brutto)) setze('brutto', w, z);
+      else if (ctx === 8 || /versorgungsbez.*enthalten|in 3\. enthaltene versorgungsbez/.test(t)) setze('versorgung', w, z);
+      else if (ctx === 29 || /bemessungsgrundlage.*versorgungsfreibetrag/.test(t)) setze('vBmg', w, z);
       else if (/einbehaltene\s+lohnsteuer|^4\.?\s/.test(t) && ctx === 4) setze('lst', w, z);
       else if (/solidarit/.test(t) && ctx === 5) setze('soli', w, z);
       else if (/kirchensteuer/.test(t) && ctx === 6) setze('kist', w, z);
@@ -406,7 +479,7 @@
     return { felder: out, gefunden };
   }
 
-  const api = { besteuerungsanteil, ertragsanteil, afaSatz, kirchgeld, leseLohnsteuerbescheinigung, JAHR, FEST, LAENDER, tarif, tarifVeranlagung, steuer, zumutbar, soliAus, berechne, kistSatz };
+  const api = { versorgungsTabelle, altersTabelle, besteuerungsanteil, ertragsanteil, afaSatz, kirchgeld, leseLohnsteuerbescheinigung, JAHR, FEST, LAENDER, tarif, tarifVeranlagung, steuer, zumutbar, soliAus, berechne, kistSatz };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   g.SDSteuer = api;
 })(typeof window !== 'undefined' ? window : globalThis);

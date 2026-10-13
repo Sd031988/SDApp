@@ -161,6 +161,9 @@
         .erg-btn { justify-self: start; border: 0; border-radius: 10px; background: #fff; color: #1c4a42; font: inherit; font-weight: bold; padding: 9px 14px; cursor: pointer; }
         .lsb-gefunden { font-size: .8rem; color: var(--muted); }
         .zeilen-nr { display: inline-block; min-width: 2.6em; font-size: .72rem; font-weight: bold; color: var(--accent-dark); background: var(--accent-soft); border-radius: 6px; padding: 1px 5px; margin-right: 4px; text-align: center; }
+        .unter-details { border: 1px dashed var(--line); border-radius: 12px; padding: 8px 12px; display: grid; gap: 10px; }
+        .unter-details summary { cursor: pointer; font-weight: bold; font-size: .88rem; color: var(--accent-dark); }
+        .unter-details[open] { background: #fbfcfb; }
         .obj-liste { display: grid; gap: 10px; }
         .obj { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; background: #fbfcfb; }
         .obj-kopf { display: flex; align-items: center; gap: 8px; }
@@ -219,7 +222,7 @@
             <span class="unter" id="ergUnter">Trage unten deine Lohnsteuerbescheinigung, Rente oder andere Einkünfte ein – dann rechnet der Helfer live mit.</span>
             <details id="ergDetails"><summary>So wurde gerechnet</summary><table class="rechenweg" id="rechenweg"></table></details>
             <ul class="erg-hinweise" id="ergHinweise"></ul>
-            <span class="unter" style="font-size:.76rem;opacity:.75">Schätzung nach den Steuerwerten <span class="w-jahr"></span> – Arbeit, Rente, Kapital, Vermietung, Selbstständigkeit und Gewerbe, mit Verlustvortrag. Nicht enthalten: Beamtenpensionen (Versorgungsfreibetrag), Altersentlastungsbetrag, Auslandseinkünfte, Veräußerungsgewinne. Den verbindlichen Betrag nennt dein Steuerbescheid.</span>
+            <span class="unter" style="font-size:.76rem;opacity:.75">Schätzung nach den Steuerwerten <span class="w-jahr"></span> – Arbeit, Rente, Kapital, Vermietung, Selbstständigkeit und Gewerbe, mit Verlustvortrag. Mit Pensionen, Altersentlastungsbetrag, Ausland, privaten Verkäufen und Verlusttöpfen. Nicht enthalten: Land- und Forstwirtschaft, Sonderfälle wie Fünftelregelung oder Teileinkünfteverfahren. Den verbindlichen Betrag nennt dein Steuerbescheid.</span>
         </section>
 
         <!-- Persönliche Angaben -->
@@ -234,6 +237,10 @@
                         </select></label>
                     <label class="feld">Bundesland (Wohnsitz) <span class="hilfe">für den Kirchensteuersatz</span>
                         <select data-f="p.land"><option value="">– bitte wählen –</option><option value="BW">Baden-Württemberg</option><option value="BY">Bayern</option><option value="BE">Berlin</option><option value="BB">Brandenburg</option><option value="HB">Bremen</option><option value="HH">Hamburg</option><option value="HE">Hessen</option><option value="MV">Mecklenburg-Vorpommern</option><option value="NI">Niedersachsen</option><option value="NW">Nordrhein-Westfalen</option><option value="RP">Rheinland-Pfalz</option><option value="SL">Saarland</option><option value="SN">Sachsen</option><option value="ST">Sachsen-Anhalt</option><option value="SH">Schleswig-Holstein</option><option value="TH">Thüringen</option></select></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld">Dein Geburtsjahr <span class="hilfe">ab 64 Jahren gibt es den Altersentlastungsbetrag</span><input type="text" inputmode="numeric" data-f="p.geb1" placeholder="z. B. 1985"></label>
+                    <label class="feld" id="geb2Feld">Geburtsjahr Partner/in<input type="text" inputmode="numeric" data-f="p.geb2" placeholder="z. B. 1987"></label>
                 </div>
                 <label class="check"><input type="checkbox" data-f="p.kirche1"> <span>Ich bin Mitglied einer Kirche (Kirchensteuer)</span></label>
                 <label class="check" id="kirche2Zeile"><input type="checkbox" data-f="p.kirche2"> <span>Mein Partner / meine Partnerin ist Kirchenmitglied</span></label>
@@ -291,6 +298,17 @@
                     <label class="feld"><span><span class="zeilen-nr">Z. 27</span>Arbeitslosenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l1.av" placeholder=""></label>
                 </div>
 
+                <details class="unter-details">
+                    <summary>🏛️ Pension / Versorgungsbezüge (Beamte, Werkspension)</summary>
+                    <div class="zeile">
+                        <label class="feld"><span><span class="zeilen-nr">Z. 8</span>In Z. 3 enthaltene Versorgungsbezüge</span><input type="text" inputmode="decimal" data-f="l1.versorgung" placeholder="z. B. 36.000,00"></label>
+                        <label class="feld"><span><span class="zeilen-nr">Z. 29</span>Bemessungsgrundlage Versorgungsfreibetrag</span><input type="text" inputmode="decimal" data-f="l1.vBmg" placeholder="z. B. 36.000,00"></label>
+                    </div>
+                    <div class="zeile">
+                        <label class="feld"><span><span class="zeilen-nr">Z. 30</span>Jahr des Versorgungsbeginns</span><input type="text" inputmode="numeric" data-f="l1.vJahr" placeholder="z. B. 2020"></label>
+                        <label class="feld"><span><span class="zeilen-nr">Z. 31</span>Monate mit Versorgungsbezug im Jahr</span><input type="text" inputmode="numeric" data-f="l1.vMonate" placeholder="12"></label>
+                    </div>
+                </details>
                 <div id="partnerBlock">
                     <h3 style="margin:10px 0 0;font-size:.95rem">👥 Lohnsteuerbescheinigung Partner/in</h3>
                     <div class="knoepfe">
@@ -319,6 +337,17 @@
                     <label class="feld"><span><span class="zeilen-nr">Z. 27</span>Arbeitslosenversicherung (Arbeitnehmer)</span><input type="text" inputmode="decimal" data-f="l2.av" placeholder=""></label>
                 </div>
 
+                <details class="unter-details">
+                    <summary>🏛️ Pension / Versorgungsbezüge (Beamte, Werkspension)</summary>
+                    <div class="zeile">
+                        <label class="feld"><span><span class="zeilen-nr">Z. 8</span>In Z. 3 enthaltene Versorgungsbezüge</span><input type="text" inputmode="decimal" data-f="l2.versorgung" placeholder="z. B. 36.000,00"></label>
+                        <label class="feld"><span><span class="zeilen-nr">Z. 29</span>Bemessungsgrundlage Versorgungsfreibetrag</span><input type="text" inputmode="decimal" data-f="l2.vBmg" placeholder="z. B. 36.000,00"></label>
+                    </div>
+                    <div class="zeile">
+                        <label class="feld"><span><span class="zeilen-nr">Z. 30</span>Jahr des Versorgungsbeginns</span><input type="text" inputmode="numeric" data-f="l2.vJahr" placeholder="z. B. 2020"></label>
+                        <label class="feld"><span><span class="zeilen-nr">Z. 31</span>Monate mit Versorgungsbezug im Jahr</span><input type="text" inputmode="numeric" data-f="l2.vMonate" placeholder="12"></label>
+                    </div>
+                </details>
                     <label class="feld">Werbungskosten Partner/in im Jahr <span class="hilfe">leer lassen = Pauschbetrag <span class="w-ap"></span></span>
                         <input type="text" inputmode="decimal" data-f="l2.wk" placeholder="z. B. 1.800"></label>
                 </div>
@@ -342,13 +371,29 @@
             <div class="inhalt">
                 <p class="info">Banken ziehen meist schon 25 % Abgeltungsteuer ab. Über die Steuererklärung bekommst du Geld zurück, wenn der Sparer-Pauschbetrag (<span id="spbText">1.000 €</span>) nicht ausgeschöpft wurde oder dein persönlicher Steuersatz niedriger als 25 % ist – der Helfer prüft das automatisch (Günstigerprüfung).</p>
                 <div class="zeile">
-                    <label class="feld">Kapitalerträge im Jahr (alle Banken) <span class="hilfe">vor Abzug von Steuer und Freistellungsauftrag</span><input type="text" inputmode="decimal" data-f="kap.ertraege" placeholder="z. B. 1.400"></label>
+                    <label class="feld">Kapitalerträge im Jahr (alle Banken) <span class="hilfe">Zinsen, Dividenden, Fonds – vor Abzug von Steuer und Freistellungsauftrag</span><input type="text" inputmode="decimal" data-f="kap.ertraege" placeholder="z. B. 1.400"></label>
                     <label class="feld">Einbehaltene Kapitalertragsteuer <input type="text" inputmode="decimal" data-f="kap.kapest" placeholder="z. B. 100,00"></label>
                 </div>
                 <div class="zeile">
                     <label class="feld">Einbehaltener Soli <input type="text" inputmode="decimal" data-f="kap.soli" placeholder="z. B. 5,50"></label>
                     <label class="feld">Einbehaltene Kirchensteuer <input type="text" inputmode="decimal" data-f="kap.kist" placeholder="leer, wenn keine"></label>
                 </div>
+                <details class="unter-details">
+                    <summary>📊 Aktienverkäufe, Verluste und ausländische Quellensteuer</summary>
+                    <p class="info">Nur nötig, wenn du Verluste bei einer Bank mit Gewinnen bei einer anderen verrechnen willst (Verlustbescheinigung bis 15.12. bei der Bank beantragen) oder ausländische Steuer anrechnen lässt. Aktienverluste dürfen nur mit Aktiengewinnen verrechnet werden.</p>
+                    <div class="zeile">
+                        <label class="feld">Gewinne aus Aktienverkäufen <span class="hilfe">nicht schon oben enthalten</span><input type="text" inputmode="decimal" data-f="kap.aktienGewinne" placeholder="z. B. 2.000"></label>
+                        <label class="feld">Verluste aus Aktienverkäufen <span class="hilfe">laut Verlustbescheinigung</span><input type="text" inputmode="decimal" data-f="kap.aktienVerluste" placeholder="z. B. 1.200"></label>
+                    </div>
+                    <div class="zeile">
+                        <label class="feld">Sonstige Verluste (allgemeiner Topf) <span class="hilfe">z. B. Fonds, Anleihen, Zertifikate</span><input type="text" inputmode="decimal" data-f="kap.sonstVerluste" placeholder="z. B. 300"></label>
+                        <label class="feld">Anrechenbare ausländische Quellensteuer <input type="text" inputmode="decimal" data-f="kap.quellensteuer" placeholder="z. B. 45"></label>
+                    </div>
+                    <div class="zeile">
+                        <label class="feld">Verlustvortrag Aktien aus Vorjahr <span class="hilfe">aus dem Steuerbescheid</span><input type="text" inputmode="decimal" data-f="kap.vortragAktien" placeholder="z. B. 0"></label>
+                        <label class="feld">Verlustvortrag sonstige Kapitalverluste <input type="text" inputmode="decimal" data-f="kap.vortragSonst" placeholder="z. B. 0"></label>
+                    </div>
+                </details>
                 <div class="ergebnis" id="ergKap"></div>
             </div>
         </details>
@@ -372,6 +417,31 @@
                 <div id="liste-betriebe" class="obj-liste"></div>
                 <div class="knoepfe"><button type="button" class="btn" data-obj-neu="betriebe">＋ Tätigkeit</button></div>
                 <div class="ergebnis" id="ergS"></div>
+            </div>
+        </details>
+
+        <!-- Ausland & private Verkaeufe -->
+        <details class="karte" id="karteAusland">
+            <summary><div class="titel"><h2>🌍 Ausland &amp; private Verkäufe</h2><small>Einkünfte aus dem Ausland, Krypto, Gold, Immobilie innerhalb der Frist</small></div><span class="summe" id="sumAusland">0 €</span></summary>
+            <div class="inhalt">
+                <h3 style="margin:4px 0 0;font-size:.95rem">🌍 Einkünfte aus dem Ausland</h3>
+                <p class="info">Steuerfrei nach Doppelbesteuerungsabkommen (z. B. Lohn für Arbeit im Ausland): in Deutschland steuerfrei, erhöht aber den Steuersatz. Steuerpflichtige Auslandseinkünfte: die im Ausland gezahlte Steuer wird angerechnet.</p>
+                <div class="zeile">
+                    <label class="feld">Steuerfreie Auslandseinkünfte (DBA) <span class="hilfe">Progressionsvorbehalt; Verluste mit Minus</span><input type="text" inputmode="decimal" data-f="ausland.frei" placeholder="z. B. 12.000"></label>
+                    <label class="feld">Steuerpflichtige Auslandseinkünfte <span class="hilfe">nach Abzug der Kosten</span><input type="text" inputmode="decimal" data-f="ausland.pflichtig" placeholder="z. B. 3.000"></label>
+                </div>
+                <label class="feld">Im Ausland gezahlte Steuer darauf <input type="text" inputmode="decimal" data-f="ausland.steuer" placeholder="z. B. 450"></label>
+                <h3 style="margin:8px 0 0;font-size:.95rem">🪙 Private Verkäufe (§ 23 EStG)</h3>
+                <p class="info">Steuerpflichtig: Krypto, Gold, Wertgegenstände innerhalb von 1 Jahr nach dem Kauf verkauft; Immobilien innerhalb von 10 Jahren (nicht, wenn selbst bewohnt). Gewinne unter 1.000 € pro Person und Jahr bleiben steuerfrei (Freigrenze: ab 1.000 € ist alles steuerpflichtig). Verluste nur mit solchen Gewinnen verrechenbar.</p>
+                <div class="zeile">
+                    <label class="feld">Dein Gewinn/Verlust im Jahr <span class="hilfe">Verkaufspreis − Kaufpreis − Kosten; Verlust mit Minus</span><input type="text" inputmode="decimal" data-f="ausland.g1" placeholder="z. B. 1.800"></label>
+                    <label class="feld">Verlustvortrag § 23 aus Vorjahr <input type="text" inputmode="decimal" data-f="ausland.v1" placeholder="meist 0"></label>
+                </div>
+                <div class="zeile" id="p23Partner">
+                    <label class="feld">Gewinn/Verlust Partner/in <input type="text" inputmode="decimal" data-f="ausland.g2" placeholder="z. B. 0"></label>
+                    <label class="feld">Verlustvortrag § 23 Partner/in <input type="text" inputmode="decimal" data-f="ausland.v2" placeholder="meist 0"></label>
+                </div>
+                <div class="ergebnis" id="ergAusland"></div>
             </div>
         </details>
 
@@ -542,7 +612,7 @@
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
-    <script src="steuer-rechner.js?v=2"></script>
+    <script src="steuer-rechner.js?v=3"></script>
     <script>
         'use strict';
 
@@ -617,12 +687,14 @@
             krank: 'Krankheitskosten',
             kinderbetreuung: 'Kinderbetreuung'
         };
-        const LSB_LEER = { brutto: '', lst: '', soli: '', kist: '', lohnersatzZ15: '', rvAG: '', rvAN: '', kv: '', pv: '', av: '' };
+        const LSB_LEER = { brutto: '', lst: '', soli: '', kist: '', lohnersatzZ15: '', rvAG: '', rvAN: '', kv: '', pv: '', av: '', versorgung: '', vBmg: '', vJahr: '', vMonate: '' };
         function leer() {
             return { n: { arbeitstage: '', entfernung: '', verkehrsmittel: 'auto', ticketkosten: '', hoTage: '', gewerkschaft: '', kontofuehrung: false },
                 haushalt: { minijob: '' }, kinder: [], posten: [],
-                p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '', kvSelbst1: '', kvSelbst2: '' },
-                kap: { ertraege: '', kapest: '', soli: '', kist: '' }, verlust: { vortrag: '', vzEst: '', vzSoli: '', vzKist: '' },
+                p: { zusammen: '', land: '', kirche1: false, kirche2: false, alleinerziehend: false, krankengeld: true, lohnersatz: '', lohnersatz2: '', versicherung: '', ruerup: '', kvSelbst1: '', kvSelbst2: '', geb1: '', geb2: '' },
+                kap: { ertraege: '', kapest: '', soli: '', kist: '', aktienGewinne: '', aktienVerluste: '', sonstVerluste: '', quellensteuer: '', vortragAktien: '', vortragSonst: '' },
+                verlust: { vortrag: '', vzEst: '', vzSoli: '', vzKist: '' },
+                ausland: { frei: '', pflichtig: '', steuer: '', g1: '', v1: '', g2: '', v2: '' },
                 renten: [], vermietung: [], betriebe: [],
                 l1: Object.assign({}, LSB_LEER), l2: Object.assign({ wk: '' }, LSB_LEER) };
         }
@@ -641,6 +713,7 @@
             d.l2 = Object.assign(leer().l2, d.l2 || {});
             d.kap = Object.assign(leer().kap, d.kap || {});
             d.verlust = Object.assign(leer().verlust, d.verlust || {});
+            d.ausland = Object.assign(leer().ausland, d.ausland || {});
             d.renten = d.renten || []; d.vermietung = d.vermietung || []; d.betriebe = d.betriebe || [];
             d.kinder = d.kinder || [];
             d.posten = d.posten || [];
@@ -808,14 +881,15 @@
             });
             return {
                 jahr, zusammen: zus, land: d.p.land, alleinerziehend: !!d.p.alleinerziehend,
-                p1: Object.assign(lsbWerte(d.l1), { wk: zahl(d.l1.brutto) > 0 ? r.wkAngesetzt : 0, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup), kvSelbst: zahl(d.p.kvSelbst1) }),
-                p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2), kvSelbst: zahl(d.p.kvSelbst2) }) : null,
+                p1: Object.assign(lsbWerte(d.l1), { wk: zahl(d.l1.brutto) > 0 ? r.wkAngesetzt : 0, kirche: !!d.p.kirche1, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz), ruerup: zahl(d.p.ruerup), kvSelbst: zahl(d.p.kvSelbst1), geburtsjahr: zahl(d.p.geb1), gewinn23: zahl(d.ausland.g1), vortrag23: zahl(d.ausland.v1), auslandPflichtig: zahl(d.ausland.pflichtig) }),
+                p2: zus ? Object.assign(lsbWerte(d.l2), { wk: zahl(d.l2.wk), kirche: !!d.p.kirche2, krankengeld: d.p.krankengeld !== false, lohnersatz: zahl(d.p.lohnersatz2), kvSelbst: zahl(d.p.kvSelbst2), geburtsjahr: zahl(d.p.geb2), gewinn23: zahl(d.ausland.g2), vortrag23: zahl(d.ausland.v2) }) : null,
                 sonstVersicherung: zahl(d.p.versicherung), spenden: r.spenden, kinderbetreuung: r.kindSumme, krankheit: r.krank,
                 ermaessigung35a: r.ermSumme, kinder,
                 renten: d.renten.map(x => ({ wer: x.wer, art: x.art, betrag: zahl(x.betrag), beginn: zahl(x.beginn), alter: zahl(x.alter), anteil: zahl(x.anteil), freibetrag: zahl(x.freibetrag), kvpv: zahl(x.kvpv) })),
                 vermietung: d.vermietung.map(x => ({ wer: x.wer, miete: zahl(x.miete), gebaeude: zahl(x.gebaeude), baujahr: zahl(x.baujahr), afa: zahl(x.afa), zinsen: zahl(x.zinsen), erhaltung: zahl(x.erhaltung), sonstige: zahl(x.sonstige) })),
                 betriebe: d.betriebe.map(x => ({ wer: x.wer, art: x.art, einnahmen: zahl(x.einnahmen), ausgaben: zahl(x.ausgaben), hebesatz: zahl(x.hebesatz) })),
-                kap: { ertraege: zahl(d.kap.ertraege), kapest: zahl(d.kap.kapest), soli: zahl(d.kap.soli), kist: zahl(d.kap.kist) },
+                kap: Object.fromEntries(Object.keys(leer().kap).map(k => [k, zahl(d.kap[k])])),
+                auslandFrei: zahl(d.ausland.frei), auslandSteuer: zahl(d.ausland.steuer),
                 verlustvortrag: zahl(d.verlust.vortrag),
                 vorauszahlung: { est: zahl(d.verlust.vzEst), soli: zahl(d.verlust.vzSoli), kist: zahl(d.verlust.vzKist) }
             };
@@ -834,6 +908,12 @@
             kirchgeld: 'Besonderes Kirchgeld: Das Kirchenmitglied hat wenig eigenes Einkommen, der Partner ist kein Mitglied. Höhe nach gemeinsamem Einkommen – die Stufen können je Landeskirche abweichen.',
             ertragsanteil_fehlt: 'Bei einer privaten Rente fehlt das Alter bei Rentenbeginn (50–75 Jahre) oder der Ertragsanteil – sie ist nicht mitgerechnet.',
             pflicht_weitere: 'Mit Rente, Vermietung oder Selbstständigkeit bist du in der Regel zur Abgabe einer Steuererklärung verpflichtet.',
+            altersentlastung: 'Altersentlastungsbetrag berücksichtigt (ab 64 Jahren, auf Arbeitslohn und andere Einkünfte – nicht auf gesetzliche Renten und Pensionen).',
+            versorgung: 'Pension: Versorgungsfreibetrag und Zuschlag nach dem Jahr des Versorgungsbeginns sind abgezogen, statt 1.230 € gelten 102 € Werbungskosten-Pauschbetrag.',
+            verlust23: 'Verlust aus privaten Verkäufen: wird festgestellt und mit künftigen Gewinnen aus privaten Verkäufen verrechnet – Erklärung abgeben.',
+            verlust_kap: 'Nicht verrechnete Kapitalverluste werden ins nächste Jahr vorgetragen (Aktienverluste nur gegen Aktiengewinne).',
+            ausland: 'Auslandseinkünfte: Doppelbesteuerungsabkommen des Landes prüfen. Die Anrechnung ausländischer Steuer ist hier vereinfacht (nicht je Staat getrennt).',
+            freigrenze23: 'Gewinn aus privaten Verkäufen unter 1.000 € – bleibt steuerfrei (Freigrenze).',
             kein_lohn: ''
         };
         function zeigeErstattung(r, d) {
@@ -862,7 +942,11 @@
             if (e.rente) h += zeile('+ Renten (steuerpflichtiger Teil)', euro(e.rente), 'minus 102 € Werbungskosten-Pauschbetrag');
             if (e.vermietungSumme) h += zeile((e.vermietungSumme < 0 ? '− Verlust' : '+ Überschuss') + ' aus Vermietung', euro(Math.abs(e.vermietungSumme)));
             if (e.betriebSumme) h += zeile((e.betriebSumme < 0 ? '− Verlust' : '+ Gewinn') + ' Selbstständigkeit/Gewerbe', euro(Math.abs(e.betriebSumme)));
-            if (e.arbeit !== e.einkuenfte) h += zeile('= Summe der Einkünfte', euro(e.einkuenfte), null, true);
+            if (e.veraeusserung) h += zeile('+ Gewinn aus privaten Verkäufen', euro(e.veraeusserung));
+            if (e.auslandPflichtig) h += zeile('+ steuerpflichtige Auslandseinkünfte', euro(e.auslandPflichtig));
+            if (e.versorgungsfreibetrag) h += zeile('Info: Versorgungsfreibetrag (schon abgezogen)', euro(e.versorgungsfreibetrag));
+            if (e.altersentlastung) h += zeile('− Altersentlastungsbetrag', euro(e.altersentlastung));
+            if (e.arbeit !== e.einkuenfte || e.altersentlastung) h += zeile('= Summe der Einkünfte', euro(e.einkuenfte - e.altersentlastung), null, true);
             if (e.verlustAbzug) h += zeile('− Verlustvortrag', euro(e.verlustAbzug));
             if (e.entlastungAE) h += zeile('− Entlastungsbetrag Alleinerziehende', euro(e.entlastungAE));
             h += zeile('− Vorsorge (Rente, Kranken-, Pflegeversicherung …)', euro(e.vorsorge));
@@ -870,7 +954,8 @@
             if (e.agb) h += zeile('− Krankheitskosten über der zumutbaren Belastung', euro(e.agb), 'zumutbar: ' + euro(e.zumutbar));
             if (e.kfbGuenstiger) h += zeile('− Kinderfreibeträge', euro(e.kfbSumme));
             h += zeile('= zu versteuerndes Einkommen', euro(e.zvE), null, true);
-            h += zeile('Einkommensteuer' + (e.zusammen ? ' (Splitting)' : ''), euro(e.estTariflich), e.lohnersatz ? 'mit Progressionsvorbehalt (' + euro(e.lohnersatz) + ' Lohnersatz)' : null);
+            h += zeile('Einkommensteuer' + (e.zusammen ? ' (Splitting)' : ''), euro(e.estTariflich), e.lohnersatz ? 'mit Progressionsvorbehalt (' + euro(e.lohnersatz) + ' steuerfreie Einnahmen' + (e.auslandFrei ? ', davon Ausland ' + euro(e.auslandFrei) : '') + ')' : null);
+            if (e.anrechnung) h += zeile('− angerechnete ausländische Steuer', euro(e.anrechnung));
             if (e.erm35) h += zeile('− Anrechnung Gewerbesteuer (§ 35)', euro(e.erm35));
             if (e.erm35a) h += zeile('− Steuerermäßigung Haushalt/Handwerker', euro(e.erm35a));
             if (e.kfbGuenstiger) h += zeile('+ verrechnetes Kindergeld', euro(e.kindergeld));
@@ -965,8 +1050,8 @@
                 '<br>Abzüglich 102 € Werbungskosten-Pauschbetrag: <b>' + euro(e.rente) + '</b>' : 'Füge eine Rente hinzu, wenn du (oder dein Partner) eine bekommst.';
             // Kapital
             $('spbText').textContent = euro(e.sparerPausch);
-            $('sumKap').textContent = euro(e.kapErtraege);
-            $('ergKap').innerHTML = e.kapErtraege ? 'Über dem Sparer-Pauschbetrag: <b>' + euro(e.kapPflichtig) + '</b><br>' +
+            $('sumKap').textContent = euro(e.kapBrutto);
+            $('ergKap').innerHTML = e.kapBrutto ? 'Nach Verlustverrechnung: ' + euro(e.kapErtraege) + '<br>Über dem Sparer-Pauschbetrag: <b>' + euro(e.kapPflichtig) + '</b><br>' +
                 (e.kapGuenstiger ? '✓ Günstiger mit deinem persönlichen Steuersatz' : 'Abgeltungsteuer: ' + euro(e.kapESt) + ' + Soli ' + euro(e.kapSoli) + (e.kapKist ? ' + KiSt ' + euro(e.kapKist) : '')) +
                 '<br>Von der Bank einbehalten: ' + euro(zahl(d.kap.kapest) + zahl(d.kap.soli) + zahl(d.kap.kist)) : 'Trag die Werte aus der Jahressteuerbescheinigung deiner Bank(en) ein.';
             // Vermietung
@@ -980,6 +1065,16 @@
             // Verlust
             $('ergVerlust').innerHTML = (e.verlustAbzug ? 'Dieses Jahr abgezogen: <b>' + euro(e.verlustAbzug) + '</b><br>' : '') + (e.verlustRest ? 'Bleibt für nächstes Jahr: <b>' + euro(e.verlustRest) + '</b>' : (zahl(d.verlust.vortrag) ? 'Der Verlustvortrag ist dieses Jahr ganz verbraucht.' : 'Kein Verlustvortrag eingetragen.'));
             $('kvSelbst2Feld').hidden = d.p.zusammen !== 'ja';
+            $('geb2Feld').hidden = d.p.zusammen !== 'ja';
+            $('p23Partner').hidden = d.p.zusammen !== 'ja';
+            $('sumAusland').textContent = euro(e.veraeusserung + e.auslandPflichtig);
+            const g = [zahl(d.ausland.g1) - zahl(d.ausland.v1), d.p.zusammen === 'ja' ? zahl(d.ausland.g2) - zahl(d.ausland.v2) : 0];
+            $('ergAusland').innerHTML = [
+                (zahl(d.ausland.frei) ? 'Steuerfrei (Progressionsvorbehalt): <b>' + euro(zahl(d.ausland.frei)) + '</b>' : ''),
+                (e.auslandPflichtig ? 'Steuerpflichtig: <b>' + euro(e.auslandPflichtig) + '</b>, angerechnete Auslandssteuer: <b>' + euro(e.anrechnung) + '</b>' : ''),
+                ...g.map((x, i) => x === 0 ? '' : (i ? 'Partner/in: ' : 'Du: ') + (x < 0 ? 'Verlust ' + euro(-x) + ' – wird vorgetragen' : x < 1000 ? euro(x) + ' – unter der Freigrenze, steuerfrei' : '<b>' + euro(x) + '</b> steuerpflichtig (über 1.000 € Freigrenze)'))
+            ].filter(Boolean).join('<br>') || 'Nur ausfüllen, wenn es dich betrifft.';
+            if (e.kapRestAktien || e.kapRestSonst) $('ergKap').innerHTML += '<br>Verlustvortrag ins nächste Jahr: ' + (e.kapRestAktien ? 'Aktien ' + euro(e.kapRestAktien) : '') + (e.kapRestAktien && e.kapRestSonst ? ', ' : '') + (e.kapRestSonst ? 'sonstige ' + euro(e.kapRestSonst) : '');
             void S;
         }
         $('leisteBtn').onclick = () => { $('ergKarte').scrollIntoView({ behavior: 'smooth', block: 'start' }); $('ergDetails').open = true; };
@@ -1069,6 +1164,17 @@
             if (zahl(d.p.versicherung)) sonst.push(['Weitere Versicherungen', 'Haftpflicht, Unfall, BU, Risiko-LV – Anlage Vorsorgeaufwand', zahl(d.p.versicherung)]);
             if (zahl(d.verlust.vzEst)) sonst.push(['Geleistete Vorauszahlungen', 'werden vom Finanzamt automatisch angerechnet', zahl(d.verlust.vzEst)]);
             gruppen.push({ titel: 'Vorsorgeaufwand und Sonstiges', zeilen: sonst });
+            const so = [];
+            if (zahl(d.ausland.g1)) so.push(['Private Veräußerungsgeschäfte (Anlage SO)', 'Krypto, Gold, Immobilie – je Geschäft Kauf-/Verkaufsdatum und Preise angeben', zahl(d.ausland.g1)]);
+            if (d.p.zusammen === 'ja' && zahl(d.ausland.g2)) so.push(['Private Veräußerungsgeschäfte Partner/in (Anlage SO)', 'je Geschäft angeben', zahl(d.ausland.g2)]);
+            gruppen.push({ titel: 'Anlage SO – Sonstige Einkünfte', zeilen: so });
+            const aus = [];
+            if (zahl(d.ausland.frei)) aus.push(['Steuerfreie Auslandseinkünfte (Progressionsvorbehalt)', 'Anlage AUS bzw. Anlage N-AUS (Arbeitslohn)', zahl(d.ausland.frei)]);
+            if (zahl(d.ausland.pflichtig)) aus.push(['Steuerpflichtige ausländische Einkünfte', 'Anlage AUS – je Staat; gezahlte ausländische Steuer ' + euro(zahl(d.ausland.steuer)), zahl(d.ausland.pflichtig)]);
+            gruppen.push({ titel: 'Anlage AUS / N-AUS – Ausland', zeilen: aus });
+            const vers = [];
+            ['l1', 'l2'].forEach((l, i) => { if (zahl(d[l].versorgung) && (i === 0 || d.p.zusammen === 'ja')) vers.push(['Versorgungsbezüge' + (i ? ' Partner/in' : ''), 'Anlage N: Zeilen 8, 29, 30 und 31 der Lohnsteuerbescheinigung übernehmen (Versorgungsbeginn ' + (zahl(d[l].vJahr) || '?') + ')', zahl(d[l].versorgung)]); });
+            gruppen.push({ titel: 'Anlage N – Versorgungsbezüge', zeilen: vers });
             return gruppen;
         }
         function posten(kat) {
