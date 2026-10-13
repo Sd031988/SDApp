@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Arbeiten in Deutschland</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Wegweiser für internationale Fachkräfte: Welcher Weg zum Arbeiten in Deutschland passt (Blaue Karte EU, Fachkräfte-Visum, Chancenkarte, Ausbildung …) – mit Checkliste und offiziellen Quellen.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .weg { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: #fff; display: grid; gap: 8px; min-width: 0; }
+        .weg.ja { border: 2px solid var(--ok); }
+        .weg.vielleicht { border: 2px solid var(--warn-line); }
+        .weg .oben { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+        .weg h3 { font-size: 1rem; }
+        .weg small.para { color: var(--muted); font-weight: normal; }
+        ul.bed { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .86rem; line-height: 1.45; }
+        ul.bed li { display: grid; grid-template-columns: 22px 1fr; gap: 4px; }
+        .marke.ja { background: var(--ok-bg); color: var(--ok); }
+        details.andere > summary { cursor: pointer; font-weight: bold; font-size: .9rem; }
+        details.andere[open] > summary { margin-bottom: 8px; }
+        .punkte-tab td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+        .abschnitt { font-size: .8rem; font-weight: bold; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 0; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <div class="sd-logo" aria-hidden="true">SD</div>
+            <div><strong data-i18n="titel">Arbeiten in Deutschland</strong><small data-i18n="untertitel">Dein Weg zu Job und Visum – Schritt für Schritt</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <p class="info" data-i18n="intro">Beantworte ein paar Fragen. Der Wegweiser zeigt dir, welche Wege zum Arbeiten in Deutschland für dich infrage kommen, was dir noch fehlt und welche Schritte als Nächstes kommen. Deine Antworten bleiben auf diesem Gerät.</p>
+            <p class="hinweis" data-i18n="kein_recht">Das ist eine Orientierung, keine Rechtsberatung. Ob du ein Visum bekommst, entscheiden die deutsche Auslandsvertretung, die Bundesagentur für Arbeit und die Ausländerbehörde.</p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s1">1 · Woher kommst du – und wo bist du jetzt?</h2>
+            <label class="feld"><span data-i18n="f_nat">Staatsangehörigkeit</span>
+                <select id="nat">
+                    <option value="" data-i18n="bitte">– bitte wählen –</option>
+                    <option value="eu" data-i18n="nat_eu">EU-Staat, Island, Liechtenstein, Norwegen oder Schweiz</option>
+                    <option value="wb" data-i18n="nat_wb">Albanien, Bosnien und Herzegowina, Kosovo, Montenegro, Nordmazedonien oder Serbien</option>
+                    <option value="vf" data-i18n="nat_vf">Australien, Israel, Japan, Kanada, Republik Korea, Neuseeland, Vereinigtes Königreich oder USA</option>
+                    <option value="andere" data-i18n="nat_andere">anderes Land</option>
+                </select></label>
+            <label class="feld"><span data-i18n="f_ort">Wo lebst du gerade?</span>
+                <select id="ort">
+                    <option value="ausland" data-i18n="ort_ausland">außerhalb von Deutschland</option>
+                    <option value="de_titel" data-i18n="ort_titel">in Deutschland, mit Visum oder Aufenthaltstitel (z. B. Studium)</option>
+                    <option value="de_asyl" data-i18n="ort_asyl">in Deutschland, im Asylverfahren oder mit Duldung</option>
+                </select></label>
+        </section>
+
+        <section class="karte" id="teilQuali">
+            <h2 data-i18n="s2">2 · Abschluss und Erfahrung</h2>
+            <label class="feld"><span data-i18n="f_abschluss">Dein höchster Abschluss</span>
+                <select id="abschluss">
+                    <option value="" data-i18n="bitte">– bitte wählen –</option>
+                    <option value="hoch" data-i18n="ab_hoch">Hochschulabschluss (Bachelor, Master …)</option>
+                    <option value="beruf" data-i18n="ab_beruf">Berufsausbildung, mindestens 2 Jahre</option>
+                    <option value="pflegehilfe" data-i18n="ab_pflege">Ausbildung in der Pflegehilfe / Pflegeassistenz</option>
+                    <option value="schule" data-i18n="ab_schule">Schulabschluss</option>
+                    <option value="kein" data-i18n="ab_kein">kein Abschluss</option>
+                </select></label>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_staatl">Ist der Abschluss im Land, wo du ihn gemacht hast, staatlich anerkannt?</span>
+                    <select id="staatl">
+                        <option value="weiss" data-i18n="weiss">weiß ich nicht</option>
+                        <option value="ja" data-i18n="ja">ja</option>
+                        <option value="nein" data-i18n="nein">nein</option>
+                    </select></label>
+                <label class="feld"><span data-i18n="f_anerk">Anerkennung in Deutschland</span>
+                    <select id="anerk">
+                        <option value="nein" data-i18n="an_nein">noch nicht / weiß nicht</option>
+                        <option value="voll" data-i18n="an_voll">voll anerkannt bzw. vergleichbar (Bescheid, ZAB oder anabin)</option>
+                        <option value="teil" data-i18n="an_teil">teilweise – Anpassungsmaßnahme nötig</option>
+                    </select></label>
+            </div>
+            <label class="feld"><span data-i18n="f_regl">Ist dein Beruf in Deutschland „reglementiert“ (z. B. Ärztin, Pflegefachkraft, Lehrer, Erzieherin)?</span>
+                <select id="regl">
+                    <option value="weiss" data-i18n="weiss">weiß ich nicht</option>
+                    <option value="nein" data-i18n="nein">nein</option>
+                    <option value="ja" data-i18n="ja">ja</option>
+                </select></label>
+            <label class="feld"><span data-i18n="f_erfahrung">Berufserfahrung in deinem Beruf</span>
+                <select id="erfahrung">
+                    <option value="0" data-i18n="er_0">weniger als 2 Jahre</option>
+                    <option value="2" data-i18n="er_2">mindestens 2 Jahre in den letzten 5 Jahren</option>
+                    <option value="5" data-i18n="er_5">mindestens 5 Jahre in den letzten 7 Jahren</option>
+                </select></label>
+            <label class="check"><input type="checkbox" id="it3"> <span data-i18n="f_it">Ich arbeite in der IT und habe mindestens 3 Jahre IT-Berufserfahrung in den letzten 7 Jahren</span></label>
+            <label class="check"><input type="checkbox" id="mangel"> <span data-i18n="f_mangel">Mein Beruf steht auf der Liste der Engpassberufe (z. B. Ingenieurwesen, IT, Gesundheit, Lehrkräfte)</span></label>
+            <p class="quelle"><a href="https://www.make-it-in-germany.com/fileadmin/1_Rebrush_2022/a_Fachkraefte/PDF-Dateien/3_Visum_u_Aufenthalt/2024_Mangelberufe_DE.pdf" target="_blank" rel="noopener" data-i18n="link_mangel">Liste der Engpassberufe (Make it in Germany, PDF)</a></p>
+            <label class="check"><input type="checkbox" id="jung"> <span data-i18n="f_jung">Mein Hochschulabschluss ist höchstens 3 Jahre alt</span></label>
+        </section>
+
+        <section class="karte" id="teilPerson">
+            <h2 data-i18n="s3">3 · Sprache und Person</h2>
+            <div class="zeile3">
+                <label class="feld"><span data-i18n="f_alter">Alter</span><input type="number" id="alter" min="15" max="80" inputmode="numeric" placeholder="z. B. 29" data-i18n-placeholder="ph_alter"></label>
+                <label class="feld"><span data-i18n="f_de">Deutsch</span>
+                    <select id="de">
+                        <option value="0" data-i18n="sp_0">keine / unter A1</option>
+                        <option value="1">A1</option><option value="2">A2</option><option value="3">B1</option><option value="4" data-i18n="sp_b2">B2 oder besser</option>
+                    </select></label>
+                <label class="feld"><span data-i18n="f_en">Englisch</span>
+                    <select id="en">
+                        <option value="0" data-i18n="sp_en0">unter B2</option>
+                        <option value="4">B2</option><option value="5" data-i18n="sp_c1">C1 oder besser</option>
+                    </select></label>
+            </div>
+            <p class="info" data-i18n="sp_info">Gemeint ist ein Zertifikat (z. B. Goethe, telc, ÖSD, TestDaF; Englisch z. B. IELTS, TOEFL) – nicht nur die eigene Einschätzung.</p>
+            <label class="check"><input type="checkbox" id="vorauf"> <span data-i18n="f_vorauf">Ich war in den letzten 5 Jahren mindestens 6 Monate ohne Unterbrechung legal in Deutschland (Touristenaufenthalte zählen nicht)</span></label>
+            <label class="check"><input type="checkbox" id="partner"> <span data-i18n="f_partner">Mein Ehepartner / meine Ehepartnerin beantragt ebenfalls eine Chancenkarte und reist mit mir ein</span></label>
+        </section>
+
+        <section class="karte" id="teilJob">
+            <h2 data-i18n="s4">4 · Hast du schon ein Angebot?</h2>
+            <label class="feld"><span data-i18n="f_job">Angebot aus Deutschland</span>
+                <select id="job">
+                    <option value="kein" data-i18n="job_kein">noch kein Angebot</option>
+                    <option value="arbeit" data-i18n="job_arbeit">Arbeitsvertrag oder verbindliches Jobangebot</option>
+                    <option value="ausbildung" data-i18n="job_ausb">Ausbildungsvertrag (duale Ausbildung)</option>
+                </select></label>
+            <div id="jobDetails" hidden style="display:grid;gap:10px">
+                <label class="feld"><span data-i18n="f_gehalt">Bruttojahresgehalt laut Angebot (€)</span><input type="number" id="gehalt" min="0" step="100" inputmode="numeric" placeholder="z. B. 48000" data-i18n-placeholder="ph_gehalt"></label>
+                <label class="check"><input type="checkbox" id="jobQual"> <span data-i18n="f_jobqual">Die Stelle passt zu meinem Abschluss (keine Helfer- oder Anlerntätigkeit)</span></label>
+                <label class="check"><input type="checkbox" id="tarif"> <span data-i18n="f_tarif">Der Arbeitgeber ist tarifgebunden und zahlt nach Tarif</span></label>
+                <label class="check"><input type="checkbox" id="ausbBetrieb"> <span data-i18n="f_ausbbetrieb">Der Arbeitgeber darf ausbilden (z. B. Ausbildungsbetrieb, Meisterbetrieb) und unterstützt meine Anerkennung</span></label>
+                <label class="check"><input type="checkbox" id="pflegeJob"> <span data-i18n="f_pflegejob">Die Stelle ist in der Pflege</span></label>
+            </div>
+        </section>
+
+        <section class="karte ergebnis" id="ergebnisKarte" hidden>
+            <h2 data-i18n="erg_titel">🧭 Deine möglichen Wege</h2>
+            <div id="ortHinweis"></div>
+            <div id="wegeJa" class="liste"></div>
+            <details class="andere" id="andereBox"><summary data-i18n="andere">Warum andere Wege (noch) nicht passen</summary><div id="wegeNein" class="liste"></div></details>
+        </section>
+
+        <section class="karte" id="checkKarte" hidden>
+            <h2 data-i18n="check_titel">✅ Deine Schritte</h2>
+            <p class="info" data-i18n="check_info">Typische Schritte für deine Wege. Welche Unterlagen genau verlangt werden, steht auf der Seite deiner deutschen Auslandsvertretung. Dein Fortschritt wird auf dem Gerät gespeichert.</p>
+            <div id="checkliste" style="display:grid;gap:8px;"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="helfer_titel">🧰 Passende Helfer in SD Hub</h2>
+            <div class="knoepfe">
+                <a class="btn klein" href="../anerkennung/index.html" data-i18n="h_anerk">🎓 Abschluss anerkennen</a>
+                <a class="btn klein" href="../Lebenslauf_app.html" data-i18n="h_cv">📝 Lebenslauf & Anschreiben (deutsches Format)</a>
+                <a class="btn klein" href="../passfoto/" data-i18n="h_foto">📸 Passfoto für das Visum</a>
+                <a class="btn klein" href="../mappe/index.html" data-i18n="h_mappe">🗂️ Dokumente sammeln</a>
+                <a class="btn klein" href="../post/index.html" data-i18n="h_post">📬 Brief vom Amt verstehen</a>
+                <a class="btn klein" href="../training/index.html" data-i18n="h_training">🎤 Vorstellungsgespräch üben</a>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="hilfe_titel">🤝 Kostenlose Beratung</h2>
+            <ul class="punkte">
+                <li><span data-i18n="hotline">Hotline „Arbeiten und Leben in Deutschland“:</span> <b>+49 30 1815-1111</b> – <span data-i18n="hotline_zeit">Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch</span></li>
+                <li data-i18n="iq">IQ-Beratung („Integration durch Qualifizierung“) – zu Anerkennung und Arbeit, in allen Bundesländern.</li>
+            </ul>
+            <div class="knoepfe">
+                <a class="btn klein" href="https://www.make-it-in-germany.com/de/visum-aufenthalt/quick-check?quickcheckpreselect=Arbeiten&cHash=8c4d34ca86a674cb7c034c2535f0cd79" target="_blank" rel="noopener" data-i18n="link_quick">✔️ Offizieller Quick-Check (Make it in Germany)</a>
+                <a class="btn klein" href="https://www.anerkennung-in-deutschland.de/" target="_blank" rel="noopener" data-i18n="link_anerk">🔎 Anerkennungs-Finder</a>
+                <a class="btn klein" href="https://www.arbeitsagentur.de/jobsuche/" target="_blank" rel="noopener" data-i18n="link_jobs">💼 Jobbörse der Arbeitsagentur</a>
+                <a class="btn klein" href="https://eures.europa.eu/" target="_blank" rel="noopener" data-i18n="link_eures">🇪🇺 EURES</a>
+                <a class="btn klein" href="https://www.netzwerk-iq.de/" target="_blank" rel="noopener" data-i18n="link_iq">IQ-Beratung finden</a>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="quellen_titel">📚 Quellen</h2>
+            <ul class="punkte quelle">
+                <li><a href="https://www.make-it-in-germany.com/fileadmin/1_Rebrush_2022/b_Arbeitgeber/PDF-Dateien/BMWE_Moeglichkeiten_der_FKE_2026_DE.pdf" target="_blank" rel="noopener">BMWE / Make it in Germany – Möglichkeiten der Fachkräfteeinwanderung (Stand Februar 2026)</a></li>
+                <li><a href="https://www.make-it-in-germany.com/de/visum-aufenthalt/visumprozess-formulare/wer-benoetigt-visum" target="_blank" rel="noopener">Make it in Germany – Wer benötigt ein Visum?</a></li>
+                <li><a href="https://www.make-it-in-germany.com/fileadmin/1_Rebrush_2022/a_Fachkraefte/PDF-Dateien/3_Visum_u_Aufenthalt/Visagrafik_DE/Chancenkarte_zur_Jobsuche_DE.pdf" target="_blank" rel="noopener">Make it in Germany – Auf einen Blick: Chancenkarte</a></li>
+                <li><a href="https://www.make-it-in-germany.com/pdf-blaue-karte-eu" target="_blank" rel="noopener">Make it in Germany – Auf einen Blick: Blaue Karte EU</a></li>
+                <li><a href="https://kairo.diplo.de/resource/blob/2664804/ff16b296556688a8ec5effaf9c727a62/250122-deu-merkblatt-chancenkarte-data.pdf" target="_blank" rel="noopener">Auswärtiges Amt (Botschaft Kairo) – Merkblatt Chancenkarte, Stand April 2026</a></li>
+                <li><a href="https://www.arbeitsagentur.de/unternehmen/fachkraefte-ausland/westbalkanregelung" target="_blank" rel="noopener">Bundesagentur für Arbeit – Westbalkanregelung</a></li>
+                <li><a href="https://www.deutsche-rentenversicherung.de/DRV/DE/Ueber-uns-und-Presse/Presse/Meldungen/2025/250910-sv-rechengroessen-vo-2026" target="_blank" rel="noopener">Deutsche Rentenversicherung – Beitragsbemessungsgrenze 2026 (Grundlage der Gehaltsgrenzen)</a></li>
+            </ul>
+            <p class="quelle" data-i18n="stand">Stand der Angaben: Oktober 2026. Gehaltsgrenzen und Beträge ändern sich jedes Jahr – vor dem Antrag auf den offiziellen Seiten prüfen. Keine Rechtsberatung.</p>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                ph_alter: 'z. B. 29', ph_gehalt: 'z. B. 48000', titel: 'Arbeiten in Deutschland', untertitel: 'Dein Weg zu Job und Visum – Schritt für Schritt',
+                intro: 'Beantworte ein paar Fragen. Der Wegweiser zeigt dir, welche Wege zum Arbeiten in Deutschland für dich infrage kommen, was dir noch fehlt und welche Schritte als Nächstes kommen. Deine Antworten bleiben auf diesem Gerät.',
+                kein_recht: 'Das ist eine Orientierung, keine Rechtsberatung. Ob du ein Visum bekommst, entscheiden die deutsche Auslandsvertretung, die Bundesagentur für Arbeit und die Ausländerbehörde.',
+                s1: '1 · Woher kommst du – und wo bist du jetzt?', f_nat: 'Staatsangehörigkeit', bitte: '– bitte wählen –',
+                nat_eu: 'EU-Staat, Island, Liechtenstein, Norwegen oder Schweiz', nat_wb: 'Albanien, Bosnien und Herzegowina, Kosovo, Montenegro, Nordmazedonien oder Serbien',
+                nat_vf: 'Australien, Israel, Japan, Kanada, Republik Korea, Neuseeland, Vereinigtes Königreich oder USA', nat_andere: 'anderes Land',
+                f_ort: 'Wo lebst du gerade?', ort_ausland: 'außerhalb von Deutschland', ort_titel: 'in Deutschland, mit Visum oder Aufenthaltstitel (z. B. Studium)', ort_asyl: 'in Deutschland, im Asylverfahren oder mit Duldung',
+                s2: '2 · Abschluss und Erfahrung', f_abschluss: 'Dein höchster Abschluss', ab_hoch: 'Hochschulabschluss (Bachelor, Master …)', ab_beruf: 'Berufsausbildung, mindestens 2 Jahre',
+                ab_pflege: 'Ausbildung in der Pflegehilfe / Pflegeassistenz', ab_schule: 'Schulabschluss', ab_kein: 'kein Abschluss',
+                f_staatl: 'Ist der Abschluss im Land, wo du ihn gemacht hast, staatlich anerkannt?', weiss: 'weiß ich nicht', ja: 'ja', nein: 'nein',
+                f_anerk: 'Anerkennung in Deutschland', an_nein: 'noch nicht / weiß nicht', an_voll: 'voll anerkannt bzw. vergleichbar (Bescheid, ZAB oder anabin)', an_teil: 'teilweise – Anpassungsmaßnahme nötig',
+                f_regl: 'Ist dein Beruf in Deutschland „reglementiert“ (z. B. Ärztin, Pflegefachkraft, Lehrer, Erzieherin)?',
+                f_erfahrung: 'Berufserfahrung in deinem Beruf', er_0: 'weniger als 2 Jahre', er_2: 'mindestens 2 Jahre in den letzten 5 Jahren', er_5: 'mindestens 5 Jahre in den letzten 7 Jahren',
+                f_it: 'Ich arbeite in der IT und habe mindestens 3 Jahre IT-Berufserfahrung in den letzten 7 Jahren',
+                f_mangel: 'Mein Beruf steht auf der Liste der Engpassberufe (z. B. Ingenieurwesen, IT, Gesundheit, Lehrkräfte)', link_mangel: 'Liste der Engpassberufe (Make it in Germany, PDF)',
+                f_jung: 'Mein Hochschulabschluss ist höchstens 3 Jahre alt',
+                s3: '3 · Sprache und Person', f_alter: 'Alter', f_de: 'Deutsch', f_en: 'Englisch', sp_0: 'keine / unter A1', sp_b2: 'B2 oder besser', sp_en0: 'unter B2', sp_c1: 'C1 oder besser',
+                sp_info: 'Gemeint ist ein Zertifikat (z. B. Goethe, telc, ÖSD, TestDaF; Englisch z. B. IELTS, TOEFL) – nicht nur die eigene Einschätzung.',
+                f_vorauf: 'Ich war in den letzten 5 Jahren mindestens 6 Monate ohne Unterbrechung legal in Deutschland (Touristenaufenthalte zählen nicht)',
+                f_partner: 'Mein Ehepartner / meine Ehepartnerin beantragt ebenfalls eine Chancenkarte und reist mit mir ein',
+                s4: '4 · Hast du schon ein Angebot?', f_job: 'Angebot aus Deutschland', job_kein: 'noch kein Angebot', job_arbeit: 'Arbeitsvertrag oder verbindliches Jobangebot', job_ausb: 'Ausbildungsvertrag (duale Ausbildung)',
+                f_gehalt: 'Bruttojahresgehalt laut Angebot (€)', f_jobqual: 'Die Stelle passt zu meinem Abschluss (keine Helfer- oder Anlerntätigkeit)', f_tarif: 'Der Arbeitgeber ist tarifgebunden und zahlt nach Tarif',
+                f_ausbbetrieb: 'Der Arbeitgeber darf ausbilden (z. B. Ausbildungsbetrieb, Meisterbetrieb) und unterstützt meine Anerkennung', f_pflegejob: 'Die Stelle ist in der Pflege',
+                erg_titel: '🧭 Deine möglichen Wege', andere: 'Warum andere Wege (noch) nicht passen',
+                st_ja: 'passt', st_vielleicht: 'möglich – es fehlt noch etwas', st_nein: 'passt nicht',
+                check_titel: '✅ Deine Schritte', check_info: 'Typische Schritte für deine Wege. Welche Unterlagen genau verlangt werden, steht auf der Seite deiner deutschen Auslandsvertretung. Dein Fortschritt wird auf dem Gerät gespeichert.',
+                vor_reise: 'Vor der Reise', nach_ankunft: 'Nach der Ankunft',
+                helfer_titel: '🧰 Passende Helfer in SD Hub', h_anerk: '🎓 Abschluss anerkennen', h_cv: '📝 Lebenslauf & Anschreiben (deutsches Format)', h_foto: '📸 Passfoto für das Visum', h_mappe: '🗂️ Dokumente sammeln', h_post: '📬 Brief vom Amt verstehen', h_training: '🎤 Vorstellungsgespräch üben',
+                hilfe_titel: '🤝 Kostenlose Beratung', hotline: 'Hotline „Arbeiten und Leben in Deutschland“:', hotline_zeit: 'Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch',
+                iq: 'IQ-Beratung („Integration durch Qualifizierung“) – zu Anerkennung und Arbeit, in allen Bundesländern.',
+                link_quick: '✔️ Offizieller Quick-Check (Make it in Germany)', link_anerk: '🔎 Anerkennungs-Finder', link_jobs: '💼 Jobbörse der Arbeitsagentur', link_eures: '🇪🇺 EURES', link_iq: 'IQ-Beratung finden',
+                quellen_titel: '📚 Quellen', stand: 'Stand der Angaben: Oktober 2026. Gehaltsgrenzen und Beträge ändern sich jedes Jahr – vor dem Antrag auf den offiziellen Seiten prüfen. Keine Rechtsberatung.',
+                // Ortshinweise
+                o_asyl: 'Im Asylverfahren oder mit Duldung gelten eigene Regeln (z. B. Beschäftigungserlaubnis der Ausländerbehörde, Wechsel in einen Aufenthalt zur Arbeit nur unter bestimmten Bedingungen). Bitte lass dich vorher beraten – z. B. bei einer Migrationsberatung oder der Hotline unten. Die Wege unten gelten vor allem für die Einreise aus dem Ausland.',
+                o_titel: 'Du bist schon in Deutschland: Ob du von deinem jetzigen Aufenthaltstitel in einen der Wege unten wechseln kannst, entscheidet die Ausländerbehörde. Frag dort nach, bevor dein Titel abläuft.',
+                o_vf: 'Mit deiner Staatsangehörigkeit darfst du ohne Visum einreisen und den Aufenthaltstitel zum Arbeiten auch in Deutschland bei der Ausländerbehörde beantragen. Arbeiten darfst du aber erst mit dem Titel. Ein Visum vorher kann helfen, pünktlich anzufangen.',
+                // EU
+                w_eu: 'Freizügigkeit (EU/EWR/Schweiz)', w_eu_text: 'Du brauchst kein Visum und keinen Aufenthaltstitel und darfst in Deutschland ohne Einschränkung arbeiten. Ein gültiger Ausweis oder Pass reicht.',
+                // Wege
+                w_blau: 'Blaue Karte EU', w_fk: 'Fachkraft mit anerkanntem Abschluss', w_erf: 'Arbeiten mit Berufserfahrung', w_ap: 'Anerkennungspartnerschaft', w_chance: 'Chancenkarte – zur Jobsuche einreisen',
+                w_ausb: 'Duale Ausbildung in Deutschland', w_ausbsuche: 'Ausbildungsplatzsuche in Deutschland', w_pflege: 'Pflegehilfskraft', w_wb: 'Westbalkanregelung',
+                // Bedingungen
+                b_hoch: 'Hochschulabschluss', b_hoch_fehlt: 'Hochschulabschluss nötig', b_it: 'IT-Fachkraft mit 3 Jahren Erfahrung in den letzten 7 Jahren (auch ohne Abschluss)',
+                b_vergleichbar: 'Abschluss in Deutschland anerkannt oder vergleichbar', b_vergl_pruefen: 'Prüfen, ob dein Abschluss vergleichbar ist (anabin) – sonst Zeugnisbewertung der ZAB oder Anerkennung beantragen',
+                b_job: 'Jobangebot oder Arbeitsvertrag', b_job_fehlt: 'Jobangebot oder Arbeitsvertrag aus Deutschland fehlt noch', b_jobqual: 'Stelle passt zu deiner Qualifikation', b_jobqual_offen: 'Die Stelle muss zu deiner Qualifikation passen (keine Helfertätigkeit)',
+                b_blau_6m: 'Vertrag für mindestens 6 Monate',
+                b_gehalt_ok: 'Gehalt {g} – Grenze {s} erreicht', b_gehalt_zu: 'Gehalt {g} liegt unter der Grenze von {s}', b_gehalt_offen: 'Bruttojahresgehalt mindestens {s} (Stand 2026)',
+                b_gehalt_niedrig: 'Niedrigere Grenze, weil {w} – dafür muss die Bundesagentur für Arbeit zustimmen', g_mangel: 'Engpassberuf', g_jung: 'Abschluss höchstens 3 Jahre alt', g_it: 'IT-Fachkraft ohne Abschluss',
+                b_abschluss_fk: 'Hochschulabschluss oder Berufsausbildung', b_abschluss_fehlt: 'Abgeschlossene Berufsausbildung oder Hochschulabschluss nötig',
+                b_anerk_voll: 'Abschluss anerkannt bzw. gleichwertig', b_anerk_teil: 'Bisher nur teilweise anerkannt – erst die Anpassungsmaßnahme abschließen (oder Anerkennungspartnerschaft prüfen)', b_anerk_fehlt: 'Anerkennung des Abschlusses in Deutschland fehlt noch (Ausbildung: Anerkennungsstelle; Studium: anabin oder ZAB)',
+                b_ba: 'Die Bundesagentur für Arbeit muss zustimmen (prüft u. a., ob die Arbeitsbedingungen wie bei deutschen Beschäftigten sind)',
+                b_45: 'Ab 45 Jahren: Gehalt mindestens {s} oder ausreichende Altersvorsorge nachweisen', b_45_ok: 'Ab 45 Jahren: Gehalt {g} liegt über {s}',
+                b_regl: 'Reglementierter Beruf: Du brauchst zusätzlich die Erlaubnis zur Berufsausübung (Anerkennung)', b_regl_weiss: 'Klären, ob dein Beruf reglementiert ist – dann ist die Anerkennung Pflicht',
+                b_staatl: 'Abschluss im Ausbildungsland staatlich anerkannt (Ausbildung mindestens 2 Jahre)', b_staatl_weiss: 'Klären, ob dein Abschluss im Ausbildungsland staatlich anerkannt ist (z. B. über die ZAB)', b_staatl_nein: 'Der Abschluss muss im Ausbildungsland staatlich anerkannt sein',
+                b_erf2: 'Mindestens 2 Jahre Berufserfahrung in den letzten 5 Jahren', b_erf_fehlt: 'Mindestens 2 Jahre Berufserfahrung in den letzten 5 Jahren nötig',
+                b_erf_regl: 'Nur für nicht reglementierte Berufe', b_erf_gehalt_tarif: 'Tarifgebundener Arbeitgeber zahlt nach Tarif – dann gilt die Gehaltsgrenze nicht',
+                b_ap_betrieb: 'Arbeitgeber darf ausbilden und unterstützt die Anerkennung (schriftliche Vereinbarung)', b_ap_betrieb_offen: 'Der Arbeitgeber muss ausbilden dürfen und die Anerkennung schriftlich unterstützen',
+                b_ap_de: 'Deutsch mindestens A2', b_ap_de_fehlt: 'Deutsch mindestens A2 nötig (Zertifikat)', b_ap_info: 'Die Anerkennung startet spätestens mit der Einreise; erst Visum bis 12 Monate, verlängerbar bis 3 Jahre; Nebenjob bis 20 Std./Woche',
+                b_c_v1: 'Abschluss voll anerkannt – Chancenkarte ohne Punkte und ohne Sprachnachweis möglich',
+                b_c_quali: 'Hochschulabschluss oder mind. 2-jährige Berufsausbildung, im Ausbildungsland staatlich anerkannt', b_c_quali_teil: 'Teilweise Anerkennung in Deutschland (Anpassungsmaßnahme festgestellt)',
+                b_c_sprache: 'Deutsch A1 oder Englisch B2 (Zertifikat)', b_c_sprache_fehlt: 'Deutsch A1 oder Englisch B2 nötig (Zertifikat) – ein A1-Kurs reicht schon',
+                b_c_punkte: 'Punkte: {p} von mindestens 6', b_c_punkte_fehlt: 'Punkte: {p} – es fehlen noch {f} bis 6 (z. B. mit besseren Deutschkenntnissen)',
+                b_c_geld: 'Lebensunterhalt sichern: 1.091 € pro Monat (2026), z. B. Sperrkonto mit 13.092 € für 12 Monate oder Verpflichtungserklärung',
+                b_c_info: 'Bis zu 12 Monate Jobsuche; Nebenjob bis 20 Std./Woche und Probearbeit bis 2 Wochen erlaubt. Mit passendem Job weiter in einen der anderen Wege.',
+                b_ausb_vertrag: 'Ausbildungsvertrag mit einem Betrieb in Deutschland', b_ausb_fehlt: 'Ausbildungsplatz fehlt noch (z. B. Jobbörse der Arbeitsagentur, Kammern)', b_ausb_de: 'Deutsch B1', b_ausb_de_fehlt: 'In der Regel Deutsch B1 nötig',
+                b_ausb_info: 'Neben der Ausbildung bis 20 Std./Woche Arbeit erlaubt; danach bis 18 Monate Zeit für die Jobsuche in Deutschland.',
+                b_as_alter: 'Höchstens 35 Jahre alt', b_as_alter_zu: 'Nur bis 35 Jahre', b_as_schule: 'Schulabschluss, der zum Studium berechtigt (in Deutschland oder im Herkunftsland) oder Abschluss einer deutschen Auslandsschule', b_as_geld: 'Lebensunterhalt gesichert', b_as_info: 'Bis zu 9 Monate Suche; Nebenjob bis 20 Std./Woche.',
+                b_pflege_ab: 'Ausbildung in Pflegehilfe / Pflegeassistenz (in Deutschland anerkannt)', b_pflege_ab_fehlt: 'Nur mit Ausbildung in Pflegehilfe / Pflegeassistenz', b_pflege_job: 'Konkrete Stelle in der Pflege', b_pflege_job_fehlt: 'Konkrete Stelle in der Pflege fehlt noch',
+                b_wb_nat: 'Staatsangehörigkeit eines Westbalkan-Staats', b_wb_nat_fehlt: 'Nur für Albanien, Bosnien und Herzegowina, Kosovo, Montenegro, Nordmazedonien und Serbien', b_wb_quali: 'Kein anerkannter Abschluss nötig (außer in reglementierten Berufen)',
+                b_wb_info: 'Höchstens 50.000 Zustimmungen pro Jahr, verteilt als Monatskontingente pro Land – teils Wartezeit. Keine Leistungen nach dem Asylbewerberleistungsgesetz in den letzten 24 Monaten.',
+                // Checkliste
+                cl: {
+                    pass: 'Gültigen Reisepass bereithalten (lange genug gültig)',
+                    anerkennung: 'Abschluss prüfen und anerkennen lassen (anabin, ZAB oder Anerkennungsstelle) – Helfer „Anerkennung“',
+                    lebenslauf: 'Lebenslauf und Anschreiben im deutschen Format erstellen – Helfer „Bewerbung schreiben“',
+                    zeugnisse: 'Zeugnisse, Arbeitszeugnisse und Nachweise der Berufserfahrung sammeln und übersetzen lassen',
+                    sprache: 'Sprachzertifikat machen (Deutsch: Goethe, telc, ÖSD …; Englisch: z. B. IELTS, TOEFL)',
+                    jobsuche: 'Stellen suchen und bewerben (Jobbörse der Arbeitsagentur, EURES, Make it in Germany)',
+                    vertrag: 'Arbeitsvertrag bzw. verbindliches Angebot und vom Arbeitgeber die „Erklärung zum Beschäftigungsverhältnis“ erhalten',
+                    fkv: 'Arbeitgeber fragen, ob er das beschleunigte Fachkräfteverfahren nutzt (Gebühr 411 € für den Arbeitgeber, meist deutlich schneller)',
+                    ausbvertrag: 'Ausbildungsvertrag unterschreiben',
+                    sperrkonto: 'Lebensunterhalt nachweisen: Sperrkonto (1.091 € pro Monat, Stand 2026) oder Verpflichtungserklärung',
+                    vorab: 'Arbeitgeber beantragt die Vorabzustimmung der Bundesagentur für Arbeit',
+                    kv: 'Krankenversicherung ab der Einreise abschließen',
+                    foto: 'Biometrische Passfotos machen – Helfer „Passfoto“',
+                    termin: 'Visumtermin bei der deutschen Auslandsvertretung buchen bzw. online im Auslandsportal beantragen',
+                    gebuehr: 'Visumgebühr bezahlen (in der Regel 75 €)',
+                    anmeldung: 'Wohnung beim Bürgeramt anmelden (innerhalb von 2 Wochen nach dem Einzug)',
+                    titel: 'Aufenthaltstitel bei der Ausländerbehörde beantragen, bevor das Visum abläuft',
+                    konto: 'Bankkonto eröffnen und Steuer-ID abwarten (kommt nach der Anmeldung per Post)',
+                    kk: 'Gesetzliche oder private Krankenkasse wählen und dem Arbeitgeber melden'
+                }
+            },
+            en: {
+                ph_alter: 'e.g. 29', ph_gehalt: 'e.g. 48000', titel: 'Working in Germany', untertitel: 'Your way to a job and visa – step by step',
+                intro: 'Answer a few questions. The guide shows which ways to work in Germany may suit you, what is still missing and what comes next. Your answers stay on this device.',
+                kein_recht: 'This is guidance, not legal advice. Whether you get a visa is decided by the German mission abroad, the Federal Employment Agency and the foreigners’ authority.',
+                s1: '1 · Where are you from – and where are you now?', f_nat: 'Citizenship', bitte: '– please choose –',
+                nat_eu: 'EU country, Iceland, Liechtenstein, Norway or Switzerland', nat_wb: 'Albania, Bosnia and Herzegovina, Kosovo, Montenegro, North Macedonia or Serbia',
+                nat_vf: 'Australia, Israel, Japan, Canada, Republic of Korea, New Zealand, United Kingdom or USA', nat_andere: 'other country',
+                f_ort: 'Where do you live now?', ort_ausland: 'outside Germany', ort_titel: 'in Germany, with a visa or residence permit (e.g. studies)', ort_asyl: 'in Germany, in the asylum procedure or with a toleration (Duldung)',
+                s2: '2 · Qualification and experience', f_abschluss: 'Your highest qualification', ab_hoch: 'University degree (Bachelor, Master …)', ab_beruf: 'Vocational training, at least 2 years',
+                ab_pflege: 'Training as a nursing assistant / care assistant', ab_schule: 'School-leaving certificate', ab_kein: 'no qualification',
+                f_staatl: 'Is the qualification state-recognised in the country where you obtained it?', weiss: 'I don’t know', ja: 'yes', nein: 'no',
+                f_anerk: 'Recognition in Germany', an_nein: 'not yet / I don’t know', an_voll: 'fully recognised or comparable (notice, ZAB or anabin)', an_teil: 'partly – adaptation measure required',
+                f_regl: 'Is your profession “regulated” in Germany (e.g. doctor, nurse, teacher, educator)?',
+                f_erfahrung: 'Work experience in your profession', er_0: 'less than 2 years', er_2: 'at least 2 years in the last 5 years', er_5: 'at least 5 years in the last 7 years',
+                f_it: 'I work in IT and have at least 3 years of IT work experience in the last 7 years',
+                f_mangel: 'My profession is on the list of shortage occupations (e.g. engineering, IT, health, teachers)', link_mangel: 'List of shortage occupations (Make it in Germany, PDF)',
+                f_jung: 'My university degree is at most 3 years old',
+                s3: '3 · Language and personal details', f_alter: 'Age', f_de: 'German', f_en: 'English', sp_0: 'none / below A1', sp_b2: 'B2 or better', sp_en0: 'below B2', sp_c1: 'C1 or better',
+                sp_info: 'This means a certificate (e.g. Goethe, telc, ÖSD, TestDaF; English e.g. IELTS, TOEFL) – not just your own estimate.',
+                f_vorauf: 'In the last 5 years I lived legally in Germany for at least 6 months without interruption (tourist stays do not count)',
+                f_partner: 'My spouse also applies for an Opportunity Card and enters Germany with me',
+                s4: '4 · Do you already have an offer?', f_job: 'Offer from Germany', job_kein: 'no offer yet', job_arbeit: 'Employment contract or binding job offer', job_ausb: 'Training contract (dual vocational training)',
+                f_gehalt: 'Gross annual salary according to the offer (€)', f_jobqual: 'The job matches my qualification (no unskilled or semi-skilled work)', f_tarif: 'The employer is bound by a collective agreement and pays accordingly',
+                f_ausbbetrieb: 'The employer may provide training (e.g. training company, master craftsman’s business) and supports my recognition', f_pflegejob: 'The job is in care / nursing',
+                erg_titel: '🧭 Your possible ways', andere: 'Why other ways do not (yet) fit',
+                st_ja: 'fits', st_vielleicht: 'possible – something is still missing', st_nein: 'does not fit',
+                check_titel: '✅ Your steps', check_info: 'Typical steps for your ways. The German mission abroad lists exactly which documents are required. Your progress is saved on your device.',
+                vor_reise: 'Before you travel', nach_ankunft: 'After arrival',
+                helfer_titel: '🧰 Matching helpers in SD Hub', h_anerk: '🎓 Get qualifications recognised', h_cv: '📝 CV & cover letter (German format)', h_foto: '📸 Passport photo for the visa', h_mappe: '🗂️ Collect documents', h_post: '📬 Understand an official letter', h_training: '🎤 Practise the interview',
+                hilfe_titel: '🤝 Free advice', hotline: 'Hotline “Working and Living in Germany”:', hotline_zeit: 'Mon–Thu 9:00–16:00, Fri 9:00–12:00 (German time), in German and English',
+                iq: 'IQ counselling (“Integration through Qualification”) – on recognition and work, in all federal states.',
+                link_quick: '✔️ Official Quick-Check (Make it in Germany)', link_anerk: '🔎 Recognition Finder', link_jobs: '💼 Job portal of the Federal Employment Agency', link_eures: '🇪🇺 EURES', link_iq: 'Find IQ counselling',
+                quellen_titel: '📚 Sources', stand: 'Information as of October 2026. Salary thresholds and amounts change every year – check the official websites before you apply. Not legal advice.',
+                o_asyl: 'In the asylum procedure or with a toleration, special rules apply (e.g. work permission from the foreigners’ authority; switching to a residence permit for work only under certain conditions). Please get advice first – e.g. from a migration counselling service or the hotline below. The ways below mainly apply to entry from abroad.',
+                o_titel: 'You are already in Germany: whether you can switch from your current residence permit to one of the ways below is decided by the foreigners’ authority. Ask there before your permit expires.',
+                o_vf: 'With your citizenship you may enter without a visa and apply for the residence permit for work at the foreigners’ authority in Germany. You may only start working once you have it. Getting a visa beforehand can help you start on time.',
+                w_eu: 'Free movement (EU/EEA/Switzerland)', w_eu_text: 'You need neither a visa nor a residence permit and may work in Germany without restrictions. A valid ID card or passport is enough.',
+                w_blau: 'EU Blue Card', w_fk: 'Skilled worker with a recognised qualification', w_erf: 'Working with professional experience', w_ap: 'Recognition partnership', w_chance: 'Opportunity Card – enter to look for a job',
+                w_ausb: 'Dual vocational training in Germany', w_ausbsuche: 'Searching for a training place in Germany', w_pflege: 'Nursing assistant', w_wb: 'Western Balkans regulation',
+                b_hoch: 'University degree', b_hoch_fehlt: 'University degree required', b_it: 'IT specialist with 3 years of experience in the last 7 years (also without a degree)',
+                b_vergleichbar: 'Qualification recognised or comparable in Germany', b_vergl_pruefen: 'Check whether your degree is comparable (anabin) – otherwise apply for a ZAB statement or recognition',
+                b_job: 'Job offer or employment contract', b_job_fehlt: 'Job offer or employment contract from Germany still missing', b_jobqual: 'Job matches your qualification', b_jobqual_offen: 'The job must match your qualification (no unskilled work)',
+                b_blau_6m: 'Contract for at least 6 months',
+                b_gehalt_ok: 'Salary {g} – threshold {s} reached', b_gehalt_zu: 'Salary {g} is below the threshold of {s}', b_gehalt_offen: 'Gross annual salary at least {s} (2026)',
+                b_gehalt_niedrig: 'Lower threshold because of: {w} – the Federal Employment Agency must approve', g_mangel: 'shortage occupation', g_jung: 'degree at most 3 years old', g_it: 'IT specialist without degree',
+                b_abschluss_fk: 'University degree or vocational training', b_abschluss_fehlt: 'Completed vocational training or university degree required',
+                b_anerk_voll: 'Qualification recognised or equivalent', b_anerk_teil: 'So far only partly recognised – first complete the adaptation measure (or check the recognition partnership)', b_anerk_fehlt: 'Recognition of your qualification in Germany still missing (training: recognition office; degree: anabin or ZAB)',
+                b_ba: 'The Federal Employment Agency must approve (it checks e.g. that working conditions are the same as for German employees)',
+                b_45: 'Aged 45 or over: salary at least {s} or proof of adequate pension provision', b_45_ok: 'Aged 45 or over: salary {g} is above {s}',
+                b_regl: 'Regulated profession: you also need a licence to practise (recognition)', b_regl_weiss: 'Find out whether your profession is regulated – then recognition is mandatory',
+                b_staatl: 'Qualification state-recognised in the country of training (training at least 2 years)', b_staatl_weiss: 'Find out whether your qualification is state-recognised in the country of training (e.g. via the ZAB)', b_staatl_nein: 'The qualification must be state-recognised in the country of training',
+                b_erf2: 'At least 2 years of work experience in the last 5 years', b_erf_fehlt: 'At least 2 years of work experience in the last 5 years required',
+                b_erf_regl: 'Only for non-regulated professions', b_erf_gehalt_tarif: 'Employer bound by a collective agreement pays accordingly – then the salary threshold does not apply',
+                b_ap_betrieb: 'Employer may provide training and supports recognition (written agreement)', b_ap_betrieb_offen: 'The employer must be allowed to train and support recognition in writing',
+                b_ap_de: 'German at least A2', b_ap_de_fehlt: 'German at least A2 required (certificate)', b_ap_info: 'Recognition starts at the latest on entry; first visa up to 12 months, extendable up to 3 years; side job up to 20 hours/week',
+                b_c_v1: 'Qualification fully recognised – Opportunity Card possible without points and without language proof',
+                b_c_quali: 'University degree or at least 2 years of vocational training, state-recognised in the country of training', b_c_quali_teil: 'Partial recognition in Germany (adaptation measure determined)',
+                b_c_sprache: 'German A1 or English B2 (certificate)', b_c_sprache_fehlt: 'German A1 or English B2 required (certificate) – an A1 course is enough',
+                b_c_punkte: 'Points: {p} of at least 6', b_c_punkte_fehlt: 'Points: {p} – {f} more needed to reach 6 (e.g. with better German)',
+                b_c_geld: 'Secure your living costs: €1,091 per month (2026), e.g. blocked account with €13,092 for 12 months or a formal obligation letter',
+                b_c_info: 'Up to 12 months of job search; side job up to 20 hours/week and trial work up to 2 weeks allowed. With a suitable job, continue on one of the other ways.',
+                b_ausb_vertrag: 'Training contract with a company in Germany', b_ausb_fehlt: 'Training place still missing (e.g. job portal of the employment agency, chambers)', b_ausb_de: 'German B1', b_ausb_de_fehlt: 'German B1 usually required',
+                b_ausb_info: 'Work of up to 20 hours/week allowed alongside training; afterwards up to 18 months to look for a job in Germany.',
+                b_as_alter: 'At most 35 years old', b_as_alter_zu: 'Only up to 35 years', b_as_schule: 'School-leaving certificate giving access to university (in Germany or your home country) or from a German school abroad', b_as_geld: 'Living costs secured', b_as_info: 'Up to 9 months of search; side job up to 20 hours/week.',
+                b_pflege_ab: 'Training as nursing / care assistant (recognised in Germany)', b_pflege_ab_fehlt: 'Only with training as nursing / care assistant', b_pflege_job: 'Specific job in care', b_pflege_job_fehlt: 'Specific job in care still missing',
+                b_wb_nat: 'Citizen of a Western Balkans country', b_wb_nat_fehlt: 'Only for Albania, Bosnia and Herzegovina, Kosovo, Montenegro, North Macedonia and Serbia', b_wb_quali: 'No recognised qualification needed (except in regulated professions)',
+                b_wb_info: 'At most 50,000 approvals per year, split into monthly quotas per country – sometimes with waiting times. No benefits under the Asylum Seekers’ Benefits Act in the last 24 months.',
+                cl: {
+                    pass: 'Have a valid passport ready (valid long enough)',
+                    anerkennung: 'Check and get your qualification recognised (anabin, ZAB or recognition office) – helper “Recognition”',
+                    lebenslauf: 'Create a CV and cover letter in German format – helper “Write an application”',
+                    zeugnisse: 'Collect certificates, references and proof of work experience and have them translated',
+                    sprache: 'Take a language certificate (German: Goethe, telc, ÖSD …; English: e.g. IELTS, TOEFL)',
+                    jobsuche: 'Search for jobs and apply (job portal of the employment agency, EURES, Make it in Germany)',
+                    vertrag: 'Get the employment contract or binding offer and the “Declaration of employment relationship” (Erklärung zum Beschäftigungsverhältnis) from the employer',
+                    fkv: 'Ask the employer whether they use the fast-track procedure for skilled workers (fee €411 for the employer, usually much faster)',
+                    ausbvertrag: 'Sign the training contract',
+                    sperrkonto: 'Prove living costs: blocked account (€1,091 per month, 2026) or a formal obligation letter',
+                    vorab: 'Employer applies for advance approval from the Federal Employment Agency',
+                    kv: 'Take out health insurance from the day of entry',
+                    foto: 'Take biometric passport photos – helper “Passport photo”',
+                    termin: 'Book a visa appointment at the German mission abroad or apply online via the Consular Services Portal',
+                    gebuehr: 'Pay the visa fee (usually €75)',
+                    anmeldung: 'Register your address at the citizens’ office (within 2 weeks of moving in)',
+                    titel: 'Apply for the residence permit at the foreigners’ authority before the visa expires',
+                    konto: 'Open a bank account and wait for your tax ID (sent by post after registration)',
+                    kk: 'Choose a statutory or private health insurance and tell your employer'
+                }
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=2"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        // Werte 2026 – Grundlage: Beitragsbemessungsgrenze Rentenversicherung 2026 = 101.400 € (Quellen unten auf der Seite)
+        const W = {
+            blau: 50700,          // 50 % BBG – Blaue Karte EU
+            blauNiedrig: 45934.2, // 45,3 % BBG – Engpassberufe, Berufseinsteiger, IT ohne Abschluss
+            erfahrung: 45630,     // 45 % BBG – § 6 BeschV (Erfahrung)
+            ab45: 55770           // 55 % BBG – Fachkräfte ab 45 Jahren
+        };
+        const KEY = 'sdArbeitenDE';
+        let d = SD.lesen(KEY, {}) || {};
+        if (!d.erledigt) d.erledigt = {};
+        const speichern = () => SD.schreiben(KEY, d);
+        const FELDER = ['nat', 'ort', 'abschluss', 'staatl', 'anerk', 'regl', 'erfahrung', 'alter', 'de', 'en', 'job', 'gehalt'];
+        const HAKEN = ['it3', 'mangel', 'jung', 'vorauf', 'partner', 'jobQual', 'tarif', 'ausbBetrieb', 'pflegeJob'];
+        FELDER.forEach(k => { if (d[k] != null) $(k).value = d[k]; $(k).addEventListener(($(k).tagName === 'SELECT') ? 'change' : 'input', () => { d[k] = $(k).value; speichern(); zeige(); }); });
+        HAKEN.forEach(k => { $(k).checked = !!d[k]; $(k).addEventListener('change', () => { d[k] = $(k).checked; speichern(); zeige(); }); });
+
+        const euro = (x) => new Intl.NumberFormat(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: x % 1 ? 2 : 0 }).format(x);
+        // Bedingung: ok = true (erfüllt) | false (fehlt, lässt sich aber schaffen) | 'hart' (passt nicht) | null (offen / prüfen) | 'info'
+        const B = (ok, k, v) => ({ ok, text: t(k, v) });
+
+        function punkteChancenkarte(a) {
+            const p = [];
+            if (a.anerk === 'teil') p.push(['b_c_quali_teil', 4]);
+            if (a.de >= 4) p.push(['Deutsch B2', 3]); else if (a.de === 3) p.push(['Deutsch B1', 2]); else if (a.de === 2) p.push(['Deutsch A2', 1]);
+            if (a.en >= 5) p.push([window.SD_LANG === 'en' ? 'English C1' : 'Englisch C1', 1]);
+            if (a.erfahrung >= 5) p.push([t('er_5'), 3]); else if (a.erfahrung >= 2) p.push([t('er_2'), 2]);
+            if (a.mangel) p.push([window.SD_LANG === 'en' ? 'Qualification in a shortage occupation' : 'Abschluss in einem Engpassberuf', 1]);
+            if (a.alter > 0 && a.alter <= 35) p.push([window.SD_LANG === 'en' ? 'Age up to 35' : 'Alter bis 35', 2]); else if (a.alter > 0 && a.alter <= 40) p.push([window.SD_LANG === 'en' ? 'Age up to 40' : 'Alter bis 40', 1]);
+            if (a.vorauf) p.push([window.SD_LANG === 'en' ? 'Previous stay in Germany' : 'Voraufenthalt in Deutschland', 1]);
+            if (a.partner) p.push([window.SD_LANG === 'en' ? 'Spouse applies too' : 'Ehepartner beantragt mit', 1]);
+            return p.map(([k, n]) => [k.startsWith('b_') ? t(k) : k, n]);
+        }
+
+        function bewerte() {
+            const a = {
+                nat: d.nat || '', ort: d.ort || 'ausland', ab: d.abschluss || '', staatl: d.staatl || 'weiss', anerk: d.anerk || 'nein', regl: d.regl || 'weiss',
+                erfahrung: Number(d.erfahrung) || 0, alter: Number(d.alter) || 0, de: Number(d.de) || 0, en: Number(d.en) || 0, job: d.job || 'kein', gehalt: Number(d.gehalt) || 0,
+                it3: !!d.it3, mangel: !!d.mangel, jung: !!d.jung, vorauf: !!d.vorauf, partner: !!d.partner, jobQual: !!d.jobQual, tarif: !!d.tarif, ausbBetrieb: !!d.ausbBetrieb, pflegeJob: !!d.pflegeJob
+            };
+            const quali = a.ab === 'hoch' || a.ab === 'beruf';
+            const arbeit = a.job === 'arbeit';
+            const wege = [];
+            const jobB = () => arbeit ? B(true, 'b_job') : B(false, 'b_job_fehlt');
+            const jobQualB = () => !arbeit ? null : (a.jobQual ? B(true, 'b_jobqual') : B(null, 'b_jobqual_offen'));
+            const ue45 = () => {
+                if (!(a.alter >= 45)) return null;
+                if (arbeit && a.gehalt >= W.ab45) return B(true, 'b_45_ok', { g: euro(a.gehalt), s: euro(W.ab45) });
+                return B(null, 'b_45', { s: euro(W.ab45) });
+            };
+            const reglB = () => a.regl === 'ja' ? B(null, 'b_regl') : (a.regl === 'weiss' ? B(null, 'b_regl_weiss') : null);
+
+            // Blaue Karte EU
+            {
+                const itWeg = a.ab !== 'hoch' && a.it3;
+                const bed = [];
+                bed.push(a.ab === 'hoch' ? B(true, 'b_hoch') : (a.it3 ? B(true, 'b_it') : B('hart', 'b_hoch_fehlt')));
+                if (!itWeg && a.ab === 'hoch') bed.push(a.anerk === 'voll' ? B(true, 'b_vergleichbar') : B(null, 'b_vergl_pruefen'));
+                bed.push(jobB());
+                bed.push(jobQualB());
+                const gruende = [];
+                if (a.mangel) gruende.push(t('g_mangel'));
+                if (a.jung && a.ab === 'hoch') gruende.push(t('g_jung'));
+                if (itWeg) gruende.push(t('g_it'));
+                const grenze = gruende.length ? W.blauNiedrig : W.blau;
+                if (arbeit && a.gehalt > 0) bed.push(a.gehalt >= grenze ? B(true, 'b_gehalt_ok', { g: euro(a.gehalt), s: euro(grenze) }) : B('hart', 'b_gehalt_zu', { g: euro(a.gehalt), s: euro(grenze) }));
+                else bed.push(B(arbeit ? null : false, 'b_gehalt_offen', { s: euro(grenze) }));
+                if (gruende.length) bed.push(B('info', 'b_gehalt_niedrig', { w: gruende.join(', ') }));
+                bed.push(B('info', 'b_blau_6m'));
+                wege.push({ id: 'blau', titel: 'w_blau', para: '§ 18g AufenthG', bed, check: ['anerkennung', 'lebenslauf', 'jobsuche', 'vertrag', 'fkv'] });
+            }
+            // Fachkraft § 18a / § 18b
+            {
+                const bed = [quali ? B(true, 'b_abschluss_fk') : B('hart', 'b_abschluss_fehlt')];
+                bed.push(a.anerk === 'voll' ? B(true, 'b_anerk_voll') : (a.anerk === 'teil' ? B(false, 'b_anerk_teil') : B(false, 'b_anerk_fehlt')));
+                bed.push(jobB(), jobQualB(), ue45(), a.regl === 'ja' ? B(null, 'b_regl') : null, B('info', 'b_ba'));
+                wege.push({ id: 'fk', titel: 'w_fk', para: '§ 18a / § 18b AufenthG', bed, check: ['anerkennung', 'zeugnisse', 'lebenslauf', 'jobsuche', 'vertrag', 'fkv'] });
+            }
+            // Erfahrung § 19c Abs. 2 + § 6 BeschV
+            {
+                const bed = [quali ? (a.staatl === 'ja' ? B(true, 'b_staatl') : (a.staatl === 'nein' ? B('hart', 'b_staatl_nein') : B(null, 'b_staatl_weiss'))) : B('hart', 'b_abschluss_fehlt')];
+                bed.push(a.erfahrung >= 2 ? B(true, 'b_erf2') : B('hart', 'b_erf_fehlt'));
+                bed.push(a.regl === 'ja' ? B('hart', 'b_erf_regl') : (a.regl === 'weiss' ? B(null, 'b_erf_regl') : B(true, 'b_erf_regl')));
+                bed.push(jobB(), jobQualB());
+                if (arbeit && a.tarif) bed.push(B(true, 'b_erf_gehalt_tarif'));
+                else if (arbeit && a.gehalt > 0) bed.push(a.gehalt >= W.erfahrung ? B(true, 'b_gehalt_ok', { g: euro(a.gehalt), s: euro(W.erfahrung) }) : B('hart', 'b_gehalt_zu', { g: euro(a.gehalt), s: euro(W.erfahrung) }));
+                else bed.push(B(arbeit ? null : false, 'b_gehalt_offen', { s: euro(W.erfahrung) }));
+                bed.push(ue45(), B('info', 'b_ba'));
+                wege.push({ id: 'erf', titel: 'w_erf', para: '§ 19c Abs. 2 AufenthG, § 6 BeschV', bed, check: ['zeugnisse', 'lebenslauf', 'jobsuche', 'vertrag', 'fkv'] });
+            }
+            // Anerkennungspartnerschaft § 16d Abs. 3
+            {
+                const bed = [quali ? (a.staatl === 'ja' ? B(true, 'b_staatl') : (a.staatl === 'nein' ? B('hart', 'b_staatl_nein') : B(null, 'b_staatl_weiss'))) : B('hart', 'b_abschluss_fehlt')];
+                bed.push(jobB());
+                if (arbeit) bed.push(a.ausbBetrieb ? B(true, 'b_ap_betrieb') : B(null, 'b_ap_betrieb_offen'));
+                bed.push(a.de >= 2 ? B(true, 'b_ap_de') : B(false, 'b_ap_de_fehlt'));
+                bed.push(B('info', 'b_ba'), B('info', 'b_ap_info'));
+                const relevant = a.anerk !== 'voll';
+                if (relevant) wege.push({ id: 'ap', titel: 'w_ap', para: '§ 16d Abs. 3 AufenthG', bed, check: ['anerkennung', 'sprache', 'lebenslauf', 'jobsuche', 'vertrag'] });
+            }
+            // Chancenkarte § 20a / § 20b
+            {
+                const bed = [];
+                let punkte = null;
+                if (a.anerk === 'voll' && quali) {
+                    bed.push(B(true, 'b_c_v1'));
+                } else {
+                    if (a.anerk === 'teil') bed.push(B(true, 'b_c_quali_teil'));
+                    else if (quali) bed.push(a.staatl === 'ja' ? B(true, 'b_c_quali') : (a.staatl === 'nein' ? B('hart', 'b_staatl_nein') : B(null, 'b_staatl_weiss')));
+                    else bed.push(B('hart', 'b_c_quali'));
+                    bed.push(a.de >= 1 || a.en >= 4 ? B(true, 'b_c_sprache') : B(false, 'b_c_sprache_fehlt'));
+                    punkte = punkteChancenkarte(a);
+                    const summe = punkte.reduce((s, x) => s + x[1], 0);
+                    bed.push(summe >= 6 ? B(true, 'b_c_punkte', { p: summe }) : B(false, 'b_c_punkte_fehlt', { p: summe, f: 6 - summe }));
+                }
+                bed.push(B('info', 'b_c_geld'), B('info', 'b_c_info'));
+                wege.push({ id: 'chance', titel: 'w_chance', para: '§ 20a / § 20b AufenthG', bed, punkte, check: ['anerkennung', 'sprache', 'sperrkonto', 'lebenslauf', 'jobsuche'] });
+            }
+            // Ausbildung § 16a / Ausbildungsplatzsuche § 17 – nur zeigen, wenn es einen Ausbildungsvertrag gibt oder (noch) keine Berufsqualifikation
+            const ausbRelevant = a.job === 'ausbildung' || !quali;
+            if (ausbRelevant) {
+                const bed = [a.job === 'ausbildung' ? B(true, 'b_ausb_vertrag') : B(false, 'b_ausb_fehlt'), a.de >= 3 ? B(true, 'b_ausb_de') : B(null, 'b_ausb_de_fehlt'), B('info', 'b_ba'), B('info', 'b_ausb_info')];
+                wege.push({ id: 'ausb', titel: 'w_ausb', para: '§ 16a AufenthG', bed, check: ['sprache', 'lebenslauf', 'jobsuche', 'ausbvertrag'] });
+            }
+            // Ausbildungsplatzsuche § 17 (nur ohne Ausbildungsvertrag)
+            if (ausbRelevant && a.job !== 'ausbildung') {
+                const bed = [a.alter > 0 && a.alter <= 35 ? B(true, 'b_as_alter') : (a.alter > 35 ? B('hart', 'b_as_alter_zu') : B(null, 'b_as_alter')),
+                    a.de >= 3 ? B(true, 'b_ausb_de') : B(false, 'b_ausb_de_fehlt'), B(a.ab === 'kein' ? 'hart' : null, 'b_as_schule'), B('info', 'b_as_geld'), B('info', 'b_as_info')];
+                wege.push({ id: 'ausbsuche', titel: 'w_ausbsuche', para: '§ 17 AufenthG', bed, check: ['sprache', 'sperrkonto', 'lebenslauf', 'jobsuche'] });
+            }
+            // Pflegehilfskraft § 22a BeschV
+            {
+                const bed = [a.ab === 'pflegehilfe' ? B(true, 'b_pflege_ab') : B('hart', 'b_pflege_ab_fehlt'), arbeit && a.pflegeJob ? B(true, 'b_pflege_job') : B(false, 'b_pflege_job_fehlt'), ue45(), B('info', 'b_ba')];
+                wege.push({ id: 'pflege', titel: 'w_pflege', para: '§ 19c Abs. 1 AufenthG, § 22a BeschV', bed, check: ['anerkennung', 'lebenslauf', 'jobsuche', 'vertrag'] });
+            }
+            // Westbalkanregelung § 26 Abs. 2 BeschV
+            {
+                const bed = [a.nat === 'wb' ? B(true, 'b_wb_nat') : B('hart', 'b_wb_nat_fehlt'), jobB(), B('info', 'b_wb_quali'), a.regl === 'ja' ? B(null, 'b_regl') : null, ue45(), B('info', 'b_ba'), B('info', 'b_wb_info')];
+                wege.push({ id: 'wb', titel: 'w_wb', para: '§ 26 Abs. 2 BeschV', bed, check: ['lebenslauf', 'jobsuche', 'vertrag', 'vorab'] });
+            }
+            wege.forEach(w => {
+                w.bed = w.bed.filter(Boolean);
+                const echte = w.bed.filter(b => b.ok !== 'info');
+                w.status = echte.some(b => b.ok === 'hart') ? 'nein' : (echte.every(b => b.ok === true) ? 'ja' : 'vielleicht');
+            });
+            return { a, wege };
+        }
+
+        const ICON = { true: '✅', false: '⬜', hart: '❌', null: '❔', info: 'ℹ️' };
+        function wegHtml(w) {
+            const marke = { ja: '<span class="marke ja">' + esc(t('st_ja')) + '</span>', vielleicht: '<span class="marke bald">' + esc(t('st_vielleicht')) + '</span>', nein: '<span class="marke ab">' + esc(t('st_nein')) + '</span>' }[w.status];
+            let h = '<div class="weg ' + w.status + '"><div class="oben"><h3>' + esc(t(w.titel)) + ' <small class="para">' + esc(w.para) + '</small></h3>' + marke + '</div>';
+            h += '<ul class="bed">' + w.bed.map(b => '<li><span aria-hidden="true">' + ICON[String(b.ok)] + '</span><span>' + esc(b.text) + '</span></li>').join('') + '</ul>';
+            if (w.punkte && w.punkte.length) {
+                h += '<div class="tabelle-wrap"><table class="tab punkte-tab"><tbody>' + w.punkte.map(([k, n]) => '<tr><td style="white-space:normal">' + esc(k) + '</td><td>' + n + '</td></tr>').join('') + '</tbody></table></div>';
+            }
+            return h + '</div>';
+        }
+
+        function zeige() {
+            $('jobDetails').hidden = d.job !== 'arbeit';
+            const eu = d.nat === 'eu';
+            ['teilQuali', 'teilPerson', 'teilJob'].forEach(id => { $(id).hidden = eu; });
+            const bereit = eu || (d.nat && d.abschluss);
+            $('ergebnisKarte').hidden = !bereit;
+            $('checkKarte').hidden = !bereit;
+            if (!bereit) return;
+            const cl = t('cl');
+            const liste = (keys) => keys.map(k => '<label class="check"><input type="checkbox" data-k="' + k + '"' + (d.erledigt[k] ? ' checked' : '') + '> <span>' + esc(cl[k]) + '</span></label>').join('');
+            const nach = ['anmeldung', 'titel', 'konto', 'kk'];
+            if (eu) {
+                $('ortHinweis').innerHTML = '';
+                $('wegeJa').innerHTML = '<div class="weg ja"><div class="oben"><h3>' + esc(t('w_eu')) + '</h3><span class="marke ja">' + esc(t('st_ja')) + '</span></div><p class="info" style="color:var(--ink)">' + esc(t('w_eu_text')) + '</p></div>';
+                $('andereBox').hidden = true;
+                $('checkliste').innerHTML = '<p class="abschnitt">' + esc(t('vor_reise')) + '</p>' + liste(['lebenslauf', 'anerkennung', 'jobsuche']) + '<p class="abschnitt">' + esc(t('nach_ankunft')) + '</p>' + liste(['anmeldung', 'konto', 'kk']);
+                return;
+            }
+            const { a, wege } = bewerte();
+            const hinweise = [];
+            if (a.ort === 'de_asyl') hinweise.push(t('o_asyl'));
+            if (a.ort === 'de_titel') hinweise.push(t('o_titel'));
+            if (a.nat === 'vf') hinweise.push(t('o_vf'));
+            $('ortHinweis').innerHTML = hinweise.map(x => '<p class="hinweis">' + esc(x) + '</p>').join('');
+            const gut = wege.filter(w => w.status !== 'nein').sort((x, y) => (x.status === 'ja' ? 0 : 1) - (y.status === 'ja' ? 0 : 1));
+            const schlecht = wege.filter(w => w.status === 'nein');
+            $('wegeJa').innerHTML = gut.length ? gut.map(wegHtml).join('') : '<p class="leer">' + esc(window.SD_LANG === 'en' ? 'No way fits yet based on your answers. Look at the reasons below – often a language certificate or recognition opens a way. Free advice: hotline below.' : 'Nach deinen Angaben passt noch kein Weg. Sieh dir unten die Gründe an – oft öffnet ein Sprachzertifikat oder die Anerkennung einen Weg. Kostenlose Beratung: Hotline unten.') + '</p>';
+            $('andereBox').hidden = !schlecht.length;
+            $('wegeNein').innerHTML = schlecht.map(wegHtml).join('');
+            // Schritte aus den passenden / möglichen Wegen
+            const vor = ['pass'];
+            gut.forEach(w => w.check.forEach(k => { if (!vor.includes(k)) vor.push(k); }));
+            if (a.nat !== 'vf' || a.ort === 'ausland') vor.push('foto', 'termin', 'gebuehr');
+            vor.push('kv');
+            $('checkliste').innerHTML = '<p class="abschnitt">' + esc(t('vor_reise')) + '</p>' + liste(vor) + '<p class="abschnitt">' + esc(t('nach_ankunft')) + '</p>' + liste(nach);
+        }
+        $('checkliste').addEventListener('change', (e) => {
+            const c = e.target.closest('[data-k]');
+            if (!c) return;
+            d.erledigt[c.dataset.k] = c.checked;
+            speichern();
+        });
+        document.addEventListener('sd-lang-changed', zeige);
+        zeige();
+    </script>
+</body>
+
+</html>
