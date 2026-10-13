@@ -459,6 +459,8 @@
       let imSpeicher = false;
       try { imSpeicher = await lib.hasModelInCache(id); } catch (e) { imSpeicher = false; }
       if (!imSpeicher && !(await frageDownload())) throw new Error(tx('abgebrochen'));
+      // Vor dem Download um dauerhaften Speicher bitten, damit der Browser das Modell nicht wegräumt
+      try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* egal */ }
       const o = overlay('<h2>' + esc(tx('laden_titel')) + '</h2><div class="sdki-balken"><div></div></div><p class="sdki-klein" data-text>' + esc(tx('laden')) + '</p>');
       const balken = o.querySelector('.sdki-balken > div');
       const text = o.querySelector('[data-text]');

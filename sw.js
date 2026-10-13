@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v68';
+const CACHE_NAME = 'sd-bewerbungsstudio-v69';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -15,7 +15,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      keys.filter(key => key.startsWith('sd-bewerbungsstudio-') && key !== CACHE_NAME).map(key => caches.delete(key))
     )).then(() => self.clients.claim())
   );
 });
