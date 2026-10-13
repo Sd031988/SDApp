@@ -523,7 +523,7 @@
         { role: 'user', content: String(prompt) }
       ],
       stream: true,
-      temperature: 0.4,
+      temperature: 0.3,
       top_p: 0.9,
       max_tokens: opt.maxTokens || 900
     }, LM.anfrageZusatz(lotse.modellId)));

@@ -183,9 +183,42 @@
 
   pruefeAbsturz();
 
+  // Feste Antworten auf kurze Fragen wie "Bist du noch da?" oder "Wer bist
+  // du?". Kleine Modelle (1 Mrd. Parameter) erfinden hier sonst Unsinn
+  // ("Ich bin ein Llama-Modell auf der Plattform Gemea"). Nur fuer sehr
+  // kurze Nachrichten, die genau so eine Frage sind - alles andere geht an
+  // das Modell. modell z. B. "Llama 3.2 1B by Meta".
+  function schnellAntwort(nachricht, sprache, modell) {
+    const m = String(nachricht || '').trim().toLowerCase()
+      .replace(/[!?.…,;:]+/g, ' ').replace(/\s+/g, ' ').trim()
+      .replace(/^(hallo|hey|hi|hello|ok|okay|sd lotse|lotse) /, '').replace(/ (sd lotse|lotse|bitte|please)$/, '');
+    if (!m || m.length > 60) return null;
+    const en = sprache === 'en';
+    const name = String(modell || '').replace(' by ', en ? ' by ' : ' von ');
+    const A = en ? {
+      da: 'Yes, I am here! 😊 What can I help you with – a CV, a cover letter, a letter or something else?',
+      wer: 'I am SD Lotse, the AI of SD Hub. I run directly here on your device – your messages are not sent anywhere. I help with CVs, cover letters, letters and other texts.',
+      modell: 'I am SD Lotse, the AI of SD Hub. Technically, the model ' + name + ' is running here – locally in your browser, without an internet server. It is a small model: for difficult questions, ☁️ Gemini is more accurate.',
+      kann: 'For example, I can help you with:\n- writing or improving your CV and cover letter\n- wording letters and e-mails\n- shortening, improving or translating texts\n- summarising documents you attach\n- explaining things simply\n\nWhat would you like to do?',
+      danke: 'You are welcome! Let me know if you need anything else.'
+    } : {
+      da: 'Ja, ich bin da! 😊 Wobei kann ich dir helfen – Lebenslauf, Anschreiben, ein Brief oder etwas anderes?',
+      wer: 'Ich bin SD Lotse, die KI von SD Hub. Ich laufe direkt hier auf deinem Gerät – deine Nachrichten werden nirgendwohin gesendet. Ich helfe dir bei Lebenslauf, Anschreiben, Briefen und anderen Texten.',
+      modell: 'Ich bin SD Lotse, die KI von SD Hub. Technisch läuft hier gerade das Modell ' + name + ' – lokal in deinem Browser, ohne Internet-Server. Es ist ein kleines Modell: Für schwierige Fragen ist ☁️ Gemini genauer.',
+      kann: 'Ich kann dir zum Beispiel helfen:\n- Lebenslauf und Anschreiben schreiben oder verbessern\n- Briefe und E-Mails formulieren\n- Texte kürzen, verbessern oder übersetzen\n- Dokumente zusammenfassen, die du anhängst\n- Dinge einfach erklären\n\nWas möchtest du machen?',
+      danke: 'Gern geschehen! Sag Bescheid, wenn du noch etwas brauchst.'
+    };
+    if (/^((bist|biste) du (noch |immer noch )?(da|wach|online|dran|bereit)|noch da|jemand da|hallo|are you (still )?(there|online|awake|ready)|still there|anyone there)$/.test(m)) return A.da;
+    if (/^(wer bist du( eigentlich)?|was bist du( eigentlich)?|wie hei(ß|ss)t du|stell dich (mal )?vor|who are you|what are you|what is your name|what's your name|introduce yourself)$/.test(m)) return A.wer;
+    if (/^(welches|was für ein|welche|auf welchem) (ki-?)?(modell|ki|llm|sprachmodell|ki-modell)( bist du| nutzt du| benutzt du| läuft| basierst du)?|(which|what) (ai )?(model|llm)( are you| do you use)?|^(bist du|are you) (chatgpt|gpt|gemini|llama|gemma|qwen|claude|eine ki|ein mensch|ein roboter|ein bot|a human|human|an ai|a robot|a bot)$/.test(m)) return A.modell;
+    if (/^(was kannst du( alles)?( machen| tun)?|wobei kannst du (mir )?helfen|wie kannst du (mir )?helfen|what can you do|how can you help( me)?)$/.test(m)) return A.kann;
+    if (/^(danke( schön| sehr| dir)?|vielen dank|dankeschön|thanks?( a lot)?|thank you( very much)?|merci|super danke)$/.test(m)) return A.danke;
+    return null;
+  }
+
   window.SDLotseModelle = {
     KATALOG, NACH_GROESSE, istIos, istHandy, moeglich, erlaubt, empfehlung, variante,
     modellId, keyVonId, alleIds, gewaehlteEinstellung, speicherBedarf, anfrageZusatz, bereinige,
-    okListe, startBeginnt, startFertig, holeAbsturzInfo, zuGrossListe, sperrenZuruecksetzen
+    okListe, startBeginnt, startFertig, holeAbsturzInfo, zuGrossListe, sperrenZuruecksetzen, schnellAntwort
   };
 })();

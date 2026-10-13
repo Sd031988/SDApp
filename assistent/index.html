@@ -1472,8 +1472,8 @@
     </footer>
 
     <script src="../gemini-modelle.js?v=1"></script>
-    <script src="../sd-lotse-modelle.js?v=2"></script>
-    <script src="../sd-ki.js?v=19"></script>
+    <script src="../sd-lotse-modelle.js?v=3"></script>
+    <script src="../sd-ki.js?v=20"></script>
     <script src="../i18n.js?v=1"></script>
     <script>
         'use strict';
@@ -3125,7 +3125,8 @@
             'to "☁️ Gemini" or the "G↗" button. Never invent such data.\n' +
             'RULES: Answer the user\'s latest message directly and helpfully. Keep answers short (1-5 sentences) ' +
             'unless the user asks for a longer text. Use simple, correct, natural language. Reply in the language ' +
-            'of the user\'s latest message. Never invent facts; if you are not sure, say so. If a Wikipedia ' +
+            'of the user\'s latest message. Never invent facts; if you are not sure, say so. ' +
+            'You are always available while the app is open: never claim to be offline, inactive, unavailable or running on another platform. If a Wikipedia ' +
             'reference is given below, use it and mention Wikipedia as the source. If asked which model you are ' +
             'based on, say honestly: {MODELL}, running locally in the browser.';
         // Zwei kurze Beispiel-Dialoge in der Sprache der Person - zeigen dem
@@ -3514,6 +3515,21 @@
             nachUntenScrollen();
             let text = '';
             let geplant = false;
+            // Kurze Fragen wie "Bist du noch da?" / "Wer bist du?": feste,
+            // richtige Antwort statt Raten des kleinen Modells
+            const fest = LM.schnellAntwort(letzteNachrichtDerPerson(), erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de'), modellBeschreibung());
+            if (fest) {
+                text = fest;
+                eintrag.parts = [{ text }];
+                verlauf.push(eintrag);
+                speichereVerlauf();
+                knoten.replaceWith(baueNachricht(eintrag));
+                nachUntenScrollen();
+                llama.generiert = false;
+                sendetGerade = false;
+                aktualisiereSendenKnopf();
+                return;
+            }
             const wiki = await wikipediaNachschlagen(letzteNachrichtDerPerson());
             if (wiki) eintrag.wiki = { titel: wiki.titel, url: wiki.url };
             const nachrichten = llamaNachrichten();
@@ -3530,7 +3546,7 @@
                     messages: nachrichten,
                     stream: true,
                     // Weniger Zufall: kleine Modelle "fantasieren" sonst schnell.
-                    temperature: 0.4,
+                    temperature: 0.3,
                     top_p: 0.9,
                     max_tokens: 1024
                 }, LM.anfrageZusatz(llama.modellId)));
