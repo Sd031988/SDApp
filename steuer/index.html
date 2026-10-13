@@ -198,7 +198,10 @@
             .topbar, .knoepfe, .hinweis.nur-schirm, details:not(.zus-karte), .leiste-erstattung { display: none !important; }
             body { background: #fff; }
         }
-    </style>
+            .vordrucke { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+        .vordrucke a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; font-size: .88rem; color: var(--accent-dark); background: var(--paper); }
+        .vordrucke .noetig a { font-weight: 600; border-color: var(--accent); background: var(--accent-soft); }
+</style>
 </head>
 
 <body>
@@ -687,6 +690,7 @@
             <div class="inhalt">
                 <p class="info">So geht’s: 1. Die Vordrucke als PDF herunterladen – von <a href="https://www.lohnsteuer-kompakt.de/steuerwissen/formulare-fuer-die-steuererklaerung-2025" target="_blank" rel="noopener">lohnsteuer-kompakt.de</a> (dort gibt es auch die Vordrucke für 2024). 2. Unten deine Angaben eintragen. 3. Alle PDFs <b>zusammen</b> auswählen – der Helfer prüft bei jedem, ob es genau diese Formularversion ist, und füllt sie aus. 4. Ausdrucken, <b>alles prüfen</b>, auf Seite 2 des Hauptvordrucks <b>unterschreiben</b> (Ehepaare beide) und beim Finanzamt abgeben.</p>
                 <p class="info">Unterstützt für <b>2024 und 2025</b>: Hauptvordruck ESt 1 A, Anlage N, Vorsorgeaufwand, Sonderausgaben (Spenden), Außergewöhnliche Belastungen, Haushaltsnahe Aufwendungen, Kind, KAP und R (gesetzliche und private Renten). Nur die Anlagen, für die du etwas eingetragen hast, kommen ins fertige PDF.</p>
+                <div id="formularLinks"></div>
                 <div class="warn" id="formularJahrHinweis" hidden>Für dieses Steuerjahr sind noch keine Formulare hinterlegt – bisher für 2024 und 2025.</div>
                 <div class="warn">Wer selbstständig ist oder ein Gewerbe hat, muss elektronisch abgeben (Mein ELSTER). Noch nicht automatisch: Anlage V, SO, AUS, R-AV/bAV sowie selbst bezahlte Kranken-/Pflegeversicherung – diese Beträge bitte von Hand eintragen (siehe Zusammenfassung).</div>
                 <h3 style="margin:6px 0 0;font-size:.95rem">Deine Angaben für das Formular</h3>
@@ -1233,6 +1237,7 @@
             $('pfPartner').hidden = d.p.zusammen !== 'ja';
             $('formularJahrHinweis').hidden = FORMULAR_JAHRE.includes(jahr);
             zeichnePfKinder(d);
+            zeichneFormularLinks();
             $('geb2Feld').hidden = d.p.zusammen !== 'ja';
             $('p23Partner').hidden = d.p.zusammen !== 'ja';
             $('sumAusland').textContent = euro(e.veraeusserung + e.auslandPflichtig);
@@ -1413,6 +1418,24 @@
                 }
             });
             return werte;
+        }
+        // Direkte Links zu den unterstützten Vordrucken (Dateien geprüft: genau diese Versionen sind vermessen)
+        const VORDRUCK_DATEI = { ESt1A: 'Hauptvordruck_ESt_1_A', N: 'Anlage_N', VOR: 'Anlage_Vorsorgeaufwand', SA: 'Anlage_Sonderausgaben', AgB: 'Anlage_Aussergewoehnliche_Belastungen',
+            HA: 'Anlage_Haushaltsnahe_Aufwendungen', Kind: 'Anlage_Kind', KAP: 'Anlage_KAP', R: 'Anlage_R' };
+        const VORDRUCK_NAME = { ESt1A: 'Hauptvordruck ESt 1 A', N: 'Anlage N', VOR: 'Anlage Vorsorgeaufwand', SA: 'Anlage Sonderausgaben', AgB: 'Anlage Außergewöhnliche Belastungen',
+            HA: 'Anlage Haushaltsnahe Aufwendungen', Kind: 'Anlage Kind', KAP: 'Anlage KAP', R: 'Anlage R' };
+        function zeichneFormularLinks() {
+            const box = $('formularLinks');
+            if (!box) return;
+            if (!FORMULAR_JAHRE.includes(jahr)) { box.innerHTML = ''; return; }
+            let w = {};
+            try { w = formularWerte(); } catch (e) { w = {}; }
+            const brauchst = (k) => k === 'ESt1A' || (k === 'N' ? (w.N || []).some(x => x.brutto || x.versorgung) : null) || (k !== 'N' && (Array.isArray(w[k]) ? w[k].length > 0 : !!w[k]));
+            box.innerHTML = '<h3 style="margin:6px 0 4px;font-size:.92rem">📥 Vordrucke ' + jahr + ' herunterladen</h3>' +
+                '<p class="info" style="margin:0 0 6px">Direkt von lohnsteuer-kompakt.de – genau diese Versionen erkennt der Helfer. <b>✓</b> = brauchst du nach deinen Angaben.</p>' +
+                '<ul class="vordrucke">' + Object.keys(VORDRUCK_DATEI).map(k =>
+                    '<li' + (brauchst(k) ? ' class="noetig"' : '') + '><a href="https://redaktion.lohnsteuer-kompakt.de/wp-content/uploads/sites/24/2026/09/' + VORDRUCK_DATEI[k] + '_' + jahr +
+                    '_lohnsteuer-kompakt.pdf" target="_blank" rel="noopener">' + (brauchst(k) ? '✓ ' : '') + VORDRUCK_NAME[k] + ' ' + jahr + '</a></li>').join('') + '</ul>';
         }
         // Was der Helfer (noch) nicht in Vordrucke schreibt – zum Hinweis nach dem Ausfüllen
         function nichtAutomatisch() {
