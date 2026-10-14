@@ -160,9 +160,10 @@
                     <button type="button" class="btn klein prim" id="eckenAuto" data-i18n="ecken_auto">🔍 Ecken automatisch suchen</button>
                     <span class="meta" id="eckenStatus"></span>
                 </div>
+                <p class="gut" id="tippHinweis" style="margin:0"></p>
                 <div class="foto-wrap" id="fotoWrap"><canvas id="fotoCanvas"></canvas><canvas id="lupe" width="240" height="240" style="position:fixed;z-index:50;width:120px;height:120px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none;display:none;left:0;top:0"></canvas></div>
                 <div class="knoepfe">
-                    <button type="button" class="btn klein" id="linieNeu" data-i18n="linie_neu">＋ Messlinie</button>
+                    <button type="button" class="btn klein" id="linieNeu" data-i18n="linie_neu">＋ Neue Messung</button>
                     <button type="button" class="btn klein" id="linieWeg" data-i18n="linie_weg">− Letzte Linie</button>
                     <button type="button" class="btn klein" id="fotoZoomPlus">🔍＋</button>
                     <button type="button" class="btn klein" id="fotoZoomMinus">🔍−</button>
@@ -215,7 +216,7 @@
                 ar_nein: 'Dieses Gerät oder dieser Browser unterstützt keine AR-Messung (nötig: Android mit Chrome und „Google Play-Dienste für AR“). Nutze unten die Live-Kamera mit Maßstab.',
                 ar_fehler: 'AR konnte nicht gestartet werden', ar_suche: 'Handy langsam bewegen, bis eine Fläche erkannt wird …', ar_zielen: 'Auf den Anfangspunkt zielen und „Punkt setzen“ tippen', ar_zielen2: 'Zum Endpunkt zielen und „Punkt setzen“ tippen',
                 ar_punkt: '＋ Punkt setzen', ar_zurueck: '↶', ar_ende: 'Fertig', messung: 'Messung', ar_ergebnis: 'Deine Messungen',
-                lk_titel: 'Live messen mit A4-Blatt oder Karte (alle Geräte)', lk_info: 'Lege ein A4-Blatt (oder eine Bankkarte) flach neben den Gegenstand auf dieselbe Fläche und richte die Kamera darauf. Sobald das Blatt erkannt ist (grüner Rahmen), schiebst du die zwei gelben Punkte an Anfang und Ende – die Länge wird live angezeigt, auch wenn du die Kamera bewegst.', lk_a4: 'A4-Blatt (empfohlen)', lk_karte: 'Bankkarte / Ausweis', lk_suche: 'Suche das Blatt … – ganz ins Bild nehmen, guter Kontrast zum Untergrund', lk_gefunden: '✓ Maßstab erkannt – Punkte an Anfang und Ende schieben', lk_alt: 'Maßstab kurz nicht erkannt – letzter Wert',
+                lk_titel: 'Live messen mit A4-Blatt oder Karte (alle Geräte)', lk_info: 'Lege ein A4-Blatt (oder eine Bankkarte) flach neben den Gegenstand auf dieselbe Fläche und richte die Kamera darauf. Sobald das Blatt erkannt ist (grüner Rahmen), tippst du auf den Anfang und dann auf das Ende (oder schiebst die gelben Punkte) – die Länge wird live angezeigt, auch wenn du die Kamera bewegst.', lk_a4: 'A4-Blatt (empfohlen)', lk_karte: 'Bankkarte / Ausweis', lk_suche: 'Suche das Blatt … – ganz ins Bild nehmen, guter Kontrast zum Untergrund', lk_gefunden: '✓ Maßstab erkannt – jetzt auf den ANFANG tippen', lk_fertig: '✓ Gemessen – Punkte verschieben oder neu tippen für eine neue Messung', lk_alt: 'Maßstab kurz nicht erkannt – letzter Wert',
                 lk_start: '🎥 Live messen starten', lk_fest: '📸 Bild festhalten', lk_stop: 'Schließen', lk_keine: 'Die Kamera konnte nicht geöffnet werden. Erlaube den Kamerazugriff im Browser oder nutze „Per Foto“.',
                 titel: 'Messen & Maße', untertitel: 'Kamera, Lineal, Foto, Flächen, Umrechnen',
                 tab_lineal: '📏 Lineal', tab_foto: '📷 Per Foto', tab_flaeche: '🏠 Flächen', tab_umrechnen: '🔁 Umrechnen',
@@ -230,13 +231,14 @@
                 foto_anleitung: '🟠 Orange Linie = Maßstab: Enden genau an die bekannte Länge ziehen. 🟢 Grüne Linien = Messungen. Zum Verschieben die runden Punkte ziehen.',
                 ref_karte: 'Bankkarte / Ausweis – 4 Ecken (genau)', ref_a4: 'A4-Blatt – 4 Ecken (genau)', ref_eigen_r: 'eigenes Rechteck – 4 Ecken …',
                 ref_1e: '1-Euro-Münze – Durchmesser (ungenauer)', ref_2e: '2-Euro-Münze – Durchmesser (ungenauer)', ref_eigen: 'eigene Länge – Linie (ungenauer) …', ref_eigen_b: 'Breite (cm)', ref_eigen_h: 'Höhe (cm)', ref_eigen_l: 'Länge (cm)',
-                anl_rechteck: '🟠 Die 4 orangen Punkte genau auf die 4 Ecken des Maßstabs ziehen (oder automatisch suchen lassen). 🟢 Grüne Linien an die Längen legen, die du messen willst. Beim Ziehen zeigt eine Lupe die genaue Stelle.',
-                anl_linie: '🟠 Die orange Linie genau über die bekannte Länge legen. 🟢 Grüne Linien an die Längen legen, die du messen willst. Ohne 4 Ecken muss das Foto ganz gerade von vorn aufgenommen sein.',
+                anl_rechteck: '1. Maßstab: Die 4 orangen Punkte genau auf die 4 Ecken des Blatts bzw. der Karte im Foto ziehen (oder automatisch suchen lassen). 2. Messen: Auf Anfang und Ende tippen. Alle Punkte lassen sich danach verschieben – eine Lupe zeigt die genaue Stelle.',
+                anl_linie: '1. Maßstab: Die orange Linie genau über die bekannte Länge legen. 2. Messen: Auf Anfang und Ende tippen. Ohne 4 Ecken muss das Foto ganz gerade von vorn aufgenommen sein.',
                 warn_gross: '⚠️ Das orange Rechteck ist sehr groß. Es muss genau auf einem echten Blatt bzw. einer Karte im Foto liegen – die Seite rechnet das Rechteck als genau diese Größe (siehe Beschriftung). Ohne bekannten Gegenstand im Foto ist keine Messung möglich.',
                 warn_lang: '⚠️ Die Messung ist viel länger als der Maßstab – schon kleine Fehler an den Ecken verfälschen das Ergebnis stark. Besser: größerer Maßstab (A4-Blatt) nah am Gegenstand, Ecken mit der Lupe genau setzen.',
                 tipp_person_t: '🧍 Körpergröße messen?', tipp_person: 'Tipp Körpergröße: Ein A4-Blatt hochkant an die Wand kleben (etwa auf Brusthöhe), die Person stellt sich direkt mit dem Rücken an diese Wand. Aus 2–3 m Abstand gerade auf Brusthöhe fotografieren. Dann die 4 Ecken auf das Blatt und die grüne Linie vom Boden bis zum Scheitel. Schuhe zählen mit.',
+                anfang: 'Anfang', tipp_anfang: '👆 Messen: Tippe im Bild auf den ANFANG der Strecke …', tipp_ende: '👆 … und jetzt auf das ENDE – dann siehst du die Länge.',
                 ecken_auto: '🔍 Ecken automatisch suchen', ecken_ok: '✓ Ecken gefunden – bitte kurz prüfen', ecken_nein: 'Nicht sicher gefunden – bitte die Ecken von Hand ziehen (klappt besser, wenn das Blatt groß im Bild ist)', ecken_laed: 'Suche …',
-                linie_neu: '＋ Messlinie', linie_weg: '− Letzte Linie', linie: 'Linie',
+                linie_neu: '＋ Neue Messung', linie_weg: '− Letzte Linie', linie: 'Linie',
                 foto_genau: 'So wird es genau: Maßstab und Gegenstand müssen auf derselben Fläche liegen (z. B. beide auf dem Tisch oder an der Wand). Mit 4 Ecken wird eine schräge Aufnahme automatisch ausgeglichen. Je größer der Maßstab im Bild, desto genauer – ein A4-Blatt ist besser als eine Karte. Teile, die vor- oder zurückstehen, werden falsch gemessen.',
                 foto_ref_fehlt: 'Erst den Maßstab festlegen (orange Punkte und bekannte Größe).',
                 fl_titel: '🏠 Flächen & Räume', fl_info: 'Maße in Metern eintragen (z. B. 3,85). Berechnet Fläche, Umfang, Wandfläche und Rauminhalt – und die Wohnfläche nach der Wohnflächenverordnung.',
@@ -257,7 +259,7 @@
                 ar_nein: 'This device or browser does not support AR measuring (requires Android with Chrome and “Google Play Services for AR”). Use the live camera with a scale below.',
                 ar_fehler: 'AR could not be started', ar_suche: 'Move the phone slowly until a surface is detected …', ar_zielen: 'Aim at the start point and tap “Set point”', ar_zielen2: 'Aim at the end point and tap “Set point”',
                 ar_punkt: '＋ Set point', ar_zurueck: '↶', ar_ende: 'Done', messung: 'Measurement', ar_ergebnis: 'Your measurements',
-                lk_titel: 'Live measuring with an A4 sheet or card (all devices)', lk_info: 'Lay an A4 sheet (or a bank card) flat next to the object on the same surface and point the camera at it. As soon as the sheet is detected (green frame), move the two yellow dots to the start and end – the length is shown live, even while you move the camera.', lk_a4: 'A4 sheet (recommended)', lk_karte: 'Bank card / ID card', lk_suche: 'Looking for the sheet … – get it fully in the picture, with good contrast to the surface', lk_gefunden: '✓ Scale detected – move the dots to start and end', lk_alt: 'Scale briefly lost – last value',
+                lk_titel: 'Live measuring with an A4 sheet or card (all devices)', lk_info: 'Lay an A4 sheet (or a bank card) flat next to the object on the same surface and point the camera at it. As soon as the sheet is detected (green frame), tap the start and then the end (or drag the yellow dots) – the length is shown live, even while you move the camera.', lk_a4: 'A4 sheet (recommended)', lk_karte: 'Bank card / ID card', lk_suche: 'Looking for the sheet … – get it fully in the picture, with good contrast to the surface', lk_gefunden: '✓ Scale detected – now tap the START', lk_fertig: '✓ Measured – drag the dots or tap again for a new measurement', lk_alt: 'Scale briefly lost – last value',
                 lk_start: '🎥 Start live measuring', lk_fest: '📸 Freeze image', lk_stop: 'Close', lk_keine: 'The camera could not be opened. Allow camera access in your browser or use “From photo”.',
                 titel: 'Measuring & sizes', untertitel: 'Camera, ruler, photo, areas, conversion',
                 tab_lineal: '📏 Ruler', tab_foto: '📷 From photo', tab_flaeche: '🏠 Areas', tab_umrechnen: '🔁 Convert',
@@ -272,13 +274,14 @@
                 foto_anleitung: '🟠 Orange line = scale: drag its ends exactly to the known length. 🟢 Green lines = measurements. Drag the round dots to move them.',
                 ref_karte: 'Bank card / ID card – 4 corners (accurate)', ref_a4: 'A4 sheet – 4 corners (accurate)', ref_eigen_r: 'own rectangle – 4 corners …',
                 ref_1e: '1 euro coin – diameter (less accurate)', ref_2e: '2 euro coin – diameter (less accurate)', ref_eigen: 'own length – line (less accurate) …', ref_eigen_b: 'Width (cm)', ref_eigen_h: 'Height (cm)', ref_eigen_l: 'Length (cm)',
-                anl_rechteck: '🟠 Drag the 4 orange dots exactly onto the 4 corners of the scale (or let them be found automatically). 🟢 Put green lines on the lengths you want to measure. While dragging, a magnifier shows the exact spot.',
-                anl_linie: '🟠 Put the orange line exactly over the known length. 🟢 Put green lines on the lengths you want to measure. Without 4 corners the photo must be taken straight from the front.',
+                anl_rechteck: '1. Scale: drag the 4 orange dots exactly onto the 4 corners of the sheet or card in the photo (or let them be found automatically). 2. Measure: tap the start and the end. All dots can be moved afterwards – a magnifier shows the exact spot.',
+                anl_linie: '1. Scale: put the orange line exactly over the known length. 2. Measure: tap the start and the end. Without 4 corners the photo must be taken straight from the front.',
                 warn_gross: '⚠️ The orange rectangle is very large. It must sit exactly on a real sheet or card in the photo – the page treats the rectangle as exactly that size (see labels). Without a known object in the photo, measuring is not possible.',
                 warn_lang: '⚠️ The measurement is much longer than the scale – even small errors at the corners distort the result a lot. Better: a larger scale (A4 sheet) close to the object, corners set precisely with the magnifier.',
                 tipp_person_t: '🧍 Measuring body height?', tipp_person: 'Tip for body height: tape an A4 sheet upright to the wall (about chest height); the person stands with their back directly against that wall. Take the photo straight on from 2–3 m at chest height. Then put the 4 corners on the sheet and the green line from the floor to the top of the head. Shoes count too.',
+                anfang: 'Start', tipp_anfang: '👆 To measure: tap the START of the distance in the picture …', tipp_ende: '👆 … and now tap the END – then you see the length.',
                 ecken_auto: '🔍 Find corners automatically', ecken_ok: '✓ Corners found – please check briefly', ecken_nein: 'Not found reliably – please drag the corners by hand (works better when the sheet is large in the picture)', ecken_laed: 'Searching …',
-                linie_neu: '＋ Measuring line', linie_weg: '− Last line', linie: 'Line',
+                linie_neu: '＋ New measurement', linie_weg: '− Last line', linie: 'Line',
                 foto_genau: 'For accurate results: the scale and the object must lie on the same surface (e.g. both on the table or on the wall). With 4 corners an angled shot is corrected automatically. The bigger the scale in the picture, the more accurate – an A4 sheet is better than a card. Parts that stick out or lie further back are measured wrongly.',
                 foto_ref_fehlt: 'Set the scale first (orange dots and known size).',
                 fl_titel: '🏠 Areas & rooms', fl_info: 'Enter sizes in metres (e.g. 3.85). Calculates area, perimeter, wall area and volume – and the living area according to the German Living Space Ordinance (WoFlV).',
@@ -420,7 +423,7 @@
         // Linien-Massstab: einfacher Faktor mm pro Bildpunkt (nur bei gerader Aufnahme genau).
         const fc = $('fotoCanvas');
         const lupe = $('lupe');
-        const foto = { img: null, zoom: 1, quad: null, ref: null, linien: [], ziehe: null };
+        const foto = { img: null, zoom: 1, quad: null, ref: null, linien: [], ziehe: null, start: null };
         $('fotoKnopf').addEventListener('click', () => $('fotoDatei').click());
         $('fotoDatei').addEventListener('change', (e) => {
             const f = e.target.files && e.target.files[0];
@@ -445,12 +448,11 @@
             const cx = w * 0.5, cy = h * 0.4;
             foto.quad = [[cx - bw / 2, cy - bh / 2], [cx + bw / 2, cy - bh / 2], [cx + bw / 2, cy + bh / 2], [cx - bw / 2, cy + bh / 2]];
             foto.ref = { a: [cx - bw / 2, cy], b: [cx + bw / 2, cy] };
-            if (!foto.linien.length) foto.linien = [{ a: [w * .25, h * .75], b: [w * .75, h * .75] }];
         }
         function ladeFoto(url, danach) {
             const img = new Image();
             img.onload = () => {
-                foto.img = img; foto.zoom = 1; foto.linien = [];
+                foto.img = img; foto.zoom = 1; foto.linien = []; foto.start = null;
                 standardPunkte();
                 $('eckenStatus').textContent = '';
                 $('fotoBereich').hidden = false;
@@ -583,6 +585,13 @@
                 [foto.ref.a, foto.ref.b].forEach(([x, y]) => punkt(x * k, y * k, '#ff9a3c'));
                 if (r.l > 0) etikett((foto.ref.a[0] + foto.ref.b[0]) / 2 * k, (foto.ref.a[1] + foto.ref.b[1]) / 2 * k - 16, laengeText(r.l));
             }
+            if (foto.start) {
+                const [sx, sy] = foto.start;
+                c.lineWidth = 3; c.strokeStyle = '#3ddc84';
+                c.beginPath(); c.moveTo(sx * k - 16, sy * k); c.lineTo(sx * k + 16, sy * k); c.moveTo(sx * k, sy * k - 16); c.lineTo(sx * k, sy * k + 16); c.stroke();
+                punkt(sx * k, sy * k, '#3ddc84');
+                etikett(sx * k, sy * k - 24, t('anfang'));
+            }
             foto.linien.forEach((l, i) => {
                 strich([l.a, l.b], '#3ddc84');
                 [l.a, l.b].forEach(([x, y]) => punkt(x * k, y * k, '#3ddc84'));
@@ -599,6 +608,7 @@
                 const refLang = r.modus === 'r' ? Math.max(r.b, r.h) : r.l;
                 if (foto.linien.some(l => m(l) > refLang * 6)) warnungen.push(t('warn_lang'));
             }
+            $('tippHinweis').textContent = t(foto.start ? 'tipp_ende' : 'tipp_anfang');
             $('fotoErgebnis').innerHTML = (m
                 ? foto.linien.map((l, i) => '<div class="ergebnis-zeile"><span>' + esc(t('linie')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(laengeText(m(l))) + '</b></div>').join('')
                 : '<p class="hinweis">' + esc(t('foto_ref_fehlt')) + '</p>') + warnungen.map(w2 => '<p class="fehler">' + esc(w2) + '</p>').join('');
@@ -638,7 +648,14 @@
             foto.linien.forEach(l => { pruefe(l, 'a'); pruefe(l, 'b'); });
             if (refInfo().modus === 'r') foto.quad.forEach((_, i) => pruefe(foto.quad, i));
             else { pruefe(foto.ref, 'a'); pruefe(foto.ref, 'b'); }
-            if (!best) return;
+            if (!best) {
+                // kein Punkt getroffen: 1. Tipp = Anfang, 2. Tipp = Ende einer neuen Messlinie
+                if (!foto.start) foto.start = p;
+                else { foto.linien.push({ a: foto.start, b: p }); foto.start = null; }
+                e.preventDefault();
+                zeichneFoto();
+                return;
+            }
             // Punkt springt nicht unter den Finger, sondern wird relativ verschoben (feiner)
             best.dx = best.obj[best.key][0] - p[0]; best.dy = best.obj[best.key][1] - p[1];
             foto.ziehe = best;
@@ -658,14 +675,8 @@
         fc.addEventListener('pointercancel', loslassen);
         $('fotoWrap').style.touchAction = 'pan-x pan-y';
         fc.style.touchAction = 'none';
-        $('linieNeu').addEventListener('click', () => {
-            if (!foto.img) return;
-            const w = foto.img.naturalWidth, h = foto.img.naturalHeight, n = foto.linien.length;
-            const y = h * (0.6 + (n * 0.1) % 0.35);
-            foto.linien.push({ a: [w * .25, y], b: [w * .75, y] });
-            zeichneFoto();
-        });
-        $('linieWeg').addEventListener('click', () => { foto.linien.pop(); zeichneFoto(); });
+        $('linieNeu').addEventListener('click', () => { foto.start = null; zeichneFoto(); $('tippHinweis').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+        $('linieWeg').addEventListener('click', () => { if (foto.start) foto.start = null; else foto.linien.pop(); zeichneFoto(); });
         $('fotoZoomPlus').addEventListener('click', () => { foto.zoom = Math.min(5, foto.zoom * 1.5); zeichneFoto(); });
         $('fotoZoomMinus').addEventListener('click', () => { foto.zoom = Math.max(1, foto.zoom / 1.5); zeichneFoto(); });
 
@@ -827,7 +838,7 @@
         // Das Blatt wird in jedem Durchgang mit der Blatterkennung des SD Scanners gesucht.
         // Aus seinen 4 Ecken ergibt sich die Umrechnung Bild -> Millimeter (Perspektive inklusive).
         let lkStream = null;
-        const lk = { quad: null, alt: 0, punkte: null, ziehe: null, timer: 0, laeuft: false, klein: document.createElement('canvas'), wert: null };
+        const lk = { quad: null, alt: 0, punkte: null, ziehe: null, naechster: 0, timer: 0, laeuft: false, klein: document.createElement('canvas'), wert: null };
         function lkAus() {
             lk.laeuft = false; clearTimeout(lk.timer);
             if (lkStream) lkStream.getTracks().forEach(tr => tr.stop());
@@ -892,19 +903,23 @@
             const c = oc.getContext('2d');
             c.setTransform(dpr, 0, 0, dpr, 0, 0);
             c.clearRect(0, 0, w, h);
-            if (!lk.punkte) lk.punkte = [[v.videoWidth * 0.25, v.videoHeight * 0.78], [v.videoWidth * 0.75, v.videoHeight * 0.78]];
+            if (!lk.punkte) lk.punkte = [];
             if (lk.quad) {
                 c.lineWidth = 3; c.strokeStyle = '#3ddc84'; c.fillStyle = 'rgba(61,220,132,.15)';
                 c.beginPath(); lk.quad.forEach(([x, y], i) => i ? c.lineTo(x * k, y * k) : c.moveTo(x * k, y * k)); c.closePath(); c.fill(); c.stroke();
             }
-            const [a, b] = lk.punkte;
-            c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
-            c.lineWidth = 3; c.strokeStyle = '#ffd34d'; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
-            [a, b].forEach(([x, y]) => { c.beginPath(); c.arc(x * k, y * k, 15, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.3)'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#ffd34d'; c.stroke(); c.beginPath(); c.arc(x * k, y * k, 2.5, 0, Math.PI * 2); c.fillStyle = '#ffd34d'; c.fill(); });
+            const gelb = '#ffd34d';
+            if (lk.punkte.length === 2) {
+                const [a, b] = lk.punkte;
+                c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
+                c.lineWidth = 3; c.strokeStyle = gelb; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
+            }
+            lk.punkte.forEach(([x, y]) => { c.beginPath(); c.arc(x * k, y * k, 15, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.3)'; c.fill(); c.lineWidth = 3; c.strokeStyle = gelb; c.stroke(); c.beginPath(); c.arc(x * k, y * k, 2.5, 0, Math.PI * 2); c.fillStyle = gelb; c.fill(); });
             const m = lkMesser();
-            if (m) lk.wert = m(a, b);
+            if (m && lk.punkte.length === 2) lk.wert = m(lk.punkte[0], lk.punkte[1]);
+            else if (lk.punkte.length < 2) lk.wert = null;
             $('lkWert').textContent = lk.wert == null ? '–' : laengeText(lk.wert);
-            $('lkStatus').textContent = t(lk.quad ? 'lk_gefunden' : (lk.wert == null ? 'lk_suche' : 'lk_alt'));
+            $('lkStatus').textContent = !lk.quad && lk.wert == null ? t('lk_suche') : (!lk.quad ? t('lk_alt') : (lk.punkte.length === 0 ? t('lk_gefunden') : (lk.punkte.length === 1 ? t('tipp_ende') : t('lk_fertig'))));
             $('lkStatus').style.color = lk.quad ? 'var(--ok)' : '';
         }
         function lkSchleife() {
@@ -921,7 +936,13 @@
                 const p = punkt(e), v = $('lkVideo'), k = v.clientWidth / v.videoWidth;
                 let best = -1, bd = 36 / k;
                 lk.punkte.forEach((q, i) => { const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; best = i; } });
-                if (best < 0) return;
+                if (best < 0 || lk.punkte.length < 2) {
+                    // Tippen ins Bild: 1. Tipp = Anfang, 2. Tipp = Ende; danach beginnt ein Tipp eine neue Messung
+                    if (lk.punkte.length >= 2) lk.punkte = [];
+                    lk.punkte.push(p);
+                    e.preventDefault(); lkZeichne();
+                    return;
+                }
                 lk.ziehe = { i: best, dx: lk.punkte[best][0] - p[0], dy: lk.punkte[best][1] - p[1] };
                 oc.setPointerCapture(e.pointerId); e.preventDefault();
             });
