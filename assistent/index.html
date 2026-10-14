@@ -3460,7 +3460,8 @@
                 if (docs.length) {
                     // Nur das neueste Dokument ganz, aeltere stark gekuerzt
                     const grenze = e === letzteMitDoc ? DOC_LOTSE_ZEICHEN + 200 : 600;
-                    const docText = docs.map(p => p.text.length > grenze ? p.text.slice(0, grenze) + ' …' : p.text).join('\n\n');
+                    // Deutlich als Dokument markieren - kleine Modelle halten es sonst fuer eine Frage
+                    const docText = docs.map(p => '<<<\n' + (p.text.length > grenze ? p.text.slice(0, grenze) + ' …' : p.text) + '\n>>>').join('\n\n');
                     const frage = eigen || (erkenneSprache(docText) === 'en'
                         ? 'Please summarize this document briefly and ask what I need help with.'
                         : 'Bitte fasse dieses Dokument kurz zusammen und frag mich, wobei ich Hilfe brauche.');
@@ -3485,7 +3486,11 @@
             (LLAMA_BEISPIELE[sprache] || LLAMA_BEISPIELE.de).forEach(([frage, antwort]) => {
                 beispiele.push({ role: 'user', content: frage }, { role: 'assistant', content: antwort });
             });
-            return [{ role: 'system', content: LLAMA_SYSTEM.replace('{MODELL}', modellBeschreibung()) + datumHinweis() + sprachHinweis() + cvKontext() }].concat(beispiele, liste);
+            const mitDoc = liste.some(m => m.role === 'user' && m.content.includes('<<<\n'));
+            const docHinweis = mitDoc ? '\n\nDOCUMENT: The user attached a document. Its full text is in the conversation between <<< and >>>. ' +
+                'Answer the user\'s questions about it using ONLY that text: who sent it, what it is about, what the user must do, dates, deadlines, amounts. ' +
+                'Copy names, dates, times and amounts exactly as written. If something is not in the text, say so. Never say you cannot read or open files.' : '';
+            return [{ role: 'system', content: LLAMA_SYSTEM.replace('{MODELL}', modellBeschreibung()) + datumHinweis() + sprachHinweis() + cvKontext() + docHinweis }].concat(beispiele, liste);
         }
 
         // Wissensfrage? ("Was ist ...", "Wer ist ...", "What is ..."). Nur
@@ -3540,7 +3545,11 @@
             let geplant = false;
             // Kurze Fragen wie "Bist du noch da?" / "Wer bist du?": feste,
             // richtige Antwort statt Raten des kleinen Modells
-            const fest = LM.schnellAntwort(letzteNachrichtDerPerson(), erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de'), modellBeschreibung());
+            // Liegt im Gespraech ein Dokument, beziehen sich Fragen fast immer darauf:
+            // dann keine festen Kurzantworten und kein Wikipedia (das lenkt das kleine Modell ab).
+            const docImGespraech = verlauf.slice(-LLAMA_MAX_NACHRICHTEN).some(e => e.role === 'user' && e.parts.some(p => p._doc));
+            const letzteMitDocJetzt = (() => { for (let i = verlauf.length - 1; i >= 0; i--) if (verlauf[i].role === 'user') return verlauf[i].parts.some(p => p._doc); return false; })();
+            const fest = letzteMitDocJetzt ? null : LM.schnellAntwort(letzteNachrichtDerPerson(), erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de'), modellBeschreibung());
             if (fest) {
                 text = fest;
                 eintrag.parts = [{ text }];
@@ -3553,7 +3562,7 @@
                 aktualisiereSendenKnopf();
                 return;
             }
-            const wiki = await wikipediaNachschlagen(letzteNachrichtDerPerson());
+            const wiki = docImGespraech ? null : await wikipediaNachschlagen(letzteNachrichtDerPerson());
             if (wiki) eintrag.wiki = { titel: wiki.titel, url: wiki.url };
             const nachrichten = llamaNachrichten();
             if (wiki) {
