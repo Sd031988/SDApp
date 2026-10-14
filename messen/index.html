@@ -68,14 +68,14 @@
         <section class="karte" id="tab-kamera" data-panel="kamera" hidden>
             <h2 data-i18n="kam_titel">📐 Mit der Kamera messen</h2>
             <div id="arBox" style="display:grid;gap:10px">
-                <h3 data-i18n="ar_titel">Wie ein Maßband im Raum (AR)</h3>
-                <p class="info" data-i18n="ar_info">Handy langsam bewegen, bis der Boden oder Tisch erkannt ist. Dann auf den Anfangspunkt zielen und tippen, zum Endpunkt zielen und wieder tippen – die Länge wird angezeigt. Gut für Möbel, Wände, Abstände.</p>
+                <h3 data-i18n="ar_titel"></h3>
+                <p class="info" data-i18n="ar_info"></p>
                 <button type="button" class="btn prim" id="arStart" data-i18n="ar_start">📐 AR-Messung starten</button>
                 <p class="hinweis" id="arStatus" data-i18n="ar_pruefe">Prüfe, ob dein Gerät AR unterstützt …</p>
                 <div id="arErgebnis" class="liste"></div>
             </div>
             <div style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
-                <h3 data-i18n="lk_titel">Live messen mit A4-Blatt oder Karte (alle Geräte)</h3>
+                <h3 data-i18n="lk_titel"></h3>
                 <p class="info" data-i18n="lk_info"></p>
                 <button type="button" class="btn" id="lkStart" data-i18n="lk_start">🎥 Live messen starten</button>
                 <label class="feld"><span data-i18n="ref_was">Bekannte Größe (Maßstab)</span>
@@ -95,6 +95,35 @@
                 </div>
                 <p class="fehler" id="lkFehler" hidden></p>
             </div>
+            <div style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
+                <h3 data-i18n="nk_titel"></h3>
+                <p class="info" data-i18n="nk_info"></p>
+                <label class="feld"><span data-i18n="nk_hoehe">Höhe der Handykamera über dem Boden (cm)</span>
+                    <input type="text" inputmode="decimal" id="nkKamHoehe" placeholder="z. B. 150"></label>
+                <p class="hinweis" data-i18n="nk_hoehe_tipp"></p>
+                <button type="button" class="btn" id="nkStart" data-i18n="nk_start">📱 Neigungs-Messung starten</button>
+                <div id="nkBox" hidden style="display:grid;gap:8px">
+                    <div id="nkStage" style="position:relative;border-radius:12px;overflow:hidden;background:#000">
+                        <video id="nkVideo" playsinline muted autoplay style="width:100%;display:block;min-height:200px"></video>
+                        <div style="position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(255,80,60,.9)"></div>
+                        <div style="position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:rgba(255,80,60,.9)"></div>
+                        <div id="nkWinkel" style="position:absolute;right:8px;top:8px;color:#fff;font:bold .9rem Verdana,sans-serif;text-shadow:0 1px 3px #000"></div>
+                    </div>
+                    <p class="info" id="nkSchritt" style="text-align:center;font-weight:bold"></p>
+                    <div class="knoepfe" style="justify-content:center">
+                        <button type="button" class="btn prim" id="nkFuss" data-i18n="nk_fuss">⬇ Fußpunkt festlegen</button>
+                        <button type="button" class="btn prim" id="nkOben" disabled data-i18n="nk_oben">⬆ Oberkante festlegen</button>
+                    </div>
+                    <div class="zahlen" id="nkErgebnis"></div>
+                    <p class="hinweis" id="nkGenau" style="text-align:center"></p>
+                    <div class="knoepfe" id="nkZuweisen" style="justify-content:center"></div>
+                    <div class="knoepfe">
+                        <button type="button" class="btn" id="nkNeu" data-i18n="nk_neu">↺ Neu messen</button>
+                        <button type="button" class="btn" id="nkStop" data-i18n="lk_stop">Schließen</button>
+                    </div>
+                </div>
+                <p class="fehler" id="nkFehler" hidden></p>
+            </div>
         </section>
 
         <!-- AR-Oberflaeche (wird waehrend der AR-Sitzung ueber das Kamerabild gelegt) -->
@@ -106,8 +135,14 @@
             <div style="position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5)"></div>
             <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.65));display:grid;gap:8px">
                 <div id="arListe" style="font-size:.95rem;text-shadow:0 1px 3px #000;max-height:22vh;overflow:auto"></div>
+                <div style="display:flex;gap:6px;justify-content:center;pointer-events:auto" id="arModi">
+                    <button type="button" class="btn klein" data-armodus="strecke" data-i18n="arm_strecke">📏 Strecke</button>
+                    <button type="button" class="btn klein" data-armodus="hoehe" data-i18n="arm_hoehe">🧍 Höhe</button>
+                    <button type="button" class="btn klein" data-armodus="flaeche" data-i18n="arm_flaeche">⬛ Fläche</button>
+                </div>
                 <div style="display:flex;gap:8px;justify-content:center;pointer-events:auto">
                     <button type="button" id="arPunkt" class="btn prim" style="flex:1;max-width:220px" data-i18n="ar_punkt">＋ Punkt setzen</button>
+                    <button type="button" id="arFlFertig" class="btn" hidden data-i18n="ar_fl_fertig">✓ Fläche schließen</button>
                     <button type="button" id="arZurueck" class="btn" data-i18n="ar_zurueck">↶</button>
                     <button type="button" id="arEnde" class="btn" data-i18n="ar_ende">Fertig</button>
                 </div>
@@ -229,13 +264,13 @@
                 auf_frei_tipp: 'Einfach eine Strecke messen – mit AR, live oder per Foto.',
                 e_grund: 'Grundfläche', e_stell: 'Stellfläche', e_inhalt: 'Rauminhalt', e_liter: 'Volumen', in_flaechen: '🏠 In „Flächen“ übernehmen', auf_leeren: 'Werte löschen',
                 uebernommen: 'Übernommen: {f} = {w}', zimmer_gemessen: 'Zimmer (gemessen)',
-                tab_kamera: '📐 Kamera', kam_titel: '📐 Mit der Kamera messen', ar_titel: 'Wie ein Maßband im Raum (AR)',
-                ar_info: 'Handy langsam bewegen, bis der Boden oder Tisch erkannt ist. Dann auf den Anfangspunkt zielen und tippen, zum Endpunkt zielen und wieder tippen – die Länge wird angezeigt. Gut für Möbel, Wände, Abstände.',
+                tab_kamera: '📐 Kamera', kam_titel: '📐 Mit der Kamera messen', ar_titel: '1. AR-Maßband – Strecke, Körpergröße, Zimmer (Android)',
+                ar_info: 'Ohne Blatt, direkt im Raum. Handy langsam bewegen, bis der Boden erkannt ist. 📏 Strecke: Anfang und Ende antippen. 🧍 Höhe (Person, Schrank, Raumhöhe): auf den Boden direkt am Fuß tippen, dann zur Oberkante zielen und tippen. ⬛ Fläche (Zimmer): die Ecken am Boden nacheinander antippen und „Fläche schließen“.', arm_strecke: '📏 Strecke', arm_hoehe: '🧍 Höhe', arm_flaeche: '⬛ Fläche', ar_fl_fertig: '✓ Fläche schließen', ar_h1: 'Auf den Boden direkt am Fuß der Person / des Schranks zielen und tippen', ar_h2: 'Jetzt zur Oberkante (Scheitel) zielen und tippen', ar_f1: 'Ecken des Zimmers am Boden nacheinander antippen', ar_f2: 'Nächste Ecke antippen – zum Schluss „Fläche schließen“', e_hoehe_k: 'Höhe', e_strecke_k: 'Strecke', e_flaeche_k: 'Fläche',
                 ar_start: '📐 AR-Messung starten', ar_pruefe: 'Prüfe, ob dein Gerät AR unterstützt …', ar_ok: 'Dein Gerät unterstützt AR-Messung. Abweichungen von einigen Zentimetern sind möglich – für Zuschnitt lieber nachmessen.',
                 ar_nein: 'Dieses Gerät oder dieser Browser unterstützt keine AR-Messung (nötig: Android mit Chrome und „Google Play-Dienste für AR“). Nutze unten die Live-Kamera mit Maßstab.',
                 ar_fehler: 'AR konnte nicht gestartet werden', ar_suche: 'Handy langsam bewegen, bis eine Fläche erkannt wird …', ar_zielen: 'Auf den Anfangspunkt zielen und „Punkt setzen“ tippen', ar_zielen2: 'Zum Endpunkt zielen und „Punkt setzen“ tippen',
                 ar_punkt: '＋ Punkt setzen', ar_zurueck: '↶', ar_ende: 'Fertig', messung: 'Messung', ar_ergebnis: 'Deine Messungen',
-                lk_titel: 'Live messen mit A4-Blatt oder Karte (alle Geräte)', lk_info: 'Lege ein A4-Blatt (oder eine Bankkarte) flach neben den Gegenstand auf dieselbe Fläche und richte die Kamera darauf. Sobald das Blatt erkannt ist (grüner Rahmen), tippst du auf den Anfang und dann auf das Ende (oder schiebst die gelben Punkte) – die Länge wird live angezeigt, auch wenn du die Kamera bewegst.', lk_a4: 'A4-Blatt (empfohlen)', lk_karte: 'Bankkarte / Ausweis', lk_suche: 'Suche das Blatt … – ganz ins Bild nehmen, guter Kontrast zum Untergrund', lk_gefunden: '✓ Maßstab erkannt – jetzt auf den ANFANG tippen', lk_fertig: '✓ Gemessen – Punkte verschieben oder neu tippen für eine neue Messung', lk_alt: 'Maßstab kurz nicht erkannt – letzter Wert',
+                lk_titel: '2. Live messen mit A4-Blatt oder Karte (alle Geräte)', nk_titel: '3. Ohne Blatt: Personen, Schränke, Raumhöhe per Neigung (alle Handys)', nk_info: 'Funktioniert wie ein Entfernungsmesser: Aus der Höhe deiner Handykamera und dem Neigungswinkel rechnet die App den Abstand und die Höhe aus. Stell dich so, dass du die Person oder den Schrank ganz siehst. 1) Rotes Kreuz genau auf den Boden am Fuß richten → „Fußpunkt“. 2) Ohne den Standort zu ändern, Kreuz auf den Scheitel bzw. die Oberkante richten → „Oberkante“. Für die Raumhöhe: Fußpunkt = Wandfuß, Oberkante = Übergang Wand/Decke. Der Abstand zum Fußpunkt eignet sich auch als Zimmerlänge (Rücken an die gegenüberliegende Wand).', nk_hoehe: 'Höhe der Handykamera über dem Boden (cm)', nk_hoehe_tipp: 'Wichtig: Diese Höhe bestimmt die Genauigkeit. Miss sie einmal mit dem Zollstock (Handy auf Augenhöhe halten, vom Boden bis zur Kamera) oder stelle das Handy auf einen Tisch/ein Regal mit bekannter Höhe. 5 cm Fehler hier = ca. 3 % Fehler im Ergebnis.', nk_start: '📱 Neigungs-Messung starten', nk_fuss: '⬇ Fußpunkt festlegen', nk_oben: '⬆ Oberkante festlegen', nk_neu: '↺ Neu messen', nk_s1: 'Schritt 1: Rotes Kreuz auf den Boden am Fuß richten', nk_s2: 'Schritt 2: Standort halten, Kreuz auf die Oberkante richten', nk_s3: '✓ Fertig – mit „Neu messen“ von vorn', nk_abstand: 'Abstand (waagerecht)', nk_hoehe_e: 'Höhe', nk_genau: 'Unsicherheit bei 1° Sensorfehler: Höhe ± {h}, Abstand ± {d}', nk_kein_sensor: 'Dein Gerät/Browser liefert keinen Neigungssensor. Nutze das A4-Blatt oder das AR-Maßband.', nk_sensor_nein: 'Zugriff auf den Bewegungssensor wurde nicht erlaubt.', nk_h_fehlt: 'Bitte zuerst die Höhe der Handykamera eingeben.', nk_zu_flach: 'Kreuz zeigt nicht nach unten auf den Boden – Handy weiter nach unten neigen.', nk_waagerecht: 'Neigung', lk_info: 'Lege ein A4-Blatt (oder eine Bankkarte) flach neben den Gegenstand auf dieselbe Fläche und richte die Kamera darauf. Sobald das Blatt erkannt ist (grüner Rahmen), tippst du auf den Anfang und dann auf das Ende (oder schiebst die gelben Punkte) – die Länge wird live angezeigt, auch wenn du die Kamera bewegst.', lk_a4: 'A4-Blatt (empfohlen)', lk_karte: 'Bankkarte / Ausweis', lk_suche: 'Suche das Blatt … – ganz ins Bild nehmen, guter Kontrast zum Untergrund', lk_gefunden: '✓ Maßstab erkannt – jetzt auf den ANFANG tippen', lk_fertig: '✓ Gemessen – Punkte verschieben oder neu tippen für eine neue Messung', lk_alt: 'Maßstab kurz nicht erkannt – letzter Wert',
                 lk_start: '🎥 Live messen starten', lk_fest: '📸 Bild festhalten', lk_stop: 'Schließen', lk_keine: 'Die Kamera konnte nicht geöffnet werden. Erlaube den Kamerazugriff im Browser oder nutze „Per Foto“.',
                 titel: 'Messen & Maße', untertitel: 'Kamera, Lineal, Foto, Flächen, Umrechnen',
                 tab_lineal: '📏 Lineal', tab_foto: '📷 Per Foto', tab_flaeche: '🏠 Flächen', tab_umrechnen: '🔁 Umrechnen',
@@ -279,13 +314,13 @@
                 auf_frei_tipp: 'Simply measure a distance – with AR, live or from a photo.',
                 e_grund: 'Floor area', e_stell: 'Footprint', e_inhalt: 'Volume', e_liter: 'Volume', in_flaechen: '🏠 Add to “Areas”', auf_leeren: 'Clear values',
                 uebernommen: 'Taken over: {f} = {w}', zimmer_gemessen: 'Room (measured)',
-                tab_kamera: '📐 Camera', kam_titel: '📐 Measure with the camera', ar_titel: 'Like a tape measure in the room (AR)',
-                ar_info: 'Move the phone slowly until the floor or table is detected. Then aim at the start point and tap, aim at the end point and tap again – the length is shown. Good for furniture, walls, distances.',
+                tab_kamera: '📐 Camera', kam_titel: '📐 Measure with the camera', ar_titel: '1. AR tape measure – distance, body height, room (Android)',
+                ar_info: 'No sheet needed, directly in the room. Move the phone slowly until the floor is detected. 📏 Distance: tap start and end. 🧍 Height (person, wardrobe, ceiling): tap the floor right at the foot, then aim at the top and tap. ⬛ Area (room): tap the corners on the floor one after another and “Close area”.', arm_strecke: '📏 Distance', arm_hoehe: '🧍 Height', arm_flaeche: '⬛ Area', ar_fl_fertig: '✓ Close area', ar_h1: 'Aim at the floor right at the foot of the person / wardrobe and tap', ar_h2: 'Now aim at the top (top of the head) and tap', ar_f1: 'Tap the corners of the room on the floor one after another', ar_f2: 'Tap the next corner – finally “Close area”', e_hoehe_k: 'Height', e_strecke_k: 'Distance', e_flaeche_k: 'Area',
                 ar_start: '📐 Start AR measuring', ar_pruefe: 'Checking whether your device supports AR …', ar_ok: 'Your device supports AR measuring. Deviations of a few centimetres are possible – measure again before cutting.',
                 ar_nein: 'This device or browser does not support AR measuring (requires Android with Chrome and “Google Play Services for AR”). Use the live camera with a scale below.',
                 ar_fehler: 'AR could not be started', ar_suche: 'Move the phone slowly until a surface is detected …', ar_zielen: 'Aim at the start point and tap “Set point”', ar_zielen2: 'Aim at the end point and tap “Set point”',
                 ar_punkt: '＋ Set point', ar_zurueck: '↶', ar_ende: 'Done', messung: 'Measurement', ar_ergebnis: 'Your measurements',
-                lk_titel: 'Live measuring with an A4 sheet or card (all devices)', lk_info: 'Lay an A4 sheet (or a bank card) flat next to the object on the same surface and point the camera at it. As soon as the sheet is detected (green frame), tap the start and then the end (or drag the yellow dots) – the length is shown live, even while you move the camera.', lk_a4: 'A4 sheet (recommended)', lk_karte: 'Bank card / ID card', lk_suche: 'Looking for the sheet … – get it fully in the picture, with good contrast to the surface', lk_gefunden: '✓ Scale detected – now tap the START', lk_fertig: '✓ Measured – drag the dots or tap again for a new measurement', lk_alt: 'Scale briefly lost – last value',
+                lk_titel: '2. Live measuring with an A4 sheet or card (all devices)', nk_titel: '3. No sheet: people, wardrobes, ceiling height by tilt (all phones)', nk_info: 'Works like a rangefinder: from the height of your phone camera and the tilt angle the app calculates distance and height. Stand so you can see the whole person or wardrobe. 1) Point the red cross exactly at the floor at the foot → “Foot point”. 2) Without moving, point the cross at the top of the head / top edge → “Top edge”. For ceiling height: foot point = base of the wall, top edge = where wall meets ceiling. The distance to the foot point can also be used as room length (back against the opposite wall).', nk_hoehe: 'Height of the phone camera above the floor (cm)', nk_hoehe_tipp: 'Important: this height decides the accuracy. Measure it once with a tape (phone at eye level, floor to camera) or put the phone on a table/shelf of known height. 5 cm error here = about 3 % error in the result.', nk_start: '📱 Start tilt measuring', nk_fuss: '⬇ Set foot point', nk_oben: '⬆ Set top edge', nk_neu: '↺ Measure again', nk_s1: 'Step 1: point the red cross at the floor at the foot', nk_s2: 'Step 2: stay where you are, point the cross at the top edge', nk_s3: '✓ Done – “Measure again” to start over', nk_abstand: 'Distance (horizontal)', nk_hoehe_e: 'Height', nk_genau: 'Uncertainty for 1° sensor error: height ± {h}, distance ± {d}', nk_kein_sensor: 'Your device/browser provides no tilt sensor. Use the A4 sheet or the AR tape measure.', nk_sensor_nein: 'Access to the motion sensor was not allowed.', nk_h_fehlt: 'Please enter the height of the phone camera first.', nk_zu_flach: 'The cross is not pointing down at the floor – tilt the phone further down.', nk_waagerecht: 'Tilt', lk_info: 'Lay an A4 sheet (or a bank card) flat next to the object on the same surface and point the camera at it. As soon as the sheet is detected (green frame), tap the start and then the end (or drag the yellow dots) – the length is shown live, even while you move the camera.', lk_a4: 'A4 sheet (recommended)', lk_karte: 'Bank card / ID card', lk_suche: 'Looking for the sheet … – get it fully in the picture, with good contrast to the surface', lk_gefunden: '✓ Scale detected – now tap the START', lk_fertig: '✓ Measured – drag the dots or tap again for a new measurement', lk_alt: 'Scale briefly lost – last value',
                 lk_start: '🎥 Start live measuring', lk_fest: '📸 Freeze image', lk_stop: 'Close', lk_keine: 'The camera could not be opened. Allow camera access in your browser or use “From photo”.',
                 titel: 'Measuring & sizes', untertitel: 'Camera, ruler, photo, areas, conversion',
                 tab_lineal: '📏 Ruler', tab_foto: '📷 From photo', tab_flaeche: '🏠 Areas', tab_umrechnen: '🔁 Convert',
@@ -1002,24 +1037,56 @@
         });
 
         // ---------------- Kamera: AR-Messung (WebXR, Android/Chrome mit ARCore) ----------------
-        const ar = { session: null, gl: null, ref: null, quelle: null, programm: null, puffer: null, ziel: null, punkte: [], unterstuetzt: false };
+        const ar = { session: null, gl: null, ref: null, quelle: null, programm: null, puffer: null, ziel: null, punkte: [], unterstuetzt: false, modus: 'strecke', ergebnisse: [], blick: null, hoehe: null };
         const arAbstand = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
         const arText = (m) => m >= 1 ? zahlFmt(m, 2) + ' m' : zahlFmt(m * 100, 1) + ' cm';
-        function arMessungen() {
-            const liste = [];
-            for (let i = 0; i + 1 < ar.punkte.length; i += 2) liste.push(arAbstand(ar.punkte[i], ar.punkte[i + 1]));
-            return liste;
+        // Vektor mit Quaternion drehen
+        function qDreh(q, v) {
+            const [x, y, z] = v, qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+            const ix = qw * x + qy * z - qz * y, iy = qw * y + qz * x - qx * z, iz = qw * z + qx * y - qy * x, iw = -qx * x - qy * y - qz * z;
+            return [ix * qw + iw * -qx + iy * -qz - iz * -qy, iy * qw + iw * -qy + iz * -qx - ix * -qz, iz * qw + iw * -qz + ix * -qy - iy * -qx];
+        }
+        // Hoehe ueber dem Fusspunkt P: Punkt auf der Senkrechten durch P, der dem Blickstrahl am naechsten liegt
+        function hoeheAusBlick(P, C, f) {
+            const w0 = [P[0] - C[0], P[1] - C[1], P[2] - C[2]];
+            const b = f[1], dd = w0[1], e = f[0] * w0[0] + f[1] * w0[1] + f[2] * w0[2];
+            const nenner = 1 - b * b;
+            if (nenner < 0.02) return null;   // fast senkrecht nach oben/unten – nicht bestimmbar
+            const tt = (b * e - dd) / nenner;
+            return tt > 0 ? tt : 0;
+        }
+        function polyFlaeche(pts) {
+            let s2 = 0, u = 0;
+            for (let i = 0; i < pts.length; i++) { const a2 = pts[i], b2 = pts[(i + 1) % pts.length]; s2 += a2[0] * b2[2] - b2[0] * a2[2]; u += Math.hypot(b2[0] - a2[0], b2[2] - a2[2]); }
+            return { flaeche: Math.abs(s2) / 2, umfang: u };
+        }
+        function arLiveWert() {
+            if (ar.modus === 'strecke' && ar.punkte.length === 1 && ar.ziel) return arText(arAbstand(ar.punkte[0], ar.ziel));
+            if (ar.modus === 'hoehe' && ar.punkte.length === 1 && ar.hoehe != null) return arText(ar.hoehe);
+            if (ar.modus === 'flaeche' && ar.punkte.length >= 2) { const pts = ar.ziel ? ar.punkte.concat([ar.ziel]) : ar.punkte; return pts.length >= 3 ? zahlFmt(polyFlaeche(pts).flaeche, 2) + ' m²' : arText(arAbstand(pts[0], pts[1])); }
+            return ar.ziel ? '·' : '–';
+        }
+        function arErgebnisText(r) {
+            return r.art === 'flaeche' ? zahlFmt(r.flaeche, 2) + ' m² · ' + t('e_umfang') + ' ' + zahlFmt(r.umfang, 2) + ' m' : arText(r.m);
         }
         function arOberflaeche() {
-            const offen = ar.punkte.length % 2 === 1;
-            $('arLive').textContent = offen && ar.ziel ? arText(arAbstand(ar.punkte[ar.punkte.length - 1], ar.ziel)) : (ar.ziel ? '·' : '–');
-            $('arHinweis').textContent = !ar.ziel ? t('ar_suche') : t(offen ? 'ar_zielen2' : 'ar_zielen');
-            $('arListe').innerHTML = arMessungen().map((m, i) => '<div>' + esc(t('messung')) + ' ' + (i + 1) + ': <b>' + esc(arText(m)) + '</b></div>').join('');
+            $('arLive').textContent = arLiveWert();
+            let h;
+            if (!ar.ziel && !(ar.modus === 'hoehe' && ar.punkte.length === 1)) h = t('ar_suche');
+            else if (ar.modus === 'hoehe') h = t(ar.punkte.length ? 'ar_h2' : 'ar_h1');
+            else if (ar.modus === 'flaeche') h = t(ar.punkte.length ? 'ar_f2' : 'ar_f1');
+            else h = t(ar.punkte.length ? 'ar_zielen2' : 'ar_zielen');
+            $('arHinweis').textContent = h;
+            document.querySelectorAll('#arModi [data-armodus]').forEach(b2 => b2.classList.toggle('prim', b2.dataset.armodus === ar.modus));
+            $('arFlFertig').hidden = !(ar.modus === 'flaeche' && ar.punkte.length >= 3);
+            $('arListe').innerHTML = ar.ergebnisse.map((r, i) => '<div>' + (i + 1) + '. ' + esc(t('e_' + r.art + '_k')) + ': <b>' + esc(arErgebnisText(r)) + '</b></div>').join('');
         }
         function arErgebnisSeite() {
-            const m = arMessungen();
-            $('arErgebnis').innerHTML = m.length ? '<h3>' + esc(t('ar_ergebnis')) + '</h3>' + m.map((x, i) => '<div class="ergebnis-zeile"><span>' + esc(t('messung')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(arText(x)) + '</b></div>' + (zuweisKnoepfe(x * 1000) ? '<div class="knoepfe">' + zuweisKnoepfe(x * 1000) + '</div>' : '')).join('') : '';
+            const liste = ar.ergebnisse;
+            $('arErgebnis').innerHTML = liste.length ? '<h3>' + esc(t('ar_ergebnis')) + '</h3>' + liste.map((r, i) => '<div class="ergebnis-zeile"><span>' + (i + 1) + '. ' + esc(t('e_' + r.art + '_k')) + '</span><b class="betrag">' + esc(arErgebnisText(r)) + '</b></div>' + (r.art !== 'flaeche' && zuweisKnoepfe(r.m * 1000) ? '<div class="knoepfe">' + zuweisKnoepfe(r.m * 1000) + '</div>' : '')).join('') : '';
         }
+        // fuer Tests und andere Teile: Liste der Strecken/Hoehen in Metern
+        function arMessungen() { return ar.ergebnisse.filter(r => r.art !== 'flaeche').map(r => r.m); }
         async function arPruefen() {
             let ok = false;
             try { ok = !!(navigator.xr && await navigator.xr.isSessionSupported('immersive-ar')); } catch (e) { ok = false; }
@@ -1052,33 +1119,73 @@
                 gl.uniform4fv(P.fa, farbe); gl.uniform1f(P.gr, groesse || 1);
                 gl.drawArrays(modus, 0, pts.length);
             };
-            // fertige Linien, offene Linie zum Zielpunkt, Punkte, Ziel
-            const linien = ar.punkte.length % 2 === 1 && ar.ziel ? ar.punkte.concat([ar.ziel]) : ar.punkte.slice(0, ar.punkte.length - (ar.punkte.length % 2));
-            male(linien, gl.LINES, [1, 1, 1, 1]);
-            male(ar.punkte, gl.POINTS, [0.24, 0.86, 0.52, 1], 18);
-            if (ar.ziel) male([ar.ziel], gl.POINTS, [1, 0.6, 0.24, 1], 14);
+            const weiss = [1, 1, 1, 1], gruen = [0.24, 0.86, 0.52, 1], orange = [1, 0.6, 0.24, 1];
+            // fertige Ergebnisse
+            ar.ergebnisse.forEach(r => {
+                if (r.art === 'flaeche') male(r.pts, gl.LINE_LOOP, gruen);
+                else male(r.pts, gl.LINES, gruen);
+            });
+            // laufende Messung
+            if (ar.modus === 'strecke' && ar.punkte.length === 1 && ar.ziel) male([ar.punkte[0], ar.ziel], gl.LINES, weiss);
+            if (ar.modus === 'hoehe' && ar.punkte.length === 1 && ar.hoehe != null) { const p0 = ar.punkte[0]; male([p0, [p0[0], p0[1] + ar.hoehe, p0[2]]], gl.LINES, weiss); }
+            if (ar.modus === 'flaeche' && ar.punkte.length) male(ar.ziel ? ar.punkte.concat([ar.ziel]) : ar.punkte, gl.LINE_STRIP, weiss);
+            male(ar.punkte, gl.POINTS, gruen, 18);
+            if (ar.ziel) male([ar.ziel], gl.POINTS, orange, 14);
         }
         function arFrame(zeit, frame) {
-            const s = frame.session;
-            s.requestAnimationFrame(arFrame);
-            const gl = ar.gl, layer = s.renderState.baseLayer;
+            const s2 = frame.session;
+            s2.requestAnimationFrame(arFrame);
+            const gl = ar.gl, layer = s2.renderState.baseLayer;
             const pose = frame.getViewerPose(ar.ref);
             const treffer = ar.quelle ? frame.getHitTestResults(ar.quelle) : [];
             if (treffer.length) { const pp = treffer[0].getPose(ar.ref); if (pp) { const q = pp.transform.position; ar.ziel = [q.x, q.y, q.z]; } } else ar.ziel = null;
+            if (pose) {
+                const pos = pose.transform.position, ori = pose.transform.orientation;
+                ar.blick = { C: [pos.x, pos.y, pos.z], f: qDreh(ori, [0, 0, -1]) };
+                ar.hoehe = ar.modus === 'hoehe' && ar.punkte.length === 1 ? hoeheAusBlick(ar.punkte[0], ar.blick.C, ar.blick.f) : null;
+            }
             gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             if (pose) pose.views.forEach(v => arZeichne(gl, v, layer));
             arOberflaeche();
         }
-        function arPunkt() { if (ar.ziel) { ar.punkte.push(ar.ziel.slice()); arOberflaeche(); } }
+        function arPunkt() {
+            if (ar.modus === 'hoehe' && ar.punkte.length === 1) {
+                if (ar.hoehe == null) return;
+                const p0 = ar.punkte[0];
+                ar.ergebnisse.push({ art: 'hoehe', m: ar.hoehe, pts: [p0, [p0[0], p0[1] + ar.hoehe, p0[2]]] });
+                ar.punkte = [];
+            } else {
+                if (!ar.ziel) return;
+                ar.punkte.push(ar.ziel.slice());
+                if (ar.modus === 'strecke' && ar.punkte.length === 2) {
+                    ar.ergebnisse.push({ art: 'strecke', m: arAbstand(ar.punkte[0], ar.punkte[1]), pts: ar.punkte });
+                    ar.punkte = [];
+                }
+            }
+            arOberflaeche();
+        }
+        function arFlaecheFertig() {
+            if (ar.punkte.length < 3) return;
+            const r = polyFlaeche(ar.punkte);
+            ar.ergebnisse.push({ art: 'flaeche', flaeche: r.flaeche, umfang: r.umfang, pts: ar.punkte });
+            ar.punkte = [];
+            arOberflaeche();
+        }
+        document.querySelectorAll('#arModi [data-armodus]').forEach(b2 => {
+            b2.addEventListener('beforexrselect', (e) => e.preventDefault());
+            b2.addEventListener('click', () => { ar.modus = b2.dataset.armodus; ar.punkte = []; arOberflaeche(); });
+        });
+        $('arFlFertig').addEventListener('beforexrselect', (e) => e.preventDefault());
+        $('arFlFertig').addEventListener('click', arFlaecheFertig);
         $('arStart').addEventListener('click', async () => {
             if (ar.session) return;
             try {
                 const ov = $('arOverlay');
                 ov.hidden = false;
                 const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test', 'local'], optionalFeatures: ['dom-overlay'], domOverlay: { root: ov } });
-                ar.session = session; ar.punkte = []; ar.ziel = null;
+                ar.session = session; ar.punkte = []; ar.ziel = null; ar.ergebnisse = [];
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
                 ar.gl = gl; ar.programm = arShader(gl); ar.puffer = gl.createBuffer();
@@ -1105,10 +1212,108 @@
         // Knoepfe in der AR-Oberflaeche sollen keinen zusaetzlichen Punkt ausloesen
         ['arPunkt', 'arZurueck', 'arEnde'].forEach(id => $(id).addEventListener('beforexrselect', (e) => e.preventDefault()));
         $('arPunkt').addEventListener('click', arPunkt);
-        $('arZurueck').addEventListener('click', () => { ar.punkte.pop(); arOberflaeche(); });
+        $('arZurueck').addEventListener('click', () => { if (ar.punkte.length) ar.punkte.pop(); else ar.ergebnisse.pop(); arOberflaeche(); });
         $('arEnde').addEventListener('click', () => { if (ar.session) ar.session.end(); });
         arPruefen();
 
+
+        // ---------------- Kamera: ohne Blatt per Neigungssensor ----------------
+        // Kamerahoehe h bekannt. Blick auf den Fusspunkt (Winkel a1 unter der Waagerechten): Abstand D = h / tan(a1).
+        // Blick auf die Oberkante (Winkel a2, + nach oben): Hoehe H = h + D * tan(a2).
+        const nk = { stream: null, elev: null, roh: null, letzte: 0, fuss: null, oben: null, D: null, H: null, an: false };
+        const RAD = Math.PI / 180;
+        function nkElevation(beta, gamma) {
+            // Blickrichtung der Rueckkamera (−z des Geraets): senkrechter Anteil = −cos(beta)·cos(gamma)
+            return Math.asin(Math.max(-1, Math.min(1, -Math.cos(beta * RAD) * Math.cos(gamma * RAD)))) / RAD;
+        }
+        function nkRechne(h, e1, e2) {
+            // h in cm, Winkel in Grad (e1 < 0 = nach unten)
+            if (!(h > 0) || !(e1 < -0.5)) return null;
+            const D = h / Math.tan(-e1 * RAD);
+            const H = e2 == null ? null : h + D * Math.tan(e2 * RAD);
+            return { D, H };
+        }
+        function nkOrient(e) {
+            if (e.beta == null || e.gamma == null) return;
+            const el = nkElevation(e.beta, e.gamma);
+            nk.roh = el;
+            nk.elev = nk.elev == null ? el : nk.elev * 0.8 + el * 0.2;   // glaetten
+            nk.letzte = Date.now();
+            nkZeige();
+        }
+        const cmText = (cm) => cm >= 100 ? zahlFmt(cm / 100, 2) + ' m' : zahlFmt(cm, 1) + ' cm';
+        function nkZeige() {
+            if (!nk.an) return;
+            $('nkWinkel').textContent = nk.elev == null ? '' : t('nk_waagerecht') + ' ' + zahlFmt(nk.elev, 1) + '°';
+            const h = zahl($('nkKamHoehe').value);
+            const e1 = nk.fuss != null ? nk.fuss : nk.elev;
+            const e2 = nk.fuss != null ? (nk.oben != null ? nk.oben : nk.elev) : null;
+            const r = e1 == null ? null : nkRechne(h, e1, e2);
+            nk.D = r ? r.D : null; nk.H = r ? r.H : null;
+            $('nkSchritt').textContent = nk.fuss == null ? (nk.elev != null && nk.elev > -0.5 ? t('nk_zu_flach') : t('nk_s1')) : nk.oben == null ? t('nk_s2') : t('nk_s3');
+            $('nkOben').disabled = nk.fuss == null || nk.oben != null;
+            $('nkFuss').disabled = nk.fuss != null;
+            const z = [];
+            if (nk.D != null) z.push([cmText(nk.D), t('nk_abstand')]);
+            if (nk.H != null && nk.H > 0) z.push([cmText(nk.H), t('nk_hoehe_e')]);
+            $('nkErgebnis').innerHTML = z.map(([w, l]) => '<div class="zahl"><b>' + esc(w) + '</b><span>' + esc(l) + '</span></div>').join('');
+            // Unsicherheit fuer 1° Sensorfehler (beide Winkel ungünstig verschoben)
+            if (r && nk.H != null && e2 != null) {
+                const a = nkRechne(h, e1 - 1, e2 + 1), b = nkRechne(h, e1 + 1, e2 - 1);
+                const dh = a && b ? Math.max(Math.abs(a.H - nk.H), Math.abs(b.H - nk.H)) : null, dd = a && b ? Math.max(Math.abs(a.D - nk.D), Math.abs(b.D - nk.D)) : null;
+                $('nkGenau').textContent = dh != null ? t('nk_genau', { h: cmText(dh), d: cmText(dd) }) : '';
+            } else $('nkGenau').textContent = '';
+        }
+        function nkZuweisen() {
+            const k = [];
+            if (nk.oben != null && nk.H > 0) k.push(zuweisKnoepfe(nk.H * 10));
+            else if (nk.fuss != null && nk.D > 0) k.push(zuweisKnoepfe(nk.D * 10));
+            $('nkZuweisen').innerHTML = k.join('');
+        }
+        function nkAus() {
+            nk.an = false;
+            window.removeEventListener('deviceorientation', nkOrient);
+            if (nk.stream) nk.stream.getTracks().forEach(tr => tr.stop());
+            nk.stream = null; $('nkVideo').srcObject = null; $('nkBox').hidden = true;
+        }
+        function nkNeu() { nk.fuss = null; nk.oben = null; $('nkZuweisen').innerHTML = ''; nkZeige(); }
+        if (d.kamHoehe) $('nkKamHoehe').value = zahlFmt(d.kamHoehe, 1);
+        $('nkKamHoehe').addEventListener('input', () => { const v = zahl($('nkKamHoehe').value); if (v > 0) { d.kamHoehe = v; speichern(); } nkZeige(); });
+        $('nkStart').addEventListener('click', async () => {
+            const fehler = (k) => { $('nkFehler').textContent = t(k); $('nkFehler').hidden = false; };
+            $('nkFehler').hidden = true;
+            if (!(zahl($('nkKamHoehe').value) > 0)) { fehler('nk_h_fehlt'); $('nkKamHoehe').focus(); return; }
+            // iPhone: Erlaubnis fuer den Bewegungssensor muss direkt im Klick angefragt werden
+            try {
+                if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const r = await DeviceOrientationEvent.requestPermission();
+                    if (r !== 'granted') { fehler('nk_sensor_nein'); return; }
+                }
+            } catch (e) { fehler('nk_sensor_nein'); return; }
+            if (!('DeviceOrientationEvent' in window)) { fehler('nk_kein_sensor'); return; }
+            nk.elev = null; nk.letzte = 0; nk.an = true; nkNeu();
+            window.addEventListener('deviceorientation', nkOrient);
+            $('nkBox').hidden = false;
+            try {
+                nk.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+                $('nkVideo').srcObject = nk.stream;
+            } catch (e) { /* ohne Kamerabild geht es auch – Kreuz zeigt die Mitte */ }
+            $('nkStage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const gestartet = Date.now();
+            setTimeout(() => { if (nk.an && nk.letzte < gestartet) { nkAus(); fehler('nk_kein_sensor'); } }, 2000);
+            nkZeige();
+        });
+        $('nkFuss').addEventListener('click', () => {
+            if (nk.elev == null) return;
+            if (nk.elev > -0.5) { $('nkSchritt').textContent = t('nk_zu_flach'); return; }
+            nk.fuss = nk.elev; nkZeige(); nkZuweisen();
+        });
+        $('nkOben').addEventListener('click', () => {
+            if (nk.elev == null || nk.fuss == null) return;
+            nk.oben = nk.elev; nkZeige(); nkZuweisen();
+        });
+        $('nkNeu').addEventListener('click', nkNeu);
+        $('nkStop').addEventListener('click', nkAus);
 
         // ---------------- Was messen? Zimmer / Schrank ----------------
         const AUFTRAG = { zimmer: ['laenge', 'breite', 'hoehe'], schrank: ['breite', 'hoehe', 'tiefe'] };
