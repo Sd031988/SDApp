@@ -64,13 +64,20 @@
                 <div id="arErgebnis" class="liste"></div>
             </div>
             <div style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
-                <h3 data-i18n="lk_titel">Live-Kamera mit Maßstab (alle Geräte)</h3>
-                <p class="info" data-i18n="lk_info">Lege eine Bankkarte, ein A4-Blatt oder eine Münze neben den Gegenstand, richte die Kamera gerade darauf und halte das Bild fest. Danach misst du wie bei „Per Foto“.</p>
-                <button type="button" class="btn" id="lkStart" data-i18n="lk_start">🎥 Kamera öffnen</button>
+                <h3 data-i18n="lk_titel">Live messen mit A4-Blatt oder Karte (alle Geräte)</h3>
+                <p class="info" data-i18n="lk_info"></p>
+                <button type="button" class="btn" id="lkStart" data-i18n="lk_start">🎥 Live messen starten</button>
+                <label class="feld"><span data-i18n="ref_was">Bekannte Größe (Maßstab)</span>
+                    <select id="lkRef">
+                        <option value="297:210" data-i18n="lk_a4">A4-Blatt (empfohlen)</option>
+                        <option value="85.6:53.98" data-i18n="lk_karte">Bankkarte / Ausweis</option>
+                    </select></label>
                 <div id="lkBox" hidden style="display:grid;gap:8px">
-                    <div style="position:relative;border-radius:12px;overflow:hidden;background:#000"><video id="lkVideo" playsinline muted autoplay style="width:100%;display:block;max-height:70vh;object-fit:cover"></video></div>
+                    <div id="lkStage" style="position:relative;border-radius:12px;overflow:hidden;background:#000;touch-action:none"><video id="lkVideo" playsinline muted autoplay style="width:100%;display:block"></video><canvas id="lkOverlay" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas></div>
+                    <p class="gross" id="lkWert" style="text-align:center;margin:0">–</p>
+                    <p class="info" id="lkStatus" style="text-align:center"></p>
                     <div class="knoepfe">
-                        <button type="button" class="btn prim" id="lkFest" data-i18n="lk_fest">📸 Bild festhalten und messen</button>
+                        <button type="button" class="btn prim" id="lkFest" data-i18n="lk_fest">📸 Bild festhalten</button>
                         <button type="button" class="btn" id="lkStop" data-i18n="lk_stop">Schließen</button>
                     </div>
                 </div>
@@ -207,8 +214,8 @@
                 ar_nein: 'Dieses Gerät oder dieser Browser unterstützt keine AR-Messung (nötig: Android mit Chrome und „Google Play-Dienste für AR“). Nutze unten die Live-Kamera mit Maßstab.',
                 ar_fehler: 'AR konnte nicht gestartet werden', ar_suche: 'Handy langsam bewegen, bis eine Fläche erkannt wird …', ar_zielen: 'Auf den Anfangspunkt zielen und „Punkt setzen“ tippen', ar_zielen2: 'Zum Endpunkt zielen und „Punkt setzen“ tippen',
                 ar_punkt: '＋ Punkt setzen', ar_zurueck: '↶', ar_ende: 'Fertig', messung: 'Messung', ar_ergebnis: 'Deine Messungen',
-                lk_titel: 'Live-Kamera mit Maßstab (alle Geräte)', lk_info: 'Lege eine Bankkarte, ein A4-Blatt oder eine Münze neben den Gegenstand, richte die Kamera gerade darauf und halte das Bild fest. Danach misst du wie bei „Per Foto“.',
-                lk_start: '🎥 Kamera öffnen', lk_fest: '📸 Bild festhalten und messen', lk_stop: 'Schließen', lk_keine: 'Die Kamera konnte nicht geöffnet werden. Erlaube den Kamerazugriff im Browser oder nutze „Per Foto“.',
+                lk_titel: 'Live messen mit A4-Blatt oder Karte (alle Geräte)', lk_info: 'Lege ein A4-Blatt (oder eine Bankkarte) flach neben den Gegenstand auf dieselbe Fläche und richte die Kamera darauf. Sobald das Blatt erkannt ist (grüner Rahmen), schiebst du die zwei gelben Punkte an Anfang und Ende – die Länge wird live angezeigt, auch wenn du die Kamera bewegst.', lk_a4: 'A4-Blatt (empfohlen)', lk_karte: 'Bankkarte / Ausweis', lk_suche: 'Suche das Blatt … – ganz ins Bild nehmen, guter Kontrast zum Untergrund', lk_gefunden: '✓ Maßstab erkannt – Punkte an Anfang und Ende schieben', lk_alt: 'Maßstab kurz nicht erkannt – letzter Wert',
+                lk_start: '🎥 Live messen starten', lk_fest: '📸 Bild festhalten', lk_stop: 'Schließen', lk_keine: 'Die Kamera konnte nicht geöffnet werden. Erlaube den Kamerazugriff im Browser oder nutze „Per Foto“.',
                 titel: 'Messen & Maße', untertitel: 'Kamera, Lineal, Foto, Flächen, Umrechnen',
                 tab_lineal: '📏 Lineal', tab_foto: '📷 Per Foto', tab_flaeche: '🏠 Flächen', tab_umrechnen: '🔁 Umrechnen',
                 lin_titel: '📏 Lineal auf dem Bildschirm', lin_unkal: 'Noch nicht eingestellt – die Anzeige ist nur ungefähr. Stelle das Lineal einmal mit einer Bankkarte ein (unten).',
@@ -246,8 +253,8 @@
                 ar_nein: 'This device or browser does not support AR measuring (requires Android with Chrome and “Google Play Services for AR”). Use the live camera with a scale below.',
                 ar_fehler: 'AR could not be started', ar_suche: 'Move the phone slowly until a surface is detected …', ar_zielen: 'Aim at the start point and tap “Set point”', ar_zielen2: 'Aim at the end point and tap “Set point”',
                 ar_punkt: '＋ Set point', ar_zurueck: '↶', ar_ende: 'Done', messung: 'Measurement', ar_ergebnis: 'Your measurements',
-                lk_titel: 'Live camera with a scale (all devices)', lk_info: 'Place a bank card, an A4 sheet or a coin next to the object, point the camera straight at it and freeze the image. Then measure as with “From photo”.',
-                lk_start: '🎥 Open camera', lk_fest: '📸 Freeze image and measure', lk_stop: 'Close', lk_keine: 'The camera could not be opened. Allow camera access in your browser or use “From photo”.',
+                lk_titel: 'Live measuring with an A4 sheet or card (all devices)', lk_info: 'Lay an A4 sheet (or a bank card) flat next to the object on the same surface and point the camera at it. As soon as the sheet is detected (green frame), move the two yellow dots to the start and end – the length is shown live, even while you move the camera.', lk_a4: 'A4 sheet (recommended)', lk_karte: 'Bank card / ID card', lk_suche: 'Looking for the sheet … – get it fully in the picture, with good contrast to the surface', lk_gefunden: '✓ Scale detected – move the dots to start and end', lk_alt: 'Scale briefly lost – last value',
+                lk_start: '🎥 Start live measuring', lk_fest: '📸 Freeze image', lk_stop: 'Close', lk_keine: 'The camera could not be opened. Allow camera access in your browser or use “From photo”.',
                 titel: 'Measuring & sizes', untertitel: 'Camera, ruler, photo, areas, conversion',
                 tab_lineal: '📏 Ruler', tab_foto: '📷 From photo', tab_flaeche: '🏠 Areas', tab_umrechnen: '🔁 Convert',
                 lin_titel: '📏 On-screen ruler', lin_unkal: 'Not calibrated yet – the display is only approximate. Calibrate the ruler once with a bank card (below).',
@@ -282,6 +289,7 @@
     </script>
     <script src="../i18n.js?v=1"></script>
     <script src="../sd-bereich.js?v=2"></script>
+    <script src="blatt.js?v=1"></script>
     <script>
         'use strict';
         const { $, t, esc } = SD;
@@ -432,7 +440,7 @@
             foto.ref = { a: [cx - bw / 2, cy], b: [cx + bw / 2, cy] };
             if (!foto.linien.length) foto.linien = [{ a: [w * .25, h * .75], b: [w * .75, h * .75] }];
         }
-        function ladeFoto(url) {
+        function ladeFoto(url, danach) {
             const img = new Image();
             img.onload = () => {
                 foto.img = img; foto.zoom = 1; foto.linien = [];
@@ -440,6 +448,7 @@
                 $('eckenStatus').textContent = '';
                 $('fotoBereich').hidden = false;
                 zeichneFoto();
+                if (danach) danach();
             };
             img.src = url;
         }
@@ -646,13 +655,14 @@
             $('eckenStatus').textContent = t('ecken_laed');
             try {
                 await ladeVision();
-                const img = foto.img, f = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+                const img = foto.img, f = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
                 const cv = document.createElement('canvas');
                 cv.width = Math.round(img.naturalWidth * f); cv.height = Math.round(img.naturalHeight * f);
                 const cx = cv.getContext('2d', { willReadFrequently: true });
                 cx.drawImage(img, 0, 0, cv.width, cv.height);
                 const daten = cx.getImageData(0, 0, cv.width, cv.height);
-                const q = window.Vision.detectDocument(daten.data, cv.width, cv.height);
+                let q = window.SDBlatt.findeBlatt(daten.data, cv.width, cv.height);
+                if (!q) q = window.Vision.detectDocument(daten.data, cv.width, cv.height);
                 if (!q) { $('eckenStatus').textContent = t('ecken_nein'); return; }
                 foto.quad = [0, 1, 2, 3].map(i => [q[i * 2] / f, q[i * 2 + 1] / f]);
                 $('eckenStatus').textContent = t('ecken_ok');
@@ -784,30 +794,132 @@
         $('umWert').addEventListener('input', rechneUm);
 
 
-        // ---------------- Kamera: Live-Bild mit Massstab ----------------
+        // ---------------- Kamera: live messen mit erkanntem Blatt ----------------
+        // Das Blatt wird in jedem Durchgang mit der Blatterkennung des SD Scanners gesucht.
+        // Aus seinen 4 Ecken ergibt sich die Umrechnung Bild -> Millimeter (Perspektive inklusive).
         let lkStream = null;
-        function lkAus() { if (lkStream) lkStream.getTracks().forEach(tr => tr.stop()); lkStream = null; $('lkVideo').srcObject = null; $('lkBox').hidden = true; }
+        const lk = { quad: null, alt: 0, punkte: null, ziehe: null, timer: 0, laeuft: false, klein: document.createElement('canvas'), wert: null };
+        function lkAus() {
+            lk.laeuft = false; clearTimeout(lk.timer);
+            if (lkStream) lkStream.getTracks().forEach(tr => tr.stop());
+            lkStream = null; $('lkVideo').srcObject = null; $('lkBox').hidden = true;
+        }
         $('lkStart').addEventListener('click', async () => {
             $('lkFehler').hidden = true;
             try {
                 lkStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
-                $('lkVideo').srcObject = lkStream;
+                const v = $('lkVideo');
+                v.srcObject = lkStream;
                 $('lkBox').hidden = false;
+                lk.quad = null; lk.punkte = null; lk.wert = null;
+                ladeVision().catch(() => {});
+                lk.laeuft = true;
+                const start = () => { if (v.videoWidth) { lkSchleife(); $('lkStage').scrollIntoView({ behavior: 'smooth', block: 'center' }); } else setTimeout(start, 100); };
+                start();
             } catch (e) {
                 $('lkFehler').textContent = t('lk_keine');
                 $('lkFehler').hidden = false;
             }
         });
         $('lkStop').addEventListener('click', lkAus);
+        function lkSuche() {
+            const v = $('lkVideo');
+            if (!v.videoWidth) return;
+            const f = Math.min(1, 960 / v.videoWidth);
+            const c = lk.klein; c.width = Math.round(v.videoWidth * f); c.height = Math.round(v.videoHeight * f);
+            const cx = c.getContext('2d', { willReadFrequently: true });
+            cx.drawImage(v, 0, 0, c.width, c.height);
+            const daten = cx.getImageData(0, 0, c.width, c.height).data;
+            let q = null;
+            try { q = window.SDBlatt.findeBlatt(daten, c.width, c.height); } catch (e) { q = null; }
+            if (!q && window.Vision && window.Vision.detectDocument) { try { q = window.Vision.detectDocument(daten, c.width, c.height); } catch (e) { q = null; } }
+            if (q) {
+                const neu = geordnet([0, 1, 2, 3].map(i => [q[i * 2] / f, q[i * 2 + 1] / f]));
+                // leicht glaetten, damit der Wert nicht springt
+                if (lk.quad) {
+                    const sprung = Math.max(...neu.map((p, i) => Math.hypot(p[0] - lk.quad[i][0], p[1] - lk.quad[i][1])));
+                    lk.quad = sprung > v.videoWidth * 0.08 ? neu : neu.map((p, i) => [lk.quad[i][0] * 0.5 + p[0] * 0.5, lk.quad[i][1] * 0.5 + p[1] * 0.5]);
+                } else lk.quad = neu;
+                lk.alt = 0;
+            } else if (lk.quad && ++lk.alt > 6) lk.quad = null;
+        }
+        function lkMesser() {
+            if (!lk.quad) return null;
+            const [g1, g2] = $('lkRef').value.split(':').map(Number);
+            const lang = Math.max(g1, g2), kurz = Math.min(g1, g2), q = lk.quad;
+            const kante = (i) => Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+            const ersteLang = kante(0) + kante(2) >= kante(1) + kante(3);
+            const W = ersteLang ? lang : kurz, H = ersteLang ? kurz : lang;
+            const M = homographie(q, [[0, 0], [W, 0], [W, H], [0, H]]);
+            if (!M) return null;
+            return (a, b) => { const p = wendeH(M, a), r = wendeH(M, b); return Math.hypot(p[0] - r[0], p[1] - r[1]); };
+        }
+        function lkZeichne() {
+            const v = $('lkVideo'), oc = $('lkOverlay');
+            const w = v.clientWidth, h = v.clientHeight;
+            if (!w || !v.videoWidth) return;
+            const k = w / v.videoWidth, dpr = window.devicePixelRatio || 1;
+            if (oc.width !== Math.round(w * dpr)) { oc.width = Math.round(w * dpr); oc.height = Math.round(h * dpr); }
+            const c = oc.getContext('2d');
+            c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            c.clearRect(0, 0, w, h);
+            if (!lk.punkte) lk.punkte = [[v.videoWidth * 0.25, v.videoHeight * 0.78], [v.videoWidth * 0.75, v.videoHeight * 0.78]];
+            if (lk.quad) {
+                c.lineWidth = 3; c.strokeStyle = '#3ddc84'; c.fillStyle = 'rgba(61,220,132,.15)';
+                c.beginPath(); lk.quad.forEach(([x, y], i) => i ? c.lineTo(x * k, y * k) : c.moveTo(x * k, y * k)); c.closePath(); c.fill(); c.stroke();
+            }
+            const [a, b] = lk.punkte;
+            c.lineWidth = 5; c.strokeStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
+            c.lineWidth = 3; c.strokeStyle = '#ffd34d'; c.beginPath(); c.moveTo(a[0] * k, a[1] * k); c.lineTo(b[0] * k, b[1] * k); c.stroke();
+            [a, b].forEach(([x, y]) => { c.beginPath(); c.arc(x * k, y * k, 15, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.3)'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#ffd34d'; c.stroke(); c.beginPath(); c.arc(x * k, y * k, 2.5, 0, Math.PI * 2); c.fillStyle = '#ffd34d'; c.fill(); });
+            const m = lkMesser();
+            if (m) lk.wert = m(a, b);
+            $('lkWert').textContent = lk.wert == null ? '–' : laengeText(lk.wert);
+            $('lkStatus').textContent = t(lk.quad ? 'lk_gefunden' : (lk.wert == null ? 'lk_suche' : 'lk_alt'));
+            $('lkStatus').style.color = lk.quad ? 'var(--ok)' : '';
+        }
+        function lkSchleife() {
+            if (!lk.laeuft) return;
+            lkSuche();
+            lkZeichne();
+            lk.timer = setTimeout(lkSchleife, 160);
+        }
+        (function () {
+            const oc = $('lkOverlay');
+            const punkt = (e) => { const v = $('lkVideo'), r = oc.getBoundingClientRect(), k = v.clientWidth / v.videoWidth; return [(e.clientX - r.left) / k, (e.clientY - r.top) / k]; };
+            oc.addEventListener('pointerdown', (e) => {
+                if (!lk.punkte) return;
+                const p = punkt(e), v = $('lkVideo'), k = v.clientWidth / v.videoWidth;
+                let best = -1, bd = 36 / k;
+                lk.punkte.forEach((q, i) => { const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; best = i; } });
+                if (best < 0) return;
+                lk.ziehe = { i: best, dx: lk.punkte[best][0] - p[0], dy: lk.punkte[best][1] - p[1] };
+                oc.setPointerCapture(e.pointerId); e.preventDefault();
+            });
+            oc.addEventListener('pointermove', (e) => {
+                if (!lk.ziehe) return;
+                const p = punkt(e), v = $('lkVideo');
+                lk.punkte[lk.ziehe.i] = [Math.max(0, Math.min(v.videoWidth, p[0] + lk.ziehe.dx)), Math.max(0, Math.min(v.videoHeight, p[1] + lk.ziehe.dy))];
+                lkZeichne();
+            });
+            const los = () => { lk.ziehe = null; };
+            oc.addEventListener('pointerup', los); oc.addEventListener('pointercancel', los);
+        })();
         $('lkFest').addEventListener('click', () => {
             const v = $('lkVideo');
             if (!v.videoWidth) return;
             const c = document.createElement('canvas');
             c.width = v.videoWidth; c.height = v.videoHeight;
             c.getContext('2d').drawImage(v, 0, 0);
+            const quad = lk.quad && lk.quad.map(p => p.slice()), punkte = lk.punkte && lk.punkte.map(p => p.slice()), refWert = $('lkRef').value;
             lkAus();
             zeigeTab('foto');
-            ladeFoto(c.toDataURL('image/jpeg', 0.92));
+            ladeFoto(c.toDataURL('image/jpeg', 0.92), () => {
+                $('refArt').value = 'r:' + refWert;
+                if (quad) foto.quad = quad;
+                if (punkte) foto.linien = [{ a: punkte[0], b: punkte[1] }];
+                zeichneFoto();
+            });
         });
 
         // ---------------- Kamera: AR-Messung (WebXR, Android/Chrome mit ARCore) ----------------
