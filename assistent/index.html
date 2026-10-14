@@ -682,6 +682,10 @@
             color: var(--danger);
         }
 
+        .doc-gelesen { align-self: flex-end; max-width: 90%; font-size: .82rem; color: var(--muted, #667); }
+        .doc-gelesen summary { cursor: pointer; text-align: right; }
+        .doc-gelesen pre { white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; background: rgba(0,0,0,.04); padding: 8px; border-radius: 8px; font: inherit; margin: 6px 0 0; }
+        .doc-gelesen.warn { color: #b45309; text-align: right; }
         .msg-attachments {
             display: flex;
             flex-wrap: wrap;
@@ -1064,7 +1068,7 @@
                 doc_ocr: '🔎 Texterkennung in „{name}“ … {p} %',
                 doc_leer: 'In „{name}“ wurde kein lesbarer Text gefunden.',
                 doc_fehler: '„{name}“ konnte nicht gelesen werden: {msg}',
-                doc_gekuerzt: '[… Rest des Dokuments gekürzt]',
+                doc_gekuerzt: '[… Rest des Dokuments gekürzt]', doc_gelesen: '📄 Gelesener Text aus „{name}“ ({n} Zeichen) – das bekommt SD Lotse', doc_wenig: '⚠️ Aus „{name}“ kam kaum lesbarer Text. Ist es ein Foto/Scan, ein Formular oder eine geschützte PDF? Dann lieber ☁️ Gemini nutzen.',
                 doc_lotse_kurz: 'Das Dokument ist lang – SD Lotse hat nur den Anfang (ca. 4.000 Zeichen) gelesen. Für das ganze Dokument oben auf ☁️ Gemini wechseln.',
                 err_doc_alt: '„{name}“ ist ein altes Word-Format (.doc). Bitte als .docx oder PDF speichern und erneut anhängen.',
                 pdf_btn: '📄 Als PDF',
@@ -1262,7 +1266,7 @@
                 doc_ocr: '🔎 Recognizing text in "{name}" … {p} %',
                 doc_leer: 'No readable text was found in "{name}".',
                 doc_fehler: '"{name}" could not be read: {msg}',
-                doc_gekuerzt: '[… rest of the document shortened]',
+                doc_gekuerzt: '[… rest of the document shortened]', doc_gelesen: '📄 Text read from “{name}” ({n} characters) – this is what SD Lotse gets', doc_wenig: '⚠️ Hardly any readable text came from “{name}”. Is it a photo/scan, a form or a protected PDF? Then better use ☁️ Gemini.',
                 doc_lotse_kurz: 'The document is long – SD Lotse only read the beginning (about 4,000 characters). For the whole document switch to ☁️ Gemini at the top.',
                 err_doc_alt: '"{name}" is an old Word format (.doc). Please save it as .docx or PDF and attach it again.',
                 pdf_btn: '📄 As PDF',
@@ -2102,6 +2106,23 @@
                     });
                     wrap.appendChild(box);
                 }
+                eintrag.parts.filter(p => p._doc && typeof p.text === 'string').forEach(p => {
+                    const roh = p.text.replace(/^\[[^\n]*\]\n/, '');
+                    const det = document.createElement('details');
+                    det.className = 'doc-gelesen';
+                    const sum = document.createElement('summary');
+                    sum.textContent = t('doc_gelesen', { name: p._doc, n: roh.replace(/\s/g, '').length });
+                    const pre = document.createElement('pre');
+                    pre.textContent = roh;
+                    det.append(sum, pre);
+                    wrap.appendChild(det);
+                    if (roh.replace(/[^\p{L}\p{N}]/gu, '').length < 40) {
+                        const w = document.createElement('div');
+                        w.className = 'doc-gelesen warn';
+                        w.textContent = t('doc_wenig', { name: p._doc });
+                        wrap.appendChild(w);
+                    }
+                });
                 const text = eintrag.parts.filter(p => typeof p.text === 'string' && !p._hinweis && !p._doc).map(p => p.text).join('\n');
                 if (text) {
                     const b = document.createElement('div');
@@ -3462,10 +3483,16 @@
                     const grenze = e === letzteMitDoc ? DOC_LOTSE_ZEICHEN + 200 : 600;
                     // Deutlich als Dokument markieren - kleine Modelle halten es sonst fuer eine Frage
                     const docText = docs.map(p => '<<<\n' + (p.text.length > grenze ? p.text.slice(0, grenze) + ' …' : p.text) + '\n>>>').join('\n\n');
-                    const frage = eigen || (erkenneSprache(docText) === 'en'
-                        ? 'Please summarize this document briefly and ask what I need help with.'
-                        : 'Bitte fasse dieses Dokument kurz zusammen und frag mich, wobei ich Hilfe brauche.');
-                    text = docText + '\n\n' + frage;
+                    const en = (erkenneSprache(eigen) || erkenneSprache(docText)) === 'en';
+                    const namen = docs.map(p => p._doc).join(', ');
+                    // Kurze, ungenaue Fragen ("Was ist das?") auf das Dokument beziehen
+                    let frage = eigen;
+                    if (!frage || frage.length < 40) frage = (frage ? frage + ' ' : '') + (en
+                        ? '(Meaning the file above: say what kind of document it is, who it is from, what it is about and what I have to do. Mention important dates and amounts.)'
+                        : '(Gemeint ist die Datei oben: Sag, was für ein Dokument das ist, von wem, worum es geht und was ich tun muss. Nenne wichtige Termine und Beträge.)');
+                    text = (en ? 'Here is the text of my file "' + namen + '". You can read it - it is written out below.\n\n'
+                               : 'Hier ist der Text meiner Datei „' + namen + '“. Du kannst ihn lesen – er steht hier ausgeschrieben.\n\n') +
+                        docText + '\n\n' + (en ? 'My question about this text: ' : 'Meine Frage zu diesem Text: ') + frage;
                 } else {
                     text = eigen || (hatAnhang ? '(Anhang)' : '');
                 }
@@ -3483,7 +3510,9 @@
             while (liste.length && liste[0].role !== 'user') liste.shift();
             const sprache = erkenneSprache(letzteNachrichtDerPerson()) || (window.SD_LANG === 'en' ? 'en' : 'de');
             const beispiele = [];
-            (LLAMA_BEISPIELE[sprache] || LLAMA_BEISPIELE.de).forEach(([frage, antwort]) => {
+            const docDa = liste.some(m => m.role === 'user' && m.content.includes('<<<\n'));
+            // Mit Dokument keine Beispiel-Dialoge: sie lenken das kleine Modell nur ab
+            if (!docDa) (LLAMA_BEISPIELE[sprache] || LLAMA_BEISPIELE.de).forEach(([frage, antwort]) => {
                 beispiele.push({ role: 'user', content: frage }, { role: 'assistant', content: antwort });
             });
             const mitDoc = liste.some(m => m.role === 'user' && m.content.includes('<<<\n'));
@@ -3528,6 +3557,28 @@
             } catch (e) {
                 return null;   // offline, gesperrt oder zu langsam: einfach ohne Nachschlagen antworten
             }
+        }
+
+        const LOTSE_ABLEHNUNG = /(nicht (öffentlich )?zugänglich|nicht (öffnen|lesen|sehen|einsehen|zugreifen)|keine?n? (zugriff|datei|dokument)|kein(en)? anhang|was du hochgeladen|was (in )?der datei steht|erzähl(e|en)? mir.{0,40}(datei|dokument|hochgeladen)|can(no|')t (open|read|see|access|view)|unable to (open|read|access|view)|don'?t have access|no (file|document|attachment))/i;
+        // Minimal-Anfrage: nur das neueste Dokument und eine klare Aufgabe
+        function lotseDokNotfall() {
+            for (let i = verlauf.length - 1; i >= 0; i--) {
+                const e = verlauf[i];
+                if (e.role !== 'user') continue;
+                const docs = e.parts.filter(p => p._doc && typeof p.text === 'string');
+                if (!docs.length) continue;
+                const doc = docs.map(p => p.text.replace(/^\[[^\n]*\]\n/, '')).join('\n\n').slice(0, DOC_LOTSE_ZEICHEN);
+                const frage = letzteNachrichtDerPerson();
+                const en = (erkenneSprache(frage) || (window.SD_LANG === 'en' ? 'en' : 'de')) === 'en';
+                const aufgabe = en
+                    ? 'Read the TEXT above. ' + (frage && frage.length >= 40 ? 'Answer this question about it: ' + frage : 'Explain in simple English in 3-6 sentences: what kind of document it is, who it is from, what it is about, what the reader has to do, and important dates and amounts. ' + (frage ? 'The user asked: ' + frage : ''))
+                    : 'Lies den TEXT oben. ' + (frage && frage.length >= 40 ? 'Beantworte dazu diese Frage: ' + frage : 'Erkläre in einfachem Deutsch in 3–6 Sätzen: was für ein Dokument es ist, von wem es ist, worum es geht, was der Leser tun muss, und wichtige Termine und Beträge. ' + (frage ? 'Die Frage war: ' + frage : ''));
+                return [
+                    { role: 'system', content: en ? 'You explain documents. The full text is given to you. Only use this text. Never say you cannot read it.' : 'Du erklärst Dokumente. Der vollständige Text liegt dir vor. Nutze nur diesen Text. Sag nie, dass du ihn nicht lesen kannst. Antworte auf Deutsch.' },
+                    { role: 'user', content: 'TEXT:\n' + doc + '\n\n' + aufgabe }
+                ];
+            }
+            return null;
         }
 
         async function antworteMitLlama(hinweis) {
@@ -3591,6 +3642,24 @@
                     if (!geplant) { geplant = true; requestAnimationFrame(zeichne); }
                 }
                 zeichne();
+                // Kleines Modell behauptet trotz Dokument, es koenne die Datei nicht lesen:
+                // einmal mit einer ganz einfachen Anfrage (nur Dokument + Aufgabe) neu versuchen.
+                if (docImGespraech && LOTSE_ABLEHNUNG.test(text)) {
+                    const zweit = lotseDokNotfall();
+                    if (zweit) {
+                        bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+                        let roh2 = '';
+                        const s2 = await llama.engine.chat.completions.create(Object.assign({ messages: zweit, stream: true, temperature: 0.2, top_p: 0.9, max_tokens: 700 }, LM.anfrageZusatz(llama.modellId)));
+                        for await (const teil of s2) {
+                            const neu = (teil.choices && teil.choices[0] && teil.choices[0].delta && teil.choices[0].delta.content) || '';
+                            if (!neu) continue;
+                            roh2 += neu;
+                            text = LM.bereinige(roh2);
+                            if (!geplant) { geplant = true; requestAnimationFrame(zeichne); }
+                        }
+                        zeichne();
+                    }
+                }
                 if (!text.trim()) throw new Error(t('err_empty'));
                 eintrag.parts = [{ text }];
                 verlauf.push(eintrag);
