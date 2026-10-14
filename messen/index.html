@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SD Messen & Maße</title>
     <meta name="theme-color" content="#0f172a">
-    <meta name="description" content="Lineal auf dem Bildschirm, Messen per Foto, Wohn- und Wandfläche berechnen und Einheiten umrechnen – direkt im Browser.">
+    <meta name="description" content="Mit der Kamera messen (AR), Lineal auf dem Bildschirm, Messen per Foto, Wohn- und Wandfläche berechnen und Einheiten umrechnen – direkt im Browser.">
     <link rel="icon" href="../icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../sd-bereich.css?v=1">
     <style>
@@ -36,7 +36,7 @@
         <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
         <div class="brand">
             <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
-            <div><strong data-i18n="titel">Messen & Maße</strong><small data-i18n="untertitel">Lineal, Foto-Messung, Flächen, Umrechnen</small></div>
+            <div><strong data-i18n="titel">Messen & Maße</strong><small data-i18n="untertitel">Kamera, Lineal, Foto, Flächen, Umrechnen</small></div>
         </div>
         <div class="sd-lang-switch">
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
@@ -46,14 +46,57 @@
 
     <main>
         <div class="tabs" role="tablist" id="tabs">
+            <button type="button" class="chip" data-tab="kamera" data-i18n="tab_kamera">📐 Kamera</button>
             <button type="button" class="chip" data-tab="lineal" data-i18n="tab_lineal">📏 Lineal</button>
             <button type="button" class="chip" data-tab="foto" data-i18n="tab_foto">📷 Per Foto</button>
             <button type="button" class="chip" data-tab="flaeche" data-i18n="tab_flaeche">🏠 Flächen</button>
             <button type="button" class="chip" data-tab="umrechnen" data-i18n="tab_umrechnen">🔁 Umrechnen</button>
         </div>
 
+        <!-- ================= Kamera ================= -->
+        <section class="karte" id="tab-kamera" data-panel="kamera" hidden>
+            <h2 data-i18n="kam_titel">📐 Mit der Kamera messen</h2>
+            <div id="arBox" style="display:grid;gap:10px">
+                <h3 data-i18n="ar_titel">Wie ein Maßband im Raum (AR)</h3>
+                <p class="info" data-i18n="ar_info">Handy langsam bewegen, bis der Boden oder Tisch erkannt ist. Dann auf den Anfangspunkt zielen und tippen, zum Endpunkt zielen und wieder tippen – die Länge wird angezeigt. Gut für Möbel, Wände, Abstände.</p>
+                <button type="button" class="btn prim" id="arStart" data-i18n="ar_start">📐 AR-Messung starten</button>
+                <p class="hinweis" id="arStatus" data-i18n="ar_pruefe">Prüfe, ob dein Gerät AR unterstützt …</p>
+                <div id="arErgebnis" class="liste"></div>
+            </div>
+            <div style="display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px">
+                <h3 data-i18n="lk_titel">Live-Kamera mit Maßstab (alle Geräte)</h3>
+                <p class="info" data-i18n="lk_info">Lege eine Bankkarte, ein A4-Blatt oder eine Münze neben den Gegenstand, richte die Kamera gerade darauf und halte das Bild fest. Danach misst du wie bei „Per Foto“.</p>
+                <button type="button" class="btn" id="lkStart" data-i18n="lk_start">🎥 Kamera öffnen</button>
+                <div id="lkBox" hidden style="display:grid;gap:8px">
+                    <div style="position:relative;border-radius:12px;overflow:hidden;background:#000"><video id="lkVideo" playsinline muted autoplay style="width:100%;display:block;max-height:70vh;object-fit:cover"></video></div>
+                    <div class="knoepfe">
+                        <button type="button" class="btn prim" id="lkFest" data-i18n="lk_fest">📸 Bild festhalten und messen</button>
+                        <button type="button" class="btn" id="lkStop" data-i18n="lk_stop">Schließen</button>
+                    </div>
+                </div>
+                <p class="fehler" id="lkFehler" hidden></p>
+            </div>
+        </section>
+
+        <!-- AR-Oberflaeche (wird waehrend der AR-Sitzung ueber das Kamerabild gelegt) -->
+        <div id="arOverlay" hidden style="position:fixed;inset:0;pointer-events:none;font-family:Verdana,sans-serif;color:#fff">
+            <div style="position:absolute;top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 12px;background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));text-align:center">
+                <div id="arLive" style="font-size:2rem;font-weight:bold;text-shadow:0 1px 4px #000">–</div>
+                <div id="arHinweis" style="font-size:.9rem;text-shadow:0 1px 3px #000"></div>
+            </div>
+            <div style="position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5)"></div>
+            <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.65));display:grid;gap:8px">
+                <div id="arListe" style="font-size:.95rem;text-shadow:0 1px 3px #000;max-height:22vh;overflow:auto"></div>
+                <div style="display:flex;gap:8px;justify-content:center;pointer-events:auto">
+                    <button type="button" id="arPunkt" class="btn prim" style="flex:1;max-width:220px" data-i18n="ar_punkt">＋ Punkt setzen</button>
+                    <button type="button" id="arZurueck" class="btn" data-i18n="ar_zurueck">↶</button>
+                    <button type="button" id="arEnde" class="btn" data-i18n="ar_ende">Fertig</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= Lineal ================= -->
-        <section class="karte" id="tab-lineal" data-panel="lineal">
+        <section class="karte" id="tab-lineal" data-panel="lineal" hidden>
             <h2 data-i18n="lin_titel">📏 Lineal auf dem Bildschirm</h2>
             <p class="hinweis" id="kalibHinweis" data-i18n="lin_unkal">Noch nicht eingestellt – die Anzeige ist nur ungefähr. Stelle das Lineal einmal mit einer Bankkarte ein (unten).</p>
             <div class="chips">
@@ -152,7 +195,15 @@
     <script>
         window.SD_I18N = {
             de: {
-                titel: 'Messen & Maße', untertitel: 'Lineal, Foto-Messung, Flächen, Umrechnen',
+                tab_kamera: '📐 Kamera', kam_titel: '📐 Mit der Kamera messen', ar_titel: 'Wie ein Maßband im Raum (AR)',
+                ar_info: 'Handy langsam bewegen, bis der Boden oder Tisch erkannt ist. Dann auf den Anfangspunkt zielen und tippen, zum Endpunkt zielen und wieder tippen – die Länge wird angezeigt. Gut für Möbel, Wände, Abstände.',
+                ar_start: '📐 AR-Messung starten', ar_pruefe: 'Prüfe, ob dein Gerät AR unterstützt …', ar_ok: 'Dein Gerät unterstützt AR-Messung. Abweichungen von einigen Zentimetern sind möglich – für Zuschnitt lieber nachmessen.',
+                ar_nein: 'Dieses Gerät oder dieser Browser unterstützt keine AR-Messung (nötig: Android mit Chrome und „Google Play-Dienste für AR“). Nutze unten die Live-Kamera mit Maßstab.',
+                ar_fehler: 'AR konnte nicht gestartet werden', ar_suche: 'Handy langsam bewegen, bis eine Fläche erkannt wird …', ar_zielen: 'Auf den Anfangspunkt zielen und „Punkt setzen“ tippen', ar_zielen2: 'Zum Endpunkt zielen und „Punkt setzen“ tippen',
+                ar_punkt: '＋ Punkt setzen', ar_zurueck: '↶', ar_ende: 'Fertig', messung: 'Messung', ar_ergebnis: 'Deine Messungen',
+                lk_titel: 'Live-Kamera mit Maßstab (alle Geräte)', lk_info: 'Lege eine Bankkarte, ein A4-Blatt oder eine Münze neben den Gegenstand, richte die Kamera gerade darauf und halte das Bild fest. Danach misst du wie bei „Per Foto“.',
+                lk_start: '🎥 Kamera öffnen', lk_fest: '📸 Bild festhalten und messen', lk_stop: 'Schließen', lk_keine: 'Die Kamera konnte nicht geöffnet werden. Erlaube den Kamerazugriff im Browser oder nutze „Per Foto“.',
+                titel: 'Messen & Maße', untertitel: 'Kamera, Lineal, Foto, Flächen, Umrechnen',
                 tab_lineal: '📏 Lineal', tab_foto: '📷 Per Foto', tab_flaeche: '🏠 Flächen', tab_umrechnen: '🔁 Umrechnen',
                 lin_titel: '📏 Lineal auf dem Bildschirm', lin_unkal: 'Noch nicht eingestellt – die Anzeige ist nur ungefähr. Stelle das Lineal einmal mit einer Bankkarte ein (unten).',
                 lin_kal: '✓ Eingestellt für dieses Gerät.', zoll: 'Zoll', lin_drehen: '↕ Senkrecht', lin_quer: '↔ Waagerecht',
@@ -178,7 +229,15 @@
                 um_quelle: 'Zoll, Fuß, Meile, Pfund, Unze und Gallone als internationale bzw. US-Einheiten mit den festgelegten Umrechnungsfaktoren (z. B. 1 Zoll = 2,54 cm).'
             },
             en: {
-                titel: 'Measuring & sizes', untertitel: 'Ruler, photo measuring, areas, conversion',
+                tab_kamera: '📐 Camera', kam_titel: '📐 Measure with the camera', ar_titel: 'Like a tape measure in the room (AR)',
+                ar_info: 'Move the phone slowly until the floor or table is detected. Then aim at the start point and tap, aim at the end point and tap again – the length is shown. Good for furniture, walls, distances.',
+                ar_start: '📐 Start AR measuring', ar_pruefe: 'Checking whether your device supports AR …', ar_ok: 'Your device supports AR measuring. Deviations of a few centimetres are possible – measure again before cutting.',
+                ar_nein: 'This device or browser does not support AR measuring (requires Android with Chrome and “Google Play Services for AR”). Use the live camera with a scale below.',
+                ar_fehler: 'AR could not be started', ar_suche: 'Move the phone slowly until a surface is detected …', ar_zielen: 'Aim at the start point and tap “Set point”', ar_zielen2: 'Aim at the end point and tap “Set point”',
+                ar_punkt: '＋ Set point', ar_zurueck: '↶', ar_ende: 'Done', messung: 'Measurement', ar_ergebnis: 'Your measurements',
+                lk_titel: 'Live camera with a scale (all devices)', lk_info: 'Place a bank card, an A4 sheet or a coin next to the object, point the camera straight at it and freeze the image. Then measure as with “From photo”.',
+                lk_start: '🎥 Open camera', lk_fest: '📸 Freeze image and measure', lk_stop: 'Close', lk_keine: 'The camera could not be opened. Allow camera access in your browser or use “From photo”.',
+                titel: 'Measuring & sizes', untertitel: 'Camera, ruler, photo, areas, conversion',
                 tab_lineal: '📏 Ruler', tab_foto: '📷 From photo', tab_flaeche: '🏠 Areas', tab_umrechnen: '🔁 Convert',
                 lin_titel: '📏 On-screen ruler', lin_unkal: 'Not calibrated yet – the display is only approximate. Calibrate the ruler once with a bank card (below).',
                 lin_kal: '✓ Calibrated for this device.', zoll: 'inch', lin_drehen: '↕ Vertical', lin_quer: '↔ Horizontal',
@@ -224,6 +283,7 @@
             document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab; });
             if (tab === 'lineal') zeichneLineal();
             if (tab === 'foto') zeichneFoto();
+            if (tab !== 'kamera' && typeof lkAus === 'function') lkAus();
         }
         $('tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) zeigeTab(b.dataset.tab); });
 
@@ -332,7 +392,9 @@
             const f = e.target.files && e.target.files[0];
             e.target.value = '';
             if (!f) return;
-            const url = URL.createObjectURL(f);
+            ladeFoto(URL.createObjectURL(f));
+        });
+        function ladeFoto(url) {
             const img = new Image();
             img.onload = () => {
                 foto.img = img; foto.zoom = 1;
@@ -343,7 +405,7 @@
                 zeichneFoto();
             };
             img.src = url;
-        });
+        }
         $('refArt').addEventListener('change', () => { $('refEigenFeld').hidden = $('refArt').value !== 'eigen'; zeichneFoto(); });
         $('refEigen').addEventListener('input', zeichneFoto);
         function refMm() { const v = $('refArt').value; return v === 'eigen' ? zahl($('refEigen').value) * 10 : Number(v); }
@@ -549,13 +611,148 @@
         $('umVon').addEventListener('change', () => { d.umVon = Object.assign({}, d.umVon, { [umArt]: $('umVon').value }); speichern(); rechneUm(); });
         $('umWert').addEventListener('input', rechneUm);
 
+
+        // ---------------- Kamera: Live-Bild mit Massstab ----------------
+        let lkStream = null;
+        function lkAus() { if (lkStream) lkStream.getTracks().forEach(tr => tr.stop()); lkStream = null; $('lkVideo').srcObject = null; $('lkBox').hidden = true; }
+        $('lkStart').addEventListener('click', async () => {
+            $('lkFehler').hidden = true;
+            try {
+                lkStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+                $('lkVideo').srcObject = lkStream;
+                $('lkBox').hidden = false;
+            } catch (e) {
+                $('lkFehler').textContent = t('lk_keine');
+                $('lkFehler').hidden = false;
+            }
+        });
+        $('lkStop').addEventListener('click', lkAus);
+        $('lkFest').addEventListener('click', () => {
+            const v = $('lkVideo');
+            if (!v.videoWidth) return;
+            const c = document.createElement('canvas');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            c.getContext('2d').drawImage(v, 0, 0);
+            lkAus();
+            zeigeTab('foto');
+            ladeFoto(c.toDataURL('image/jpeg', 0.92));
+        });
+
+        // ---------------- Kamera: AR-Messung (WebXR, Android/Chrome mit ARCore) ----------------
+        const ar = { session: null, gl: null, ref: null, quelle: null, programm: null, puffer: null, ziel: null, punkte: [], unterstuetzt: false };
+        const arAbstand = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        const arText = (m) => m >= 1 ? zahlFmt(m, 2) + ' m' : zahlFmt(m * 100, 1) + ' cm';
+        function arMessungen() {
+            const liste = [];
+            for (let i = 0; i + 1 < ar.punkte.length; i += 2) liste.push(arAbstand(ar.punkte[i], ar.punkte[i + 1]));
+            return liste;
+        }
+        function arOberflaeche() {
+            const offen = ar.punkte.length % 2 === 1;
+            $('arLive').textContent = offen && ar.ziel ? arText(arAbstand(ar.punkte[ar.punkte.length - 1], ar.ziel)) : (ar.ziel ? '·' : '–');
+            $('arHinweis').textContent = !ar.ziel ? t('ar_suche') : t(offen ? 'ar_zielen2' : 'ar_zielen');
+            $('arListe').innerHTML = arMessungen().map((m, i) => '<div>' + esc(t('messung')) + ' ' + (i + 1) + ': <b>' + esc(arText(m)) + '</b></div>').join('');
+        }
+        function arErgebnisSeite() {
+            const m = arMessungen();
+            $('arErgebnis').innerHTML = m.length ? '<h3>' + esc(t('ar_ergebnis')) + '</h3>' + m.map((x, i) => '<div class="ergebnis-zeile"><span>' + esc(t('messung')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(arText(x)) + '</b></div>').join('') : '';
+        }
+        async function arPruefen() {
+            let ok = false;
+            try { ok = !!(navigator.xr && await navigator.xr.isSessionSupported('immersive-ar')); } catch (e) { ok = false; }
+            ar.unterstuetzt = ok;
+            $('arStart').hidden = !ok;
+            $('arStatus').textContent = t(ok ? 'ar_ok' : 'ar_nein');
+            $('arStatus').className = ok ? 'info' : 'hinweis';
+        }
+        function arShader(gl) {
+            const vs = 'attribute vec3 p;uniform mat4 pr;uniform mat4 vw;uniform float gr;void main(){gl_Position=pr*vw*vec4(p,1.0);gl_PointSize=gr;}';
+            const fs = 'precision mediump float;uniform vec4 fa;void main(){gl_FragColor=fa;}';
+            const mk = (typ, src) => { const sh = gl.createShader(typ); gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
+            const pg = gl.createProgram();
+            gl.attachShader(pg, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(pg, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pg);
+            return { pg, p: gl.getAttribLocation(pg, 'p'), pr: gl.getUniformLocation(pg, 'pr'), vw: gl.getUniformLocation(pg, 'vw'), gr: gl.getUniformLocation(pg, 'gr'), fa: gl.getUniformLocation(pg, 'fa') };
+        }
+        function arZeichne(gl, view, layer) {
+            const vp = layer.getViewport(view);
+            gl.viewport(vp.x, vp.y, vp.width, vp.height);
+            const P = ar.programm;
+            gl.useProgram(P.pg);
+            gl.uniformMatrix4fv(P.pr, false, view.projectionMatrix);
+            gl.uniformMatrix4fv(P.vw, false, view.transform.inverse.matrix);
+            gl.bindBuffer(gl.ARRAY_BUFFER, ar.puffer);
+            gl.enableVertexAttribArray(P.p);
+            gl.vertexAttribPointer(P.p, 3, gl.FLOAT, false, 0, 0);
+            const male = (pts, modus, farbe, groesse) => {
+                if (!pts.length) return;
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pts.flat()), gl.DYNAMIC_DRAW);
+                gl.uniform4fv(P.fa, farbe); gl.uniform1f(P.gr, groesse || 1);
+                gl.drawArrays(modus, 0, pts.length);
+            };
+            // fertige Linien, offene Linie zum Zielpunkt, Punkte, Ziel
+            const linien = ar.punkte.length % 2 === 1 && ar.ziel ? ar.punkte.concat([ar.ziel]) : ar.punkte.slice(0, ar.punkte.length - (ar.punkte.length % 2));
+            male(linien, gl.LINES, [1, 1, 1, 1]);
+            male(ar.punkte, gl.POINTS, [0.24, 0.86, 0.52, 1], 18);
+            if (ar.ziel) male([ar.ziel], gl.POINTS, [1, 0.6, 0.24, 1], 14);
+        }
+        function arFrame(zeit, frame) {
+            const s = frame.session;
+            s.requestAnimationFrame(arFrame);
+            const gl = ar.gl, layer = s.renderState.baseLayer;
+            const pose = frame.getViewerPose(ar.ref);
+            const treffer = ar.quelle ? frame.getHitTestResults(ar.quelle) : [];
+            if (treffer.length) { const pp = treffer[0].getPose(ar.ref); if (pp) { const q = pp.transform.position; ar.ziel = [q.x, q.y, q.z]; } } else ar.ziel = null;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            if (pose) pose.views.forEach(v => arZeichne(gl, v, layer));
+            arOberflaeche();
+        }
+        function arPunkt() { if (ar.ziel) { ar.punkte.push(ar.ziel.slice()); arOberflaeche(); } }
+        $('arStart').addEventListener('click', async () => {
+            if (ar.session) return;
+            try {
+                const ov = $('arOverlay');
+                ov.hidden = false;
+                const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test', 'local'], optionalFeatures: ['dom-overlay'], domOverlay: { root: ov } });
+                ar.session = session; ar.punkte = []; ar.ziel = null;
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl', { xrCompatible: true, alpha: true });
+                ar.gl = gl; ar.programm = arShader(gl); ar.puffer = gl.createBuffer();
+                await session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+                ar.ref = await session.requestReferenceSpace('local');
+                const viewer = await session.requestReferenceSpace('viewer');
+                ar.quelle = await session.requestHitTestSource({ space: viewer });
+                // Tippen irgendwo auf den Bildschirm (ausser auf Knoepfe) setzt ebenfalls einen Punkt
+                session.addEventListener('select', arPunkt);
+                session.addEventListener('end', () => {
+                    try { ar.quelle && ar.quelle.cancel(); } catch (e) {}
+                    ar.session = null; ar.quelle = null;
+                    ov.hidden = true;
+                    arErgebnisSeite();
+                });
+                session.requestAnimationFrame(arFrame);
+                arOberflaeche();
+            } catch (e) {
+                $('arOverlay').hidden = true;
+                $('arStatus').textContent = t('ar_fehler') + (e && e.message ? ' (' + e.message + ')' : '') + '.';
+                $('arStatus').className = 'fehler';
+            }
+        });
+        // Knoepfe in der AR-Oberflaeche sollen keinen zusaetzlichen Punkt ausloesen
+        ['arPunkt', 'arZurueck', 'arEnde'].forEach(id => $(id).addEventListener('beforexrselect', (e) => e.preventDefault()));
+        $('arPunkt').addEventListener('click', arPunkt);
+        $('arZurueck').addEventListener('click', () => { ar.punkte.pop(); arOberflaeche(); });
+        $('arEnde').addEventListener('click', () => { if (ar.session) ar.session.end(); });
+        arPruefen();
+
         // ---------------- Start ----------------
-        function allesNeu() { zeichneRaeume(); fuelleEinheiten(); zeichneLineal(); zeichneFoto(); }
+        function allesNeu() { zeichneRaeume(); fuelleEinheiten(); zeichneLineal(); zeichneFoto(); arPruefen(); arErgebnisSeite(); }
         document.addEventListener('sd-lang-changed', allesNeu);
         window.addEventListener('resize', () => { zeichneLineal(); zeichneFoto(); });
         zeichneRaeume();
         fuelleEinheiten();
-        zeigeTab(d.tab || 'lineal');
+        zeigeTab(d.tab || 'kamera');
     </script>
 </body>
 
