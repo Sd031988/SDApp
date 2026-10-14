@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Messen & Maße</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Lineal auf dem Bildschirm, Messen per Foto, Wohn- und Wandfläche berechnen und Einheiten umrechnen – direkt im Browser.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tabs .chip { font-weight: bold; }
+        .lineal-wrap { position: relative; border: 1px solid var(--line); border-radius: 12px; background: #fffef6; overflow: hidden; touch-action: none; user-select: none; }
+        .lineal-wrap canvas { display: block; }
+        .gross { font-size: 1.6rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+        .kalib-karte { margin: 0 auto; border: 2px solid var(--accent); border-radius: 3.2% / 5%; background: repeating-linear-gradient(135deg, var(--accent-soft) 0 10px, #fff 10px 20px); display: grid; place-items: center; color: var(--accent-dark); font-weight: bold; font-size: .85rem; text-align: center; max-width: 100%; }
+        input[type=range] { width: 100%; }
+        .foto-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #111; touch-action: none; }
+        .foto-wrap canvas { display: block; width: 100%; height: auto; }
+        .raum { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; display: grid; gap: 8px; }
+        .raum .kopf { display: flex; gap: 8px; align-items: center; }
+        .raum .kopf input { flex: 1; }
+        .paar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+        .paar label.feld { font-size: .78rem; }
+        .ergebnis-zeile { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .9rem; }
+        .umr-liste { display: grid; gap: 6px; }
+        .umr-liste .zeile2 { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding: 6px 2px; font-size: .92rem; }
+        .umr-liste .zeile2 b { font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
+            <div><strong data-i18n="titel">Messen & Maße</strong><small data-i18n="untertitel">Lineal, Foto-Messung, Flächen, Umrechnen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="tabs" role="tablist" id="tabs">
+            <button type="button" class="chip" data-tab="lineal" data-i18n="tab_lineal">📏 Lineal</button>
+            <button type="button" class="chip" data-tab="foto" data-i18n="tab_foto">📷 Per Foto</button>
+            <button type="button" class="chip" data-tab="flaeche" data-i18n="tab_flaeche">🏠 Flächen</button>
+            <button type="button" class="chip" data-tab="umrechnen" data-i18n="tab_umrechnen">🔁 Umrechnen</button>
+        </div>
+
+        <!-- ================= Lineal ================= -->
+        <section class="karte" id="tab-lineal" data-panel="lineal">
+            <h2 data-i18n="lin_titel">📏 Lineal auf dem Bildschirm</h2>
+            <p class="hinweis" id="kalibHinweis" data-i18n="lin_unkal">Noch nicht eingestellt – die Anzeige ist nur ungefähr. Stelle das Lineal einmal mit einer Bankkarte ein (unten).</p>
+            <div class="chips">
+                <button type="button" class="chip" data-einheit="cm">cm</button>
+                <button type="button" class="chip" data-einheit="in" data-i18n="zoll">Zoll</button>
+                <button type="button" class="chip" id="linDrehen" data-i18n="lin_drehen">↕ Senkrecht</button>
+            </div>
+            <p class="info" data-i18n="lin_info">Gegenstand an die 0 legen und auf das Lineal tippen oder ziehen – die Länge wird angezeigt.</p>
+            <div class="lineal-wrap" id="linWrap"><canvas id="linCanvas"></canvas></div>
+            <p class="gross" id="linWert">–</p>
+            <details>
+                <summary><b data-i18n="kal_titel">⚙️ Lineal einstellen (Kalibrieren)</b></summary>
+                <div style="display:grid;gap:10px;margin-top:10px">
+                    <p class="info" data-i18n="kal_info">Lege eine Bankkarte, EC-Karte oder einen Personalausweis (alle 85,6 × 54 mm) auf den Bildschirm und verschiebe den Regler, bis der Rahmen genau so groß ist wie die Karte.</p>
+                    <div class="kalib-karte" id="kalibKarte"><span data-i18n="kal_karte">Karte hier auflegen</span></div>
+                    <input type="range" id="kalibRegler" min="2" max="12" step="0.01" aria-label="Kalibrierung">
+                    <div class="knoepfe">
+                        <button type="button" class="btn klein" id="kalibMinus">−</button>
+                        <button type="button" class="btn klein" id="kalibPlus">+</button>
+                        <button type="button" class="btn klein prim" id="kalibSpeichern" data-i18n="kal_speichern">✓ Passt – speichern</button>
+                        <button type="button" class="btn klein" id="kalibReset" data-i18n="kal_reset">Zurücksetzen</button>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- ================= Foto ================= -->
+        <section class="karte" id="tab-foto" data-panel="foto" hidden>
+            <h2 data-i18n="foto_titel">📷 Messen per Foto</h2>
+            <p class="info" data-i18n="foto_info">Fotografiere den Gegenstand zusammen mit etwas, dessen Größe bekannt ist (z. B. Bankkarte, A4-Blatt, Münze) – möglichst gerade von vorn und auf derselben Ebene. Dann zuerst den Maßstab und danach die gewünschten Längen ziehen.</p>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="fotoKnopf" data-i18n="foto_waehlen">📷 Foto aufnehmen / wählen</button>
+                <input type="file" id="fotoDatei" accept="image/*" capture="environment" hidden>
+            </div>
+            <div id="fotoBereich" hidden style="display:grid;gap:10px">
+                <div class="zeile">
+                    <label class="feld"><span data-i18n="ref_was">Bekannte Größe (Maßstab)</span>
+                        <select id="refArt">
+                            <option value="85.6" data-i18n="ref_karte_b">Bankkarte – lange Seite (85,6 mm)</option>
+                            <option value="53.98" data-i18n="ref_karte_h">Bankkarte – kurze Seite (54 mm)</option>
+                            <option value="297" data-i18n="ref_a4_l">A4-Blatt – lange Seite (297 mm)</option>
+                            <option value="210" data-i18n="ref_a4_k">A4-Blatt – kurze Seite (210 mm)</option>
+                            <option value="23.25" data-i18n="ref_1e">1-Euro-Münze – Durchmesser (23,25 mm)</option>
+                            <option value="25.75" data-i18n="ref_2e">2-Euro-Münze – Durchmesser (25,75 mm)</option>
+                            <option value="eigen" data-i18n="ref_eigen">eigene Länge eingeben …</option>
+                        </select></label>
+                    <label class="feld" id="refEigenFeld" hidden><span data-i18n="ref_eigen_mm">Länge in cm</span><input type="number" id="refEigen" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 30"></label>
+                </div>
+                <p class="info" data-i18n="foto_anleitung">🟠 Orange Linie = Maßstab: Enden genau an die bekannte Länge ziehen. 🟢 Grüne Linien = Messungen. Zum Verschieben die runden Punkte ziehen.</p>
+                <div class="foto-wrap" id="fotoWrap"><canvas id="fotoCanvas"></canvas></div>
+                <div class="knoepfe">
+                    <button type="button" class="btn klein" id="linieNeu" data-i18n="linie_neu">＋ Messlinie</button>
+                    <button type="button" class="btn klein" id="linieWeg" data-i18n="linie_weg">− Letzte Linie</button>
+                    <button type="button" class="btn klein" id="fotoZoomPlus">🔍＋</button>
+                    <button type="button" class="btn klein" id="fotoZoomMinus">🔍−</button>
+                </div>
+                <div id="fotoErgebnis" class="liste"></div>
+                <p class="hinweis" data-i18n="foto_genau">Genauigkeit: Nur so genau wie das Foto. Schräge Aufnahmen, Weitwinkel und unterschiedliche Abstände (Maßstab näher an der Kamera als der Gegenstand) verfälschen das Ergebnis – für Zuschnitt oder Kauf lieber mit dem Maßband nachmessen.</p>
+            </div>
+        </section>
+
+        <!-- ================= Flächen ================= -->
+        <section class="karte" id="tab-flaeche" data-panel="flaeche" hidden>
+            <h2 data-i18n="fl_titel">🏠 Flächen & Räume</h2>
+            <p class="info" data-i18n="fl_info">Maße in Metern eintragen (z. B. 3,85). Berechnet Fläche, Umfang, Wandfläche und Rauminhalt – und die Wohnfläche nach der Wohnflächenverordnung.</p>
+            <div id="raeume" class="liste"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn" id="raumNeu" data-i18n="raum_neu">＋ Raum</button>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="verschnitt">Verschnitt für Bodenbelag (%)</span><input type="number" id="verschnitt" min="0" max="50" step="1" inputmode="numeric" value="10"></label>
+            </div>
+            <div class="zahlen" id="flSumme"></div>
+            <p class="quelle" data-i18n="fl_quelle">Wohnfläche nach § 4 Wohnflächenverordnung: Flächen mit mindestens 2 m lichter Höhe zählen voll, mit 1 bis 2 m zur Hälfte, unter 1 m gar nicht; Balkone und Terrassen in der Regel zu einem Viertel (höchstens zur Hälfte). Im Mietvertrag kann eine andere Berechnung vereinbart sein (z. B. DIN 277). Der Verschnitt ist ein Richtwert – beim Händler nachfragen.</p>
+        </section>
+
+        <!-- ================= Umrechnen ================= -->
+        <section class="karte" id="tab-umrechnen" data-panel="umrechnen" hidden>
+            <h2 data-i18n="um_titel">🔁 Einheiten umrechnen</h2>
+            <div class="chips" id="umArten">
+                <button type="button" class="chip" data-art="laenge" data-i18n="um_laenge">Länge</button>
+                <button type="button" class="chip" data-art="flaeche" data-i18n="um_flaeche">Fläche</button>
+                <button type="button" class="chip" data-art="volumen" data-i18n="um_volumen">Volumen</button>
+                <button type="button" class="chip" data-art="gewicht" data-i18n="um_gewicht">Gewicht</button>
+                <button type="button" class="chip" data-art="temp" data-i18n="um_temp">Temperatur</button>
+            </div>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="um_wert">Wert</span><input type="number" id="umWert" step="any" inputmode="decimal" value="1"></label>
+                <label class="feld"><span data-i18n="um_von">Einheit</span><select id="umVon"></select></label>
+            </div>
+            <div class="umr-liste" id="umListe"></div>
+            <p class="quelle" data-i18n="um_quelle">Zoll, Fuß, Meile, Pfund, Unze und Gallone als internationale bzw. US-Einheiten mit den festgelegten Umrechnungsfaktoren (z. B. 1 Zoll = 2,54 cm).</p>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Messen & Maße', untertitel: 'Lineal, Foto-Messung, Flächen, Umrechnen',
+                tab_lineal: '📏 Lineal', tab_foto: '📷 Per Foto', tab_flaeche: '🏠 Flächen', tab_umrechnen: '🔁 Umrechnen',
+                lin_titel: '📏 Lineal auf dem Bildschirm', lin_unkal: 'Noch nicht eingestellt – die Anzeige ist nur ungefähr. Stelle das Lineal einmal mit einer Bankkarte ein (unten).',
+                lin_kal: '✓ Eingestellt für dieses Gerät.', zoll: 'Zoll', lin_drehen: '↕ Senkrecht', lin_quer: '↔ Waagerecht',
+                lin_info: 'Gegenstand an die 0 legen und auf das Lineal tippen oder ziehen – die Länge wird angezeigt.',
+                kal_titel: '⚙️ Lineal einstellen (Kalibrieren)', kal_info: 'Lege eine Bankkarte, EC-Karte oder einen Personalausweis (alle 85,6 × 54 mm) auf den Bildschirm und verschiebe den Regler, bis der Rahmen genau so groß ist wie die Karte.',
+                kal_karte: 'Karte hier auflegen', kal_hoch: 'Karte hochkant auflegen', kal_speichern: '✓ Passt – speichern', kal_reset: 'Zurücksetzen', kal_ok: 'Gespeichert ✓',
+                foto_titel: '📷 Messen per Foto', foto_info: 'Fotografiere den Gegenstand zusammen mit etwas, dessen Größe bekannt ist (z. B. Bankkarte, A4-Blatt, Münze) – möglichst gerade von vorn und auf derselben Ebene. Dann zuerst den Maßstab und danach die gewünschten Längen ziehen.',
+                foto_waehlen: '📷 Foto aufnehmen / wählen', ref_was: 'Bekannte Größe (Maßstab)', ref_karte_b: 'Bankkarte – lange Seite (85,6 mm)', ref_karte_h: 'Bankkarte – kurze Seite (54 mm)',
+                ref_a4_l: 'A4-Blatt – lange Seite (297 mm)', ref_a4_k: 'A4-Blatt – kurze Seite (210 mm)', ref_1e: '1-Euro-Münze – Durchmesser (23,25 mm)', ref_2e: '2-Euro-Münze – Durchmesser (25,75 mm)', ref_eigen: 'eigene Länge eingeben …', ref_eigen_mm: 'Länge in cm',
+                foto_anleitung: '🟠 Orange Linie = Maßstab: Enden genau an die bekannte Länge ziehen. 🟢 Grüne Linien = Messungen. Zum Verschieben die runden Punkte ziehen.',
+                linie_neu: '＋ Messlinie', linie_weg: '− Letzte Linie', linie: 'Linie',
+                foto_genau: 'Genauigkeit: Nur so genau wie das Foto. Schräge Aufnahmen, Weitwinkel und unterschiedliche Abstände (Maßstab näher an der Kamera als der Gegenstand) verfälschen das Ergebnis – für Zuschnitt oder Kauf lieber mit dem Maßband nachmessen.',
+                foto_ref_fehlt: 'Erst den Maßstab festlegen (orange Linie und bekannte Länge).',
+                fl_titel: '🏠 Flächen & Räume', fl_info: 'Maße in Metern eintragen (z. B. 3,85). Berechnet Fläche, Umfang, Wandfläche und Rauminhalt – und die Wohnfläche nach der Wohnflächenverordnung.',
+                raum_neu: '＋ Raum', raum: 'Raum', r_name: 'Name', r_form: 'Form', f_rechteck: 'Rechteck', f_l: 'L-Form (2 Rechtecke)', f_kreis: 'Kreis', f_flaeche: 'Fläche direkt eingeben',
+                r_laenge: 'Länge (m)', r_breite: 'Breite (m)', l_info: 'Teil 2 schließt an der Längsseite von Teil 1 an (zusammen ein „L“).', r_laenge2: 'Länge Teil 2 (m)', r_breite2: 'Breite Teil 2 (m)', r_durchm: 'Durchmesser (m)', r_qm: 'Fläche (m²)', r_umfang_eig: 'Umfang (m, optional)',
+                r_hoehe: 'Raumhöhe (m)', r_oeffnung: 'Fenster & Türen (m², abziehen)', r_art: 'Art', a_wohn: 'Wohnraum', a_balkon: 'Balkon / Terrasse / Loggia', a_neben: 'Keller / Garage (keine Wohnfläche)',
+                r_schraege: 'Dachschräge: davon Fläche mit 1–2 m Höhe (m²)', r_unter1: 'davon Fläche unter 1 m Höhe (m²)',
+                e_flaeche: 'Fläche', e_umfang: 'Umfang', e_wand: 'Wandfläche', e_volumen: 'Rauminhalt', e_wohn: 'Wohnfläche', loeschen: 'Entfernen',
+                s_grund: 'Grundfläche gesamt', s_wohn: 'Wohnfläche (WoFlV)', s_wand: 'Wandfläche gesamt', s_boden: 'Bodenbelag inkl. Verschnitt', verschnitt: 'Verschnitt für Bodenbelag (%)',
+                fl_quelle: 'Wohnfläche nach § 4 Wohnflächenverordnung: Flächen mit mindestens 2 m lichter Höhe zählen voll, mit 1 bis 2 m zur Hälfte, unter 1 m gar nicht; Balkone und Terrassen in der Regel zu einem Viertel (höchstens zur Hälfte). Im Mietvertrag kann eine andere Berechnung vereinbart sein (z. B. DIN 277). Der Verschnitt ist ein Richtwert – beim Händler nachfragen.',
+                um_titel: '🔁 Einheiten umrechnen', um_laenge: 'Länge', um_flaeche: 'Fläche', um_volumen: 'Volumen', um_gewicht: 'Gewicht', um_temp: 'Temperatur', um_wert: 'Wert', um_von: 'Einheit',
+                um_quelle: 'Zoll, Fuß, Meile, Pfund, Unze und Gallone als internationale bzw. US-Einheiten mit den festgelegten Umrechnungsfaktoren (z. B. 1 Zoll = 2,54 cm).'
+            },
+            en: {
+                titel: 'Measuring & sizes', untertitel: 'Ruler, photo measuring, areas, conversion',
+                tab_lineal: '📏 Ruler', tab_foto: '📷 From photo', tab_flaeche: '🏠 Areas', tab_umrechnen: '🔁 Convert',
+                lin_titel: '📏 On-screen ruler', lin_unkal: 'Not calibrated yet – the display is only approximate. Calibrate the ruler once with a bank card (below).',
+                lin_kal: '✓ Calibrated for this device.', zoll: 'inch', lin_drehen: '↕ Vertical', lin_quer: '↔ Horizontal',
+                lin_info: 'Place the object at 0 and tap or drag on the ruler – the length is shown.',
+                kal_titel: '⚙️ Calibrate the ruler', kal_info: 'Place a bank card or ID card (all 85.6 × 54 mm) on the screen and move the slider until the frame is exactly the size of the card.',
+                kal_karte: 'Place card here', kal_hoch: 'Place card upright', kal_speichern: '✓ Fits – save', kal_reset: 'Reset', kal_ok: 'Saved ✓',
+                foto_titel: '📷 Measure from a photo', foto_info: 'Photograph the object together with something of known size (e.g. bank card, A4 sheet, coin) – as straight-on as possible and in the same plane. Then set the scale first and draw the lengths you want.',
+                foto_waehlen: '📷 Take / choose photo', ref_was: 'Known size (scale)', ref_karte_b: 'Bank card – long side (85.6 mm)', ref_karte_h: 'Bank card – short side (54 mm)',
+                ref_a4_l: 'A4 sheet – long side (297 mm)', ref_a4_k: 'A4 sheet – short side (210 mm)', ref_1e: '1 euro coin – diameter (23.25 mm)', ref_2e: '2 euro coin – diameter (25.75 mm)', ref_eigen: 'enter my own length …', ref_eigen_mm: 'Length in cm',
+                foto_anleitung: '🟠 Orange line = scale: drag its ends exactly to the known length. 🟢 Green lines = measurements. Drag the round dots to move them.',
+                linie_neu: '＋ Measuring line', linie_weg: '− Last line', linie: 'Line',
+                foto_genau: 'Accuracy: only as good as the photo. Angled shots, wide-angle lenses and different distances (scale closer to the camera than the object) distort the result – for cutting or buying, check with a tape measure.',
+                foto_ref_fehlt: 'Set the scale first (orange line and known length).',
+                fl_titel: '🏠 Areas & rooms', fl_info: 'Enter sizes in metres (e.g. 3.85). Calculates area, perimeter, wall area and volume – and the living area according to the German Living Space Ordinance (WoFlV).',
+                raum_neu: '＋ Room', raum: 'Room', r_name: 'Name', r_form: 'Shape', f_rechteck: 'Rectangle', f_l: 'L-shape (2 rectangles)', f_kreis: 'Circle', f_flaeche: 'Enter area directly',
+                r_laenge: 'Length (m)', r_breite: 'Width (m)', l_info: 'Part 2 adjoins the long side of part 1 (together an “L”).', r_laenge2: 'Length part 2 (m)', r_breite2: 'Width part 2 (m)', r_durchm: 'Diameter (m)', r_qm: 'Area (m²)', r_umfang_eig: 'Perimeter (m, optional)',
+                r_hoehe: 'Room height (m)', r_oeffnung: 'Windows & doors (m², subtract)', r_art: 'Type', a_wohn: 'Living space', a_balkon: 'Balcony / terrace / loggia', a_neben: 'Cellar / garage (no living space)',
+                r_schraege: 'Sloping ceiling: area with 1–2 m height (m²)', r_unter1: 'area below 1 m height (m²)',
+                e_flaeche: 'Area', e_umfang: 'Perimeter', e_wand: 'Wall area', e_volumen: 'Volume', e_wohn: 'Living area', loeschen: 'Remove',
+                s_grund: 'Total floor area', s_wohn: 'Living area (WoFlV)', s_wand: 'Total wall area', s_boden: 'Flooring incl. waste', verschnitt: 'Waste for flooring (%)',
+                fl_quelle: 'Living area according to § 4 WoFlV: areas with a clear height of at least 2 m count fully, 1 to 2 m count half, below 1 m not at all; balconies and terraces usually count one quarter (at most half). A tenancy agreement may use another method (e.g. DIN 277). The waste percentage is a guideline – ask your retailer.',
+                um_titel: '🔁 Convert units', um_laenge: 'Length', um_flaeche: 'Area', um_volumen: 'Volume', um_gewicht: 'Weight', um_temp: 'Temperature', um_wert: 'Value', um_von: 'Unit',
+                um_quelle: 'Inch, foot, mile, pound, ounce and gallon as international or US units with their defined conversion factors (e.g. 1 inch = 2.54 cm).'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=2"></script>
+    <script>
+        'use strict';
+        const { $, t, esc } = SD;
+        const KEY = 'sdMessen';
+        let d = SD.lesen(KEY, {}) || {};
+        const speichern = () => SD.schreiben(KEY, d);
+        const en = () => window.SD_LANG === 'en';
+        const zahlFmt = (x, stellen) => new Intl.NumberFormat(en() ? 'en-GB' : 'de-DE', { maximumFractionDigits: stellen == null ? 2 : stellen, minimumFractionDigits: 0 }).format(x);
+        const zahl = (s) => { const n = parseFloat(String(s == null ? '' : s).replace(',', '.')); return isFinite(n) ? n : 0; };
+
+        // ---------------- Tabs ----------------
+        function zeigeTab(tab) {
+            d.tab = tab; speichern();
+            document.querySelectorAll('#tabs [data-tab]').forEach(b => b.classList.toggle('an', b.dataset.tab === tab));
+            document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab; });
+            if (tab === 'lineal') zeichneLineal();
+            if (tab === 'foto') zeichneFoto();
+        }
+        $('tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) zeigeTab(b.dataset.tab); });
+
+        // ---------------- Lineal ----------------
+        const KARTE_MM = 85.6;
+        const STANDARD_PX_MM = 96 / 25.4;   // CSS-Annahme, auf Handys oft ungenau
+        let pxMm = d.pxMm || STANDARD_PX_MM;
+        let einheit = d.einheit || 'cm';
+        let senkrecht = !!d.senkrecht;
+        let marker = null;   // Position in mm
+        const linCanvas = $('linCanvas');
+        function zeichneLineal() {
+            const wrap = $('linWrap');
+            const breite = wrap.clientWidth;
+            if (!breite) return;
+            const lang = senkrecht ? Math.max(260, Math.min(window.innerHeight - 140, 900)) : breite;
+            const quer = senkrecht ? Math.min(breite, 130) : 120;
+            const w = senkrecht ? quer : lang, h = senkrecht ? lang : quer;
+            const dpr = window.devicePixelRatio || 1;
+            linCanvas.width = Math.round(w * dpr); linCanvas.height = Math.round(h * dpr);
+            linCanvas.style.width = w + 'px'; linCanvas.style.height = h + 'px';
+            wrap.style.width = senkrecht ? w + 'px' : '';
+            const c = linCanvas.getContext('2d');
+            c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            c.clearRect(0, 0, w, h);
+            c.fillStyle = '#fffef6'; c.fillRect(0, 0, w, h);
+            c.strokeStyle = '#172a3a'; c.fillStyle = '#172a3a'; c.lineWidth = 1;
+            c.font = 'bold 12px Verdana, sans-serif';
+            const pos = (p, len) => { c.beginPath(); if (senkrecht) { c.moveTo(0, p); c.lineTo(len, p); } else { c.moveTo(p, 0); c.lineTo(p, len); } c.stroke(); };
+            const start = 4; // kleiner Rand vor der 0
+            if (einheit === 'cm') {
+                const n = Math.floor((lang - start) / pxMm);
+                for (let mm = 0; mm <= n; mm++) {
+                    const p = start + mm * pxMm + .5;
+                    const len = mm % 10 === 0 ? 34 : (mm % 5 === 0 ? 24 : 14);
+                    pos(p, len);
+                    if (mm % 10 === 0) {
+                        const txt = String(mm / 10);
+                        if (senkrecht) c.fillText(txt, 38, p + 4); else c.fillText(txt, p + 2, 48);
+                    }
+                }
+                c.fillStyle = '#647482'; c.font = '11px Verdana, sans-serif';
+                if (senkrecht) c.fillText('cm', 38, lang - 8); else c.fillText('cm', lang - 26, h - 10);
+            } else {
+                const pxIn = pxMm * 25.4;
+                const n = Math.floor((lang - start) / (pxIn / 16));
+                for (let i = 0; i <= n; i++) {
+                    const p = start + i * pxIn / 16 + .5;
+                    const len = i % 16 === 0 ? 34 : (i % 8 === 0 ? 26 : (i % 4 === 0 ? 19 : (i % 2 === 0 ? 14 : 9)));
+                    pos(p, len);
+                    if (i % 16 === 0) { const txt = String(i / 16); if (senkrecht) c.fillText(txt, 38, p + 4); else c.fillText(txt, p + 2, 48); }
+                }
+                c.fillStyle = '#647482'; c.font = '11px Verdana, sans-serif';
+                if (senkrecht) c.fillText('in', 38, lang - 8); else c.fillText('in', lang - 18, h - 10);
+            }
+            if (marker != null) {
+                const p = start + marker * pxMm;
+                c.strokeStyle = '#d66b45'; c.lineWidth = 2;
+                pos(p, senkrecht ? w : h);
+                c.fillStyle = 'rgba(214,107,69,.12)';
+                if (senkrecht) c.fillRect(0, start, w, p - start); else c.fillRect(start, 0, p - start, h);
+            }
+            $('kalibHinweis').textContent = t(d.pxMm ? 'lin_kal' : 'lin_unkal');
+            $('kalibHinweis').className = d.pxMm ? 'gut' : 'hinweis';
+            $('linDrehen').textContent = t(senkrecht ? 'lin_quer' : 'lin_drehen');
+            document.querySelectorAll('[data-einheit]').forEach(b => b.classList.toggle('an', b.dataset.einheit === einheit));
+            $('linWert').textContent = marker == null ? '–' : (einheit === 'cm' ? zahlFmt(marker / 10, 1) + ' cm' : zahlFmt(marker / 25.4, 2) + ' ' + (en() ? 'in' : 'Zoll'));
+        }
+        function linZeiger(e) {
+            const r = linCanvas.getBoundingClientRect();
+            const p = (senkrecht ? e.clientY - r.top : e.clientX - r.left) - 4;
+            marker = Math.max(0, p / pxMm);
+            zeichneLineal();
+        }
+        let linZieht = false;
+        linCanvas.addEventListener('pointerdown', (e) => { linZieht = true; linCanvas.setPointerCapture(e.pointerId); linZeiger(e); });
+        linCanvas.addEventListener('pointermove', (e) => { if (linZieht) linZeiger(e); });
+        linCanvas.addEventListener('pointerup', () => { linZieht = false; });
+        document.querySelectorAll('[data-einheit]').forEach(b => b.addEventListener('click', () => { einheit = b.dataset.einheit; d.einheit = einheit; speichern(); zeichneLineal(); }));
+        $('linDrehen').addEventListener('click', () => { senkrecht = !senkrecht; d.senkrecht = senkrecht; speichern(); zeichneLineal(); });
+
+        // Kalibrieren
+        const regler = $('kalibRegler');
+        function zeigeKalib() {
+            const k = $('kalibKarte');
+            const platz = k.parentElement.clientWidth || 300;
+            // Passt die Karte quer nicht auf den Bildschirm (Handy hochkant), wird sie hochkant gezeigt
+            const hoch = KARTE_MM * pxMm > platz;
+            k.style.width = (hoch ? 53.98 : KARTE_MM) * pxMm + 'px';
+            k.style.height = (hoch ? KARTE_MM : 53.98) * pxMm + 'px';
+            k.querySelector('span').textContent = t(hoch ? 'kal_hoch' : 'kal_karte');
+            regler.value = pxMm;
+        }
+        regler.addEventListener('input', () => { pxMm = Number(regler.value); zeigeKalib(); zeichneLineal(); });
+        $('kalibMinus').addEventListener('click', () => { pxMm = Math.max(2, pxMm - 0.02); zeigeKalib(); zeichneLineal(); });
+        $('kalibPlus').addEventListener('click', () => { pxMm = Math.min(12, pxMm + 0.02); zeigeKalib(); zeichneLineal(); });
+        $('kalibSpeichern').addEventListener('click', () => { d.pxMm = pxMm; speichern(); zeichneLineal(); SD.toast(t('kal_ok')); });
+        $('kalibReset').addEventListener('click', () => { delete d.pxMm; pxMm = STANDARD_PX_MM; speichern(); zeigeKalib(); zeichneLineal(); });
+        document.querySelector('#tab-lineal details').addEventListener('toggle', zeigeKalib);
+
+        // ---------------- Foto ----------------
+        const fc = $('fotoCanvas');
+        const foto = { img: null, zoom: 1, ref: null, linien: [], ziehe: null };
+        $('fotoKnopf').addEventListener('click', () => $('fotoDatei').click());
+        $('fotoDatei').addEventListener('change', (e) => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f) return;
+            const url = URL.createObjectURL(f);
+            const img = new Image();
+            img.onload = () => {
+                foto.img = img; foto.zoom = 1;
+                const w = img.naturalWidth, h = img.naturalHeight;
+                foto.ref = { a: [w * .3, h * .5], b: [w * .7, h * .5] };
+                foto.linien = [{ a: [w * .3, h * .7], b: [w * .7, h * .7] }];
+                $('fotoBereich').hidden = false;
+                zeichneFoto();
+            };
+            img.src = url;
+        });
+        $('refArt').addEventListener('change', () => { $('refEigenFeld').hidden = $('refArt').value !== 'eigen'; zeichneFoto(); });
+        $('refEigen').addEventListener('input', zeichneFoto);
+        function refMm() { const v = $('refArt').value; return v === 'eigen' ? zahl($('refEigen').value) * 10 : Number(v); }
+        const dist = (l) => Math.hypot(l.b[0] - l.a[0], l.b[1] - l.a[1]);
+        function anzeigeMasse() {
+            // Leinwandgroesse: Breite des Bereichs, Bild ggf. vergroessert
+            const img = foto.img;
+            const breite = $('fotoWrap').clientWidth || 300;
+            const k = breite / img.naturalWidth * foto.zoom;
+            return { k, w: Math.round(img.naturalWidth * k), h: Math.round(img.naturalHeight * k) };
+        }
+        function laengeText(mm) {
+            if (mm >= 1000) return zahlFmt(mm / 1000, 3) + ' m';
+            return zahlFmt(mm / 10, 1) + ' cm';
+        }
+        function zeichneFoto() {
+            if (!foto.img || $('tab-foto').hidden) return;
+            const { k, w, h } = anzeigeMasse();
+            const dpr = window.devicePixelRatio || 1;
+            fc.width = Math.round(w * dpr); fc.height = Math.round(h * dpr);
+            fc.style.width = w + 'px'; fc.style.height = h + 'px';
+            $('fotoWrap').style.overflow = foto.zoom > 1 ? 'auto' : 'hidden';
+            const c = fc.getContext('2d');
+            c.setTransform(dpr, 0, 0, dpr, 0, 0);
+            c.drawImage(foto.img, 0, 0, w, h);
+            const ref = refMm();
+            const mmProPx = ref > 0 && dist(foto.ref) > 2 ? ref / dist(foto.ref) : 0;
+            const linie = (l, farbe, text) => {
+                const ax = l.a[0] * k, ay = l.a[1] * k, bx = l.b[0] * k, by = l.b[1] * k;
+                c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+                c.lineWidth = 2.5; c.strokeStyle = farbe; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+                [[ax, ay], [bx, by]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 11, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.35)'; c.fill(); c.lineWidth = 2.5; c.strokeStyle = farbe; c.stroke(); c.beginPath(); c.arc(x, y, 2, 0, Math.PI * 2); c.fillStyle = farbe; c.fill(); });
+                if (text) {
+                    c.font = 'bold 14px Verdana, sans-serif';
+                    const mx = (ax + bx) / 2, my = (ay + by) / 2 - 16;
+                    const tw = c.measureText(text).width;
+                    c.fillStyle = 'rgba(15,23,42,.85)'; c.fillRect(mx - tw / 2 - 6, my - 13, tw + 12, 20);
+                    c.fillStyle = '#fff'; c.fillText(text, mx - tw / 2, my + 2);
+                }
+            };
+            linie(foto.ref, '#ff9a3c', ref > 0 ? laengeText(ref) : '?');
+            foto.linien.forEach((l, i) => linie(l, '#3ddc84', mmProPx ? laengeText(dist(l) * mmProPx) : (i + 1) + ''));
+            $('fotoErgebnis').innerHTML = mmProPx
+                ? foto.linien.map((l, i) => '<div class="ergebnis-zeile"><span>' + esc(t('linie')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(laengeText(dist(l) * mmProPx)) + '</b></div>').join('')
+                : '<p class="hinweis">' + esc(t('foto_ref_fehlt')) + '</p>';
+        }
+        function fotoPunkt(e) {
+            const r = fc.getBoundingClientRect();
+            const { k } = anzeigeMasse();
+            return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
+        }
+        fc.addEventListener('pointerdown', (e) => {
+            if (!foto.img) return;
+            const p = fotoPunkt(e);
+            const { k } = anzeigeMasse();
+            const radius = 26 / k;
+            let best = null, bestD = radius;
+            [foto.ref, ...foto.linien].forEach(l => ['a', 'b'].forEach(s => { const dd = Math.hypot(l[s][0] - p[0], l[s][1] - p[1]); if (dd < bestD) { bestD = dd; best = { l, s }; } }));
+            if (!best) return;
+            foto.ziehe = best;
+            fc.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+        fc.addEventListener('pointermove', (e) => {
+            if (!foto.ziehe) return;
+            const p = fotoPunkt(e);
+            foto.ziehe.l[foto.ziehe.s] = [Math.max(0, Math.min(foto.img.naturalWidth, p[0])), Math.max(0, Math.min(foto.img.naturalHeight, p[1]))];
+            zeichneFoto();
+        });
+        fc.addEventListener('pointerup', () => { foto.ziehe = null; });
+        fc.addEventListener('pointercancel', () => { foto.ziehe = null; });
+        $('fotoWrap').style.touchAction = 'pan-x pan-y';
+        fc.style.touchAction = 'none';
+        $('linieNeu').addEventListener('click', () => {
+            if (!foto.img) return;
+            const w = foto.img.naturalWidth, h = foto.img.naturalHeight, n = foto.linien.length;
+            const y = h * (0.25 + (n * 0.12) % 0.6);
+            foto.linien.push({ a: [w * .25, y], b: [w * .75, y] });
+            zeichneFoto();
+        });
+        $('linieWeg').addEventListener('click', () => { foto.linien.pop(); zeichneFoto(); });
+        $('fotoZoomPlus').addEventListener('click', () => { foto.zoom = Math.min(4, foto.zoom * 1.5); zeichneFoto(); });
+        $('fotoZoomMinus').addEventListener('click', () => { foto.zoom = Math.max(1, foto.zoom / 1.5); zeichneFoto(); });
+
+        // ---------------- Flächen ----------------
+        if (!Array.isArray(d.raeume) || !d.raeume.length) d.raeume = [{ id: SD.neueId(), name: '', form: 'rechteck', art: 'wohn', hoehe: '2,50' }];
+        if (d.verschnitt != null) $('verschnitt').value = d.verschnitt;
+        function raumWerte(r) {
+            const L = zahl(r.l), B = zahl(r.b), L2 = zahl(r.l2), B2 = zahl(r.b2), H = zahl(r.hoehe);
+            let flaeche = 0, umfang = 0;
+            if (r.form === 'rechteck') { flaeche = L * B; umfang = (L && B) ? 2 * (L + B) : 0; }
+            else if (r.form === 'l') {
+                // L-Form aus zwei Rechtecken, die an einer Seite aneinanderliegen:
+                // Umfang = 2 × (größte Außenlänge + größte Außenbreite) gilt für jedes rechtwinklige L
+                flaeche = L * B + L2 * B2;
+                umfang = (L && B && L2 && B2) ? 2 * (Math.max(L, L2) + (B + B2)) : 0;
+            }
+            else if (r.form === 'kreis') { flaeche = Math.PI * (L / 2) ** 2; umfang = Math.PI * L; }
+            else { flaeche = zahl(r.qm); umfang = zahl(r.umfang); }
+            const offen = r.art === 'balkon';   // Balkon/Terrasse: keine Wände, kein Rauminhalt
+            const wand = !offen && H && umfang ? Math.max(0, umfang * H - zahl(r.oeffnung)) : 0;
+            const vol = !offen && H ? flaeche * H : 0;
+            // Wohnfläche nach § 4 WoFlV
+            const halb = Math.min(zahl(r.schraege), flaeche), null1 = Math.min(zahl(r.unter1), flaeche - halb);
+            let wohn = 0;
+            if (r.art === 'wohn') wohn = (flaeche - halb - null1) + halb / 2;
+            else if (r.art === 'balkon') wohn = flaeche / 4;
+            return { flaeche, umfang, wand, vol, wohn };
+        }
+        function zeichneRaeume() {
+            const box = $('raeume');
+            box.innerHTML = '';
+            d.raeume.forEach((r, i) => {
+                const div = document.createElement('div');
+                div.className = 'raum';
+                const sel = (key, opts) => '<select data-k="' + key + '">' + opts.map(([v, k]) => '<option value="' + v + '"' + (r[key] === v ? ' selected' : '') + '>' + esc(t(k)) + '</option>').join('') + '</select>';
+                const inp = (key, label, ph) => '<label class="feld"><span>' + esc(t(label)) + '</span><input type="text" inputmode="decimal" data-k="' + key + '" value="' + esc(r[key] || '') + '" placeholder="' + (ph || '') + '"></label>';
+                let masse = '';
+                if (r.form === 'rechteck') masse = '<div class="paar">' + inp('l', 'r_laenge', '4,20') + inp('b', 'r_breite', '3,50') + '</div>';
+                else if (r.form === 'l') masse = '<p class="info">' + esc(t('l_info')) + '</p><div class="paar">' + inp('l', 'r_laenge', '5,00') + inp('b', 'r_breite', '3,00') + '</div><div class="paar">' + inp('l2', 'r_laenge2', '2,00') + inp('b2', 'r_breite2', '1,50') + '</div>';
+                else if (r.form === 'kreis') masse = '<div class="paar">' + inp('l', 'r_durchm', '3,00') + '</div>';
+                else masse = '<div class="paar">' + inp('qm', 'r_qm', '12,5') + inp('umfang', 'r_umfang_eig', '14,4') + '</div>';
+                div.innerHTML = '<div class="kopf"><input type="text" data-k="name" value="' + esc(r.name || '') + '" placeholder="' + esc(t('raum') + ' ' + (i + 1)) + '" aria-label="' + esc(t('r_name')) + '"><button type="button" class="btn klein gefahr" data-weg>' + esc(t('loeschen')) + '</button></div>' +
+                    '<div class="paar"><label class="feld"><span>' + esc(t('r_form')) + '</span>' + sel('form', [['rechteck', 'f_rechteck'], ['l', 'f_l'], ['kreis', 'f_kreis'], ['flaeche', 'f_flaeche']]) + '</label>' +
+                    '<label class="feld"><span>' + esc(t('r_art')) + '</span>' + sel('art', [['wohn', 'a_wohn'], ['balkon', 'a_balkon'], ['neben', 'a_neben']]) + '</label></div>' +
+                    masse +
+                    (r.art !== 'balkon' ? '<div class="paar">' + inp('hoehe', 'r_hoehe', '2,50') + inp('oeffnung', 'r_oeffnung', '3,5') + '</div>' : '') +
+                    (r.art === 'wohn' ? '<details' + ((zahl(r.schraege) || zahl(r.unter1)) ? ' open' : '') + '><summary class="info">' + esc(t('r_schraege').split(':')[0]) + '</summary><div class="paar" style="margin-top:8px">' + inp('schraege', 'r_schraege', '0') + inp('unter1', 'r_unter1', '0') + '</div></details>' : '') +
+                    '<div class="liste" data-erg></div>';
+                div.addEventListener('input', (e) => {
+                    const k = e.target.dataset.k; if (!k) return;
+                    r[k] = e.target.value; speichern();
+                    if (k === 'form' || k === 'art') zeichneRaeume(); else rechneFlaechen();
+                });
+                div.querySelector('[data-weg]').addEventListener('click', () => { d.raeume = d.raeume.filter(x => x !== r); if (!d.raeume.length) d.raeume.push({ id: SD.neueId(), name: '', form: 'rechteck', art: 'wohn', hoehe: '2,50' }); speichern(); zeichneRaeume(); });
+                div.dataset.id = r.id;
+                box.appendChild(div);
+            });
+            rechneFlaechen();
+        }
+        function rechneFlaechen() {
+            const m2 = (x) => zahlFmt(x, 2) + ' m²';
+            let grund = 0, wohn = 0, wand = 0, boden = 0;
+            d.raeume.forEach(r => {
+                const v = raumWerte(r);
+                grund += v.flaeche; wohn += v.wohn; wand += v.wand;
+                if (r.art !== 'balkon') boden += v.flaeche;
+                const el = document.querySelector('.raum[data-id="' + r.id + '"] [data-erg]');
+                if (!el) return;
+                const z = [];
+                if (v.flaeche) z.push([t('e_flaeche'), m2(v.flaeche)]);
+                if (v.umfang) z.push([t('e_umfang'), zahlFmt(v.umfang, 2) + ' m']);
+                if (v.wand) z.push([t('e_wand'), m2(v.wand)]);
+                if (v.vol) z.push([t('e_volumen'), zahlFmt(v.vol, 2) + ' m³']);
+                if (r.art !== 'neben' && v.flaeche) z.push([t('e_wohn'), m2(v.wohn)]);
+                el.innerHTML = z.map(([a, b]) => '<div class="ergebnis-zeile"><span>' + esc(a) + '</span><b class="betrag">' + esc(b) + '</b></div>').join('');
+            });
+            const vs = Math.max(0, zahl($('verschnitt').value));
+            $('flSumme').innerHTML = [[t('s_grund'), m2(grund)], [t('s_wohn'), m2(wohn)], [t('s_wand'), m2(wand)], [t('s_boden'), m2(boden * (1 + vs / 100))]]
+                .map(([a, b]) => '<div class="zahl"><b>' + esc(b) + '</b><span>' + esc(a) + '</span></div>').join('');
+        }
+        $('raumNeu').addEventListener('click', () => { d.raeume.push({ id: SD.neueId(), name: '', form: 'rechteck', art: 'wohn', hoehe: d.raeume[d.raeume.length - 1] ? d.raeume[d.raeume.length - 1].hoehe : '2,50' }); speichern(); zeichneRaeume(); });
+        $('verschnitt').addEventListener('input', () => { d.verschnitt = $('verschnitt').value; speichern(); rechneFlaechen(); });
+
+        // ---------------- Umrechnen ----------------
+        // Faktoren zur Basiseinheit (Länge: m, Fläche: m², Volumen: l, Gewicht: kg) – festgelegte Definitionen
+        const EINH = {
+            laenge: [['mm', 0.001], ['cm', 0.01], ['m', 1], ['km', 1000], ['in', 0.0254], ['ft', 0.3048], ['yd', 0.9144], ['mi', 1609.344]],
+            flaeche: [['cm²', 1e-4], ['m²', 1], ['a', 100], ['ha', 1e4], ['km²', 1e6], ['in²', 0.0254 ** 2], ['ft²', 0.3048 ** 2], ['acre', 4046.8564224]],
+            volumen: [['ml', 0.001], ['l', 1], ['m³', 1000], ['fl oz (US)', 0.0295735295625], ['cup (US)', 0.2365882365], ['gal (US)', 3.785411784]],
+            gewicht: [['g', 0.001], ['kg', 1], ['t', 1000], ['oz', 0.028349523125], ['lb', 0.45359237]],
+            temp: [['°C'], ['°F'], ['K']]
+        };
+        let umArt = d.umArt || 'laenge';
+        function fuelleEinheiten() {
+            const sel = $('umVon');
+            sel.innerHTML = EINH[umArt].map(([n]) => '<option>' + n + '</option>').join('');
+            const gemerkt = (d.umVon || {})[umArt];
+            if (gemerkt && EINH[umArt].some(([n]) => n === gemerkt)) sel.value = gemerkt;
+            else sel.value = umArt === 'temp' ? '°C' : (umArt === 'laenge' ? 'cm' : (umArt === 'flaeche' ? 'm²' : (umArt === 'volumen' ? 'l' : 'kg')));
+            document.querySelectorAll('#umArten [data-art]').forEach(b => b.classList.toggle('an', b.dataset.art === umArt));
+            rechneUm();
+        }
+        function rechneUm() {
+            const wert = zahl($('umWert').value), von = $('umVon').value;
+            let zeilen;
+            if (umArt === 'temp') {
+                const c = von === '°C' ? wert : (von === '°F' ? (wert - 32) * 5 / 9 : wert - 273.15);
+                zeilen = [['°C', c], ['°F', c * 9 / 5 + 32], ['K', c + 273.15]];
+            } else {
+                const basis = wert * EINH[umArt].find(([n]) => n === von)[1];
+                zeilen = EINH[umArt].map(([n, f]) => [n, basis / f]);
+            }
+            const fmt = (x) => {
+                if (x === 0) return '0';
+                const a = Math.abs(x);
+                if (a >= 1e9 || a < 1e-4) return x.toExponential(4).replace('.', en() ? '.' : ',');
+                return zahlFmt(x, a < 1 ? 6 : 4);
+            };
+            $('umListe').innerHTML = zeilen.filter(([n]) => n !== von).map(([n, x]) => '<div class="zeile2"><span>' + esc(n) + '</span><b>' + esc(fmt(x)) + '</b></div>').join('');
+        }
+        $('umArten').addEventListener('click', (e) => { const b = e.target.closest('[data-art]'); if (!b) return; umArt = b.dataset.art; d.umArt = umArt; speichern(); fuelleEinheiten(); });
+        $('umVon').addEventListener('change', () => { d.umVon = Object.assign({}, d.umVon, { [umArt]: $('umVon').value }); speichern(); rechneUm(); });
+        $('umWert').addEventListener('input', rechneUm);
+
+        // ---------------- Start ----------------
+        function allesNeu() { zeichneRaeume(); fuelleEinheiten(); zeichneLineal(); zeichneFoto(); }
+        document.addEventListener('sd-lang-changed', allesNeu);
+        window.addEventListener('resize', () => { zeichneLineal(); zeichneFoto(); });
+        zeichneRaeume();
+        fuelleEinheiten();
+        zeigeTab(d.tab || 'lineal');
+    </script>
+</body>
+
+</html>
