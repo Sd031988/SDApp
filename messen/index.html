@@ -135,18 +135,24 @@
                 <div class="zeile">
                     <label class="feld"><span data-i18n="ref_was">Bekannte Größe (Maßstab)</span>
                         <select id="refArt">
-                            <option value="85.6" data-i18n="ref_karte_b">Bankkarte – lange Seite (85,6 mm)</option>
-                            <option value="53.98" data-i18n="ref_karte_h">Bankkarte – kurze Seite (54 mm)</option>
-                            <option value="297" data-i18n="ref_a4_l">A4-Blatt – lange Seite (297 mm)</option>
-                            <option value="210" data-i18n="ref_a4_k">A4-Blatt – kurze Seite (210 mm)</option>
-                            <option value="23.25" data-i18n="ref_1e">1-Euro-Münze – Durchmesser (23,25 mm)</option>
-                            <option value="25.75" data-i18n="ref_2e">2-Euro-Münze – Durchmesser (25,75 mm)</option>
-                            <option value="eigen" data-i18n="ref_eigen">eigene Länge eingeben …</option>
+                            <option value="r:85.6:53.98" data-i18n="ref_karte">Bankkarte / Ausweis – 4 Ecken (genau)</option>
+                            <option value="r:297:210" data-i18n="ref_a4">A4-Blatt – 4 Ecken (genau)</option>
+                            <option value="r:eigen" data-i18n="ref_eigen_r">eigenes Rechteck – 4 Ecken …</option>
+                            <option value="l:23.25" data-i18n="ref_1e">1-Euro-Münze – Durchmesser (ungenauer)</option>
+                            <option value="l:25.75" data-i18n="ref_2e">2-Euro-Münze – Durchmesser (ungenauer)</option>
+                            <option value="l:eigen" data-i18n="ref_eigen">eigene Länge – Linie (ungenauer) …</option>
                         </select></label>
-                    <label class="feld" id="refEigenFeld" hidden><span data-i18n="ref_eigen_mm">Länge in cm</span><input type="number" id="refEigen" min="0" step="0.1" inputmode="decimal" placeholder="z. B. 30"></label>
+                    <div class="paar" id="refEigenFeld" hidden>
+                        <label class="feld"><span id="refEigenLabel">Breite (cm)</span><input type="number" id="refEigenB" min="0" step="0.1" inputmode="decimal" placeholder="30"></label>
+                        <label class="feld" id="refEigenHFeld"><span data-i18n="ref_eigen_h">Höhe (cm)</span><input type="number" id="refEigenH" min="0" step="0.1" inputmode="decimal" placeholder="20"></label>
+                    </div>
                 </div>
-                <p class="info" data-i18n="foto_anleitung">🟠 Orange Linie = Maßstab: Enden genau an die bekannte Länge ziehen. 🟢 Grüne Linien = Messungen. Zum Verschieben die runden Punkte ziehen.</p>
-                <div class="foto-wrap" id="fotoWrap"><canvas id="fotoCanvas"></canvas></div>
+                <p class="info" id="fotoAnleitung"></p>
+                <div class="knoepfe">
+                    <button type="button" class="btn klein prim" id="eckenAuto" data-i18n="ecken_auto">🔍 Ecken automatisch suchen</button>
+                    <span class="meta" id="eckenStatus"></span>
+                </div>
+                <div class="foto-wrap" id="fotoWrap"><canvas id="fotoCanvas"></canvas><canvas id="lupe" width="240" height="240" style="position:fixed;z-index:50;width:120px;height:120px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none;display:none;left:0;top:0"></canvas></div>
                 <div class="knoepfe">
                     <button type="button" class="btn klein" id="linieNeu" data-i18n="linie_neu">＋ Messlinie</button>
                     <button type="button" class="btn klein" id="linieWeg" data-i18n="linie_weg">− Letzte Linie</button>
@@ -154,7 +160,7 @@
                     <button type="button" class="btn klein" id="fotoZoomMinus">🔍−</button>
                 </div>
                 <div id="fotoErgebnis" class="liste"></div>
-                <p class="hinweis" data-i18n="foto_genau">Genauigkeit: Nur so genau wie das Foto. Schräge Aufnahmen, Weitwinkel und unterschiedliche Abstände (Maßstab näher an der Kamera als der Gegenstand) verfälschen das Ergebnis – für Zuschnitt oder Kauf lieber mit dem Maßband nachmessen.</p>
+                <p class="hinweis" data-i18n="foto_genau">So wird es genau: Maßstab und Gegenstand müssen auf derselben Fläche liegen (z. B. beide auf dem Tisch oder an der Wand). Mit 4 Ecken wird eine schräge Aufnahme automatisch ausgeglichen. Je größer der Maßstab im Bild, desto genauer – ein A4-Blatt ist besser als eine Karte. Teile, die vor- oder zurückstehen, werden falsch gemessen.</p>
             </div>
         </section>
 
@@ -214,9 +220,14 @@
                 foto_waehlen: '📷 Foto aufnehmen / wählen', ref_was: 'Bekannte Größe (Maßstab)', ref_karte_b: 'Bankkarte – lange Seite (85,6 mm)', ref_karte_h: 'Bankkarte – kurze Seite (54 mm)',
                 ref_a4_l: 'A4-Blatt – lange Seite (297 mm)', ref_a4_k: 'A4-Blatt – kurze Seite (210 mm)', ref_1e: '1-Euro-Münze – Durchmesser (23,25 mm)', ref_2e: '2-Euro-Münze – Durchmesser (25,75 mm)', ref_eigen: 'eigene Länge eingeben …', ref_eigen_mm: 'Länge in cm',
                 foto_anleitung: '🟠 Orange Linie = Maßstab: Enden genau an die bekannte Länge ziehen. 🟢 Grüne Linien = Messungen. Zum Verschieben die runden Punkte ziehen.',
+                ref_karte: 'Bankkarte / Ausweis – 4 Ecken (genau)', ref_a4: 'A4-Blatt – 4 Ecken (genau)', ref_eigen_r: 'eigenes Rechteck – 4 Ecken …',
+                ref_1e: '1-Euro-Münze – Durchmesser (ungenauer)', ref_2e: '2-Euro-Münze – Durchmesser (ungenauer)', ref_eigen: 'eigene Länge – Linie (ungenauer) …', ref_eigen_b: 'Breite (cm)', ref_eigen_h: 'Höhe (cm)', ref_eigen_l: 'Länge (cm)',
+                anl_rechteck: '🟠 Die 4 orangen Punkte genau auf die 4 Ecken des Maßstabs ziehen (oder automatisch suchen lassen). 🟢 Grüne Linien an die Längen legen, die du messen willst. Beim Ziehen zeigt eine Lupe die genaue Stelle.',
+                anl_linie: '🟠 Die orange Linie genau über die bekannte Länge legen. 🟢 Grüne Linien an die Längen legen, die du messen willst. Ohne 4 Ecken muss das Foto ganz gerade von vorn aufgenommen sein.',
+                ecken_auto: '🔍 Ecken automatisch suchen', ecken_ok: '✓ Ecken gefunden – bitte kurz prüfen', ecken_nein: 'Nicht sicher gefunden – bitte die Ecken von Hand ziehen (klappt besser, wenn das Blatt groß im Bild ist)', ecken_laed: 'Suche …',
                 linie_neu: '＋ Messlinie', linie_weg: '− Letzte Linie', linie: 'Linie',
-                foto_genau: 'Genauigkeit: Nur so genau wie das Foto. Schräge Aufnahmen, Weitwinkel und unterschiedliche Abstände (Maßstab näher an der Kamera als der Gegenstand) verfälschen das Ergebnis – für Zuschnitt oder Kauf lieber mit dem Maßband nachmessen.',
-                foto_ref_fehlt: 'Erst den Maßstab festlegen (orange Linie und bekannte Länge).',
+                foto_genau: 'So wird es genau: Maßstab und Gegenstand müssen auf derselben Fläche liegen (z. B. beide auf dem Tisch oder an der Wand). Mit 4 Ecken wird eine schräge Aufnahme automatisch ausgeglichen. Je größer der Maßstab im Bild, desto genauer – ein A4-Blatt ist besser als eine Karte. Teile, die vor- oder zurückstehen, werden falsch gemessen.',
+                foto_ref_fehlt: 'Erst den Maßstab festlegen (orange Punkte und bekannte Größe).',
                 fl_titel: '🏠 Flächen & Räume', fl_info: 'Maße in Metern eintragen (z. B. 3,85). Berechnet Fläche, Umfang, Wandfläche und Rauminhalt – und die Wohnfläche nach der Wohnflächenverordnung.',
                 raum_neu: '＋ Raum', raum: 'Raum', r_name: 'Name', r_form: 'Form', f_rechteck: 'Rechteck', f_l: 'L-Form (2 Rechtecke)', f_kreis: 'Kreis', f_flaeche: 'Fläche direkt eingeben',
                 r_laenge: 'Länge (m)', r_breite: 'Breite (m)', l_info: 'Teil 2 schließt an der Längsseite von Teil 1 an (zusammen ein „L“).', r_laenge2: 'Länge Teil 2 (m)', r_breite2: 'Breite Teil 2 (m)', r_durchm: 'Durchmesser (m)', r_qm: 'Fläche (m²)', r_umfang_eig: 'Umfang (m, optional)',
@@ -248,9 +259,14 @@
                 foto_waehlen: '📷 Take / choose photo', ref_was: 'Known size (scale)', ref_karte_b: 'Bank card – long side (85.6 mm)', ref_karte_h: 'Bank card – short side (54 mm)',
                 ref_a4_l: 'A4 sheet – long side (297 mm)', ref_a4_k: 'A4 sheet – short side (210 mm)', ref_1e: '1 euro coin – diameter (23.25 mm)', ref_2e: '2 euro coin – diameter (25.75 mm)', ref_eigen: 'enter my own length …', ref_eigen_mm: 'Length in cm',
                 foto_anleitung: '🟠 Orange line = scale: drag its ends exactly to the known length. 🟢 Green lines = measurements. Drag the round dots to move them.',
+                ref_karte: 'Bank card / ID card – 4 corners (accurate)', ref_a4: 'A4 sheet – 4 corners (accurate)', ref_eigen_r: 'own rectangle – 4 corners …',
+                ref_1e: '1 euro coin – diameter (less accurate)', ref_2e: '2 euro coin – diameter (less accurate)', ref_eigen: 'own length – line (less accurate) …', ref_eigen_b: 'Width (cm)', ref_eigen_h: 'Height (cm)', ref_eigen_l: 'Length (cm)',
+                anl_rechteck: '🟠 Drag the 4 orange dots exactly onto the 4 corners of the scale (or let them be found automatically). 🟢 Put green lines on the lengths you want to measure. While dragging, a magnifier shows the exact spot.',
+                anl_linie: '🟠 Put the orange line exactly over the known length. 🟢 Put green lines on the lengths you want to measure. Without 4 corners the photo must be taken straight from the front.',
+                ecken_auto: '🔍 Find corners automatically', ecken_ok: '✓ Corners found – please check briefly', ecken_nein: 'Not found reliably – please drag the corners by hand (works better when the sheet is large in the picture)', ecken_laed: 'Searching …',
                 linie_neu: '＋ Measuring line', linie_weg: '− Last line', linie: 'Line',
-                foto_genau: 'Accuracy: only as good as the photo. Angled shots, wide-angle lenses and different distances (scale closer to the camera than the object) distort the result – for cutting or buying, check with a tape measure.',
-                foto_ref_fehlt: 'Set the scale first (orange line and known length).',
+                foto_genau: 'For accurate results: the scale and the object must lie on the same surface (e.g. both on the table or on the wall). With 4 corners an angled shot is corrected automatically. The bigger the scale in the picture, the more accurate – an A4 sheet is better than a card. Parts that stick out or lie further back are measured wrongly.',
+                foto_ref_fehlt: 'Set the scale first (orange dots and known size).',
                 fl_titel: '🏠 Areas & rooms', fl_info: 'Enter sizes in metres (e.g. 3.85). Calculates area, perimeter, wall area and volume – and the living area according to the German Living Space Ordinance (WoFlV).',
                 raum_neu: '＋ Room', raum: 'Room', r_name: 'Name', r_form: 'Shape', f_rechteck: 'Rectangle', f_l: 'L-shape (2 rectangles)', f_kreis: 'Circle', f_flaeche: 'Enter area directly',
                 r_laenge: 'Length (m)', r_breite: 'Width (m)', l_info: 'Part 2 adjoins the long side of part 1 (together an “L”).', r_laenge2: 'Length part 2 (m)', r_breite2: 'Width part 2 (m)', r_durchm: 'Diameter (m)', r_qm: 'Area (m²)', r_umfang_eig: 'Perimeter (m, optional)',
@@ -385,8 +401,11 @@
         document.querySelector('#tab-lineal details').addEventListener('toggle', zeigeKalib);
 
         // ---------------- Foto ----------------
+        // Rechteck-Massstab (4 Ecken): Homographie Bild -> Ebene in mm, gleicht schraege Aufnahmen aus.
+        // Linien-Massstab: einfacher Faktor mm pro Bildpunkt (nur bei gerader Aufnahme genau).
         const fc = $('fotoCanvas');
-        const foto = { img: null, zoom: 1, ref: null, linien: [], ziehe: null };
+        const lupe = $('lupe');
+        const foto = { img: null, zoom: 1, quad: null, ref: null, linien: [], ziehe: null };
         $('fotoKnopf').addEventListener('click', () => $('fotoDatei').click());
         $('fotoDatei').addEventListener('change', (e) => {
             const f = e.target.files && e.target.files[0];
@@ -394,24 +413,100 @@
             if (!f) return;
             ladeFoto(URL.createObjectURL(f));
         });
+        function refInfo() {
+            const v = $('refArt').value.split(':');
+            const modus = v[0];
+            if (v[1] === 'eigen') {
+                const b = zahl($('refEigenB').value) * 10, h = zahl($('refEigenH').value) * 10;
+                return modus === 'r' ? { modus, b, h } : { modus, l: b };
+            }
+            return modus === 'r' ? { modus, b: Number(v[1]), h: Number(v[2]) } : { modus, l: Number(v[1]) };
+        }
+        function standardPunkte() {
+            const img = foto.img, w = img.naturalWidth, h = img.naturalHeight;
+            const r = refInfo();
+            const asp = r.modus === 'r' && r.b && r.h ? Math.max(r.b, r.h) / Math.min(r.b, r.h) : 1.586;
+            const bw = Math.min(w * 0.3, h * 0.3 * asp), bh = bw / asp;
+            const cx = w * 0.5, cy = h * 0.4;
+            foto.quad = [[cx - bw / 2, cy - bh / 2], [cx + bw / 2, cy - bh / 2], [cx + bw / 2, cy + bh / 2], [cx - bw / 2, cy + bh / 2]];
+            foto.ref = { a: [cx - bw / 2, cy], b: [cx + bw / 2, cy] };
+            if (!foto.linien.length) foto.linien = [{ a: [w * .25, h * .75], b: [w * .75, h * .75] }];
+        }
         function ladeFoto(url) {
             const img = new Image();
             img.onload = () => {
-                foto.img = img; foto.zoom = 1;
-                const w = img.naturalWidth, h = img.naturalHeight;
-                foto.ref = { a: [w * .3, h * .5], b: [w * .7, h * .5] };
-                foto.linien = [{ a: [w * .3, h * .7], b: [w * .7, h * .7] }];
+                foto.img = img; foto.zoom = 1; foto.linien = [];
+                standardPunkte();
+                $('eckenStatus').textContent = '';
                 $('fotoBereich').hidden = false;
                 zeichneFoto();
             };
             img.src = url;
         }
-        $('refArt').addEventListener('change', () => { $('refEigenFeld').hidden = $('refArt').value !== 'eigen'; zeichneFoto(); });
-        $('refEigen').addEventListener('input', zeichneFoto);
-        function refMm() { const v = $('refArt').value; return v === 'eigen' ? zahl($('refEigen').value) * 10 : Number(v); }
+        function refUi() {
+            const v = $('refArt').value;
+            const r = v.startsWith('r');
+            $('refEigenFeld').hidden = !v.endsWith('eigen');
+            $('refEigenHFeld').hidden = !r;
+            $('refEigenLabel').textContent = t(r ? 'ref_eigen_b' : 'ref_eigen_l');
+            $('eckenAuto').hidden = !r;
+            $('fotoAnleitung').textContent = t(r ? 'anl_rechteck' : 'anl_linie');
+        }
+        $('refArt').addEventListener('change', () => { refUi(); zeichneFoto(); });
+        $('refEigenB').addEventListener('input', zeichneFoto);
+        $('refEigenH').addEventListener('input', zeichneFoto);
+
+        // 8x8-Gleichungssystem fuer die Homographie (Gauss mit Pivotsuche)
+        function homographie(src, dst) {
+            const A = [], bb = [];
+            for (let i = 0; i < 4; i++) {
+                const [x, y] = src[i], [u, v] = dst[i];
+                A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); bb.push(u);
+                A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); bb.push(v);
+            }
+            const n = 8;
+            for (let c = 0; c < n; c++) {
+                let piv = c;
+                for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[piv][c])) piv = r;
+                if (Math.abs(A[piv][c]) < 1e-12) return null;
+                [A[c], A[piv]] = [A[piv], A[c]]; [bb[c], bb[piv]] = [bb[piv], bb[c]];
+                for (let r = 0; r < n; r++) {
+                    if (r === c) continue;
+                    const f = A[r][c] / A[c][c];
+                    for (let k = c; k < n; k++) A[r][k] -= f * A[c][k];
+                    bb[r] -= f * bb[c];
+                }
+            }
+            const h = bb.map((v, i) => v / A[i][i]);
+            return h.concat([1]);
+        }
+        const wendeH = (H, [x, y]) => { const w = H[6] * x + H[7] * y + H[8]; return [(H[0] * x + H[1] * y + H[2]) / w, (H[3] * x + H[4] * y + H[5]) / w]; };
+        // Ecken reihum ordnen (Winkel um den Schwerpunkt), damit vertauschte Punkte nicht stoeren
+        function geordnet(q) {
+            const cx = q.reduce((s2, p) => s2 + p[0], 0) / 4, cy = q.reduce((s2, p) => s2 + p[1], 0) / 4;
+            return q.slice().sort((a2, b2) => Math.atan2(a2[1] - cy, a2[0] - cx) - Math.atan2(b2[1] - cy, b2[0] - cx));
+        }
         const dist = (l) => Math.hypot(l.b[0] - l.a[0], l.b[1] - l.a[1]);
+        // Liefert eine Funktion (Bildlinie -> Laenge in mm) oder null
+        function messer() {
+            const r = refInfo();
+            if (r.modus === 'r') {
+                if (!(r.b > 0 && r.h > 0)) return null;
+                const q = geordnet(foto.quad);
+                const kante = (i) => Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+                const lang = Math.max(r.b, r.h), kurz = Math.min(r.b, r.h);
+                // Kante 0/2 im Bild laenger als 1/3 -> dort die lange Seite des Massstabs
+                const ersteLang = kante(0) + kante(2) >= kante(1) + kante(3);
+                const W = ersteLang ? lang : kurz, Hh = ersteLang ? kurz : lang;
+                const H = homographie(q, [[0, 0], [W, 0], [W, Hh], [0, Hh]]);
+                if (!H) return null;
+                return (l) => { const a = wendeH(H, l.a), b = wendeH(H, l.b); return Math.hypot(a[0] - b[0], a[1] - b[1]); };
+            }
+            if (!(r.l > 0) || dist(foto.ref) < 2) return null;
+            const k = r.l / dist(foto.ref);
+            return (l) => dist(l) * k;
+        }
         function anzeigeMasse() {
-            // Leinwandgroesse: Breite des Bereichs, Bild ggf. vergroessert
             const img = foto.img;
             const breite = $('fotoWrap').clientWidth || 300;
             const k = breite / img.naturalWidth * foto.zoom;
@@ -422,6 +517,7 @@
             return zahlFmt(mm / 10, 1) + ' cm';
         }
         function zeichneFoto() {
+            refUi();
             if (!foto.img || $('tab-foto').hidden) return;
             const { k, w, h } = anzeigeMasse();
             const dpr = window.devicePixelRatio || 1;
@@ -431,64 +527,140 @@
             const c = fc.getContext('2d');
             c.setTransform(dpr, 0, 0, dpr, 0, 0);
             c.drawImage(foto.img, 0, 0, w, h);
-            const ref = refMm();
-            const mmProPx = ref > 0 && dist(foto.ref) > 2 ? ref / dist(foto.ref) : 0;
-            const linie = (l, farbe, text) => {
-                const ax = l.a[0] * k, ay = l.a[1] * k, bx = l.b[0] * k, by = l.b[1] * k;
-                c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.55)'; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
-                c.lineWidth = 2.5; c.strokeStyle = farbe; c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
-                [[ax, ay], [bx, by]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 11, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.35)'; c.fill(); c.lineWidth = 2.5; c.strokeStyle = farbe; c.stroke(); c.beginPath(); c.arc(x, y, 2, 0, Math.PI * 2); c.fillStyle = farbe; c.fill(); });
-                if (text) {
-                    c.font = 'bold 14px Verdana, sans-serif';
-                    const mx = (ax + bx) / 2, my = (ay + by) / 2 - 16;
-                    const tw = c.measureText(text).width;
-                    c.fillStyle = 'rgba(15,23,42,.85)'; c.fillRect(mx - tw / 2 - 6, my - 13, tw + 12, 20);
-                    c.fillStyle = '#fff'; c.fillText(text, mx - tw / 2, my + 2);
-                }
+            const r = refInfo();
+            const m = messer();
+            const punkt = (x, y, farbe) => {
+                c.beginPath(); c.arc(x, y, 12, 0, Math.PI * 2); c.fillStyle = 'rgba(255,255,255,.25)'; c.fill();
+                c.lineWidth = 2.5; c.strokeStyle = farbe; c.stroke();
+                c.beginPath(); c.arc(x, y, 2, 0, Math.PI * 2); c.fillStyle = farbe; c.fill();
             };
-            linie(foto.ref, '#ff9a3c', ref > 0 ? laengeText(ref) : '?');
-            foto.linien.forEach((l, i) => linie(l, '#3ddc84', mmProPx ? laengeText(dist(l) * mmProPx) : (i + 1) + ''));
-            $('fotoErgebnis').innerHTML = mmProPx
-                ? foto.linien.map((l, i) => '<div class="ergebnis-zeile"><span>' + esc(t('linie')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(laengeText(dist(l) * mmProPx)) + '</b></div>').join('')
+            const strich = (pts, farbe, zu) => {
+                [['rgba(0,0,0,.55)', 4], [farbe, 2.5]].forEach(([f, lw]) => {
+                    c.lineWidth = lw; c.strokeStyle = f; c.beginPath();
+                    pts.forEach(([x, y], i) => i ? c.lineTo(x * k, y * k) : c.moveTo(x * k, y * k));
+                    if (zu) c.closePath();
+                    c.stroke();
+                });
+            };
+            const etikett = (x, y, text) => {
+                c.font = 'bold 14px Verdana, sans-serif';
+                const tw = c.measureText(text).width;
+                c.fillStyle = 'rgba(15,23,42,.85)'; c.fillRect(x - tw / 2 - 6, y - 13, tw + 12, 20);
+                c.fillStyle = '#fff'; c.fillText(text, x - tw / 2, y + 2);
+            };
+            if (r.modus === 'r') {
+                strich(geordnet(foto.quad), '#ff9a3c', true);
+                foto.quad.forEach(([x, y]) => punkt(x * k, y * k, '#ff9a3c'));
+            } else {
+                strich([foto.ref.a, foto.ref.b], '#ff9a3c');
+                [foto.ref.a, foto.ref.b].forEach(([x, y]) => punkt(x * k, y * k, '#ff9a3c'));
+                if (r.l > 0) etikett((foto.ref.a[0] + foto.ref.b[0]) / 2 * k, (foto.ref.a[1] + foto.ref.b[1]) / 2 * k - 16, laengeText(r.l));
+            }
+            foto.linien.forEach((l, i) => {
+                strich([l.a, l.b], '#3ddc84');
+                [l.a, l.b].forEach(([x, y]) => punkt(x * k, y * k, '#3ddc84'));
+                etikett((l.a[0] + l.b[0]) / 2 * k, (l.a[1] + l.b[1]) / 2 * k - 16, m ? laengeText(m(l)) : String(i + 1));
+            });
+            $('fotoErgebnis').innerHTML = m
+                ? foto.linien.map((l, i) => '<div class="ergebnis-zeile"><span>' + esc(t('linie')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(laengeText(m(l))) + '</b></div>').join('')
                 : '<p class="hinweis">' + esc(t('foto_ref_fehlt')) + '</p>';
+            zeigeLupe();
+        }
+        function zeigeLupe() {
+            const z = foto.ziehe;
+            if (!z || !foto.img) { lupe.style.display = 'none'; return; }
+            const { k } = anzeigeMasse();
+            const p = z.obj[z.key];
+            const lc = lupe.getContext('2d');
+            const seite = 40 / k;   // 3-fache Vergroesserung der Anzeige
+            lc.clearRect(0, 0, 240, 240);
+            lc.drawImage(foto.img, p[0] - seite / 2, p[1] - seite / 2, seite, seite, 0, 0, 240, 240);
+            lc.strokeStyle = '#ff2d55'; lc.lineWidth = 2;
+            lc.beginPath(); lc.moveTo(120, 96); lc.lineTo(120, 144); lc.moveTo(96, 120); lc.lineTo(144, 120); lc.stroke();
+            // feste Position am Bildschirm ueber dem Finger (nicht vom Bildrahmen abgeschnitten)
+            const rr = fc.getBoundingClientRect();
+            const fx = rr.left + p[0] * k, fy = rr.top + p[1] * k;
+            let x = fx - 63, y = fy - 190;
+            if (y < 8) y = fy + 60;
+            x = Math.max(8, Math.min(window.innerWidth - 134, x));
+            lupe.style.left = x + 'px'; lupe.style.top = y + 'px';
+            lupe.style.display = 'block';
         }
         function fotoPunkt(e) {
-            const r = fc.getBoundingClientRect();
+            const rr = fc.getBoundingClientRect();
             const { k } = anzeigeMasse();
-            return [(e.clientX - r.left) / k, (e.clientY - r.top) / k];
+            return [(e.clientX - rr.left) / k, (e.clientY - rr.top) / k];
         }
         fc.addEventListener('pointerdown', (e) => {
             if (!foto.img) return;
             const p = fotoPunkt(e);
             const { k } = anzeigeMasse();
-            const radius = 26 / k;
-            let best = null, bestD = radius;
-            [foto.ref, ...foto.linien].forEach(l => ['a', 'b'].forEach(s => { const dd = Math.hypot(l[s][0] - p[0], l[s][1] - p[1]); if (dd < bestD) { bestD = dd; best = { l, s }; } }));
+            let best = null, bestD = 28 / k;
+            const pruefe = (obj, key) => { const dd = Math.hypot(obj[key][0] - p[0], obj[key][1] - p[1]); if (dd < bestD) { bestD = dd; best = { obj, key }; } };
+            foto.linien.forEach(l => { pruefe(l, 'a'); pruefe(l, 'b'); });
+            if (refInfo().modus === 'r') foto.quad.forEach((_, i) => pruefe(foto.quad, i));
+            else { pruefe(foto.ref, 'a'); pruefe(foto.ref, 'b'); }
             if (!best) return;
+            // Punkt springt nicht unter den Finger, sondern wird relativ verschoben (feiner)
+            best.dx = best.obj[best.key][0] - p[0]; best.dy = best.obj[best.key][1] - p[1];
             foto.ziehe = best;
             fc.setPointerCapture(e.pointerId);
             e.preventDefault();
-        });
-        fc.addEventListener('pointermove', (e) => {
-            if (!foto.ziehe) return;
-            const p = fotoPunkt(e);
-            foto.ziehe.l[foto.ziehe.s] = [Math.max(0, Math.min(foto.img.naturalWidth, p[0])), Math.max(0, Math.min(foto.img.naturalHeight, p[1]))];
             zeichneFoto();
         });
-        fc.addEventListener('pointerup', () => { foto.ziehe = null; });
-        fc.addEventListener('pointercancel', () => { foto.ziehe = null; });
+        fc.addEventListener('pointermove', (e) => {
+            const z = foto.ziehe;
+            if (!z) return;
+            const p = fotoPunkt(e);
+            z.obj[z.key] = [Math.max(0, Math.min(foto.img.naturalWidth, p[0] + z.dx)), Math.max(0, Math.min(foto.img.naturalHeight, p[1] + z.dy))];
+            zeichneFoto();
+        });
+        const loslassen = () => { if (foto.ziehe) { foto.ziehe = null; zeichneFoto(); } };
+        fc.addEventListener('pointerup', loslassen);
+        fc.addEventListener('pointercancel', loslassen);
         $('fotoWrap').style.touchAction = 'pan-x pan-y';
         fc.style.touchAction = 'none';
         $('linieNeu').addEventListener('click', () => {
             if (!foto.img) return;
             const w = foto.img.naturalWidth, h = foto.img.naturalHeight, n = foto.linien.length;
-            const y = h * (0.25 + (n * 0.12) % 0.6);
+            const y = h * (0.6 + (n * 0.1) % 0.35);
             foto.linien.push({ a: [w * .25, y], b: [w * .75, y] });
             zeichneFoto();
         });
         $('linieWeg').addEventListener('click', () => { foto.linien.pop(); zeichneFoto(); });
-        $('fotoZoomPlus').addEventListener('click', () => { foto.zoom = Math.min(4, foto.zoom * 1.5); zeichneFoto(); });
+        $('fotoZoomPlus').addEventListener('click', () => { foto.zoom = Math.min(5, foto.zoom * 1.5); zeichneFoto(); });
         $('fotoZoomMinus').addEventListener('click', () => { foto.zoom = Math.max(1, foto.zoom / 1.5); zeichneFoto(); });
+
+        // Ecken automatisch suchen – mit der Blatterkennung des SD Scanners
+        let visionLaden = null;
+        function ladeVision() {
+            if (window.Vision && window.Vision.detectDocument) return Promise.resolve();
+            if (!visionLaden) {
+                const lade = (src) => new Promise((ok, f) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = f; document.head.appendChild(sc); });
+                visionLaden = lade('../scanner/js/vision.js').then(() => lade('../scanner/js/docdetect.js')).catch(e => { visionLaden = null; throw e; });
+            }
+            return visionLaden;
+        }
+        $('eckenAuto').addEventListener('click', async () => {
+            if (!foto.img) return;
+            $('eckenStatus').textContent = t('ecken_laed');
+            try {
+                await ladeVision();
+                const img = foto.img, f = Math.min(1, 1200 / Math.max(img.naturalWidth, img.naturalHeight));
+                const cv = document.createElement('canvas');
+                cv.width = Math.round(img.naturalWidth * f); cv.height = Math.round(img.naturalHeight * f);
+                const cx = cv.getContext('2d', { willReadFrequently: true });
+                cx.drawImage(img, 0, 0, cv.width, cv.height);
+                const daten = cx.getImageData(0, 0, cv.width, cv.height);
+                const q = window.Vision.detectDocument(daten.data, cv.width, cv.height);
+                if (!q) { $('eckenStatus').textContent = t('ecken_nein'); return; }
+                foto.quad = [0, 1, 2, 3].map(i => [q[i * 2] / f, q[i * 2 + 1] / f]);
+                $('eckenStatus').textContent = t('ecken_ok');
+                zeichneFoto();
+            } catch (e) {
+                $('eckenStatus').textContent = t('ecken_nein');
+            }
+        });
 
         // ---------------- Flächen ----------------
         if (!Array.isArray(d.raeume) || !d.raeume.length) d.raeume = [{ id: SD.neueId(), name: '', form: 'rechteck', art: 'wohn', hoehe: '2,50' }];
