@@ -155,6 +155,7 @@
                     </div>
                 </div>
                 <p class="info" id="fotoAnleitung"></p>
+                <details><summary class="info"><b data-i18n="tipp_person_t">🧍 Körpergröße messen?</b></summary><p class="info" data-i18n="tipp_person" style="margin-top:6px"></p></details>
                 <div class="knoepfe">
                     <button type="button" class="btn klein prim" id="eckenAuto" data-i18n="ecken_auto">🔍 Ecken automatisch suchen</button>
                     <span class="meta" id="eckenStatus"></span>
@@ -231,6 +232,9 @@
                 ref_1e: '1-Euro-Münze – Durchmesser (ungenauer)', ref_2e: '2-Euro-Münze – Durchmesser (ungenauer)', ref_eigen: 'eigene Länge – Linie (ungenauer) …', ref_eigen_b: 'Breite (cm)', ref_eigen_h: 'Höhe (cm)', ref_eigen_l: 'Länge (cm)',
                 anl_rechteck: '🟠 Die 4 orangen Punkte genau auf die 4 Ecken des Maßstabs ziehen (oder automatisch suchen lassen). 🟢 Grüne Linien an die Längen legen, die du messen willst. Beim Ziehen zeigt eine Lupe die genaue Stelle.',
                 anl_linie: '🟠 Die orange Linie genau über die bekannte Länge legen. 🟢 Grüne Linien an die Längen legen, die du messen willst. Ohne 4 Ecken muss das Foto ganz gerade von vorn aufgenommen sein.',
+                warn_gross: '⚠️ Das orange Rechteck ist sehr groß. Es muss genau auf einem echten Blatt bzw. einer Karte im Foto liegen – die Seite rechnet das Rechteck als genau diese Größe (siehe Beschriftung). Ohne bekannten Gegenstand im Foto ist keine Messung möglich.',
+                warn_lang: '⚠️ Die Messung ist viel länger als der Maßstab – schon kleine Fehler an den Ecken verfälschen das Ergebnis stark. Besser: größerer Maßstab (A4-Blatt) nah am Gegenstand, Ecken mit der Lupe genau setzen.',
+                tipp_person_t: '🧍 Körpergröße messen?', tipp_person: 'Tipp Körpergröße: Ein A4-Blatt hochkant an die Wand kleben (etwa auf Brusthöhe), die Person stellt sich direkt mit dem Rücken an diese Wand. Aus 2–3 m Abstand gerade auf Brusthöhe fotografieren. Dann die 4 Ecken auf das Blatt und die grüne Linie vom Boden bis zum Scheitel. Schuhe zählen mit.',
                 ecken_auto: '🔍 Ecken automatisch suchen', ecken_ok: '✓ Ecken gefunden – bitte kurz prüfen', ecken_nein: 'Nicht sicher gefunden – bitte die Ecken von Hand ziehen (klappt besser, wenn das Blatt groß im Bild ist)', ecken_laed: 'Suche …',
                 linie_neu: '＋ Messlinie', linie_weg: '− Letzte Linie', linie: 'Linie',
                 foto_genau: 'So wird es genau: Maßstab und Gegenstand müssen auf derselben Fläche liegen (z. B. beide auf dem Tisch oder an der Wand). Mit 4 Ecken wird eine schräge Aufnahme automatisch ausgeglichen. Je größer der Maßstab im Bild, desto genauer – ein A4-Blatt ist besser als eine Karte. Teile, die vor- oder zurückstehen, werden falsch gemessen.',
@@ -270,6 +274,9 @@
                 ref_1e: '1 euro coin – diameter (less accurate)', ref_2e: '2 euro coin – diameter (less accurate)', ref_eigen: 'own length – line (less accurate) …', ref_eigen_b: 'Width (cm)', ref_eigen_h: 'Height (cm)', ref_eigen_l: 'Length (cm)',
                 anl_rechteck: '🟠 Drag the 4 orange dots exactly onto the 4 corners of the scale (or let them be found automatically). 🟢 Put green lines on the lengths you want to measure. While dragging, a magnifier shows the exact spot.',
                 anl_linie: '🟠 Put the orange line exactly over the known length. 🟢 Put green lines on the lengths you want to measure. Without 4 corners the photo must be taken straight from the front.',
+                warn_gross: '⚠️ The orange rectangle is very large. It must sit exactly on a real sheet or card in the photo – the page treats the rectangle as exactly that size (see labels). Without a known object in the photo, measuring is not possible.',
+                warn_lang: '⚠️ The measurement is much longer than the scale – even small errors at the corners distort the result a lot. Better: a larger scale (A4 sheet) close to the object, corners set precisely with the magnifier.',
+                tipp_person_t: '🧍 Measuring body height?', tipp_person: 'Tip for body height: tape an A4 sheet upright to the wall (about chest height); the person stands with their back directly against that wall. Take the photo straight on from 2–3 m at chest height. Then put the 4 corners on the sheet and the green line from the floor to the top of the head. Shoes count too.',
                 ecken_auto: '🔍 Find corners automatically', ecken_ok: '✓ Corners found – please check briefly', ecken_nein: 'Not found reliably – please drag the corners by hand (works better when the sheet is large in the picture)', ecken_laed: 'Searching …',
                 linie_neu: '＋ Measuring line', linie_weg: '− Last line', linie: 'Line',
                 foto_genau: 'For accurate results: the scale and the object must lie on the same surface (e.g. both on the table or on the wall). With 4 corners an angled shot is corrected automatically. The bigger the scale in the picture, the more accurate – an A4 sheet is better than a card. Parts that stick out or lie further back are measured wrongly.',
@@ -559,6 +566,17 @@
             };
             if (r.modus === 'r') {
                 strich(geordnet(foto.quad), '#ff9a3c', true);
+                // reale Seitenlaengen an die Kanten schreiben, damit klar ist, was das orange Rechteck bedeutet
+                if (r.b > 0 && r.h > 0) {
+                    const q = geordnet(foto.quad);
+                    const kante = (i) => Math.hypot(q[(i + 1) % 4][0] - q[i][0], q[(i + 1) % 4][1] - q[i][1]);
+                    const ersteLang = kante(0) + kante(2) >= kante(1) + kante(3);
+                    const lang = Math.max(r.b, r.h), kurz = Math.min(r.b, r.h);
+                    [[0, ersteLang ? lang : kurz], [1, ersteLang ? kurz : lang]].forEach(([i, mm]) => {
+                        const a2 = q[i], b2 = q[(i + 1) % 4];
+                        etikett((a2[0] + b2[0]) / 2 * k, (a2[1] + b2[1]) / 2 * k - 14, '= ' + laengeText(mm));
+                    });
+                }
                 foto.quad.forEach(([x, y]) => punkt(x * k, y * k, '#ff9a3c'));
             } else {
                 strich([foto.ref.a, foto.ref.b], '#ff9a3c');
@@ -570,9 +588,20 @@
                 [l.a, l.b].forEach(([x, y]) => punkt(x * k, y * k, '#3ddc84'));
                 etikett((l.a[0] + l.b[0]) / 2 * k, (l.a[1] + l.b[1]) / 2 * k - 16, m ? laengeText(m(l)) : String(i + 1));
             });
-            $('fotoErgebnis').innerHTML = m
+            // Plausibilitaet: Massstab zu gross im Bild (wahrscheinlich nicht auf ein echtes Blatt gesetzt)
+            // oder Messung viel laenger als der Massstab (kleine Eckfehler wirken sich stark aus)
+            const warnungen = [];
+            if (m) {
+                const bildFl = foto.img.naturalWidth * foto.img.naturalHeight;
+                let refFl = 0;
+                if (r.modus === 'r') { const q = geordnet(foto.quad); for (let i = 0; i < 4; i++) { const a2 = q[i], b2 = q[(i + 1) % 4]; refFl += a2[0] * b2[1] - b2[0] * a2[1]; } refFl = Math.abs(refFl) / 2; }
+                if (refFl > bildFl * 0.35) warnungen.push(t('warn_gross'));
+                const refLang = r.modus === 'r' ? Math.max(r.b, r.h) : r.l;
+                if (foto.linien.some(l => m(l) > refLang * 6)) warnungen.push(t('warn_lang'));
+            }
+            $('fotoErgebnis').innerHTML = (m
                 ? foto.linien.map((l, i) => '<div class="ergebnis-zeile"><span>' + esc(t('linie')) + ' ' + (i + 1) + '</span><b class="betrag">' + esc(laengeText(m(l))) + '</b></div>').join('')
-                : '<p class="hinweis">' + esc(t('foto_ref_fehlt')) + '</p>';
+                : '<p class="hinweis">' + esc(t('foto_ref_fehlt')) + '</p>') + warnungen.map(w2 => '<p class="fehler">' + esc(w2) + '</p>').join('');
             zeigeLupe();
         }
         function zeigeLupe() {
