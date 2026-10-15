@@ -112,8 +112,22 @@
         .frist-box { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fafcfb; }
         .frist-box .chips { display: flex; gap: 6px; flex-wrap: wrap; }
         .frist-datum { max-width: 220px; }
+        .oben-zeile { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .zahl.gut b { color: var(--ok); } .zahl.schlecht b { color: var(--danger); }
+        .w-chart { overflow-x: auto; }
+        .w-chart svg { display: block; width: 100%; height: auto; }
+        #wSuche { width: 100%; font: inherit; font-size: 16px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+        .w-chart .leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--muted); margin-bottom: 4px; }
+        .w-chart .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+        .ware-zahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px; font-size: .8rem; color: var(--muted); }
+        .ware-zahlen b { display: block; color: var(--ink); font-size: .95rem; font-variant-numeric: tabular-nums; }
+        .b-knapp { background: var(--warn-bg); color: var(--warn-ink); } .b-leer { background: var(--danger-bg); color: var(--danger); } .b-ok { background: var(--ok-bg); color: var(--ok); }
+        .verlauf { display: grid; gap: 4px; font-size: .82rem; margin-top: 6px; max-height: 260px; overflow: auto; }
+        .verlauf div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
+        .lager-warn { color: var(--warn-ink); font-size: .84rem; margin: 0; }
     </style>
-    <script src="../sd-sync.js?v=1"></script>
+    <script src="../sd-sync.js?v=2"></script>
 </head>
 
 <body>
@@ -132,6 +146,7 @@
     <nav class="tabs" role="tablist">
         <button type="button" class="tab an" id="tabAus" role="tab" data-i18n="tab_aus">✍️ Schreiben</button>
         <button type="button" class="tab" id="tabEin" role="tab" data-i18n="tab_ein">📥 Erhalten</button>
+        <button type="button" class="tab" id="tabWaren" role="tab" data-i18n="tab_waren">📦 Waren</button>
     </nav>
 
     <!-- ============================ SCHREIBEN ============================ -->
@@ -185,6 +200,8 @@
                 <button type="button" class="btn klein" id="posNeuBtn" data-i18n="pos_neu">＋ Position</button>
                 <button type="button" class="btn klein" id="kiPosBtn" data-i18n="ki_pos">✨ Positionen mit KI (sprechen/tippen)</button>
             </div>
+            <p class="lager-warn" id="lagerWarn" hidden></p>
+            <p class="info" id="warenTipp" hidden data-i18n="w_hinweis_rechnung"></p>
             <div class="summen" id="summen"></div>
             <label class="feld"><span data-i18n="r_text">Zusatztext (optional)</span><textarea id="rText" rows="2" data-i18n-placeholder="text_ph" placeholder="z. B. Vielen Dank für Ihren Auftrag!"></textarea></label>
             <div class="hinweis" id="pruefBox"><b data-i18n="pruef_titel">Pflichtangaben-Check</b><ul class="pruefung" id="pruefung"></ul></div>
@@ -264,6 +281,59 @@
         </section>
     </main>
 
+    <!-- ============================ WAREN ============================ -->
+    <main id="seiteWaren" hidden>
+        <section class="karte">
+            <h2 data-i18n="w_stat_titel">📊 Auswertung</h2>
+            <div class="chips" id="wZeitraum"></div>
+            <div class="zahlen" id="wZahlen"></div>
+            <div class="w-chart" id="wChart"></div>
+            <p class="info" data-i18n="w_stat_info"></p>
+        </section>
+        <section class="karte">
+            <div class="oben-zeile"><h2 data-i18n="w_titel">📦 Meine Waren</h2>
+                <div class="knoepfe"><button type="button" class="btn prim" id="wNeuBtn" data-i18n="w_neu">＋ Neue Ware</button><button type="button" class="btn" id="wCsvBtn" data-i18n="w_csv">⬇️ CSV</button></div></div>
+            <input type="search" id="wSuche" data-i18n-placeholder="w_suche" placeholder="Ware suchen …">
+            <div class="liste" id="wListe"></div>
+        </section>
+    </main>
+
+    <!-- Dialog: Ware anlegen/bearbeiten -->
+    <div class="dialog" id="wDialog" hidden>
+        <form class="karte" id="wForm">
+            <h2 id="wDialogTitel"></h2>
+            <div class="raster">
+                <label class="feld"><span data-i18n="w_name">Bezeichnung</span><input type="text" name="name" required></label>
+                <label class="feld"><span data-i18n="w_nr">Artikel-Nr. (optional)</span><input type="text" name="nr"></label>
+                <label class="feld"><span data-i18n="w_einheit">Einheit</span><input type="text" name="einheit"></label>
+                <label class="feld"><span data-i18n="w_mindest">Mindestbestand (Warnung)</span><input type="text" name="mindest" inputmode="decimal"></label>
+                <label class="feld"><span data-i18n="w_ek">Einkaufspreis netto (€/Einheit)</span><input type="text" name="ek" inputmode="decimal" placeholder="0,00"></label>
+                <label class="feld"><span data-i18n="w_vk">Verkaufspreis netto (€/Einheit)</span><input type="text" name="vk" inputmode="decimal" placeholder="0,00"></label>
+            </div>
+            <label class="feld" id="wAnfangFeld"><span data-i18n="w_anfang">Anfangsbestand (schon vorhanden)</span><input type="text" name="anfang" inputmode="decimal" placeholder="0"></label>
+            <div class="knoepfe"><button type="submit" class="btn prim" data-i18n="speichern">💾 Speichern</button><button type="button" class="btn" id="wAbbrechen" data-i18n="abbrechen">Abbrechen</button><button type="button" class="btn gefahr" id="wLoeschen" data-i18n="w_loeschen">🗑️ Ware löschen</button></div>
+        </form>
+    </div>
+
+    <!-- Dialog: Einkauf / Verkauf / Korrektur buchen -->
+    <div class="dialog" id="bDialog" hidden>
+        <form class="karte" id="bForm">
+            <h2 id="bDialogTitel"></h2>
+            <div class="chips" id="bTyp"></div>
+            <div class="raster">
+                <label class="feld"><span id="bMengeLabel"></span><input type="text" name="menge" inputmode="decimal" required></label>
+                <label class="feld" id="bPreisFeld"><span id="bPreisLabel"></span><input type="text" name="preis" inputmode="decimal" placeholder="0,00"></label>
+                <label class="feld"><span data-i18n="w_datum">Datum</span><input type="date" name="datum"></label>
+                <label class="feld"><span data-i18n="w_notiz">Notiz (z. B. Lieferant, Kunde)</span><input type="text" name="notiz"></label>
+            </div>
+            <p class="info" id="bInfo"></p>
+            <div class="knoepfe"><button type="submit" class="btn prim" data-i18n="w_buchen">✓ Buchen</button><button type="button" class="btn" id="bAbbrechen" data-i18n="abbrechen">Abbrechen</button></div>
+            <div id="bVerlauf"></div>
+        </form>
+    </div>
+
+    <datalist id="warenListe"></datalist>
+
     <!-- Dialog: erhaltene Rechnung bearbeiten -->
     <div class="dialog" id="einDialog" hidden>
         <form class="karte" id="einForm">
@@ -309,7 +379,7 @@
                 positionen: 'Positionen', p_text: 'Beschreibung', p_menge: 'Menge', p_einheit: 'Einheit', p_preis_netto: 'Einzelpreis netto €', p_preis: 'Einzelpreis €', p_ust: 'USt', pos_neu: '＋ Position', ki_pos: '✨ Positionen mit KI (sprechen/tippen)',
                 r_text: 'Zusatztext (optional)', text_ph: 'z. B. Vielen Dank für Ihren Auftrag!', pruef_titel: 'Pflichtangaben-Check',
                 entwurf_speichern: '💾 Entwurf speichern', vorschau: '👁 PDF-Vorschau', fertig: '✅ Fertigstellen & PDF', abbrechen: 'Abbrechen', speichern: '💾 Speichern',
-                frist_titel_r: '⏰ Zahlungsfrist – schnell wählen:', frist_titel_a: '⏰ Wie lange gilt das Angebot?', frist_datum_r: 'oder fällig am', frist_datum_a: 'oder gültig bis', frist_sofort: 'sofort', frist_tage: '{n} Tage', frist_woche: '1 Woche', frist_wochen: '{n} Wochen', frist_monat: '1 Monat', frist_info_r: 'Fällig am {d} – steht so auf der Rechnung und in der Fristen-Übersicht.', frist_info_r0: 'Sofort fällig – steht so auf der Rechnung.', frist_info_a: 'Gültig bis {d} – steht so auf dem Angebot und in der Fristen-Übersicht.', b_kalender_r: '📅 Frist in Kalender', ics_zahlung: 'Zahlung erwartet: {nr} · {k} · {b}', ics_angebot: 'Angebot läuft ab: {nr} · {k} · {b}', art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
+                tab_waren: '📦 Waren', w_stat_titel: '📊 Auswertung', w_stat_info: 'Alle Preise netto. Gewinn = Verkaufserlös minus Wareneinsatz (verkaufte Menge × durchschnittlicher Einkaufspreis) minus Schwund. Weitere Kosten (Miete, Versand usw.) sind nicht enthalten – das ist der Rohgewinn, keine Steuerberechnung.', w_titel: '📦 Meine Waren', w_neu: '＋ Neue Ware', w_csv: '⬇️ CSV', w_suche: 'Ware suchen …', w_name: 'Bezeichnung', w_nr: 'Artikel-Nr. (optional)', w_einheit: 'Einheit', w_mindest: 'Mindestbestand (Warnung)', w_ek: 'Einkaufspreis netto (€/Einheit)', w_vk: 'Verkaufspreis netto (€/Einheit)', w_anfang: 'Anfangsbestand (schon vorhanden)', w_loeschen: '🗑️ Ware löschen', w_datum: 'Datum', w_notiz: 'Notiz (z. B. Lieferant, Kunde)', w_buchen: '✓ Buchen', w_neu_titel: '📦 Neue Ware', w_bearb_titel: '📦 Ware bearbeiten', w_zr_monat: 'Dieser Monat', w_zr_jahr: 'Dieses Jahr', w_zr_alles: 'Gesamt', w_z_ek: 'Eingekauft', w_z_vk: 'Verkauft', w_z_einsatz: 'Wareneinsatz', w_z_gewinn: 'Gewinn', w_z_verlust: 'Verlust', w_z_lager: 'Lagerwert jetzt', w_stk: '{n} {e}', w_leer: 'Noch keine Waren. Leg los mit „＋ Neue Ware“.', w_keine_treffer: 'Keine Ware gefunden.', w_bestand: 'Bestand', w_ek_k: 'Ø Einkauf', w_vk_k: 'Verkaufspreis', w_verkauft_k: 'verkauft', w_gewinn_k: 'Gewinn', w_lagerwert_k: 'Lagerwert', w_s_ok: 'auf Lager', w_s_knapp: 'wird knapp', w_s_leer: 'ausverkauft', w_b_ein: '＋ Einkauf', w_b_aus: '− Verkauf', w_b_korr: '± Korrektur', w_b_bearb: '✏️', w_b_verlauf: '📜 Verlauf', w_t_einkauf: '➕ Einkauf', w_t_verkauf: '➖ Verkauf', w_t_korrektur: '± Korrektur / Inventur', w_menge_ein: 'Menge eingekauft', w_menge_aus: 'Menge verkauft', w_menge_korr: 'Änderung (+ gefunden, − Schwund/kaputt)', w_preis_ein: 'Einkaufspreis netto (€/Einheit)', w_preis_aus: 'Verkaufspreis netto (€/Einheit)', w_info_bestand: 'Aktueller Bestand: {n}', w_info_zu_wenig: '⚠️ Mehr als auf Lager ({n}) – wird trotzdem gebucht, Bestand wird negativ.', w_verlauf_titel: 'Verlauf', w_aus_rechnung: 'Rechnung {nr}', w_weg: 'Buchung löschen', w_loeschen_frage: 'Diese Ware mit allen Buchungen löschen?', w_gebucht: '✓ Gebucht', w_lager_warn: '⚠️ {w}: nur {n} auf Lager', w_chart_titel: 'Einkauf und Verkauf je Monat (netto)', w_chart_ek: 'Einkauf', w_chart_vk: 'Verkauf', w_csv_kopf: 'Ware;Artikel-Nr.;Einheit;Bestand;Ø Einkauf;Verkaufspreis;Eingekauft Menge;Eingekauft €;Verkauft Menge;Verkauft €;Gewinn €;Lagerwert €', w_hinweis_rechnung: '📦 Waren aus deiner Liste kannst du bei den Positionen auswählen – beim Fertigstellen wird der Bestand automatisch verringert.', frist_titel_r: '⏰ Zahlungsfrist – schnell wählen:', frist_titel_a: '⏰ Wie lange gilt das Angebot?', frist_datum_r: 'oder fällig am', frist_datum_a: 'oder gültig bis', frist_sofort: 'sofort', frist_tage: '{n} Tage', frist_woche: '1 Woche', frist_wochen: '{n} Wochen', frist_monat: '1 Monat', frist_info_r: 'Fällig am {d} – steht so auf der Rechnung und in der Fristen-Übersicht.', frist_info_r0: 'Sofort fällig – steht so auf der Rechnung.', frist_info_a: 'Gültig bis {d} – steht so auf dem Angebot und in der Fristen-Übersicht.', b_kalender_r: '📅 Frist in Kalender', ics_zahlung: 'Zahlung erwartet: {nr} · {k} · {b}', ics_angebot: 'Angebot läuft ab: {nr} · {k} · {b}', art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
                 angaben_titel: '🏷️ Meine Angaben (Absender)', a_name: 'Name / Firma', a_zusatz: 'Zusatz (optional)', zusatz_ph: 'z. B. Malerarbeiten · Nachhilfe', a_strasse: 'Straße, Nr.', a_ort: 'PLZ Ort', a_tel: 'Telefon', a_email: 'E-Mail',
                 a_steuernr: 'Steuernummer', steuernr_ph: 'vom Finanzamt', a_ustid: 'USt-IdNr. (falls vorhanden)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Rechnungsnummer: Vorsilbe', a_naechste: 'Nächste laufende Nummer',
                 a_klein: 'Ich bin Kleinunternehmer (§ 19 UStG)', a_klein_hilfe: 'Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.',
@@ -354,7 +424,7 @@
                 positionen: 'Items', p_text: 'Description', p_menge: 'Qty', p_einheit: 'Unit', p_preis_netto: 'Unit price net €', p_preis: 'Unit price €', p_ust: 'VAT', pos_neu: '＋ Item', ki_pos: '✨ Items with AI (speak/type)',
                 r_text: 'Additional text (optional)', text_ph: 'e.g. Thank you for your order!', pruef_titel: 'Mandatory details check',
                 entwurf_speichern: '💾 Save draft', vorschau: '👁 PDF preview', fertig: '✅ Finalise & PDF', abbrechen: 'Cancel', speichern: '💾 Save',
-                frist_titel_r: '⏰ Payment term – quick choice:', frist_titel_a: '⏰ How long is the quotation valid?', frist_datum_r: 'or due on', frist_datum_a: 'or valid until', frist_sofort: 'immediately', frist_tage: '{n} days', frist_woche: '1 week', frist_wochen: '{n} weeks', frist_monat: '1 month', frist_info_r: 'Due on {d} – printed on the invoice and shown in the deadline overview.', frist_info_r0: 'Due immediately – printed on the invoice.', frist_info_a: 'Valid until {d} – printed on the quotation and shown in the deadline overview.', b_kalender_r: '📅 Deadline to calendar', ics_zahlung: 'Payment expected: {nr} · {k} · {b}', ics_angebot: 'Quotation expires: {nr} · {k} · {b}', art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
+                tab_waren: '📦 Goods', w_stat_titel: '📊 Analysis', w_stat_info: 'All prices net. Profit = sales revenue minus cost of goods sold (quantity sold × average purchase price) minus shrinkage. Other costs (rent, shipping etc.) are not included – this is gross profit, not a tax calculation.', w_titel: '📦 My goods', w_neu: '＋ New item', w_csv: '⬇️ CSV', w_suche: 'Search items …', w_name: 'Name', w_nr: 'Item no. (optional)', w_einheit: 'Unit', w_mindest: 'Minimum stock (warning)', w_ek: 'Purchase price net (€/unit)', w_vk: 'Selling price net (€/unit)', w_anfang: 'Opening stock (already there)', w_loeschen: '🗑️ Delete item', w_datum: 'Date', w_notiz: 'Note (e.g. supplier, customer)', w_buchen: '✓ Book', w_neu_titel: '📦 New item', w_bearb_titel: '📦 Edit item', w_zr_monat: 'This month', w_zr_jahr: 'This year', w_zr_alles: 'All time', w_z_ek: 'Purchased', w_z_vk: 'Sold', w_z_einsatz: 'Cost of goods sold', w_z_gewinn: 'Profit', w_z_verlust: 'Loss', w_z_lager: 'Stock value now', w_stk: '{n} {e}', w_leer: 'No items yet. Start with "＋ New item".', w_keine_treffer: 'No item found.', w_bestand: 'Stock', w_ek_k: 'Avg. purchase', w_vk_k: 'Selling price', w_verkauft_k: 'sold', w_gewinn_k: 'Profit', w_lagerwert_k: 'Stock value', w_s_ok: 'in stock', w_s_knapp: 'running low', w_s_leer: 'sold out', w_b_ein: '＋ Purchase', w_b_aus: '− Sale', w_b_korr: '± Correction', w_b_bearb: '✏️', w_b_verlauf: '📜 History', w_t_einkauf: '➕ Purchase', w_t_verkauf: '➖ Sale', w_t_korrektur: '± Correction / stocktaking', w_menge_ein: 'Quantity purchased', w_menge_aus: 'Quantity sold', w_menge_korr: 'Change (+ found, − shrinkage/broken)', w_preis_ein: 'Purchase price net (€/unit)', w_preis_aus: 'Selling price net (€/unit)', w_info_bestand: 'Current stock: {n}', w_info_zu_wenig: '⚠️ More than in stock ({n}) – will be booked anyway, stock becomes negative.', w_verlauf_titel: 'History', w_aus_rechnung: 'Invoice {nr}', w_weg: 'Delete booking', w_loeschen_frage: 'Delete this item with all bookings?', w_gebucht: '✓ Booked', w_lager_warn: '⚠️ {w}: only {n} in stock', w_chart_titel: 'Purchases and sales per month (net)', w_chart_ek: 'Purchases', w_chart_vk: 'Sales', w_csv_kopf: 'Item;Item no.;Unit;Stock;Avg purchase;Selling price;Purchased qty;Purchased €;Sold qty;Sold €;Profit €;Stock value €', w_hinweis_rechnung: '📦 You can pick items from your goods list in the positions – when finalising, the stock is reduced automatically.', frist_titel_r: '⏰ Payment term – quick choice:', frist_titel_a: '⏰ How long is the quotation valid?', frist_datum_r: 'or due on', frist_datum_a: 'or valid until', frist_sofort: 'immediately', frist_tage: '{n} days', frist_woche: '1 week', frist_wochen: '{n} weeks', frist_monat: '1 month', frist_info_r: 'Due on {d} – printed on the invoice and shown in the deadline overview.', frist_info_r0: 'Due immediately – printed on the invoice.', frist_info_a: 'Valid until {d} – printed on the quotation and shown in the deadline overview.', b_kalender_r: '📅 Deadline to calendar', ics_zahlung: 'Payment expected: {nr} · {k} · {b}', ics_angebot: 'Quotation expires: {nr} · {k} · {b}', art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
                 angaben_titel: '🏷️ My details (sender)', a_name: 'Name / company', a_zusatz: 'Addition (optional)', zusatz_ph: 'e.g. Painting · Tutoring', a_strasse: 'Street, no.', a_ort: 'Postcode city', a_tel: 'Phone', a_email: 'E-mail',
                 a_steuernr: 'Tax number', steuernr_ph: 'from the tax office', a_ustid: 'VAT ID (if any)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Invoice number: prefix', a_naechste: 'Next sequential number',
                 a_klein: 'I am a small business (§ 19 UStG)', a_klein_hilfe: 'No VAT is charged and the invoice states the exemption. Limits since 2025: previous year max. €25,000, current year max. €100,000 turnover.',
@@ -433,6 +503,8 @@
         D.absender = Object.assign(standard().absender, D.absender || {});
         if (!D.logos || typeof D.logos !== 'object') D.logos = {};
         if (!Array.isArray(D.angebote)) D.angebote = [];
+        if (!Array.isArray(D.waren)) D.waren = [];
+        if (!Array.isArray(D.bewegungen)) D.bewegungen = [];
         ['kunden', 'ausgang', 'eingang'].forEach(k => { if (!Array.isArray(D[k])) D[k] = []; });
         function speichern() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { /* voll */ } }
         function herunterladen(blob, name) {
@@ -449,12 +521,16 @@
         function zeigeTab(welcher) {
             $('tabAus').classList.toggle('an', welcher === 'aus');
             $('tabEin').classList.toggle('an', welcher === 'ein');
+            $('tabWaren').classList.toggle('an', welcher === 'waren');
             $('seiteAus').hidden = welcher !== 'aus';
             $('seiteEin').hidden = welcher !== 'ein';
+            $('seiteWaren').hidden = welcher !== 'waren';
+            if (welcher === 'waren') zeichneWaren();
             try { sessionStorage.setItem('sdRechnungenTab', welcher); } catch (e) { /* egal */ }
         }
         $('tabAus').onclick = () => zeigeTab('aus');
         $('tabEin').onclick = () => zeigeTab('ein');
+        $('tabWaren').onclick = () => zeigeTab('waren');
 
         // ------------------------------------------------------------
         // Meine Angaben
@@ -652,7 +728,7 @@
             else if (a === 'bezahlt') { r.status = 'bezahlt'; r.bezahltAm = heuteIso(); speichern(); zeichneAus(); }
             else if (a === 'offen') { r.status = 'offen'; r.bezahltAm = ''; speichern(); zeichneAus(); }
             else if (a === 'kopie') { const k = JSON.parse(JSON.stringify(r)); Object.assign(k, { id: neueId(), erstellt: Date.now(), nr: '', status: 'entwurf', datum: heuteIso(), faellig: '', bezahltAm: '', leistung: '', gueltigBis: '', rechnungId: '', entschiedenAm: '' }); delete k.absender; listeVon(k).push(k); speichern(); oeffneEditor(k); }
-            else if (a === 'storno') { if (confirm(t('storno_frage', { nr: r.nr }))) { r.status = 'storniert'; r.storniertAm = heuteIso(); speichern(); zeichneAus(); } }
+            else if (a === 'storno') { if (confirm(t('storno_frage', { nr: r.nr }))) { r.status = 'storniert'; r.storniertAm = heuteIso(); D.bewegungen = D.bewegungen.filter(x => x.rechnungId !== r.id); speichern(); zeichneAus(); } }
             else if (a === 'loeschen') { if (confirm(t('loeschen_frage'))) { if (istAng(r)) D.angebote = D.angebote.filter(x => x.id !== r.id); else D.ausgang = D.ausgang.filter(x => x.id !== r.id); speichern(); zeichneAus(); } }
             else if (a === 'erinnerung') erinnerung(r);
         });
@@ -776,7 +852,7 @@
             $('pPreisKopf').textContent = klein ? t('p_preis') : t('p_preis_netto');
             $('positionen').innerHTML = aktuell.positionen.map((p, i) =>
                 '<div class="pos" data-i="' + i + '">' +
-                '<label class="mob beschr"><span>' + esc(t('p_text')) + '</span><input type="text" data-k="text" value="' + esc(p.text) + '" aria-label="' + esc(t('p_text')) + '"></label>' +
+                '<label class="mob beschr"><span>' + esc(t('p_text')) + (p.warenId ? ' 📦' : '') + '</span><input type="text" data-k="text" list="warenListe" value="' + esc(p.text) + '" aria-label="' + esc(t('p_text')) + '"></label>' +
                 '<label class="mob"><span>' + esc(t('p_menge')) + '</span><input type="text" inputmode="decimal" data-k="menge" value="' + esc(p.menge) + '" aria-label="' + esc(t('p_menge')) + '"></label>' +
                 '<label class="mob"><span>' + esc(t('p_einheit')) + '</span><input type="text" data-k="einheit" value="' + esc(p.einheit) + '" aria-label="' + esc(t('p_einheit')) + '"></label>' +
                 '<label class="mob"><span>' + esc(klein ? t('p_preis') : t('p_preis_netto')) + '</span><input type="text" inputmode="decimal" data-k="preis" value="' + esc(p.preis) + '" placeholder="0,00" aria-label="' + esc(t('p_preis')) + '"></label>' +
@@ -788,6 +864,10 @@
             if (!f) return;
             const i = Number(f.closest('.pos').dataset.i);
             aktuell.positionen[i][f.dataset.k] = f.dataset.k === 'ust' ? Number(f.value) : f.value;
+            if (f.dataset.k === 'text' && wareZuPosition(aktuell.positionen[i])) {
+                const zeile = f.closest('.pos');
+                zeile.querySelector('[data-k=preis]').value = aktuell.positionen[i].preis; zeile.querySelector('[data-k=einheit]').value = aktuell.positionen[i].einheit;
+            }
             aktualisiereEditor();
         });
         $('positionen').addEventListener('change', (e) => { if (e.target.dataset.k === 'ust') { aktuell.positionen[Number(e.target.closest('.pos').dataset.i)].ust = Number(e.target.value); aktualisiereEditor(); } });
@@ -842,6 +922,8 @@
             $('pruefung').innerHTML = p.liste.map(([ok, txt]) => '<li style="color:' + (ok ? 'var(--ok)' : 'var(--danger)') + '">' + (ok ? '✓ ' : '✗ ') + esc(txt) + '</li>').join('');
             $('absenderFehlt').hidden = istAng(aktuell) ? !!(D.absender.name && D.absender.strasse && D.absender.ort) : angabenVollstaendig();
             zeichneFrist();
+            const lh = lagerHinweis(); $('lagerWarn').textContent = lh; $('lagerWarn').hidden = !lh;
+            $('warenTipp').hidden = !D.waren.length;
             const ang = istAng(aktuell);
             $('rNrInfo').innerHTML = '<span class="nr-gross">' + esc(aktuell.nr ? t(ang ? 'nr_info_ang' : 'nr_info', { nr: aktuell.nr }) : t(ang ? 'nr_info_neu_ang' : 'nr_info_neu', { nr: nrNeu(aktuell) })) + '</span>';
         }
@@ -882,6 +964,7 @@
                 aktuell.nr = naechsteNr();
                 D.absender.naechste = (parseInt(D.absender.naechste, 10) || 1) + 1;
                 aktuell.faellig = plusTage(aktuell.datum, aktuell.ziel);
+                verkaufVerbuchen(aktuell);
             }
             aktuell.status = 'offen';
             aktuell.sprache = window.SD_LANG === 'en' ? 'en' : 'de';
@@ -1264,13 +1347,227 @@
         };
 
         // ------------------------------------------------------------
+        // Waren: Bestand, Einkauf, Verkauf, Gewinn
+        // ------------------------------------------------------------
+        // Buchungen: { id, warenId, typ: 'einkauf'|'verkauf'|'korrektur', menge, preis (netto je Einheit), datum, notiz, rechnungId? }
+        const fmtMenge = (n) => Number(n || 0).toLocaleString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { maximumFractionDigits: 3 });
+        const wareVon = (id) => D.waren.find(w => w.id === id);
+        function warenKennzahlen(w, von, bis) {
+            const b = D.bewegungen.filter(x => x.warenId === w.id);
+            let ekMengeAlle = 0, ekSummeAlle = 0, bestand = 0;
+            b.forEach(x => {
+                const m = zahl(x.menge);
+                if (x.typ === 'einkauf') { ekMengeAlle += m; ekSummeAlle += m * zahl(x.preis); bestand += m; }
+                else if (x.typ === 'verkauf') bestand -= m;
+                else bestand += m;
+            });
+            // Durchschnittlicher Einkaufspreis aller Einkäufe; ohne Einkauf: eingetragener Einkaufspreis
+            const avg = ekMengeAlle > 0 ? ekSummeAlle / ekMengeAlle : zahl(w.ek);
+            const imZr = (x) => (!von || x.datum >= von) && (!bis || x.datum <= bis);
+            let ekMenge = 0, ekSumme = 0, vkMenge = 0, vkSumme = 0, schwund = 0;
+            b.filter(imZr).forEach(x => {
+                const m = zahl(x.menge);
+                if (x.typ === 'einkauf') { ekMenge += m; ekSumme += m * zahl(x.preis); }
+                else if (x.typ === 'verkauf') { vkMenge += m; vkSumme += m * zahl(x.preis); }
+                else if (m < 0) schwund += -m;
+            });
+            const einsatz = runde(vkMenge * avg), verlustSchwund = runde(schwund * avg);
+            return { bestand, avg, ekMenge, ekSumme: runde(ekSumme), vkMenge, vkSumme: runde(vkSumme), einsatz, schwund: verlustSchwund, gewinn: runde(vkSumme - einsatz - verlustSchwund), lagerwert: runde(Math.max(0, bestand) * avg) };
+        }
+        let wZeitraum = 'jahr';
+        function zeitraum() {
+            const h = heuteIso();
+            if (wZeitraum === 'monat') return [h.slice(0, 8) + '01', h];
+            if (wZeitraum === 'jahr') return [h.slice(0, 5) + '01-01', h];
+            return ['', ''];
+        }
+        function zeichneWaren() {
+            if ($('seiteWaren').hidden) return;
+            const [von, bis] = zeitraum();
+            $('wZeitraum').innerHTML = ['monat', 'jahr', 'alles'].map(z => '<button type="button" class="chip' + (z === wZeitraum ? ' an' : '') + '" data-zr="' + z + '">' + esc(t('w_zr_' + z)) + '</button>').join('');
+            const k = D.waren.map(w => [w, warenKennzahlen(w, von, bis)]);
+            const sum = (f) => runde(k.reduce((x, [, z]) => x + z[f], 0));
+            const gewinn = sum('gewinn');
+            $('wZahlen').innerHTML =
+                '<div class="zahl"><b>' + euro(sum('ekSumme')) + '</b><span>' + esc(t('w_z_ek')) + '</span></div>' +
+                '<div class="zahl"><b>' + euro(sum('vkSumme')) + '</b><span>' + esc(t('w_z_vk')) + '</span></div>' +
+                '<div class="zahl"><b>' + euro(sum('einsatz') + sum('schwund')) + '</b><span>' + esc(t('w_z_einsatz')) + '</span></div>' +
+                '<div class="zahl ' + (gewinn > 0 ? 'gut' : gewinn < 0 ? 'schlecht' : '') + '"><b>' + (gewinn < 0 ? '▼ ' : gewinn > 0 ? '▲ ' : '') + euro(Math.abs(gewinn)) + '</b><span>' + esc(t(gewinn < 0 ? 'w_z_verlust' : 'w_z_gewinn')) + '</span></div>' +
+                '<div class="zahl"><b>' + euro(sum('lagerwert')) + '</b><span>' + esc(t('w_z_lager')) + '</span></div>';
+            zeichneWarenChart();
+            const such = ($('wSuche').value || '').trim().toLowerCase();
+            const liste = k.filter(([w]) => !such || (w.name + ' ' + (w.nr || '')).toLowerCase().includes(such)).sort((a, b) => a[0].name.localeCompare(b[0].name));
+            $('wListe').innerHTML = !D.waren.length ? '<p class="leer">' + esc(t('w_leer')) + '</p>' : !liste.length ? '<p class="leer">' + esc(t('w_keine_treffer')) + '</p>' : liste.map(([w, z]) => {
+                const e = w.einheit || stdEinheit();
+                const st = z.bestand <= 0 ? ['leer', t('w_s_leer')] : (zahl(w.mindest) > 0 && z.bestand <= zahl(w.mindest)) ? ['knapp', t('w_s_knapp')] : ['ok', t('w_s_ok')];
+                return '<div class="eintrag"><div class="oben"><span class="titel">' + esc(w.name) + (w.nr ? ' <small class="meta">· ' + esc(w.nr) + '</small>' : '') + '</span><span class="badge b-' + st[0] + '">' + esc(fmtMenge(z.bestand) + ' ' + e + ' · ' + st[1]) + '</span></div>' +
+                    '<div class="ware-zahlen"><span><b>' + euro(z.avg) + '</b>' + esc(t('w_ek_k')) + '</span><span><b>' + euro(zahl(w.vk)) + '</b>' + esc(t('w_vk_k')) + '</span><span><b>' + esc(fmtMenge(z.vkMenge)) + '</b>' + esc(t('w_verkauft_k')) + '</span><span><b style="color:' + (z.gewinn < 0 ? 'var(--danger)' : 'var(--ok)') + '">' + euro(z.gewinn) + '</b>' + esc(t('w_gewinn_k')) + '</span><span><b>' + euro(z.lagerwert) + '</b>' + esc(t('w_lagerwert_k')) + '</span></div>' +
+                    '<div class="knoepfe">' + [['einkauf', t('w_b_ein')], ['verkauf', t('w_b_aus')], ['korrektur', t('w_b_korr')], ['verlauf', t('w_b_verlauf')], ['bearb', t('w_b_bearb')]].map(([a, txt]) => '<button type="button" class="btn klein' + (a === 'einkauf' ? ' prim' : '') + '" data-wa="' + a + '" data-id="' + esc(w.id) + '">' + esc(txt) + '</button>').join('') + '</div></div>';
+            }).join('');
+            fuelleWarenListe();
+        }
+        // Einkauf/Verkauf je Monat (letzte 12 Monate) als gruppierte Balken
+        function zeichneWarenChart() {
+            const monate = [];
+            const d = new Date(heuteIso() + 'T12:00:00'); d.setDate(1);
+            for (let i = 11; i >= 0; i--) { const x = new Date(d); x.setMonth(d.getMonth() - i); monate.push(x.toISOString().slice(0, 7)); }
+            const werte = monate.map(m => {
+                let ek = 0, vk = 0;
+                D.bewegungen.forEach(b => { if ((b.datum || '').slice(0, 7) !== m) return; const v = zahl(b.menge) * zahl(b.preis); if (b.typ === 'einkauf') ek += v; else if (b.typ === 'verkauf') vk += v; });
+                return { m, ek: runde(ek), vk: runde(vk) };
+            });
+            const max = Math.max(...werte.map(w => Math.max(w.ek, w.vk)));
+            if (!(max > 0)) { $('wChart').innerHTML = ''; return; }
+            const W = Math.max(320, Math.min(860, $('wChart').clientWidth || 640)), H = 200, L0 = 52, B0 = 172, T0 = 12, bw = (W - L0 - 8) / 12;
+            const schritt = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / schritt) * schritt;
+            const y = (v) => B0 - (B0 - T0) * v / top;
+            const mName = (m) => new Date(m + '-15T12:00:00').toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'short' });
+            const kurz = (v) => v >= 1000 ? Math.round(v / 100) / 10 + 'k' : String(Math.round(v));
+            let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('w_chart_titel')) + '">';
+            [0, 0.5, 1].forEach(f => { const yy = y(top * f); svg += '<line x1="' + L0 + '" x2="' + (W - 8) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e3e8e6" stroke-width="1"/><text x="' + (L0 - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="#647482">' + kurz(top * f) + ' €</text>'; });
+            werte.forEach((w, i) => {
+                const x0 = L0 + i * bw, b2 = Math.min(14, (bw - 8) / 2);
+                const bar = (v, x, farbe, art) => { if (!(v > 0)) return ''; const yy = y(v), h = Math.max(1, B0 - yy); return '<path d="M' + x + ' ' + B0 + 'V' + (yy + Math.min(4, h)) + 'q0 -' + Math.min(4, h) + ' ' + Math.min(4, b2 / 2) + ' -' + Math.min(4, h) + 'H' + (x + b2 - Math.min(4, b2 / 2)) + 'q' + Math.min(4, b2 / 2) + ' 0 ' + Math.min(4, b2 / 2) + ' ' + Math.min(4, h) + 'V' + B0 + 'Z" fill="' + farbe + '"><title>' + esc(mName(w.m) + ' ' + w.m.slice(0, 4) + ' · ' + t(art) + ': ' + euro(v)) + '</title></path>'; };
+                const mitte = x0 + bw / 2;
+                svg += bar(w.ek, mitte - b2 - 1, '#c2410c', 'w_chart_ek') + bar(w.vk, mitte + 1, '#0f8a7a', 'w_chart_vk');
+                svg += '<text x="' + mitte + '" y="' + (B0 + 16) + '" text-anchor="middle" font-size="11" fill="#647482">' + esc(mName(w.m)) + '</text>';
+            });
+            svg += '<line x1="' + L0 + '" x2="' + (W - 8) + '" y1="' + B0 + '" y2="' + B0 + '" stroke="#b8c2bf" stroke-width="1"/></svg>';
+            $('wChart').innerHTML = '<div class="leg"><b style="color:var(--ink);flex-basis:100%">' + esc(t('w_chart_titel')) + '</b><span><i style="background:#c2410c"></i>' + esc(t('w_chart_ek')) + '</span><span><i style="background:#0f8a7a"></i>' + esc(t('w_chart_vk')) + '</span></div>' + svg;
+        }
+        $('wZeitraum').addEventListener('click', (e) => { const b = e.target.closest('[data-zr]'); if (b) { wZeitraum = b.dataset.zr; zeichneWaren(); } });
+        $('wSuche').addEventListener('input', zeichneWaren);
+
+        // Ware anlegen / bearbeiten
+        let wBearb = null;
+        function oeffneWare(w) {
+            wBearb = w ? w.id : null;
+            const f = $('wForm');
+            $('wDialogTitel').textContent = t(w ? 'w_bearb_titel' : 'w_neu_titel');
+            f.elements.name.value = w ? w.name : ''; f.elements.nr.value = w ? (w.nr || '') : '';
+            f.elements.einheit.value = w ? (w.einheit || '') : stdEinheit(); f.elements.mindest.value = w ? (w.mindest || '') : '';
+            f.elements.ek.value = w ? (w.ek || '') : ''; f.elements.vk.value = w ? (w.vk || '') : ''; f.elements.anfang.value = '';
+            $('wAnfangFeld').hidden = !!w; $('wLoeschen').hidden = !w;
+            $('wDialog').hidden = false;
+            setTimeout(() => f.elements.name.focus(), 50);
+        }
+        $('wNeuBtn').onclick = () => oeffneWare(null);
+        $('wAbbrechen').onclick = () => { $('wDialog').hidden = true; };
+        $('wForm').onsubmit = (e) => {
+            e.preventDefault();
+            const f = $('wForm');
+            const daten = { name: f.elements.name.value.trim(), nr: f.elements.nr.value.trim(), einheit: f.elements.einheit.value.trim() || stdEinheit(), mindest: f.elements.mindest.value.trim(), ek: f.elements.ek.value.trim(), vk: f.elements.vk.value.trim() };
+            if (!daten.name) return;
+            let w = wareVon(wBearb);
+            if (w) Object.assign(w, daten);
+            else {
+                w = Object.assign({ id: neueId(), erstellt: Date.now() }, daten); D.waren.push(w);
+                const anfang = zahl(f.elements.anfang.value);
+                if (anfang > 0) D.bewegungen.push({ id: neueId(), warenId: w.id, typ: 'einkauf', menge: anfang, preis: zahl(daten.ek), datum: heuteIso(), notiz: t('w_anfang') });
+            }
+            speichern(); $('wDialog').hidden = true; zeichneWaren();
+        };
+        $('wLoeschen').onclick = () => {
+            if (!wBearb || !confirm(t('w_loeschen_frage'))) return;
+            D.waren = D.waren.filter(w => w.id !== wBearb); D.bewegungen = D.bewegungen.filter(b => b.warenId !== wBearb);
+            speichern(); $('wDialog').hidden = true; zeichneWaren();
+        };
+
+        // Einkauf / Verkauf / Korrektur buchen
+        let bWare = null, bTyp = 'einkauf';
+        function zeichneBuchung() {
+            const w = wareVon(bWare); if (!w) return;
+            const f = $('bForm'), z = warenKennzahlen(w), e = w.einheit || stdEinheit();
+            $('bDialogTitel').textContent = w.name;
+            $('bTyp').innerHTML = ['einkauf', 'verkauf', 'korrektur'].map(x => '<button type="button" class="chip' + (x === bTyp ? ' an' : '') + '" data-bt="' + x + '">' + esc(t('w_t_' + x)) + '</button>').join('');
+            $('bMengeLabel').textContent = t(bTyp === 'einkauf' ? 'w_menge_ein' : bTyp === 'verkauf' ? 'w_menge_aus' : 'w_menge_korr') + ' (' + e + ')';
+            $('bPreisFeld').hidden = bTyp === 'korrektur';
+            $('bPreisLabel').textContent = t(bTyp === 'einkauf' ? 'w_preis_ein' : 'w_preis_aus');
+            const m = zahl(f.elements.menge.value);
+            $('bInfo').textContent = bTyp === 'verkauf' && m > z.bestand ? t('w_info_zu_wenig', { n: fmtMenge(z.bestand) }) : t('w_info_bestand', { n: fmtMenge(z.bestand) + ' ' + e });
+            const verlauf = D.bewegungen.filter(b => b.warenId === w.id).sort((a, b) => String(b.datum).localeCompare(String(a.datum)));
+            $('bVerlauf').innerHTML = verlauf.length ? '<h3 style="margin-top:10px">' + esc(t('w_verlauf_titel')) + '</h3><div class="verlauf">' + verlauf.map(b => {
+                const re = b.rechnungId ? D.ausgang.find(r => r.id === b.rechnungId) : null;
+                const vz = b.typ === 'verkauf' ? '−' : (b.typ === 'korrektur' && zahl(b.menge) < 0 ? '' : '+');
+                return '<div><span>' + esc(deDatum(b.datum)) + ' · ' + esc(t('w_t_' + b.typ).replace(/^\S+\s/, '')) + (re ? ' · ' + esc(t('w_aus_rechnung', { nr: re.nr })) : b.notiz ? ' · ' + esc(b.notiz) : '') + '</span><span><b>' + vz + esc(fmtMenge(b.menge)) + '</b>' + (b.typ !== 'korrektur' ? ' × ' + euro(zahl(b.preis)) : '') + (b.rechnungId ? '' : ' <button type="button" class="btn klein gefahr" data-bweg="' + esc(b.id) + '" aria-label="' + esc(t('w_weg')) + '">✕</button>') + '</span></div>';
+            }).join('') + '</div>' : '';
+        }
+        function oeffneBuchung(w, typ) {
+            bWare = w.id; bTyp = typ;
+            const f = $('bForm');
+            f.elements.menge.value = ''; f.elements.notiz.value = ''; f.elements.datum.value = heuteIso();
+            f.elements.preis.value = typ === 'einkauf' ? (w.ek || '') : typ === 'verkauf' ? (w.vk || '') : '';
+            zeichneBuchung();
+            $('bDialog').hidden = false;
+            setTimeout(() => f.elements.menge.focus(), 50);
+        }
+        $('bTyp').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-bt]'); if (!b) return;
+            bTyp = b.dataset.bt; const w = wareVon(bWare), f = $('bForm');
+            f.elements.preis.value = bTyp === 'einkauf' ? (w.ek || '') : bTyp === 'verkauf' ? (w.vk || '') : '';
+            zeichneBuchung();
+        });
+        $('bForm').elements.menge.addEventListener('input', zeichneBuchung);
+        $('bVerlauf').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-bweg]'); if (!b) return;
+            D.bewegungen = D.bewegungen.filter(x => x.id !== b.dataset.bweg); speichern(); zeichneBuchung(); zeichneWaren();
+        });
+        $('bAbbrechen').onclick = () => { $('bDialog').hidden = true; };
+        $('bForm').onsubmit = (e) => {
+            e.preventDefault();
+            const f = $('bForm');
+            let m = zahl(f.elements.menge.value);
+            if (!m || (bTyp !== 'korrektur' && m < 0)) return;
+            D.bewegungen.push({ id: neueId(), warenId: bWare, typ: bTyp, menge: m, preis: bTyp === 'korrektur' ? 0 : zahl(f.elements.preis.value), datum: f.elements.datum.value || heuteIso(), notiz: f.elements.notiz.value.trim() });
+            speichern(); $('bDialog').hidden = true; zeichneWaren(); SD_toast(t('w_gebucht'));
+        };
+        function SD_toast(text) { const st = $('wListe'); const p = document.createElement('p'); p.className = 'ok'; p.textContent = text; st.parentNode.insertBefore(p, st); setTimeout(() => p.remove(), 2500); }
+        $('wListe').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-wa]'); if (!b) return;
+            const w = wareVon(b.dataset.id); if (!w) return;
+            const a = b.dataset.wa;
+            if (a === 'bearb') oeffneWare(w);
+            else if (a === 'verlauf') oeffneBuchung(w, 'einkauf');
+            else oeffneBuchung(w, a);
+        });
+        $('wCsvBtn').onclick = () => {
+            const [von, bis] = zeitraum();
+            const zeilen = [t('w_csv_kopf').split(';')];
+            const n = (v) => Number(v || 0).toFixed(2).replace('.', ',');
+            D.waren.forEach(w => { const z = warenKennzahlen(w, von, bis); zeilen.push([w.name, w.nr || '', w.einheit || '', fmtMenge(z.bestand), n(z.avg), n(zahl(w.vk)), fmtMenge(z.ekMenge), n(z.ekSumme), fmtMenge(z.vkMenge), n(z.vkSumme), n(z.gewinn), n(z.lagerwert)]); });
+            const csv = '﻿' + zeilen.map(z => z.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+            herunterladen(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'waren-' + heuteIso() + '.csv');
+        };
+
+        // Rechnungen: Waren auswählen, Bestand prüfen, beim Fertigstellen verbuchen
+        function fuelleWarenListe() {
+            $('warenListe').innerHTML = D.waren.map(w => '<option value="' + esc(w.name) + '">' + esc((w.nr ? w.nr + ' · ' : '') + euro(zahl(w.vk)) + ' / ' + (w.einheit || stdEinheit())) + '</option>').join('');
+        }
+        function wareZuPosition(p) {
+            const w = D.waren.find(x => x.name.toLowerCase() === String(p.text || '').trim().toLowerCase());
+            if (w) { if (p.warenId !== w.id) { p.warenId = w.id; if (!zahl(p.preis) && zahl(w.vk)) p.preis = String(w.vk); if (w.einheit) p.einheit = w.einheit; return true; } }
+            else if (p.warenId) delete p.warenId;
+            return false;
+        }
+        function lagerHinweis() {
+            if (!aktuell) return '';
+            const bedarf = {};
+            aktuell.positionen.forEach(p => { if (p.warenId) bedarf[p.warenId] = (bedarf[p.warenId] || 0) + zahl(p.menge); });
+            return Object.keys(bedarf).map(id => { const w = wareVon(id); if (!w) return ''; const z = warenKennzahlen(w); return bedarf[id] > z.bestand ? t('w_lager_warn', { w: w.name, n: fmtMenge(z.bestand) + ' ' + (w.einheit || '') }) : ''; }).filter(Boolean).join(' · ');
+        }
+        function verkaufVerbuchen(r) {
+            D.bewegungen = D.bewegungen.filter(b => b.rechnungId !== r.id);
+            r.positionen.forEach(p => { if (p.warenId && wareVon(p.warenId) && zahl(p.menge) > 0) D.bewegungen.push({ id: neueId(), warenId: p.warenId, typ: 'verkauf', menge: zahl(p.menge), preis: zahl(p.preis), datum: r.datum, notiz: r.kunde.name || '', rechnungId: r.id }); });
+        }
+
+        // ------------------------------------------------------------
         // Start
         // ------------------------------------------------------------
         function aktualisiereTexte() {
             $('wissenAus').innerHTML = L().wissen_aus.map(x => '<li>' + esc(x) + '</li>').join('');
             $('wissenEin').innerHTML = L().wissen_ein.map(x => '<li>' + esc(x) + '</li>').join('');
             zeigeAngabenZusammen();
-            zeichneAus(); zeichneEin();
+            zeichneAus(); zeichneEin(); zeichneWaren();
             if (aktuell) { zeichnePositionen(); aktualisiereEditor(); setzeEditorTexte(); }
         }
         fuelleAngaben();
@@ -1286,7 +1583,7 @@
         } catch (e) { /* egal */ }
         let tab = 'aus';
         try { tab = sessionStorage.getItem('sdRechnungenTab') || (location.hash === '#erhalten' ? 'ein' : 'aus'); } catch (e) { /* egal */ }
-        zeigeTab(tab === 'ein' ? 'ein' : 'aus');
+        zeigeTab(['ein', 'waren'].includes(tab) ? tab : (location.hash === '#waren' ? 'waren' : 'aus'));
         document.addEventListener('sd-lang-changed', aktualisiereTexte);
         aktualisiereTexte();
     })();
