@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Ordner aufräumen</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Downloads und andere Ordner automatisch nach Dateityp sortieren – direkt im Browser (Chrome/Edge) oder mit einem Skript für Windows und Mac.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tabs .chip { font-weight: bold; }
+        .kat { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px; align-items: center; border-bottom: 1px solid var(--line); padding: 6px 0; }
+        .kat input[type=checkbox] { width: 20px; height: 20px; }
+        .kat input[type=text] { padding: 7px 9px; font-size: 15px; }
+        @media (max-width: 560px) { .kat { grid-template-columns: auto minmax(0, 1fr) auto; } .kat .endungen { grid-column: 2 / 4; order: 5; } }
+        .plan { display: grid; gap: 6px; }
+        .plan details { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: #fff; }
+        .plan summary { cursor: pointer; display: flex; justify-content: space-between; gap: 10px; font-weight: bold; }
+        .plan summary b { font-variant-numeric: tabular-nums; }
+        .plan ul { margin: 8px 0 0; padding-left: 18px; font-size: .84rem; max-height: 220px; overflow: auto; overflow-wrap: anywhere; }
+        .code { background: #0f1b24; color: #dbe7ee; border-radius: 10px; padding: 12px; font: 12px/1.5 Consolas, Menlo, monospace; white-space: pre; overflow: auto; max-height: 340px; }
+        .befehl { display: flex; gap: 8px; align-items: stretch; }
+        .befehl code { flex: 1; min-width: 0; background: #0f1b24; color: #dbe7ee; border-radius: 10px; padding: 10px; font: 12px/1.5 Consolas, Menlo, monospace; overflow-wrap: anywhere; }
+        .fortschritt { height: 8px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; }
+        .fortschritt div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+        ol.schritte { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .9rem; line-height: 1.5; }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
+            <div><strong data-i18n="titel">Ordner aufräumen</strong><small data-i18n="untertitel">Dateien automatisch nach Art sortieren</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <h2 data-i18n="intro_titel">🧹 Unordnung im Downloads-Ordner?</h2>
+            <p class="info" data-i18n="intro_text"></p>
+        </section>
+
+        <!-- Regeln -->
+        <section class="karte">
+            <h2 data-i18n="regeln_titel">1 · Was kommt wohin?</h2>
+            <p class="info" data-i18n="regeln_info"></p>
+            <div id="kategorien"></div>
+            <div class="knoepfe">
+                <button type="button" class="btn klein" id="katNeu" data-i18n="kat_neu">＋ Eigener Ordner</button>
+                <button type="button" class="btn klein" id="katStandard" data-i18n="kat_standard">↺ Standard</button>
+            </div>
+            <label class="feld"><span data-i18n="doppelt">Wenn es die Datei im Zielordner schon gibt</span>
+                <select id="doppelt">
+                    <option value="ueberspringen" data-i18n="d_skip">liegen lassen (nichts überschreiben)</option>
+                    <option value="umbenennen" data-i18n="d_rename">trotzdem verschieben, als „Name (2)“</option>
+                </select></label>
+            <label class="check"><input type="checkbox" id="sonstige"> <span data-i18n="sonstige">Alle übrigen Dateien in den Ordner „Sonstiges“</span></label>
+        </section>
+
+        <div class="tabs" role="tablist">
+            <button type="button" class="chip" data-tab="browser" data-i18n="tab_browser">🌐 Im Browser aufräumen</button>
+            <button type="button" class="chip" data-tab="skript" data-i18n="tab_skript">💾 Programm herunterladen</button>
+        </div>
+
+        <!-- Weg 1: Browser -->
+        <section class="karte" data-panel="browser" hidden>
+            <h2 data-i18n="b_titel">2 · Ordner wählen und aufräumen</h2>
+            <p class="info" data-i18n="b_info"></p>
+            <p class="hinweis" id="bNichtMoeglich" hidden data-i18n="b_nicht"></p>
+            <div class="knoepfe" id="bStartBox">
+                <button type="button" class="btn prim" id="bWaehlen" data-i18n="b_waehlen">📂 Ordner wählen</button>
+                <span class="info" id="bOrdnerName"></span>
+            </div>
+            <div id="bVorschau" hidden style="display:grid;gap:10px">
+                <h3 data-i18n="b_vorschau">Vorschau – noch wird nichts verschoben</h3>
+                <div class="plan" id="bPlan"></div>
+                <p class="info" id="bRest"></p>
+                <div class="knoepfe">
+                    <button type="button" class="btn prim" id="bLos" data-i18n="b_los">🧹 Jetzt aufräumen</button>
+                    <button type="button" class="btn" id="bNeuLesen" data-i18n="b_neu">↻ Neu einlesen</button>
+                </div>
+            </div>
+            <div id="bLaeuft" hidden style="display:grid;gap:6px">
+                <div class="fortschritt"><div id="bBalken"></div></div>
+                <p class="info" id="bStatus" style="text-align:center"></p>
+            </div>
+            <div id="bFertig" hidden style="display:grid;gap:10px">
+                <p class="hinweis" id="bErgebnis" style="background:var(--ok-bg);border-color:#bfe0cc"></p>
+                <div class="plan" id="bFehlerListe"></div>
+                <div class="knoepfe">
+                    <button type="button" class="btn" id="bRueck" data-i18n="b_rueck">↶ Rückgängig machen</button>
+                </div>
+                <p class="info" data-i18n="b_rueck_info"></p>
+            </div>
+            <p class="fehler" id="bFehler" hidden></p>
+        </section>
+
+        <!-- Weg 2: Skript -->
+        <section class="karte" data-panel="skript" hidden>
+            <h2 data-i18n="s_titel">2 · Programm für deinen Computer</h2>
+            <p class="info" data-i18n="s_info"></p>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="s_system">Dein Computer</span>
+                    <select id="sSystem">
+                        <option value="win">Windows</option>
+                        <option value="mac">Mac</option>
+                        <option value="linux">Linux</option>
+                    </select></label>
+                <label class="feld"><span data-i18n="s_ordner">Welcher Ordner?</span>
+                    <select id="sOrdner">
+                        <option value="downloads" data-i18n="o_downloads">Downloads</option>
+                        <option value="desktop" data-i18n="o_desktop">Schreibtisch (Desktop)</option>
+                        <option value="dokumente" data-i18n="o_dokumente">Dokumente</option>
+                        <option value="eigen" data-i18n="o_eigen">Eigener Pfad …</option>
+                    </select></label>
+            </div>
+            <label class="feld" id="sPfadFeld" hidden><span data-i18n="s_pfad">Pfad zum Ordner</span>
+                <input type="text" id="sPfad" placeholder="C:\Users\Name\Bilder"></label>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="sLaden" data-i18n="s_laden">⬇ Programm herunterladen</button>
+            </div>
+            <h3 data-i18n="s_so">So startest du es</h3>
+            <ol class="schritte" id="sSchritte"></ol>
+            <div class="befehl"><code id="sBefehl"></code><button type="button" class="btn klein" id="sKopieren" data-i18n="kopieren">Kopieren</button></div>
+            <p class="hinweis" id="sWarnung"></p>
+            <details>
+                <summary class="info"><b data-i18n="s_code">🔍 Was genau macht das Programm? (Code ansehen)</b></summary>
+                <div class="code" id="sCode" style="margin-top:8px"></div>
+            </details>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="sicher_titel">🔒 Sicher und privat</h2>
+            <p class="info" data-i18n="sicher_text"></p>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Ordner aufräumen', untertitel: 'Dateien automatisch nach Art sortieren',
+                intro_titel: '🧹 Unordnung im Downloads-Ordner?',
+                intro_text: 'Dieser Helfer sortiert die Dateien eines Ordners automatisch in Unterordner: Bilder zu Bilder, PDFs und Word-Dateien zu Dokumente, Videos zu Videos usw. Du siehst vorher genau, was passiert. Es wird nichts gelöscht und nichts überschrieben. Unterordner, die schon da sind, bleiben unberührt.',
+                regeln_titel: '1 · Was kommt wohin?', regeln_info: 'Haken = wird sortiert. Ordnername und Dateiendungen kannst du ändern (Endungen mit Komma trennen).',
+                kat_neu: '＋ Eigener Ordner', kat_standard: '↺ Standard', kat_name: 'Ordnername', kat_endungen: 'Endungen, z. B. pdf, docx', kat_weg: 'Entfernen',
+                doppelt: 'Wenn es die Datei im Zielordner schon gibt', d_skip: 'liegen lassen (nichts überschreiben)', d_rename: 'trotzdem verschieben, als „Name (2)“',
+                sonstige: 'Alle übrigen Dateien in den Ordner „Sonstiges“', sonstiges: 'Sonstiges',
+                k_bilder: 'Bilder', k_dokumente: 'Dokumente', k_tabellen: 'Tabellen', k_praesentationen: 'Präsentationen', k_videos: 'Videos', k_musik: 'Musik', k_archive: 'Archive', k_programme: 'Programme', k_neu: 'Neuer Ordner',
+                tab_browser: '🌐 Im Browser aufräumen', tab_skript: '💾 Programm herunterladen',
+                b_titel: '2 · Ordner wählen und aufräumen',
+                b_info: 'Ohne Installation: Der Browser fragt einmal, ob SD Hub auf den Ordner zugreifen darf. Die Dateien bleiben auf deinem Computer – nichts wird hochgeladen. Funktioniert in Chrome und Edge am Computer.',
+                b_nicht: 'Dein Browser erlaubt keinen Zugriff auf Ordner (das können nur Chrome und Edge am Computer – nicht Safari, Firefox oder Handys). Nutze „💾 Programm herunterladen“ oder öffne diese Seite in Chrome/Edge.',
+                b_waehlen: '📂 Ordner wählen', b_ordner: 'Ordner: {name} · {n} Dateien', b_vorschau: 'Vorschau – noch wird nichts verschoben',
+                b_dateien: '{n} Dateien', b_rest: '{n} Dateien bleiben, wo sie sind (keine passende Regel).', b_nichts: 'Hier gibt es nichts zu sortieren – keine Datei passt zu den Regeln.',
+                b_los: '🧹 Jetzt aufräumen', b_neu: '↻ Neu einlesen', b_status: '{i} von {n}: {name}',
+                b_fertig: '✓ Fertig: {ok} Dateien einsortiert.', b_skip: '{n} übersprungen (gab es im Zielordner schon).', b_fehl: '{n} konnten nicht verschoben werden:',
+                b_rueck: '↶ Rückgängig machen', b_rueck_info: 'Rückgängig geht, solange diese Seite offen ist. Die neuen Unterordner bleiben (leer) bestehen.',
+                b_rueck_ok: '↶ {n} Dateien zurück an ihren alten Platz gelegt.', b_abgebrochen: 'Auswahl abgebrochen.',
+                b_kein_recht: 'Der Browser hat den Zugriff nicht erlaubt. Bitte erneut wählen und „Änderungen zulassen“ bestätigen.',
+                b_gesperrt: 'Diesen Ordner gibt der Browser aus Sicherheitsgründen nicht frei (z. B. der ganze Benutzerordner oder Systemordner). Wähle einen Unterordner, z. B. Downloads.',
+                b_fehler: 'Fehler: {msg}',
+                s_titel: '2 · Programm für deinen Computer',
+                s_info: 'Für alle Browser: Du lädst ein kleines Programm (Skript) herunter, das mit deinen Regeln von oben arbeitet. Es zeigt zuerst die Vorschau und fragt, bevor es etwas verschiebt. Am Ende legt es ein Protokoll in den Ordner. Auf Windows nutzt es PowerShell, auf Mac/Linux das Terminal – beides ist schon im System, nichts muss installiert werden.',
+                s_system: 'Dein Computer', s_ordner: 'Welcher Ordner?', o_downloads: 'Downloads', o_desktop: 'Schreibtisch (Desktop)', o_dokumente: 'Dokumente', o_eigen: 'Eigener Pfad …', s_pfad: 'Pfad zum Ordner',
+                s_laden: '⬇ Programm herunterladen', s_so: 'So startest du es', kopieren: 'Kopieren', kopiert: 'Kopiert', s_code: '🔍 Was genau macht das Programm? (Code ansehen)',
+                s_win1: 'Datei „{datei}“ herunterladen (landet meist im Ordner Downloads).',
+                s_win2: 'Rechtsklick auf die Datei → „Mit PowerShell ausführen“.',
+                s_win3: 'Falls das nicht geht: Startmenü → „PowerShell“ öffnen und diesen Befehl einfügen:',
+                s_mac1: 'Datei „{datei}“ herunterladen (landet meist im Ordner Downloads).',
+                s_mac2: 'Programm „Terminal“ öffnen (Mac: Spotlight ⌘+Leertaste → „Terminal“).',
+                s_mac3: 'Diesen Befehl einfügen und Enter drücken:',
+                s_warn_win: 'Windows kann warnen, weil das Skript aus dem Internet kommt. Das ist normal. Du kannst den Code unten vorher ansehen – er verschiebt nur Dateien in Unterordner, löscht nichts und sendet nichts ins Internet.',
+                s_warn_mac: 'Das Skript verschiebt nur Dateien in Unterordner, löscht nichts und sendet nichts ins Internet. Den Code kannst du unten ansehen.',
+                s_pfad_fehlt: 'Bitte den Pfad zum Ordner eingeben.', s_keine_regel: 'Bitte mindestens eine Regel mit Endungen anhaken.',
+                sicher_titel: '🔒 Sicher und privat',
+                sicher_text: 'Es wird nichts gelöscht und nichts überschrieben: Liegt im Zielordner schon eine gleichnamige Datei, bleibt die Datei liegen (oder bekommt „(2)“ im Namen, wenn du das wählst). Es werden nur Dateien direkt im gewählten Ordner sortiert, keine Unterordner. Keine Datei verlässt deinen Computer. Tipp: Bei sehr wichtigen Ordnern vorher eine Sicherung machen.'
+            },
+            en: {
+                titel: 'Tidy up folders', untertitel: 'Sort files automatically by type',
+                intro_titel: '🧹 Messy Downloads folder?',
+                intro_text: 'This helper automatically sorts the files of a folder into subfolders: pictures to Pictures, PDFs and Word files to Documents, videos to Videos and so on. You see exactly what will happen beforehand. Nothing is deleted and nothing is overwritten. Existing subfolders are left untouched.',
+                regeln_titel: '1 · What goes where?', regeln_info: 'Ticked = will be sorted. You can change the folder name and file extensions (separate extensions with commas).',
+                kat_neu: '＋ Own folder', kat_standard: '↺ Default', kat_name: 'Folder name', kat_endungen: 'Extensions, e.g. pdf, docx', kat_weg: 'Remove',
+                doppelt: 'If the file already exists in the target folder', d_skip: 'leave it where it is (never overwrite)', d_rename: 'move it anyway, as “Name (2)”',
+                sonstige: 'Put all other files into the folder “Other”', sonstiges: 'Other',
+                k_bilder: 'Pictures', k_dokumente: 'Documents', k_tabellen: 'Spreadsheets', k_praesentationen: 'Presentations', k_videos: 'Videos', k_musik: 'Music', k_archive: 'Archives', k_programme: 'Programs', k_neu: 'New folder',
+                tab_browser: '🌐 Tidy up in the browser', tab_skript: '💾 Download a program',
+                b_titel: '2 · Choose a folder and tidy up',
+                b_info: 'No installation: the browser asks once whether SD Hub may access the folder. The files stay on your computer – nothing is uploaded. Works in Chrome and Edge on a computer.',
+                b_nicht: 'Your browser does not allow access to folders (only Chrome and Edge on a computer can – not Safari, Firefox or phones). Use “💾 Download a program” or open this page in Chrome/Edge.',
+                b_waehlen: '📂 Choose folder', b_ordner: 'Folder: {name} · {n} files', b_vorschau: 'Preview – nothing has been moved yet',
+                b_dateien: '{n} files', b_rest: '{n} files stay where they are (no matching rule).', b_nichts: 'Nothing to sort here – no file matches the rules.',
+                b_los: '🧹 Tidy up now', b_neu: '↻ Read again', b_status: '{i} of {n}: {name}',
+                b_fertig: '✓ Done: {ok} files sorted.', b_skip: '{n} skipped (already existed in the target folder).', b_fehl: '{n} could not be moved:',
+                b_rueck: '↶ Undo', b_rueck_info: 'Undo works as long as this page stays open. The new subfolders remain (empty).',
+                b_rueck_ok: '↶ {n} files put back in their old place.', b_abgebrochen: 'Selection cancelled.',
+                b_kein_recht: 'The browser did not allow access. Please choose again and confirm “Allow changes”.',
+                b_gesperrt: 'The browser does not allow this folder for security reasons (e.g. the whole user folder or system folders). Choose a subfolder, e.g. Downloads.',
+                b_fehler: 'Error: {msg}',
+                s_titel: '2 · Program for your computer',
+                s_info: 'For all browsers: you download a small program (script) that uses your rules from above. It shows the preview first and asks before moving anything. At the end it saves a log in the folder. On Windows it uses PowerShell, on Mac/Linux the Terminal – both are already part of the system, nothing needs to be installed.',
+                s_system: 'Your computer', s_ordner: 'Which folder?', o_downloads: 'Downloads', o_desktop: 'Desktop', o_dokumente: 'Documents', o_eigen: 'Own path …', s_pfad: 'Path to the folder',
+                s_laden: '⬇ Download program', s_so: 'How to start it', kopieren: 'Copy', kopiert: 'Copied', s_code: '🔍 What exactly does the program do? (view code)',
+                s_win1: 'Download the file “{datei}” (usually ends up in Downloads).',
+                s_win2: 'Right-click the file → “Run with PowerShell”.',
+                s_win3: 'If that does not work: Start menu → open “PowerShell” and paste this command:',
+                s_mac1: 'Download the file “{datei}” (usually ends up in Downloads).',
+                s_mac2: 'Open the program “Terminal” (Mac: Spotlight ⌘+Space → “Terminal”).',
+                s_mac3: 'Paste this command and press Enter:',
+                s_warn_win: 'Windows may warn you because the script comes from the internet. That is normal. You can look at the code below first – it only moves files into subfolders, deletes nothing and sends nothing to the internet.',
+                s_warn_mac: 'The script only moves files into subfolders, deletes nothing and sends nothing to the internet. You can look at the code below.',
+                s_pfad_fehlt: 'Please enter the path to the folder.', s_keine_regel: 'Please tick at least one rule with extensions.',
+                sicher_titel: '🔒 Safe and private',
+                sicher_text: 'Nothing is deleted and nothing is overwritten: if a file with the same name already exists in the target folder, the file stays where it is (or gets “(2)” in its name if you choose that). Only files directly in the chosen folder are sorted, no subfolders. No file leaves your computer. Tip: back up very important folders first.'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=2"></script>
+    <script src="ordnen.js?v=1"></script>
+</body>
+
+</html>

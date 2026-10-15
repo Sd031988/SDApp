@@ -2,7 +2,7 @@
   "id": "/?app=hub",
   "name": "SD Hub",
   "short_name": "SD Hub",
-  "description": "21 Helfer für Bewerbung, Briefe, Finanzen und Dokumente",
+  "description": "22 Helfer für Bewerbung, Briefe, Finanzen und Dokumente",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
