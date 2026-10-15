@@ -110,23 +110,20 @@
         <section class="karte" data-panel="skript" hidden>
             <h2 data-i18n="s_titel">2 · Programm für deinen Computer</h2>
             <p class="info" data-i18n="s_info"></p>
-            <div class="zeile">
-                <label class="feld"><span data-i18n="s_system">Dein Computer</span>
-                    <select id="sSystem">
-                        <option value="win">Windows</option>
-                        <option value="mac">Mac</option>
-                        <option value="linux">Linux</option>
-                    </select></label>
-                <label class="feld"><span data-i18n="s_ordner">Welcher Ordner?</span>
-                    <select id="sOrdner">
-                        <option value="downloads" data-i18n="o_downloads">Downloads</option>
-                        <option value="desktop" data-i18n="o_desktop">Schreibtisch (Desktop)</option>
-                        <option value="dokumente" data-i18n="o_dokumente">Dokumente</option>
-                        <option value="eigen" data-i18n="o_eigen">Eigener Pfad …</option>
-                    </select></label>
+            <label class="feld"><span data-i18n="s_system">Dein Computer</span>
+                <select id="sSystem">
+                    <option value="win">Windows</option>
+                    <option value="mac">Mac</option>
+                    <option value="linux">Linux</option>
+                </select></label>
+            <div style="display:grid;gap:8px">
+                <b style="font-size:.82rem" data-i18n="s_ordner">Welche Ordner? (mehrere möglich)</b>
+                <div id="sOrdnerWahl" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px"></div>
+                <label class="check"><input type="checkbox" id="sAuswahl"> <span data-i18n="s_auswahl">Beim Start weitere Ordner selbst auswählen – jeder Ordner auf dem PC, auch USB-Stick oder externe Festplatte</span></label>
+                <label class="feld"><span data-i18n="s_pfade">Feste Ordner-Pfade (optional, einer pro Zeile)</span>
+                    <textarea id="sPfade" rows="2" placeholder="D:\Fotos"></textarea></label>
+                <p class="info" data-i18n="s_schutz"></p>
             </div>
-            <label class="feld" id="sPfadFeld" hidden><span data-i18n="s_pfad">Pfad zum Ordner</span>
-                <input type="text" id="sPfad" placeholder="C:\Users\Name\Bilder"></label>
             <div class="knoepfe">
                 <button type="button" class="btn prim" id="sLaden" data-i18n="s_laden">⬇ Programm herunterladen</button>
             </div>
@@ -172,7 +169,7 @@
                 b_fehler: 'Fehler: {msg}',
                 s_titel: '2 · Programm für deinen Computer',
                 s_info: 'Für alle Browser: Du lädst ein kleines Programm (Skript) herunter, das mit deinen Regeln von oben arbeitet. Es zeigt zuerst die Vorschau und fragt, bevor es etwas verschiebt. Am Ende legt es ein Protokoll in den Ordner. Auf Windows nutzt es PowerShell, auf Mac/Linux das Terminal – beides ist schon im System, nichts muss installiert werden.',
-                s_system: 'Dein Computer', s_ordner: 'Welcher Ordner?', o_downloads: 'Downloads', o_desktop: 'Schreibtisch (Desktop)', o_dokumente: 'Dokumente', o_eigen: 'Eigener Pfad …', s_pfad: 'Pfad zum Ordner',
+                s_system: 'Dein Computer', s_ordner: 'Welche Ordner? (mehrere möglich)', o_downloads: 'Downloads', o_desktop: 'Schreibtisch', o_dokumente: 'Dokumente', o_bilder: 'Bilder', o_videos: 'Videos', o_musik: 'Musik', s_auswahl: 'Beim Start weitere Ordner selbst auswählen – jeder Ordner auf dem PC, auch USB-Stick oder externe Festplatte', s_pfade: 'Feste Ordner-Pfade (optional, einer pro Zeile)', s_schutz: '🛡️ Schutz: Ganze Laufwerke (z. B. C:\\), Windows, Programme, AppData und der Benutzer-Hauptordner werden nie aufgeräumt – dort würden sonst Programme kaputtgehen. Es werden nur Dateien direkt in den gewählten Ordnern sortiert, keine Unterordner. Verknüpfungen auf dem Schreibtisch bleiben liegen.', s_keine_ordner: 'Bitte mindestens einen Ordner ankreuzen oder „selbst auswählen“ aktivieren.',
                 s_laden: '⬇ Programm herunterladen', s_so: 'So startest du es', kopieren: 'Kopieren', kopiert: 'Kopiert', s_code: '🔍 Was genau macht das Programm? (Code ansehen)',
                 s_win1: 'Datei „{datei}“ herunterladen (landet meist im Ordner Downloads).',
                 s_win2: 'Rechtsklick auf die Datei → „Mit PowerShell ausführen“.',
@@ -210,7 +207,7 @@
                 b_fehler: 'Error: {msg}',
                 s_titel: '2 · Program for your computer',
                 s_info: 'For all browsers: you download a small program (script) that uses your rules from above. It shows the preview first and asks before moving anything. At the end it saves a log in the folder. On Windows it uses PowerShell, on Mac/Linux the Terminal – both are already part of the system, nothing needs to be installed.',
-                s_system: 'Your computer', s_ordner: 'Which folder?', o_downloads: 'Downloads', o_desktop: 'Desktop', o_dokumente: 'Documents', o_eigen: 'Own path …', s_pfad: 'Path to the folder',
+                s_system: 'Your computer', s_ordner: 'Which folders? (several possible)', o_downloads: 'Downloads', o_desktop: 'Desktop', o_dokumente: 'Documents', o_bilder: 'Pictures', o_videos: 'Videos', o_musik: 'Music', s_auswahl: 'Choose more folders yourself at start – any folder on the PC, also USB stick or external drive', s_pfade: 'Fixed folder paths (optional, one per line)', s_schutz: '🛡️ Protection: whole drives (e.g. C:\\), Windows, Program Files, AppData and the main user folder are never tidied up – programs would break there. Only files directly in the chosen folders are sorted, no subfolders. Shortcuts on the desktop stay where they are.', s_keine_ordner: 'Please tick at least one folder or enable “choose yourself”.',
                 s_laden: '⬇ Download program', s_so: 'How to start it', kopieren: 'Copy', kopiert: 'Copied', s_code: '🔍 What exactly does the program do? (view code)',
                 s_win1: 'Download the file “{datei}” (usually ends up in Downloads).',
                 s_win2: 'Right-click the file → “Run with PowerShell”.',
@@ -228,7 +225,7 @@
     </script>
     <script src="../i18n.js?v=1"></script>
     <script src="../sd-bereich.js?v=2"></script>
-    <script src="ordnen.js?v=2"></script>
+    <script src="ordnen.js?v=3"></script>
 </body>
 
 </html>

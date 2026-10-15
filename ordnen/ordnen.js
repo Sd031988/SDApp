@@ -57,27 +57,38 @@
             erkl: 'Verschiebt Dateien nach Dateiendung in Unterordner. Löscht nichts und überschreibt nichts.',
             ordner: 'Ordner', fehlt: 'Ordner nicht gefunden', nichts: 'Nichts zu sortieren - keine Datei passt zu den Regeln.',
             vorschau: 'Vorschau - so würde sortiert:', dateien: 'Dateien', frage: 'Jetzt verschieben? (j/n)', abbruch: 'Abgebrochen - nichts wurde verschoben.',
-            fertig: 'Fertig', verschoben: 'verschoben', uebersprungen: 'übersprungen (gab es schon)', fehler: 'Fehler', protokoll: 'Protokoll gespeichert', enter: 'Enter zum Schließen'
+            fertig: 'Fertig', verschoben: 'verschoben', uebersprungen: 'übersprungen (gab es schon)', fehler: 'Fehler', protokoll: 'Protokoll gespeichert', enter: 'Enter zum Schließen',
+            waehlen: 'Ordner zum Aufräumen auswählen', nochmal: 'Noch einen Ordner auswählen? (j/n)', keiner: 'Kein Ordner ausgewählt.',
+            gesperrt: 'Wird aus Sicherheitsgründen NICHT aufgeräumt (Laufwerk, System-, Programm- oder Benutzer-Hauptordner)', pfadfrage: 'Pfad zum Ordner eingeben (leer = fertig)'
         },
         en: {
             kopf: 'SD Hub - Tidy up folders (thesdhub.com/ordnen)',
             erkl: 'Moves files into subfolders by file extension. Deletes nothing and overwrites nothing.',
             ordner: 'Folder', fehlt: 'Folder not found', nichts: 'Nothing to sort - no file matches the rules.',
             vorschau: 'Preview - files would be sorted like this:', dateien: 'files', frage: 'Move them now? (y/n)', abbruch: 'Cancelled - nothing was moved.',
-            fertig: 'Done', verschoben: 'moved', uebersprungen: 'skipped (already existed)', fehler: 'errors', protokoll: 'Log saved', enter: 'Press Enter to close'
+            fertig: 'Done', verschoben: 'moved', uebersprungen: 'skipped (already existed)', fehler: 'errors', protokoll: 'Log saved', enter: 'Press Enter to close',
+            waehlen: 'Choose a folder to tidy up', nochmal: 'Choose another folder? (y/n)', keiner: 'No folder chosen.',
+            gesperrt: 'NOT tidied up for safety reasons (drive, system, program or main user folder)', pfadfrage: 'Enter the path to the folder (empty = done)'
         }
     };
+    const ORDNER_IDS = ['downloads', 'desktop', 'dokumente', 'bilder', 'videos', 'musik'];
 
     function powershellSkript(o) {
         const T = SKRIPT_TEXTE[o.lang] || SKRIPT_TEXTE.de;
-        let ordnerAusdruck;
-        if (o.ordner === 'desktop') ordnerAusdruck = "[Environment]::GetFolderPath('Desktop')";
-        else if (o.ordner === 'dokumente') ordnerAusdruck = "[Environment]::GetFolderPath('MyDocuments')";
-        else if (o.ordner === 'eigen') ordnerAusdruck = psStr(o.pfad);
-        else ordnerAusdruck = "$(try { (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path } catch { Join-Path $env:USERPROFILE 'Downloads' })";
+        const AUSDRUCK = {
+            downloads: "$(try { (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path } catch { Join-Path $env:USERPROFILE 'Downloads' })",
+            desktop: "[Environment]::GetFolderPath('Desktop')",
+            dokumente: "[Environment]::GetFolderPath('MyDocuments')",
+            bilder: "[Environment]::GetFolderPath('MyPictures')",
+            videos: "[Environment]::GetFolderPath('MyVideos')",
+            musik: "[Environment]::GetFolderPath('MyMusic')"
+        };
         const z = [];
         z.push('# ' + T.kopf, '# ' + T.erkl, '');
-        z.push('$Ordner = ' + ordnerAusdruck);
+        z.push('$Liste = @()');
+        (o.ordnerListe || []).forEach(id => { if (AUSDRUCK[id]) z.push('$Liste += ' + AUSDRUCK[id]); });
+        (o.pfade || []).forEach(p2 => z.push('$Liste += ' + psStr(p2)));
+        z.push('$Auswaehlen = ' + (o.auswahl ? '$true' : '$false'));
         z.push('$Regeln = [ordered]@{');
         o.regeln.forEach(r => z.push('    ' + psStr(r.ordner) + ' = @(' + r.endungen.map(e => psStr('.' + e)).join(', ') + ')'));
         z.push('}');
@@ -87,34 +98,65 @@
         z.push('');
         z.push('try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}');
         z.push('function Ende { Write-Host ""; [void](Read-Host ' + psStr(T.enter) + '); exit }');
+        z.push('# Laufwerke, Windows, Programme, AppData und der Benutzer-Hauptordner werden nie aufgeräumt');
+        z.push('function Ist-Gesperrt([string]$p) {');
+        z.push("    try { $v = [IO.Path]::GetFullPath($p).TrimEnd('\\') } catch { return $true }");
+        z.push("    if ($v -match '^[A-Za-z]:$') { return $true }");
+        z.push("    if ($v.StartsWith('\\\\') -and @($v.Split('\\') | Where-Object { $_ }).Count -le 2) { return $true }");
+        z.push("    $schutz = @($env:windir, $env:ProgramFiles, ${env:ProgramFiles(x86)}, $env:ProgramData, $env:APPDATA, $env:LOCALAPPDATA, $env:SystemRoot) | Where-Object { $_ }");
+        z.push("    foreach ($s in $schutz) { $s = $s.TrimEnd('\\'); if ($v -ieq $s -or $v.StartsWith($s + '\\', [StringComparison]::OrdinalIgnoreCase)) { return $true } }");
+        z.push("    if ($env:USERPROFILE -and $v -ieq $env:USERPROFILE.TrimEnd('\\')) { return $true }");
+        z.push("    if ($env:USERPROFILE -and $v.StartsWith($env:USERPROFILE.TrimEnd('\\') + '\\AppData', [StringComparison]::OrdinalIgnoreCase)) { return $true }");
+        z.push('    return $false');
+        z.push('}');
         z.push('Write-Host ' + psStr(T.kopf) + ' -ForegroundColor Cyan');
-        z.push('Write-Host (' + psStr(T.ordner + ': ') + ' + $Ordner)');
-        z.push('if (-not $Ordner -or -not (Test-Path -LiteralPath $Ordner -PathType Container)) { Write-Host (' + psStr(T.fehlt + ': ') + ' + $Ordner) -ForegroundColor Red; Ende }');
+        z.push('if ($Auswaehlen) {');
+        z.push('    Add-Type -AssemblyName System.Windows.Forms');
+        z.push('    do {');
+        z.push('        $dlg = New-Object System.Windows.Forms.FolderBrowserDialog');
+        z.push('        $dlg.Description = ' + psStr(T.waehlen));
+        z.push('        $dlg.ShowNewFolderButton = $false');
+        z.push('        $vorne = New-Object System.Windows.Forms.Form -Property @{ TopMost = $true }');
+        z.push("        if ($dlg.ShowDialog($vorne) -eq [System.Windows.Forms.DialogResult]::OK) { $Liste += $dlg.SelectedPath; Write-Host ('  + ' + $dlg.SelectedPath) }");
+        z.push('        $vorne.Dispose()');
+        z.push('        $w = Read-Host ' + psStr(T.nochmal));
+        z.push("    } while ($w -match '^\\s*[jJyY]')");
+        z.push('}');
+        z.push('$Liste = @($Liste | Where-Object { $_ } | Select-Object -Unique)');
+        z.push('if ($Liste.Count -eq 0) { Write-Host ' + psStr(T.keiner) + ' -ForegroundColor Yellow; Ende }');
         z.push('$Zuordnung = @{}');
         z.push('foreach ($k in $Regeln.Keys) { foreach ($e in $Regeln[$k]) { if (-not $Zuordnung.ContainsKey($e)) { $Zuordnung[$e] = $k } } }');
         z.push('$Ich = $PSCommandPath');
         z.push('$Plan = @()');
-        z.push('foreach ($f in (Get-ChildItem -LiteralPath $Ordner -Force | Where-Object { -not $_.PSIsContainer })) {');
-        z.push('    if ($f.Attributes -band [IO.FileAttributes]::Hidden) { continue }');
-        z.push("    if ($f.Name.StartsWith('.') -or $f.Name.StartsWith(" + psStr(PROTOKOLL_PREFIX) + ')) { continue }');
-        z.push('    if ($Ich -and $f.FullName -eq $Ich) { continue }');
-        z.push('    $e = $f.Extension.ToLowerInvariant()');
-        z.push('    if ($ImmerLassen -contains $e) { continue }');
-        z.push('    $ziel = $null');
-        z.push('    if ($e -and $Zuordnung.ContainsKey($e)) { $ziel = $Zuordnung[$e] } elseif ($Sonstiges) { $ziel = $Sonstiges }');
-        z.push('    if ($ziel) { $Plan += [pscustomobject]@{ Datei = $f; Ziel = $ziel } }');
+        z.push('foreach ($Ordner in $Liste) {');
+        z.push('    if (-not (Test-Path -LiteralPath $Ordner -PathType Container)) { Write-Host (' + psStr(T.fehlt + ': ') + ' + $Ordner) -ForegroundColor Red; continue }');
+        z.push('    if (Ist-Gesperrt $Ordner) { Write-Host (' + psStr(T.gesperrt + ': ') + ' + $Ordner) -ForegroundColor Red; continue }');
+        z.push('    foreach ($f in (Get-ChildItem -LiteralPath $Ordner -Force | Where-Object { -not $_.PSIsContainer })) {');
+        z.push('        if ($f.Attributes -band [IO.FileAttributes]::Hidden -or $f.Attributes -band [IO.FileAttributes]::System) { continue }');
+        z.push("        if ($f.Name.StartsWith('.') -or $f.Name.StartsWith(" + psStr(PROTOKOLL_PREFIX) + ')) { continue }');
+        z.push("        if ($Ich -and $f.FullName -eq $Ich) { continue }");
+        z.push("        if ($f.Extension -ieq '.lnk' -or $f.Extension -ieq '.url' -or $f.Name -ieq 'desktop.ini') { continue }");
+        z.push('        $e = $f.Extension.ToLowerInvariant()');
+        z.push('        if ($ImmerLassen -contains $e) { continue }');
+        z.push('        $ziel = $null');
+        z.push('        if ($e -and $Zuordnung.ContainsKey($e)) { $ziel = $Zuordnung[$e] } elseif ($Sonstiges) { $ziel = $Sonstiges }');
+        z.push('        if ($ziel) { $Plan += [pscustomobject]@{ Ordner = $Ordner; Datei = $f; Ziel = $ziel } }');
+        z.push('    }');
         z.push('}');
         z.push('if ($Plan.Count -eq 0) { Write-Host ' + psStr(T.nichts) + ' -ForegroundColor Yellow; Ende }');
         z.push('Write-Host ""');
         z.push('Write-Host ' + psStr(T.vorschau));
-        z.push("$Plan | Group-Object Ziel | Sort-Object Name | ForEach-Object { Write-Host ('  {0,-22} {1} ' -f ($_.Name + '\\'), $_.Count) -NoNewline; Write-Host " + psStr(T.dateien) + ' }');
+        z.push('foreach ($g in ($Plan | Group-Object Ordner)) {');
+        z.push('    Write-Host ("  " + $g.Name) -ForegroundColor Cyan');
+        z.push("    $g.Group | Group-Object Ziel | Sort-Object Name | ForEach-Object { Write-Host ('    {0,-22} {1} ' -f ($_.Name + '\\'), $_.Count) -NoNewline; Write-Host " + psStr(T.dateien) + ' }');
+        z.push('}');
         z.push('Write-Host ""');
         z.push('$a = Read-Host ' + psStr(T.frage));
         z.push("if ($a -notmatch '^\\s*[jJyY]') { Write-Host " + psStr(T.abbruch) + '; Ende }');
-        z.push('$ok = 0; $skip = 0; $fehl = 0; $Log = @()');
+        z.push('$ok = 0; $skip = 0; $fehl = 0; $Log = @{}');
         z.push('foreach ($p in $Plan) {');
         z.push('    try {');
-        z.push('        $zielOrdner = Join-Path $Ordner $p.Ziel');
+        z.push('        $zielOrdner = Join-Path $p.Ordner $p.Ziel');
         z.push('        if (-not (Test-Path -LiteralPath $zielOrdner -PathType Container)) { [void][IO.Directory]::CreateDirectory($zielOrdner) }');
         z.push('        $name = $p.Datei.Name');
         z.push('        $zielDatei = Join-Path $zielOrdner $name');
@@ -124,10 +166,13 @@
         z.push('            do { $name = "{0} ({1}){2}" -f $p.Datei.BaseName, $n, $p.Datei.Extension; $zielDatei = Join-Path $zielOrdner $name; $n++ } while (Test-Path -LiteralPath $zielDatei)');
         z.push('        }');
         z.push('        [IO.File]::Move($p.Datei.FullName, $zielDatei)');
-        z.push('        $ok++; $Log += ($p.Datei.Name + "  ->  " + $p.Ziel + "\\" + $name)');
-        z.push('    } catch { $fehl++; Write-Host ("  " + $p.Datei.Name + ": " + $_.Exception.Message) -ForegroundColor Red }');
+        z.push('        $ok++');
+        z.push('        if (-not $Log.ContainsKey($p.Ordner)) { $Log[$p.Ordner] = New-Object System.Collections.ArrayList }');
+        z.push('        [void]$Log[$p.Ordner].Add($p.Datei.Name + "  ->  " + $p.Ziel + "\\" + $name)');
+        z.push('    } catch { $fehl++; Write-Host ("  " + $p.Datei.FullName + ": " + $_.Exception.Message) -ForegroundColor Red }');
         z.push('}');
-        z.push('if ($Log.Count) { $lp = Join-Path $Ordner (' + psStr(PROTOKOLL_PREFIX + '-') + " + (Get-Date -Format 'yyyy-MM-dd_HH-mm') + '.txt'); $Log | Set-Content -LiteralPath $lp -Encoding UTF8; Write-Host (" + psStr(T.protokoll + ': ') + ' + $lp) }');
+        z.push('$stempel = Get-Date -Format \'yyyy-MM-dd_HH-mm\'');
+        z.push('foreach ($o in $Log.Keys) { try { $lp = Join-Path $o (' + psStr(PROTOKOLL_PREFIX + '-') + " + $stempel + '.txt'); $Log[$o] | Set-Content -LiteralPath $lp -Encoding UTF8; Write-Host (" + psStr(T.protokoll + ': ') + ' + $lp) } catch {} }');
         z.push('Write-Host ""');
         z.push('Write-Host (' + psStr(T.fertig + ': ') + " + $ok + ' ' + " + psStr(T.verschoben) + " + ', ' + $skip + ' ' + " + psStr(T.uebersprungen) + " + ', ' + $fehl + ' ' + " + psStr(T.fehler) + ') -ForegroundColor Green');
         z.push('Ende');
@@ -136,16 +181,19 @@
 
     function bashSkript(o) {
         const T = SKRIPT_TEXTE[o.lang] || SKRIPT_TEXTE.de;
-        let ordner;
-        if (o.ordner === 'eigen') ordner = shStr(o.pfad);
-        else if (o.system === 'linux') {
-            const xdg = { downloads: 'DOWNLOAD', desktop: 'DESKTOP', dokumente: 'DOCUMENTS' }[o.ordner] || 'DOWNLOAD';
-            const ers = { downloads: 'Downloads', desktop: 'Desktop', dokumente: 'Documents' }[o.ordner] || 'Downloads';
-            ordner = '"$(xdg-user-dir ' + xdg + ' 2>/dev/null || echo "$HOME/' + ers + '")"';
-        } else ordner = '"$HOME/' + ({ downloads: 'Downloads', desktop: 'Desktop', dokumente: 'Documents' }[o.ordner] || 'Downloads') + '"';
+        const linux = o.system === 'linux';
+        const XDG = { downloads: 'DOWNLOAD', desktop: 'DESKTOP', dokumente: 'DOCUMENTS', bilder: 'PICTURES', videos: 'VIDEOS', musik: 'MUSIC' };
+        const MAC = { downloads: 'Downloads', desktop: 'Desktop', dokumente: 'Documents', bilder: 'Pictures', videos: 'Movies', musik: 'Music' };
+        const LX = { downloads: 'Downloads', desktop: 'Desktop', dokumente: 'Documents', bilder: 'Pictures', videos: 'Videos', musik: 'Music' };
         const z = [];
         z.push('#!/bin/bash', '# ' + T.kopf, '# ' + T.erkl, '');
-        z.push('ORDNER=' + ordner);
+        z.push('LISTE="$(mktemp)"; PLAN="$(mktemp)"; trap \'rm -f "$LISTE" "$PLAN"\' EXIT');
+        (o.ordnerListe || []).forEach(id => {
+            if (!MAC[id]) return;
+            z.push(linux ? 'printf \'%s\\n\' "$(xdg-user-dir ' + XDG[id] + ' 2>/dev/null || echo "$HOME/' + LX[id] + '")" >> "$LISTE"' : 'printf \'%s\\n\' "$HOME/' + MAC[id] + '" >> "$LISTE"');
+        });
+        (o.pfade || []).forEach(p2 => z.push('printf \'%s\\n\' ' + shStr(p2) + ' >> "$LISTE"'));
+        z.push('AUSWAEHLEN=' + (o.auswahl ? '1' : '0'));
         z.push('SONSTIGES=' + shStr(o.sonstiges || ''));
         z.push('DOPPELT=' + shStr(o.doppelt === 'umbenennen' ? 'umbenennen' : 'ueberspringen'));
         z.push('');
@@ -156,34 +204,60 @@
         z.push('        *) echo "$SONSTIGES" ;;');
         z.push('    esac');
         z.push('}');
+        z.push('# System-, Programm- und Benutzer-Hauptordner werden nie aufgeräumt');
+        z.push('gesperrt() {');
+        z.push('    v="$(cd "$1" 2>/dev/null && pwd -P)" || return 0');
+        z.push('    h="$(cd "$HOME" && pwd -P)"');
+        z.push('    case "$v" in');
+        z.push('        /|"$h"|"$h"/Library|"$h"/Library/*|"$h"/.*|/System|/System/*|/Library|/Library/*|/Applications|/Applications/*|/usr|/usr/*|/bin|/bin/*|/sbin|/sbin/*|/etc|/etc/*|/var|/var/*|/private|/private/*|/opt|/opt/*|/boot|/boot/*|/proc|/proc/*|/sys|/sys/*|/dev|/dev/*|/lib|/lib/*|/lib64|/lib64/*|/snap|/snap/*|/Volumes|/media|/mnt|/home|/Users) return 0 ;;');
+        z.push('    esac');
+        z.push('    return 1');
+        z.push('}');
         z.push('');
         z.push('echo ' + shStr(T.kopf));
-        z.push('echo ' + shStr(T.ordner + ': ') + '"$ORDNER"');
-        z.push('if [ ! -d "$ORDNER" ]; then echo ' + shStr(T.fehlt + ': ') + '"$ORDNER"; exit 1; fi');
-        z.push('PLAN="$(mktemp)"; trap \'rm -f "$PLAN"\' EXIT');
-        z.push('for f in "$ORDNER"/*; do');
-        z.push('    [ -f "$f" ] || continue');
-        z.push('    [ -L "$f" ] && continue');
-        z.push('    [ "$f" -ef "$0" ] && continue');
-        z.push('    name="${f##*/}"');
-        z.push('    case "$name" in ' + PROTOKOLL_PREFIX + '*) continue ;; esac');
-        z.push('    case "$name" in ?*.*) ext="${name##*.}" ;; *) ext="" ;; esac');
-        z.push("    ext=\"$(printf '%s' \"$ext\" | tr '[:upper:]' '[:lower:]')\"");
-        z.push('    if [ -n "$ext" ]; then ziel="$(kategorie "$ext")"; else ziel="$SONSTIGES"; fi');
-        z.push('    case "$ext" in ' + IMMER_LASSEN.join('|') + ') continue ;; esac');
-        z.push('    [ -n "$ziel" ] && printf \'%s\\t%s\\n\' "$ziel" "$name" >> "$PLAN"');
-        z.push('done');
+        z.push('if [ "$AUSWAEHLEN" = 1 ]; then');
+        z.push('    while :; do');
+        z.push('        p=""');
+        z.push('        if command -v osascript >/dev/null 2>&1; then');
+        z.push('            p="$(osascript -e ' + shStr('POSIX path of (choose folder with prompt "' + T.waehlen.replace(/"/g, '') + '")') + ' 2>/dev/null)"');
+        z.push('        elif command -v zenity >/dev/null 2>&1; then');
+        z.push('            p="$(zenity --file-selection --directory --title=' + shStr(T.waehlen) + ' 2>/dev/null)"');
+        z.push('        else');
+        z.push('            printf \'%s: \' ' + shStr(T.pfadfrage) + '; read -r p < /dev/tty; [ -z "$p" ] && break');
+        z.push('        fi');
+        z.push('        p="${p%/}"; [ -n "$p" ] && { printf \'%s\\n\' "$p" >> "$LISTE"; echo "  + $p"; }');
+        z.push('        printf \'%s \' ' + shStr(T.nochmal) + '; read -r w < /dev/tty');
+        z.push('        case "$w" in [jJyY]*) ;; *) break ;; esac');
+        z.push('    done');
+        z.push('fi');
+        z.push('if [ ! -s "$LISTE" ]; then echo ' + shStr(T.keiner) + '; exit 0; fi');
+        z.push('while IFS= read -r ORDNER; do');
+        z.push('    [ -n "$ORDNER" ] || continue');
+        z.push('    if [ ! -d "$ORDNER" ]; then echo ' + shStr(T.fehlt + ': ') + '"$ORDNER"; continue; fi');
+        z.push('    if gesperrt "$ORDNER"; then echo ' + shStr(T.gesperrt + ': ') + '"$ORDNER"; continue; fi');
+        z.push('    for f in "$ORDNER"/*; do');
+        z.push('        [ -f "$f" ] || continue');
+        z.push('        [ -L "$f" ] && continue');
+        z.push('        [ "$f" -ef "$0" ] && continue');
+        z.push('        name="${f##*/}"');
+        z.push('        case "$name" in ' + PROTOKOLL_PREFIX + '*|*.desktop|*.app|*.webloc) continue ;; esac');
+        z.push('        case "$name" in ?*.*) ext="${name##*.}" ;; *) ext="" ;; esac');
+        z.push("        ext=\"$(printf '%s' \"$ext\" | tr '[:upper:]' '[:lower:]')\"");
+        z.push('        case "$ext" in ' + IMMER_LASSEN.join('|') + ') continue ;; esac');
+        z.push('        if [ -n "$ext" ]; then ziel="$(kategorie "$ext")"; else ziel="$SONSTIGES"; fi');
+        z.push('        [ -n "$ziel" ] && printf \'%s\\t%s\\t%s\\n\' "$ORDNER" "$ziel" "$name" >> "$PLAN"');
+        z.push('    done');
+        z.push('done < <(sort -u "$LISTE")');
         z.push('if [ ! -s "$PLAN" ]; then echo ' + shStr(T.nichts) + '; exit 0; fi');
         z.push('echo');
         z.push('echo ' + shStr(T.vorschau));
-        z.push("cut -f1 \"$PLAN\" | sort | uniq -c | while read -r anzahl ordner; do printf '  %-22s %s %s\\n' \"$ordner/\" \"$anzahl\" " + shStr(T.dateien) + '; done');
+        z.push("awk -F'\\t' -v d=" + shStr(T.dateien) + " '{ n[$1 \"\\t\" $2]++ } END { for (k in n) { split(k, t, \"\\t\"); print t[1] \"\\t\" t[2] \"\\t\" n[k] } }' \"$PLAN\" | sort | awk -F'\\t' -v d=" + shStr(T.dateien) + " '{ if ($1 != alt) { print \"  \" $1; alt = $1 } printf \"    %-22s %s %s\\n\", $2 \"/\", $3, d }'");
         z.push('echo');
         z.push('printf \'%s \' ' + shStr(T.frage));
         z.push('read -r antwort < /dev/tty');
         z.push('case "$antwort" in [jJyY]*) ;; *) echo ' + shStr(T.abbruch) + '; exit 0 ;; esac');
-        z.push('ok=0; skip=0; fehl=0');
-        z.push('LOG="$ORDNER/' + PROTOKOLL_PREFIX + '-$(date +%Y-%m-%d_%H-%M).txt"');
-        z.push("while IFS=\"$(printf '\\t')\" read -r ziel name; do");
+        z.push('ok=0; skip=0; fehl=0; STEMPEL="$(date +%Y-%m-%d_%H-%M)"');
+        z.push("while IFS=\"$(printf '\\t')\" read -r ORDNER ziel name; do");
         z.push('    mkdir -p "$ORDNER/$ziel" || { fehl=$((fehl+1)); continue; }');
         z.push('    neu="$name"');
         z.push('    if [ -e "$ORDNER/$ziel/$neu" ]; then');
@@ -193,18 +267,18 @@
         z.push('        neu="$basis ($n)$end"');
         z.push('    fi');
         z.push('    if mv -n "$ORDNER/$name" "$ORDNER/$ziel/$neu" && [ -e "$ORDNER/$ziel/$neu" ] && [ ! -e "$ORDNER/$name" ]; then');
-        z.push('        ok=$((ok+1)); printf \'%s  ->  %s/%s\\n\' "$name" "$ziel" "$neu" >> "$LOG"');
+        z.push('        ok=$((ok+1)); printf \'%s  ->  %s/%s\\n\' "$name" "$ziel" "$neu" >> "$ORDNER/' + PROTOKOLL_PREFIX + '-$STEMPEL.txt"');
         z.push('    else');
-        z.push('        fehl=$((fehl+1)); echo "  $name: ' + T.fehler + '"');
+        z.push('        fehl=$((fehl+1)); echo "  $ORDNER/$name: ' + T.fehler + '"');
         z.push('    fi');
         z.push('done < "$PLAN"');
-        z.push('[ -f "$LOG" ] && echo ' + shStr(T.protokoll + ': ') + '"$LOG"');
         z.push('echo');
         z.push('echo "' + T.fertig + ': $ok ' + T.verschoben + ', $skip ' + T.uebersprungen + ', $fehl ' + T.fehler + '"');
+        z.push('echo ' + shStr(T.protokoll + ': ' + PROTOKOLL_PREFIX + '-…txt'));
         return z.join('\n') + '\n';
     }
 
-    const api = { STANDARD, endungenAus, sichererOrdnerName, zielFuer, nummerierterName, aktiveRegeln, powershellSkript, bashSkript, IMMER_LASSEN };
+    const api = { ORDNER_IDS, STANDARD, endungenAus, sichererOrdnerName, zielFuer, nummerierterName, aktiveRegeln, powershellSkript, bashSkript, IMMER_LASSEN };
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
     window.SDOrdnen = api;
 
@@ -392,16 +466,26 @@
     // ---------- Weg 2: Skript ----------
     if (!d.system) d.system = /Mac/i.test(navigator.platform || navigator.userAgent) ? 'mac' : /Linux/i.test(navigator.platform || '') && !/Android/i.test(navigator.userAgent) ? 'linux' : 'win';
     $('sSystem').value = d.system;
-    $('sOrdner').value = d.sOrdner || 'downloads';
-    $('sPfad').value = d.sPfad || '';
+    if (!Array.isArray(d.sOrdnerListe)) d.sOrdnerListe = ['downloads'];
+    $('sAuswahl').checked = !!d.sAuswahl;
+    $('sPfade').value = (d.sPfade || []).join('\n');
+    function zeichneOrdnerWahl() {
+        $('sOrdnerWahl').innerHTML = ORDNER_IDS.map(id => '<label class="check"><input type="checkbox" data-ordner="' + id + '"' + (d.sOrdnerListe.includes(id) ? ' checked' : '') + '> <span>' + esc(t('o_' + id)) + '</span></label>').join('');
+    }
+    $('sOrdnerWahl').addEventListener('change', (e) => {
+        const id = e.target.dataset.ordner; if (!id) return;
+        d.sOrdnerListe = ORDNER_IDS.filter(x => x === id ? e.target.checked : d.sOrdnerListe.includes(x));
+        speichern(); zeichneSkript();
+    });
+    $('sAuswahl').addEventListener('change', () => { d.sAuswahl = $('sAuswahl').checked; speichern(); zeichneSkript(); });
+    $('sPfade').addEventListener('input', () => { d.sPfade = $('sPfade').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean); speichern(); zeichneSkript(); });
     function skriptOptionen() {
-        return { lang: en() ? 'en' : 'de', system: d.system, ordner: d.sOrdner || 'downloads', pfad: d.sPfad || '', regeln: regeln(), sonstiges: sonstigesName(), doppelt: d.doppelt || 'ueberspringen' };
+        return { lang: en() ? 'en' : 'de', system: d.system, ordnerListe: d.sOrdnerListe, auswahl: !!d.sAuswahl, pfade: d.sPfade || [], regeln: regeln(), sonstiges: sonstigesName(), doppelt: d.doppelt || 'ueberspringen' };
     }
     const dateiName = () => d.system === 'win' ? 'sd-ordner-aufraeumen.ps1' : 'sd-ordner-aufraeumen.sh';
     function zeichneSkript() {
         const o = skriptOptionen();
-        $('sPfadFeld').hidden = o.ordner !== 'eigen';
-        $('sPfad').placeholder = d.system === 'win' ? 'C:\\Users\\Name\\Bilder' : '/Users/name/Pictures';
+        $('sPfade').placeholder = d.system === 'win' ? 'D:\\Fotos' : (d.system === 'mac' ? '/Volumes/USB/Fotos' : '/media/usb/Fotos');
         const win = d.system === 'win';
         const datei = dateiName();
         const schritte = win ? [t('s_win1', { datei }), t('s_win2'), t('s_win3')] : [t('s_mac1', { datei }), t('s_mac2'), t('s_mac3')];
@@ -413,11 +497,9 @@
         $('sCode').textContent = (win ? powershellSkript : bashSkript)(o);
     }
     $('sSystem').addEventListener('change', () => { d.system = $('sSystem').value; speichern(); zeichneSkript(); });
-    $('sOrdner').addEventListener('change', () => { d.sOrdner = $('sOrdner').value; speichern(); zeichneSkript(); });
-    $('sPfad').addEventListener('input', () => { d.sPfad = $('sPfad').value.trim(); speichern(); zeichneSkript(); });
     $('sLaden').addEventListener('click', () => {
         const o = skriptOptionen();
-        if (o.ordner === 'eigen' && !o.pfad) { SD.toast(t('s_pfad_fehlt')); $('sPfad').focus(); return; }
+        if (!o.ordnerListe.length && !o.auswahl && !o.pfade.length) { SD.toast(t('s_keine_ordner')); return; }
         if (!o.regeln.length && !o.sonstiges) { SD.toast(t('s_keine_regel')); return; }
         const win = d.system === 'win';
         // PowerShell 5 liest Skripte ohne BOM nicht als UTF-8 (Umlaute)
@@ -430,9 +512,10 @@
     });
 
     // ---------- Start ----------
-    function allesNeu() { zeichneKategorien(); if (b.dateien) { $('bOrdnerName').textContent = t('b_ordner', { name: b.dir.name, n: b.dateien.length }); zeichnePlan(); } zeichneSkript(); }
+    function allesNeu() { zeichneKategorien(); zeichneOrdnerWahl(); if (b.dateien) { $('bOrdnerName').textContent = t('b_ordner', { name: b.dir.name, n: b.dateien.length }); zeichnePlan(); } zeichneSkript(); }
     document.addEventListener('sd-lang-changed', allesNeu);
     zeichneKategorien();
+    zeichneOrdnerWahl();
     zeichneSkript();
     zeigeTab(d.tab || (kannOrdner ? 'browser' : 'skript'));
 })();
