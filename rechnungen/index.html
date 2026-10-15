@@ -100,6 +100,11 @@
 
         .dialog { position: fixed; inset: 0; background: rgba(15, 23, 42, .45); display: grid; place-items: center; padding: 16px; z-index: 50; }
         .dialog .karte { width: min(560px, 100%); max-height: 90dvh; overflow: auto; }
+            .logo-box { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 12px; padding: 12px; }
+        .logo-zeile { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+        .logo-vorschau { width: 150px; height: 70px; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: grid; place-items: center; overflow: hidden; color: var(--muted); font-size: .8rem; flex: 0 0 auto; }
+        .logo-vorschau img { max-width: 140px; max-height: 60px; }
+        .logo-optionen { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     </style>
 </head>
 
@@ -175,6 +180,24 @@
 
         <details class="karte" id="angabenKarte">
             <summary><span data-i18n="angaben_titel">🏷️ Meine Angaben (Absender)</span><small id="angabenZusammen"></small></summary>
+            <div class="logo-box">
+                <b data-i18n="logo_titel">🖼️ Logo (optional)</b>
+                <div class="logo-zeile">
+                    <div class="logo-vorschau" id="logoVorschau"><span data-i18n="logo_keins">kein Logo</span></div>
+                    <div style="display:grid;gap:8px;min-width:0">
+                        <div class="knoepfe">
+                            <label class="btn klein" style="cursor:pointer"><span data-i18n="logo_waehlen">📁 Logo hochladen</span><input type="file" id="logoDatei" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden></label>
+                            <button type="button" class="btn klein" id="logoWeg" hidden data-i18n="logo_weg">Entfernen</button>
+                        </div>
+                        <div class="logo-optionen" id="logoOptionen" hidden>
+                            <label class="feld"><span data-i18n="logo_pos">Position</span><select id="logoPos"><option value="links" data-i18n="logo_links">oben links</option><option value="rechts" data-i18n="logo_rechts">oben rechts (über der Adresse)</option></select></label>
+                            <label class="feld"><span data-i18n="logo_groesse">Größe</span><select id="logoGroesse"><option value="klein" data-i18n="logo_klein">klein</option><option value="mittel" data-i18n="logo_mittel">mittel</option><option value="gross" data-i18n="logo_gross">groß</option></select></label>
+                        </div>
+                    </div>
+                </div>
+                <small class="info" data-i18n="logo_info">PNG, JPG, WebP oder SVG. Am besten mit durchsichtigem oder weißem Hintergrund. Das Logo steht oben auf jeder neuen Rechnung.</small>
+                <p class="fehler" id="logoFehler" hidden></p>
+            </div>
             <div class="raster">
                 <label class="feld"><span data-i18n="a_name">Name / Firma</span><input type="text" id="aName"></label>
                 <label class="feld"><span data-i18n="a_zusatz">Zusatz (optional)</span><input type="text" id="aZusatz" data-i18n-placeholder="zusatz_ph" placeholder="z. B. Malerarbeiten · Nachhilfe"></label>
@@ -268,7 +291,7 @@
                 angaben_titel: '🏷️ Meine Angaben (Absender)', a_name: 'Name / Firma', a_zusatz: 'Zusatz (optional)', zusatz_ph: 'z. B. Malerarbeiten · Nachhilfe', a_strasse: 'Straße, Nr.', a_ort: 'PLZ Ort', a_tel: 'Telefon', a_email: 'E-Mail',
                 a_steuernr: 'Steuernummer', steuernr_ph: 'vom Finanzamt', a_ustid: 'USt-IdNr. (falls vorhanden)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Rechnungsnummer: Vorsilbe', a_naechste: 'Nächste laufende Nummer',
                 a_klein: 'Ich bin Kleinunternehmer (§ 19 UStG)', a_klein_hilfe: 'Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.',
-                a_ziel: 'Standard-Zahlungsziel (Tage)', angaben_info: 'Wird nur auf diesem Gerät gespeichert und erscheint auf deinen Rechnungen.', angaben_fehlen: 'noch nicht ausgefüllt', klein_kurz: 'Kleinunternehmer',
+                a_ziel: 'Standard-Zahlungsziel (Tage)', angaben_info: 'Wird nur auf diesem Gerät gespeichert und erscheint auf deinen Rechnungen.', logo_titel: '🖼️ Logo (optional)', logo_keins: 'kein Logo', logo_waehlen: '📁 Logo hochladen', logo_weg: 'Entfernen', logo_pos: 'Position', logo_links: 'oben links', logo_rechts: 'oben rechts (über der Adresse)', logo_groesse: 'Größe', logo_klein: 'klein', logo_mittel: 'mittel', logo_gross: 'groß', logo_info: 'PNG, JPG, WebP oder SVG. Am besten mit durchsichtigem oder weißem Hintergrund. Das Logo steht oben auf jeder neuen Rechnung.', logo_fehler: 'Das Bild konnte nicht gelesen werden. Bitte PNG oder JPG verwenden.', logo_ok: 'Logo gespeichert', angaben_fehlen: 'noch nicht ausgefüllt', klein_kurz: 'Kleinunternehmer',
                 wissen_titel: 'ℹ️ Gut zu wissen',
                 wissen_aus: [
                     'Diese App erstellt die Rechnung als PDF. Das reicht für Rechnungen an Privatpersonen, für Kleinunternehmer (§ 19 UStG) und für Beträge bis 250 € immer.',
@@ -313,7 +336,7 @@
                 angaben_titel: '🏷️ My details (sender)', a_name: 'Name / company', a_zusatz: 'Addition (optional)', zusatz_ph: 'e.g. Painting · Tutoring', a_strasse: 'Street, no.', a_ort: 'Postcode city', a_tel: 'Phone', a_email: 'E-mail',
                 a_steuernr: 'Tax number', steuernr_ph: 'from the tax office', a_ustid: 'VAT ID (if any)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Invoice number: prefix', a_naechste: 'Next sequential number',
                 a_klein: 'I am a small business (§ 19 UStG)', a_klein_hilfe: 'No VAT is charged and the invoice states the exemption. Limits since 2025: previous year max. €25,000, current year max. €100,000 turnover.',
-                a_ziel: 'Default payment term (days)', angaben_info: 'Stored only on this device and printed on your invoices.', angaben_fehlen: 'not filled in yet', klein_kurz: 'small business',
+                a_ziel: 'Default payment term (days)', angaben_info: 'Stored only on this device and printed on your invoices.', logo_titel: '🖼️ Logo (optional)', logo_keins: 'no logo', logo_waehlen: '📁 Upload logo', logo_weg: 'Remove', logo_pos: 'Position', logo_links: 'top left', logo_rechts: 'top right (above the address)', logo_groesse: 'Size', logo_klein: 'small', logo_mittel: 'medium', logo_gross: 'large', logo_info: 'PNG, JPG, WebP or SVG. Ideally with a transparent or white background. The logo appears at the top of every new invoice.', logo_fehler: 'The image could not be read. Please use PNG or JPG.', logo_ok: 'Logo saved', angaben_fehlen: 'not filled in yet', klein_kurz: 'small business',
                 wissen_titel: 'ℹ️ Good to know',
                 wissen_aus: [
                     'This app creates the invoice as a PDF. That is always enough for invoices to private persons, for small businesses (§ 19 UStG) and for amounts up to €250.',
@@ -381,11 +404,12 @@
         // ------------------------------------------------------------
         const KEY = 'sdRechnungen';
         function standard() {
-            return { absender: { name: '', zusatz: '', strasse: '', ort: '', tel: '', email: '', steuernr: '', ustid: '', iban: '', bank: '', klein: false, ziel: 14, praefix: new Date().getFullYear() + '-', naechste: 1 }, kunden: [], ausgang: [], eingang: [] };
+            return { logos: {}, absender: { name: '', zusatz: '', strasse: '', ort: '', tel: '', email: '', steuernr: '', ustid: '', iban: '', bank: '', klein: false, ziel: 14, praefix: new Date().getFullYear() + '-', naechste: 1 }, kunden: [], ausgang: [], eingang: [] };
         }
         let D;
         try { D = Object.assign(standard(), JSON.parse(localStorage.getItem(KEY) || '{}') || {}); } catch (e) { D = standard(); }
         D.absender = Object.assign(standard().absender, D.absender || {});
+        if (!D.logos || typeof D.logos !== 'object') D.logos = {};
         ['kunden', 'ausgang', 'eingang'].forEach(k => { if (!Array.isArray(D[k])) D[k] = []; });
         function speichern() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) { /* voll */ } }
         function herunterladen(blob, name) {
@@ -416,6 +440,7 @@
         function fuelleAngaben() {
             Object.keys(ANGABEN).forEach(id => { $(id).value = D.absender[ANGABEN[id]] == null ? '' : D.absender[ANGABEN[id]]; });
             $('aKlein').checked = !!D.absender.klein;
+            zeigeLogo();
             zeigeAngabenZusammen();
         }
         function angabenVollstaendig() { const a = D.absender; return !!(a.name && a.strasse && a.ort && (a.steuernr || a.ustid)); }
@@ -429,6 +454,48 @@
             D.absender[ANGABEN[id]] = v;
             speichern(); zeigeAngabenZusammen(); if (!$('editor').hidden) aktualisiereEditor();
         }));
+        // Logo: einmal als PNG (max. 800 px) gespeichert; Rechnungen merken sich nur die Logo-ID
+        function logoVon(a) { return a && a.logoId && D.logos[a.logoId] ? D.logos[a.logoId] : null; }
+        function logosAufraeumen() {
+            const benutzt = new Set([D.absender.logoId].concat(D.ausgang.map(r => r.absender && r.absender.logoId)).filter(Boolean));
+            Object.keys(D.logos).forEach(id => { if (!benutzt.has(id)) delete D.logos[id]; });
+        }
+        function zeigeLogo() {
+            const l = logoVon(D.absender);
+            $('logoVorschau').innerHTML = l ? '<img alt="Logo">' : '<span>' + esc(t('logo_keins')) + '</span>';
+            if (l) $('logoVorschau').querySelector('img').src = l.daten;
+            $('logoWeg').hidden = !l; $('logoOptionen').hidden = !l;
+            $('logoPos').value = D.absender.logoPos || 'links';
+            $('logoGroesse').value = D.absender.logoGroesse || 'mittel';
+        }
+        function bildLaden(url) { return new Promise((ok, fehler) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fehler; i.src = url; }); }
+        $('logoDatei').addEventListener('change', async () => {
+            const f = $('logoDatei').files[0];
+            $('logoDatei').value = '';
+            if (!f) return;
+            $('logoFehler').hidden = true;
+            try {
+                const url = await new Promise((ok, fehler) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fehler; r.readAsDataURL(f); });
+                const img = await bildLaden(url);
+                let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+                if (!w || !h) { w = 600; h = 300; }   // SVG ohne feste Groesse
+                const fk = Math.min(1, 800 / Math.max(w, h));
+                const c = document.createElement('canvas');
+                c.width = Math.max(1, Math.round(w * fk)); c.height = Math.max(1, Math.round(h * fk));
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                const daten = c.toDataURL('image/png');
+                const id = 'l' + Date.now().toString(36);
+                D.logos[id] = { daten, w: c.width, h: c.height };
+                D.absender.logoId = id;
+                logosAufraeumen(); speichern(); zeigeLogo();
+                if (!$('editor').hidden) aktualisiereEditor();
+            } catch (e) {
+                $('logoFehler').textContent = t('logo_fehler'); $('logoFehler').hidden = false;
+            }
+        });
+        $('logoWeg').onclick = () => { delete D.absender.logoId; logosAufraeumen(); speichern(); zeigeLogo(); };
+        $('logoPos').onchange = () => { D.absender.logoPos = $('logoPos').value; speichern(); };
+        $('logoGroesse').onchange = () => { D.absender.logoGroesse = $('logoGroesse').value; speichern(); };
         $('aKlein').onchange = () => { D.absender.klein = $('aKlein').checked; speichern(); zeigeAngabenZusammen(); if (!$('editor').hidden) { zeichnePositionen(); aktualisiereEditor(); } };
         const naechsteNr = () => (D.absender.praefix || '') + String(D.absender.naechste || 1).padStart(3, '0');
 
@@ -702,12 +769,25 @@
             doc.setFontSize(7.5); doc.setTextColor(90);
             doc.text(pdfText([a.name, a.strasse, a.ort].filter(Boolean).join(' · ')), L0, 47);
             doc.setTextColor(0);
+            // Logo (oben links oder oben rechts ueber der Adresse)
+            const logo = logoVon(a);
+            let kopfY = 22;
+            if (logo) {
+                const maxH = { klein: 14, mittel: 20, gross: 28 }[a.logoGroesse] || 20, maxB = 75;
+                const f = Math.min(maxH / logo.h, maxB / logo.w);
+                const lw = logo.w * f, lh = logo.h * f;
+                try {
+                    if ((a.logoPos || 'links') === 'rechts') { doc.addImage(logo.daten, 'PNG', R0 - lw, 10, lw, lh, 'logo', 'FAST'); kopfY = 10 + lh + 6; }
+                    else doc.addImage(logo.daten, 'PNG', L0, 10, lw, lh, 'logo', 'FAST');
+                } catch (e) { /* Logo nicht lesbar - Rechnung trotzdem erstellen */ }
+            }
             // Kopf rechts
             doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-            doc.text(pdfText(a.name), R0, 22, { align: 'right' });
+            doc.text(pdfText(a.name), R0, kopfY, { align: 'right' });
             doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-            let y = 27;
+            let y = kopfY + 5;
             [a.zusatz, a.strasse, a.ort, a.tel ? 'Tel. ' + a.tel : '', a.email].filter(Boolean).forEach(z => { doc.text(pdfText(z), R0, y, { align: 'right' }); y += 4.3; });
+            const kopfEnde = y;
             // Empfänger
             doc.setFontSize(11);
             y = 54;
@@ -717,7 +797,7 @@
             const info = [['Rechnungsnummer', r.nr || '-'], ['Rechnungsdatum', deDatum(r.datum)], ['Leistungsdatum', r.leistung || '-']];
             if (a.steuernr) info.push(['Steuernummer', a.steuernr]);
             if (a.ustid) info.push(['USt-IdNr.', a.ustid]);
-            let yi = 54;
+            let yi = Math.max(54, kopfEnde + 4);
             info.forEach(([k, v]) => { doc.setTextColor(90); doc.text(pdfText(k), 128, yi); doc.setTextColor(0); doc.text(pdfText(v), R0, yi, { align: 'right' }); yi += 5; });
             // Titel
             y = Math.max(y, yi) + 12;
