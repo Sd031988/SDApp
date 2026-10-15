@@ -251,12 +251,13 @@
     function regelnGeaendert() { if (b.dateien) zeichnePlan(); zeichneSkript(); }
 
     // ---------- Tabs ----------
-    function zeigeTab(tab) {
+    function zeigeTab(tab, rollen) {
         d.tab = tab; speichern();
-        document.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('an', x.dataset.tab === tab));
+        document.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('an', x.dataset.tab === tab));
+        if (rollen) window.scrollTo({ top: document.querySelector('.tabs').offsetTop - 70, behavior: 'smooth' });
         document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab; });
     }
-    document.querySelectorAll('[data-tab]').forEach(x => x.addEventListener('click', () => zeigeTab(x.dataset.tab)));
+    document.querySelectorAll('[data-tab]').forEach(x => x.addEventListener('click', () => zeigeTab(x.dataset.tab, !x.closest('.tabs'))));
 
     // ---------- Weg 1: im Browser ----------
     const b = { dir: null, dateien: null, plan: null, log: [] };
@@ -317,14 +318,16 @@
     $('bWaehlen').addEventListener('click', async () => {
         fehlerZeigen('');
         try {
-            const dir = await window.showDirectoryPicker({ id: 'sd-ordnen', mode: 'readwrite', startIn: 'downloads' });
+            $('bZuSkript').hidden = true;
+            const dir = await window.showDirectoryPicker({ id: 'sd-ordnen', mode: 'readwrite', startIn: 'documents' });
             const recht = dir.requestPermission ? await dir.requestPermission({ mode: 'readwrite' }) : 'granted';
             if (recht !== 'granted') { fehlerZeigen(t('b_kein_recht')); return; }
             b.dir = dir; b.log = [];
             await einlesen();
         } catch (e) {
-            if (e && e.name === 'AbortError') return;
+            if (e && e.name === 'AbortError') { fehlerZeigen(t('b_abbruch_tipp')); $('bZuSkript').hidden = false; return; }
             fehlerZeigen(e && e.name === 'SecurityError' ? t('b_gesperrt') : t('b_fehler', { msg: (e && e.message) || String(e) }));
+            if (e && e.name === 'SecurityError') $('bZuSkript').hidden = false;
         }
     });
     $('bNeuLesen').addEventListener('click', () => { if (b.dir) einlesen().catch(e => fehlerZeigen(t('b_fehler', { msg: e.message }))); });

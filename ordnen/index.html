@@ -76,6 +76,7 @@
             <h2 data-i18n="b_titel">2 · Ordner wählen und aufräumen</h2>
             <p class="info" data-i18n="b_info"></p>
             <p class="hinweis" id="bNichtMoeglich" hidden data-i18n="b_nicht"></p>
+            <p class="hinweis" id="bSperre" data-i18n="b_sperre"></p>
             <div class="knoepfe" id="bStartBox">
                 <button type="button" class="btn prim" id="bWaehlen" data-i18n="b_waehlen">📂 Ordner wählen</button>
                 <span class="info" id="bOrdnerName"></span>
@@ -102,6 +103,7 @@
                 <p class="info" data-i18n="b_rueck_info"></p>
             </div>
             <p class="fehler" id="bFehler" hidden></p>
+            <div class="knoepfe" id="bZuSkript" hidden><button type="button" class="btn prim" data-tab="skript" data-i18n="b_zu_skript">💾 Zum Programm für Downloads</button></div>
         </section>
 
         <!-- Weg 2: Skript -->
@@ -159,7 +161,7 @@
                 b_titel: '2 · Ordner wählen und aufräumen',
                 b_info: 'Ohne Installation: Der Browser fragt einmal, ob SD Hub auf den Ordner zugreifen darf. Die Dateien bleiben auf deinem Computer – nichts wird hochgeladen. Funktioniert in Chrome und Edge am Computer.',
                 b_nicht: 'Dein Browser erlaubt keinen Zugriff auf Ordner (das können nur Chrome und Edge am Computer – nicht Safari, Firefox oder Handys). Nutze „💾 Programm herunterladen“ oder öffne diese Seite in Chrome/Edge.',
-                b_waehlen: '📂 Ordner wählen', b_ordner: 'Ordner: {name} · {n} Dateien', b_vorschau: 'Vorschau – noch wird nichts verschoben',
+                b_sperre: 'Wichtig: Den Downloads-Ordner und den Schreibtisch selbst geben Chrome und Edge aus Sicherheitsgründen nicht frei („Dieser Ordner kann nicht geöffnet werden … Systemdateien“). Darauf haben wir keinen Einfluss. Für diese Ordner nimm „💾 Programm herunterladen“. Hier im Browser gehen andere Ordner, z. B. ein Unterordner in Downloads oder Dokumente oder ein Ordner auf einem USB-Stick.', b_zu_skript: '💾 Zum Programm für Downloads', b_abbruch_tipp: 'Kein Ordner gewählt. Kam die Meldung „Dieser Ordner kann nicht geöffnet werden“? Dann sperrt der Browser diesen Ordner (z. B. Downloads oder Schreibtisch) – nutze dafür das Programm.', b_waehlen: '📂 Ordner wählen', b_ordner: 'Ordner: {name} · {n} Dateien', b_vorschau: 'Vorschau – noch wird nichts verschoben',
                 b_dateien: '{n} Dateien', b_rest: '{n} Dateien bleiben, wo sie sind (keine passende Regel).', b_nichts: 'Hier gibt es nichts zu sortieren – keine Datei passt zu den Regeln.',
                 b_los: '🧹 Jetzt aufräumen', b_neu: '↻ Neu einlesen', b_status: '{i} von {n}: {name}',
                 b_fertig: '✓ Fertig: {ok} Dateien einsortiert.', b_skip: '{n} übersprungen (gab es im Zielordner schon).', b_fehl: '{n} konnten nicht verschoben werden:',
@@ -197,7 +199,7 @@
                 b_titel: '2 · Choose a folder and tidy up',
                 b_info: 'No installation: the browser asks once whether SD Hub may access the folder. The files stay on your computer – nothing is uploaded. Works in Chrome and Edge on a computer.',
                 b_nicht: 'Your browser does not allow access to folders (only Chrome and Edge on a computer can – not Safari, Firefox or phones). Use “💾 Download a program” or open this page in Chrome/Edge.',
-                b_waehlen: '📂 Choose folder', b_ordner: 'Folder: {name} · {n} files', b_vorschau: 'Preview – nothing has been moved yet',
+                b_sperre: 'Important: Chrome and Edge do not allow the Downloads folder and the Desktop themselves for security reasons (“This folder cannot be opened … system files”). We cannot change that. For these folders use “💾 Download a program”. Here in the browser other folders work, e.g. a subfolder in Downloads or Documents, or a folder on a USB stick.', b_zu_skript: '💾 To the program for Downloads', b_abbruch_tipp: 'No folder chosen. Did you see “This folder cannot be opened”? Then the browser blocks this folder (e.g. Downloads or Desktop) – use the program for it.', b_waehlen: '📂 Choose folder', b_ordner: 'Folder: {name} · {n} files', b_vorschau: 'Preview – nothing has been moved yet',
                 b_dateien: '{n} files', b_rest: '{n} files stay where they are (no matching rule).', b_nichts: 'Nothing to sort here – no file matches the rules.',
                 b_los: '🧹 Tidy up now', b_neu: '↻ Read again', b_status: '{i} of {n}: {name}',
                 b_fertig: '✓ Done: {ok} files sorted.', b_skip: '{n} skipped (already existed in the target folder).', b_fehl: '{n} could not be moved:',
@@ -226,7 +228,7 @@
     </script>
     <script src="../i18n.js?v=1"></script>
     <script src="../sd-bereich.js?v=2"></script>
-    <script src="ordnen.js?v=1"></script>
+    <script src="ordnen.js?v=2"></script>
 </body>
 
 </html>
