@@ -126,6 +126,17 @@
         .verlauf { display: grid; gap: 4px; font-size: .82rem; margin-top: 6px; max-height: 260px; overflow: auto; }
         .verlauf div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
         .lager-warn { color: var(--warn-ink); font-size: .84rem; margin: 0; }
+        .design-box { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 12px; padding: 12px; }
+        .farben { display: flex; gap: 8px; flex-wrap: wrap; }
+        .farben button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+        .farben button.an { box-shadow: 0 0 0 3px var(--ink); }
+        .rabatt-feld { max-width: 200px; justify-self: end; }
+        .top-box { border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; background: #fff; }
+        .top-box summary { cursor: pointer; font-weight: bold; font-size: .9rem; }
+        .top-zeile { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: .86rem; padding: 4px 0; }
+        .top-balken { grid-column: 1 / 3; height: 6px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
+        .top-balken i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+        .b-abo { background: #eef2ff; color: #3730a3; }
     </style>
     <script src="../sd-sync.js?v=2"></script>
 </head>
@@ -157,6 +168,8 @@
                 <button type="button" class="chip" data-art="angebot" data-i18n="art_angebote">📝 Angebote</button>
             </div>
             <div class="zahlen" id="ausZahlen"></div>
+            <p class="ok" id="aboMeldung" hidden></p>
+            <details class="top-box" id="topKunden"></details>
             <div class="knoepfe">
                 <button type="button" class="btn prim" id="neueRechnungBtn" data-i18n="neue_rechnung">＋ Neue Rechnung</button>
                 <button type="button" class="btn prim" id="neuesAngebotBtn" hidden data-i18n="neues_angebot">＋ Neues Angebot</button>
@@ -202,6 +215,7 @@
             </div>
             <p class="lager-warn" id="lagerWarn" hidden></p>
             <p class="info" id="warenTipp" hidden data-i18n="w_hinweis_rechnung"></p>
+            <label class="feld rabatt-feld"><span data-i18n="rabatt">Rabatt (%) – optional</span><input type="text" id="rRabatt" inputmode="decimal" placeholder="0"></label>
             <div class="summen" id="summen"></div>
             <label class="feld"><span data-i18n="r_text">Zusatztext (optional)</span><textarea id="rText" rows="2" data-i18n-placeholder="text_ph" placeholder="z. B. Vielen Dank für Ihren Auftrag!"></textarea></label>
             <div class="hinweis" id="pruefBox"><b data-i18n="pruef_titel">Pflichtangaben-Check</b><ul class="pruefung" id="pruefung"></ul></div>
@@ -251,6 +265,11 @@
                 <label class="feld"><span data-i18n="a_naechste_ang">Nächste Angebotsnummer</span><input type="number" id="aNaechsteAng" min="1" step="1"></label>
                 <label class="feld"><span data-i18n="a_gueltig">Angebote gültig (Tage)</span><input type="number" id="aGueltig" min="1" max="365" step="1"></label>
             </div>
+            <div class="design-box">
+                <b data-i18n="design_titel">🎨 Aussehen der PDF</b>
+                <div class="farben" id="farbWahl"></div>
+                <label class="check"><input type="checkbox" id="aGiro"> <span><b data-i18n="giro_titel">GiroCode (QR-Code zum Bezahlen) auf Rechnungen</b><small data-i18n="giro_hilfe">Kunden scannen den Code mit ihrer Banking-App – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Braucht deine IBAN oben.</small></span></label>
+            </div>
             <label class="check"><input type="checkbox" id="aKlein"> <span><b data-i18n="a_klein">Ich bin Kleinunternehmer (§ 19 UStG)</b><small data-i18n="a_klein_hilfe">Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.</small></span></label>
             <label class="feld" style="max-width:220px"><span data-i18n="a_ziel">Standard-Zahlungsziel (Tage)</span><input type="number" id="aZiel" min="0" max="120" step="1"></label>
             <p class="info" data-i18n="angaben_info">Wird nur auf diesem Gerät gespeichert und erscheint auf deinen Rechnungen.</p>
@@ -288,6 +307,7 @@
             <div class="chips" id="wZeitraum"></div>
             <div class="zahlen" id="wZahlen"></div>
             <div class="w-chart" id="wChart"></div>
+            <details class="top-box" id="topWaren"></details>
             <p class="info" data-i18n="w_stat_info"></p>
         </section>
         <section class="karte">
@@ -334,6 +354,17 @@
 
     <datalist id="warenListe"></datalist>
 
+    <!-- Dialog: Abo-Rechnung -->
+    <div class="dialog" id="aboDialog" hidden>
+        <div class="karte">
+            <h2 data-i18n="abo_titel">🔁 Rechnung regelmäßig wiederholen</h2>
+            <p class="info" data-i18n="abo_info"></p>
+            <div class="chips" id="aboWahl"></div>
+            <label class="feld" style="max-width:220px"><span data-i18n="abo_naechste">Nächste Rechnung am</span><input type="date" id="aboDatum"></label>
+            <div class="knoepfe"><button type="button" class="btn prim" id="aboOk" data-i18n="speichern">💾 Speichern</button><button type="button" class="btn" id="aboZu" data-i18n="abbrechen">Abbrechen</button></div>
+        </div>
+    </div>
+
     <!-- Dialog: erhaltene Rechnung bearbeiten -->
     <div class="dialog" id="einDialog" hidden>
         <form class="karte" id="einForm">
@@ -379,7 +410,7 @@
                 positionen: 'Positionen', p_text: 'Beschreibung', p_menge: 'Menge', p_einheit: 'Einheit', p_preis_netto: 'Einzelpreis netto €', p_preis: 'Einzelpreis €', p_ust: 'USt', pos_neu: '＋ Position', ki_pos: '✨ Positionen mit KI (sprechen/tippen)',
                 r_text: 'Zusatztext (optional)', text_ph: 'z. B. Vielen Dank für Ihren Auftrag!', pruef_titel: 'Pflichtangaben-Check',
                 entwurf_speichern: '💾 Entwurf speichern', vorschau: '👁 PDF-Vorschau', fertig: '✅ Fertigstellen & PDF', abbrechen: 'Abbrechen', speichern: '💾 Speichern',
-                tab_waren: '📦 Waren', w_stat_titel: '📊 Auswertung', w_stat_info: 'Alle Preise netto. Gewinn = Verkaufserlös minus Wareneinsatz (verkaufte Menge × durchschnittlicher Einkaufspreis) minus Schwund. Weitere Kosten (Miete, Versand usw.) sind nicht enthalten – das ist der Rohgewinn, keine Steuerberechnung.', w_titel: '📦 Meine Waren', w_neu: '＋ Neue Ware', w_csv: '⬇️ CSV', w_suche: 'Ware suchen …', w_name: 'Bezeichnung', w_nr: 'Artikel-Nr. (optional)', w_einheit: 'Einheit', w_mindest: 'Mindestbestand (Warnung)', w_ek: 'Einkaufspreis netto (€/Einheit)', w_vk: 'Verkaufspreis netto (€/Einheit)', w_anfang: 'Anfangsbestand (schon vorhanden)', w_loeschen: '🗑️ Ware löschen', w_datum: 'Datum', w_notiz: 'Notiz (z. B. Lieferant, Kunde)', w_buchen: '✓ Buchen', w_neu_titel: '📦 Neue Ware', w_bearb_titel: '📦 Ware bearbeiten', w_zr_monat: 'Dieser Monat', w_zr_jahr: 'Dieses Jahr', w_zr_alles: 'Gesamt', w_z_ek: 'Eingekauft', w_z_vk: 'Verkauft', w_z_einsatz: 'Wareneinsatz', w_z_gewinn: 'Gewinn', w_z_verlust: 'Verlust', w_z_lager: 'Lagerwert jetzt', w_stk: '{n} {e}', w_leer: 'Noch keine Waren. Leg los mit „＋ Neue Ware“.', w_keine_treffer: 'Keine Ware gefunden.', w_bestand: 'Bestand', w_ek_k: 'Ø Einkauf', w_vk_k: 'Verkaufspreis', w_verkauft_k: 'verkauft', w_gewinn_k: 'Gewinn', w_lagerwert_k: 'Lagerwert', w_s_ok: 'auf Lager', w_s_knapp: 'wird knapp', w_s_leer: 'ausverkauft', w_b_ein: '＋ Einkauf', w_b_aus: '− Verkauf', w_b_korr: '± Korrektur', w_b_bearb: '✏️', w_b_verlauf: '📜 Verlauf', w_t_einkauf: '➕ Einkauf', w_t_verkauf: '➖ Verkauf', w_t_korrektur: '± Korrektur / Inventur', w_menge_ein: 'Menge eingekauft', w_menge_aus: 'Menge verkauft', w_menge_korr: 'Änderung (+ gefunden, − Schwund/kaputt)', w_preis_ein: 'Einkaufspreis netto (€/Einheit)', w_preis_aus: 'Verkaufspreis netto (€/Einheit)', w_info_bestand: 'Aktueller Bestand: {n}', w_info_zu_wenig: '⚠️ Mehr als auf Lager ({n}) – wird trotzdem gebucht, Bestand wird negativ.', w_verlauf_titel: 'Verlauf', w_aus_rechnung: 'Rechnung {nr}', w_weg: 'Buchung löschen', w_loeschen_frage: 'Diese Ware mit allen Buchungen löschen?', w_gebucht: '✓ Gebucht', w_lager_warn: '⚠️ {w}: nur {n} auf Lager', w_chart_titel: 'Einkauf und Verkauf je Monat (netto)', w_chart_ek: 'Einkauf', w_chart_vk: 'Verkauf', w_csv_kopf: 'Ware;Artikel-Nr.;Einheit;Bestand;Ø Einkauf;Verkaufspreis;Eingekauft Menge;Eingekauft €;Verkauft Menge;Verkauft €;Gewinn €;Lagerwert €', w_hinweis_rechnung: '📦 Waren aus deiner Liste kannst du bei den Positionen auswählen – beim Fertigstellen wird der Bestand automatisch verringert.', frist_titel_r: '⏰ Zahlungsfrist – schnell wählen:', frist_titel_a: '⏰ Wie lange gilt das Angebot?', frist_datum_r: 'oder fällig am', frist_datum_a: 'oder gültig bis', frist_sofort: 'sofort', frist_tage: '{n} Tage', frist_woche: '1 Woche', frist_wochen: '{n} Wochen', frist_monat: '1 Monat', frist_info_r: 'Fällig am {d} – steht so auf der Rechnung und in der Fristen-Übersicht.', frist_info_r0: 'Sofort fällig – steht so auf der Rechnung.', frist_info_a: 'Gültig bis {d} – steht so auf dem Angebot und in der Fristen-Übersicht.', b_kalender_r: '📅 Frist in Kalender', ics_zahlung: 'Zahlung erwartet: {nr} · {k} · {b}', ics_angebot: 'Angebot läuft ab: {nr} · {k} · {b}', art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
+                tab_waren: '📦 Waren', w_stat_titel: '📊 Auswertung', w_stat_info: 'Alle Preise netto. Gewinn = Verkaufserlös minus Wareneinsatz (verkaufte Menge × durchschnittlicher Einkaufspreis) minus Schwund. Weitere Kosten (Miete, Versand usw.) sind nicht enthalten – das ist der Rohgewinn, keine Steuerberechnung.', w_titel: '📦 Meine Waren', w_neu: '＋ Neue Ware', w_csv: '⬇️ CSV', w_suche: 'Ware suchen …', w_name: 'Bezeichnung', w_nr: 'Artikel-Nr. (optional)', w_einheit: 'Einheit', w_mindest: 'Mindestbestand (Warnung)', w_ek: 'Einkaufspreis netto (€/Einheit)', w_vk: 'Verkaufspreis netto (€/Einheit)', w_anfang: 'Anfangsbestand (schon vorhanden)', w_loeschen: '🗑️ Ware löschen', w_datum: 'Datum', w_notiz: 'Notiz (z. B. Lieferant, Kunde)', w_buchen: '✓ Buchen', w_neu_titel: '📦 Neue Ware', w_bearb_titel: '📦 Ware bearbeiten', w_zr_monat: 'Dieser Monat', w_zr_jahr: 'Dieses Jahr', w_zr_alles: 'Gesamt', w_z_ek: 'Eingekauft', w_z_vk: 'Verkauft', w_z_einsatz: 'Wareneinsatz', w_z_gewinn: 'Gewinn', w_z_verlust: 'Verlust', w_z_lager: 'Lagerwert jetzt', w_stk: '{n} {e}', w_leer: 'Noch keine Waren. Leg los mit „＋ Neue Ware“.', w_keine_treffer: 'Keine Ware gefunden.', w_bestand: 'Bestand', w_ek_k: 'Ø Einkauf', w_vk_k: 'Verkaufspreis', w_verkauft_k: 'verkauft', w_gewinn_k: 'Gewinn', w_lagerwert_k: 'Lagerwert', w_s_ok: 'auf Lager', w_s_knapp: 'wird knapp', w_s_leer: 'ausverkauft', w_b_ein: '＋ Einkauf', w_b_aus: '− Verkauf', w_b_korr: '± Korrektur', w_b_bearb: '✏️', w_b_verlauf: '📜 Verlauf', w_t_einkauf: '➕ Einkauf', w_t_verkauf: '➖ Verkauf', w_t_korrektur: '± Korrektur / Inventur', w_menge_ein: 'Menge eingekauft', w_menge_aus: 'Menge verkauft', w_menge_korr: 'Änderung (+ gefunden, − Schwund/kaputt)', w_preis_ein: 'Einkaufspreis netto (€/Einheit)', w_preis_aus: 'Verkaufspreis netto (€/Einheit)', w_info_bestand: 'Aktueller Bestand: {n}', w_info_zu_wenig: '⚠️ Mehr als auf Lager ({n}) – wird trotzdem gebucht, Bestand wird negativ.', w_verlauf_titel: 'Verlauf', w_aus_rechnung: 'Rechnung {nr}', w_weg: 'Buchung löschen', w_loeschen_frage: 'Diese Ware mit allen Buchungen löschen?', w_gebucht: '✓ Gebucht', w_lager_warn: '⚠️ {w}: nur {n} auf Lager', w_chart_titel: 'Einkauf und Verkauf je Monat (netto)', w_chart_ek: 'Einkauf', w_chart_vk: 'Verkauf', w_csv_kopf: 'Ware;Artikel-Nr.;Einheit;Bestand;Ø Einkauf;Verkaufspreis;Eingekauft Menge;Eingekauft €;Verkauft Menge;Verkauft €;Gewinn €;Lagerwert €', w_hinweis_rechnung: '📦 Waren aus deiner Liste kannst du bei den Positionen auswählen – beim Fertigstellen wird der Bestand automatisch verringert.', rabatt: 'Rabatt (%) – optional', zwischensumme: 'Zwischensumme', rabatt_x: 'abzgl. {p} % Rabatt', design_titel: '🎨 Aussehen der PDF', farbe: 'Farbe', giro_titel: 'GiroCode (QR-Code zum Bezahlen) auf Rechnungen', giro_hilfe: 'Kunden scannen den Code mit ihrer Banking-App – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Braucht deine IBAN oben.', abo_titel: '🔁 Rechnung regelmäßig wiederholen', abo_info: 'Zum gewählten Termin legt die App automatisch einen Entwurf mit denselben Positionen an (beim nächsten Öffnen dieser Seite). Du prüfst ihn und stellst ihn fertig – erst dann bekommt er seine Nummer.', abo_naechste: 'Nächste Rechnung am', abo_aus: 'nicht wiederholen', abo_monat: 'monatlich', abo_quartal: 'vierteljährlich', abo_halbjahr: 'halbjährlich', abo_jahr: 'jährlich', b_abo: '🔁 Wiederholen', abo_neu: '🔁 {n} wiederkehrende Rechnung(en) als Entwurf angelegt – bitte prüfen und fertigstellen.', abo_badge: '🔁 {i}', top_kunden: '👥 Top-Kunden {j} (Umsatz)', top_waren: '🏆 Top-Waren nach Gewinn', top_leer: 'Noch keine Daten.', frist_titel_r: '⏰ Zahlungsfrist – schnell wählen:', frist_titel_a: '⏰ Wie lange gilt das Angebot?', frist_datum_r: 'oder fällig am', frist_datum_a: 'oder gültig bis', frist_sofort: 'sofort', frist_tage: '{n} Tage', frist_woche: '1 Woche', frist_wochen: '{n} Wochen', frist_monat: '1 Monat', frist_info_r: 'Fällig am {d} – steht so auf der Rechnung und in der Fristen-Übersicht.', frist_info_r0: 'Sofort fällig – steht so auf der Rechnung.', frist_info_a: 'Gültig bis {d} – steht so auf dem Angebot und in der Fristen-Übersicht.', b_kalender_r: '📅 Frist in Kalender', ics_zahlung: 'Zahlung erwartet: {nr} · {k} · {b}', ics_angebot: 'Angebot läuft ab: {nr} · {k} · {b}', art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
                 angaben_titel: '🏷️ Meine Angaben (Absender)', a_name: 'Name / Firma', a_zusatz: 'Zusatz (optional)', zusatz_ph: 'z. B. Malerarbeiten · Nachhilfe', a_strasse: 'Straße, Nr.', a_ort: 'PLZ Ort', a_tel: 'Telefon', a_email: 'E-Mail',
                 a_steuernr: 'Steuernummer', steuernr_ph: 'vom Finanzamt', a_ustid: 'USt-IdNr. (falls vorhanden)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Rechnungsnummer: Vorsilbe', a_naechste: 'Nächste laufende Nummer',
                 a_klein: 'Ich bin Kleinunternehmer (§ 19 UStG)', a_klein_hilfe: 'Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.',
@@ -424,7 +455,7 @@
                 positionen: 'Items', p_text: 'Description', p_menge: 'Qty', p_einheit: 'Unit', p_preis_netto: 'Unit price net €', p_preis: 'Unit price €', p_ust: 'VAT', pos_neu: '＋ Item', ki_pos: '✨ Items with AI (speak/type)',
                 r_text: 'Additional text (optional)', text_ph: 'e.g. Thank you for your order!', pruef_titel: 'Mandatory details check',
                 entwurf_speichern: '💾 Save draft', vorschau: '👁 PDF preview', fertig: '✅ Finalise & PDF', abbrechen: 'Cancel', speichern: '💾 Save',
-                tab_waren: '📦 Goods', w_stat_titel: '📊 Analysis', w_stat_info: 'All prices net. Profit = sales revenue minus cost of goods sold (quantity sold × average purchase price) minus shrinkage. Other costs (rent, shipping etc.) are not included – this is gross profit, not a tax calculation.', w_titel: '📦 My goods', w_neu: '＋ New item', w_csv: '⬇️ CSV', w_suche: 'Search items …', w_name: 'Name', w_nr: 'Item no. (optional)', w_einheit: 'Unit', w_mindest: 'Minimum stock (warning)', w_ek: 'Purchase price net (€/unit)', w_vk: 'Selling price net (€/unit)', w_anfang: 'Opening stock (already there)', w_loeschen: '🗑️ Delete item', w_datum: 'Date', w_notiz: 'Note (e.g. supplier, customer)', w_buchen: '✓ Book', w_neu_titel: '📦 New item', w_bearb_titel: '📦 Edit item', w_zr_monat: 'This month', w_zr_jahr: 'This year', w_zr_alles: 'All time', w_z_ek: 'Purchased', w_z_vk: 'Sold', w_z_einsatz: 'Cost of goods sold', w_z_gewinn: 'Profit', w_z_verlust: 'Loss', w_z_lager: 'Stock value now', w_stk: '{n} {e}', w_leer: 'No items yet. Start with "＋ New item".', w_keine_treffer: 'No item found.', w_bestand: 'Stock', w_ek_k: 'Avg. purchase', w_vk_k: 'Selling price', w_verkauft_k: 'sold', w_gewinn_k: 'Profit', w_lagerwert_k: 'Stock value', w_s_ok: 'in stock', w_s_knapp: 'running low', w_s_leer: 'sold out', w_b_ein: '＋ Purchase', w_b_aus: '− Sale', w_b_korr: '± Correction', w_b_bearb: '✏️', w_b_verlauf: '📜 History', w_t_einkauf: '➕ Purchase', w_t_verkauf: '➖ Sale', w_t_korrektur: '± Correction / stocktaking', w_menge_ein: 'Quantity purchased', w_menge_aus: 'Quantity sold', w_menge_korr: 'Change (+ found, − shrinkage/broken)', w_preis_ein: 'Purchase price net (€/unit)', w_preis_aus: 'Selling price net (€/unit)', w_info_bestand: 'Current stock: {n}', w_info_zu_wenig: '⚠️ More than in stock ({n}) – will be booked anyway, stock becomes negative.', w_verlauf_titel: 'History', w_aus_rechnung: 'Invoice {nr}', w_weg: 'Delete booking', w_loeschen_frage: 'Delete this item with all bookings?', w_gebucht: '✓ Booked', w_lager_warn: '⚠️ {w}: only {n} in stock', w_chart_titel: 'Purchases and sales per month (net)', w_chart_ek: 'Purchases', w_chart_vk: 'Sales', w_csv_kopf: 'Item;Item no.;Unit;Stock;Avg purchase;Selling price;Purchased qty;Purchased €;Sold qty;Sold €;Profit €;Stock value €', w_hinweis_rechnung: '📦 You can pick items from your goods list in the positions – when finalising, the stock is reduced automatically.', frist_titel_r: '⏰ Payment term – quick choice:', frist_titel_a: '⏰ How long is the quotation valid?', frist_datum_r: 'or due on', frist_datum_a: 'or valid until', frist_sofort: 'immediately', frist_tage: '{n} days', frist_woche: '1 week', frist_wochen: '{n} weeks', frist_monat: '1 month', frist_info_r: 'Due on {d} – printed on the invoice and shown in the deadline overview.', frist_info_r0: 'Due immediately – printed on the invoice.', frist_info_a: 'Valid until {d} – printed on the quotation and shown in the deadline overview.', b_kalender_r: '📅 Deadline to calendar', ics_zahlung: 'Payment expected: {nr} · {k} · {b}', ics_angebot: 'Quotation expires: {nr} · {k} · {b}', art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
+                tab_waren: '📦 Goods', w_stat_titel: '📊 Analysis', w_stat_info: 'All prices net. Profit = sales revenue minus cost of goods sold (quantity sold × average purchase price) minus shrinkage. Other costs (rent, shipping etc.) are not included – this is gross profit, not a tax calculation.', w_titel: '📦 My goods', w_neu: '＋ New item', w_csv: '⬇️ CSV', w_suche: 'Search items …', w_name: 'Name', w_nr: 'Item no. (optional)', w_einheit: 'Unit', w_mindest: 'Minimum stock (warning)', w_ek: 'Purchase price net (€/unit)', w_vk: 'Selling price net (€/unit)', w_anfang: 'Opening stock (already there)', w_loeschen: '🗑️ Delete item', w_datum: 'Date', w_notiz: 'Note (e.g. supplier, customer)', w_buchen: '✓ Book', w_neu_titel: '📦 New item', w_bearb_titel: '📦 Edit item', w_zr_monat: 'This month', w_zr_jahr: 'This year', w_zr_alles: 'All time', w_z_ek: 'Purchased', w_z_vk: 'Sold', w_z_einsatz: 'Cost of goods sold', w_z_gewinn: 'Profit', w_z_verlust: 'Loss', w_z_lager: 'Stock value now', w_stk: '{n} {e}', w_leer: 'No items yet. Start with "＋ New item".', w_keine_treffer: 'No item found.', w_bestand: 'Stock', w_ek_k: 'Avg. purchase', w_vk_k: 'Selling price', w_verkauft_k: 'sold', w_gewinn_k: 'Profit', w_lagerwert_k: 'Stock value', w_s_ok: 'in stock', w_s_knapp: 'running low', w_s_leer: 'sold out', w_b_ein: '＋ Purchase', w_b_aus: '− Sale', w_b_korr: '± Correction', w_b_bearb: '✏️', w_b_verlauf: '📜 History', w_t_einkauf: '➕ Purchase', w_t_verkauf: '➖ Sale', w_t_korrektur: '± Correction / stocktaking', w_menge_ein: 'Quantity purchased', w_menge_aus: 'Quantity sold', w_menge_korr: 'Change (+ found, − shrinkage/broken)', w_preis_ein: 'Purchase price net (€/unit)', w_preis_aus: 'Selling price net (€/unit)', w_info_bestand: 'Current stock: {n}', w_info_zu_wenig: '⚠️ More than in stock ({n}) – will be booked anyway, stock becomes negative.', w_verlauf_titel: 'History', w_aus_rechnung: 'Invoice {nr}', w_weg: 'Delete booking', w_loeschen_frage: 'Delete this item with all bookings?', w_gebucht: '✓ Booked', w_lager_warn: '⚠️ {w}: only {n} in stock', w_chart_titel: 'Purchases and sales per month (net)', w_chart_ek: 'Purchases', w_chart_vk: 'Sales', w_csv_kopf: 'Item;Item no.;Unit;Stock;Avg purchase;Selling price;Purchased qty;Purchased €;Sold qty;Sold €;Profit €;Stock value €', w_hinweis_rechnung: '📦 You can pick items from your goods list in the positions – when finalising, the stock is reduced automatically.', rabatt: 'Discount (%) – optional', zwischensumme: 'Subtotal', rabatt_x: 'less {p} % discount', design_titel: '🎨 PDF appearance', farbe: 'Colour', giro_titel: 'GiroCode (QR code for payment) on invoices', giro_hilfe: 'Customers scan the code with their banking app – recipient, IBAN, amount and invoice number are filled in. Needs your IBAN above.', abo_titel: '🔁 Repeat invoice regularly', abo_info: 'On the chosen date the app automatically creates a draft with the same items (the next time this page is opened). You check it and finalise it – only then does it get its number.', abo_naechste: 'Next invoice on', abo_aus: 'do not repeat', abo_monat: 'monthly', abo_quartal: 'quarterly', abo_halbjahr: 'half-yearly', abo_jahr: 'yearly', b_abo: '🔁 Repeat', abo_neu: '🔁 {n} recurring invoice(s) created as draft – please check and finalise.', abo_badge: '🔁 {i}', top_kunden: '👥 Top customers {j} (revenue)', top_waren: '🏆 Top items by profit', top_leer: 'No data yet.', frist_titel_r: '⏰ Payment term – quick choice:', frist_titel_a: '⏰ How long is the quotation valid?', frist_datum_r: 'or due on', frist_datum_a: 'or valid until', frist_sofort: 'immediately', frist_tage: '{n} days', frist_woche: '1 week', frist_wochen: '{n} weeks', frist_monat: '1 month', frist_info_r: 'Due on {d} – printed on the invoice and shown in the deadline overview.', frist_info_r0: 'Due immediately – printed on the invoice.', frist_info_a: 'Valid until {d} – printed on the quotation and shown in the deadline overview.', b_kalender_r: '📅 Deadline to calendar', ics_zahlung: 'Payment expected: {nr} · {k} · {b}', ics_angebot: 'Quotation expires: {nr} · {k} · {b}', art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
                 angaben_titel: '🏷️ My details (sender)', a_name: 'Name / company', a_zusatz: 'Addition (optional)', zusatz_ph: 'e.g. Painting · Tutoring', a_strasse: 'Street, no.', a_ort: 'Postcode city', a_tel: 'Phone', a_email: 'E-mail',
                 a_steuernr: 'Tax number', steuernr_ph: 'from the tax office', a_ustid: 'VAT ID (if any)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Invoice number: prefix', a_naechste: 'Next sequential number',
                 a_klein: 'I am a small business (§ 19 UStG)', a_klein_hilfe: 'No VAT is charged and the invoice states the exemption. Limits since 2025: previous year max. €25,000, current year max. €100,000 turnover.',
@@ -540,6 +571,7 @@
             Object.keys(ANGABEN).forEach(id => { $(id).value = D.absender[ANGABEN[id]] == null ? '' : D.absender[ANGABEN[id]]; });
             $('aKlein').checked = !!D.absender.klein;
             zeigeLogo();
+            zeichneFarben();
             zeigeAngabenZusammen();
         }
         function angabenVollstaendig() { const a = D.absender; return !!(a.name && a.strasse && a.ort && (a.steuernr || a.ustid)); }
@@ -596,9 +628,16 @@
         $('logoWeg').onclick = () => { delete D.absender.logoId; logosAufraeumen(); speichern(); zeigeLogo(); };
         $('logoPos').onchange = () => { D.absender.logoPos = $('logoPos').value; speichern(); };
         $('logoGroesse').onchange = () => { D.absender.logoGroesse = $('logoGroesse').value; speichern(); };
+        function zeichneFarben() {
+            $('farbWahl').innerHTML = FARBEN.map(([id, hex]) => '<button type="button" data-farbe="' + id + '" style="background:' + hex + '" class="' + ((D.absender.farbe || 'petrol') === id ? 'an' : '') + '" aria-label="' + esc(t('farbe') + ' ' + id) + '"></button>').join('');
+            $('aGiro').checked = D.absender.giro !== false;
+        }
+        $('farbWahl').addEventListener('click', (e) => { const b = e.target.closest('[data-farbe]'); if (!b) return; D.absender.farbe = b.dataset.farbe; speichern(); zeichneFarben(); });
+        $('aGiro').onchange = () => { D.absender.giro = $('aGiro').checked; speichern(); };
         $('aKlein').onchange = () => { D.absender.klein = $('aKlein').checked; speichern(); zeigeAngabenZusammen(); if (!$('editor').hidden) { zeichnePositionen(); aktualisiereEditor(); } };
         const naechsteNr = () => (D.absender.praefix || '') + String(D.absender.naechste || 1).padStart(3, '0');
         const naechsteAngNr = () => (D.absender.praefixAng || '') + String(D.absender.naechsteAng || 1).padStart(3, '0');
+        const zahlFmt = (n) => Number(n || 0).toLocaleString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { maximumFractionDigits: 2 });
         const stdEinheit = () => window.SD_LANG === 'en' ? 'pcs' : 'Stück';
         const istAng = (r) => r && r.art === 'angebot';
         const dateiPdf = (r, nr) => { const en_ = (r.sprache || (window.SD_LANG === 'en' ? 'en' : 'de')) === 'en'; return (istAng(r) ? (en_ ? 'Quotation-' : 'Angebot-') : (en_ ? 'Invoice-' : 'Rechnung-')) + dateiname(nr) + '.pdf'; };
@@ -611,17 +650,22 @@
         // ------------------------------------------------------------
         function berechne(r, klein) {
             const proSatz = {};
-            let netto = 0;
+            let summe = 0;
             (r.positionen || []).forEach(p => {
                 const b = runde(zahl(p.menge) * zahl(p.preis));
-                netto += b;
+                summe += b;
                 const s = klein ? 0 : Number(p.ust || 0);
                 proSatz[s] = (proSatz[s] || 0) + b;
             });
-            netto = runde(netto);
-            const steuern = Object.keys(proSatz).map(Number).filter(s => s > 0).sort((a, b) => b - a).map(s => ({ satz: s, basis: runde(proSatz[s]), betrag: runde(proSatz[s] * s / 100) }));
+            summe = runde(summe);
+            // Rabatt in % wirkt anteilig auf jeden Steuersatz
+            const rp = Math.min(100, Math.max(0, zahl(r.rabatt)));
+            const faktor = 1 - rp / 100;
+            const rabatt = runde(summe * rp / 100);
+            const netto = runde(summe - rabatt);
+            const steuern = Object.keys(proSatz).map(Number).filter(s => s > 0).sort((a, b) => b - a).map(s => { const basis = runde(proSatz[s] * faktor); return { satz: s, basis, betrag: runde(basis * s / 100) }; });
             const ust = runde(steuern.reduce((x, s) => x + s.betrag, 0));
-            return { netto, steuern, ust, brutto: runde(netto + ust) };
+            return { summe, rabattProzent: rp, rabatt, netto, steuern, ust, brutto: runde(netto + ust) };
         }
 
         // ------------------------------------------------------------
@@ -645,7 +689,16 @@
             const bis = r.gueltigBis || plusTage(r.datum, r.ziel);
             return tageBis(bis) < 0 ? { k: 'ueber', text: t('s_abgelaufen') } : { k: 'offen', text: t('s_gueltig', { d: deDatum(bis) }) };
         }
+        function zeichneTop(id, titel, eintraege) {
+            const el = $(id), offen = el.open;
+            const liste = eintraege.filter(([, v]) => v !== 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const max = Math.max(1, ...liste.map(([, v]) => Math.abs(v)));
+            el.hidden = !liste.length;
+            el.innerHTML = '<summary>' + esc(titel) + '</summary>' + liste.map(([n, v]) => '<div class="top-zeile"><span>' + esc(n) + '</span><b style="font-variant-numeric:tabular-nums' + (v < 0 ? ';color:var(--danger)' : '') + '">' + euro(v) + '</b><div class="top-balken"><i style="width:' + Math.round(100 * Math.abs(v) / max) + '%' + (v < 0 ? ';background:var(--danger)' : '') + '"></i></div></div>').join('');
+            el.open = offen;
+        }
         function zeichneAng() {
+            $('topKunden').hidden = true;
             const offen = D.angebote.filter(r => r.status === 'offen');
             const an = D.angebote.filter(r => r.status === 'angenommen'), ab = D.angebote.filter(r => r.status === 'abgelehnt');
             $('ausZahlen').innerHTML =
@@ -683,6 +736,9 @@
                 '<div class="zahl"><b>' + euro(offen.reduce((s, r) => s + r.summe, 0)) + '</b><span>' + esc(t('z_offen')) + ' (' + offen.length + ')</span></div>' +
                 '<div class="zahl' + (ueber.length ? ' warn' : '') + '"><b>' + ueber.length + '</b><span>' + esc(t('z_ueber')) + '</span></div>' +
                 '<div class="zahl"><b>' + euro(bezahltJahr.reduce((s, r) => s + r.summe, 0)) + '</b><span>' + esc(t('z_bezahlt_jahr', { j: jahr })) + '</span></div>';
+            const kunden = {};
+            D.ausgang.filter(r => (r.status === 'offen' || r.status === 'bezahlt') && String(r.datum || '').startsWith(jahr)).forEach(r => { const n = r.kunde.name || '–'; kunden[n] = (kunden[n] || 0) + (r.summe || 0); });
+            zeichneTop('topKunden', t('top_kunden', { j: jahr }), Object.entries(kunden));
             $('ausFilter').innerHTML = ['alle', 'entwurf', 'offen', 'bezahlt', 'storniert'].map(f => '<button type="button" class="chip' + (ausFilter === f ? ' an' : '') + '" data-f="' + f + '">' + esc(t('f_' + f)) + '</button>').join('');
             const liste = D.ausgang.filter(r => ausFilter === 'alle' || r.status === ausFilter).slice().sort((a, b) => String(b.datum || '').localeCompare(String(a.datum || '')) || (b.erstellt || 0) - (a.erstellt || 0));
             $('ausListe').innerHTML = liste.length ? liste.map(r => {
@@ -693,10 +749,11 @@
                 if (r.status === 'offen') { knoepfe.push(['bezahlt', t('b_bezahlt')]); if (r.faellig && Number(r.ziel) > 0) knoepfe.push(['kalender_aus', t('b_kalender_r')]); if (r.faellig && tageBis(r.faellig) < 0) knoepfe.push(['erinnerung', t('b_erinnerung')]); }
                 if (r.status === 'bezahlt') knoepfe.push(['offen', t('b_offen')]);
                 knoepfe.push(['kopie', t('b_kopie')]);
+                if (r.status === 'offen' || r.status === 'bezahlt') knoepfe.push(['abo', t('b_abo')]);
                 if (r.status === 'offen') knoepfe.push(['storno', t('b_storno')]);
                 if (r.status === 'entwurf') knoepfe.push(['loeschen', t('b_loeschen')]);
                 return '<div class="eintrag"><div class="oben"><span class="titel">' + esc((r.nr ? r.nr + ' · ' : '') + (r.kunde.name || '–')) + '</span><span class="betrag">' + euro(r.summe) + '</span></div>' +
-                    '<div class="oben"><span class="meta">' + esc(deDatum(r.datum)) + (r.leistung ? ' · ' + esc(r.leistung) : '') + '</span><span class="badge b-' + st.k + '">' + esc(st.text) + '</span></div>' +
+                    '<div class="oben"><span class="meta">' + esc(deDatum(r.datum)) + (r.leistung ? ' · ' + esc(r.leistung) : '') + '</span><span>' + (r.abo && r.abo.intervall ? '<span class="badge b-abo">' + esc(t('abo_badge', { i: t('abo_' + r.abo.intervall) })) + '</span> ' : '') + '<span class="badge b-' + st.k + '">' + esc(st.text) + '</span></span></div>' +
                     '<div class="knoepfe">' + knoepfe.map(([a, txt]) => '<button type="button" class="btn klein' + (a === 'loeschen' || a === 'storno' ? ' gefahr' : '') + '" data-a="' + a + '" data-id="' + esc(r.id) + '">' + esc(txt) + '</button>').join('') + '</div></div>';
             }).join('') : '<p class="leer">' + esc(t('leer_aus')) + '</p>';
         }
@@ -709,6 +766,7 @@
             if (!r) return;
             const a = b.dataset.a;
             if (a === 'kalender_aus') { kalenderAus(r); return; }
+            if (a === 'abo') { oeffneAbo(r); return; }
             if (istAng(r)) {
                 if (a === 'angenommen' || a === 'abgelehnt' || a === 'offen') { r.status = a; r.entschiedenAm = a === 'offen' ? '' : heuteIso(); speichern(); zeichneAus(); return; }
                 if (a === 'zurechnung') {
@@ -727,11 +785,46 @@
             else if (a === 'pdf') { const blob = await rechnungPdf(r); if (blob) herunterladen(blob, dateiPdf(r, r.nr || (window.SD_LANG === 'en' ? 'draft' : 'Entwurf'))); }
             else if (a === 'bezahlt') { r.status = 'bezahlt'; r.bezahltAm = heuteIso(); speichern(); zeichneAus(); }
             else if (a === 'offen') { r.status = 'offen'; r.bezahltAm = ''; speichern(); zeichneAus(); }
-            else if (a === 'kopie') { const k = JSON.parse(JSON.stringify(r)); Object.assign(k, { id: neueId(), erstellt: Date.now(), nr: '', status: 'entwurf', datum: heuteIso(), faellig: '', bezahltAm: '', leistung: '', gueltigBis: '', rechnungId: '', entschiedenAm: '' }); delete k.absender; listeVon(k).push(k); speichern(); oeffneEditor(k); }
+            else if (a === 'kopie') { const k = JSON.parse(JSON.stringify(r)); Object.assign(k, { id: neueId(), erstellt: Date.now(), nr: '', status: 'entwurf', datum: heuteIso(), faellig: '', bezahltAm: '', leistung: '', gueltigBis: '', rechnungId: '', entschiedenAm: '' }); delete k.absender; delete k.abo; listeVon(k).push(k); speichern(); oeffneEditor(k); }
             else if (a === 'storno') { if (confirm(t('storno_frage', { nr: r.nr }))) { r.status = 'storniert'; r.storniertAm = heuteIso(); D.bewegungen = D.bewegungen.filter(x => x.rechnungId !== r.id); speichern(); zeichneAus(); } }
             else if (a === 'loeschen') { if (confirm(t('loeschen_frage'))) { if (istAng(r)) D.angebote = D.angebote.filter(x => x.id !== r.id); else D.ausgang = D.ausgang.filter(x => x.id !== r.id); speichern(); zeichneAus(); } }
             else if (a === 'erinnerung') erinnerung(r);
         });
+
+        // Wiederkehrende Rechnungen
+        const ABO_MONATE = { monat: 1, quartal: 3, halbjahr: 6, jahr: 12 };
+        const plusMonate = (iso, n) => { const [j, m, d] = iso.split('-').map(Number); const z = new Date(j, m - 1 + n, 1, 12); const letzter = new Date(z.getFullYear(), z.getMonth() + 1, 0).getDate(); z.setDate(Math.min(d, letzter)); return z.getFullYear() + '-' + String(z.getMonth() + 1).padStart(2, '0') + '-' + String(z.getDate()).padStart(2, '0'); };
+        let aboRechnung = null, aboWahl = 'monat';
+        function oeffneAbo(r) {
+            aboRechnung = r; aboWahl = r.abo && r.abo.intervall || 'monat';
+            const zeichne = () => { $('aboWahl').innerHTML = ['monat', 'quartal', 'halbjahr', 'jahr', 'aus'].map(i => '<button type="button" class="chip' + (i === aboWahl ? ' an' : '') + '" data-abo="' + i + '">' + esc(t('abo_' + i)) + '</button>').join(''); $('aboDatum').closest('label').hidden = aboWahl === 'aus'; if (aboWahl !== 'aus' && !(r.abo && r.abo.intervall === aboWahl)) $('aboDatum').value = plusMonate(r.datum, ABO_MONATE[aboWahl]); };
+            $('aboDatum').value = r.abo && r.abo.naechste || plusMonate(r.datum, 1);
+            zeichne();
+            $('aboWahl').onclick = (e) => { const b = e.target.closest('[data-abo]'); if (b) { aboWahl = b.dataset.abo; zeichne(); } };
+            $('aboDialog').hidden = false;
+        }
+        $('aboZu').onclick = () => { $('aboDialog').hidden = true; };
+        $('aboOk').onclick = () => {
+            const r = aboRechnung; if (!r) return;
+            if (aboWahl === 'aus') delete r.abo; else r.abo = { intervall: aboWahl, naechste: $('aboDatum').value || plusMonate(r.datum, ABO_MONATE[aboWahl]) };
+            speichern(); $('aboDialog').hidden = true; zeichneAus(); aboPruefen();
+        };
+        // Fällige Wiederholungen als Entwurf anlegen (höchstens 12 je Vorlage auf einmal)
+        function aboPruefen() {
+            const heute = heuteIso();
+            let n = 0;
+            D.ausgang.filter(r => r.abo && r.abo.intervall && r.abo.naechste && r.status !== 'storniert').forEach(vorlage => {
+                let schutz = 0;
+                while (vorlage.abo.naechste <= heute && schutz++ < 12) {
+                    const k = JSON.parse(JSON.stringify(vorlage));
+                    Object.assign(k, { id: neueId(), erstellt: Date.now(), nr: '', status: 'entwurf', datum: vorlage.abo.naechste, faellig: '', bezahltAm: '', storniertAm: '', ausAbo: vorlage.nr, leistung: new Date(vorlage.abo.naechste + 'T12:00').toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'long', year: 'numeric' }) });
+                    delete k.abo; delete k.absender; delete k.sprache;
+                    D.ausgang.push(k); n++;
+                    vorlage.abo.naechste = plusMonate(vorlage.abo.naechste, ABO_MONATE[vorlage.abo.intervall]);
+                }
+            });
+            if (n) { speichern(); $('aboMeldung').textContent = t('abo_neu', { n }); $('aboMeldung').hidden = false; ausFilter = 'entwurf'; zeichneAus(); }
+        }
 
         // Zahlungserinnerung: als Brief ins Schreibstudio (Absender kommt von dort)
         function erinnerung(r) {
@@ -776,6 +869,7 @@
             fuelleKundenWahl();
             $('kundeWahl').value = aktuell.kundeId || '';
             $('kName').value = aktuell.kunde.name; $('kAdresse').value = aktuell.kunde.adresse; $('kEmail').value = aktuell.kunde.email || ''; $('kPrivat').checked = aktuell.kunde.privat !== false;
+            $('rRabatt').value = aktuell.rabatt || '';
             $('rDatum').value = aktuell.datum; $('rLeistung').value = aktuell.leistung; $('rZiel').value = aktuell.ziel; $('rText').value = aktuell.text || '';
             $('editorStatus').textContent = '';
             zeichnePositionen();
@@ -844,7 +938,7 @@
             else { $('kName').value = ''; $('kAdresse').value = ''; $('kEmail').value = ''; $('kPrivat').checked = true; }
             leseEditor(); aktualisiereEditor();
         };
-        ['kName', 'kAdresse', 'kEmail', 'rLeistung', 'rText'].forEach(id => $(id).addEventListener('input', () => { leseEditor(); aktualisiereEditor(); }));
+        ['kName', 'kAdresse', 'kEmail', 'rLeistung', 'rText', 'rRabatt'].forEach(id => $(id).addEventListener('input', () => { leseEditor(); aktualisiereEditor(); }));
         ['kPrivat', 'rDatum', 'rZiel'].forEach(id => $(id).addEventListener('change', () => { leseEditor(); aktualisiereEditor(); }));
 
         function zeichnePositionen() {
@@ -888,6 +982,7 @@
             aktuell.leistung = $('rLeistung').value.trim();
             aktuell.ziel = Math.max(0, parseInt($('rZiel').value, 10) || 0);
             aktuell.text = $('rText').value.trim();
+            aktuell.rabatt = $('rRabatt').value.trim();
         }
         function pruefe() {
             const a = D.absender, r = aktuell, klein = !!a.klein;
@@ -913,9 +1008,10 @@
             if (!aktuell) return;
             const klein = !!D.absender.klein;
             const s = berechne(aktuell, klein);
+            const rabattZeilen = s.rabatt ? '<div><span>' + esc(t('zwischensumme')) + '</span><span>' + euro(s.summe) + '</span></div><div><span>' + esc(t('rabatt_x', { p: zahlFmt(s.rabattProzent) })) + '</span><span>− ' + euro(s.rabatt) + '</span></div>' : '';
             $('summen').innerHTML = klein
-                ? '<div class="gesamt"><span>' + esc(t('gesamt_klein')) + '</span><span>' + euro(s.brutto) + '</span></div>'
-                : '<div><span>' + esc(t('netto')) + '</span><span>' + euro(s.netto) + '</span></div>' +
+                ? rabattZeilen + '<div class="gesamt"><span>' + esc(t('gesamt_klein')) + '</span><span>' + euro(s.brutto) + '</span></div>'
+                : rabattZeilen + '<div><span>' + esc(t('netto')) + '</span><span>' + euro(s.netto) + '</span></div>' +
                   s.steuern.map(x => '<div><span>' + esc(t('ust_x', { s: x.satz })) + '</span><span>' + euro(x.betrag) + '</span></div>').join('') +
                   '<div class="gesamt"><span>' + esc(t('gesamt')) + '</span><span>' + euro(s.brutto) + '</span></div>';
             const p = pruefe();
@@ -971,7 +1067,8 @@
             aktuell.absender = Object.assign({}, D.absender);   // so bleibt die Rechnung auch nach Adressaenderung gleich
             speichern();
             $('aNaechste').value = D.absender.naechste; $('aNaechsteAng').value = D.absender.naechsteAng;
-            const blob = await rechnungPdf(aktuell);
+            let blob = null;
+            try { blob = await rechnungPdf(aktuell); } catch (err) { $('editorStatus').textContent = '⚠️ PDF: ' + ((err && err.message) || err); }
             if (blob) herunterladen(blob, dateiPdf(aktuell, aktuell.nr));
             const nr = aktuell.nr;
             art = ang ? 'angebot' : 'rechnung';
@@ -995,6 +1092,17 @@
             });
         }
         const pdfText = (s) => String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[^\x20-\x7E\xA0-\xFF€„“‚‘’…•\n]/g, '');
+        const FARBEN = [['petrol', '#1c4a42'], ['blau', '#1e3a8a'], ['weinrot', '#7f1d1d'], ['anthrazit', '#1f2937'], ['gruen', '#166534'], ['orange', '#9a3412'], ['violett', '#5b21b6']];
+        // EPC-QR (GiroCode), Version 002: BCD / 002 / 1 (UTF-8) / SCT / BIC / Name / IBAN / Betrag / Zweck / Referenz / Text
+        function girocodeText(a, betrag, nr) {
+            const iban = String(a.iban || '').replace(/\s+/g, '').toUpperCase();
+            if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(iban) || !(betrag > 0) || betrag > 999999999.99) return '';
+            // BIC nur übernehmen, wenn das Länderkürzel (Stelle 5–6) zur IBAN passt – sonst weglassen (bei Version 002 freiwillig)
+            const bic = (String(a.bank || '').toUpperCase().match(/\b[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b/g) || []).find(x => x.slice(4, 6) === iban.slice(0, 2)) || '';
+            const name = String(a.name || '').replace(/[\r\n]+/g, ' ').slice(0, 70);
+            if (!name) return '';
+            return ['BCD', '002', '1', 'SCT', bic, name, iban, 'EUR' + betrag.toFixed(2), '', '', String(nr || '').slice(0, 140)].join('\n');
+        }
         // Texte auf dem PDF: Sprache der Seite beim Fertigstellen (r.sprache), sonst aktuelle Sprache
         const PDF_TEXTE = {
             de: { rnr: 'Rechnungsnummer', rdat: 'Rechnungsdatum', ldat: 'Leistungsdatum', anr: 'Angebotsnummer', adat: 'Angebotsdatum', gbis: 'Gültig bis', ausf: 'Ausführung', stnr: 'Steuernummer', ustid: 'USt-IdNr.', angebot: 'Angebot', rechnung: 'Rechnung', storniert: ' (STORNIERT)', pos: 'Pos.', beschr: 'Beschreibung', menge: 'Menge', ep: 'Einzelpreis', epn: 'Einzelpreis netto', ges: 'Gesamt', ust: '% USt', netto: 'Summe netto', zzgl: 'zzgl. {s} % USt auf {b}', ust0: 'USt 0 %', brutto: 'Gesamtbetrag', tel: 'Tel. ',
@@ -1004,7 +1112,7 @@
                 zahlen: 'Bitte überweisen Sie den Rechnungsbetrag bis zum {d} ohne Abzug{k}. Verwendungszweck: {nr}.', konto: ' auf das unten genannte Konto', rnrPh: 'Rechnungsnummer',
                 ausAng: 'Gemäß unserem Angebot {nr}.',
                 verzug: 'Hinweis gemäß § 286 Abs. 3 BGB: Sie kommen spätestens in Verzug, wenn Sie nicht innerhalb von 30 Tagen nach Fälligkeit und Zugang dieser Rechnung zahlen.',
-                fstnr: 'Steuernr. ', fustid: 'USt-IdNr. ', seite: 'Seite {i} von {n}', vorschau: ' (Vorschau)' },
+                fstnr: 'Steuernr. ', fustid: 'USt-IdNr. ', seite: 'Seite {i} von {n}', vorschau: ' (Vorschau)', zwischen: 'Zwischensumme', rabatt: 'abzgl. {p} % Rabatt', giro1: 'Bequem bezahlen per QR-Code', giro2: 'Code mit der Banking-App scannen – Empfänger, IBAN, Betrag und Verwendungszweck sind dann schon ausgefüllt (GiroCode).' },
             en: { rnr: 'Invoice number', rdat: 'Invoice date', ldat: 'Date of service', anr: 'Quotation number', adat: 'Quotation date', gbis: 'Valid until', ausf: 'Execution', stnr: 'Tax number', ustid: 'VAT ID', angebot: 'Quotation', rechnung: 'Invoice', storniert: ' (CANCELLED)', pos: 'No.', beschr: 'Description', menge: 'Qty', ep: 'Unit price', epn: 'Unit price net', ges: 'Total', ust: '% VAT', netto: 'Net total', zzgl: 'plus {s} % VAT on {b}', ust0: 'VAT 0 %', brutto: 'Total amount', tel: 'Phone ',
                 klein: 'No VAT is charged in accordance with § 19 UStG (German small business exemption).',
                 gueltig: 'This quotation is valid until {d}. We look forward to your order.',
@@ -1012,7 +1120,7 @@
                 zahlen: 'Please transfer the invoice amount without deduction by {d}{k}. Payment reference: {nr}.', konto: ' to the account stated below', rnrPh: 'invoice number',
                 ausAng: 'According to our quotation {nr}.',
                 verzug: 'Note pursuant to § 286 (3) German Civil Code (BGB): you will be in default at the latest if you do not pay within 30 days of the due date and receipt of this invoice.',
-                fstnr: 'Tax no. ', fustid: 'VAT ID ', seite: 'Page {i} of {n}', vorschau: ' (preview)' }
+                fstnr: 'Tax no. ', fustid: 'VAT ID ', seite: 'Page {i} of {n}', vorschau: ' (preview)', zwischen: 'Subtotal', rabatt: 'less {p} % discount', giro1: 'Pay easily by QR code', giro2: 'Scan the code with your banking app – recipient, IBAN, amount and reference are filled in automatically (EPC QR / GiroCode).' }
         };
         async function rechnungPdf(r, absenderJetzt) {
             const sp_ = r.sprache || (window.SD_LANG === 'en' ? 'en' : 'de');
@@ -1024,6 +1132,10 @@
             try { jspdf = await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf'); }
             catch (e) { alert(t('pdf_fehler')); return null; }
             const a = r.absender || absenderJetzt || D.absender;
+            const farbe = FARBEN.find(f => f[0] === (a.farbe || 'petrol')) || FARBEN[0];
+            const rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+            const [fr, fg, fb] = rgb(farbe[1]);
+            const hell = [fr, fg, fb].map(c => Math.round(255 - (255 - c) * 0.12));
             const klein = r.klein != null ? !!r.klein : !!a.klein;
             const s = berechne(r, klein);
             const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
@@ -1069,14 +1181,15 @@
             info.forEach(([k, v]) => { doc.setTextColor(90); doc.text(pdfText(k), 128, yi); doc.setTextColor(0); doc.text(pdfText(v), R0, yi, { align: 'right' }); yi += 5; });
             // Titel
             y = Math.max(y, yi) + 12;
-            doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(fr, fg, fb);
             doc.text(pdfText(ang ? P.angebot : P.rechnung + (r.status === 'storniert' ? P.storniert : '')), L0, y);
-            doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(0);
             y += 9;
             // Tabelle
             const sp = { pos: L0, text: L0 + 9, menge: 128, preis: 156, summe: R0 };
             const kopf = () => {
-                doc.setFillColor(236, 242, 239); doc.rect(L0 - 1, y - 4.5, R0 - L0 + 2, 7, 'F');
+                doc.setFillColor(hell[0], hell[1], hell[2]); doc.rect(L0 - 1, y - 4.5, R0 - L0 + 2, 7, 'F');
+                doc.setFillColor(fr, fg, fb); doc.rect(L0 - 1, y - 4.5, 1.2, 7, 'F');
                 doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
                 doc.text(P.pos, sp.pos, y); doc.text(P.beschr, sp.text, y); doc.text(P.menge, sp.menge, y, { align: 'right' });
                 doc.text(pdfText(klein ? P.ep : P.epn), sp.preis, y, { align: 'right' }); doc.text(P.ges, sp.summe, y, { align: 'right' });
@@ -1098,12 +1211,13 @@
             y += 4;
             const summenZeile = (k, v, fett) => { if (fett) doc.setFont('helvetica', 'bold'); doc.text(pdfText(k), 150, y, { align: 'right' }); doc.text(pdfText(v), R0, y, { align: 'right' }); if (fett) doc.setFont('helvetica', 'normal'); y += 5.4; };
             if (y > 240) { doc.addPage(); y = 25; }
+            if (s.rabatt) { summenZeile(P.zwischen, geld(s.summe)); summenZeile(F('rabatt', { p: String(s.rabattProzent).replace('.', sp_ === 'en' ? '.' : ',') }), '- ' + geld(s.rabatt)); }
             if (!klein) {
                 summenZeile(P.netto, geld(s.netto));
                 s.steuern.forEach(x => summenZeile(F('zzgl', { s: x.satz, b: geld(x.basis) }), geld(x.betrag)));
                 if (s.netto && !s.steuern.length) summenZeile(P.ust0, geld(0));
             }
-            doc.setFontSize(11); summenZeile(P.brutto, geld(s.brutto), true); doc.setFontSize(9.5);
+            doc.setFontSize(11); doc.setTextColor(fr, fg, fb); summenZeile(P.brutto, geld(s.brutto), true); doc.setTextColor(0); doc.setFontSize(9.5);
             y += 4;
             // Hinweise
             const hinweise = [];
@@ -1123,6 +1237,22 @@
                 if (y + z.length * 4.6 > 262) { doc.addPage(); y = 25; }
                 doc.text(z, L0, y); y += z.length * 4.6 + 2.5;
             });
+            // GiroCode (EPC-QR): Banking-App füllt Überweisung aus
+            const epc = !ang && r.status !== 'storniert' && a.giro !== false ? girocodeText(a, s.brutto, r.nr) : '';
+            if (epc) {
+                try {
+                    const QR = await ladeSkript('../pdf-studio/vendor/qrcode.min.js', 'QRCode');
+                    const bild = await QR.toDataURL(epc, { errorCorrectionLevel: 'M', margin: 1, width: 300 });
+                    if (y + 30 > 268) { doc.addPage(); y = 25; }
+                    y += 2;
+                    doc.addImage(bild, 'PNG', L0, y, 26, 26);
+                    doc.setFont('helvetica', 'bold'); doc.text(pdfText(P.giro1), L0 + 30, y + 7);
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90);
+                    doc.text(doc.splitTextToSize(pdfText(P.giro2), R0 - L0 - 30), L0 + 30, y + 12);
+                    doc.setTextColor(0); doc.setFontSize(9.5);
+                    y += 30;
+                } catch (e) { /* ohne QR-Code weiter */ }
+            }
             // Fußzeile auf jeder Seite
             const seiten = doc.getNumberOfPages();
             for (let i = 1; i <= seiten; i++) {
@@ -1395,6 +1525,7 @@
                 '<div class="zahl ' + (gewinn > 0 ? 'gut' : gewinn < 0 ? 'schlecht' : '') + '"><b>' + (gewinn < 0 ? '▼ ' : gewinn > 0 ? '▲ ' : '') + euro(Math.abs(gewinn)) + '</b><span>' + esc(t(gewinn < 0 ? 'w_z_verlust' : 'w_z_gewinn')) + '</span></div>' +
                 '<div class="zahl"><b>' + euro(sum('lagerwert')) + '</b><span>' + esc(t('w_z_lager')) + '</span></div>';
             zeichneWarenChart();
+            zeichneTop('topWaren', t('top_waren'), k.map(([w, z]) => [w.name, z.gewinn]));
             const such = ($('wSuche').value || '').trim().toLowerCase();
             const liste = k.filter(([w]) => !such || (w.name + ' ' + (w.nr || '')).toLowerCase().includes(such)).sort((a, b) => a[0].name.localeCompare(b[0].name));
             $('wListe').innerHTML = !D.waren.length ? '<p class="leer">' + esc(t('w_leer')) + '</p>' : !liste.length ? '<p class="leer">' + esc(t('w_keine_treffer')) + '</p>' : liste.map(([w, z]) => {
@@ -1557,7 +1688,7 @@
         }
         function verkaufVerbuchen(r) {
             D.bewegungen = D.bewegungen.filter(b => b.rechnungId !== r.id);
-            r.positionen.forEach(p => { if (p.warenId && wareVon(p.warenId) && zahl(p.menge) > 0) D.bewegungen.push({ id: neueId(), warenId: p.warenId, typ: 'verkauf', menge: zahl(p.menge), preis: zahl(p.preis), datum: r.datum, notiz: r.kunde.name || '', rechnungId: r.id }); });
+            r.positionen.forEach(p => { if (p.warenId && wareVon(p.warenId) && zahl(p.menge) > 0) D.bewegungen.push({ id: neueId(), warenId: p.warenId, typ: 'verkauf', menge: zahl(p.menge), preis: runde(zahl(p.preis) * (1 - Math.min(100, Math.max(0, zahl(r.rabatt))) / 100)), datum: r.datum, notiz: r.kunde.name || '', rechnungId: r.id }); });
         }
 
         // ------------------------------------------------------------
@@ -1586,6 +1717,7 @@
         zeigeTab(['ein', 'waren'].includes(tab) ? tab : (location.hash === '#waren' ? 'waren' : 'aus'));
         document.addEventListener('sd-lang-changed', aktualisiereTexte);
         aktualisiereTexte();
+        aboPruefen();
     })();
     </script>
 </body>
