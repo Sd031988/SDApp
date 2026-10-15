@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>SD Rechnungen</title>
+    <title>SD Rechnungen & Angebote</title>
     <meta name="theme-color" content="#0f172a">
     <meta name="description" content="Rechnungen schreiben (auch für Kleinunternehmer) und erhaltene Rechnungen im Blick behalten – mit Fälligkeiten, Erinnerungen und Steuer-Helfer">
     <link rel="icon" href="../icon.svg" type="image/svg+xml">
@@ -109,6 +109,9 @@
         .art-wahl .chip { font-weight: bold; }
         .nr-gross { font-size: 1.05rem; font-weight: bold; color: var(--accent-dark); }
         .b-angenommen { background: var(--ok-bg); color: var(--ok); } .b-abgelehnt { background: #eef0f2; color: var(--muted); }
+        .frist-box { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fafcfb; }
+        .frist-box .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .frist-datum { max-width: 220px; }
     </style>
     <script src="../sd-sync.js?v=1"></script>
 </head>
@@ -118,7 +121,7 @@
         <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
         <div class="brand">
             <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
-            <div><strong data-i18n="titel">Rechnungen</strong><small data-i18n="untertitel">Rechnungen schreiben und erhaltene im Blick behalten</small></div>
+            <div><strong data-i18n="titel">Rechnungen &amp; Angebote</strong><small data-i18n="untertitel">Rechnungen schreiben und erhaltene im Blick behalten</small></div>
         </div>
         <div class="sd-lang-switch">
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
@@ -165,7 +168,13 @@
             <div class="raster3">
                 <label class="feld"><span id="eDatum">Rechnungsdatum</span><input type="date" id="rDatum"></label>
                 <label class="feld"><span id="eLeistung">Leistungsdatum / -zeitraum</span><input type="text" id="rLeistung" data-i18n-placeholder="leistung_ph" placeholder="z. B. 06.10.2026 oder September 2026"></label>
-                <label class="feld"><span id="eZiel">Zahlungsziel (Tage)</span><input type="number" id="rZiel" min="0" max="120" step="1"></label>
+                <label class="feld"><span id="eZiel">Zahlungsziel (Tage)</span><input type="number" id="rZiel" min="0" max="365" step="1"></label>
+            </div>
+            <div class="frist-box">
+                <span class="info" id="eFristTitel"></span>
+                <div class="chips" id="fristChips"></div>
+                <label class="feld frist-datum"><span id="eFristDatum"></span><input type="date" id="rFristDatum"></label>
+                <p class="info" id="fristInfo"></p>
             </div>
             <p class="info" id="rNrInfo"></p>
 
@@ -292,7 +301,7 @@
     <script>
         window.SD_I18N = {
             de: {
-                titel: 'Rechnungen', untertitel: 'Rechnungen schreiben und erhaltene im Blick behalten', tab_aus: '✍️ Schreiben', tab_ein: '📥 Erhalten',
+                titel: 'Rechnungen & Angebote', untertitel: 'Angebote und Rechnungen schreiben, erhaltene im Blick behalten', tab_aus: '✍️ Schreiben', tab_ein: '📥 Erhalten',
                 neue_rechnung: '＋ Neue Rechnung', csv: '⬇️ CSV (für die Steuer)', absender_fehlt: 'Bitte zuerst unten „Meine Angaben“ ausfüllen – sie stehen auf jeder Rechnung.',
                 kunde: 'Kunde / Rechnungsempfänger', kunde_gespeichert: 'Gespeicherter Kunde', kunde_neu: '– neuer Kunde –', kunde_name: 'Name / Firma', kunde_email: 'E-Mail (optional)', kunde_adresse: 'Anschrift', adresse_ph: 'Straße Nr.\nPLZ Ort',
                 kunde_privat: 'Privatperson (Verbraucher)', kunde_privat_hilfe: 'Dann kommt automatisch der Hinweis auf den Zahlungsverzug nach 30 Tagen auf die Rechnung (§ 286 Abs. 3 BGB).',
@@ -300,7 +309,7 @@
                 positionen: 'Positionen', p_text: 'Beschreibung', p_menge: 'Menge', p_einheit: 'Einheit', p_preis_netto: 'Einzelpreis netto €', p_preis: 'Einzelpreis €', p_ust: 'USt', pos_neu: '＋ Position', ki_pos: '✨ Positionen mit KI (sprechen/tippen)',
                 r_text: 'Zusatztext (optional)', text_ph: 'z. B. Vielen Dank für Ihren Auftrag!', pruef_titel: 'Pflichtangaben-Check',
                 entwurf_speichern: '💾 Entwurf speichern', vorschau: '👁 PDF-Vorschau', fertig: '✅ Fertigstellen & PDF', abbrechen: 'Abbrechen', speichern: '💾 Speichern',
-                art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
+                frist_titel_r: '⏰ Zahlungsfrist – schnell wählen:', frist_titel_a: '⏰ Wie lange gilt das Angebot?', frist_datum_r: 'oder fällig am', frist_datum_a: 'oder gültig bis', frist_sofort: 'sofort', frist_tage: '{n} Tage', frist_woche: '1 Woche', frist_wochen: '{n} Wochen', frist_monat: '1 Monat', frist_info_r: 'Fällig am {d} – steht so auf der Rechnung und in der Fristen-Übersicht.', frist_info_r0: 'Sofort fällig – steht so auf der Rechnung.', frist_info_a: 'Gültig bis {d} – steht so auf dem Angebot und in der Fristen-Übersicht.', b_kalender_r: '📅 Frist in Kalender', ics_zahlung: 'Zahlung erwartet: {nr} · {k} · {b}', ics_angebot: 'Angebot läuft ab: {nr} · {k} · {b}', art_rechnungen: '🧾 Rechnungen', art_angebote: '📝 Angebote', neues_angebot: '＋ Neues Angebot', kunde_ang: 'Kunde / Angebotsempfänger', angebot: 'Angebot', an_datum: 'Angebotsdatum', an_leistung: 'Ausführung / Zeitraum (optional)', an_gueltig: 'Gültig (Tage)', fertig_ang: '✅ Angebot fertig & PDF', neu_titel_ang: '📝 Neues Angebot', bearbeiten_titel_ang: '📝 Angebot bearbeiten', nr_info_neu_ang: 'Angebotsnummer beim Fertigstellen: {nr}', nr_info_ang: 'Angebotsnummer: {nr}', leer_ang: 'Noch keine Angebote. Leg los mit „＋ Neues Angebot“.', fertig_ok_ang: '✓ Angebot {nr} erstellt – PDF wurde heruntergeladen.', z_ang_offen: 'Offene Angebote', z_ang_an: 'Angenommen', z_ang_quote: 'Angenommen-Quote', s_angenommen: 'angenommen', s_abgelehnt: 'abgelehnt', s_gueltig: 'gültig bis {d}', s_abgelaufen: 'abgelaufen', f_angenommen: 'Angenommen', f_abgelehnt: 'Abgelehnt', b_angenommen: '✅ Angenommen', b_abgelehnt: '✖ Abgelehnt', b_zur_rechnung: '🧾 → Rechnung', b_rechnung_da: '🧾 Rechnung erstellt', zur_rechnung_ok: 'Rechnungsentwurf aus Angebot {nr} – bitte Leistungsdatum prüfen und fertigstellen.', auto_gespeichert: '✓ automatisch gespeichert', p_absender_ang: 'Dein Name und deine Anschrift', a_praefix_ang: 'Angebotsnummer: Vorsilbe', a_naechste_ang: 'Nächste Angebotsnummer', a_gueltig: 'Angebote gültig (Tage)', neu_titel: '✍️ Neue Rechnung', bearbeiten_titel: '✍️ Entwurf bearbeiten', nr_info_neu: 'Die Rechnungsnummer wird beim Fertigstellen vergeben: {nr}', nr_info: 'Rechnungsnummer: {nr}',
                 angaben_titel: '🏷️ Meine Angaben (Absender)', a_name: 'Name / Firma', a_zusatz: 'Zusatz (optional)', zusatz_ph: 'z. B. Malerarbeiten · Nachhilfe', a_strasse: 'Straße, Nr.', a_ort: 'PLZ Ort', a_tel: 'Telefon', a_email: 'E-Mail',
                 a_steuernr: 'Steuernummer', steuernr_ph: 'vom Finanzamt', a_ustid: 'USt-IdNr. (falls vorhanden)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Rechnungsnummer: Vorsilbe', a_naechste: 'Nächste laufende Nummer',
                 a_klein: 'Ich bin Kleinunternehmer (§ 19 UStG)', a_klein_hilfe: 'Dann wird keine Umsatzsteuer berechnet, und auf der Rechnung steht der Hinweis auf die Steuerbefreiung. Grenzen seit 2025: Vorjahr höchstens 25.000 €, laufendes Jahr höchstens 100.000 € Umsatz.',
@@ -337,7 +346,7 @@
                 erinnerung_betreff: 'Zahlungserinnerung zur Rechnung Nr. {nr}', pdf_fehler: 'Das PDF konnte nicht erstellt werden (keine Verbindung zur PDF-Bibliothek?).'
             },
             en: {
-                titel: 'Invoices', untertitel: 'Write invoices and keep track of received ones', tab_aus: '✍️ Write', tab_ein: '📥 Received',
+                titel: 'Invoices & quotations', untertitel: 'Write quotations and invoices, keep track of received ones', tab_aus: '✍️ Write', tab_ein: '📥 Received',
                 neue_rechnung: '＋ New invoice', csv: '⬇️ CSV (for taxes)', absender_fehlt: 'Please fill in "My details" below first – they appear on every invoice.',
                 kunde: 'Customer / recipient', kunde_gespeichert: 'Saved customer', kunde_neu: '– new customer –', kunde_name: 'Name / company', kunde_email: 'E-mail (optional)', kunde_adresse: 'Address', adresse_ph: 'Street no.\nPostcode city',
                 kunde_privat: 'Private person (consumer)', kunde_privat_hilfe: 'Then the note on default after 30 days is added automatically (§ 286 (3) BGB).',
@@ -345,7 +354,7 @@
                 positionen: 'Items', p_text: 'Description', p_menge: 'Qty', p_einheit: 'Unit', p_preis_netto: 'Unit price net €', p_preis: 'Unit price €', p_ust: 'VAT', pos_neu: '＋ Item', ki_pos: '✨ Items with AI (speak/type)',
                 r_text: 'Additional text (optional)', text_ph: 'e.g. Thank you for your order!', pruef_titel: 'Mandatory details check',
                 entwurf_speichern: '💾 Save draft', vorschau: '👁 PDF preview', fertig: '✅ Finalise & PDF', abbrechen: 'Cancel', speichern: '💾 Save',
-                art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
+                frist_titel_r: '⏰ Payment term – quick choice:', frist_titel_a: '⏰ How long is the quotation valid?', frist_datum_r: 'or due on', frist_datum_a: 'or valid until', frist_sofort: 'immediately', frist_tage: '{n} days', frist_woche: '1 week', frist_wochen: '{n} weeks', frist_monat: '1 month', frist_info_r: 'Due on {d} – printed on the invoice and shown in the deadline overview.', frist_info_r0: 'Due immediately – printed on the invoice.', frist_info_a: 'Valid until {d} – printed on the quotation and shown in the deadline overview.', b_kalender_r: '📅 Deadline to calendar', ics_zahlung: 'Payment expected: {nr} · {k} · {b}', ics_angebot: 'Quotation expires: {nr} · {k} · {b}', art_rechnungen: '🧾 Invoices', art_angebote: '📝 Quotations', neues_angebot: '＋ New quotation', kunde_ang: 'Customer / recipient of the quotation', angebot: 'Quotation', an_datum: 'Quotation date', an_leistung: 'Execution / period (optional)', an_gueltig: 'Valid (days)', fertig_ang: '✅ Finalise quotation & PDF', neu_titel_ang: '📝 New quotation', bearbeiten_titel_ang: '📝 Edit quotation', nr_info_neu_ang: 'Quotation number when finalising: {nr}', nr_info_ang: 'Quotation number: {nr}', leer_ang: 'No quotations yet. Start with "＋ New quotation".', fertig_ok_ang: '✓ Quotation {nr} created – the PDF was downloaded.', z_ang_offen: 'Open quotations', z_ang_an: 'Accepted', z_ang_quote: 'Acceptance rate', s_angenommen: 'accepted', s_abgelehnt: 'declined', s_gueltig: 'valid until {d}', s_abgelaufen: 'expired', f_angenommen: 'Accepted', f_abgelehnt: 'Declined', b_angenommen: '✅ Accepted', b_abgelehnt: '✖ Declined', b_zur_rechnung: '🧾 → Invoice', b_rechnung_da: '🧾 Invoice created', zur_rechnung_ok: 'Invoice draft from quotation {nr} – please check the date of service and finalise.', auto_gespeichert: '✓ saved automatically', p_absender_ang: 'Your name and address', a_praefix_ang: 'Quotation number: prefix', a_naechste_ang: 'Next quotation number', a_gueltig: 'Quotations valid (days)', neu_titel: '✍️ New invoice', bearbeiten_titel: '✍️ Edit draft', nr_info_neu: 'The invoice number is assigned when finalising: {nr}', nr_info: 'Invoice number: {nr}',
                 angaben_titel: '🏷️ My details (sender)', a_name: 'Name / company', a_zusatz: 'Addition (optional)', zusatz_ph: 'e.g. Painting · Tutoring', a_strasse: 'Street, no.', a_ort: 'Postcode city', a_tel: 'Phone', a_email: 'E-mail',
                 a_steuernr: 'Tax number', steuernr_ph: 'from the tax office', a_ustid: 'VAT ID (if any)', a_iban: 'IBAN', a_bank: 'Bank / BIC (optional)', a_praefix: 'Invoice number: prefix', a_naechste: 'Next sequential number',
                 a_klein: 'I am a small business (§ 19 UStG)', a_klein_hilfe: 'No VAT is charged and the invoice states the exemption. Limits since 2025: previous year max. €25,000, current year max. €100,000 turnover.',
@@ -575,7 +584,7 @@
                 const knoepfe = [];
                 if (r.status === 'entwurf') knoepfe.push(['bearbeiten', t('b_bearbeiten')]);
                 knoepfe.push(['pdf', t('b_pdf')]);
-                if (r.status === 'offen') knoepfe.push(['angenommen', t('b_angenommen')], ['abgelehnt', t('b_abgelehnt')]);
+                if (r.status === 'offen') knoepfe.push(['angenommen', t('b_angenommen')], ['abgelehnt', t('b_abgelehnt')], ['kalender_aus', t('b_kalender_r')]);
                 if (r.status === 'angenommen' || r.status === 'abgelehnt') knoepfe.push(['offen', t('b_offen')]);
                 if (r.status !== 'entwurf') knoepfe.push(r.rechnungId && D.ausgang.some(x => x.id === r.rechnungId) ? ['zurechnung_da', t('b_rechnung_da')] : ['zurechnung', t('b_zur_rechnung')]);
                 knoepfe.push(['kopie', t('b_kopie')]);
@@ -605,7 +614,7 @@
                 const knoepfe = [];
                 if (r.status === 'entwurf') knoepfe.push(['bearbeiten', t('b_bearbeiten')]);
                 knoepfe.push(['pdf', t('b_pdf')]);
-                if (r.status === 'offen') { knoepfe.push(['bezahlt', t('b_bezahlt')]); if (r.faellig && tageBis(r.faellig) < 0) knoepfe.push(['erinnerung', t('b_erinnerung')]); }
+                if (r.status === 'offen') { knoepfe.push(['bezahlt', t('b_bezahlt')]); if (r.faellig && Number(r.ziel) > 0) knoepfe.push(['kalender_aus', t('b_kalender_r')]); if (r.faellig && tageBis(r.faellig) < 0) knoepfe.push(['erinnerung', t('b_erinnerung')]); }
                 if (r.status === 'bezahlt') knoepfe.push(['offen', t('b_offen')]);
                 knoepfe.push(['kopie', t('b_kopie')]);
                 if (r.status === 'offen') knoepfe.push(['storno', t('b_storno')]);
@@ -623,6 +632,7 @@
             const r = D.ausgang.find(x => x.id === b.dataset.id) || D.angebote.find(x => x.id === b.dataset.id);
             if (!r) return;
             const a = b.dataset.a;
+            if (a === 'kalender_aus') { kalenderAus(r); return; }
             if (istAng(r)) {
                 if (a === 'angenommen' || a === 'abgelehnt' || a === 'offen') { r.status = a; r.entschiedenAm = a === 'offen' ? '' : heuteIso(); speichern(); zeichneAus(); return; }
                 if (a === 'zurechnung') {
@@ -697,6 +707,29 @@
             if (!angabenVollstaendig()) $('angabenKarte').open = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        const FRISTEN_R = [0, 7, 14, 30, 60], FRISTEN_A = [14, 30, 60, 90];
+        const fristLabel = (n) => n === 0 ? t('frist_sofort') : n === 30 ? t('frist_monat') : n === 7 ? t('frist_woche') : n % 7 === 0 && n <= 28 ? t('frist_wochen', { n: n / 7 }) : t('frist_tage', { n });
+        function zeichneFrist() {
+            if (!aktuell) return;
+            const ang = istAng(aktuell), z = Math.max(0, parseInt(aktuell.ziel, 10) || 0);
+            $('eFristTitel').textContent = t(ang ? 'frist_titel_a' : 'frist_titel_r');
+            $('eFristDatum').textContent = t(ang ? 'frist_datum_a' : 'frist_datum_r');
+            $('fristChips').innerHTML = (ang ? FRISTEN_A : FRISTEN_R).map(n => '<button type="button" class="chip' + (n === z ? ' an' : '') + '" data-frist="' + n + '">' + esc(fristLabel(n)) + '</button>').join('');
+            const bis = plusTage(aktuell.datum || heuteIso(), z);
+            $('rFristDatum').value = bis;
+            $('rFristDatum').min = aktuell.datum || heuteIso();
+            $('fristInfo').textContent = !ang && z === 0 ? t('frist_info_r0') : t(ang ? 'frist_info_a' : 'frist_info_r', { d: deDatum(bis) });
+        }
+        $('fristChips').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-frist]');
+            if (!b || !aktuell) return;
+            $('rZiel').value = b.dataset.frist; leseEditor(); aktualisiereEditor(); autoSichern();
+        });
+        $('rFristDatum').addEventListener('change', () => {
+            if (!aktuell || !$('rFristDatum').value) return;
+            const tage = Math.round((new Date($('rFristDatum').value + 'T12:00') - new Date((aktuell.datum || heuteIso()) + 'T12:00')) / 86400000);
+            $('rZiel').value = Math.max(0, tage); leseEditor(); aktualisiereEditor(); autoSichern();
+        });
         function setzeEditorTexte() {
             if (!aktuell) return;
             const ang = istAng(aktuell), vorhanden = listeVon(aktuell).some(x => x.id === aktuell.id);
@@ -808,6 +841,7 @@
             const p = pruefe();
             $('pruefung').innerHTML = p.liste.map(([ok, txt]) => '<li style="color:' + (ok ? 'var(--ok)' : 'var(--danger)') + '">' + (ok ? '✓ ' : '✗ ') + esc(txt) + '</li>').join('');
             $('absenderFehlt').hidden = istAng(aktuell) ? !!(D.absender.name && D.absender.strasse && D.absender.ort) : angabenVollstaendig();
+            zeichneFrist();
             const ang = istAng(aktuell);
             $('rNrInfo').innerHTML = '<span class="nr-gross">' + esc(aktuell.nr ? t(ang ? 'nr_info_ang' : 'nr_info', { nr: aktuell.nr }) : t(ang ? 'nr_info_neu_ang' : 'nr_info_neu', { nr: nrNeu(aktuell) })) + '</span>';
         }
@@ -1116,6 +1150,19 @@
             speichern(); zeichneEin();
         });
         function icsText(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+        function kalenderAus(r) {
+            const ang = istAng(r);
+            const datum = ang ? (r.gueltigBis || plusTage(r.datum, r.ziel)) : r.faellig;
+            if (!datum) return;
+            const tag = datum.replace(/-/g, ''), ende = plusTage(datum, 1).replace(/-/g, '');
+            const titel = t(ang ? 'ics_angebot' : 'ics_zahlung', { nr: r.nr, k: r.kunde.name || '', b: euroPdf(r.summe) });
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SD Hub//Rechnungen//DE', 'BEGIN:VEVENT',
+                'UID:sd-' + r.id + '-' + tag + '@thesdhub.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
+                'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(titel),
+                'BEGIN:VALARM', 'TRIGGER:-PT15H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(titel), 'END:VALARM',
+                'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+            herunterladen(new Blob([ics], { type: 'text/calendar' }), dateiname(r.nr || 'frist') + '.ics');
+        }
         function kalender(r) {
             const tag = r.faellig.replace(/-/g, '');
             const ende = plusTage(r.faellig, 1).replace(/-/g, '');

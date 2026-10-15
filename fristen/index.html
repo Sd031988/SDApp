@@ -76,7 +76,7 @@
                 leer: 'Keine anstehenden Fristen. 🎉', leer_info: 'Fristen erscheinen hier automatisch, sobald du sie in einem Bereich einträgst – oder lege eine eigene an.',
                 q_alle: 'Alle', q_post: '📬 Briefe', q_bewerbung: '📌 Bewerbungen', q_rechnung: '🧾 Rechnungen', q_mappe: '🗂️ Dokumente', q_vertrag: '📝 Verträge', q_eigen: '✏️ Eigene',
                 heute: 'heute', morgen: 'morgen', in_tagen: 'in {n} Tagen', vor_tagen: 'seit {n} Tagen', oeffnen: 'öffnen', erledigt: '✓ erledigt', bearbeiten: '✏️',
-                post_titel: 'Brief: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Bewerbungsfrist: {firma}', re_zahlen: 'Rechnung bezahlen: {x}', re_eingang: 'Zahlung erwartet: Rechnung {x}',
+                post_titel: 'Brief: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Bewerbungsfrist: {firma}', re_zahlen: 'Rechnung bezahlen: {x}', re_eingang: 'Zahlung erwartet: Rechnung {x}', re_angebot: 'Angebot läuft ab: {x}',
                 mappe_titel: '{x} läuft ab', vertrag_titel: 'Letzter Tag zum Kündigen: {x}', betrag: '{b}',
                 ed_titel: 'Eigene Frist', f_titel: 'Was?', f_titel_ph: 'z. B. Antrag Wohngeld abgeben', f_datum: 'Bis wann?', f_vorher: 'Erinnern', f_notiz: 'Notiz',
                 v0: 'nur am Tag', v1: '1 Tag vorher', v3: '3 Tage vorher', v7: '1 Woche vorher', v14: '2 Wochen vorher',
@@ -92,7 +92,7 @@
                 leer: 'No upcoming deadlines. 🎉', leer_info: 'Deadlines appear here automatically as soon as you enter them in an area – or add your own.',
                 q_alle: 'All', q_post: '📬 Letters', q_bewerbung: '📌 Applications', q_rechnung: '🧾 Invoices', q_mappe: '🗂️ Documents', q_vertrag: '📝 Contracts', q_eigen: '✏️ Own',
                 heute: 'today', morgen: 'tomorrow', in_tagen: 'in {n} days', vor_tagen: '{n} days ago', oeffnen: 'open', erledigt: '✓ done', bearbeiten: '✏️',
-                post_titel: 'Letter: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Application deadline: {firma}', re_zahlen: 'Pay invoice: {x}', re_eingang: 'Payment expected: invoice {x}',
+                post_titel: 'Letter: {x}', bew_schritt: '{firma}: {schritt}', bew_frist: 'Application deadline: {firma}', re_zahlen: 'Pay invoice: {x}', re_eingang: 'Payment expected: invoice {x}', re_angebot: 'Quotation expires: {x}',
                 mappe_titel: '{x} expires', vertrag_titel: 'Last day to cancel: {x}', betrag: '{b}',
                 ed_titel: 'Own deadline', f_titel: 'What?', f_titel_ph: 'e.g. submit housing benefit application', f_datum: 'By when?', f_vorher: 'Remind me', f_notiz: 'Note',
                 v0: 'on the day only', v1: '1 day before', v3: '3 days before', v7: '1 week before', v14: '2 weeks before',
@@ -151,6 +151,10 @@
                 quelle: 'rechnung', id: 'ra-' + r.id, datum: r.faellig, vorher: 0, titel: t('re_eingang', { x: (r.nr || '') + (r.kunde && r.kunde.name ? ' · ' + r.kunde.name : '') }),
                 info: r.summe ? SD.euro(r.summe) : '', link: '../rechnungen/index.html'
             }));
+            ((re && re.angebote) || []).filter(r => r.status === 'offen').forEach(r => { const bis = r.gueltigBis || (r.datum && r.ziel != null ? SD.plusTage(r.datum, Number(r.ziel)) : ''); if (bis) x.push({
+                quelle: 'rechnung', id: 'an-' + r.id, datum: bis, vorher: 3, titel: t('re_angebot', { x: (r.nr || '') + (r.kunde && r.kunde.name ? ' · ' + r.kunde.name : '') }),
+                info: r.summe ? SD.euro(r.summe) : '', link: '../rechnungen/index.html'
+            }); });
             mappe.filter(d => d.gueltigBis).forEach(d => x.push({
                 quelle: 'mappe', id: 'mappe-' + d.id, datum: d.gueltigBis, vorher: Number(d.erinnernTage) || 0,
                 titel: t('mappe_titel', { x: [d.titel, d.person].filter(Boolean).join(' – ') }), info: '', link: '../mappe/index.html'
