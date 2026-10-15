@@ -152,6 +152,15 @@
         .kasse { font-size: .85rem; color: var(--muted); }
         .eintrag.verlust { border-color: #f1c4bf; background: #fffafa; }
         .preis-warn { color: var(--danger); font-size: .82rem; margin: 0; }
+        /* Dari / Paschtu: von rechts nach links */
+        html[dir=rtl] body { font-family: Tahoma, 'Segoe UI', 'Noto Naskh Arabic', 'Noto Sans Arabic', Arial, sans-serif; }
+        html[dir=rtl] .sd-lang-switch, html[dir=rtl] input[type=date], html[dir=rtl] input[inputmode=decimal], html[dir=rtl] input[type=email], html[dir=rtl] .betrag, html[dir=rtl] .zahl b, html[dir=rtl] .w-chart svg { direction: ltr; }
+        html[dir=rtl] .ware-zahlen b, html[dir=rtl] .top-zeile b { direction: ltr; unicode-bidi: isolate; }
+        html[dir=rtl] .back-link { transform: scaleX(-1); display: inline-block; }
+        html[dir=rtl] .rabatt-feld { justify-self: start; }
+        .sd-lang-btn[data-lang=fa], .sd-lang-btn[data-lang=ps] { font-family: Tahoma, 'Segoe UI', Arial, sans-serif; }
+        @media (max-width: 520px) { .sd-lang-btn { padding: 5px 7px; } }
+        .pdf-sprache { font-size: .8rem; color: var(--muted); margin: 0; }
     </style>
     <script src="../sd-sync.js?v=2"></script>
 </head>
@@ -166,6 +175,8 @@
         <div class="sd-lang-switch">
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
             <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+            <button type="button" class="sd-lang-btn" data-lang="fa" onclick="sdApplyLang('fa')" lang="fa" title="دری">دری</button>
+            <button type="button" class="sd-lang-btn" data-lang="ps" onclick="sdApplyLang('ps')" lang="ps" title="پښتو">پښتو</button>
         </div>
     </header>
 
@@ -240,6 +251,7 @@
                 <button type="button" class="btn prim" id="fertigBtn">✅ Fertigstellen &amp; PDF</button>
                 <button type="button" class="btn" id="abbrechenBtn" data-i18n="abbrechen">Abbrechen</button>
             </div>
+            <p class="pdf-sprache" id="pdfSprache" hidden data-i18n="sprache_pdf"></p>
             <p class="status" id="editorStatus" aria-live="polite"></p>
         </section>
 
@@ -518,7 +530,8 @@
             }
         };
     </script>
-    <script src="../i18n.js?v=1"></script>
+    <script src="sprachen-fa-ps.js?v=1"></script>
+    <script src="../i18n.js?v=2"></script>
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
@@ -526,7 +539,7 @@
     (function () {
         'use strict';
         const $ = (id) => document.getElementById(id);
-        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const L = () => { const d = window.SD_I18N.de, x = window.SD_I18N[window.SD_LANG] || d; return x === d ? d : Object.assign({}, d, x); };
         const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
         const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const neueId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -544,7 +557,7 @@
             return isFinite(n) ? n : 0;
         };
         const runde = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
-        const euro = (n) => (window.SD_LANG === 'en' ? '€' : '') + Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (window.SD_LANG === 'en' ? '' : ' €');
+        const euro = (n) => { const x = (window.SD_LANG === 'en' ? '€' : '') + Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (window.SD_LANG === 'en' ? '' : ' €'); return document.documentElement.dir === 'rtl' ? '\u2066' + x + '\u2069' : x; };
         const euroPdf = (n) => Number(n || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' EUR';
 
         // ------------------------------------------------------------
@@ -1539,7 +1552,9 @@
         // Zeitraum-Wahl (für Auswertung und Bericht): feste Kurzwahl oder bestimmter Tag / Monat / Jahr / Von–bis
         const zrJetzt = () => { const h = heuteIso(); return { tag: h, monat: Number(h.slice(5, 7)), jahr: Number(h.slice(0, 4)), von: h.slice(0, 8) + '01', bis: h }; };
         const zrStatus = { auswertung: Object.assign({ art: 'jahr' }, zrJetzt()), bericht: Object.assign({ art: 'monat' }, zrJetzt()) };
-        const monatsName = (m, j) => new Date(j, m - 1, 15).toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'long', year: j ? 'numeric' : undefined });
+        // Gregorianische Monatsnamen; für Dari/Paschtu die in Afghanistan üblichen Namen (nicht der persische Kalender)
+        const MONATE_AF = { fa: ['جنوری', 'فبروری', 'مارچ', 'اپریل', 'می', 'جون', 'جولای', 'اگست', 'سپتمبر', 'اکتوبر', 'نومبر', 'دسمبر'], ps: ['جنوري', 'فبروري', 'مارچ', 'اپرېل', 'مۍ', 'جون', 'جولای', 'اګست', 'سپتمبر', 'اکتوبر', 'نومبر', 'دسمبر'] };
+        const monatsName = (m, j) => MONATE_AF[window.SD_LANG] ? MONATE_AF[window.SD_LANG][m - 1] + (j ? ' ' + j : '') : new Date(j || 2000, m - 1, 15).toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'long', year: j ? 'numeric' : undefined });
         const datAnz = (iso) => !iso ? '' : window.SD_LANG === 'en' ? iso.split('-').reverse().join('/') : deDatum(iso);
         function periodeBereich(st) {
             const pad = (n) => String(n).padStart(2, '0');
@@ -1662,7 +1677,7 @@
             const W = Math.max(320, Math.min(860, $('wChart').clientWidth || 640)), H = 200, L0 = 52, B0 = 172, T0 = 12, bw = (W - L0 - 8) / 12;
             const schritt = Math.pow(10, Math.floor(Math.log10(max))); const top = Math.ceil(max / schritt) * schritt;
             const y = (v) => B0 - (B0 - T0) * v / top;
-            const mName = (m) => new Date(m + '-15T12:00:00').toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'short' });
+            const mName = (m) => MONATE_AF[window.SD_LANG] ? MONATE_AF[window.SD_LANG][Number(m.slice(5, 7)) - 1] : new Date(m + '-15T12:00:00').toLocaleDateString(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { month: 'short' });
             const kurz = (v) => v >= 1000 ? Math.round(v / 100) / 10 + 'k' : String(Math.round(v));
             let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t('w_chart_titel')) + '">';
             [0, 0.5, 1].forEach(f => { const yy = y(top * f); svg += '<line x1="' + L0 + '" x2="' + (W - 8) + '" y1="' + yy + '" y2="' + yy + '" stroke="#e3e8e6" stroke-width="1"/><text x="' + (L0 - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="#647482">' + kurz(top * f) + ' €</text>'; });
@@ -1921,6 +1936,7 @@
         // Start
         // ------------------------------------------------------------
         function aktualisiereTexte() {
+            $('pdfSprache').hidden = !['fa', 'ps'].includes(window.SD_LANG);
             $('wissenAus').innerHTML = L().wissen_aus.map(x => '<li>' + esc(x) + '</li>').join('');
             $('wissenEin').innerHTML = L().wissen_ein.map(x => '<li>' + esc(x) + '</li>').join('');
             zeigeAngabenZusammen();
