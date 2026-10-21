@@ -473,7 +473,17 @@
       $('lKiTest').disabled = false;
     };
   }
-  const kiKnopf = () => '<button type="button" class="l-btn" data-kiset="1">⚙️ KI einrichten</button>';
+  const kiAnbieter = () => { try { return window.sdKi ? window.sdKi.anbieter() : 'gemini'; } catch (e) { return 'gemini'; } };
+  const kiKnopf = () => '<button type="button" class="l-btn" data-kiset="1">⚙️ KI einrichten</button>' +
+    (kiAnbieter() !== 'lotse' && window.sdKi ? '<button type="button" class="l-btn" data-lotse="1">🔒 SD Lotse nehmen</button>' : '');
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-lotse]'); if (!b) return;
+    e.preventDefault();
+    window.sdKi.setzeAnbieter('lotse');
+    b.outerHTML = '<p class="l-note l-lotseok">🔒 <b>SD Lotse ist gewählt.</b> Er läuft auf deinem Gerät, ohne Schlüssel und ohne Internet-KI. ' +
+      'Beim ersten Mal wird das Modell einmal heruntergeladen (groß – am besten im WLAN, am besten PC/Laptop mit Chrome oder Edge). ' +
+      'Tippe jetzt auf „Nochmal versuchen“ oder schick deine Nachricht nochmal. SD Lotse ist kleiner als Gemini – Lektionen und Korrekturen können schwächer sein.</p>';
+  });
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kiset]'); if (b) { e.preventDefault(); showKi(); } });
   document.addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('#lTonTest'); if (!b) return;

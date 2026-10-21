@@ -79,7 +79,8 @@
       return geminiDirekt(key, prompt, system);
     }
     if (!window.sdKi) throw new Error('KI-Baustein fehlt (sd-ki.js).');
-    return window.sdKi.schreibe(prompt, system ? {system, maxTokens: 2500} : {maxTokens: 2500});
+    const max = anbieter === 'lotse' ? 1500 : 2500;   // SD Lotse hat wenig Platz (Text + Antwort zusammen)
+    return window.sdKi.schreibe(prompt, system ? {system, maxTokens: max} : {maxTokens: max});
   }
   async function kiTest() {
     const t0 = Date.now();
