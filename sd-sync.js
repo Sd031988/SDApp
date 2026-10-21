@@ -11,13 +11,14 @@
 (function () {
     'use strict';
     const KEYS = ['sdRechnungen', 'sdFristenEigene', 'sdVertraege', 'sdHaushalt', 'sdStunden', 'sdWohnung', 'sdAnerkennung',
-        'sdBewerbungen', 'sdSteuerHelfer', 'sdSteuerFormularAngaben', 'sdMessen', 'sdArbeitenDE', 'sdPost', 'sdOrdnen'];
+        'sdBewerbungen', 'sdSteuerHelfer', 'sdSteuerFormularAngaben', 'sdMessen', 'sdArbeitenDE', 'sdPost', 'sdOrdnen', 'sdLearn'];
     const NAMEN = {
         sdRechnungen: ['Rechnungen', 'Invoices'], sdFristenEigene: ['Fristen', 'Deadlines'], sdVertraege: ['Verträge', 'Contracts'],
         sdHaushalt: ['Haushaltsbuch', 'Household budget'], sdStunden: ['Stundenzettel', 'Timesheet'], sdWohnung: ['Wohnungsbewerbung', 'Flat application'],
         sdAnerkennung: ['Anerkennung', 'Recognition'], sdBewerbungen: ['Bewerbungs-Tracker', 'Application tracker'], sdSteuerHelfer: ['Steuer-Helfer', 'Tax helper'],
         sdSteuerFormularAngaben: ['Steuer-Formulare', 'Tax forms'], sdMessen: ['Messen', 'Measuring'], sdArbeitenDE: ['Arbeiten in DE', 'Working in DE'],
-        sdPost: ['Post-Assistent', 'Letter assistant'], sdOrdnen: ['Ordner aufräumen', 'Tidy up folders']
+        sdPost: ['Post-Assistent', 'Letter assistant'], sdOrdnen: ['Ordner aufräumen', 'Tidy up folders'],
+        sdLearn: ['Deutsch lernen', 'Learn German']
     };
     const AUTH_URL = document.currentScript ? new URL('sd-auth.js?v=1', document.currentScript.src).href : '../sd-auth.js?v=1';
     const META = 'sdSyncMeta';
