@@ -40,9 +40,51 @@
     const m = t.match(/\{[\s\S]*\}/);
     return JSON.parse(m ? m[0] : t);
   }
+  // Gemini direkt (mit Wiederholung bei Verbindungsfehlern und genauer Fehlermeldung); andere KIs über sdKi
+  const MODELLE = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+  async function geminiDirekt(key, prompt, system) {
+    const body = {contents: [{role: 'user', parts: [{text: String(prompt)}]}], generationConfig: {temperature: 0.4}};
+    if (system) body.system_instruction = {parts: [{text: system}]};
+    let letzter = '';
+    for (let versuch = 0; versuch < 3; versuch++) {
+      const modell = MODELLE[Math.min(versuch, MODELLE.length - 1)];
+      const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 60000);
+      let r;
+      try {
+        r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + modell + ':generateContent', {
+          method: 'POST', headers: {'Content-Type': 'application/json', 'x-goog-api-key': key}, body: JSON.stringify(body), signal: ctrl.signal});
+      } catch (e) {
+        clearTimeout(to);
+        letzter = e && e.name === 'AbortError' ? 'Google hat 60 Sekunden nicht geantwortet' : 'keine Verbindung zu Google (' + ((e && (e.message || e.name)) || 'Netzwerk') + ')';
+        await new Promise(res => setTimeout(res, 800));
+        continue;
+      }
+      clearTimeout(to);
+      if (r.status === 429 || r.status === 404 || r.status >= 500) { letzter = 'Gemini ' + modell + ': Status ' + r.status + (r.status === 429 ? ' (Kontingent/zu viele Anfragen)' : ''); continue; }
+      if (!r.ok) {
+        let m = ''; try { m = ((await r.json()).error || {}).message || ''; } catch (_) {}
+        throw new Error(r.status === 400 || r.status === 401 || r.status === 403 ? 'Gemini hat den Schlüssel abgelehnt (' + r.status + (m ? ': ' + m.slice(0, 120) : '') + ')' : 'Gemini-Fehler ' + r.status + (m ? ': ' + m.slice(0, 120) : ''));
+      }
+      const d = await r.json();
+      const t = ((((d.candidates || [])[0] || {}).content || {}).parts || []).filter(x => !x.thought).map(x => x.text || '').join('').trim();
+      if (t) return t;
+      letzter = 'Gemini hat keinen Text geliefert';
+    }
+    throw new Error(letzter + '. Bitte Internet prüfen und nochmal versuchen – oder unter ⚙️ KI einrichten eine andere KI wählen.');
+  }
   async function ki(prompt, system) {
+    const anbieter = window.sdKi ? window.sdKi.anbieter() : 'gemini', key = geminiKey();
+    if (anbieter === 'gemini') {
+      if (!key) throw new Error('Kein Gemini-Schlüssel eingetragen – bitte unter ⚙️ KI einrichten den kostenlosen Schlüssel eintragen.');
+      return geminiDirekt(key, prompt, system);
+    }
     if (!window.sdKi) throw new Error('KI-Baustein fehlt (sd-ki.js).');
     return window.sdKi.schreibe(prompt, system ? {system, maxTokens: 2500} : {maxTokens: 2500});
+  }
+  async function kiTest() {
+    const t0 = Date.now();
+    try { const t = await ki('Antworte nur mit dem Wort: OK'); return {ok: true, text: t.slice(0, 60), ms: Date.now() - t0}; }
+    catch (e) { return {ok: false, error: (e && e.message) || String(e), ms: Date.now() - t0}; }
   }
   const kiFehler = (vor, e) => ({ok: false, error: vor + ((e && e.message) || String(e)).slice(0, 220), ki: true});
   function unitInfo(cur, level, idx) {
@@ -230,5 +272,5 @@
     return antwort(r);
   }
 
-  window.SDLernAPI = {fetch: lernFetch, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
+  window.SDLernAPI = {fetch: lernFetch, kiTest, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
 })();

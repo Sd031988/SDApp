@@ -461,10 +461,17 @@
       'Für den KI-Lehrer (Lektionen), das Gespräch, die Schreib-Korrektur und das Übersetzen brauchst du eine KI – ' +
       'am einfachsten einen kostenlosen Gemini-Schlüssel. Er gilt in allen SD-Apps.</p>' +
       '<div class="l-kibox" id="lKiBox"></div>' +
+      '<button type="button" class="l-btn" id="lKiTest">🧪 Verbindung testen</button><div class="l-note" id="lKiRes"></div>' +
       '<button type="button" class="l-btn l-primary" id="lKiOk">✓ Fertig</button>');
     if (window.sdKi) window.sdKi.baueAuswahl($('lKiBox'), {geminiKeyFeld: true});
     else $('lKiBox').textContent = 'Der KI-Baustein konnte nicht geladen werden.';
     $('lKiOk').onclick = () => { if (prof()) showHome(); else showProfiles(); };
+    $('lKiTest').onclick = async () => {
+      const r = $('lKiRes'); r.textContent = '⏳ Frage die KI …'; $('lKiTest').disabled = true;
+      const d = await window.SDLernAPI.kiTest();
+      r.textContent = d.ok ? '✅ Die KI antwortet (' + (d.ms / 1000).toFixed(1) + ' s): „' + d.text + '“' : '❌ ' + d.error;
+      $('lKiTest').disabled = false;
+    };
   }
   const kiKnopf = () => '<button type="button" class="l-btn" data-kiset="1">⚙️ KI einrichten</button>';
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kiset]'); if (b) { e.preventDefault(); showKi(); } });
