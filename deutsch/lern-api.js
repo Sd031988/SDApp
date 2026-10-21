@@ -6,6 +6,24 @@
 (function () {
   'use strict';
   const BASIS = new URL('.', document.currentScript ? document.currentScript.src : location.href).href;
+  // SD-Server (SD Maschinen Kenner auf Render): KI mit dem Schlüssel des Servers, natürliche Stimme, Aussprache-Erkennung
+  const SERVER = (() => { try { return localStorage.getItem('sdLearnServer') || ''; } catch (e) { return ''; } })() || 'https://sd-maschinen-kenner.onrender.com';
+  const quelle = () => { try { return localStorage.getItem('sdLearnKiQuelle') || 'server'; } catch (e) { return 'server'; } };
+  // Render schläft nach 15 Minuten ohne Nutzung – schon beim Öffnen wecken
+  try { fetch(SERVER + '/hub/ping', {mode: 'cors'}).catch(() => {}); } catch (e) {}
+  async function serverPost(pfad, daten, sekunden) {
+    const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), (sekunden || 80) * 1000);
+    try {
+      const r = await fetch(SERVER + pfad, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(daten), signal: ctrl.signal});
+      let d = {}; try { d = await r.json(); } catch (_) {}
+      if (!r.ok || !d.ok) throw new Error(d.error || ('SD-Server: Status ' + r.status));
+      return d;
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw new Error('Der SD-Server hat zu lange nicht geantwortet (er wacht nach einer Pause bis zu einer Minute auf).');
+      if (e instanceof TypeError) throw new Error('Keine Verbindung zum SD-Server.');
+      throw e;
+    } finally { clearTimeout(to); }
+  }
   const V = '1';
   const cache = {};
   function json(url) {
@@ -72,7 +90,23 @@
     }
     throw new Error(letzter + '. Bitte Internet prüfen und nochmal versuchen – oder unter ⚙️ KI einrichten eine andere KI wählen.');
   }
+  function eigeneKiDa() {
+    const a = window.sdKi ? window.sdKi.anbieter() : 'gemini';
+    if (a === 'lotse') return true;
+    if (a === 'gemini') return !!geminiKey();
+    try { return !!(localStorage.getItem(a === 'openai' ? 'sdOpenAiApiKey' : 'sdClaudeApiKey') || sessionStorage.getItem(a === 'openai' ? 'sdOpenAiApiKey' : 'sdClaudeApiKey')); } catch (e) { return false; }
+  }
   async function ki(prompt, system) {
+    if (quelle() !== 'eigen') {
+      try { return (await serverPost('/hub/ki', {prompt: String(prompt), system: system || ''})).text; }
+      catch (e) {
+        if (!eigeneKiDa()) throw e;   // ohne eigene KI: Meldung des Servers zeigen
+        // sonst: eigene KI springt ein
+      }
+    }
+    return kiEigen(prompt, system);
+  }
+  async function kiEigen(prompt, system) {
     const anbieter = window.sdKi ? window.sdKi.anbieter() : 'gemini', key = geminiKey();
     if (anbieter === 'gemini') {
       if (!key) throw new Error('Kein Gemini-Schlüssel eingetragen – bitte unter ⚙️ KI einrichten den kostenlosen Schlüssel eintragen.');
@@ -217,6 +251,8 @@
     try { return sessionStorage.getItem('biGeminiApiKey') || localStorage.getItem('biGeminiApiKey') || ''; } catch (e) { return ''; }
   }
   async function stt(d) {
+    try { return Object.assign({ok: true}, await serverPost('/hub/stt', {audio: d.audio, mime: d.mime || 'audio/wav', mode: 'learn'}, 60)); }
+    catch (e) { if (!geminiKey()) return {ok: false, error: e.message, server: true}; }
     const key = geminiKey();
     if (!key || !window.sdGemini) return {ok: false, error: 'Für die Aussprache-Prüfung mit Aufnahme fehlt ein Gemini-Schlüssel.', nokey: true};
     const prompt = 'Schreibe GENAU auf, was in dieser Aufnahme gesagt wird – Wort fuer Wort, auch wenn es falsches Deutsch ist. ' +
@@ -273,5 +309,5 @@
     return antwort(r);
   }
 
-  window.SDLernAPI = {fetch: lernFetch, kiTest, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
+  window.SDLernAPI = {fetch: lernFetch, kiTest, SERVER, quelle, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
 })();

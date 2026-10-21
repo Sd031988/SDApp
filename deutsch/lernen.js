@@ -21,11 +21,25 @@
   }
   let _unlocked = false;
   // iPhone/iPad: Die Sprachausgabe muss einmal durch ein Antippen freigeschaltet werden
+  // Natürliche Stimme vom SD-Server kommt als Audio-Datei (klingt am iPhone auch im Lautlos-Modus)
+  let _tts = null, _serverStimmeAus = 0, _serverStimmeZeit = 0;
+  function _ttsEl() { if (!_tts) { _tts = new Audio(); _tts.preload = 'auto'; _tts.setAttribute('playsinline', ''); } return _tts; }
+  function _silentWav() {
+    const n = 800, buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+    const w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true);
+    v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+    for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+    let bin = ''; new Uint8Array(buf).forEach(b => bin += String.fromCharCode(b));
+    return 'data:audio/wav;base64,' + btoa(bin);
+  }
   function unlockAudio(ev) {
     if (_unlocked) return;
     const imTipp = !!ev || (navigator.userActivation ? navigator.userActivation.isActive : false);
     if (!imTipp) return;
     _unlocked = true;
+    try { const a = _ttsEl(); a.src = _silentWav(); const p = a.play(); if (p && p.catch) p.catch(() => { _unlocked = false; }); } catch (e) {}
     try { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'de-DE'; window.speechSynthesis.speak(u); } } catch (e) {}
   }
   ['touchend', 'click', 'keydown'].forEach(n => document.addEventListener(n, unlockAudio, {capture: true, passive: true}));
@@ -201,6 +215,7 @@
   // ---------- Stimme ----------
   let _spFin = null;
   function lStopSpeak() {
+    try { if (_tts) { _tts.onended = _tts.onerror = _tts.onplaying = null; _tts.pause(); } } catch (e) {}
     try { const ss = window.speechSynthesis; if (ss && (ss.speaking || ss.pending)) ss.cancel(); } catch (e) {}
     if (_spFin) { const f = _spFin; _spFin = null; f(); }
   }
@@ -225,10 +240,20 @@
           // nach cancel() verschluckt Safari ein sofortiges speak() manchmal – darum kurz warten
           const los = () => { if (done) return; try { if (ss.paused) ss.resume(); } catch (_) {} ss.speak(u); wd = setTimeout(fin, est); };
           if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(los, 80); } else los();
-          tonHinweis();
+          tonHinweis();   // nur wenn die Geräte-Stimme benutzt wird
         } catch (e) { fin(); }
       };
-      fb();
+      // 1) natürliche Stimme vom SD-Server, 2) sonst Stimme des Geräts
+      if (!window.SDLernAPI || (_serverStimmeAus >= 2 && Date.now() - _serverStimmeZeit < 120000)) { fb(); return; }   // nach 2 Fehlern 2 Minuten Geräte-Stimme
+      try {
+        const a = _ttsEl();
+        const fehler = () => { _serverStimmeAus++; _serverStimmeZeit = Date.now(); fb(); };
+        a.onended = fin; a.onerror = fehler;
+        a.onplaying = () => { _serverStimmeAus = 0; clearTimeout(wd); wd = setTimeout(fin, (isFinite(a.duration) && a.duration > 0) ? a.duration * 1000 + 1500 : est); };
+        wd = setTimeout(fehler, 9000);
+        a.src = window.SDLernAPI.SERVER + '/hub/tts?text=' + encodeURIComponent(t) + '&voice=' + encodeURIComponent(voice || 'de-DE-KatjaNeural') + '&rate=' + encodeURIComponent(slow ? '-25%' : '-8%');
+        const p = a.play(); if (p && p.catch) p.catch(fehler);
+      } catch (e) { fb(); }
     });
   }
   const slowFor = () => { const p = prof(); return !p || p.level === 'alpha' || p.level === 'A1'; };
@@ -300,10 +325,7 @@
   async function lHear(onState) {
     lStopSpeak();
     const hatSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-    if (!window.SDLernAPI.geminiKey()) {
-      if (hatSR) return srHear(onState);
-      return {error: 'Für die Aussprache brauche ich die Spracherkennung (Chrome, Edge, Safari) oder einen Gemini-Schlüssel (⚙️ KI einrichten).'};
-    }
+    if (L.nurBrowserSR && hatSR) return srHear(onState);
     const r = await lRecord(onState);
     if (r.error) return {error: r.error};
     if (r.silent) return {text: ''};
@@ -311,7 +333,10 @@
     try {
       const d = await (await fetch('/stt', {method: 'POST', headers: {'Content-Type': 'application/json'},
                                             body: JSON.stringify({audio: r.b64, mime: 'audio/wav', mode: 'learn'})})).json();
-      if (!d.ok) return {error: d.error || 'Spracherkennung fehlgeschlagen'};
+      if (!d.ok) {
+        if (hatSR) { L.nurBrowserSR = true; return {error: (d.error || 'Spracherkennung fehlgeschlagen') + ' – tippe nochmal auf 🎤, dann nutze ich die Erkennung des Browsers.'}; }
+        return {error: d.error || 'Spracherkennung fehlgeschlagen'};
+      }
       return {text: (d.text || '').trim()};
     } catch (e) { return {error: 'Keine Verbindung zum Server'}; }
   }
@@ -456,13 +481,18 @@
   // ---------- KI einrichten (Gemini-Schlüssel, ChatGPT, Claude oder SD Lotse) ----------
   function showKi() {
     stopAll(); L.view = 'ki'; topbar();
+    const q = window.SDLernAPI.quelle();
     body('<h2 class="l-h">⚙️ KI einrichten</h2>' +
       '<p class="l-note">Kursbuch, Training, Bilder, Artikel-Tricks, Grammatik und Wörterbuch gehen <b>ohne KI</b>. ' +
-      'Für den KI-Lehrer (Lektionen), das Gespräch, die Schreib-Korrektur und das Übersetzen brauchst du eine KI – ' +
-      'am einfachsten einen kostenlosen Gemini-Schlüssel. Er gilt in allen SD-Apps.</p>' +
+      'Der KI-Lehrer, das Gespräch, die Schreib-Korrektur und das Übersetzen nutzen eine KI:</p>' +
+      '<div class="l-list l-kiq">' +
+      '<label class="l-unit"><span><input type="radio" name="lKiQ" value="server"' + (q !== 'eigen' ? ' checked' : '') + '> 🌐 <b>SD-Server</b> (Standard) – ohne eigenen Schlüssel, mit natürlicher Stimme</span></label>' +
+      '<label class="l-unit"><span><input type="radio" name="lKiQ" value="eigen"' + (q === 'eigen' ? ' checked' : '') + '> 🔑 <b>Eigene KI</b> – Gemini-Schlüssel, ChatGPT, Claude oder SD Lotse (Auswahl unten)</span></label></div>' +
+      '<p class="l-note">Antwortet der SD-Server nicht, springt die eigene KI ein – wenn unten eine eingerichtet ist.</p>' +
       '<div class="l-kibox" id="lKiBox"></div>' +
       '<button type="button" class="l-btn" id="lKiTest">🧪 Verbindung testen</button><div class="l-note" id="lKiRes"></div>' +
       '<button type="button" class="l-btn l-primary" id="lKiOk">✓ Fertig</button>');
+    document.querySelectorAll('input[name=lKiQ]').forEach(r => r.onchange = () => { try { localStorage.setItem('sdLearnKiQuelle', r.value); } catch (e) {} });
     if (window.sdKi) window.sdKi.baueAuswahl($('lKiBox'), {geminiKeyFeld: true});
     else $('lKiBox').textContent = 'Der KI-Baustein konnte nicht geladen werden.';
     $('lKiOk').onclick = () => { if (prof()) showHome(); else showProfiles(); };
@@ -480,6 +510,7 @@
     const b = e.target.closest && e.target.closest('[data-lotse]'); if (!b) return;
     e.preventDefault();
     window.sdKi.setzeAnbieter('lotse');
+    try { localStorage.setItem('sdLearnKiQuelle', 'eigen'); } catch (_) {}
     b.outerHTML = '<p class="l-note l-lotseok">🔒 <b>SD Lotse ist gewählt.</b> Er läuft auf deinem Gerät, ohne Schlüssel und ohne Internet-KI. ' +
       'Beim ersten Mal wird das Modell einmal heruntergeladen (groß – am besten im WLAN, am besten PC/Laptop mit Chrome oder Edge). ' +
       'Tippe jetzt auf „Nochmal versuchen“ oder schick deine Nachricht nochmal. SD Lotse ist kleiner als Gemini – Lektionen und Korrekturen können schwächer sein.</p>';
