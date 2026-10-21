@@ -20,9 +20,33 @@
     return _ctx;
   }
   let _unlocked = false;
-  function unlockAudio() {
-    if (_unlocked) return; _unlocked = true;
+  // iPhone/iPad: Die Sprachausgabe muss einmal durch ein Antippen freigeschaltet werden
+  function unlockAudio(ev) {
+    if (_unlocked) return;
+    const imTipp = !!ev || (navigator.userActivation ? navigator.userActivation.isActive : false);
+    if (!imTipp) return;
+    _unlocked = true;
     try { if ('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.lang = 'de-DE'; window.speechSynthesis.speak(u); } } catch (e) {}
+  }
+  ['touchend', 'click', 'keydown'].forEach(n => document.addEventListener(n, unlockAudio, {capture: true, passive: true}));
+  const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // Gute deutsche Stimmen (iPhone, Android, Windows, Mac) – für den zweiten Sprecher im Hörtext
+  const GUTE_STIMMEN = ['Anna', 'Markus', 'Helena', 'Yannick', 'Petra', 'Google Deutsch', 'Microsoft Katja', 'Microsoft Conrad', 'Microsoft Hedda', 'Microsoft Stefan'];
+  function stimmeFuer(vi, ss) {
+    if (!vi) return null;   // erster Sprecher: Standardstimme des Geräts (am zuverlässigsten)
+    const de = (ss.getVoices() || []).filter(x => x.lang && x.lang.toLowerCase().startsWith('de'));
+    const gut = de.filter(v => GUTE_STIMMEN.some(n => v.name.indexOf(n) === 0) && !v.default);
+    return gut.length ? gut[(vi - 1) % gut.length] : null;
+  }
+  // Einmaliger Hinweis am iPhone: im Lautlos-Modus ist die Browser-Stimme stumm
+  function tonHinweis() {
+    if (!IOS) return;
+    try { if (localStorage.getItem('sdLearnTonHinweis')) return; localStorage.setItem('sdLearnTonHinweis', '1'); } catch (e) { return; }
+    const d = document.createElement('div');
+    d.className = 'l-tonhinweis';
+    d.innerHTML = '🔈 <b>Nichts zu hören?</b> Lautlos-Modus am iPhone ausschalten und Lautstärke hochdrehen – die Vorlese-Stimme ist im Lautlos-Modus stumm. <button type="button">OK</button>';
+    d.querySelector('button').onclick = () => d.remove();
+    document.body.appendChild(d); setTimeout(() => d.remove(), 12000);
   }
   function _jBeep(ctx) {
     try {
@@ -177,7 +201,7 @@
   // ---------- Stimme ----------
   let _spFin = null;
   function lStopSpeak() {
-    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    try { const ss = window.speechSynthesis; if (ss && (ss.speaking || ss.pending)) ss.cancel(); } catch (e) {}
     if (_spFin) { const f = _spFin; _spFin = null; f(); }
   }
   function lSpeak(text, slow, voice) {
@@ -192,13 +216,16 @@
       const fb = () => {
         if (done) return; clearTimeout(wd);
         try {
-          const ss = window.speechSynthesis; ss.cancel();
+          const ss = window.speechSynthesis;
           const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; u.rate = slow ? 0.75 : 0.95;
-          const de = (ss.getVoices() || []).filter(x => x.lang && x.lang.toLowerCase().startsWith('de'));
           const vi = Math.max(0, VOICES.indexOf(voice || VOICES[0]));
-          if (de.length) u.voice = de[vi % de.length];
-          if (vi && de.length <= vi) u.pitch = [1, 0.75, 1.25, 0.9][vi % 4];
-          u.onend = fin; u.onerror = fin; ss.speak(u); wd = setTimeout(fin, est);
+          const v = stimmeFuer(vi, ss);
+          if (v) u.voice = v; else if (vi) u.pitch = [1, 0.75, 1.25, 0.9][vi % 4];
+          u.onend = fin; u.onerror = fin;
+          // nach cancel() verschluckt Safari ein sofortiges speak() manchmal – darum kurz warten
+          const los = () => { if (done) return; try { if (ss.paused) ss.resume(); } catch (_) {} ss.speak(u); wd = setTimeout(fin, est); };
+          if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(los, 80); } else los();
+          tonHinweis();
         } catch (e) { fin(); }
       };
       fb();
@@ -441,6 +468,12 @@
   }
   const kiKnopf = () => '<button type="button" class="l-btn" data-kiset="1">⚙️ KI einrichten</button>';
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kiset]'); if (b) { e.preventDefault(); showKi(); } });
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('#lTonTest'); if (!b) return;
+    try { localStorage.removeItem('sdLearnTonHinweis'); } catch (_) {}
+    lSpeak('Hallo! Kannst du mich hören?', false);
+    if (!IOS) { const d = document.createElement('div'); d.className = 'l-tonhinweis'; d.innerHTML = '🔈 <b>Nichts zu hören?</b> Lautstärke prüfen. Die Stimme kommt vom Gerät selbst (Sprachausgabe des Browsers). <button type="button">OK</button>'; d.querySelector('button').onclick = () => d.remove(); document.body.appendChild(d); setTimeout(() => d.remove(), 10000); }
+  });
   window.addEventListener('pageshow', () => {});
 
   function posShort(p) {
@@ -476,7 +509,8 @@
       '<h3 class="l-h3">📚 Kursbuch</h3><div class="l-grid">' +
       '<button type="button" class="l-btn" id="lBookBtn">📖 ' + bi('Meine Einheit', 'book') + '</button>' +
       '<button type="button" class="l-btn" id="lDictBtn">🔤 ' + bi('Wörterbuch', 'dict') + '</button>' +
-      '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' + kiKnopf() + '</div>';
+      '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' + kiKnopf() +
+      '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button></div>';
     h += '<h3 class="l-h3">Dein Weg</h3>';
     L.cur.levels.forEach(lv => {
       const open = lv.id === p.level;
