@@ -54,6 +54,14 @@ LEVELS = [
      ]},
 ]
 
+# Neue Einheiten (siehe book/neu_*.py) hinten anhängen
+from book.neu_a1 import UNITS as _N1  # noqa: E402
+from book.neu_a2 import UNITS as _N2  # noqa: E402
+from book.neu_b1 import UNITS as _N3  # noqa: E402
+for _lv in LEVELS:
+    for _u in {"A1": _N1, "A2": _N2, "B1": _N3}.get(_lv["id"], []):
+        _lv["units"].append({"title": _u["t"], "goals": _u["goals"]})
+
 # Lektionsarten pro Einheit (5 = Test)
 LESSONS = [
     {"id": 1, "name": "Neue Wörter", "spec": "8 x word (Wort mit Artikel bei Nomen, Uebersetzung, Beispielsatz), 2 x choice zur Bedeutung"},

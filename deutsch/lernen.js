@@ -99,6 +99,15 @@
     p.updated = p.updated || p.created || 1;
   }
   const LEVEL_IDS = ['alpha', 'A1', 'A2', 'B1'];
+  // Jedes Niveau hat eine eigene Farbe und einen kurzen Namen – damit man immer sieht, wo man ist
+  const LV = {
+    alpha: {kurz: 'Alpha', name: 'Alphabetisierung', stufe: 'Lesen und Schreiben lernen', was: 'Buchstaben, Laute, Silben und die ersten Wörter lesen und schreiben.'},
+    A1: {kurz: 'A1', name: 'A1', stufe: 'Anfänger', was: 'Sich vorstellen, Uhrzeit, Familie, Einkaufen, Wohnen, Mein Tag, Arzt, Stadt, Arbeit, Freizeit, Kleidung und Wetter, Reparaturen – einfache Sätze im Präsens.'},
+    A2: {kurz: 'A2', name: 'A2', stufe: 'Grundstufe', was: 'Ämter, Wohnungssuche, Arbeit suchen, Gesundheit, Kita und Schule, Reisen, Feste, Reklamieren, Sport, Handy und Internet, Bank, Lebensstationen – Perfekt, weil, dass, Dativ.'},
+    B1: {kurz: 'B1', name: 'B1', stufe: 'Mittelstufe', was: 'Bewerbung, Rechte und Pflichten, Beschwerden, Meinung sagen, Zusammenleben, Umwelt, Briefe, Medien, Datenschutz, Werbung, Heimat – Prüfung DTZ.'},
+  };
+  const lvInfo = id => LV[id] || LV.A1;
+  const lvChip = (id, extra) => '<span class="l-lvchip lvc-' + esc(id) + '">' + esc(lvInfo(id).kurz) + (extra ? ' · ' + extra : '') + '</span>';
   const L = { view: 'profiles', lesson: null, idx: -1, results: [], chat: [], chatTurns: 0, rec: null, cur: null, place: null, busy: false };
 
   // ---------- Speicher ----------
@@ -195,14 +204,16 @@
           book: 'واحد من', dict: 'فرهنگ لغت', gram: 'دستور زبان', words: 'لغات', phrases: 'عبارات مهم', read: 'خواندن', hear: 'شنیدن',
           write: 'نوشتن', cards: 'کارت‌های لغت', print: 'چاپ', know: 'بلدم', practice: 'باز هم تمرین', flip: 'برگرداندن',
           correct: 'اصلاح کن', model: 'جواب نمونه', play: 'پخش', showtext: 'نمایش متن', exercises: 'تمرین‌ها با معلم', search: 'جستجو',
-          wotd: 'کلمهٔ روز', goal: 'هدف روزانه', review: 'تکرار روزانه', articles: 'حرف تعریف', order: 'ساختن جمله', dictation: 'املا', train: 'تمرین', pics: 'تمرین با عکس', tricks: 'ترفندهای حرف تعریف', trick: 'ترفند یادآوری', videos: 'ویدیو در یوتیوب' },
+          wotd: 'کلمهٔ روز', goal: 'هدف روزانه', review: 'تکرار روزانه', articles: 'حرف تعریف', order: 'ساختن جمله', dictation: 'املا', train: 'تمرین', pics: 'تمرین با عکس', tricks: 'ترفندهای حرف تعریف', trick: 'ترفند یادآوری', videos: 'ویدیو در یوتیوب',
+          wquiz: 'آزمون لغت', plural: 'جمع', hquiz: 'تمرین شنیداری', mix: 'آزمون سطح', level: 'سطح', levels: 'انتخاب سطح', way: 'راه شما' },
     en: { cont: 'Continue', listen: 'Listen', speak: 'Speak', check: 'Check', next: 'Next', again: 'Again', trans: 'Translation',
           right: 'Correct!', almost: 'Almost', wrong: 'Not quite', chat: 'Practice conversation', weak: 'Difficult words',
           place: 'Placement test', newp: 'New person', name: 'Name', lesson: 'Lesson', unit: 'Unit', done: 'Done', start: 'Start',
           book: 'My unit', dict: 'Dictionary', gram: 'Grammar', words: 'Vocabulary', phrases: 'Useful phrases', read: 'Reading', hear: 'Listening',
           write: 'Writing', cards: 'Flashcards', print: 'Print', know: 'I know it', practice: 'Practise again', flip: 'Turn over',
           correct: 'Correct it', model: 'Model answer', play: 'Play', showtext: 'Show text', exercises: 'Exercises with the teacher', search: 'Search',
-          wotd: 'Word of the day', goal: 'Daily goal', review: 'Daily review', articles: 'Articles', order: 'Sentence building', dictation: 'Dictation', train: 'Training', pics: 'Picture quiz', tricks: 'Article tricks', trick: 'Memory trick', videos: 'Videos on YouTube' },
+          wotd: 'Word of the day', goal: 'Daily goal', review: 'Daily review', articles: 'Articles', order: 'Sentence building', dictation: 'Dictation', train: 'Training', pics: 'Picture quiz', tricks: 'Article tricks', trick: 'Memory trick', videos: 'Videos on YouTube',
+          wquiz: 'Word quiz', plural: 'Plural', hquiz: 'Listening quiz', mix: 'Level check', level: 'Level', levels: 'Choose level', way: 'Your path' },
   };
   // Deutsche/lateinische Woerter in Dari-Text als eigene Laufrichtung isolieren (sonst springt die Reihenfolge)
   const LAT = /[\u200e\-]*[A-Za-zÄÖÜäöüß](?:[A-Za-zÄÖÜäöüß0-9\-\/+=.’'\u200e →←–,]*[A-Za-zÄÖÜäöüß0-9!?])?/g;
@@ -393,7 +404,7 @@
     const lv = levelObj(p.level); if (!lv) return '';
     if (p.finished) return 'B1 geschafft! 🎉';
     const ls = lessonsFor(p.level).find(x => x.id === p.lesson) || {};
-    return lv.name + ' · Einheit ' + (p.unit + 1) + ': ' + lv.units[p.unit] + ' · Lektion ' + p.lesson + ': ' + (ls.name || '');
+    return lvInfo(p.level).kurz + ' · Einheit ' + (p.unit + 1) + ' von ' + lv.units.length + ': ' + lv.units[p.unit] + ' · Lektion ' + p.lesson + ' von 5: ' + (ls.name || '');
   }
   function progressPct(p) {
     let total = 0, done = 0;
@@ -417,21 +428,57 @@
       $('lClose').onclick = closeLearn;
       $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
       $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
+      if ($('lLvBtn')) $('lLvBtn').onclick = showLevels;
       return;
     }
     const d = document.createElement('div');
     d.id = 'learn';
     d.innerHTML = '<div class="l-top"><button type="button" class="l-btn-round" id="lBack" aria-label="Zurück">‹</button>' +
-      '<span class="l-title">📚 Deutsch lernen</span><button type="button" class="l-prof" id="lProfBtn"></button>' +
+      '<span class="l-title">📚 Deutsch lernen</span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-prof" id="lProfBtn"></button>' +
       '<button type="button" class="l-btn-round" id="lClose" aria-label="Schließen">✕</button></div><div id="lBody" class="l-body"></div>';
     document.body.appendChild(d);
     $('lClose').onclick = closeLearn;
     $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
     $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
+    $('lLvBtn').onclick = showLevels;
   }
   function stopAll() { lStopSpeak(); if (L.rec) { try { L.rec.stop(); } catch (_) {} } }
   function body(html) { const b = $('lBody'); b.innerHTML = '<div class="l-wrap">' + html + '</div>'; b.scrollTop = 0; }
-  function topbar() { const p = prof(); $('lProfBtn').textContent = p ? '👤 ' + p.name : ''; $('lProfBtn').style.display = p ? '' : 'none'; }
+  function topbar() {
+    const p = prof(); $('lProfBtn').textContent = p ? '👤 ' + p.name : ''; $('lProfBtn').style.display = p ? '' : 'none';
+    const lb = $('lLvBtn');
+    if (p && p.level) { $('learn').dataset.lv = p.level; if (lb) { lb.textContent = lvInfo(p.level).kurz + ' ▾'; lb.style.display = ''; lb.className = 'l-lvbtn lvc-' + p.level; } }
+    else { delete $('learn').dataset.lv; if (lb) lb.style.display = 'none'; }
+  }
+  // Niveau wechseln: die Stelle im alten Niveau merken, im neuen dort weitermachen, wo man war
+  function setLevel(id) {
+    const p = prof(); if (!p || !LEVEL_IDS.includes(id)) return;
+    p.pos = p.pos || {};
+    p.pos[p.level] = {unit: p.unit, lesson: p.lesson};
+    const z = p.pos[id] || {unit: 0, lesson: 1};
+    const max = levelObj(id).units.length - 1;
+    p.level = id; p.unit = Math.min(z.unit || 0, max); p.lesson = z.lesson || 1; p.finished = false;
+    save();
+  }
+  const lvDone = (p, id) => levelObj(id).units.filter((u, i) => p.done && p.done[id + ':' + i + ':5']).length;
+  function levelCards(p, cur) {
+    return '<div class="l-lvcards">' + LEVEL_IDS.map(id => {
+      const o = levelObj(id), inf = lvInfo(id), dn = lvDone(p, id), n = o.units.length;
+      return '<button type="button" class="l-lvcard lvc-' + id + (id === cur ? ' on' : '') + '" data-setlv="' + id + '">' +
+        '<span class="l-lvbig">' + esc(inf.kurz) + '</span><span class="l-lvtxt"><b>' + esc(inf.name === inf.kurz ? inf.stufe : inf.name) + '</b>' +
+        '<small>' + esc(inf.was) + '</small><small class="l-lvn">' + n + ' Einheiten · ' + dn + ' fertig' + (id === cur ? ' · ✔ gewählt' : '') + '</small></span></button>';
+    }).join('') + '</div>';
+  }
+  function showLevels() {
+    stopAll(); L.view = 'levels'; topbar();
+    const p = prof();
+    body('<h2 class="l-h">🎚️ ' + bi('Niveau wählen', 'levels') + '</h2>' +
+      '<p class="l-note">Alles in der App – Lektionen, Training, Wörterbuch und Grammatik – zeigt dann <b>nur dieses Niveau</b>. Dein Stand in jedem Niveau bleibt gespeichert.</p>' +
+      levelCards(p, p.level) +
+      '<button type="button" class="l-btn" id="lPlace2">🎯 ' + bi('Einstufungstest', 'place') + ' – ich weiß nicht, welches Niveau</button>');
+    document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { setLevel(b.dataset.setlv); showHome(); });
+    $('lPlace2').onclick = startPlacement;
+  }
 
   async function openLearn() {
     try { unlockAudio(); _jAudioCtx(); } catch (e) {}
@@ -534,43 +581,45 @@
     body('<h2 class="l-h">Hallo ' + esc(prof().name) + '! 👋</h2>' +
       '<div class="l-card"><h3>Wo möchtest du anfangen?</h3>' + l1(prof().lang === 'fa' ? 'از کجا می‌خواهید شروع کنید؟' : 'Where do you want to start?') +
       '<button type="button" class="l-btn l-primary" id="lPlace">🎯 Einstufungstest (12 Fragen) <span class="l-sub">· ' + esc(tx('place')) + '</span></button>' +
-      '<div class="l-grid">' + LEVEL_IDS.map(id => '<button type="button" class="l-btn" data-lv="' + id + '">' + esc(levelObj(id).name) + '</button>').join('') + '</div>' +
-      '<p class="l-note">Alphabetisierung = Buchstaben und Lesen von Anfang an.</p></div>');
+      '<p class="l-note">Oder such dir dein Niveau selbst aus:</p>' + levelCards(prof(), null) + '</div>');
     $('lPlace').onclick = startPlacement;
-    document.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { const p = prof(); p.level = b.dataset.lv; p.unit = 0; p.lesson = 1; save(); showHome(); });
+    document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { setLevel(b.dataset.setlv); showHome(); });
   }
 
   // ----- Startseite -----
   function showHome() {
     if (!prof()) { showProfiles(); return; }
     L.view = 'home'; topbar();
-    const p = prof(), weak = weakList();
+    const p = prof(), weak = weakList(), lv = levelObj(p.level), inf = lvInfo(p.level);
+    const dn = lvDone(p, p.level), nU = lv.units.length, pctLv = Math.round(dn / nU * 100);
     let h = '<h2 class="l-h">Hallo ' + esc(p.name) + '! 👋</h2>' +
-      '<div class="l-progress"><div style="width:' + progressPct(p) + '%"></div></div><p class="l-note">' + progressPct(p) + ' % vom ganzen Weg bis B1 · ⭐ ' + (p.xp || 0) + '</p><p class="l-note l-sync" id="lSync">' + esc(syncText()) + '</p>';
+      // Niveau-Leiste: immer sichtbar, ein Tipp wechselt das Niveau
+      '<div class="l-lvtabs" role="tablist" aria-label="Niveau">' + LEVEL_IDS.map(id => '<button type="button" role="tab" aria-selected="' + (id === p.level) + '" class="l-lvtab lvc-' + id + (id === p.level ? ' on' : '') + '" data-setlv="' + id + '">' + esc(lvInfo(id).kurz) + '</button>').join('') + '</div>' +
+      '<div class="l-lvhero lvc-' + p.level + '"><div class="l-lvhero-top"><span class="l-lvbig">' + esc(inf.kurz) + '</span><div><small>Du lernst gerade</small><b>' + esc(inf.name === inf.kurz ? 'Niveau ' + inf.kurz + ' · ' + inf.stufe : inf.name) + '</b></div></div>' +
+      '<p>' + esc(inf.was) + '</p><div class="l-progress"><div style="width:' + pctLv + '%"></div></div>' +
+      '<small>' + dn + ' von ' + nU + ' Einheiten in ' + esc(inf.kurz) + ' fertig · ⭐ ' + (p.xp || 0) + '</small></div>' +
+      '<p class="l-note l-sync" id="lSync">' + esc(syncText()) + '</p>';
     if (!p.finished) {
       h += '<button type="button" class="l-continue" id="lCont"><span class="l-big">▶ ' + bi('Weitermachen', 'cont') + '</span><small>' + esc(posText(p)) + '</small></button>';
-    } else h += '<div class="l-card">🎉 Du hast alle Einheiten bis B1 geschafft! Übe weiter mit Gesprächen und Wiederholungen.</div>';
-    h += '<h3 class="l-h3">🏋️ ' + bi('Training', 'train') + '</h3><div id="lTrain" class="l-train"><div class="l-note">…</div></div>';
+    } else h += '<div class="l-card">🎉 Du hast alle Einheiten bis B1 geschafft! Übe weiter mit Gesprächen und Wiederholungen – oder wähle oben ein Niveau zum Wiederholen.</div>';
+    h += '<h3 class="l-h3">🏋️ ' + bi('Training', 'train') + ' ' + lvChip(p.level, 'nur dieses Niveau') + '</h3><div id="lTrain" class="l-train"><div class="l-note">…</div></div>';
     h += '<div class="l-grid"><button type="button" class="l-btn" id="lChatBtn">💬 ' + bi('Gespräch üben', 'chat') + '</button>' +
       (weak.length ? '<button type="button" class="l-btn" id="lWeakBtn">🔁 ' + bi('Schwierige Wörter', 'weak') + ' (' + weak.length + ')</button>' : '') +
       '<button type="button" class="l-btn" id="lPlaceBtn">🎯 ' + bi('Einstufungstest', 'place') + '</button></div>' +
-      '<h3 class="l-h3">📚 Kursbuch</h3><div class="l-grid">' +
+      '<h3 class="l-h3">📚 Kursbuch ' + lvChip(p.level) + '</h3><div class="l-grid">' +
       '<button type="button" class="l-btn" id="lBookBtn">📖 ' + bi('Meine Einheit', 'book') + '</button>' +
       '<button type="button" class="l-btn" id="lDictBtn">🔤 ' + bi('Wörterbuch', 'dict') + '</button>' +
       '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' + kiKnopf() +
       '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button></div>';
-    h += '<h3 class="l-h3">Dein Weg</h3>';
-    L.cur.levels.forEach(lv => {
-      const open = lv.id === p.level;
-      h += '<details class="l-level"' + (open ? ' open' : '') + '><summary>' + esc(lv.name) + ' <small>' + lv.units.filter((u, i) => p.done[lv.id + ':' + i + ':5']).length + '/' + lv.units.length + '</small></summary>';
-      lv.units.forEach((u, i) => {
-        const dn = !!p.done[lv.id + ':' + i + ':5'], cur = lv.id === p.level && i === p.unit;
-        const dots = [1, 2, 3, 4, 5].map(n => '<i class="' + (p.done[lv.id + ':' + i + ':' + n] != null ? 'ok' : (cur && n === p.lesson ? 'cur' : '')) + '"></i>').join('');
-        h += '<button type="button" class="l-unit' + (cur ? ' cur' : '') + '" data-u="' + lv.id + ':' + i + '"><span>' + (dn ? '✅' : (cur ? '▶️' : '○')) + ' ' + (i + 1) + '. ' + esc(u) + '</span><span class="l-dots">' + dots + '</span></button>';
-      });
-      h += '</details>';
+    h += '<h3 class="l-h3">' + bi('Dein Weg', 'way') + ' ' + lvChip(p.level, nU + ' Einheiten') + '</h3><div class="l-level l-way lvc-' + p.level + '">';
+    lv.units.forEach((u, i) => {
+      const d5 = !!p.done[p.level + ':' + i + ':5'], cur = i === p.unit;
+      const dots = [1, 2, 3, 4, 5].map(n => '<i class="' + (p.done[p.level + ':' + i + ':' + n] != null ? 'ok' : (cur && n === p.lesson ? 'cur' : '')) + '"></i>').join('');
+      h += '<button type="button" class="l-unit' + (cur ? ' cur' : '') + '" data-u="' + p.level + ':' + i + '"><span>' + (d5 ? '✅' : (cur ? '▶️' : '○')) + ' ' + (i + 1) + '. ' + esc(u) + (cur ? ' <em class="l-here">du bist hier</em>' : '') + '</span><span class="l-dots">' + dots + '</span></button>';
     });
+    h += '</div><p class="l-note">Ganzer Weg bis B1: ' + progressPct(p) + ' % · Anderes Niveau: oben auf Alpha, A1, A2 oder B1 tippen.</p>';
     body(h);
+    document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { if (b.dataset.setlv !== p.level) { setLevel(b.dataset.setlv); showHome(); } });
     if ($('lCont')) $('lCont').onclick = () => startLesson(p.level, p.unit, p.lesson);
     $('lChatBtn').onclick = () => startChat(p.level, p.unit, false);
     if ($('lWeakBtn')) $('lWeakBtn').onclick = startWeak;
@@ -612,7 +661,7 @@
 
   function head() {
     const les = L.lesson, n = les.items.length;
-    return '<div class="l-lhead"><small>' + esc((levelObj(les.level) || {}).name || '') + ' · ' + esc(les.unit_title || '') + ' · Lektion ' + les.lesson + ': ' + esc(les.lesson_name || '') + '</small>' +
+    return '<div class="l-lhead">' + lvChip(les.level) + '<small>' + esc(les.unit_title || '') + ' · Lektion ' + les.lesson + ' von 5: ' + esc(les.lesson_name || '') + '</small>' +
       '<div class="l-progress"><div style="width:' + Math.round(Math.max(0, L.idx) / n * 100) + '%"></div></div></div>';
   }
   const btnSpeak = (t, id, label) => '<button type="button" class="l-btn l-icon" id="' + (id || 'lSp') + '" data-say="' + esc(t) + '">🔊 ' + (label ? esc(label) : bi('Hören', 'listen')) + '</button>';
@@ -746,14 +795,18 @@
     p.done[k] = Math.max(p.done[k] || 0, Math.round(score * 100));
     p.xp = (p.xp || 0) + Math.round(score * 10) + (passed && isTest ? 20 : 0);
     const isCurrent = p.level === les.level && p.unit === les.unit && p.lesson === les.lesson;
+    const lvVorher = p.level;
     if (isCurrent) advance(p, passed);
+    const aufgestiegen = p.level !== lvVorher;
+    if (aufgestiegen) { p.pos = p.pos || {}; p.pos[lvVorher] = {unit: les.unit, lesson: 5}; }
     if (isTest && !passed) cacheDel(L.ck);   // neuer Test beim naechsten Versuch
-    save();
+    save(); topbar();
     const pct = Math.round(score * 100);
     let h = '<div class="l-card l-center"><div class="l-big-ic">' + (passed ? (isTest ? '🏆' : '🎉') : '💪') + '</div><h2>' +
       (isTest ? (passed ? 'Test bestanden! ' + pct + ' %' : 'Noch nicht bestanden: ' + pct + ' %') : 'Lektion geschafft! ' + pct + ' %') + '</h2>' +
       (isTest && !passed ? '<p>Für den nächsten Schritt brauchst du 70 %. Wiederhole die Einheit oder versuch den Test nochmal.</p>' : '') +
-      '<p class="l-note">⭐ ' + p.xp + '</p>';
+      '<p class="l-note">⭐ ' + p.xp + '</p>' +
+      (aufgestiegen ? '<div class="l-lvup lvc-' + p.level + '">🎓 <b>' + esc(lvInfo(lvVorher).kurz) + ' geschafft!</b> Ab jetzt lernst du <b>' + esc(lvInfo(p.level).kurz) + '</b>. Die Farbe oben zeigt dir immer dein Niveau.</div>' : '');
     if (!p.finished) h += '<button type="button" class="l-btn l-primary" id="lGo">▶ ' + bi('Weitermachen', 'cont') + '</button><p class="l-note">' + esc(posText(p)) + '</p>';
     h += '<button type="button" class="l-btn" id="lHome">Zur Übersicht</button></div>';
     body(h);
@@ -780,7 +833,7 @@
     L.view = 'chat'; topbar();
     L.chat = []; L.chatTurns = 0; L.chatCtx = {level, unit, isLesson};
     const lv = levelObj(level);
-    body('<div class="l-lhead"><small>' + esc(lv ? lv.name : '') + ' · ' + esc(lv ? lv.units[unit] : '') + ' · 💬 Gespräch</small></div>' +
+    body('<div class="l-lhead">' + lvChip(level) + '<small>' + esc(lv ? lv.units[unit] : '') + ' · 💬 Gespräch</small></div>' +
       '<div class="l-chat" id="lChat"></div>' +
       '<div class="l-chatbar">' + micUi('lCMic') +
       '<form id="lCForm" class="l-cform"><input id="lCIn" class="l-input" placeholder="Oder schreiben …" autocomplete="off"><button type="submit" class="l-btn l-primary">➤</button></form>' +
@@ -851,8 +904,8 @@
     const r = L.place.right;
     let start = 'B1';
     for (const id of LEVEL_IDS) { if (r[id] < 2) { start = id; break; } }
-    const p = prof(); p.level = start; p.unit = 0; p.lesson = 1; p.finished = false; save();
-    body('<div class="l-card l-center"><div class="l-big-ic">🎯</div><h2>Dein Start: ' + esc(levelObj(start).name) + '</h2>' +
+    setLevel(start); topbar();
+    body('<div class="l-card l-center"><div class="l-big-ic">🎯</div>' + lvChip(start) + '<h2>Dein Start: ' + esc(levelObj(start).name) + '</h2>' +
       '<p class="l-note">Richtig: Alphabetisierung ' + r.alpha + '/3 · A1 ' + r.A1 + '/3 · A2 ' + r.A2 + '/3 · B1 ' + r.B1 + '/3</p>' +
       '<button type="button" class="l-btn l-primary" id="lGo">▶ ' + bi('Los geht’s', 'start') + '</button></div>');
     lSpeak('Dein Start: ' + levelObj(start).name, false);
@@ -903,7 +956,7 @@
   }
   function bookHead(title) {
     const b = L.bk, lv = levelObj(b.level);
-    return '<div class="l-lhead"><small>' + esc(lv ? lv.name : '') + ' · Einheit ' + (b.unit + 1) + ': ' + esc(b.u.title) + '</small></div>' +
+    return '<div class="l-lhead">' + lvChip(b.level) + '<small>Einheit ' + (b.unit + 1) + ': ' + esc(b.u.title) + '</small></div>' +
       (title ? '<h2 class="l-h">' + title + '</h2>' : '');
   }
   async function translateBtn(btn, text, target) {
@@ -960,7 +1013,9 @@
       bi(de, k) + (extra ? '<small>' + esc(extra) + '</small>' : '') + '</span><span class="l-sec-ok">' + (part && allDone(level, unit, part, n || 1) ? '✅' : '') + '</span></button>';
     const ngrp = new Set(u.words.map(w => w.grp)).size, cnt = (n, one, many) => n + ' ' + (n === 1 ? one : many);
     const lessons = lessonsFor(level);
-    let h = '<div class="l-lhead"><small>' + esc(lv.name) + ' · Einheit ' + (unit + 1) + ' von ' + lv.units.length + '</small></div>' +
+    const pp = prof(), fremd = pp && pp.level !== level;
+    let h = '<div class="l-lhead">' + lvChip(level) + '<small>Einheit ' + (unit + 1) + ' von ' + lv.units.length + '</small></div>' +
+      (fremd ? '<div class="l-lvwarn lvc-' + level + '"><p>Das ist eine Einheit aus <b>' + esc(lvInfo(level).kurz) + '</b> – du lernst gerade <b>' + esc(lvInfo(pp.level).kurz) + '</b>.</p><button type="button" class="l-btn" id="lToLv">Zu ' + esc(lvInfo(level).kurz) + ' wechseln</button></div>' : '') +
       '<h2 class="l-h">' + esc(u.title) + '</h2>' + (u.goals ? '<p class="l-note">🎯 ' + esc(u.goals) + '</p>' : '') +
       '<h3 class="l-h3">📖 Kursbuch</h3><div class="l-secs">' +
       sec('words', '🔤', 'Wortschatz', 'words', 'w', u.words.length + ' Wörter · ' + cnt(ngrp, 'Gruppe', 'Gruppen')) +
@@ -979,13 +1034,15 @@
       }).join('') + '</div>' +
       '<p class="l-note">Die Kursbuch-Inhalte sind fest geschrieben (nicht von der KI). Die Übungen erstellt der KI-Lehrer passend zur Einheit.</p>';
     body(h);
+    if ($('lToLv')) $('lToLv').onclick = () => { setLevel(level); showHome(); };
     document.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => ({words: showWords, cards: () => showCards(), phrases: showPhrases, grammar: showGrammar,
       read: () => showRead(0), hear: () => showHear(0), write: () => showWrite(0), print: printUnit})[b.dataset.sec]());
     document.querySelectorAll('[data-les]').forEach(b => b.onclick = () => {
       const n = +b.dataset.les, p2 = prof();
       if (!(p2.level === level && p2.unit === unit)) {
         if (!confirm('Mit „' + u.title + '“ weitermachen? Dein Platz auf dem Lernweg wird hierher verschoben.')) return;
-        p2.level = level; p2.unit = unit; p2.finished = false;
+        if (p2.level !== level) setLevel(level);
+        p2.unit = unit; p2.finished = false; topbar();
       }
       p2.lesson = n; save(); startLesson(level, unit, n);
     });
@@ -1215,9 +1272,9 @@
       try { const d = await (await fetch('/learn/dictionary?lang=' + encodeURIComponent(p.lang))).json(); DICT = {lang: p.lang, words: d.words || []}; }
       catch (e) { body('<div class="l-card">❌ Wörterbuch konnte nicht geladen werden.</div>'); return; }
     }
-    let lvF = '';
-    body('<h2 class="l-h">🔤 ' + bi('Wörterbuch', 'dict') + '</h2><input id="lDQ" class="l-input" placeholder="Suchen … (Deutsch, ' + (isFa() ? 'دری' : 'English') + ')" autocomplete="off" spellcheck="false">' +
-      '<div class="l-chips">' + ['', 'alpha', 'A1', 'A2', 'B1'].map(id => '<button type="button" class="l-chip' + (id === '' ? ' on' : '') + '" data-lvf="' + id + '">' + (id ? esc(levelObj(id).name) : 'Alle') + '</button>').join('') + '</div>' +
+    let lvF = p.level;
+    body('<h2 class="l-h">🔤 ' + bi('Wörterbuch', 'dict') + ' ' + lvChip(p.level) + '</h2><input id="lDQ" class="l-input" placeholder="Suchen … (Deutsch, ' + (isFa() ? 'دری' : 'English') + ')" autocomplete="off" spellcheck="false">' +
+      '<div class="l-chips">' + ['', 'alpha', 'A1', 'A2', 'B1'].map(id => '<button type="button" class="l-chip' + (id === lvF ? ' on' : '') + '" data-lvf="' + id + '">' + (id ? esc(lvInfo(id).kurz) : 'Alle') + '</button>').join('') + '</div>' +
       '<p class="l-note" id="lDN"></p><div class="l-wlist" id="lDL"></div>');
     const render = () => {
       const q = norm($('lDQ').value), ql = ($('lDQ').value || '').trim().toLowerCase();
@@ -1225,7 +1282,7 @@
       $('lDN').textContent = res.length + ' Wörter' + (res.length > 150 ? ' (die ersten 150 werden gezeigt)' : '');
       $('lDL').innerHTML = res.slice(0, 150).map(w => '<div class="l-wrow"><button type="button" class="l-btn l-icon l-sp" data-say="' + esc(w.de) + '" aria-label="Hören">🔊</button>' +
         '<div class="l-wtxt"><div>' + picEmo(w) + wordHtml(w) + (w.pl ? ' <span class="l-pl">· Pl. ' + esc(w.pl) + '</span>' : '') + '</div><div class="l-l1 l-wl1"' + l1Attr() + '>' + esc(w.l1) + '</div></div>' +
-        '<button type="button" class="l-wu" data-go="' + w.level + ':' + w.unit + '">' + esc(levelObj(w.level).name) + ' · ' + (w.unit + 1) + '</button></div>').join('');
+        '<button type="button" class="l-wu lvc-' + w.level + '" data-go="' + w.level + ':' + w.unit + '">' + esc(lvInfo(w.level).kurz) + ' · ' + (w.unit + 1) + '</button></div>').join('');
       $('lDL').querySelectorAll('[data-say]').forEach(b => b.onclick = () => lSpeak(b.dataset.say, slowFor()));
       $('lDL').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [a, c] = b.dataset.go.split(':'); showUnit(a, +c); });
     };
@@ -1245,22 +1302,28 @@
     let chs = [];
     try { const gd = await (await fetch('/learn/grammar?lang=' + encodeURIComponent(p.lang))).json(); gs = gd.grammar || []; chs = gd.channels || []; }
     catch (e) { body('<div class="l-card">❌ Grammatik konnte nicht geladen werden.</div>'); return; }
-    let h = '<h2 class="l-h">📐 ' + bi('Grammatik-Übersicht', 'gram') + '</h2><p class="l-note">Alle Grammatik-Themen vom Anfang bis B1. Tippe auf ein Thema – bei jedem gibt es einen 🧠 Merk-Trick und Videos.</p>' + channelsHtml(chs);
-    L.cur.levels.forEach(lv => {
-      h += '<h3 class="l-h3">' + esc(lv.name) + '</h3>';
-      gs.filter(g => g.level === lv.id).forEach(g => {
+    let gF = p.level;
+    body('<h2 class="l-h">📐 ' + bi('Grammatik-Übersicht', 'gram') + '</h2><p class="l-note">Gezeigt wird dein Niveau. Tippe auf ein Thema – bei jedem gibt es einen 🧠 Merk-Trick und Videos.</p>' +
+      '<div class="l-chips">' + LEVEL_IDS.map(id => '<button type="button" class="l-chip' + (id === gF ? ' on' : '') + '" data-gf="' + id + '">' + esc(lvInfo(id).kurz) + (id === p.level ? ' ✔' : '') + '</button>').join('') + '</div>' +
+      '<div id="lGL"></div>' + channelsHtml(chs));
+    const render = () => {
+      let h = '<h3 class="l-h3">' + lvChip(gF) + ' ' + esc(levelObj(gF).name) + '</h3>';
+      gs.filter(g => g.level === gF).forEach(g => {
         h += '<details class="l-level l-gram"><summary>' + esc(g.title) + ' <small>Einheit ' + (g.unit + 1) + '</small></summary>' + grammarHtml(g) +
           '<button type="button" class="l-btn" data-go="' + g.level + ':' + g.unit + '">📖 Zur Einheit „' + esc(g.unit_title) + '“</button></details>';
       });
-    });
-    body(h);
-    document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [a, c] = b.dataset.go.split(':'); showUnit(a, +c); });
+      $('lGL').innerHTML = h;
+      $('lGL').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { const [a, c] = b.dataset.go.split(':'); showUnit(a, +c); });
+      wireCommon();
+    };
+    document.querySelectorAll('[data-gf]').forEach(b => b.onclick = () => { gF = b.dataset.gf; document.querySelectorAll('[data-gf]').forEach(x => x.classList.toggle('on', x === b)); render(); });
+    render();
   }
 
   window._sdLearnBook = {showUnit, showDict, showGrammarAll};
   window._sdSync = {now: syncNow, info: () => SYNC, daysOf: () => daysOf(prof()), DEV};
   window._sdPics = {wikiPhoto, cache: () => PICC};
-  window._sdTrain = {streak: () => streak(prof()), srs: () => srs(), dayNum, dictMarks};
+  window._sdTrain = {streak: () => streak(prof()), srs: () => srs(), dayNum, dictMarks, qPlural};
 
   // =================== TRAINING (ohne KI) ===================
   const SRS_DAYS = [0, 0, 1, 2, 4, 7, 15, 30];          // Abstand in Tagen je Kasten 1..7
@@ -1325,13 +1388,16 @@
 
   // ----- Wörter- und Satz-Vorrat bis zum aktuellen Stand -----
   const POOLC = {};
+  // Training übt NUR das gewählte Niveau (alle Einheiten davon) – die aktuelle Einheit kommt zuerst dran
   async function getPool() {
-    const p = prof(), k = p.lang + '|' + p.level + '|' + p.unit;
+    const p = prof(), k = p.lang + '|' + p.level;
     if (POOLC[k]) return POOLC[k];
-    const d = await (await fetch('/learn/pool?level=' + encodeURIComponent(p.level) + '&unit=' + p.unit + '&lang=' + encodeURIComponent(p.lang))).json();
+    const d = await (await fetch('/learn/pool?level=' + encodeURIComponent(p.level) + '&unit=99&lang=' + encodeURIComponent(p.lang))).json();
     if (!d.ok) throw new Error('Pool');
-    POOLC[k] = d; return d;
+    const r = {ok: true, words: d.words.filter(w => w.level === p.level), sentences: d.sentences.filter(x => x.level === p.level)};
+    POOLC[k] = r; return r;
   }
+  const naehe = (w, p) => w.unit === p.unit ? 0 : (w.unit < p.unit ? 1 : 2);
   const simpleNoun = w => !!w.art && /^(der|die|das) [A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]+$/.test(w.de);
 
   // ----- Karteikasten (SRS) -----
@@ -1346,7 +1412,7 @@
   }
   const srsDue = () => { const s = srs(), t = dayNum(); return Object.keys(s).filter(k => s[k][1] <= t); };
 
-  function trainHead(title) { return '<div class="l-lhead"><small>🏋️ Training</small></div><h2 class="l-h">' + title + '</h2>'; }
+  function trainHead(title) { const p = prof(); return '<div class="l-lhead">' + lvChip(p.level, 'Training') + '<small>Nur Wörter und Sätze aus ' + esc(lvInfo(p.level).kurz) + '</small></div><h2 class="l-h">' + title + '</h2>'; }
   function trainLoading() { body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>'); }
   function trainError() { body('<div class="l-card">❌ Das Training konnte nicht geladen werden. Bitte Internet prüfen.</div>'); }
   function trainDone(icon, title, right, n, again) {
@@ -1365,7 +1431,7 @@
     const p = prof(), goal = p.goal || 30, today = daysOf(p)[todayStr()] || 0, st = streak(p), due = srsDue().length;
     let wotd = '';
     try {
-      const pool = await getPool(), ws = pool.words.filter(w => w.level === p.level);
+      const pool = await getPool(), ws = pool.words;
       const list = ws.length ? ws : pool.words;
       if (list.length) {
         const w = list[dayNum() % list.length];
@@ -1385,12 +1451,17 @@
       '<button type="button" class="l-btn l-tbtn" id="lTSrs">🧠 ' + bi('Wiederholung', 'review') + (due ? ' <span class="l-badge">' + due + '</span>' : '') + '</button>' +
       '<button type="button" class="l-btn l-tbtn" id="lTArt">🎨 ' + bi('der · die · das', 'articles') + '</button>' +
       '<button type="button" class="l-btn l-tbtn" id="lTSatz">🧩 ' + bi('Satzbau', 'order') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTDik">✍️ ' + bi('Diktat', 'dictation') + '</button></div>' +
+      '<button type="button" class="l-btn l-tbtn" id="lTDik">✍️ ' + bi('Diktat', 'dictation') + '</button>' +
+      '<button type="button" class="l-btn l-tbtn" id="lTWq">🔤 ' + bi('Wörter-Quiz', 'wquiz') + '</button>' +
+      '<button type="button" class="l-btn l-tbtn" id="lTPl">👥 ' + bi('Plural', 'plural') + '</button>' +
+      '<button type="button" class="l-btn l-tbtn" id="lTHq">🎧 ' + bi('Hör-Quiz', 'hquiz') + '</button>' +
+      '<button type="button" class="l-btn l-tbtn l-tmix" id="lTMix">🏁 ' + bi('Niveau-Test', 'mix') + ' ' + esc(lvInfo(p.level).kurz) + '</button></div>' +
       '<button type="button" class="l-btn l-tipslink" id="lTTips">💡 ' + bi('Artikel-Tricks', 'tricks') + ' · Videos</button>' +
       '<label class="l-note l-phototgl"><input type="checkbox" id="lPhotos"' + (p.photos !== false ? ' checked' : '') + '> 📷 Echte Fotos zeigen (aus Wikipedia, braucht Internet)</label>';
     box.querySelectorAll('[data-say]').forEach(b => b.onclick = () => lSpeak(b.dataset.say, slowFor()));
     $('lTPic').onclick = startPics; $('lTTips').onclick = showArtTips; $('lPhotos').onchange = () => { p.photos = $('lPhotos').checked; save(); };
     $('lTSrs').onclick = startSrs; $('lTArt').onclick = startArticles; $('lTSatz').onclick = startOrder; $('lTDik').onclick = startDictation;
+    $('lTWq').onclick = startWordQuiz; $('lTPl').onclick = startPlural; $('lTHq').onclick = startHearQuiz; $('lTMix').onclick = startMix;
     $('lGoalBtn').onclick = () => {
       const opts = [10, 30, 60, 100], i = (opts.indexOf(p.goal || 30) + 1) % opts.length;
       p.goal = opts[i]; save(); homeTraining();
@@ -1405,7 +1476,7 @@
     const due = shuffle(srsDue().filter(k => byDe[k])).slice(0, 20);
     const fresh = pool.words.filter(w => !srs()[w.de]);
     // neue Wörter: zuerst aus der aktuellen Einheit, dann ältere
-    fresh.sort((a, b) => (b.level === p.level && b.unit === p.unit) - (a.level === p.level && a.unit === p.unit));
+    fresh.sort((a, b) => naehe(a, p) - naehe(b, p) || (a.unit - b.unit));
     const nNew = Math.max(0, Math.min(p.newPerDay || 10, 25 - due.length));
     const items = due.map(k => ({w: byDe[k], fresh: false})).concat(fresh.slice(0, nNew).map(w => ({w, fresh: true})));
     if (!items.length) {
@@ -1698,6 +1769,118 @@
       };
     };
     next();
+  }
+
+
+  // =================== Mehr Übungen (ohne KI, nur das gewählte Niveau) ===================
+  // Fragen: {kind, hint, top (HTML), say, opts:[{v, html}], answer, w, fb (HTML)}
+  function runMC(icon, title, key, deck, again, punkte) {
+    const S = {i: 0, right: 0};
+    const next = () => {
+      if (S.i >= deck.length) { trainDone(icon, title + ' fertig!', S.right, deck.length, again); return; }
+      const q = deck[S.i];
+      body(trainHead(icon + ' ' + bi(title, key)) + '<div class="l-progress"><div style="width:' + Math.round(S.i / deck.length * 100) + '%"></div></div>' +
+        '<div class="l-card l-center"><p class="l-note">' + (S.i + 1) + ' / ' + deck.length + ' · ✅ ' + S.right + (q.kind ? ' · ' + esc(q.kind) : '') + '</p>' +
+        '<p class="l-hint">' + q.hint + '</p>' + (q.say ? '<div class="l-row">' + btnSpeak(q.say) + '</div>' : '') + (q.top || '') +
+        '<div class="l-opts">' + q.opts.map((o, k) => '<button type="button" class="l-opt" data-k="' + k + '"' + (o.l1 ? l1Attr() : '') + '>' + o.html + '</button>').join('') + '</div><div id="lFb"></div></div>');
+      wireCommon(); if (q.say) lSpeak(q.say, slowFor());
+      document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+        if (b.disabled) return;
+        const ok = q.opts[+b.dataset.k].v === q.answer;
+        document.querySelectorAll('[data-k]').forEach(x => { x.disabled = true; if (q.opts[+x.dataset.k].v === q.answer) x.classList.add('right'); });
+        if (!ok) b.classList.add('wrong'); else { S.right++; gain(punkte || 1); }
+        if (q.w) { addWeak(q.w.de, ok ? -1 : 1); if (!ok) { srsAdd(q.w.de, 1); srsGrade(q.w.de, false); } }
+        $('lFb').innerHTML = '<div class="l-fb ' + (ok ? 'ok' : 'bad') + '"><b>' + (ok ? '✅ ' : '❌ ') + q.fb + '</b></div>' +
+          '<button type="button" class="l-btn l-primary" id="lNext2">' + bi('Weiter', 'next') + ' ➜</button>';
+        if (q.sayAfter) lSpeak(q.sayAfter, slowFor());
+        $('lNext2').onclick = () => { stopAll(); S.i++; next(); };
+      });
+    };
+    next();
+  }
+  // Wörter zuerst aus der aktuellen Einheit und schwierige Wörter, dann der Rest des Niveaus
+  function deckOf(list, n, nPri) {
+    const p = prof(), weak = weakList();
+    const pri = list.filter(w => weak.includes(w.de) || w.unit === p.unit);
+    return shuffle(pri).slice(0, nPri).concat(shuffle(list)).filter((w, i, a) => a.findIndex(x => x.de === w.de) === i).slice(0, n);
+  }
+  function qMeaning(w, all, rev) {
+    const others = shuffle(all.filter(x => x.de !== w.de && x.l1 !== w.l1 && !!x.art === !!w.art)).slice(0, 3);
+    const ws = shuffle([w].concat(others));
+    if (rev) return {kind: 'Bedeutung → Deutsch', hint: 'Welches deutsche Wort passt?', top: picBox(w, true) + '<div class="l-l1 l-big-l1"' + l1Attr() + '>' + esc(w.l1) + '</div>',
+      opts: ws.map(o => ({v: o.de, html: esc(o.de)})), answer: w.de, w, fb: wordHtml(w) + ' = ' + esc(w.l1), sayAfter: w.de};
+    return {kind: 'Deutsch → Bedeutung', hint: 'Was bedeutet das?', say: w.de, top: '<div class="l-word">' + wordHtml(w) + '</div>',
+      opts: ws.map(o => ({v: o.de, html: esc(o.l1), l1: true})), answer: w.de, w, fb: wordHtml(w) + ' = ' + esc(w.l1)};
+  }
+  // Plural: richtige Form + zwei typische falsche Endungen (nur Formen, die es bei diesem Wort NICHT gibt)
+  const UML = {a: 'ä', o: 'ö', u: 'ü', A: 'Ä', O: 'Ö', U: 'Ü'};
+  function umlaut(n) {   // nur der LETZTE Vokal: a/o/u/au bekommt Umlaut, sonst bleibt das Wort
+    const m = n.match(/^(.*?)(au|Au|[aeiouäöüAEIOUÄÖÜ]+)([^aeiouäöüAEIOUÄÖÜ]*)$/);
+    if (!m || !/^(au|Au|a|o|u|A|O|U)$/.test(m[2])) return n;
+    return m[1] + (m[2].length === 2 ? (m[2][0] === 'A' ? 'Äu' : 'äu') : UML[m[2]]) + m[3];
+  }
+  const silben = n => (n.match(/[aeiouäöüy]+/gi) || []).length;
+  const pluralOk = w => simpleNoun(w) && /^die [A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]+$/.test(w.pl || '');
+  function qPlural(w) {
+    const n = w.de.slice(w.art.length + 1), right = w.pl.slice(4), low = n.toLowerCase();
+    let cand;
+    if (/(ung|heit|keit|schaft|ion|tät|ik|ur|ei)$/.test(low)) cand = [n + 's', n];
+    else if (/[aiouy]$/.test(low)) cand = [n, n + 'en'];
+    else if (/nis$/.test(low)) cand = [n + 'e', n + 's', n + 'sen'];
+    else if (/us$/.test(low)) cand = [n + 'se', n + 'sse', n + 'en'];
+    else if (/e$/.test(low)) cand = [n, n + 's', umlaut(n) + 'n'];
+    else if (/(en|lein)$/.test(low)) cand = [n + 's', n + 'er'];
+    else if (/(el|er)$/.test(low)) cand = [n + 'n', n + 's', umlaut(n)];
+    else if (/(um|ma)$/.test(low)) cand = [n + 's', n + 'e', n];
+    else if (/(al|ent|ant|ist|or|ar|at)$/.test(low)) cand = [n + 's', n + 'en', n + 'er', n];
+    else { cand = [n + 'e', n + 'er', n + 's', n + 'en', n]; if (silben(n) <= 2) cand.push(umlaut(n) + 'e', umlaut(n) + 'er'); }
+    const wrong = shuffle([...new Set(cand)].filter(x => x !== right)).slice(0, 2);
+    const opts = shuffle([right].concat(wrong)).map(x => ({v: x, html: 'die ' + esc(x)}));
+    return {kind: 'Plural', hint: 'Ein Wort – viele davon: Wie heißt der Plural?', top: picBox(w, true) + '<div class="l-word">' + wordHtml(w) + '</div><div class="l-l1"' + l1Attr() + '>' + esc(w.l1) + '</div>',
+      opts, answer: right, w, fb: wordHtml(w) + ' → <b>' + esc(w.pl) + '</b><p class="l-note">Im Plural ist der Artikel immer „die“.</p>', sayAfter: w.de + ', ' + w.pl};
+  }
+  // Hör-Quiz: einen Satz hören und den richtigen geschriebenen Satz antippen
+  function qHear(s, all) {
+    const len = s.de.split(' ').length;
+    const others = shuffle(all.filter(x => x.de !== s.de && Math.abs(x.de.split(' ').length - len) <= 2)).slice(0, 2);
+    if (others.length < 2) return null;
+    return {kind: 'Hören', hint: 'Hör zu: Welchen Satz hörst du?', say: s.de, opts: shuffle([s].concat(others)).map(o => ({v: o.de, html: esc(o.de)})), answer: s.de, fb: esc(s.de), sayAfter: s.de};
+  }
+  async function startWordQuiz() {
+    stopAll(); L.view = 'train-wq'; topbar(); trainLoading();
+    let pool; try { pool = await getPool(); } catch (e) { trainError(); return; }
+    const ws = pool.words.filter(w => w.l1);
+    if (ws.length < 5) { body(trainHead('🔤 Wörter-Quiz') + '<div class="l-card">In diesem Niveau gibt es noch zu wenige Wörter.</div>'); return; }
+    runMC('🔤', 'Wörter-Quiz', 'wquiz', deckOf(ws, 12, 6).map((w, i) => qMeaning(w, ws, i % 2 === 1)), startWordQuiz, 1);
+  }
+  async function startPlural() {
+    stopAll(); L.view = 'train-pl'; topbar(); trainLoading();
+    let pool; try { pool = await getPool(); } catch (e) { trainError(); return; }
+    const ns = pool.words.filter(pluralOk);
+    if (ns.length < 4) { body(trainHead('👥 Plural') + '<div class="l-card">In diesem Niveau gibt es noch zu wenige Nomen mit Plural. Wähle oben ein anderes Niveau (ab A1).</div>'); return; }
+    runMC('👥', 'Plural', 'plural', deckOf(ns, 12, 6).map(qPlural), startPlural, 2);
+  }
+  async function startHearQuiz() {
+    stopAll(); L.view = 'train-hq'; topbar(); trainLoading();
+    let pool; try { pool = await getPool(); } catch (e) { trainError(); return; }
+    const p = prof(), ss = pool.sentences.filter(x => x.de.split(' ').length <= (p.level === 'alpha' || p.level === 'A1' ? 8 : 12));
+    const deck = shuffle(ss.filter(x => x.unit === p.unit)).slice(0, 4).concat(shuffle(ss)).filter((x, i, a) => a.findIndex(y => y.de === x.de) === i).slice(0, 8).map(x => qHear(x, ss)).filter(Boolean);
+    if (deck.length < 3) { body(trainHead('🎧 Hör-Quiz') + '<div class="l-card">In diesem Niveau gibt es noch zu wenige Sätze.</div>'); return; }
+    runMC('🎧', 'Hör-Quiz', 'hquiz', deck, startHearQuiz, 2);
+  }
+  // Niveau-Test: gemischte Fragen aus dem ganzen Niveau (Bedeutung, Artikel, Plural, Hören)
+  async function startMix() {
+    stopAll(); L.view = 'train-mix'; topbar(); trainLoading();
+    let pool; try { pool = await getPool(); } catch (e) { trainError(); return; }
+    const p = prof(), ws = pool.words.filter(w => w.l1), ss = pool.sentences;
+    if (ws.length < 6) { body(trainHead('🏁 Niveau-Test') + '<div class="l-card">In diesem Niveau gibt es noch zu wenige Wörter.</div>'); return; }
+    const qs = [];
+    shuffle(ws).slice(0, 6).forEach((w, i) => qs.push(qMeaning(w, ws, i % 2 === 0)));
+    shuffle(ws.filter(simpleNoun)).slice(0, 3).forEach(w => qs.push({kind: 'Artikel', hint: 'der, die oder das?', top: picBox(w, true) + '<div class="l-word">___ ' + esc(w.de.slice(w.art.length + 1)) + '</div>',
+      opts: ['der', 'die', 'das'].map(a => ({v: a, html: '<span class="' + artCls(a) + '">' + a + '</span>'})), answer: w.art, w, fb: wordHtml(w), sayAfter: w.de}));
+    shuffle(ws.filter(pluralOk)).slice(0, 3).forEach(w => qs.push(qPlural(w)));
+    shuffle(ss.filter(x => x.de.split(' ').length <= 10)).slice(0, 3).forEach(x => { const q = qHear(x, ss); if (q) qs.push(q); });
+    runMC('🏁', 'Niveau-Test', 'mix', shuffle(qs), startMix, 2);
   }
 
   window.openLearn = openLearn;

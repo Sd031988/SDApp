@@ -29,6 +29,21 @@ for _lv, _mod in (("alpha", "x_alpha"), ("A1", "x_a1"), ("A2", "x_a2"), ("B1", "
         EXTRA[_lv] = {}
 
 
+# Neue Einheiten (Themen wie in A1–B1-Integrationskursbüchern): HINTEN anhängen, damit der gespeicherte Lernstand gültig bleibt
+from .neu_a1 import UNITS as _NEU_A1  # noqa: E402
+from .neu_a2 import UNITS as _NEU_A2  # noqa: E402
+from .neu_b1 import UNITS as _NEU_B1  # noqa: E402
+NEU = {"A1": _NEU_A1, "A2": _NEU_A2, "B1": _NEU_B1}
+for _lv, _neu in NEU.items():
+    BOOK[_lv] = list(BOOK[_lv])
+    EXTRA[_lv] = dict(EXTRA.get(_lv) or {})
+    for _u in _neu:
+        _i = len(BOOK[_lv])
+        BOOK[_lv].append({k: v for k, v in _u.items() if k not in ("words", "goals")})
+        if _u.get("words"):
+            EXTRA[_lv][_i] = {"words": _u["words"]}
+
+
 def _extra(level, idx):
     return (EXTRA.get(level) or {}).get(idx) or {}
 
