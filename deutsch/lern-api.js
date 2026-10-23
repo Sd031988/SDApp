@@ -24,7 +24,7 @@
       throw e;
     } finally { clearTimeout(to); }
   }
-  const V = '4';
+  const V = '5';
   const cache = {};
   function json(url) {
     if (!cache[url]) cache[url] = fetch(new URL(url + '?v=' + V, BASIS).href).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
@@ -32,7 +32,7 @@
     return cache[url];
   }
   const lehrplan = () => json('daten/lehrplan.json');
-  const SPR = l => (['fa', 'en', 'ur'].includes(l) ? l : 'en');   // Erklärsprachen
+  const SPR = l => (['fa', 'en', 'ur', 'ti'].includes(l) ? l : 'en');   // Erklärsprachen
   const buch = lang => json('daten/buch-' + SPR(lang) + '.json');
   const antwort = (obj, status) => new Response(JSON.stringify(obj), {status: status || 200, headers: {'Content-Type': 'application/json'}});
 

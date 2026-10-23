@@ -225,11 +225,21 @@
           wotd: 'آج کا لفظ', goal: 'روزانہ کا ہدف', review: 'روزانہ دہرائی', articles: 'حرفِ تعریف', order: 'جملہ بنانا', dictation: 'املا', train: 'مشق', pics: 'تصویری کوئز', tricks: 'حرفِ تعریف کے گُر', trick: 'یاد رکھنے کا گُر', videos: 'یوٹیوب پر ویڈیوز',
           wquiz: 'الفاظ کا کوئز', plural: 'جمع', hquiz: 'سننے کا کوئز', mix: 'سطح کا ٹیسٹ', level: 'سطح', levels: 'سطح منتخب کریں', way: 'آپ کا راستہ',
           lwords: 'اس سبق کے الفاظ', where: 'آپ کہاں سے شروع کرنا چاہتے ہیں؟', prep: 'استاد سبق تیار کر رہا ہے …', expl: 'وضاحت کی زبان' },
+    ti: { cont: 'ቀጽል', listen: 'ስማዕ', speak: 'ተዛረብ', check: 'ፈትሽ', next: 'ዝቕጽል', again: 'ደጊም', trans: 'ትርጉም',
+          right: 'ቅኑዕ!', almost: 'ዳርጋ ቅኑዕ', wrong: 'ጌጋ', chat: 'ልምምድ ዝርርብ', weak: 'ከቢድ ቃላት',
+          place: 'ፈተና ደረጃ', newp: 'ሓድሽ ሰብ', name: 'ስም', lesson: 'ትምህርቲ', unit: 'ክፍሊ', done: 'ተወዲኡ', start: 'ጀምር',
+          book: 'ክፍለይ', dict: 'መዝገበ ቃላት', gram: 'ሰዋስው', words: 'ቃላት', phrases: 'ኣገደስቲ ሓረጋት', read: 'ምንባብ', hear: 'ምስማዕ',
+          write: 'ምጽሓፍ', cards: 'ካርድታት ቃላት', print: 'ሕተም', know: 'እፈልጦ እየ', practice: 'ደጊም ተለማመድ', flip: 'ገልብጥ',
+          correct: 'ኣርም', model: 'ኣብነታዊ መልሲ', play: 'ኣጻውት', showtext: 'ጽሑፍ ኣርኢ', exercises: 'ልምምድ ምስ መምህር', search: 'ድለ',
+          wotd: 'ቃል ናይ ሎሚ', goal: 'መዓልታዊ ዕላማ', review: 'መዓልታዊ ድግግም', articles: 'መስተዋድድ', order: 'ሓረግ ምህናጽ', dictation: 'ጽሑፍ ብምስማዕ', train: 'ልምምድ', pics: 'ፈተና ብስእሊ', tricks: 'ምኽርታት መስተዋድድ', trick: 'መዘኻኸሪ', videos: 'ቪድዮታት ኣብ ዩቱብ',
+          wquiz: 'ፈተና ቃላት', plural: 'ብዙሕ', hquiz: 'ፈተና ምስማዕ', mix: 'ፈተና ደረጃ', level: 'ደረጃ', levels: 'ደረጃ ምረጽ', way: 'መገድኻ',
+          lwords: 'ቃላት ናይዚ ትምህርቲ', where: 'ካበይ ክትጅምር ትደሊ?', prep: 'መምህር ነቲ ትምህርቲ የዳሉ ኣሎ …', expl: 'ቋንቋ መግለጺ' },
   };
   // Deutsche/lateinische Woerter in Dari-Text als eigene Laufrichtung isolieren (sonst springt die Reihenfolge)
   const LAT = /[\u200e\-]*[A-Za-zÄÖÜäöüß](?:[A-Za-zÄÖÜäöüß0-9\-\/+=.’'\u200e →←–,]*[A-Za-zÄÖÜäöüß0-9!?])?/g;
   // Erklärsprachen: Bedeutungen, Grammatik-Erklärungen und Hilfetexte kommen direkt in dieser Sprache
-  const SPRACHEN = {fa: {name: 'دری / فارسی', rtl: true}, en: {name: 'English', rtl: false}, ur: {name: 'اردو', rtl: true}};
+  const SPRACHEN = {fa: {name: 'دری / فارسی', rtl: true}, en: {name: 'English', rtl: false}, ur: {name: 'اردو', rtl: true},
+    ti: {name: 'ትግርኛ (Tigrinya)', rtl: false, neu: true}};
   const spr = () => { const p = prof(); return (p && SPRACHEN[p.lang]) ? p.lang : 'en'; };
   const rtl = () => SPRACHEN[spr()].rtl;
   const l1h = txt => { const e = esc(txt); return rtl() ? e.replace(LAT, m => '<bdi dir="ltr">' + m + '</bdi>') : e; };
@@ -472,7 +482,7 @@
     body('<h2 class="l-h">🌐 Erklärsprache <span class="l-sub">· ' + esc(tx('expl')) + '</span></h2>' +
       '<p class="l-note">In dieser Sprache kommen die Bedeutungen der Wörter, die Grammatik-Erklärungen, die Tipps und die Hilfe vom KI-Lehrer. Dein Lernstand bleibt gleich.</p>' +
       '<div class="l-list">' + Object.keys(SPRACHEN).map(k => '<button type="button" class="l-unit' + (k === p.lang ? ' cur' : '') + '" data-spr="' + k + '"><span>' + (k === p.lang ? '✔ ' : '') +
-        '<bdi>' + esc(SPRACHEN[k].name) + '</bdi></span></button>').join('') + '</div>');
+        '<bdi>' + esc(SPRACHEN[k].name) + '</bdi>' + (SPRACHEN[k].neu ? ' <small class="l-sub">· neu, noch nicht von Muttersprachlern geprüft</small>' : '') + '</span></button>').join('') + '</div>');
     document.querySelectorAll('[data-spr]').forEach(b => b.onclick = () => { p.lang = b.dataset.spr; save(); showHome(); });
   }
   // Niveau wechseln: die Stelle im alten Niveau merken, im neuen dort weitermachen, wo man war
@@ -530,7 +540,7 @@
     }
     h += '<div class="l-card"><h3>➕ Neue Person <span class="l-sub">· New person · شخص جدید</span></h3>' +
       '<input id="lName" class="l-input" placeholder="Name" maxlength="30" autocomplete="off">' +
-      '<div class="l-lang">' + Object.keys(SPRACHEN).map((k, i) => '<label><input type="radio" name="lLang" value="' + k + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(SPRACHEN[k].name) + '</label>').join('') + '</div>' +
+      '<div class="l-lang">' + Object.keys(SPRACHEN).map((k, i) => '<label><input type="radio" name="lLang" value="' + k + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(SPRACHEN[k].name) + (SPRACHEN[k].neu ? ' <small>(neu)</small>' : '') + '</label>').join('') + '</div>' +
       '<p class="l-note">Erklärsprache: In dieser Sprache hilft der Lehrer, wenn etwas schwer ist.</p>' +
       '<button type="button" class="l-btn l-primary" id="lCreate">Profil anlegen</button></div>' +
       '<p class="l-note" id="lSync">' + esc(syncText()) + '</p>';
@@ -984,7 +994,7 @@
   const BOOKC = {};
   const VOICES = ['de-DE-KatjaNeural', 'de-DE-ConradNeural', 'de-DE-AmalaNeural', 'de-DE-KillianNeural'];
   const isFa = () => rtl();   // rechts-nach-links (Dari/Farsi, Urdu)
-  function l1Attr() { return rtl() ? ' dir="rtl" lang="' + spr() + '"' : ' lang="en"'; }
+  function l1Attr() { return (rtl() ? ' dir="rtl"' : '') + ' lang="' + spr() + '"'; }
   async function getBook(level, unit) {
     const p = prof(), k = p.lang + '|' + level + '|' + unit;
     if (BOOKC[k]) return BOOKC[k];

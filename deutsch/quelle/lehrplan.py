@@ -1,6 +1,6 @@
 """Lehrplan für „Deutsch lernen“ (Alphabetisierung bis B1): Niveaus, Einheiten, Lektionsarten."""
 
-LANGS = {"fa": "Dari/Persisch (persische Schrift, so wie in Afghanistan gesprochen)", "en": "Englisch", "ur": "Urdu (in Urdu-Schrift, so wie in Pakistan und Indien gesprochen)"}
+LANGS = {"fa": "Dari/Persisch (persische Schrift, so wie in Afghanistan gesprochen)", "en": "Englisch", "ur": "Urdu (in Urdu-Schrift, so wie in Pakistan und Indien gesprochen)", "ti": "Tigrinya (in Ge'ez-Schrift ፊደል, so wie in Eritrea und Tigray gesprochen)"}
 
 LEVELS = [
     {"id": "alpha", "name": "Alphabetisierung", "desc": "Buchstaben, Laute, Silben, erste Woerter lesen und schreiben. "

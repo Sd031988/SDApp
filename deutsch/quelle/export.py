@@ -38,7 +38,7 @@ ALLE = B.pool("B1", 99, "en")["words"]
 STAT = ART.stats(ALLE)
 AR = {w["de"]: (w.get("ar"), w.get("ax")) for w in ALLE if w.get("ar")}
 
-for lang in ("fa", "en", "ur"):
+for lang in ("fa", "en", "ur", "ti"):
     order = list(B.BOOK.keys())
     units = {}
     seen, seen_s = set(), set()
@@ -77,8 +77,9 @@ for lang in ("fa", "en", "ur"):
                                    "articles": {"rules": rules, "general": general, "videos": ART.VIDEOS},
                                    "channels": B.CHANNELS})
 
-# Urdu: Abdeckung melden
-from book.urdu import UR_WORT, FEHLT  # noqa: E402
+# Weitere Sprachen: Abdeckung melden
+from book.urdu import WORT, FEHLT, EXTRA_SPRACHEN  # noqa: E402
 _alle = {w["de"] for w in B.dictionary("en")}
-_ohne = sorted(_alle - set(UR_WORT))
-print(f"Urdu: {len(_alle) - len(_ohne)}/{len(_alle)} Wörter, {len(FEHLT)} Texte ohne Übersetzung")
+for _l in EXTRA_SPRACHEN:
+    _ohne = sorted(_alle - set(WORT[_l]))
+    print(f"{_l}: {len(_alle) - len(_ohne)}/{len(_alle)} Wörter, {len(FEHLT[_l])} Texte ohne Übersetzung")

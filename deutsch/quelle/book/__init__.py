@@ -74,23 +74,23 @@ def _all(level, idx, key):
 
 
 from .pics import pic_for  # noqa: E402
-from .urdu import UR_WORT, ur_text  # noqa: E402
+from .urdu import WORT, x_text, EXTRA_SPRACHEN  # noqa: E402
 
 
 def l1_wort(pw, lang):
     """Bedeutung eines Wortes in der Erklärsprache (fa, en, ur). Fehlt Urdu, steht Englisch da."""
     if lang == "fa":
         return pw["fa"]
-    if lang == "ur":
-        return UR_WORT.get(pw["de"]) or pw["en"]
+    if lang in EXTRA_SPRACHEN:
+        return WORT[lang].get(pw["de"]) or pw["en"]
     return pw["en"]
 
 
 def l1_text(en, fa, lang):
     if lang == "fa":
         return fa
-    if lang == "ur":
-        return ur_text(en)
+    if lang in EXTRA_SPRACHEN:
+        return x_text(en, lang)
     return en
 from .articles import annotate  # noqa: E402
 from .grammar_tips import tip_for, CHANNELS  # noqa: E402,F401

@@ -356,7 +356,7 @@ def tip_for(title: str, lang: str):
     t = TIPS.get(title)
     if not t:
         return None
-    if lang == "ur":
-        from .urdu import ur_text
-        return {"de": t[0], "l1": ur_text(t[1]), "q": t[3]}
+    if lang in ("ur", "ti"):
+        from .urdu import x_text
+        return {"de": t[0], "l1": x_text(t[1], lang), "q": t[3]}
     return {"de": t[0], "l1": t[2] if lang == "fa" else t[1], "q": t[3]}
