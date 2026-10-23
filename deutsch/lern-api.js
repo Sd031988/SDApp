@@ -24,7 +24,7 @@
       throw e;
     } finally { clearTimeout(to); }
   }
-  const V = '3';
+  const V = '4';
   const cache = {};
   function json(url) {
     if (!cache[url]) cache[url] = fetch(new URL(url + '?v=' + V, BASIS).href).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
@@ -32,7 +32,8 @@
     return cache[url];
   }
   const lehrplan = () => json('daten/lehrplan.json');
-  const buch = lang => json('daten/buch-' + (lang === 'fa' ? 'fa' : 'en') + '.json');
+  const SPR = l => (['fa', 'en', 'ur'].includes(l) ? l : 'en');   // Erklärsprachen
+  const buch = lang => json('daten/buch-' + SPR(lang) + '.json');
   const antwort = (obj, status) => new Response(JSON.stringify(obj), {status: status || 200, headers: {'Content-Type': 'application/json'}});
 
   // ---------- Kursbuch-Daten ----------
@@ -50,6 +51,17 @@
     const b = await buch(lang), out = [];
     b.order.forEach(l => b.units[l].forEach((u, i) => (u.grammars || []).forEach(g => out.push(Object.assign({}, g, {level: l, unit: i, unit_title: u.title})))));
     return out;
+  }
+
+  // Jede Lektion bekommt ihren eigenen Wortschatz aus der Einheit: Lektion 1 die ersten Wörter, Lektion 2 die nächsten, …
+  // Der Test (Lektion 5) wiederholt die Wörter von Lektion 1–3. Gleiche Regel für App und KI-Auftrag.
+  function fokus(words, lesson, alpha) {
+    const n = alpha ? 6 : 12, ws = words || [];
+    if (!ws.length) return [];
+    const teil = i => { const a = (i * n) % ws.length; return ws.slice(a, a + n); };
+    if (lesson >= 5) return teil(0).concat(teil(1), teil(2)).filter((w, i, arr) => arr.findIndex(x => x.de === w.de) === i);
+    if (lesson === 4) return [];
+    return teil(Math.max(0, lesson - 1));
   }
 
   // ---------- KI ----------
@@ -157,18 +169,19 @@
 
   async function lesson(d) {
     const cur = await lehrplan(), level = String(d.level || 'A1'), idx = parseInt(d.unit, 10) || 0;
-    const lang = d.lang === 'fa' ? 'fa' : 'en', [lv, unit] = unitInfo(cur, level, idx);
+    const lang = SPR(d.lang), [lv, unit] = unitInfo(cur, level, idx);
     if (!unit) return {ok: false, error: 'Einheit nicht gefunden'};
     const alpha = level === 'alpha', specs = alpha ? cur.lessons.alpha : cur.lessons.default;
     const spec = specs[Math.max(0, Math.min(4, (parseInt(d.lesson, 10) || 1) - 1))];
     const b = await buch(lang), u = (b.units[level] || [])[idx];
-    const core = u ? u.words.filter(w => w.grp === 'Grundwortschatz').map(w => w.de)
-      .concat(u.words.filter(w => w.grp !== 'Grundwortschatz').map(w => w.de).slice(0, 40)) : [];
+    const fok = u ? fokus(u.words, spec.id, alpha).map(w => w.de) : [];
+    const core = u ? u.words.map(w => w.de).filter(w => !fok.includes(w)).slice(0, 30) : [];
     const weak = (d.weak || []).map(w => String(w).slice(0, 60)).slice(0, 10);
     const prompt = 'Du bist eine erfahrene DaZ-Lehrkraft (Deutsch als Zweitsprache, Integrationskurs) und erstellst EINE Lektion als JSON.\n' +
       `NIVEAU: ${lv.name} – ${lv.desc}\nEINHEIT: ${unit.title} – Lernziele: ${unit.goals}\nLEKTION ${spec.id}: ${spec.name} – Inhalt: ${spec.spec}\n` +
       `ERKLAERSPRACHE fuer alle Felder *_l1 und l1: ${cur.langs[lang]}.\n` +
-      (core.length ? `KERNWORTSCHATZ DIESER EINHEIT aus dem Kursbuch (benutze vor allem diese Woerter, genau so geschrieben): ${core.join(', ')}\n` : '') +
+      (fok.length ? `WOERTER DIESER LEKTION aus dem Kursbuch (benutze genau diese Woerter, genau so geschrieben; bei Lektion 1 jedes davon als word-Item, so weit Platz ist): ${fok.join(', ')}\n` : '') +
+      (core.length ? `Weitere Woerter der Einheit (duerfen vorkommen): ${core.join(', ')}\n` : '') +
       (weak.length ? `Baue diese Woerter, die der Lernende oft falsch hatte, zur Wiederholung ein: ${weak.join(', ')}\n` : '') +
       'WICHTIG: Deutsch muss 100 % korrekt sein (Rechtschreibung, Artikel, Grammatik). Nur Wortschatz und Grammatik passend zum Niveau. ' +
       'Alltagsnah fuer Erwachsene, die in Deutschland leben. Respektvoll und neutral. Bei choice genau eine eindeutig richtige Antwort. ' +
@@ -184,7 +197,7 @@
 
   async function chat(d) {
     const cur = await lehrplan(), level = String(d.level || 'A1'), idx = parseInt(d.unit, 10) || 0;
-    const lang = d.lang === 'fa' ? 'fa' : 'en', [lv, unit] = unitInfo(cur, level, idx);
+    const lang = SPR(d.lang), [lv, unit] = unitInfo(cur, level, idx);
     const msgs = (d.messages || []).filter(m => m && (m.role === 'user' || m.role === 'assistant')).slice(-12);
     const system = 'Du bist ein geduldiger, freundlicher Deutschlehrer und fuehrst ein kurzes ROLLENSPIEL mit einem Lernenden.\n' +
       `NIVEAU: ${lv ? lv.name : 'A1'} – ${lv ? lv.desc : ''}\nTHEMA: ${unit ? unit.title : 'Alltag'} (${unit ? unit.goals : 'freies Gespraech im Alltag'})\n` +
@@ -207,7 +220,7 @@
 
   const trCache = {};
   async function translate(d) {
-    const cur = await lehrplan(), text = String(d.text || '').trim().slice(0, 2500), lang = d.lang === 'fa' ? 'fa' : 'en';
+    const cur = await lehrplan(), text = String(d.text || '').trim().slice(0, 2500), lang = SPR(d.lang);
     if (!text) return {ok: false, error: 'Kein Text'};
     const k = lang + '|' + text;
     if (trCache[k]) return {ok: true, text: trCache[k]};
@@ -221,7 +234,7 @@
   }
 
   async function write(d) {
-    const cur = await lehrplan(), level = String(d.level || 'A1'), idx = parseInt(d.unit, 10) || 0, lang = d.lang === 'fa' ? 'fa' : 'en';
+    const cur = await lehrplan(), level = String(d.level || 'A1'), idx = parseInt(d.unit, 10) || 0, lang = SPR(d.lang);
     const [lv] = unitInfo(cur, level, idx), b = await buch(lang), u = (b.units[level] || [])[idx];
     const text = String(d.text || '').trim().slice(0, 3000);
     if (!lv || !u) return {ok: false, error: 'Einheit nicht gefunden'};
@@ -272,7 +285,7 @@
   async function route(url, opt) {
     const u = new URL(url, location.href), p = u.pathname, q = u.searchParams;
     const body = opt && opt.body ? JSON.parse(opt.body) : {};
-    const lang = q.get('lang') === 'fa' ? 'fa' : 'en';
+    const lang = SPR(q.get('lang'));
     if (p.endsWith('/learn/curriculum')) {
       const c = await lehrplan();
       return {levels: c.levels.map(l => ({id: l.id, name: l.name, units: l.units})),
@@ -309,5 +322,5 @@
     return antwort(r);
   }
 
-  window.SDLernAPI = {fetch: lernFetch, kiTest, SERVER, quelle, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
+  window.SDLernAPI = {fokus, fetch: lernFetch, kiTest, SERVER, quelle, pool, grammarAll, geminiKey, _jsonAus: jsonAus, _cleanLesson: cleanLesson};
 })();

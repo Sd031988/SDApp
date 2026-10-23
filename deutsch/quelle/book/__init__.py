@@ -74,6 +74,24 @@ def _all(level, idx, key):
 
 
 from .pics import pic_for  # noqa: E402
+from .urdu import UR_WORT, ur_text  # noqa: E402
+
+
+def l1_wort(pw, lang):
+    """Bedeutung eines Wortes in der Erklärsprache (fa, en, ur). Fehlt Urdu, steht Englisch da."""
+    if lang == "fa":
+        return pw["fa"]
+    if lang == "ur":
+        return UR_WORT.get(pw["de"]) or pw["en"]
+    return pw["en"]
+
+
+def l1_text(en, fa, lang):
+    if lang == "fa":
+        return fa
+    if lang == "ur":
+        return ur_text(en)
+    return en
 from .articles import annotate  # noqa: E402
 from .grammar_tips import tip_for, CHANNELS  # noqa: E402,F401
 
@@ -87,7 +105,7 @@ def parse_word(s: str) -> dict:
 
 
 def _gram(g, lang):
-    return {"title": g["title"], "head": g["head"], "rows": g["rows"], "de": g["de"], "l1": g["fa"] if lang == "fa" else g["en"],
+    return {"title": g["title"], "head": g["head"], "rows": g["rows"], "de": g["de"], "l1": l1_text(g["en"], g["fa"], lang),
             "tip": tip_for(g["title"], lang)}
 
 
@@ -103,7 +121,7 @@ def unit(level: str, idx: int, lang: str = "en"):
             if pw["de"].lower() in seen:
                 continue
             seen.add(pw["de"].lower())
-            words.append({"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"], "l1": pw["fa"] if lang == "fa" else pw["en"],
+            words.append({"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"], "l1": l1_wort(pw, lang),
                           "en": pw["en"], "grp": grp})
     grams = [_gram(g, lang) for g in _all(level, idx, "g")]
     reads, dialogs, writes = _all(level, idx, "r"), _all(level, idx, "d"), _all(level, idx, "s")
@@ -131,7 +149,7 @@ def dictionary(lang: str = "en") -> list:
                 if pw["de"].lower() in seen:
                     continue
                 seen.add(pw["de"].lower())
-                out.append({"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"], "l1": pw["fa"] if lang == "fa" else pw["en"],
+                out.append({"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"], "l1": l1_wort(pw, lang),
                             "level": lv, "unit": i})
     return out
 
@@ -242,7 +260,7 @@ def pool(level: str, unit_idx: int, lang: str = "en") -> dict:
                         continue
                     seen.add(k)
                     words.append({"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"],
-                                  "l1": pw["fa"] if lang == "fa" else pw["en"], "level": lv, "unit": i, "grp": grp})
+                                  "l1": l1_wort(pw, lang), "level": lv, "unit": i, "grp": grp})
             texts = [r["text"] for r in _all(lv, i, "r")] + [l[1] for d in _all(lv, i, "d") for l in d["lines"]]
             texts += [t["model"] for t in _all(lv, i, "s")]
             for t in texts:

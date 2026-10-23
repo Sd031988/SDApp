@@ -205,7 +205,8 @@
           write: 'نوشتن', cards: 'کارت‌های لغت', print: 'چاپ', know: 'بلدم', practice: 'باز هم تمرین', flip: 'برگرداندن',
           correct: 'اصلاح کن', model: 'جواب نمونه', play: 'پخش', showtext: 'نمایش متن', exercises: 'تمرین‌ها با معلم', search: 'جستجو',
           wotd: 'کلمهٔ روز', goal: 'هدف روزانه', review: 'تکرار روزانه', articles: 'حرف تعریف', order: 'ساختن جمله', dictation: 'املا', train: 'تمرین', pics: 'تمرین با عکس', tricks: 'ترفندهای حرف تعریف', trick: 'ترفند یادآوری', videos: 'ویدیو در یوتیوب',
-          wquiz: 'آزمون لغت', plural: 'جمع', hquiz: 'تمرین شنیداری', mix: 'آزمون سطح', level: 'سطح', levels: 'انتخاب سطح', way: 'راه شما' },
+          wquiz: 'آزمون لغت', plural: 'جمع', hquiz: 'تمرین شنیداری', mix: 'آزمون سطح', level: 'سطح', levels: 'انتخاب سطح', way: 'راه شما',
+          lwords: 'لغات این درس', where: 'از کجا می‌خواهید شروع کنید؟', prep: 'معلم درس را آماده می‌کند …', expl: 'زبان توضیح' },
     en: { cont: 'Continue', listen: 'Listen', speak: 'Speak', check: 'Check', next: 'Next', again: 'Again', trans: 'Translation',
           right: 'Correct!', almost: 'Almost', wrong: 'Not quite', chat: 'Practice conversation', weak: 'Difficult words',
           place: 'Placement test', newp: 'New person', name: 'Name', lesson: 'Lesson', unit: 'Unit', done: 'Done', start: 'Start',
@@ -213,15 +214,29 @@
           write: 'Writing', cards: 'Flashcards', print: 'Print', know: 'I know it', practice: 'Practise again', flip: 'Turn over',
           correct: 'Correct it', model: 'Model answer', play: 'Play', showtext: 'Show text', exercises: 'Exercises with the teacher', search: 'Search',
           wotd: 'Word of the day', goal: 'Daily goal', review: 'Daily review', articles: 'Articles', order: 'Sentence building', dictation: 'Dictation', train: 'Training', pics: 'Picture quiz', tricks: 'Article tricks', trick: 'Memory trick', videos: 'Videos on YouTube',
-          wquiz: 'Word quiz', plural: 'Plural', hquiz: 'Listening quiz', mix: 'Level check', level: 'Level', levels: 'Choose level', way: 'Your path' },
+          wquiz: 'Word quiz', plural: 'Plural', hquiz: 'Listening quiz', mix: 'Level check', level: 'Level', levels: 'Choose level', way: 'Your path',
+          lwords: 'Words in this lesson', where: 'Where do you want to start?', prep: 'The teacher is preparing the lesson …', expl: 'Explanation language' },
+    ur: { cont: 'جاری رکھیں', listen: 'سنیں', speak: 'بولیں', check: 'جانچیں', next: 'اگلا', again: 'دوبارہ', trans: 'ترجمہ',
+          right: 'درست!', almost: 'تقریباً درست', wrong: 'افسوس، غلط', chat: 'گفتگو کی مشق', weak: 'مشکل الفاظ',
+          place: 'سطح جانچنے کا ٹیسٹ', newp: 'نیا شخص', name: 'نام', lesson: 'سبق', unit: 'یونٹ', done: 'مکمل', start: 'شروع',
+          book: 'میرا یونٹ', dict: 'لغت', gram: 'قواعد', words: 'الفاظ', phrases: 'اہم جملے', read: 'پڑھنا', hear: 'سننا',
+          write: 'لکھنا', cards: 'یادداشتی کارڈ', print: 'پرنٹ', know: 'مجھے آتا ہے', practice: 'پھر سے مشق', flip: 'پلٹیں',
+          correct: 'درست کریں', model: 'نمونہ جواب', play: 'چلائیں', showtext: 'متن دکھائیں', exercises: 'استاد کے ساتھ مشقیں', search: 'تلاش',
+          wotd: 'آج کا لفظ', goal: 'روزانہ کا ہدف', review: 'روزانہ دہرائی', articles: 'حرفِ تعریف', order: 'جملہ بنانا', dictation: 'املا', train: 'مشق', pics: 'تصویری کوئز', tricks: 'حرفِ تعریف کے گُر', trick: 'یاد رکھنے کا گُر', videos: 'یوٹیوب پر ویڈیوز',
+          wquiz: 'الفاظ کا کوئز', plural: 'جمع', hquiz: 'سننے کا کوئز', mix: 'سطح کا ٹیسٹ', level: 'سطح', levels: 'سطح منتخب کریں', way: 'آپ کا راستہ',
+          lwords: 'اس سبق کے الفاظ', where: 'آپ کہاں سے شروع کرنا چاہتے ہیں؟', prep: 'استاد سبق تیار کر رہا ہے …', expl: 'وضاحت کی زبان' },
   };
   // Deutsche/lateinische Woerter in Dari-Text als eigene Laufrichtung isolieren (sonst springt die Reihenfolge)
   const LAT = /[\u200e\-]*[A-Za-zÄÖÜäöüß](?:[A-Za-zÄÖÜäöüß0-9\-\/+=.’'\u200e →←–,]*[A-Za-zÄÖÜäöüß0-9!?])?/g;
-  const l1h = txt => { const p = prof(); const e = esc(txt); return (p && p.lang === 'fa') ? e.replace(LAT, m => '<bdi dir="ltr">' + m + '</bdi>') : e; };
-  const tx = k => { const p = prof(); return (TX[(p && p.lang) || 'en'] || TX.en)[k] || ''; };
-  const l1 = (txt, cls) => { const p = prof(); if (!txt) return ''; const fa = p && p.lang === 'fa';
-    return '<div class="l-l1 ' + (cls || '') + '"' + (fa ? ' dir="rtl" lang="fa"' : ' lang="en"') + '>' + l1h(txt) + '</div>'; };
-  const bi = (de, k) => esc(de) + (tx(k) ? ' <span class="l-sub">· <bdi' + (prof() && prof().lang === 'fa' ? ' dir="rtl" lang="fa"' : '') + '>' + esc(tx(k)) + '</bdi></span>' : '');
+  // Erklärsprachen: Bedeutungen, Grammatik-Erklärungen und Hilfetexte kommen direkt in dieser Sprache
+  const SPRACHEN = {fa: {name: 'دری / فارسی', rtl: true}, en: {name: 'English', rtl: false}, ur: {name: 'اردو', rtl: true}};
+  const spr = () => { const p = prof(); return (p && SPRACHEN[p.lang]) ? p.lang : 'en'; };
+  const rtl = () => SPRACHEN[spr()].rtl;
+  const l1h = txt => { const e = esc(txt); return rtl() ? e.replace(LAT, m => '<bdi dir="ltr">' + m + '</bdi>') : e; };
+  const tx = k => (TX[spr()] || TX.en)[k] || '';
+  const l1 = (txt, cls) => { if (!txt) return ''; const fa = rtl();
+    return '<div class="l-l1 ' + (cls || '') + '"' + l1Attr() + '>' + l1h(txt) + '</div>'; };
+  const bi = (de, k) => esc(de) + (tx(k) ? ' <span class="l-sub">· <bdi' + (rtl() ? ' dir="rtl" lang="' + spr() + '"' : '') + '>' + esc(tx(k)) + '</bdi></span>' : '');
 
   // ---------- Stimme ----------
   let _spFin = null;
@@ -450,6 +465,16 @@
     if (p && p.level) { $('learn').dataset.lv = p.level; if (lb) { lb.textContent = lvInfo(p.level).kurz + ' ▾'; lb.style.display = ''; lb.className = 'l-lvbtn lvc-' + p.level; } }
     else { delete $('learn').dataset.lv; if (lb) lb.style.display = 'none'; }
   }
+  // Erklärsprache wechseln: Bedeutungen, Grammatik und Hilfetexte kommen dann direkt in dieser Sprache
+  function showSprache() {
+    stopAll(); L.view = 'sprache'; topbar();
+    const p = prof();
+    body('<h2 class="l-h">🌐 Erklärsprache <span class="l-sub">· ' + esc(tx('expl')) + '</span></h2>' +
+      '<p class="l-note">In dieser Sprache kommen die Bedeutungen der Wörter, die Grammatik-Erklärungen, die Tipps und die Hilfe vom KI-Lehrer. Dein Lernstand bleibt gleich.</p>' +
+      '<div class="l-list">' + Object.keys(SPRACHEN).map(k => '<button type="button" class="l-unit' + (k === p.lang ? ' cur' : '') + '" data-spr="' + k + '"><span>' + (k === p.lang ? '✔ ' : '') +
+        '<bdi>' + esc(SPRACHEN[k].name) + '</bdi></span></button>').join('') + '</div>');
+    document.querySelectorAll('[data-spr]').forEach(b => b.onclick = () => { p.lang = b.dataset.spr; save(); showHome(); });
+  }
   // Niveau wechseln: die Stelle im alten Niveau merken, im neuen dort weitermachen, wo man war
   function setLevel(id) {
     const p = prof(); if (!p || !LEVEL_IDS.includes(id)) return;
@@ -505,8 +530,7 @@
     }
     h += '<div class="l-card"><h3>➕ Neue Person <span class="l-sub">· New person · شخص جدید</span></h3>' +
       '<input id="lName" class="l-input" placeholder="Name" maxlength="30" autocomplete="off">' +
-      '<div class="l-lang"><label><input type="radio" name="lLang" value="fa" checked> دری / فارسی</label>' +
-      '<label><input type="radio" name="lLang" value="en"> English</label></div>' +
+      '<div class="l-lang">' + Object.keys(SPRACHEN).map((k, i) => '<label><input type="radio" name="lLang" value="' + k + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(SPRACHEN[k].name) + '</label>').join('') + '</div>' +
       '<p class="l-note">Erklärsprache: In dieser Sprache hilft der Lehrer, wenn etwas schwer ist.</p>' +
       '<button type="button" class="l-btn l-primary" id="lCreate">Profil anlegen</button></div>' +
       '<p class="l-note" id="lSync">' + esc(syncText()) + '</p>';
@@ -579,7 +603,7 @@
   function showStart() {
     L.view = 'start'; topbar();
     body('<h2 class="l-h">Hallo ' + esc(prof().name) + '! 👋</h2>' +
-      '<div class="l-card"><h3>Wo möchtest du anfangen?</h3>' + l1(prof().lang === 'fa' ? 'از کجا می‌خواهید شروع کنید؟' : 'Where do you want to start?') +
+      '<div class="l-card"><h3>Wo möchtest du anfangen?</h3>' + l1(tx('where')) +
       '<button type="button" class="l-btn l-primary" id="lPlace">🎯 Einstufungstest (12 Fragen) <span class="l-sub">· ' + esc(tx('place')) + '</span></button>' +
       '<p class="l-note">Oder such dir dein Niveau selbst aus:</p>' + levelCards(prof(), null) + '</div>');
     $('lPlace').onclick = startPlacement;
@@ -610,7 +634,8 @@
       '<button type="button" class="l-btn" id="lBookBtn">📖 ' + bi('Meine Einheit', 'book') + '</button>' +
       '<button type="button" class="l-btn" id="lDictBtn">🔤 ' + bi('Wörterbuch', 'dict') + '</button>' +
       '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' + kiKnopf() +
-      '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button></div>';
+      '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button>' +
+      '<button type="button" class="l-btn" id="lSprBtn">🌐 Erklärsprache: <bdi>' + esc(SPRACHEN[spr()].name) + '</bdi></button></div>';
     h += '<h3 class="l-h3">' + bi('Dein Weg', 'way') + ' ' + lvChip(p.level, nU + ' Einheiten') + '</h3><div class="l-level l-way lvc-' + p.level + '">';
     lv.units.forEach((u, i) => {
       const d5 = !!p.done[p.level + ':' + i + ':5'], cur = i === p.unit;
@@ -627,6 +652,7 @@
     $('lBookBtn').onclick = () => showUnit(p.level, p.unit);
     $('lDictBtn').onclick = showDict;
     $('lGramBtn').onclick = showGrammarAll;
+    $('lSprBtn').onclick = showSprache;
     homeTraining();
     document.querySelectorAll('[data-u]').forEach(b => b.onclick = () => {
       const [lvId, ui] = b.dataset.u.split(':');
@@ -642,7 +668,7 @@
     const ck = p.lang + '|' + level + '|' + unit + '|' + lesson;
     let les = cacheGet(ck);
     if (!les) {
-      body('<div class="l-loading"><div class="l-spin"></div>Der Lehrer bereitet die Lektion vor …' + l1(p.lang === 'fa' ? 'معلم درس را آماده می‌کند …' : 'The teacher is preparing the lesson …') + '</div>');
+      body('<div class="l-loading"><div class="l-spin"></div>Der Lehrer bereitet die Lektion vor …' + l1(tx('prep')) + '</div>');
       try {
         const d = await (await fetch('/learn/lesson', {method: 'POST', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({level, unit, lesson, lang: p.lang, weak: weakList().slice(0, 8)})})).json();
@@ -656,7 +682,34 @@
       }
     }
     L.lesson = les; L.ck = ck; L.idx = -1; L.results = [];
+    try { L.vocab = await lessonVocab(les); } catch (e) { L.vocab = []; }
     renderItem();
+  }
+
+  // ----- Wortschatz dieser Lektion: Kursbuch-Wörter der Lektion + Kursbuch-Wörter, die in der Lektion vorkommen -----
+  // Bedeutungen kommen aus dem Kursbuch in der gewählten Erklärsprache (nicht von der KI).
+  async function lessonVocab(les) {
+    if (!les || les.unit < 0) return [];
+    const u = await getBook(les.level, les.unit), ws = u.words || [];
+    const fok = window.SDLernAPI.fokus(ws, les.lesson, les.level === 'alpha');
+    const text = (les.items || []).map(it => [it.de, it.q, it.answer, it.text, it.example, it.audio].concat(it.options || [], it.words || []).filter(Boolean).join(' ')).join(' ');
+    const toks = new Set(text.split(/[^A-Za-zÄÖÜäöüß-]+/).filter(Boolean));
+    const lower = new Set([...toks].map(t => t.toLowerCase()));
+    const drin = w => {
+      const kern = w.de.replace(/^(der|die|das) /, '').replace(/\s*\(.*\)$/, '');
+      if (/\s/.test(kern) || /[\/…|]/.test(kern)) return false;
+      return w.art ? toks.has(kern) || (w.pl && toks.has(w.pl.replace(/^die /, ''))) : lower.has(kern.toLowerCase());
+    };
+    const out = [], seen = new Set();
+    fok.concat(ws.filter(drin)).forEach(w => { if (!seen.has(w.de)) { seen.add(w.de); out.push(w); } });
+    return out.slice(0, 30);
+  }
+  function vocabHtml(list, offen) {
+    if (!list || !list.length) return '';
+    return '<details class="l-level l-lvocab"' + (offen ? ' open' : '') + '><summary>📚 Wortschatz dieser Lektion <small>' + list.length + ' · ' + esc(tx('lwords')) + '</small></summary>' +
+      '<div class="l-wlist">' + list.map(w => '<div class="l-wrow"><button type="button" class="l-btn l-icon l-sp" data-say="' + esc(w.de) + '" aria-label="Hören">🔊</button>' +
+        '<div class="l-wtxt"><div>' + picEmo(w) + wordHtml(w) + (w.pl ? ' <span class="l-pl">· Pl. ' + esc(w.pl) + '</span>' : '') + '</div>' +
+        '<div class="l-l1 l-wl1"' + l1Attr() + '>' + esc(w.l1) + '</div></div></div>').join('') + '</div></details>';
   }
 
   function head() {
@@ -699,7 +752,7 @@
       body(head() + '<div class="l-card l-center"><h2>' + esc(les.title || les.lesson_name) + '</h2>' +
         '<p class="l-de">' + esc(les.intro) + '</p>' + l1(les.intro_l1) +
         '<div class="l-row">' + (les.intro ? btnSpeak(les.intro) : '') + '</div>' +
-        '<button type="button" class="l-btn l-primary" id="lNext">' + bi('Los geht’s', 'start') + ' ➜</button></div>');
+        '<button type="button" class="l-btn l-primary" id="lNext">' + bi('Los geht’s', 'start') + ' ➜</button></div>' + vocabHtml(L.vocab, true));
       wireCommon(); if (les.intro) lSpeak(les.intro, slowFor());
       return;
     }
@@ -809,7 +862,11 @@
       (aufgestiegen ? '<div class="l-lvup lvc-' + p.level + '">🎓 <b>' + esc(lvInfo(lvVorher).kurz) + ' geschafft!</b> Ab jetzt lernst du <b>' + esc(lvInfo(p.level).kurz) + '</b>. Die Farbe oben zeigt dir immer dein Niveau.</div>' : '');
     if (!p.finished) h += '<button type="button" class="l-btn l-primary" id="lGo">▶ ' + bi('Weitermachen', 'cont') + '</button><p class="l-note">' + esc(posText(p)) + '</p>';
     h += '<button type="button" class="l-btn" id="lHome">Zur Übersicht</button></div>';
-    body(h);
+    if (L.vocab && L.vocab.length) {
+      L.vocab.forEach(w => srsAdd(w.de, 1));   // Wörter der Lektion kommen in die tägliche Wiederholung
+      h += vocabHtml(L.vocab, false) + '<p class="l-note">✔ Diese Wörter sind jetzt in deiner 🧠 Wiederholung.</p>';
+    }
+    body(h); wireCommon();
     lSpeak(passed ? (isTest ? 'Super! Test bestanden.' : 'Super gemacht!') : 'Gut versucht. Wir üben das nochmal.', false);
     if ($('lGo')) $('lGo').onclick = () => startLesson(p.level, p.unit, p.lesson);
     $('lHome').onclick = () => showUnit(les.level, les.unit);
@@ -926,8 +983,8 @@
   // =================== KURSBUCH (feste Inhalte) ===================
   const BOOKC = {};
   const VOICES = ['de-DE-KatjaNeural', 'de-DE-ConradNeural', 'de-DE-AmalaNeural', 'de-DE-KillianNeural'];
-  const isFa = () => { const p = prof(); return !!(p && p.lang === 'fa'); };
-  const l1Attr = () => isFa() ? ' dir="rtl" lang="fa"' : ' lang="en"';
+  const isFa = () => rtl();   // rechts-nach-links (Dari/Farsi, Urdu)
+  function l1Attr() { return rtl() ? ' dir="rtl" lang="' + spr() + '"' : ' lang="en"'; }
   async function getBook(level, unit) {
     const p = prof(), k = p.lang + '|' + level + '|' + unit;
     if (BOOKC[k]) return BOOKC[k];
@@ -1030,7 +1087,7 @@
       lessons.map(ls => {
         const done = p.done[level + ':' + unit + ':' + ls.id] != null, here = cur && p.lesson === ls.id;
         return '<button type="button" class="l-unit' + (here ? ' cur' : '') + '" data-les="' + ls.id + '"><span>' + (done ? '✅' : (here ? '▶️' : '○')) + ' ' +
-          ls.id + '. ' + esc(ls.name) + '</span><span class="l-sub">' + (done ? p.done[level + ':' + unit + ':' + ls.id] + ' %' : '') + '</span></button>';
+          ls.id + '. ' + esc(ls.name) + (window.SDLernAPI.fokus(u.words, ls.id, level === 'alpha').length ? ' <small class="l-sub">· 📚 ' + window.SDLernAPI.fokus(u.words, ls.id, level === 'alpha').length + ' Wörter</small>' : '') + '</span><span class="l-sub">' + (done ? p.done[level + ':' + unit + ':' + ls.id] + ' %' : '') + '</span></button>';
       }).join('') + '</div>' +
       '<p class="l-note">Die Kursbuch-Inhalte sind fest geschrieben (nicht von der KI). Die Übungen erstellt der KI-Lehrer passend zur Einheit.</p>';
     body(h);
@@ -1273,7 +1330,7 @@
       catch (e) { body('<div class="l-card">❌ Wörterbuch konnte nicht geladen werden.</div>'); return; }
     }
     let lvF = p.level;
-    body('<h2 class="l-h">🔤 ' + bi('Wörterbuch', 'dict') + ' ' + lvChip(p.level) + '</h2><input id="lDQ" class="l-input" placeholder="Suchen … (Deutsch, ' + (isFa() ? 'دری' : 'English') + ')" autocomplete="off" spellcheck="false">' +
+    body('<h2 class="l-h">🔤 ' + bi('Wörterbuch', 'dict') + ' ' + lvChip(p.level) + '</h2><input id="lDQ" class="l-input" placeholder="Suchen … (Deutsch, ' + esc(SPRACHEN[spr()].name) + ')" autocomplete="off" spellcheck="false">' +
       '<div class="l-chips">' + ['', 'alpha', 'A1', 'A2', 'B1'].map(id => '<button type="button" class="l-chip' + (id === lvF ? ' on' : '') + '" data-lvf="' + id + '">' + (id ? esc(lvInfo(id).kurz) : 'Alle') + '</button>').join('') + '</div>' +
       '<p class="l-note" id="lDN"></p><div class="l-wlist" id="lDL"></div>');
     const render = () => {

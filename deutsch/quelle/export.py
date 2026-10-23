@@ -38,7 +38,7 @@ ALLE = B.pool("B1", 99, "en")["words"]
 STAT = ART.stats(ALLE)
 AR = {w["de"]: (w.get("ar"), w.get("ax")) for w in ALLE if w.get("ar")}
 
-for lang in ("fa", "en"):
+for lang in ("fa", "en", "ur"):
     order = list(B.BOOK.keys())
     units = {}
     seen, seen_s = set(), set()
@@ -57,7 +57,7 @@ for lang in ("fa", "en"):
                         continue
                     seen.add(k)
                     e = {"de": pw["de"], "pl": pw["pl"], "art": pw["art"], "pic": pw["pic"], "ph": pw["ph"],
-                         "l1": pw["fa"] if lang == "fa" else pw["en"], "level": lv, "unit": i, "grp": grp}
+                         "l1": B.l1_wort(pw, lang), "level": lv, "unit": i, "grp": grp}
                     if pw["de"] in AR:
                         e["ar"], e["ax"] = AR[pw["de"]]
                     neu_w.append(e)
@@ -70,9 +70,15 @@ for lang in ("fa", "en"):
                         neu_s.append({"de": s, "level": lv, "unit": i})
             u["poolWords"], u["poolSents"] = neu_w, neu_s
             units[lv].append(u)
-    rules = [{"id": r["id"], "art": r["art"], "title": r["title"], "de": r["de"], "l1": r["fa"] if lang == "fa" else r["en"],
+    rules = [{"id": r["id"], "art": r["art"], "title": r["title"], "de": r["de"], "l1": B.l1_text(r["en"], r["fa"], lang),
               "ex": r["ex"], **STAT[r["id"]]} for r in ART.RULES]
-    general = [{"icon": g["icon"], "de": g["de"], "l1": g["fa"] if lang == "fa" else g["en"]} for g in ART.GENERAL]
+    general = [{"icon": g["icon"], "de": g["de"], "l1": B.l1_text(g["en"], g["fa"], lang)} for g in ART.GENERAL]
     schreibe(f"buch-{lang}.json", {"order": order, "units": units,
                                    "articles": {"rules": rules, "general": general, "videos": ART.VIDEOS},
                                    "channels": B.CHANNELS})
+
+# Urdu: Abdeckung melden
+from book.urdu import UR_WORT, FEHLT  # noqa: E402
+_alle = {w["de"] for w in B.dictionary("en")}
+_ohne = sorted(_alle - set(UR_WORT))
+print(f"Urdu: {len(_alle) - len(_ohne)}/{len(_alle)} Wörter, {len(FEHLT)} Texte ohne Übersetzung")
