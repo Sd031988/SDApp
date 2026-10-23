@@ -238,8 +238,8 @@
   // Deutsche/lateinische Woerter in Dari-Text als eigene Laufrichtung isolieren (sonst springt die Reihenfolge)
   const LAT = /[\u200e\-]*[A-Za-zÄÖÜäöüß](?:[A-Za-zÄÖÜäöüß0-9\-\/+=.’'\u200e →←–,]*[A-Za-zÄÖÜäöüß0-9!?])?/g;
   // Erklärsprachen: Bedeutungen, Grammatik-Erklärungen und Hilfetexte kommen direkt in dieser Sprache
-  const SPRACHEN = {fa: {name: 'دری / فارسی', rtl: true}, en: {name: 'English', rtl: false}, ur: {name: 'اردو', rtl: true},
-    ti: {name: 'ትግርኛ (Tigrinya)', rtl: false, neu: true}};
+  const SPRACHEN = {fa: {name: 'دری / فارسی', kurz: 'دری', rtl: true}, en: {name: 'English', kurz: 'EN', rtl: false}, ur: {name: 'اردو', kurz: 'اردو', rtl: true},
+    ti: {name: 'ትግርኛ (Tigrinya)', kurz: 'ትግርኛ', rtl: false, neu: true}};
   const spr = () => { const p = prof(); return (p && SPRACHEN[p.lang]) ? p.lang : 'en'; };
   const rtl = () => SPRACHEN[spr()].rtl;
   const l1h = txt => { const e = esc(txt); return rtl() ? e.replace(LAT, m => '<bdi dir="ltr">' + m + '</bdi>') : e; };
@@ -454,23 +454,27 @@
       $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
       $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
       if ($('lLvBtn')) $('lLvBtn').onclick = showLevels;
+      if ($('lSprTop')) $('lSprTop').onclick = showSprache;
       return;
     }
     const d = document.createElement('div');
     d.id = 'learn';
     d.innerHTML = '<div class="l-top"><button type="button" class="l-btn-round" id="lBack" aria-label="Zurück">‹</button>' +
-      '<span class="l-title">📚 Deutsch lernen</span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-prof" id="lProfBtn"></button>' +
+      '<span class="l-title">📚 <span class="l-tt">Deutsch lernen</span></span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-sprbtn" id="lSprTop" style="display:none" aria-label="Erklärsprache ändern"></button><button type="button" class="l-prof" id="lProfBtn"></button>' +
       '<button type="button" class="l-btn-round" id="lClose" aria-label="Schließen">✕</button></div><div id="lBody" class="l-body"></div>';
     document.body.appendChild(d);
     $('lClose').onclick = closeLearn;
     $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
     $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
     $('lLvBtn').onclick = showLevels;
+    $('lSprTop').onclick = showSprache;
   }
   function stopAll() { lStopSpeak(); if (L.rec) { try { L.rec.stop(); } catch (_) {} } }
   function body(html) { const b = $('lBody'); b.innerHTML = '<div class="l-wrap">' + html + '</div>'; b.scrollTop = 0; }
   function topbar() {
     const p = prof(); $('lProfBtn').textContent = p ? '👤 ' + p.name : ''; $('lProfBtn').style.display = p ? '' : 'none';
+    const sb = $('lSprTop');
+    if (sb) { sb.style.display = p ? '' : 'none'; if (p) sb.innerHTML = '🌐 <bdi>' + esc(SPRACHEN[spr()].kurz) + '</bdi>'; }
     const lb = $('lLvBtn');
     if (p && p.level) { $('learn').dataset.lv = p.level; if (lb) { lb.textContent = lvInfo(p.level).kurz + ' ▾'; lb.style.display = ''; lb.className = 'l-lvbtn lvc-' + p.level; } }
     else { delete $('learn').dataset.lv; if (lb) lb.style.display = 'none'; }

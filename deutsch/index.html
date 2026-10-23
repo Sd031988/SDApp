@@ -35,6 +35,8 @@
   #learn[data-lv="B1"], .lvc-B1 { --accent: #c2410c; --accent2: #fdba74; --accent3: #9a3412; --accent-glow: rgba(194,65,12,.35); --lvbg: rgba(194,65,12,.18); }
   #learn[data-lv] .l-top { border-bottom: 3px solid var(--accent); }
   .l-lvbtn { min-height: 36px; padding: 0 12px; border-radius: 18px; border: none; background: var(--accent); color: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; letter-spacing: .3px; flex-shrink: 0; }
+  .l-sprbtn { min-height: 36px; padding: 0 10px; border-radius: 18px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+  @media (max-width: 480px) { .l-tt { display: none; } .l-prof { max-width: 26vw; } }
   .l-lvchip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: none; vertical-align: middle; width: fit-content; }
   .l-lhead .l-lvchip { margin-bottom: 6px; }
   .l-lvtabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -244,7 +246,7 @@
 <body class="learn-open">
 <div id="learn">
   <div class="l-top topbar"><button type="button" class="l-btn-round" id="lBack" aria-label="Zurück">‹</button>
-    <span class="l-title">📚 Deutsch lernen</span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-prof" id="lProfBtn"></button>
+    <span class="l-title">📚 <span class="l-tt">Deutsch lernen</span></span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-sprbtn" id="lSprTop" style="display:none" aria-label="Erklärsprache ändern"></button><button type="button" class="l-prof" id="lProfBtn"></button>
     <button type="button" class="l-btn-round" id="lClose" aria-label="Zur SD-Hub-Übersicht">✕</button></div>
   <div id="lBody" class="l-body"><div class="l-wrap"><div class="l-loading">Einen Moment …</div></div></div>
 </div>
@@ -252,7 +254,7 @@
 <script src="../gemini-modelle.js?v=1"></script>
 <script src="../sd-ki.js?v=20"></script>
 <script src="lern-api.js?v=8"></script>
-<script src="lernen.js?v=9"></script>
+<script src="lernen.js?v=10"></script>
 <script src="umzug.js?v=1"></script>
 <script>Promise.resolve(openLearn()).then(() => window.SDUmzug && SDUmzug.pruefen());</script>
 </body>
