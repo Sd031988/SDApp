@@ -35,6 +35,18 @@
   #learn[data-lv="B1"], .lvc-B1 { --accent: #c2410c; --accent2: #fdba74; --accent3: #9a3412; --accent-glow: rgba(194,65,12,.35); --lvbg: rgba(194,65,12,.18); }
   #learn[data-lv] .l-top { border-bottom: 3px solid var(--accent); }
   .l-lvbtn { min-height: 36px; padding: 0 12px; border-radius: 18px; border: none; background: var(--accent); color: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; letter-spacing: .3px; flex-shrink: 0; }
+  .l-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .l-kachel { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 112px; padding: 14px; border-radius: 18px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+  .l-kachel:hover, .l-kachel:focus-visible { border-color: var(--accent); }
+  .l-kachel-ic { font-size: 30px; line-height: 1; } .l-kachel b { font-size: 16px; } .l-kachel small { color: var(--muted); font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+  .l-lvhero-fuss { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; } .l-lvhero-fuss small { color: var(--muted); }
+  .l-link { background: none; border: none; color: var(--accent2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 0; min-height: 36px; }
+  .l-tlist { display: flex; flex-direction: column; gap: 8px; }
+  .l-trow { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  .l-trow:hover { border-color: var(--accent); } .l-trow-ic { font-size: 26px; width: 34px; text-align: center; flex-shrink: 0; }
+  .l-trow-t { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; } .l-trow-t small { color: var(--muted); font-size: 13px; } .l-trow-go { color: var(--muted); font-size: 22px; }
+  .l-mehr summary, .l-way summary { font-size: 15px; }
+  .l-continue { min-height: 84px; }
   .l-sprbtn { min-height: 36px; padding: 0 10px; border-radius: 18px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
   @media (max-width: 480px) { .l-tt { display: none; } .l-prof { max-width: 26vw; } }
   .l-lvchip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: none; vertical-align: middle; width: fit-content; }
@@ -254,7 +266,7 @@
 <script src="../gemini-modelle.js?v=1"></script>
 <script src="../sd-ki.js?v=20"></script>
 <script src="lern-api.js?v=8"></script>
-<script src="lernen.js?v=10"></script>
+<script src="lernen.js?v=11"></script>
 <script src="umzug.js?v=1"></script>
 <script>Promise.resolve(openLearn()).then(() => window.SDUmzug && SDUmzug.pruefen());</script>
 </body>

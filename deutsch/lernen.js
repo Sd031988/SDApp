@@ -451,7 +451,7 @@
     if ($('learn')) {
       $('learn').dataset.wired = '1';
       $('lClose').onclick = closeLearn;
-      $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
+      $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else showHome(); };
       $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
       if ($('lLvBtn')) $('lLvBtn').onclick = showLevels;
       if ($('lSprTop')) $('lSprTop').onclick = showSprache;
@@ -464,7 +464,7 @@
       '<button type="button" class="l-btn-round" id="lClose" aria-label="Schließen">✕</button></div><div id="lBody" class="l-body"></div>';
     document.body.appendChild(d);
     $('lClose').onclick = closeLearn;
-    $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else showHome(); };
+    $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else showHome(); };
     $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
     $('lLvBtn').onclick = showLevels;
     $('lSprTop').onclick = showSprache;
@@ -625,53 +625,61 @@
   }
 
   // ----- Startseite -----
+  // Startseite: bewusst einfach – eine große Hauptaktion, vier Kacheln, alles andere eingeklappt
   function showHome() {
     if (!prof()) { showProfiles(); return; }
     L.view = 'home'; topbar();
     const p = prof(), weak = weakList(), lv = levelObj(p.level), inf = lvInfo(p.level);
-    const dn = lvDone(p, p.level), nU = lv.units.length, pctLv = Math.round(dn / nU * 100);
+    const dn = lvDone(p, p.level), nU = lv.units.length, pctLv = Math.round(dn / nU * 100), st = streak(p);
+    const kachel = (id, ic, de, k, sub) => '<button type="button" class="l-kachel" id="' + id + '"><span class="l-kachel-ic">' + ic + '</span><b>' + bi(de, k) + '</b><small>' + esc(sub) + '</small></button>';
     let h = '<h2 class="l-h">Hallo ' + esc(p.name) + '! 👋</h2>' +
-      // Niveau-Leiste: immer sichtbar, ein Tipp wechselt das Niveau
-      '<div class="l-lvtabs" role="tablist" aria-label="Niveau">' + LEVEL_IDS.map(id => '<button type="button" role="tab" aria-selected="' + (id === p.level) + '" class="l-lvtab lvc-' + id + (id === p.level ? ' on' : '') + '" data-setlv="' + id + '">' + esc(lvInfo(id).kurz) + '</button>').join('') + '</div>' +
+      '<p class="l-note">🔥 ' + st + ' ' + (st === 1 ? 'Tag' : 'Tage') + ' · ⭐ ' + (p.xp || 0) + '</p>' +
       '<div class="l-lvhero lvc-' + p.level + '"><div class="l-lvhero-top"><span class="l-lvbig">' + esc(inf.kurz) + '</span><div><small>Du lernst gerade</small><b>' + esc(inf.name === inf.kurz ? 'Niveau ' + inf.kurz + ' · ' + inf.stufe : inf.name) + '</b></div></div>' +
-      '<p>' + esc(inf.was) + '</p><div class="l-progress"><div style="width:' + pctLv + '%"></div></div>' +
-      '<small>' + dn + ' von ' + nU + ' Einheiten in ' + esc(inf.kurz) + ' fertig · ⭐ ' + (p.xp || 0) + '</small></div>' +
-      '<p class="l-note l-sync" id="lSync">' + esc(syncText()) + '</p>';
+      '<div class="l-progress"><div style="width:' + pctLv + '%"></div></div>' +
+      '<div class="l-lvhero-fuss"><small>' + dn + ' von ' + nU + ' Einheiten fertig</small><button type="button" class="l-link" id="lLvChange">🎚️ Niveau ändern</button></div></div>';
     if (!p.finished) {
       h += '<button type="button" class="l-continue" id="lCont"><span class="l-big">▶ ' + bi('Weitermachen', 'cont') + '</span><small>' + esc(posText(p)) + '</small></button>';
-    } else h += '<div class="l-card">🎉 Du hast alle Einheiten bis B1 geschafft! Übe weiter mit Gesprächen und Wiederholungen – oder wähle oben ein Niveau zum Wiederholen.</div>';
-    h += '<h3 class="l-h3">🏋️ ' + bi('Training', 'train') + ' ' + lvChip(p.level, 'nur dieses Niveau') + '</h3><div id="lTrain" class="l-train"><div class="l-note">…</div></div>';
-    h += '<div class="l-grid"><button type="button" class="l-btn" id="lChatBtn">💬 ' + bi('Gespräch üben', 'chat') + '</button>' +
-      (weak.length ? '<button type="button" class="l-btn" id="lWeakBtn">🔁 ' + bi('Schwierige Wörter', 'weak') + ' (' + weak.length + ')</button>' : '') +
-      '<button type="button" class="l-btn" id="lPlaceBtn">🎯 ' + bi('Einstufungstest', 'place') + '</button></div>' +
-      '<h3 class="l-h3">📚 Kursbuch ' + lvChip(p.level) + '</h3><div class="l-grid">' +
-      '<button type="button" class="l-btn" id="lBookBtn">📖 ' + bi('Meine Einheit', 'book') + '</button>' +
-      '<button type="button" class="l-btn" id="lDictBtn">🔤 ' + bi('Wörterbuch', 'dict') + '</button>' +
-      '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' + kiKnopf() +
-      '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button>' +
-      '<button type="button" class="l-btn" id="lSprBtn">🌐 Erklärsprache: <bdi>' + esc(SPRACHEN[spr()].name) + '</bdi></button></div>';
-    h += '<h3 class="l-h3">' + bi('Dein Weg', 'way') + ' ' + lvChip(p.level, nU + ' Einheiten') + '</h3><div class="l-level l-way lvc-' + p.level + '">';
+    } else h += '<div class="l-card">🎉 Du hast alle Einheiten bis B1 geschafft! Wähle ein Niveau zum Wiederholen.</div>';
+    h += '<div class="l-kacheln">' +
+      kachel('lTrainBtn', '🏋️', 'Üben', 'train', 'Wörter und Sätze aus ' + inf.kurz) +
+      kachel('lChatBtn', '💬', 'Sprechen', 'chat', 'Gespräch mit dem KI-Lehrer') +
+      kachel('lBookBtn', '📖', 'Meine Einheit', 'book', lv.units[p.unit] || '') +
+      kachel('lDictBtn', '🔤', 'Wörterbuch', 'dict', 'Wörter suchen und hören') + '</div>';
+    h += '<details class="l-level l-way lvc-' + p.level + '"><summary>🗺️ ' + bi('Dein Weg', 'way') + ' <small>' + esc(inf.kurz) + ' · ' + dn + '/' + nU + '</small></summary>';
     lv.units.forEach((u, i) => {
       const d5 = !!p.done[p.level + ':' + i + ':5'], cur = i === p.unit;
       const dots = [1, 2, 3, 4, 5].map(n => '<i class="' + (p.done[p.level + ':' + i + ':' + n] != null ? 'ok' : (cur && n === p.lesson ? 'cur' : '')) + '"></i>').join('');
       h += '<button type="button" class="l-unit' + (cur ? ' cur' : '') + '" data-u="' + p.level + ':' + i + '"><span>' + (d5 ? '✅' : (cur ? '▶️' : '○')) + ' ' + (i + 1) + '. ' + esc(u) + (cur ? ' <em class="l-here">du bist hier</em>' : '') + '</span><span class="l-dots">' + dots + '</span></button>';
     });
-    h += '</div><p class="l-note">Ganzer Weg bis B1: ' + progressPct(p) + ' % · Anderes Niveau: oben auf Alpha, A1, A2 oder B1 tippen.</p>';
+    h += '</details>';
+    h += '<details class="l-level l-mehr"><summary>⚙️ Mehr</summary><div class="l-grid">' +
+      '<button type="button" class="l-btn" id="lGramBtn">📐 ' + bi('Grammatik', 'gram') + '</button>' +
+      (weak.length ? '<button type="button" class="l-btn" id="lWeakBtn">🔁 ' + bi('Schwierige Wörter', 'weak') + ' (' + weak.length + ')</button>' : '') +
+      '<button type="button" class="l-btn" id="lPlaceBtn">🎯 ' + bi('Einstufungstest', 'place') + '</button>' +
+      '<button type="button" class="l-btn" id="lSprBtn">🌐 Erklärsprache: <bdi>' + esc(SPRACHEN[spr()].name) + '</bdi></button>' +
+      kiKnopf() + '<button type="button" class="l-btn" id="lTonTest">🔊 Ton testen</button></div>' +
+      '<p class="l-note">Ganzer Weg bis B1: ' + progressPct(p) + ' %</p><p class="l-note l-sync" id="lSync">' + esc(syncText()) + '</p></details>';
     body(h);
-    document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { if (b.dataset.setlv !== p.level) { setLevel(b.dataset.setlv); showHome(); } });
     if ($('lCont')) $('lCont').onclick = () => startLesson(p.level, p.unit, p.lesson);
+    $('lLvChange').onclick = showLevels;
+    $('lTrainBtn').onclick = showTraining;
     $('lChatBtn').onclick = () => startChat(p.level, p.unit, false);
-    if ($('lWeakBtn')) $('lWeakBtn').onclick = startWeak;
-    $('lPlaceBtn').onclick = startPlacement;
     $('lBookBtn').onclick = () => showUnit(p.level, p.unit);
     $('lDictBtn').onclick = showDict;
     $('lGramBtn').onclick = showGrammarAll;
+    if ($('lWeakBtn')) $('lWeakBtn').onclick = startWeak;
+    $('lPlaceBtn').onclick = startPlacement;
     $('lSprBtn').onclick = showSprache;
+    document.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const [lvId, ui] = b.dataset.u.split(':'); showUnit(lvId, +ui); });
+  }
+  // Übungs-Seite: alle Trainings an einem Ort, nach Art sortiert und kurz erklärt
+  function showTraining() {
+    if (!prof()) { showProfiles(); return; }
+    stopAll(); L.view = 'training'; topbar();
+    const p = prof();
+    body('<div class="l-lhead">' + lvChip(p.level, 'Üben') + '<small>Nur Wörter und Sätze aus ' + esc(lvInfo(p.level).kurz) + '</small></div>' +
+      '<h2 class="l-h">🏋️ ' + bi('Üben', 'train') + '</h2><div id="lTrain" class="l-train"><div class="l-note">…</div></div>');
     homeTraining();
-    document.querySelectorAll('[data-u]').forEach(b => b.onclick = () => {
-      const [lvId, ui] = b.dataset.u.split(':');
-      showUnit(lvId, +ui);
-    });
   }
 
   // ----- Lektion laden -----
@@ -1493,7 +1501,7 @@
       '<button type="button" class="l-btn l-primary" id="lTAgain">' + bi('Nochmal', 'again') + '</button>' +
       '<button type="button" class="l-btn" id="lTHome">Zur Übersicht</button></div>');
     lSpeak(pct >= 80 ? 'Sehr gut gemacht!' : 'Gut geübt! Weiter so.', false);
-    $('lTAgain').onclick = again; $('lTHome').onclick = showHome;
+    $('lTAgain').onclick = again; $('lTHome').onclick = showTraining;
   }
 
   // ----- Startseite: Serie, Tagesziel, Wort des Tages, Training -----
@@ -1512,21 +1520,27 @@
       }
     } catch (e) { /* ohne Wort des Tages weiter */ }
     if (!$('lTrain')) return;
+    const tgrp = t => '<h3 class="l-h3">' + t + '</h3>';
+    const tb = (id, ic, de, k, sub, badge) => '<button type="button" class="l-trow" id="' + id + '"><span class="l-trow-ic">' + ic + '</span><span class="l-trow-t"><b>' + bi(de, k) + '</b><small>' + esc(sub) + '</small></span>' +
+      (badge ? '<span class="l-badge">' + badge + '</span>' : '<span class="l-trow-go">›</span>') + '</button>';
     box.innerHTML =
       '<div class="l-streak"><div class="l-fire">🔥 <b>' + st + '</b> <small>' + (st === 1 ? 'Tag' : 'Tage') + '</small></div>' +
       '<div class="l-goal"><small>' + bi('Tagesziel', 'goal') + ': ' + Math.min(today, goal) + ' / ' + goal + ' ⭐</small>' +
       '<div class="l-progress"><div style="width:' + Math.min(100, Math.round(today / goal * 100)) + '%"></div></div></div>' +
       '<button type="button" class="l-btn l-icon" id="lGoalBtn" aria-label="Tagesziel ändern">🎯</button></div>' + wotd +
-      '<div class="l-grid l-tgrid">' +
-      '<button type="button" class="l-btn l-tbtn l-tpic" id="lTPic">📷 ' + bi('Bilder-Quiz', 'pics') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTSrs">🧠 ' + bi('Wiederholung', 'review') + (due ? ' <span class="l-badge">' + due + '</span>' : '') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTArt">🎨 ' + bi('der · die · das', 'articles') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTSatz">🧩 ' + bi('Satzbau', 'order') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTDik">✍️ ' + bi('Diktat', 'dictation') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTWq">🔤 ' + bi('Wörter-Quiz', 'wquiz') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTPl">👥 ' + bi('Plural', 'plural') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn" id="lTHq">🎧 ' + bi('Hör-Quiz', 'hquiz') + '</button>' +
-      '<button type="button" class="l-btn l-tbtn l-tmix" id="lTMix">🏁 ' + bi('Niveau-Test', 'mix') + ' ' + esc(lvInfo(p.level).kurz) + '</button></div>' +
+      tgrp('🔤 Wörter') + '<div class="l-tlist">' +
+      tb('lTPic', '📷', 'Bilder-Quiz', 'pics', 'Bild sehen – richtiges Wort tippen') +
+      tb('lTWq', '🔤', 'Wörter-Quiz', 'wquiz', 'Was bedeutet das Wort?') +
+      tb('lTArt', '🎨', 'der · die · das', 'articles', 'Den richtigen Artikel wählen') +
+      tb('lTPl', '👥', 'Plural', 'plural', 'Ein Wort – viele davon') + '</div>' +
+      tgrp('🧠 Wiederholen') + '<div class="l-tlist">' +
+      tb('lTSrs', '🧠', 'Wiederholung', 'review', due ? due + ' Wörter warten auf dich' : 'Gelernte Wörter wiederholen', due) + '</div>' +
+      tgrp('🗣️ Sätze') + '<div class="l-tlist">' +
+      tb('lTSatz', '🧩', 'Satzbau', 'order', 'Wörter in die richtige Reihenfolge bringen') +
+      tb('lTHq', '🎧', 'Hör-Quiz', 'hquiz', 'Satz hören – richtigen Satz tippen') +
+      tb('lTDik', '✍️', 'Diktat', 'dictation', 'Satz hören und aufschreiben') + '</div>' +
+      tgrp('🏁 Test') + '<div class="l-tlist">' +
+      tb('lTMix', '🏁', 'Niveau-Test ' + lvInfo(p.level).kurz, 'mix', 'Gemischte Fragen aus dem ganzen Niveau') + '</div>' +
       '<button type="button" class="l-btn l-tipslink" id="lTTips">💡 ' + bi('Artikel-Tricks', 'tricks') + ' · Videos</button>' +
       '<label class="l-note l-phototgl"><input type="checkbox" id="lPhotos"' + (p.photos !== false ? ' checked' : '') + '> 📷 Echte Fotos zeigen (aus Wikipedia, braucht Internet)</label>';
     box.querySelectorAll('[data-say]').forEach(b => b.onclick = () => lSpeak(b.dataset.say, slowFor()));
@@ -1553,7 +1567,7 @@
     if (!items.length) {
       body(trainHead('🧠 ' + bi('Wiederholung', 'review')) + '<div class="l-card l-center"><div class="l-big-ic">🎉</div><h2>Alles wiederholt!</h2>' +
         '<p>Für heute ist nichts mehr fällig. Morgen geht es weiter.</p><button type="button" class="l-btn" id="lTHome">Zur Übersicht</button></div>');
-      $('lTHome').onclick = showHome; return;
+      $('lTHome').onclick = showTraining; return;
     }
     const S = {items, i: 0, right: 0, n: 0, again: new Set()};
     const all = pool.words;
