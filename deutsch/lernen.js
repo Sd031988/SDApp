@@ -102,9 +102,9 @@
   // Jedes Niveau hat eine eigene Farbe und einen kurzen Namen – damit man immer sieht, wo man ist
   const LV = {
     alpha: {kurz: 'Alpha', name: 'Alphabetisierung', stufe: 'Lesen und Schreiben lernen', was: 'Buchstaben, Laute, Silben und die ersten Wörter lesen und schreiben.'},
-    A1: {kurz: 'A1', name: 'A1', stufe: 'Anfänger', was: 'Sich vorstellen, Uhrzeit, Familie, Einkaufen, Wohnen, Mein Tag, Arzt, Stadt, Arbeit, Freizeit, Kleidung und Wetter, Reparaturen – einfache Sätze im Präsens.'},
-    A2: {kurz: 'A2', name: 'A2', stufe: 'Grundstufe', was: 'Ämter, Wohnungssuche, Arbeit suchen, Gesundheit, Kita und Schule, Reisen, Feste, Reklamieren, Sport, Handy und Internet, Bank, Lebensstationen – Perfekt, weil, dass, Dativ.'},
-    B1: {kurz: 'B1', name: 'B1', stufe: 'Mittelstufe', was: 'Bewerbung, Rechte und Pflichten, Beschwerden, Meinung sagen, Zusammenleben, Umwelt, Briefe, Medien, Datenschutz, Werbung, Heimat – Prüfung DTZ.'},
+    A1: {kurz: 'A1', name: 'A1', stufe: 'Anfänger', was: 'Sich vorstellen, Uhrzeit, Familie, Einkaufen, Wohnen, Mein Tag, Arzt, Stadt, Arbeit, Freizeit, Kleidung und Wetter, Reparaturen, Kinder und Schule, Ämter, Feste – einfache Sätze im Präsens.'},
+    A2: {kurz: 'A2', name: 'A2', stufe: 'Grundstufe', was: 'Ämter, Wohnungssuche, Arbeit suchen, Gesundheit, Kita und Schule, Reisen, Feste, Reklamieren, Sport, Handy und Internet, Bank, Lebensstationen, Ankommen, Essen und Trinken, Wochenende – Perfekt, weil, dass, Dativ.'},
+    B1: {kurz: 'B1', name: 'B1', stufe: 'Mittelstufe', was: 'Bewerbung, Rechte und Pflichten, Beschwerden, Meinung sagen, Zusammenleben, Umwelt, Briefe, Medien, Datenschutz, Werbung, Heimat, Glück, Gesundheit, Sprachen, Dienstleistungen, Kollegen, Politik und Geschichte – Prüfung DTZ.'},
   };
   const lvInfo = id => LV[id] || LV.A1;
   const lvChip = (id, extra) => '<span class="l-lvchip lvc-' + esc(id) + '">' + esc(lvInfo(id).kurz) + (extra ? ' · ' + extra : '') + '</span>';

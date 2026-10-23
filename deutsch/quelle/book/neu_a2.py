@@ -296,3 +296,223 @@ schwer||difficult; heavy|سخت؛ سنگین
 """,
     },
 ]
+
+# Zweite Runde: restliche Themen aus A2-Kursbüchern (Ankommen, Essen und Trinken, Am Wochenende)
+UNITS += [
+    {
+        "t": "Ankommen und Kennenlernen",
+        "goals": "über die ersten Wochen in einer neuen Stadt erzählen, Nachbarn kennenlernen, Hilfe finden; Perfekt mit trennbaren und nicht trennbaren Verben",
+        "w": [
+            "ankommen||to arrive|رسیدن",
+            "kennenlernen||to get to know|آشنا شدن",
+            "sich vorstellen||to introduce oneself|خود را معرفی کردن",
+            "der Nachbar|die Nachbarn|neighbour|همسایه",
+            "die Nachbarschaft|die Nachbarschaften|neighbourhood|همسایگی، محله",
+            "neu||new|نو، جدید",
+            "fremd||strange, unfamiliar|ناآشنا، بیگانه",
+            "der Anfang|die Anfänge|beginning|آغاز",
+            "verstehen||to understand|فهمیدن",
+            "besuchen||to visit|دیدن کردن، به دیدن رفتن",
+            "erklären||to explain|توضیح دادن",
+            "die Hilfe||help|کمک",
+            "die Beratungsstelle|die Beratungsstellen|advice centre|مرکز مشاوره",
+            "sich zurechtfinden||to find one's way around|راه خود را پیدا کردن",
+        ],
+        "p": ["Ich bin vor drei Wochen hier angekommen.", "Am Anfang habe ich wenig verstanden.", "Darf ich mich vorstellen? Ich bin …",
+              "Ich wohne seit Montag im dritten Stock.", "Können Sie mir erklären, wo …?", "Ich habe schon viele Leute kennengelernt."],
+        "g": {
+            "title": "Perfekt: trennbare und nicht trennbare Verben",
+            "head": ["Verb", "Partizip II", "Satz"],
+            "rows": [["ankommen", "angekommen", "Ich bin im Mai angekommen."], ["kennenlernen", "kennengelernt", "Wir haben die Nachbarn kennengelernt."],
+                     ["einkaufen", "eingekauft", "Sie hat schon eingekauft."], ["besuchen", "besucht", "Er hat seine Tante besucht."],
+                     ["verstehen", "verstanden", "Ich habe nicht alles verstanden."], ["erklären", "erklärt", "Sie hat mir den Weg erklärt."]],
+            "de": "Trennbare Verben: -ge- steht in der Mitte (angekommen). Verben mit be-, ver-, er-, ent- und auf -ieren haben kein ge- (besucht, verstanden, telefoniert).",
+            "en": "Separable verbs put -ge- between prefix and stem: ankommen → angekommen, einkaufen → eingekauft. Verbs starting with be-, ver-, er-, ent-, emp-, ge-, zer- and verbs ending in -ieren have no ge- at all: besucht, verstanden, erklärt, telefoniert.",
+            "fa": "فعل‌های جداشدنی ‎-ge-‎ را بین پیشوند و ریشه می‌گیرند: ankommen ← angekommen، einkaufen ← eingekauft. فعل‌هایی که با be-، ver-، er-، ent-، emp-، ge-، zer- شروع می‌شوند و فعل‌های ‎-ieren‎ اصلاً ge- ندارند: besucht، verstanden، erklärt، telefoniert.",
+        },
+        "r": {"title": "Die ersten Wochen in Bremen",
+              "text": "Vor zwei Monaten ist Sima mit ihrem Mann nach Bremen gezogen. Am Anfang war alles neu. Sie hat die Durchsagen in der Straßenbahn nicht verstanden und hat sich oft verlaufen. "
+                      "Dann hat ihre Nachbarin, Frau Schulz, an der Tür geklingelt und sich vorgestellt. Sie hat Sima die Stadt gezeigt und ihr die Bibliothek und den Markt erklärt. "
+                      "In einer Beratungsstelle hat Sima Informationen über Deutschkurse bekommen. Jetzt besucht sie jeden Tag einen Kurs und hat schon viele Leute kennengelernt.",
+              "q": [["Wann ist Sima nach Bremen gezogen?", ["vor zwei Monaten", "vor zwei Jahren", "vor zwei Wochen"], 0],
+                    ["Wer hat Sima die Stadt gezeigt?", ["ihre Nachbarin", "ihr Mann", "ihre Lehrerin"], 0],
+                    ["Wo hat Sima Informationen über Deutschkurse bekommen?", ["in einer Beratungsstelle", "in der Bibliothek", "auf dem Markt"], 0]]},
+        "d": {"title": "Im Treppenhaus", "lines": [
+            ["Herr Weber", "Guten Abend! Sind Sie neu hier?"], ["Herr Sadiqi", "Ja, wir sind letzte Woche eingezogen. Mein Name ist Sadiqi."],
+            ["Herr Weber", "Weber, freut mich! Ich wohne direkt unter Ihnen. Haben Sie sich schon gut eingelebt?"],
+            ["Herr Sadiqi", "Langsam. Wir haben noch nicht alles ausgepackt. Wissen Sie, wann der Müll abgeholt wird?"],
+            ["Herr Weber", "Der Restmüll am Dienstag, der gelbe Sack am Freitag. Wenn Sie Fragen haben, klingeln Sie einfach."],
+            ["Herr Sadiqi", "Vielen Dank, das ist sehr nett!"]],
+            "q": [["Wann ist Familie Sadiqi eingezogen?", ["letzte Woche", "gestern", "vor einem Jahr"], 0],
+                  ["Wann wird der gelbe Sack abgeholt?", ["am Freitag", "am Dienstag", "am Montag"], 0]]},
+        "s": {"task": "Schreib einer Freundin in deiner Heimat: Wie waren deine ersten Wochen in der neuen Stadt? Was hast du schon gemacht? Wen hast du kennengelernt? (6–7 Sätze, im Perfekt)",
+              "model": "Liebe Nilofar, vor einem Monat bin ich in Kassel angekommen. Am Anfang habe ich nur wenig verstanden. Aber meine Nachbarn haben mir viel geholfen. Ich habe mich beim Bürgeramt angemeldet und ein Konto eröffnet. Letzte Woche habe ich eine Frau aus Syrien kennengelernt. Wir haben zusammen eingekauft und Tee getrunken. Ich vermisse dich! Liebe Grüße, Parisa"},
+        "words": """
+# Einziehen
+einziehen||to move in|اسباب‌کشی کردن (به خانهٔ نو)
+auspacken||to unpack|باز کردن (بار و بسته)
+sich einleben||to settle in|عادت کردن به جای نو
+das Treppenhaus|die Treppenhäuser|stairwell|راه‌پله
+klingeln||to ring (the bell)|زنگ زدن (دروازه)
+der Briefkasten|die Briefkästen|letterbox|صندوق پست
+der Müll||rubbish|زباله، کثافات
+# Orientierung
+sich verlaufen||to get lost|راه را گم کردن
+der Stadtplan|die Stadtpläne|city map|نقشهٔ شهر
+die Durchsage|die Durchsagen|announcement|اعلان
+zeigen||to show|نشان دادن
+# Hilfe und Kontakte
+der Kontakt|die Kontakte|contact|تماس، ارتباط
+das Treffen|die Treffen|meeting|ملاقات، دیدار
+der Treffpunkt|die Treffpunkte|meeting point|محل ملاقات
+die Information|die Informationen|information|معلومات
+der Dolmetscher|die Dolmetscher|interpreter|ترجمان
+ehrenamtlich||voluntary|داوطلبانه
+nett||nice, kind|مهربان
+""",
+    },
+    {
+        "t": "Essen und Trinken",
+        "goals": "im Restaurant bestellen, Rezepte, Essgewohnheiten vergleichen, gesund essen; Superlativ (am liebsten, der/die/das beste)",
+        "w": [
+            "das Restaurant|die Restaurants|restaurant|رستورانت",
+            "die Speisekarte|die Speisekarten|menu|فهرست غذا، منو",
+            "bestellen||to order|سفارش دادن",
+            "das Gericht|die Gerichte|dish|غذا",
+            "die Vorspeise|die Vorspeisen|starter|پیش‌غذا",
+            "die Hauptspeise|die Hauptspeisen|main course|غذای اصلی",
+            "der Nachtisch|die Nachtische|dessert|دسر",
+            "das Rezept|die Rezepte|recipe|دستور پخت",
+            "die Zutat|die Zutaten|ingredient|مواد (غذا)",
+            "scharf||spicy|تند",
+            "lecker||tasty|مزه‌دار، خوشمزه",
+            "vegetarisch||vegetarian|گیاهی",
+            "die Rechnung|die Rechnungen|bill|صورت‌حساب",
+            "am liebsten||most of all (like best)|از همه بیشتر",
+        ],
+        "p": ["Ich hätte gern die Linsensuppe.", "Ist da Schweinefleisch drin?", "Was können Sie empfehlen?",
+              "Die Rechnung, bitte! / Zusammen oder getrennt?", "Am liebsten esse ich Reis mit Gemüse.", "Das ist das beste Essen in der Stadt."],
+        "g": {
+            "title": "Superlativ",
+            "head": ["Adjektiv", "Komparativ", "Superlativ"],
+            "rows": [["lecker", "leckerer", "am leckersten"], ["scharf", "schärfer", "am schärfsten"], ["gut", "besser", "am besten"],
+                     ["gern", "lieber", "am liebsten"], ["viel", "mehr", "am meisten"], ["groß", "größer", "am größten"]],
+            "de": "Superlativ: am + Adjektiv + -(e)sten. Vor einem Nomen: der/die/das + -ste (das beste Essen). Unregelmäßig: gut – besser – am besten, gern – lieber – am liebsten.",
+            "en": "Superlative: am + adjective + -sten (am leckersten); after s, ß, t, z add -esten (am heißesten). Before a noun use der/die/das + -ste: 'das beste Restaurant'. Irregular: gut – besser – am besten, gern – lieber – am liebsten, viel – mehr – am meisten.",
+            "fa": "صفت عالی: am + صفت + ‎-sten (am leckersten)؛ بعد از s، ß، t، z ‏‎-esten (am heißesten). قبل از اسم: der/die/das + ‎-ste: «das beste Restaurant». بی‌قاعده: gut – besser – am besten، gern – lieber – am liebsten، viel – mehr – am meisten.",
+        },
+        "r": {"title": "Was essen die Deutschen?",
+              "text": "Viele Menschen in Deutschland essen gern Nudeln, Pizza und Fleisch. Aber vegetarisches Essen wird immer beliebter, besonders bei jungen Menschen. "
+                      "Am Morgen essen viele Brot oder Brötchen mit Käse oder Marmelade. Das Mittagessen ist in vielen Familien die wichtigste warme Mahlzeit. "
+                      "Am Abend gibt es oft nur Brot – das nennt man Abendbrot. In der Kantine und in der Schule gibt es meistens auch ein Gericht ohne Fleisch.",
+              "q": [["Was isst man in Deutschland oft am Abend?", ["Brot", "Pizza", "Suppe"], 0],
+                    ["Welche Mahlzeit ist in vielen Familien die wichtigste warme Mahlzeit?", ["das Mittagessen", "das Frühstück", "das Abendbrot"], 0],
+                    ["Was wird immer beliebter?", ["vegetarisches Essen", "Fast Food", "Fisch"], 0]]},
+        "d": {"title": "Im Restaurant", "lines": [
+            ["Kellnerin", "Guten Abend! Was möchten Sie trinken?"], ["Frau Rahmani", "Ein Wasser, bitte. Und was können Sie als Hauptspeise empfehlen?"],
+            ["Kellnerin", "Am beliebtesten ist heute die Gemüsepfanne mit Reis."], ["Frau Rahmani", "Ist sie scharf?"],
+            ["Kellnerin", "Nur ein bisschen. Die schärfste Speise ist das Hähnchen-Curry."],
+            ["Frau Rahmani", "Dann nehme ich die Gemüsepfanne. Und zum Nachtisch einen Apfelkuchen, bitte."]],
+            "q": [["Was empfiehlt die Kellnerin?", ["die Gemüsepfanne mit Reis", "das Hähnchen-Curry", "einen Apfelkuchen"], 0],
+                  ["Was bestellt Frau Rahmani zum Nachtisch?", ["Apfelkuchen", "Eis", "Obstsalat"], 0]]},
+        "s": {"task": "Beschreib dein Lieblingsgericht: Was ist es? Welche Zutaten braucht man? Wie kocht man es? Wann isst man es? (6–8 Sätze)",
+              "model": "Mein Lieblingsgericht ist Kabuli Palau. Man braucht Reis, Lammfleisch, Karotten, Rosinen und Gewürze. Zuerst kocht man das Fleisch mit Zwiebeln. Dann kocht man den Reis in der Brühe. Die Karotten und Rosinen brät man kurz in Öl. Am Ende kommt alles zusammen in den Ofen. Wir essen es am liebsten an Festtagen mit der ganzen Familie. Für mich ist es das beste Essen der Welt."},
+        "words": """
+# Im Restaurant
+der Kellner|die Kellner|waiter|گارسون
+die Kellnerin|die Kellnerinnen|waitress|گارسون (زن)
+reservieren||to reserve|رزرو کردن
+das Trinkgeld||tip|بخشش، انعام
+getrennt||separately|جدا جدا
+zusammen||together|با هم
+satt||full (after eating)|سیر
+# Kochen
+braten||to fry|سرخ کردن
+backen||to bake|پختن (در داش)
+schneiden||to cut|بریدن
+das Gewürz|die Gewürze|spice|ادویه
+die Brühe|die Brühen|broth|شوربا، آب گوشت
+der Ofen|die Öfen|oven|داش، اجاق
+die Pfanne|die Pfannen|frying pan|تابه
+der Topf|die Töpfe|pot|دیگ
+# Ernährung
+die Mahlzeit|die Mahlzeiten|meal|وعدهٔ غذایی
+das Schweinefleisch||pork|گوشت خوک
+das Rindfleisch||beef|گوشت گاو
+halal||halal|حلال
+die Allergie|die Allergien|allergy|حساسیت
+beliebt||popular|محبوب
+""",
+    },
+    {
+        "t": "Am Wochenende",
+        "goals": "Pläne fürs Wochenende, Ausflüge, Veranstaltungen, sich verabreden und absagen; Zeitangaben mit vor, nach, seit, ab, bis",
+        "w": [
+            "der Ausflug|die Ausflüge|trip, outing|گردش",
+            "die Veranstaltung|die Veranstaltungen|event|برنامه، رویداد",
+            "das Programm|die Programme|programme|برنامه",
+            "planen||to plan|برنامه‌ریزی کردن",
+            "vorhaben||to plan, to intend|قصد داشتن",
+            "sich verabreden||to arrange to meet|قرار گذاشتن",
+            "absagen||to cancel|لغو کردن، جواب رد دادن",
+            "der Eintritt||admission (fee)|ورودیه",
+            "geöffnet||open|باز",
+            "geschlossen||closed|بسته",
+            "das Museum|die Museen|museum|موزیم",
+            "der Flohmarkt|die Flohmärkte|flea market|بازار کهنه‌فروشی",
+            "das Picknick|die Picknicks|picnic|پیک‌نیک",
+            "vor||before; ago|قبل از؛ پیش",
+            "seit||since, for|از (زمان)",
+        ],
+        "p": ["Was hast du am Wochenende vor?", "Wollen wir am Sonntag einen Ausflug machen?", "Tut mir leid, ich muss leider absagen.",
+              "Das Museum ist ab zehn Uhr geöffnet.", "Nach dem Frühstück fahren wir los.", "Seit drei Wochen habe ich kein freies Wochenende."],
+        "g": {
+            "title": "Zeitangaben: vor, nach, seit, ab, bis",
+            "head": ["Präposition", "Kasus", "Beispiel"],
+            "rows": [["vor", "Dativ", "vor dem Frühstück / vor einer Woche"], ["nach", "Dativ", "nach der Arbeit"],
+                     ["seit", "Dativ", "seit einem Jahr (bis heute)"], ["ab", "Dativ", "ab nächster Woche / ab 10 Uhr"], ["bis", "–", "bis Sonntag / bis 18 Uhr"]],
+            "de": "vor, nach, seit und ab stehen mit Dativ. „seit“ heißt: Es hat in der Vergangenheit angefangen und dauert noch. „vor“ + Zeit = in der Vergangenheit (vor zwei Tagen).",
+            "en": "vor, nach, seit and ab take the dative: vor dem Essen, nach der Arbeit. 'seit' means something started in the past and is still going on (use the present tense: 'Ich wohne seit einem Jahr hier.'). 'vor' + a time span means 'ago': vor zwei Tagen.",
+            "fa": "‏vor، nach، seit و ab با Dativ می‌آیند: vor dem Essen، nach der Arbeit. ‏«seit» یعنی کاری در گذشته شروع شده و هنوز ادامه دارد (با زمان حال: «Ich wohne seit einem Jahr hier.»). ‏«vor» + مدت زمان یعنی «… پیش»: vor zwei Tagen.",
+        },
+        "r": {"title": "Tipps fürs Wochenende",
+              "text": "Samstag: Großer Flohmarkt auf dem Marktplatz, von 8 bis 14 Uhr. Hier finden Sie Kleidung, Bücher und Spielsachen zu kleinen Preisen. "
+                      "Sonntag: Im Stadtmuseum ist der Eintritt am ersten Sonntag im Monat frei. Das Museum ist ab 11 Uhr geöffnet. "
+                      "Für Familien: Nach der Führung gibt es um 15 Uhr ein Programm für Kinder ab sechs Jahren. "
+                      "Bei schönem Wetter lädt der Stadtpark zum Picknick ein. Der Spielplatz wurde vor einem Monat neu gebaut.",
+              "q": [["Wann ist der Flohmarkt?", ["am Samstag von 8 bis 14 Uhr", "am Sonntag ab 11 Uhr", "jeden Tag"], 0],
+                    ["Wann ist der Eintritt im Museum frei?", ["am ersten Sonntag im Monat", "jeden Samstag", "nie"], 0],
+                    ["Was ist im Stadtpark neu?", ["der Spielplatz", "ein Café", "das Museum"], 0]]},
+        "d": {"title": "Eine Absage", "lines": [
+            ["Karin", "Hallo Wahid! Wir fahren am Sonntag an den See. Kommst du mit?"],
+            ["Wahid", "Ach, schade! Am Sonntag kann ich leider nicht. Meine Cousine kommt zu Besuch."],
+            ["Karin", "Seit wann ist sie in Deutschland?"], ["Wahid", "Seit einem halben Jahr. Ich habe sie vor drei Monaten das letzte Mal gesehen."],
+            ["Karin", "Dann viel Spaß! Vielleicht klappt es nächstes Wochenende?"], ["Wahid", "Ja, ab nächster Woche habe ich mehr Zeit."]],
+            "q": [["Warum kann Wahid am Sonntag nicht?", ["Seine Cousine kommt zu Besuch.", "Er muss arbeiten.", "Er ist krank."], 0],
+                  ["Wann hat Wahid seine Cousine das letzte Mal gesehen?", ["vor drei Monaten", "vor einem halben Jahr", "letzte Woche"], 0]]},
+        "s": {"task": "Ein Freund lädt dich für Samstag ein, aber du hast keine Zeit. Schreib eine Absage: Bedanke dich, erkläre den Grund und mach einen neuen Vorschlag. (5–6 Sätze)",
+              "model": "Lieber Tobias, vielen Dank für deine Einladung zum Grillen am Samstag. Leider kann ich nicht kommen. Ich arbeite am Samstag bis 18 Uhr und danach muss ich meine Mutter vom Bahnhof abholen. Hast du nächsten Sonntag Zeit? Dann können wir zusammen in den Park gehen. Viele Grüße, Jawid"},
+        "words": """
+# Ausflüge
+der See|die Seen|lake|جهیل
+der Wald|die Wälder|forest|جنگل
+der Berg|die Berge|mountain|کوه
+der Zoo|die Zoos|zoo|باغ وحش
+der Spielplatz|die Spielplätze|playground|میدان بازی
+die Führung|die Führungen|guided tour|بازدید با راهنما
+grillen||to barbecue|کباب کردن
+# Planen
+der Vorschlag|die Vorschläge|suggestion|پیشنهاد
+vorschlagen||to suggest|پیشنهاد کردن
+zusagen||to accept (an invitation)|قبول کردن
+klappen||to work out|درست شدن، جور آمدن
+der Besuch|die Besuche|visit|دیدار، مهمانی
+losfahren||to set off|حرکت کردن
+# Zeit
+das nächste Wochenende||next weekend|آخر هفتهٔ آینده
+letzte Woche||last week|هفتهٔ گذشته
+halb||half|نیم
+frei||free|آزاد، مجانی
+""",
+    },
+]

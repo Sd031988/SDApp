@@ -24,7 +24,7 @@
       throw e;
     } finally { clearTimeout(to); }
   }
-  const V = '2';
+  const V = '3';
   const cache = {};
   function json(url) {
     if (!cache[url]) cache[url] = fetch(new URL(url + '?v=' + V, BASIS).href).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });

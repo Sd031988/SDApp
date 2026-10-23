@@ -298,3 +298,433 @@ die Gemeinschaft|die Gemeinschaften|community|جامعه، اجتماع
 """,
     },
 ]
+
+# Zweite Runde: restliche Themen aus B1-Kursbüchern
+UNITS += [
+    {
+        "t": "Glück im Alltag",
+        "goals": "über Glück, Wünsche und Träume sprechen, kleine Glücksmomente beschreiben; Konjunktiv II für Wünsche (Wenn ich … hätte/wäre, würde ich …)",
+        "w": [
+            "das Glück||happiness; luck|خوشبختی؛ شانس",
+            "glücklich||happy|خوشبخت، خوشحال",
+            "zufrieden||satisfied, content|راضی",
+            "der Wunsch|die Wünsche|wish|آرزو",
+            "sich wünschen||to wish for|آرزو داشتن",
+            "der Traum|die Träume|dream|خواب؛ رؤیا",
+            "träumen (von)||to dream (of)|خواب دیدن؛ رؤیا داشتن",
+            "der Zufall|die Zufälle|coincidence|تصادف، اتفاق",
+            "die Freude||joy|شادی",
+            "genießen||to enjoy|لذت بردن",
+            "das Pech||bad luck|بدشانسی",
+            "die Gesundheit||health|صحت، سلامتی",
+            "wichtig||important|مهم",
+            "wenn||if|اگر",
+        ],
+        "p": ["Für mich ist Glück, wenn …", "Ich hätte gern mehr Zeit für meine Familie.", "Wenn ich viel Geld hätte, würde ich …",
+              "Ich wünsche mir, dass …", "Da hatte ich wirklich Glück!", "Am glücklichsten bin ich, wenn …"],
+        "g": {
+            "title": "Konjunktiv II: Wünsche und Träume",
+            "head": ["", "sein", "haben", "würde + Infinitiv"],
+            "rows": [["ich", "wäre", "hätte", "würde reisen"], ["du", "wärst", "hättest", "würdest reisen"], ["er / sie", "wäre", "hätte", "würde reisen"],
+                     ["wir", "wären", "hätten", "würden reisen"], ["ihr", "wärt", "hättet", "würdet reisen"], ["sie / Sie", "wären", "hätten", "würden reisen"]],
+            "de": "Unwirkliche Wünsche: Wenn ich mehr Zeit hätte, würde ich reisen. Bei sein, haben und Modalverben benutzt man die eigene Form (wäre, hätte, könnte), sonst würde + Infinitiv.",
+            "en": "For wishes and things that are not real, use the Konjunktiv II: 'Wenn ich mehr Zeit hätte, würde ich reisen.' sein, haben and modal verbs have their own forms (wäre, hätte, könnte, müsste); most other verbs use würde + infinitive. Wishes: 'Ich wäre gern …', 'Ich hätte gern …', 'Wenn ich doch … hätte!'",
+            "fa": "برای آرزوها و چیزهای غیرواقعی از Konjunktiv II استفاده می‌شود: «Wenn ich mehr Zeit hätte, würde ich reisen.» ‏sein، haben و فعل‌های وجهی شکل خاص خود را دارند (wäre، hätte، könnte، müsste)؛ بیشتر فعل‌های دیگر با würde + مصدر می‌آیند. آرزو: «Ich wäre gern …»، «Ich hätte gern …».",
+        },
+        "r": {"title": "Kleine Glücksmomente",
+              "text": "Was macht Menschen glücklich? Viele denken zuerst an Geld, ein großes Haus oder ein teures Auto. Doch Glücksforscher sagen, dass Beziehungen zu Familie und Freunden für die meisten Menschen wichtiger sind. "
+                      "Auch kleine Momente im Alltag spielen eine große Rolle: ein Gespräch mit der Nachbarin, ein Spaziergang in der Sonne oder ein gutes Essen. "
+                      "Wer dankbar ist und solche Momente bewusst genießt, ist oft zufriedener. Ein einfacher Tipp: Schreiben Sie jeden Abend drei Dinge auf, über die Sie sich heute gefreut haben.",
+              "q": [["Was ist laut Glücksforschern für die meisten Menschen wichtiger als Geld?", ["Beziehungen zu Familie und Freunden", "ein großes Haus", "ein teures Auto"], 0],
+                    ["Was ist ein Beispiel für einen kleinen Glücksmoment?", ["ein Spaziergang in der Sonne", "eine hohe Rechnung", "ein langer Arbeitstag"], 0],
+                    ["Was ist der Tipp am Ende?", ["jeden Abend drei schöne Dinge aufschreiben", "mehr arbeiten", "weniger schlafen"], 0]]},
+        "d": {"title": "Was wäre, wenn …?", "lines": [
+            ["Emma", "Stell dir vor, du gewinnst im Lotto. Was würdest du machen?"],
+            ["Roya", "Zuerst würde ich meine Eltern besuchen. Ich habe sie seit vier Jahren nicht gesehen."],
+            ["Emma", "Und dann?"], ["Roya", "Dann würde ich eine eigene Bäckerei eröffnen. Das ist schon lange mein Traum."],
+            ["Emma", "Und wärst du dann glücklicher?"], ["Roya", "Vielleicht. Aber eigentlich bin ich schon zufrieden – ich habe tolle Kinder und gute Freunde."]],
+            "q": [["Was würde Roya zuerst machen?", ["ihre Eltern besuchen", "ein Auto kaufen", "eine Reise um die Welt machen"], 0],
+                  ["Was ist Royas Traum?", ["eine eigene Bäckerei", "ein großes Haus", "ein neuer Beruf als Lehrerin"], 0]]},
+        "s": {"task": "Was bedeutet Glück für dich? Beschreib einen glücklichen Moment und schreib, was du dir für die Zukunft wünschst. Benutze den Konjunktiv II. (8–10 Sätze)",
+              "model": "Für mich ist Glück, wenn meine Familie gesund ist. Ein besonders glücklicher Moment war der Tag, an dem meine Tochter ihren Schulabschluss bekommen hat. Wir haben zusammen gekocht und gefeiert. Im Alltag freue ich mich über kleine Dinge, zum Beispiel über einen Tee mit meiner Nachbarin. Wenn ich mehr Zeit hätte, würde ich öfter in die Natur fahren. Ich wäre gern Krankenpflegerin. Deshalb lerne ich jeden Tag Deutsch. Ich wünsche mir, dass meine Kinder hier eine gute Zukunft haben."},
+        "words": """
+# Gefühle
+die Zufriedenheit||contentment|رضایت
+die Dankbarkeit||gratitude|سپاس‌گزاری
+die Sorge|die Sorgen|worry|نگرانی
+sich Sorgen machen||to worry|نگران بودن
+entspannt||relaxed|آرام، راحت
+gestresst||stressed|تحت فشار
+optimistisch||optimistic|خوش‌بین
+# Glück und Zufall
+der Lottogewinn|die Lottogewinne|lottery win|برندهٔ لاتری
+gewinnen||to win|بردن
+der Glücksbringer|die Glücksbringer|lucky charm|طلسم خوش‌شانسی
+die Beziehung|die Beziehungen|relationship|رابطه
+der Moment|die Momente|moment|لحظه
+bewusst||consciously|آگاهانه
+# Ziele
+das Ziel|die Ziele|goal|هدف
+erreichen||to achieve, to reach|رسیدن به
+die Zukunft||future|آینده
+sich verwirklichen||to come true; to fulfil oneself|تحقق یافتن
+""",
+    },
+    {
+        "t": "Gesund bleiben",
+        "goals": "gesund leben, Vorsorge, Stress, mit dem Arzt sprechen, Ratschläge geben; Konnektoren deshalb, trotzdem, sonst",
+        "w": [
+            "die Vorsorge||preventive care|پیشگیری",
+            "die Vorsorgeuntersuchung|die Vorsorgeuntersuchungen|check-up|معاینهٔ پیشگیرانه",
+            "die Impfung|die Impfungen|vaccination|واکسین",
+            "der Stress||stress|فشار روحی، استرس",
+            "die Ernährung||diet, nutrition|تغذیه",
+            "ausgewogen||balanced|متعادل",
+            "die Bewegung||exercise, movement|تحرک",
+            "der Schlaf||sleep|خواب",
+            "rauchen||to smoke|سگرت کشیدن",
+            "der Rat|die Ratschläge|advice|مشوره",
+            "raten||to advise|مشوره دادن",
+            "vermeiden||to avoid|دوری کردن",
+            "deshalb||therefore|به همین دلیل",
+            "trotzdem||nevertheless|با این حال",
+            "sonst||otherwise|وگرنه",
+        ],
+        "p": ["Ich habe viel Stress, deshalb schlafe ich schlecht.", "Ich bin müde, trotzdem gehe ich joggen.", "Du solltest mehr Wasser trinken.",
+              "Geh zum Arzt, sonst wird es schlimmer.", "Wann war Ihre letzte Vorsorgeuntersuchung?", "Ich achte auf eine ausgewogene Ernährung."],
+        "g": {
+            "title": "deshalb, trotzdem, sonst",
+            "head": ["Konnektor", "Bedeutung", "Beispiel (Verb auf Position 2)"],
+            "rows": [["deshalb / darum", "Folge", "Ich habe Rückenschmerzen, deshalb mache ich Gymnastik."],
+                     ["trotzdem", "Gegensatz", "Es regnet, trotzdem gehe ich spazieren."],
+                     ["sonst", "wenn nicht …", "Nimm die Tabletten, sonst wirst du nicht gesund."]],
+            "de": "Nach deshalb, trotzdem und sonst kommt sofort das Verb (Position 2), dann das Subjekt: …, deshalb gehe ich zum Arzt.",
+            "en": "deshalb (therefore), trotzdem (nevertheless) and sonst (otherwise) take position 1 in the second sentence, so the verb follows immediately and the subject comes after it: '…, deshalb gehe ich zum Arzt.' Do not confuse with weil/obwohl, which send the verb to the end.",
+            "fa": "‏deshalb (به همین دلیل)، trotzdem (با این حال) و sonst (وگرنه) در جملهٔ دوم در جای اول می‌آیند، پس فعل بلافاصله بعد از آن و فاعل بعد از فعل می‌آید: «…, deshalb gehe ich zum Arzt.» با weil/obwohl که فعل را به آخر می‌برند اشتباه نکنید.",
+        },
+        "r": {"title": "Vorsorge lohnt sich",
+              "text": "Viele Menschen gehen erst zum Arzt, wenn sie krank sind. Dabei ist Vorsorge sehr wichtig. Die gesetzliche Krankenversicherung bezahlt viele Untersuchungen, zum Beispiel ab 35 Jahren alle drei Jahre einen Gesundheits-Check-up beim Hausarzt. "
+                      "Auch für Kinder gibt es regelmäßige Untersuchungen, die U-Untersuchungen. Dazu kommen Impfungen und die Kontrolle beim Zahnarzt. "
+                      "Wer Krankheiten früh erkennt, kann sie oft besser behandeln. Deshalb sollte man die Termine nicht vergessen – auch wenn man sich gesund fühlt.",
+              "q": [["Wie oft bezahlt die Krankenkasse ab 35 Jahren einen Check-up?", ["alle drei Jahre", "jeden Monat", "nur einmal im Leben"], 0],
+                    ["Wie heißen die Untersuchungen für Kinder?", ["U-Untersuchungen", "Check-ups", "Impfungen"], 0],
+                    ["Warum ist Vorsorge wichtig?", ["Krankheiten werden früh erkannt.", "Man bekommt Geld.", "Man muss nicht arbeiten."], 0]]},
+        "d": {"title": "Beim Hausarzt", "lines": [
+            ["Ärztin", "Was führt Sie zu mir, Herr Wardak?"], ["Herr Wardak", "Ich bin immer müde und habe oft Kopfschmerzen. Ich arbeite im Schichtdienst."],
+            ["Ärztin", "Wie viel schlafen Sie?"], ["Herr Wardak", "Fünf Stunden, manchmal weniger. Ich trinke viel Kaffee, trotzdem bin ich müde."],
+            ["Ärztin", "Sie sollten mindestens sieben Stunden schlafen und weniger Kaffee trinken, sonst werden die Kopfschmerzen nicht besser. Wir machen auch ein Blutbild."],
+            ["Herr Wardak", "Gut, dann versuche ich das. Vielen Dank."]],
+            "q": [["Welche Beschwerden hat Herr Wardak?", ["Müdigkeit und Kopfschmerzen", "Bauchschmerzen", "Fieber und Husten"], 0],
+                  ["Was rät die Ärztin?", ["mehr schlafen und weniger Kaffee trinken", "mehr Kaffee trinken", "eine Woche Urlaub machen"], 0]]},
+        "s": {"task": "Ein Freund hat viel Stress und schläft schlecht. Schreib ihm eine Nachricht mit Ratschlägen. Benutze deshalb, trotzdem, sonst und „du solltest“. (7–9 Sätze)",
+              "model": "Lieber Basir, du hast geschrieben, dass du viel Stress hast und schlecht schläfst. Das tut mir leid. Du solltest jeden Tag eine halbe Stunde spazieren gehen. Bewegung hilft gegen Stress, deshalb mache ich das auch. Trink am Abend keinen Kaffee mehr, sonst kannst du nicht einschlafen. Ich weiß, du hast wenig Zeit. Trotzdem solltest du dir kleine Pausen nehmen. Wenn es nicht besser wird, geh bitte zum Hausarzt. Alles Gute, dein Yusuf"},
+        "words": """
+# Vorsorge
+die Krankenkasse|die Krankenkassen|health insurance fund|صندوق بیمهٔ صحی
+die Untersuchung|die Untersuchungen|examination|معاینه
+der Zahnarzt|die Zahnärzte|dentist|داکتر دندان
+das Blutbild|die Blutbilder|blood count|آزمایش خون
+der Blutdruck||blood pressure|فشار خون
+der Impfpass|die Impfpässe|vaccination record|کارت واکسین
+behandeln||to treat|تداوی کردن
+erkennen||to recognise, to detect|تشخیص دادن
+# Gesunder Alltag
+der Schichtdienst||shift work|کار نوبتی
+die Entspannung||relaxation|آرامش، استراحت
+das Übergewicht||overweight|اضافه وزن
+der Zucker||sugar|بوره، شکر
+das Vollkornbrot|die Vollkornbrote|wholemeal bread|نان سبوس‌دار
+achten auf||to pay attention to|توجه کردن به
+aufhören (mit)||to stop|ترک کردن
+# Beschwerden
+die Beschwerden||complaints, symptoms|ناراحتی‌ها، علائم
+die Müdigkeit||tiredness|خستگی
+schwindelig||dizzy|سرگیچ
+erschöpft||exhausted|خسته و کوفته
+""",
+    },
+    {
+        "t": "Sprachen lernen",
+        "goals": "über Sprachen und Lernstrategien sprechen, Mehrsprachigkeit, Missverständnisse; Verben mit Präpositionen und da-/wo-Wörter (sich interessieren für – dafür, wofür?)",
+        "w": [
+            "die Sprache|die Sprachen|language|زبان",
+            "die Muttersprache|die Muttersprachen|mother tongue|زبان مادری",
+            "die Fremdsprache|die Fremdsprachen|foreign language|زبان خارجی",
+            "mehrsprachig||multilingual|چندزبانه",
+            "der Dialekt|die Dialekte|dialect|لهجه",
+            "die Aussprache||pronunciation|تلفظ",
+            "das Missverständnis|die Missverständnisse|misunderstanding|سوءتفاهم",
+            "sich interessieren für||to be interested in|علاقه داشتن به",
+            "sich erinnern an||to remember|به یاد آوردن",
+            "sich kümmern um||to take care of|رسیدگی کردن به",
+            "denken an||to think of|فکر کردن به",
+            "üben||to practise|تمرین کردن",
+            "wiederholen||to repeat|تکرار کردن",
+            "die Lernstrategie|die Lernstrategien|learning strategy|روش یادگیری",
+        ],
+        "p": ["Wie lernst du neue Wörter?", "Ich interessiere mich sehr für Sprachen.", "Woran denkst du? – An meine erste Deutschstunde.",
+              "Wofür brauchst du Englisch? – Dafür, dass ich mit Kunden sprechen kann.", "Entschuldigung, das war ein Missverständnis.", "Mit meinen Kindern spreche ich Dari."],
+        "g": {
+            "title": "Verben mit Präposition: da- und wo-",
+            "head": ["Verb + Präposition", "Frage (Sache)", "Antwort (Sache)", "Person"],
+            "rows": [["sich interessieren für", "Wofür?", "dafür", "für wen? – für ihn"], ["denken an", "Woran?", "daran", "an wen? – an sie"],
+                     ["sich erinnern an", "Woran?", "daran", "an wen? – an ihn"], ["sich kümmern um", "Worum?", "darum", "um wen? – um sie"],
+                     ["sprechen über", "Worüber?", "darüber", "über wen? – über ihn"]],
+            "de": "Bei Sachen: wo(r)- + Präposition (Wofür? Woran?) und da(r)- + Präposition (dafür, daran). Beginnt die Präposition mit Vokal, kommt ein -r- dazu. Bei Personen: Präposition + Pronomen (an wen? an sie).",
+            "en": "Many verbs come with a fixed preposition: sich interessieren für, denken an, sich kümmern um. For things you ask with wo- + preposition (Wofür? Woran?) and answer with da- + preposition (dafür, daran). If the preposition starts with a vowel, add -r-: woran, darüber. For people use preposition + pronoun: 'An wen denkst du? – An meine Mutter.'",
+            "fa": "بسیاری از فعل‌ها یک حرف اضافهٔ ثابت دارند: sich interessieren für، denken an، sich kümmern um. برای چیزها با wo- + حرف اضافه می‌پرسیم (Wofür? Woran?) و با da- + حرف اضافه جواب می‌دهیم (dafür، daran). اگر حرف اضافه با حرف صدادار شروع شود ‎-r-‎ اضافه می‌شود: woran، darüber. برای اشخاص: حرف اضافه + ضمیر: «An wen denkst du? – An meine Mutter.»",
+        },
+        "r": {"title": "Mehrsprachig aufwachsen",
+              "text": "In vielen Familien in Deutschland werden zwei oder mehr Sprachen gesprochen. Manche Eltern machen sich Sorgen darüber, dass ihre Kinder dann schlechter Deutsch lernen. "
+                      "Fachleute sehen das anders: Kinder können mehrere Sprachen gut lernen. Wichtig ist, dass die Eltern in der Sprache mit ihren Kindern sprechen, die sie selbst am besten können. "
+                      "Wer seine Muttersprache gut beherrscht, lernt oft auch eine zweite Sprache leichter. Viele Städte bieten außerdem Unterricht in der Herkunftssprache an. Mehrsprachigkeit ist also kein Problem, sondern eine Chance.",
+              "q": [["Worüber machen sich manche Eltern Sorgen?", ["dass ihre Kinder schlechter Deutsch lernen", "dass ihre Kinder zu viel lesen", "dass die Schule zu teuer ist"], 0],
+                    ["In welcher Sprache sollten Eltern mit ihren Kindern sprechen?", ["in der Sprache, die sie selbst am besten können", "nur auf Deutsch", "nur auf Englisch"], 0],
+                    ["Wie sieht der Text Mehrsprachigkeit?", ["als Chance", "als großes Problem", "als unwichtig"], 0]]},
+        "d": {"title": "Ein Missverständnis", "lines": [
+            ["Chefin", "Herr Hakimi, können Sie die Kartons bitte nach hinten bringen?"],
+            ["Herr Hakimi", "Nach hinten? Meinen Sie in den Keller?"], ["Chefin", "Nein, ins Lager hinter der Küche."],
+            ["Herr Hakimi", "Ach so! Entschuldigung, ich habe „hinten“ und „unten“ verwechselt."],
+            ["Chefin", "Kein Problem. Sie fragen wenigstens nach – darüber bin ich froh."],
+            ["Herr Hakimi", "Ich interessiere mich sehr dafür, besser Deutsch zu sprechen. Ich übe jeden Abend."]],
+            "q": [["Wohin soll Herr Hakimi die Kartons bringen?", ["ins Lager hinter der Küche", "in den Keller", "nach draußen"], 0],
+                  ["Worüber ist die Chefin froh?", ["dass Herr Hakimi nachfragt", "dass die Kartons leer sind", "dass Herr Hakimi früh nach Hause geht"], 0]]},
+        "s": {"task": "Wie lernst du Deutsch? Schreib einen Beitrag für ein Lernforum: Was hilft dir? Was ist schwer? Woran erinnerst du dich gern? Benutze Verben mit Präpositionen. (8–10 Sätze)",
+              "model": "Ich lerne seit zwei Jahren Deutsch. Am Anfang war die Aussprache sehr schwer für mich, besonders das „ü“. Ich erinnere mich gern an meinen ersten Kurs, weil die Lehrerin sehr geduldig war. Neue Wörter schreibe ich auf Karteikarten und wiederhole sie im Bus. Außerdem schaue ich Serien mit Untertiteln. Ich interessiere mich besonders für Wörter aus meinem Beruf, denn ich möchte als Elektriker arbeiten. Mit meinen Kindern spreche ich Paschtu, darüber freuen sich auch meine Eltern. Mein Tipp: Habt keine Angst vor Fehlern!"},
+        "words": """
+# Sprachen
+die Herkunftssprache|die Herkunftssprachen|heritage language|زبان اصلی (خانواده)
+die Zweitsprache|die Zweitsprachen|second language|زبان دوم
+der Akzent|die Akzente|accent|لهجه (تلفظ)
+die Grammatik||grammar|دستور زبان
+der Wortschatz||vocabulary|ذخیرهٔ لغات
+beherrschen||to master|مسلط بودن
+übersetzen||to translate|ترجمه کردن
+# Lernen
+die Karteikarte|die Karteikarten|flashcard|کارت یادداشت
+der Fehler|die Fehler|mistake|اشتباه
+korrigieren||to correct|تصحیح کردن
+nachfragen||to ask (again)|دوباره پرسیدن
+verwechseln||to mix up|اشتباه گرفتن
+geduldig||patient|صبور
+# Verben mit Präposition
+sich freuen über||to be happy about|خوشحال بودن از
+sich ärgern über||to be annoyed about|عصبانی شدن از
+warten auf||to wait for|منتظر ... بودن
+Angst haben vor||to be afraid of|ترسیدن از
+teilnehmen an||to take part in|شرکت کردن در
+""",
+    },
+    {
+        "t": "Dienstleistungen",
+        "goals": "Dienstleistungen beauftragen (Friseur, Werkstatt, Handwerker, Paketdienst), Preise und Termine klären, reklamieren; lassen (etwas machen lassen)",
+        "w": [
+            "die Dienstleistung|die Dienstleistungen|service|خدمات",
+            "der Friseur|die Friseure|hairdresser|سلمانی",
+            "die Werkstatt|die Werkstätten|garage, workshop|ورکشاپ، ترمیم‌گاه",
+            "der Handwerker|die Handwerker|tradesman|کارگر فنی",
+            "der Kostenvoranschlag|die Kostenvoranschläge|cost estimate|برآورد هزینه",
+            "der Auftrag|die Aufträge|order, job|سفارش، کار",
+            "beauftragen||to commission|سفارش دادن به",
+            "lassen||to have (something done); to let|دادن برای انجام؛ گذاشتن",
+            "abholen||to collect|گرفتن، آوردن",
+            "liefern||to deliver|تحویل دادن",
+            "die Lieferung|die Lieferungen|delivery|تحویل",
+            "zufrieden||satisfied|راضی",
+            "die Beschwerde|die Beschwerden|complaint|شکایت",
+            "die Qualität||quality|کیفیت",
+        ],
+        "p": ["Ich möchte mir die Haare schneiden lassen.", "Ich lasse mein Auto in der Werkstatt reparieren.", "Können Sie mir einen Kostenvoranschlag machen?",
+              "Wann kann ich das Fahrrad abholen?", "Mit der Arbeit bin ich leider nicht zufrieden.", "Lassen Sie mich kurz überlegen."],
+        "g": {
+            "title": "lassen: etwas machen lassen",
+            "head": ["Satz", "Bedeutung"],
+            "rows": [["Ich lasse mir die Haare schneiden.", "Der Friseur schneidet sie, nicht ich."], ["Wir lassen das Auto reparieren.", "Die Werkstatt repariert es."],
+                     ["Er hat die Waschmaschine liefern lassen.", "Perfekt: hat … lassen (Infinitiv)"], ["Lass mich helfen!", "lassen = erlauben"]],
+            "de": "lassen + Infinitiv am Ende: Eine andere Person macht die Arbeit. Im Perfekt steht „lassen“ im Infinitiv: Ich habe die Heizung reparieren lassen.",
+            "en": "lassen + infinitive means you have someone else do something: 'Ich lasse das Auto reparieren.' (The garage repairs it.) The infinitive goes to the end. In the perfect tense 'lassen' stays in the infinitive: 'Ich habe die Heizung reparieren lassen.' lassen can also mean 'to let/allow': 'Lass mich helfen!'",
+            "fa": "‏lassen + مصدر یعنی کاری را به کس دیگری می‌سپارید: «Ich lasse das Auto reparieren.» (ورکشاپ آن را ترمیم می‌کند.) مصدر در آخر جمله می‌آید. در زمان Perfekt خود lassen هم به شکل مصدر می‌ماند: «Ich habe die Heizung reparieren lassen.» ‏lassen به معنای «اجازه دادن» هم هست: «Lass mich helfen!»",
+        },
+        "r": {"title": "Handwerker finden – aber richtig",
+              "text": "Wenn in der Wohnung etwas kaputt ist, muss man zuerst den Vermieter informieren. Er muss Schäden reparieren lassen, die nicht der Mieter verursacht hat. "
+                      "Für eigene Aufträge, zum Beispiel einen Umzug oder neue Möbel, sollte man mehrere Angebote vergleichen und sich einen schriftlichen Kostenvoranschlag geben lassen. "
+                      "Bezahlen Sie nicht im Voraus und lassen Sie sich immer eine Rechnung geben. Wenn die Arbeit schlecht gemacht wurde, haben Sie das Recht, eine Nachbesserung zu verlangen.",
+              "q": [["Wen muss ein Mieter zuerst informieren, wenn etwas kaputt ist?", ["den Vermieter", "die Polizei", "die Nachbarn"], 0],
+                    ["Was sollte man vor einem eigenen Auftrag machen?", ["mehrere Angebote vergleichen", "sofort bezahlen", "keine Rechnung verlangen"], 0],
+                    ["Was kann man verlangen, wenn die Arbeit schlecht ist?", ["eine Nachbesserung", "einen neuen Vermieter", "nichts"], 0]]},
+        "d": {"title": "In der Fahrradwerkstatt", "lines": [
+            ["Mitarbeiter", "Was kann ich für Sie tun?"], ["Frau Popal", "Meine Bremse funktioniert nicht richtig. Ich möchte sie reparieren lassen."],
+            ["Mitarbeiter", "Ich schaue mal … Die Bremsbeläge sind alt. Neue kosten mit Arbeit ungefähr 35 Euro."],
+            ["Frau Popal", "Und wann ist das Fahrrad fertig?"], ["Mitarbeiter", "Morgen ab 16 Uhr können Sie es abholen."],
+            ["Frau Popal", "Gut. Rufen Sie mich bitte an, wenn es teurer wird."]],
+            "q": [["Was ist am Fahrrad kaputt?", ["die Bremse", "das Licht", "der Reifen"], 0],
+                  ["Wann kann Frau Popal das Fahrrad abholen?", ["morgen ab 16 Uhr", "heute Abend", "in einer Woche"], 0]]},
+        "s": {"task": "Du hast deine Waschmaschine reparieren lassen, aber sie ist nach zwei Tagen wieder kaputt. Schreib eine Beschwerde an die Firma: Was ist passiert? Was erwartest du? (8–10 Sätze)",
+              "model": "Sehr geehrte Damen und Herren, am 4. März habe ich meine Waschmaschine von Ihrem Techniker reparieren lassen. Ich habe dafür 120 Euro bezahlt. Leider funktioniert die Maschine schon nach zwei Tagen wieder nicht. Das Wasser läuft nicht ab. Mit der Reparatur bin ich deshalb nicht zufrieden. Ich bitte Sie, die Maschine kostenlos nachzubessern. Bitte teilen Sie mir mit, wann ein Techniker kommen kann. Ich bin vormittags zu Hause. Mit freundlichen Grüßen, Laila Popal"},
+        "words": """
+# Dienstleister
+der Schlüsseldienst|die Schlüsseldienste|locksmith service|خدمات کلیدسازی
+die Reinigung|die Reinigungen|dry cleaner's|لباس‌شویی (خشک‌شویی)
+der Schneider|die Schneider|tailor|خیاط
+der Elektriker|die Elektriker|electrician|برقکار
+der Klempner|die Klempner|plumber|نل‌دوان
+der Paketdienst|die Paketdienste|parcel service|خدمات پست بسته
+der Umzugsservice|die Umzugsservices|removal service|خدمات انتقال اثاثیه
+# Auftrag und Preis
+im Voraus||in advance|از قبل، پیش‌پرداخت
+schriftlich||in writing|کتبی
+die Nachbesserung|die Nachbesserungen|rectification|اصلاح دوباره
+verlangen||to demand|خواستن، مطالبه کردن
+der Schaden|die Schäden|damage|خسارت
+verursachen||to cause|باعث شدن
+# Am Fahrrad / Auto
+die Bremse|die Bremsen|brake|برک
+der Reifen|die Reifen|tyre|تایر
+der Ölwechsel|die Ölwechsel|oil change|تبدیل روغن
+""",
+    },
+    {
+        "t": "Unter Kollegen",
+        "goals": "im Team arbeiten, Konflikte am Arbeitsplatz lösen, Smalltalk, Aufgaben verteilen; zweiteilige Konnektoren (sowohl … als auch, weder … noch, entweder … oder, nicht nur … sondern auch)",
+        "w": [
+            "der Kollege|die Kollegen|colleague (male)|همکار",
+            "die Kollegin|die Kolleginnen|colleague (female)|همکار (زن)",
+            "das Team|die Teams|team|تیم",
+            "die Teamarbeit||teamwork|کار گروهی",
+            "der Vorgesetzte|die Vorgesetzten|superior, boss|آمر، مافوق",
+            "die Besprechung|die Besprechungen|meeting|جلسه",
+            "die Aufgabe|die Aufgaben|task|وظیفه",
+            "verteilen||to distribute|تقسیم کردن",
+            "zuständig||responsible|مسئول",
+            "der Konflikt|die Konflikte|conflict|کشمکش، اختلاف",
+            "die Lösung|die Lösungen|solution|راه‌حل",
+            "der Kompromiss|die Kompromisse|compromise|سازش، توافق",
+            "der Smalltalk||small talk|گپ کوتاه دوستانه",
+            "die Kantine|die Kantinen|canteen|غذاخوری",
+            "sowohl … als auch||both … and|هم … و هم",
+        ],
+        "p": ["Wer ist dafür zuständig?", "Können wir das in der Besprechung klären?", "Ich schlage vor, dass wir die Aufgaben teilen.",
+              "Ich habe weder Zeit noch Lust auf Streit.", "Sollen wir zusammen in die Kantine gehen?", "Lass uns einen Kompromiss finden."],
+        "g": {
+            "title": "Zweiteilige Konnektoren",
+            "head": ["Konnektor", "Bedeutung", "Beispiel"],
+            "rows": [["sowohl … als auch", "beides", "Er spricht sowohl Dari als auch Deutsch."], ["nicht nur … sondern auch", "beides (betont)", "Sie ist nicht nur pünktlich, sondern auch freundlich."],
+                     ["weder … noch", "keins von beiden", "Ich habe weder Zeit noch Geld."], ["entweder … oder", "eins von beiden", "Wir treffen uns entweder am Montag oder am Dienstag."]],
+            "de": "Zweiteilige Konnektoren verbinden zwei Satzteile. „weder … noch“ ist schon negativ – kein extra „nicht“!",
+            "en": "Two-part connectors link two words or phrases: sowohl … als auch (both … and), nicht nur … sondern auch (not only … but also), weder … noch (neither … nor), entweder … oder (either … or). 'weder … noch' is already negative – do not add 'nicht' or 'kein'.",
+            "fa": "حروف ربط دوبخشی دو کلمه یا عبارت را به هم وصل می‌کنند: sowohl … als auch (هم … و هم)، nicht nur … sondern auch (نه تنها … بلکه)، weder … noch (نه … و نه)، entweder … oder (یا … یا). ‏«weder … noch» خودش منفی است – «nicht» یا «kein» اضافه نکنید.",
+        },
+        "r": {"title": "Ärger im Team",
+              "text": "In einer Pflegestation gibt es Streit: Einige Kolleginnen arbeiten fast jedes Wochenende, andere fast nie. Die Stimmung ist schlecht. "
+                      "Die Stationsleiterin lädt zu einer Besprechung ein. Jeder darf sagen, was ihn stört. Am Ende finden sie eine Lösung: Ein neuer Plan verteilt die Wochenenden gerecht. "
+                      "Wer einen Dienst tauschen möchte, spricht es nicht nur mit der Kollegin ab, sondern trägt es auch in eine Liste ein. Seitdem ist die Atmosphäre wieder besser.",
+              "q": [["Worüber gibt es Streit?", ["über die Verteilung der Wochenenddienste", "über das Essen in der Kantine", "über das Gehalt"], 0],
+                    ["Was macht die Stationsleiterin?", ["Sie lädt zu einer Besprechung ein.", "Sie kündigt einer Kollegin.", "Sie arbeitet selbst jedes Wochenende."], 0],
+                    ["Was muss man machen, wenn man einen Dienst tauschen möchte?", ["mit der Kollegin sprechen und es in eine Liste eintragen", "nichts", "den Chef anrufen"], 0]]},
+        "d": {"title": "In der Pause", "lines": [
+            ["Tom", "Na, Hamed, wie war dein Wochenende?"], ["Hamed", "Schön, danke! Wir waren sowohl am See als auch bei Freunden. Und deins?"],
+            ["Tom", "Ruhig. Sag mal, kannst du nächste Woche die Frühschicht am Mittwoch übernehmen? Ich habe einen Arzttermin."],
+            ["Hamed", "Entweder Mittwoch oder Donnerstag – beides geht nicht, ich habe am Donnerstag selbst einen Termin."],
+            ["Tom", "Nur Mittwoch, das reicht. Danke dir!"], ["Hamed", "Kein Problem. Dann trag es bitte in den Plan ein."]],
+            "q": [["Wo war Hamed am Wochenende?", ["am See und bei Freunden", "nur zu Hause", "bei der Arbeit"], 0],
+                  ["Warum braucht Tom Hilfe?", ["Er hat am Mittwoch einen Arzttermin.", "Er hat Urlaub.", "Er ist krank."], 0]]},
+        "s": {"task": "In deinem Team gibt es ein Problem (z. B. Pausen, Ordnung in der Küche, Urlaubsplanung). Schreib eine E-Mail an deine Vorgesetzte: Beschreib das Problem und mach einen Lösungsvorschlag. Benutze zweiteilige Konnektoren. (8–10 Sätze)",
+              "model": "Sehr geehrte Frau Krüger, ich möchte ein Problem in unserem Team ansprechen. In der Küche ist es oft sehr unordentlich. Es wird weder das Geschirr gespült noch der Müll weggebracht. Das ärgert nicht nur mich, sondern auch viele andere Kolleginnen und Kollegen. Ich schlage vor, dass wir einen Küchenplan machen. Jede Woche sind zwei Personen zuständig. Wir könnten das entweder in der nächsten Besprechung oder per E-Mail klären. Ich freue mich auf Ihre Antwort. Mit freundlichen Grüßen, Shabnam Rasuli"},
+        "words": """
+# Am Arbeitsplatz
+die Schicht|die Schichten|shift|نوبت کاری
+der Dienstplan|die Dienstpläne|duty roster|جدول کاری
+übernehmen||to take over|به عهده گرفتن
+tauschen||to swap|عوض کردن
+die Stimmung||mood, atmosphere|حال و هوا، روحیه
+die Atmosphäre||atmosphere|فضا
+der Betriebsrat|die Betriebsräte|works council|شورای کارکنان
+# Kommunikation im Team
+absprechen||to agree on|هماهنگ کردن
+ansprechen||to address (a topic)|مطرح کردن
+stören||to bother, to disturb|مزاحم شدن، ناراحت کردن
+gerecht||fair|عادلانه
+die Kritik||criticism|انتقاد
+das Lob||praise|تعریف، تمجید
+sich beschweren||to complain|شکایت کردن
+# Smalltalk
+Wie war dein Wochenende?||How was your weekend?|آخر هفته‌ات چطور بود؟
+Mahlzeit!||Enjoy your lunch! (greeting at lunchtime)|نوش جان! (سلام وقت غذا)
+der Feierabend||end of the working day|پایان کار روزانه
+Schönen Feierabend!||Have a nice evening!|عصر خوش!
+""",
+    },
+    {
+        "t": "Politik und Geschichte",
+        "goals": "das politische System in Deutschland, Wahlen, Grundrechte, wichtige Daten der Geschichte; Passiv im Präteritum (wurde gegründet)",
+        "w": [
+            "die Politik||politics|سیاست",
+            "die Demokratie|die Demokratien|democracy|دموکراسی",
+            "das Grundgesetz||Basic Law (German constitution)|قانون اساسی آلمان",
+            "das Grundrecht|die Grundrechte|basic right|حق اساسی",
+            "die Wahl|die Wahlen|election|انتخابات",
+            "wählen||to vote, to choose|رأی دادن؛ انتخاب کردن",
+            "die Partei|die Parteien|political party|حزب",
+            "der Bundestag||Federal Parliament|پارلمان فدرال",
+            "die Regierung|die Regierungen|government|حکومت",
+            "das Bundesland|die Bundesländer|federal state|ایالت",
+            "die Geschichte|die Geschichten|history; story|تاریخ؛ داستان",
+            "die Mauer|die Mauern|wall|دیوار",
+            "die Wiedervereinigung||reunification|اتحاد دوباره",
+            "gründen||to found|تأسیس کردن",
+        ],
+        "p": ["Das Grundgesetz wurde 1949 verabschiedet.", "Alle vier Jahre wird der Bundestag gewählt.", "In Deutschland gibt es 16 Bundesländer.",
+              "Die Mauer fiel am 9. November 1989.", "Die Würde des Menschen ist unantastbar.", "Ich interessiere mich für Politik, weil …"],
+        "g": {
+            "title": "Passiv im Präteritum",
+            "head": ["Aktiv", "Passiv Präteritum (wurde + Partizip II)"],
+            "rows": [["Man gründete 1949 die Bundesrepublik.", "Die Bundesrepublik wurde 1949 gegründet."], ["Man baute 1961 die Mauer.", "Die Mauer wurde 1961 gebaut."],
+                     ["Man öffnete 1989 die Grenze.", "Die Grenze wurde 1989 geöffnet."], ["Man wählte die Abgeordneten.", "Die Abgeordneten wurden gewählt."]],
+            "de": "Passiv Präteritum: wurde/wurden + Partizip II am Ende. Man benutzt es oft in Texten über Geschichte. Wer es gemacht hat, steht – wenn wichtig – mit „von“.",
+            "en": "Past passive: wurde/wurden + past participle at the end: 'Die Mauer wurde 1961 gebaut.' It is very common in texts about history, because the event matters more than the person. If you want to say who did it, use 'von' + dative: 'Das Gesetz wurde vom Bundestag beschlossen.'",
+            "fa": "مجهول گذشته: wurde/wurden + Partizip II در آخر جمله: «Die Mauer wurde 1961 gebaut.» در متن‌های تاریخی زیاد استفاده می‌شود، چون رویداد مهم‌تر از انجام‌دهنده است. اگر بخواهید انجام‌دهنده را بگویید از «von» + Dativ استفاده کنید: «Das Gesetz wurde vom Bundestag beschlossen.»",
+        },
+        "r": {"title": "Kurze deutsche Geschichte seit 1945",
+              "text": "Nach dem Zweiten Weltkrieg wurde Deutschland 1945 in vier Besatzungszonen geteilt. 1949 wurden zwei Staaten gegründet: die Bundesrepublik Deutschland im Westen und die DDR im Osten. "
+                      "Am 23. Mai 1949 wurde in der Bundesrepublik das Grundgesetz verkündet. 1961 wurde in Berlin die Mauer gebaut. Am 9. November 1989 wurde die Grenze geöffnet – die Mauer fiel. "
+                      "Am 3. Oktober 1990 wurde Deutschland wiedervereinigt. Dieser Tag ist heute ein Feiertag: der Tag der Deutschen Einheit.",
+              "q": [["Wann wurden die zwei deutschen Staaten gegründet?", ["1949", "1945", "1961"], 0],
+                    ["Was passierte am 9. November 1989?", ["Die Grenze wurde geöffnet.", "Die Mauer wurde gebaut.", "Das Grundgesetz wurde verkündet."], 0],
+                    ["Warum ist der 3. Oktober ein Feiertag?", ["Deutschland wurde 1990 wiedervereinigt.", "Das Grundgesetz wurde geschrieben.", "Der Krieg endete."], 0]]},
+        "d": {"title": "Darf ich wählen?", "lines": [
+            ["Nasima", "Nächsten Monat ist Bundestagswahl. Darf ich eigentlich wählen?"],
+            ["Herr Becker", "Bei der Bundestagswahl dürfen nur deutsche Staatsangehörige ab 18 Jahren wählen."],
+            ["Nasima", "Und bei der Kommunalwahl?"],
+            ["Herr Becker", "Da dürfen auch Bürgerinnen und Bürger aus anderen EU-Ländern wählen. Aber mit afghanischem Pass leider nicht."],
+            ["Nasima", "Schade. Wenn ich eingebürgert bin, möchte ich unbedingt wählen."],
+            ["Herr Becker", "Sie können sich aber schon jetzt engagieren, zum Beispiel im Integrationsbeirat Ihrer Stadt."]],
+            "q": [["Wer darf bei der Bundestagswahl wählen?", ["deutsche Staatsangehörige ab 18 Jahren", "alle Menschen in Deutschland", "nur EU-Bürger"], 0],
+                  ["Was kann Nasima schon jetzt machen?", ["sich im Integrationsbeirat engagieren", "bei der Bundestagswahl wählen", "eine Partei gründen"], 0]]},
+        "s": {"task": "Welches Grundrecht ist für dich besonders wichtig und warum? Schreib einen Text. Erkläre auch, wie es in deinem Herkunftsland war oder ist. (8–10 Sätze)",
+              "model": "Für mich ist die Meinungsfreiheit besonders wichtig. Sie steht in Artikel 5 des Grundgesetzes. In Deutschland darf ich sagen, was ich denke, auch wenn ich die Regierung kritisiere. In meinem Herkunftsland war das oft gefährlich. Viele Journalisten wurden verhaftet. Deshalb weiß ich, wie wertvoll dieses Recht ist. Meinungsfreiheit bedeutet aber auch, dass ich andere Meinungen respektiere. Beleidigungen und Hetze sind nicht erlaubt. Ich finde, eine Demokratie braucht Menschen, die mitdiskutieren."},
+        "words": """
+# Staat und Politik
+der Bundeskanzler|die Bundeskanzler|Federal Chancellor|صدراعظم فدرال
+der Bundespräsident|die Bundespräsidenten|Federal President|رئیس جمهور فدرال
+der Abgeordnete|die Abgeordneten|member of parliament|وکیل پارلمان
+die Kommunalwahl|die Kommunalwahlen|local election|انتخابات محلی
+die Bundestagswahl|die Bundestagswahlen|general election|انتخابات پارلمان فدرال
+das Wahlrecht||right to vote|حق رأی
+die Meinungsfreiheit||freedom of expression|آزادی بیان
+die Religionsfreiheit||freedom of religion|آزادی دین
+die Gleichberechtigung||equal rights|حقوق برابر
+der Rechtsstaat||state under the rule of law|دولت قانون‌مدار
+# Geschichte
+der Weltkrieg|die Weltkriege|world war|جنگ جهانی
+die DDR||GDR (East Germany)|آلمان شرقی
+die Grenze|die Grenzen|border|سرحد، مرز
+die Diktatur|die Diktaturen|dictatorship|دیکتاتوری
+in Kraft treten||to come into force|نافذ شدن
+# Mitmachen
+sich engagieren||to get involved|فعالیت کردن (اجتماعی)
+der Integrationsbeirat|die Integrationsbeiräte|integration advisory council|شورای مشورتی ادغام
+die Demonstration|die Demonstrationen|demonstration|تظاهرات
+die Einbürgerung|die Einbürgerungen|naturalisation|گرفتن تابعیت
+""",
+    },
+]

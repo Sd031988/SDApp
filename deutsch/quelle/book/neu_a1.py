@@ -230,3 +230,223 @@ Was kann ich für Sie tun?||What can I do for you?|چه کمکی از دستم �
 """,
     },
 ]
+
+# Zweite Runde: restliche Themen aus A1-Kursbüchern (Kinder und Schule, Ämter, Feste)
+UNITS += [
+    {
+        "t": "Kinder und Schule",
+        "goals": "Schule und Kita, Schulsachen, Elternabend, Kind krankmelden; Modalverben müssen und dürfen",
+        "w": [
+            "die Schule|die Schulen|school|مکتب",
+            "die Kita|die Kitas|day nursery|کودکستان",
+            "der Lehrer|die Lehrer|teacher (male)|معلم",
+            "die Lehrerin|die Lehrerinnen|teacher (female)|معلم (زن)",
+            "der Schüler|die Schüler|pupil (male)|شاگرد",
+            "die Schülerin|die Schülerinnen|pupil (female)|شاگرد (دختر)",
+            "die Klasse|die Klassen|class|صنف",
+            "die Hausaufgabe|die Hausaufgaben|homework|کارخانگی",
+            "das Heft|die Hefte|exercise book|کتابچه",
+            "der Stift|die Stifte|pen, pencil|قلم",
+            "die Pause|die Pausen|break|تفریح (در مکتب)",
+            "der Elternabend|die Elternabende|parents' evening|جلسهٔ والدین",
+            "müssen||must, to have to|باید",
+            "dürfen||may, to be allowed to|اجازه داشتن",
+            "lernen||to learn|یاد گرفتن، درس خواندن",
+        ],
+        "p": ["Mein Sohn geht in die zweite Klasse.", "Meine Tochter ist krank. Sie kann heute nicht kommen.", "Muss mein Kind ein Heft mitbringen?",
+              "Darf mein Kind heute früher gehen?", "Wann ist der Elternabend?", "Die Kinder müssen um acht Uhr in der Schule sein."],
+        "g": {
+            "title": "Modalverben: müssen und dürfen",
+            "head": ["", "müssen", "dürfen"],
+            "rows": [["ich", "muss", "darf"], ["du", "musst", "darfst"], ["er / sie", "muss", "darf"],
+                     ["wir", "müssen", "dürfen"], ["ihr", "müsst", "dürft"], ["sie / Sie", "müssen", "dürfen"]],
+            "de": "Das Modalverb steht auf Position 2, das zweite Verb am Ende: Du musst Hausaufgaben machen. Ich und er/sie haben keine Endung: ich muss, er darf.",
+            "en": "The modal verb is in position 2, the main verb goes to the end in the infinitive: 'Du musst Hausaufgaben machen.' ich and er/sie have no ending: ich muss, er darf. müssen = it is necessary; dürfen = it is allowed. 'nicht dürfen' means it is forbidden.",
+            "fa": "فعل وجهی در جای دوم و فعل اصلی به شکل مصدر در آخر جمله می‌آید: «Du musst Hausaufgaben machen.» ‏ich و er/sie پسوند ندارند: ich muss، er darf. ‏müssen یعنی لازم است؛ dürfen یعنی اجازه است. «nicht dürfen» یعنی ممنوع است.",
+        },
+        "r": {"title": "Ein Brief von der Schule",
+              "text": "Liebe Eltern, am Freitag machen wir mit der Klasse 2b einen Ausflug in den Zoo. Wir fahren um 8:15 Uhr mit dem Bus ab. "
+                      "Die Kinder müssen um acht Uhr an der Schule sein. Sie brauchen ein Frühstück, etwas zu trinken und eine Jacke. "
+                      "Handys dürfen die Kinder nicht mitnehmen. Der Ausflug kostet 5 Euro. Wir sind um 13 Uhr wieder an der Schule. Viele Grüße, Frau Klein",
+              "q": [["Wohin geht die Klasse am Freitag?", ["in den Zoo", "ins Kino", "in den Park"], 0],
+                    ["Wann müssen die Kinder an der Schule sein?", ["um acht Uhr", "um 8:15 Uhr", "um 13 Uhr"], 0],
+                    ["Was dürfen die Kinder nicht mitnehmen?", ["ein Handy", "eine Jacke", "ein Frühstück"], 0]]},
+        "d": {"title": "Anruf in der Schule", "lines": [
+            ["Sekretärin", "Grundschule am Park, Sekretariat, guten Morgen."],
+            ["Frau Amiri", "Guten Morgen, hier ist Amiri. Mein Sohn Arman ist krank. Er hat Fieber."],
+            ["Sekretärin", "Oh, gute Besserung! In welche Klasse geht Arman?"], ["Frau Amiri", "In die Klasse 3a."],
+            ["Sekretärin", "Danke, ich sage es der Lehrerin. Muss er morgen auch zu Hause bleiben?"],
+            ["Frau Amiri", "Ich weiß es noch nicht. Ich rufe morgen wieder an."]],
+            "q": [["Warum ruft Frau Amiri an?", ["Ihr Sohn ist krank.", "Sie möchte einen Termin.", "Ihr Sohn hat Geburtstag."], 0],
+                  ["In welche Klasse geht Arman?", ["3a", "2b", "1c"], 0]]},
+        "s": {"task": "Dein Kind ist krank. Schreib eine kurze Entschuldigung an die Lehrerin: Name, Klasse, wie lange, warum. (4 Sätze)",
+              "model": "Liebe Frau Klein, meine Tochter Sara aus der Klasse 2b ist krank. Sie hat Fieber und muss zu Hause bleiben. Sie kann heute und morgen nicht in die Schule kommen. Viele Grüße, Fatima Nazari"},
+        "words": """
+# In der Schule
+der Unterricht||lessons, teaching|درس، تدریس
+das Fach|die Fächer|school subject|مضمون
+die Mathematik||maths|ریاضی
+das Zeugnis|die Zeugnisse|school report|اطلاعیه، کارنامه
+die Note|die Noten|mark, grade|نمره
+die Ferien||school holidays|رخصتی‌ها
+der Ausflug|die Ausflüge|trip, outing|گردش، سفر کوتاه
+die Grundschule|die Grundschulen|primary school|مکتب ابتدائیه
+# Schulsachen
+der Rucksack|die Rucksäcke|backpack|بکس پشتی
+das Buch|die Bücher|book|کتاب
+der Radiergummi|die Radiergummis|eraser|پاک‌کن
+das Lineal|die Lineale|ruler|خط‌کش
+die Schere|die Scheren|scissors|قیچی
+# Eltern
+die Eltern||parents|والدین
+krankmelden||to call in sick|غیرحاضری به خاطر مریضی خبر دادن
+die Entschuldigung|die Entschuldigungen|excuse note; apology|عذرنامه؛ معذرت
+abholen||to pick up|آوردن، گرفتن (کسی را)
+bringen||to bring, to take|بردن، آوردن
+""",
+    },
+    {
+        "t": "Ämter und Behörden",
+        "goals": "auf dem Amt: Anmeldung, Termin, Wartenummer, Formular ausfüllen; Imperativ mit Sie (Füllen Sie bitte … aus!)",
+        "w": [
+            "das Amt|die Ämter|office, authority|اداره",
+            "die Behörde|die Behörden|authority|اداره (دولتی)",
+            "das Bürgeramt|die Bürgerämter|citizens' office|ادارهٔ امور شهروندان",
+            "das Formular|die Formulare|form|فورم",
+            "ausfüllen||to fill in|خانه‌پری کردن",
+            "unterschreiben||to sign|امضا کردن",
+            "die Unterschrift|die Unterschriften|signature|امضا",
+            "der Ausweis|die Ausweise|ID card|تذکره، کارت هویت",
+            "der Pass|die Pässe|passport|پاسپورت",
+            "die Wartenummer|die Wartenummern|waiting number|نمبر نوبت",
+            "warten||to wait|منتظر ماندن",
+            "der Termin|die Termine|appointment|وقت ملاقات، نوبت",
+            "die Kopie|die Kopien|copy|کاپی",
+            "mitbringen||to bring along|با خود آوردن",
+        ],
+        "p": ["Ich habe einen Termin um zehn Uhr.", "Wo bekomme ich eine Wartenummer?", "Füllen Sie bitte das Formular aus.",
+              "Unterschreiben Sie bitte hier.", "Bringen Sie bitte Ihren Pass mit.", "Können Sie das bitte noch einmal langsam sagen?"],
+        "g": {
+            "title": "Imperativ mit Sie",
+            "head": ["Verb", "Imperativ (Sie)"],
+            "rows": [["warten", "Warten Sie bitte hier."], ["ausfüllen", "Füllen Sie bitte das Formular aus."],
+                     ["unterschreiben", "Unterschreiben Sie bitte hier."], ["mitbringen", "Bringen Sie bitte eine Kopie mit."], ["sein", "Seien Sie bitte pünktlich."]],
+            "de": "Imperativ mit Sie: Das Verb steht am Anfang, dann kommt „Sie“. Mit „bitte“ ist es höflich. Trennbare Verben: der Teil (aus, mit) kommt ans Ende.",
+            "en": "Polite imperative: the verb comes first, then 'Sie': 'Warten Sie bitte!' Add 'bitte' to sound polite. With separable verbs the prefix goes to the end: 'Füllen Sie bitte das Formular aus.' Offices use this form a lot.",
+            "fa": "امر مؤدبانه: فعل اول و بعد «Sie» می‌آید: «Warten Sie bitte!» با «bitte» مؤدبانه می‌شود. در فعل‌های جداشدنی پیشوند به آخر جمله می‌رود: «Füllen Sie bitte das Formular aus.» در ادارات این شکل زیاد استفاده می‌شود.",
+        },
+        "r": {"title": "Im Bürgeramt",
+              "text": "Herr Mohammadi hat eine neue Wohnung. Er muss sich im Bürgeramt anmelden. Er hat online einen Termin gemacht: Dienstag, 9:30 Uhr. "
+                      "Im Bürgeramt zieht er eine Wartenummer. Er wartet zehn Minuten. Dann ist er dran. Die Mitarbeiterin sagt: „Geben Sie mir bitte Ihren Pass und die Wohnungsgeberbestätigung.“ "
+                      "Herr Mohammadi füllt das Formular aus und unterschreibt. Nach 15 Minuten bekommt er die Meldebescheinigung.",
+              "q": [["Warum geht Herr Mohammadi ins Bürgeramt?", ["Er muss sich anmelden.", "Er braucht einen neuen Pass.", "Er sucht eine Wohnung."], 0],
+                    ["Wie lange wartet er?", ["zehn Minuten", "eine Stunde", "15 Minuten"], 0],
+                    ["Was bekommt er am Ende?", ["die Meldebescheinigung", "eine Wartenummer", "eine neue Wohnung"], 0]]},
+        "d": {"title": "Am Schalter", "lines": [
+            ["Mitarbeiter", "Guten Tag. Ihre Wartenummer, bitte."], ["Frau Karimi", "Hier, die Nummer 47."],
+            ["Mitarbeiter", "Was kann ich für Sie tun?"], ["Frau Karimi", "Ich brauche eine Kopie von meiner Meldebescheinigung."],
+            ["Mitarbeiter", "Füllen Sie bitte dieses Formular aus und warten Sie dort. Das kostet fünf Euro."],
+            ["Frau Karimi", "Kann ich mit Karte bezahlen?"], ["Mitarbeiter", "Ja, natürlich."]],
+            "q": [["Was braucht Frau Karimi?", ["eine Kopie der Meldebescheinigung", "einen neuen Ausweis", "einen Termin"], 0],
+                  ["Wie viel kostet das?", ["fünf Euro", "47 Euro", "nichts"], 0]]},
+        "s": {"task": "Schreib eine kurze E-Mail an das Bürgeramt: Du brauchst einen Termin für die Anmeldung. Wann hast du Zeit? (4–5 Sätze)",
+              "model": "Sehr geehrte Damen und Herren, ich wohne seit einer Woche in Freiburg. Ich möchte mich anmelden und brauche einen Termin. Ich habe am Montag und am Mittwoch Zeit. Vielen Dank. Mit freundlichen Grüßen, Hassan Mohammadi"},
+        "words": """
+# Dokumente
+die Meldebescheinigung|die Meldebescheinigungen|registration certificate|تصدیق ثبت آدرس
+die Wohnungsgeberbestätigung|die Wohnungsgeberbestätigungen|landlord's confirmation|تأییدیهٔ صاحب‌خانه
+die Geburtsurkunde|die Geburtsurkunden|birth certificate|تصدیق تولد
+das Passfoto|die Passfotos|passport photo|عکس پاسپورتی
+der Aufenthaltstitel|die Aufenthaltstitel|residence permit|اجازهٔ اقامت
+das Dokument|die Dokumente|document|سند
+# Angaben
+der Vorname|die Vornamen|first name|نام
+der Familienname|die Familiennamen|surname|تخلص
+das Geburtsdatum|die Geburtsdaten|date of birth|تاریخ تولد
+der Geburtsort|die Geburtsorte|place of birth|محل تولد
+der Familienstand||marital status|وضعیت تأهل
+die Staatsangehörigkeit|die Staatsangehörigkeiten|nationality|تابعیت
+# Auf dem Amt
+der Schalter|die Schalter|counter|باجه
+der Wartebereich|die Wartebereiche|waiting area|محل انتظار
+dran sein||to be next|نوبت کسی بودن
+die Gebühr|die Gebühren|fee|فیس
+pünktlich||on time|سر وقت
+""",
+    },
+    {
+        "t": "Feste und Feiertage",
+        "goals": "Feste im Jahr, Einladung, gratulieren, Datum sagen; Ordinalzahlen (am ersten Mai, am dritten Oktober)",
+        "w": [
+            "das Fest|die Feste|festival, party|جشن",
+            "der Feiertag|die Feiertage|public holiday|روز رخصتی رسمی",
+            "feiern||to celebrate|جشن گرفتن",
+            "der Geburtstag|die Geburtstage|birthday|سالگره",
+            "die Party|die Partys|party|مهمانی",
+            "die Einladung|die Einladungen|invitation|دعوت‌نامه",
+            "einladen||to invite|دعوت کردن",
+            "das Geschenk|die Geschenke|present|تحفه",
+            "schenken||to give (as a present)|تحفه دادن",
+            "gratulieren||to congratulate|تبریک گفتن",
+            "das Datum|die Daten|date|تاریخ",
+            "der Kuchen|die Kuchen|cake|کیک",
+            "Herzlichen Glückwunsch!||Congratulations!|تبریک صمیمانه!",
+            "das neue Jahr||the new year|سال نو",
+        ],
+        "p": ["Herzlichen Glückwunsch zum Geburtstag!", "Wann hast du Geburtstag? – Am zwölften März.", "Ich lade dich zu meiner Party ein.",
+              "Vielen Dank für die Einladung!", "Frohes neues Jahr! / Eid mubarak!", "Am dritten Oktober ist ein Feiertag."],
+        "g": {
+            "title": "Datum: Ordinalzahlen",
+            "head": ["Zahl", "Der Wievielte ist heute?", "Wann? (am …)"],
+            "rows": [["1.", "der erste", "am ersten"], ["2.", "der zweite", "am zweiten"], ["3.", "der dritte", "am dritten"],
+                     ["7.", "der siebte", "am siebten"], ["4.–19.", "der vierte … neunzehnte", "am vierten … neunzehnten"], ["ab 20.", "der zwanzigste", "am zwanzigsten"]],
+            "de": "Datum: bis 19 + -te, ab 20 + -ste. Achtung: erste, dritte, siebte. Mit „am“: am ersten Mai (Endung -en).",
+            "en": "Dates use ordinal numbers: up to 19 add -te (der vierte), from 20 add -ste (der zwanzigste). Irregular: erste, dritte, siebte. For 'on …' use 'am' + ending -en: 'am ersten Mai', 'am dritten Oktober'. Written: am 1. Mai.",
+            "fa": "برای تاریخ از عددهای ترتیبی استفاده می‌شود: تا ۱۹ ‏‎-te اضافه می‌شود (der vierte) و از ۲۰ به بالا ‎-ste (der zwanzigste). بی‌قاعده: erste، dritte، siebte. برای «در تاریخ …» از «am» با پسوند ‎-en استفاده کنید: «am ersten Mai»، «am dritten Oktober». نوشتاری: am 1. Mai.",
+        },
+        "r": {"title": "Feiertage in Deutschland",
+              "text": "In Deutschland gibt es viele Feiertage. Am ersten Januar ist Neujahr. Am ersten Mai ist der Tag der Arbeit. "
+                      "Am dritten Oktober feiert man den Tag der Deutschen Einheit. Im Dezember ist Weihnachten, das wichtigste Fest für viele Familien. "
+                      "An Feiertagen sind die meisten Geschäfte geschlossen. Viele Menschen feiern auch andere Feste, zum Beispiel Nouruz, das persische Neujahr am 20. oder 21. März, oder das Zuckerfest am Ende vom Ramadan.",
+              "q": [["Wann ist der Tag der Deutschen Einheit?", ["am dritten Oktober", "am ersten Mai", "am ersten Januar"], 0],
+                    ["Was ist an Feiertagen meistens geschlossen?", ["die Geschäfte", "die Krankenhäuser", "die Parks"], 0],
+                    ["Was ist Nouruz?", ["das persische Neujahr", "der Tag der Arbeit", "ein Fest im Dezember"], 0]]},
+        "d": {"title": "Eine Einladung", "lines": [
+            ["Hamid", "Hallo Jana! Am Samstag habe ich Geburtstag. Ich lade dich zu meiner Party ein."],
+            ["Jana", "Oh, danke! Wann ist die Party?"], ["Hamid", "Am Samstag, am vierzehnten Juni, um sieben Uhr."],
+            ["Jana", "Super, ich komme gern! Soll ich etwas mitbringen?"], ["Hamid", "Vielleicht einen Salat?"],
+            ["Jana", "Gern. Bis Samstag!"]],
+            "q": [["Wann ist die Party?", ["am vierzehnten Juni um sieben Uhr", "am vierten Juni um elf Uhr", "am Sonntag um sieben Uhr"], 0],
+                  ["Was bringt Jana mit?", ["einen Salat", "einen Kuchen", "ein Buch"], 0]]},
+        "s": {"task": "Schreib eine Einladung zu deinem Geburtstag: Wann? Wo? Um wie viel Uhr? Was sollen die Gäste mitbringen? (4–5 Sätze)",
+              "model": "Liebe Freunde, am fünfzehnten August habe ich Geburtstag. Ich lade euch zu meiner Party ein. Wir feiern am Samstag um 18 Uhr bei mir zu Hause. Bringt bitte gute Laune mit! Viele Grüße, Mahsa"},
+        "words": """
+# Feste im Jahr
+das Neujahr||New Year's Day|روز سال نو
+Silvester||New Year's Eve|شب سال نو میلادی
+Weihnachten||Christmas|کرسمس
+Ostern||Easter|عید پاک
+der Ramadan||Ramadan|رمضان
+das Zuckerfest||Eid al-Fitr|عید رمضان (عید فطر)
+das Opferfest||Eid al-Adha|عید قربان
+Nouruz||Nowruz (Persian New Year)|نوروز
+die Hochzeit|die Hochzeiten|wedding|عروسی
+# Feiern
+der Gast|die Gäste|guest|مهمان
+die Kerze|die Kerzen|candle|شمع
+die Blume|die Blumen|flower|گل
+die Karte|die Karten|card|کارت
+tanzen||to dance|رقصیدن
+Alles Gute!||All the best!|بهترین آرزوها!
+Frohe Feiertage!||Happy holidays!|رخصتی‌های خوش!
+# Monate
+der Januar||January|جنوری
+der März||March|مارچ
+der Mai||May|می
+der Juni||June|جون
+der August||August|آگست
+der Oktober||October|اکتوبر
+der Dezember||December|دسمبر
+""",
+    },
+]
