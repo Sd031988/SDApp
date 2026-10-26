@@ -16,6 +16,10 @@
         .ergebnis { border: 2px solid var(--accent); }
     </style>
     <script src="../sd-sync.js?v=2"></script>
+    <style>
+        .vzeile { display: grid; gap: 8px; grid-template-columns: 110px 110px 1fr 1fr auto; align-items: end; }
+        @media (max-width: 640px) { .vzeile { grid-template-columns: 1fr 1fr; padding-bottom: 8px; border-bottom: 1px dashed var(--line); } .vzeile button { justify-self: start; } }
+    </style>
 </head>
 
 <body>
@@ -54,6 +58,67 @@
         <section class="karte ergebnis" id="ergebnis" hidden>
             <h2 id="erTitel"></h2>
             <div id="erText" style="display:grid;gap:10px;"></div>
+        </section>
+
+        <section class="karte" id="landKarte" hidden>
+            <h2 data-i18n="land_titel">📍 Dein Bundesland</h2>
+            <p class="info" data-i18n="land_info">Zuständig ist die Zeugnisanerkennungsstelle des Bundeslandes, in dem du wohnst (oder die Ausbildung bzw. Arbeit machen willst).</p>
+            <label class="feld"><span data-i18n="land_wahl">Bundesland</span>
+                <select id="land"></select>
+            </label>
+            <div id="landInfo" style="display:grid;gap:8px;"></div>
+        </section>
+
+        <section class="karte" id="antragKarte" hidden>
+            <h2 data-i18n="an_titel">📝 Antrag vorbereiten – als PDF</h2>
+            <p class="info" data-i18n="an_info">Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF – mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.</p>
+            <p class="hinweis" id="anHinweis"></p>
+
+            <h3 data-i18n="an_person">1. Angaben zur Person</h3>
+            <div class="zeile"><label class="feld"><span data-i18n="an_nachname">Familienname</span><input type="text" data-a="nachname" autocomplete="family-name"></label>
+                <label class="feld"><span data-i18n="an_vorname">Vorname(n)</span><input type="text" data-a="vorname" autocomplete="given-name"></label></div>
+            <div class="zeile3"><label class="feld"><span data-i18n="an_gebname">Geburtsname <small>(falls anders)</small></span><input type="text" data-a="gebname"></label>
+                <label class="feld"><span data-i18n="an_gebdat">Geburtsdatum</span><input type="date" data-a="gebdat"></label>
+                <label class="feld"><span data-i18n="an_gebort">Geburtsort und -land</span><input type="text" data-a="gebort"></label></div>
+            <div class="zeile"><label class="feld"><span data-i18n="an_staat">Staatsangehörigkeit</span><input type="text" data-a="staat"></label>
+                <label class="feld"><span data-i18n="an_strasse">Straße und Hausnummer</span><input type="text" data-a="strasse" autocomplete="street-address"></label></div>
+            <div class="zeile3"><label class="feld"><span data-i18n="an_plzort">PLZ und Ort</span><input type="text" data-a="plzort"></label>
+                <label class="feld"><span data-i18n="an_tel">Telefon</span><input type="tel" data-a="tel" autocomplete="tel"></label>
+                <label class="feld"><span data-i18n="an_mail">E-Mail</span><input type="email" data-a="mail" autocomplete="email"></label></div>
+
+            <h3 data-i18n="an_abschluss">2. Ausländischer Schulabschluss</h3>
+            <div class="zeile"><label class="feld"><span data-i18n="an_land">Land, in dem der Abschluss erworben wurde</span><input type="text" data-a="aland"></label>
+                <label class="feld"><span data-i18n="an_aname">Bezeichnung des Abschlusses <small>(wie auf dem Zeugnis, ggf. mit Übersetzung)</small></span><input type="text" data-a="aname"></label></div>
+            <div class="zeile3"><label class="feld"><span data-i18n="an_schule">Schule (Name)</span><input type="text" data-a="aschule"></label>
+                <label class="feld"><span data-i18n="an_sort">Ort der Schule</span><input type="text" data-a="aort"></label>
+                <label class="feld"><span data-i18n="an_datum">Datum des Abschlusses</span><input type="text" data-a="adatum" placeholder="z. B. 06/2019"></label></div>
+            <label class="feld" style="max-width:260px"><span data-i18n="an_jahre">Schuljahre insgesamt <small>(ab Klasse 1)</small></span><input type="number" min="1" max="20" data-a="jahre"></label>
+
+            <h3 data-i18n="an_verlauf">3. Schulbesuch (lückenlos, ab Klasse 1)</h3>
+            <div id="verlauf" style="display:grid;gap:8px;"></div>
+            <div class="knoepfe"><button type="button" class="btn klein" id="vPlus" data-i18n="an_vplus">➕ Weitere Schule</button></div>
+
+            <h3 data-i18n="an_zweck">4. Wofür brauchst du die Anerkennung?</h3>
+            <div class="zeile"><label class="feld"><span data-i18n="an_zwecklab">Zweck</span>
+                <select data-a="zweck"><option value="ausbildung" data-i18n="z_ausbildung">Berufsausbildung</option><option value="arbeit" data-i18n="z_arbeit">Arbeit / Bewerbung</option><option value="schule" data-i18n="z_schule">Weiterer Schulbesuch</option><option value="studium" data-i18n="z_studium">Studium</option><option value="weiterbildung" data-i18n="z_weiterbildung">Weiterbildung / Umschulung</option><option value="sonst" data-i18n="z_sonst">Sonstiges</option></select></label>
+                <label class="feld"><span data-i18n="an_zweckdet">Genauer <small>(z. B. Ausbildungsplatz bei …)</small></span><input type="text" data-a="zweckdet"></label></div>
+            <label class="feld"><span data-i18n="an_ziel">Gewünschte Einstufung</span>
+                <select data-a="ziel"><option value="hoechst" data-i18n="g_hoechst">Höchstmöglicher Abschluss (Stelle entscheidet)</option><option value="esa" data-i18n="g_esa">Erster Schulabschluss (Hauptschulabschluss)</option><option value="msa" data-i18n="g_msa">Mittlerer Schulabschluss (Realschulabschluss)</option><option value="fhr" data-i18n="g_fhr">Fachhochschulreife</option><option value="ahr" data-i18n="g_ahr">Allgemeine Hochschulreife (Abitur)</option></select></label>
+
+            <h3 data-i18n="an_stelle">5. An welche Stelle?</h3>
+            <label class="feld"><span data-i18n="an_stellelab">Name und Anschrift der Zeugnisanerkennungsstelle <small>(wird beim Bundesland vorausgefüllt, wenn bekannt)</small></span><textarea data-a="stelle" rows="3"></textarea></label>
+
+            <h3 data-i18n="an_anlagen">6. Anlagen</h3>
+            <div id="anlagen" style="display:grid;gap:6px;"></div>
+            <label class="check"><input type="checkbox" data-a="befreiung"> <span data-i18n="an_befreiung">Ich beantrage eine Gebührenbefreiung bzw. -ermäßigung (z. B. wegen Bürgergeld oder geringem Einkommen) – Nachweis liegt bei.</span></label>
+
+            <div class="zeile"><label class="feld"><span data-i18n="an_ortunt">Ort (für die Unterschrift)</span><input type="text" data-a="ortunt"></label></div>
+            <p class="fehler" id="anFehler" hidden></p>
+            <div class="knoepfe">
+                <button type="button" class="btn prim" id="anPdf" data-i18n="an_pdf">📄 Antrag als PDF erstellen</button>
+                <button type="button" class="btn klein gefahr" id="anLeeren" data-i18n="an_leeren">Felder leeren</button>
+            </div>
+            <p class="quelle" data-i18n="an_hinweis2">Deine Angaben bleiben auf deinem Gerät (bzw. in deinem Konto, wenn du angemeldet bist). Das PDF ersetzt kein vorgeschriebenes Landesformular – prüfe beim Bundesland oben, ob ein eigenes Formular verlangt wird.</p>
         </section>
 
         <section class="karte" id="checkKarte" hidden>
@@ -131,7 +196,27 @@
                     bescheid: 'Bescheid abwarten (bis zu 4 Monate ab vollständigen Unterlagen) – ggf. Anpassungsqualifizierung planen',
                     anabin: 'In anabin nachsehen, wie Hochschule und Abschluss eingestuft sind',
                     zab: 'Zeugnisbewertung bei der ZAB online beantragen (208 €)'
-                }
+                },
+                land_titel: '📍 Dein Bundesland', land_info: 'Zuständig ist die Zeugnisanerkennungsstelle des Bundeslandes, in dem du wohnst (oder die Ausbildung bzw. Arbeit machen willst).', land_wahl: 'Bundesland', land_bitte: '– bitte wählen –',
+                land_stelle: 'Zuständige Stelle', land_link: '🔗 Offizielle Infos und Formular', land_mail: 'E-Mail',
+                land_offen: 'Für dieses Bundesland haben wir die zuständige Stelle noch nicht selbst geprüft. Du findest sie in der offiziellen Datenbank anabin: dort „Suchen nach anderen Stellen“ → Zuständigkeit „Zeugnisanerkennung“ → dein Bundesland.', land_anabin: '🔎 Stelle in anabin suchen', land_finder: 'Anerkennungs-Finder',
+                land_formular: '⚠️ Dieses Bundesland hat ein eigenes Antragsformular. Bitte das offizielle Formular verwenden – das PDF unten hilft dir beim Ausfüllen und kann als Anschreiben beigelegt werden.',
+                land_stand: 'Angaben geprüft im Oktober 2026 auf den Seiten des Landes. Gebühren und Formulare können sich ändern.',
+                an_titel: '📝 Antrag vorbereiten – als PDF', an_info: 'Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF – mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.',
+                an_hinweis_offen: 'Wähle oben dein Bundesland. Ohne eigenes Landesformular kannst du dieses PDF als Antrag unterschrieben einreichen; frag im Zweifel bei der Stelle nach.',
+                an_hinweis_formular: 'Dein Bundesland verlangt ein eigenes Formular. Nutze das PDF als Ausfüllhilfe und als Anschreiben zum offiziellen Formular.',
+                an_hinweis_frei: 'Für dein Bundesland ist uns kein eigenes Pflichtformular bekannt. Frag bei der Stelle nach, ob ein formloser Antrag (dieses PDF) reicht.',
+                an_person: '1. Angaben zur Person', an_nachname: 'Familienname', an_vorname: 'Vorname(n)', an_gebname: 'Geburtsname (falls anders)', an_gebdat: 'Geburtsdatum', an_gebort: 'Geburtsort und -land', an_staat: 'Staatsangehörigkeit', an_strasse: 'Straße und Hausnummer', an_plzort: 'PLZ und Ort', an_tel: 'Telefon', an_mail: 'E-Mail',
+                an_abschluss: '2. Ausländischer Schulabschluss', an_land: 'Land, in dem der Abschluss erworben wurde', an_aname: 'Bezeichnung des Abschlusses (wie auf dem Zeugnis, ggf. mit Übersetzung)', an_schule: 'Schule (Name)', an_sort: 'Ort der Schule', an_datum: 'Datum des Abschlusses', an_jahre: 'Schuljahre insgesamt (ab Klasse 1)',
+                an_verlauf: '3. Schulbesuch (lückenlos, ab Klasse 1)', an_vplus: '➕ Weitere Schule', v_von: 'Von (MM/JJJJ)', v_bis: 'Bis (MM/JJJJ)', v_schule: 'Schule, Ort, Land', v_kl: 'Klassen / Abschluss', v_weg: 'Entfernen',
+                an_zweck: '4. Wofür brauchst du die Anerkennung?', an_zwecklab: 'Zweck', z_ausbildung: 'Berufsausbildung', z_arbeit: 'Arbeit / Bewerbung', z_schule: 'Weiterer Schulbesuch', z_studium: 'Studium', z_weiterbildung: 'Weiterbildung / Umschulung', z_sonst: 'Sonstiges', an_zweckdet: 'Genauer (z. B. Ausbildungsplatz bei …)',
+                an_ziel: 'Gewünschte Einstufung', g_hoechst: 'Höchstmöglicher Abschluss (Stelle entscheidet)', g_esa: 'Erster Schulabschluss (Hauptschulabschluss)', g_msa: 'Mittlerer Schulabschluss (Realschulabschluss)', g_fhr: 'Fachhochschulreife', g_ahr: 'Allgemeine Hochschulreife (Abitur)',
+                an_stelle: '5. An welche Stelle?', an_stellelab: 'Name und Anschrift der Zeugnisanerkennungsstelle (wird beim Bundesland vorausgefüllt, wenn bekannt)',
+                an_anlagen: '6. Anlagen', an_befreiung: 'Ich beantrage eine Gebührenbefreiung bzw. -ermäßigung (z. B. wegen Bürgergeld oder geringem Einkommen) – Nachweis liegt bei.',
+                an_ortunt: 'Ort (für die Unterschrift)', an_pdf: '📄 Antrag als PDF erstellen', an_leeren: 'Felder leeren', an_leeren_frage: 'Alle Felder des Antrags leeren?',
+                an_hinweis2: 'Deine Angaben bleiben auf deinem Gerät (bzw. in deinem Konto, wenn du angemeldet bist). Das PDF ersetzt kein vorgeschriebenes Landesformular – prüfe beim Bundesland oben, ob ein eigenes Formular verlangt wird.',
+                an_fehlt: 'Bitte mindestens ausfüllen: {f}.', an_stelle_fehlt: 'Bitte unter 5. die vollständige Anschrift der zuständigen Stelle eintragen (steht im Formular oder auf der Seite des Landes).', an_latein: 'Diese Felder enthalten Zeichen, die im PDF nicht dargestellt werden können – bitte in lateinischer Schrift schreiben: {f}.', an_pdf_fehler: 'Das PDF konnte nicht erstellt werden (keine Internetverbindung zum Laden des PDF-Bausteins?).', an_fertig: '✅ PDF erstellt: {n}',
+                al: { lebenslauf: 'Tabellarischer Lebenslauf mit lückenloser Schulzeit', ausweis: 'Kopie von Pass oder Personalausweis', aufenthalt: 'Kopie des Aufenthaltstitels (mit Zusatzblatt)', melde: 'Meldebescheinigung', zeugnis: 'Beglaubigte Kopie des Abschlusszeugnisses (Originalsprache)', noten: 'Beglaubigte Kopie der Fächer- und Notenübersicht', uebers: 'Beglaubigte Übersetzungen der Zeugnisse (vereidigte Übersetzer)', name: 'Nachweis der Namensänderung', zweck: 'Nachweis über Ausbildungs-, Arbeits- oder Studienplatz', gebuehr: 'Nachweis für die Gebührenbefreiung (z. B. Bürgergeld-Bescheid)' },
             },
             en: {
                 titel: 'Recognition of qualifications', untertitel: 'Foreign vocational training, degree, school – step by step',
@@ -170,7 +255,27 @@
                     bescheid: 'Wait for the notice (up to 4 months from complete documents) – plan an adaptation qualification if needed',
                     anabin: 'Check in anabin how your university and degree are classified',
                     zab: 'Apply online for a statement of comparability at the ZAB (€208)'
-                }
+                },
+                land_titel: '📍 Your federal state', land_info: 'The certificate recognition office of the federal state where you live (or want to train or work) is responsible.', land_wahl: 'Federal state', land_bitte: '– please choose –',
+                land_stelle: 'Responsible office', land_link: '🔗 Official information and form', land_mail: 'E-mail',
+                land_offen: 'We have not checked the responsible office for this state ourselves yet. You can find it in the official anabin database: “Suchen nach anderen Stellen” → responsibility “Zeugnisanerkennung” → your state.', land_anabin: '🔎 Find the office in anabin', land_finder: 'Recognition Finder',
+                land_formular: '⚠️ This state has its own application form. Please use the official form – the PDF below helps you fill it in and can be enclosed as a cover letter.',
+                land_stand: 'Information checked in October 2026 on the state websites. Fees and forms can change.',
+                an_titel: '📝 Prepare the application – as a PDF', an_info: 'Fill in the fields. This creates a complete application ready to sign as a PDF – with your details, your school history and the list of enclosures. Please write everything in Latin letters, exactly as in your passport.',
+                an_hinweis_offen: 'Choose your federal state above. If there is no state form, you can sign and submit this PDF as your application; ask the office if in doubt.',
+                an_hinweis_formular: 'Your state requires its own form. Use the PDF to help you fill it in and as a cover letter for the official form.',
+                an_hinweis_frei: 'We do not know of a mandatory state form for your state. Ask the office whether an informal application (this PDF) is enough.',
+                an_person: '1. Personal details', an_nachname: 'Surname', an_vorname: 'First name(s)', an_gebname: 'Birth name (if different)', an_gebdat: 'Date of birth', an_gebort: 'Place and country of birth', an_staat: 'Nationality', an_strasse: 'Street and house number', an_plzort: 'Postcode and town', an_tel: 'Phone', an_mail: 'E-mail',
+                an_abschluss: '2. Foreign school-leaving certificate', an_land: 'Country where the certificate was obtained', an_aname: 'Name of the certificate (as on the certificate, with translation if needed)', an_schule: 'School (name)', an_sort: 'Town of the school', an_datum: 'Date of the certificate', an_jahre: 'Total years of school (from grade 1)',
+                an_verlauf: '3. School history (complete, from grade 1)', an_vplus: '➕ Add school', v_von: 'From (MM/YYYY)', v_bis: 'To (MM/YYYY)', v_schule: 'School, town, country', v_kl: 'Grades / certificate', v_weg: 'Remove',
+                an_zweck: '4. What do you need the recognition for?', an_zwecklab: 'Purpose', z_ausbildung: 'Vocational training', z_arbeit: 'Work / job application', z_schule: 'Further schooling', z_studium: 'University studies', z_weiterbildung: 'Further training / retraining', z_sonst: 'Other', an_zweckdet: 'Details (e.g. training place at …)',
+                an_ziel: 'Requested classification', g_hoechst: 'Highest possible certificate (office decides)', g_esa: 'Erster Schulabschluss (Hauptschulabschluss)', g_msa: 'Mittlerer Schulabschluss (Realschulabschluss)', g_fhr: 'Fachhochschulreife', g_ahr: 'Allgemeine Hochschulreife (Abitur)',
+                an_stelle: '5. Which office?', an_stellelab: 'Name and address of the certificate recognition office (pre-filled for your state if known)',
+                an_anlagen: '6. Enclosures', an_befreiung: 'I apply for a fee waiver or reduction (e.g. because of Bürgergeld or low income) – proof is enclosed.',
+                an_ortunt: 'Town (for the signature)', an_pdf: '📄 Create application PDF', an_leeren: 'Clear fields', an_leeren_frage: 'Clear all fields of the application?',
+                an_hinweis2: 'Your details stay on your device (or in your account if you are signed in). The PDF does not replace a mandatory state form – check above whether your state requires its own form.',
+                an_fehlt: 'Please fill in at least: {f}.', an_stelle_fehlt: 'Please enter the full address of the responsible office under 5. (it is on the form or the state website).', an_latein: 'These fields contain characters that cannot be shown in the PDF – please write in Latin letters: {f}.', an_pdf_fehler: 'The PDF could not be created (no internet connection to load the PDF module?).', an_fertig: '✅ PDF created: {n}',
+                al: { lebenslauf: 'Tabular CV with complete school history', ausweis: 'Copy of passport or ID card', aufenthalt: 'Copy of residence permit (with supplementary sheet)', melde: 'Registration certificate (Meldebescheinigung)', zeugnis: 'Certified copy of the school-leaving certificate (original language)', noten: 'Certified copy of the subjects and grades', uebers: 'Certified translations of the certificates (sworn translators)', name: 'Proof of name change', zweck: 'Proof of training, job or study place', gebuehr: 'Proof for the fee waiver (e.g. Bürgergeld notice)' },
             }
         };
     </script>
@@ -189,7 +294,7 @@
             frei: { titel: 'e_frei_titel', text: 'e_frei', check: ['stelle', 'beratung', 'kosten', 'zeugnis', 'inhalte', 'erfahrung', 'lebenslauf', 'ausweis', 'uebersetzung', 'antrag', 'bescheid'] },
             weiss: { titel: 'e_weiss_titel', text: 'e_weiss', check: [] },
             studium: { titel: 'e_studium_frei_titel', text: 'e_studium_frei', check: ['anabin', 'zeugnis', 'inhalte', 'ausweis', 'zab'] },
-            schule: { titel: 'e_schule_titel', text: 'e_schule', check: ['stelle', 'zeugnis', 'ausweis', 'uebersetzung', 'antrag'] }
+            schule: { titel: 'e_schule_titel', text: 'e_schule', check: ['stelle', 'zeugnis', 'lebenslauf', 'ausweis', 'uebersetzung', 'antrag'] }
         };
         function pfad() {
             if (d.art === 'schule') return 'schule';
@@ -215,7 +320,7 @@
             const b = e.target.closest('[data-art]');
             if (!b) return;
             if (d.art !== b.dataset.art) { d.art = b.dataset.art; d.reg = ''; }
-            speichern(); zeige();
+            speichern(); zeige(); if (typeof zeigeSchule === 'function') zeigeSchule();
             const ziel = d.art === 'schule' ? $('ergebnis') : $('frage2');
             setTimeout(() => ziel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
         });
@@ -234,6 +339,230 @@
         });
         document.addEventListener('sd-lang-changed', zeige);
         zeige();
+
+        // ---------- Schulabschluss: Bundesland + Antrag ----------
+        // Nur Angaben, die auf den offiziellen Seiten der Länder geprüft wurden (Okt. 2026). Alle anderen: anabin-Suche.
+        const LAENDER = [
+            ['BW', 'Baden-Württemberg', { stelle: 'Regierungspräsidium Stuttgart\nReferat 73.2 – Zeugnisanerkennungsstelle\n(Anschrift laut Formular ergänzen)', formular: true,
+                links: [['Antragsformular (PDF)', 'https://rps.baden-wuerttemberg.de/fileadmin/RP-Internet/Stuttgart/Abteilung_7/_DocumentLibraries/Documents/Zeugnisanerkennungab2019/2025-12-05_Antrag_Anerkennung_schulisch.pdf'], ['Infos / Online-Antrag (service-bw)', 'https://web1.karlsruhe.de/service/Buergerdienste/leistung.php?id=863']],
+                info: { de: 'Antrag schriftlich oder online über service-bw. Beglaubigte Kopien; Übersetzung durch vereidigte Übersetzer (nicht nötig bei Dokumenten auf Deutsch oder Englisch). Gebührenbefreiung bei geringem Einkommen möglich.', en: 'Apply in writing or online via service-bw. Certified copies; translation by sworn translators (not needed for documents in German or English). Fee waiver possible on low income.' } }],
+            ['BY', 'Bayern', { stelle: 'Bayerisches Landesamt für Schule\nZeugnisanerkennungsstelle\n(Anschrift in Gunzenhausen laut Formular ergänzen)', formular: true,
+                links: [['Antragsformular Deutsch (PDF)', 'https://www.las.bayern.de/mam/zeugnisanerkennung/allgemeinbildende_schulabschluesse/antragsformular_zast_deutsch_v3.pdf'], ['Application form English (PDF)', 'https://www.las.bayern.de/mam/zeugnisanerkennung/allgemeinbildende_schulabschluesse/antragsformular_zast_englisch.pdf'], ['BayernPortal', 'https://www.bayernportal.de/dokumente/leistung/242201860439']],
+                info: { de: 'Kostenlos. Nötig ist meist eine schriftliche Bestätigung, dass eine bayerische Schule, Hochschule oder ein Ausbildungsbetrieb die Anerkennung verlangt.', en: 'Free of charge. Usually you need written confirmation that a Bavarian school, university or training company requires the recognition.' } }],
+            ['BE', 'Berlin'], ['BB', 'Brandenburg', { stelle: 'Staatliches Schulamt Cottbus\nZeugnisanerkennungsstelle\nCalauer Straße 71\n03048 Cottbus', formular: true,
+                links: [['Antragsformular (PDF, Stand 05/2025)', 'https://schulaemter.brandenburg.de/sixcms/media.php/161/02_onlineformular_asa_2025.pdf']],
+                info: { de: 'Antrag per Post oder als eingescanntes PDF per E-Mail an die Zeugnisanerkennungsstelle.', en: 'Send the application by post or as a scanned PDF by e-mail to the recognition office.' } }],
+            ['HB', 'Bremen'], ['HH', 'Hamburg', { stelle: 'Schulinformationszentrum (SIZ)\nHamburger Straße 125a\n22083 Hamburg', formular: false,
+                links: [['hamburg.de – Bewertung ausländischer Schulzeugnisse', 'https://www.hamburg.de/service/info/111095357/']],
+                info: { de: 'Keine Gebühren. Termin telefonisch vereinbaren: 040 428 99 22 11.', en: 'No fees. Make an appointment by phone: +49 40 428 99 22 11.' } }],
+            ['HE', 'Hessen'], ['MV', 'Mecklenburg-Vorpommern'],
+            ['NI', 'Niedersachsen', { stelle: 'Regionales Landesamt für Schule und Bildung Lüneburg\nZeugnisanerkennung\nPostfach 21 20\n21311 Lüneburg', mail: 'zeugnisanerkennung@rlsb-lg.niedersachsen.de', formular: true,
+                links: [['Antragsformular (PDF)', 'https://bildungsportal-niedersachsen.de/fileadmin/8_Schulorganisation/01_Auslaendische_Abschluesse/Dokumente/Schulabschluesse/Antrag_Anerkennung_Schulabschluss-Stand_22.02.2024.pdf']],
+                info: { de: 'Gebühr etwa 54–100 €, Befreiung möglich. Keine Übersetzung nötig bei Dokumenten auf Englisch, Französisch oder Spanisch.', en: 'Fee about €54–100, exemption possible. No translation needed for documents in English, French or Spanish.' } }],
+            ['NW', 'Nordrhein-Westfalen', { stelle: 'Bezirksregierung Köln\nDezernat 48 – Zeugnisanerkennung\n(Anschrift laut Broschüre ergänzen)', formular: false,
+                links: [['Informationsbroschüre (PDF)', 'https://www.brd.nrw.de/document/20260415_4_48_Schulrecht_Schulverwaltung_Zeugnisanerkennung_Informationsbroschuere.pdf']],
+                info: { de: 'Mittlere Abschlüsse (z. B. Realschule): Bezirksregierung Köln, Dez. 48. Hochschulreife: Bezirksregierung Düsseldorf, Dez. 48. Gebührenfrei, Antrag per Post. Genaue Anschrift und ggf. Formular bitte in der Broschüre prüfen.', en: 'Intermediate certificates (e.g. Realschule): Bezirksregierung Köln, Dept. 48. University entrance: Bezirksregierung Düsseldorf, Dept. 48. Free of charge, apply by post. Please check the exact address and any form in the brochure.' } }],
+            ['RP', 'Rheinland-Pfalz'], ['SL', 'Saarland'],
+            ['SN', 'Sachsen', { stelle: 'Landesamt für Schule und Bildung (LaSuB)\nZeugnisanerkennung\n(Anschrift laut Formular ergänzen)', formular: true,
+                links: [['Antragsformular (PDF)', 'https://www.schule.sachsen.de/zvv/zvv_struktur_04/zvv_04_99_001_schule.pdf'], ['Online über Amt24', 'https://amt24.sachsen.de']],
+                info: { de: 'Antrag auch online über Amt24. Gebühr je nach Aufwand etwa 35–675 €.', en: 'You can also apply online via Amt24. Fee depending on effort about €35–675.' } }],
+            ['ST', 'Sachsen-Anhalt'], ['SH', 'Schleswig-Holstein'], ['TH', 'Thüringen']
+        ];
+        const ANABIN = 'https://anabin.kmk.org/db/anerkennungs-und-beratungsstellen';
+        const ANLAGEN = ['lebenslauf', 'ausweis', 'aufenthalt', 'melde', 'zeugnis', 'noten', 'uebers', 'name', 'zweck', 'gebuehr'];
+        if (!d.antrag) d.antrag = {};
+        if (!Array.isArray(d.antrag.verlauf) || !d.antrag.verlauf.length) d.antrag.verlauf = [{}, {}];
+        if (!d.antrag.anlagen) d.antrag.anlagen = { lebenslauf: true, ausweis: true, zeugnis: true, noten: true, uebers: true };
+        const A = d.antrag;
+        const landDaten = () => (LAENDER.find(l => l[0] === d.land) || [])[2] || null;
+        const lang = () => (window.SD_LANG === 'en' ? 'en' : 'de');
+
+        function zeigeSchule() {
+            const an = d.art === 'schule';
+            $('landKarte').hidden = !an; $('antragKarte').hidden = !an;
+            if (!an) return;
+            const sel = $('land');
+            sel.innerHTML = '<option value="">' + esc(t('land_bitte')) + '</option>' + LAENDER.map(l => '<option value="' + l[0] + '"' + (d.land === l[0] ? ' selected' : '') + '>' + esc(l[1]) + '</option>').join('');
+            const L = landDaten();
+            let h = '';
+            if (d.land && L) {
+                h += '<div class="hinweis gut"><b>' + esc(t('land_stelle')) + ':</b><br>' + esc(L.stelle).replace(/\n/g, '<br>') + (L.mail ? '<br>' + esc(t('land_mail')) + ': <span style="user-select:all">' + esc(L.mail) + '</span>' : '') + '</div>';
+                h += '<p class="info">' + esc(L.info[lang()]) + '</p>';
+                if (L.formular) h += '<p class="hinweis">' + esc(t('land_formular')) + '</p>';
+                h += '<div class="knoepfe">' + L.links.map(x => '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(x[1]) + '">🔗 ' + esc(x[0]) + '</a>').join('') + '</div>';
+                h += '<p class="quelle">' + esc(t('land_stand')) + '</p>';
+            } else if (d.land) {
+                h += '<p class="hinweis">' + esc(t('land_offen')) + '</p><div class="knoepfe"><a class="btn klein prim" target="_blank" rel="noopener" href="' + ANABIN + '">' + esc(t('land_anabin')) + '</a></div>';
+            }
+            $('landInfo').innerHTML = h;
+            $('anHinweis').textContent = !d.land ? t('an_hinweis_offen') : (L ? (L.formular ? t('an_hinweis_formular') : t('an_hinweis_frei')) : t('an_hinweis_offen'));
+            // Felder füllen
+            document.querySelectorAll('#antragKarte [data-a]').forEach(el => {
+                const k = el.dataset.a;
+                if (el.type === 'checkbox') el.checked = !!A[k];
+                else if (A[k] != null) el.value = A[k];
+                else if (el.tagName === 'SELECT') A[k] = el.value;
+            });
+            zeigeVerlauf();
+            const al = t('al');
+            $('anlagen').innerHTML = ANLAGEN.map(k => '<label class="check"><input type="checkbox" data-al="' + k + '"' + (A.anlagen[k] ? ' checked' : '') + '> <span>' + esc(al[k]) + '</span></label>').join('');
+        }
+        function zeigeVerlauf() {
+            $('verlauf').innerHTML = A.verlauf.map((v, i) => '<div data-v="' + i + '" class="vzeile">' +
+                ['von', 'bis', 'schule', 'kl'].map(k => '<label class="feld"><span>' + esc(t('v_' + k)) + '</span><input type="text" data-vk="' + k + '" value="' + esc(v[k] || '') + '"></label>').join('') +
+                '<button type="button" class="btn klein" data-vweg="' + i + '" title="' + esc(t('v_weg')) + '" aria-label="' + esc(t('v_weg')) + '">✕</button></div>').join('');
+        }
+        $('land').addEventListener('change', () => {
+            const alt = landDaten();
+            d.land = $('land').value;
+            const L = landDaten();
+            // Stelle vorausfüllen, wenn leer oder noch die alte Vorbelegung
+            if (L && (!A.stelle || (alt && A.stelle === alt.stelle))) A.stelle = L.stelle;
+            if (!L && alt && A.stelle === alt.stelle) A.stelle = '';
+            speichern(); zeigeSchule();
+        });
+        $('antragKarte').addEventListener('input', (e) => {
+            const el = e.target;
+            if (el.dataset.a) A[el.dataset.a] = el.type === 'checkbox' ? el.checked : el.value;
+            else if (el.dataset.vk) { const i = +el.closest('[data-v]').dataset.v; A.verlauf[i][el.dataset.vk] = el.value; }
+            else if (el.dataset.al) A.anlagen[el.dataset.al] = el.checked;
+            speichern();
+        });
+        $('antragKarte').addEventListener('change', (e) => { if (e.target.matches('select,input[type=checkbox]')) e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+        $('verlauf').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-vweg]'); if (!b) return;
+            A.verlauf.splice(+b.dataset.vweg, 1); if (!A.verlauf.length) A.verlauf.push({});
+            speichern(); zeigeVerlauf();
+        });
+        $('vPlus').addEventListener('click', () => { A.verlauf.push({}); speichern(); zeigeVerlauf(); });
+        $('anLeeren').addEventListener('click', (e) => SD.sicherFragen(e.currentTarget, t('an_leeren_frage'), () => {
+            d.antrag = { verlauf: [{}, {}], anlagen: { lebenslauf: true, ausweis: true, zeugnis: true, noten: true, uebers: true } };
+            Object.keys(A).forEach(k => delete A[k]); Object.assign(A, d.antrag); d.antrag = A;
+            document.querySelectorAll('#antragKarte [data-a]').forEach(el => { if (el.type === 'checkbox') el.checked = false; else if (el.tagName !== 'SELECT') el.value = ''; });
+            speichern(); zeigeSchule();
+        }));
+
+        function ladeSkript(url, name) {
+            return new Promise((ok, fehler) => {
+                if (window[name]) return ok(window[name]);
+                const s = document.createElement('script');
+                s.src = url;
+                s.onload = () => window[name] ? ok(window[name]) : fehler(new Error(name));
+                s.onerror = () => fehler(new Error('Keine Verbindung'));
+                document.head.appendChild(s);
+            });
+        }
+        const pdfText = (s) => String(s == null ? '' : s).replace(/[–—−]/g, '-').replace(/[^\x20-\x7E\xA0-\xFF€„“‚‘’…•\n]/g, '');
+        const deDatum = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : (iso || ''); };
+        // PDF ist immer Deutsch: es geht an eine deutsche Behörde
+        const PDF_ZWECK = { ausbildung: 'Aufnahme einer Berufsausbildung', arbeit: 'Arbeitsaufnahme / Bewerbung', schule: 'Weiterer Schulbesuch', studium: 'Aufnahme eines Studiums', weiterbildung: 'Weiterbildung / Umschulung', sonst: 'Sonstiges' };
+        const PDF_ZIEL = { hoechst: 'dem höchstmöglichen deutschen Schulabschluss', esa: 'dem Ersten Schulabschluss (Hauptschulabschluss)', msa: 'dem Mittleren Schulabschluss (Realschulabschluss)', fhr: 'der Fachhochschulreife', ahr: 'der Allgemeinen Hochschulreife' };
+        const PDF_AL = { lebenslauf: 'Tabellarischer Lebenslauf mit lückenloser Darstellung der Schulzeit', ausweis: 'Kopie des Reisepasses bzw. Personalausweises', aufenthalt: 'Kopie des Aufenthaltstitels (mit Zusatzblatt)', melde: 'Meldebescheinigung', zeugnis: 'Beglaubigte Kopie des Abschlusszeugnisses in der Originalsprache', noten: 'Beglaubigte Kopie der Fächer- und Notenübersicht', uebers: 'Beglaubigte Übersetzungen der Zeugnisse (vereidigte Übersetzer)', name: 'Nachweis der Namensänderung', zweck: 'Nachweis über den Ausbildungs-, Arbeits- bzw. Studienplatz', gebuehr: 'Nachweis zur Gebührenbefreiung bzw. -ermäßigung' };
+
+        function pruefen() {
+            const pflicht = [['nachname', 'an_nachname'], ['vorname', 'an_vorname'], ['gebdat', 'an_gebdat'], ['strasse', 'an_strasse'], ['plzort', 'an_plzort'], ['aland', 'an_land'], ['aname', 'an_aname']];
+            const fehlt = pflicht.filter(p => !String(A[p[0]] || '').trim()).map(p => t(p[1]));
+            if (fehlt.length) return t('an_fehlt', { f: fehlt.join(', ') });
+            if (!String(A.stelle || '').trim() || /ergänzen\)/.test(A.stelle)) return t('an_stelle_fehlt');
+            const textFelder = { nachname: 'an_nachname', vorname: 'an_vorname', gebname: 'an_gebname', gebort: 'an_gebort', staat: 'an_staat', strasse: 'an_strasse', plzort: 'an_plzort', aland: 'an_land', aname: 'an_aname', aschule: 'an_schule', aort: 'an_sort', zweckdet: 'an_zweckdet', stelle: 'an_stellelab', ortunt: 'an_ortunt' };
+            const nichtLatein = Object.keys(textFelder).filter(k => A[k] && pdfText(A[k]) !== String(A[k]).replace(/[–—−]/g, '-')).map(k => t(textFelder[k]));
+            if (A.verlauf.some(v => ['schule', 'kl', 'von', 'bis'].some(k => v[k] && pdfText(v[k]) !== String(v[k]).replace(/[–—−]/g, '-')))) nichtLatein.push(t('an_verlauf'));
+            if (nichtLatein.length) return t('an_latein', { f: nichtLatein.join(', ') });
+            return '';
+        }
+
+        async function erstellePdf() {
+            const f = pruefen();
+            $('anFehler').hidden = !f; $('anFehler').textContent = f;
+            if (f) { $('anFehler').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+            let jspdf;
+            try { jspdf = await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf'); }
+            catch (e) { $('anFehler').hidden = false; $('anFehler').textContent = t('an_pdf_fehler'); return; }
+            const doc = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+            const L = 20, B = 170, U = 280;
+            let y = 20;
+            const P = pdfText;
+            const neueSeite = (h) => { if (y + h > U) { doc.addPage(); y = 20; } };
+            const absatz = (txt, opt) => {
+                opt = opt || {};
+                doc.setFont('helvetica', opt.fett ? 'bold' : 'normal'); doc.setFontSize(opt.gr || 10.5);
+                const zl = doc.splitTextToSize(P(txt), opt.b || B);
+                zl.forEach(z => { neueSeite(5.2); doc.text(z, opt.x || L, y); y += (opt.zh || 5.2); });
+                y += opt.nach != null ? opt.nach : 2;
+            };
+            const tabelle = (zeilen) => {
+                zeilen.filter(z => String(z[1] || '').trim()).forEach(z => {
+                    doc.setFontSize(10);
+                    const w = doc.splitTextToSize(P(z[1]), B - 62);
+                    neueSeite(w.length * 5 + 1);
+                    doc.setFont('helvetica', 'normal'); doc.setTextColor(90); doc.text(P(z[0]), L, y);
+                    doc.setTextColor(0); doc.text(w, L + 62, y);
+                    y += w.length * 5 + 1;
+                });
+                y += 3;
+            };
+            // Absender
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+            const abs = [((A.vorname || '') + ' ' + (A.nachname || '')).trim(), A.strasse, A.plzort, A.tel ? 'Tel.: ' + A.tel : '', A.mail ? 'E-Mail: ' + A.mail : ''].filter(Boolean);
+            abs.forEach(z => { doc.text(P(z), L, y); y += 4.6; });
+            y += 8;
+            // Empfänger
+            doc.setFontSize(10.5);
+            String(A.stelle || '').split('\n').filter(z => z.trim()).forEach(z => { doc.text(P(z), L, y); y += 5.2; });
+            y = Math.max(y + 8, 82);
+            const heute = new Date();
+            const dat = String(heute.getDate()).padStart(2, '0') + '.' + String(heute.getMonth() + 1).padStart(2, '0') + '.' + heute.getFullYear();
+            doc.text(P((A.ortunt ? A.ortunt + ', ' : '') + dat), L + B, y, { align: 'right' });
+            y += 10;
+            absatz('Antrag auf Anerkennung und Bewertung eines ausländischen Schulabschlusses (Feststellung der Gleichwertigkeit)', { fett: true, gr: 12, zh: 6, nach: 4 });
+            absatz('Sehr geehrte Damen und Herren,', { nach: 3 });
+            absatz('hiermit beantrage ich die Bewertung meines in ' + (A.aland || '') + ' erworbenen Schulabschlusses und die Feststellung der Gleichwertigkeit mit ' + PDF_ZIEL[A.ziel || 'hoechst'] + '.', { nach: 3 });
+            absatz('Ich benötige die Anerkennung für: ' + PDF_ZWECK[A.zweck || 'ausbildung'] + (A.zweckdet ? ' (' + A.zweckdet + ')' : '') + '.', { nach: 5 });
+
+            absatz('1. Angaben zur Person', { fett: true, nach: 1.5 });
+            tabelle([['Familienname', A.nachname], ['Vorname(n)', A.vorname], ['Geburtsname', A.gebname], ['Geburtsdatum', deDatum(A.gebdat)], ['Geburtsort, -land', A.gebort], ['Staatsangehörigkeit', A.staat], ['Anschrift', [A.strasse, A.plzort].filter(Boolean).join(', ')], ['Telefon', A.tel], ['E-Mail', A.mail]]);
+            absatz('2. Ausländischer Schulabschluss', { fett: true, nach: 1.5 });
+            tabelle([['Land', A.aland], ['Bezeichnung', A.aname], ['Schule', [A.aschule, A.aort].filter(Boolean).join(', ')], ['Datum des Abschlusses', A.adatum], ['Schuljahre insgesamt', A.jahre]]);
+            const vl = A.verlauf.filter(v => Object.values(v).some(x => String(x || '').trim()));
+            if (vl.length) {
+                absatz('3. Schulbesuch', { fett: true, nach: 1.5 });
+                neueSeite(7);
+                doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(90);
+                const sp = [L, L + 24, L + 48, L + 118];
+                ['Von', 'Bis', 'Schule, Ort, Land', 'Klassen / Abschluss'].forEach((h, i) => doc.text(h, sp[i], y));
+                doc.setTextColor(0); y += 1.5; doc.setDrawColor(180); doc.line(L, y, L + B, y); y += 4.5;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+                vl.forEach(v => {
+                    const s1 = doc.splitTextToSize(P(v.schule || ''), 68), s2 = doc.splitTextToSize(P(v.kl || ''), 52);
+                    const h = Math.max(s1.length, s2.length, 1) * 5;
+                    neueSeite(h + 1);
+                    doc.text(P(v.von || ''), sp[0], y); doc.text(P(v.bis || ''), sp[1], y); doc.text(s1, sp[2], y); doc.text(s2, sp[3], y);
+                    y += h + 1;
+                });
+                y += 4;
+            }
+            const al = ANLAGEN.filter(k => A.anlagen[k]);
+            if (al.length) {
+                absatz((vl.length ? '4' : '3') + '. Anlagen', { fett: true, nach: 1.5 });
+                al.forEach(k => absatz('-  ' + PDF_AL[k], { x: L + 2, b: B - 4, nach: 0.5 }));
+                y += 3;
+            }
+            if (A.befreiung) absatz('Ich beantrage eine Befreiung bzw. Ermäßigung der Gebühren, da ich nur über ein geringes Einkommen verfüge bzw. Sozialleistungen beziehe. Ein Nachweis liegt bei.', { nach: 3 });
+            absatz('Ich versichere, dass meine Angaben richtig und vollständig sind.', { nach: 3 });
+            absatz('Für Rückfragen bin ich gern erreichbar. Vielen Dank für die Bearbeitung.', { nach: 4 });
+            absatz('Mit freundlichen Grüßen', { nach: 16 });
+            neueSeite(12);
+            doc.setDrawColor(0); doc.line(L, y, L + 75, y); y += 4.5;
+            doc.setFontSize(9); doc.text(P('Unterschrift ' + ((A.vorname || '') + ' ' + (A.nachname || '')).trim()), L, y);
+            const n = doc.getNumberOfPages();
+            for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(140); doc.text(P('Antrag Anerkennung Schulabschluss - ' + ((A.vorname || '') + ' ' + (A.nachname || '')).trim() + (n > 1 ? ' - Seite ' + i + ' von ' + n : '')), L, 290); doc.setTextColor(0); }
+            const name = SD.dateiname('Antrag-Anerkennung-Schulabschluss-' + (A.nachname || ''), '.pdf');
+            SD.herunterladen(doc.output('blob'), name);
+            SD.toast(t('an_fertig', { n: name }));
+        }
+        $('anPdf').addEventListener('click', erstellePdf);
+        document.addEventListener('sd-lang-changed', zeigeSchule);
+        zeigeSchule();
     </script>
 </body>
 
