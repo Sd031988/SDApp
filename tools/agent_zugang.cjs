@@ -32,7 +32,10 @@ async function kHolen() {
   const zug = lese(ZUG);
   const k = await z.oeffnen(zug, code);
   if (!k) fehler('ADMIN_CODE passt nicht zu agent/zugang.json');
-  return { zug, k };
+  // D = Schluessel der PC-Version (Download-Freigabe). Alte Dateien ohne "dl": PC-Version liegt noch mit K.
+  const d = zug.dl ? await z.oeffnen(zug, code, 'dl') : null;
+  if (zug.dl && !d) fehler('Admin hat keine Download-Freigabe in zugang.json');
+  return { zug, k, d };
 }
 
 (async () => {
@@ -43,29 +46,33 @@ async function kHolen() {
   if (cmd === 'einrichten') {
     if (fs.existsSync(ZUG)) fehler('agent/zugang.json existiert schon – zum Ändern "verschluesseln" benutzen');
     if (!a1 || !a2) fehler('einrichten <klartext.html> <pc.zip>');
-    const k = z.zufall(32), key = await z.aesKey(k), ver = neueVersion();
+    const k = z.zufall(32), key = await z.aesKey(k), d = z.zufall(32), ver = neueVersion();
     fs.mkdirSync(path.join(AGENT, 'pc-agent'), { recursive: true });
     schreibe(path.join(AGENT, 'app-' + ver + '.enc'), await z.verschluessle(key, fs.readFileSync(a1, 'utf8')));
-    schreibe(path.join(AGENT, 'pc-agent', 'pc-' + ver + '.enc'), await z.verschluessle(key, new Uint8Array(fs.readFileSync(a2))));
-    const admin = await z.einpacken(k, code);
-    schreibe(ZUG, { v: 1, ver, iter: z.ITER, eintraege: { [admin.id]: admin.eintrag } });
+    schreibe(path.join(AGENT, 'pc-agent', 'pc-' + ver + '.enc'), await z.verschluessle(await z.aesKey(d), new Uint8Array(fs.readFileSync(a2))));
+    const admin = await z.einpacken(k, code), adminDl = await z.einpacken(d, code);
+    schreibe(ZUG, { v: 1, ver, iter: z.ITER, eintraege: { [admin.id]: admin.eintrag }, dl: { [adminDl.id]: adminDl.eintrag } });
     schreibe(path.join(AGENT, 'admin.enc'), await z.registerVerschluesseln(code, { personen: [] }));
     console.log('Eingerichtet, Version ' + ver);
   } else if (cmd === 'entschluesseln') {
     if (!a1) fehler('entschluesseln <zielordner>');
     if (path.resolve(a1).startsWith(path.resolve(__dirname, '..'))) fehler('Zielordner muss AUSSERHALB des Repositories liegen');
-    const { zug, k } = await kHolen(), key = await z.aesKey(k);
+    const { zug, k, d } = await kHolen(), key = await z.aesKey(k);
     fs.mkdirSync(a1, { recursive: true });
     fs.writeFileSync(path.join(a1, 'app.html'), z.text(await z.entschluessle(key, lese(path.join(AGENT, 'app-' + zug.ver + '.enc')))));
-    fs.writeFileSync(path.join(a1, 'pc.zip'), await z.entschluessle(key, lese(path.join(AGENT, 'pc-agent', 'pc-' + zug.ver + '.enc'))));
+    fs.writeFileSync(path.join(a1, 'pc.zip'), await z.entschluessle(d ? await z.aesKey(d) : key, lese(path.join(AGENT, 'pc-agent', 'pc-' + zug.ver + '.enc'))));
     console.log('Entschlüsselt nach ' + a1 + ' (app.html, pc.zip)');
   } else if (cmd === 'verschluesseln') {
     if (!a1) fehler('verschluesseln <klartext.html> [pc.zip]');
-    const { zug, k } = await kHolen(), key = await z.aesKey(k), ver = neueVersion();
+    let { zug, k, d } = await kHolen(); const key = await z.aesKey(k), ver = neueVersion();
     const altZip = path.join(AGENT, 'pc-agent', 'pc-' + zug.ver + '.enc');
-    const zip = a2 ? new Uint8Array(fs.readFileSync(a2)) : await z.entschluessle(key, lese(altZip));
+    const zip = a2 ? new Uint8Array(fs.readFileSync(a2)) : await z.entschluessle(d ? await z.aesKey(d) : key, lese(altZip));
+    if (!d) {   // Umstellung: eigener Download-Schluessel, zunaechst nur fuer den Admin freigegeben
+      d = z.zufall(32); const a = await z.einpacken(d, code, zug.iter); zug.dl = { [a.id]: a.eintrag };
+      console.log('Download-Freigabe eingerichtet: nur Admin. Personen in agent/zugang.html freigeben.');
+    }
     schreibe(path.join(AGENT, 'app-' + ver + '.enc'), await z.verschluessle(key, fs.readFileSync(a1, 'utf8')));
-    schreibe(path.join(AGENT, 'pc-agent', 'pc-' + ver + '.enc'), await z.verschluessle(key, zip));
+    schreibe(path.join(AGENT, 'pc-agent', 'pc-' + ver + '.enc'), await z.verschluessle(await z.aesKey(d), zip));
     zug.ver = ver; schreibe(ZUG, zug); alteDateienWeg(ver);
     console.log('Neu verschlüsselt, Version ' + ver);
   } else {

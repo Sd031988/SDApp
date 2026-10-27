@@ -77,7 +77,10 @@
                     if (!kRaw) throw Object.assign(new Error('falsch'), { falsch: true });
                     const paket = await (await fetch('app-' + zug.ver + '.enc?t=' + Date.now(), { cache: 'no-store' })).json();
                     const html = z.text(await z.entschluessle(await z.aesKey(kRaw), paket));
+                    // Download-Freigabe (eigener Schluessel D) – nur wer freigegeben ist, kann die PC-Version entschluesseln
+                    const dRaw = zug.dl ? await z.oeffnen(zug, code, 'dl') : kRaw;
                     try {
+                        if (dRaw) sessionStorage.setItem('sdAgentDL', z.b64(dRaw)); else sessionStorage.removeItem('sdAgentDL');
                         sessionStorage.setItem('sdAgentK', z.b64(kRaw));
                         sessionStorage.setItem('sdAgentZugang', code);
                         if (merken) localStorage.setItem('sdAgentZugang', code);

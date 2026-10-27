@@ -55,6 +55,7 @@
             <form id="neuForm" class="zeile" autocomplete="off">
                 <input type="text" id="neuName" placeholder="Name, z. B. Ahmad Karimi" maxlength="80" required>
                 <button type="submit" id="neuBtn">Schlüssel erstellen</button>
+                <label class="info" style="flex-basis:100%;display:flex;gap:6px;align-items:center"><input type="checkbox" id="neuDl"> Darf auch die PC-Version (Windows, Linux, Mac) herunterladen</label>
             </form>
             <div class="neu" id="neuBox" hidden>
                 <b>Neuer Schlüssel für <span id="neuWer"></span>:</b>
@@ -66,8 +67,9 @@
 
         <section class="karte">
             <h2>Personen mit Zugang (<span id="anzahl">0</span>)</h2>
-            <table><thead><tr><th>Name</th><th>Schlüssel</th><th>Seit</th><th></th></tr></thead><tbody id="liste"></tbody></table>
-            <p class="info">„Entziehen“ verschlüsselt alles mit einem neuen Inhaltsschlüssel neu – der alte Schlüssel der Person funktioniert danach nicht mehr. Alle anderen behalten ihren Schlüssel.</p>
+            <table><thead><tr><th>Name</th><th>Schlüssel</th><th>Seit</th><th>PC-Download</th><th></th></tr></thead><tbody id="liste"></tbody></table>
+            <p class="info">Online nutzen darf jede Person mit Schlüssel. Die PC-Version herunterladen nur, wer zusätzlich „Download freigegeben“ hat.</p>
+            <p class="info">„Entziehen“ und „Download sperren“ verschlüsseln alles mit einem neuen Inhaltsschlüssel neu – der alte Schlüssel der Person funktioniert danach nicht mehr. Alle anderen behalten ihren Schlüssel.</p>
         </section>
 
         <section class="karte">
@@ -96,7 +98,7 @@
     const Z = window.sdZugang, $ = id => document.getElementById(id);
     const REPO = 'Sd031988/SDApp', BRANCH = 'main', PFAD = 'agent/';
     const API = window.SD_GH_API || 'https://api.github.com';
-    let adminCode = '', kRaw = null, zug = null, register = null;
+    let adminCode = '', kRaw = null, dRaw = null, zug = null, register = null;
 
     const log = (t, fehler) => { $('log').textContent = t; $('log').classList.toggle('fehler', !!fehler); };
     const lies = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
@@ -130,6 +132,7 @@
             if (!n || n.id !== 'ADMN') throw new Error('Das ist kein Admin-Schlüssel.');
             zug = await holeJson('zugang.json');
             kRaw = await Z.oeffnen(zug, code); if (!kRaw) throw new Error('Admin-Schlüssel ist falsch.');
+            dRaw = zug.dl ? await Z.oeffnen(zug, code, 'dl') : null;   // null = alte Dateien ohne eigene Download-Freigabe
             register = await Z.registerEntschluesseln(code, await holeJson('admin.enc'), zug.iter);
             if (!register) throw new Error('Register konnte nicht gelesen werden.');
             adminCode = code; $('login').hidden = true; $('bereich').hidden = false; zeigeListe();
@@ -141,16 +144,19 @@
     function zeigeListe() {
         const p = register.personen || [];
         $('anzahl').textContent = p.length;
-        $('liste').innerHTML = p.length ? '' : '<tr><td colspan="4" class="info">Noch niemand. Oben eine Person hinzufügen.</td></tr>';
+        $('liste').innerHTML = p.length ? '' : '<tr><td colspan="5" class="info">Noch niemand. Oben eine Person hinzufügen.</td></tr>';
         p.forEach((x, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = '<td>' + esc(x.name) + '</td><td class="mono">' + esc(x.code.slice(0, 9)) + '…</td><td>' + esc((x.erstellt || '').slice(0, 10)) + '</td>' +
+                '<td>' + (x.download ? '✓ freigegeben <button type="button" class="gefahr" data-ds="' + i + '">Sperren</button>' : '– <button type="button" class="zweit" data-df="' + i + '">Freigeben</button>') + '</td>' +
                 '<td style="text-align:right;white-space:nowrap"><button type="button" class="zweit" data-k="' + i + '">Kopieren</button> <button type="button" class="gefahr" data-e="' + i + '">Entziehen</button></td>';
             $('liste').appendChild(tr);
         });
     }
     $('liste').onclick = (e) => {
         const k = e.target.dataset.k, en = e.target.dataset.e;
+        if (e.target.dataset.df != null) downloadFreigeben(+e.target.dataset.df, e.target);
+        if (e.target.dataset.ds != null) downloadSperren(+e.target.dataset.ds, e.target);
         if (k != null) { navigator.clipboard.writeText(nachricht(register.personen[k])); e.target.textContent = 'Kopiert ✓'; setTimeout(() => e.target.textContent = 'Kopieren', 1500); }
         if (en != null) entziehen(+en, e.target);
     };
@@ -162,16 +168,19 @@
         $('neuBtn').disabled = true;
         try {
             let code; do { code = Z.neuerCode(); } while (zug.eintraege[Z.normalisiere(code).id]);
+            const dl = $('neuDl').checked;
+            if (dl && !dRaw) throw new Error('Bitte zuerst bei einer vorhandenen Person „Freigeben“ benutzen (stellt die Download-Freigabe einmalig um).');
             const e2 = await Z.einpacken(kRaw, code, zug.iter);
             const neuZug = JSON.parse(JSON.stringify(zug)); neuZug.eintraege[e2.id] = e2.eintrag;
-            const p = { name, code, erstellt: new Date().toISOString() };
+            if (dl) { const d2 = await Z.einpacken(dRaw, code, zug.iter); neuZug.dl[d2.id] = d2.eintrag; }
+            const p = { name, code, erstellt: new Date().toISOString(), download: dl };
             const neuReg = { personen: (register.personen || []).concat([p]) };
             log('Speichere auf GitHub …');
             await hochladen(PFAD + 'admin.enc', JSON.stringify(await Z.registerVerschluesseln(adminCode, neuReg, zug.iter)), 'Zugang: Person hinzugefügt');
             await hochladen(PFAD + 'zugang.json', JSON.stringify(neuZug), 'Zugang: neuer Schlüssel');
             zug = neuZug; register = neuReg; zeigeListe();
-            $('neuWer').textContent = name; $('neuCode').textContent = code; $('neuText').value = nachricht(p); $('neuBox').hidden = false; $('neuName').value = '';
-            log('✓ ' + name + ' hinzugefügt.');
+            $('neuWer').textContent = name; $('neuCode').textContent = code; $('neuText').value = nachricht(p); $('neuBox').hidden = false; $('neuName').value = ''; $('neuDl').checked = false;
+            log('✓ ' + name + ' hinzugefügt' + (dl ? ' (mit PC-Download).' : ' (nur online).'));
         } catch (x) { log('⚠️ ' + x.message, true); }
         $('neuBtn').disabled = false;
     };
@@ -182,20 +191,47 @@
         const altKey = await Z.aesKey(kRaw);
         log('Lade verschlüsselte Dateien …');
         const app = await Z.entschluessle(altKey, await holeJson('app-' + zug.ver + '.enc'));
-        const pc = await Z.entschluessle(altKey, await holeJson('pc-agent/pc-' + zug.ver + '.enc'));
-        const k2 = Z.zufall(32), key2 = await Z.aesKey(k2), ver = neueVersion();
-        const eintraege = {};
+        const pc = await Z.entschluessle(dRaw ? await Z.aesKey(dRaw) : altKey, await holeJson('pc-agent/pc-' + zug.ver + '.enc'));
+        // neuer Online-Schluessel K (alle) und neuer Download-Schluessel D (nur Freigegebene)
+        const k2 = Z.zufall(32), key2 = await Z.aesKey(k2), d2 = Z.zufall(32), ver = neueVersion();
+        const eintraege = {}, dl = {};
         for (const c of [neuerAdmin].concat(personen.map(p => p.code))) { const e2 = await Z.einpacken(k2, c, zug.iter); eintraege[e2.id] = e2.eintrag; }
-        const neuZug = { v: 1, ver, iter: zug.iter, eintraege };
+        for (const c of [neuerAdmin].concat(personen.filter(p => p.download).map(p => p.code))) { const e2 = await Z.einpacken(d2, c, zug.iter); dl[e2.id] = e2.eintrag; }
+        const neuZug = { v: 1, ver, iter: zug.iter, eintraege, dl };
         log('Lade neu verschlüsselte Dateien hoch …');
         await hochladen(PFAD + 'app-' + ver + '.enc', JSON.stringify(await Z.verschluessle(key2, app)), grund);
-        await hochladen(PFAD + 'pc-agent/pc-' + ver + '.enc', JSON.stringify(await Z.verschluessle(key2, pc)), grund);
+        await hochladen(PFAD + 'pc-agent/pc-' + ver + '.enc', JSON.stringify(await Z.verschluessle(await Z.aesKey(d2), pc)), grund);
         await hochladen(PFAD + 'admin.enc', JSON.stringify(await Z.registerVerschluesseln(neuerAdmin, { personen }, zug.iter)), grund);
         await hochladen(PFAD + 'zugang.json', JSON.stringify(neuZug), grund);
         // vorletzte Version noch kurz liegen lassen (Zwischenspeicher), aeltere loeschen
         if (zug.vorher) { await loeschen(PFAD + 'app-' + zug.vorher + '.enc', grund + ' (alt)'); await loeschen(PFAD + 'pc-agent/pc-' + zug.vorher + '.enc', grund + ' (alt)'); }
         neuZug.vorher = zug.ver; await hochladen(PFAD + 'zugang.json', JSON.stringify(neuZug), grund);
-        zug = neuZug; kRaw = k2; adminCode = neuerAdmin; register = { personen };
+        zug = neuZug; kRaw = k2; dRaw = d2; adminCode = neuerAdmin; register = { personen };
+    }
+    // ---- PC-Download freigeben: D fuer den Schluessel der Person einpacken (ohne Neuverschluesselung)
+    async function downloadFreigeben(i, btn) {
+        const p = register.personen[i]; btn.disabled = true;
+        try {
+            const personen = register.personen.map((x, j) => j === i ? Object.assign({}, x, { download: true }) : x);
+            if (!dRaw) { await neuVerschluesseln(personen, adminCode, 'PC-Download freigegeben'); }   // einmalige Umstellung
+            else {
+                const d2 = await Z.einpacken(dRaw, p.code, zug.iter);
+                const neuZug = JSON.parse(JSON.stringify(zug)); neuZug.dl[d2.id] = d2.eintrag;
+                log('Speichere auf GitHub …');
+                await hochladen(PFAD + 'admin.enc', JSON.stringify(await Z.registerVerschluesseln(adminCode, { personen }, zug.iter)), 'Zugang: PC-Download freigegeben');
+                await hochladen(PFAD + 'zugang.json', JSON.stringify(neuZug), 'Zugang: PC-Download freigegeben');
+                zug = neuZug; register = { personen };
+            }
+            zeigeListe(); log('✓ ' + p.name + ' darf jetzt die PC-Version herunterladen (nach ca. 1 Minute, Seite neu laden).');
+        } catch (x) { log('⚠️ ' + x.message, true); btn.disabled = false; }
+    }
+    async function downloadSperren(i, btn) {
+        const p = register.personen[i];
+        if (!confirm('PC-Download für „' + p.name + '“ sperren?\n\nOnline nutzen kann die Person weiterhin. Die PC-Version wird dafür neu verschlüsselt.')) return;
+        btn.disabled = true;
+        try { await neuVerschluesseln(register.personen.map((x, j) => j === i ? Object.assign({}, x, { download: false }) : x), adminCode, 'PC-Download gesperrt');
+            zeigeListe(); log('✓ PC-Download für ' + p.name + ' gesperrt.'); }
+        catch (x) { log('⚠️ ' + x.message, true); btn.disabled = false; }
     }
     async function entziehen(i, btn) {
         const p = register.personen[i];

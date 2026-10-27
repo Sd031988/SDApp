@@ -57,9 +57,10 @@
     return { id: n.id, eintrag: { s: b64(salt), i: p.i, k: p.d } };
   }
   // Mit einem Zugangscode den Inhaltsschluessel aus zugang.json holen (null = falsch)
-  async function oeffnen(zugang, code) {
+  // feld 'eintraege' = Online-Zugang (K), feld 'dl' = Download-Freigabe fuer die PC-Version (D)
+  async function oeffnen(zugang, code, feld) {
     const n = normalisiere(code); if (!n) return null;
-    const e = (zugang.eintraege || {})[n.id]; if (!e) return null;
+    const e = (zugang[feld || 'eintraege'] || {})[n.id]; if (!e) return null;
     try {
       const raw = await entschluessle(await ableiten(n.voll, unb64(e.s), zugang.iter), { i: e.i, d: e.k });
       return raw;
