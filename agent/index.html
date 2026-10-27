@@ -27,6 +27,15 @@
         @media (min-width: 980px) { main.mit-vorschau { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
         .spalte { display: grid; gap: 14px; min-width: 0; }
         .karte { background: rgba(255, 255, 255, .97); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+        .glm { border: 2px solid #c77d14; border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; background: #fffaf2; }
+        .glm.aktiv { background: #fff3df; }
+        .glm-kopf { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+        .glm-kopf small { display: block; color: var(--muted); font-size: .78rem; margin-top: 2px; }
+        .glm-link { color: var(--accent); font-size: .85rem; }
+        #glmKey { display: grid; gap: 8px; } #glmKey[hidden] { display: none; }
+        #glmFeld { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; }
+        .check-klein { display: flex; gap: 6px; align-items: center; font-size: .82rem; }
+        .pc-schritte { padding-left: 1.2em; margin: 0; } .pc-schritte code { background: #eef2f0; padding: 1px 5px; border-radius: 4px; }
         .karte h2 { margin: 0; font-family: Georgia, serif; font-size: 1.05rem; }
         .info { color: var(--muted); font-size: .8rem; line-height: 1.5; margin: 0; }
         details.einst > summary { cursor: pointer; font-weight: bold; font-size: .92rem; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -174,12 +183,37 @@
             <section class="karte">
                 <details class="einst" id="einstKi" open>
                     <summary><span data-i18n="ki_titel">🤖 KI &amp; Arbeitsweise</span><span class="zusammen" id="kiZusammen"></span></summary>
+                    <div class="glm" id="glmBox">
+                        <div class="glm-kopf"><div><b data-i18n="glm_titel">⚡ GLM-5.3 über Ollama Cloud</b><small data-i18n="glm_sub">Open-Source-Modell · sehr stark bei Werkzeugen · eigener kostenloser Ollama-Schlüssel</small></div>
+                            <button type="button" class="btn klein" id="glmAn" data-i18n="glm_an">Benutzen</button></div>
+                        <div id="glmKey" hidden>
+                            <a class="glm-link" href="https://ollama.com/settings/keys" target="_blank" rel="noopener" data-i18n="glm_link">🔗 Kostenlosen Schlüssel bei Ollama holen (anmelden → API Keys → Add)</a>
+                            <input type="password" id="glmFeld" autocomplete="off" data-i18n-placeholder="glm_ph" placeholder="Ollama-API-Schlüssel hier einfügen …">
+                            <div class="zeile"><label class="check-klein"><input type="checkbox" id="glmDauer"> <span data-i18n="glm_dauer">In diesem Browser merken</span></label>
+                                <button type="button" class="btn klein prim" id="glmSpeichern" data-i18n="glm_speichern">Speichern</button><span id="glmStatus" class="info" aria-live="polite"></span></div>
+                            <p class="info" data-i18n="glm_info">Deine Aufträge gehen direkt von deinem Gerät an Ollama – nicht über uns. Ollama hat ein kostenloses Kontingent; Nutzung siehst du unter ollama.com/settings/usage.</p>
+                        </div>
+                    </div>
                     <div id="kiWahl"></div>
                     <div class="knoepfe" id="modellZeile"></div>
                     <p class="hinweis" id="lotseHinweis" hidden data-i18n="lotse_hinweis">Der Agent braucht ein starkes Modell, das Werkzeuge zuverlässig bedient: bitte ☁️ Gemini, 🟢 ChatGPT oder 🟠 Claude wählen. Das lokale Modell ist dafür zu klein.</p>
                     <label class="check"><input type="checkbox" id="planZuerst" checked> <span><b data-i18n="plan_zuerst">Erst Plan zeigen</b><small data-i18n="plan_zuerst_hilfe">Der Agent schreibt zuerst einen Plan, du bestätigst, dann führt er ihn aus.</small></span></label>
                     <label class="check"><input type="checkbox" id="ohneNachfrage"> <span><b data-i18n="ohne_nachfrage">Änderungen ohne Nachfrage erlauben</b><small data-i18n="ohne_nachfrage_hilfe">Sonst fragt der Agent vor jeder Änderung an deinen Daten oder Dateien.</small></span></label>
-                    <p class="info" data-i18n="kosten_hinweis">Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini gilt das Gratis-Kontingent.</p>
+                    <p class="info" data-i18n="kosten_hinweis">Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini und GLM-5.3 (Ollama) gilt das jeweilige Gratis-Kontingent.</p>
+                </details>
+            </section>
+
+            <section class="karte">
+                <details class="einst" id="einstPc">
+                    <summary><span data-i18n="pc_titel">💻 Volle Version für deinen PC</span><span class="zusammen" data-i18n="pc_zusammen">Windows · kostenlos</span></summary>
+                    <p class="info" data-i18n="pc_text">Der „Sulaiman Durrani Open Source KI-Agent“ läuft auf deinem eigenen PC mit Ollama und GLM-5.3. Er baut Webseiten, Spiele und Apps direkt in Ordnern auf deinem Rechner, testet sie selbst (auch per Screenshot), speichert Versionen, holt Open-Source-Code von GitHub und Hugging Face und kann Seiten veröffentlichen – jede Aktion nur mit deiner Erlaubnis.</p>
+                    <ol class="info pc-schritte">
+                        <li data-i18n="pc_s1" data-i18n-html>Python installieren: <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> (Haken bei „Add to PATH“)</li>
+                        <li data-i18n="pc_s2" data-i18n-html>Ollama installieren: <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a></li>
+                        <li data-i18n="pc_s3" data-i18n-html>In der Eingabeaufforderung: <code>ollama signin</code> und <code>ollama pull glm-5.3:cloud</code></li>
+                        <li data-i18n="pc_s4">ZIP herunterladen, entpacken, „Ollama_Start.bat“ doppelklicken.</li>
+                    </ol>
+                    <a class="btn prim" href="pc-agent/SD-KI-Agent-PC.zip" download data-i18n="pc_dl">⬇️ PC-Agent herunterladen (ZIP)</a>
                 </details>
             </section>
 
@@ -246,11 +280,22 @@
     <script>
         window.SD_I18N = {
             de: {
+                glm_titel: '⚡ GLM-5.3 über Ollama Cloud', glm_sub: 'Open-Source-Modell · sehr stark bei Werkzeugen · eigener kostenloser Ollama-Schlüssel',
+                glm_an: 'Benutzen', glm_aktiv: '✓ Aktiv', glm_link: '🔗 Kostenlosen Schlüssel bei Ollama holen (anmelden → API Keys → Add)', glm_ph: 'Ollama-API-Schlüssel hier einfügen …',
+                glm_dauer: 'In diesem Browser merken', glm_speichern: 'Speichern', glm_gespeichert: '✓ Gespeichert', glm_entfernt: 'Schlüssel entfernt',
+                glm_info: 'Deine Aufträge gehen direkt von deinem Gerät an Ollama – nicht über uns. Ollama hat ein kostenloses Kontingent; Nutzung siehst du unter ollama.com/settings/usage.',
+                glm_netz: 'Keine Verbindung zu Ollama. Bitte Internet prüfen. Bleibt der Fehler, lässt ollama.com evtl. keine Anfragen direkt aus dem Browser zu – dann den PC-Agenten unten nutzen.',
+                pc_titel: '💻 Volle Version für deinen PC', pc_zusammen: 'Windows · kostenlos',
+                pc_text: 'Der „Sulaiman Durrani Open Source KI-Agent“ läuft auf deinem eigenen PC mit Ollama und GLM-5.3. Er baut Webseiten, Spiele und Apps direkt in Ordnern auf deinem Rechner, testet sie selbst (auch per Screenshot), speichert Versionen, holt Open-Source-Code von GitHub und Hugging Face und kann Seiten veröffentlichen – jede Aktion nur mit deiner Erlaubnis.',
+                pc_s1: 'Python installieren: <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> (Haken bei „Add to PATH“)',
+                pc_s2: 'Ollama installieren: <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>',
+                pc_s3: 'In der Eingabeaufforderung: <code>ollama signin</code> und <code>ollama pull glm-5.3:cloud</code>',
+                pc_s4: 'ZIP herunterladen, entpacken, „Ollama_Start.bat“ doppelklicken.', pc_dl: '⬇️ PC-Agent herunterladen (ZIP)',
                 titel: 'SD Lotze', untertitel: 'Dein Agent erledigt Aufgaben mit Werkzeugen – Schritt für Schritt', zurueck_titel: 'Zum KI-Assistenten',
                 ki_titel: '🤖 KI & Arbeitsweise', lotse_hinweis: 'Der Agent braucht ein starkes Modell, das Werkzeuge zuverlässig bedient: bitte ☁️ Gemini, 🟢 ChatGPT oder 🟠 Claude wählen. Das lokale Modell ist dafür zu klein.',
                 plan_zuerst: 'Erst Plan zeigen', plan_zuerst_hilfe: 'Der Agent schreibt zuerst einen Plan, du bestätigst, dann führt er ihn aus.',
                 ohne_nachfrage: 'Änderungen ohne Nachfrage erlauben', ohne_nachfrage_hilfe: 'Sonst fragt der Agent vor jeder Änderung an deinen Daten oder Dateien.',
-                kosten_hinweis: 'Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini gilt das Gratis-Kontingent.',
+                kosten_hinweis: 'Ein Auftrag braucht mehrere KI-Anfragen (pro Schritt eine). Bei ChatGPT und Claude zahlst du nach Nutzung, bei Gemini und GLM-5.3 (Ollama) gilt das jeweilige Gratis-Kontingent.',
                 ablage_titel: '📁 Arbeitsbereich', ablage_ort: 'Dateien liegen:', ordner_oeffnen: '📂 Ordner am PC öffnen', zurueck_browser: '↩️ Zurück zum Browser-Speicher',
                 zip: '⬇️ Alles als ZIP', leeren: '🗑️ Browser-Speicher leeren', ort_browser: 'im Browser-Speicher dieses Geräts', ort_ordner: 'im Ordner „{n}“ auf deinem PC',
                 ordner_nicht: 'Ordner öffnen geht nur in Chrome oder Edge am PC. Hier arbeitet der Agent im Browser-Speicher – Ergebnisse als ZIP herunterladen.',
@@ -275,11 +320,22 @@
                 bild_frage: 'Sieh dir das Bild genau an.'
             },
             en: {
+                glm_titel: '⚡ GLM-5.3 via Ollama Cloud', glm_sub: 'Open-source model · very strong with tools · your own free Ollama key',
+                glm_an: 'Use it', glm_aktiv: '✓ Active', glm_link: '🔗 Get a free key from Ollama (sign in → API Keys → Add)', glm_ph: 'Paste your Ollama API key …',
+                glm_dauer: 'Remember in this browser', glm_speichern: 'Save', glm_gespeichert: '✓ Saved', glm_entfernt: 'Key removed',
+                glm_info: 'Your tasks go directly from your device to Ollama – not through us. Ollama has a free quota; see usage at ollama.com/settings/usage.',
+                glm_netz: 'No connection to Ollama. Please check the internet. If it persists, ollama.com may not accept requests directly from the browser – then use the PC agent below.',
+                pc_titel: '💻 Full version for your PC', pc_zusammen: 'Windows · free',
+                pc_text: 'The “Sulaiman Durrani Open Source AI Agent” runs on your own PC with Ollama and GLM-5.3. It builds websites, games and apps directly in folders on your computer, tests them itself (including screenshots), keeps versions, pulls open-source code from GitHub and Hugging Face and can publish sites – every action only with your permission.',
+                pc_s1: 'Install Python: <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org</a> (tick “Add to PATH”)',
+                pc_s2: 'Install Ollama: <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>',
+                pc_s3: 'In the command prompt: <code>ollama signin</code> and <code>ollama pull glm-5.3:cloud</code>',
+                pc_s4: 'Download the ZIP, unzip it, double-click “Ollama_Start.bat”.', pc_dl: '⬇️ Download PC agent (ZIP)',
                 titel: 'SD Lotze', untertitel: 'Your agent gets tasks done with tools – step by step', zurueck_titel: 'Back to the AI assistant',
                 ki_titel: '🤖 AI & way of working', lotse_hinweis: 'The agent needs a strong model that uses tools reliably: please choose ☁️ Gemini, 🟢 ChatGPT or 🟠 Claude. The local model is too small for this.',
                 plan_zuerst: 'Show a plan first', plan_zuerst_hilfe: 'The agent writes a plan first, you confirm, then it carries it out.',
                 ohne_nachfrage: 'Allow changes without asking', ohne_nachfrage_hilfe: 'Otherwise the agent asks before every change to your data or files.',
-                kosten_hinweis: 'One task needs several AI requests (one per step). With ChatGPT and Claude you pay per use, Gemini uses the free quota.',
+                kosten_hinweis: 'One task needs several AI requests (one per step). With ChatGPT and Claude you pay per use, Gemini and GLM-5.3 (Ollama) use their free quota.',
                 ablage_titel: '📁 Workspace', ablage_ort: 'Files are stored:', ordner_oeffnen: '📂 Open folder on PC', zurueck_browser: '↩️ Back to browser storage',
                 zip: '⬇️ All as ZIP', leeren: '🗑️ Clear browser storage', ort_browser: 'in this device\'s browser storage', ort_ordner: 'in the folder "{n}" on your PC',
                 ordner_nicht: 'Opening a folder only works in Chrome or Edge on a PC. Here the agent works in browser storage – download results as ZIP.',
@@ -858,10 +914,13 @@
         const ANB = {
             gemini: { name: 'Gemini', firma: 'Google' },
             openai: { name: 'ChatGPT', firma: 'OpenAI', key: 'sdOpenAiApiKey', option: 'openaiModell', modelle: ['gpt-5-mini', 'gpt-5-nano'] },
-            claude: { name: 'Claude', firma: 'Anthropic', key: 'sdClaudeApiKey', option: 'claudeModell', modelle: ['claude-haiku-4-5-20251001', 'claude-sonnet-5-5'] }
+            claude: { name: 'Claude', firma: 'Anthropic', key: 'sdClaudeApiKey', option: 'claudeModell', modelle: ['claude-haiku-4-5-20251001', 'claude-sonnet-5-5'] },
+            ollama: { name: 'Ollama Cloud', firma: 'Ollama', key: 'sdOllamaApiKey', option: 'ollamaModell', modelle: ['glm-5.3'] }
         };
-        const MODELL_NAME = { 'gpt-5-mini': 'GPT-5 mini', 'gpt-5-nano': 'GPT-5 nano (günstiger)', 'claude-haiku-4-5-20251001': 'Claude Haiku 4.5 (günstiger)', 'claude-sonnet-5-5': 'Claude Sonnet 5.5 (stärker)' };
-        const anbieter = () => (window.sdKi ? window.sdKi.anbieter() : 'gemini');
+        const MODELL_NAME = { 'glm-5.3': 'GLM-5.3 (Ollama Cloud)', 'gpt-5-mini': 'GPT-5 mini', 'gpt-5-nano': 'GPT-5 nano (günstiger)', 'claude-haiku-4-5-20251001': 'Claude Haiku 4.5 (günstiger)', 'claude-sonnet-5-5': 'Claude Sonnet 5.5 (stärker)' };
+        // GLM-5.3 (Ollama Cloud) gibt es nur hier im Agent – es ueberstimmt die allgemeine KI-Wahl der SD-Apps
+        const glmAktiv = () => lies(localStorage, 'sdAgentGlm') === '1';
+        const anbieter = () => (glmAktiv() ? 'ollama' : (window.sdKi ? window.sdKi.anbieter() : 'gemini'));
         function schluessel(a) {
             const k = a === 'gemini' ? 'biGeminiApiKey' : ANB[a].key;
             return lies(sessionStorage, k) || lies(localStorage, k) || '';
@@ -940,6 +999,49 @@
                 text: (m.content || '').trim(),
                 aufrufe: (m.tool_calls || []).filter(c => c.type === 'function').map(c => ({ id: c.id, name: c.function.name, args: json(c.function.arguments, {}) })),
                 roh: { anbieter: 'openai' }
+            };
+        }
+
+        // GLM-5.3 ueber Ollama Cloud (https://ollama.com/api/chat, eigener Schluessel der Person)
+        let ollamaModellName = null;
+        async function frageOllama(gespraech, system, nurLesend, signal) {
+            const msgs = [{ role: 'system', content: system }];
+            gespraech.forEach(m => {
+                if (m.rolle === 'user') {
+                    const x = { role: 'user', content: m.text || '…' };
+                    if ((m.bilder || []).length) x.images = m.bilder.map(b => b.data);
+                    msgs.push(x);
+                } else if (m.rolle === 'ki') {
+                    const x = { role: 'assistant', content: m.text || '' };
+                    if (m.aufrufe && m.aufrufe.length) x.tool_calls = m.aufrufe.map(c => ({ function: { name: c.name, arguments: c.args || {} } }));
+                    msgs.push(x);
+                } else if (m.rolle === 'tool') m.ergebnisse.forEach(e => msgs.push({ role: 'tool', content: e.text, tool_name: e.name }));
+            });
+            const tools = werkzeugListe(nurLesend).map(w => ({ type: 'function', function: { name: w.name, description: w.beschreibung, parameters: w.params } }));
+            const kandidaten = ollamaModellName ? [ollamaModellName] : ['glm-5.3', 'glm-5.3:cloud'];
+            let antwort, d = {};
+            for (const name of kandidaten) {
+                try {
+                    antwort = await fetch('https://ollama.com/api/chat', {
+                        method: 'POST', signal,
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + schluessel('ollama') },
+                        body: JSON.stringify({ model: name, messages: msgs, tools, stream: false, think: false, options: { num_ctx: 32768 } })
+                    });
+                } catch (e) { if (e.name === 'AbortError') throw e; throw new Error(t('glm_netz')); }
+                d = {}; try { d = await antwort.json(); } catch (e) { /* egal */ }
+                // Modellname unbekannt -> naechste Schreibweise probieren
+                if (antwort.status === 404 && /not found/i.test(d.error || '') && name !== kandidaten[kandidaten.length - 1]) continue;
+                if (antwort.ok) ollamaModellName = name;
+                break;
+            }
+            if (!antwort.ok) throw new Error(fehlerAus('ollama', antwort.status, '', d.error || ''));
+            const m = d.message || {};
+            let n = 0;
+            return {
+                text: (m.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim(),
+                aufrufe: (m.tool_calls || []).map(c => ({ id: 'glm' + Date.now().toString(36) + (n++), name: c.function.name,
+                    args: typeof c.function.arguments === 'string' ? json(c.function.arguments, {}) : (c.function.arguments || {}) })),
+                roh: { anbieter: 'ollama' }
             };
         }
 
@@ -1112,7 +1214,7 @@
             abbruch = new AbortController();
             $('sendenBtn').hidden = true; $('stoppBtn').hidden = false;
             setzeStimmung('denkt');
-            const frageKi = a === 'claude' ? frageClaude : (a === 'openai' ? frageOpenAI : frageGemini);
+            const frageKi = a === 'ollama' ? frageOllama : a === 'claude' ? frageClaude : (a === 'openai' ? frageOpenAI : frageGemini);
             let schritte = 0, letzteAntwort = '', fehlerStimmung = false;
             try {
                 while (laeuft) {
@@ -1356,6 +1458,26 @@
             if (!pruefeBereit()) $('einstKi').open = false;
             diktat = window.sdKi.diktatAnbinden($('eingabe'), $('mikroBtn'), (x) => setStatus(x || ''));
         }
+        function zeigeGlm() {
+            const an = glmAktiv();
+            $('glmBox').classList.toggle('aktiv', an);
+            $('glmAn').textContent = an ? t('glm_aktiv') : t('glm_an');
+            $('glmAn').classList.toggle('prim', an);
+            $('glmKey').hidden = !an;
+            $('kiWahl').style.opacity = an ? '.55' : '';
+            if (an) { $('glmFeld').value = schluessel('ollama'); $('glmDauer').checked = !!lies(localStorage, 'sdOllamaApiKey'); }
+            zeigeModellZeile();
+        }
+        $('glmAn').onclick = () => { try { localStorage.setItem('sdAgentGlm', glmAktiv() ? '0' : '1'); } catch (e) { /* egal */ } zeigeGlm(); };
+        $('glmSpeichern').onclick = () => {
+            const wert = ($('glmFeld').value || '').trim();
+            try { sessionStorage.removeItem('sdOllamaApiKey'); localStorage.removeItem('sdOllamaApiKey'); (($('glmDauer').checked) ? localStorage : sessionStorage).setItem('sdOllamaApiKey', wert); if (!wert) localStorage.removeItem('sdOllamaApiKey'); } catch (e) { /* egal */ }
+            $('glmStatus').textContent = wert ? t('glm_gespeichert') : t('glm_entfernt');
+        };
+        // Wer unten eine andere KI anklickt, schaltet GLM fuer den Agenten ab
+        $('kiWahl').addEventListener('click', (e) => { if (e.target.closest('.sdki-opt') && glmAktiv()) { try { localStorage.setItem('sdAgentGlm', '0'); } catch (x) { /* egal */ } zeigeGlm(); } }, true);
+        zeigeGlm();
+        document.addEventListener('sd-lang-changed', zeigeGlm);
         document.addEventListener('sd-ki-anbieter', zeigeModellZeile);
         $('kiWahl').addEventListener('click', () => setTimeout(zeigeModellZeile, 0));
         document.addEventListener('sd-lang-changed', aktualisiereTexte);
