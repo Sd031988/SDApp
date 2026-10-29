@@ -415,7 +415,7 @@ async function programmStarten() {
   const neben = alle.filter(n => n !== haupt && n.startsWith(basis)).map(n => ({ file: n.slice(basis.length), code: d[n] }));
   let code = d[haupt]; if (sp === 'java') code = code.replace(/\bpublic\s+((?:final\s+|abstract\s+)?class\s+)/, '$1');
   const roh = []; if (sp === 'cpp' || sp === 'c' || sp === 'csharp') neben.filter(f => /\.(c|cc|cpp|cxx|cs)$/.test(f.file)).forEach(f => roh.push(f.file)); if (sp === 'cpp') roh.push('-std=c++17'); if (sp === 'c') roh.push('-std=c11');
-  unten('ausgabe'); ausgabe('⏳ Baue und starte ' + haupt + ' (' + SPR[sp] + ', online über wandbox.org) …'); S.problemeProgramm = []; probleme(); $('starten').disabled = true;
+  unten('ausgabe'); ansicht('ausgabe'); ausgabe('⏳ Baue und starte ' + haupt + ' (' + SPR[sp] + ', online über wandbox.org) …'); S.problemeProgramm = []; probleme(); $('starten').disabled = true;
   try { const r = await wbSenden({ compiler: await wbCompiler(sp), code, codes: neben, stdin: $('eingabe').value || '', 'compiler-option-raw': roh.join('\n') });
     const cErr = String(r.compiler_error || ''), out = String(r.program_output || ''), pErr = String(r.program_error || ''), st = String(r.status == null ? '' : r.status), name = haupt.split('/').pop();
     const fehlerText = (cErr + '\n' + pErr).replace(/\bprog\.(cc|c|java|rs|go|py|cs)\b/g, name);
@@ -436,7 +436,7 @@ function probleme() { const box = $('problemListe'); box.innerHTML = ''; const a
 async function ausfuehren() {
   if (!S.p) { vorlagenWaehlen(); return; }
   if (S.aktiv && programmSprache(S.aktiv)) return programmStarten();
-  if (startSeite()) { vorschau(true); ausgabe('▶ Vorschau gestartet: ' + startSeite() + (S.swBereit ? ' – läuft wie auf einem echten Server (nur in deinem Browser).' : ' – einfache Vorschau (dein Browser unterstützt keinen Vorschau-Server).')); return; }
+  if (startSeite()) { vorschau(true); ansicht('vorschau'); ausgabe('▶ Vorschau gestartet: ' + startSeite() + (S.swBereit ? ' – läuft wie auf einem echten Server (nur in deinem Browser).' : ' – einfache Vorschau (dein Browser unterstützt keinen Vorschau-Server).')); return; }
   const prog = Object.keys(S.p.dateien).find(programmSprache); if (prog) { dateiOeffnen(prog); return programmStarten(); }
   ausgabe('Nichts zum Ausführen gefunden. Lege eine index.html (Webseite) oder z. B. main.py an.');
 }
@@ -680,11 +680,43 @@ async function seiteLoeschen() {
   const j = await hubPost('/hub/seite/loeschen', { code, name }); if (j.ok) { if (S.p && S.p.online && S.p.online.name === name) { delete S.p.online; projSchreiben(S.p); } toast('🗑 Offline genommen: ' + name); } else alert(j.error);
 }
 
+/* ---------------- Handy: eine Ansicht nach der anderen + Zeichen-Leiste ---------------- */
+const istHandy = () => matchMedia('(max-width:800px)').matches;
+function ansicht(n) { if (!istHandy()) return; const app = $('app');
+  if (n === 'mehr') { handyMehr(); return; }
+  app.dataset.ansicht = n; document.querySelectorAll('#handyNav button').forEach(b => b.classList.toggle('an', b.dataset.a === n));
+  if (n === 'dateien') { app.classList.remove('seiteZu'); if (!document.querySelector('#seite [data-panel]:not([hidden])')) seite('explorer'); }
+  if (n === 'vorschau' && $('vorschau').hidden) { if (startSeite && S.p && startSeite()) vorschau(true); else { toast('Keine Webseite zum Anzeigen – ▶ startet Programme in der Ausgabe.'); } }
+  if (n === 'ausgabe') { const sichtbar = document.querySelector('#unten [data-feld]:not([hidden])'); if (!sichtbar) unten('ausgabe'); $('haupt').classList.remove('untenZu'); }
+  setTimeout(() => S.cm && S.cm.refresh(), 40); }
+function handyMehr() { const B = [['＋ Neue Datei', () => neueDatei('')], ['＋ Neues Projekt (Vorlagen)', vorlagenWaehlen], ['📋 Anleitung/Code einfügen', () => einfuegenDialog('')], ['🎨 Im Design-Studio gestalten', designOeffnen],
+  [(S.frei ? '🌐' : '🔒') + ' Online stellen', onlineDialog], ['🔍 In allen Dateien suchen', () => { ansicht('dateien'); seite('suche'); }], ['🕘 Versionen', () => { ansicht('dateien'); seite('versionen'); }], ['⚙ Einstellungen', () => { ansicht('dateien'); seite('einst'); }],
+  ['✨ Code formatieren', formatieren], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
+  palette(B.map(([l, fn]) => ({ label: l, fn })), 'Was möchtest du tun?', x => x.fn()); }
+const TASTEN = ['⇥', '<', '>', '/', '=', '"', "'", '{', '}', '(', ')', '[', ']', ';', ':', '.', ',', '#', '-', '_', '+', '*', '!', '&', '|', '$', '`', '←', '→', '↶', '↷'];
+function handyEinrichten() {
+  const leiste = $('tasten'); leiste.innerHTML = '';
+  TASTEN.forEach(t => { const b = document.createElement('button'); b.textContent = t; b.type = 'button';
+    b.onmousedown = e => e.preventDefault(); b.onpointerdown = e => e.preventDefault();
+    b.onclick = () => { const cm = S.cm; if (!cm) { if (S.ta) { const ta = S.ta; ta.setRangeText(t === '⇥' ? '  ' : t, ta.selectionStart, ta.selectionEnd, 'end'); ta.dispatchEvent(new Event('input')); ta.focus(); } return; }
+      if (t === '⇥') cm.execCommand('indentMore'); else if (t === '←') cm.execCommand('goCharLeft'); else if (t === '→') cm.execCommand('goCharRight'); else if (t === '↶') cm.undo(); else if (t === '↷') cm.redo();
+      else cm.replaceSelection(t); cm.focus(); };
+    leiste.appendChild(b); });
+  document.querySelectorAll('#handyNav button').forEach(b => b.onclick = () => ansicht(b.dataset.a));
+  $('baum').addEventListener('click', e => { if (istHandy() && e.target.closest('.bz.datei') && e.target.tagName !== 'BUTTON') ansicht('code'); });
+  $('suchErg').addEventListener('click', e => { if (istHandy() && e.target.closest('.sz')) ansicht('code'); });
+  $('problemListe').addEventListener('click', e => { if (istHandy() && e.target.closest('.pr')) ansicht('code'); });
+  const mq = matchMedia('(max-width:800px)'); const wechsel = () => { if (mq.matches) ansicht($('app').dataset.ansicht || 'code'); else { delete $('app').dataset.ansicht; } setTimeout(() => S.cm && S.cm.refresh(), 60); };
+  mq.addEventListener ? mq.addEventListener('change', wechsel) : mq.addListener(wechsel); wechsel();
+  // roter Punkt bei neuen Problemen
+  const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="ausgabe"]'); if (k) k.classList.toggle('punkt', n > 0 && $('app').dataset.ansicht !== 'ausgabe'); });
+  beob.observe($('problemAnz'), { childList: true, characterData: true, subtree: true }); beob.observe($('konsoleAnz'), { childList: true, characterData: true, subtree: true });
+}
 /* ---------------- Zugang: 10× Öffnen in 24 Stunden ohne Schlüssel ---------------- */
 const FREI = 10, ZAEHL = 'sdStudioOeffnungen';
 function oeffnungen() { const j = Date.now(); return (store.get(ZAEHL, []) || []).filter(t => j - t < 864e5); }
 async function schluesselOk(code) { try { const zug = await (await fetch('../agent/zugang.json?t=' + Date.now(), { cache: 'no-store' })).json(); return !!(await sdZugang.oeffnen(zug, code)); } catch (e) { return false; } }
-function zaehlerZeigen() { const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (S.frei) { n.textContent = '🔓 Unbegrenzt'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } const rest = Math.max(0, FREI - oeffnungen().length); n.textContent = '🎟 ' + rest + '/' + FREI + ' heute'; n.title = 'Ohne Zugangsschlüssel kannst du das Code-Studio ' + FREI + '× in 24 Stunden öffnen. Klick: Schlüssel eingeben'; }
+function zaehlerZeigen() { const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (S.frei) { n.innerHTML = '🔓<span class="lang"> Unbegrenzt</span>'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } const rest = Math.max(0, FREI - oeffnungen().length); n.innerHTML = '🎟 ' + rest + '<span class="lang">/' + FREI + ' heute</span>'; n.title = 'Ohne Zugangsschlüssel kannst du das Code-Studio ' + FREI + '× in 24 Stunden öffnen. Klick: Schlüssel eingeben'; }
 async function zugangPruefen() {
   const gemerkt = (() => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang'); } catch (e) { return null; } })();
   if (gemerkt && await schluesselOk(gemerkt)) { S.frei = true; return true; }
@@ -760,9 +792,8 @@ function verdrahten() {
   $('app').addEventListener('dragleave', e => { if (e.target === $('app') || !$('app').contains(e.relatedTarget)) $('app').classList.remove('ziehen'); });
   $('app').addEventListener('drop', e => { $('app').classList.remove('ziehen'); if (e.dataTransfer.files.length) { e.preventDefault(); hochladen([...e.dataTransfer.files]); } });
   window.addEventListener('resize', () => { clearTimeout(S.rz); S.rz = setTimeout(() => S.cm && S.cm.refresh(), 120); });
-  $('baum').addEventListener('click', e => { if ($('app').classList.contains('handy') && e.target.closest('.bz.datei') && e.target.tagName !== 'BUTTON') { $('app').classList.add('seiteZu'); setTimeout(() => S.cm && S.cm.refresh(), 60); } });
   window.addEventListener('beforeunload', () => { if (S.geaendert) speichernJetzt(); });
   // Handy: Seitenleiste zu Beginn zu
-  if (innerWidth < 800) $('app').classList.add('seiteZu', 'handy');
+  handyEinrichten();
 }
 (async () => { if (await zugangPruefen()) starten(); else sperre(false); })();
