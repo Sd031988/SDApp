@@ -15,9 +15,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 #kopf{grid-column:1/4;grid-row:1}#akt{grid-column:1;grid-row:2}#seite{grid-column:2;grid-row:2}#haupt{grid-column:3;grid-row:2}#status{grid-column:1/4;grid-row:3}
 #app.seiteZu{grid-template-columns:48px 0 1fr}#app.seiteZu #seite{display:none}
 #app.fokus{grid-template-columns:0 0 1fr}#app.fokus #akt,#app.fokus #seite{display:none}#app.fokus #haupt{grid-template-rows:auto 1fr 0}#app.fokus #unten{display:none}
-#app button{background:transparent;border:1px solid var(--sline);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap}#app button:hover{background:var(--shov)}
-#app button.primary{background:linear-gradient(135deg,var(--sacc),#db2777);border:0;color:#fff;font-weight:600}#app button.primary:disabled{opacity:.6}
-#app input,#app select,#app textarea{background:var(--sakt);border:1px solid var(--sline);border-radius:6px;padding:5px 8px;outline:0}#app input:focus,#app textarea:focus{border-color:var(--sacc)}
+#app button,.dialog button,#palette button{background:transparent;border:1px solid var(--sline);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap}#app button:hover,.dialog button:hover{background:var(--shov)}
+#app button.primary,.dialog button.primary{background:linear-gradient(135deg,var(--sacc),#db2777);border:0;color:#fff;font-weight:600}#app button.primary:disabled{opacity:.6}
+#app input,#app select,#app textarea,.dialog input,.dialog select,.dialog textarea{background:var(--sakt);border:1px solid var(--sline);border-radius:6px;padding:5px 8px;outline:0}#app input:focus,#app textarea:focus{border-color:var(--sacc)}
 #kopf{grid-column:1/4;display:flex;align-items:center;gap:6px;padding:0 8px;background:var(--sside);border-bottom:1px solid var(--sline);overflow-x:auto;scrollbar-width:none}
 #kopf .logo{font-weight:800;font-size:15px;white-space:nowrap;background:linear-gradient(90deg,#a855f7,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent;margin-right:6px}
 #kopf select{max-width:200px}#kopf .luecke{flex:1}#kont{font-size:12px;color:var(--smut);border:0!important}
@@ -61,12 +61,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 #palette{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;display:flex;justify-content:center;align-items:flex-start;padding-top:60px}#palette[hidden]{display:none}
 #palette .pk{width:min(620px,94vw);background:var(--sside);border:1px solid var(--sline);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}#palIn{width:100%;border:0!important;border-bottom:1px solid var(--sline)!important;border-radius:0!important;padding:12px!important;font-size:15px!important;background:var(--sside)!important}
 #palListe{max-height:60vh;overflow:auto}#palListe div{display:flex;justify-content:space-between;gap:10px;padding:7px 12px;cursor:pointer}#palListe div.an,#palListe div:hover{background:var(--ssel)}#palListe small{color:var(--smut)}
-.dialog{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:grid;place-items:center;padding:12px}.dialog[hidden]{display:none}
+.dialog{color:var(--stext);position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:grid;place-items:center;padding:12px}.dialog[hidden]{display:none}
 .karte{background:var(--sside);border:1px solid var(--sline);border-radius:14px;padding:16px;display:grid;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 #einfuegen .karte{width:min(1000px,96vw);max-height:92vh;grid-template-rows:auto auto 1fr auto}#efTeile{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
 #efText{min-height:340px;resize:none;font:12px/1.45 ui-monospace,Consolas,monospace}#efVorschau{overflow:auto;border:1px solid var(--sline);border-radius:8px;padding:8px;font-size:13px}
 #efVorschau .mono{font:12px ui-monospace,Consolas,monospace}#efVorschau .grau{color:var(--smut)}#efVorschau .fett{font-weight:600;margin:6px 0 2px}
 .reihe{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.galK{width:min(1180px,96vw);max-height:92vh;grid-template-rows:auto auto 1fr}#galRaster{overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:2px}
+#galTabs button{margin-left:4px}#galTabs button.an{background:var(--ssel)}
+.galKarte{display:grid!important;gap:4px;text-align:left;padding:8px!important;border-radius:12px!important;white-space:normal!important}.galKarte:hover{border-color:var(--sacc)!important;transform:translateY(-2px)}.galKarte small{color:var(--smut)}.galKarte b{color:var(--stext);font-size:14px}
+.galBild{height:150px;border-radius:8px;overflow:hidden;position:relative;background:#fff;pointer-events:none}.galBild iframe{position:absolute;left:0;top:0;width:1280px;height:960px;border:0;transform:scale(.16);transform-origin:0 0}
+.galBild pre{margin:0;padding:8px;height:100%;background:var(--sakt);color:var(--smut);font:10px/1.4 ui-monospace,Consolas,monospace;overflow:hidden}
 #sperre{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:radial-gradient(circle at 30% 20%,#3b1d6e,#120e22 60%)}#sperre[hidden]{display:none}
 #sperre .karte{width:min(480px,100%);background:#1d1733;border-color:#3d2f6b;color:#e6e1ff}#sperre input[type=text]{width:100%;padding:11px;border-radius:9px;border:1px solid #3d2f6b;background:#120e22;color:#fff;font:15px ui-monospace,Consolas,monospace;text-transform:uppercase}
 #sperre button{padding:11px;border-radius:9px;border:1px solid #3d2f6b;background:#2a2147;color:#fff;cursor:pointer;font-weight:600}#sperre button.primary{background:linear-gradient(135deg,#8b5cf6,#db2777);border:0}
@@ -183,8 +188,13 @@ button,input,select,textarea{font:inherit;color:inherit}
   <a href="../agent/index.html">Mehr über den KI-Agenten und den Zugangsschlüssel →</a>
   <a href="../index.html">← Zurück zum SD Hub</a>
 </div></div>
+<div id="galerie" class="dialog" hidden><div class="karte galK">
+  <div class="reihe"><b style="font-size:16px">✨ Neues Projekt – Vorlage wählen</b><span style="flex:1"></span><span id="galTabs"><button data-g="firma" class="an">🏪 Webseiten für Firmen</button><button data-g="basis">🧩 Basis & Programme</button></span><button id="galZu">✕</button></div>
+  <div class="hinweis" style="padding:0">Fertige, moderne Seiten fürs Handy und den PC – Texte, Farben und Bilder danach einfach im Code oder im 🎨 Design-Studio ändern.</div>
+  <div id="galRaster"></div>
+</div></div>
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
-<script src="studio.js?v=67e786cc"></script>
+<script src="studio.js?v=e3083582"></script>
 </body>
 </html>
