@@ -479,7 +479,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['⬇ Projekt als ZIP', '', zipExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['⬇ Projekt als ZIP', '', zipExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
@@ -634,6 +634,52 @@ function einfuegenDialog(text) {
   ta.value = text || ''; zeigen(); setTimeout(() => ta.focus(), 30);
 }
 
+/* ---------------- 🌐 Online stellen (nur mit Zugangsschlüssel) ---------------- */
+const HUB = 'https://sd-maschinen-kenner.onrender.com';
+function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
+async function hubPost(pfad, daten, wartenText) {
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 100000); let wach = null;
+  if (wartenText) wach = setTimeout(() => wartenText('⏳ Der Server wacht gerade auf (kann bis zu einer Minute dauern) …'), 6000);
+  try { const r = await fetch(HUB + pfad, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(daten), signal: ctrl.signal });
+    const j = await r.json().catch(() => ({ error: 'Server-Antwort unlesbar (' + r.status + ')' })); return j; }
+  catch (e) { return { error: e.name === 'AbortError' ? 'Der Server hat nicht rechtzeitig geantwortet. Bitte gleich nochmal.' : 'Server nicht erreichbar – bist du online?' }; }
+  finally { clearTimeout(t); clearTimeout(wach); }
+}
+function onlineDialog() {
+  if (!S.p) return; const code = gemerkterCode();
+  if (!S.frei || !code) { sperre(true); $('spTitel').textContent = '🔑 Online stellen braucht einen Zugangsschlüssel'; $('spText').innerHTML = 'Damit keine Betrugsseiten entstehen, können nur Menschen mit <b>Zugangsschlüssel vom KI-Agenten</b> Seiten veröffentlichen. Gib deinen Schlüssel ein – danach kannst du direkt online stellen.'; return; }
+  if (!startSeite()) { alert('Zum Online-Stellen braucht das Projekt eine HTML-Datei (z. B. index.html).'); return; }
+  const box = $('online'); box.hidden = false; $('onErg').innerHTML = ''; $('onLos').disabled = false;
+  $('onName').value = (S.p.online && S.p.online.name) || slug(S.p.name).replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  const vorschau = () => { $('onUrl').textContent = 'https://sd031988.github.io/sd-seiten/' + ($('onName').value.trim().toLowerCase() || '…') + '/'; }; $('onName').oninput = vorschau; vorschau();
+  $('onRecht').checked = false; $('onZu').onclick = () => { box.hidden = true; }; box.onclick = e => { if (e.target === box) box.hidden = true; };
+  $('onLos').onclick = async () => {
+    if (!$('onRecht').checked) { $('onErg').innerHTML = '<p class="fehlerText">Bitte bestätige die Regeln (Häkchen).</p>'; return; }
+    const name = $('onName').value.trim().toLowerCase(); await speichernJetzt();
+    $('onLos').disabled = true; const info = t => { $('onErg').innerHTML = '<p>' + esc(t) + '</p>'; }; info('⏳ Wird veröffentlicht …');
+    const j = await hubPost('/hub/seite/veroeffentlichen', { code, name, dateien: S.p.dateien }, info); $('onLos').disabled = false;
+    if (!j.ok) { $('onErg').innerHTML = '<p class="fehlerText">⨯ ' + esc(j.error || 'Fehler') + '</p>' + (j.gruende ? '<ul>' + j.gruende.map(g => '<li>' + esc(g) + '</li>').join('') + '</ul>' : ''); return; }
+    S.p.online = { name, url: j.url, t: Date.now() }; await projSchreiben(S.p);
+    $('onErg').innerHTML = '<p class="okText">✅ ' + (j.neu ? 'Veröffentlicht!' : 'Aktualisiert!') + '</p><div class="reihe"><input readonly id="onLink" style="flex:1"><button id="onKopie">📋 Kopieren</button><a class="knopfLink" target="_blank" rel="noopener" id="onOeffnen">↗ Öffnen</a></div><p class="hinweis" style="padding:0">' + esc(j.hinweis || '') + ' Änderungen später: einfach nochmal „Online stellen“ – die Adresse bleibt gleich.</p>';
+    $('onLink').value = j.url; $('onOeffnen').href = j.url; $('onKopie').onclick = () => { navigator.clipboard.writeText(j.url).then(() => toast('📋 Link kopiert')); };
+    konfetti(); S.konfettiGezeigt = null;
+  };
+  setTimeout(() => $('onName').focus(), 30);
+}
+async function meineSeiten() {
+  const code = gemerkterCode(); if (!S.frei || !code) { onlineDialog(); return; }
+  toast('⏳ Lade deine Seiten …'); const j = await hubPost('/hub/seite/meine', { code });
+  if (j.error) { alert(j.error); return; }
+  if (!j.seiten.length) { toast('Du hast noch keine Seite online.'); return; }
+  palette(j.seiten.map(s => ({ label: '🌐 ' + s.name, info: new Date(s.t * 1000).toLocaleDateString('de-DE') + ' · öffnen', s })), 'Deine Seiten online – Enter öffnet', x => window.open(x.s.url, '_blank'));
+}
+async function seiteLoeschen() {
+  const code = gemerkterCode(); if (!S.frei || !code) { onlineDialog(); return; }
+  const name = (prompt('Welche Seite soll offline genommen werden? (Name, z. B. mein-cafe)', (S.p && S.p.online && S.p.online.name) || '') || '').trim().toLowerCase(); if (!name) return;
+  if (!confirm('Seite „' + name + '“ wirklich aus dem Internet nehmen?')) return;
+  const j = await hubPost('/hub/seite/loeschen', { code, name }); if (j.ok) { if (S.p && S.p.online && S.p.online.name === name) { delete S.p.online; projSchreiben(S.p); } toast('🗑 Offline genommen: ' + name); } else alert(j.error);
+}
+
 /* ---------------- Zugang: 10× Öffnen in 24 Stunden ohne Schlüssel ---------------- */
 const FREI = 10, ZAEHL = 'sdStudioOeffnungen';
 function oeffnungen() { const j = Date.now(); return (store.get(ZAEHL, []) || []).filter(t => j - t < 864e5); }
@@ -676,7 +722,7 @@ function verdrahten() {
   document.querySelectorAll('#akt button[data-s]').forEach(b => b.onclick = () => { const offen = !$('app').classList.contains('seiteZu') && b.classList.contains('an'); $('app').classList.toggle('seiteZu', offen); seite(b.dataset.s); setTimeout(() => S.cm && S.cm.refresh(), 50); });
   document.querySelectorAll('#untenTabs button[data-u]').forEach(b => b.onclick = () => unten(b.dataset.u)); $('untenZu').onclick = () => { $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('projektWahl').onchange = () => { const v = $('projektWahl').value; if (v === '__neu') { projektListe(); vorlagenWaehlen(); } else projektOeffnen(v); };
-  $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen;
+  $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen; $('onlineBtn').onclick = onlineDialog;
   $('starten').onclick = ausfuehren; $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
   ['hochDatei', 'hochOrdner', 'hochZip'].forEach(id => $(id).onchange = () => { hochladen([...$(id).files]); $(id).value = ''; });

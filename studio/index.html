@@ -72,6 +72,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .galKarte{display:grid!important;gap:4px;text-align:left;padding:8px!important;border-radius:12px!important;white-space:normal!important}.galKarte:hover{border-color:var(--sacc)!important;transform:translateY(-2px)}.galKarte small{color:var(--smut)}.galKarte b{color:var(--stext);font-size:14px}
 .galBild{height:150px;border-radius:8px;overflow:hidden;position:relative;background:#fff;pointer-events:none}.galBild iframe{position:absolute;left:0;top:0;width:1280px;height:960px;border:0;transform:scale(.16);transform-origin:0 0}
 .galBild pre{margin:0;padding:8px;height:100%;background:var(--sakt);color:var(--smut);font:10px/1.4 ui-monospace,Consolas,monospace;overflow:hidden}
+.fehlerText{color:#fca5a5;margin:0}.okText{color:#86efac;font-weight:700;margin:0}#onErg ul{margin:4px 0;padding-left:18px;color:#fca5a5}.knopfLink{padding:5px 10px;border:1px solid var(--sline);border-radius:6px;color:var(--stext);text-decoration:none}
 #sperre{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:radial-gradient(circle at 30% 20%,#3b1d6e,#120e22 60%)}#sperre[hidden]{display:none}
 #sperre .karte{width:min(480px,100%);background:#1d1733;border-color:#3d2f6b;color:#e6e1ff}#sperre input[type=text]{width:100%;padding:11px;border-radius:9px;border:1px solid #3d2f6b;background:#120e22;color:#fff;font:15px ui-monospace,Consolas,monospace;text-transform:uppercase}
 #sperre button{padding:11px;border-radius:9px;border:1px solid #3d2f6b;background:#2a2147;color:#fff;cursor:pointer;font-weight:600}#sperre button.primary{background:linear-gradient(135deg,#8b5cf6,#db2777);border:0}
@@ -100,6 +101,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <button id="neuProjekt" title="Neues Projekt mit Vorlage">＋ <span class="lang">Projekt</span></button>
     <button id="einfuegenBtn" title="Anleitung oder Code einfügen → Ordner und Dateien automatisch">📋 <span class="lang">Einfügen</span></button>
     <button id="designBtn" title="Im Design-Studio gestalten – ohne Code">🎨 <span class="lang">Design</span></button>
+    <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
     <span class="luecke"></span>
     <button id="kont"></button>
     <button id="starten" class="primary">▶ Ausführen</button>
@@ -193,8 +195,17 @@ button,input,select,textarea{font:inherit;color:inherit}
   <div class="hinweis" style="padding:0">Fertige, moderne Seiten fürs Handy und den PC – Texte, Farben und Bilder danach einfach im Code oder im 🎨 Design-Studio ändern.</div>
   <div id="galRaster"></div>
 </div></div>
+<div id="online" class="dialog" hidden><div class="karte" style="width:min(560px,96vw)">
+  <b style="font-size:16px">🌐 Online stellen</b>
+  <div class="hinweis" style="padding:0">Deine Seite bekommt einen eigenen Link, den alle öffnen können – z. B. zum Teilen mit Kunden oder Freunden.</div>
+  <label style="display:grid;gap:4px">Name der Seite <input id="onName" maxlength="40" spellcheck="false" placeholder="mein-cafe"></label>
+  <code id="onUrl" style="color:var(--smut);word-break:break-all"></code>
+  <label class="kl" style="align-items:flex-start"><input type="checkbox" id="onRecht" style="margin-top:3px"> <span>Ich habe die Rechte an Texten und Bildern. Die Seite enthält keine Betrugs-, Hass- oder illegalen Inhalte und keine Anmeldeseiten fremder Firmen. Ich weiß: Die Seite ist öffentlich und trägt einen „Melden“-Link.</span></label>
+  <div id="onErg"></div>
+  <div class="reihe"><span style="flex:1"></span><button id="onZu">Schließen</button><button class="primary" id="onLos">🌐 Jetzt online stellen</button></div>
+</div></div>
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
-<script src="studio.js?v=e3083582"></script>
+<script src="studio.js?v=a40c65de"></script>
 </body>
 </html>
