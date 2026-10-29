@@ -255,7 +255,7 @@ function dateiOeffnen(pfad, zeile) {
 }
 function tabZu(pfad) { const i = S.tabs.indexOf(pfad); if (i < 0) return; S.tabs.splice(i, 1); delete S.docs[pfad];
   if (S.aktiv === pfad) { const n = S.tabs[Math.max(0, i - 1)]; if (n) dateiOeffnen(n); else { S.aktiv = null; editorLeer(); } } tabsZeigen(); status(); }
-function tabsZeigen() { const box = $('tabs'); box.innerHTML = ''; S.tabs.forEach(p => { const t = document.createElement('div'); t.className = 'tab' + (p === S.aktiv ? ' an' : ''); t.title = p;
+function tabsZeigen() { const box = $('tabs'); box.innerHTML = ''; if (S.aktiv) { const w = document.createElement('div'); w.className = 'tabWerkzeug'; w.innerHTML = '<button id="leerenBtn" title="Ganzen Code dieser Datei löschen">🧹 <span>Leeren</span></button><button id="ersetzenBtn" title="Ganzen Code durch die Zwischenablage ersetzen">📥 <span>Einfügen</span></button>'; w.querySelector('#leerenBtn').onclick = dateiLeeren; w.querySelector('#ersetzenBtn').onclick = dateiErsetzen; setTimeout(() => { box.querySelectorAll('.tabWerkzeug').forEach(x => x.remove()); box.appendChild(w); }, 0); } S.tabs.forEach(p => { const t = document.createElement('div'); t.className = 'tab' + (p === S.aktiv ? ' an' : ''); t.title = p;
     t.innerHTML = '<span></span><button title="Schließen (Strg+W)">×</button>'; t.querySelector('span').textContent = icon(p) + ' ' + p.split('/').pop();
     t.onclick = e => { if (e.target.tagName === 'BUTTON') tabZu(p); else dateiOeffnen(p); }; t.onauxclick = e => { if (e.button === 1) tabZu(p); }; box.appendChild(t); }); }
 
@@ -477,7 +477,7 @@ function palZu() { $('palette').hidden = true; if (S.cm) S.cm.focus(); }
 function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filter(d => !/\.gitkeep$/.test(d)).map(d => ({ label: icon(d) + ' ' + d.split('/').pop(), info: d, d })), 'Datei öffnen …', x => dateiOeffnen(x.d)); }
 function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
-  ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
+  ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['⬇ Projekt als ZIP', '', zipExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
@@ -680,6 +680,18 @@ async function seiteLoeschen() {
   const j = await hubPost('/hub/seite/loeschen', { code, name }); if (j.ok) { if (S.p && S.p.online && S.p.online.name === name) { delete S.p.online; projSchreiben(S.p); } toast('🗑 Offline genommen: ' + name); } else alert(j.error);
 }
 
+/* ---------------- Ganze Datei leeren / durch Zwischenablage ersetzen ---------------- */
+function dateiLeeren() { if (!S.aktiv) { toast('Keine Datei offen.'); return; }
+  if (S.cm) { if (!S.cm.getValue()) { S.cm.focus(); return; } S.cm.setValue(''); S.cm.focus(); } else if (S.ta) { S.ta.value = ''; S.ta.dispatchEvent(new Event('input')); S.ta.focus(); }
+  if (S.cm) { S.p.dateien[S.aktiv] = ''; tabsZeigen(); speichernBald(); }
+  toast('🧹 ' + S.aktiv.split('/').pop() + ' ist leer – jetzt neuen Code einfügen. ↶ holt den alten zurück.'); }
+async function dateiErsetzen() { if (!S.aktiv) { toast('Keine Datei offen.'); return; }
+  let t = null; try { t = await navigator.clipboard.readText(); } catch (e) { t = null; }
+  if (t == null) { dateiLeeren(); toast('📋 Jetzt lange ins Code-Feld tippen → „Einfügen“ (dein Browser erlaubt kein direktes Einfügen).'); return; }
+  if (!t.trim()) { toast('Die Zwischenablage ist leer – erst Code kopieren.'); return; }
+  if (abIstAnleitung(t)) { einfuegenDialog(t); return; }
+  if (S.cm) { S.cm.setValue(t); S.p.dateien[S.aktiv] = t; tabsZeigen(); speichernBald(); S.cm.focus(); } else if (S.ta) { S.ta.value = t; S.ta.dispatchEvent(new Event('input')); }
+  toast('📥 Code eingefügt (' + t.split('\n').length + ' Zeilen) – ↶ holt den alten zurück.'); }
 /* ---------------- Handy: eine Ansicht nach der anderen + Zeichen-Leiste ---------------- */
 const istHandy = () => matchMedia('(max-width:800px)').matches;
 function ansicht(n) { if (!istHandy()) return; const app = $('app');
