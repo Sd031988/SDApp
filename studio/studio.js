@@ -421,7 +421,7 @@ async function programmStarten() {
     const cErr = String(r.compiler_error || ''), out = String(r.program_output || ''), pErr = String(r.program_error || ''), st = String(r.status == null ? '' : r.status), name = haupt.split('/').pop();
     const fehlerText = (cErr + '\n' + pErr).replace(/\bprog\.(cc|c|java|rs|go|py|cs)\b/g, name);
     if (st !== '0' && /error/i.test(cErr) && !out) { ausgabe('❌ BAUFEHLER (' + SPR[sp] + ')\n\n' + fehlerText.trim()); fehlerSammeln(fehlerText, haupt); }
-    else if (st !== '0' || r.signal) { ausgabe('❌ LAUFZEITFEHLER (Exit-Code ' + (st || '?') + (r.signal ? ', ' + r.signal : '') + ')\n\n' + (out ? 'Ausgabe:\n' + out + '\n' : '') + fehlerText.trim()); fehlerSammeln(fehlerText, haupt); }
+    else if (st !== '0' || r.signal) { ausgabe('❌ LAUFZEITFEHLER (Exit-Code ' + (st || '?') + (r.signal ? ', ' + r.signal : '') + ')\n\n' + (out ? 'Ausgabe:\n' + out + '\n' : '') + fehlerText.trim() + (/No module named|ModuleNotFoundError|_tkinter|no display name|TclError/.test(fehlerText) ? '\n\n💡 Online gibt es nur reines Python ohne Zusatz-Pakete (z. B. kein cv2/OpenCV, numpy, Flask) und ohne Fenster (tkinter). Solche Programme laufen in der PC-Version des SD KI-Agenten – dort installiert ▶ die Pakete automatisch.' : '')); fehlerSammeln(fehlerText, haupt); }
     else { ausgabe('✅ Gebaut und ausgeführt (' + SPR[sp] + ', online über wandbox.org)\n\n' + (out || '(keine Ausgabe)') + (cErr.trim() ? '\n\nHinweise vom Compiler:\n' + cErr.trim() : '')); if (!S.p.erfolg) { S.p.erfolg = 1; konfetti(); } }
   } catch (e) { ausgabe('❌ ' + e.message + (navigator.onLine ? '' : '\n➜ Keine Internetverbindung. Webseiten (HTML/CSS/JS) laufen auch offline, Programme brauchen Internet.')); }
   finally { $('starten').disabled = false; }
@@ -553,8 +553,13 @@ function nameAusInhalt(code,lang){const t=code.slice(0,3000);let m;
   if(/#include\s*<stdio\.h>|printf\s*\(/.test(t)&&!/print\(/.test(t))return "main.c";
   if(/\bfn\s+main\s*\(|println!\s*\(/.test(t))return "src/main.rs";
   if(/^package\s+main\b|\bfunc\s+main\s*\(/m.test(t))return "main.go";
-  if(/^\s*(def |import |from \w+ import|print\(|if __name__)/m.test(t))return "main.py";
+  if(/^\s*(def |import |from [\w.]+ import|print\(|if __name__|class \w+(\(.*\))?:\s*$|elif |async def )/m.test(t))return /\bFlask\(|FastAPI\(|tk\.Tk\(|tkinter|streamlit/.test(t)?"app.py":"main.py";
+  if(/^<\?php/.test(t))return "index.php";
+  if(/^\s*fun\s+main\s*\(/m.test(t))return "Main.kt";
+  if(/^\s*(SELECT|CREATE TABLE|INSERT INTO|UPDATE \w+ SET)\b/im.test(t)&&!/[{};]\s*$/m.test(t.replace(/;\s*$/gm,"")))return "abfrage.sql";
+  if(/^\s*[\[{]/.test(t)){try{JSON.parse(t);return "daten.json"}catch(e){}}
   if(/^\s*[.#]?[\w-]+\s*\{[^}]*:[^}]*\}/m.test(t)&&!/function|=>|;\s*$/m.test(t))return "style.css";
+  if(/^[^{}()\n;=]+\{\s*$/m.test(t)&&/^\s*[\w-]+\s*:\s*[^;{}]+;/m.test(t)&&!/\b(function|return|const|let|var|if|for|while|int|void|class|def|fn|func|public|import)\b|=>|#include/.test(t))return "style.css";
   if(/\b(function|const|let|var)\b|=>|document\.|console\.log/.test(t))return "script.js";
   return null}
 const AB_DATEI_RE=/(?:^|[\s`*"'(\[])((?:[\w.\-]+\/)*(?:[\w\-]+\.(?:py|pyw|txt|js|mjs|cjs|ts|tsx|jsx|html?|css|scss|json|md|toml|ya?ml|cfg|ini|sql|sh|bat|ps1|java|kt|c|cc|cpp|h|hpp|cs|csproj|rs|go|php|rb|swift|dart|vue|svelte|xml|svg|lock|example)|\.env(?:\.\w+)?|\.gitignore|\.dockerignore|Dockerfile|Makefile|Procfile|README))(?=$|[\s`*"'),:;\]])/g;
@@ -581,6 +586,7 @@ function anleitungParsen(text){
   const re=/```([^\n`]*)\n([\s\S]*?)```/g;let m,letztesEnde=0;const bloecke=[];
   while((m=re.exec(text)))bloecke.push({lang:(m[1]||"").trim().toLowerCase().split(/\s+/)[0],code:m[2].replace(/\s+$/,""),davor:text.slice(letztesEnde,m.index),start:m.index}),letztesEnde=re.lastIndex;
   // 1) Ordnerbaum
+  if(!bloecke.length){const roh=abRohCode(text);if(roh){erg.dateien[roh.datei]=roh.code;erg.roh=roh;erg.sprache=roh.sprache;erg.sprachen=roh.sprache?[roh.sprache.icon+" "+roh.sprache.name]:[];return erg}}
   for(const b of bloecke){if(/[├└]──|\|--|`--/.test(b.code)||(/^[\w.\-]+\/\s*$/m.test(b.code)&&/^\s+[\w.\-]+/m.test(b.code)&&!/[=(){};]/.test(b.code))){
     const t=abBaumParsen(b.code);if(t.dateien.length+t.ordner.length){b.baum=true;if(t.wurzel&&!erg.name)erg.name=t.wurzel;
       t.ordner.forEach(o=>{if(!erg.ordner.includes(o))erg.ordner.push(o)});t.dateien.forEach(d=>{if(!(d in erg.dateien))erg.dateien[d]="";erg.baum.push(d)})}}}
@@ -606,14 +612,34 @@ function anleitungParsen(text){
   for(const x of text.matchAll(/`((?:pip3?|npm|npx|uvicorn|python3?|node|yarn|pnpm|docker|cargo|go|dotnet|streamlit|alembic|pytest)\s[^`\n]{2,120})`/gi)){const c=x[1].trim();if(!erg.befehle.includes(c))erg.befehle.push(c)}
   const rang=c=>/\b(install|add|venv|init|mkdir)\b|^cd\s/i.test(c)?0:/\b(migrate|upgrade|build|alembic)\b/i.test(c)?1:2;
   erg.befehle.sort((a,b)=>rang(a)-rang(b));
+  erg.sprachen=[...new Set(Object.keys(erg.dateien).map(d=>abSprache(d)).filter(Boolean).map(x=>x.icon+" "+x.name))];
   return erg}
+const AB_SPRACHEN={html:["HTML-Webseite","🌐","webseite"],htm:["HTML-Webseite","🌐","webseite"],css:["CSS (Design)","🎨","design"],js:["JavaScript","🟨","javascript"],ts:["TypeScript","🔷","typescript"],py:["Python","🐍","python-programm"],
+  cpp:["C++","⚙️","cpp-programm"],c:["C","⚙️","c-programm"],java:["Java","☕","java-programm"],cs:["C#","🟪","csharp-programm"],rs:["Rust","🦀","rust-programm"],go:["Go","🐹","go-programm"],php:["PHP","🐘","php-projekt"],
+  kt:["Kotlin","🟣","kotlin-programm"],sql:["SQL","🗄","datenbank"],json:["JSON-Daten","🧩","daten"],sh:["Shell-Skript","🐚","skripte"],md:["Markdown","📄","texte"],jsx:["React (JSX)","⚛️","react-app"],tsx:["React (TSX)","⚛️","react-app"],vue:["Vue","🟩","vue-app"]};
+function abSprache(datei){const e=(String(datei||"").split(".").pop()||"").toLowerCase();const x=AB_SPRACHEN[e];return x?{name:x[0],icon:x[1],ordner:x[2],endung:e}:null}
+function abRohCode(text){const t=String(text||"").trim();if(!t||/```/.test(t))return null;
+  const zeilen=t.split("\n"),codeArtig=zeilen.filter(z=>/[{}();=<>:#\[\]]|^\s{2,}\S|^(def|class|import|from|function|const|let|var|public|private|package|using|fn|func|SELECT|CREATE)\b/.test(z)).length;
+  if(codeArtig<Math.max(1,zeilen.length*0.3))return null;const datei=nameAusInhalt(t,"");if(!datei)return null;return {datei,code:t+"\n",sprache:abSprache(datei)}}
 function abIstAnleitung(t){t=String(t||"");const fences=(t.match(/```/g)||[]).length/2;return fences>=2||(fences>=1&&/[├└]──/.test(t))}
 
 function einfuegenDialog(text) {
-  const box = $('einfuegen'); box.hidden = false; const ta = $('efText'), vor = $('efVorschau'); let erg = null, nameHand = false;
-  const zeigen = () => { erg = anleitungParsen(ta.value); if (!nameHand) $('efName').value = erg.name || (S.p ? '' : 'mein-projekt') || 'mein-projekt';
-    const dat = Object.keys(erg.dateien).sort(); vor.innerHTML = ''; const h = (t, k) => { const e = document.createElement('div'); if (k) e.className = k; e.textContent = t; vor.appendChild(e); };
-    if (!dat.length && !erg.ordner.length) { h('Noch nichts erkannt.', 'grau'); h('Tipp: Code muss zwischen ``` stehen, Dateinamen davor (z. B. „app/main.py“).', 'grau'); return; }
+  const box = $('einfuegen'); box.hidden = false; const ta = $('efText'), vor = $('efVorschau'); let erg = null, nameHand = false, ziel = null;
+  const offenSpr = S.aktiv ? abSprache(S.aktiv) : null;
+  const zeigen = () => { erg = anleitungParsen(ta.value); if (!nameHand) $('efName').value = erg.name || (erg.roh && erg.roh.sprache ? erg.roh.sprache.ordner : 'mein-projekt');
+    const dat = Object.keys(erg.dateien).sort(); vor.innerHTML = ''; const h = (t, k) => { const e = document.createElement('div'); if (k) e.className = k; e.textContent = t; vor.appendChild(e); return e; };
+    if (!dat.length && !erg.ordner.length) { h(ta.value.trim() ? 'Keine Programmiersprache erkannt.' : 'Noch nichts eingefügt.', 'grau'); h('Füge Code ein (HTML, CSS, JavaScript, Python, C++, Java, C#, Rust, Go, PHP, SQL …) – die Sprache wird automatisch erkannt. Oder eine Anleitung mit ``` Code-Blöcken.', 'grau'); $('efLos').textContent = '🏗 Projekt aufbauen'; return; }
+    if (erg.sprachen && erg.sprachen.length) h('✅ Erkannt: ' + erg.sprachen.join(' · '), 'erkannt');
+    if (erg.roh) { const sp = erg.roh.sprache || { name: 'Code', icon: '📄', endung: '' }; const gleich = offenSpr && offenSpr.endung === sp.endung;
+      if (!ziel) ziel = gleich ? 'datei' : 'neu'; if (ziel === 'datei' && !S.aktiv) ziel = 'neu'; if (ziel === 'projekt' && !S.p) ziel = 'neu';
+      h('Wohin soll der ' + sp.name + '-Code?', 'fett');
+      const opt = (id, text, ok) => { if (!ok) return; const l = document.createElement('label'); l.className = 'zielWahl'; l.innerHTML = '<input type="radio" name="efZiel"><span></span>'; l.querySelector('span').textContent = text; const i = l.querySelector('input'); i.checked = ziel === id; i.onchange = () => { ziel = id; zeigen(); }; vor.appendChild(l); };
+      opt('datei', 'In die offene Datei „' + (S.aktiv || '') + '“ (ersetzt ihren Inhalt)' + (gleich ? ' – gleiche Sprache ✓' : ''), !!S.aktiv);
+      opt('projekt', 'Als neue Datei „' + erg.roh.datei + '“ ins Projekt „' + (S.p ? S.p.name : '') + '“', !!S.p);
+      opt('neu', 'Neues Projekt (Ordner) – Name unten: „' + ($('efName').value || sp.ordner) + '“', true);
+      $('efName').disabled = ziel !== 'neu'; $('efLos').textContent = ziel === 'neu' ? '🏗 Projekt aufbauen' : '📥 Einfügen';
+      h('   ' + icon(erg.roh.datei) + ' ' + erg.roh.datei + '  ' + erg.roh.code.split('\n').filter(Boolean).length + ' Zeilen', 'mono'); return; }
+    $('efName').disabled = false; $('efLos').textContent = '🏗 Projekt aufbauen';
     h('📁 ' + ($('efName').value || S.p && S.p.name || 'projekt') + '/', 'fett');
     erg.ordner.filter(o => !dat.some(d => d.startsWith(o + '/'))).forEach(o => h('   📁 ' + o + '/  (leer)', 'mono grau'));
     dat.forEach(d => { const z = erg.dateien[d].split('\n').filter(Boolean).length; h('   ' + icon(d) + ' ' + d + '  ' + (z ? z + ' Zeilen' : '(leer)'), 'mono'); });
@@ -621,7 +647,12 @@ function einfuegenDialog(text) {
   ta.oninput = zeigen; $('efName').oninput = () => { nameHand = true; zeigen(); };
   $('efZu').onclick = () => { box.hidden = true; };
   $('efNurText').onclick = () => { const t = ta.value; box.hidden = true; if (S.cm && S.aktiv) S.cm.replaceSelection(t); };
-  $('efLos').onclick = async () => { if (!erg) zeigen(); const leer = !Object.keys(erg.dateien).length && !erg.ordner.length; if (leer) { alert('In dem Text habe ich keine Dateien erkannt.'); return; }
+  $('efLos').onclick = async () => { if (!erg) zeigen();
+    if (erg.roh && ziel === 'datei') { box.hidden = true; if (S.cm) S.cm.replaceRange(erg.roh.code, { line: 0, ch: 0 }, { line: S.cm.lastLine() }, '+einfuegen'); else { S.ta.value = erg.roh.code; S.ta.dispatchEvent(new Event('input')); }
+      S.p.dateien[S.aktiv] = erg.roh.code; await speichernJetzt(); if (istWebProjekt() && !$('vorschau').hidden) vorschau(false); toast('📥 Code in ' + S.aktiv + ' eingefügt – ↶ holt den alten zurück'); return; }
+    if (erg.roh && ziel === 'projekt') { let pfad = erg.roh.datei; if (S.p.dateien[pfad] != null && !confirm('„' + pfad + '“ gibt es schon. Ersetzen? (Abbrechen = neuer Name)')) { const n = sicherPfad(prompt('Neuer Dateiname:', pfad.replace(/(\.\w+)$/, '-2$1'))); if (!n) return; pfad = n; }
+      await speichernJetzt(); S.p.dateien[pfad] = erg.roh.code; delete S.docs[pfad]; await projSchreiben(S.p); box.hidden = true; baum(); dateiOeffnen(pfad); if (typeof ansicht === 'function') ansicht('code'); toast('📥 ' + pfad + ' eingefügt'); return; }
+    const leer = !Object.keys(erg.dateien).length && !erg.ordner.length; if (leer) { alert('In dem Text habe ich keine Dateien erkannt.'); return; }
     const name = ($('efName').value.trim() || 'mein-projekt').replace(/[\/\\<>:"|?*]+/g, '-'); let p = await projLesen(name);
     if (p && !confirm('Das Projekt „' + name + '“ gibt es schon.\n\nOK = Dateien dort hinzufügen bzw. aktualisieren (vorheriger Stand kommt in 🕘 Versionen).')) return;
     if (p) { S.p = p; await versionNeu('Vor dem Einfügen', true); p = S.p; } else p = { name, dateien: {}, versionen: [], erstellt: Date.now() };
