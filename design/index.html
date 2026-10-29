@@ -271,6 +271,17 @@ async function dsAlsWebseite(){dsSpeichern(true);if(!await sdDarf())return;
   const blob=new Blob([dsHtml(DS.d,true)],{type:"text/html"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=slug(DS.name)+".html";
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);dsToast("🌐 Webseite gespeichert (Downloads): "+a.download+" – im Browser öffnen oder online stellen")}
 // ---------- Aufbau ----------
+async function dsInsStudio(){dsSpeichern(true);let ziel="";try{ziel=JSON.parse(localStorage.getItem("sdDesignZiel")||'""')}catch(e){}
+  const name=(prompt("Name des Projekts im Code-Studio:",ziel||slug(DS.name||"mein-design"))||"").trim().replace(/[\/\\<>:"|?*]+/g,"-");if(!name)return;
+  const db=await new Promise((ok,nein)=>{const r=indexedDB.open("sdCodeStudio",1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("projekte"))r.result.createObjectStore("projekte",{keyPath:"name"})};r.onsuccess=()=>ok(r.result);r.onerror=()=>nein(r.error)});
+  const alt=await new Promise(ok=>{const q=db.transaction("projekte").objectStore("projekte").get(name);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)});
+  if(alt&&ziel!==name&&!confirm("Im Code-Studio gibt es „"+name+"“ schon. index.html dort ersetzen? (Der alte Stand kommt in die Versionen.)"))return;
+  const p=alt||{name,dateien:{},versionen:[],erstellt:Date.now()};
+  if(alt){p.versionen=p.versionen||[];p.versionen.unshift({t:Date.now(),text:"Vor dem Design-Studio",dateien:JSON.parse(JSON.stringify(p.dateien))});p.versionen=p.versionen.slice(0,30)}
+  p.dateien["index.html"]=dsHtml(DS.d,true);p.dateien["design.json"]=JSON.stringify({name:DS.name,design:DS.d});p.haupt="index.html";p.t=Date.now();
+  await new Promise((ok,nein)=>{const t=db.transaction("projekte","readwrite");t.objectStore("projekte").put(p);t.oncomplete=ok;t.onerror=()=>nein(t.error)});
+  try{localStorage.removeItem("sdDesignZiel")}catch(e){}
+  location.href="../studio/?projekt="+encodeURIComponent(name)}
 function dsStil(){if($("dsStil"))return;const s=document.createElement("style");s.id="dsStil";s.textContent=
  "#dsBox[hidden]{display:none!important}#dsBox{position:fixed;inset:0;z-index:40;display:grid;grid-template-columns:230px 1fr 270px;grid-template-rows:auto 1fr;background:#15161a;color:#e7e7ea;font:13px system-ui,'Segoe UI',sans-serif}"+
  "#dsBox button{background:#24262d;color:#e7e7ea;border:1px solid #33363f;border-radius:8px;padding:6px 9px;cursor:pointer;font:inherit}#dsBox button:hover{background:#2e313a}#dsBox button.primary{background:linear-gradient(135deg,#7c3aed,#db2777);border:0;color:#fff;font-weight:600}"+
@@ -300,7 +311,7 @@ function designStudio(){dsStil();if($("dsBox")){$("dsBox").hidden=false;dsAnpass
   box.innerHTML='<div id="dsKopf"><b>🎨 Design-Studio</b><input id="dsName" placeholder="Name des Designs"><button id="dsOeffnen" title="Gespeicherte Designs und Vorlagen">📂 Öffnen</button><button id="dsSpeich">💾 Speichern</button>'+
    '<button id="dsZur" title="Strg+Z">↶</button><button id="dsVor" title="Strg+Y">↷</button><button id="dsUeber" class="primary" title="Neue Farben und Schrift – so oft du willst">🎲 Überrasch mich</button>'+
    '<label style="display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" id="dsRaster" style="width:auto" checked> Hilfslinien</label><span style="flex:1"></span>'+
-   '<button id="dsPng" title="Als Bild speichern (z. B. für Instagram, WhatsApp, Druck)">🖼 Als Bild (PNG)</button><button id="dsWeb" title="Als Webseite herunterladen (index.html) – passt sich jeder Bildschirmgröße an">🌐 Als Webseite</button><span id="sdKont"></span><button id="dsZu" title="Zurück zum SD Hub">✕</button></div>'+
+   '<button id="dsPng" title="Als Bild speichern (z. B. für Instagram, WhatsApp, Druck)">🖼 Als Bild (PNG)</button><button id="dsWeb" title="Als Webseite herunterladen (index.html) – passt sich jeder Bildschirmgröße an">🌐 Als Webseite</button><span id="sdKont"></span><button id="dsStudio" title="Als Webseite ins SD Code-Studio – dort mit Code weiterbauen">💻 Im Code-Studio</button><button id="dsZu" title="Zurück zum SD Hub">✕</button></div>'+
    '<div id="dsLinks"><div class="dsT">HINZUFÜGEN</div><div class="dsKacheln">'+
      [["titel","𝐓","Überschrift"],["text","¶","Text"],["knopf","▭","Knopf"],["bild","🖼","Bild"],["box","■","Form"],["kreis","●","Kreis"],["linie","—","Linie"]].map(x=>'<button data-neu="'+x[0]+'"><span>'+x[1]+'</span>'+x[2]+'</button>').join("")+'</div>'+
     '<div class="dsT">EMOJIS & SYMBOLE</div><div class="dsEmoji">'+DS_EMOJI.map(e=>'<button data-emoji="'+e+'">'+e+'</button>').join("")+'</div>'+
@@ -315,7 +326,7 @@ function designStudio(){dsStil();if($("dsBox")){$("dsBox").hidden=false;dsAnpass
   $("dsNeuePal").onclick=()=>{const p=dsZufallsPalette();dsPaletteAnwenden(p);dsToast("🎨 Neue Palette: "+p.join(" "))};
   box.querySelectorAll("[data-vorl]").forEach(b=>b.onclick=()=>{const v=dsVorlagen()[+b.dataset.vorl];if(DS.d&&DS.d.els.length&&!confirm("Vorlage „"+v[0]+"“ laden? Dein aktuelles Design wird vorher gespeichert."))return;dsSpeichern(true);dsLaden(v[1](),v[0].replace(/^\S+\s/,""))});
   $("dsZu").onclick=dsSchliessen;$("dsSpeich").onclick=()=>dsSpeichern(false);$("dsOeffnen").onclick=dsOeffnenDialog;$("dsZur").onclick=dsZurueck;$("dsVor").onclick=dsVor;$("dsUeber").onclick=dsUeberrasch;
-  $("dsPng").onclick=dsPng;$("dsWeb").onclick=dsAlsWebseite;$("dsRaster").onchange=()=>DS.raster=$("dsRaster").checked;$("dsName").onchange=()=>{DS.name=$("dsName").value.trim()||DS.name};
+  $("dsPng").onclick=dsPng;$("dsStudio").onclick=dsInsStudio;$("dsWeb").onclick=dsAlsWebseite;$("dsRaster").onchange=()=>DS.raster=$("dsRaster").checked;$("dsName").onchange=()=>{DS.name=$("dsName").value.trim()||DS.name};
   $("dsBildDatei").onchange=()=>{dsBildLaden($("dsBildDatei").files[0]);$("dsBildDatei").value=""};
   $("dsZm").onclick=()=>{DS.zoom=Math.max(.08,DS.zoom/1.2);dsZeichnen();$("dsZoomW").textContent=Math.round(DS.zoom*100)+"%"};$("dsZp").onclick=()=>{DS.zoom=Math.min(4,DS.zoom*1.2);dsZeichnen();$("dsZoomW").textContent=Math.round(DS.zoom*100)+"%"};$("dsZf").onclick=dsAnpassen;
   $("dsMitte").addEventListener("pointerdown",dsMaus);$("dsMitte").addEventListener("dblclick",dsDoppel);
