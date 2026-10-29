@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SD Design-Studio – Poster, Posts und Webseiten gestalten</title>
+<meta name="description" content="Gestalten ohne Code: Poster, Instagram-Posts, Visitenkarten und Webseiten mit Vorlagen, Farbpaletten und „Überrasch mich“. Läuft im Browser.">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<script src="../agent/zugang-krypto.js"></script>
+<style>html,body{margin:0;background:#15161a}</style>
+</head>
+<body>
+<noscript>Bitte JavaScript einschalten.</noscript>
+<script>
+
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function slug(t){return String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"design"}
+/* ---------- Kontingent: ohne Schlüssel 10 Nutzungen (Bild- oder Webseiten-Export) pro 24 Stunden ---------- */
+const SD_FREI=10,SD_KEY="sdDesignNutzung";let SD_FREIGESCHALTET=false;
+function sdNutzungen(){const jetzt=Date.now();return (store.get(SD_KEY,[])||[]).filter(t=>jetzt-t<864e5)}
+function sdKontZeigen(){const n=$("sdKont");if(!n)return;if(SD_FREIGESCHALTET){n.textContent="🔓 Unbegrenzt";n.title="Mit deinem Zugangsschlüssel freigeschaltet";return}
+  const rest=Math.max(0,SD_FREI-sdNutzungen().length);n.textContent="🎟 "+rest+" von "+SD_FREI+" frei";n.title="Ohne Zugangsschlüssel: "+SD_FREI+" Exporte (Bild oder Webseite) in 24 Stunden";n.style.color=rest?"#c4b5fd":"#fca5a5"}
+async function sdSchluesselPruefen(code){try{const zug=await (await fetch("../agent/zugang.json?t="+Date.now(),{cache:"no-store"})).json();return !!(await sdZugang.oeffnen(zug,code))}catch(e){return false}}
+async function sdDarf(){if(SD_FREIGESCHALTET)return true;const l=sdNutzungen();if(l.length<SD_FREI){l.push(Date.now());store.set(SD_KEY,l);sdKontZeigen();return true}
+  sdSperre();return false}
+function sdSperre(){let o=$("sdSperre");if(o)o.remove();o=document.createElement("div");o.id="sdSperre";$("dsBox").appendChild(o);
+  const l=sdNutzungen(),wieder=new Date(Math.min(...l)+864e5);
+  o.innerHTML='<div class="dsKarte"><b>🔒 Deine 10 kostenlosen Nutzungen für heute sind aufgebraucht</b>'+
+   '<p style="margin:0;line-height:1.5">Ohne Schlüssel kannst du in 24 Stunden 10 Designs als Bild oder Webseite speichern. Wieder frei ab <b>'+wieder.toLocaleString("de-DE",{weekday:"short",hour:"2-digit",minute:"2-digit"})+'</b>.</p>'+
+   '<p style="margin:0;line-height:1.5">Für unbegrenzte Nutzung brauchst du den <b>Zugangsschlüssel vom KI-Agenten</b> (SD Lotze). Mit dem Schlüssel bekommst du auch den KI-Agenten und den PC-Agenten.</p>'+
+   '<label class="dsF"><span>Zugangsschlüssel</span><input id="sdCode" placeholder="SDL-XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" style="text-transform:uppercase;font-family:ui-monospace,Consolas,monospace"></label>'+
+   '<label style="display:flex;gap:6px;align-items:center;color:#9a9aa5"><input type="checkbox" id="sdMerken" style="width:auto" checked> Auf diesem Gerät merken</label>'+
+   '<div id="sdFehler" style="color:#fca5a5;min-height:1.2em"></div>'+
+   '<div class="dsReihe"><button id="sdZu">Später</button><button class="primary" id="sdLos">🔓 Freischalten</button></div>'+
+   '<a href="../agent/index.html" style="color:#c4b5fd">Mehr über den KI-Agenten und den Zugangsschlüssel →</a></div>';
+  $("sdZu").onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()};
+  $("sdLos").onclick=async()=>{const c=$("sdCode").value.trim();if(!c){$("sdFehler").textContent="Bitte den Schlüssel eingeben.";return}
+    $("sdLos").disabled=true;$("sdLos").textContent="Prüfe …";const ok=await sdSchluesselPruefen(c);$("sdLos").disabled=false;$("sdLos").textContent="🔓 Freischalten";
+    if(!ok){$("sdFehler").textContent="Dieser Schlüssel ist nicht gültig.";return}
+    try{sessionStorage.setItem("sdAgentZugang",c);if($("sdMerken").checked)localStorage.setItem("sdAgentZugang",c)}catch(e){}
+    SD_FREIGESCHALTET=true;sdKontZeigen();o.remove();dsToast("🔓 Freigeschaltet – unbegrenzt gestalten")};
+  setTimeout(()=>$("sdCode").focus(),30)}
+/* ================= 🎨 DESIGN-STUDIO – gestalten ohne Code (Poster, Posts, Webseiten), alles lokal ================= */
+const DS={d:null,sel:null,verlauf:[],zukunft:[],zoom:1,name:"",raster:true};
+const DS_FORMATE=[["Instagram-Post",1080,1080],["Story / Reel",1080,1920],["Poster A4",1240,1754],["Webseite (Startbereich)",1440,900],["YouTube-Thumbnail",1280,720],["Visitenkarte",1050,600],["Präsentation 16:9",1920,1080],["Flyer A5",874,1240]];
+const DS_SCHRIFTEN=[["Modern","'Segoe UI',system-ui,sans-serif"],["Elegant","Georgia,'Times New Roman',serif"],["Kräftig","Impact,'Arial Black',sans-serif"],["Klassisch","'Palatino Linotype',Palatino,serif"],
+  ["Rund","'Trebuchet MS',Verdana,sans-serif"],["Technisch","'Cascadia Code',Consolas,'Courier New',monospace"],["Verspielt","'Comic Sans MS','Comic Neue',cursive"],["Schlicht","Arial,Helvetica,sans-serif"]];
+const DS_PALETTEN=[["Sonnenuntergang",["#2b1055","#ff6f61","#ffd166","#ffffff","#7a2e8c"]],["Ozean",["#03045e","#00b4d8","#90e0ef","#ffffff","#0077b6"]],["Wald",["#1b4332","#95d5b2","#d8f3dc","#ffffff","#40916c"]],
+  ["Neon",["#0d0d0d","#39ff14","#ff00e6","#ffffff","#00e5ff"]],["Pastell",["#fff1e6","#e07a5f","#3d405b","#3d405b","#81b29a"]],["Luxus",["#111111","#d4af37","#f5f5f5","#f5f5f5","#8c6d1f"]],
+  ["Bonbon",["#ffafcc","#7b2cbf","#ffffff","#3c096c","#cdb4db"]],["Business",["#f8fafc","#0f172a","#2563eb","#334155","#93c5fd"]],["Retro",["#f4e1c1","#c0392b","#2c3e50","#2c3e50","#e67e22"]],["Nacht",["#0b132b","#5bc0be","#ffffff","#c5d1eb","#3a506b"]]];
+const DS_VERLAEUFE=[["#ff9a9e","#fad0c4"],["#a18cd1","#fbc2eb"],["#667eea","#764ba2"],["#43e97b","#38f9d7"],["#fa709a","#fee140"],["#30cfd0","#330867"],["#0f2027","#2c5364"],["#f83600","#f9d423"],["#00c6fb","#005bea"],["#232526","#414345"]];
+const DS_EMOJI="⭐ ❤️ 🔥 ✨ 🎉 🚀 💡 📱 💻 🛒 🍕 ☕ 🌍 🌸 🏆 ✅ 📍 📞 ✉️ 🎵 📷 🎁 💎 🌙 ☀️ 👋 👉 🙌 💪 😀 😍 🤖".split(" ");
+function dsId(){return "e"+Math.random().toString(36).slice(2,8)}
+function dsLeer(w,h){return {w,h,hg:{art:"farbe",a:"#ffffff",b:"#dddddd",winkel:135},els:[]}}
+function dsText(t,x,y,w,fs,o){return Object.assign({id:dsId(),typ:"text",text:t,x,y,w,h:Math.round(fs*1.4),fs,farbe:"#111111",font:DS_SCHRIFTEN[0][1],gewicht:400,ausr:"left",zeile:1.2,deck:1,rot:0},o||{})}
+function dsForm(typ,x,y,w,h,hg,o){return Object.assign({id:dsId(),typ,x,y,w,h,hg,rund:typ==="kreis"?50:0,deck:1,rot:0,rand:0,randFarbe:"#000000",schatten:0},o||{})}
+// ---------- Vorlagen ----------
+function dsVorlagen(){return [
+ ["🎉 Event-Poster",()=>{const d=dsLeer(1240,1754);d.hg={art:"verlauf",a:"#2b1055",b:"#ff6f61",winkel:160};
+   d.els.push(dsForm("kreis",760,-180,700,700,"#ffd166",{deck:.35}),dsForm("kreis",-200,1250,600,600,"#ffffff",{deck:.12}),
+    dsText("SOMMER\nFESTIVAL",110,420,1020,190,{farbe:"#ffffff",font:DS_SCHRIFTEN[2][1],gewicht:700,zeile:1,h:400}),
+    dsText("12. August · Heidelberg · Eintritt frei",110,880,1020,52,{farbe:"#ffd166"}),
+    dsText("Live-Musik · Streetfood · Kinderprogramm",110,960,1020,40,{farbe:"#ffffff",deck:.85}),
+    dsForm("knopf",110,1450,520,120,"#ffd166",{text:"Jetzt anmelden",farbe:"#2b1055",fs:46,font:DS_SCHRIFTEN[0][1],gewicht:700,rund:60}));return d}],
+ ["🛍 Angebot (Instagram)",()=>{const d=dsLeer(1080,1080);d.hg={art:"farbe",a:"#fff1e6"};
+   d.els.push(dsForm("box",0,0,1080,380,"#e07a5f"),dsText("−30 %",80,90,920,200,{farbe:"#ffffff",font:DS_SCHRIFTEN[2][1],ausr:"center",h:220}),
+    dsText("Nur dieses Wochenende",80,470,920,70,{farbe:"#3d405b",gewicht:700,ausr:"center"}),
+    dsText("Auf alle Produkte im Laden und online.",80,570,920,44,{farbe:"#3d405b",ausr:"center",deck:.8}),
+    dsForm("knopf",290,760,500,110,"#3d405b",{text:"Jetzt shoppen",farbe:"#ffffff",fs:44,font:DS_SCHRIFTEN[0][1],gewicht:700,rund:55}),
+    dsText("🛍",470,920,140,90,{ausr:"center"}));return d}],
+ ["🚀 Webseite Startbereich",()=>{const d=dsLeer(1440,900);d.hg={art:"verlauf",a:"#0f172a",b:"#1e3a8a",winkel:135};
+   d.els.push(dsText("● MeineFirma",80,50,500,34,{farbe:"#ffffff",gewicht:700}),dsText("Start    Leistungen    Preise    Kontakt",760,56,600,26,{farbe:"#c7d2fe",ausr:"right"}),
+    dsText("Ideen schneller\nverwirklichen",80,250,760,84,{farbe:"#ffffff",gewicht:700,zeile:1.1,h:200}),
+    dsText("Wir bauen Webseiten und Apps, die Kunden lieben – modern, schnell und fürs Handy gemacht.",80,500,680,30,{farbe:"#c7d2fe",zeile:1.5,h:100}),
+    dsForm("knopf",80,650,300,80,"#3b82f6",{text:"Kostenlos testen",farbe:"#ffffff",fs:28,font:DS_SCHRIFTEN[0][1],gewicht:700,rund:14}),
+    dsForm("knopf",400,650,260,80,"rgba(255,255,255,0)",{text:"Mehr erfahren",farbe:"#ffffff",fs:28,font:DS_SCHRIFTEN[0][1],rund:14,rand:2,randFarbe:"#ffffff"}),
+    dsForm("box",900,220,440,520,"#ffffff",{rund:28,deck:.1,schatten:40}),dsText("🚀",1020,370,200,200,{ausr:"center"}));return d}],
+ ["🎬 YouTube-Thumbnail",()=>{const d=dsLeer(1280,720);d.hg={art:"verlauf",a:"#f83600",b:"#f9d423",winkel:120};
+   d.els.push(dsText("SO GEHT'S!",60,80,800,170,{farbe:"#ffffff",font:DS_SCHRIFTEN[2][1],schatten:12,h:190}),dsText("in 5 Minuten",70,300,700,80,{farbe:"#111111",gewicht:700}),
+    dsForm("kreis",820,140,420,420,"#ffffff",{rand:14,randFarbe:"#111111"}),dsText("😀",880,230,300,240,{ausr:"center"}));return d}],
+ ["💼 Visitenkarte",()=>{const d=dsLeer(1050,600);d.hg={art:"farbe",a:"#111111"};
+   d.els.push(dsForm("box",0,0,18,600,"#d4af37"),dsText("Dein Name",80,170,880,70,{farbe:"#f5f5f5",font:DS_SCHRIFTEN[1][1]}),
+    dsText("Softwareentwickler",80,260,880,34,{farbe:"#d4af37"}),dsText("📞 0176 000000\n✉️ name@beispiel.de\n📍 Heidelberg",80,360,880,28,{farbe:"#f5f5f5",zeile:1.6,h:150,deck:.85}));return d}],
+ ["💌 Einladung",()=>{const d=dsLeer(1080,1350);d.hg={art:"verlauf",a:"#ffafcc",b:"#cdb4db",winkel:180};
+   d.els.push(dsForm("box",90,90,900,1170,"#ffffff",{rund:30,deck:.85,schatten:30}),dsText("Du bist eingeladen!",140,300,800,80,{farbe:"#7b2cbf",font:DS_SCHRIFTEN[1][1],ausr:"center"}),
+    dsText("🎂",440,440,200,160,{ausr:"center"}),dsText("Zu meinem Geburtstag\nSamstag, 18 Uhr",140,680,800,48,{farbe:"#3c096c",ausr:"center",zeile:1.5,h:160}),
+    dsText("Bitte sag mir bis Freitag Bescheid",140,960,800,32,{farbe:"#3c096c",ausr:"center",deck:.7}));return d}],
+ ["⬜ Leer",()=>{const f=DS_FORMATE[0];return dsLeer(f[1],f[2])}]]}
+// ---------- Darstellung ----------
+function dsHgCss(hg){return hg.art==="verlauf"?"linear-gradient("+(hg.winkel||135)+"deg,"+hg.a+","+hg.b+")":hg.art==="radial"?"radial-gradient(circle at 30% 30%,"+hg.a+","+hg.b+")":hg.a}
+function dsEsc(t){return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function dsElStil(e,einheit){const u=einheit||(v=>v+"px");const s=["position:absolute","left:"+u(e.x,"x"),"top:"+u(e.y,"y"),"width:"+u(e.w,"x"),"opacity:"+(e.deck==null?1:e.deck),"box-sizing:border-box"];
+  if(e.rot)s.push("transform:rotate("+e.rot+"deg)");
+  if(e.typ==="text"){s.push("min-height:"+u(e.h,"y"),"font-size:"+u(e.fs,"f"),"color:"+e.farbe,"font-family:"+e.font,"font-weight:"+(e.gewicht||400),"text-align:"+(e.ausr||"left"),"line-height:"+(e.zeile||1.2),"white-space:pre-wrap","word-wrap:break-word","margin:0");
+    if(e.kursiv)s.push("font-style:italic");if(e.schatten)s.push("text-shadow:0 "+u(e.schatten/3,"f")+" "+u(e.schatten,"f")+" rgba(0,0,0,.45)");if(e.abstand)s.push("letter-spacing:"+u(e.abstand,"f"))}
+  else{s.push("height:"+u(e.h,"y"),"background:"+(e.bild?"center/"+(e.passung||"cover")+" no-repeat url("+e.bild+")":e.hg),"border-radius:"+(e.typ==="kreis"?"50%":u(e.rund||0,"f")));
+    if(e.rand)s.push("border:"+u(e.rand,"f")+" solid "+(e.randFarbe||"#000"));if(e.schatten)s.push("box-shadow:0 "+u(e.schatten/2,"f")+" "+u(e.schatten,"f")+" rgba(0,0,0,.35)");
+    if(e.typ==="knopf")s.push("display:flex","align-items:center","justify-content:center","text-align:center","font-size:"+u(e.fs||32,"f"),"color:"+(e.farbe||"#fff"),"font-family:"+(e.font||DS_SCHRIFTEN[0][1]),"font-weight:"+(e.gewicht||700),"text-decoration:none","cursor:pointer")}
+  return s.join(";")}
+function dsZeichnen(){const f=$("dsFlaeche");if(!f||!DS.d)return;const d=DS.d;
+  f.style.width=d.w+"px";f.style.height=d.h+"px";f.style.background=dsHgCss(d.hg);f.style.transform="scale("+DS.zoom+")";
+  $("dsBuehne").style.width=d.w*DS.zoom+"px";$("dsBuehne").style.height=d.h*DS.zoom+"px";
+  f.innerHTML="";d.els.forEach(e=>{const n=document.createElement("div");n.className="dsEl"+(DS.sel===e.id?" sel":"");n.dataset.id=e.id;n.style.cssText=dsElStil(e);
+    if(e.typ==="text"||e.typ==="knopf")n.textContent=e.text||"";if(e.gesperrt)n.classList.add("lock");
+    if(DS.sel===e.id&&!e.gesperrt)["nw","ne","sw","se"].forEach(k=>{const g=document.createElement("i");g.className="dsGriff "+k;g.dataset.griff=k;g.style.transform="scale("+(1/DS.zoom)+")";n.appendChild(g)});
+    f.appendChild(n)});
+  dsEigenschaften();dsEbenen()}
+function dsAnpassen(){const b=$("dsMitte");if(!b||!DS.d)return;DS.zoom=Math.min((b.clientWidth-60)/DS.d.w,(b.clientHeight-60)/DS.d.h,1.5);DS.zoom=Math.max(.08,DS.zoom);dsZeichnen();$("dsZoomW").textContent=Math.round(DS.zoom*100)+"%"}
+// ---------- Verlauf (Rückgängig) ----------
+function dsMerken(){DS.verlauf.push(JSON.stringify(DS.d));if(DS.verlauf.length>80)DS.verlauf.shift();DS.zukunft=[];dsAutoSichern()}
+function dsZurueck(){if(!DS.verlauf.length)return;DS.zukunft.push(JSON.stringify(DS.d));DS.d=JSON.parse(DS.verlauf.pop());dsZeichnen()}
+function dsVor(){if(!DS.zukunft.length)return;DS.verlauf.push(JSON.stringify(DS.d));DS.d=JSON.parse(DS.zukunft.pop());dsZeichnen()}
+let dsSichernT=null;function dsAutoSichern(){clearTimeout(dsSichernT);dsSichernT=setTimeout(()=>dsSpeichern(true),800)}
+function dsSel(){return DS.d&&DS.d.els.find(e=>e.id===DS.sel)}
+// ---------- Elemente hinzufügen ----------
+function dsHinzu(e){dsMerken();const d=DS.d;if(e.x==null){e.x=Math.round((d.w-e.w)/2);e.y=Math.round((d.h-(e.h||100))/2)}d.els.push(e);DS.sel=e.id;dsZeichnen()}
+function dsNeu(typ){const d=DS.d,k=Math.min(d.w,d.h),p=dsPalette();
+  if(typ==="titel")dsHinzu(dsText("Deine Überschrift",null,null,Math.round(d.w*.8),Math.round(k*.09),{farbe:p[1],gewicht:700,ausr:"center"}));
+  else if(typ==="text")dsHinzu(dsText("Hier steht dein Text. Doppelklick zum Bearbeiten.",null,null,Math.round(d.w*.6),Math.round(k*.035),{farbe:p[3],ausr:"center",zeile:1.5,h:Math.round(k*.12)}));
+  else if(typ==="knopf")dsHinzu(dsForm("knopf",null,null,Math.round(k*.42),Math.round(k*.1),p[2],{text:"Klick mich",farbe:p[0],fs:Math.round(k*.04),font:DS_SCHRIFTEN[0][1],gewicht:700,rund:Math.round(k*.05),link:""}));
+  else if(typ==="box")dsHinzu(dsForm("box",null,null,Math.round(k*.5),Math.round(k*.3),p[4],{rund:Math.round(k*.02)}));
+  else if(typ==="kreis")dsHinzu(dsForm("kreis",null,null,Math.round(k*.3),Math.round(k*.3),p[2]));
+  else if(typ==="linie")dsHinzu(dsForm("box",null,null,Math.round(d.w*.6),Math.max(4,Math.round(k*.006)),p[1]));
+  else if(typ==="bild")$("dsBildDatei").click()}
+function dsPalette(){return DS.d.palette||["#ffffff","#111111","#2563eb","#333333","#93c5fd"]}
+function dsBildLaden(datei){if(!datei)return;const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{
+    const max=1600,f=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*f);c.height=Math.round(img.height*f);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);const url=c.toDataURL(/png/i.test(datei.type)?"image/png":"image/jpeg",.88);
+    const d=DS.d,s=Math.min(d.w*.6/c.width,d.h*.6/c.height,1);const e=dsForm("bild",null,null,Math.round(c.width*s),Math.round(c.height*s),"transparent",{bild:url,passung:"cover"});
+    const alt=dsSel();if(alt&&alt.typ!=="text"&&DS.wartetBild){dsMerken();alt.bild=url;DS.wartetBild=false;dsZeichnen()}else dsHinzu(e)};img.src=r.result};r.readAsDataURL(datei)}
+// ---------- Ziehen / Größe ändern / Hilfslinien ----------
+function dsMaus(ev){const n=ev.target.closest(".dsEl"),griff=ev.target.dataset&&ev.target.dataset.griff;
+  if(!n){if(ev.target.id==="dsFlaeche"||ev.target.id==="dsMitte"||ev.target.id==="dsBuehne"){DS.sel=null;dsZeichnen()}return}
+  const e=DS.d.els.find(x=>x.id===n.dataset.id);if(!e)return;if(DS.sel!==e.id){DS.sel=e.id;dsZeichnen()}if(e.gesperrt)return;
+  if(n.isContentEditable)return;ev.preventDefault();
+  const sx=ev.clientX,sy=ev.clientY,o={x:e.x,y:e.y,w:e.w,h:e.h,fs:e.fs},z=DS.zoom;let bewegt=false;
+  const mv=m=>{const dx=(m.clientX-sx)/z,dy=(m.clientY-sy)/z;if(!bewegt&&Math.abs(dx)+Math.abs(dy)<2)return;if(!bewegt){dsMerken();bewegt=true}
+    if(griff){let nw=o.w+(griff.includes("e")?dx:-dx),nh=o.h+(griff.includes("s")?dy:-dy);
+      if(m.shiftKey||e.typ==="kreis"||e.typ==="bild"&&!m.altKey){const r=o.h/o.w;nh=nw*r}
+      nw=Math.max(10,nw);nh=Math.max(4,nh);e.w=Math.round(nw);e.h=Math.round(nh);
+      if(griff.includes("w"))e.x=Math.round(o.x+(o.w-nw));if(griff.includes("n"))e.y=Math.round(o.y+(o.h-nh));
+      if(e.typ==="text"&&o.fs)e.fs=Math.max(6,Math.round(o.fs*nw/o.w))}
+    else{let nx=o.x+dx,ny=o.y+dy;const linien=[];
+      if(DS.raster){const d=DS.d,fang=8/z,ziele=[[d.w/2,"x",0.5],[0,"x",0],[d.w,"x",1]],zy=[[d.h/2,"y",0.5],[0,"y",0],[d.h,"y",1]];
+        DS.d.els.forEach(a=>{if(a.id!==e.id){ziele.push([a.x,"x",0],[a.x+a.w/2,"x",.5],[a.x+a.w,"x",1]);zy.push([a.y,"y",0],[a.y+a.h/2,"y",.5],[a.y+a.h,"y",1])}});
+        for(const t of [0,.5,1]){for(const [v] of ziele)if(Math.abs(nx+e.w*t-v)<fang){nx=v-e.w*t;linien.push(["x",v]);break}}
+        for(const t of [0,.5,1]){for(const [v] of zy)if(Math.abs(ny+e.h*t-v)<fang){ny=v-e.h*t;linien.push(["y",v]);break}}}
+      e.x=Math.round(nx);e.y=Math.round(ny);dsLinien(linien)}
+    const k=$("dsFlaeche").querySelector('[data-id="'+e.id+'"]');if(k){k.style.left=e.x+"px";k.style.top=e.y+"px";k.style.width=e.w+"px";k.style[e.typ==="text"?"minHeight":"height"]=e.h+"px";if(e.typ==="text")k.style.fontSize=e.fs+"px"}};
+  const up=()=>{document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);dsLinien([]);if(bewegt){dsZeichnen();dsAutoSichern()}};
+  document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up)}
+function dsLinien(l){const f=$("dsFlaeche");f.querySelectorAll(".dsLinie").forEach(x=>x.remove());
+  l.forEach(([a,v])=>{const n=document.createElement("b");n.className="dsLinie";n.style.cssText=a==="x"?"left:"+v+"px;top:0;bottom:0;width:"+(1/DS.zoom)+"px":"top:"+v+"px;left:0;right:0;height:"+(1/DS.zoom)+"px";f.appendChild(n)})}
+function dsDoppel(ev){const n=ev.target.closest(".dsEl");if(!n)return;const e=DS.d.els.find(x=>x.id===n.dataset.id);if(!e||(e.typ!=="text"&&e.typ!=="knopf"))return;
+  n.querySelectorAll(".dsGriff").forEach(g=>g.remove());n.contentEditable="true";n.focus();document.execCommand&&document.execCommand("selectAll",false,null);
+  const fertig=()=>{n.contentEditable="false";const t=n.innerText.replace(/\n$/,"");if(t!==e.text){dsMerken();e.text=t}dsZeichnen()};
+  n.addEventListener("blur",fertig,{once:true});n.addEventListener("keydown",k=>{if(k.key==="Escape"){k.preventDefault();n.blur()}k.stopPropagation()})}
+// ---------- Eigenschaften rechts ----------
+function dsFeld(lbl,html){return '<label class="dsF"><span>'+lbl+'</span>'+html+'</label>'}
+function dsEigenschaften(){const box=$("dsRechts");if(!box)return;const e=dsSel(),d=DS.d;
+  if(!e){box.innerHTML='<div class="dsT">HINTERGRUND</div>'+
+     dsFeld("Art",'<select data-hg="art"><option value="farbe">Farbe</option><option value="verlauf">Verlauf</option><option value="radial">Kreis-Verlauf</option></select>')+
+     dsFeld("Farbe 1",'<input type="color" data-hg="a">')+(d.hg.art!=="farbe"?dsFeld("Farbe 2",'<input type="color" data-hg="b">')+(d.hg.art==="verlauf"?dsFeld("Winkel",'<input type="range" min="0" max="360" data-hg="winkel">'):""):"")+
+     '<div class="dsT">VERLÄUFE</div><div class="dsChips">'+DS_VERLAEUFE.map((v,i)=>'<button class="dsChip" data-verlauf="'+i+'" style="background:linear-gradient(135deg,'+v[0]+','+v[1]+')"></button>').join("")+'</div>'+
+     '<div class="dsT">FORMAT</div>'+dsFeld("Größe",'<select id="dsFormat">'+DS_FORMATE.map((f,i)=>'<option value="'+i+'"'+(f[1]===d.w&&f[2]===d.h?" selected":"")+'>'+f[0]+' ('+f[1]+'×'+f[2]+')</option>').join("")+'<option value="eigen">Eigene Größe …</option></select>')+
+     '<div class="dsHinweis">Tipp: Element anklicken zum Bearbeiten · Doppelklick auf Text zum Schreiben · Pfeiltasten verschieben · Entf löscht · Strg+D verdoppelt · Strg+Z rückgängig · Umschalt beim Ziehen = Seitenverhältnis</div>';
+    box.querySelectorAll("[data-hg]").forEach(i=>{const k=i.dataset.hg;i.value=d.hg[k]==null?(k==="winkel"?135:"#dddddd"):d.hg[k];i.oninput=()=>{if(!i._m){dsMerken();i._m=1}d.hg[k]=k==="winkel"?+i.value:i.value;if(k==="art")dsZeichnen();else $("dsFlaeche").style.background=dsHgCss(d.hg)};i.onchange=()=>{i._m=0;dsZeichnen()}});
+    box.querySelectorAll("[data-verlauf]").forEach(b=>b.onclick=()=>{dsMerken();const v=DS_VERLAEUFE[+b.dataset.verlauf];d.hg={art:"verlauf",a:v[0],b:v[1],winkel:d.hg.winkel||135};dsZeichnen()});
+    $("dsFormat").onchange=()=>{let w,h;if($("dsFormat").value==="eigen"){const t=prompt("Breite × Höhe in Pixel, z. B. 1200x800",d.w+"x"+d.h);const m=t&&t.match(/(\d+)\s*[x×*]\s*(\d+)/);if(!m)return dsZeichnen();w=+m[1];h=+m[2]}else{const f=DS_FORMATE[+$("dsFormat").value];w=f[1];h=f[2]}
+      dsMerken();const sx=w/d.w,sy=h/d.h,s=Math.min(sx,sy);d.els.forEach(e=>{e.x=Math.round(e.x*sx);e.y=Math.round(e.y*sy);e.w=Math.round(e.w*s);e.h=Math.round(e.h*s);if(e.fs)e.fs=Math.round(e.fs*s)});d.w=w;d.h=h;dsAnpassen()};
+    return}
+  const istText=e.typ==="text",hatText=istText||e.typ==="knopf";let h='<div class="dsT">'+({text:"TEXT",knopf:"KNOPF",box:"FORM",kreis:"KREIS",bild:"BILD"}[e.typ]||"ELEMENT")+'</div>';
+  if(hatText)h+=dsFeld("Text",'<textarea data-k="text" rows="3"></textarea>')+
+    dsFeld("Schrift",'<select data-k="font">'+DS_SCHRIFTEN.map(s=>'<option value="'+s[1].replace(/"/g,"&quot;")+'" style="font-family:'+s[1].replace(/"/g,"&quot;")+'">'+s[0]+'</option>').join("")+'</select>')+
+    dsFeld("Größe",'<input type="number" data-k="fs" min="6" max="600">')+dsFeld("Textfarbe",'<input type="color" data-k="farbe">')+
+    '<div class="dsReihe"><button data-schalt="fett" title="Fett"><b>F</b></button><button data-schalt="kursiv" title="Kursiv"><i>K</i></button><button data-ausr="left">⯇</button><button data-ausr="center">≡</button><button data-ausr="right">⯈</button></div>'+
+    (istText?dsFeld("Zeilenabstand",'<input type="range" min="0.8" max="2.5" step="0.05" data-k="zeile">')+dsFeld("Buchstabenabstand",'<input type="range" min="-5" max="40" data-k="abstand">'):"");
+  if(!istText)h+=dsFeld(e.typ==="bild"?"Füllfarbe":"Farbe",'<input type="color" data-k="hg">')+(e.typ!=="kreis"?dsFeld("Ecken rund",'<input type="range" min="0" max="'+Math.round(Math.min(e.w,e.h)/2)+'" data-k="rund">'):"")+
+    dsFeld("Rahmen",'<input type="range" min="0" max="40" data-k="rand">')+dsFeld("Rahmenfarbe",'<input type="color" data-k="randFarbe">')+
+    (e.typ==="bild"?dsFeld("Einpassen",'<select data-k="passung"><option value="cover">Füllen</option><option value="contain">Ganz zeigen</option></select>')+'<button id="dsBildTausch">🖼 Bild ersetzen</button>':'<button id="dsBildRein">🖼 Bild hineinlegen</button>');
+  if(e.typ==="knopf")h+=dsFeld("Link (Webseite)",'<input data-k="link" placeholder="https://… oder #kontakt">');
+  h+=dsFeld("Schatten",'<input type="range" min="0" max="80" data-k="schatten">')+dsFeld("Deckkraft",'<input type="range" min="0.05" max="1" step="0.05" data-k="deck">')+dsFeld("Drehen",'<input type="range" min="-180" max="180" data-k="rot">')+
+    '<div class="dsT">POSITION</div><div class="dsReihe">'+["x","y","w","h"].map(k=>'<label class="dsKlein">'+k.toUpperCase()+'<input type="number" data-k="'+k+'"></label>').join("")+'</div>'+
+    '<div class="dsReihe"><button data-mitte="x" title="Waagerecht zentrieren">⇹ Mitte</button><button data-mitte="y" title="Senkrecht zentrieren">⇳ Mitte</button></div>'+
+    '<div class="dsReihe"><button data-ebene="1" title="Nach vorne">⬆ Vor</button><button data-ebene="-1" title="Nach hinten">⬇ Zurück</button><button id="dsDoppelt" title="Strg+D">⧉ Doppeln</button></div>'+
+    '<div class="dsReihe"><button id="dsSperren">'+(e.gesperrt?"🔓 Entsperren":"🔒 Sperren")+'</button><button id="dsWeg" class="danger">🗑 Löschen</button></div>';
+  box.innerHTML=h;
+  box.querySelectorAll("[data-k]").forEach(i=>{const k=i.dataset.k;let v=e[k];if(v==null)v=k==="deck"?1:k==="zeile"?1.2:k==="passung"?"cover":k==="randFarbe"?"#000000":k==="link"?"":0;
+    if(i.type==="color"&&!/^#[0-9a-f]{6}$/i.test(v))v=dsHex(v);i.value=v;
+    i.oninput=()=>{if(!i._m){dsMerken();i._m=1}e[k]=i.type==="number"||i.type==="range"?+i.value:i.value;
+      const n=$("dsFlaeche").querySelector('[data-id="'+e.id+'"]');if(n){n.style.cssText=dsElStil(e);if(hatText&&k==="text")n.textContent=e.text}};
+    i.onchange=()=>{i._m=0;dsZeichnen()}});
+  box.querySelectorAll("[data-ausr]").forEach(b=>{b.classList.toggle("an",(e.ausr||"left")===b.dataset.ausr||e.typ==="knopf"&&b.dataset.ausr==="center");b.onclick=()=>{dsMerken();e.ausr=b.dataset.ausr;dsZeichnen()}});
+  box.querySelectorAll("[data-schalt]").forEach(b=>{const k=b.dataset.schalt;b.classList.toggle("an",k==="fett"?(e.gewicht||400)>=600:!!e.kursiv);b.onclick=()=>{dsMerken();if(k==="fett")e.gewicht=(e.gewicht||400)>=600?400:700;else e.kursiv=!e.kursiv;dsZeichnen()}});
+  box.querySelectorAll("[data-mitte]").forEach(b=>b.onclick=()=>{dsMerken();if(b.dataset.mitte==="x")e.x=Math.round((d.w-e.w)/2);else e.y=Math.round((d.h-e.h)/2);dsZeichnen()});
+  box.querySelectorAll("[data-ebene]").forEach(b=>b.onclick=()=>dsEbeneVerschieben(+b.dataset.ebene));
+  $("dsDoppelt").onclick=dsDoppeln;$("dsWeg").onclick=dsLoeschen;$("dsSperren").onclick=()=>{dsMerken();e.gesperrt=!e.gesperrt;dsZeichnen()};
+  if($("dsBildRein"))$("dsBildRein").onclick=()=>{DS.wartetBild=true;$("dsBildDatei").click()};if($("dsBildTausch"))$("dsBildTausch").onclick=()=>{DS.wartetBild=true;$("dsBildDatei").click()};
+  if($("dsKiText"))$("dsKiText").onclick=()=>dsKiText(e)}
+function dsHex(c){try{const x=document.createElement("canvas").getContext("2d");x.fillStyle=c;const v=x.fillStyle;return /^#/.test(v)?v:"#000000"}catch(e){return "#000000"}}
+function dsEbenen(){const box=$("dsEbenenListe");if(!box)return;box.innerHTML="";[...DS.d.els].reverse().forEach(e=>{const r=document.createElement("div");r.className="dsEb"+(DS.sel===e.id?" an":"");
+  r.textContent=({text:"T",knopf:"▭",box:"■",kreis:"●",bild:"🖼"}[e.typ]||"·")+"  "+(e.text?String(e.text).split("\n")[0].slice(0,22):({box:"Form",kreis:"Kreis",bild:"Bild"}[e.typ]||e.typ))+(e.gesperrt?"  🔒":"");
+  r.onclick=()=>{DS.sel=e.id;dsZeichnen()};box.appendChild(r)})}
+function dsEbeneVerschieben(r){const els=DS.d.els,i=els.findIndex(e=>e.id===DS.sel);const j=i+r;if(i<0||j<0||j>=els.length)return;dsMerken();[els[i],els[j]]=[els[j],els[i]];dsZeichnen()}
+function dsDoppeln(){const e=dsSel();if(!e)return;const k=JSON.parse(JSON.stringify(e));k.id=dsId();k.x+=30;k.y+=30;k.gesperrt=false;dsMerken();DS.d.els.push(k);DS.sel=k.id;dsZeichnen()}
+function dsLoeschen(){const e=dsSel();if(!e)return;dsMerken();DS.d.els=DS.d.els.filter(x=>x.id!==e.id);DS.sel=null;dsZeichnen()}
+// ---------- Kreativ-Werkzeuge ----------
+function dsHsl(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join("")}
+function dsZufallsPalette(){const h=Math.floor(Math.random()*360),art=Math.floor(Math.random()*4),dunkel=Math.random()<.5;
+  const h2=art===0?(h+180)%360:art===1?(h+30)%360:art===2?(h+120)%360:(h+150)%360;
+  return dunkel?[dsHsl(h,45,10),dsHsl(h2,85,62),dsHsl(h,90,60),dsHsl(h,20,92),dsHsl(h,50,25)]:[dsHsl(h,60,96),dsHsl(h,70,25),dsHsl(h2,80,52),dsHsl(h,25,25),dsHsl(h,55,82)]}
+function dsHell(c){const v=dsHex(c);const r=parseInt(v.slice(1,3),16),g=parseInt(v.slice(3,5),16),b=parseInt(v.slice(5,7),16);return (r*299+g*587+b*114)/1000>150}
+function dsPaletteAnwenden(p){dsMerken();const d=DS.d;d.palette=p;
+  d.hg=Math.random()<.45?{art:"verlauf",a:p[0],b:p[4],winkel:[120,135,160,180][Math.floor(Math.random()*4)]}:{art:"farbe",a:p[0]};
+  let i=0;d.els.forEach(e=>{if(e.typ==="box"||e.typ==="kreis"){if(e.deck==null||e.deck>.3){e.hg=[p[2],p[4],p[1]][i++%3]}else e.hg=p[2]}
+    else if(e.typ==="knopf"){if(!/rgba\(.*,\s*0\)/.test(e.hg))e.hg=p[2];e.farbe=/rgba\(.*,\s*0\)/.test(e.hg)?(dsHell(p[0])?"#111111":"#ffffff"):dsHell(p[2])?"#111111":"#ffffff";if(e.rand)e.randFarbe=e.farbe}});
+  // Textfarbe passend zu dem, was darunter liegt (Fläche oder Hintergrund)
+  const groesste=Math.max(0,...d.els.filter(e=>e.typ==="text").map(e=>e.fs||0));
+  d.els.forEach((e,idx)=>{if(e.typ!=="text"||/\p{Extended_Pictographic}/u.test(e.text||""))return;
+    const cx=e.x+e.w/2,cy=e.y+(e.h||e.fs)/2;let unten=p[0];
+    for(let j=idx-1;j>=0;j--){const f=d.els[j];if((f.typ==="box"||f.typ==="kreis"||f.typ==="knopf")&&(f.deck==null||f.deck>.5)&&cx>=f.x&&cx<=f.x+f.w&&cy>=f.y&&cy<=f.y+f.h){unten=f.hg;break}}
+    const wunsch=e.fs===groesste?p[1]:p[3];
+    e.farbe=dsHell(wunsch)!==dsHell(unten)?wunsch:dsHell(unten)?"#111111":"#ffffff"});
+  dsZeichnen()}
+function dsUeberrasch(){const p=Math.random()<.5?DS_PALETTEN[Math.floor(Math.random()*DS_PALETTEN.length)][1]:dsZufallsPalette();
+  dsPaletteAnwenden(p);const titel=[...DS.d.els].filter(e=>e.typ==="text").sort((a,b)=>b.fs-a.fs)[0];
+  if(titel&&Math.random()<.7){titel.font=DS_SCHRIFTEN[[0,1,2,3,4][Math.floor(Math.random()*5)]][1];dsZeichnen()}
+  dsToast("🎲 Neue Farben"+(titel?" und Schrift":"")+" – nochmal klicken für mehr Ideen · Strg+Z holt das alte zurück")}
+async function dsKiText(e){const modell=$("model")&&$("model").value;if(!modell){alert("Für Textvorschläge bitte oben ein Modell auswählen. Das Design-Studio selbst funktioniert auch ohne KI.");return}
+  const worum=prompt("Worum geht es? (z. B. „Eröffnung meines Cafés in Heidelberg“)",DS.thema||"");if(!worum)return;DS.thema=worum;
+  const b=$("dsKiText");b.disabled=true;b.textContent="✨ KI schreibt …";
+  try{const lang=e.fs>=Math.min(DS.d.w,DS.d.h)*.06?"eine kurze, starke Überschrift (höchstens 6 Wörter)":"einen kurzen Werbetext (höchstens 25 Wörter)";
+    const t=await einmalFragen(modell,[{role:"user",content:"Schreibe auf Deutsch "+lang+" für ein Design zum Thema: "+worum+". Bisheriger Text: «"+e.text+"». Antworte NUR mit dem neuen Text, ohne Anführungszeichen, ohne Erklärung."}]);
+    const neu=String(t||"").replace(/^["„«»“]+|["„«»“]+$/g,"").trim();if(neu){dsMerken();e.text=neu;dsZeichnen()}}
+  catch(err){alert("Die KI hat gerade nicht geantwortet ("+err.message+"). Du kannst den Text auch selbst schreiben.")}
+  finally{if($("dsKiText")){$("dsKiText").disabled=false;$("dsKiText").textContent="✨ KI: Text vorschlagen"}}}
+function dsToast(t){let n=$("dsToast");if(!n){n=document.createElement("div");n.id="dsToast";$("dsBox").appendChild(n)}n.textContent=t;n.classList.add("an");clearTimeout(n._t);n._t=setTimeout(()=>n.classList.remove("an"),3200)}
+// ---------- Speichern / Öffnen ----------
+function dsListe(){return store.get("oc_designs",{})}
+function dsSpeichern(still){if(!DS.d)return;DS.name=($("dsName")&&$("dsName").value.trim())||DS.name||"Mein Design";const l=dsListe();l[DS.name]={d:DS.d,t:Date.now()};
+  try{localStorage.setItem("oc_designs",JSON.stringify(l));store.set("oc_design_letztes",DS.name);if(!still)dsToast("💾 Gespeichert: "+DS.name)}
+  catch(e){if(!still)alert("Speicher im Browser ist voll (meist wegen großer Bilder). Tipp: Bilder vorher verkleinern oder das Design als Webseite herunterladen.")}}
+function dsOeffnenDialog(){const l=dsListe(),namen=Object.keys(l).sort((a,b)=>l[b].t-l[a].t);let o=$("dsOffen");if(o)o.remove();
+  o=document.createElement("div");o.id="dsOffen";$("dsBox").appendChild(o);
+  o.innerHTML='<div class="dsKarte"><b>📂 Design öffnen</b><div class="dsOListe"></div><div class="dsT">ODER NEU MIT VORLAGE</div><div class="dsOVorl"></div><button id="dsOZu">Schließen</button></div>';
+  const li=o.querySelector(".dsOListe");if(!namen.length)li.innerHTML='<div style="color:#8a8a95">Noch keine gespeicherten Designs.</div>';
+  namen.forEach(n=>{const r=document.createElement("div");r.className="dsORow";r.innerHTML='<span></span><small></small><button title="Löschen">🗑</button>';r.querySelector("span").textContent="🎨 "+n;
+    r.querySelector("small").textContent=new Date(l[n].t).toLocaleString("de-DE");
+    r.onclick=ev=>{if(ev.target.tagName==="BUTTON"){ev.stopPropagation();if(confirm("Design „"+n+"“ löschen?")){const x=dsListe();delete x[n];try{localStorage.setItem("oc_designs",JSON.stringify(x))}catch(e){}r.remove()}return}
+      dsSpeichern(true);o.remove();dsLaden(JSON.parse(JSON.stringify(l[n].d)),n)};li.appendChild(r)});
+  const vl=o.querySelector(".dsOVorl");dsVorlagen().forEach(([n,f])=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{dsSpeichern(true);o.remove();dsLaden(f(),n.replace(/^\S+\s/,""))};vl.appendChild(b)});
+  $("dsOZu").onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()}}
+function dsLaden(d,name){DS.d=d;DS.name=name||"Mein Design";DS.sel=null;DS.verlauf=[];DS.zukunft=[];if($("dsName"))$("dsName").value=DS.name;dsAnpassen()}
+// ---------- Export ----------
+function dsHtml(d,fuerWeb){const els=d.els.map(e=>{const st=dsElStil(e,fuerWeb?(v,a)=>a==="f"?"calc("+(v/d.w*100).toFixed(4)+"cqw)":a==="x"?(v/d.w*100).toFixed(4)+"%":(v/d.h*100).toFixed(4)+"%":null);
+    if(e.typ==="text")return '<p style="'+dsEsc(st)+'">'+dsEsc(e.text)+'</p>';
+    if(e.typ==="knopf")return e.link&&fuerWeb?'<a href="'+dsEsc(e.link)+'" style="'+dsEsc(st)+'">'+dsEsc(e.text)+'</a>':'<div style="'+dsEsc(st)+'">'+dsEsc(e.text)+'</div>';
+    return '<div style="'+dsEsc(st)+'"></div>'}).join("\n  ");
+  if(!fuerWeb)return '<div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:'+d.w+'px;height:'+d.h+'px;overflow:hidden;background:'+dsEsc(dsHgCss(d.hg))+'">'+els+'</div>';
+  return '<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>'+dsEsc(DS.name||"Design")+'</title>\n<style>\n'+
+    'html,body{margin:0;min-height:100%;background:'+dsHgCss(d.hg)+'}\nbody{display:flex;justify-content:center;align-items:flex-start}\n'+
+    '.design{position:relative;width:min(100vw,'+d.w+'px);aspect-ratio:'+d.w+'/'+d.h+';container-type:inline-size;overflow:hidden;background:'+dsHgCss(d.hg)+'}\n.design a:hover{filter:brightness(1.08)}\n</style>\n</head>\n<body>\n<main class="design">\n  '+els+'\n</main>\n</body>\n</html>\n'}
+async function dsPng(){if(!await sdDarf())return;const d=DS.d,sel=DS.sel;DS.sel=null;
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+d.w+'" height="'+d.h+'"><foreignObject width="100%" height="100%">'+dsHtml(d,false)+'</foreignObject></svg>';
+  const img=new Image();img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+  try{await img.decode();const c=document.createElement("canvas");c.width=d.w;c.height=d.h;c.getContext("2d").drawImage(img,0,0);
+    const url=c.toDataURL("image/png");const a=document.createElement("a");a.href=url;a.download=(DS.name||"design").replace(/[^\w\-äöüÄÖÜß ]+/g,"").trim().replace(/\s+/g,"-")+".png";document.body.appendChild(a);a.click();a.remove();dsToast("🖼 Bild gespeichert (Downloads): "+a.download);DS.lastPng=url}
+  catch(e){alert("Das Bild konnte nicht erstellt werden: "+e.message)}DS.sel=sel}
+async function dsAlsWebseite(){dsSpeichern(true);if(!await sdDarf())return;
+  const blob=new Blob([dsHtml(DS.d,true)],{type:"text/html"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=slug(DS.name)+".html";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);dsToast("🌐 Webseite gespeichert (Downloads): "+a.download+" – im Browser öffnen oder online stellen")}
+// ---------- Aufbau ----------
+function dsStil(){if($("dsStil"))return;const s=document.createElement("style");s.id="dsStil";s.textContent=
+ "#dsBox[hidden]{display:none!important}#dsBox{position:fixed;inset:0;z-index:40;display:grid;grid-template-columns:230px 1fr 270px;grid-template-rows:auto 1fr;background:#15161a;color:#e7e7ea;font:13px system-ui,'Segoe UI',sans-serif}"+
+ "#dsBox button{background:#24262d;color:#e7e7ea;border:1px solid #33363f;border-radius:8px;padding:6px 9px;cursor:pointer;font:inherit}#dsBox button:hover{background:#2e313a}#dsBox button.primary{background:linear-gradient(135deg,#7c3aed,#db2777);border:0;color:#fff;font-weight:600}"+
+ "#dsBox button.an{background:#4c1d95;border-color:#7c3aed}#dsBox button.danger{color:#fca5a5;border-color:#7f1d1d}"+
+ "#dsBox input,#dsBox select,#dsBox textarea{background:#1c1d22;color:#e7e7ea;border:1px solid #33363f;border-radius:7px;padding:5px 7px;font:inherit;width:100%;box-sizing:border-box}#dsBox input[type=color]{padding:2px;height:30px}#dsBox input[type=range]{padding:0;accent-color:#a855f7}"+
+ "#dsKopf{grid-column:1/4;display:flex;gap:7px;align-items:center;padding:8px 10px;background:#1b1c21;border-bottom:1px solid #2b2d34;overflow-x:auto}#dsKopf b{font-size:15px;white-space:nowrap;background:linear-gradient(90deg,#a855f7,#ec4899,#f59e0b);-webkit-background-clip:text;color:transparent}"+
+ "#dsKopf #dsName{width:180px}#dsLinks,#dsRechts{overflow:auto;padding:10px;background:#1b1c21}#dsLinks{border-right:1px solid #2b2d34}#dsRechts{border-left:1px solid #2b2d34}"+
+ ".dsT{font-size:11px;letter-spacing:.08em;color:#9a9aa5;margin:12px 0 6px;font-weight:600}.dsT:first-child{margin-top:0}"+
+ ".dsKacheln{display:grid;grid-template-columns:1fr 1fr;gap:6px}.dsKacheln button{padding:10px 4px!important;display:grid;gap:3px;justify-items:center;font-size:12px!important}.dsKacheln button span{font-size:20px}"+
+ ".dsVorl{display:grid;gap:5px}.dsVorl button{text-align:left}.dsChips{display:flex;flex-wrap:wrap;gap:5px}.dsChip{width:30px;height:30px;padding:0!important;border-radius:50%!important;border:2px solid #33363f!important}"+
+ ".dsPal{display:flex;border-radius:7px;overflow:hidden;height:22px;cursor:pointer;border:1px solid #33363f;margin-bottom:5px}.dsPal i{flex:1}.dsPal:hover{outline:2px solid #a855f7}"+
+ ".dsEmoji{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:2px}.dsEmoji button{padding:3px!important;font-size:17px!important;background:transparent!important;border:0!important}"+
+ "#dsMitte{overflow:auto;display:grid;place-items:center;background:radial-gradient(circle,#26272e 1px,transparent 1px) 0 0/18px 18px,#121317;position:relative}"+
+ "#dsBuehne{position:relative;box-shadow:0 20px 60px rgba(0,0,0,.6)}#dsFlaeche{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden}"+
+ ".dsEl{cursor:move;user-select:none;outline:1px dashed transparent}.dsEl:hover{outline-color:rgba(168,85,247,.6)}.dsEl.sel{outline:2px solid #a855f7}.dsEl.lock{cursor:default}.dsEl[contenteditable=true]{cursor:text;user-select:text;outline:2px solid #ec4899}"+
+ ".dsGriff{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #a855f7;border-radius:50%;z-index:5}.dsGriff.nw{left:-8px;top:-8px;cursor:nwse-resize;transform-origin:center}.dsGriff.ne{right:-8px;top:-8px;cursor:nesw-resize}.dsGriff.sw{left:-8px;bottom:-8px;cursor:nesw-resize}.dsGriff.se{right:-8px;bottom:-8px;cursor:nwse-resize}"+
+ ".dsLinie{position:absolute;background:#ec4899;z-index:9;pointer-events:none}"+
+ ".dsF{display:grid;gap:3px;margin-bottom:8px}.dsF span{color:#9a9aa5;font-size:12px}.dsReihe{display:flex;gap:5px;margin-bottom:7px}.dsReihe>*{flex:1}.dsKlein{display:grid;font-size:11px;color:#9a9aa5;gap:2px}"+
+ ".dsHinweis{color:#8a8a95;font-size:12px;line-height:1.5;margin-top:10px}.dsEb{padding:5px 7px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsEb:hover{background:#24262d}.dsEb.an{background:#4c1d95}"+
+ "#dsZoom{position:absolute;right:12px;bottom:12px;display:flex;gap:4px;align-items:center;background:#1b1c21;border:1px solid #2b2d34;border-radius:9px;padding:3px}"+
+ "#dsToast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,30px);opacity:0;transition:.25s;background:#24262d;border:1px solid #7c3aed;padding:9px 14px;border-radius:10px;z-index:50;pointer-events:none}#dsToast.an{opacity:1;transform:translate(-50%,0)}"+
+ "#sdSperre{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:46}#sdKont{white-space:nowrap;font-size:12px;padding:0 4px}#dsOffen{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:45}.dsKarte{background:#1b1c21;border:1px solid #33363f;border-radius:14px;padding:16px;width:min(560px,92vw);max-height:85vh;overflow:auto;display:grid;gap:8px}"+
+ ".dsORow{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:8px;cursor:pointer}.dsORow:hover{background:#24262d}.dsORow span{flex:1}.dsORow small{color:#8a8a95}.dsOVorl{display:flex;flex-wrap:wrap;gap:6px}"+
+ ".dsEl{touch-action:none}@media(max-width:900px){#dsBox{grid-template-columns:1fr;grid-template-rows:auto 62vh auto auto;overflow-y:auto}#dsKopf{grid-column:1;order:0;position:sticky;top:0;z-index:3}#dsMitte{order:1}#dsLinks,#dsRechts{overflow:visible}#dsRechts{order:2;border:0;border-top:1px solid #2b2d34}#dsLinks{order:3;border:0;border-top:1px solid #2b2d34}}";document.head.appendChild(s)}
+function designStudio(){dsStil();if($("dsBox")){$("dsBox").hidden=false;dsAnpassen();return}
+  const box=document.createElement("div");box.id="dsBox";document.body.appendChild(box);
+  box.innerHTML='<div id="dsKopf"><b>🎨 Design-Studio</b><input id="dsName" placeholder="Name des Designs"><button id="dsOeffnen" title="Gespeicherte Designs und Vorlagen">📂 Öffnen</button><button id="dsSpeich">💾 Speichern</button>'+
+   '<button id="dsZur" title="Strg+Z">↶</button><button id="dsVor" title="Strg+Y">↷</button><button id="dsUeber" class="primary" title="Neue Farben und Schrift – so oft du willst">🎲 Überrasch mich</button>'+
+   '<label style="display:flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" id="dsRaster" style="width:auto" checked> Hilfslinien</label><span style="flex:1"></span>'+
+   '<button id="dsPng" title="Als Bild speichern (z. B. für Instagram, WhatsApp, Druck)">🖼 Als Bild (PNG)</button><button id="dsWeb" title="Als Webseite herunterladen (index.html) – passt sich jeder Bildschirmgröße an">🌐 Als Webseite</button><span id="sdKont"></span><button id="dsZu" title="Zurück zum SD Hub">✕</button></div>'+
+   '<div id="dsLinks"><div class="dsT">HINZUFÜGEN</div><div class="dsKacheln">'+
+     [["titel","𝐓","Überschrift"],["text","¶","Text"],["knopf","▭","Knopf"],["bild","🖼","Bild"],["box","■","Form"],["kreis","●","Kreis"],["linie","—","Linie"]].map(x=>'<button data-neu="'+x[0]+'"><span>'+x[1]+'</span>'+x[2]+'</button>').join("")+'</div>'+
+    '<div class="dsT">EMOJIS & SYMBOLE</div><div class="dsEmoji">'+DS_EMOJI.map(e=>'<button data-emoji="'+e+'">'+e+'</button>').join("")+'</div>'+
+    '<div class="dsT">FARBPALETTEN</div><div id="dsPaletten">'+DS_PALETTEN.map((p,i)=>'<div class="dsPal" data-pal="'+i+'" title="'+p[0]+'">'+p[1].map(c=>'<i style="background:'+c+'"></i>').join("")+'</div>').join("")+'</div><button id="dsNeuePal" style="width:100%">🎨 Neue Palette erfinden</button>'+
+    '<div class="dsT">VORLAGEN</div><div class="dsVorl">'+dsVorlagen().map((v,i)=>'<button data-vorl="'+i+'">'+v[0]+'</button>').join("")+'</div>'+
+    '<div class="dsT">EBENEN</div><div id="dsEbenenListe"></div></div>'+
+   '<div id="dsMitte"><div id="dsBuehne"><div id="dsFlaeche"></div></div><div id="dsZoom"><button id="dsZm">−</button><span id="dsZoomW">100%</span><button id="dsZp">+</button><button id="dsZf" title="Einpassen">⤢</button></div></div>'+
+   '<div id="dsRechts"></div><input type="file" id="dsBildDatei" accept="image/*" hidden>';
+  box.querySelectorAll("[data-neu]").forEach(b=>b.onclick=()=>dsNeu(b.dataset.neu));
+  box.querySelectorAll("[data-emoji]").forEach(b=>b.onclick=()=>{const k=Math.min(DS.d.w,DS.d.h);dsHinzu(dsText(b.dataset.emoji,null,null,Math.round(k*.22),Math.round(k*.16),{ausr:"center"}))});
+  box.querySelectorAll("[data-pal]").forEach(b=>b.onclick=()=>{dsPaletteAnwenden(DS_PALETTEN[+b.dataset.pal][1]);dsToast("🎨 Palette „"+DS_PALETTEN[+b.dataset.pal][0]+"“")});
+  $("dsNeuePal").onclick=()=>{const p=dsZufallsPalette();dsPaletteAnwenden(p);dsToast("🎨 Neue Palette: "+p.join(" "))};
+  box.querySelectorAll("[data-vorl]").forEach(b=>b.onclick=()=>{const v=dsVorlagen()[+b.dataset.vorl];if(DS.d&&DS.d.els.length&&!confirm("Vorlage „"+v[0]+"“ laden? Dein aktuelles Design wird vorher gespeichert."))return;dsSpeichern(true);dsLaden(v[1](),v[0].replace(/^\S+\s/,""))});
+  $("dsZu").onclick=dsSchliessen;$("dsSpeich").onclick=()=>dsSpeichern(false);$("dsOeffnen").onclick=dsOeffnenDialog;$("dsZur").onclick=dsZurueck;$("dsVor").onclick=dsVor;$("dsUeber").onclick=dsUeberrasch;
+  $("dsPng").onclick=dsPng;$("dsWeb").onclick=dsAlsWebseite;$("dsRaster").onchange=()=>DS.raster=$("dsRaster").checked;$("dsName").onchange=()=>{DS.name=$("dsName").value.trim()||DS.name};
+  $("dsBildDatei").onchange=()=>{dsBildLaden($("dsBildDatei").files[0]);$("dsBildDatei").value=""};
+  $("dsZm").onclick=()=>{DS.zoom=Math.max(.08,DS.zoom/1.2);dsZeichnen();$("dsZoomW").textContent=Math.round(DS.zoom*100)+"%"};$("dsZp").onclick=()=>{DS.zoom=Math.min(4,DS.zoom*1.2);dsZeichnen();$("dsZoomW").textContent=Math.round(DS.zoom*100)+"%"};$("dsZf").onclick=dsAnpassen;
+  $("dsMitte").addEventListener("pointerdown",dsMaus);$("dsMitte").addEventListener("dblclick",dsDoppel);
+  $("dsMitte").addEventListener("dragover",e=>e.preventDefault());$("dsMitte").addEventListener("drop",e=>{e.preventDefault();const f=[...e.dataTransfer.files].find(x=>/^image\//.test(x.type));if(f){DS.wartetBild=false;dsBildLaden(f)}});
+  box.addEventListener("paste",e=>{if(/INPUT|TEXTAREA/.test(document.activeElement.tagName)||document.activeElement.isContentEditable)return;const f=[...(e.clipboardData?.files||[])].find(x=>/^image\//.test(x.type));if(f){e.preventDefault();DS.wartetBild=false;dsBildLaden(f)}});
+  document.addEventListener("keydown",dsTasten,true);window.addEventListener("resize",()=>{if($("dsBox")&&!$("dsBox").hidden)dsAnpassen()});
+  const l=dsListe(),letztes=store.get("oc_design_letztes","");
+  if(letztes&&l[letztes])dsLaden(JSON.parse(JSON.stringify(l[letztes].d)),letztes);else{const v=dsVorlagen()[0];dsLaden(v[1](),"Mein erstes Design")}}
+function dsTasten(ev){const b=$("dsBox");if(!b||b.hidden)return;const a=document.activeElement,tippt=a&&(/INPUT|TEXTAREA|SELECT/.test(a.tagName)||a.isContentEditable);
+  const st=ev.ctrlKey||ev.metaKey,k=ev.key.toLowerCase();
+  if(st&&k==="z"&&!tippt){ev.preventDefault();ev.shiftKey?dsVor():dsZurueck();return}if(st&&k==="y"&&!tippt){ev.preventDefault();dsVor();return}
+  if(st&&k==="s"){ev.preventDefault();ev.stopPropagation();dsSpeichern(false);return}if(st&&k==="d"&&!tippt){ev.preventDefault();dsDoppeln();return}
+  if(ev.key==="Escape"&&!tippt){if(DS.sel){DS.sel=null;dsZeichnen()}else dsSchliessen();return}
+  if(tippt)return;const e=dsSel();if(!e)return;
+  if(ev.key==="Delete"||ev.key==="Backspace"){ev.preventDefault();dsLoeschen();return}
+  const s=ev.shiftKey?10:1,r={ArrowLeft:[-s,0],ArrowRight:[s,0],ArrowUp:[0,-s],ArrowDown:[0,s]}[ev.key];
+  if(r&&!e.gesperrt){ev.preventDefault();if(!DS.pfeil){dsMerken();DS.pfeil=1;setTimeout(()=>DS.pfeil=0,600)}e.x+=r[0];e.y+=r[1];dsZeichnen()}}
+function dsSchliessen(){dsSpeichern(true);location.href="../index.html"}
+
+(async()=>{designStudio();
+  const c=(()=>{try{return sessionStorage.getItem("sdAgentZugang")||localStorage.getItem("sdAgentZugang")}catch(e){return null}})();
+  if(c&&await sdSchluesselPruefen(c))SD_FREIGESCHALTET=true;sdKontZeigen()})();
+</script>
+</body>
+</html>

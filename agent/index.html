@@ -38,7 +38,7 @@
             <div class="schloss" aria-hidden="true">🔒</div>
             <div><h1>SD Lotze · KI-Agent</h1><p class="sub" data-t="sub">Geschützter Bereich</p></div>
         </div>
-        <p data-t="text">Dieser Bereich ist nur mit einem persönlichen Zugangsschlüssel von Sulaiman Durrani zugänglich. Er enthält den KI-Agenten SD Lotze (mit GLM-5.3) und den PC-Agenten zum Herunterladen.</p>
+        <p data-t="text">Dieser Bereich ist nur mit einem persönlichen Zugangsschlüssel von SD zugänglich. Er enthält den KI-Agenten SD Lotze (mit GLM-5.3) und den PC-Agenten zum Herunterladen.</p>
         <form id="form" autocomplete="off">
             <div style="display:grid;gap:10px">
                 <label for="code" data-t="label">Zugangsschlüssel</label>
@@ -57,7 +57,7 @@
             try { sprache = (localStorage.getItem('sdSprache') || navigator.language || 'de').slice(0, 2) === 'de' ? 'de' : 'en'; } catch (e) { /* egal */ }
             const T = {
                 de: { falsch: 'Dieser Schlüssel ist ungültig oder wurde entzogen.', format: 'Bitte den kompletten Schlüssel eingeben (beginnt mit SDL-).', netz: 'Keine Verbindung – bitte Internet prüfen und erneut versuchen.', oeffnet: 'Wird entschlüsselt …' },
-                en: { zurueck: '← Back to SD Hub', sub: 'Protected area', text: 'This area is only accessible with a personal access key from Sulaiman Durrani. It contains the AI agent SD Lotze (with GLM-5.3) and the PC agent download.',
+                en: { zurueck: '← Back to SD Hub', sub: 'Protected area', text: 'This area is only accessible with a personal access key from SD. It contains the AI agent SD Lotze (with GLM-5.3) and the PC agent download.',
                     label: 'Access key', merken: 'Remember on this device', los: 'Open', anfrage: 'No key yet? Request one at <a href="mailto:kontakt@thesdhub.com">kontakt@thesdhub.com</a>.',
                     falsch: 'This key is invalid or has been revoked.', format: 'Please enter the complete key (starts with SDL-).', netz: 'No connection – please check the internet and try again.', oeffnet: 'Decrypting …' }
             };
