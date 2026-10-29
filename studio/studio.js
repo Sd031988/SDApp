@@ -273,6 +273,7 @@ function baum() {
     const z = zeile(icon(d) + ' ' + teile[teile.length - 1], teile.length - 1, 'datei'); z.dataset.pfad = d; z.onclick = e => { if (e.target.tagName !== 'BUTTON') dateiOeffnen(d); };
     knoepfe(z, [['✎', 'Umbenennen', () => umbenennen(d)], ['🗑', 'Löschen', () => loeschen(d)]]); box.appendChild(z); });
   if (!dateien.length) box.innerHTML = '<div class="hinweis">Noch keine Dateien. ＋ Datei, 📋 Einfügen oder ⬆ Hochladen.</div>';
+  katalogOnline();
   baumMarkieren();
 }
 function zeile(text, tiefe, art) { const z = document.createElement('div'); z.className = 'bz ' + art; z.style.paddingLeft = (8 + tiefe * 14) + 'px'; const s = document.createElement('span'); s.textContent = text; z.appendChild(s); return z; }
@@ -634,6 +635,86 @@ function einfuegenDialog(text) {
   ta.value = text || ''; zeigen(); setTimeout(() => ta.focus(), 30);
 }
 
+/* ---------- Datei-Katalog: alles, was man zum Programmieren braucht – nach Bereichen, aufklappbar ---------- */
+const KAT_SEITE = (titel, inhalt) => '<!doctype html>\n<html lang="de">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>' + titel + '</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <main style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">\n' + inhalt + '\n    <p><a href="index.html">← Zur Startseite</a></p>\n  </main>\n</body>\n</html>\n';
+const KATALOG = [
+  { name: 'Seiten (HTML)', icon: '🌐', dateien: [
+    ['index.html', 'Startseite', () => KAT_SEITE('Startseite', '    <h1>Willkommen</h1>\n    <p>Das ist die Startseite.</p>')],
+    ['ueber-uns.html', 'Über uns', () => KAT_SEITE('Über uns', '    <h1>Über uns</h1>\n    <p>Wer wir sind und was uns wichtig ist.</p>')],
+    ['kontakt.html', 'Kontakt mit Formular', () => KAT_SEITE('Kontakt', '    <h1>Kontakt</h1>\n    <form id="formular" style="display: grid; gap: 12px;">\n      <input name="name" placeholder="Dein Name" required>\n      <input name="email" type="email" placeholder="Deine E-Mail" required>\n      <textarea name="nachricht" rows="5" placeholder="Deine Nachricht" required></textarea>\n      <button type="submit">Absenden</button>\n    </form>\n    <p>📍 Musterstraße 1, 69117 Heidelberg · 📞 0000 000000</p>')],
+    ['galerie.html', 'Bilder-Galerie', () => KAT_SEITE('Galerie', '    <h1>Galerie</h1>\n    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">\n      <img src="bilder/bild1.jpg" alt="Bild 1" style="width: 100%; border-radius: 12px;">\n      <img src="bilder/bild2.jpg" alt="Bild 2" style="width: 100%; border-radius: 12px;">\n    </div>')],
+    ['blog.html', 'Blog / Neuigkeiten', () => KAT_SEITE('Neuigkeiten', '    <h1>Neuigkeiten</h1>\n    <article>\n      <h2>Erster Beitrag</h2>\n      <small>29. Oktober 2026</small>\n      <p>Hier steht der Text des Beitrags.</p>\n    </article>')],
+    ['impressum.html', 'Impressum (Pflicht in DE)', () => KAT_SEITE('Impressum', '    <h1>Impressum</h1>\n    <p>Angaben gemäß § 5 DDG:</p>\n    <p>Vorname Nachname<br>Straße Hausnummer<br>PLZ Ort</p>\n    <p>Telefon: …<br>E-Mail: …</p>\n    <p><b>Bitte mit deinen echten Angaben füllen und rechtlich prüfen lassen.</b></p>')],
+    ['datenschutz.html', 'Datenschutzerklärung', () => KAT_SEITE('Datenschutz', '    <h1>Datenschutzerklärung</h1>\n    <p>Verantwortlich: …</p>\n    <p>Welche Daten werden erhoben, wofür, wie lange gespeichert, welche Rechte haben Besucher?</p>\n    <p><b>Bitte mit einem Datenschutz-Generator erstellen und rechtlich prüfen lassen.</b></p>')],
+    ['404.html', 'Fehlerseite „Nicht gefunden“', () => KAT_SEITE('Seite nicht gefunden', '    <h1>404 – Seite nicht gefunden</h1>\n    <p>Diese Seite gibt es leider nicht (mehr).</p>')] ] },
+  { name: 'Design (CSS)', icon: '🎨', dateien: [
+    ['style.css', 'Haupt-Design', () => '* { box-sizing: border-box; }\nbody {\n  margin: 0;\n  font-family: system-ui, "Segoe UI", sans-serif;\n  line-height: 1.6;\n  color: #1f2937;\n}\n'],
+    ['css/farben.css', 'Farben & Variablen', () => ':root {\n  --farbe: #6d28d9;      /* Hauptfarbe */\n  --farbe2: #db2777;     /* Akzent */\n  --text: #1f2937;\n  --hintergrund: #ffffff;\n  --rund: 14px;\n  --schatten: 0 10px 30px rgba(0, 0, 0, .08);\n}\n'],
+    ['css/handy.css', 'Fürs Handy (responsive)', () => '/* Gilt nur auf kleinen Bildschirmen */\n@media (max-width: 700px) {\n  body { font-size: 17px; }\n  nav { display: none; }\n  .raster { grid-template-columns: 1fr; }\n}\n'],
+    ['css/animationen.css', 'Animationen', () => '@keyframes einblenden {\n  from { opacity: 0; transform: translateY(20px); }\n  to { opacity: 1; transform: none; }\n}\n.einblenden { animation: einblenden .6s ease both; }\n\n@keyframes pulsieren { 50% { transform: scale(1.05); } }\n.pulsieren { animation: pulsieren 2s ease-in-out infinite; }\n'],
+    ['css/dunkel.css', 'Dunkles Design (Dark Mode)', () => '@media (prefers-color-scheme: dark) {\n  :root {\n    --text: #e5e7eb;\n    --hintergrund: #111827;\n  }\n  body { background: var(--hintergrund); color: var(--text); }\n}\n'],
+    ['css/reset.css', 'Browser-Standard zurücksetzen', () => '*, *::before, *::after { box-sizing: border-box; }\nbody, h1, h2, h3, p, figure { margin: 0; }\nimg { max-width: 100%; display: block; }\nbutton, input, textarea, select { font: inherit; }\n'] ] },
+  { name: 'JavaScript', icon: '🟨', dateien: [
+    ['script.js', 'Haupt-Skript', () => '// Wird ausgeführt, sobald die Seite geladen ist\ndocument.addEventListener("DOMContentLoaded", () => {\n  console.log("Seite ist bereit");\n});\n'],
+    ['js/menue.js', 'Handy-Menü (☰)', () => '// HTML: <button id="menue">☰</button> <nav id="nav">…</nav>\nconst knopf = document.getElementById("menue");\nconst nav = document.getElementById("nav");\nknopf?.addEventListener("click", () => nav.classList.toggle("offen"));\n'],
+    ['js/formular.js', 'Formular prüfen', () => '// HTML: <form id="formular"> … </form>\nconst form = document.getElementById("formular");\nform?.addEventListener("submit", e => {\n  e.preventDefault();\n  const daten = Object.fromEntries(new FormData(form));\n  if (!daten.email || !daten.email.includes("@")) {\n    alert("Bitte eine gültige E-Mail eingeben.");\n    return;\n  }\n  console.log("Formular ok:", daten);\n  form.reset();\n});\n'],
+    ['js/slider.js', 'Bilder-Slider', () => '// HTML: <div id="slider"><img …><img …></div>\nconst bilder = document.querySelectorAll("#slider img");\nlet nr = 0;\nfunction zeige(i) {\n  bilder.forEach((b, k) => (b.style.display = k === i ? "block" : "none"));\n}\nif (bilder.length) {\n  zeige(0);\n  setInterval(() => zeige((nr = (nr + 1) % bilder.length)), 3000);\n}\n'],
+    ['js/dunkel.js', 'Hell/Dunkel umschalten', () => '// HTML: <button id="modus">🌙</button>\nconst modus = document.getElementById("modus");\nmodus?.addEventListener("click", () => {\n  document.body.classList.toggle("dunkel");\n  localStorage.setItem("dunkel", document.body.classList.contains("dunkel"));\n});\nif (localStorage.getItem("dunkel") === "true") document.body.classList.add("dunkel");\n'],
+    ['js/api.js', 'Daten aus dem Internet laden (fetch)', () => '// Beispiel: Daten von einer Schnittstelle (API) holen\nasync function laden() {\n  try {\n    const antwort = await fetch("daten.json");\n    const daten = await antwort.json();\n    console.log(daten);\n  } catch (fehler) {\n    console.error("Laden fehlgeschlagen:", fehler);\n  }\n}\nladen();\n'],
+    ['daten.json', 'Daten (JSON)', () => '{\n  "produkte": [\n    { "name": "Kaffee", "preis": 2.5 },\n    { "name": "Kuchen", "preis": 3.2 }\n  ]\n}\n'] ] },
+  { name: 'Bilder & Symbole', icon: '🖼', dateien: [
+    ['favicon.svg', 'Symbol im Browser-Tab', () => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">\n  <rect width="64" height="64" rx="14" fill="#6d28d9"/>\n  <text x="32" y="44" font-size="34" text-anchor="middle" fill="#fff" font-family="system-ui">S</text>\n</svg>\n'],
+    ['bilder/logo.svg', 'Logo', () => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60">\n  <circle cx="30" cy="30" r="22" fill="#db2777"/>\n  <text x="62" y="40" font-size="28" font-weight="700" fill="#1f2937" font-family="system-ui">Meine Firma</text>\n</svg>\n'],
+    ['bilder/hintergrund.svg', 'Hintergrund-Muster', () => '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">\n  <circle cx="20" cy="20" r="2" fill="#6d28d9" opacity=".25"/>\n</svg>\n'] ] },
+  { name: 'Web-App & Google', icon: '📱', dateien: [
+    ['manifest.json', 'Als App installierbar (PWA)', () => '{\n  "name": "Meine Seite",\n  "short_name": "Meine Seite",\n  "start_url": "index.html",\n  "display": "standalone",\n  "background_color": "#ffffff",\n  "theme_color": "#6d28d9",\n  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]\n}\n'],
+    ['robots.txt', 'Für Suchmaschinen', () => 'User-agent: *\nAllow: /\n\nSitemap: https://www.deine-seite.de/sitemap.xml\n'],
+    ['sitemap.xml', 'Seitenliste für Google', () => '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://www.deine-seite.de/</loc></url>\n  <url><loc>https://www.deine-seite.de/kontakt.html</loc></url>\n</urlset>\n'] ] },
+  { name: 'Projekt & Einstellungen', icon: '⚙️', dateien: [
+    ['README.md', 'Beschreibung des Projekts', () => '# Mein Projekt\n\nKurze Beschreibung, was das Projekt macht.\n\n## Starten\n\n1. Projekt öffnen\n2. ▶ Ausführen\n'],
+    ['.gitignore', 'Dateien, die Git ignoriert', () => 'node_modules/\n.venv/\n__pycache__/\n.env\n.DS_Store\n'],
+    ['package.json', 'Node.js-Projekt', () => '{\n  "name": "mein-projekt",\n  "version": "1.0.0",\n  "scripts": {\n    "start": "node server.js"\n  },\n  "dependencies": {}\n}\n'],
+    ['.env', 'Geheime Einstellungen', () => '# Zugangsdaten hier eintragen – diese Datei NICHT veröffentlichen\nAPI_KEY=\n'],
+    ['LICENSE', 'Lizenz (MIT)', () => 'MIT License\n\nCopyright (c) 2026 Dein Name\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software, to deal in the Software without restriction.\n'] ] },
+  { name: 'Python', icon: '🐍', dateien: [
+    ['main.py', 'Python-Programm', () => 'def main():\n    print("Hallo aus Python!")\n\n\nif __name__ == "__main__":\n    main()\n'],
+    ['app.py', 'Web-App (Flask)', () => 'from flask import Flask\n\napp = Flask(__name__)\n\n\n@app.route("/")\ndef start():\n    return "<h1>Hallo von Flask!</h1>"\n\n\nif __name__ == "__main__":\n    app.run(debug=True)\n'],
+    ['requirements.txt', 'Benötigte Pakete', () => '# Ein Paket pro Zeile, z. B.:\nflask\nrequests\n'],
+    ['test_main.py', 'Tests', () => 'from main import main\n\n\ndef test_main(capsys):\n    main()\n    assert "Hallo" in capsys.readouterr().out\n'] ] },
+  { name: 'Weitere Sprachen', icon: '⚙️', dateien: [
+    ['main.cpp', 'C++', () => '#include <iostream>\n\nint main() {\n    std::cout << "Hallo aus C++!" << std::endl;\n    return 0;\n}\n'],
+    ['main.c', 'C', () => '#include <stdio.h>\n\nint main(void) {\n    printf("Hallo aus C!\\n");\n    return 0;\n}\n'],
+    ['Main.java', 'Java', () => 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hallo aus Java!");\n    }\n}\n'],
+    ['Program.cs', 'C#', () => 'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hallo aus C#!");\n    }\n}\n'],
+    ['main.go', 'Go', () => 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hallo aus Go!")\n}\n'],
+    ['src/main.rs', 'Rust', () => 'fn main() {\n    println!("Hallo aus Rust!");\n}\n'],
+    ['server.js', 'Node.js-Server', () => 'const http = require("http");\n\nhttp.createServer((anfrage, antwort) => {\n  antwort.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });\n  antwort.end("<h1>Hallo von Node.js!</h1>");\n}).listen(3000, () => console.log("Läuft auf http://localhost:3000"));\n'],
+    ['abfrage.sql', 'SQL-Datenbank', () => 'CREATE TABLE kunden (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  email TEXT\n);\n\nSELECT * FROM kunden;\n'] ] }
+];
+/* Katalog zeichnen – vorhanden(pfad) sagt, ob es die Datei schon gibt; nehmen(pfad, inhalt) legt an/öffnet */
+function katalogZeigen(box, vorhanden, nehmen) {
+  const offen = (() => { try { return JSON.parse(localStorage.getItem('sdKatalogOffen') || '[]'); } catch (e) { return []; } })();
+  box.innerHTML = '';
+  KATALOG.forEach((g, gi) => {
+    const kopf = document.createElement('div'); kopf.className = 'katG'; const auf = offen.includes(gi);
+    kopf.innerHTML = '<span class="katPfeil">' + (auf ? '▾' : '▸') + '</span><span>' + g.icon + ' ' + g.name + '</span><small>' + g.dateien.length + '</small>';
+    kopf.onclick = () => { const i = offen.indexOf(gi); if (i >= 0) offen.splice(i, 1); else offen.push(gi); try { localStorage.setItem('sdKatalogOffen', JSON.stringify(offen)); } catch (e) { /* egal */ } katalogZeigen(box, vorhanden, nehmen); };
+    box.appendChild(kopf);
+    if (!auf) return;
+    g.dateien.forEach(([pfad, info, inhalt]) => { const z = document.createElement('div'); const da = vorhanden(pfad); z.className = 'katD' + (da ? ' da' : '');
+      z.title = da ? pfad + ' öffnen' : pfad + ' anlegen und öffnen';
+      z.innerHTML = '<span></span><small></small><b>' + (da ? '↗' : '＋') + '</b>'; z.querySelector('span').textContent = pfad; z.querySelector('small').textContent = info;
+      z.onclick = () => nehmen(pfad, inhalt()); box.appendChild(z); });
+  });
+}
+const KATALOG_CSS = '.katG{display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:13px}.katG:hover{background:var(--shov)}.katG small{margin-left:auto;color:var(--smut);font-weight:400}.katPfeil{width:12px;color:var(--smut)}' +
+  '.katD{display:grid;grid-template-columns:1fr auto;column-gap:6px;padding:4px 10px 4px 30px;cursor:pointer;font-size:12.5px}.katD:hover{background:var(--shov)}.katD span{font-family:ui-monospace,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+  '.katD small{grid-column:1;color:var(--smut);font-size:11px}.katD b{grid-row:1/3;grid-column:2;align-self:center;color:var(--sacc);font-weight:700}.katD.da span{color:var(--smut)}.katD.da b{color:var(--smut)}';
+
+function katalogOnline() { if (!$('katStil')) { const st = document.createElement('style'); st.id = 'katStil'; st.textContent = KATALOG_CSS; document.head.appendChild(st); }
+  katalogZeigen($('katalog'), p => !!(S.p && S.p.dateien[p] != null), async (pfad, inhalt) => { if (!S.p) return;
+    if (S.p.dateien[pfad] == null) { S.p.dateien[pfad] = inhalt; await projSchreiben(S.p); const o = pfad.split('/').slice(0, -1); o.forEach((_, i) => S.offen.add(o.slice(0, i + 1).join('/'))); baum(); toast('＋ ' + pfad + ' angelegt'); }
+    dateiOeffnen(pfad); if (typeof ansicht === 'function') ansicht('code'); }); }
 /* ---------------- 🌐 Online stellen (nur mit Zugangsschlüssel) ---------------- */
 const HUB = 'https://sd-maschinen-kenner.onrender.com';
 function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
