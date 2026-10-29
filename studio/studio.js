@@ -395,37 +395,40 @@ function konsoleZeigen() { const box = $('konsoleAus'); if (!box) return; box.in
 function geraet(w) { $('frame').style.width = w; document.querySelectorAll('#geraete button').forEach(b => b.classList.toggle('an', b.dataset.w === w)); }
 
 /* ---------------- Programme über wandbox.org ---------------- */
-const WB = 'https://wandbox.org/api/', WB_STD = { cpp: 'gcc-13.2.0', c: 'gcc-13.2.0-c', csharp: 'mono-6.12.0.199', java: 'openjdk-jdk-21+35', rust: 'rust-1.82.0', go: 'go-1.23.2', python: 'cpython-3.12.7' };
-const SPR = { cpp: 'C++', c: 'C', csharp: 'C#', java: 'Java', rust: 'Rust', go: 'Go', python: 'Python' };
+const WB = 'https://wandbox.org/api/', WB_STD = { cpp: 'gcc-13.2.0', c: 'gcc-13.2.0-c', csharp: 'mono-6.12.0.199', java: 'openjdk-jdk-22+36', rust: 'rust-1.82.0', go: 'go-1.23.2', python: 'cpython-3.12.7', node: 'nodejs-20.17.0', typescript: 'typescript-5.6.2' };
+const SPR = { cpp: 'C++', c: 'C', csharp: 'C#', java: 'Java', rust: 'Rust', go: 'Go', python: 'Python', node: 'JavaScript (Node.js)', typescript: 'TypeScript' };
 let wbListe = null, wbKette = Promise.resolve();
 function programmSprache(p) { const e = (p || '').split('.').pop().toLowerCase(); return { py: 'python', c: 'c', cc: 'cpp', cpp: 'cpp', cxx: 'cpp', cs: 'csharp', java: 'java', rs: 'rust', go: 'go' }[e] || null; }
 async function wbCompiler(sp) { if (!wbListe) wbListe = fetch(WB + 'list.json').then(r => r.json()).catch(() => []); const l = await wbListe;
-  const regel = { cpp: x => x.language === 'C++' && /^gcc-\d/.test(x.name), c: x => x.language === 'C' && /^gcc-\d/.test(x.name), csharp: x => x.language === 'C#' && /^mono-/.test(x.name), java: x => x.language === 'Java' && /^openjdk-/.test(x.name), rust: x => x.language === 'Rust' && /^rust-\d/.test(x.name), go: x => x.language === 'Go' && /^go-\d/.test(x.name), python: x => x.language === 'Python' && /^cpython-3\.\d+\.\d+$/.test(x.name) }[sp];
+  const regel = { cpp: x => x.language === 'C++' && /^gcc-\d/.test(x.name), c: x => x.language === 'C' && /^gcc-\d/.test(x.name), csharp: x => x.language === 'C#' && /^mono-/.test(x.name), java: x => x.language === 'Java' && /^openjdk-/.test(x.name), rust: x => x.language === 'Rust' && /^rust-\d/.test(x.name), go: x => x.language === 'Go' && /^go-\d/.test(x.name), python: x => x.language === 'Python' && /^cpython-3\.\d+\.\d+$/.test(x.name), node: x => x.language === 'JavaScript' && /^nodejs-\d/.test(x.name), typescript: x => x.language === 'TypeScript' && /^typescript-\d/.test(x.name) }[sp];
   const f = Array.isArray(l) && regel ? l.find(regel) : null; return f ? f.name : WB_STD[sp]; }
 function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0; i < 4; i++) { const r = await fetch(WB + 'compile.json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const tx = await r.text();
     if (/^Error: Too many/i.test(tx) || r.status === 429) { await new Promise(ok => setTimeout(ok, 2500 * (i + 1))); continue; } try { return JSON.parse(tx); } catch (e) { throw new Error('Online-Compiler antwortet nicht richtig: ' + tx.slice(0, 120)); } }
     throw new Error('Online-Compiler ist gerade überlastet – bitte gleich nochmal.'); }); wbKette = lauf.catch(() => {}); return lauf; }
-async function programmStarten() {
-  const sp = programmSprache(S.aktiv); await speichernJetzt();
-  if (sp === 'python') { const info = pyFremde(S.p.dateien); if (info.pakete.length || info.fenster) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); } }
+async function programmStarten(spWahl) {
+  const sp = spWahl || programmSprache(S.aktiv); await speichernJetzt();
+  const info = sp === 'python' ? (i => ({ gruende: [i.pakete.length ? 'Python-Pakete: ' + i.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', i.fenster ? 'ein Fenster (tkinter/turtle)' : ''].filter(Boolean) }))(pyFremde(S.p.dateien)) : nurAufPc(sp, S.p.dateien);
+  if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); }
+  let stdinText = ($('eingabe').value || '').replace(/ \| /g, '\n'); if (!stdinText.trim() && liestEingabe(sp, S.p.dateien)) { const e = await eingabeFragen(sp); if (e == null) return; stdinText = e; }
   if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
-  const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)));
+  const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)) || (sp === 'node' && /\.(m?js|cjs|json)$/.test(x) && !/^package(-lock)?\.json$/.test(x)) || (sp === 'typescript' && /\.ts$/.test(x)));
   let haupt = S.aktiv; const t = d[haupt];
-  const mainRe = { cpp: /\bint\s+main\s*\(/, c: /\bint\s+main\s*\(/, java: /static\s+void\s+main\s*\(/, csharp: /static\s+(async\s+)?\S+\s+Main\s*\(/, rust: /fn\s+main\s*\(/, go: /func\s+main\s*\(/, python: /./ }[sp];
+  const mainRe = { cpp: /\bint\s+main\s*\(/, c: /\bint\s+main\s*\(/, java: /static\s+void\s+main\s*\(/, csharp: /static\s+(async\s+)?\S+\s+Main\s*\(/, rust: /fn\s+main\s*\(/, go: /func\s+main\s*\(/, python: /./, node: /./, typescript: /./ }[sp];
   if (!mainRe.test(t)) haupt = alle.find(x => mainRe.test(d[x])) || haupt;
   const basis = haupt.includes('/') ? haupt.slice(0, haupt.lastIndexOf('/') + 1) : '';
   const neben = alle.filter(n => n !== haupt && n.startsWith(basis)).map(n => ({ file: n.slice(basis.length), code: d[n] }));
-  let code = d[haupt]; if (sp === 'java') code = code.replace(/\bpublic\s+((?:final\s+|abstract\s+)?class\s+)/, '$1');
+  let code = d[haupt]; if (sp === 'java') { const ohnePaket = t => t.replace(/^\s*package\s+[\w.]+\s*;[ \t]*$/m, ''); code = ohnePaket(code).replace(/\bpublic\s+((?:final\s+|abstract\s+)?class\s+)/, '$1'); neben.forEach(f => { f.code = ohnePaket(f.code); }); }
   const roh = []; if (sp === 'cpp' || sp === 'c' || sp === 'csharp') neben.filter(f => /\.(c|cc|cpp|cxx|cs)$/.test(f.file)).forEach(f => roh.push(f.file)); if (sp === 'cpp') roh.push('-std=c++17'); if (sp === 'c') roh.push('-std=c11');
-  unten('ausgabe'); ansicht('ausgabe'); ausgabe('⏳ Baue und starte ' + haupt + ' (' + SPR[sp] + ', online über wandbox.org) …'); S.problemeProgramm = []; probleme(); $('starten').disabled = true;
-  try { const r = await wbSenden({ compiler: await wbCompiler(sp), code, codes: neben, stdin: $('eingabe').value || '', 'compiler-option-raw': roh.join('\n') });
+  unten('ausgabe'); ansicht('ausgabe'); const t0 = Date.now(), warte = () => ausgabe('⏳ Baue und starte ' + haupt + ' (' + SPR[sp] + ', online über wandbox.org) … ' + Math.round((Date.now() - t0) / 1000) + ' s' + (Date.now() - t0 > 8000 ? '\n(Java, Go und Node.js brauchen online oft 10–20 Sekunden – bitte kurz warten.)' : '')); warte(); const uhr = setInterval(warte, 1000);
+  S.problemeProgramm = []; probleme(); $('starten').disabled = true;
+  try { const r = await wbSenden({ compiler: await wbCompiler(sp), code, codes: neben, stdin: stdinText, 'compiler-option-raw': roh.join('\n') });
     const cErr = String(r.compiler_error || ''), out = String(r.program_output || ''), pErr = String(r.program_error || ''), st = String(r.status == null ? '' : r.status), name = haupt.split('/').pop();
     const fehlerText = (cErr + '\n' + pErr).replace(/\bprog\.(cc|c|java|rs|go|py|cs)\b/g, name);
     if (st !== '0' && /error/i.test(cErr) && !out) { ausgabe('❌ BAUFEHLER (' + SPR[sp] + ')\n\n' + fehlerText.trim()); fehlerSammeln(fehlerText, haupt); }
     else if (st !== '0' || r.signal) { ausgabe('❌ LAUFZEITFEHLER (Exit-Code ' + (st || '?') + (r.signal ? ', ' + r.signal : '') + ')\n\n' + (out ? 'Ausgabe:\n' + out + '\n' : '') + fehlerText.trim() + (/No module named|ModuleNotFoundError|_tkinter|no display name|TclError/.test(fehlerText) ? '\n\n💡 Online gibt es nur reines Python ohne Zusatz-Pakete (z. B. kein cv2/OpenCV, numpy, Flask) und ohne Fenster (tkinter). Solche Programme laufen in der PC-Version des SD KI-Agenten – dort installiert ▶ die Pakete automatisch.' : '')); fehlerSammeln(fehlerText, haupt); }
     else { ausgabe('✅ Gebaut und ausgeführt (' + SPR[sp] + ', online über wandbox.org)\n\n' + (out || '(keine Ausgabe)') + (cErr.trim() ? '\n\nHinweise vom Compiler:\n' + cErr.trim() : '')); if (!S.p.erfolg) { S.p.erfolg = 1; konfetti(); } }
   } catch (e) { ausgabe('❌ ' + e.message + (navigator.onLine ? '' : '\n➜ Keine Internetverbindung. Webseiten (HTML/CSS/JS) laufen auch offline, Programme brauchen Internet.')); }
-  finally { $('starten').disabled = false; }
+  finally { clearInterval(uhr); $('starten').disabled = false; }
 }
 function fehlerSammeln(text, haupt) { const zeilen = text.split('\n'); const funde = []; zeilen.forEach(z => { for (const m of z.matchAll(/([\w./-]+\.(?:c|cc|cpp|cxx|h|hpp|cs|java|rs|go|py))(?::(\d+)|\((\d+),\d+\)|", line (\d+))/g)) { let k = m[1].replace(/^\.\//, ''); const nr = +(m[2] || m[3] || m[4]); const voll = S.p.dateien[k] != null ? k : Object.keys(S.p.dateien).find(x => x.endsWith('/' + k) || x.split('/').pop() === k.split('/').pop()) || haupt; funde.push({ text: z.trim(), datei: voll, zeile: nr }); } });
   const letzte = zeilen.reverse().find(z => /^\w*(Error|Exception)\b/.test(z.trim())); if (letzte && funde.length) funde[funde.length - 1].text = letzte.trim() + '  ·  ' + funde[funde.length - 1].datei + ':' + funde[funde.length - 1].zeile;
@@ -438,6 +441,15 @@ function probleme() { const box = $('problemListe'); box.innerHTML = ''; const a
 async function ausfuehren() {
   if (!S.p) { vorlagenWaehlen(); return; }
   if (S.aktiv && programmSprache(S.aktiv)) return programmStarten();
+  if (S.aktiv && /\.(m?js|cjs|ts)$/.test(S.aktiv)) { const t = S.p.dateien[S.aktiv] || '', name = S.aktiv.split('/').pop();
+    const inHtml = Object.entries(S.p.dateien).some(([p, h]) => /\.html?$/.test(p) && typeof h === 'string' && h.includes(name));
+    const dom = /\b(document|window|localStorage|alert\(|addEventListener|querySelector)/.test(t);
+    if (inHtml && startSeite()) { vorschau(true); ansicht('vorschau'); ausgabe('▶ Vorschau gestartet – ' + name + ' läuft in der Webseite. console.log erscheint unter KONSOLE.'); return; }
+    if (dom && !/\.ts$/.test(S.aktiv)) { if (!confirm(name + ' benutzt die Webseite (document/window). Soll ich eine index.html anlegen, die das Skript lädt, und die Vorschau starten?')) return;
+      const html = S.p.dateien['index.html'] == null ? 'index.html' : 'seite-' + name.replace(/\.\w+$/, '') + '.html';
+      S.p.dateien[html] = '<!doctype html>\n<html lang="de">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>' + name + '</title>\n</head>\n<body>\n  <h1>' + name + '</h1>\n  <script src="' + S.aktiv + '"><\/script>\n</body>\n</html>\n';
+      await projSchreiben(S.p); baum(); const alt = S.aktiv; dateiOeffnen(html); vorschau(true); ansicht('vorschau'); dateiOeffnen(alt); ausgabe('▶ ' + html + ' angelegt – sie lädt ' + name + '. Ausgaben von console.log stehen unter KONSOLE.'); return; }
+    return programmStarten(/\.ts$/.test(S.aktiv) ? 'typescript' : 'node'); }
   if (startSeite()) { vorschau(true); ansicht('vorschau'); ausgabe('▶ Vorschau gestartet: ' + startSeite() + (S.swBereit ? ' – läuft wie auf einem echten Server (nur in deinem Browser).' : ' – einfache Vorschau (dein Browser unterstützt keinen Vorschau-Server).')); return; }
   const prog = Object.keys(S.p.dateien).find(programmSprache); if (prog) { dateiOeffnen(prog); return programmStarten(); }
   ausgabe('Nichts zum Ausführen gefunden. Lege eine index.html (Webseite) oder z. B. main.py an.');
@@ -780,13 +792,47 @@ function pcHinweis(titel, text) { let o = $('pcHinweis'); if (!o) { o = document
   o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(560px,96vw)"><b style="font-size:16px"></b><pre style="white-space:pre-wrap;font:13px/1.55 system-ui;margin:0"></pre><div class="reihe"><span style="flex:1"></span><a class="knopfLink" href="../agent/index.html" target="_blank">🤖 Zum KI-Agenten</a><button id="pcZip">⬇ Als ZIP</button><button class="primary" id="pcZu">OK</button></div></div>';
   o.querySelector('b').textContent = titel; o.querySelector('pre').textContent = text; $('pcZu').onclick = () => { o.hidden = true; }; $('pcZip').onclick = () => { o.hidden = true; zipExport(); }; o.onclick = e => { if (e.target === o) o.hidden = true; }; }
 function pcFrage(info) { return new Promise(ok => { let o = $('pcFrage'); if (!o) { o = document.createElement('div'); o.id = 'pcFrage'; o.className = 'dialog'; document.body.appendChild(o); }
-  const was = [info.pakete.length ? 'Pakete: ' + info.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', info.fenster ? 'ein Fenster (tkinter)' : ''].filter(Boolean).join(' und ');
+  const was = (info.gruende || []).join(' und ');
   o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(600px,96vw)"><b style="font-size:16px">💻 Dieses Programm läuft nur auf deinem PC</b><p style="margin:0;line-height:1.55"></p>' +
-    '<p class="hinweis" style="padding:0">Online gibt es nur reines Python ohne Zusatz-Pakete und ohne Fenster. Auf deinem PC nutzt der SD KI-Agent dein Python und installiert fehlende Pakete automatisch.</p>' +
+    '<p class="hinweis" style="padding:0">Online laufen nur Konsolen-Programme mit der Standard-Bibliothek – ohne Fenster, ohne Zusatz-Pakete und ohne Server. Auf deinem PC nutzt der SD KI-Agent deine installierten Programme und holt fehlende Pakete (pip, npm …) automatisch.</p>' +
     '<div class="reihe"><button id="pfOnline">Trotzdem online versuchen</button><span style="flex:1"></span><button id="pfAbbr">Abbrechen</button><button class="primary" id="pfPc">💻 Auf meinem PC ausführen</button></div></div>';
   o.querySelector('p').textContent = 'Dein Code braucht ' + was + '.';
   const fertig = w => { o.hidden = true; ok(w); }; $('pfPc').onclick = () => fertig('pc'); $('pfOnline').onclick = () => fertig('online'); $('pfAbbr').onclick = () => fertig(null); o.onclick = e => { if (e.target === o) fertig(null); }; }); }
 
+/* Was läuft online NICHT (Fenster, Zusatz-Pakete, Server)? -> lieber auf dem PC */
+const NODE_EINGEBAUT = new Set('assert buffer child_process cluster console constants crypto dgram dns domain events fs http http2 https inspector module net os path perf_hooks process punycode querystring readline repl stream string_decoder timers tls tty url util v8 vm worker_threads zlib test'.split(' '));
+function nurAufPc(sp, dateien) {
+  const g = [], alle = Object.entries(dateien).filter(([p, t]) => typeof t === 'string');
+  const text = re => alle.filter(([p]) => re.test(p)).map(([, t]) => t).join('\n');
+  if (sp === 'java') { const t = text(/\.java$/); if (/import\s+(javax\.swing|java\.awt|javafx)\b/.test(t)) g.push('ein Fenster (Swing/AWT/JavaFX)');
+    const fremd = [...new Set([...t.matchAll(/^\s*import\s+(?:static\s+)?([\w.]+)\s*;/gm)].map(m => m[1]).filter(x => !/^(java|javax|jdk|sun)\./.test(x)).map(x => x.split('.').slice(0, 2).join('.')))];
+    const eigen = new Set(alle.filter(([p]) => p.endsWith('.java')).map(([, c]) => ((/^\s*package\s+([\w.]+)/m.exec(c) || [])[1] || '').split('.').slice(0, 2).join('.')));
+    const f2 = fremd.filter(x => !eigen.has(x)); if (f2.length) g.push('Java-Bibliotheken (Maven/Gradle): ' + f2.join(', ')); }
+  if (sp === 'csharp') { const t = text(/\.cs$/); if (/using\s+System\.(Windows|Drawing)\b|Application\.Run\(/.test(t)) g.push('ein Fenster (Windows Forms/WPF)');
+    const fremd = [...new Set([...t.matchAll(/^\s*using\s+([A-Z][\w.]*)\s*;/gm)].map(m => m[1]).filter(x => !/^(System|Microsoft\.CSharp)\b/.test(x)))]; if (fremd.length) g.push('NuGet-Pakete: ' + fremd.join(', ')); }
+  if (sp === 'cpp' || sp === 'c') { const t = text(/\.(c|cc|cpp|cxx|h|hpp)$/);
+    if (/#include\s*[<"](windows\.h|conio\.h|SFML\/|SDL2?\/|SDL\.h|GL\/|GLFW|Q\w+|opencv2|wx\/|raylib|graphics\.h)/.test(t)) g.push('Windows-/Grafik-Bibliotheken (z. B. windows.h, SFML, SDL, Qt, OpenCV)');
+    else if (/#include\s*[<"](curl|boost|nlohmann|fmt\/|sqlite3|mysql)/.test(t)) g.push('Zusatz-Bibliotheken (z. B. curl, boost, json, sqlite)'); }
+  if (sp === 'rust') { const t = text(/\.rs$/), cargo = dateien['Cargo.toml'] || '';
+    const fremd = [...new Set([...t.matchAll(/^\s*(?:use|extern\s+crate)\s+(\w+)/gm)].map(m => m[1]).filter(x => !['std', 'core', 'alloc', 'crate', 'self', 'super'].includes(x)))];
+    const mods = new Set(alle.filter(([p]) => p.endsWith('.rs')).map(([p]) => p.split('/').pop().replace(/\.rs$/, '')));
+    const f2 = fremd.filter(x => !mods.has(x)); if (f2.length || /\[dependencies\][^\[]*\w+\s*=/.test(cargo)) g.push('Rust-Crates: ' + (f2.join(', ') || 'aus Cargo.toml')); }
+  if (sp === 'go') { const t = text(/\.go$/); const fremd = [...new Set([...t.matchAll(/"([\w-]+\.[\w.-]+\/[^"]+)"/g)].map(m => m[1]))]; if (fremd.length) g.push('Go-Module: ' + fremd.slice(0, 4).join(', ')); }
+  if (sp === 'node' || sp === 'typescript') { const t = text(/\.(m?js|cjs|ts)$/);
+    const fremd = [...new Set([...t.matchAll(/(?:require\(\s*|from\s+|import\s+)['"]([^'"./][^'"]*)['"]/g)].map(m => m[1].replace(/^node:/, '').split('/')[0]))].filter(x => !NODE_EINGEBAUT.has(x));
+    if (fremd.length) g.push('npm-Pakete: ' + fremd.join(', ')); if (/\.listen\(|createServer\(/.test(t)) g.push('einen Server (läuft dauerhaft, braucht localhost)'); }
+  return { gruende: g };
+}
+const EINGABE_RE = { python: /\binput\s*\(|sys\.stdin/, java: /new\s+Scanner\s*\(\s*System\.in|BufferedReader\s*\(\s*new\s+InputStreamReader\s*\(\s*System\.in|System\.console\(\)/, cpp: /\b(std::)?cin\s*>>|getline\s*\(\s*(std::)?cin|scanf\s*\(/, c: /scanf\s*\(|fgets\s*\([^)]*stdin|getchar\s*\(/,
+  csharp: /Console\.Read(Line|Key)?\s*\(/, rust: /std::io::stdin|io::stdin\(\)/, go: /fmt\.Scan|bufio\.NewReader\s*\(\s*os\.Stdin|bufio\.NewScanner\s*\(\s*os\.Stdin/, node: /readline|process\.stdin/, typescript: /readline|process\.stdin/ };
+function liestEingabe(sp, dateien) { const re = EINGABE_RE[sp]; if (!re) return false; return Object.entries(dateien).some(([p, t]) => programmSprache(p) === sp || (sp === 'node' && /\.m?js$/.test(p)) ? re.test(String(t)) : false) || re.test(String(dateien[S.aktiv] || '')); }
+function eingabeFragen(sp) { return new Promise(ok => { let o = $('einFrage'); if (!o) { o = document.createElement('div'); o.id = 'einFrage'; o.className = 'dialog'; document.body.appendChild(o); }
+  o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(560px,96vw)"><b style="font-size:16px">⌨ Dein Programm fragt nach Eingaben</b>' +
+    '<p class="hinweis" style="padding:0">Online kann man nicht während des Laufens tippen. Schreib die Eingaben vorher hier hinein – <b>jede Zeile ist eine Eingabe</b> (z. B. erst den Namen, dann eine Zahl).</p>' +
+    '<textarea id="einText" rows="5" placeholder="Anna\n42" style="font:13px ui-monospace,Consolas,monospace"></textarea>' +
+    '<div class="reihe"><button id="einPc">💻 Lieber auf meinem PC (live tippen)</button><span style="flex:1"></span><button id="einAbbr">Abbrechen</button><button class="primary" id="einLos">▶ Mit diesen Eingaben starten</button></div></div>';
+  const fertig = w => { o.hidden = true; ok(w); }; $('einLos').onclick = () => fertig($('einText').value.replace(/\s+$/, '') + '\n'); $('einAbbr').onclick = () => fertig(null);
+  $('einPc').onclick = () => { fertig(null); aufPcAusfuehren(); }; setTimeout(() => $('einText').focus(), 30); }); }
 /* ---------------- 🌐 Online stellen (nur mit Zugangsschlüssel) ---------------- */
 const HUB = 'https://sd-maschinen-kenner.onrender.com';
 function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
