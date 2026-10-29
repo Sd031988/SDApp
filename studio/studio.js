@@ -407,6 +407,7 @@ function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0
     throw new Error('Online-Compiler ist gerade überlastet – bitte gleich nochmal.'); }); wbKette = lauf.catch(() => {}); return lauf; }
 async function programmStarten() {
   const sp = programmSprache(S.aktiv); await speichernJetzt();
+  if (sp === 'python') { const info = pyFremde(S.p.dateien); if (info.pakete.length || info.fenster) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); } }
   if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
   const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)));
   let haupt = S.aktiv; const t = d[haupt];
@@ -480,7 +481,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['⬇ Projekt als ZIP', '', zipExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
@@ -746,6 +747,46 @@ function katalogOnline() { if (!$('katStil')) { const st = document.createElemen
   katalogZeigen($('katalog'), p => !!(S.p && S.p.dateien[p] != null), async (pfad, inhalt) => { if (!S.p) return;
     if (S.p.dateien[pfad] == null) { S.p.dateien[pfad] = inhalt; await projSchreiben(S.p); const o = pfad.split('/').slice(0, -1); o.forEach((_, i) => S.offen.add(o.slice(0, i + 1).join('/'))); baum(); toast('＋ ' + pfad + ' angelegt'); }
     dateiOeffnen(pfad); if (typeof ansicht === 'function') ansicht('code'); }); }
+/* ---------------- 💻 Auf meinem PC ausführen (SD KI-Agent auf localhost:8765) ---------------- */
+const PY_STD = new Set(["__future__", "_abc", "_aix_support", "_android_support", "_apple_support", "_ast", "_asyncio", "_bisect", "_blake2", "_bz2", "_codecs", "_codecs_cn", "_codecs_hk", "_codecs_iso2022", "_codecs_jp", "_codecs_kr", "_codecs_tw", "_collections", "_collections_abc", "_colorize", "_compat_pickle", "_compression", "_contextvars", "_csv", "_ctypes", "_curses", "_curses_panel", "_datetime", "_dbm", "_decimal", "_elementtree", "_frozen_importlib", "_frozen_importlib_external", "_functools", "_gdbm", "_hashlib", "_heapq", "_imp", "_interpchannels", "_interpqueues", "_interpreters", "_io", "_ios_support", "_json", "_locale", "_lsprof", "_lzma", "_markupbase", "_md5", "_multibytecodec", "_multiprocessing", "_opcode", "_opcode_metadata", "_operator", "_osx_support", "_overlapped", "_pickle", "_posixshmem", "_posixsubprocess", "_py_abc", "_pydatetime", "_pydecimal", "_pyio", "_pylong", "_pyrepl", "_queue", "_random", "_scproxy", "_sha1", "_sha2", "_sha3", "_signal", "_sitebuiltins", "_socket", "_sqlite3", "_sre", "_ssl", "_stat", "_statistics", "_string", "_strptime", "_struct", "_suggestions", "_symtable", "_sysconfig", "_thread", "_threading_local", "_tkinter", "_tokenize", "_tracemalloc", "_typing", "_uuid", "_warnings", "_weakref", "_weakrefset", "_winapi", "_wmi", "_zoneinfo", "abc", "antigravity", "argparse", "array", "ast", "asyncio", "atexit", "base64", "bdb", "binascii", "bisect", "builtins", "bz2", "cProfile", "calendar", "cmath", "cmd", "code", "codecs", "codeop", "collections", "colorsys", "compileall", "concurrent", "configparser", "contextlib", "contextvars", "copy", "copyreg", "csv", "ctypes", "curses", "dataclasses", "datetime", "dbm", "decimal", "difflib", "dis", "doctest", "email", "encodings", "ensurepip", "enum", "errno", "faulthandler", "fcntl", "filecmp", "fileinput", "fnmatch", "fractions", "ftplib", "functools", "gc", "genericpath", "getopt", "getpass", "gettext", "glob", "graphlib", "grp", "gzip", "hashlib", "heapq", "hmac", "html", "http", "idlelib", "imaplib", "importlib", "inspect", "io", "ipaddress", "itertools", "json", "keyword", "linecache", "locale", "logging", "lzma", "mailbox", "marshal", "math", "mimetypes", "mmap", "modulefinder", "msvcrt", "multiprocessing", "netrc", "nt", "ntpath", "nturl2path", "numbers", "opcode", "operator", "optparse", "os", "pathlib", "pdb", "pickle", "pickletools", "pkgutil", "platform", "plistlib", "poplib", "posix", "posixpath", "pprint", "profile", "pstats", "pty", "pwd", "py_compile", "pyclbr", "pydoc", "pydoc_data", "pyexpat", "queue", "quopri", "random", "re", "readline", "reprlib", "resource", "rlcompleter", "runpy", "sched", "secrets", "select", "selectors", "shelve", "shlex", "shutil", "signal", "site", "smtplib", "socket", "socketserver", "sqlite3", "sre_compile", "sre_constants", "sre_parse", "ssl", "stat", "statistics", "string", "stringprep", "struct", "subprocess", "symtable", "sys", "sysconfig", "syslog", "tabnanny", "tarfile", "tempfile", "termios", "textwrap", "this", "threading", "time", "timeit", "tkinter", "token", "tokenize", "tomllib", "trace", "traceback", "tracemalloc", "tty", "turtle", "turtledemo", "types", "typing", "unicodedata", "unittest", "urllib", "uuid", "venv", "warnings", "wave", "weakref", "webbrowser", "winreg", "winsound", "wsgiref", "xml", "xmlrpc", "zipapp", "zipfile", "zipimport", "zlib", "zoneinfo"]);
+const PIP_NAMEN = { cv2: 'opencv-python', PIL: 'pillow', yaml: 'pyyaml', sklearn: 'scikit-learn', skimage: 'scikit-image', bs4: 'beautifulsoup4', docx: 'python-docx', fitz: 'pymupdf', dotenv: 'python-dotenv', serial: 'pyserial' };
+function pyFremde(dateien) {   // Pakete/Fenster, die es online nicht gibt
+  const eigene = new Set(Object.keys(dateien).filter(d => d.endsWith('.py')).map(d => d.split('/').pop().slice(0, -3)).concat(Object.keys(dateien).map(d => d.split('/')[0])));
+  const pakete = new Set(); let fenster = false;
+  for (const [pfad, t] of Object.entries(dateien)) { if (!pfad.endsWith('.py') || typeof t !== 'string') continue;
+    for (const m of t.matchAll(/^\s*(?:import\s+([\w.]+(?:\s*,\s*[\w.]+)*)|from\s+([\w.]+)\s+import)/gm)) for (const teil of (m[1] || m[2] || '').split(',')) {
+      const k = teil.trim().split(/\s+as\s+/)[0].split('.')[0]; if (!k) continue;
+      if (/^(tkinter|turtle)$/.test(k)) { fenster = true; continue; }
+      if (!PY_STD.has(k) && !eigene.has(k)) pakete.add(k); } }
+  return { pakete: [...pakete], fenster };
+}
+const PC_URL = 'http://localhost:8765';
+async function pcErreichbar() { try { const c = new AbortController(); const t = setTimeout(() => c.abort(), 2500);
+  const r = await fetch(PC_URL + '/__vom_hub', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"aktion":"ping"}', signal: c.signal }); clearTimeout(t); return (await r.json()).ok === true; } catch (e) { return false; } }
+async function aufPcAusfuehren() {
+  if (!S.p) return; await speichernJetzt(); const fenster = window.open('', '_blank');
+  if (fenster) fenster.document.write('<body style="font-family:system-ui;background:#1a1530;color:#e6e1ff;padding:30px"><h2>⏳ Übertrage an den SD KI-Agenten auf deinem PC …</h2></body>');
+  const zu = () => { try { fenster && fenster.close(); } catch (e) { /* egal */ } };
+  if (!(await pcErreichbar())) { zu();
+    pcHinweis('Der SD KI-Agent auf deinem PC ist gerade nicht erreichbar.', 'So geht es:\n1. Starte den „SD KI-Agent“ auf deinem PC (Desktop-Symbol).\n2. Klick hier nochmal auf „💻 Auf meinem PC ausführen“.\n\nFragt der Browser „thesdhub.com möchte auf Geräte in deinem lokalen Netzwerk zugreifen“ → Zulassen.\n\nNoch nicht installiert? Den PC-Agenten bekommst du auf der Seite des KI-Agenten (mit Zugangsschlüssel). Oder: ⬇ Projekt als ZIP herunterladen und am PC öffnen.'); return; }
+  try { const r = await fetch(PC_URL + '/__vom_hub', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: S.p.name, dateien: S.p.dateien }) }); const j = await r.json();
+    if (!j.ok) { zu(); pcHinweis('Übertragen ging nicht', j.error || '?'); return; }
+    const url = PC_URL + '/?studio=' + encodeURIComponent(j.name) + (S.aktiv ? '&datei=' + encodeURIComponent(S.aktiv) : '');
+    if (fenster) fenster.location.href = url; else window.open(url, '_blank');
+    ausgabe('💻 Projekt „' + j.name + '“ wurde an deinen PC übergeben (' + j.dateien.length + ' Dateien) und im SD KI-Agenten geöffnet.\nDort ▶ Ausführen – fehlende Pakete werden automatisch installiert, Fenster-Programme öffnen sich als echtes Fenster.');
+  } catch (e) { zu(); pcHinweis('Übertragen ging nicht', String(e.message || e)); }
+}
+function pcHinweis(titel, text) { let o = $('pcHinweis'); if (!o) { o = document.createElement('div'); o.id = 'pcHinweis'; o.className = 'dialog'; document.body.appendChild(o); }
+  o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(560px,96vw)"><b style="font-size:16px"></b><pre style="white-space:pre-wrap;font:13px/1.55 system-ui;margin:0"></pre><div class="reihe"><span style="flex:1"></span><a class="knopfLink" href="../agent/index.html" target="_blank">🤖 Zum KI-Agenten</a><button id="pcZip">⬇ Als ZIP</button><button class="primary" id="pcZu">OK</button></div></div>';
+  o.querySelector('b').textContent = titel; o.querySelector('pre').textContent = text; $('pcZu').onclick = () => { o.hidden = true; }; $('pcZip').onclick = () => { o.hidden = true; zipExport(); }; o.onclick = e => { if (e.target === o) o.hidden = true; }; }
+function pcFrage(info) { return new Promise(ok => { let o = $('pcFrage'); if (!o) { o = document.createElement('div'); o.id = 'pcFrage'; o.className = 'dialog'; document.body.appendChild(o); }
+  const was = [info.pakete.length ? 'Pakete: ' + info.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', info.fenster ? 'ein Fenster (tkinter)' : ''].filter(Boolean).join(' und ');
+  o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(600px,96vw)"><b style="font-size:16px">💻 Dieses Programm läuft nur auf deinem PC</b><p style="margin:0;line-height:1.55"></p>' +
+    '<p class="hinweis" style="padding:0">Online gibt es nur reines Python ohne Zusatz-Pakete und ohne Fenster. Auf deinem PC nutzt der SD KI-Agent dein Python und installiert fehlende Pakete automatisch.</p>' +
+    '<div class="reihe"><button id="pfOnline">Trotzdem online versuchen</button><span style="flex:1"></span><button id="pfAbbr">Abbrechen</button><button class="primary" id="pfPc">💻 Auf meinem PC ausführen</button></div></div>';
+  o.querySelector('p').textContent = 'Dein Code braucht ' + was + '.';
+  const fertig = w => { o.hidden = true; ok(w); }; $('pfPc').onclick = () => fertig('pc'); $('pfOnline').onclick = () => fertig('online'); $('pfAbbr').onclick = () => fertig(null); o.onclick = e => { if (e.target === o) fertig(null); }; }); }
+
 /* ---------------- 🌐 Online stellen (nur mit Zugangsschlüssel) ---------------- */
 const HUB = 'https://sd-maschinen-kenner.onrender.com';
 function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
@@ -815,7 +856,7 @@ function ansicht(n) { if (!istHandy()) return; const app = $('app');
   setTimeout(() => S.cm && S.cm.refresh(), 40); }
 function handyMehr() { const B = [['＋ Neue Datei', () => neueDatei('')], ['＋ Neues Projekt (Vorlagen)', vorlagenWaehlen], ['📋 Anleitung/Code einfügen', () => einfuegenDialog('')], ['🎨 Im Design-Studio gestalten', designOeffnen],
   [(S.frei ? '🌐' : '🔒') + ' Online stellen', onlineDialog], ['🔍 In allen Dateien suchen', () => { ansicht('dateien'); seite('suche'); }], ['🕘 Versionen', () => { ansicht('dateien'); seite('versionen'); }], ['⚙ Einstellungen', () => { ansicht('dateien'); seite('einst'); }],
-  ['✨ Code formatieren', formatieren], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
+  ['✨ Code formatieren', formatieren], ['💻 Auf meinem PC ausführen', aufPcAusfuehren], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
   palette(B.map(([l, fn]) => ({ label: l, fn })), 'Was möchtest du tun?', x => x.fn()); }
 const TASTEN = ['⇥', '<', '>', '/', '=', '"', "'", '{', '}', '(', ')', '[', ']', ';', ':', '.', ',', '#', '-', '_', '+', '*', '!', '&', '|', '$', '`', '←', '→', '↶', '↷'];
 function handyEinrichten() {
