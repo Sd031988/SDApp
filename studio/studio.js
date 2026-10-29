@@ -684,7 +684,7 @@ async function seiteLoeschen() {
 const FREI = 10, ZAEHL = 'sdStudioOeffnungen';
 function oeffnungen() { const j = Date.now(); return (store.get(ZAEHL, []) || []).filter(t => j - t < 864e5); }
 async function schluesselOk(code) { try { const zug = await (await fetch('../agent/zugang.json?t=' + Date.now(), { cache: 'no-store' })).json(); return !!(await sdZugang.oeffnen(zug, code)); } catch (e) { return false; } }
-function zaehlerZeigen() { const n = $('kont'); if (S.frei) { n.textContent = '🔓 Unbegrenzt'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } const rest = Math.max(0, FREI - oeffnungen().length); n.textContent = '🎟 ' + rest + '/' + FREI + ' heute'; n.title = 'Ohne Zugangsschlüssel kannst du das Code-Studio ' + FREI + '× in 24 Stunden öffnen. Klick: Schlüssel eingeben'; }
+function zaehlerZeigen() { const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (S.frei) { n.textContent = '🔓 Unbegrenzt'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } const rest = Math.max(0, FREI - oeffnungen().length); n.textContent = '🎟 ' + rest + '/' + FREI + ' heute'; n.title = 'Ohne Zugangsschlüssel kannst du das Code-Studio ' + FREI + '× in 24 Stunden öffnen. Klick: Schlüssel eingeben'; }
 async function zugangPruefen() {
   const gemerkt = (() => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang'); } catch (e) { return null; } })();
   if (gemerkt && await schluesselOk(gemerkt)) { S.frei = true; return true; }
