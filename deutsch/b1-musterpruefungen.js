@@ -51,6 +51,42 @@ const letters=[
 const talk=['Ein gemeinsamer Ausflug','Eine Geburtstagsfeier','Ein Besuch bei Freunden','Ein Lerntreffen','Ein Sportnachmittag'];
 const opinions=['Sollten Jugendliche täglich Sport treiben?','Sind öffentliche Verkehrsmittel besser als das Auto?','Sollte man lieber online oder im Geschäft einkaufen?','Sind gemeinsame Mahlzeiten in Familien wichtig?','Sollten Schulen mehr digitale Medien nutzen?'];
 const formalSituations=['Du kannst einen Termin bei einer Beratungsstelle nicht wahrnehmen.','Du hast einen Kurs gebucht, musst aber kurzfristig absagen.','Du hast eine Einladung zu einem Vorstellungsgespräch erhalten, bist aber verhindert.','Du hast einen Besichtigungstermin für eine Wohnung verpasst.','Du kannst an einem Elternabend nicht teilnehmen.'];
+const listeningScenes=[
+ ['Bahnhof','Guten Tag, hier ist die Reiseauskunft. Der Regionalzug nach Mannheim fährt heute ausnahmsweise von Gleis sieben statt Gleis vier. Wegen Bauarbeiten kann sich die Ankunft um ungefähr zehn Minuten verspäten. Bitte achten Sie auf die Anzeigen am Bahnsteig.'],
+ ['Kursanmeldung','Guten Morgen, Frau Kaya. Sie hatten nach dem Abendkurs gefragt. Der Kurs beginnt am 14. April, jeweils montags und mittwochs um 18 Uhr. Bitte bringen Sie zum ersten Termin Ihren Ausweis und einen Stift mit. Die Kursgebühr können Sie auch in zwei Raten bezahlen.'],
+ ['Arbeit','Hallo Samir, ich bin es, Jana. Unser Treffen mit dem Kunden findet nicht um neun, sondern um halb elf statt. Wir sehen uns direkt im Besprechungsraum im zweiten Stock. Bitte bring die aktuellen Unterlagen mit. Ruf mich an, falls du später kommst.'],
+ ['Stadtfest','Liebe Besucherinnen und Besucher, das Stadtfest beginnt am Samstag um elf Uhr auf dem Marktplatz. Das Kinderprogramm findet im Park statt. Wegen der Wettervorhersage wird das Konzert am Abend in die Stadthalle verlegt. Der Eintritt ist überall frei.'],
+ ['Arzttermin','Guten Tag, hier spricht die Praxis Berger. Wir müssen Ihren Termin am Donnerstag leider verschieben. Wir können Ihnen stattdessen Freitag um 10:15 Uhr anbieten. Bitte bestätigen Sie den neuen Termin telefonisch bis morgen Mittag. Vielen Dank.'],
+ ['Wohnung','Guten Abend, Frau Weber. Die Besichtigung in der Lindenstraße findet morgen um 17 Uhr statt. Der Vermieter erwartet Sie am Hauseingang. Die Wohnung liegt im dritten Stock. Bitte bringen Sie keine Unterlagen mit; wir besprechen alles zunächst vor Ort.'],
+ ['Schule','Liebe Eltern, am kommenden Dienstag findet unser Informationsabend statt. Wir beginnen um 19 Uhr in der Aula. Es geht um die Klassenfahrt im Juni und die Kosten. Eine Anmeldung ist nicht nötig, aber wir freuen uns über eine kurze Nachricht, wenn Sie nicht kommen können.'],
+ ['Einkauf','Guten Tag und willkommen in unserem Kaufhaus. Heute erhalten Sie auf alle Winterjacken zwanzig Prozent Rabatt. Die Aktion gilt nur bis 18 Uhr. Bitte beachten Sie, dass reduzierte Waren ausschließlich an der Kasse im Erdgeschoss bezahlt werden können.'],
+ ['Freizeit','Hallo Lea, möchtest du am Sonntag mit uns wandern gehen? Wir treffen uns um neun Uhr am Bahnhof und fahren gemeinsam mit dem Bus. Nimm bitte etwas zu trinken und eine Regenjacke mit. Wenn es stark regnet, gehen wir stattdessen ins Museum.'],
+ ['Verein','Liebe Mitglieder, die Mitgliederversammlung wird auf den nächsten Freitag verschoben. Beginn ist um 18:30 Uhr im Gemeinschaftshaus. Wir sprechen über neue Projekte und wählen einen Vorstand. Wer nicht kommen kann, darf Vorschläge per E-Mail schicken.']
+];
+const listeningPrompts=[
+ ['Wovon handelt die Durchsage?','Was ändert sich?','Was sollen die Fahrgäste beachten?'],
+ ['Wann beginnt der Kurs?','An welchen Tagen findet der Kurs statt?','Was soll man mitbringen?'],
+ ['Wann findet das Treffen statt?','Wo trifft sich das Team?','Was soll Samir mitbringen?'],
+ ['Wo findet das Abendkonzert statt?','Wann beginnt das Fest?','Was kostet der Eintritt?'],
+ ['Welcher neue Termin wird angeboten?','Was sollen die Patienten tun?','Wer ruft an?'],
+ ['Wann ist die Besichtigung?','Wo wartet der Vermieter?','Was muss man mitbringen?'],
+ ['Wann beginnt der Elternabend?','Wo findet er statt?','Worum geht es?'],
+ ['Welche Waren sind reduziert?','Wie hoch ist der Rabatt?','Wo bezahlt man?'],
+ ['Wo ist der Treffpunkt?','Was sollen die Teilnehmer mitnehmen?','Was passiert bei starkem Regen?'],
+ ['Wann ist die Versammlung?','Wo findet sie statt?','Was können Abwesende tun?']
+];
+const listeningAnswers=[
+ [['Eine Zugänderung','Ein neues Restaurant','Eine Schulprüfung'],['Das Gleis','Der Ticketpreis','Der Bahnhof'],['Die Anzeigen am Bahnsteig','Die Speisekarte','Den Wetterbericht']],
+ [['Am 14. April','Am 14. Mai','Am 4. April'],['Montags und mittwochs','Dienstags und donnerstags','Nur samstags'],['Ausweis und Stift','Laptop und Kopfhörer','Sportkleidung']],
+ [['Um halb elf','Um neun','Um zwölf'],['Im zweiten Stock','Im Erdgeschoss','Am Bahnhof'],['Aktuelle Unterlagen','Einen Kuchen','Seinen Reisepass']],
+ [['In der Stadthalle','Im Park','Auf dem Marktplatz'],['Um elf Uhr','Um acht Uhr','Um 19 Uhr'],['Nichts','Fünf Euro','Zehn Euro']],
+ [['Freitag um 10:15 Uhr','Donnerstag um 10:15 Uhr','Freitag um 15 Uhr'],['Telefonisch bestätigen','Persönlich vorbeikommen','Eine Rechnung bezahlen'],['Eine Arztpraxis','Eine Schule','Ein Geschäft']],
+ [['Morgen um 17 Uhr','Heute um 17 Uhr','Morgen um 19 Uhr'],['Am Hauseingang','In der Küche','An der Bushaltestelle'],['Keine Unterlagen','Eine Gehaltsabrechnung','Ein Passfoto']],
+ [['Um 19 Uhr','Um 17 Uhr','Um 20 Uhr'],['In der Aula','Im Park','In der Mensa'],['Um eine Klassenfahrt','Um einen Umzug','Um ein Sportfest']],
+ [['Winterjacken','Schuhe','Schulbücher'],['Zwanzig Prozent','Zehn Prozent','Dreißig Prozent'],['Im Erdgeschoss','Im ersten Stock','Online']],
+ [['Am Bahnhof','Am Rathaus','Im Museum'],['Getränk und Regenjacke','Fahrrad und Helm','Laptop und Heft'],['Sie gehen ins Museum','Sie bleiben im Bahnhof','Sie fahren ans Meer']],
+ [['Am Freitag','Am Montag','Am Mittwoch'],['Im Gemeinschaftshaus','Im Rathaus','In der Schule'],['Vorschläge per E-Mail schicken','Nur telefonisch abstimmen','Nichts mitteilen']]
+];
 const grammar=[
  ['Ich freue mich ___ deine Nachricht.',['auf','an','mit'],0],
  ['Wir treffen uns ___ Samstag.',['am','im','um'],0],
@@ -86,6 +122,13 @@ function items(section){
        const gr=grammar[(n+(set-1)*4)%grammar.length],correct=gr[1][0],options=gr[1].slice(),pos=(n+set)%3;
        options[0]=options[pos];options[pos]=correct;
        result.push({g,j,q:gr[0],options,answer:pos,passage:'Ergänzen Sie die Lücke im Satz.',kind:kinds[g]});
+       continue;
+     }
+     if(id==='hoeren'){
+       const sceneIndex=(g*2+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
+       const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
+       const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
+       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],kind:kinds[g]});
        continue;
      }
      const isBinary=(exam==='goethe'&&((id==='lesen'&&(g===0||g===3))||(id==='hoeren'&&(g===0&&j%2===0||g===2))))||(exam==='telc'&&id==='hoeren');
