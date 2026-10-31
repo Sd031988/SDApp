@@ -123,11 +123,12 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  '<button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button>'+
- '<p class="b1x-note">Die schriftlichen Antworten bleiben auf diesem Gerät. Audio nutzt standardmäßig die lokale Sprachausgabe des Browsers. Die mündliche Prüfung ist eine Selbstübung ohne Prüfer. Manche Aufgabenarten (insbesondere Zuordnung und längere zusammenhängende Hörtexte) sind noch vereinfacht. Keine offizielle Bewertung.</p>');
+ '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 Gespeicherte B1-Antworten löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
  root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{running=false;start(Number(b.dataset.part));});
  el('b1x-start').onclick=()=>{running=true;results={};start(0);};
+ if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Übungsergebnisse löschen?')){localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');alert('Die lokal gespeicherten B1-Ergebnisse wurden gelöscht.');}};
 }
 function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];deadline=began+(p[2]||30)*60000;question();}
 function speak(t){
