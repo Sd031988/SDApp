@@ -44,12 +44,12 @@
   );
   const labels = {lesen:'📖 Lesen',hoeren:'🎧 Hören',schreiben:'✍️ Schreiben',sprechen:'🎤 Sprechen'};
   const duration = {goethe:{lesen:65,hoeren:40,schreiben:60,sprechen:15},telc:{lesen:90,hoeren:30,schreiben:30,sprechen:15},dtz:{lesen:45,hoeren:25,schreiben:30,sprechen:16}};
-  let exam = 'goethe', part = null, index = 0, answers = [], started = 0, timer = null, root = null, previous = null, mode = 'practice', setNumber = 1, setResults = {};
+  let exam = 'goethe', part = null, index = 0, answers = [], started = 0, timer = null, root = null, previous = null, mode = 'practice', setNumber = 1, setResults = {}, fullRun = false;
   const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const $ = id => document.getElementById(id);
   function clearTimer(){ if(timer){clearInterval(timer);timer=null;} }
   function close(){
-    clearTimer();
+    fullRun=false;clearTimer();
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     if(root) root.remove(); root=null;
     if(previous) previous.style.display='';
@@ -74,15 +74,17 @@
     overview();
   }
   function overview(){
-    part=null; clearTimer();
+    part=null; fullRun=false; clearTimer();
     layout('<h2>Prüfung auswählen</h2><p class="b1-muted">Eigene Übungsaufgaben zur Vorbereitung, keine offiziellen Prüfungsfragen.</p>'+
       '<div class="b1-options">'+Object.entries(EXAMS).map(([id,e])=>'<button class="b1-choice '+(exam===id?'selected':'')+'" data-exam="'+id+'"><b>'+esc(e.name)+'</b><small>'+esc(e.desc)+'</small></button>').join('')+'</div>'+
       '<h3>Fünf Mustersätze</h3><div class="b1-grid">'+[1,2,3,4,5].map(n=>'<button class="b1-choice '+(setNumber===n?'selected':'')+'" data-set="'+n+'"><b>📋 Muster '+n+'</b><small>'+(n===1&&exam==='dtz'?'DTZ: vollständige Anzahl an Lese- und Höraufgaben':'Aufgabenaufbau in Arbeit')+'</small></button>').join('')+'</div>'+ 
+      (exam==='dtz'&&setNumber===1?'<button class="b1-next" id="b1-full">▶ DTZ-Muster 1 durchgehend üben (Beta)</button>':'')+
       '<h3>Prüfungsteil üben</h3><div class="b1-grid">'+Object.entries(labels).map(([id,label])=>'<button class="b1-choice" data-part="'+id+'"><b>'+label+'</b><small>'+TASKS[id].length+' eigene Aufgaben · '+duration[exam][id]+' Min. Prüfungszeit (Orientierung)</small></button>').join('')+'</div>'+
       '<p class="b1-muted">Unabhängiges Training mit selbst erstellten Aufgaben. Keine offizielle Prüfung, kein Zertifikat. Nur DTZ Muster 1 hat bereits 25 Lese- und 20 Hörfragen; andere Muster und authentische Aufgabentypen sind noch in Arbeit. Antworten werden lokal gespeichert. Bei Hörtexten wird der Text an den eingestellten Sprachserver übertragen.</p>');
+    if($('b1-full')) $('b1-full').onclick=()=>{fullRun=true;setResults={};part='hoeren';index=0;answers=[];started=Date.now();question();};
     root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;setNumber=1;overview();});
     root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{setNumber=Number(b.dataset.set);overview();});
-    root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{if(setNumber!==1 || exam!=='dtz'){alert('Dieser Mustersatz wird noch erstellt. Der erste DTZ-Satz ist bereits als Übung verfügbar.');return;}part=b.dataset.part;index=0;answers=[];started=Date.now();question();});
+    root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{if(setNumber!==1 || exam!=='dtz'){alert('Dieser Mustersatz wird noch erstellt. Der erste DTZ-Satz ist bereits als Übung verfügbar.');return;}fullRun=false;part=b.dataset.part;index=0;answers=[];started=Date.now();question();});
   }
   function speak(text){
     if(!text) return;
@@ -140,9 +142,13 @@
       tasks.map((t,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(t.q)+'</p><small>Deine Antwort: '+esc(t.options[answers[i]])+'<br>Richtig: '+esc(t.options[t.answer])+'</small></div>').join(''):
       '<h2>Übungsblock abgeschlossen</h2><p>Deine Antwort wurde auf diesem Gerät gespeichert. Für Schreiben und Sprechen gibt es hier noch keine automatische Sprach- oder Textbewertung.</p>'+
       answers.map((a,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(a||'(Keine Antwort)')+'</p></div>').join('');
-    layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p>'+detail+
-      '<button class="b1-next" id="b1-again">Zur Prüfungsübersicht</button>');
-    $('b1-again').onclick=overview;
+    setResults[part]={correct,total:tasks.length,seconds:result.seconds};
+    const order=['hoeren','lesen','schreiben','sprechen'];
+    const next=fullRun?order[order.indexOf(part)+1]:null;
+    const progress=fullRun?'<p class="b1-muted">Durchgehender Übungslauf: '+order.map(k=>(setResults[k]?'✓ ':'○ ')+labels[k]).join(' · ')+'</p>':'';
+    layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p>'+progress+detail+
+      '<button class="b1-next" id="b1-again">'+(next?'Weiter zu '+labels[next]:'Zur Prüfungsübersicht')+'</button>');
+    $('b1-again').onclick=()=>{if(next){part=next;index=0;answers=[];started=Date.now();question();}else overview();};
   }
   function attach(){
     if(root) return;
