@@ -40,6 +40,30 @@ const themes=[
  ['Termin','Die Beratungsstelle bittet Besucher, Termine vorab online zu buchen. Ohne Termin ist nur eine kurze Auskunft möglich.','Was wird empfohlen?','Online einen Termin buchen','Einfach vorbeikommen','Nur Briefe schreiben'],
  ['Ausflug','Die Wandergruppe fährt am Sonntag mit dem Zug in die Berge. Treffpunkt ist um 7:30 Uhr am Bahnhof.','Wie reist die Gruppe?','Mit dem Zug','Mit dem Flugzeug','Mit dem Schiff']
 ];
+const matchingOffers=[
+ ['A','Sprachcafé am Mittwoch','Kostenlos Deutsch sprechen, ohne Anmeldung. In der Stadtbibliothek ab 17 Uhr.'],
+ ['B','Fahrradwerkstatt','Reparatur und Beratung für Fahrräder. Dienstags nachmittags, Ersatzteile kosten extra.'],
+ ['C','Kinderbetreuung am Abend','Zuverlässige Betreuung für Kinder ab drei Jahren, auch freitags bis 22 Uhr.'],
+ ['D','Wohnung nahe Bahnhof','Zwei Zimmer, zehn Minuten zu Fuß vom Bahnhof, ab sofort frei.'],
+ ['E','Computerhilfe für Senioren','Geduldige Einführung in Smartphone und E-Mail, jeden Samstag kostenlos.'],
+ ['F','Schwimmkurs für Anfänger','Abendkurs für Erwachsene, donnerstags um 18 Uhr im Hallenbad.'],
+ ['G','Musikunterricht','Gitarrenunterricht für Erwachsene, montags nach der Arbeit.'],
+ ['H','Gemeinschaftsgarten','Gemeinsam Gemüse anbauen, Treffen samstags um 10 Uhr.'],
+ ['I','Beruflicher Buchhaltungskurs','Kurs am Abend, zweimal pro Woche, mit Teilnahmebescheinigung.'],
+ ['J','Wandergruppe','Sonntags gemeinsam wandern, Treffpunkt am Hauptbahnhof.']
+];
+const matchingNeeds=[
+ ['Du möchtest ohne Anmeldung Deutsch mit anderen Menschen üben.','A'],
+ ['Dein Fahrrad ist kaputt. Du hast am Dienstag Zeit.','B'],
+ ['Du brauchst am Freitagabend jemanden, der auf dein vierjähriges Kind aufpasst.','C'],
+ ['Du suchst eine kleine Wohnung, von der aus du zu Fuß zum Bahnhof gehen kannst.','D'],
+ ['Deine Großmutter möchte lernen, wie man E-Mails verschickt.','E'],
+ ['Du kannst noch nicht schwimmen und hast donnerstags abends Zeit.','F'],
+ ['Du arbeitest tagsüber und möchtest Gitarre lernen.','G'],
+ ['Du möchtest am Samstag gemeinsam mit anderen Gemüse anbauen.','H'],
+ ['Du willst nach der Arbeit Buchhaltung lernen.','I'],
+ ['Du möchtest am Sonntag mit einer Gruppe draußen unterwegs sein.','J']
+];
 const readingTexts=[
  ['Wohnungssuche','Seit drei Monaten sucht Lara eine größere Wohnung. Sie arbeitet im Krankenhaus und möchte deshalb nicht weit von der Arbeit entfernt wohnen. Gestern hat sie eine Wohnung besichtigt, die hell und ruhig ist. Die Miete passt zu ihrem Budget, aber die Bushaltestelle liegt zwanzig Minuten zu Fuß entfernt. Lara möchte deshalb vor ihrer Entscheidung noch prüfen, wie sie abends nach Hause kommt.','Was möchte Lara vor ihrer Entscheidung prüfen?','Die Verbindung am Abend','Die Öffnungszeiten des Krankenhauses','Die Farbe der Wände'],
  ['Freiwilligenarbeit','Im Nachbarschaftszentrum helfen jeden Samstag Freiwillige älteren Menschen beim Umgang mit Smartphones. Wer teilnehmen möchte, muss kein eigenes Gerät besitzen, denn das Zentrum stellt einige Geräte bereit. Die Beratung ist kostenlos. Weil die Plätze begrenzt sind, ist eine Anmeldung bis Donnerstag erforderlich.','Was müssen Interessierte tun?','Sich bis Donnerstag anmelden','Ein neues Smartphone kaufen','Am Freitag bezahlen'],
@@ -146,6 +170,15 @@ function items(section){
        const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
        result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],kind:kinds[g]});
+       continue;
+     }
+     if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&(g===0||g===2))||(exam==='dtz'&&g===2))){
+       const needsIndex=(j+(set-1)*3+g)%matchingNeeds.length,need=matchingNeeds[needsIndex];
+       const offerStart=(needsIndex+matchingOffers.length-2)%matchingOffers.length;
+       const offers=[matchingOffers[offerStart],matchingOffers[needsIndex],matchingOffers[(needsIndex+2)%matchingOffers.length]];
+       const options=offers.map(o=>o[0]+' · '+o[1]),answer=1;
+       const passage='Welche Anzeige passt zu dieser Situation?\\n\\n'+offers.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
+       result.push({g,j,q:need[0],options,answer,passage,kind:'Anzeigen zuordnen'});
        continue;
      }
      if(id==='lesen'){
