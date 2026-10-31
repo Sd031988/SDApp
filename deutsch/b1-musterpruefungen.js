@@ -176,8 +176,8 @@ function items(section){
        const needsIndex=(j+(set-1)*3+g)%matchingNeeds.length,need=matchingNeeds[needsIndex];
        const offerStart=(needsIndex+matchingOffers.length-2)%matchingOffers.length;
        const offers=[matchingOffers[offerStart],matchingOffers[needsIndex],matchingOffers[(needsIndex+2)%matchingOffers.length]];
-       const options=offers.map(o=>o[0]+' · '+o[1]),answer=1;
-       const passage='Welche Anzeige passt zu dieser Situation?\\n\\n'+offers.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
+       const correctOffer=offers[1];const rotated=offers.slice((j+set)%3).concat(offers.slice(0,(j+set)%3));const options=rotated.map(o=>o[0]+' · '+o[1]),answer=rotated.indexOf(correctOffer);
+       const passage='Welche Anzeige passt zu dieser Situation?\\n\\n'+rotated.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
        result.push({g,j,q:need[0],options,answer,passage,kind:'Anzeigen zuordnen'});
        continue;
      }
