@@ -210,13 +210,17 @@ function finish(){
  const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000)};
  results[p[0]]=record;
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
- const text=auto?'<h2>'+correct+' / '+list.length+' richtig</h2><p>Nur diese Übungsfragen wurden automatisch ausgewertet. Das Ergebnis ist keine offizielle Prüfungsnote.</p>':
- '<h2>Prüfungsteil beendet</h2><p>Für '+esc(p[1])+' ist eine Bewertung durch eine qualifizierte Person erforderlich. Es wurde keine automatische B1-Einstufung vorgenommen.</p>';
  const next=running&&part+1<E[exam].parts.length;
  const completed=running&&!next;
+ const text=running&&next?
+  '<h2>Prüfungsteil abgeschlossen</h2><p>Deine Antworten wurden gespeichert. Im Prüfungsmodus zeigen wir Lösungen und Punkte erst nach dem letzten Prüfungsteil.</p>':
+  auto?'<h2>'+correct+' / '+list.length+' richtig</h2><p>Nur diese Übungsfragen wurden automatisch ausgewertet. Das Ergebnis ist keine offizielle Prüfungsnote.</p>':
+  '<h2>Prüfungsteil beendet</h2><p>Für '+esc(p[1])+' ist eine Bewertung durch eine qualifizierte Person erforderlich. Es wurde keine automatische B1-Einstufung vorgenommen.</p>';
  const summary=completed?'<h3>Gesamtübersicht – Muster '+set+'</h3><div class="b1x-passage">'+E[exam].parts.map(x=>{const z=results[x[0]];return '<p><b>'+esc(x[1])+':</b> '+(z?(z.correct===null?'Bearbeitet, manuelle Bewertung erforderlich':z.correct+' / '+z.total+' richtige Antworten'):'Nicht bearbeitet')+'</p>';}).join('')+'</div><p class="b1x-note">Keine offizielle Gesamtpunktzahl oder Bestehensentscheidung. Schreiben und Sprechen müssen fachlich beurteilt werden.</p>':'';
- view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+
- '<div class="b1x-passage">'+(auto?list.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>'+
+ const review=running&&next?'':completed?
+  E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[z.answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>';}).join(''):
+  '<div class="b1x-passage">'+(auto?list.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>';
+ view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+review+
  '<button id="b1x-continue" class="b1x-primary">'+(next?'Weiter: '+esc(E[exam].parts[part+1][1]):'Zur Übersicht')+'</button>');
  el('b1x-continue').onclick=()=>next?start(part+1):home();
 }
