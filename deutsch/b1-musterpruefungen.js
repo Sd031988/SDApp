@@ -5,8 +5,8 @@
 (()=>{'use strict';
 const E={
  goethe:{name:'Goethe-Zertifikat B1 – Übung',parts:[['lesen','Lesen',65,[6,6,7,7,4],['Richtig/Falsch','Mehrfachauswahl','Zuordnung','Ja/Nein','Mehrfachauswahl']],['hoeren','Hören',40,[10,5,7,8],['Richtig/Falsch und Auswahl','Mehrfachauswahl','Richtig/Falsch','Sprecher zuordnen']],['schreiben','Schreiben',60,[1,1,1],['Private E-Mail','Diskussionsbeitrag','Formelle E-Mail']],['sprechen','Sprechen',15,[1,1,1],['Gemeinsam planen','Ein Thema präsentieren','Auf Fragen reagieren']]]},
- telc:{name:'telc Deutsch B1 – Übung',parts:[['lesen','Lesen',90,[5,5,10],['Zuordnung','Detailverstehen','Selektives Lesen']],['sprach','Sprachbausteine',0,[10,10],['Lückentext','Wortwahl']],['hoeren','Hören',30,[5,10,5],['Globalverstehen','Detailverstehen','Selektives Verstehen']],['schreiben','Schreiben',30,[1],['E-Mail']],['sprechen','Sprechen',15,[1,1,1],['Kennenlernen','Über ein Thema sprechen','Gemeinsam planen']]]},
- dtz:{name:'Deutsch-Test für Zuwanderer (DTZ) – Übung',parts:[['hoeren','Hören',25,[4,5,6,5],['Ansagen','Kurze Gespräche','Informationen','Meinungen']],['lesen','Lesen',45,[5,5,5,5,5],['Anzeigen','Informationen','Zuordnung','Mitteilungen','Anweisungen']],['schreiben','Schreiben',30,[1],['Brief / E-Mail']],['sprechen','Sprechen',20,[1,1,1],['Sich vorstellen','Über Erfahrungen sprechen','Gemeinsam etwas planen']]]}
+ telc:{name:'telc Deutsch B1 – Übung',parts:[['lesen','Lesen',90,[5,5,10],['Zuordnung','Detailverstehen','Selektives Lesen']],['sprach','Sprachbausteine',90,[10,10],['Lückentext','Wortwahl']],['hoeren','Hören',30,[5,10,5],['Globalverstehen','Detailverstehen','Selektives Verstehen']],['schreiben','Schreiben',30,[1],['E-Mail']],['sprechen','Sprechen',15,[1,1,1],['Kennenlernen','Über ein Thema sprechen','Gemeinsam planen']]]},
+ dtz:{name:'Deutsch-Test für Zuwanderer (DTZ) – Übung',parts:[['hoeren','Hören',25,[4,5,6,5],['Ansagen','Kurze Gespräche','Informationen','Meinungen']],['lesen','Lesen',45,[5,5,5,5,5],['Anzeigen','Informationen','Zuordnung','Mitteilungen','Anweisungen']],['schreiben','Schreiben',30,[1],['Brief / E-Mail']],['sprechen','Sprechen',16,[1,1,1],['Sich vorstellen','Über Erfahrungen sprechen','Gemeinsam etwas planen']]]}
 };
 const themes=[
  ['Bibliothek','Die Stadtbibliothek öffnet ab Montag um neun Uhr. Am Mittwoch ist sie wegen einer Schulung geschlossen. Bücher können online verlängert werden.','Wann bleibt die Bibliothek geschlossen?','Am Mittwoch','Am Montag','Am Freitag'],
@@ -49,20 +49,49 @@ const letters=[
  ['Du suchst eine Wohnung und möchtest einen Besichtigungstermin vereinbaren.','Stelle dich kurz vor, frage nach dem Termin und nach den Nebenkosten.']
 ];
 const talk=['Ein gemeinsamer Ausflug','Eine Geburtstagsfeier','Ein Besuch bei Freunden','Ein Lerntreffen','Ein Sportnachmittag'];
+const grammar=[
+ ['Ich freue mich ___ deine Nachricht.',['auf','an','mit'],0],
+ ['Wir treffen uns ___ Samstag.',['am','im','um'],0],
+ ['Sie hat gestern lange ___.',['gearbeitet','arbeiten','arbeitet'],0],
+ ['Könnten Sie mir bitte ___?',['helfen','hilft','geholfen'],0],
+ ['Er bleibt zu Hause, ___ er krank ist.',['weil','trotzdem','deshalb'],0],
+ ['Ich interessiere mich ___ diesen Kurs.',['für','von','nach'],0],
+ ['Wenn ich Zeit habe, ___ ich dich an.',['rufe','rufen','ruft'],0],
+ ['Wir haben ___ neuen Nachbarn kennengelernt.',['einen','ein','einem'],0],
+ ['Ich warte schon seit einer Stunde ___ den Bus.',['auf','mit','bei'],0],
+ ['Sie möchte wissen, ___ der Kurs beginnt.',['wann','denn','dass'],0],
+ ['Der Brief wurde gestern ___.',['geschickt','schicken','schickt'],0],
+ ['Obwohl es regnet, ___ wir spazieren.',['gehen','gingen','geht'],0],
+ ['Er hat vergessen, die Tür ___.',['abzuschließen','abschließen','abschließt'],0],
+ ['Ich würde gern einen Termin ___.',['vereinbaren','vereinbart','vereinbarte'],0],
+ ['Die Frau, ___ dort steht, ist meine Lehrerin.',['die','der','das'],0],
+ ['Seit ___ Jahr lerne ich Deutsch.',['einem','ein','einen'],0],
+ ['Bitte melden Sie sich ___ Freitag an.',['bis','nachdem','während'],0],
+ ['Sie ist müde, ___ sie hat gut gearbeitet.',['aber','weil','dass'],0],
+ ['Ich habe mich ___ den Fehler entschuldigt.',['für','über','zu'],0],
+ ['Er fragte, ___ ich morgen kommen kann.',['ob','weil','denn'],0]
+];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el=id=>document.getElementById(id);
-let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0;
+let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0,plays=0;
 const k=(n,s)=>themes[(n+s*7)%themes.length];
 function items(section){
  const [id,,minutes,groups,kinds]=section;const result=[];
  groups.forEach((count,g)=>{for(let j=0;j<count;j++){
    const n=result.length,base=k(n+g*3,set-1),shift=(n+set)%3;
    if(id==='lesen'||id==='hoeren'||id==='sprach'){
-     const isBinary=(exam==='goethe'&&((id==='lesen'&&(g===0||g===3))||(id==='hoeren'&&(g===0&&j%2===0||g===2))))||(exam==='telc'&&id==='hoeren'&&g===0);
+     if(id==='sprach'){
+       const gr=grammar[(n+(set-1)*4)%grammar.length],correct=gr[1][0],options=gr[1].slice(),pos=(n+set)%3;
+       options[0]=options[pos];options[pos]=correct;
+       result.push({g,j,q:gr[0],options,answer:pos,passage:'Ergänzen Sie die Lücke im Satz.',kind:kinds[g]});
+       continue;
+     }
+     const isBinary=(exam==='goethe'&&((id==='lesen'&&(g===0||g===3))||(id==='hoeren'&&(g===0&&j%2===0||g===2))))||(exam==='telc'&&id==='hoeren');
      const options=isBinary?['Richtig','Falsch']:[base[3],base[4],base[5]];
-     const answer=isBinary?0:shift;
+     const truth=(n+set)%2===0;
+     const answer=isBinary?(truth?0:1):shift;
      if(!isBinary) {const correct=options[0];options[0]=options[shift];options[shift]=correct;}
-     const q=isBinary?'Die Information lautet: '+base[3]+'.':id==='sprach'?'Welche Ergänzung passt zum Text?':base[2];
+     const q=isBinary?'Aussage: '+(truth?base[3]:base[4])+'.':base[2];
      const passage=(contexts[(n+set)%contexts.length]+': '+base[1]);
      result.push({g,j,q,options,answer,passage,audio:passage,kind:kinds[g],binary:isBinary});
    } else if(id==='schreiben'){
@@ -89,18 +118,18 @@ function open(){
 }
 function home(){
  clear();running=false;
- view('<h2>Prüfung auswählen</h2><p class="b1x-note">Unabhängiges Übungsmaterial. Keine offizielle Prüfung, kein offizielles Zertifikat. Die Aufgaben sind eigens erstellt und orientieren sich am Aufbau der Prüfungen.</p>'+
+ view('<h2>Prüfung auswählen</h2><p class="b1x-note">Unabhängiges Übungsmaterial. Keine offizielle Prüfung, kein offizielles Zertifikat. Die Aufgaben sind eigens erstellt und orientieren sich an der Anzahl der Prüfungsteile. Es handelt sich um Übungsentwürfe, nicht um originalgetreue Prüfungssimulationen.</p>'+
  '<div class="b1x-grid">'+Object.entries(E).map(([id,e])=>'<button data-exam="'+id+'" class="b1x-card '+(exam===id?'active':'')+'"><b>'+esc(e.name)+'</b></button>').join('')+'</div>'+
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  '<button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button>'+
- '<p class="b1x-note">Die schriftlichen Antworten bleiben auf diesem Gerät. Audio nutzt standardmäßig die lokale Sprachausgabe des Browsers. Die mündliche Prüfung ist eine Selbstübung ohne Prüfer. Keine offizielle Bewertung.</p>');
+ '<p class="b1x-note">Die schriftlichen Antworten bleiben auf diesem Gerät. Audio nutzt standardmäßig die lokale Sprachausgabe des Browsers. Die mündliche Prüfung ist eine Selbstübung ohne Prüfer. Manche Aufgabenarten (insbesondere Zuordnung und längere zusammenhängende Hörtexte) sind noch vereinfacht. Keine offizielle Bewertung.</p>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
  root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{running=false;start(Number(b.dataset.part));});
  el('b1x-start').onclick=()=>{running=true;results={};start(0);};
 }
-function start(i){clear();part=i;idx=0;answers=[];began=Date.now();const p=E[exam].parts[i];deadline=began+(p[2]||30)*60000;question();}
+function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];deadline=began+(p[2]||30)*60000;question();}
 function speak(t){
  if(!('speechSynthesis'in window)){alert('Dein Browser unterstützt diese Sprachausgabe nicht.');return;}
  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.87;speechSynthesis.speak(u);
@@ -117,7 +146,7 @@ function question(){
  '<div class="b1x-meta"><span id="b1x-clock">⏱ '+p[2]+':00</span><span>'+Math.round(idx/list.length*100)+' %</span></div>'+
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
- if(el('b1x-audio'))el('b1x-audio').onclick=()=>speak(t.audio);
+ if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio);};}
  if(el('b1x-text'))el('b1x-text').oninput=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';};
  el('b1x-next').onclick=()=>{
   let val;
@@ -125,7 +154,7 @@ function question(){
    const c=root.querySelector('input[name="b1x-answer"]:checked');
    if(!c){alert('Bitte wähle eine Antwort.');return;}val=Number(c.value);
   }else val=el('b1x-text').value.trim();
-  answers.push(val);idx++;question();
+  answers.push(val);idx++;plays=0;question();
  };
  tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent='⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0){clear();finish();}},1000);
 }
