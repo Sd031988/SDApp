@@ -44,7 +44,7 @@
   );
   const labels = {lesen:'📖 Lesen',hoeren:'🎧 Hören',schreiben:'✍️ Schreiben',sprechen:'🎤 Sprechen'};
   const duration = {goethe:{lesen:65,hoeren:40,schreiben:60,sprechen:15},telc:{lesen:90,hoeren:30,schreiben:30,sprechen:15},dtz:{lesen:45,hoeren:25,schreiben:30,sprechen:16}};
-  let exam = 'goethe', part = null, index = 0, answers = [], started = 0, timer = null, root = null, previous = null, mode = 'practice';
+  let exam = 'goethe', part = null, index = 0, answers = [], started = 0, timer = null, root = null, previous = null, mode = 'practice', setNumber = 1, setResults = {};
   const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const $ = id => document.getElementById(id);
   function clearTimer(){ if(timer){clearInterval(timer);timer=null;} }
@@ -77,10 +77,12 @@
     part=null; clearTimer();
     layout('<h2>Prüfung auswählen</h2><p class="b1-muted">Eigene Übungsaufgaben zur Vorbereitung, keine offiziellen Prüfungsfragen.</p>'+
       '<div class="b1-options">'+Object.entries(EXAMS).map(([id,e])=>'<button class="b1-choice '+(exam===id?'selected':'')+'" data-exam="'+id+'"><b>'+esc(e.name)+'</b><small>'+esc(e.desc)+'</small></button>').join('')+'</div>'+
+      '<h3>Fünf Mustersätze</h3><div class="b1-grid">'+[1,2,3,4,5].map(n=>'<button class="b1-choice '+(setNumber===n?'selected':'')+'" data-set="'+n+'"><b>📋 Muster '+n+'</b><small>'+(n===1&&exam==='dtz'?'DTZ: vollständige Anzahl an Lese- und Höraufgaben':'Aufgabenaufbau in Arbeit')+'</small></button>').join('')+'</div>'+ 
       '<h3>Prüfungsteil üben</h3><div class="b1-grid">'+Object.entries(labels).map(([id,label])=>'<button class="b1-choice" data-part="'+id+'"><b>'+label+'</b><small>'+TASKS[id].length+' eigene Aufgaben · '+duration[exam][id]+' Min. Prüfungszeit (Orientierung)</small></button>').join('')+'</div>'+
-      '<p class="b1-muted">Eigene Aufgaben; keine offizielle Prüfung oder Zertifizierung. Die Zeitangaben orientieren sich an den Prüfungsformaten. Keine vollständige Prüfungssimulation.</p>');
-    root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;overview();});
-    root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{part=b.dataset.part;index=0;answers=[];started=Date.now();question();});
+      '<p class="b1-muted">Unabhängiges Training mit selbst erstellten Aufgaben. Keine offizielle Prüfung, kein Zertifikat. Nur DTZ Muster 1 hat bereits 25 Lese- und 20 Hörfragen; andere Muster und authentische Aufgabentypen sind noch in Arbeit. Antworten werden lokal gespeichert. Bei Hörtexten wird der Text an den eingestellten Sprachserver übertragen.</p>');
+    root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;setNumber=1;overview();});
+    root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{setNumber=Number(b.dataset.set);overview();});
+    root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{if(setNumber!==1 || exam!=='dtz'){alert('Dieser Mustersatz wird noch erstellt. Der erste DTZ-Satz ist bereits als Übung verfügbar.');return;}part=b.dataset.part;index=0;answers=[];started=Date.now();question();});
   }
   function speak(text){
     if(!text) return;
@@ -95,9 +97,10 @@
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);u.lang='de-DE';u.rate=.85;speechSynthesis.speak(u);
   }
+  function activeTasks(){return TASKS[part].slice(0,part==='lesen'?25:part==='hoeren'?20:part==='schreiben'?1:3);}
   function question(){
     clearTimer();
-    const tasks=TASKS[part], t=tasks[index];
+    const tasks=activeTasks(), t=tasks[index];
     if(!t){finish();return;}
     let input='';
     if(part==='lesen'||part==='hoeren'){
@@ -129,9 +132,9 @@
   }
   function finish(){
     clearTimer();
-    const tasks=TASKS[part], automatic=part==='lesen'||part==='hoeren';
+    const tasks=activeTasks(), automatic=part==='lesen'||part==='hoeren';
     const correct=automatic?answers.filter((a,i)=>a===tasks[i].answer).length:null;
-    const result={exam,part,date:new Date().toISOString(),correct,total:tasks.length,answers,seconds:Math.round((Date.now()-started)/1000)};
+    const result={exam,setNumber,part,date:new Date().toISOString(),correct,total:tasks.length,answers,seconds:Math.round((Date.now()-started)/1000)};
     try{const old=JSON.parse(localStorage.getItem('sdB1Pruefungen')||'[]');old.push(result);localStorage.setItem('sdB1Pruefungen',JSON.stringify(old.slice(-30)));}catch(_){}
     const detail=automatic?'<h2>'+correct+' von '+tasks.length+' richtig</h2><p>'+Math.round(correct/tasks.length*100)+' % in diesem Übungsblock</p>'+
       tasks.map((t,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(t.q)+'</p><small>Deine Antwort: '+esc(t.options[answers[i]])+'<br>Richtig: '+esc(t.options[t.answer])+'</small></div>').join(''):
