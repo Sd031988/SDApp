@@ -855,7 +855,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
@@ -879,6 +879,84 @@ async function formatieren() { if (!S.aktiv || !S.cm) return; const e = S.aktiv.
   catch (err) { toast('Formatieren ging nicht: ' + String(err.message || err).split('\n')[0].slice(0, 120)); } }
 
 /* ---------------- Design-Studio-Verbindung ---------------- */
+
+/* Visueller Website-Designer: Änderungen ausschließlich in einer Projektkopie. */
+function websiteDesignVorschlag(html, einstellungen) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const clean = value => String(value || '').trim().slice(0, 160);
+  const titel = clean(einstellungen.titel);
+  const ueberschrift = clean(einstellungen.ueberschrift);
+  const beschreibung = clean(einstellungen.beschreibung);
+  if (titel) doc.title = titel;
+  const h1 = doc.querySelector('h1');
+  if (h1 && ueberschrift) h1.textContent = ueberschrift;
+  const p = doc.querySelector('main p, section p, p');
+  if (p && beschreibung) p.textContent = beschreibung;
+  const farbe = String(einstellungen.farbe || '');
+  if (/^#[0-9a-fA-F]{6}$/.test(farbe)) {
+    const style = doc.createElement('style');
+    style.setAttribute('data-sd-visual-designer', 'true');
+    style.textContent = ':root{--sd-design-accent:' + farbe + ';} a,button{accent-color:var(--sd-design-accent)} button,[type="submit"]{background-color:var(--sd-design-accent);color:white}';
+    doc.head.appendChild(style);
+  }
+  return '<!doctype html>\n' + doc.documentElement.outerHTML;
+}
+async function visuellerWebsiteDesigner() {
+  if (!S.p) { alert('Bitte zuerst ein Webprojekt öffnen.'); return; }
+  const projekt = S.p;
+  try { await speichernJetzt(); } catch (e) { toast('Designer abgebrochen: Speichern fehlgeschlagen.'); return; }
+  if (S.p !== projekt) return;
+  const start = Object.keys(projekt.dateien).find(p => p === 'index.html') ||
+    Object.keys(projekt.dateien).find(p => /(^|\/)index\.html?$/i.test(p));
+  if (!start || istBinaer(projekt.dateien[start])) {
+    alert('Der visuelle Designer benötigt eine index.html-Datei.'); return;
+  }
+  const quelltext = projekt.dateien[start];
+  const doc = new DOMParser().parseFromString(quelltext, 'text/html');
+  const dialog = document.createElement('div');
+  dialog.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#000b;display:flex;align-items:center;justify-content:center;padding:16px';
+  const panel = document.createElement('section');
+  panel.style.cssText = 'width:min(1100px,96vw);max-height:94vh;overflow:auto;background:#211b36;color:white;border:1px solid #66578e;border-radius:16px;padding:20px;font:15px system-ui';
+  const heading = document.createElement('h2'); heading.textContent = '🎨 Visueller Website-Designer – Vorschau'; panel.appendChild(heading);
+  const hint = document.createElement('p'); hint.textContent = 'Bearbeite Texte und Akzentfarbe. Erst „Als neues Projekt speichern“ erstellt eine getrennte Kopie. Das Original bleibt unverändert.'; panel.appendChild(hint);
+  const fields = {};
+  const inputs = [
+    ['titel','Seitentitel',doc.title || projekt.name],
+    ['ueberschrift','Hauptüberschrift',doc.querySelector('h1')?.textContent || ''],
+    ['beschreibung','Beschreibung',doc.querySelector('main p, section p, p')?.textContent || ''],
+    ['farbe','Akzentfarbe','#6d28d9']
+  ];
+  for (const [key,label,value] of inputs) {
+    const wrap = document.createElement('label'); wrap.style.cssText='display:inline-flex;flex-direction:column;gap:5px;margin:6px;min-width:180px;max-width:100%';
+    wrap.append(document.createTextNode(label));
+    const input = document.createElement('input'); input.type = key === 'farbe' ? 'color' : 'text';
+    input.value = value; input.maxLength = 160;
+    input.style.cssText='background:#fff;color:#171325;border:1px solid #aaa;border-radius:7px;padding:9px';
+    wrap.appendChild(input); panel.appendChild(wrap); fields[key] = input;
+  }
+  const preview = document.createElement('iframe'); preview.title='Vorschau der Website'; preview.setAttribute('sandbox','');
+  preview.style.cssText='display:block;width:100%;height:min(48vh,520px);border:1px solid #888;border-radius:9px;background:white;margin:12px 0';
+  panel.appendChild(preview);
+  const buttons = document.createElement('div'); buttons.style.cssText='display:flex;gap:10px;flex-wrap:wrap';
+  const makeButton = (label,fn) => { const b=document.createElement('button'); b.type='button'; b.textContent=label; b.style.cssText='padding:11px 16px;border:0;border-radius:8px;cursor:pointer'; b.onclick=fn; buttons.appendChild(b); };
+  const settings = () => Object.fromEntries(Object.entries(fields).map(([key,input])=>[key,input.value]));
+  const render = () => { const result = websiteDesignVorschlag(quelltext,settings()); preview.srcdoc = result.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,'').replace(/<script\b[^>]*\/>/gi,''); };
+  for (const input of Object.values(fields)) input.addEventListener('input',render);
+  const close = () => dialog.remove();
+  makeButton('Abbrechen',close);
+  makeButton('Als neues Projekt speichern',async () => {
+    let basis = slug(projekt.name + '-design').slice(0,70), name=basis, i=2;
+    while (await projLesen(name)) name=basis+'-'+i++;
+    if (!confirm('Neue Projektkopie „'+name+'“ speichern? Das Original „'+projekt.name+'“ bleibt unverändert.')) return;
+    const kopie = {...projekt.dateien,[start]:websiteDesignVorschlag(quelltext,settings())};
+    try {
+      await projSchreiben({name,dateien:kopie,haupt:start,versionen:[],erstellt:Date.now()});
+      close(); await projektOeffnen(name); toast('Website-Design als neues Projekt gespeichert.');
+    } catch (e) { console.error(e); alert('Speichern der Projektkopie fehlgeschlagen.'); }
+  });
+  panel.appendChild(buttons); dialog.appendChild(panel); document.body.appendChild(dialog); render();
+}
+
 function designOeffnen() {
   if (S.p && S.p.dateien['design.json']) { try { const j = JSON.parse(S.p.dateien['design.json']); const l = store.get('oc_designs', {}); l[j.name || S.p.name] = { d: j.design, t: Date.now() }; localStorage.setItem('oc_designs', JSON.stringify(l)); store.set('oc_design_letztes', j.name || S.p.name); store.set('sdDesignZiel', S.p.name); } catch (e) { /* egal */ } }
   location.href = '../design/index.html';
