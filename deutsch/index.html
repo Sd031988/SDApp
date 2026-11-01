@@ -49,7 +49,8 @@
   .l-continue { min-height: 84px; }
   .l-sprbtn { min-height: 36px; padding: 0 10px; border-radius: 18px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
   @media (max-width: 480px) { .l-tt { display: none; } .l-prof { max-width: 26vw; } }
-  .l-lvchip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: none; vertical-align: middle; width: fit-content; }
+  .l-hub-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-height:36px;padding:6px 9px;border:1px solid #459c83;border-radius:12px;color:#baf8dc;background:#205549;text-decoration:none;font-size:12px;font-weight:800}.l-hub-link:hover,.l-hub-link:focus-visible{background:#2a6b5c}@media(max-width:670px){.l-hub-link .l-hub-text{display:none}.l-hub-link{width:36px;padding:6px}}
+.l-lvchip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .3px; text-transform: none; vertical-align: middle; width: fit-content; }
   .l-lhead .l-lvchip { margin-bottom: 6px; }
   .l-lvtabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .l-lvtab { min-height: 48px; border-radius: 14px; border: 2px solid var(--accent); background: transparent; color: var(--accent2); font: inherit; font-size: 17px; font-weight: 800; cursor: pointer; }
@@ -259,7 +260,7 @@
 <div id="learn">
   <div class="l-top topbar"><button type="button" class="l-btn-round" id="lBack" aria-label="Zurück">‹</button>
     <span class="l-title">📚 <span class="l-tt">Deutsch lernen</span></span><button type="button" class="l-lvbtn" id="lLvBtn" style="display:none" aria-label="Niveau wählen"></button><button type="button" class="l-sprbtn" id="lSprTop" style="display:none" aria-label="Erklärsprache ändern"></button><button type="button" class="l-prof" id="lProfBtn"></button>
-    <button type="button" class="l-btn-round" id="lClose" aria-label="Zur SD-Hub-Übersicht">✕</button></div>
+    <a href="../mein-sd-hub/#akademie" class="l-hub-link" target="_blank" rel="noopener" aria-label="SD Akademie in neuem Tab öffnen" title="Zur SD Akademie">🏠 <span class="l-hub-text">Mein SD Hub</span></a><button type="button" class="l-btn-round" id="lClose" aria-label="Zur SD-Hub-Übersicht">✕</button></div>
   <div id="lBody" class="l-body"><div class="l-wrap"><div class="l-loading">Einen Moment …</div></div></div>
 </div>
 <a href="b1-pruefung.html" style="position:fixed;right:16px;bottom:18px;z-index:99999;background:#164a9c;color:white;padding:13px 18px;border-radius:12px;text-decoration:none;font:700 16px system-ui;box-shadow:0 4px 18px #0005" aria-label="B1 Prüfungstraining öffnen">🎓 B1-Prüfung üben</a>
