@@ -110,7 +110,15 @@ $('catVoice').addEventListener('click',()=>{
  sound('meow');$('say').textContent='Miauu! Pibo spricht wie eine echte Katze. 🐱';
 });
 function act(type){if(type==='feed'&&currentRoom!=='kitchen')switchRoom('kitchen');if(type==='sleep'&&currentRoom!=='bedroom')switchRoom('bedroom');if(type==='wash'&&currentRoom!=='bathroom')switchRoom('bathroom');if(type==='play'&&state.energy<12){$('say').textContent='Pibo ist müde. Lass ihn erst schlafen! 💤';sound('meow');return}const effects={pet:{joy:10},feed:{food:22,clean:-3},play:{joy:20,energy:-13,food:-7,clean:-4},sleep:{energy:30,food:-5},wash:{clean:27,joy:-2}};for(const [k,v] of Object.entries(effects[type]))state[k]=clamp(state[k]+v);const messages={pet:'Prrrr! Noch mehr Streicheleinheiten! 💙',feed:'Miau! Das schmeckt lecker! 🐟',play:'Juhu! Fang den Ball! 🧶',sleep:'Gute Nacht, Pibo! 💤',wash:'Jetzt bin ich wieder sauber! 🫧'};$('say').textContent=messages[type];mode=type;modeUntil=performance.now()+ (type==='sleep'?9000:type==='wash'||type==='feed'?7000:5500);if(['feed','wash','sleep'].includes(type))startInteraction(type);if(type==='feed')showEffect(foods[foodIndex][0]+' 🍽️','Pibo frisst '+foods[foodIndex][1]+'!');if(type==='wash')showEffect('🛁 🫧 🧼','Pibo badet mit Seife und Schaum!',4300);if(type==='sleep')showEffect('🛏️ 🌙 💤','Pibo schläft im Bett!',5800);if(type==='play')showEffect('⚽ 🐾','Pibo jagt den Ball!');sound(type==='feed'?'chew':type==='wash'?'water':type==='sleep'?'snore':type==='pet'?'purr':'meow');render()}
-document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));$('sound').addEventListener('click',()=>{soundOn=!soundOn;syncPiboSound();savePiboSound();if(soundOn)sound('select')});
+document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));$('sound').addEventListener('click',()=>{
+ soundOn=!soundOn;
+ syncPiboSound();savePiboSound();
+ if(soundOn){sound('select');return}
+ piboAudio.stop?.();
+ try{voicePlayback?.source?.stop()}catch{}
+ try{voicePlayback?.player?.pause()}catch{}
+ finishVoice();
+});
 const stage=$('stage'),scene=new THREE.Scene();
 function dropFood(index){
  if(!selectFood(index))return;
