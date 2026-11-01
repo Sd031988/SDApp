@@ -2,6 +2,7 @@ import {
  SAVE_KEY,BLOCK_COLORS,CRYSTALS,PARKOUR,newSave,restoreSave,cleanName,
  claimCrystal,placeBlock,removeBlock,reachParkour,landingY,localDay
 } from './core.mjs';
+import {BlockWorldOnline} from './online.mjs';
 
 const $=id=>document.getElementById(id);
 const swatches={mint:0x52ddb2,blue:0x65b4ff,pink:0xff83af,yellow:0xffd761,purple:0xa68af6,orange:0xff9c61};
@@ -11,6 +12,70 @@ let buildMode=false,eraseMode=false,buildLevel=0,selectedColor='mint',yaw=0.35,p
 let feetY=0,velocityY=0,grounded=true,jumpQueued=false,elapsed=0,lastTime=0,noticeTimer=0;
 const keys={forward:false,back:false,left:false,right:false};
 const blockMeshes=new Map(),crystalMeshes=new Map();
+const remoteAvatars=new Map(),remoteBlocks=new Map();
+let remoteAvatarLayer=null,remoteBlockLayer=null;
+let remoteBlocksChecksum='';
+const online=new BlockWorldOnline({
+ onState:updateRemoteWorld,
+ onStatus(message){$('onlineStatus').textContent=message}
+});
+function refreshOnlineButtons(){
+ $('onlineLeave').disabled=!online.connected;
+ $('onlineJoin').textContent=online.connected?'🌐 Raum wechseln':'🌐 Online beitreten';
+}
+function createRemoteAvatar(color){
+ const group=new THREE.Group(),body=mat(swatches[color]||swatches.blue);
+ cube(group,swatches[color]||swatches.blue,0,1.2,0,.84,1.05,.48);
+ cube(group,0xf3c59e,0,2.12,0,.66,.66,.66);
+ cube(group,0x485782,-.22,.38,0,.34,.77,.37);
+ cube(group,0x485782,.22,.38,0,.34,.77,.37);
+ cube(group,0x27334c,0,2.53,0,.75,.15,.7);
+ group.userData.shirt=group.children[0].material;
+ remoteAvatarLayer.add(group);return group;
+}
+function updateRemoteWorld(payload){
+ if(!scene)return;
+ const peers=Array.isArray(payload.players)?payload.players.slice(0,12):[];
+ const found=new Set();
+ for(const p of peers){
+  if(!p||typeof p.id!=='string'||!/^[a-f0-9]{16}$/.test(p.id))continue;
+  found.add(p.id);
+  let obj=remoteAvatars.get(p.id);
+  if(!obj){obj=createRemoteAvatar(p.color);remoteAvatars.set(p.id,obj)}
+  obj.userData.target={x:p.x,y:p.y,z:p.z,heading:p.heading};
+  obj.userData.shirt.color.setHex(swatches[p.color]||swatches.blue);
+ }
+ for(const [id,obj] of remoteAvatars)if(!found.has(id)){
+  remoteAvatarLayer.remove(obj);
+  obj.traverse(n=>{n.geometry?.dispose();n.material?.dispose()});
+  remoteAvatars.delete(id);
+ }
+ $('onlinePlayers').textContent=String(remoteAvatars.size);
+ const blocks=Array.isArray(payload.blocks)?payload.blocks.slice(0,160):[];
+ const checksum=JSON.stringify(blocks);
+ if(checksum!==remoteBlocksChecksum){
+  remoteBlocksChecksum=checksum;
+  for(const obj of remoteBlocks.values()){
+   remoteBlockLayer.remove(obj);obj.geometry.dispose();obj.material.dispose();
+  }
+  remoteBlocks.clear();
+  for(const b of blocks){
+   if(!Number.isInteger(b.x)||!Number.isInteger(b.z)||!Number.isInteger(b.level)||b.level<0||b.level>3||!(b.color in swatches))continue;
+   const obj=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.6,1.8),
+     new THREE.MeshStandardMaterial({color:swatches[b.color],transparent:true,opacity:.79,roughness:.7}));
+   obj.position.set(b.x,(b.level+.5)*1.6,b.z);obj.castShadow=true;obj.receiveShadow=true;
+   remoteBlockLayer.add(obj);remoteBlocks.set(keyFor(b),obj);
+  }
+ }
+ window.__blockWorldOnlineVisible={players:remoteAvatars.size,blocks:remoteBlocks.size};
+}
+function updateRemoteAvatars(){
+ for(const obj of remoteAvatars.values()){
+  const p=obj.userData.target;if(!p)continue;
+  obj.position.lerp(new THREE.Vector3(p.x,Math.max(0,p.y),p.z),.18);
+  obj.rotation.y=p.heading||0;
+ }
+}
 const PAUSE_COLOR=0x142443;
 const updateHud=()=>{
  $('tokens').textContent=String(state.tokens);
@@ -174,6 +239,8 @@ function initialiseWorld(){
  sphere(npc,0xffffff,-.16,2.08,-.34,.07);sphere(npc,0xffffff,.16,2.08,-.34,.07);
  makePerson();
  blockGroup=new THREE.Group();scene.add(blockGroup);
+ remoteAvatarLayer=new THREE.Group();scene.add(remoteAvatarLayer);
+ remoteBlockLayer=new THREE.Group();scene.add(remoteBlockLayer);
  for(const b of state.blocks)drawBlock(b);
  crystalGroup=new THREE.Group();scene.add(crystalGroup);
  for(const c of CRYSTALS)if(!state.crystals.includes(c.id))drawCrystal(c);
@@ -223,13 +290,17 @@ function refreshCrystals(){
 function tryPlace(x,z,level=buildLevel){
  const b=getCell(x,z,level);
  if(!placeBlock(state,b)){notify('Hier kannst du keinen Block setzen (oder die Welt ist voll).');return}
- drawBlock(b);changed();notify(state.buildCount===5?'⭐ Bauaufgabe erledigt! +15 Sterne':'🧱 Block gesetzt!');
+ drawBlock(b);changed();
+ if(online.connected)online.build('place',b);
+ notify(state.buildCount===5?'⭐ Bauaufgabe erledigt! +15 Sterne':'🧱 Block gesetzt!');
 }
 function tryRemove(b){
  if(!removeBlock(state,b)){notify('Kein eigener Block an dieser Stelle.');return}
  const key=keyFor(b),mesh=blockMeshes.get(key);
  if(mesh){blockGroup.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();blockMeshes.delete(key)}
- changed();notify('Block entfernt.');
+ changed();
+ if(online.connected)online.build('remove',b);
+ notify('Block entfernt.');
 }
 function pointAhead(){
  const heading=player.rotation.y;
@@ -276,6 +347,23 @@ function teleport(dest){
  if(dest==='build'&&!buildMode)setBuildMode(true);
 }
 function bindControls(){
+ online.position=()=>({
+   x:player.position.x,z:player.position.z,y:feetY,
+   heading:player.rotation.y,color:state.avatarColor
+ });
+ $('onlineJoin').addEventListener('click',async()=>{
+  $('onlineJoin').disabled=true;
+  try{
+   const ok=await online.join($('onlineRoom').value);
+   if(ok){notify('🌐 Du spielst jetzt mit anderen in der gemeinsamen Welt!');online.poll()}
+  }finally{$('onlineJoin').disabled=false;refreshOnlineButtons()}
+ });
+ $('onlineLeave').addEventListener('click',()=>{
+  online.disconnect();refreshOnlineButtons();
+  $('onlineStatus').textContent='Einzelspieler-Modus aktiv.';
+  notify('Du spielst wieder offline.');
+ });
+ window.addEventListener('pagehide',()=>online.disconnect());
  window.addEventListener('keydown',e=>{
   if(e.target instanceof HTMLInputElement)return;
   const k=e.code;
@@ -448,6 +536,7 @@ function frame(now){
  camera.position.lerp(cameraPos,.12);camera.lookAt(target);
  if(now-lastSave>2400&&dirty){saveNow();lastSave=now}
  if(now-lastDailyCheck>60000){lastDailyCheck=now;refreshCrystals()}
+ updateRemoteAvatars();
  renderer.render(scene,camera);
 }
 start();
