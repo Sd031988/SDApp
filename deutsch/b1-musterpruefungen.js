@@ -331,9 +331,20 @@ function timerText(seconds){
  const left=Math.max(0,Math.ceil(seconds));
  return '⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
 }
+function captureCurrentAnswer(){
+ const p=E[exam].parts[part];
+ if(answers.length>idx)return;
+ if(['lesen','hoeren','sprach'].includes(p[0])){
+  const chosen=root&&root.querySelector('input[name="b1x-answer"]:checked');
+  answers.push(chosen?Number(chosen.value):null);
+ }else{
+  const field=el('b1x-text');
+  answers.push(field?field.value.trim():null);
+ }
+}
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
- if(Date.now()>=deadline){while(answers.length<list.length)answers.push(null);finish();return;}
+ if(Date.now()>=deadline){captureCurrentAnswer();while(answers.length<list.length)answers.push(null);finish();return;}
  const count=p[3].slice(0,t.g).reduce((a,b)=>a+b,0)+1;
  const body=(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach')?
  (p[0]==='hoeren'?'<button id="b1x-audio" class="b1x-audio">🔊 Hörtext abspielen</button>':'<div class="b1x-passage">'+(p[0]==='sprach'?gapPassage(t):esc(t.passage))+'</div>')+
@@ -347,7 +358,7 @@ function question(){
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
  if(el('b1x-text'))el('b1x-text').oninput=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';};
  el('b1x-next').onclick=()=>{
-  if(Date.now()>=deadline){if(['schreiben','sprechen'].includes(p[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<list.length)answers.push(null);finish();return;}
+  if(Date.now()>=deadline){captureCurrentAnswer();while(answers.length<list.length)answers.push(null);finish();return;}
   let val;
   if(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach'){
    const c=root.querySelector('input[name="b1x-answer"]:checked');
@@ -355,7 +366,7 @@ function question(){
   }else val=el('b1x-text').value.trim();
   answers.push(val);idx++;plays=0;question();
  };
- tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
+ tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];captureCurrentAnswer();while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
 function selfCheckMarkup(section,entries){
  const isWrite=section==='schreiben';
