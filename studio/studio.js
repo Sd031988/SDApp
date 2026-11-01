@@ -1548,7 +1548,24 @@ async function einfuegenDateienImportieren(dateien,istOrdner=false) {
 function einfuegenDialog(text) {
   const box = $('einfuegen'); box.hidden = false; const ta = $('efText'), vor = $('efVorschau'); let erg = null, nameHand = false, ziel = null;
   const offenSpr = S.aktiv ? abSprache(S.aktiv) : null;
-  const zeigen = () => { erg = anleitungParsen(ta.value); if (!nameHand) $('efName').value = erg.name || (erg.roh && erg.roh.sprache ? erg.roh.sprache.ordner : 'mein-projekt');
+  const zeigen = () => {
+    // Both "Einfügen" and "KI Coding" must use the SAME code-only parser.
+    const parser = window.SDKICoding;
+    const parsed = parser ? parser.parse(ta.value, S.aktiv, S.p?.dateien||{}) : null;
+    if (parsed && (parsed.files.length || (ta.value.includes('```') && parsed.errors.length))) {
+      erg = {ki:parsed}; vor.replaceChildren();
+      const h = (message, cls) => {const e=document.createElement('div');e.textContent=message;if(cls)e.className=cls;vor.appendChild(e);};
+      h('✨ KI-Code erkannt: '+parsed.files.length+' Datei(en). Nur Code wird importiert.','erkannt');
+      for (const file of parsed.files) h('  '+file.path+' ('+file.language+') · '+file.content.split('\\n').length+' Zeilen','mono');
+      parsed.warnings.forEach(w=>h('ⓘ '+w,'grau'));
+      parsed.errors.forEach(w=>h('⚠ '+w,'grau'));
+      $('efName').disabled=true;
+      $('efLos').disabled=!!parsed.errors.length||!parsed.files.length;
+      $('efLos').textContent='✨ Alle KI-Dateien prüfen und übernehmen';
+      return;
+    }
+    $('efLos').disabled=false;
+    erg = anleitungParsen(ta.value); if (!nameHand) $('efName').value = erg.name || (erg.roh && erg.roh.sprache ? erg.roh.sprache.ordner : 'mein-projekt');
     const dat = Object.keys(erg.dateien).sort(); vor.innerHTML = ''; const h = (t, k) => { const e = document.createElement('div'); if (k) e.className = k; e.textContent = t; vor.appendChild(e); return e; };
     if (!dat.length && !erg.ordner.length) { h(ta.value.trim() ? 'Keine Programmiersprache erkannt.' : 'Noch nichts eingefügt.', 'grau'); h('Füge Code ein (HTML, CSS, JavaScript, Python, C++, Java, C#, Rust, Go, PHP, SQL …) – die Sprache wird automatisch erkannt. Oder eine Anleitung mit ``` Code-Blöcken.', 'grau'); $('efLos').textContent = '🏗 Projekt aufbauen'; return; }
     if (erg.sprachen && erg.sprachen.length) h('✅ Erkannt: ' + erg.sprachen.join(' · '), 'erkannt');
@@ -1573,7 +1590,15 @@ function einfuegenDialog(text) {
   ta.oninput = zeigen; $('efName').oninput = () => { nameHand = true; zeigen(); };
   $('efZu').onclick = () => { box.hidden = true; };
   $('efNurText').onclick = () => { const t = ta.value; box.hidden = true; if (S.cm && S.aktiv) S.cm.replaceSelection(t); };
-  $('efLos').onclick = async () => { if (!erg) zeigen();
+  $('efLos').onclick = async () => {
+    if (!erg) zeigen();
+    if (erg?.ki) {
+      if (erg.ki.errors.length || !erg.ki.files.length) {alert('Der KI-Code enthält noch ungültige Dateipfade. Bitte überprüfen.');return;}
+      if (!window.SDKICodingUI?.openDialogWithCode) {alert('Die KI-Dateierkennung konnte nicht geladen werden. Bitte diese Seite neu laden.');return;}
+      box.hidden=true;
+      if (!window.SDKICodingUI.openDialogWithCode(ta.value)) box.hidden=false;
+      return;
+    }
     if (erg.roh && ziel === 'datei') { box.hidden = true; if (S.cm) S.cm.replaceRange(erg.roh.code, { line: 0, ch: 0 }, { line: S.cm.lastLine() }, '+einfuegen'); else { S.ta.value = erg.roh.code; S.ta.dispatchEvent(new Event('input')); }
       S.p.dateien[S.aktiv] = erg.roh.code; await speichernJetzt(); if (istWebProjekt() && !$('vorschau').hidden) vorschau(false); toast('📥 Code in ' + S.aktiv + ' eingefügt – ↶ holt den alten zurück'); return; }
     if (erg.roh && ziel === 'projekt') { let pfad = erg.roh.datei; if (S.p.dateien[pfad] != null && !confirm('„' + pfad + '“ gibt es schon. Ersetzen? (Abbrechen = neuer Name)')) { const n = sicherPfad(prompt('Neuer Dateiname:', pfad.replace(/(\.\w+)$/, '-2$1'))); if (!n) return; pfad = n; }
