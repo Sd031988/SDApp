@@ -247,8 +247,12 @@ function items(section){
        continue;
      }
      if(id==='hoeren'){
+       // Gesprächsgruppen unterscheiden sich je nach Prüfungsanbieter.
+       // Die übrigen Gruppen trainieren Durchsagen und kurze Mitteilungen.
+       const dialogueGroups={goethe:[1,3],telc:[1],dtz:[1,3]};
+       const useExtendedDialogue=dialogueGroups[exam].includes(g);
        const extraIndex=(g+Math.floor(j/3)+set-1)%extraListening.length;
-       if((g+set)%2===0){
+       if(useExtendedDialogue){
          const ex=extraListening[extraIndex],qIndex=j%3,question=ex.questions[qIndex];
          const options=question.slice(1),correct=options[0],pos=(n+set)%3;
          options[0]=options[pos];options[pos]=correct;
