@@ -44,6 +44,7 @@ jobs:
           node --check kids/sd-sound.mjs
           node --check kids/sd-sound.test.mjs
           node kids/sd-sound.test.mjs
+          node kids/pibo-audio.test.mjs
       - name: Verify SD Kids eight mini-game engines and ten-game catalog
         run: |
           node --check kids/games/catalog.mjs
