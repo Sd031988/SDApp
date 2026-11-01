@@ -59,6 +59,15 @@ const assert = require('node:assert/strict');
       'js/app.js':'console.log("ok")',
       'bilder/logo.svg':'<svg xmlns="http://www.w3.org/2000/svg"></svg>'
     },'ZIP-Roundtrip mit Ordnern und Dateiinhalten');
+    const analysis = await page.evaluate(() => zipProjektAnalyse({
+      'index.html':'<link href="css/style.css" rel="stylesheet">',
+      'css/style.css':'body{}',
+      'package.json':JSON.stringify({dependencies:{react:'19.0.0'},scripts:{build:'vite build'}})
+    }));
+    assert.equal(analysis.framework.name,'React');
+    assert.equal(analysis.start,'index.html');
+    assert.equal(analysis.sprache,'HTML');
+    assert(analysis.ordner.includes('css'));
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
