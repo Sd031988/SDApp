@@ -44,4 +44,33 @@ function fixture(){const cat=new N(),head=new N(),mouth=new N(),paws=[new N(),ne
  care.start('feed',0,t);care.update(1,t+9000);assert.equal(care.active,null);
  care.start('sleep',0,t);care.update(2,t+10000);assert.equal(care.active,null);
 }
+
+{
+ const {care,cat}=fixture(),t=performance.now();
+ care.start('wash',0,t);
+ const foam=care.active.foam;
+ assert.ok(foam&&cat.children.includes(foam),'Foam is attached to the moving cat');
+ assert.equal(foam.children.length,12);
+ assert.equal(foam.children.filter(p=>p.visible).length,0,'No foam before soap');
+ for(let j=0;j<3;j++)care.scrub();
+ assert.equal(foam.children.filter(p=>p.visible).length,6,'Soap builds visible body-following foam');
+ const shower=care.props.children.find(p=>p.userData.piboCareTool==='rinse');
+ const drops=shower.children.filter(p=>p.userData.sprayDrop!==undefined);
+ assert.equal(drops.length,9,'Shower has reusable local water particles');
+ assert.equal(drops.filter(p=>p.visible).length,0,'Water off before dragging');
+ care.moveTool('rinse',{x:-2.6,y:1.4});
+ assert.equal(drops.filter(p=>p.visible).length,9,'Dragging emits spray in 3D');
+ care.update(3,performance.now()+1000);
+ assert.equal(drops.filter(p=>p.visible).length,0,'Spray stops when idle');
+ care.moveTool('rinse',{x:-2.6,y:1.4});
+ assert.equal(care.rinse(),true);
+ assert.equal(foam.children.filter(p=>p.visible).length,0,'Rinsing removes all soap');
+ assert.equal(shower.visible,false,'Shower disappears when finished');
+ const foamGeometry=foam.children[0].geometry;
+ foamGeometry.dispose=()=>{foamGeometry.disposed=true};
+ care.start('feed',0,t);
+ assert.equal(cat.children.includes(foam),false,'Changing care removes attached foam');
+ assert.equal(foamGeometry.disposed,true,'Foam GPU geometry is disposed');
+}
+
 console.log('PASS: 3D shower/towel gesture state, bath soap/rinse/dry, toilet flush, feeding, sleep and cleanup');
