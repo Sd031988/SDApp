@@ -17,8 +17,8 @@ const items=[
 {id:"studio",title:"SD Code-Studio",icon:"💻",category:"Kreativ",href:"/studio/",keywords:"code programmieren website html css javascript entwickeln app zip projekt studio",description:"Webseiten und Programme entwickeln.",color:"#c3a5fb"},
 {id:"design",title:"SD Design-Studio",icon:"🎨",category:"Kreativ",href:"/design/",keywords:"design kreativ flyer poster einladung visitenkarte grafik zeichnen",description:"Ideen visuell gestalten.",color:"#c3a5fb"},
 {id:"ki",title:"KI-Assistent",icon:"✨",category:"KI",href:"/assistent/",keywords:"ki künstliche intelligenz ai assistent fragen text schreiben chat hilfe",description:"Fragen stellen und Texte verbessern.",color:"#87cfeb"},
-{id:"pibo",title:"Pibo 3D",icon:"🐱",category:"Kids",href:"/kids/",keywords:"katze pibo tiere kinder spielen kids 3d",description:"Mit Pibo spielen.",color:"#ff9cc5"},
-{id:"spiele",title:"SD Kids Spiele",icon:"🎮",category:"Kids",href:"/kids/games/",keywords:"kinder spiele games spielen lernen blockworld familie",description:"Spiele und Abenteuer entdecken.",color:"#ff9cc5"}
+{id:"pibo",title:"Pibo 3D",icon:"🐱",category:"Spiele",href:"/kids/",keywords:"katze pibo tiere kinder spielen kids 3d",description:"Mit Pibo spielen.",color:"#ff9cc5"},
+{id:"spiele",title:"Spiele",icon:"🎮",category:"Spiele",href:"/kids/games/",keywords:"kinder spiele games spielen lernen blockworld familie",description:"Spiele und Abenteuer entdecken.",color:"#ff9cc5"}
 ];
 const goals=[
 {id:"lernen",emoji:"📚",title:"Etwas lernen",subtitle:"Deutsch, Computer und neue Fähigkeiten",query:"deutsch lernen prüfung computer",itemIds:["deutsch","b1","studio"]},
@@ -81,7 +81,7 @@ const paths=[
 ["Briefe verständlich machen","Prüfe den Inhalt und mögliche Termine.","/post/"],
 ["Wichtige Unterlagen digitalisieren","Scanne nur notwendige Dokumente.","/scanner/"],
 ["Aufgaben und Ausgaben organisieren","Nutze die praktischen Alltagshelfer.","/haushalt/"],
-["Zeit zum Spielen einplanen","Entdecke gemeinsam die SD Kids-Spiele.","/kids/games/"]
+["Zeit zum Spielen einplanen","Entdecke gemeinsam die Spiele.","/kids/games/"]
 ]}
 ];
 const phrases=[
