@@ -1,6 +1,7 @@
 import {findGame,miniIds} from './catalog.mjs';
 import {STORAGE_KEY,PETS,COLOR_KEYS,CITY_JOBS,QUESTIONS,TREASURE_ITEMS,TREASURE_KEYS,TREASURE_EXIT,
- initialState,sanitize,visit,action} from './rules.mjs';
+ initialState,sanitize,visit,action,restartGame} from './rules.mjs';
+import {readSettings,saveSettings} from './profile.mjs';
 const $=id=>document.getElementById(id);
 const id=new URLSearchParams(location.search).get('game');
 if(!miniIds.includes(id)){
@@ -18,7 +19,38 @@ let save;
 try{save=sanitize(localStorage.getItem(STORAGE_KEY))}catch{save=initialState()}
 visit(save,id);
 const g=save.games[id], keys={left:false,right:false,up:false,down:false};
-let tool='plant',running=true,soundOn=false,audio=null,last=0,elapsed=0;
+const prefs=readSettings();prefs.lastPlayed=id;saveSettings(prefs);
+let tool='plant',paused=false,soundOn=prefs.sound,reducedMotion=prefs.reducedMotion,audio=null,last=0,elapsed=0;
+const releaseKeys=()=>Object.keys(keys).forEach(k=>keys[k]=false);
+function togglePause(force){
+ paused=typeof force==='boolean'?force:!paused;
+ releaseKeys();
+ $('pauseShade').hidden=!paused;
+ $('pause').setAttribute('aria-pressed',String(paused));
+ $('pause').textContent=paused?'▶ Weiter':'⏸️ Pause';
+ if(!paused)last=0;
+}
+$('pause').addEventListener('click',()=>togglePause());
+$('resume').addEventListener('click',()=>togglePause(false));
+$('fullscreen').addEventListener('click',async()=>{
+ try{
+  if(document.fullscreenElement)await document.exitFullscreen();
+  else if($('canvasBox').requestFullscreen)await $('canvasBox').requestFullscreen();
+  else message('Vollbild wird auf diesem Gerät nicht unterstützt.');
+ }catch{message('Vollbild konnte nicht aktiviert werden.')}
+});
+document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'⛶ Vollbild beenden':'⛶ Vollbild'});
+$('motion').addEventListener('click',()=>{
+ reducedMotion=!reducedMotion;prefs.reducedMotion=reducedMotion;saveSettings(prefs);
+ $('motion').setAttribute('aria-pressed',String(reducedMotion));
+ $('motion').textContent=reducedMotion?'🌿 Wenig Bewegung an':'🌿 Bewegung reduzieren';
+});
+$('motion').setAttribute('aria-pressed',String(reducedMotion));
+if(reducedMotion)$('motion').textContent='🌿 Wenig Bewegung an';
+$('sound').setAttribute('aria-pressed',String(soundOn));
+$('sound').textContent=soundOn?'🔊 Ton an':'🔇 Ton aus';
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)togglePause(true)});
+
 const obby={x:64,y:535,vy:0,grounded:true};
 const kart={x:295,y:473,angle:0,speed:0};
 const levels=[
@@ -28,7 +60,13 @@ const levels=[
 ];
 const gates=[{x:500,y:470},{x:653,y:325},{x:420,y:146},{x:144,y:314}];
 function persist(){
- try{localStorage.setItem(STORAGE_KEY,JSON.stringify(save))}catch{$('message').textContent='Dein Browser erlaubt das Speichern nicht.'}
+ try{
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(save));
+  $('saveIndicator').textContent='✓ Lokal gespeichert';
+ }catch{
+  $('saveIndicator').textContent='⚠ Speichern nicht möglich';
+  $('message').textContent='Dein Browser erlaubt das Speichern nicht.';
+ }
 }
 let noticeTimeout=0;
 function message(text){$('message').textContent=text;clearTimeout(noticeTimeout)}
@@ -45,6 +83,7 @@ function beep(freq=600){
  }catch{}
 }
 function perform(kind,payload){
+ if(paused)return false;
  const result=action(save,id,kind,payload||{});
  if(result.ok){
   persist();message(result.message+(result.reward?' ⭐ +'+result.reward:''));
@@ -260,6 +299,7 @@ function updateActions(){
  }
 }
 function onCanvasClick(e){
+ if(paused)return;
  const rect=canvas.getBoundingClientRect();
  const x=(e.clientX-rect.left)*800/rect.width,y=(e.clientY-rect.top)*600/rect.height;
  if(id==='garden'){
@@ -274,25 +314,29 @@ function onCanvasClick(e){
  }
 }
 function moveOnce(direction){
- if(id!=='treasure')return;
+ if(paused||id!=='treasure')return;
  const d={left:{dx:-1,dy:0},right:{dx:1,dy:0},up:{dx:0,dy:-1},down:{dx:0,dy:1}}[direction];
  if(d)perform('move',d);
 }
 const KEY_MAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down'};
 window.addEventListener('keydown',e=>{
- if(e.target instanceof HTMLInputElement)return;
+ if(e.target instanceof HTMLInputElement||e.target instanceof HTMLButtonElement)return;
+ if(e.code==='Escape'&&paused){e.preventDefault();togglePause(false);return}
+ if(e.code==='KeyP'&&!e.repeat){e.preventDefault();togglePause();return}
+ if(paused)return;
  const k=KEY_MAP[e.code];if(k){e.preventDefault();keys[k]=true;if(!e.repeat)moveOnce(k)}
  if(e.code==='Space'){e.preventDefault();jump()}
  if(id==='learn'&&/^Digit[123]$/.test(e.code)&&!e.repeat&&g.index<QUESTIONS.length)perform('answer',{index:Number(e.code.at(-1))-1});
 });
 window.addEventListener('keyup',e=>{const k=KEY_MAP[e.code];if(k)keys[k]=false});
-window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
+window.addEventListener('blur',releaseKeys);
 document.querySelectorAll('[data-move]').forEach(b=>{
  const k=b.dataset.move;
- b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;moveOnce(k);try{b.setPointerCapture(e.pointerId)}catch{}});
+ b.addEventListener('pointerdown',e=>{e.preventDefault();if(paused)return;keys[k]=true;moveOnce(k);try{b.setPointerCapture(e.pointerId)}catch{}});
  for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys[k]=false);
 });
 function jump(){
+ if(paused)return;
  if(id==='obby'&&obby.grounded){obby.vy=-680;obby.grounded=false;beep(450)}
  else if(id==='treasure')moveOnce('up');
  else if(id==='pet')perform('pet');
@@ -303,25 +347,29 @@ function jump(){
 $('jump').addEventListener('click',jump);
 canvas.addEventListener('click',onCanvasClick);
 $('sound').addEventListener('click',()=>{
- soundOn=!soundOn;$('sound').setAttribute('aria-pressed',String(soundOn));
+ soundOn=!soundOn;prefs.sound=soundOn;saveSettings(prefs);$('sound').setAttribute('aria-pressed',String(soundOn));
  $('sound').textContent=soundOn?'🔊 Ton an':'🔇 Ton aus';if(soundOn)beep();
 });
 $('reset').addEventListener('click',()=>{
  if(!window.confirm('Nur dieses Minispiel zurücksetzen? Deine gesammelten Spielsterne bleiben erhalten.'))return;
- const fresh=initialState();Object.keys(g).forEach(key=>delete g[key]);Object.assign(g,fresh.games[id]);persist();
+ restartGame(save,id);persist();
  if(id==='obby')resetObby();
  if(id==='kart')Object.assign(kart,{x:295,y:473,angle:0,speed:0});
  message('Minispiel zurückgesetzt.');updateHUD();updateActions();draw();
 });
 function frame(now){
- const dt=Math.min(.035,Math.max(0,(now-last)/1000||.016));last=now;elapsed+=dt;
- if(id==='obby')updateObby(dt);
- if(id==='kart')updateKart(dt);
- if(id==='obby'||id==='kart')draw();
+ // Clamp time after a suspended tab, keep CPU usage low while paused or hidden.
+ const dt=Math.min(.035,Math.max(0,(now-last)/1000||.016));last=now;
+ if(!paused&&!document.hidden){
+  elapsed+=dt;
+  if(id==='obby')updateObby(dt);
+  if(id==='kart')updateKart(dt);
+  if(id==='obby'||id==='kart')draw();
+ }
  requestAnimationFrame(frame);
 }
 $('hint').textContent=({obby:'WASD / Pfeile bewegen · Leertaste springen · Checkpoints berühren.',pet:'Tier auswählen, füttern, streicheln und schlafen.',garden:'Werkzeug wählen und eines der neun Beete antippen.',city:'Beruf wählen und die Aufgaben nacheinander erledigen.',kart:'WASD oder Pfeile: Gas, Bremsen und Lenken. Tore 1–4 nacheinander.',treasure:'Mit Pfeiltasten / WASD die Insel erkunden und alle Schätze finden.',fashion:'Hut, Shirt und Schuhe kombinieren – neue Looks verdienen Sterne.',learn:'Wähle eine Antwort über die Schaltflächen, per Klick oder mit 1, 2 und 3.'})[id];
 if(id==='obby')resetObby();
 updateHUD();updateActions();draw();persist();
 requestAnimationFrame(frame);
-window.__sdMiniReady={id,version:1};
+window.__sdMiniReady={id,version:2};
