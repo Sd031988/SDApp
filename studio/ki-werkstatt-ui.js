@@ -146,7 +146,7 @@ function renderPlan(){
  }
  for(const file of plan){
   const label=node('label','kiFile'),checkbox=node('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.dataset.path=file.path;
-  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',file.status+' · '+file.language.toUpperCase()+' · '+file.content.split('\n').length+' Zeilen'));label.append(checkbox,detail);list.append(label);
+  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',(file.status==='ersetzt in Kopie'?'bestehende Datei – Änderung prüfen':file.status)+' · '+file.language.toUpperCase()+' · '+file.content.split('\n').length+' Zeilen'));label.append(checkbox,detail);list.append(label);
  }
  updateActions();
  status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
@@ -264,7 +264,9 @@ function setup(){
  const button=$('kiCodeBtn'),overlay=$('kiOverlay');if(!button||!overlay)return;
  button.addEventListener('click',()=>openDialog());
  $('kiChangeBtn').addEventListener('click',openChangeDialog);
- $('kiSources').addEventListener('change',()=>{$('kiChangeConsent').checked=false;status('Dateiauswahl geändert. Bitte die Freigabe der Inhalte erneut bestätigen.');});
+ $('kiSources').addEventListener('change',()=>{$('kiChangeConsent').checked=false;$('kiClipboard').value='';$('kiClipboard').hidden=true;status('Dateiauswahl geändert. Bitte die Freigabe der Inhalte erneut bestätigen.');});
+ $('kiChangeConsent').addEventListener('change',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
+ $('kiGoal').addEventListener('input',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiPromptPreview').addEventListener('click',showPromptPreview);
  $('kiClose').addEventListener('click',closeDialog);
  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
