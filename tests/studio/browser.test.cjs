@@ -109,6 +109,22 @@ const assert = require('node:assert/strict');
     assert.equal(github.safe,true);
     assert.equal(github.traversal,false);
     assert.equal(github.dependencies,false);
+    const lessons = await page.evaluate(() => ({
+      count:LERN_LEKTIONEN.length,
+      htmlOk:lernAufgabePruefen('html','<h1>Hallo</h1><p>Welt</p>'),
+      htmlBad:lernAufgabePruefen('html','<h1>Hallo</h1>'),
+      cssOk:lernAufgabePruefen('css','body { background-color: red; } h1 { color: blue; }'),
+      jsOk:lernAufgabePruefen('javascript',"const begruessung = 'Hallo'; console.log(begruessung);"),
+      pythonOk:lernAufgabePruefen('python',"name = 'Ada'\nprint(name)"),
+      unknown:lernAufgabePruefen('unknown','anything')
+    }));
+    assert.equal(lessons.count,4);
+    assert.equal(lessons.htmlOk,true);
+    assert.equal(lessons.htmlBad,false);
+    assert.equal(lessons.cssOk,true);
+    assert.equal(lessons.jsOk,true);
+    assert.equal(lessons.pythonOk,true);
+    assert.equal(lessons.unknown,false);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
