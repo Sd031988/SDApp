@@ -64,6 +64,23 @@ const matchingNeeds=[
  ['Du willst nach der Arbeit Buchhaltung lernen.','I'],
  ['Du möchtest am Sonntag mit einer Gruppe draußen unterwegs sein.','J']
 ];
+const readingClaims=[
+ ['Lara möchte prüfen, wie sie abends von der Wohnung nach Hause kommt.','Lara hat die Wohnung bereits gemietet.'],
+ ['Für die Smartphone-Beratung muss man sich spätestens am Donnerstag anmelden.','Alle Teilnehmenden müssen ein eigenes Smartphone mitbringen.'],
+ ['Der Betriebsausflug findet als Wanderung statt.','Die Firma hat sich für eine Radtour entschieden.'],
+ ['Im Sprachcafé dürfen die Teilnehmenden selbst Gesprächsthemen vorschlagen.','Im Sprachcafé bekommen alle Teilnehmenden Noten.'],
+ ['Morgens dürfen private Autos nicht mehr bis zum Schuleingang fahren.','Die Schule empfiehlt allen Eltern, ihre Kinder direkt mit dem Auto zum Eingang zu bringen.'],
+ ['Im Reparaturcafé müssen Besucher eventuell Ersatzteile bezahlen.','Das Reparaturcafé garantiert, dass jedes Gerät repariert wird.'],
+ ['Während der Bauarbeiten bleibt der Weg zum See offen.','Während der Bauarbeiten ist auch das Café geschlossen.'],
+ ['Miriam lernt inzwischen nach einem festen Zeitplan.','Miriam besucht den Buchhaltungskurs am Morgen.'],
+ ['Bei starkem Wind findet der Regionalmarkt in einer Halle statt.','Bei starkem Wind fällt der Regionalmarkt vollständig aus.'],
+ ['Für die Buchausleihe benötigt man einen Bibliotheksausweis.','In den ruhigen Lernräumen darf man telefonieren.'],
+ ['Für die Workshops am Gesundheitstag muss man sich anmelden.','Für die Vorträge ist eine Anmeldung erforderlich.'],
+ ['An der Paketstation kann man Sendungen auch außerhalb der Öffnungszeiten abholen.','Große Pakete passen in die neue Paketstation.'],
+ ['Bei schlechtem Wetter findet das Nachbarschaftsfest im Gemeindehaus statt.','Alle Gäste müssen ihre Getränke selbst mitbringen.'],
+ ['Während der Bauphase gibt es eine ausgeschilderte Umleitung für Radfahrer.','Der neue Radweg ist ausschließlich für Touristen gedacht.'],
+ ['Die Musikschule bietet seit September auch Kurse für Erwachsene an.','Man kann die Instrumente ein ganzes Jahr kostenlos ausleihen.']
+];
 const readingTexts=[
  ['Wohnungssuche','Seit drei Monaten sucht Lara eine größere Wohnung. Sie arbeitet im Krankenhaus und möchte deshalb nicht weit von der Arbeit entfernt wohnen. Gestern hat sie eine Wohnung besichtigt, die hell und ruhig ist. Die Miete passt zu ihrem Budget, aber die Bushaltestelle liegt zwanzig Minuten zu Fuß entfernt. Lara möchte deshalb vor ihrer Entscheidung noch prüfen, wie sie abends nach Hause kommt.','Was möchte Lara vor ihrer Entscheidung prüfen?','Die Verbindung am Abend','Die Öffnungszeiten des Krankenhauses','Die Farbe der Wände'],
  ['Freiwilligenarbeit','Im Nachbarschaftszentrum helfen jeden Samstag Freiwillige älteren Menschen beim Umgang mit Smartphones. Wer teilnehmen möchte, muss kein eigenes Gerät besitzen, denn das Zentrum stellt einige Geräte bereit. Die Beratung ist kostenlos. Weil die Plätze begrenzt sind, ist eine Anmeldung bis Donnerstag erforderlich.','Was müssen Interessierte tun?','Sich bis Donnerstag anmelden','Ein neues Smartphone kaufen','Am Freitag bezahlen'],
@@ -248,7 +265,7 @@ function items(section){
      if(id==='lesen'&&exam==='goethe'&&(g===0||g===3)){
        const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
        const rd=readingTexts[textIndex],truth=(j+set)%2===0;
-       const statement=truth?rd[3]:rd[4];
+       const statement=readingClaims[textIndex][truth?0:1];
        result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],kind:'Leseverstehen · '+kinds[g]});
        continue;
      }
