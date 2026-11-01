@@ -51,7 +51,7 @@ export class PiboCare {
     this.sound('step');this.onStatus(true,'Pibo macht sich bereit',0)
   }
   scrub(){
-    const i=this.active;if(i?.type!=='wash')return false;
+    const i=this.active;if(i?.type!=='wash'||i.rinsed)return false;
     i.scrubs=Math.min(12,(i.scrubs||0)+1);
     const sponge=this.props.children.find(obj=>obj.userData?.sponge);
     if(sponge){sponge.position.x=-1.8+.10*Math.sin(i.scrubs*1.7);sponge.rotation.z=.22*Math.sin(i.scrubs*1.3)}
@@ -89,7 +89,7 @@ export class PiboCare {
     return true;
   }
   flush(){
-    const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<2)return false;
+    const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<1)return false;
     i.flushed=true;
     if(i.water)i.water.visible=true;
     this.sound('flush');this.onStatus(true,'Gespült!',1);
@@ -106,7 +106,7 @@ export class PiboCare {
       // In the interactive bath, the player chooses when soap is rinsed away.
       if(i.type==='sleep'&&phase===2)this.sound('snore');
       if(i.type==='toilet'&&phase===2)this.sound('fart');
-      if(i.type==='toilet'&&phase===3)this.flush()
+      // Flushing now waits for the user's own button press after Pibo sits down.
     }
     if(!i.lastStatusAt||now-i.lastStatusAt>=80||phase!==i.lastStatusPhase){
       const bathLabel=i.dried?'Abtrocknen fertig':i.rinsed?'Mit Handtuch abtrocknen':i.scrubs>=3?'Jetzt mit der Dusche abspülen':'Über Pibo reiben und einseifen';
