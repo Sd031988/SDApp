@@ -229,6 +229,16 @@ function updateActions(){
    const b=button(label,()=>{tool=kind;updateActions();draw();message('Werkzeug ausgewählt: '+label)});
    b.classList.toggle('active',tool===kind);
   }
+  const beds=document.createElement('div');beds.className='row';beds.setAttribute('role','group');beds.setAttribute('aria-label','Gartenbeete wählen');
+  beds.style.display='grid';beds.style.gridTemplateColumns='repeat(3,1fr)';
+  for(let i=0;i<9;i++){
+   const b=document.createElement('button');b.textContent=(g.plots[i]===0?'🌱':g.plots[i]===1?'🌿':'🌻')+' '+(i+1);
+   b.type='button';b.setAttribute('aria-label','Beet '+(i+1)+': '+(g.plots[i]===0?'leer':g.plots[i]===1?'gepflanzt':'erntereif'));
+   b.style.minWidth='0';b.style.padding='8px 2px';
+   b.addEventListener('click',()=>perform(tool,{index:i}));
+   beds.append(b);
+  }
+  a.append(beds);
  }
  if(id==='city'){
   for(const [job,v] of Object.entries(CITY_JOBS)){
