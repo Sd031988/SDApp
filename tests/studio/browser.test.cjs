@@ -86,6 +86,14 @@ const assert = require('node:assert/strict');
     assert(design.changed.includes('Bearbeitet'));
     assert(design.changed.includes('#336699'));
     assert(design.original.includes('Vorher'));
+    const diagnostics = await page.evaluate(() => ({
+      broken: fehlerFinden({'index.html':'<link href="css/missing.css" rel="stylesheet"><script src="js/missing.js"></script>','package.json':'{broken'}),
+      valid: fehlerFinden({'index.html':'<link href="style.css" rel="stylesheet">','style.css':'body{}'})
+    }));
+    assert(diagnostics.broken.some(x=>x.typ==='json'));
+    assert(diagnostics.broken.some(x=>x.typ==='referenz'&&x.reparatur.ziel==='css/missing.css'));
+    assert(diagnostics.broken.some(x=>x.typ==='referenz'&&x.reparatur.ziel==='js/missing.js'));
+    assert.equal(diagnostics.valid.length,0);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
