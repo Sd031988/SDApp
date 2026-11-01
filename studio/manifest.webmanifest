@@ -1,0 +1,19 @@
+{
+  "id": "/studio/",
+  "name": "SD Code-Studio – The SD Hub",
+  "short_name": "SD Studio",
+  "description": "Code-Editor und Webdesign-Studio für Windows, macOS und Linux",
+  "start_url": "/studio/index.html",
+  "scope": "/studio/",
+  "display": "standalone",
+  "background_color": "#120e22",
+  "theme_color": "#221b3d",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
