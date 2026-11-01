@@ -4,7 +4,7 @@ on:
     branches: [feature/b1-pruefung]
     paths:
       - 'deutsch/**'
-      - 'tests/lernweg.spec.js'
+      - 'tests/**'
       - '.github/workflows/lernweg-tests.yml'
   workflow_dispatch:
 permissions:
@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate exercise catalog and progress migration
+        run: node --test tests/lernwerk-data.test.cjs
       - name: Install Playwright test runner
         run: npm install --no-save --no-package-lock @playwright/test
       - name: Install Chromium
