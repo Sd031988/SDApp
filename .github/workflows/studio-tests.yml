@@ -1,0 +1,27 @@
+name: SD Studio – automatische Prüfungen
+on:
+  push:
+    paths:
+      - 'studio/**'
+      - 'tests/studio/**'
+      - '.github/workflows/studio-tests.yml'
+  pull_request:
+    paths:
+      - 'studio/**'
+      - 'tests/studio/**'
+      - '.github/workflows/studio-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  studio-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JavaScript-Syntax prüfen
+        run: node --check studio/studio.js
+      - name: Projektanalyse und Export prüfen
+        run: node --test tests/studio/studio.test.cjs
