@@ -45,5 +45,7 @@ jobs:
           node --check kids/games/rules.mjs
           node --check kids/games/play.mjs
           node kids/games/rules.test.mjs
+          node --check kids/games/profile.mjs
+          node kids/games/profile.test.mjs
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
