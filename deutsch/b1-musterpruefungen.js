@@ -579,13 +579,14 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  (getCheckpoint()?'<button id="b1x-resume" class="b1x-primary">↩ Unterbrochene Prüfung fortsetzen</button>':'')+
- '<button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
+ '<button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
  '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist (60 Minuten Lesen, anschließend die verbleibende Zeit für Sprachbausteine). Dies ist eine vereinfachte Trainingsaufteilung; bei Einzelübungen gelten getrennte Zeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 B1-Ergebnisse und Schreibentwürfe löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
  root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{if(getCheckpoint()&&!confirm('Gespeicherte Prüfung durch eine neue Einzelübung ersetzen?'))return;clearCheckpoint();running=false;start(Number(b.dataset.part));});
  if(el('b1x-resume'))el('b1x-resume').onclick=resumeCheckpoint;
  el('b1x-start').onclick=()=>{if(getCheckpoint()&&!confirm('Eine unterbrochene Prüfung ist gespeichert. Neue Prüfung starten und bisherigen Fortschritt ersetzen?'))return;clearCheckpoint();running=true;results={};telcSharedDeadline=0;start(0);};
+ el('b1x-marked-practice').onclick=markedPractice;
  if(el('b1x-history'))el('b1x-history').onclick=history;
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse und Schreibentwürfe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
 }
@@ -814,6 +815,34 @@ function finish(){
 }
 function getSaved(){
  try{return JSON.parse(localStorage.getItem('sdB1FullResults')||'[]').filter(x=>x&&typeof x==='object');}catch(_){return [];}
+}
+function markedPractice(){
+ const saved=getSaved().filter(x=>E[x.exam]&&Number.isInteger(x.set)&&x.set>=1&&x.set<=5&&Array.isArray(x.marked)&&x.marked.length&&Array.isArray(x.answers));
+ const oldExam=exam,oldSet=set;
+ const cards=[];
+ saved.slice().reverse().forEach(record=>{
+  exam=record.exam;set=record.set;
+  const p=E[exam].parts.find(x=>x[0]===record.part);
+  if(!p)return;
+  const tasks=items(p);
+  record.marked.forEach(i=>{
+   if(!Number.isInteger(i)||i<0||i>=tasks.length)return;
+   const t=tasks[i];
+   cards.push({exam:record.exam,set:record.set,section:p[1],index:i,task:t,answer:record.answers[i],auto:Array.isArray(t.options)});
+  });
+ });
+ exam=oldExam;set=oldSet;
+ view('<h2>★ Markierte Fragen wiederholen</h2>'+
+ '<p class="b1x-note">Gespeicherte Markierungen aus abgeschlossenen Übungen auf diesem Gerät. Die Fragen werden hier nachträglich mit Lösungen gezeigt. Keine erneute Prüfung, keine Bewertung und kein erneutes Abspielen begrenzter Hörtexte.</p>'+
+ (cards.length?'<p><b>'+cards.length+' markierte Aufgaben</b> aus deinen bisherigen Übungen.</p>'+
+ cards.slice(0,80).map((x,i)=>'<details class="b1x-passage"><summary>★ '+esc(E[x.exam].name)+' · Muster '+x.set+' · '+esc(x.section)+' · Aufgabe '+(x.index+1)+'</summary>'+
+ (x.auto?reviewTask(x.task,x.answer,x.index,x.task.audio!==undefined):
+ '<p><b>Aufgabe:</b> '+esc(x.task.q)+'</p><p><b>Deine Antwort:</b> '+esc(x.answer||'Keine Antwort')+'</p><p class="b1x-note">Schreiben und Sprechen benötigen eine menschliche Rückmeldung.</p>')+
+ '</details>').join('')+
+ (cards.length>80?'<p class="b1x-note">Es werden die ersten 80 Markierungen angezeigt.</p>':''):
+ '<p>Noch keine markierten Aufgaben aus abgeschlossenen Übungen vorhanden. Markiere während einer Übung eine Frage mit ☆ und schließe den Prüfungsteil ab.</p>')+
+ '<button id="b1x-home" class="b1x-primary">Zurück zur Auswahl</button>');
+ el('b1x-home').onclick=home;
 }
 function history(){
  const saved=getSaved().slice().reverse();
