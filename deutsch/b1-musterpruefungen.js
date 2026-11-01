@@ -323,11 +323,15 @@ function speak(t,dialogue){
   synth.speak(u);
  });
 }
+function gapPassage(t){
+ const safe=esc(t.passage),current=t.j+1;
+ return safe.replace(/\\[(\\d+)\\]/g,(_,number)=>Number(number)===current?'<mark class="b1x-current-gap" aria-label="Aktuelle Lücke '+number+'">['+number+']</mark>':'<span class="b1x-other-gap">['+number+']</span>');
+}
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
  const count=p[3].slice(0,t.g).reduce((a,b)=>a+b,0)+1;
  const body=(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach')?
- (p[0]==='hoeren'?'<button id="b1x-audio" class="b1x-audio">🔊 Hörtext abspielen</button>':'<div class="b1x-passage">'+esc(t.passage)+'</div>')+
+ (p[0]==='hoeren'?'<button id="b1x-audio" class="b1x-audio">🔊 Hörtext abspielen</button>':'<div class="b1x-passage">'+(p[0]==='sprach'?gapPassage(t):esc(t.passage))+'</div>')+
  '<h3>'+esc(t.q)+'</h3><div class="b1x-stack" role="radiogroup" aria-label="Antwort auswählen">'+t.options.map((o,i)=>'<label class="b1x-card"><input type="radio" name="b1x-answer" value="'+i+'"> '+esc(o)+'</label>').join('')+'</div>':
  '<h3>'+esc(t.q)+'</h3><p class="b1x-note">'+esc(t.hint)+'</p><textarea id="b1x-text" rows="9" placeholder="'+(p[0]==='sprechen'?'Notizen zur mündlichen Antwort …':'Deine Antwort …')+'"></textarea><div id="b1x-count" class="b1x-note">0 Wörter</div>';
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+' · '+esc(p[1])+'</p>'+
@@ -414,7 +418,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-card{display:block;text-align:left;background:#191c29;border:1px solid #3e4257;border-radius:12px;color:#fff;padding:15px;font:inherit;cursor:pointer}
 .b1x-card.active{border-color:#fb923c;background:#3a241d}.b1x-card small{display:block;color:#b5bacb;margin-top:5px}
 .b1x-card input{margin-right:8px}.b1x-check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer}.b1x-check input{width:18px;height:18px;flex:none;accent-color:#fb923c}
-.b1x-transcript{margin:8px 0 18px;padding:10px 12px;border:1px solid #4b5563;border-radius:8px}.b1x-transcript summary{cursor:pointer;font-weight:600}.b1x-transcript p{white-space:pre-wrap;line-height:1.65}.b1x-passage{background:#1b1e2b;border:1px solid #3e4257;padding:16px;border-radius:12px;line-height:1.8;white-space:pre-wrap;margin:14px 0}
+.b1x-current-gap{background:#fbbf24;color:#111827;padding:3px 6px;border-radius:5px;font-weight:800}.b1x-other-gap{color:#fda96b;font-weight:600}.b1x-transcript{margin:8px 0 18px;padding:10px 12px;border:1px solid #4b5563;border-radius:8px}.b1x-transcript summary{cursor:pointer;font-weight:600}.b1x-transcript p{white-space:pre-wrap;line-height:1.65}.b1x-passage{background:#1b1e2b;border:1px solid #3e4257;padding:16px;border-radius:12px;line-height:1.8;white-space:pre-wrap;margin:14px 0}
 .b1x-progress{height:7px;background:#35394c;border-radius:20px;overflow:hidden;margin:8px 0 18px}.b1x-progress>div{height:100%;background:#fb923c;transition:width .2s}.b1x-primary:focus-visible,.b1x-card:focus-within,.b1x-audio:focus-visible{outline:3px solid #fdba74;outline-offset:3px}@media(max-width:520px){.b1x-wrap{padding:10px 12px 64px}.b1x-grid{grid-template-columns:1fr}.b1x-meta{flex-wrap:wrap;font-size:13px}.b1x-nav{gap:5px}.b1x-nav button{padding:8px}}.b1x-primary,.b1x-audio{width:100%;background:#c2410c;border:0;color:#fff;padding:15px;border-radius:12px;font:inherit;font-weight:700;margin:14px 0;cursor:pointer}
 .b1x-audio{background:#334155}
 #b1x-text{width:100%;box-sizing:border-box;min-height:190px;background:#191c29;border:1px solid #565b70;color:white;padding:14px;border-radius:12px;font:inherit}
