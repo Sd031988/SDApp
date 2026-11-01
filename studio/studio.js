@@ -1104,8 +1104,8 @@ function lernQuizPruefen(id,antwort) {
 }
 function lernLektionAusProjekt(projekt) {
   if (!projekt || !projekt.dateien || !projekt.dateien['LEKTION.md']) return null;
-  const treffer=String(projekt.name).match(/^lernen-(.+?)(?:-\d+)?$/);
-  return treffer ? LERN_LEKTIONEN.find(l=>l.id===treffer[1])||null : null;
+  const name=String(projekt.name);
+  return LERN_LEKTIONEN.find(l=>name==='lernen-'+l.id||name.startsWith('lernen-'+l.id+'-')&&/^\d+$/.test(name.slice(('lernen-'+l.id+'-').length)))||null;
 }
 function lernNaechsteLektion(fortschritt) {
   return LERN_LEKTIONEN.find(l=>fortschritt[l.id]!=='abgeschlossen')||null;
@@ -1118,6 +1118,39 @@ function lernQuizFrage(lektion) {
   if (!/^[1-3]$/.test(eingabe.trim())) return false;
   const nummer=Number(eingabe);
   return lernQuizPruefen(lektion.id,nummer-1);
+}
+
+
+/* Erweiterte Lektionen und ausführbare JS-Tests in isoliertem Frame. */
+LERN_LEKTIONEN.push(
+{id:'js-conditions',titel:'JavaScript – Bedingungen',datei:'app.js',aufgabe:'Implementiere function istVolljaehrig(alter): true ab 18, sonst false.',code:'function istVolljaehrig(alter) {\n  // Ergänzen\n}\n',pruefen:c=>c.includes('function istVolljaehrig('),tipp:'Vergleiche alter >= 18.'},
+{id:'js-arrays',titel:'JavaScript – Arrays',datei:'app.js',aufgabe:'Implementiere function summe(zahlen), die alle Arraywerte addiert.',code:'function summe(zahlen) {\n  // Ergänzen\n}\n',pruefen:c=>c.includes('function summe('),tipp:'Nutze eine Schleife oder reduce.'}
+);
+Object.assign(LERN_WISSEN,{
+'js-conditions':['Bedingungen steuern den Ablauf anhand eines Wahrheitswerts.','Welcher Operator prüft strikte Gleichheit?',['=','===','=>'],1],
+'js-arrays':['Arrays speichern Werte in einer Reihenfolge. length gibt ihre Anzahl zurück.','Welche Eigenschaft gibt die Länge eines Arrays zurück?',['size','length','count'],1]
+});
+const LERN_AUSFUEHRBARE_TESTS={
+'javascript-functions':{fn:'addieren',cases:[[[2,3],5],[[-4,2],-2],[[0,0],0]]},
+'js-conditions':{fn:'istVolljaehrig',cases:[[[17],false],[[18],true],[[0],false]]},
+'js-arrays':{fn:'summe',cases:[[[[1,2,3]],6],[[[]],0],[[[-2,5]],3]]}
+};
+async function lernCodeTesten(id,code) {
+ const spec=LERN_AUSFUEHRBARE_TESTS[id];
+ if(!spec)return {bestanden:lernAufgabePruefen(id,code),unterstuetzt:false};
+ if(typeof code!=='string'||code.length>30000)return {bestanden:false,unterstuetzt:true,fehler:'Code zu groß.'};
+ return new Promise(resolve=>{
+  const frame=document.createElement('iframe');frame.setAttribute('sandbox','allow-scripts');frame.hidden=true;
+  const token='sd'+Math.random().toString(36).slice(2);let done=false;
+  const finish=result=>{if(done)return;done=true;clearTimeout(timer);window.removeEventListener('message',receive);frame.remove();resolve({unterstuetzt:true,...result});};
+  const receive=e=>{if(e.source===frame.contentWindow&&e.data&&e.data.token===token)finish(e.data.result);};
+  window.addEventListener('message',receive);
+  const timer=setTimeout(()=>finish({bestanden:false,fehler:'Zeitlimit überschritten.'}),2000);
+  const data=JSON.stringify({token,code,fn:spec.fn,cases:spec.cases}).replace(/</g,'\\u003c');
+  const script='const p='+data+';let result;try{const fn=new Function(p.code+"\\nreturn "+p.fn+";")();let ok=0;for(const [args,expected] of p.cases){if(JSON.stringify(fn(...args))===JSON.stringify(expected))ok++;}result={bestanden:ok===p.cases.length,erfolgreich:ok,anzahl:p.cases.length};}catch(e){result={bestanden:false,fehler:String(e.message)}}parent.postMessage({token:p.token,result},"*");';
+  frame.srcdoc='<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39;; connect-src &#39;none&#39;"><script>'+script+'</scr'+'ipt>';
+  document.body.appendChild(frame);
+ });
 }
 
 function lernAufgabePruefen(id,code) {
@@ -1156,7 +1189,8 @@ async function lernaufgabePruefen() {
   const lektion=lernLektionAusProjekt(S.p);
   if(!lektion) { alert('Dies ist kein Lernmodus-Projekt. Starte zuerst eine Lektion.'); return; }
   try { await speichernJetzt(); } catch(e) { toast('Prüfung abgebrochen: Speichern fehlgeschlagen.'); return; }
-  const ok=lernAufgabePruefen(lektion.id,S.p.dateien[lektion.datei]);
+  const test=await lernCodeTesten(lektion.id,S.p.dateien[lektion.datei]);
+  const ok=test.bestanden;
   if(ok) {
     const quiz=lernQuizFrage(lektion);
     if(quiz===null) { alert('Codeprüfung bestanden. Die Wissensfrage ist noch offen.'); return; }
@@ -1165,7 +1199,7 @@ async function lernaufgabePruefen() {
     fortschritt[lektion.id]='abgeschlossen'; store.set('sdStudioLernfortschritt',fortschritt);
     const naechste=lernNaechsteLektion(fortschritt);
     alert('✅ Codeaufgabe und Wissensfrage bestanden! '+lektion.titel+'\n\n'+(naechste?'Nächste Lektion: '+naechste.titel:'Alle Lektionen abgeschlossen! Zertifikat freigeschaltet.')+'\n\nFortschritt wurde in diesem Browser gespeichert.');
-  } else alert('Noch nicht ganz geschafft.\n\nAufgabe: '+lektion.aufgabe+'\n\nTipp: '+lektion.tipp+
+  } else alert('Noch nicht ganz geschafft.'+(test.unterstuetzt?'\n\nTestfälle: '+(test.erfolgreich||0)+'/'+(test.anzahl||0)+(test.fehler?'\n'+test.fehler:''):'')+'\n\nAufgabe: '+lektion.aufgabe+'\n\nTipp: '+lektion.tipp+
     '\n\nDie Prüfung erkennt einfache Code-Muster, führt den Code aber nicht aus.');
 }
 function lernfortschrittAnzeigen() {
