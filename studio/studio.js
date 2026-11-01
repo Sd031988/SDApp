@@ -195,9 +195,46 @@ function vorlagenWaehlen() {
 async function projektListe() { const l = (await projAlle()).sort((a, b) => b.t - a.t); const s = $('projektWahl'); s.innerHTML = '';
   l.forEach(p => { const o = document.createElement('option'); o.value = p.name; o.textContent = p.name; if (S.p && p.name === S.p.name) o.selected = true; s.appendChild(o); });
   const neu = document.createElement('option'); neu.value = '__neu'; neu.textContent = '＋ Neues Projekt …'; s.appendChild(neu); }
-async function speichernJetzt() { if (!S.p) return; for (const [pfad, doc] of Object.entries(S.docs)) S.p.dateien[pfad] = doc.getValue ? doc.getValue() : doc.wert; await projSchreiben(S.p); S.geaendert = false; status(); }
 let speicherT = null;
-function speichernBald() { S.geaendert = true; status(); clearTimeout(speicherT); speicherT = setTimeout(async () => { await speichernJetzt(); if (einst().live !== false && istWebDatei(S.aktiv) && !$('vorschau').hidden) vorschau(false); }, 450); }
+let speicherRevision = 0;
+let speicherKette = Promise.resolve();
+function speichernJetzt() {
+  if (!S.p) return Promise.resolve();
+  clearTimeout(speicherT);
+  const projekt = S.p;
+  const revision = speicherRevision;
+  // Snapshot vor dem asynchronen Schreiben: ein späterer Projektwechsel darf
+  // nicht versehentlich die Dateien des vorherigen Projekts überschreiben.
+  const dateien = { ...projekt.dateien };
+  for (const [pfad, doc] of Object.entries(S.docs)) dateien[pfad] = doc.getValue ? doc.getValue() : doc.wert;
+  const snapshot = { ...projekt, dateien };
+  const auftrag = speicherKette.catch(() => {}).then(async () => {
+    await projSchreiben(snapshot);
+    if (S.p === projekt && speicherRevision === revision) {
+      S.geaendert = false;
+      status();
+    }
+  });
+  speicherKette = auftrag;
+  return auftrag.catch(err => {
+    if (S.p === projekt) { S.geaendert = true; status(); }
+    console.error('Studio: Speichern fehlgeschlagen', err);
+    toast('Speichern fehlgeschlagen – bitte Speicherplatz und Browser prüfen.');
+    throw err;
+  });
+}
+function speichernBald() {
+  speicherRevision++;
+  S.geaendert = true;
+  status();
+  clearTimeout(speicherT);
+  speicherT = setTimeout(async () => {
+    try {
+      await speichernJetzt();
+      if (einst().live !== false && istWebDatei(S.aktiv) && !$('vorschau').hidden) vorschau(false);
+    } catch (err) { /* Fehlermeldung bereits in speichernJetzt */ }
+  }, 450);
+}
 function istWebDatei(p) { return /\.(html?|css|m?js|json|svg)$/i.test(p || ''); }
 function istWebProjekt() { if (!S.p) return false; const d = Object.keys(S.p.dateien); return d.some(x => /\.html?$/i.test(x)) && !(S.aktiv && programmSprache(S.aktiv)); }
 
@@ -1003,7 +1040,14 @@ function verdrahten() {
   $('app').addEventListener('dragleave', e => { if (e.target === $('app') || !$('app').contains(e.relatedTarget)) $('app').classList.remove('ziehen'); });
   $('app').addEventListener('drop', e => { $('app').classList.remove('ziehen'); if (e.dataTransfer.files.length) { e.preventDefault(); hochladen([...e.dataTransfer.files]); } });
   window.addEventListener('resize', () => { clearTimeout(S.rz); S.rz = setTimeout(() => S.cm && S.cm.refresh(), 120); });
-  window.addEventListener('beforeunload', () => { if (S.geaendert) speichernJetzt(); });
+  window.addEventListener('beforeunload', e => {
+    if (S.geaendert) { e.preventDefault(); e.returnValue = ''; }
+  });
+  // Beim Wechsel in einen anderen Tab sofort speichern, statt auf den
+  // verzögerten Autosave-Timer zu warten. Fehler werden sichtbar gemeldet.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && S.geaendert) speichernJetzt().catch(() => {});
+  });
   // Handy: Seitenleiste zu Beginn zu
   handyEinrichten();
 }
