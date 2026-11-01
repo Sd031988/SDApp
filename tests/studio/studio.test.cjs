@@ -74,3 +74,9 @@ test('JSON error finder reports the correct line even if the JS engine omits pos
   assert.equal(context.check('{"ok": }','settings.json').line,0);
   assert(context.check('{broken}','settings.json').message.length>0);
 });
+
+test('CodeMirror simple-mode dependency loads before TOML and Shell modes', () => {
+  const addon = source.indexOf("lade(CM_BASE + 'addon/mode/simple.min.js')");
+  const modes = source.indexOf("'mode/toml/toml'");
+  assert(addon>0 && modes>addon,'CodeMirror addon must load before language modes');
+});
