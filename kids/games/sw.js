@@ -1,6 +1,6 @@
 // Offline support only for SD Kids 2D mini-games. Does not control BlockWorld, Pibo or the hub root.
-const CACHE='sd-kids-mini-v2';
-const ASSETS=['./','./index.html','./play.html','./catalog.mjs','./rules.mjs','./profile.mjs','./play.mjs','./icon.svg','./manifest.webmanifest'];
+const CACHE='sd-kids-mini-v3';
+const ASSETS=['./','./index.html','./play.html','./catalog.mjs','./rules.mjs','./profile.mjs','./play.mjs','../sd-sound.mjs','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
@@ -11,7 +11,9 @@ self.addEventListener('fetch',event=>{
  const request=event.request;
  if(request.method!=='GET')return;
  const url=new URL(request.url);
- if(url.origin!==self.location.origin||!url.pathname.startsWith(new URL(self.registration.scope).pathname))return;
+ const allowedScope=new URL(self.registration.scope).pathname;
+ const isSoundModule=url.pathname===new URL('../sd-sound.mjs',self.registration.scope).pathname;
+ if(url.origin!==self.location.origin||(!url.pathname.startsWith(allowedScope)&&!isSoundModule))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
   try{
