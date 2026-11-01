@@ -95,12 +95,12 @@ export class PiboCare {
         if(b.userData.bubble!==undefined){const n=b.userData.bubble;b.position.y=.9+((t*.32+n*.17)%1.2);b.position.x=-3.2+(n%5)*.33+.08*Math.sin(t*2+n)}
         if(b.userData.sponge)b.position.y=1.25+.15*Math.sin(t*5)
       }
-      if(p>.4&&p<.8)this.head.rotation.z=.13*Math.sin(t*6)
+      if(p>.4&&p<.8){this.head.rotation.z=.13*Math.sin(t*6);this.cat.rotation.y=.045*Math.sin(t*4);this.head.rotation.x=.07*Math.sin(t*8)}
     }
     if(i.type==='sleep'){
       const lying=smooth((p-.24)/.18)*(1-smooth((p-.8)/.13));
       this.cat.scale.setScalar(1-.32*lying);this.cat.rotation.z=-1.32*lying;
-      this.cat.position.y=.65*lying;
+      this.cat.position.y=.65*lying;this.head.rotation.x=.17*lying+.025*Math.sin(t*1.5);
       i.blanket.visible=lying>.8;i.blanket.position.y=.9+.05*Math.sin(t*2);
     }
     if(i.type==='toilet'){
