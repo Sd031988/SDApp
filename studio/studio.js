@@ -923,7 +923,7 @@ function palZeigen() { const box = $('palListe'); box.innerHTML = ''; PAL.liste.
 function palZu() { $('palette').hidden = true; if (S.cm) S.cm.focus(); }
 function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filter(d => !/\.gitkeep$/.test(d)).map(d => ({ label: icon(d) + ' ' + d.split('/').pop(), info: d, d })), 'Datei öffnen …', x => dateiOeffnen(x.d)); }
 function befehle() { const B = [
-  ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
+  ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['🎓 Teilnahmezertifikat erstellen', '', lernZertifikat], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
@@ -1033,6 +1033,58 @@ const LERN_LEKTIONEN = [
    pruefen:code=>/^\s*name\s*=\s*.+/m.test(code)&&/\bprint\s*\(\s*name\s*\)/.test(code),
    tipp:"name = 'Alex'\nprint(name)"}
 ];
+
+/* Aufbaukurs: Lektionen bleiben eigenständig und überschreiben keine Projekte. */
+LERN_LEKTIONEN.push(
+  {id:'html-links',titel:'HTML Aufbau – Links und Bilder',stufe:'Aufbau',datei:'index.html',
+   aufgabe:'Erstelle einen Link mit href und ein Bild mit src und alt.',
+   code:'<!doctype html>\n<html lang="de"><head><meta charset="utf-8"><title>Links und Bilder</title></head><body>\n<!-- Ergänze einen Link und ein Bild. -->\n</body></html>',
+   pruefen:c=>/<a\b[^>]*href\s*=\s*["'][^"']+["'][^>]*>[\s\S]*?<\/a>/i.test(c)&&/<img\b[^>]*src\s*=\s*["'][^"']+["'][^>]*alt\s*=\s*["'][^"']+["']/i.test(c),
+   tipp:'Nutze <a href="https://example.org">Link</a> und <img src="bild.png" alt="Beschreibung">.'},
+  {id:'css-layout',titel:'CSS Aufbau – Flexbox',stufe:'Aufbau',datei:'style.css',
+   aufgabe:'Erstelle eine .container-Regel mit display:flex und gap.',
+   code:'.container {\n  /* Flexbox und Abstand ergänzen */\n}\n',
+   pruefen:c=>/\.container\s*\{[^}]*display\s*:\s*flex\s*;?[^}]*gap\s*:\s*[^;\s}]+/i.test(c),
+   tipp:'.container { display: flex; gap: 16px; }'},
+  {id:'javascript-functions',titel:'JavaScript Aufbau – Funktionen',stufe:'Aufbau',datei:'app.js',
+   aufgabe:'Schreibe eine Funktion addieren(a, b), die a + b zurückgibt.',
+   code:'// Ergänze deine Funktion.\n',
+   pruefen:c=>/(?:function\s+addieren\s*\(\s*a\s*,\s*b\s*\)|(?:const|let)\s+addieren\s*=\s*\(\s*a\s*,\s*b\s*\)\s*=>)[\s\S]*?\breturn\s+a\s*\+\s*b/.test(c),
+   tipp:'function addieren(a, b) { return a + b; }'},
+  {id:'python-loops',titel:'Python Aufbau – Schleifen',stufe:'Aufbau',datei:'main.py',
+   aufgabe:'Schreibe eine for-Schleife mit range(5), die print verwendet.',
+   code:'# Schreibe eine Schleife mit range(5).\n',
+   pruefen:c=>/\bfor\s+\w+\s+in\s+range\s*\(\s*5\s*\)\s*:[\s\S]*?\bprint\s*\(/.test(c),
+   tipp:'for zahl in range(5):\n    print(zahl)'},
+  {id:'web-project',titel:'Praxisprojekt – Persönliche Webseite',stufe:'Projekt',datei:'index.html',
+   aufgabe:'Baue eine Webseite mit h1, Navigation (nav), main und mindestens zwei section-Bereichen.',
+   code:'<!doctype html>\n<html lang="de"><head><meta charset="utf-8"><title>Mein Portfolio</title></head><body>\n<!-- Navigation, Hauptinhalt und zwei Bereiche ergänzen -->\n</body></html>',
+   pruefen:c=>/<h1\b/i.test(c)&&/<nav\b/i.test(c)&&/<main\b/i.test(c)&&(c.match(/<section\b/gi)||[]).length>=2,
+   tipp:'Nutze <nav>, <main>, <h1> und zweimal <section>.'}
+);
+function lernKursStatus(fortschritt) {
+  const abgeschlossen=LERN_LEKTIONEN.filter(l=>fortschritt[l.id]==='abgeschlossen').length;
+  return {abgeschlossen,gesamt:LERN_LEKTIONEN.length,fertig:abgeschlossen===LERN_LEKTIONEN.length};
+}
+function lernZertifikat() {
+  const fortschritt=store.get('sdStudioLernfortschritt',{})||{};
+  const status=lernKursStatus(fortschritt);
+  if(!status.fertig) { alert('Das Abschlusszertifikat wird nach allen '+status.gesamt+' Lektionen freigeschaltet. Aktuell: '+status.abgeschlossen+'/'+status.gesamt+'.'); return; }
+  const name=(prompt('Name für dein persönliches Teilnahmezertifikat:')||'').trim().slice(0,100);
+  if(!name) return;
+  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const win=window.open('','_blank');
+  if(!win) { alert('Bitte Pop-ups für das Zertifikat erlauben.'); return; }
+  win.document.open();
+  win.document.write('<!doctype html><html lang="de"><meta charset="utf-8"><title>SD Studio Lernzertifikat</title>'+
+    '<body style="font:20px system-ui;text-align:center;padding:9vh 6vw"><h1>🎓 Teilnahmezertifikat</h1>'+
+    '<h2>'+esc(name)+'</h2><p>hat alle '+status.gesamt+' Übungen des SD Code-Studio Programmier-Lernmodus abgeschlossen.</p>'+
+    '<p>HTML · CSS · JavaScript · Python · Praxisprojekt</p><p>'+esc(new Date().toLocaleDateString('de-DE'))+'</p>'+
+    '<small>Automatisch erstellter Lernnachweis – keine staatlich anerkannte Qualifikation.</small>'+
+    '<p><button onclick="window.print()">Drucken / als PDF speichern</button></p></body></html>');
+  win.document.close();
+}
+
 function lernAufgabePruefen(id,code) {
   const lektion=LERN_LEKTIONEN.find(x=>x.id===id);
   return !!lektion && typeof code==='string' && lektion.pruefen(code);
@@ -1063,7 +1115,7 @@ async function programmierLernmodus() {
 }
 async function lernaufgabePruefen() {
   if(!S.p) { alert('Bitte zuerst ein Lernprojekt öffnen.'); return; }
-  const match=S.p.name.match(/^lernen-(html|css|javascript|python)(?:-\d+)?$/);
+  const match=S.p.name.match(/^lernen-(html-links|css-layout|javascript-functions|python-loops|web-project|html|css|javascript|python)(?:-\d+)?$/);
   const lektion=match&&LERN_LEKTIONEN.find(l=>l.id===match[1]);
   if(!lektion||!S.p.dateien['LEKTION.md']) { alert('Dies ist kein Lernmodus-Projekt. Starte zuerst eine Lektion.'); return; }
   try { await speichernJetzt(); } catch(e) { toast('Prüfung abgebrochen: Speichern fehlgeschlagen.'); return; }
