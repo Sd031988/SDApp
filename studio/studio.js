@@ -886,12 +886,31 @@ async function swStarten() {
     S.swBereit = !!(reg.active || w); return S.swBereit; } catch (e) { return false; }
 }
 function relAufloesen(basis, ref) { if (/^(https?:|data:|blob:|mailto:|tel:|#|\/\/|javascript:)/i.test(ref)) return null; const t = (basis.includes('/') ? basis.slice(0, basis.lastIndexOf('/') + 1) : '') + ref.split(/[?#]/)[0]; const out = []; t.split('/').forEach(x => { if (x === '..') out.pop(); else if (x && x !== '.') out.push(x); }); return out.join('/'); }
+/* Listen for errors in opaque-origin srcdoc previews, without sharing storage with Studio. */
+function sichereVorschauBruecke() {
+  const code = [
+    '(function(){',
+    'var P=window.parent;if(!P||P===window)return;',
+    'function fmt(x){try{if(x instanceof Error)return x.message;if(typeof x==="object")return JSON.stringify(x);return String(x)}catch(_){return String(x)}}',
+    'function send(kind,args,file,line){try{P.postMessage({sdVorschau:1,typ:kind,text:Array.prototype.map.call(args,fmt).join(" "),datei:file||null,zeile:line||null},"*")}catch(_){}}',
+    '["log","info","warn","error"].forEach(function(kind){var original=console[kind];console[kind]=function(){send(kind,arguments);return original.apply(console,arguments)}});',
+    'window.addEventListener("error",function(e){',
+    'var src=String(e.filename||"");var m=/sd-studio-preview\\/([^?#\\s]+)/.exec(src);',
+    'var file=null;try{if(m)file=decodeURIComponent(m[1])}catch(_){}',
+    'send("fehler",[e.message||"Unbekannter JavaScript-Fehler"],file,e.lineno||null);',
+    '});',
+    'window.addEventListener("unhandledrejection",function(e){var reason=e.reason;send("fehler",["Promise: "+(reason&&reason.message||fmt(reason))],null,null)});',
+    '})();'
+  ].join('');
+  return '<script>' + code.replace(/<\/script/gi, '<\\/script') + '<\/script>';
+}
 function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung ohne Service Worker
   const d = S.p.dateien; let h = d[start];
   h = h.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, href) => { if (!/stylesheet/i.test(m)) return m; const p = relAufloesen(start, href); return p && d[p] != null ? '<style>/* ' + p + ' */\n' + d[p] + '\n</style>' : m; });
-  h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => { const p = relAufloesen(start, src); return p && d[p] != null ? '<script' + a + b + '>/* ' + p + ' */\n' + d[p].replace(/<\/script/gi, '<\\/script') + '\n<\/script>' : m; });
+  h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => { const p = relAufloesen(start, src); return p && d[p] != null ? '<script' + a + b + '>/* ' + p + ' */\n' + d[p].replace(/<\/script/gi, '<\\/script') + '\n//# sourceURL=sd-studio-preview/' + encodeURIComponent(p) + '\n<\/script>' : m; });
   h = h.replace(/(src|href)=["']([^"']+\.(?:png|jpe?g|gif|webp|svg|ico|avif))["']/gi, (m, attr, ref) => { const p = relAufloesen(start, ref); if (!p || d[p] == null) return m; const v = d[p]; return attr + '="' + (istBinaer(v) ? v : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(v)) + '"'; });
-  return h;
+  const bridge = sichereVorschauBruecke();
+  return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
 }
 function startSeite() { const d = Object.keys(S.p.dateien); if (S.aktiv && /\.html?$/i.test(S.aktiv)) return S.aktiv; return d.find(x => x === 'index.html') || d.find(x => /(^|\/)index\.html$/.test(x)) || d.find(x => /\.html?$/i.test(x)); }
 async function vorschau(neu) {
@@ -910,6 +929,8 @@ async function vorschau(neu) {
   // by htmlZusammenbauen(). Keep allow-same-origin OFF for untrusted AI code.
   const istKiProjekt = Object.prototype.hasOwnProperty.call(S.p, 'kiQuelle');
   if (istKiProjekt || !S.swBereit) {
+    // srcdoc otherwise inherits the studio origin. Never give local preview its cookies/storage.
+    f.setAttribute('sandbox', 'allow-scripts allow-forms');
     f.removeAttribute('src');
     f.srcdoc = htmlZusammenbauen(start);
     $('url').value = '/' + start + ' (sichere lokale Vorschau)';
@@ -922,7 +943,14 @@ async function vorschau(neu) {
 }
 window.addEventListener('message', e => { const m = e.data; if (!m || !m.sdVorschau || e.source !== $('frame').contentWindow) return;
   S.konsole.push(m); if (S.konsole.length > 300) S.konsole.shift(); konsoleZeigen();
-  if (m.typ === 'fehler' || m.typ === 'error') { const s = /\(([^():]+):(\d+)\)\s*$/.exec(m.text); S.problemeVorschau.push({ text: m.text, datei: s ? s[1] : null, zeile: s ? +s[2] : null }); probleme(); } });
+  if (m.typ === 'fehler' || m.typ === 'error') {
+    const match = /\(([^():]+):(\d+)\)\s*$/.exec(m.text);
+    const file = typeof m.datei === 'string' && S.p?.dateien?.[m.datei] != null ? m.datei : (match ? match[1] : null);
+    const line = Number.isInteger(m.zeile) && m.zeile > 0 ? m.zeile : (match ? +match[2] : null);
+    S.problemeVorschau.push({ text: m.text, datei: file, zeile: line });
+    if (S.problemeVorschau.length > 100) S.problemeVorschau.shift();
+    probleme();
+  } });
 function konsoleZeigen() { const box = $('konsoleAus'); if (!box) return; box.innerHTML = ''; S.konsole.slice(-200).forEach(m => { const z = document.createElement('div'); z.className = 'kz ' + m.typ; z.textContent = ({ error: '⨯ ', fehler: '⨯ ', warn: '⚠ ', ergebnis: '← ' }[m.typ] || '') + m.text; box.appendChild(z); }); box.scrollTop = box.scrollHeight;
   const n = S.konsole.filter(m => m.typ === 'error' || m.typ === 'fehler').length; $('konsoleAnz').textContent = n ? n : ''; }
 function geraet(w) { $('frame').style.width = w; document.querySelectorAll('#geraete button').forEach(b => b.classList.toggle('an', b.dataset.w === w)); }
