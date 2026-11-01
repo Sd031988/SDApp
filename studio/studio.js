@@ -94,7 +94,7 @@ const VORLAGEN = [
 ];
 
 /* ---------------- Projekte ---------------- */
-async function projektOeffnen(name, datei) {
+async function projektOeffnen(name, datei, optionen) {
   // Offene Editor-Änderungen müssen vor dem Projektwechsel dauerhaft
   // gespeichert sein; bei einem Fehler bleibt das aktuelle Projekt offen.
   if (S.p && S.geaendert) {
@@ -109,7 +109,8 @@ async function projektOeffnen(name, datei) {
   S.offen = new Set(dat.map(d => d.split('/').slice(0, -1).join('/')).filter(Boolean).map(o => o.split('/')[0]));
   baum(); if (haupt) dateiOeffnen(haupt); else { editorLeer(); }
   tabsZeigen(); status(); projektListe();
-  if (istWebProjekt()) vorschau(true); else { $('vorschau').hidden = true; }
+  // Imported AI code must not execute automatically when a fresh project copy opens.
+  if (istWebProjekt() && !(optionen && optionen.keineAutoVorschau)) vorschau(true); else { $('vorschau').hidden = true; }
 }
 async function projektNeu(vorlageId, nameVorschlag) {
   const v = VORLAGEN.find(x => x.id === vorlageId) || VORLAGEN[0];
