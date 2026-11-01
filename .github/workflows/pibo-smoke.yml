@@ -1,0 +1,27 @@
+name: Pibo smoke checks
+on:
+  push:
+    paths:
+      - 'kids/**'
+      - '.github/workflows/pibo-smoke.yml'
+  pull_request:
+    paths:
+      - 'kids/**'
+      - '.github/workflows/pibo-smoke.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Pibo modules
+        run: |
+          node --check kids/pibo-care.js
+          node --check kids/pibo-audio.js
+          node --check kids/pibo-smoke.js
+      - name: Exercise rooms, feeding, bath, sleep, toilet and games
+        run: node kids/pibo-smoke-test.mjs
