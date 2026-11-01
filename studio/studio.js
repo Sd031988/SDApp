@@ -927,7 +927,7 @@ function befehle() { const B = [
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
-  ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
+  ['✎ Projekt umbenennen', '', projektUmbenennen], ['☁ Cloud-Backup als ZIP', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
   ['⌨ Konsole', '', () => unten('konsole')], ['⨯ Probleme', '', () => unten('probleme')], ['🖥 Vorschau: PC', '', () => geraet('100%')], ['📱 Vorschau: Handy', '', () => geraet('390px')], ['⟳ Vorschau neu laden', '', () => vorschau(false)], ['↗ Vorschau in neuem Tab', '', () => $('neuTab').click()],
@@ -935,6 +935,80 @@ function befehle() { const B = [
   palette(B.map(([l, k, fn]) => ({ label: l, info: k, fn })), 'Befehl eingeben …', x => x.fn()); }
 const KUERZEL = 'Tastenkürzel:\nF5 / Strg+Enter  Ausführen\nStrg+S  Speichern (passiert auch automatisch)\nStrg+P  Datei öffnen\nStrg+Umschalt+P  Alle Befehle\nStrg+Umschalt+F  In allen Dateien suchen\nStrg+F / Strg+H  Suchen / Ersetzen in der Datei\nStrg+G  Gehe zu Zeile\nStrg+/  Kommentar an/aus\nStrg+D  Zeile verdoppeln\nAlt+↑/↓  Zeile verschieben\nStrg+Leertaste  Vorschläge\nUmschalt+Alt+F  Code formatieren\nStrg+W  Tab schließen\nStrg+B  Seitenleiste ein/aus\nStrg+J  Unteres Feld ein/aus';
 async function projektUmbenennen() { if (!S.p) return; const n = (prompt('Neuer Projektname:', S.p.name) || '').trim(); if (!n || n === S.p.name) return; if (await projLesen(n)) { alert('Den Namen gibt es schon.'); return; } await speichernJetzt(); const alt = S.p.name; S.p.name = n; await projSchreiben(S.p); await projLoeschen(alt); await projektOeffnen(n); }
+
+/* GitHub & Cloud-Projekte: öffentlicher Read-only-Import + portable Cloud-Backups.
+   Keine Zugangsdaten im Browser und kein Schreiben in fremde Repositories. */
+function githubAdressePruefen(eingabe) {
+  const wert = String(eingabe || '').trim();
+  const match = wert.match(/^(?:https:\/\/github\.com\/)?([a-z\d](?:[a-z\d-]{0,37}[a-z\d])?)\/([a-z\d._-]+?)(?:\.git)?\/?$/i);
+  if (!match || match[2] === '.' || match[2] === '..') return null;
+  return {owner:match[1],repo:match[2]};
+}
+function githubPfadSicher(pfad) {
+  return typeof pfad === 'string' && pfad.length <= 240 &&
+    sicherPfad(pfad) === pfad && !pfad.split('/').some(x => !x || x === '.git' || x === 'node_modules');
+}
+async function githubProjektImport() {
+  const eingabe = prompt('GitHub-Projekt importieren (öffentliches Repository):\n\nhttps://github.com/OWNER/REPO\n\nEs wird ausschließlich eine neue lokale Projektkopie angelegt.');
+  if (!eingabe) return;
+  const adresse = githubAdressePruefen(eingabe);
+  if (!adresse) { alert('Ungültige GitHub-Repository-Adresse.'); return; }
+  try {
+    const api = 'https://api.github.com/repos/' + encodeURIComponent(adresse.owner) + '/' + encodeURIComponent(adresse.repo);
+    const response = await fetch(api,{headers:{Accept:'application/vnd.github+json'}});
+    if (!response.ok) throw new Error('GitHub-Repository nicht verfügbar (HTTP '+response.status+').');
+    const meta = await response.json();
+    if (meta.private || !meta.default_branch) throw new Error('Nur öffentliche Repositories werden unterstützt.');
+    const branch = meta.default_branch;
+    const treeResponse = await fetch(api+'/git/trees/'+encodeURIComponent(branch)+'?recursive=1',
+      {headers:{Accept:'application/vnd.github+json'}});
+    if (!treeResponse.ok) throw new Error('Dateiliste nicht verfügbar (HTTP '+treeResponse.status+').');
+    const tree = await treeResponse.json();
+    if (tree.truncated) throw new Error('Repository zu groß: Dateiliste unvollständig.');
+    const files = (tree.tree || []).filter(x => x.type === 'blob' && githubPfadSicher(x.path));
+    if (!files.length || files.length > 250) throw new Error('Es werden 1 bis 250 Dateien unterstützt.');
+    if (files.some(x => x.size > 2e6) || files.reduce((n,x)=>n+(x.size||0),0)>15e6)
+      throw new Error('Repository überschreitet das Größenlimit (2 MB pro Datei, 15 MB insgesamt).');
+    if (!confirm('GitHub-Projekt „'+adresse.owner+'/'+adresse.repo+'“ mit '+files.length+
+      ' Dateien als NEUES Projekt importieren?\n\nNur öffentliche Inhalte. Keine bestehenden Projekte werden überschrieben.')) return;
+    const dateien = {};
+    for (const file of files) {
+      const blob = await fetch(api+'/git/blobs/'+file.sha,{headers:{Accept:'application/vnd.github+json'}});
+      if (!blob.ok) throw new Error('Datei konnte nicht geladen werden: '+file.path);
+      const data = await blob.json();
+      if (data.encoding !== 'base64' || typeof data.content !== 'string') throw new Error('Unbekanntes Dateiformat: '+file.path);
+      const bytes = Uint8Array.from(atob(data.content.replace(/\s/g,'')),c=>c.charCodeAt(0));
+      if (bytes.length > 2e6) throw new Error('Datei zu groß: '+file.path);
+      const textArt = /\.(?:html?|css|js|mjs|cjs|ts|tsx|jsx|json|md|txt|py|java|cs|c|cc|cpp|h|hpp|rs|go|kt|php|rb|sql|ya?ml|toml|svg|xml|csv|env|gitignore|vue|svelte|lock)$/i.test(file.path) || !file.path.split('/').pop().includes('.');
+      if (textArt) dateien[file.path] = new TextDecoder().decode(bytes);
+      else {
+        let raw=''; for(let i=0;i<bytes.length;i+=8192) raw+=String.fromCharCode(...bytes.subarray(i,i+8192));
+        dateien[file.path]='data:'+mimeVon(file.path)+';base64,'+btoa(raw);
+      }
+    }
+    const basis=slug(adresse.repo).slice(0,65)||'github-projekt'; let name=basis,n=2;
+    while(await projLesen(name)) name=basis+'-'+n++;
+    if (S.p && S.geaendert) await speichernJetzt();
+    await projSchreiben({name,dateien,haupt:Object.keys(dateien).find(p=>/(^|\/)index\.html?$/i.test(p))||'',versionen:[],erstellt:Date.now()});
+    await projektOeffnen(name);
+    toast('GitHub-Projekt als lokale Kopie importiert.');
+  } catch(e) { console.error(e); alert('GitHub-Import fehlgeschlagen: '+e.message+'\n\nEs wurden keine bestehenden Projekte verändert.'); }
+}
+async function cloudProjektBackup() {
+  if (!S.p) { alert('Bitte zuerst ein Projekt öffnen.'); return; }
+  const p=S.p;
+  try { await speichernJetzt(); } catch(e) { toast('Backup abgebrochen: Speichern fehlgeschlagen.'); return; }
+  if (S.p!==p) return;
+  const dateien={...p.dateien};
+  dateien['SD-CLOUD-BACKUP-INFO.txt'] =
+    'SD Code-Studio – portables Projektbackup\nProjekt: '+p.name+
+    '\nErstellt: '+new Date().toISOString()+
+    '\n\nDieses ZIP kann im Studio über „ZIP öffnen“ auf einem anderen Gerät importiert werden.'+
+    '\nDie Cloud-Synchronisierung erfolgt nicht automatisch. Das ZIP kann in einem eigenen Cloud-Speicher abgelegt werden.\n';
+  herunterladen(zipBauen(dateien),slug(p.name)+'-cloud-backup.zip');
+  toast('Portables Projektbackup erstellt. In deinem Cloud-Speicher ablegen.');
+}
+
 async function projektDuplizieren() { if (!S.p) return; const n = (prompt('Name der Kopie:', S.p.name + '-kopie') || '').trim(); if (!n) return; await speichernJetzt(); await projSchreiben({ ...JSON.parse(JSON.stringify(S.p)), name: n }); await projektOeffnen(n); toast('⧉ Kopie angelegt'); }
 async function projektLoeschen() { if (!S.p) return; if (!confirm('Projekt „' + S.p.name + '“ wirklich löschen? Tipp: vorher ⬇ als ZIP sichern.')) return; if (prompt('Zum Bestätigen den Projektnamen eintippen:') !== S.p.name) return; await projLoeschen(S.p.name); S.p = null; const l = await projAlle(); if (l.length) projektOeffnen(l[0].name); else { baum(); editorLeer(); projektListe(); } }
 
