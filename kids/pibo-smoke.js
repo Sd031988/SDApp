@@ -31,12 +31,27 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  const click=(key,val)=>{const b=groups[key]?.find(x=>x.dataset[key]===val)||get(val===undefined?key:val);if(!b?.handlers?.click)throw Error('Missing click '+key+':'+val);b.click()};
  const frame=(n=1)=>{for(let i=0;i<n;i++){now+=150;const cb=frames.shift();if(!cb)throw Error('No animation frame');cb()}};
  for(const room of ['living','kitchen','bedroom','bathroom','toilet']){click('room',room);frame()}
- click('food','3');click('act','feed');frame(50);
+ click('food','3');
+ const foodDrag=groups.food.find(b=>b.dataset.food==='2');
+ if(!foodDrag?.handlers?.dragstart||!get('stage').handlers.drop)throw Error('Food drag/drop not installed');
+ const data={types:['text/plain'],effectAllowed:'',raw:'',setData(_type,value){this.raw=value},getData(){return this.raw}};
+ foodDrag.handlers.dragstart({dataTransfer:data});
+ let dropPrevented=false;
+ get('stage').handlers.drop({dataTransfer:data,preventDefault(){dropPrevented=true}});
+ if(!dropPrevented)throw Error('Food drop did not accept the item');
+ frame(50);
+ foodDrag.handlers.pointerdown({pointerType:'touch',pointerId:9});
+ get('stage').handlers.pointerup({pointerId:9});
+ frame(50);
+ click('act','feed');frame(50);
  click('act','wash');frame(50);
  click('act','sleep');frame(65);
  click('potty');frame(55);
  click('outfit');if(wardrobeButtons.length!==12)throw Error('Wardrobe has '+wardrobeButtons.length+' outfits, expected 12');
  wardrobeButtons[11].click();click('surprise');click('surprise');
+ const savedGift=JSON.parse(storage.get('sd-kids-pibo-extras-v2'));
+ if(savedGift.gifts!==1)throw Error('Duplicate daily gift: '+savedGift.gifts);
+ if(get('starsCount').textContent!==String(savedGift.stars))throw Error('Star display is stale');
  const canvas=get('stage').children[0];if(!canvas?.handlers?.pointerdown)throw Error('Missing canvas pointer input');
  click('minigame');for(let n=0;n<9;n++)canvas.handlers.pointerdown({clientX:400,clientY:250,pointerId:1});
  if(get('gamePoints').textContent!=='9')throw Error('Ball scoring broken');
@@ -46,5 +61,5 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  click('mousegame');click('photo');frame();
  if(!storage.has('sd-kids-pibo-v1'))throw Error('Game progress not persisted');
  if(!sounds.includes('chew')||!sounds.includes('flush')||!sounds.includes('splash'))throw Error('Missing care sound triggers: '+sounds.join(','));
- return {status:'PASS',checks:['startup','5 room navigation','food choice','feeding','bathing','sleeping','toilet and flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
+ return {status:'PASS',checks:['startup','5 room navigation','food choice','desktop and touch food drop','daily gift once','visible stars','feeding','bathing','sleeping','toilet and flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
 }
