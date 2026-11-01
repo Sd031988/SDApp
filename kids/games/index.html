@@ -260,5 +260,6 @@ window.addEventListener('pageshow',()=>{
  profile=readProfile();preferences=readSettings();renderStats();render();
 });
 renderStats();render();
+window.__sdKidsHubReady=true;
 if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></body></html>
