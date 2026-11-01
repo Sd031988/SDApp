@@ -1,0 +1,49 @@
+name: SD Hub – Gemeinsames App-Design
+on:
+  push:
+    paths:
+      - 'sd-workspace.css'
+      - 'sd-workspace.js'
+      - 'sd-bereich.css'
+      - 'tests/hub/app-workspace.*'
+      - 'deutsch/**'
+      - 'studio/index.html'
+      - 'design/index.html'
+      - 'assistent/index.html'
+      - 'kids/**'
+      - 'fristen/index.html'
+      - 'post/index.html'
+      - '.github/workflows/app-workspace.yml'
+  pull_request:
+    paths:
+      - 'sd-workspace.css'
+      - 'sd-workspace.js'
+      - 'sd-bereich.css'
+      - 'tests/hub/app-workspace.*'
+      - 'deutsch/**'
+      - 'studio/index.html'
+      - 'design/index.html'
+      - 'assistent/index.html'
+      - 'kids/**'
+      - '.github/workflows/app-workspace.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  app-design:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sicherheits- und Navigationsprüfungen
+        run: |
+          node --check sd-workspace.js
+          node --test tests/hub/app-workspace.test.cjs
+      - name: Browser vorbereiten
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Desktop und Handy testen
+        run: node tests/hub/app-workspace.browser.cjs
