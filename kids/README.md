@@ -68,3 +68,35 @@ Die bestehende Pibo-Automatisierung wurde am 01.11.2026 auf einen stündlichen E
 - **Regressionen:** Neuer `pibo-care.test.mjs` simuliert mehr als 120 Sekunden in Bad und Toilette, Seife → Dusche → Handtuch, Spülung, Kopf-/Pfoten-Rücksetzung sowie zeitgesteuertes Fressen/Schlafen. Der Pibo-Smoke-Workflow führt ihn aus.
 - **Vorabprüfung:** JS-Parsing und simulierte Pflegesequenzen bestanden. Vorheriger Main-Stand `547a39693960`: Pibo-Smoke, Chromium-Browser-Checks und Pages-Deployment erfolgreich. Die neuen CI-Resultate sind noch abzuwarten.
 - **Offen:** Echte mobile Touch-/GPU-Tests, Animation-Blendings, Kollisionsprüfung, Audioabmischung, Offline-Betrieb. **Nächster Schritt:** Langzeit-Pflegegesten im echten Playwright-WebGL-Browser testen.
+
+
+## Verbindlicher Qualitätsvergleich mit dem Original
+
+Der laufend zu aktualisierende, **quellenbasierte Vergleichskatalog** befindet
+sich in [pibo-benchmark.json](pibo-benchmark.json). Seine 26 unabhängigen
+Kriterien decken Grafik, Animationen, Pflege, natürliche Sounds, direkte
+Berührungsreaktionen, Räume, Minispiele, zusätzliche Spielwelten, Offline-Betrieb,
+Datenschutz und reale Endgerätetests ab.
+
+Referenzen sind das offizielle **My Talking Tom 2**-Produktprofil, der
+Google-Play-Eintrag sowie 2026 veröffentlichte Herstellerinformationen zu
+Badezimmer-Minispielen, frei begehbarem Garten und neuen Abenteuern. Bei
+jedem weiteren Pibo-Durchlauf gilt:
+
+1. Erneut aktuelle **Originalfunktionen** prüfen und Änderungen vermerken.
+2. Pibo im Browser und im Code dagegen **pro Merkmal** vergleichen.
+3. Die größte realistische Qualitätslücke konkret verbessern.
+4. Regressionstests und CI für die vorhandenen Funktionen ausführen.
+5. Änderungen erst mit Code- und Testbeleg im Vergleichskatalog aktualisieren.
+6. Fehlende Profi-Assets, Animationen, Sounds, iOS/Android-Tests und sonstige
+   Einschränkungen **nicht** als fertig bewerten.
+
+Automatisiert validiert `node kids/pibo-benchmark.test.mjs` die Nachweise.
+Der Vergleich orientiert sich an der **Spielqualität und allgemeinen
+Mechaniken**, niemals an einer illegalen 1:1-Kopie der markenrechtlich
+und urheberrechtlich geschützten Figur, Originalgeräusche oder Grafikdateien.
+
+**Stand 1. November 2026:** Das professionelle Skelett-3D-Modell, echte
+freie 3D-Erkundung, eigenständige Begleittiere, Reisen und mehrere
+Minispiele fehlen noch oder existieren erst in Basisform. Das ist eine
+konkrete offene Aufgabenliste, **keine** Fertigstellungsbestätigung.
