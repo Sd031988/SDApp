@@ -83,7 +83,8 @@ export class PiboCare {
       f.position.set(1.45*(1-q),.62+1.07*q,1.25-.2*q);
       f.scale.setScalar(Math.max(.001,1-smooth((p-.57)/.17)));
       if(p>.42&&p<.78){
-        this.head.rotation.x=.12+.09*Math.sin(t*21);this.mouth.scale.y=.04+.13*Math.abs(Math.sin(t*21));
+        const bite=Math.abs(Math.sin(t*21));this.head.rotation.x=.12+.09*Math.sin(t*21);this.mouth.scale.y=.04+.13*bite;
+        this.cat.scale.y=1-.025*bite;
         if(now-i.lastSound>480){this.sound('chew');i.lastSound=now}
       }
     }
