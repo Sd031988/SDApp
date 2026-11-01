@@ -70,7 +70,12 @@ export class PiboCare {
     this.cat.position.set(target*near,Math.sin(t*18)*.03*near,(i.type==='feed'?0:-1.12)*near);
     this.cat.rotation.set(0,0,0);this.cat.scale.set(1,1,1);
     this.mouth.scale.y=.04;
-    for(let j=0;j<this.paws.length;j++)if(phase===0)this.paws[j].position.y=.21+.16*Math.max(0,Math.sin(t*14+j*Math.PI));
+    for(let j=0;j<this.paws.length;j++){
+      const stride=phase===0?.16*Math.max(0,Math.sin(t*14+j*Math.PI)):0;
+      const eating=i.type==='feed'&&phase===2?.10*Math.abs(Math.sin(t*10+j*Math.PI)):0;
+      const scrubbing=i.type==='wash'&&phase===1?.14*Math.abs(Math.sin(t*8+j*Math.PI)):0;
+      this.paws[j].position.y=.21+stride+eating+scrubbing;
+    }
     if(i.type==='feed'){
       const q=smooth((p-.22)/.37),f=i.food;
       f.position.set(1.45*(1-q),.62+1.07*q,1.25-.2*q);
