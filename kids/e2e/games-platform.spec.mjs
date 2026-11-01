@@ -73,3 +73,57 @@ test('Kids minis share only their own local virtual stars',async({page})=>{
  await page.goto('/kids/games/play.html?game=fashion');
  await expect(page.locator('#score')).toContainText('12 Spielsterne');
 });
+
+
+test('Professional games portal: search, favorites, sorting, achievements and backup',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/kids/games/');
+ await expect(page.locator('.game')).toHaveCount(10);
+ await page.locator('#gameSearch').fill('garden');
+ await expect(page.locator('.game')).toHaveCount(1);
+ await expect(page.locator('.game h3')).toHaveText('SD Garden World');
+ await page.locator('.favorite').click();
+ await expect(page.locator('.favorite')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#gameSearch').fill('');
+ await page.getByRole('button',{name:'♡ Favoriten'}).click();
+ await expect(page.locator('.game')).toHaveCount(1);
+ await expect(page.locator('.game h3')).toHaveText('SD Garden World');
+ await page.getByRole('button',{name:'Alle',exact:true}).click();
+ await page.locator('#sortGames').selectOption('favorite');
+ await expect(page.locator('.game').first().locator('h3')).toHaveText('SD Garden World');
+ await expect(page.locator('.achievement')).toHaveCount(8);
+ const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#exportSave').click()]);
+ expect(download.suggestedFilename()).toBe('sd-kids-spielstand.json');
+ await page.evaluate(()=>{window.confirm=()=>true});
+ const backup=await page.evaluate(async()=>{
+  const settings=localStorage.getItem('sd-kids-ui-v1');
+  const games=localStorage.getItem('sd-kids-games-v1');
+  return JSON.stringify({format:'sd-kids-games-backup',version:1,
+   settings:JSON.parse(settings),games:games?JSON.parse(games):{games:{}}});
+ });
+ await page.locator('#backupFile').setInputFiles({
+  name:'sd-kids-spielstand.json',mimeType:'application/json',buffer:Buffer.from(backup)
+ });
+ await expect(page.locator('#backupStatus')).toContainText('geladen');
+ expect(errors).toEqual([]);
+});
+
+test('Mini-games support pause, reduced motion and persisted sound preferences',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/kids/games/play.html?game=obby');
+ await expect.poll(()=>page.evaluate(()=>window.__sdMiniReady?.version)).toBe(2);
+ await page.locator('#pause').click();
+ await expect(page.locator('#pauseShade')).toBeVisible();
+ await expect(page.locator('#pause')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#resume').click();
+ await expect(page.locator('#pauseShade')).toBeHidden();
+ await page.locator('#motion').click();
+ await expect(page.locator('#motion')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#sound').click();
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await page.reload();
+ await expect(page.locator('#motion')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#saveIndicator')).toContainText('gespeichert');
+ expect(errors).toEqual([]);
+});
