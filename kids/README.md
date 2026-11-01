@@ -60,3 +60,11 @@ Zur laufenden Projektplanung: [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md). **Produk
 ## Kontinuierliche Qualitätsverbesserung
 
 Die bestehende Pibo-Automatisierung wurde am 01.11.2026 auf einen stündlichen Entwicklungs- und Prüfzyklus geändert. Jeder Durchlauf prüft den Hauptbranch, bestehende Funktionen, Testresultate und eine konkrete verbleibende Qualitätslücke; die Automatik bedeutet **nicht**, dass ununterbrochen Rechenarbeit läuft oder 100 % Fertigstellung garantiert ist. Kein geschütztes Talking-Tom-Modell, keine Originalsounds, kein proprietary code. Priorität: eine **eigenständige Pibo-Premium-Welt** mit hoher Spieltiefe, rechtmäßigen Assets und nachweisbaren Browser-/Touch-Tests.
+
+## Qualitätsdurchlauf 01.11.2026 – Pflege ohne Zeitdruck
+
+- **Repariert:** Das Bad endete bisher nach 20 Sekunden automatisch, auch ohne Abspülen/Abtrocknen. Es bleibt jetzt bis zur letzten Pflegeaktion aktiv.
+- **Repariert:** Der Toilettengang endete bisher nach 7,5 Sekunden ohne Spülung. Er wartet nun auf den Spülknopf; danach läuft die Ausstiegsanimation.
+- **Regressionen:** Neuer `pibo-care.test.mjs` simuliert mehr als 120 Sekunden in Bad und Toilette, Seife → Dusche → Handtuch, Spülung, Kopf-/Pfoten-Rücksetzung sowie zeitgesteuertes Fressen/Schlafen. Der Pibo-Smoke-Workflow führt ihn aus.
+- **Vorabprüfung:** JS-Parsing und simulierte Pflegesequenzen bestanden. Vorheriger Main-Stand `547a39693960`: Pibo-Smoke, Chromium-Browser-Checks und Pages-Deployment erfolgreich. Die neuen CI-Resultate sind noch abzuwarten.
+- **Offen:** Echte mobile Touch-/GPU-Tests, Animation-Blendings, Kollisionsprüfung, Audioabmischung, Offline-Betrieb. **Nächster Schritt:** Langzeit-Pflegegesten im echten Playwright-WebGL-Browser testen.

@@ -91,13 +91,20 @@ export class PiboCare {
   flush(){
     const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<1)return false;
     i.flushed=true;
+    i.start=performance.now()-i.duration*.82; // exit only after user flushes
     if(i.water)i.water.visible=true;
     this.sound('flush');this.onStatus(true,'Gespült!',1);
     return true
   }
   update(t,now=performance.now()){
     const i=this.active;if(!i)return;
-    const p=Math.min(1,(now-i.start)/i.duration);
+    const elapsed=Math.max(0,(now-i.start)/i.duration);
+    // Player-driven bathing and toilet visits must not expire mid-interaction.
+    const p=i.type==='wash'&&!i.dried
+      ?Math.min(i.rinsed?.82:.68,elapsed)
+      :i.type==='toilet'&&!i.flushed
+        ?Math.min(.74,elapsed)
+        :Math.min(1,elapsed);
     if(p>=1){this.stop();return}
     const phase=Math.min(3,Math.floor(p*4));
     const labels={feed:['Zum Futter gehen','Essen ansehen','Lecker kauen','Fertig!'],wash:['In die Wanne steigen','Einseifen','Abspülen','Abtrocknen'],sleep:['Zum Bett gehen','Hinlegen','Schlafen','Aufwachen'],toilet:['Zur Toilette gehen','Hinsetzen','Toilette benutzen','Spülen']};
