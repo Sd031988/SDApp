@@ -463,13 +463,21 @@ function explainAnswer(t,withTranscript){
  if(t.options.length===2)return 'Laut Lösungsschlüssel ist die Aussage '+(t.answer===0?'richtig / Ja':'falsch / Nein')+'. Prüfe die Angaben im Text.';
  return 'Richtige Antwort: „'+solution+'“. Vergleiche die Information mit dem Lesetext.';
 }
+function compareWrongAnswer(t,answer){
+ if(answer===null||answer===undefined||answer===t.answer)return '';
+ const chosen=t.options[answer],correct=t.options[t.answer];
+ if(t.kind&&t.kind.includes('Anzeigen zuordnen'))return 'Deine gewählte Anzeige „'+chosen+'“ ist nicht die vorgesehene Zuordnung. Prüfe, welche konkrete Bedingung in der Situation genannt wird und ob sie in der richtigen Anzeige „'+correct+'“ vorkommt.';
+ if(t.kind&&(t.kind.includes('Lückentext')||t.kind.includes('Wortwahl')))return 'Du hast „'+chosen+'“ eingesetzt. Vergleiche die grammatische Form und die Bedeutung mit „'+correct+'“. Die anderen Optionen sind nicht automatisch in jedem Zusammenhang falsch.';
+ if(t.options.length===2)return 'Du hast „'+chosen+'“ gewählt. Der Lösungsschlüssel sieht „'+correct+'“ vor. Suche die Aussage im Text und achte besonders auf Verneinungen, Zeitangaben und Einschränkungen.';
+ return 'Du hast „'+chosen+'“ gewählt. Im Lösungsschlüssel steht „'+correct+'“. Prüfe die Angaben im Text oder Hörtext und unterscheide ausdrücklich zwischen diesen beiden Möglichkeiten.';
+}
 function reviewTask(t,answer,i,withTranscript){
  const selected=answer===null||answer===undefined?'–':t.options[answer]||'–';
  const correct=answer===t.answer;
  const status=answer===null||answer===undefined?'Nicht beantwortet':correct?'Richtig beantwortet':'Noch einmal üben';
  const evidence=withTranscript?'Höre die Aufnahme erneut oder lies den Hörtext. Suche die Stelle, die die richtige Antwort belegt.':t.kind&&t.kind.includes('Anzeigen zuordnen')?'Vergleiche die Angaben der Situation mit der passenden Anzeige. Achte auf die konkreten Bedingungen.':t.kind&&t.kind.includes('Lückentext')||t.kind&&t.kind.includes('Wortwahl')?'Setze die richtige Lösung in die Lücke ein und prüfe Grammatik und Satzbedeutung.':'Suche im Lesetext die Information, die diese Lösung bestätigt oder die falsche Aussage widerlegt.';
  const base='<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>'+esc(status)+' · Deine Antwort: '+esc(selected)+' · Lösung: '+esc(t.options[t.answer])+'</small></p>';
- const guidance='<details class="b1x-transcript"><summary>Erklärung und Textbeleg</summary><p>'+esc(explainAnswer(t,withTranscript))+'</p><p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
+ const guidance='<details class="b1x-transcript"><summary>Erklärung und Textbeleg</summary><p>'+esc(explainAnswer(t,withTranscript))+'</p>'+(answer!==null&&answer!==undefined&&answer!==t.answer?'<p>'+esc(compareWrongAnswer(t,answer))+'</p>':'')+'<p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
  return base+guidance+(withTranscript&&t.audio?'<details class="b1x-transcript"><summary>Hörtext zu Aufgabe '+(i+1)+' nachlesen</summary><p>'+esc(t.dialogue?t.dialogue.map(turn=>turn[0]+': '+turn[1]).join('\\n'):t.audio)+'</p></details>':'');
 }
 function finish(){
