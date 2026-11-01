@@ -37,5 +37,7 @@ jobs:
           node --check kids/blockworld/core.mjs
           node --check kids/blockworld/game.mjs
           node kids/blockworld/core.test.mjs
+          node --check kids/blockworld/online.mjs
+          node kids/blockworld/online.test.mjs
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
