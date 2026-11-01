@@ -1033,6 +1033,26 @@ const css=document.createElement('style');css.textContent=`
 .b1x-mark{width:100%;min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px;font:inherit;cursor:pointer}
 .b1x-overview-item.is-marked{box-shadow:inset 0 0 0 2px #facc15}
 .b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
+/* Dashboard and study screens: narrow-device and accessible touch layout. */
+#b1x .b1x-grid>*{min-width:0}
+#b1x .b1x-passage h3{margin:0 0 10px;line-height:1.35}
+#b1x .b1x-passage p{margin:8px 0}
+#b1x .b1x-passage .b1x-primary{margin:12px 0 4px}
+#b1x .b1x-card{width:100%;overflow-wrap:anywhere}
+#b1x button:focus-visible,#b1x input:focus-visible,#b1x summary:focus-visible{outline:3px solid #fdba74;outline-offset:3px}
+#b1x summary{min-height:44px;align-content:center;touch-action:manipulation}
+#b1x .b1x-check{min-height:44px;align-items:center}
+#b1x .b1x-check input{min-width:22px;min-height:22px}
+#b1x .b1x-week-row{flex-wrap:wrap;overflow-wrap:anywhere}
+@media(max-width:380px){
+ #b1x .b1x-wrap{padding-left:10px;padding-right:10px}
+ #b1x .b1x-nav{flex-wrap:wrap;justify-content:center}
+ #b1x .b1x-nav strong{flex:1 1 100%;order:-1}
+ #b1x .b1x-grid{grid-template-columns:minmax(0,1fr)}
+ #b1x .b1x-passage{padding:10px}
+ #b1x .b1x-overview-grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr))}
+}
+
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
