@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#171e49"><meta name="description" content="SD Hub Kids – kostenlose, kindgerechte Browser-Spiele: Pibo, BlockWorld, Abenteuer, Basteln, Rennen und Lernen.">
+<meta name="theme-color" content="#171e49">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><meta name="description" content="SD Hub Kids – kostenlose, kindgerechte Browser-Spiele: Pibo, BlockWorld, Abenteuer, Basteln, Rennen und Lernen.">
 <title>SD Kids Spielewelt | Alle Spiele</title>
 <style>
 :root{font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#f5f7ff;background:#0f1636}
@@ -182,4 +183,5 @@ window.addEventListener('pageshow',()=>{
  profile=readProfile();preferences=readSettings();renderStats();render();
 });
 renderStats();render();
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></body></html>
