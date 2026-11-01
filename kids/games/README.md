@@ -33,11 +33,11 @@ Der Hub enthält **10 spielbare Spiele**, davon die beiden bestehenden eigenstä
 ## Original-Sounds in allen zehn Spielen
 
 - **Gemeinsames Audio-Panel:** In der Spielezentrale kannst du Klänge an-/ausschalten und die Lautstärke wählen. Diese beiden Einstellungen gelten auch in BlockWorld, Pibo und den acht Minispielen (`sd-kids-audio-v1`, lokal im Browser).
-- **Eigene prozedural erzeugte Geräusche:** Das Modul `../sd-sound.mjs` erzeugt mehr als 30 unterschiedliche Signale ausschließlich im Browser (Web Audio) – ohne nachzuladende Sounddateien, externe Samples, Streams oder Musik mit fremden Rechten.
+- **Eigene prozedural erzeugte Geräusche:** Das Modul `../sd-sound.mjs` erzeugt 40 unterschiedliche Signale ausschließlich im Browser (Web Audio) – ohne nachzuladende Sounddateien, externe Samples, Streams oder Musik mit fremden Rechten.
 - **Obby Tower:** Sprung, Schritte, Landung, Checkpoint, Ziel und Fall.
-- **Pet Island:** Füttern, Schnurren und Schlafen, dazu dezente Vogelstimmen.
+- **Pet Island:** Füttern und Schlafen, eigene Lautbilder für Hund, Katze, Hase und Fuchs, dazu dezente Vogelstimmen.
 - **Garden World:** Samen in die Erde, Gießwasser, Ernte, Vogelstimmen.
-- **City Life:** Aufgaben und Missionsabschlüsse.
+- **City Life:** Feuerwehrsirene, Herzschlag im Krankenhaus, Paketauslieferung, Schulglocke und Missionsabschlüsse.
 - **Kart Rush:** Motorimpulse, Kontrolltore und Rundenabschluss; Motorsounds werden zeitlich begrenzt, um Überlastung zu vermeiden.
 - **Treasure Quest:** Schritte, Schlüssel, Schätze und Sieg.
 - **Fashion Studio:** Farbauswahl, neue Outfits und Laufsteg.
