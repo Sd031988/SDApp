@@ -77,7 +77,7 @@ const matchingExplanations=[
  "Anzeige J bietet gemeinsames Wandern am Sonntag. Damit stimmen Aktivität, Gruppenteilnahme und Wochentag überein."
 ];
 const readingClaims=[
- ['Lara möchte prüfen, wie sie abends von der Wohnung nach Hause kommt.','Lara hat die Wohnung bereits gemietet.'],
+ ['Lara möchte prüfen, wie sie abends von der Arbeit zur Wohnung kommt.','Lara hat die Wohnung bereits gemietet.'],
  ['Für die Smartphone-Beratung muss man sich spätestens am Donnerstag anmelden.','Alle Teilnehmenden müssen ein eigenes Smartphone mitbringen.'],
  ['Der Betriebsausflug findet als Wanderung statt.','Die Firma hat sich für eine Radtour entschieden.'],
  ['Im Sprachcafé dürfen die Teilnehmenden selbst Gesprächsthemen vorschlagen.','Im Sprachcafé bekommen alle Teilnehmenden Noten.'],
@@ -96,7 +96,7 @@ const readingClaims=[
 const readingClaimExplanations=[
  [
   "Der Text sagt ausdrücklich, dass Lara noch prüfen möchte, wie sie abends nach Hause kommt.",
-  "Lara hat die Wohnung nur besichtigt und prüft noch die Verbindung. Von einem abgeschlossenen Mietvertrag steht nichts."
+  "Lara hat die Wohnung nur besichtigt und prüft noch den Heimweg. Von einem abgeschlossenen Mietvertrag steht nichts."
  ],
  [
   "Der Text nennt eine Anmeldung bis Donnerstag, weil die Plätze begrenzt sind.",
@@ -705,7 +705,8 @@ function reviewTask(t,answer,i,withTranscript){
  const status=answer===null||answer===undefined?'Nicht beantwortet':correct?'Richtig beantwortet':'Noch einmal üben';
  const evidence=withTranscript?'Höre die Aufnahme erneut oder lies den Hörtext. Suche die Stelle, die die richtige Antwort belegt.':t.kind&&t.kind.includes('Anzeigen zuordnen')?'Vergleiche die Angaben der Situation mit der passenden Anzeige. Achte auf die konkreten Bedingungen.':t.kind&&t.kind.includes('Lückentext')||t.kind&&t.kind.includes('Wortwahl')?'Setze die richtige Lösung in die Lücke ein und prüfe Grammatik und Satzbedeutung.':'Suche im Lesetext die Information, die diese Lösung bestätigt oder die falsche Aussage widerlegt.';
  const base='<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>'+esc(status)+' · Deine Antwort: '+esc(selected)+' · Lösung: '+esc(t.options[t.answer])+'</small></p>';
- const guidance='<details class="b1x-transcript"><summary>Erklärung und Textbeleg</summary><p>'+esc(explainAnswer(t,withTranscript))+'</p>'+(answer!==null&&answer!==undefined&&answer!==t.answer?'<p>'+esc(compareWrongAnswer(t,answer))+'</p>':'')+'<p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
+ const choices='<ol>'+t.options.map((option,k)=>'<li>'+esc(option)+(k===t.answer?' <strong>(richtige Lösung)</strong>':'')+(k===answer&&k!==t.answer?' <strong>(deine Auswahl)</strong>':'')+'</li>').join('')+'</ol>';
+ const guidance='<details class="b1x-transcript"><summary>Erklärung und Textbeleg</summary>'+choices+'<p>'+esc(explainAnswer(t,withTranscript))+'</p>'+(answer!==null&&answer!==undefined&&answer!==t.answer?'<p>'+esc(compareWrongAnswer(t,answer))+'</p>':'')+'<p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
  return base+guidance+(withTranscript&&t.audio?'<details class="b1x-transcript"><summary>Hörtext zu Aufgabe '+(i+1)+' nachlesen</summary><p>'+esc(t.dialogue?t.dialogue.map(turn=>turn[0]+': '+turn[1]).join('\\n'):t.audio)+'</p></details>':'');
 }
 function finish(){
