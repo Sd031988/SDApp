@@ -331,6 +331,10 @@ function timerText(seconds){
  const left=Math.max(0,Math.ceil(seconds));
  return '⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
 }
+function draftKey(){return 'sdB1Draft:'+exam+':'+set+':'+part+':'+idx;}
+function saveDraft(value){try{localStorage.setItem(draftKey(),value);}catch(_){}}
+function readDraft(){try{return localStorage.getItem(draftKey());}catch(_){return null;}}
+function removeDraft(){try{localStorage.removeItem(draftKey());}catch(_){}}
 function captureCurrentAnswer(){
  const p=E[exam].parts[part];
  if(answers.length>idx)return;
@@ -356,7 +360,7 @@ function question(){
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
- if(el('b1x-text'))el('b1x-text').oninput=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';};
+ if(el('b1x-text')){const saved=readDraft();if(saved!==null)el('b1x-text').value=saved;const update=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';saveDraft(el('b1x-text').value);};el('b1x-text').oninput=update;el('b1x-count').textContent=(el('b1x-text').value.trim()?el('b1x-text').value.trim().split(/\s+/).length:0)+' Wörter';}
  el('b1x-next').onclick=()=>{
   if(Date.now()>=deadline){captureCurrentAnswer();while(answers.length<list.length)answers.push(null);finish();return;}
   let val;
@@ -364,7 +368,7 @@ function question(){
    const c=root.querySelector('input[name="b1x-answer"]:checked');
    if(!c){if(!confirm('Ohne Antwort zur nächsten Aufgabe?'))return;val=null;}else val=Number(c.value);
   }else val=el('b1x-text').value.trim();
-  answers.push(val);idx++;plays=0;question();
+  answers.push(val);if(['schreiben','sprechen'].includes(p[0]))removeDraft();idx++;plays=0;question();
  };
  tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];captureCurrentAnswer();while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
@@ -398,7 +402,7 @@ function reviewTask(t,answer,i,withTranscript){
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
  const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000),deadline};
- results[p[0]]=record;
+ results[p[0]]=record;if(['schreiben','sprechen'].includes(p[0]))removeDraft();
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
  const next=running&&part+1<E[exam].parts.length;
  const completed=running&&!next;
