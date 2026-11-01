@@ -34,6 +34,7 @@ footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;colo
 @media(max-width:600px){.hero:after{position:static;display:block;text-align:center;opacity:.65;margin-top:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.art{height:112px;font-size:3.2rem}.info{padding:10px}.game{min-height:285px}.info h3{font-size:1rem}.info p{font-size:.77rem}.hero{padding:22px}}
 @media(max-width:370px){.grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.game{transition:none}.game:hover{transform:none}}
+.featured a{min-height:52px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 0 #14204477}.featured a:hover,.featured a:focus-visible{transform:translateY(-2px);box-shadow:0 6px 0 #14204477}.game .play{min-height:48px;display:flex;align-items:center;justify-content:center}@media(max-width:600px){.featured a{flex:1 1 43%;text-align:center;font-size:.9rem;min-width:0;padding:11px 7px}}
 
 /* SD Kids 2.0: unified accessible navigation, progress and creator-friendly library */
 .toolbar{gap:12px}.game{position:relative;outline-offset:4px}.game:focus-within{border-color:#c2eaff}
@@ -67,7 +68,7 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 <div class="nav"><a class="back" href="../../index.html">← SD Hub</a><strong>✨ SD KIDS · SPIELEWELT</strong><a class="back" href="../index.html">🐱 Pibo</a></div>
 <section class="hero"><h1>Deine Spielewelt.<br>Dein Abenteuer.</h1>
 <p>Entdecken, bauen, spielen und lernen – in zehn eigenen SD Kids Spielen. Kostenlos, ohne Konto, ohne Werbung und ohne In-App-Käufe.</p>
-<div class="featured"><a href="../blockworld/">🧱 In 3D bauen</a><a href="./play.html?game=obby">🏁 Obby spielen</a></div>
+<nav class="featured" aria-label="Direkt spielen"><a href="./play.html?game=obby">🏁 Jetzt hüpfen</a><a href="./play.html?game=pet">🐶 Tiere füttern</a><a href="./play.html?game=learn">🧩 Rätsel spielen</a><a href="../index.html">🐱 Pibo besuchen</a></nav>
 <div id="playerStats" style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap" aria-label="Dein Spielstand">
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="totalStars">⭐ Minispiele: 0 Sterne</span>
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="playedGames">🎮 Gestartet: 0/8</span>
@@ -86,8 +87,48 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 <label for="sortGames">Sortierung <select id="sortGames" aria-label="Spiele sortieren"><option value="default">Empfohlen</option><option value="favorite">Favoriten zuerst</option><option value="recent">Zuletzt gespielt</option><option value="name">Alphabetisch</option></select></label>
 </div>
 <section class="grid" id="gameGrid" aria-label="Spielekatalog">
-<noscript>Bitte JavaScript aktivieren, um alle Spiele anzuzeigen. <a href="../index.html">Pibo</a> · <a href="../blockworld/">BlockWorld</a>.</noscript>
+<article class="game" style="--accent:#efb88b">
+<div class="art">🐱<span class="tag">3D</span></div>
+<div class="info"><span class="genre">Haustier</span><h3>Pibo 3D</h3><p>Pflege Pibo, gestalte seine Zimmer und spiele mit ihm.</p><a class="play" href="../index.html" aria-label="Pibo 3D spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#71bef0">
+<div class="art">🧱<span class="tag">3D + Online</span></div>
+<div class="info"><span class="genre">Kreativwelt</span><h3>SD BlockWorld</h3><p>Baue deine eigene Welt, sammle Kristalle und spiele optional gemeinsam.</p><a class="play" href="../blockworld/" aria-label="SD BlockWorld spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#aa92ed">
+<div class="art">🏁<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Jump &amp; Run</span><h3>SD Obby Tower</h3><p>Springe durch drei Level, nutze Checkpoints und erreiche das Ziel.</p><a class="play" href="./play.html?game=obby" aria-label="SD Obby Tower spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#f9ba82">
+<div class="art">🐶<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Haustier</span><h3>SD Pet Island</h3><p>Pflege deine Insel-Tiere und sammle Herzen.</p><a class="play" href="./play.html?game=pet" aria-label="SD Pet Island spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#6cdaa3">
+<div class="art">🌻<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Garten</span><h3>SD Garden World</h3><p>Säe, gieße und ernte deinen eigenen kleinen Garten.</p><a class="play" href="./play.html?game=garden" aria-label="SD Garden World spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#77b9f5">
+<div class="art">🏙️<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Rollenspiel</span><h3>SD City Life</h3><p>Hilf als Feuerwehr, Ärztin, Lieferdienst oder Lehrkraft.</p><a class="play" href="./play.html?game=city" aria-label="SD City Life spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#f9a66d">
+<div class="art">🏎️<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Rennen</span><h3>SD Kart Rush</h3><p>Fahre mit deinem Kart durch Checkpoints und schaffe Runden.</p><a class="play" href="./play.html?game=kart" aria-label="SD Kart Rush spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#e8cd76">
+<div class="art">🏝️<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Abenteuer</span><h3>SD Treasure Quest</h3><p>Erkunde eine Schatzinsel, sammle Schlüssel und öffne Truhen.</p><a class="play" href="./play.html?game=treasure" aria-label="SD Treasure Quest spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#ef9ccf">
+<div class="art">👗<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Gestalten</span><h3>SD Fashion Studio</h3><p>Kombiniere Outfits und zeige deinen Stil auf dem Laufsteg.</p><a class="play" href="./play.html?game=fashion" aria-label="SD Fashion Studio spielen">▶ Jetzt spielen</a></div>
+</article>
+<article class="game" style="--accent:#97b0fb">
+<div class="art">🧩<span class="tag">2D Mini</span></div>
+<div class="info"><span class="genre">Lernen</span><h3>SD Lern-Abenteuer</h3><p>Löse Deutsch-, Rechen- und Logikrätsel für Sterne.</p><a class="play" href="./play.html?game=learn" aria-label="SD Lern-Abenteuer spielen">▶ Jetzt spielen</a></div>
+</article>
 </section>
+<noscript><p class="note">Die Spielkarten sind sichtbar. Für Bewegung und Spielaktionen benötigst du JavaScript im Browser.</p></noscript>
 <p id="empty" hidden role="status">Keine Spiele gefunden. Probiere einen anderen Suchbegriff oder Filter.</p>
 <section class="note" aria-labelledby="achievementsTitle">
 <h2 id="achievementsTitle">🏆 Deine Erfolge</h2>
