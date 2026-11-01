@@ -398,7 +398,7 @@ async function hochladen(dateien) {
       '',
       'OK = Als NEUES Projekt importieren.',
       'Abbrechen = ZIP verwerfen. Bestehende Projekte bleiben unverändert.'
-    ].join('\\n');
+    ].join('\n');
     if (!confirm(vorschau)) { toast('ZIP-Import abgebrochen.'); return; }
     try {
       if (S.p && S.geaendert) await speichernJetzt();
