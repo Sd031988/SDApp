@@ -167,8 +167,7 @@ test('Mini-game sound makes actual Web Audio notes and saves the chosen volume',
  await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
  await expect.poll(()=>page.evaluate(()=>window.__audioVoices)).toBeGreaterThan(0);
  const count=await page.evaluate(()=>window.__audioVoices);
- await page.locator('#volume').fill('35');
- await page.locator('#volume').dispatchEvent('input');
+ await page.locator('#volume').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('input',{bubbles:true}))});
  await page.getByRole('button',{name:/Samen pflanzen/}).click();
  await page.locator('#actions [aria-label^="Beet 1"]').click();
  await expect.poll(()=>page.evaluate(()=>window.__audioVoices)).toBeGreaterThan(count);
@@ -181,8 +180,7 @@ test('Mini-game sound makes actual Web Audio notes and saves the chosen volume',
 test('Pibo and BlockWorld reuse SD Kids sound level and provide original action cues',async({page})=>{
  await page.goto('/kids/games/play.html?game=fashion');
  await page.locator('#sound').click();
- await page.locator('#volume').fill('50');
- await page.locator('#volume').dispatchEvent('input');
+ await page.locator('#volume').evaluate(el=>{el.value='50';el.dispatchEvent(new Event('input',{bubbles:true}))});
  await page.goto('/kids/blockworld/');
  await expect.poll(()=>page.evaluate(()=>window.__blockWorldReady||false),{timeout:30000}).toBe(true);
  await expect(page.locator('#worldSound')).toHaveAttribute('aria-pressed','true');
