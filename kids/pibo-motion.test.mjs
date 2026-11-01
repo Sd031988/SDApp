@@ -11,6 +11,10 @@ for(let t=0;t<50;t+=.37){
  }
 }
 assert.ok(bodyPose(1,'play').vertical!==bodyPose(1,'idle').vertical);
+assert.notEqual(bodyPose(.38,'tail').tailSwing,bodyPose(.38,'idle').tailSwing);
+assert.notEqual(bodyPose(.38,'ear').earTwitch,bodyPose(.38,'idle').earTwitch);
+assert.ok(bodyPose(.1,'paw').vertical>bodyPose(.1,'idle').vertical);
+assert.ok(bodyPose(.1,'belly').vertical>bodyPose(.1,'idle').vertical);
 assert.ok(bodyPose(1,'idle','feed',.1).frontPaws.some(v=>v>0)||bodyPose(.7,'idle','feed',.1).frontPaws.some(v=>v>0));
 assert.ok(bodyPose(1,'play',null,0,true).vertical < bodyPose(1,'play').vertical);
 assert.equal(bodyPose(NaN).tailSegments.length,7);
