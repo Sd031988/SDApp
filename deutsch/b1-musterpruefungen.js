@@ -579,7 +579,7 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  (getCheckpoint()?'<button id="b1x-resume" class="b1x-primary">↩ Unterbrochene Prüfung fortsetzen</button>':'')+
- '<button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
+ '<button id="b1x-writing-trainer" class="b1x-card">✍ B1-Schreibtrainer</button><button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
  '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist (60 Minuten Lesen, anschließend die verbleibende Zeit für Sprachbausteine). Dies ist eine vereinfachte Trainingsaufteilung; bei Einzelübungen gelten getrennte Zeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 B1-Ergebnisse und Schreibentwürfe löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
@@ -587,10 +587,11 @@ function home(){
  if(el('b1x-resume'))el('b1x-resume').onclick=resumeCheckpoint;
  el('b1x-start').onclick=()=>{if(getCheckpoint()&&!confirm('Eine unterbrochene Prüfung ist gespeichert. Neue Prüfung starten und bisherigen Fortschritt ersetzen?'))return;clearCheckpoint();running=true;results={};telcSharedDeadline=0;start(0);};
  el('b1x-marked-practice').onclick=markedPractice;
+ el('b1x-writing-trainer').onclick=writingTrainer;
  el('b1x-dashboard').onclick=dashboard;
  el('b1x-week-plan').onclick=weekPlan;
  if(el('b1x-history'))el('b1x-history').onclick=history;
- if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse, Schreibentwürfe und die Wochenverläufe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');localStorage.removeItem(weekPlanKey);localStorage.removeItem(weekArchiveKey);clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
+ if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse, Schreibentwürfe und die Wochenverläufe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');localStorage.removeItem(weekPlanKey);localStorage.removeItem(weekArchiveKey);localStorage.removeItem(trainerKey);clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
 }
 function start(i){clear();part=i;idx=0;answers=[];marked=[];plays=0;pendingChoice=null;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
 function speak(t,dialogue){
@@ -968,6 +969,30 @@ function dashboard(){
  el('b1x-dash-week').onclick=weekPlan;el('b1x-dash-mark').onclick=markedPractice;el('b1x-dash-results').onclick=history;el('b1x-dash-back').onclick=home;
  el('b1x-dash-go').onclick=()=>{const x=saved.slice().reverse().find(z=>z.part===focus.id&&E[z.exam]&&E[z.exam].parts.some(p=>p[0]===focus.id));const e=x?x.exam:exam,n=x?x.set:set,p=E[e].parts.findIndex(z=>z[0]===focus.id);if(p<0)return;if(getCheckpoint()&&!confirm('Gespeicherte Prüfung ersetzen?'))return;clearCheckpoint();exam=e;set=n;running=false;start(p);};
 }
+const trainerKey='sdB1TrainerWritingV1';
+const writingTopics=[
+ {title:'Termin verschieben',prompt:'Du kannst morgen nicht zu einem Termin kommen. Schreibe eine höfliche E-Mail: Grund, neuer Termin und Bitte um Rückmeldung.',sample:'Guten Tag, leider kann ich morgen nicht zum vereinbarten Termin kommen, weil ich krank bin. Könnten wir den Termin bitte auf nächste Woche verschieben? Ich freue mich über Ihre Rückmeldung. Mit freundlichen Grüßen'},
+ {title:'Einladung beantworten',prompt:'Ein Freund lädt dich zum Geburtstag ein. Bedanke dich, sage zu oder ab und stelle eine Frage zur Feier.',sample:'Liebe Maria, vielen Dank für deine Einladung! Ich komme sehr gern zu deiner Feier. Soll ich etwas zu essen mitbringen? Ich freue mich auf Samstag. Liebe Grüße'},
+ {title:'Meinung: Online lernen',prompt:'Schreibe deine Meinung zum Online-Lernen. Nenne einen Vorteil, einen Nachteil und ein persönliches Beispiel.',sample:'Meiner Meinung nach ist Online-Lernen praktisch, weil man zu Hause lernen kann. Ein Nachteil ist, dass man weniger Kontakt zu anderen hat. Ich lerne selbst gern online, aber manchmal brauche ich Hilfe.'}
+];
+function writingTrainer(){
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem(trainerKey)||'{}')}catch(_){return {}}})();
+ const chosen=Number.isInteger(saved.topic)&&saved.topic>=0&&saved.topic<writingTopics.length?saved.topic:0;
+ view('<h2>B1-Schreibtrainer</h2><p class="b1x-note">Freies Schreibtraining ohne automatische Prüfungsnote. Der Entwurf bleibt auf diesem Gerät.</p>'+
+ '<label for="b1x-write-topic">Aufgabe wählen</label><select id="b1x-write-topic" class="b1x-select">'+writingTopics.map((t,i)=>'<option value="'+i+'" '+(i===chosen?'selected':'')+'>'+esc(t.title)+'</option>').join('')+'</select>'+
+ '<div class="b1x-passage"><b>'+esc(writingTopics[chosen].title)+'</b><p>'+esc(writingTopics[chosen].prompt)+'</p></div>'+
+ '<label for="b1x-write-answer">Dein Text</label><textarea id="b1x-write-answer" rows="10" placeholder="Schreibe hier deine Antwort …">'+esc(saved['draft'+chosen]||'')+'</textarea>'+
+ '<p id="b1x-write-count" class="b1x-note"></p><div class="b1x-passage"><b>Selbstkontrolle</b>'+
+ ['Ich habe alle Inhaltspunkte beantwortet.','Mein Text hat eine passende Anrede und einen passenden Schluss (falls E-Mail).','Ich habe Satzstellung, Artikel und Verbformen kontrolliert.','Ich habe Absätze und Satzzeichen geprüft.'].map((t,i)=>'<label class="b1x-check"><input type="checkbox" data-write-check="'+i+'"> '+esc(t)+'</label>').join('')+'</div>'+
+ '<details class="b1x-passage"><summary>Beispieltext anzeigen (erst selbst schreiben)</summary><p>'+esc(writingTopics[chosen].sample)+'</p><p class="b1x-note">Nur ein mögliches Beispiel; keine offizielle Musterlösung.</p></details>'+
+ '<button id="b1x-write-home" class="b1x-card">Zurück zur Auswahl</button>');
+ const field=el('b1x-write-answer'),count=el('b1x-write-count');
+ const refresh=()=>{const words=field.value.trim().split(/\\s+/).filter(Boolean).length;count.textContent=words+' Wörter · Keine automatische Grammatikbewertung';};
+ refresh();
+ field.oninput=()=>{refresh();try{const data=JSON.parse(localStorage.getItem(trainerKey)||'{}');data.topic=chosen;data['draft'+chosen]=field.value;localStorage.setItem(trainerKey,JSON.stringify(data));}catch(_){}};
+ el('b1x-write-topic').onchange=e=>{try{const data=JSON.parse(localStorage.getItem(trainerKey)||'{}');data.topic=Number(e.target.value);localStorage.setItem(trainerKey,JSON.stringify(data));}catch(_){}writingTrainer();};
+ el('b1x-write-home').onclick=home;
+}
 function history(){
  const saved=getSaved().slice().reverse();
  view('<h2>Deine bisherigen Übungsergebnisse</h2><p class="b1x-note">Nur auf diesem Gerät gespeichert. Nicht mit offiziellen Prüfungsergebnissen vergleichbar.</p>'+
@@ -1032,7 +1057,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-overview summary{cursor:pointer;font-weight:700}
 .b1x-mark{width:100%;min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px;font:inherit;cursor:pointer}
 .b1x-overview-item.is-marked{box-shadow:inset 0 0 0 2px #facc15}
-.b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
+#b1x-write-answer,#b1x-write-topic{width:100%;min-height:48px;background:#191c29;color:#fff;border:1px solid #6b7280;border-radius:10px;padding:12px;font:inherit;font-size:16px}#b1x-write-answer{min-height:220px;resize:vertical}.b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
 /* Dashboard and study screens: narrow-device and accessible touch layout. */
 #b1x .b1x-grid>*{min-width:0}
 #b1x .b1x-passage h3{margin:0 0 10px;line-height:1.35}
