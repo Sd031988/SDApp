@@ -41,7 +41,12 @@ export class PiboCare {
     if(type==='feed'){i.food=this.food(index);if(i.direct)i.food.position.set(.68,1.55,.94)}
     if(type==='wash'){
       for(let n=0;n<20;n++){const b=this.orb(0xe2faff,-3.2+(n%5)*.33,.95+Math.floor(n/5)*.18,-1.3,.075+(n%3)*.025,.075+(n%3)*.025,.075+(n%3)*.025);b.userData.bubble=n}
-      const sponge=this.box(0xf8d16b,-1.8,1.35,-1.1,.3,.16,.25);sponge.userData.sponge=true
+      const sponge=this.box(0xf8d16b,-1.8,1.35,-1.1,.3,.16,.25);sponge.userData.sponge=true;
+      // Real scene tools: drag the shower head or towel onto Pibo's 3D body.
+      const shower=this.mesh(new this.THREE.CylinderGeometry(.16,.16,.38,16),0x4c9ed4,-1.45,2.18,-.35);
+      shower.rotation.z=-.6;shower.userData.piboCareTool='rinse';shower.visible=false;
+      const towel=this.box(0xffc7d8,-1.5,1.5,-.35,.85,.5,.1);
+      towel.userData.piboCareTool='dry';towel.visible=false
     }
     if(type==='sleep'){i.blanket=this.box(0x91a8ed,-2.45,.9,-1.25,1.65,.12,1.15);i.blanket.visible=false}
     if(type==='toilet'){
@@ -58,6 +63,7 @@ export class PiboCare {
     for(const b of this.props.children){
       if(b.userData?.bubble!==undefined)b.scale.setScalar((.075+(b.userData.bubble%3)*.025)*(1+.15*Math.sin(i.scrubs+b.userData.bubble)));
     }
+    if(i.scrubs>=3){const shower=this.props.children.find(o=>o.userData?.piboCareTool==='rinse');if(shower)shower.visible=true}
     if(i.scrubs%3===0)this.sound('splash');
     this.onStatus(true,'Einseifen: '+Math.min(6,i.scrubs)+'/6',Math.min(1,i.scrubs/6));
     return true
@@ -66,6 +72,8 @@ export class PiboCare {
     const i=this.active;
     if(i?.type!=='wash'||i.scrubs<3||i.rinsed)return false;
     i.rinsed=true;
+    const shower=this.props.children.find(o=>o.userData?.piboCareTool==='rinse');if(shower)shower.visible=false;
+    const towel=this.props.children.find(o=>o.userData?.piboCareTool==='dry');if(towel)towel.visible=true;
     for(const bubble of this.props.children)if(bubble.userData?.bubble!==undefined)bubble.visible=false;
     // Three short spray droplets make the shower visibly work, instead of only changing a number.
     for(let j=0;j<12;j++){
@@ -81,12 +89,20 @@ export class PiboCare {
     const i=this.active;
     if(i?.type!=='wash'||!i.rinsed||i.dried)return false;
     i.dried=true;
-    const towel=this.box(0xffc7d8,-2.6,1.32,-.35,.95,.54,.10);
-    towel.userData.towel=true;
+    const towel=this.props.children.find(o=>o.userData?.piboCareTool==='dry');
+    if(towel){towel.position.set(-2.6,1.32,-.35);towel.userData.piboCareTool=null;towel.userData.towel=true}
     this.sound('select');
     this.onStatus(true,'Geschafft! Pibo ist sauber und trocken! ✨',1);
     i.start=performance.now()-i.duration*.91;
     return true;
+  }
+  moveTool(type,point){
+    if(this.active?.type!=='wash'||!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return false;
+    const tool=this.props.children.find(o=>o.userData?.piboCareTool===type&&o.visible);
+    if(!tool)return false;
+    tool.position.x=Math.max(-4,Math.min(4,point.x));
+    tool.position.y=Math.max(.5,Math.min(3,point.y));
+    return true
   }
   flush(){
     const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<1)return false;
