@@ -243,11 +243,11 @@ async function replayVoice(blob){
      const buffer=await ctx.decodeAudioData(await blob.arrayBuffer());
      const source=ctx.createBufferSource(),gain=ctx.createGain();
      source.buffer=buffer;source.playbackRate.value=1.34;gain.gain.value=.85;
-     source.connect(gain);gain.connect(ctx.destination);source.start();
+     source.connect(gain);gain.connect(piboAudio.master||ctx.destination);source.start();
      return
    }
  }catch(e){console.warn('WebAudio voice playback unavailable; trying browser player',e)}
- const url=URL.createObjectURL(blob),voice=new Audio(url);
+ const url=URL.createObjectURL(blob),voice=new Audio(url);voice.volume=piboVolume;
  voice.playbackRate=1.34;voice.preservesPitch=false;
  voice.onended=()=>URL.revokeObjectURL(url);voice.onerror=()=>URL.revokeObjectURL(url);
  try{await voice.play()}catch{URL.revokeObjectURL(url);$('say').textContent='Die Wiedergabe wurde vom Browser blockiert.'}
