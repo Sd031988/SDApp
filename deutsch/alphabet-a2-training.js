@@ -101,8 +101,8 @@ function saveReview(x){try{localStorage.setItem(vocabReviewKey,JSON.stringify(x)
 function reviewMarkup(){
  const data=reviewData(),due=vocabulary[level].map((w,i)=>({w,i,entry:data[level+':'+i]})).filter(x=>x.entry&&x.entry.next<=Date.now());
  const next=due.slice(0,8);
- return '<section class="pre-card"><h3>🔁 Meine Wiederholungen</h3><p>'+due.length+' Wörter sind zur Wiederholung fällig. Falsche Antworten im Wortschatztest werden hier gesammelt. Richtig beantwortete Wörter erscheinen später erneut.</p>'+
- (next.length?next.map(({w,i})=>'<div class="pre-line"><span><b>'+esc(w[0])+'</b><small>'+esc(w[1])+'</small></span><button data-review="'+i+'">✓ Gelernt</button></div>').join(''):'<p>Aktuell keine Wörter fällig. Bearbeite den Wortschatztest.</p>')+'</section>';
+ return '<section class="pre-card"><h3>🔁 Meine Wiederholungen</h3><p>'+due.length+' Wörter sind zur Wiederholung fällig. Versuche zuerst, dich an die Bedeutung zu erinnern. Decke dann die Lösung auf und bewerte dich selbst.</p>'+
+ (next.length?next.map(({w,i})=>'<div class="pre-question" data-review-card="'+i+'"><b>'+esc(w[0])+'</b><button data-review-reveal="'+i+'" aria-expanded="false">Bedeutung zeigen</button><div data-review-answer="'+i+'" hidden><p>'+esc(w[1])+'</p><button data-review-result="'+i+'" data-known="yes">✓ Gewusst</button> <button data-review-result="'+i+'" data-known="no">↻ Noch üben</button></div></div>').join(''):'<p>Aktuell keine Wörter fällig. Bearbeite den Wortschatztest.</p>')+'</section>';
 }
 function quizMarkup(){
  const words=vocabulary[level],start=(unit*5)%words.length;
@@ -142,7 +142,8 @@ function show(){
  draft.oninput=()=>{updateCount();try{localStorage.setItem(draftKey,draft.value)}catch(_){}};
  panel.querySelector('#pre-draft-clear').onclick=()=>{draft.value='';try{localStorage.removeItem(draftKey)}catch(_){}updateCount();};
  panel.querySelector('#pre-check').onclick=()=>{let correct=0,answered=0;const review=reviewData();panel.querySelectorAll('[data-quiz]').forEach(f=>{const checked=f.querySelector('input:checked'),answer=Number(f.dataset.answer),id=level+':'+answer;if(checked){answered++;if(Number(checked.value)===answer){correct++;if(review[id]){review[id].stage=Math.min(4,(review[id].stage||0)+1);review[id].next=Date.now()+[0,86400000,259200000,604800000,1209600000][review[id].stage];}}else{review[id]={stage:0,next:Date.now()};}}f.style.borderColor=checked&&Number(checked.value)===answer?'#4ade80':'#fb923c';});saveReview(review);panel.querySelector('#pre-feedback').textContent=correct+' von 5 richtig · '+answered+' beantwortet. Falsche Wörter kommen in die Wiederholung.';};
- panel.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{const review=reviewData(),id=level+':'+b.dataset.review;if(review[id]){review[id].stage=Math.min(4,(review[id].stage||0)+1);review[id].next=Date.now()+[0,86400000,259200000,604800000,1209600000][review[id].stage];saveReview(review);show();}});
+ panel.querySelectorAll('[data-review-reveal]').forEach(b=>b.onclick=()=>{const answer=panel.querySelector('[data-review-answer="'+b.dataset.reviewReveal+'"]');answer.hidden=false;b.setAttribute('aria-expanded','true');b.disabled=true;});
+ panel.querySelectorAll('[data-review-result]').forEach(b=>b.onclick=()=>{const review=reviewData(),id=level+':'+b.dataset.reviewResult;if(review[id]){if(b.dataset.known==='yes'){review[id].stage=Math.min(4,(review[id].stage||0)+1);review[id].next=Date.now()+[0,86400000,259200000,604800000,1209600000][review[id].stage];}else{review[id].stage=0;review[id].next=Date.now()+600000;}saveReview(review);show();}});
  panel.querySelector('#pre-close').onclick=close;
  panel.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{level=b.dataset.level;unit=0;show()});
  panel.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{unit=Number(b.dataset.unit);show()});
