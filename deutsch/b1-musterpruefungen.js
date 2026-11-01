@@ -284,14 +284,14 @@ function items(section){
  return result;
 }
 function clear(){if(tick)clearInterval(tick);tick=null;if('speechSynthesis'in window)speechSynthesis.cancel();}
-function close(){clear();if(root)root.remove();root=null;if(host)host.style.display='';host=null;}
+function close(){clear();if(root)root.remove();root=null;if(host)host.style.display='';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='';host=null;}
 function view(html){
  if(!root)return;
  root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+html+'</div>';
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
 }
 function open(){
- if(root)return;host=el('lBody');if(!host)return;host.style.display='none';root=document.createElement('div');root.id='b1x';host.parentNode.insertBefore(root,host.nextSibling);home();
+ if(root)return;host=el('lBody');if(!host)return;host.style.display='none';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='none';root=document.createElement('div');root.id='b1x';host.parentNode.insertBefore(root,host.nextSibling);home();
 }
 function home(){
  clear();running=false;
@@ -450,6 +450,15 @@ function attach(){
  const old=h.querySelector('#sdB1Entry');if(old)old.remove();
  const tiles=h.querySelector('.l-kacheln');if(tiles)tiles.insertAdjacentElement('afterend',b);else h.querySelector('.l-wrap').insertAdjacentElement('afterbegin',b);
 }
-new MutationObserver(attach).observe(document.documentElement,{childList:true,subtree:true});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
+// Keep a permanent entry outside the learning content, which is frequently rerendered.
+function attachFixedEntry(){
+ if(document.getElementById('sdB1FixedEntry'))return;
+ const target=el('lBody');if(!target||!target.parentNode)return;
+ const b=document.createElement('button');b.id='sdB1FixedEntry';b.type='button';b.className='b1-entry';
+ b.innerHTML='<b>🎓 B1-Musterprüfungen öffnen</b><small>Goethe · telc · DTZ – 15 Übungssätze</small>';
+ b.onclick=open;target.parentNode.insertBefore(b,target);b.style.display='block';
+}
+function refreshEntry(){attach();attachFixedEntry();}
+new MutationObserver(refreshEntry).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refreshEntry);else refreshEntry();
 })();
