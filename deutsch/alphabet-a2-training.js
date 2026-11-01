@@ -31,7 +31,7 @@ Object.keys(moreWords).forEach(id=>vocabulary[id].push(...moreWords[id]));
 let panel=null,level='alpha',unit=0;
 const key='sdPreB1ProgressV1';
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const progress=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(_){return {}}};
+const progress=()=>{try{const x=JSON.parse(localStorage.getItem(key)||'{}');return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}catch(_){return {}}};
 const speak=t=>{if(!('speechSynthesis' in window))return alert('Sprachausgabe nicht verfügbar.');speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.85;speechSynthesis.speak(u);};
 const grammarNotes={
  alpha:['Lies die Zeichen langsam. Sprich jeden Laut deutlich nach.','Verbinde zuerst zwei Buchstaben, dann lies das ganze Wort.'],
