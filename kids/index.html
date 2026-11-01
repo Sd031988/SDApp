@@ -334,21 +334,40 @@ const clock=new THREE.Clock();let blink=0;const raycaster=new THREE.Raycaster(),
 function heartAt(x,y){const h=document.createElement('span');h.className='heart';h.textContent=['💗','💕','✨'][Math.floor(Math.random()*3)];h.style.left=x+'px';h.style.top=y+'px';$('hearts').appendChild(h);setTimeout(()=>h.remove(),1150)}
 function rayAt(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);return rect}
 function stroke(e){const rect=rayAt(e),hits=raycaster.intersectObjects(cat.children,true);if(!hits.length)return false;const now=performance.now();if(now-lastStroke>180){lastStroke=now;heartAt(e.clientX-rect.left,e.clientY-rect.top);head.rotation.z=.12*Math.sin(now/180);if(now-(window.lastPiboReward||0)>1200){window.lastPiboReward=now;act('pet')}else{$('say').textContent='Prrrr … Pibo genießt das Streicheln! 😻'}}return true}
-let lastScrub=0;
+let lastScrub=0,careToolDrag=null;
 renderer.domElement.addEventListener('pointermove',e=>{
+ if(careToolDrag&&e.pointerId===careToolDrag.pointerId){
+   rayAt(e);
+   // The actual 3D shower/towel follows the pointer on a scene plane.
+   const plane=new THREE.Plane(new THREE.Vector3(0,0,1),.35);
+   const point=raycaster.ray.intersectPlane(plane,new THREE.Vector3());
+   if(point)care?.moveTool(careToolDrag.type,point);
+   if(raycaster.intersectObjects(cat.children,true).length){
+     const type=careToolDrag.type;careToolDrag=null;
+     $(type).click(); // Keep button and direct 3D gestures on one state machine.
+   }
+   return;
+ }
  if(care?.active?.type==='wash'&&!care.active.rinsed&&(e.buttons||e.pressure>0)&&performance.now()-lastScrub>=240){
    lastScrub=performance.now();
    rayAt(e);
    if(!raycaster.intersectObjects(cat.children,true).length)return;
-   if(care.scrub()){state.clean=clamp(state.clean+1);render()}
+   if(care.scrub()){state.clean=clamp(state.clean+1);if(care.active.scrubs===3)$('say').textContent='Ziehe die blaue 3D-Dusche auf Pibo oder tippe auf Abspülen! 🚿';render()}
    return;
  }
  if(stroking)stroke(e)
 });
-renderer.domElement.addEventListener('pointerup',()=>{stroking=false});
-renderer.domElement.addEventListener('pointercancel',()=>{stroking=false});
-window.addEventListener('pointerup',()=>{stroking=false});
-renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);if(currentRoom==='garden'&&gardenWorld?.tryCatch(raycaster)){
+renderer.domElement.addEventListener('pointerup',()=>{stroking=false;careToolDrag=null});
+renderer.domElement.addEventListener('pointercancel',()=>{stroking=false;careToolDrag=null});
+window.addEventListener('pointerup',()=>{stroking=false;careToolDrag=null});
+renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);
+ if(care?.active?.type==='wash'){
+   const hit=raycaster.intersectObjects(care.props.children,true).find(h=>h.object.visible&&h.object.userData?.piboCareTool);
+   if(hit){careToolDrag={type:hit.object.userData.piboCareTool,pointerId:e.pointerId};
+     try{renderer.domElement.setPointerCapture(e.pointerId)}catch{}
+     $('say').textContent=careToolDrag.type==='rinse'?'Ziehe die Dusche auf Pibos Fell! 🚿':'Ziehe das Handtuch über Pibos Fell! 🧻';return}
+ }
+ if(currentRoom==='garden'&&gardenWorld?.tryCatch(raycaster)){
  gardenTouches++;
  state.joy=clamp(state.joy+2);
  $('say').textContent='🦋 Hui, der Schmetterling flattert weiter! Fang noch einen!';
@@ -395,13 +414,13 @@ $('foodchoice').addEventListener('click',()=>{switchRoom('kitchen');foodIndex=(f
 $('potty').addEventListener('click',()=>{switchRoom('toilet');mode='toilet';modeUntil=performance.now()+7500;startInteraction('toilet');showEffect('🚽 💨','Pibo benutzt die Toilette! Prrrt!',4200);state.clean=clamp(state.clean-8);state.joy=clamp(state.joy+3);render()});
 $('scrub').addEventListener('click',()=>{
  if(care?.active?.type!=='wash')act('wash');
- if(care?.scrub()){state.clean=clamp(state.clean+2);render();$('say').textContent='Pibo wird sauber eingeseift! 🧽'}
+ if(care?.scrub()){state.clean=clamp(state.clean+2);render();$('say').textContent=care.active.scrubs>=3?'Ziehe die blaue 3D-Dusche auf Pibo oder drücke Abspülen! 🚿':'Pibo wird sauber eingeseift! 🧽'}
 });
 $('rinse').addEventListener('click',()=>{
  if(care?.rinse()){
    state.clean=clamp(state.clean+12);
    $('say').textContent='Plitsch, platsch! Die Seife ist weg. Jetzt abtrocknen! 🚿';
-   showEffect('🚿 💧','Frisches Wasser fließt über Pibo!',4000);
+   showEffect('🚿 💧','Frisches Wasser fließt über Pibo! Ziehe danach das rosa 3D-Handtuch auf ihn.',4000);
    render();return
  }
  $('say').textContent=care?.active?.type==='wash'?'Erst Pibo gut einseifen – reibe mit dem Finger über seine Katze! 🧼':'Erst ins Badezimmer gehen und Pibo waschen! 🛁';
