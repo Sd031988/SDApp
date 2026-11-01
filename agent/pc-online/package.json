@@ -41,6 +41,22 @@
         "deb"
       ],
       "category": "Development"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Sd031988",
+        "repo": "SDApp"
+      }
+    ]
+  },
+  "author": {
+    "name": "The SD Hub",
+    "email": "kontakt@thesdhub.com"
+  },
+  "homepage": "https://www.thesdhub.com/agent/index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sd031988/SDApp.git"
   }
 }
