@@ -257,6 +257,48 @@ function editorLaden() {
       .then(() => ok(!!window.CodeMirror)).catch(() => ok(false));
   });
 }
+
+/* Editor-Diagnostik: JSON-Fehler ohne Änderungen an Projektdateien markieren. */
+let editorDiagnoseTimer=null;
+let editorDiagnoseMarker=null;
+function editorJsonDiagnose(text,pfad) {
+ if(!/\.json$/i.test(pfad||''))return null;
+ try { JSON.parse(text);return null; }
+ catch(e) {
+  const message=String(e.message||'Ungültiges JSON');
+  const match=message.match(/position\s+(\d+)/i);
+  const position=match?Math.min(text.length,Number(match[1])):null;
+  let line=0,ch=0;
+  if(position!==null){const before=text.slice(0,position);line=(before.match(/\n/g)||[]).length;ch=before.length-(before.lastIndexOf('\n')+1);}
+  else {const lc=message.match(/line\s+(\d+)\s+column\s+(\d+)/i);if(lc){line=Number(lc[1])-1;ch=Number(lc[2])-1;}}
+  return {line:Math.max(0,line),ch:Math.max(0,ch),message};
+ }
+}
+function editorDiagnoseAktualisieren() {
+ if(editorDiagnoseMarker){editorDiagnoseMarker.clear();editorDiagnoseMarker=null;}
+ if(!S.cm||!S.aktiv||!S.p)return;
+ const pfad=S.aktiv,code=S.cm.getValue(),problem=editorJsonDiagnose(code,pfad);
+ if(!problem)return;
+ const zeile=Math.min(problem.line,S.cm.lineCount()-1);
+ const ende=S.cm.getLine(zeile).length;
+ const von={line:zeile,ch:Math.min(problem.ch,Math.max(0,ende-1))};
+ const bis={line:zeile,ch:Math.min(ende,von.ch+1)};
+ if(von.ch<bis.ch)editorDiagnoseMarker=S.cm.markText(von,bis,{className:'sd-json-fehler',title:problem.message});
+}
+function editorDiagnoseBald() {
+ clearTimeout(editorDiagnoseTimer);
+ editorDiagnoseTimer=setTimeout(editorDiagnoseAktualisieren,350);
+}
+function editorDiagnoseAnzeigen() {
+ if(!S.cm||!S.aktiv){toast('Keine Datei geöffnet.');return;}
+ const problem=editorJsonDiagnose(S.cm.getValue(),S.aktiv);
+ if(!/\.json$/i.test(S.aktiv)){toast('JSON-Diagnose unterstützt aktuell .json-Dateien.');return;}
+ if(!problem){toast('✓ JSON-Syntax ist gültig.');return;}
+ S.cm.setCursor({line:problem.line,ch:problem.ch});
+ S.cm.focus();
+ alert('JSON-Syntaxfehler in '+S.aktiv+'\nZeile '+(problem.line+1)+', Spalte '+(problem.ch+1)+'\n'+problem.message);
+}
+
 function editorBauen(mitCM) {
   const box = $('editor');
   if (mitCM) {
@@ -266,7 +308,7 @@ function editorBauen(mitCM) {
         'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment', 'Ctrl-Space': 'autocomplete', 'Ctrl-H': 'replace', 'Ctrl-G': 'jumpToLine', 'Alt-Up': 'swapLineUp', 'Alt-Down': 'swapLineDown',
         'Ctrl-D': c => { const s = c.getCursor(); c.replaceRange(c.getLine(s.line) + '\n', { line: s.line, ch: 0 }); }, 'Shift-Alt-F': () => formatieren() } });
     S.cm.on('change', (c, ch) => { if (ch.origin !== 'setValue' && S.aktiv) { S.p.dateien[S.aktiv] = c.getValue(); tabsZeigen(); speichernBald(); } farbChipsBald(); });
-    S.cm.on('cursorActivity', status); S.cm.on('viewportChange', farbChipsBald);
+    S.cm.on('cursorActivity', status); S.cm.on('change', editorDiagnoseBald); S.cm.on('viewportChange', farbChipsBald);
     S.cm.on('inputRead', (c, ch) => { if (einst().vorschlaege === false) return; const t = ch.text[0]; const m = c.getMode().name; if (/^[a-zA-Z]$/.test(t) && !c.state.completionActive && /css|javascript|xml/.test(m)) { const tok = c.getTokenAt(c.getCursor()); if (tok.string.length >= 2) c.showHint({ completeSingle: false }); } });
     S.cm.on('paste', (c, e) => { const t = e.clipboardData && e.clipboardData.getData('text'); if (t && abIstAnleitung(t)) { e.preventDefault(); einfuegenDialog(t); } });
   } else {
@@ -290,6 +332,7 @@ function dateiOeffnen(pfad, zeile) {
     if (S.cm) { S.cm.getWrapperElement().style.display = '';
       if (!S.docs[pfad]) { S.docs[pfad] = CodeMirror.Doc(inhalt, modus(pfad)); }
       if (S.cm.getDoc() !== S.docs[pfad]) S.cm.swapDoc(S.docs[pfad]);
+      editorDiagnoseBald();
       const iu = /\.(py|java|cs|go|rs|c|cpp|cc|h|hpp|kt)$/i.test(pfad) ? 4 : 2; S.cm.setOption('indentUnit', iu); S.cm.setOption('tabSize', iu);
       setTimeout(() => { S.cm.refresh(); S.cm.focus(); if (zeile) { S.cm.setCursor({ line: zeile - 1, ch: 0 }); S.cm.scrollIntoView({ line: zeile - 1, ch: 0 }, 120); S.cm.addLineClass(zeile - 1, 'background', 'blitz'); setTimeout(() => S.cm.removeLineClass(zeile - 1, 'background', 'blitz'), 1400); } farbChips(); }, 10);
     } else { S.ta.style.display = ''; S.ta.value = inhalt; S.docs[pfad] = { wert: inhalt, getValue: () => S.p.dateien[pfad] }; }
@@ -924,7 +967,7 @@ function palZu() { $('palette').hidden = true; if (S.cm) S.cm.focus(); }
 function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filter(d => !/\.gitkeep$/.test(d)).map(d => ({ label: icon(d) + ' ' + d.split('/').pop(), info: d, d })), 'Datei öffnen …', x => dateiOeffnen(x.d)); }
 function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['🎓 Teilnahmezertifikat erstellen', '', lernZertifikat], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
-  ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
+  ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['🔎 JSON-Syntax prüfen', '', editorDiagnoseAnzeigen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['☁ Cloud-Backup als ZIP', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
