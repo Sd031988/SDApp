@@ -19,8 +19,8 @@
     {
       "id": "figurenmodell",
       "area": "Grafik",
-      "status": "fehlt",
-      "reference": "Professionell geriggte, unverwechselbare Pibo-Figur mit sauberer Silhouette und realistischen Fellmaterialien",
+      "status": "teilweise",
+      "reference": "Einfaches prozedurales Pibo-3D-Modell ist vorhanden, professionelles Skelett-/Morph-Target-Modell fehlt",
       "acceptance": "Originales GLB-Modell, geprüfte Knochenanimationen und klare mobile Performance; keine geschützten Tom-Assets",
       "evidence": [
         "kids/pibo-character.mjs"
