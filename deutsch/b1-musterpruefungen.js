@@ -654,7 +654,30 @@ function question(){
  };
  tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];captureCurrentAnswer();while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
-function selfCheckMarkup(section,entries){
+function taskSpecificHelp(section,tasks){
+ if(!tasks||!tasks.length)return '';
+ const writing={
+  'Private E-Mail':'<b>Private E-Mail:</b> „Liebe Mia, vielen Dank für deine Einladung. Leider kann ich am Samstag nicht kommen, weil … Hast du nächste Woche Zeit? Liebe Grüße …“',
+  'Diskussionsbeitrag':'<b>Diskussionsbeitrag:</b> „Ich bin der Meinung, dass … Ein wichtiger Grund dafür ist … Beispielsweise … Andererseits … Deshalb …“',
+  'Formelle E-Mail':'<b>Formelle E-Mail:</b> „Sehr geehrte Damen und Herren, leider kann ich den vereinbarten Termin nicht wahrnehmen, weil … Könnten Sie mir einen Ersatztermin anbieten? Mit freundlichen Grüßen …“',
+  'E-Mail':'<b>E-Mail:</b> „Guten Tag, ich schreibe Ihnen, weil … Zunächst möchte ich … Außerdem … Könnten Sie mir bitte mitteilen, ob …? Vielen Dank im Voraus.“',
+  'Brief / E-Mail':'<b>Brief oder E-Mail:</b> „Sehr geehrte Frau …, ich möchte Sie informieren, dass … Der Grund dafür ist … Könnten wir …? Vielen Dank für Ihr Verständnis.“'
+ };
+ const speaking={
+  'Gemeinsam planen':'<b>Gemeinsam planen:</b> „Ich schlage vor, dass wir … Was meinst du? … Das passt mir leider nicht, aber wir könnten … Dann sind wir uns einig.“',
+  'Ein Thema präsentieren':'<b>Präsentieren:</b> „Heute spreche ich über … Zuerst erzähle ich von meinen Erfahrungen. Danach … Ein Vorteil ist … Zusammenfassend denke ich …“',
+  'Auf Fragen reagieren':'<b>Auf Fragen reagieren:</b> „Danke für die Frage. Meiner Erfahrung nach … Ein Beispiel dafür ist … Und wie ist das bei dir?“',
+  'Kennenlernen':'<b>Kennenlernen:</b> „Ich wohne seit … in … und arbeite als … Was machst du beruflich? Was gefällt dir an deiner Stadt?“',
+  'Über ein Thema sprechen':'<b>Über Erfahrungen sprechen:</b> „Ich habe damit gute Erfahrungen gemacht, weil … Wie siehst du das? … Da stimme ich dir teilweise zu.“',
+  'Sich vorstellen':'<b>Sich vorstellen:</b> „Ich heiße … und komme aus … Seit … lebe ich in … In meiner Freizeit …“',
+  'Über Erfahrungen sprechen':'<b>Erfahrungen beschreiben:</b> „In meinem Alltag ist das so: … Früher habe ich … Heute … Ich finde das wichtig, weil …“'
+ };
+ const bank=section==='schreiben'?writing:speaking;
+ return '<div class="b1x-passage"><b>Hilfen passend zu deinen Aufgaben</b>'+
+ tasks.map((t,i)=>'<p><b>Aufgabe '+(i+1)+' · '+esc(t.kind||'Übung')+':</b> '+(bank[(t.kind||'').split(' · ').pop()]||'Formuliere eigene Beispiele, Gründe und passende Rückfragen.')+'</p>').join('')+
+ '<p class="b1x-note">Die Satzanfänge sind Beispiele und müssen an die konkrete Situation angepasst werden.</p></div>';
+}
+function selfCheckMarkup(section,entries,tasks){
  const isWrite=section==='schreiben';
  const criteria=isWrite?[
   ['inhalt','Alle geforderten Inhaltspunkte angesprochen'],
@@ -672,6 +695,7 @@ function selfCheckMarkup(section,entries){
  return '<details class="b1x-passage"><summary>Selbstkontrolle: '+(isWrite?'Schreiben':'Sprechen')+'</summary>'+
  '<p class="b1x-note">Diese Checkliste ist eine Lernhilfe, kein offizielles Bewertungsraster. Setze ein Häkchen nur, wenn du den Punkt tatsächlich erfüllt hast.</p>'+
  criteria.map(c=>'<label class="b1x-check"><input type="checkbox"> '+esc(c[1])+'</label>').join('')+
+ taskSpecificHelp(section,tasks)+
  (isWrite?'<p class="b1x-note">Prüfe außerdem die Aufgabenstellung: Wurden alle verlangten Informationen genannt? Ist die Sprache zur Situation passend?</p>':
  '<p class="b1x-note">Für eine verlässliche Einschätzung der Aussprache und Interaktion ist Rückmeldung von einer Lehrkraft oder einem Gesprächspartner hilfreich.</p>')+
  '<details class="b1x-passage"><summary>Formulierungshilfen und kurze B1-Beispiele</summary>'+
@@ -733,8 +757,8 @@ function finish(){
   '<h2>Prüfungsteil beendet</h2><p>Für '+esc(p[1])+' ist eine Bewertung durch eine qualifizierte Person erforderlich. Es wurde keine automatische B1-Einstufung vorgenommen.</p>';
  const summary=completed?'<h3>Gesamtübersicht – Muster '+set+'</h3><div class="b1x-passage">'+E[exam].parts.map(x=>{const z=results[x[0]];return '<p><b>'+esc(x[1])+':</b> '+(z?(z.correct===null?'Bearbeitet, manuelle Bewertung erforderlich':z.correct+' / '+z.total+' richtige Antworten'):'Nicht bearbeitet')+'</p>';}).join('')+'</div><p class="b1x-note">Keine offizielle Gesamtpunktzahl oder Bestehensentscheidung. Schreiben und Sprechen müssen fachlich beurteilt werden.</p>':'';
  const review=running&&next?'':completed?
-  E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>reviewTask(t,z.answers[i],i,x[0]==='hoeren')).join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>'+(['schreiben','sprechen'].includes(x[0])?selfCheckMarkup(x[0],z.answers):'');}).join(''):
-  '<div class="b1x-passage">'+(auto?list.map((t,i)=>reviewTask(t,answers[i],i,p[0]==='hoeren')).join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>'+(auto?'':selfCheckMarkup(p[0],answers));
+  E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>reviewTask(t,z.answers[i],i,x[0]==='hoeren')).join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>'+(['schreiben','sprechen'].includes(x[0])?selfCheckMarkup(x[0],z.answers,tasks):'');}).join(''):
+  '<div class="b1x-passage">'+(auto?list.map((t,i)=>reviewTask(t,answers[i],i,p[0]==='hoeren')).join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>'+(auto?'':selfCheckMarkup(p[0],answers,list));
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+review+
  '<button id="b1x-continue" class="b1x-primary">'+(next?'Weiter: '+esc(E[exam].parts[part+1][1]):'Zur Übersicht')+'</button>');
  el('b1x-continue').onclick=()=>next?start(part+1):home();
