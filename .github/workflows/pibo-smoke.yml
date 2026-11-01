@@ -39,6 +39,11 @@ jobs:
           node kids/blockworld/core.test.mjs
           node --check kids/blockworld/online.mjs
           node kids/blockworld/online.test.mjs
+      - name: Verify original sound library, volume, mute and all game cues
+        run: |
+          node --check kids/sd-sound.mjs
+          node --check kids/sd-sound.test.mjs
+          node kids/sd-sound.test.mjs
       - name: Verify SD Kids eight mini-game engines and ten-game catalog
         run: |
           node --check kids/games/catalog.mjs
