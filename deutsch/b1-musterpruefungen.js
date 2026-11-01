@@ -820,6 +820,28 @@ const css=document.createElement('style');css.textContent=`
 .b1x-progress{height:7px;background:#35394c;border-radius:20px;overflow:hidden;margin:8px 0 18px}.b1x-progress>div{height:100%;background:#fb923c;transition:width .2s}.b1x-primary:focus-visible,.b1x-card:focus-within,.b1x-audio:focus-visible{outline:3px solid #fdba74;outline-offset:3px}@media(max-width:520px){.b1x-wrap{padding:10px 12px 64px}.b1x-grid{grid-template-columns:1fr}.b1x-meta{flex-wrap:wrap;font-size:13px}.b1x-nav{gap:5px}.b1x-nav button{padding:8px}}.b1x-primary,.b1x-audio{width:100%;background:#c2410c;border:0;color:#fff;padding:15px;border-radius:12px;font:inherit;font-weight:700;margin:14px 0;cursor:pointer}
 .b1x-audio{background:#334155}
 #b1x-text{width:100%;box-sizing:border-box;min-height:190px;background:#191c29;border:1px solid #565b70;color:white;padding:14px;border-radius:12px;font:inherit}
+
+/* Mobile-first usability: keep actions tappable and prevent horizontal overflow. */
+#b1x,#b1x *{box-sizing:border-box}
+#b1x{min-width:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.b1x-wrap{width:100%;overflow-wrap:anywhere}
+.b1x-nav strong{min-width:0;text-align:center;line-height:1.3}
+.b1x-nav button,.b1x-primary,.b1x-audio,.b1x-card{min-height:44px;touch-action:manipulation}
+.b1x-card{display:flex;align-items:flex-start;gap:10px;line-height:1.5}
+.b1x-card input[type=radio]{width:20px;height:20px;flex:0 0 20px;margin:2px 0 0;accent-color:#fb923c}
+.b1x-passage{overflow-wrap:anywhere}
+#b1x-text{font-size:16px;line-height:1.55;resize:vertical}
+@media(max-width:520px){
+ .b1x-wrap{padding:10px 12px max(76px,env(safe-area-inset-bottom))}
+ .b1x-nav{position:sticky;top:0;z-index:3;background:#0b0c13;padding:8px 0;margin-top:0}
+ .b1x-nav strong{font-size:14px}
+ .b1x-nav button{min-width:44px;min-height:44px}
+ .b1x-card{padding:14px 12px}
+ .b1x-passage{padding:12px;line-height:1.65}
+ .b1x-primary,.b1x-audio{padding:14px 12px}
+ #b1x-text{min-height:220px}
+}
+@media(prefers-reduced-motion:reduce){.b1x-progress>div{transition:none}}
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
