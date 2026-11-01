@@ -1,0 +1,93 @@
+/* Pibo Premium: cat-first responsive game interface, 2026-11-01.
+   Does not modify WebGL meshes, input handlers, local saves or cat physics. */
+:root{--pibo-ink:#f6f6ff;--pibo-slate:#25254a;--pibo-glass:#ffffffde;--pibo-purple:#785ad9;--pibo-pink:#f364a4}
+html{scroll-padding-top:14px}
+body.pibo-premium{color:#292643;background:radial-gradient(ellipse at 50% -15%,#f9e4fb,transparent 54%),linear-gradient(145deg,#dcefff,#efecff 58%,#fff2e6);min-width:0}
+body.pibo-premium .pibo-top{padding:8px 14px 4px;text-align:left;background:#ffffff80;border-bottom:1px solid #fff9;backdrop-filter:blur(16px)}
+.pibo-top-inner{max-width:1320px;margin:0 auto;display:flex;gap:13px;align-items:center;justify-content:space-between}
+.pibo-back{min-height:42px;display:flex;align-items:center;gap:7px;border-radius:13px;padding:10px 13px;background:white;text-decoration:none;font-weight:850;font-size:13px;white-space:nowrap}
+.pibo-brand{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.pibo-brand-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:15px;background:linear-gradient(130deg,#ffddc9,#f8b3d1);font-size:26px;box-shadow:0 4px 15px #be88a333}
+.pibo-brand strong{display:block;line-height:1.1;font-size:19px;font-weight:950;color:#393064}
+.pibo-brand strong em{font-size:11px;font-style:normal;border-radius:6px;padding:3px 5px;background:#7860d9;color:white}
+.pibo-brand small{display:block;font-size:10px;line-height:1.3;color:#726c83;margin-top:4px}
+.pibo-top-links{display:flex;align-items:center;gap:6px}
+.pibo-top-links a{display:grid;place-items:center;min-height:40px;font-size:12px;font-weight:850;text-decoration:none;background:#ffffffdb;border:1px solid white;padding:7px 12px;border-radius:12px;white-space:nowrap}
+body.pibo-premium main.wrap{max-width:1320px;margin:0 auto;padding:14px clamp(8px,1.8vw,20px) 45px}
+body.pibo-premium .panel{padding:clamp(9px,1.4vw,18px);display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,390px);gap:clamp(12px,2vw,22px);align-items:start;border-radius:26px;border-color:#fff;background:#ffffffb4;box-shadow:0 18px 65px #4c498530;min-width:0}
+.pibo-play-view{position:sticky;top:12px;min-width:0;align-self:start}
+body.pibo-premium .stage{height:clamp(390px,68dvh,650px);min-height:390px;border-radius:22px;background:linear-gradient(#d5e6ff,#fbe9dd);box-shadow:inset 0 0 0 1px #ffffffb5,0 12px 30px #67749620}
+body.pibo-premium .stage canvas{display:block;width:100%;height:100%;touch-action:none}
+body.pibo-premium .stage .tag{left:10px;top:11px;max-width:65%;font-size:11px;line-height:1.4;background:#ffffffcf;padding:7px 10px;box-shadow:0 3px 12px #0001}
+body.pibo-premium #roomTitle{right:9px!important;top:10px!important;font-size:11px!important;padding:7px 10px!important;background:#ffffffec!important;max-width:46%;text-align:right}
+.pibo-controls{min-width:0;display:flex;flex-direction:column;gap:10px}
+.pibo-controls-head{padding:7px 4px 0}
+.pibo-eyebrow{color:#856bac;font-weight:900;letter-spacing:.13em;font-size:10px}
+.pibo-controls-head h2{font-size:clamp(19px,2vw,25px);letter-spacing:-.04em;margin:4px 0;color:#382e61}
+.pibo-controls-head p{font-size:12px;color:#746d84;margin:0}
+body.pibo-premium .care-status{margin:0;min-height:32px;font-size:12px;justify-content:flex-start}
+body.pibo-premium #starsHud,body.pibo-premium #giftReveal,body.pibo-premium #gameHud{margin:0!important;border-radius:12px!important;font-size:12px!important}
+body.pibo-premium #sceneEffect{margin:0;min-height:0;font-size:13px;line-height:1.4}
+body.pibo-premium #sceneEffect:empty{display:none}
+body.pibo-premium .bubble{display:flex;align-items:center;justify-content:center;min-height:48px;padding:11px 12px;margin:0;border-radius:15px;background:#f2eafd;color:#563c88;font-size:13px;line-height:1.45;box-shadow:inset 0 0 0 1px #e8d8ff}
+body.pibo-premium .stats{margin:1px 0 3px;gap:8px}
+body.pibo-premium .stats>div{padding:8px;border-radius:12px;background:#ffffffb8;border:1px solid #e8e6fc}
+body.pibo-premium .stats label{font-size:11px}
+body.pibo-premium .stats .track{height:8px;margin-top:5px}
+body.pibo-premium .rooms{margin:0;display:flex;overflow-x:auto;gap:7px;scrollbar-width:thin;padding:4px 1px 8px;max-width:100%}
+body.pibo-premium .rooms button{flex:0 0 auto;min-width:108px;min-height:46px;padding:8px 10px;font-size:12px;border-radius:13px;background:#ffffffde;border:1px solid #e7ddfb;box-shadow:none}
+body.pibo-premium .rooms button[aria-current=page]{background:#745ed2;color:white;border-color:#745ed2}
+body.pibo-premium .choice-shelf{margin:1px 0 4px;padding:10px;gap:7px;justify-content:start}
+body.pibo-premium .choice-shelf button{min-width:62px;min-height:58px;font-size:11px}
+.pibo-action-tabs{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:5px;background:#eae6f9;border-radius:16px}
+.pibo-action-tabs button{min-width:0;min-height:45px;border-radius:12px;padding:7px 3px;font-size:11px;line-height:1.2;white-space:normal;color:#615780;background:transparent;box-shadow:none;outline-offset:1px}
+.pibo-action-tabs button[aria-pressed=true]{color:white;background:linear-gradient(145deg,#8f68df,#694cbd);box-shadow:0 4px 11px #7755c449}
+body.pibo-premium .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body.pibo-premium .actions button{border-radius:14px;background:#fff;color:#3b3065;border:1px solid #ded9f3;min-height:55px;font-size:13px;padding:8px 9px;box-shadow:0 3px 9px #46336f12;text-align:left}
+body.pibo-premium .actions button:active{transform:translateY(1px)}
+body.pibo-premium .actions button:hover{background:#f2e9ff}
+body.pibo-premium .actions button[hidden]{display:none!important}
+body.pibo-premium .actions button[data-act=feed],body.pibo-premium .actions button[data-act=wash]{background:linear-gradient(135deg,#e9dbff,#f5ecff);border-color:#cdb7ff;font-size:14px;font-weight:900}
+body.pibo-premium .actions button[data-act=feed]{background:linear-gradient(135deg,#ffe2cf,#fff4e7);border-color:#ffccb0;color:#764b32}
+body.pibo-premium .pibo-sound{margin:2px 0 0;gap:7px;padding:9px;background:#f4f4ff;font-size:11px;justify-content:flex-start}
+body.pibo-premium .pibo-sound input{flex:1;min-width:85px;width:auto;max-width:100%}
+body.pibo-premium .pibo-sound span{font-size:11px!important}
+body.pibo-premium .note{margin:2px 0 0;line-height:1.5;text-align:left;font-size:11px;color:#716d85}
+body.pibo-premium a:focus-visible,body.pibo-premium button:focus-visible{outline:3px solid #fdcb73;outline-offset:2px}
+@media(max-width:930px){
+ body.pibo-premium .panel{grid-template-columns:minmax(0,1fr) minmax(270px,340px)}
+ body.pibo-premium .stage{height:clamp(330px,57dvh,570px);min-height:330px}
+ body.pibo-premium .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:730px){
+ body.pibo-premium .pibo-top{padding:5px 9px}
+ .pibo-top-inner{gap:8px}
+ .pibo-back{padding:8px;min-width:40px}
+ .pibo-back span{display:none}
+ .pibo-brand strong{font-size:17px}
+ .pibo-brand-icon{width:35px;height:35px;font-size:22px}
+ .pibo-top-links a{padding:7px 8px;font-size:11px}
+ body.pibo-premium main.wrap{padding:6px 8px calc(65px + env(safe-area-inset-bottom,0px));max-width:580px}
+ body.pibo-premium .panel{display:flex;flex-direction:column;gap:9px;padding:7px;border-radius:20px}
+ .pibo-play-view{width:100%;position:sticky;top:0;z-index:9;background:#ffffffec;border-radius:17px;padding:0;box-shadow:0 7px 24px #45417a30;isolation:isolate}
+ body.pibo-premium .stage{height:clamp(240px,43dvh,410px);min-height:240px;border-radius:16px}
+ .pibo-controls{width:100%;padding:4px 6px 10px;gap:9px}
+ .pibo-controls-head{padding:5px 2px 0}
+ .pibo-controls-head h2{font-size:21px;margin:2px 0}
+ .pibo-controls-head p{font-size:11px}
+ body.pibo-premium .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ body.pibo-premium .stats>div{padding:6px 5px}
+ body.pibo-premium .stats label{font-size:10px}
+ body.pibo-premium .rooms button{min-width:96px;min-height:44px;font-size:11px}
+ body.pibo-premium .actions button{min-height:53px}
+ body.pibo-premium .bubble{min-height:43px;font-size:12px}
+}
+@media(max-width:390px){
+ body.pibo-premium .stage{height:clamp(222px,39dvh,325px);min-height:222px}
+ body.pibo-premium .stage .tag{font-size:10px;max-width:54%}
+ body.pibo-premium #roomTitle{font-size:10px!important;max-width:46%}
+ body.pibo-premium .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pibo-top-links a:last-child{display:none}
+ .pibo-action-tabs button{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){body.pibo-premium .actions button{transition:none!important}}
