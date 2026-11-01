@@ -141,6 +141,28 @@ const extraListening=[
  {title:'Elternabend zur Klassenfahrt',dialogue:[['Lehrerin','Vielen Dank, dass Sie heute gekommen sind. Die Klassenfahrt nach Freiburg findet vom 12. bis 15. Juni statt.'],['Vater','Wie fahren die Kinder dorthin?'],['Lehrerin','Wir fahren gemeinsam mit dem Zug. Treffpunkt ist um 7:30 Uhr am Haupteingang des Bahnhofs.'],['Mutter','Wie viel kostet die Fahrt insgesamt?'],['Lehrerin','Mit Unterkunft und Verpflegung sind es 180 Euro pro Kind. Bitte überweisen Sie das Geld bis zum 20. Mai.'],['Vater','Müssen die Kinder Bettwäsche mitnehmen?'],['Lehrerin','Nein, die Jugendherberge stellt Bettwäsche bereit. Wichtig sind feste Schuhe und eine Regenjacke.']],questions:[['Wie reisen die Kinder nach Freiburg?','Mit dem Zug','Mit dem Bus','Mit dem Flugzeug'],['Wie viel kostet die Klassenfahrt pro Kind?','180 Euro','80 Euro','280 Euro'],['Was sollen die Kinder mitnehmen?','Feste Schuhe und Regenjacke','Eigene Bettwäsche','Einen Schlafsack']]},
  {title:'Gespräch im Bürgerbüro',dialogue:[['Mitarbeiter','Guten Tag, was kann ich für Sie tun?'],['Besucherin','Ich bin vor zwei Wochen umgezogen und möchte meine neue Adresse anmelden.'],['Mitarbeiter','Haben Sie einen Termin vereinbart?'],['Besucherin','Ja, für heute um 11 Uhr. Welche Unterlagen brauchen Sie?'],['Mitarbeiter','Ihren Personalausweis und die Wohnungsgeberbestätigung. Das Formular können Sie hier ausfüllen.'],['Besucherin','Kostet die Anmeldung etwas?'],['Mitarbeiter','Nein, die Anmeldung ist kostenlos. Wenn alle Unterlagen vollständig sind, dauert es ungefähr zehn Minuten.'],['Besucherin','Vielen Dank, dann fülle ich das Formular gleich aus.']],questions:[['Warum kommt die Besucherin ins Bürgerbüro?','Um ihre neue Adresse anzumelden','Um einen Führerschein zu beantragen','Um ein Paket abzuholen'],['Welches Dokument wird benötigt?','Die Wohnungsgeberbestätigung','Ein Schulzeugnis','Eine Fahrkarte'],['Was kostet die Anmeldung?','Nichts','Zehn Euro','Zwanzig Euro']]}
 ];
+const dialogueExplanations=[
+ [
+  'Die Mitarbeiterin sagt ausdrücklich, dass man im ersten Stock in Ruhe lernen kann. Das Erdgeschoss ist für die Buchausleihe.',
+  'Die Mitarbeiterin erklärt: Für die Lernplätze braucht man keinen Ausweis, für das Ausleihen von Büchern dagegen schon.',
+  'Die reguläre Leihfrist beträgt vier Wochen. Eine einmalige Verlängerung ist nur unter bestimmten Bedingungen möglich.'
+ ],
+ [
+  'Die Bewerberin sagt, dass sie zwei Jahre in einem Geschäft gearbeitet und dort Kunden beraten hat.',
+  'Der Personalleiter erklärt, dass die ersten zwei Wochen gemeinsam mit einer erfahrenen Kollegin stattfinden.',
+  'Der Personalleiter verspricht eine Rückmeldung bis nächsten Mittwoch. Der mögliche Arbeitsbeginn ist ein anderes Datum.'
+ ],
+ [
+  'Die Lehrerin sagt, dass die Klasse gemeinsam mit dem Zug nach Freiburg fährt. Der Bahnhof ist der Treffpunkt.',
+  'Die Lehrerin nennt 180 Euro einschließlich Unterkunft und Verpflegung. Der 20. Mai ist die Zahlungsfrist, nicht der Preis.',
+  'Die Lehrerin nennt feste Schuhe und eine Regenjacke. Bettwäsche wird von der Jugendherberge bereitgestellt.'
+ ],
+ [
+  'Die Besucherin sagt, dass sie umgezogen ist und ihre neue Adresse anmelden möchte.',
+  'Der Mitarbeiter verlangt den Personalausweis und die Wohnungsgeberbestätigung. Das Formular kann vor Ort ausgefüllt werden.',
+  'Der Mitarbeiter sagt ausdrücklich, dass die Anmeldung kostenlos ist. Zehn Minuten beziehen sich auf die ungefähre Dauer.'
+ ]
+];
 const listeningDialogues=[
  ['Kursberatung',[
  ['Beraterin','Guten Morgen. Sie interessieren sich für unseren Abendkurs?'],
@@ -257,7 +279,7 @@ function items(section){
          const options=question.slice(1),correct=options[0],pos=(n+set)%3;
          options[0]=options[pos];options[pos]=correct;
          const audio=ex.dialogue.map(turn=>turn[0]+': '+turn[1]).join(' ');
-         result.push({g,j,q:question[0],options,answer:pos,passage:audio,audio,dialogue:ex.dialogue,kind:kinds[g]+' · Gespräch'});
+         result.push({g,j,q:question[0],options,answer:pos,passage:audio,audio,dialogue:ex.dialogue,explanation:dialogueExplanations[extraIndex][qIndex],kind:kinds[g]+' · Gespräch'});
          continue;
        }
        const sceneIndex=(g*3+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
@@ -448,6 +470,7 @@ function selfCheckMarkup(section,entries){
  '</details>';
 }
 function explainAnswer(t,withTranscript){
+ if(t.explanation)return t.explanation;
  const solution=t.options[t.answer];
  if(withTranscript){
    const source=t.audio||'';
