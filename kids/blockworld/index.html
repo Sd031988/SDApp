@@ -50,6 +50,9 @@ canvas:focus-visible{outline:3px solid #ffe29a;outline-offset:-4px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.world{height:61vh;min-height:390px}}
 @media(max-width:540px){header{gap:7px}header .subtitle{width:100%;margin:0}.layout{padding:4px 8px 18px}.side{grid-template-columns:1fr}.world{height:62vh;min-height:360px}.pad{bottom:10px;left:9px;grid-template-columns:repeat(3,45px);grid-template-rows:repeat(2,45px)}.jump{width:65px;height:65px}.hud{left:7px;right:7px;top:7px}.pill{font-size:.71rem;padding:6px 7px}#notice{top:62px;font-size:.8rem}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+.soundBar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid #ffffff33;background:#172b50cf;padding:8px 12px;margin:0 0 12px;border-radius:14px;font-size:.85rem}
+.soundBar label{font-weight:800;white-space:nowrap}.soundBar input{accent-color:#ffdc7d;max-width:220px;flex:1;min-width:100px;touch-action:manipulation}.soundBar small{color:#c9d8f8}
+@media(max-width:570px){.soundBar small{flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -75,7 +78,8 @@ canvas:focus-visible{outline:3px solid #ffe29a;outline-offset:-4px}
   <button class="jump" id="jump" type="button">⬆ Springen</button>
   <div id="pauseCover" class="pauseCover" hidden role="status"><strong>⏸️ Pause</strong><p>Dein Abenteuer wartet auf dich.</p><button type="button" id="resumeWorld">▶ Weiter</button></div>
 </div>
-<div class="gameTools" aria-label="Spieloptionen"><button type="button" id="pauseWorld" aria-pressed="false">⏸️ Pause</button><button type="button" id="fullWorld">⛶ Vollbild</button><a href="../games/" style="color:#fff;padding:10px 13px;font-weight:800">🎮 Zur Spielewelt</a></div>
+<div class="gameTools" aria-label="Spieloptionen"><button type="button" id="pauseWorld" aria-pressed="false">⏸️ Pause</button><button type="button" id="fullWorld">⛶ Vollbild</button><button type="button" id="worldSound" aria-pressed="false">🔇 Ton aus</button><a href="../games/" style="color:#fff;padding:10px 13px;font-weight:800">🎮 Zur Spielewelt</a></div>
+<div class="soundBar"><label for="worldVolume">🔊 Lautstärke <output id="worldVolumeValue" for="worldVolume">65 %</output></label><input id="worldVolume" type="range" min="0" max="100" step="5" value="65"><small>Originale Spielgeräusche – kein Download von Audiodateien. Sound nach Einschalten aktiv.</small></div>
 <p class="controls">⌨️ <strong>WASD / Pfeile</strong> bewegen · <strong>Leertaste</strong> springen · <strong>Maus ziehen</strong> Kamera drehen · <strong>B</strong> bauen · <strong>E</strong> Block setzen · <strong>R</strong> Block entfernen. Auf dem Handy die Pfeile und Springen nutzen.</p>
 </section>
 <aside class="side">
