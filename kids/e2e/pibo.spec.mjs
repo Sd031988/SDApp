@@ -67,3 +67,51 @@ test('Pibo cat remains visible above care controls on desktop and small phones',
   await expect(page.locator('#scrub')).toBeVisible();
   await expect(page.locator('#minigame')).toBeHidden();
 });
+
+
+test('Pibo interactive hands-on care: food-to-mouth, soap/rinse/dry, toilet and bedroom light',async({page,isMobile})=>{
+  await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('#stage canvas')).toBeVisible({timeout:30000});
+  await page.setViewportSize({width:isMobile?390:1280,height:844});
+  await page.locator('[data-room="kitchen"]').click();
+  await expect(page.locator('#foodShelf')).toBeVisible();
+  // Disable native HTML drag only in this test to explicitly exercise the
+  // custom touch-like pointer interaction that is also used by mobile devices.
+  await page.evaluate(()=>document.querySelectorAll('[data-food]').forEach(b=>b.draggable=false));
+  const source=await page.locator('[data-food="0"]').boundingBox();
+  const destination=await page.evaluate(()=>{
+    const r=document.querySelector('#stage').getBoundingClientRect();
+    return {x:r.left+r.width*.5,y:r.top+r.height*.43};
+  });
+  await page.mouse.move(source.x+source.width/2,source.y+source.height/2);
+  await page.mouse.down();
+  await page.mouse.move(destination.x,destination.y,{steps:18});
+  await expect(page.locator('#piboMouthTarget')).toBeVisible();
+  await page.mouse.up();
+  await expect(page.locator('#piboMouthTarget')).toBeHidden();
+  await expect(page.locator('#say')).toContainText('Lieblingsessen');
+  await expect(page.locator('#sceneEffect')).toContainText('Direkt in Pibos Mund');
+  await expect(page.locator('#careStatus')).toBeVisible();
+
+  await page.locator('[data-act="wash"]').click();
+  for(let n=0;n<3;n++)await page.locator('#scrub').click();
+  await expect(page.locator('#careLabel')).toContainText('abspülen');
+  await page.locator('#rinse').click();
+  await expect(page.locator('#say')).toContainText('Seife ist weg');
+  await page.locator('#dry').click();
+  await expect(page.locator('#say')).toContainText('Alles trocken');
+
+  await page.locator('#potty').click();
+  await expect(page.locator('#roomTitle')).toContainText('Toilette');
+  await page.waitForTimeout(2200);
+  await page.locator('#flush').click();
+  await expect(page.locator('#say')).toContainText('gespült');
+  await page.locator('[data-act="sleep"]').click();
+  await expect(page.locator('#roomTitle')).toContainText('Schlafzimmer');
+  await expect(page.locator('#sleepStars')).toBeVisible();
+  await page.locator('#lamp').click();
+  await expect(page.locator('#sleepStars')).toBeHidden();
+  await expect(page.locator('#say')).toContainText('Guten Morgen');
+  const docWidth=await page.evaluate(()=>document.documentElement.scrollWidth);
+  expect(docWidth).toBeLessThanOrEqual((isMobile?390:1280)+3);
+});
