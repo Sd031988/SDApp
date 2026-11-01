@@ -74,7 +74,7 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="completedGames">🏆 Erfolge: 0/8</span>
 </div>
 <div class="hubAudio" aria-label="Sounds für alle SD Kids Spiele">
-<button type="button" id="hubSound" aria-pressed="false">🔇 Sound aktivieren</button>
+<button type="button" id="hubSound" aria-pressed="false">🔇 Sound aktivieren</button><button type="button" id="hubPreview">🎵 Sound testen</button>
 <label for="hubVolume">🔉 Lautstärke</label><input type="range" id="hubVolume" min="0" max="100" step="5" value="65">
 <output id="hubVolumeLabel" for="hubVolume">65 %</output>
 </div>
@@ -131,6 +131,12 @@ hubVolume.addEventListener('input',()=>{
  syncHubSound();if(soundEngine.enabled)soundEngine.pulse('select',280);
 });
 syncHubSound();
+document.getElementById('hubPreview').addEventListener('click',()=>{
+ if(!soundEngine.enabled){
+  soundEngine.setEnabled(true);saveSoundSettings({enabled:true,volume:soundEngine.volume});syncHubSound();
+ }
+ soundEngine.play('reward');
+});
 const grid=document.getElementById('gameGrid'),count=document.getElementById('count'),empty=document.getElementById('empty');
 let profile=readProfile(),preferences=readSettings(),filter='Alle';
 const selected=()=>document.getElementById('gameSearch').value.trim().toLocaleLowerCase('de');
