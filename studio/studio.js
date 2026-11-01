@@ -624,6 +624,77 @@ async function kiProjektAssistent() {
   toast('Neues Starterprojekt erstellt – bestehende Projekte bleiben unverändert.');
 }
 
+
+/* Automatischer Fehlerfinder: rein statische Analyse, niemals fremden Code ausführen. */
+function fehlerFinden(dateien) {
+  const probleme = [];
+  const melden = (datei, text, typ, reparatur) => probleme.push({datei,text,typ,reparatur});
+  for (const [datei,inhalt] of Object.entries(dateien)) {
+    if (typeof inhalt !== 'string' || istBinaer(inhalt)) continue;
+    if (/\.json$/i.test(datei)) {
+      try { JSON.parse(inhalt); }
+      catch (e) { melden(datei,'Ungültiges JSON: '+e.message,'json'); }
+    }
+    if (/\.html?$/i.test(datei)) {
+      const refs = [...inhalt.matchAll(/\b(?:src|href)\s*=\s*["']([^"']+)["']/gi)];
+      for (const match of refs) {
+        const ref = match[1].split(/[?#]/)[0];
+        if (!ref || /^(?:[a-z][\w+.-]*:|\/\/|#|\/|\{)/i.test(ref)) continue;
+        const teile = datei.split('/').slice(0,-1);
+        for (const segment of ref.split('/')) {
+          if (segment === '..') { if (!teile.length) { teile.push('..'); break; } teile.pop(); }
+          else if (segment && segment !== '.') teile.push(segment);
+        }
+        const ziel = teile.join('/');
+        if (ziel.startsWith('..')) continue;
+        if (dateien[ziel] == null) melden(datei,'Verlinkte Datei fehlt: '+ziel,'referenz',{art:'platzhalter',ziel});
+      }
+    }
+  }
+  if (typeof dateien['package.json'] === 'string') {
+    try {
+      const pkg = JSON.parse(dateien['package.json']);
+      const deps = {...pkg.dependencies,...pkg.devDependencies};
+      if (Object.keys(deps).some(n => ['react','vue','svelte','next','nuxt','@angular/core','vite'].includes(n)) &&
+          (!pkg.scripts || typeof pkg.scripts.build !== 'string' || !pkg.scripts.build.trim())) {
+        melden('package.json','Build-Skript fehlt (scripts.build).','build');
+      }
+    } catch (e) { /* bereits als JSON-Fehler erfasst */ }
+  }
+  return probleme.slice(0,100);
+}
+async function automatischerFehlerfinder() {
+  if (!S.p) { alert('Bitte zuerst ein Projekt öffnen.'); return; }
+  const projekt = S.p;
+  try { await speichernJetzt(); } catch (e) { toast('Fehlerprüfung abgebrochen: Speichern fehlgeschlagen.'); return; }
+  if (S.p !== projekt) return;
+  const funde = fehlerFinden(projekt.dateien);
+  S.problemeProgramm = funde.map(f => ({datei:f.datei,text:f.text}));
+  probleme(); unten('probleme');
+  if (!funde.length) { toast('Keine Probleme bei der statischen Prüfung gefunden.'); return; }
+  const reparierbar = funde.filter(f => f.reparatur && f.reparatur.art === 'platzhalter' &&
+    sicherPfad(f.reparatur.ziel) === f.reparatur.ziel && !projekt.dateien[f.reparatur.ziel] &&
+    /\.(?:css|js)$/i.test(f.reparatur.ziel));
+  const bericht = 'Automatischer Fehlerfinder\n\n' +
+    funde.slice(0,25).map(f => '• '+f.datei+': '+f.text).join('\n') +
+    (funde.length > 25 ? '\n… weitere Probleme im Probleme-Fenster.' : '') +
+    '\n\nStatische Analyse: Es wurde kein Code ausgeführt.' +
+    (reparierbar.length ? '\n\nOK: '+reparierbar.length+' fehlende CSS/JS-Datei(en) als leere Platzhalter in einer NEUEN Projektkopie anlegen.\nAbbrechen: Nur Bericht anzeigen.' : '');
+  if (!reparierbar.length || !confirm(bericht)) { if (!reparierbar.length) alert(bericht); return; }
+  const kopie = {...projekt.dateien};
+  for (const f of reparierbar) if (kopie[f.reparatur.ziel] == null) kopie[f.reparatur.ziel] =
+    '/* Automatisch angelegter Platzhalter: '+f.reparatur.ziel.replace(/\*\//g,'')+' */\n';
+  const basis = slug(projekt.name+'-repariert').slice(0,70);
+  let name=basis, nummer=2;
+  while (await projLesen(name)) name=basis+'-'+nummer++;
+  if (!confirm('Reparierte Projektkopie „'+name+'“ erstellen? Das Original bleibt unverändert.')) return;
+  try {
+    await projSchreiben({name,dateien:kopie,haupt:projekt.haupt,versionen:[],erstellt:Date.now()});
+    await projektOeffnen(name);
+    toast('Reparaturvorschlag als neues Projekt gespeichert.');
+  } catch (e) { console.error(e); alert('Projektkopie konnte nicht gespeichert werden.'); }
+}
+
 async function projektAssistent() {
   if (!S.p) { alert('Bitte zuerst ein Projekt öffnen oder ZIP importieren.'); return; }
   const p = S.p;
@@ -855,7 +926,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
