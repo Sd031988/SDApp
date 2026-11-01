@@ -44,9 +44,11 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  get('stage').handlers.pointerup({pointerId:9});
  frame(50);
  click('act','feed');frame(50);
- click('act','wash');frame(50);
+ click('act','wash');click('scrub');click('scrub');click('scrub');frame(50);
  click('act','sleep');frame(65);
- click('potty');frame(55);
+ const flushBefore=sounds.filter(s=>s==='flush').length;
+ click('potty');frame(28);click('flush');frame(27);
+ if(sounds.filter(s=>s==='flush').length!==flushBefore+1)throw Error('Toilet must flush exactly once');
  click('outfit');if(wardrobeButtons.length!==12)throw Error('Wardrobe has '+wardrobeButtons.length+' outfits, expected 12');
  wardrobeButtons[11].click();click('surprise');click('surprise');
  const savedGift=JSON.parse(storage.get('sd-kids-pibo-extras-v2'));
@@ -61,5 +63,5 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  click('mousegame');click('photo');frame();
  if(!storage.has('sd-kids-pibo-v1'))throw Error('Game progress not persisted');
  if(!sounds.includes('chew')||!sounds.includes('flush')||!sounds.includes('splash'))throw Error('Missing care sound triggers: '+sounds.join(','));
- return {status:'PASS',checks:['startup','5 room navigation','food choice','desktop and touch food drop','daily gift once','visible stars','feeding','bathing','sleeping','toilet and flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
+ return {status:'PASS',checks:['startup','5 room navigation','food choice','desktop and touch food drop','daily gift once','visible stars','feeding','interactive scrubbing','bathing','sleeping','single toilet flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
 }
