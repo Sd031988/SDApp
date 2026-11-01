@@ -105,13 +105,15 @@ function reviewMarkup(){
  (next.length?next.map(({w,i})=>'<div class="pre-line"><span><b>'+esc(w[0])+'</b><small>'+esc(w[1])+'</small></span><button data-review="'+i+'">✓ Gelernt</button></div>').join(''):'<p>Aktuell keine Wörter fällig. Bearbeite den Wortschatztest.</p>')+'</section>';
 }
 function quizMarkup(){
- const words=vocabulary[level],start=(unit*3)%words.length;
+ const words=vocabulary[level],start=(unit*5)%words.length;
  const chosen=Array.from({length:5},(_,i)=>(start+i)%words.length);
  return '<section class="pre-card"><h3>Wortschatz-Selbsttest</h3><p>Wähle die passende englische Bedeutung. Die Auswertung ist nur eine Übung, keine Prüfungsnote.</p>'+
  chosen.map((ix,n)=>{
-  const options=[ix,(ix+7)%words.length,(ix+13)%words.length].sort((a,b)=>((a*7+n)%17)-((b*7+n)%17));
+  const distractors=Array.from({length:words.length},(_,j)=>j).filter(j=>j!==ix&&words[j][1].toLocaleLowerCase('en')!==words[ix][1].toLocaleLowerCase('en'));
+  const options=[ix,...distractors.slice((unit+n*3)%Math.max(1,distractors.length)).concat(distractors).slice(0,2)];
+  const ordered=options.map((j,k)=>({j,order:(k+n+unit)%3})).sort((a,b)=>a.order-b.order).map(x=>x.j);
   return '<fieldset class="pre-question" data-quiz="'+n+'" data-answer="'+ix+'"><legend>'+(n+1)+'. '+esc(words[ix][0])+'</legend>'+
-  options.map(j=>'<label><input type="radio" name="pre-q'+n+'" value="'+j+'"> '+esc(words[j][1])+'</label>').join('')+'</fieldset>';
+  ordered.map(j=>'<label><input type="radio" name="pre-q'+n+'" value="'+j+'"> '+esc(words[j][1])+'</label>').join('')+'</fieldset>';
  }).join('')+'<button id="pre-check">Antworten prüfen</button><p id="pre-feedback" role="status" aria-live="polite"></p></section>';
 }
 let stopRecording=()=>{};
