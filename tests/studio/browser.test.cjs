@@ -39,6 +39,26 @@ const assert = require('node:assert/strict');
     for (const key of ['check','framework','zip','desktop','assistant']) assert.equal(result[key],'function',key);
     assert.equal(result.react,'React');
     assert.equal(result.missing,true);
+    const zipResult = await page.evaluate(async () => {
+      const original = {
+        'index.html':'<!doctype html><html><body>Hallo</body></html>',
+        'css/style.css':'body { color: blue; }',
+        'js/app.js':'console.log("ok")',
+        'bilder/logo.svg':'<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+      };
+      const blob = zipBauen(original);
+      const destination = {};
+      const file = { arrayBuffer: () => blob.arrayBuffer() };
+      const count = await zipEinlesen(file, destination);
+      return {count, files:destination};
+    });
+    assert.equal(zipResult.count,4,'ZIP-Dateizahl');
+    assert.deepEqual(zipResult.files,{
+      'index.html':'<!doctype html><html><body>Hallo</body></html>',
+      'css/style.css':'body { color: blue; }',
+      'js/app.js':'console.log("ok")',
+      'bilder/logo.svg':'<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+    },'ZIP-Roundtrip mit Ordnern und Dateiinhalten');
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
