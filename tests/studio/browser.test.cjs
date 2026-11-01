@@ -177,6 +177,16 @@ const assert = require('node:assert/strict');
     assert.equal(endToEnd.next,'css');
     assert.equal(endToEnd.unchanged,true);
     assert.equal(endToEnd.lesson,'js-conditions');
+    const jsonDiagnostics = await page.evaluate(() => ({
+      valid:editorJsonDiagnose('{"ok":true}','settings.json'),
+      invalid:editorJsonDiagnose('{"ok": }','settings.json'),
+      other:editorJsonDiagnose('broken','notes.txt'),
+      multi:editorJsonDiagnose('{\n"ok": true,\n"bad": }','settings.json')
+    }));
+    assert.equal(jsonDiagnostics.valid,null);
+    assert.equal(jsonDiagnostics.other,null);
+    assert(jsonDiagnostics.invalid && jsonDiagnostics.invalid.message);
+    assert(jsonDiagnostics.multi && jsonDiagnostics.multi.line>=1);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
