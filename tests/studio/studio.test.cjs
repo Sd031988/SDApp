@@ -56,3 +56,10 @@ test('Electron-Export enthält Workflow für drei Betriebssysteme', () => {
   assert(source.includes('macos-latest'));
   assert(source.includes('ubuntu-latest'));
 });
+
+test('KI-Projekt-Assistent besitzt getrennte Projektanlage und KI-Anweisung', () => {
+  assert(source.includes('function kiProjektAnweisung(wunsch)'));
+  assert(source.includes('async function kiProjektAssistent()'));
+  assert(source.includes("while (await projLesen(name)) name = nameBasis + '-' + nr++"));
+  assert(source.includes('navigator.clipboard.writeText(anweisung)'));
+});
