@@ -73,16 +73,28 @@ function renderPlan(){
  }
  for(const file of plan){
   const label=node('label','kiFile'),checkbox=node('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.dataset.path=file.path;
-  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',file.status+' · '+file.content.split('\n').length+' Zeilen'));label.append(checkbox,detail);list.append(label);
+  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',file.status+' · '+file.language.toUpperCase()+' · '+file.content.split('\n').length+' Zeilen'));label.append(checkbox,detail);list.append(label);
  }
  $('kiApply').disabled=!!(parsed.errors.length||!plan.length);
- status(parsed.errors.length?parsed.errors.length+' Fehler: Dateinamen oder Codeblöcke korrigieren.':plan.length+' Datei(en) erkannt. Noch nichts gespeichert.',parsed.errors.length>0);
+ status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
 }
 function analyse(){
- parsed=core.parse($('kiResult').value,S.aktiv);
+ parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
  stagedSnapshot=currentFiles();
  renderPlan();
+}
+async function pasteWholeAnswer(){
+ try{
+  if(!navigator.clipboard||!navigator.clipboard.readText)throw Error('no clipboard');
+  const content=await navigator.clipboard.readText();
+  if(!content.trim()){status('Zwischenablage ist leer. Bitte die gesamte KI-Antwort kopieren.',true);return}
+  $('kiResult').value=content;
+  analyse();
+ }catch(e){
+  $('kiResult').focus();
+  status('Zwischenablage nicht freigegeben. Bitte in das große Textfeld tippen und die gesamte KI-Antwort mit Einfügen einsetzen.',true);
+ }
 }
 async function uniqueName(base){
  const p=typeof slug==='function'?slug(base):String(base).replace(/[^a-z0-9._-]+/gi,'-').toLowerCase();
@@ -134,8 +146,10 @@ function setup(){
  $('kiChatGPT').addEventListener('click',()=>openAI('https://chatgpt.com/'));
  $('kiGemini').addEventListener('click',()=>openAI('https://gemini.google.com/'));
  $('kiAnalyse').addEventListener('click',analyse);
+ $('kiPaste').addEventListener('click',pasteWholeAnswer);
  $('kiApply').addEventListener('click',apply);
- $('kiResult').addEventListener('input',()=>{parsed=null;stagedSnapshot=null;$('kiApply').disabled=true;status('Code geändert – bitte erneut analysieren.')});
+ $('kiResult').addEventListener('input',()=>{parsed=null;stagedSnapshot=null;$('kiApply').disabled=true;status('Antwort geändert – analysieren oder den vollständigen Text einfügen.')});
+ $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
  window.SDKICodingUI={openDialog,analyse,apply,currentFiles};
