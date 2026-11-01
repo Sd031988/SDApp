@@ -193,7 +193,7 @@ function addChoice(label,action){const b=document.createElement('button');b.type
 addChoice('Alphabetisierung',()=>{level='alpha';unit=0;open();show();});
 addChoice('A1 lernen',()=>{level='a1';unit=0;open();show();});
 addChoice('A2 lernen',()=>{level='a2';unit=0;open();show();});
-addChoice('B1 lernen',()=>{close();const target=document.querySelector('#learn [data-lv="B1"], #learn [data-level="B1"], #learn button[data-level="b1"]');if(target)target.click();else{const candidates=Array.from(document.querySelectorAll('#lBody button, #learn button')).filter(b=>/^B1(?:\\s|$)/i.test(b.textContent.trim())&&!/Prüfung|Muster/i.test(b.textContent));if(candidates[0])candidates[0].click();else document.getElementById('lBody')?.scrollIntoView({behavior:'smooth'});}});
+addChoice('B1 lernen',()=>{close();const buttons=Array.from(document.querySelectorAll('#lBody button, #learn button'));const target=buttons.find(b=>/^(?:B1|B1\\s*[–-]\\s*[^\\n]+)$/i.test(b.textContent.trim())&&!/Prüfung|Muster/i.test(b.textContent));if(target){target.click();return;}const section=document.getElementById('lBody');if(section)section.scrollIntoView({behavior:'smooth'});});
 addChoice('B1-Prüfungen',()=>{close();const target=document.getElementById('sdB1FixedEntry')||document.getElementById('sdB1FullEntry');if(target)target.click();});
 entry.onclick=()=>{const next=menu.hidden;menu.hidden=!next;menu.style.display=next?'grid':'none';entry.setAttribute('aria-expanded',String(next));};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){hideMenu();entry.focus();}});
