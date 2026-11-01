@@ -100,7 +100,7 @@ export class PiboCare {
     if(i.type==='sleep'){
       const lying=smooth((p-.24)/.18)*(1-smooth((p-.8)/.13));
       this.cat.scale.setScalar(1-.32*lying);this.cat.rotation.z=-1.32*lying;
-      this.cat.position.y=.65*lying;this.head.rotation.x=.17*lying+.025*Math.sin(t*1.5);
+      this.cat.position.y=.65*lying;this.head.rotation.x=.17*lying+.025*Math.sin(t*1.5);this.cat.scale.x=1+.012*Math.sin(t*2)*lying;
       i.blanket.visible=lying>.8;i.blanket.position.y=.9+.05*Math.sin(t*2);i.blanket.rotation.z=.015*Math.sin(t*2)*lying;
     }
     if(i.type==='toilet'){
