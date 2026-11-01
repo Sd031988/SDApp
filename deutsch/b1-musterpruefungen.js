@@ -589,7 +589,7 @@ function home(){
  el('b1x-marked-practice').onclick=markedPractice;
  el('b1x-week-plan').onclick=weekPlan;
  if(el('b1x-history'))el('b1x-history').onclick=history;
- if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse, Schreibentwürfe und den Wochenplan löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');localStorage.removeItem(weekPlanKey);clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
+ if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse, Schreibentwürfe und die Wochenverläufe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');localStorage.removeItem(weekPlanKey);localStorage.removeItem(weekArchiveKey);clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
 }
 function start(i){clear();part=i;idx=0;answers=[];marked=[];plays=0;pendingChoice=null;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
 function speak(t,dialogue){
@@ -924,16 +924,33 @@ const weekTasks=[
 function getWeekChecks(){
  try{const a=JSON.parse(localStorage.getItem(weekPlanKey)||'[]');return Array.isArray(a)?weekTasks.map((_,i)=>a[i]===true):weekTasks.map(()=>false);}catch(_){return weekTasks.map(()=>false);}
 }
+const weekArchiveKey='sdB1WeekArchiveV1';
+function getWeekArchive(){
+ try{const a=JSON.parse(localStorage.getItem(weekArchiveKey)||'[]');return Array.isArray(a)?a.filter(x=>x&&typeof x.date==='string'&&Number.isInteger(x.done)&&x.done>=0&&x.done<=7).slice(-24):[];}catch(_){return [];}
+}
+function weeklyOverview(){
+ const archive=getWeekArchive(),current=getWeekChecks().filter(Boolean).length;
+ const weeks=archive.concat([{date:'Aktuelle Woche',done:current}]);
+ let streak=0;
+ for(let i=weeks.length-1;i>=0;i--){if(weeks[i].done===7)streak++;else if(i!==weeks.length-1)break;else if(weeks[i].done!==7)break;}
+ const previous=archive.length?archive[archive.length-1].done:null;
+ return '<details class="b1x-passage"><summary>Wochenvergleich und Lernserie</summary>'+
+ '<p><b>'+streak+' vollständig abgeschlossene Woche(n) in Folge</b> (nach gespeicherten Wochenplänen).</p>'+
+ '<p>Aktuell: '+current+'/7 Tage'+(previous===null?' · Noch kein vorheriger Wochenplan vorhanden.':' · Letzter gespeicherter Plan: '+previous+'/7 Tage · Unterschied: '+(current-previous>0?'+':'')+(current-previous)+' Tage')+'</p>'+
+ weeks.slice(-6).map((w,i)=>'<div class="b1x-week-row"><span>'+esc(w.date==='Aktuelle Woche'?w.date:'Woche vom '+new Date(w.date).toLocaleDateString('de-DE'))+'</span><span>'+w.done+'/7</span></div><div class="b1x-progress" role="progressbar" aria-label="Wochenfortschritt" aria-valuemin="0" aria-valuemax="7" aria-valuenow="'+w.done+'"><div style="width:'+(w.done/7*100)+'%"></div></div>').join('')+
+ '<p class="b1x-note">Der Vergleich beruht auf selbst gesetzten Häkchen und manuell abgeschlossenen Wochenplänen, nicht auf Kalenderwochen oder Prüfungsnoten.</p></details>';
+}
 function weekPlan(){
  const checks=getWeekChecks(),done=checks.filter(Boolean).length;
  view('<h2>7-Tage-B1-Lernplan</h2><p class="b1x-note">Eine freiwillige Wochenroutine mit kurzen Übungen. Hake einen Tag erst ab, wenn du die Aufgabe erledigt hast. Dein Fortschritt bleibt auf diesem Gerät gespeichert.</p>'+
+ weeklyOverview()+
  '<p><b>'+done+' von 7 Tagen abgeschlossen</b></p><div class="b1x-progress" role="progressbar" aria-label="Fortschritt des Wochenplans" aria-valuemin="0" aria-valuemax="7" aria-valuenow="'+done+'"><div style="width:'+(done/7*100)+'%"></div></div>'+
  weekTasks.map((t,i)=>'<div class="b1x-passage"><label class="b1x-check"><input type="checkbox" data-week-day="'+i+'" '+(checks[i]?'checked':'')+'><b>'+esc(t[0])+'</b></label><p>'+esc(t[1])+'</p></div>').join('')+
  '<p class="b1x-note">Die Häkchen dokumentieren nur deine eigene Bestätigung, nicht eine automatische Leistungsmessung.</p>'+
- '<button id="b1x-week-reset" class="b1x-card" type="button">Wochenplan zurücksetzen</button>'+
+ '<button id="b1x-week-reset" class="b1x-card" type="button">Woche abschließen und neue beginnen</button>'+
  '<button id="b1x-week-home" class="b1x-primary">Zurück zur Auswahl</button>');
  root.querySelectorAll('[data-week-day]').forEach(input=>input.onchange=()=>{const current=getWeekChecks();current[Number(input.dataset.weekDay)]=input.checked;try{localStorage.setItem(weekPlanKey,JSON.stringify(current));}catch(_){}weekPlan();});
- el('b1x-week-reset').onclick=()=>{if(confirm('Alle Häkchen im 7-Tage-Lernplan zurücksetzen?')){try{localStorage.removeItem(weekPlanKey);}catch(_){}weekPlan();}};
+ el('b1x-week-reset').onclick=()=>{if(confirm('Diese Lernwoche abschließen, ihren Fortschritt im Wochenvergleich speichern und einen neuen Plan beginnen?')){try{const a=getWeekArchive();a.push({date:new Date().toISOString(),done:getWeekChecks().filter(Boolean).length});localStorage.setItem(weekArchiveKey,JSON.stringify(a.slice(-24)));localStorage.removeItem(weekPlanKey);}catch(_){alert('Der Wochenfortschritt konnte nicht gespeichert werden.');return;}weekPlan();}};
  el('b1x-week-home').onclick=home;
 }
 function history(){
@@ -1000,6 +1017,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-overview summary{cursor:pointer;font-weight:700}
 .b1x-mark{width:100%;min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px;font:inherit;cursor:pointer}
 .b1x-overview-item.is-marked{box-shadow:inset 0 0 0 2px #facc15}
+.b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
