@@ -90,14 +90,14 @@
         /* Lichtkranz und Bodenschatten hinter dem Stapel */
         .szene::before { content: ""; position: absolute; width: min(420px, 92%); aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from 0deg, rgba(126, 231, 196, 0), rgba(126, 231, 196, .28), rgba(120, 160, 255, .22), rgba(255, 170, 120, .2), rgba(126, 231, 196, 0)); filter: blur(34px); opacity: .9; }
         .szene::after { content: ""; position: absolute; left: 50%; top: 74%; width: 62%; height: 70px; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, .42), transparent); filter: blur(6px); }
-        .stapel { --z: 168px; --abstand: 22px; --rx: 58deg; --rz: -34deg; --dreh: 0deg; position: relative; z-index: 1; width: 250px; height: 310px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(calc(var(--rz) + var(--dreh))); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+        .stapel { --z: 183px; --abstand: 20px; --rx: 58deg; --rz: -34deg; --dreh: 0deg; position: relative; z-index: 1; width: 250px; height: 310px; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateZ(calc(var(--rz) + var(--dreh))); transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
         .stapel.zieht-hand { transition: none; }
         .lage { position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); transform-style: preserve-3d; transform: translateZ(calc(var(--i) * var(--abstand))); transition: transform .55s cubic-bezier(.2, .9, .25, 1.15); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 0 0 1px rgba(0, 0, 0, .1); cursor: pointer; }
         /* Materialdicke: dunklere Unterkante */
         .lage::before { content: ""; position: absolute; inset: 0; border-radius: 16px; background: var(--farbe); filter: brightness(.55) saturate(1.2); transform: translateZ(-8px); }
         .lage::after { content: ""; position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, .18)); }
         /* Reiter oben an der Mappe, versetzt wie im Aktenschrank */
-        .lage .tab { position: absolute; top: -15px; left: calc(14px + (5 - var(--i)) * 30px); width: 62px; height: 22px; border-radius: 9px 9px 0 0; background: var(--farbe); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+        .lage .tab { position: absolute; top: -15px; left: calc(14px + (7 - var(--i)) * 22px); width: 62px; height: 22px; border-radius: 9px 9px 0 0; background: var(--farbe); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
         /* Papier, das aus der Mappe schaut */
         .lage .papier { position: absolute; left: 10%; right: 12%; top: -7px; height: 30px; border-radius: 4px; background: linear-gradient(#fff, #eef2f0); transform: translateZ(3px); box-shadow: 0 2px 4px rgba(0, 0, 0, .12); }
         .lage span { position: absolute; left: 16px; bottom: 14px; font-family: var(--titel); font-weight: 800; font-size: 1.15rem; color: #fff; opacity: 0; translate: 0 6px; transition: opacity .3s ease, translate .3s ease; text-shadow: 0 1px 2px rgba(0, 0, 0, .3); z-index: 1; transform: translateZ(2px); }
@@ -131,7 +131,7 @@
             .kalender > b { animation-delay: -1.6s; } .haken > b { animation-delay: -3.1s; }
             @keyframes wippen { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
             /* Einmaliger Auftritt: Lagen fallen nacheinander auf den Stapel */
-            .lage { animation: landen .7s cubic-bezier(.2, .9, .3, 1.2) backwards; animation-delay: calc((5 - var(--i)) * 70ms + 100ms); }
+            .lage { animation: landen .7s cubic-bezier(.2, .9, .3, 1.2) backwards; animation-delay: calc((7 - var(--i)) * 70ms + 100ms); }
             .blatt { animation-name: landen-blatt, schweben; animation-duration: .8s, 6s; animation-delay: .6s, 1.4s; animation-iteration-count: 1, infinite; animation-fill-mode: backwards, none; animation-timing-function: cubic-bezier(.2, .9, .3, 1.2), ease-in-out; }
             .schwebt { animation: auftauchen .7s cubic-bezier(.2, .9, .3, 1.3) 1s backwards; }
             .kalender { animation-delay: 1.15s; } .haken { animation-delay: 1.3s; }
@@ -186,8 +186,8 @@
         @media (max-width: 860px) {
             .held { grid-template-columns: minmax(0, 1fr); gap: 0; }
             .szene { height: 300px; margin-top: 4px; }
-            .stapel { width: 170px; height: 212px; --z: 96px; --abstand: 13px; margin-top: 40px; }
-            .lage .tab { top: -11px; left: calc(10px + (5 - var(--i)) * 20px); width: 42px; height: 16px; border-radius: 7px 7px 0 0; }
+            .stapel { width: 170px; height: 212px; --z: 115px; --abstand: 13px; margin-top: 40px; }
+            .lage .tab { top: -11px; left: calc(10px + (7 - var(--i)) * 15px); width: 42px; height: 16px; border-radius: 7px 7px 0 0; }
             .lage .papier { top: -5px; height: 20px; }
             .lage::before { transform: translateZ(-5px); }
             .muenze { left: -34px; top: 18px; width: 44px; height: 44px; transform: translateZ(84px); }
@@ -256,9 +256,9 @@
                     <p class="treffer" id="treffer" aria-live="polite"></p>
                     <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="mein-sd-hub/" data-such="persönlich mein sd hub wegweiser akademie kurs lernen projekt sprache"><span aria-hidden="true">✨</span> <span data-i18n="q_personal">Mein SD Hub</span></a><a class="chip" href="kids/games/"><span aria-hidden="true">🎮</span> SD Kids – 10 Spiele</a><a class="chip" href="kids/index.html"><span aria-hidden="true">🐱</span> SD Kids – Pibo</a><a class="chip" href="kids/blockworld/index.html"><span aria-hidden="true">🧱</span> SD BlockWorld – 3D spielen</a><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
                 </div>
-                <div class="szene" id="szene" aria-hidden="true">
+                <div class="szene" id="szene" role="group" aria-label="Interaktive 3D-Themenordner">
                     <div class="stapel" id="stapel">
-                        <div class="lage" data-thema="arbeit" style="--i:5;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></div><div class="lage" data-thema="post" style="--i:4;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" data-thema="geld" style="--i:3;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" data-thema="doku" style="--i:2;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" data-thema="wohnen" style="--i:1;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></div><div class="lage" data-thema="ki" style="--i:0;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI-Helfer</span></div>
+                        <div class="lage" role="button" tabindex="0" data-thema="deutsch" style="--i:7;--farbe:#098a75"><i class="tab"></i><i class="papier"></i><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></div><div class="lage" role="button" tabindex="0" data-thema="arbeit" style="--i:6;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></div><div class="lage" role="button" tabindex="0" data-thema="post" style="--i:5;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" role="button" tabindex="0" data-thema="geld" style="--i:4;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" role="button" tabindex="0" data-thema="doku" style="--i:3;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" role="button" tabindex="0" data-thema="wohnen" style="--i:2;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></div><div class="lage" role="button" tabindex="0" data-thema="ki" style="--i:1;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI, Code &amp; Design</span></div><div class="lage" role="button" tabindex="0" data-thema="kids" style="--i:0;--farbe:#c64e95"><i class="tab"></i><i class="papier"></i><span data-i18n="t_kids">Kids &amp; Spiele</span></div>
                         <div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
                         <div class="schwebt muenze"><b>€</b></div>
                         <div class="schwebt kalender"><b><em id="kalTag">1</em></b></div>
@@ -266,7 +266,7 @@
                     </div>
                 </div>
             </div>
-            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI-Helfer</span></a></nav>
+            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-deutsch" data-thema="deutsch" style="--farbe:#098a75"><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></a><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI, Code &amp; Design</span></a><a href="#thema-kids" data-thema="kids" style="--farbe:#c64e95"><span data-i18n="t_kids">Kids &amp; Spiele</span></a></nav>
         </div>
     </header>
 
@@ -291,8 +291,29 @@
     </section>
 
     <main class="breite" id="bereiche">
+            <section class="thema" style="--farbe:#098a75" data-thema="deutsch" id="thema-deutsch">
+                <h2 class="reiterkopf"><span data-i18n="t_deutsch">Deutsch & Lernen</span><small class="anzahl">5</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
+                    <a class="kachel" href="deutsch/b1-pruefung.html" data-such="b1 prüfung goethe telc dtz test musterprüfung lesen hören schreiben sprechen">
+                        <span class="symbol" aria-hidden="true">🎓</span>
+                        <span class="text"><b data-i18n="hub_b1">B1-Prüfung üben</b><small data-i18n="hub_b1_sub">Lesen, Hören, Schreiben und Sprechen</small></span>
+                    </a>
+                    <a class="kachel" href="deutsch/b1-pruefungsablauf.html" data-such="b1 prüfungsablauf termine vorbereiten anmeldung sprachprüfung">
+                        <span class="symbol" aria-hidden="true">🗓️</span>
+                        <span class="text"><b data-i18n="hub_exam_flow">B1-Prüfungsablauf</b><small data-i18n="hub_exam_flow_sub">So läuft die Prüfung ab</small></span>
+                    </a>
+                    <a class="kachel" href="deutsch/b1-papierpruefung.html" data-such="b1 papierformat papierprüfung muster lesen schreiben">
+                        <span class="symbol" aria-hidden="true">📝</span>
+                        <span class="text"><b data-i18n="hub_paper">B1-Prüfung im Papierformat</b><small data-i18n="hub_paper_sub">Übungen wie auf dem Prüfungsbogen</small></span>
+                    </a>
+                    <a class="kachel" href="mein-sd-hub/#akademie" data-such="akademie lernen computer digitale grundlagen beruf programmieren lektionen">
+                        <span class="symbol" aria-hidden="true">💡</span>
+                        <span class="text"><b data-i18n="hub_academy">SD Akademie</b><small data-i18n="hub_academy_sub">Deutsch, Computer, Beruf und Code</small></span>
+                    </a>
+                </div></div>
+            </section>
             <section class="thema" style="--farbe:#2f5fd0" data-thema="arbeit" id="thema-arbeit">
-                <h2 class="reiterkopf"><span data-i18n="t_arbeit">Arbeit &amp; Bewerbung</span><small class="anzahl">6</small></h2>
+                <h2 class="reiterkopf"><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span><small class="anzahl">5</small></h2>
                 <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="Lebenslauf_app.html" data-such="cv lebenslauf resume anschreiben deckblatt bewerbungsmappe job bewerbung schreiben write an application lebenslauf, anschreiben, deckblatt cv, cover letter, cover page">
                         <span class="symbol" aria-hidden="true">📝</span>
@@ -401,7 +422,7 @@
                 </div></div>
             </section>
             <section class="thema" style="--farbe:#0e7490" data-thema="ki" id="thema-ki">
-                <h2 class="reiterkopf"><span data-i18n="t_ki">KI-Helfer</span><small class="anzahl">4</small></h2>
+                <h2 class="reiterkopf"><span data-i18n="t_ki">KI, Code &amp; Design</span><small class="anzahl">4</small></h2>
                 <div class="mappe-flaeche"><div class="kacheln">
                     <a class="kachel" href="assistent/index.html" data-such="ki chat assistent lotse gemini chatgpt claude ai ki-assistent ai assistant fragen stellen, texte verbessern ask questions, improve texts">
                         <span class="symbol" aria-hidden="true">💬</span>
@@ -418,6 +439,23 @@
                     <a class="kachel" href="design/index.html" data-such="design studio poster flyer instagram post story visitenkarte einladung webseite gestalten grafik canva bild designer create graphics website">
                         <span class="symbol" aria-hidden="true">🎨</span>
                         <span class="text"><b data-i18n="a_design">Design-Studio</b><small data-i18n="k_design">Poster, Posts, Webseiten gestalten · 10× am Tag frei</small></span>
+                    </a>
+                </div></div>
+            </section>
+            <section class="thema" style="--farbe:#c64e95" data-thema="kids" id="thema-kids">
+                <h2 class="reiterkopf"><span data-i18n="t_kids">Kids & Spiele</span><small class="anzahl">3</small></h2>
+                <div class="mappe-flaeche"><div class="kacheln">
+                    <a class="kachel" href="kids/index.html" data-such="pibo katze 3d spielen tiere kinder haustier">
+                        <span class="symbol" aria-hidden="true">🐱</span>
+                        <span class="text"><b data-i18n="hub_pibo">Pibo 3D</b><small data-i18n="hub_pibo_sub">Mit der Katze spielen und entdecken</small></span>
+                    </a>
+                    <a class="kachel" href="kids/games/" data-such="kinder spiele kids games spaß spielen">
+                        <span class="symbol" aria-hidden="true">🎮</span>
+                        <span class="text"><b data-i18n="hub_games">SD Kids Spiele</b><small data-i18n="hub_games_sub">Kinderspiele und kleine Abenteuer</small></span>
+                    </a>
+                    <a class="kachel" href="kids/blockworld/index.html" data-such="kinder spiel blockworld minecraft bauen block 3d">
+                        <span class="symbol" aria-hidden="true">🧱</span>
+                        <span class="text"><b data-i18n="hub_blocks">SD BlockWorld</b><small data-i18n="hub_blocks_sub">Eine kreative 3D-Blockwelt</small></span>
                     </a>
                 </div></div>
             </section>
@@ -490,12 +528,30 @@
   "update": "Eine neue Version ist da.",
   "update_btn": "Neu laden",
   "oeffnen": "öffnen",
-  "t_arbeit": "Arbeit & Bewerbung",
+  "t_deutsch": "Deutsch & Lernen",
+  "t_kids": "Kids & Spiele",
+  "hub_learn": "Deutsch lernen",
+  "hub_learn_sub": "Alphabetisierung, A1, A2 und B1",
+  "hub_b1": "B1-Prüfung üben",
+  "hub_b1_sub": "Lesen, Hören, Schreiben und Sprechen",
+  "hub_exam_flow": "B1-Prüfungsablauf",
+  "hub_exam_flow_sub": "So läuft die Prüfung ab",
+  "hub_paper": "B1-Prüfung im Papierformat",
+  "hub_paper_sub": "Übungen wie auf dem Prüfungsbogen",
+  "hub_academy": "SD Akademie",
+  "hub_academy_sub": "Deutsch, Computer, Beruf und Code",
+  "hub_pibo": "Pibo 3D",
+  "hub_pibo_sub": "Mit der Katze spielen und entdecken",
+  "hub_games": "SD Kids Spiele",
+  "hub_games_sub": "Kinderspiele und kleine Abenteuer",
+  "hub_blocks": "SD BlockWorld",
+  "hub_blocks_sub": "Eine kreative 3D-Blockwelt",
+  "t_arbeit": "Arbeit & Zukunft",
   "t_post": "Briefe & Ämter",
   "t_geld": "Finanzen & Verträge",
   "t_doku": "Dokumente & Fotos",
   "t_wohnen": "Wohnen & Zuhause",
-  "t_ki": "KI-Helfer",
+  "t_ki": "KI, Code & Design",
   "a_bewerbung": "Bewerbung schreiben",
   "k_bewerbung": "Lebenslauf, Anschreiben, Deckblatt",
   "a_arbeiten": "Arbeiten in Deutschland",
@@ -588,12 +644,30 @@
   "update": "A new version is available.",
   "update_btn": "Reload",
   "oeffnen": "open",
-  "t_arbeit": "Work & applications",
+  "t_deutsch": "German & learning",
+  "t_kids": "Kids & games",
+  "hub_learn": "Learn German",
+  "hub_learn_sub": "Literacy, A1, A2 and B1",
+  "hub_b1": "Practise B1 exams",
+  "hub_b1_sub": "Reading, listening, writing and speaking",
+  "hub_exam_flow": "B1 exam procedure",
+  "hub_exam_flow_sub": "How the exam works",
+  "hub_paper": "B1 paper-format exam",
+  "hub_paper_sub": "Practice with exam-style sheets",
+  "hub_academy": "SD Academy",
+  "hub_academy_sub": "German, computers, work and coding",
+  "hub_pibo": "Pibo 3D",
+  "hub_pibo_sub": "Play and explore with the cat",
+  "hub_games": "SD Kids games",
+  "hub_games_sub": "Games and small adventures",
+  "hub_blocks": "SD BlockWorld",
+  "hub_blocks_sub": "A creative 3D block world",
+  "t_arbeit": "Work & career",
   "t_post": "Letters & authorities",
   "t_geld": "Finances & Contracts",
   "t_doku": "Documents & photos",
   "t_wohnen": "Home & living",
-  "t_ki": "AI helpers",
+  "t_ki": "AI, code & design",
   "a_bewerbung": "Write an application",
   "k_bewerbung": "CV, cover letter, cover page",
   "a_arbeiten": "Working in Germany",
@@ -670,12 +744,31 @@
                 a.addEventListener('pointerleave', function () { ziehe(null); });
                 a.addEventListener('blur', function () { ziehe(null); });
             });
-            // Klick auf eine Mappe im Stapel springt zum Thema
+            // Die 3D-Ordner bleiben auch ohne Maus oder Touch bedienbar.
+            // Eine aktive Suche wird zurückgesetzt, damit das Ziel sichtbar ist.
+            function oeffneThema(thema) {
+                const feld = document.getElementById('suche');
+                if (feld.value.trim()) { feld.value = ''; filtern(); }
+                pausiere();
+                const ziel = document.getElementById('thema-' + thema);
+                if (ziel) ziel.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' });
+            }
             stapel.querySelectorAll('.lage').forEach(function (l) {
-                l.style.cursor = 'pointer';
                 l.addEventListener('pointerenter', function () { ziehe(l.dataset.thema); });
+                l.addEventListener('focus', function () { ziehe(l.dataset.thema); });
                 l.addEventListener('pointerleave', function () { ziehe(null); });
-                l.addEventListener('click', function () { pausiere(); const z = document.getElementById('thema-' + l.dataset.thema); if (z) z.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' }); });
+                l.addEventListener('blur', function () { ziehe(null); });
+                l.addEventListener('click', function () { oeffneThema(l.dataset.thema); });
+                l.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); oeffneThema(l.dataset.thema); }
+                });
+            });
+            document.querySelectorAll('#reiter a').forEach(function (a) {
+                a.addEventListener('click', function () {
+                    const feld = document.getElementById('suche');
+                    if (feld.value.trim()) { feld.value = ''; filtern(); }
+                    pausiere();
+                });
             });
             // Von selbst: alle paar Sekunden zieht sich die naechste Mappe heraus
             // und zeigt ihr Thema. Pausiert, sobald jemand selbst zeigt/tippt,
@@ -757,7 +850,7 @@
             feld.addEventListener('input', filtern);
             feld.addEventListener('keydown', function (e) {
                 if (e.key !== 'Enter') return;
-                const erste = document.querySelector('.kachel:not([hidden])');
+                const erste = document.querySelector('.thema:not([hidden]) .kachel:not([hidden])');
                 if (erste && feld.value.trim()) { e.preventDefault(); erste.click(); }
             });
             // Mit Tippen in der Suche springt die Ansicht zu den Treffern (am Handy wichtig)
