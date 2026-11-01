@@ -2,6 +2,7 @@ import {
  SAVE_KEY,BLOCK_COLORS,CRYSTALS,PARKOUR,newSave,restoreSave,cleanName,
  claimCrystal,placeBlock,removeBlock,reachParkour,landingY,localDay
 } from './core.mjs';
+import {SDGameSound,loadSoundSettings,saveSoundSettings} from '../sd-sound.mjs';
 import {BlockWorldOnline} from './online.mjs';
 
 const $=id=>document.getElementById(id);
@@ -12,6 +13,25 @@ let buildMode=false,eraseMode=false,buildLevel=0,selectedColor='mint',yaw=0.35,p
 let feetY=0,velocityY=0,grounded=true,jumpQueued=false,elapsed=0,lastTime=0,noticeTimer=0;
 const keys={forward:false,back:false,left:false,right:false};
 const blockMeshes=new Map(),crystalMeshes=new Map();
+const soundFx=new SDGameSound(loadSoundSettings());
+function initSoundControls(){
+ const button=$('worldSound'),slider=$('worldVolume'),label=$('worldVolumeValue');
+ const sync=()=>{button.setAttribute('aria-pressed',String(soundFx.enabled));
+  button.textContent=soundFx.enabled?'🔊 Ton an':'🔇 Ton aus';
+  slider.value=String(Math.round(soundFx.volume*100));label.textContent=slider.value+' %'};
+ button.addEventListener('click',()=>{
+  soundFx.setEnabled(!soundFx.enabled);
+  saveSoundSettings({enabled:soundFx.enabled,volume:soundFx.volume});sync();
+  if(soundFx.enabled)soundFx.play('select');
+ });
+ slider.addEventListener('input',()=>{
+  soundFx.setVolume(Number(slider.value)/100);
+  saveSoundSettings({enabled:soundFx.enabled,volume:soundFx.volume});sync();
+  if(soundFx.enabled)soundFx.pulse('select',220);
+ });
+ sync();
+}
+
 const remoteAvatars=new Map(),remoteBlocks=new Map();
 let remoteAvatarLayer=null,remoteBlockLayer=null;
 let remoteBlocksChecksum='';
@@ -115,6 +135,7 @@ async function start(){
  try{
   THREE=await import('https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js');
   initialiseWorld();
+  initSoundControls();
   bindControls();
   updateHud();
   $('nickname').value=state.nickname;
@@ -289,8 +310,8 @@ function refreshCrystals(){
 }
 function tryPlace(x,z,level=buildLevel){
  const b=getCell(x,z,level);
- if(!placeBlock(state,b)){notify('Hier kannst du keinen Block setzen (oder die Welt ist voll).');return}
- drawBlock(b);changed();
+ if(!placeBlock(state,b)){soundFx.pulse('error',350);notify('Hier kannst du keinen Block setzen (oder die Welt ist voll).');return}
+ drawBlock(b);changed();soundFx.play('build');
  if(online.connected)online.build('place',b);
  notify(state.buildCount===5?'⭐ Bauaufgabe erledigt! +15 Sterne':'🧱 Block gesetzt!');
 }
@@ -298,7 +319,7 @@ function tryRemove(b){
  if(!removeBlock(state,b)){notify('Kein eigener Block an dieser Stelle.');return}
  const key=keyFor(b),mesh=blockMeshes.get(key);
  if(mesh){blockGroup.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();blockMeshes.delete(key)}
- changed();
+ soundFx.play('remove');changed();
  if(online.connected)online.build('remove',b);
  notify('Block entfernt.');
 }
@@ -311,7 +332,7 @@ function setBuildMode(enabled){
  $('builderBadge').hidden=!enabled;$('mode').setAttribute('aria-pressed',String(enabled));
  $('mode').textContent=enabled?'🔨 Baumodus beenden':'🔨 Baumodus einschalten';
  $('eraseMode').setAttribute('aria-pressed','false');
- notify(enabled?'Bauen: Farbe wählen und Boden antippen!':'Entdecker-Modus aktiv');
+ soundFx.play('select');notify(enabled?'Bauen: Farbe wählen und Boden antippen!':'Entdecker-Modus aktiv');
 }
 function rayFromPointer(e){
  const rect=renderer.domElement.getBoundingClientRect();
@@ -341,7 +362,7 @@ function teleport(dest){
  };
  const loc=locations[dest];if(!loc)return;
  player.position.x=loc.x;player.position.z=loc.z;feetY=0;velocityY=0;grounded=true;
- state.x=loc.x;state.z=loc.z;saveNow();
+ state.x=loc.x;state.z=loc.z;saveNow();soundFx.play('teleport');
  notify({village:'🏡 Willkommen im Dorf!',crystals:'💎 Finde die leuchtenden Kristalle!',
   obby:'🏁 Springe nacheinander auf die Plattformen!',build:'🧱 Hier ist Platz für deine Ideen!'}[dest]);
  if(dest==='build'&&!buildMode)setBuildMode(true);
@@ -352,7 +373,7 @@ function toggleWorldPause(force){
  $('pauseCover').hidden=!paused;
  $('pauseWorld').textContent=paused?'▶ Weiter':'⏸️ Pause';
  $('pauseWorld').setAttribute('aria-pressed',String(paused));
- if(!paused)lastTime=0;
+ if(!paused){lastTime=0;soundFx.play('select')}
 }
 function bindControls(){
  $('pauseWorld').addEventListener('click',()=>toggleWorldPause());
@@ -376,11 +397,11 @@ function bindControls(){
   $('onlineJoin').disabled=true;
   try{
    const ok=await online.join($('onlineRoom').value);
-   if(ok){notify('🌐 Du spielst jetzt mit anderen in der gemeinsamen Welt!');online.poll()}
+   if(ok){soundFx.play('join');notify('🌐 Du spielst jetzt mit anderen in der gemeinsamen Welt!');online.poll()}
   }finally{$('onlineJoin').disabled=false;refreshOnlineButtons()}
  });
  $('onlineLeave').addEventListener('click',()=>{
-  online.disconnect();refreshOnlineButtons();
+  online.disconnect();soundFx.play('leave');refreshOnlineButtons();
   $('onlineStatus').textContent='Einzelspieler-Modus aktiv.';
   notify('Du spielst wieder offline.');
  });
@@ -497,6 +518,7 @@ function frame(now){
  const length=Math.hypot(forward,right);
  const moving=length>.01;
  if(moving){
+  if(grounded)soundFx.pulse('step',300);
   const mx=(Math.sin(yaw)*forward+Math.cos(yaw)*right)/length;
   const mz=(-Math.cos(yaw)*forward+Math.sin(yaw)*right)/length;
   player.position.x=clamp(player.position.x+mx*5.4*dt,-26.3,26.3);
@@ -505,7 +527,7 @@ function frame(now){
   dirty=true;
  }
  if(jumpQueued&&grounded){
-  velocityY=8.8;grounded=false;
+  velocityY=8.8;grounded=false;soundFx.play('jump');
   notify('⬆ Sprung!');
  }
  jumpQueued=false;
@@ -517,7 +539,7 @@ function frame(now){
   const prior=feetY;velocityY-=19.5*dt;feetY+=velocityY*dt;
   if(velocityY<=0){
    const top=landingY(prior,feetY,player.position.x,player.position.z,state);
-   if(top!==null){feetY=top;velocityY=0;grounded=true}
+   if(top!==null){feetY=top;velocityY=0;grounded=true;soundFx.pulse('land',160)}
   }
  }
  if(feetY< -4||Math.abs(player.position.x)>25.5||Math.abs(player.position.z)>25.5){
@@ -536,7 +558,7 @@ function frame(now){
   if(Math.hypot(player.position.x-c.x,player.position.z-c.z)<1.25&&feetY<1.2){
    if(claimCrystal(state,id)){
     crystalGroup.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();crystalMeshes.delete(id);
-    changed();notify(state.crystals.length===CRYSTALS.length?'🏆 Alle Kristalle gefunden!':'💎 Kristall gesammelt! +5 Sterne');
+    changed();soundFx.play(state.crystals.length===CRYSTALS.length?'finish':'collect');notify(state.crystals.length===CRYSTALS.length?'🏆 Alle Kristalle gefunden!':'💎 Kristall gesammelt! +5 Sterne');
    }
   }
  }
@@ -544,11 +566,11 @@ function frame(now){
  if(next&&grounded&&Math.abs(feetY-next.top)<.08&&Math.abs(player.position.x-next.x)<next.w/2&&Math.abs(player.position.z-next.z)<next.d/2){
   const oldWins=state.parkourWins;
   if(reachParkour(state,PARKOUR.indexOf(next))){
-   changed();notify(state.parkourWins>oldWins?'🏁 Parcours geschafft! +30 Sterne':'✅ Plattform erreicht!');
+   changed();soundFx.play(state.parkourWins>oldWins?'finish':'checkpoint');notify(state.parkourWins>oldWins?'🏁 Parcours geschafft! +30 Sterne':'✅ Plattform erreicht!');
   }
  }
  if(now-lastNPC>12000&&Math.hypot(player.position.x-3.2,player.position.z-8.2)<2.6&&feetY<.5){
-  lastNPC=now;notify('👋 Hallo '+state.nickname+'! Entdecke die Kristalle und baue deine Welt.');
+  lastNPC=now;soundFx.play('bell');notify('👋 Hallo '+state.nickname+'! Entdecke die Kristalle und baue deine Welt.');
  }
  // Third-person follow-camera, controlled by pointer gestures.
  const target=new THREE.Vector3(player.position.x,feetY+1.15,player.position.z);
@@ -561,6 +583,7 @@ function frame(now){
  camera.position.lerp(cameraPos,.12);camera.lookAt(target);
  if(now-lastSave>2400&&dirty){saveNow();lastSave=now}
  if(now-lastDailyCheck>60000){lastDailyCheck=now;refreshCrystals()}
+ if(!document.hidden&&feetY<2)soundFx.pulse('bird',19000);
  updateRemoteAvatars();
  renderer.render(scene,camera);
 }
