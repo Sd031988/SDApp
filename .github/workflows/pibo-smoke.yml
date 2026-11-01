@@ -44,6 +44,7 @@ jobs:
           node kids/pibo-interactions.test.mjs
           node kids/pibo-care.test.mjs
           node kids/pibo-garden.test.mjs
+          node kids/pibo-benchmark.test.mjs
       - name: Verify BlockWorld sandbox and game logic
         run: |
           node --check kids/blockworld/core.mjs
