@@ -55,6 +55,7 @@ assert.equal(await page.locator("#phraseList .phrase").count(),10);
 await page.locator("#translateLang").selectOption("fa");
 assert.match(await page.locator("#phraseList .phrase").first().innerText(),/روز بخیر/);
 await page.reload();
+await page.locator('[data-tab="uebersicht"]').click();
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 assert.equal(await page.locator("#statSteps").innerText(),"1");
