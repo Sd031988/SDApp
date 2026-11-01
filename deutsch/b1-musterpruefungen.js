@@ -674,6 +674,15 @@ function selfCheckMarkup(section,entries){
  criteria.map(c=>'<label class="b1x-check"><input type="checkbox"> '+esc(c[1])+'</label>').join('')+
  (isWrite?'<p class="b1x-note">Prüfe außerdem die Aufgabenstellung: Wurden alle verlangten Informationen genannt? Ist die Sprache zur Situation passend?</p>':
  '<p class="b1x-note">Für eine verlässliche Einschätzung der Aussprache und Interaktion ist Rückmeldung von einer Lehrkraft oder einem Gesprächspartner hilfreich.</p>')+
+ '<details class="b1x-passage"><summary>Formulierungshilfen und kurze B1-Beispiele</summary>'+
+ (isWrite?
+ '<p><b>Freundliche E-Mail:</b> „Vielen Dank für Ihre Nachricht. Leider kann ich den Termin nicht wahrnehmen, weil ich arbeiten muss. Wäre ein anderer Termin möglich? Ich freue mich auf Ihre Antwort. Mit freundlichen Grüßen …“</p>'+
+ '<p><b>Meinung begründen:</b> „Meiner Meinung nach ist das sinnvoll, weil … Zum Beispiel … Allerdings sollte man auch bedenken, dass … Deshalb finde ich …“</p>'+
+ '<p><b>Prüfe:</b> Wer schreibt wem? Welche drei Informationen verlangt die Aufgabe? Ist der Ton höflich oder persönlich?</p>':
+ '<p><b>Eine Meinung äußern:</b> „Ich finde das Thema wichtig, weil … In meinem Alltag habe ich erlebt, dass … Ein Vorteil ist … Ein Nachteil ist …“</p>'+
+ '<p><b>Gemeinsam planen:</b> „Was hältst du davon, wenn wir uns am Samstag treffen?“ – „Das ist eine gute Idee. Allerdings kann ich erst am Nachmittag. Wäre 15 Uhr möglich?“ – „Ja, dann machen wir das so.“</p>'+
+ '<p><b>Auf Rückfragen reagieren:</b> „Danke für die Frage. Ich denke, dass …, weil … Wie siehst du das?“</p>')+
+ '<p class="b1x-note">Dies sind allgemeine Beispiele zum Üben, keine Musterlösung für jede konkrete Aufgabe. Übernimm sie nicht unverändert, sondern passe Inhalt und Anrede an.</p></details>'+
  '</details>';
 }
 function explainAnswer(t,withTranscript){
