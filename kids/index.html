@@ -49,7 +49,7 @@ function switchRoom(room){if(!roomPalette[room])return;currentRoom=room;furnish(
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>switchRoom(b.dataset.room)));
 const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 const interactionObjects=new THREE.Group();scene.add(interactionObjects);let interaction=null;
-function clearInteraction(){while(interactionObjects.children.length){const o=interactionObjects.children[0];interactionObjects.remove(o);o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}interaction=null}
+function clearInteraction(){while(interactionObjects.children.length){const o=interactionObjects.children[0];interactionObjects.remove(o);o.traverse(n=>{if(n.geometry)n.geometry.dispose()})}interaction=null;if(typeof cat!=='undefined'){cat.position.x=0;cat.rotation.z=0;cat.rotation.y=0}}
 function startInteraction(type){clearInteraction();interaction={type,start:performance.now(),duration:type==='sleep'?7000:5500};if(type==='feed'){const food=ell(interactionObjects,mat(0xe2a56d),1.55,.7,1.4,.23,.16,.23);interaction.food=food;showEffect(foods[foodIndex][0],'Pibo bekommt '+foods[foodIndex][1],5200)}
 if(type==='wash'){for(let i=0;i<14;i++){const b=ell(interactionObjects,mat(0xd7faff,.15),-1.8+(i%5)*.32,.95+Math.floor(i/5)*.2,-1.15,.08+(i%3)*.04,.08+(i%3)*.04,.08+(i%3)*.04);b.userData.bubble=i}showEffect('🫧','Mit Schaum einseifen und abspülen!',5200)}
 if(type==='sleep')showEffect('🌙','Pibo legt sich ins Bett und schläft',6500);
