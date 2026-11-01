@@ -173,6 +173,18 @@ const listeningAnswers=[
  [['Am Bahnhof','Am Rathaus','Im Museum'],['Getränk und Regenjacke','Fahrrad und Helm','Laptop und Heft'],['Sie gehen ins Museum','Sie bleiben im Bahnhof','Sie fahren ans Meer']],
  [['Am Freitag','Am Montag','Am Mittwoch'],['Im Gemeinschaftshaus','Im Rathaus','In der Schule'],['Vorschläge per E-Mail schicken','Nur telefonisch abstimmen','Nichts mitteilen']]
 ];
+const grammarLetters=[
+ ['E-Mail an einen Sprachkurs','Guten Tag,\\n\\nich interessiere mich sehr [1] Ihren Deutschkurs. Ich habe Ihre Anzeige gestern [2] Internet gelesen. Da ich tagsüber arbeite, suche ich einen Kurs, [3] am Abend stattfindet. Können Sie mir bitte sagen, [4] der nächste Kurs beginnt? Außerdem möchte ich wissen, [5] die Anmeldung online möglich ist. Ich lerne seit [6] Jahr Deutsch und möchte meine Kenntnisse verbessern. Besonders wichtig ist mir, [7] ich mehr sprechen kann. Falls noch Plätze frei [8], würde ich mich gern anmelden. Bitte schicken Sie mir die Informationen [9] E-Mail. Vielen Dank [10] Ihre Hilfe.\\n\\nMit freundlichen Grüßen\\nSamira Kaya',[
+ ['für','an','über'],['im','am','zum'],['der','den','dem'],['wann','weil','dass'],['ob','als','denn'],['einem','einen','ein'],['dass','weil','obwohl'],['sind','ist','sein'],['per','mit','aus'],['für','an','über']]],
+ ['Nachricht über einen Umzug','Liebe Mia,\\n\\nendlich habe ich eine neue Wohnung [1]. Sie liegt nicht weit [2] meiner Arbeitsstelle. Ich bin froh, [3] ich jetzt nicht mehr so lange fahren muss. Am Samstag möchte ich [4] meine Möbel transportieren. Könntest du mir vielleicht [5]? Wir treffen uns um neun Uhr [6] dem alten Haus. Wenn wir früh anfangen, [7] wir am Nachmittag fertig. Ich habe auch meinen Bruder gefragt, [8] er Zeit hat. Nach dem Umzug lade ich alle [9] ein gemeinsames Essen ein. Bitte gib mir bis Donnerstag [10].\\n\\nViele Grüße\\nLena',[
+ ['gefunden','finden','findet'],['von','mit','bei'],['dass','ob','denn'],['alle','alles','aller'],['helfen','hilfst','geholfen'],['vor','auf','in'],['sind','haben','werden'],['ob','weil','dass'],['zu','für','bei'],['Bescheid','Antworten','Nachrichtens']]],
+ ['Bitte um einen neuen Termin','Sehr geehrte Frau Berger,\\n\\nleider kann ich meinen Termin am Dienstag nicht [1], weil ich an diesem Tag arbeiten [2]. Ich möchte mich dafür [3]. Wäre es möglich, [4] Termin zu vereinbaren? Am Donnerstag hätte ich [5] Nachmittag Zeit. Falls das nicht möglich ist, [6] ich auch am Freitag kommen. Bitte teilen Sie mir mit, [7] Termine noch frei sind. Ich freue mich [8] Ihre Antwort und bedanke mich [9] Voraus für Ihre Mühe.\\n\\nMit freundlichen [10]\\nAli Demir',[
+ ['wahrnehmen','wahrgenommen','nimmt'],['muss','müssen','musste'],['entschuldigen','entschuldigt','Entschuldigung'],['einen neuen','einem neuen','ein neuer'],['am','im','um'],['könnte','kannst','können'],['welche','welcher','welches'],['auf','für','an'],['im','am','zum'],['Grüßen','Gruß','Grüße']]],
+ ['Informationen zum Vereinsfest','Liebe Mitglieder,\\n\\nunser Vereinsfest findet [1] Samstag statt. Wir beginnen um 14 Uhr, [2] alle Familien teilnehmen können. Wer einen Kuchen [3] möchte, meldet sich bitte bis Mittwoch. Wir brauchen außerdem Personen, [4] beim Aufbau helfen. Die Tische werden schon am Freitag [5]. Bitte bringt auch Teller und Besteck [6]. Sollte es stark regnen, feiern wir [7] Vereinsraum. Wir freuen uns sehr, [8] viele Gäste kommen. Für Fragen könnt ihr euch jederzeit [9] uns wenden. Vielen Dank [10] eure Unterstützung!\\n\\nEuer Organisationsteam',[
+ ['am','im','um'],['damit','weil','trotzdem'],['mitbringen','mitgebracht','mitbringt'],['die','der','den'],['aufgestellt','aufstellen','stellt'],['mit','nach','bei'],['im','am','zum'],['dass','ob','denn'],['an','auf','für'],['für','mit','von']]],
+ ['Bewerbung für ein Praktikum','Sehr geehrte Damen und Herren,\\n\\nich habe Ihre Anzeige für ein Praktikum [1] Ihrer Webseite gelesen. Zurzeit besuche ich einen Deutschkurs und möchte [2] Berufserfahrung sammeln. Besonders interessiere ich mich [3] die Arbeit in Ihrem Unternehmen. Ich habe bereits sechs Monate [4] einem Geschäft gearbeitet. Dort war ich [5] die Kundenberatung verantwortlich. Über die Möglichkeit eines Gesprächs würde ich mich sehr [6]. Könnten Sie mir bitte mitteilen, [7] Unterlagen Sie benötigen? Meinen Lebenslauf kann ich Ihnen sofort [8]. Ich bin ab Mai verfügbar und freue mich [9] Ihre Rückmeldung.\\n\\nMit freundlichen [10]\\nNora Özdemir',[
+ ['auf','bei','zu'],['mehr','viele','mehrere'],['für','mit','an'],['in','auf','zu'],['für','auf','an'],['freuen','freut','gefreut'],['welche','welcher','welches'],['schicken','geschickt','schickt'],['auf','an','über'],['Grüßen','Gruß','Grüße']]]
+];
 const grammar=[
  ['Ich freue mich ___ deine Nachricht.',['auf','an','mit'],0],
  ['Wir treffen uns ___ Samstag.',['am','im','um'],0],
@@ -205,9 +217,10 @@ function items(section){
    const n=result.length,base=k(n+g*3,set-1),shift=(n+set)%3;
    if(id==='lesen'||id==='hoeren'||id==='sprach'){
      if(id==='sprach'){
-       const gr=grammar[(n+(set-1)*4)%grammar.length],correct=gr[1][0],options=gr[1].slice(),pos=(n+set)%3;
+       const letter=grammarLetters[(set-1+g)%grammarLetters.length];
+       const correctOptions=letter[2][j],options=correctOptions.slice(),correct=options[0],pos=(n+set)%3;
        options[0]=options[pos];options[pos]=correct;
-       result.push({g,j,q:gr[0],options,answer:pos,passage:'Ergänzen Sie die Lücke im Satz.',kind:kinds[g]});
+       result.push({g,j,q:'Welche Ergänzung passt in Lücke '+(j+1)+'?',options,answer:pos,passage:letter[0]+'\\n\\n'+letter[1],kind:kinds[g]+' · zusammenhängender Text'});
        continue;
      }
      if(id==='hoeren'){
