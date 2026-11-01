@@ -21,6 +21,7 @@ assert.equal(await page.locator("#stapel .lage").count(),8);
 assert.equal(await page.locator("#reiter a").count(),8);
 assert.equal(await page.locator(".thema").count(),8);
 assert.equal(await page.locator("#mein-sd-hub").count(),1);
+assert.equal(await page.locator('.sd-dashboard-launch').getAttribute('href'),'mein-sd-hub/');
 assert.equal(await page.locator("#szene").getAttribute("aria-hidden"),null);
 assert.equal(await page.locator('#thema-deutsch .kachel').count(),5);
 assert.equal(await page.locator('#thema-kids .kachel').count(),6);
