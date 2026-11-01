@@ -99,7 +99,7 @@ function dashboardMarkup(){
  Object.entries(levels).map(([id,x])=>{const done=x.units.filter((_,i)=>p[id+':'+i]).length;return '<div class="pre-progress"><span>'+esc(x.title)+': '+done+'/'+x.units.length+'</span><progress max="'+x.units.length+'" value="'+done+'"></progress></div>';}).join('')+'</section>';
 }
 function readingMarkup(){
- const [title,story,question,options]=readingTexts[level][unit%3];
+ const [title,story,question,options]=readingTexts[level][unit%readingTexts[level].length];
  return '<section class="pre-card"><h3>Lesen und Verstehen · '+esc(title)+'</h3><p>'+esc(story)+'</p><button id="pre-read-play">🔊 Text anhören</button><fieldset class="pre-question"><legend>'+esc(question)+'</legend>'+options.map((x,i)=>'<label><input type="radio" name="pre-read-answer" value="'+i+'"> '+esc(x)+'</label>').join('')+'</fieldset><button id="pre-read-check">Leseverständnis prüfen</button><p id="pre-read-feedback" role="status"></p></section>';
 }
 const speakingPrompts={
@@ -160,7 +160,7 @@ function show(){
  stopRecording=()=>{closed=true;if(recorder&&recorder.state==='recording')recorder.stop();if(stream)stream.getTracks().forEach(t=>t.stop());if(url)URL.revokeObjectURL(url);url=null;};
  startButton.onclick=async()=>{if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){status.textContent='Mikrofon hier nicht verfügbar.';return;}startButton.disabled=true;try{const media=await navigator.mediaDevices.getUserMedia({audio:true});if(closed){media.getTracks().forEach(t=>t.stop());return;}stream=media;chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{stream?.getTracks().forEach(t=>t.stop());if(closed||!chunks.length)return;if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(new Blob(chunks,{type:recorder.mimeType||'audio/webm'}));const audio=document.createElement('audio');audio.controls=true;audio.src=url;playback.replaceChildren(audio);startButton.disabled=false;stopButton.disabled=true;status.textContent='Aufnahme bereit zum Anhören.';};recorder.start();stopButton.disabled=false;status.textContent='Aufnahme läuft …';}catch(_){if(!closed){status.textContent='Mikrofonzugriff nicht möglich.';startButton.disabled=false;}}};
  stopButton.onclick=()=>{if(recorder&&recorder.state==='recording')recorder.stop()};
- const reading=readingTexts[level][unit%3];
+ const reading=readingTexts[level][unit%readingTexts[level].length];
  panel.querySelector('#pre-read-play').onclick=()=>speak(reading[1]);
  panel.querySelector('#pre-read-check').onclick=()=>{const selected=panel.querySelector('input[name="pre-read-answer"]:checked');panel.querySelector('#pre-read-feedback').textContent=!selected?'Bitte wähle zuerst eine Antwort.':Number(selected.value)===reading[4]?'✓ Richtig!':'Noch nicht richtig. Richtige Antwort: '+reading[3][reading[4]];};
  const dictationText=data.units[unit][unit%2?3:1];
