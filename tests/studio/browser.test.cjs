@@ -396,6 +396,56 @@ const assert = require('node:assert/strict');
     assert.equal(unexpectedErrors.length,0,'Unexpected browser errors: '+unexpectedErrors.join(' | '));
 
 
+    // End-to-end change request: write a modification in Studio, approve only necessary
+    // source files, inspect the complete AI prompt, paste one edited file and keep the others.
+    const changeBefore=await page.evaluate(()=>({
+      project:S.p.name,
+      html:S.p.dateien["index.html"],
+      js:S.p.dateien["js/app.js"],
+      versions:S.p.versionen.length
+    }));
+    await page.locator('#kiChangeBtn').click();
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true);
+    assert.equal(await page.locator('#kiChangeBox').isVisible(),true);
+    await page.locator('#kiGoal').fill('Füge einen Drucken-Knopf hinzu, alles andere behalten');
+    assert.equal(await page.locator('#kiChangeConsent').isChecked(),false,'No automatic sharing of project source');
+    const recommended=await page.locator('#kiSources input:checked').evaluateAll(nodes=>nodes.map(el=>el.dataset.path));
+    for(const p of ['index.html','css/style.css','js/app.js'])assert(recommended.includes(p),'Missing linked file: '+p);
+    assert(!recommended.includes('main.py'),'Unrelated Python source must not be shared');
+    await page.locator('#kiPromptPreview').click();
+    assert.match(await page.locator('#kiStatus').innerText(),/ausdrücklich|bestätigen/,'Explicit consent required for prompt content');
+    await page.locator('#kiChangeConsent').check();
+    await page.locator('#kiPromptPreview').click();
+    const changePrompt=await page.locator('#kiClipboard').inputValue();
+    assert.match(changePrompt,/Füge einen Drucken-Knopf hinzu/);
+    assert(changePrompt.includes(changeBefore.html),'The complete current HTML must be included');
+    assert(changePrompt.includes(changeBefore.js),'The current JS file must be included');
+    assert(!changePrompt.includes('print("Direct Python")'),'Unrelated Python code must not be in prompt');
+    await page.locator('#kiSources input[data-path="css/style.css"]').uncheck();
+    assert.equal(await page.locator('#kiChangeConsent').isChecked(),false,'Changing file selection must reset consent');
+    await page.locator('#kiChangeConsent').check();
+    await page.locator('#kiPromptPreview').click();
+    assert(!(await page.locator('#kiClipboard').inputValue()).includes('body { color: navy; }'),'Deselected CSS content must stay private');
+    const changedHtml=changeBefore.html.replace('Direkt im Editor','Geändert vom Assistenten');
+    assert.notEqual(changedHtml,changeBefore.html);
+    await page.locator('#kiResult').fill('### Datei: index.html\n'+ticks+'html\n'+changedHtml+'\n'+ticks);
+    await page.locator('#kiAnalyse').click();
+    assert.equal(await page.locator('#kiFiles .kiFile').count(),1,'Only requested updated file is imported');
+    page.once('dialog',dialog=>dialog.accept());
+    await page.locator('#kiDirect').click();
+    await page.waitForFunction(()=>document.querySelector('#kiOverlay').hidden,{timeout:12000});
+    const changeAfter=await page.evaluate(()=>({
+      project:S.p.name,html:S.p.dateien['index.html'],js:S.p.dateien['js/app.js'],
+      versions:S.p.versionen.length,backup:S.p.versionen[0]?.dateien['index.html'],
+      active:S.aktiv
+    }));
+    assert.equal(changeAfter.project,changeBefore.project,'Changes happen in the open project');
+    assert.equal(changeAfter.backup,changeBefore.html,'Previous version saved before changing source');
+    assert.equal(changeAfter.versions,changeBefore.versions+1);
+    assert.equal(changeAfter.js,changeBefore.js,'Unchanged JS remains intact');
+    assert.equal(changeAfter.active,'index.html');
+    assert.match(changeAfter.html,/Geändert vom Assistenten/);
+
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
     if(browser) await browser.close();
