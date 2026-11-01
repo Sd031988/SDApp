@@ -173,12 +173,15 @@ function items(section){
        continue;
      }
      if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&(g===0||g===2))||(exam==='dtz'&&g===2))){
-       const needsIndex=(j+(set-1)*3+g)%matchingNeeds.length,need=matchingNeeds[needsIndex];
-       const offerStart=(needsIndex+matchingOffers.length-2)%matchingOffers.length;
-       const offers=[matchingOffers[offerStart],matchingOffers[needsIndex],matchingOffers[(needsIndex+2)%matchingOffers.length]];
-       const correctOffer=offers[1];const rotated=offers.slice((j+set)%3).concat(offers.slice(0,(j+set)%3));const options=rotated.map(o=>o[0]+' · '+o[1]),answer=rotated.indexOf(correctOffer);
-       const passage='Welche Anzeige passt zu dieser Situation?\\n\\n'+rotated.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
-       result.push({g,j,q:need[0],options,answer,passage,kind:'Anzeigen zuordnen'});
+       const countInGroup=groups[g],startNeed=(set*3+g)%matchingNeeds.length;
+       const needIndex=(startNeed+j)%matchingNeeds.length,need=matchingNeeds[needIndex];
+       const activeIds=Array.from({length:countInGroup},(_,i)=>matchingNeeds[(startNeed+i)%matchingNeeds.length][1]);
+       const distractorIds=matchingOffers.filter(o=>!activeIds.includes(o[0])).slice((set+g)%3,(set+g)%3+3).map(o=>o[0]);
+       const poolIds=[...new Set([...activeIds,...distractorIds])];
+       const pool=matchingOffers.filter(o=>poolIds.includes(o[0])).sort((a,b)=>a[0].localeCompare(b[0]));
+       const options=pool.map(o=>o[0]+' · '+o[1]),answer=pool.findIndex(o=>o[0]===need[1]);
+       const passage='Lies die Anzeigen A–'+pool[pool.length-1][0]+'. Einige Anzeigen passen zu keiner Situation.\\n\\n'+pool.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
+       result.push({g,j,q:'Situation '+(j+1)+': '+need[0],options,answer,passage,kind:'Anzeigen zuordnen · gemeinsamer Anzeigenpool'});
        continue;
      }
      if(id==='lesen'){
