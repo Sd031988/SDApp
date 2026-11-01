@@ -11,7 +11,7 @@ export function runPiboSmoke(html,careSource){
    constructor(...args){this.children=[];this.position=vec();this.rotation=vec();this.scale=vec(1,1,1);this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.shadowMap={};this.userData={};this.geometry={dispose(){}};this.material={color:{setHex(){}},dispose(){}};this.style={};this.visible=true;this.domElement=element('canvas');this.domElement.toDataURL=()=>'data:image/png;base64,abc';this.clock=0}
    add(o){this.children.push(o)}remove(o){this.children=this.children.filter(x=>x!==o)}
    traverse(f){f(this);for(const c of this.children)c.traverse(f)}
-   lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}intersectObjects(){return []}getElapsedTime(){return this.clock+=.2}dispose(){}
+   setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}intersectObjects(){return []}getElapsedTime(){return this.clock+=.2}dispose(){}
  }
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element(id));return elements.get(id)};
  const tags=[...html.matchAll(/<button\b([^>]*)>/g)].map(x=>x[1]),groups={act:[],room:[],food:[]};
