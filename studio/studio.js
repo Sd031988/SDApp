@@ -345,6 +345,25 @@ async function loeschen(pfad, istOrdner) {
   betroffen.forEach(k => { delete S.p.dateien[k]; if (S.tabs.includes(k)) tabZu(k); });
   await projSchreiben(S.p); baum(); ausgabe('🗑 Gelöscht: ' + pfad + ' (in 🕘 Versionen wiederherstellbar)');
 }
+function zipProjektAnalyse(dateien) {
+  const pfade = Object.keys(dateien).sort();
+  const framework = frameworkErkennen(dateien);
+  const pruefung = projektPruefen(dateien);
+  const pkg = (() => { try { return JSON.parse(dateien['package.json'] || '{}'); } catch (e) { return {}; } })();
+  const start = pfade.includes('index.html') ? 'index.html' :
+    pfade.find(p => /(^|\/)index\.html?$/i.test(p)) ||
+    pfade.find(p => /\.html?$/i.test(p)) || '';
+  const sprache = pfade.some(p => /\.(ts|tsx)$/i.test(p)) ? 'TypeScript' :
+    pfade.some(p => /\.(jsx|js|mjs)$/i.test(p)) ? 'JavaScript' :
+    pfade.some(p => /\.py$/i.test(p)) ? 'Python' :
+    pfade.some(p => /\.html?$/i.test(p)) ? 'HTML' : 'Andere / gemischt';
+  const ordner = [...new Set(pfade.filter(p => p.includes('/')).map(p => p.split('/')[0]))];
+  const hinweise = [...pruefung.meldungen];
+  if (framework && !framework.fehler && !framework.build) hinweise.push('Für einen Framework-Export muss ein build-Skript ergänzt werden.');
+  if (pkg.scripts && pkg.scripts.dev) hinweise.push('Entwicklungsstart: npm run dev (benötigt Node.js).');
+  return {pfade, framework, start, sprache, ordner, hinweise};
+}
+
 async function hochladen(dateien) {
   const liste = Array.from(dateien);
   if (!liste.length) return;
@@ -363,13 +382,29 @@ async function hochladen(dateien) {
     try { n = await zipEinlesen(f, dateienNeu); }
     catch (err) { console.error(err); alert('ZIP konnte nicht vollständig gelesen werden: ' + err.message); return; }
     if (!n) { toast('Keine unterstützten Dateien im ZIP gefunden.'); return; }
-    const framework = frameworkErkennen(dateienNeu);
-    if (framework && !framework.fehler) toast('Framework erkannt: ' + framework.name + ' – Build über Befehlspalette möglich.');
+    const analyse = zipProjektAnalyse(dateienNeu);
+    const vorschau = [
+      'Intelligenter ZIP-Import – Vorschau',
+      '',
+      'Neues Projekt: ' + name,
+      'Dateien: ' + analyse.pfade.length,
+      'Sprache: ' + analyse.sprache,
+      'Framework: ' + (analyse.framework ? analyse.framework.name : 'Statische Dateien / nicht erkannt'),
+      'Startdatei: ' + (analyse.start || 'Keine HTML-Startdatei'),
+      'Ordner: ' + (analyse.ordner.join(', ') || '(Projektwurzel)'),
+      '',
+      'Prüfung:',
+      ...analyse.hinweise.slice(0, 12),
+      '',
+      'OK = Als NEUES Projekt importieren.',
+      'Abbrechen = ZIP verwerfen. Bestehende Projekte bleiben unverändert.'
+    ].join('\\n');
+    if (!confirm(vorschau)) { toast('ZIP-Import abgebrochen.'); return; }
     try {
       if (S.p && S.geaendert) await speichernJetzt();
-      await projSchreiben({ name, dateien: dateienNeu, haupt: Object.keys(dateienNeu).find(p => p === 'index.html') || Object.keys(dateienNeu).find(p => p.endsWith('/index.html')) || '', versionen: [], erstellt: Date.now() });
+      await projSchreiben({ name, dateien: dateienNeu, haupt: analyse.start, versionen: [], erstellt: Date.now() });
       await projektOeffnen(name);
-      ausgabe('⬆ ZIP importiert: ' + n + ' Dateien automatisch nach Ordnern und Dateitypen einsortiert. Originalprojekt bleibt erhalten.');
+      ausgabe('⬆ ZIP importiert: ' + n + ' Dateien. ' + (analyse.framework ? 'Framework: ' + analyse.framework.name + '. ' : '') + (analyse.start ? 'Startdatei: ' + analyse.start + '. ' : '') + 'Originalprojekt bleibt erhalten.');
     } catch (err) { console.error(err); toast('ZIP-Import fehlgeschlagen.'); }
     return;
   }
