@@ -12,7 +12,8 @@ export function addStars(extras, amount) {
 }
 export function claimDailyGift(extras, day, reward) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return false;
-  if(extras.lastGift===day)return false;
+  // Refuse repeat claims and clock rollback within a saved profile.
+  if(typeof extras.lastGift==='string'&&extras.lastGift>=day)return false;
   extras.lastGift=day;
   extras.gifts=Math.min(100000,Math.max(0,Math.floor(Number(extras.gifts)||0))+1);
   addStars(extras,reward.stars||0);
