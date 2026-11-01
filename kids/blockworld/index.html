@@ -72,6 +72,20 @@ canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 </section>
 <aside class="side">
   <section class="panel">
+    <h2>🌐 Gemeinsam in einer Welt spielen</h2>
+    <p>Nutze den bestehenden SD-Server auf Render. Andere Spielfiguren und gemeinsam gebaute Blöcke werden live angezeigt. Ohne Anmeldung oder Chat.</p>
+    <label for="onlineRoom">Gemeinsamer Spielraum</label>
+    <select id="onlineRoom" class="name" style="margin:6px 0" aria-label="Spielraum">
+      <option value="dorf">🏡 Dorf</option>
+      <option value="kreativ">🧱 Kreativwelt</option>
+      <option value="parkour">🏁 Parcours</option>
+    </select>
+    <div class="row"><button id="onlineJoin" type="button">🌐 Online beitreten</button><button id="onlineLeave" type="button" disabled>Offline gehen</button></div>
+    <p id="onlineStatus" role="status" aria-live="polite">Einzelspieler-Modus aktiv.</p>
+    <p>👥 Andere Spieler: <strong id="onlinePlayers">0</strong> · <strong>Keine Nachrichten</strong>, keine Profile und keine Namen für andere sichtbar.</p>
+    <p>Die gemeinsamen Bauwerke sind vorübergehend. Der kostenlose Server kann schlafen oder neu starten; deine eigenen gespeicherten Blöcke bleiben lokal erhalten. Benutze die Online-Welt nur mit Zustimmung deiner Eltern.</p>
+  </section>
+  <section class="panel">
     <h2>🌍 Entdecke deine Welt</h2>
     <p>Erkunde das Dorf, sammle Kristalle und springe über die schwebenden Plattformen. Kein Zeitdruck!</p>
     <div class="row"><button type="button" data-travel="village">🏡 Dorf</button><button type="button" data-travel="crystals">💎 Feld</button><button type="button" data-travel="obby">🏁 Parcours</button><button type="button" data-travel="build">🔨 Bauplatz</button></div>
@@ -119,6 +133,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
   </section>
 </aside>
 </main>
-<footer class="footer">SD BlockWorld ist ein eigenes SD-Hub-Kids-Spiel, keine Roblox-App und nicht mit Roblox verbunden. Einzelspieler-Spiel ohne Chat, Anmeldung, Echtgeld oder Käufe. Spielstände bleiben im Browser. Keine geschützten Roblox-Figuren oder Spielwelten werden verwendet. Zum Laden der 3D-Bibliothek ist Internet erforderlich.</footer>
+<footer class="footer">SD BlockWorld ist ein eigenes SD-Hub-Kids-Spiel, keine Roblox-App und nicht mit Roblox verbunden. Offline einzeln oder freiwillig gemeinsam in temporären Online-Räumen, ohne Chat, Anmeldung, Echtgeld oder Käufe. Spielstände bleiben im Browser. Keine geschützten Roblox-Figuren oder Spielwelten werden verwendet. Zum Laden der 3D-Bibliothek ist Internet erforderlich.</footer>
 <script type="module" src="./game.mjs"></script>
 </body></html>
