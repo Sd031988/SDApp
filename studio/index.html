@@ -263,10 +263,11 @@ button,input,select,textarea{font:inherit;color:inherit}
       <button type="button" id="kiGemini">Gemini öffnen ↗</button>
     </div>
     <textarea id="kiClipboard" rows="4" hidden readonly aria-label="KI-Anfrage manuell kopieren"></textarea>
-    <label class="kiLabel" for="kiResult">2. KI-Antwort mit Code einfügen</label>
-    <p class="kiHint">Jede Datei mit „### Datei: ordner/name.ext“ und einem vollständigen Codeblock angeben. Unterstützt HTML, CSS, JavaScript, Python und weitere Textformate.</p>
+    <label class="kiLabel" for="kiResult">2. Gesamte KI-Antwort einfügen – nur Programmcode wird importiert</label>
+    <p class="kiHint">Kopiere die <strong>gesamte KI-Antwort</strong> auf einmal, auch wenn Erklärungen davor oder dazwischen stehen. Das Studio filtert die Erklärungen heraus und übernimmt nur erkannte Codeblöcke. HTML, CSS, JavaScript, Python, Java, C/C++, C#, TypeScript, Rust, Go und weitere Sprachen werden getrennten Dateien zugeordnet.</p>
     <textarea id="kiResult" rows="7" spellcheck="false" placeholder="### Datei: index.html&#10;&#96;&#96;&#96;html&#10;&lt;!doctype html&gt; ...&#10;&#96;&#96;&#96;&#10;&#10;### Datei: css/style.css&#10;&#96;&#96;&#96;css&#10;body { ... }&#10;&#96;&#96;&#96;"></textarea>
     <div class="kiActions">
+      <button type="button" id="kiPaste">📋 Gesamte KI-Antwort einfügen</button>
       <button type="button" id="kiAnalyse">🔎 Dateien automatisch erkennen</button>
       <button type="button" id="kiApply" class="kiPrimary" disabled>📁 Als neue Projektkopie übernehmen</button>
     </div>
