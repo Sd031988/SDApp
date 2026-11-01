@@ -1509,7 +1509,16 @@ function abSprache(datei){const e=(String(datei||"").split(".").pop()||"").toLow
 function abRohCode(text){const t=String(text||"").trim();if(!t||/```/.test(t))return null;
   const zeilen=t.split("\n"),codeArtig=zeilen.filter(z=>/[{}();=<>:#\[\]]|^\s{2,}\S|^(def|class|import|from|function|const|let|var|public|private|package|using|fn|func|SELECT|CREATE)\b/.test(z)).length;
   if(codeArtig<Math.max(1,zeilen.length*0.3))return null;const datei=nameAusInhalt(t,"");if(!datei)return null;return {datei,code:t+"\n",sprache:abSprache(datei)}}
-function abIstAnleitung(t){t=String(t||"");const fences=(t.match(/```/g)||[]).length/2;return fences>=2||(fences>=1&&/[├└]──/.test(t))}
+function abIstAnleitung(t){
+ t=String(t||"");
+ // Do not hijack pasted Markdown documentation; code paste elsewhere uses one shared parser.
+ if(/\.(?:md|txt|rst)$/i.test(S.aktiv||''))return false;
+ if(!/(?:```|~~~)/.test(t))return false;
+ const parser=window.SDKICoding;
+ if(parser){const r=parser.parse(t,S.aktiv,S.p?.dateien||{});return r.files.length>0||r.errors.length>0}
+ const fences=(t.match(/```/g)||[]).length/2;
+ return fences>=1;
+}
 
 
 /* Uploads im Einfügen-Dialog erzeugen grundsätzlich ein neues Projekt. */
