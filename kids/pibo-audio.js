@@ -1,9 +1,40 @@
-// Original, procedurally generated Pibo sound effects. No external recordings or copyrighted assets.
+// Pibo sound engine: original synthesized effects + optional real CC0/public-domain cat recordings.
+// Real audio loads from Wikimedia Commons only after a user's sound-triggering interaction;
+// if unavailable it gracefully falls back to the procedural sound engine.
 export class PiboAudio {
-  constructor(){this.ctx=null;this.master=null;this.noiseBuffer=null;this.volume=.65}
+  constructor(){
+    this.ctx=null;this.master=null;this.noiseBuffer=null;this.volume=.65;
+    this.realCatClips={
+      meow:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maullido_de_gata_hembra_joven.ogg',
+      purr:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Whiskers%27_purr.ogg'
+    };
+    this.realVoice=null;
+  }
+  playRecording(type){
+    if(!this.realCatClips[type]||typeof window==='undefined'||typeof window.Audio!=='function')return false;
+    try{
+      if(this.realVoice){this.realVoice.pause();this.realVoice=null}
+      const voice=new window.Audio(this.realCatClips[type]);
+      voice.preload='none';
+      voice.volume=Math.min(1,Math.max(0,this.volume*.9));
+      this.realVoice=voice;
+      let finished=false;
+      const fallback=()=>{
+        if(finished)return;finished=true;
+        if(this.realVoice===voice)this.realVoice=null;
+        this.playSynth(type);
+      };
+      voice.addEventListener?.('error',fallback,{once:true});
+      voice.addEventListener?.('ended',()=>{if(this.realVoice===voice)this.realVoice=null},{once:true});
+      const result=voice.play();
+      if(result?.catch)result.catch(fallback);
+      return true;
+    }catch(e){return false}
+  }
   setVolume(value){
     this.volume=Math.max(0,Math.min(1,Number.isFinite(Number(value))?Number(value):.65));
     if(this.master)this.master.gain.value=this.volume;
+    if(this.realVoice)this.realVoice.volume=Math.min(1,this.volume*.9);
   }
   ensure(){
     if(this.ctx)return this.ctx;
@@ -31,6 +62,10 @@ export class PiboAudio {
     f.Q.value=.7;src.connect(f);f.connect(this.gain(at,duration,volume));src.start(at);src.stop(at+duration+.02)
   }
   play(type='meow'){
+    if((type==='meow'||type==='purr')&&this.playRecording(type))return;
+    this.playSynth(type);
+  }
+  playSynth(type='meow'){
     try{
       const c=this.ensure();if(!c)return;c.resume().catch(()=>{});const t=c.currentTime+.005;
       if(type==='meow'){
