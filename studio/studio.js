@@ -406,7 +406,7 @@ async function desktopExport() {
   try { await speichernJetzt(); } catch (e) { return; }
   if (S.p !== projekt) return;
   const quelle = { ...projekt.dateien };
-  const start = Object.keys(quelle).find(p => p === 'index.html') || Object.keys(quelle).find(p => /(^|\\/)index\\.html$/i.test(p)) || Object.keys(quelle).find(p => /\\.html?$/i.test(p));
+  const start = Object.keys(quelle).find(p => p === 'index.html') || Object.keys(quelle).find(p => p.toLowerCase().endsWith('/index.html')) || Object.keys(quelle).find(p => p.toLowerCase().endsWith('.html') || p.toLowerCase().endsWith('.htm'));
   if (!start) { alert('Desktop-Export benötigt eine HTML-Datei.'); return; }
   const name = projekt.name.slice(0, 80) || 'SD Desktop App';
   const slugName = slug(name).replace(/[^a-z0-9-]/g, '').slice(0, 45);
