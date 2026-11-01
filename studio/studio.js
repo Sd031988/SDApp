@@ -103,6 +103,10 @@ async function projektOeffnen(name, datei, optionen) {
   }
   const p = await projLesen(name); if (!p) { toast('Projekt nicht gefunden'); return; }
   S.p = p; S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; probleme();
+  if (Object.prototype.hasOwnProperty.call(p,'kiQuelle')) {
+    // Stop any earlier preview immediately; the AI copy must remain inactive until ▶ Run.
+    const frame=$('frame');frame.removeAttribute('src');frame.srcdoc='';frame.setAttribute('sandbox','allow-scripts allow-forms');
+  }
   store.set('sdStudioLetztes', name); $('projektName').textContent = name;
   const dat = Object.keys(p.dateien).sort();
   const haupt = datei && p.dateien[datei] != null ? datei : (p.haupt && p.dateien[p.haupt] != null ? p.haupt : dat.find(d => /(^|\/)index\.html$/.test(d)) || dat.find(d => !istBinaer(p.dateien[d])) || null);
