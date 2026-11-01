@@ -41,7 +41,7 @@ assert.equal(await page.locator("#suche").inputValue(),"");
 assert.equal(await page.locator('#thema-deutsch').isVisible(),true);
 await page.evaluate(()=>sdApplyLang("en"));
 assert.match(await page.locator('#thema-deutsch .reiterkopf').innerText(),/German & learning/);
-assert.match(await page.locator('#thema-kids .reiterkopf').innerText(),/Kids & games/);
+assert.match(await page.locator('#thema-kids .reiterkopf').innerText(),/Games/);
 await page.evaluate(()=>sdApplyLang("de"));
 assert.match(await page.locator('#thema-deutsch .reiterkopf').innerText(),/Deutsch & Lernen/);
 const ov=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
