@@ -23,7 +23,7 @@ const ctx=await browser.newContext({acceptDownloads:true,viewport:{width:1250,he
 page.on("pageerror",e=>errors.push(e.message));
 await page.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 assert.match(await page.title(),/Mein SD Hub/);
-assert.equal(await page.locator(".tab").count(),6);
+assert.equal(await page.locator(".tab[data-tab]").count(),6); // Six content tabs, plus the mobile More control.
 assert.equal(await page.locator("#goalGrid .goal").count(),6);
 await page.locator('[data-tab="wegweiser"]').click();
 await page.locator("#goalSearch").fill("Ich möchte B1 üben");
