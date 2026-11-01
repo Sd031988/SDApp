@@ -1,0 +1,33 @@
+name: SD Lotze – Online und PC Versionsprüfung
+on:
+  push:
+    paths:
+      - 'agent/zugang.json'
+      - 'agent/app-*.enc'
+      - 'agent/pc-agent/*.enc'
+      - 'tools/agent_zugang.cjs'
+      - 'tests/agent/**'
+      - '.github/workflows/agent-release-check.yml'
+  pull_request:
+    paths:
+      - 'agent/zugang.json'
+      - 'agent/app-*.enc'
+      - 'agent/pc-agent/*.enc'
+      - 'tools/agent_zugang.cjs'
+      - 'tests/agent/**'
+      - '.github/workflows/agent-release-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paired-package-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verschlüsselte Web- und PC-Versionen vergleichen
+        run: |
+          node --check tools/agent_zugang.cjs
+          node --test tests/agent/*.test.cjs
