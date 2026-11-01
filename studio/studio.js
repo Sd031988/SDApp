@@ -923,7 +923,7 @@ function palZeigen() { const box = $('palListe'); box.innerHTML = ''; PAL.liste.
 function palZu() { $('palette').hidden = true; if (S.cm) S.cm.focus(); }
 function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filter(d => !/\.gitkeep$/.test(d)).map(d => ({ label: icon(d) + ' ' + d.split('/').pop(), info: d, d })), 'Datei öffnen …', x => dateiOeffnen(x.d)); }
 function befehle() { const B = [
-  ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
+  ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
@@ -1007,6 +1007,79 @@ async function cloudProjektBackup() {
     '\nDie Cloud-Synchronisierung erfolgt nicht automatisch. Das ZIP kann in einem eigenen Cloud-Speicher abgelegt werden.\n';
   herunterladen(zipBauen(dateien),slug(p.name)+'-cloud-backup.zip');
   toast('Portables Projektbackup erstellt. In deinem Cloud-Speicher ablegen.');
+}
+
+
+/* Programmier-Lernmodus: eigenständige Übungen ohne Eingriff in Benutzerprojekte. */
+const LERN_LEKTIONEN = [
+  {id:'html',titel:'HTML – Überschriften und Absätze',datei:'index.html',
+   aufgabe:'Erstelle eine Überschrift und einen Absatz mit deinem eigenen Text.',
+   code:'<!doctype html>\n<html lang="de">\n<head><meta charset="utf-8"><title>Meine erste Seite</title></head>\n<body>\n  <!-- Schreibe hier eine h1-Überschrift und einen p-Absatz. -->\n</body>\n</html>\n',
+   pruefen:code=>/<h1\b[^>]*>[\s\S]*?\S[\s\S]*?<\/h1\s*>/i.test(code)&&/<p\b[^>]*>[\s\S]*?\S[\s\S]*?<\/p\s*>/i.test(code),
+   tipp:'Nutze <h1>Meine Überschrift</h1> und <p>Mein Absatz</p>.'},
+  {id:'css',titel:'CSS – Farben und Gestaltung',datei:'style.css',
+   aufgabe:'Gib der Seite eine Hintergrundfarbe und dem h1 eine Textfarbe.',
+   code:'/* Übung: Ergänze background-color und color. */\nbody {\n}\nh1 {\n}\n',
+   pruefen:code=>/body\s*\{[^}]*background-color\s*:\s*[^;\s}]+/i.test(code)&&/h1\s*\{[^}]*\bcolor\s*:\s*[^;\s}]+/i.test(code),
+   tipp:'Zum Beispiel body { background-color: lightblue; } und h1 { color: navy; }.'},
+  {id:'javascript',titel:'JavaScript – Variablen und Ausgabe',datei:'app.js',
+   aufgabe:'Lege eine Variable namens begruessung an und gib sie mit console.log aus.',
+   code:'// Ergänze deine Variable und console.log.\n',
+   pruefen:code=>/\b(?:const|let|var)\s+begruessung\s*=/.test(code)&&/console\.log\s*\(\s*begruessung\s*\)/.test(code),
+   tipp:"const begruessung = 'Hallo!'; console.log(begruessung);"},
+  {id:'python',titel:'Python – Variablen und print',datei:'main.py',
+   aufgabe:'Speichere einen Namen in der Variable name und gib ihn mit print aus.',
+   code:'# Ergänze name und print.\n',
+   pruefen:code=>/^\s*name\s*=\s*.+/m.test(code)&&/\bprint\s*\(\s*name\s*\)/.test(code),
+   tipp:"name = 'Alex'\nprint(name)"}
+];
+function lernAufgabePruefen(id,code) {
+  const lektion=LERN_LEKTIONEN.find(x=>x.id===id);
+  return !!lektion && typeof code==='string' && lektion.pruefen(code);
+}
+async function programmierLernmodus() {
+  const auswahl=prompt('🎓 Programmier-Lernmodus\n\n'+LERN_LEKTIONEN.map((l,i)=>(i+1)+'. '+l.titel).join('\n')+
+    '\n\nWähle eine Lektion (1–'+LERN_LEKTIONEN.length+'):','1');
+  if (auswahl===null) return;
+  const index=Number(auswahl)-1, lektion=LERN_LEKTIONEN[index];
+  if (!Number.isInteger(index)||!lektion) { alert('Bitte eine gültige Lektionsnummer eingeben.'); return; }
+  const fortschritt=store.get('sdStudioLernfortschritt',{})||{};
+  const nameBasis='lernen-'+lektion.id;
+  let name=nameBasis,n=2;
+  while(await projLesen(name)) name=nameBasis+'-'+n++;
+  if (!confirm(lektion.titel+'\n\nAufgabe: '+lektion.aufgabe+
+    '\n\nOK: Eigenes Übungsprojekt „'+name+'“ anlegen.\nAbbrechen: Keine Änderung.')) return;
+  if(S.p&&S.geaendert) {
+    try { await speichernJetzt(); } catch(e) { toast('Lernmodus abgebrochen: Speichern fehlgeschlagen.'); return; }
+  }
+  await projSchreiben({name,dateien:{[lektion.datei]:lektion.code,
+    'LEKTION.md':'# '+lektion.titel+'\n\n'+lektion.aufgabe+
+    '\n\nÖffne die Befehlspalette und wähle „🎓 Lernaufgabe prüfen“, sobald du fertig bist.\n'},
+    haupt:lektion.datei,versionen:[],erstellt:Date.now()});
+  await projektOeffnen(name);
+  fortschritt[lektion.id]=fortschritt[lektion.id]||'begonnen';
+  store.set('sdStudioLernfortschritt',fortschritt);
+  toast('Übungsprojekt angelegt. Aufgabe in LEKTION.md.');
+}
+async function lernaufgabePruefen() {
+  if(!S.p) { alert('Bitte zuerst ein Lernprojekt öffnen.'); return; }
+  const match=S.p.name.match(/^lernen-(html|css|javascript|python)(?:-\d+)?$/);
+  const lektion=match&&LERN_LEKTIONEN.find(l=>l.id===match[1]);
+  if(!lektion||!S.p.dateien['LEKTION.md']) { alert('Dies ist kein Lernmodus-Projekt. Starte zuerst eine Lektion.'); return; }
+  try { await speichernJetzt(); } catch(e) { toast('Prüfung abgebrochen: Speichern fehlgeschlagen.'); return; }
+  const ok=lernAufgabePruefen(lektion.id,S.p.dateien[lektion.datei]);
+  if(ok) {
+    const fortschritt=store.get('sdStudioLernfortschritt',{})||{};
+    fortschritt[lektion.id]='abgeschlossen'; store.set('sdStudioLernfortschritt',fortschritt);
+    alert('✅ Aufgabe erfüllt! '+lektion.titel+'\n\nFortschritt wurde in diesem Browser gespeichert.');
+  } else alert('Noch nicht ganz geschafft.\n\nAufgabe: '+lektion.aufgabe+'\n\nTipp: '+lektion.tipp+
+    '\n\nDie Prüfung erkennt einfache Code-Muster, führt den Code aber nicht aus.');
+}
+function lernfortschrittAnzeigen() {
+  const fortschritt=store.get('sdStudioLernfortschritt',{})||{};
+  alert('🎓 Dein Lernfortschritt\n\n'+LERN_LEKTIONEN.map(l=>
+    (fortschritt[l.id]==='abgeschlossen'?'✅':fortschritt[l.id]==='begonnen'?'🟡':'○')+
+    ' '+l.titel).join('\n')+'\n\nFortschritt ist lokal in diesem Browser gespeichert.');
 }
 
 async function projektDuplizieren() { if (!S.p) return; const n = (prompt('Name der Kopie:', S.p.name + '-kopie') || '').trim(); if (!n) return; await speichernJetzt(); await projSchreiben({ ...JSON.parse(JSON.stringify(S.p)), name: n }); await projektOeffnen(n); toast('⧉ Kopie angelegt'); }
