@@ -324,7 +324,7 @@ function bindControls(){
  $('save').addEventListener('click',()=>{saveNow();notify('💾 Welt und Spielfigur gespeichert!')});
  $('reset').addEventListener('click',()=>{
   if(!window.confirm('Deine Bauwerke, Kristalle und Sterne wirklich zurücksetzen?'))return;
-  state=newSave();saveNow();window.location.reload();
+  state=newSave();player.position.set(0,0,5);feetY=0;velocityY=0;grounded=true;saveNow();window.location.reload();
  });
  window.addEventListener('pagehide',saveNow);
  let dragging=null;
