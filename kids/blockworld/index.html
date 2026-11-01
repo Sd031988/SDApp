@@ -102,7 +102,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
       <div class="row"><button id="down" type="button">− Höhe</button><button id="up" type="button">+ Höhe</button></div>
       <div class="row"><button id="place" type="button">➕ Setzen</button><button id="eraseMode" type="button" aria-pressed="false">🗑 Löschen</button></div>
     </div>
-    <p>Deine Bauwerke werden automatisch auf diesem Gerät gespeichert (maximal 350 Blöcke).</p>
+    <div class="row" style="margin-top:8px">
+  <button type="button" id="exportWorld">📤 Welt teilen</button>
+  <button type="button" id="importWorld">📥 Welt laden</button>
+  <input type="file" id="importFile" accept=".json,application/json" hidden>
+</div>
+<p>Deine Bauwerke werden automatisch auf diesem Gerät gespeichert (maximal 350 Blöcke). Du kannst deine selbstgebaute Welt als JSON-Datei weitergeben und wieder laden. Andere Spieler und Chats werden dabei nicht verbunden.</p>
   </section>
   <section class="panel">
     <h2>😎 Meine Spielfigur</h2>
