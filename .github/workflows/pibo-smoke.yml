@@ -22,6 +22,7 @@ jobs:
         run: |
           node --check kids/pibo-care.js
           node --check kids/pibo-audio.js
+          node --check kids/pibo-premium.js
           node --check kids/pibo-smoke.js
           node --check kids/pibo-rewards.mjs
           node --check kids/pibo-face.mjs
@@ -45,6 +46,7 @@ jobs:
           node --check kids/sd-sound.test.mjs
           node kids/sd-sound.test.mjs
           node kids/pibo-audio.test.mjs
+          node kids/pibo-premium.test.mjs
       - name: Verify SD Kids eight mini-game engines and ten-game catalog
         run: |
           node --check kids/games/catalog.mjs
