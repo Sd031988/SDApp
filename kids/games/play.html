@@ -1,0 +1,60 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141b42"><title>SD Kids | Spiel</title>
+<style>
+:root{font:16px/1.5 system-ui,-apple-system,sans-serif;color:#f9faff;background:#121c3f}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#283b70,#171f44 46%,#292052);min-height:100vh}
+a{color:#e6f3ff}button,input{font:inherit}button{border:1px solid #ffffff3d;background:#365487;color:#fff;font-weight:800;border-radius:14px;padding:11px 15px;cursor:pointer;touch-action:manipulation}
+button:hover{background:#4968a3}button[aria-pressed=true]{background:#ffdc83;color:#25294e}button:focus-visible,a:focus-visible{outline:3px solid #ffe194;outline-offset:2px}
+header{max-width:1120px;margin:auto;padding:15px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header a{font-weight:800;text-decoration:none;padding:7px 12px;border:1px solid #ffffff3c;border-radius:30px}
+h1{margin:0;font-size:clamp(1.35rem,3.2vw,2rem)}
+.layout{max-width:1120px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 295px;gap:13px;padding:0 15px 35px}
+.panel{background:#1c2b55ec;border:1px solid #ffffff29;border-radius:21px;box-shadow:0 10px 30px #090f2c55}
+.main{padding:12px}
+.canvasBox{position:relative;border-radius:15px;overflow:hidden;background:#9dddff}
+canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;max-height:620px;touch-action:none}
+.controls{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;padding:11px 0 4px}
+.controls button{min-width:53px;min-height:50px}
+#jump{background:#efc65b;color:#26254e}
+.sidebar{padding:17px;display:flex;flex-direction:column;gap:12px;align-self:start}
+.sidebar h2{font-size:1.07rem;margin:0}.sidebar p{font-size:.9rem;color:#d2e2f9;margin:0}
+#actions{display:flex;flex-direction:column;gap:9px}
+#actions button{width:100%;text-align:left;background:#334e83}
+#actions button:disabled{opacity:.45;cursor:default}
+#actions button.active{background:#ffdb76;color:#292545}
+.row{display:flex;gap:7px;flex-wrap:wrap}.row button{flex:1}
+.hud{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 11px}
+.pill{background:#142242;border:1px solid #fff3;border-radius:20px;font-size:.86rem;font-weight:800;padding:7px 11px}
+#message{min-height:52px;border:1px solid #b1d3ff5a;background:#283f75;padding:10px 13px;border-radius:12px;font-weight:750;margin:0 0 10px}
+.legend{color:#bfd4ef;font-size:.84rem;margin:8px}
+footer{max-width:1120px;margin:auto;color:#b6c7ec;font-size:.78rem;padding:0 15px 25px}
+#hint{font-weight:700;font-size:.87rem;color:#ffe59c}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{order:2}}
+@media(max-width:600px){.layout{padding:0 7px 25px}.main,.sidebar{padding:9px}.controls button{min-height:49px;padding:10px 12px}.hud{font-size:.82rem}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style></head><body>
+<header><a href="./">← Alle Spiele</a><h1 id="title">🎮 SD Kids</h1><a href="../blockworld/">🧱 3D BlockWorld</a></header>
+<main class="layout">
+<section class="panel main" aria-label="Spielbereich">
+<div class="hud"><span class="pill" id="score">⭐ 0</span><span class="pill" id="progress">Los geht's!</span><span class="pill" id="type">2D-Minispiel</span></div>
+<div class="canvasBox"><canvas id="stage" width="800" height="600" tabindex="0" role="img" aria-label="Spielwelt. Zum Spielen können die Schaltflächen benutzt werden."></canvas></div>
+<p id="hint" class="legend">Benutze die Spieltasten und das Aktionsmenü.</p>
+<div class="controls" aria-label="Spielbewegung">
+<button type="button" data-move="left" aria-label="Links">◀</button>
+<button type="button" data-move="up" aria-label="Vorwärts">▲</button>
+<button type="button" data-move="down" aria-label="Zurück">▼</button>
+<button type="button" data-move="right" aria-label="Rechts">▶</button>
+<button type="button" id="jump" aria-label="Springen oder Aktion">⬆ Aktion</button>
+</div>
+</section>
+<aside class="panel sidebar">
+<h2>✨ Deine Mission</h2><p id="description">Die Spielwelt startet.</p>
+<p id="message" role="status" aria-live="polite">Viel Spaß!</p>
+<div id="actions" role="group" aria-label="Spielaktionen"></div>
+<div class="row"><button id="reset" type="button">↺ Neu starten</button><button id="sound" aria-pressed="false" type="button">🔇 Ton aus</button></div>
+<p>Dein Fortschritt und deine virtuellen Sterne bleiben nur auf diesem Gerät gespeichert. Keine Anmeldung, Werbung oder Käufe.</p>
+</aside>
+</main>
+<footer>Die neuen SD Kids Minispiele sind eigenständige 2D-Browserspiele. Pibo und BlockWorld bleiben als separate 3D-Spiele verfügbar. Keine offenen Chats oder Nutzer-Uploads.</footer>
+<script type="module" src="./play.mjs"></script>
+</body></html>
