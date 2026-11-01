@@ -20,19 +20,19 @@
 </div></header>
 <main class="wrap"><section class="panel" aria-label="Pibos virtuelles Zuhause">
 <div class="pibo-play-view" aria-label="Pibo bleibt beim Spielen sichtbar">
-<div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div class="fallback" id="fallback"><div><strong>🐱</strong><span id="piboLoadStatus">Pibo 3D wird geladen …</span><p style="margin:8px 0;font-size:.88rem">Du kannst inzwischen ein Spiel starten:</p><a href="./games/play.html?game=obby">🏁 Obby spielen</a><a href="./games/play.html?game=pet">🐶 Tierinsel</a></div></div></div>
+<div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div id="piboMouthTarget" aria-hidden="true" hidden>🐱 Mund</div><div id="sleepStars" aria-hidden="true" hidden>🌙 ✨ Zzz</div><div class="fallback" id="fallback"><div><strong>🐱</strong><span id="piboLoadStatus">Pibo 3D wird geladen …</span><p style="margin:8px 0;font-size:.88rem">Du kannst inzwischen ein Spiel starten:</p><a href="./games/play.html?game=obby">🏁 Obby spielen</a><a href="./games/play.html?game=pet">🐶 Tierinsel</a></div></div></div>
 </div>
 <div class="pibo-controls">
 <div class="pibo-controls-head"><span class="pibo-eyebrow">DEINE KATZE · LIVE</span><h2>Spiel mit Pibo!</h2><p>Wähle eine Aktion. Pibo bleibt dabei im Bild.</p></div>
 <div class="care-status" id="careStatus" hidden><span id="careLabel">Pibo beschäftigt sich</span><div class="care-track"><div id="careFill"></div></div></div><div id="gameHud" role="status" aria-live="off" hidden style="text-align:center;background:#e9f6ff;border-radius:16px;padding:9px;font-weight:800">🎯 <span id="gameName"></span> · Punkte: <span id="gamePoints">0</span> · ⏱️ <span id="gameSeconds">30</span>s</div><div id="starsHud" role="status" aria-live="polite" style="text-align:center;font-weight:800;padding:8px">⭐ Sterne: <span id="starsCount">0</span> · Nur Spielpunkte, kein echtes Geld</div><div id="giftReveal" role="status" aria-live="polite" hidden style="text-align:center;background:#fff2c6;border-radius:18px;padding:12px;margin:8px auto;font-weight:800"></div><div id="sceneEffect" aria-live="polite" style="text-align:center;font-size:1.5rem;min-height:36px"></div><div class="bubble" id="say" role="status" aria-live="polite">Miau! Komm und spiel mit mir! 💙</div>
 <div class="stats"><div><label>🍎 Satt</label><div class="track"><div class="fill" id="food"></div></div></div><div><label>💗 Freude</label><div class="track"><div class="fill" id="joy"></div></div></div><div><label>⚡ Energie</label><div class="track"><div class="fill" id="energy"></div></div></div><div><label>🫧 Sauber</label><div class="track"><div class="fill" id="clean"></div></div></div></div>
-<div id="foodShelf" class="choice-shelf" aria-label="Pibos Speisekarte" hidden><span style="flex-basis:100%;text-align:center;font-size:.9rem">Essen antippen und füttern – oder direkt auf Pibo ziehen.</span><button data-food="0" aria-pressed="true"><span>🐟</span>Fisch</button><button data-food="1" aria-pressed="false"><span>🍗</span>Hähnchen</button><button data-food="2" aria-pressed="false"><span>🥕</span>Karotte</button><button data-food="3" aria-pressed="false"><span>🍎</span>Apfel</button><button data-food="4" aria-pressed="false"><span>🥣</span>Futter</button></div><div id="wardrobe" class="choice-shelf" aria-label="Pibos Kleiderschrank" hidden></div><nav class="rooms" aria-label="Pibos Zimmer"><button data-room="living">🛋️ Wohnzimmer</button><button data-room="kitchen">🍽️ Küche</button><button data-room="bedroom">🛏️ Schlafzimmer</button><button data-room="bathroom">🛁 Badezimmer</button><button data-room="toilet">🚽 Toilette</button></nav><nav class="pibo-action-tabs" id="piboActionTabs" aria-label="Aktionen auswählen">
+<div id="foodShelf" class="choice-shelf" aria-label="Pibos Speisekarte" hidden><span style="flex-basis:100%;text-align:center;font-size:.9rem">Wähle ein Essen und ziehe es bis zu Pibos Mund! (Tippen + Füttern geht auch.)</span><button data-food="0" aria-pressed="true"><span>🐟</span>Fisch</button><button data-food="1" aria-pressed="false"><span>🍗</span>Hähnchen</button><button data-food="2" aria-pressed="false"><span>🥕</span>Karotte</button><button data-food="3" aria-pressed="false"><span>🍎</span>Apfel</button><button data-food="4" aria-pressed="false"><span>🥣</span>Futter</button></div><div id="wardrobe" class="choice-shelf" aria-label="Pibos Kleiderschrank" hidden></div><nav class="rooms" aria-label="Pibos Zimmer"><button data-room="living">🛋️ Wohnzimmer</button><button data-room="kitchen">🍽️ Küche</button><button data-room="bedroom">🛏️ Schlafzimmer</button><button data-room="bathroom">🛁 Badezimmer</button><button data-room="toilet">🚽 Toilette</button></nav><nav class="pibo-action-tabs" id="piboActionTabs" aria-label="Aktionen auswählen">
 <button type="button" data-pibo-tab="care" aria-pressed="true">🫶 Pflege</button>
 <button type="button" data-pibo-tab="games" aria-pressed="false">🧶 Spielen</button>
 <button type="button" data-pibo-tab="style" aria-pressed="false">🎀 Anziehen</button>
 <button type="button" data-pibo-tab="extras" aria-pressed="false">✨ Extras</button>
 </nav>
-<div class="actions" id="piboActions"><button data-act="pet">🤗 Streicheln</button><button data-act="feed">🐟 Füttern</button><button data-act="play">🧶 Spielen</button><button data-act="sleep">🌙 Schlafen</button><button data-act="wash">🫧 Waschen</button><button id="scrub">🧽 Einseifen</button><button id="sound" aria-pressed="true">🔊 Ton an</button><button id="catVoice" type="button" title="Pibos echtes Miauen anhören">🐱 Echtes Miau hören</button><button id="talk" aria-pressed="false">🎙️ Nachsprechen</button><button id="minigame">🎯 Ball fangen</button><button id="decorate">🎨 Zimmerfarbe</button><button id="outfit">🎀 Pibo anziehen</button><button id="mousegame">🐭 Maus suchen</button><button id="surprise">🎁 Tagesgeschenk</button><button id="photo">📸 Foto</button><button id="potty">🚽 Toilette benutzen</button><button id="flush">🚽 Spülen</button><button id="foodchoice">🍎 Essen auswählen</button></div>
+<div class="actions" id="piboActions"><button data-act="pet">🤗 Streicheln</button><button data-act="feed">🐟 Füttern</button><button data-act="play">🧶 Spielen</button><button data-act="sleep">🌙 Schlafen</button><button data-act="wash">🫧 Waschen</button><button id="scrub">🧼 Einseifen</button><button id="rinse">🚿 Abspülen</button><button id="dry">🧻 Abtrocknen</button><button id="lamp">💡 Licht aus/an</button><button id="sound" aria-pressed="true">🔊 Ton an</button><button id="catVoice" type="button" title="Pibos echtes Miauen anhören">🐱 Echtes Miau hören</button><button id="talk" aria-pressed="false">🎙️ Nachsprechen</button><button id="minigame">🎯 Ball fangen</button><button id="decorate">🎨 Zimmerfarbe</button><button id="outfit">🎀 Pibo anziehen</button><button id="mousegame">🐭 Maus suchen</button><button id="surprise">🎁 Tagesgeschenk</button><button id="photo">📸 Foto</button><button id="potty">🚽 Toilette benutzen</button><button id="flush">🚽 Spülen</button><button id="foodchoice">🍎 Essen auswählen</button></div>
 <div class="pibo-sound" aria-label="Pibos Geräusche einstellen"><label for="piboVolume">🔊 Pibos Lautstärke</label><input id="piboVolume" type="range" min="0" max="100" step="5" value="65" aria-label="Lautstärke von Pibo"><output id="piboVolumeValue" for="piboVolume">65 %</output><span style="font-size:.82rem">Miauen, Schnurren, Fressen, Wasser, Spülen und Schlafen sind eigene Geräusche.</span></div>
 <p class="note">Keine Werbung · Keine Käufe · Keine Anmeldung · Spielstand auf diesem Gerät.<br>Mikrofon nur nach Zustimmung; Aufnahmen bleiben im Browser. Für echte Katzengeräusche werden bei Wiedergabe Dateien von Wikimedia Commons geladen. <a href="./Pibo-Sound-Lizenzen.md" target="_blank" rel="noopener">Sound-Quellen und Lizenzen</a>. 3D benötigt WebGL und Internetzugang zum Laden der 3D-Bibliothek.</p>
 </div>
@@ -60,6 +60,7 @@ import {facePose} from './pibo-face.mjs';
 import {bodyPose} from './pibo-motion.mjs';
 import {voiceLoudness,mouthWhileSpeaking,nextTalkingTurn} from './pibo-voice.mjs';
 import {decoratePibo} from './pibo-character.mjs';
+import {mouthTarget,mouthDrop,withinStage,foodReaction,pawReaction} from './pibo-interactions.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
 try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&typeof saved==='object')for(const k of Object.keys(defaults))if(Number.isFinite(saved[k]))state[k]=Math.max(0,Math.min(100,saved[k]));}catch{}
@@ -109,7 +110,13 @@ $('catVoice').addEventListener('click',()=>{
  if(!soundOn){$('say').textContent='Schalte zuerst den Ton an, um Pibos echtes Miauen zu hören. 🔊';return}
  sound('meow');$('say').textContent='Miauu! Pibo spricht wie eine echte Katze. 🐱';
 });
-function act(type){if(type==='feed'&&currentRoom!=='kitchen')switchRoom('kitchen');if(type==='sleep'&&currentRoom!=='bedroom')switchRoom('bedroom');if(type==='wash'&&currentRoom!=='bathroom')switchRoom('bathroom');if(type==='play'&&state.energy<12){$('say').textContent='Pibo ist müde. Lass ihn erst schlafen! 💤';sound('meow');return}const effects={pet:{joy:10},feed:{food:22,clean:-3},play:{joy:20,energy:-13,food:-7,clean:-4},sleep:{energy:30,food:-5},wash:{clean:27,joy:-2}};for(const [k,v] of Object.entries(effects[type]))state[k]=clamp(state[k]+v);const messages={pet:'Prrrr! Noch mehr Streicheleinheiten! 💙',feed:'Miau! Das schmeckt lecker! 🐟',play:'Juhu! Fang den Ball! 🧶',sleep:'Gute Nacht, Pibo! 💤',wash:'Jetzt bin ich wieder sauber! 🫧'};$('say').textContent=messages[type];mode=type;modeUntil=performance.now()+ (type==='sleep'?9000:type==='wash'||type==='feed'?7000:5500);if(['feed','wash','sleep'].includes(type))startInteraction(type);if(type==='feed')showEffect(foods[foodIndex][0]+' 🍽️','Pibo frisst '+foods[foodIndex][1]+'!');if(type==='wash')showEffect('🛁 🫧 🧼','Pibo badet mit Seife und Schaum!',4300);if(type==='sleep')showEffect('🛏️ 🌙 💤','Pibo schläft im Bett!',5800);if(type==='play')showEffect('⚽ 🐾','Pibo jagt den Ball!');sound(type==='feed'?'chew':type==='wash'?'water':type==='sleep'?'snore':type==='pet'?'purr':'meow');render()}
+function act(type,options={}){if(type==='feed'&&currentRoom!=='kitchen')switchRoom('kitchen');if(type==='sleep'&&currentRoom!=='bedroom')switchRoom('bedroom');if(type==='wash'&&currentRoom!=='bathroom')switchRoom('bathroom');if(type==='play'&&state.energy<12){$('say').textContent='Pibo ist müde. Lass ihn erst schlafen! 💤';sound('meow');return}const effects={pet:{joy:10},feed:{food:22,clean:-3},play:{joy:20,energy:-13,food:-7,clean:-4},sleep:{energy:30,food:-5},wash:{joy:-2}};for(const [k,v] of Object.entries(effects[type]))state[k]=clamp(state[k]+v);const messages={pet:'Prrrr! Noch mehr Streicheleinheiten! 💙',feed:'Miau! Das schmeckt lecker! 🐟',play:'Juhu! Fang den Ball! 🧶',sleep:'Gute Nacht, Pibo! 💤',wash:'Jetzt bin ich wieder sauber! 🫧'};$('say').textContent=messages[type];mode=type;modeUntil=performance.now()+ (type==='sleep'?9000:type==='wash'||type==='feed'?7000:5500);if(['feed','wash','sleep'].includes(type))startInteraction(type,options);if(type==='feed'){
+  const food=foodReaction(foodIndex);
+  state.food=clamp(state.food-22+food.food);
+  $('say').textContent=food.say;
+  showEffect(foods[foodIndex][0]+' 🍽️',options.direct?'Direkt in Pibos Mund!':'Pibo frisst '+foods[foodIndex][1]+'!');
+}
+if(type==='sleep'){setNight(true)}if(type==='wash')showEffect('🛁 🫧 🧼','Pibo badet mit Seife und Schaum!',4300);if(type==='sleep')showEffect('🛏️ 🌙 💤','Pibo schläft im Bett!',5800);if(type==='play')showEffect('⚽ 🐾','Pibo jagt den Ball!');sound(type==='feed'?'chew':type==='wash'?'water':type==='sleep'?'snore':type==='pet'?'purr':'meow');render()}
 document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));$('sound').addEventListener('click',()=>{
  soundOn=!soundOn;
  syncPiboSound();savePiboSound();
@@ -120,22 +127,23 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
  finishVoice();
 });
 const stage=$('stage'),scene=new THREE.Scene();
-function dropFood(index){
+function dropFood(index,direct=false){
  if(!selectFood(index))return;
  if(currentRoom!=='kitchen')switchRoom('kitchen');
- act('feed');
+ act('feed',{direct});
 }
 stage.addEventListener('pointerup',e=>{
- if(!draggedFood||draggedFood.pointerId!==e.pointerId)return;
- const index=draggedFood.index;draggedFood=null;dropFood(index);
+ // A touch gesture started on a food item is handled at the window level,
+ // since the button and the 3D scene are separate DOM containers.
 });
-window.addEventListener('pointerup',()=>{draggedFood=null});
-window.addEventListener('pointercancel',()=>{draggedFood=null});
+// Touch and mouse drop handling is registered after the food selection controls.
 stage.addEventListener('dragover',e=>{if(e.dataTransfer?.types?.includes('text/plain'))e.preventDefault()});
 stage.addEventListener('drop',e=>{
  const data=e.dataTransfer?.getData('text/plain')||'';
  if(!data.startsWith('pibo-food:'))return;
- e.preventDefault();dropFood(data.slice(10));
+ e.preventDefault();
+ if(mouthDrop(e.clientX,e.clientY,stage.getBoundingClientRect()))dropFood(data.slice(10),true);
+ else showEffect('🐱','Ziehe das Essen direkt bis zu Pibos Mund!');
 });scene.background=new THREE.Color(0xd4eaff);const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(0,2.3,8.8);camera.lookAt(0,1.35,0);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);$('fallback').remove();
 scene.add(new THREE.HemisphereLight(0xffffff,0x9d8f83,2.1));const sun=new THREE.DirectionalLight(0xffffff,2.8);sun.position.set(-3,8,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-6;sun.shadow.camera.right=6;sun.shadow.camera.top=6;sun.shadow.camera.bottom=-6;scene.add(sun);
 const mat=(c,rough=.88)=>new THREE.MeshStandardMaterial({color:c,roughness:rough}),fur=mat(0xf5b965),cream=mat(0xffedcf),stripe=mat(0xd78a3f),pink=mat(0xf08b99),dark=mat(0x25223b),iris=mat(0x57ad8b,.3),white=mat(0xffffff,.22),floor=mat(0xe7c49f),wall=mat(0xd9e8fb);
@@ -145,7 +153,7 @@ const back=new THREE.Mesh(new THREE.PlaneGeometry(200,30),wall);back.position.se
 const rug=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.3,.035,64),mat(0xc6b4e9));rug.position.y=.035;rug.receiveShadow=true;scene.add(rug);
 let foodIndex=0;const foods=[['🐟','Fisch'],['🍗','Hähnchen'],['🥕','Karotte'],['🍎','Apfel'],['🥣','Katzenfutter']];let effectTimer=0;
 function showEffect(emoji,description,duration=2800){$('sceneEffect').textContent=emoji+' '+description;clearTimeout(effectTimer);effectTimer=setTimeout(()=>{$('sceneEffect').textContent=''},duration)}
-let draggedFood=null;
+let draggedFood=null,foodGhost=null;
 function selectFood(index){
  const n=Number(index);if(!Number.isInteger(n)||n<0||n>=foods.length)return false;
  foodIndex=n;
@@ -161,10 +169,59 @@ document.querySelectorAll('[data-food]').forEach(b=>{
    if(e.dataTransfer){e.dataTransfer.setData('text/plain','pibo-food:'+b.dataset.food);e.dataTransfer.effectAllowed='copy'}
  });
  b.addEventListener('pointerdown',e=>{
-   if(e.pointerType==='touch'||e.pointerType==='pen')draggedFood={index:Number(b.dataset.food),pointerId:e.pointerId};
+   // Keep the page from scrolling while a player drags a food item.
+   if(e.pointerType==='touch'||e.pointerType==='pen'||e.pointerType==='mouse')
+     draggedFood={index:Number(b.dataset.food),pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,moved:false};
  });
- b.addEventListener('pointerup',()=>{draggedFood=null});
 });
+// The selected food follows the finger across the page; only a drop near Pibo's
+// mouth feeds him. A single click still only selects food for accessibility.
+function clearFoodDrag(){
+ draggedFood=null;
+ if(foodGhost){foodGhost.remove();foodGhost=null}
+ const target=document.getElementById('piboMouthTarget');
+ if(target)target.hidden=true;
+}
+function foodDragMove(e){
+ const drag=draggedFood;
+ if(!drag||e.pointerId!==drag.pointerId)return;
+ const distance=Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY);
+ if(!drag.moved&&distance<9)return;
+ drag.moved=true;
+ if(e.cancelable)e.preventDefault();
+ if(!foodGhost){
+   foodGhost=document.createElement('span');
+   foodGhost.className='pibo-food-ghost';
+   foodGhost.textContent=foods[drag.index][0];
+   document.body.appendChild(foodGhost);
+ }
+ foodGhost.style.left=e.clientX+'px';
+ foodGhost.style.top=e.clientY+'px';
+ const rect=stage.getBoundingClientRect();
+ const t=mouthTarget(rect);
+ const target=document.getElementById('piboMouthTarget');
+ if(target&&t){
+   target.hidden=false;
+   target.style.left=(t.x-rect.left)+'px';
+   target.style.top=(t.y-rect.top)+'px';
+   target.classList.toggle('pibo-food-hit',mouthDrop(e.clientX,e.clientY,rect));
+ }
+}
+function foodDragEnd(e){
+ const drag=draggedFood;
+ if(!drag||e.pointerId!==drag.pointerId)return;
+ const rect=stage.getBoundingClientRect();
+ const hit=drag.moved&&mouthDrop(e.clientX,e.clientY,rect);
+ const inside=withinStage(e.clientX,e.clientY,rect);
+ const index=drag.index;
+ clearFoodDrag();
+ if(hit){dropFood(index,true);return}
+ if(drag.moved&&inside){showEffect('🐟','Fast! Ziehe das Futter direkt zu Pibos Mund.');return}
+ if(drag.moved){showEffect('👆','Futter bis zur Katze ziehen, nicht nur auf die Schaltfläche tippen.')}
+}
+window.addEventListener('pointermove',foodDragMove,{passive:false});
+window.addEventListener('pointerup',foodDragEnd);
+window.addEventListener('pointercancel',clearFoodDrag);
 const roomProps=new THREE.Group();scene.add(roomProps);let currentRoom='living';
 const roomPalette={living:0xe9dcff,kitchen:0xffefce,bedroom:0xd7e2ff,bathroom:0xd3f3f6,toilet:0xe2f3e4};
 function cube(p,color,x,y,z,w,h,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;p.add(m);return m}
