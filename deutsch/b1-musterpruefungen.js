@@ -104,6 +104,37 @@ const listeningScenes=[
  ['Freizeit','Hallo Lea, möchtest du am Sonntag mit uns wandern gehen? Wir treffen uns um neun Uhr am Bahnhof und fahren gemeinsam mit dem Bus. Nimm bitte etwas zu trinken und eine Regenjacke mit. Wenn es stark regnet, gehen wir stattdessen ins Museum.'],
  ['Verein','Liebe Mitglieder, die Mitgliederversammlung wird auf den nächsten Freitag verschoben. Beginn ist um 18:30 Uhr im Gemeinschaftshaus. Wir sprechen über neue Projekte und wählen einen Vorstand. Wer nicht kommen kann, darf Vorschläge per E-Mail schicken.']
 ];
+const listeningDialogues=[
+ ['Kursberatung',[
+ ['Beraterin','Guten Morgen. Sie interessieren sich für unseren Abendkurs?'],
+ ['Teilnehmer','Ja. Ich arbeite tagsüber. Wann beginnt der Kurs?'],
+ ['Beraterin','Am 14. April. Wir treffen uns montags und mittwochs um 18 Uhr.'],
+ ['Teilnehmer','Muss ich einen Laptop mitbringen?'],
+ ['Beraterin','Nein, aber bitte Ihren Ausweis und einen Stift.']
+ ],['Wann beginnt der Kurs?','An welchen Tagen findet der Kurs statt?','Was soll man mitbringen?']],
+ ['Arbeitstreffen',[
+ ['Kollegin','Hallo Samir, unser Treffen mit dem Kunden wurde verschoben.'],
+ ['Kollege','Findet es immer noch um neun Uhr statt?'],
+ ['Kollegin','Nein, erst um halb elf, im Besprechungsraum im zweiten Stock.'],
+ ['Kollege','Soll ich etwas vorbereiten?'],
+ ['Kollegin','Bitte bring die aktuellen Unterlagen mit.']
+ ],['Wann findet das Treffen statt?','Wo trifft sich das Team?','Was soll Samir mitbringen?']],
+ ['Wohnungsbesichtigung',[
+ ['Vermieter','Guten Abend, Frau Weber. Können Sie morgen um 17 Uhr kommen?'],
+ ['Interessentin','Ja. Wo treffen wir uns?'],
+ ['Vermieter','Direkt am Hauseingang in der Lindenstraße.'],
+ ['Interessentin','Soll ich schon meine Unterlagen mitbringen?'],
+ ['Vermieter','Nein, wir besprechen zunächst alles vor Ort.']
+ ],['Wann ist die Besichtigung?','Wo wartet der Vermieter?','Was muss man mitbringen?']],
+ ['Sonntagsausflug',[
+ ['Freundin','Hallo Lea, kommst du am Sonntag mit uns wandern?'],
+ ['Freund','Gerne. Wo treffen wir uns?'],
+ ['Freundin','Um neun Uhr am Bahnhof. Wir fahren von dort mit dem Bus.'],
+ ['Freund','Was soll ich mitnehmen?'],
+ ['Freundin','Etwas zu trinken und eine Regenjacke. Bei starkem Regen gehen wir ins Museum.']
+ ],['Wo ist der Treffpunkt?','Was sollen die Teilnehmer mitnehmen?','Was passiert bei starkem Regen?']]
+];
+const dialogueSceneIndices=[1,2,5,8];
 const listeningPrompts=[
  ['Wovon handelt die Durchsage?','Was ändert sich?','Was sollen die Fahrgäste beachten?'],
  ['Wann beginnt der Kurs?','An welchen Tagen findet der Kurs statt?','Was soll man mitbringen?'],
@@ -169,7 +200,10 @@ function items(section){
        const sceneIndex=(g*2+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
        const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
-       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],kind:kinds[g]});
+       const dialogueAt=dialogueSceneIndices.indexOf(sceneIndex);
+       const conversation=dialogueAt>=0?listeningDialogues[dialogueAt]:null;
+       const audio=conversation?conversation[1].map(turn=>turn[0]+': '+turn[1]).join(' '):scene[1];
+       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio,dialogue:conversation?conversation[1]:null,kind:kinds[g]});
        continue;
      }
      if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&(g===0||g===2))||(exam==='dtz'&&g===2))){
@@ -237,9 +271,19 @@ function home(){
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Übungsergebnisse löschen?')){localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');alert('Die lokal gespeicherten B1-Ergebnisse wurden gelöscht.');}};
 }
 function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];deadline=began+(p[2]||30)*60000;question();}
-function speak(t){
+function speak(t,dialogue){
  if(!('speechSynthesis'in window)){alert('Dein Browser unterstützt diese Sprachausgabe nicht.');return;}
- speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.87;speechSynthesis.speak(u);
+ const synth=window.speechSynthesis;synth.cancel();
+ const voices=synth.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith('de'));
+ if(!dialogue){const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.87;synth.speak(u);return;}
+ const roles=[...new Set(dialogue.map(turn=>turn[0]))];
+ dialogue.forEach(turn=>{
+  const u=new SpeechSynthesisUtterance(turn[1]);u.lang='de-DE';u.rate=.89;
+  const roleIndex=roles.indexOf(turn[0]);
+  if(voices.length>1)u.voice=voices[roleIndex%voices.length];
+  u.pitch=roleIndex%2===0?1.07:.9;
+  synth.speak(u);
+ });
 }
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
@@ -253,7 +297,7 @@ function question(){
  '<div class="b1x-meta"><span id="b1x-clock">⏱ '+p[2]+':00</span><span>'+Math.round(idx/list.length*100)+' %</span></div>'+
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
- if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio);};}
+ if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
  if(el('b1x-text'))el('b1x-text').oninput=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';};
  el('b1x-next').onclick=()=>{
   let val;
