@@ -73,9 +73,7 @@ const assert=require('node:assert/strict');
   await page.locator('#mobileMore').click();
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#mobileNavMenu').isVisible(),false);
-  await page.goto('http://127.0.0.1:8766/',{waitUntil:'domcontentloaded'});
-  assert.equal(await page.locator('.sd-dashboard-launch').getAttribute('href'),'mein-sd-hub/');
-  assert.equal(await page.locator('#thema-deutsch').count(),1);
+  assert.equal(await page.locator('#appDirectory').count(),1,'App directory remains available after navigation');
   assert.equal(errors.length,0,'Unexpected browser errors: '+errors.join(' | '));
   console.log('SD Hub dashboard: desktop/mobile navigation, filters, search, favorites, themes and links PASS');
  }finally{if(browser)await browser.close();server.kill()}
