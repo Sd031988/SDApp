@@ -1044,7 +1044,7 @@ function writingTrainer(){
  '<details class="b1x-passage"><summary>Beispieltext anzeigen (erst selbst schreiben)</summary><p>'+esc(writingTopics[chosen].sample)+'</p><p class="b1x-note">Nur ein mögliches Beispiel; keine offizielle Musterlösung.</p></details>'+
  '<button id="b1x-write-home" class="b1x-card">Zurück zur Auswahl</button>');
  const field=el('b1x-write-answer'),count=el('b1x-write-count');
- const refresh=()=>{const words=field.value.trim().split(/\\s+/).filter(Boolean).length;count.textContent=words+' Wörter · Keine automatische Grammatikbewertung';};
+ const refresh=()=>{const words=field.value.trim()?field.value.trim().split(/\s+/).length:0;count.textContent=words+' Wörter · Keine automatische Grammatikbewertung';};
  refresh();
  field.oninput=()=>{refresh();try{const data=JSON.parse(localStorage.getItem(trainerKey)||'{}');data.topic=chosen;data['draft'+chosen]=field.value;localStorage.setItem(trainerKey,JSON.stringify(data));}catch(_){}};
  el('b1x-write-topic').onchange=e=>{try{const data=JSON.parse(localStorage.getItem(trainerKey)||'{}');data.topic=Number(e.target.value);localStorage.setItem(trainerKey,JSON.stringify(data));}catch(_){}writingTrainer();};
