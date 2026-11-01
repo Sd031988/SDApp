@@ -360,7 +360,9 @@ const assert = require('node:assert/strict');
 
     // When all files are already present, a single button should just open the editor (also on mobile).
     await page.setViewportSize({width:390,height:844});
-    await page.locator('#kiCodeBtn').click();
+    // Compact mobile toolbar puts secondary AI actions in the accessible More menu.
+    await page.locator('#kopfMehr').click();
+    await page.locator('#palListe span').getByText('✨ KI Coding',{exact:true}).click();
     await page.locator('#kiResult').fill(directAnswer);
     await page.locator('#kiAnalyse').click();
     await page.locator('#kiDirect').click(); // No overwrite dialog necessary for identical content.
