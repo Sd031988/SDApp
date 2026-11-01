@@ -915,7 +915,20 @@ function sichereVorschauBruecke() {
 function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung ohne Service Worker
   const d = S.p.dateien; let h = d[start];
   h = h.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, href) => { if (!/stylesheet/i.test(m)) return m; const p = relAufloesen(start, href); return p && d[p] != null ? '<style>/* ' + p + ' */\n' + d[p] + '\n</style>' : m; });
-  h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => { const p = relAufloesen(start, src); return p && d[p] != null ? '<script' + a + b + '>/* ' + p + ' */\n' + d[p].replace(/<\/script/gi, '<\\/script') + '\n//# sourceURL=sd-studio-preview/' + encodeURIComponent(p) + '\n<\/script>' : m; });
+  h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => {
+    const p = relAufloesen(start,src);
+    if(!p||d[p]==null)return m;
+    if(/\btype\s*=\s*["']module["']/i.test(a+' '+b)){
+      try {
+        const url=window.SDStudioModules?.bundle(p,d);
+        if(!url)throw Error('Module-Unterstützung nicht geladen');
+        return '<script type="module" src="'+url+'"><\/script>';
+      } catch(e) {
+        return '<script>console.error('+JSON.stringify('Modul-Vorschau: '+e.message)+');<\/script>';
+      }
+    }
+    return '<script'+a+b+'>/* '+p+' */\n'+d[p].replace(/<\/script/gi,'<\\/script')+'\n//# sourceURL=sd-studio-preview/'+encodeURIComponent(p)+'\n<\/script>';
+  });
   h = h.replace(/(src|href)=["']([^"']+\.(?:png|jpe?g|gif|webp|svg|ico|avif))["']/gi, (m, attr, ref) => { const p = relAufloesen(start, ref); if (!p || d[p] == null) return m; const v = d[p]; return attr + '="' + (istBinaer(v) ? v : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(v)) + '"'; });
   const bridge = sichereVorschauBruecke();
   return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
