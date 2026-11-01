@@ -43,3 +43,33 @@ test('BlockWorld supports jump, builder level, removal and responsive layout',as
  await expect(page.locator('.pad button')).toHaveCount(4);
  await expect(page.locator('#world')).toBeVisible();
 });
+
+test('optional shared Render room displays peer avatars and shared blocks without chat',async({page})=>{
+ const requests=[];
+ await page.route('https://sd-maschinen-kenner.onrender.com/hub/blockworld/**',async route=>{
+  const method=route.request().url().split('/').pop();
+  requests.push(method);
+  const payload=method==='join'?{
+   ok:true,token:'test-token',id:'1122334455667788',room:'dorf',
+   players:[{id:'aabbccddeeff0011',x:6,z:4,y:0,heading:0,color:'pink'}],
+   blocks:[{x:10,z:6,level:0,color:'yellow'}]
+  }:method==='sync'?{
+   ok:true,players:[{id:'aabbccddeeff0011',x:5,z:4,y:0,heading:0,color:'pink'}],
+   blocks:[{x:10,z:6,level:0,color:'yellow'}]
+  }:{ok:true};
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(payload)});
+ });
+ await page.goto('/kids/blockworld/',{waitUntil:'domcontentloaded'});
+ await expect.poll(()=>page.evaluate(()=>window.__blockWorldReady||false),{timeout:30000}).toBe(true);
+ await expect(page.locator('#onlineLeave')).toBeDisabled();
+ await page.locator('#onlineRoom').selectOption('dorf');
+ await page.locator('#onlineJoin').click();
+ await expect(page.locator('#onlineLeave')).toBeEnabled();
+ await expect(page.locator('#onlinePlayers')).toHaveText('1');
+ await expect.poll(()=>page.evaluate(()=>window.__blockWorldOnlineVisible?.blocks),{timeout:10000}).toBe(1);
+ await expect(page.locator('#onlineStatus')).toContainText('Verbunden');
+ await page.locator('#onlineLeave').click();
+ await expect(page.locator('#onlinePlayers')).toHaveText('0');
+ await expect(page.locator('#onlineLeave')).toBeDisabled();
+ expect(requests).toContain('join');
+});
