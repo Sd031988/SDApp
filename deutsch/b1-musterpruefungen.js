@@ -638,7 +638,19 @@ function question(){
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+' · '+esc(p[1])+'</p>'+
  '<div class="b1x-meta"><span>Teil '+(t.g+1)+'/'+p[3].length+' · '+esc(t.kind)+'</span><span>Aufgabe '+(idx+1)+'/'+list.length+'</span></div>'+
  '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">'+timerText((deadline-Date.now())/1000)+'</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
- body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
+ body+(['schreiben','sprechen'].includes(p[0])?
+ '<details class="b1x-passage" id="b1x-before-submit"><summary>Vor der Abgabe: kurze Selbstkontrolle</summary>'+
+ (p[0]==='schreiben'?
+ '<p><b>Verbesserungstipp:</b> Prüfe zuerst, ob du alle Punkte der Aufgabe beantwortet hast. Ergänze einen konkreten Grund mit „weil“ und kontrolliere die Verbposition.</p>'+
+ '<label class="b1x-check"><input type="checkbox"> Alle verlangten Informationen sind enthalten.</label>'+
+ '<label class="b1x-check"><input type="checkbox"> Anrede und Gruß passen zur Situation.</label>'+
+ '<label class="b1x-check"><input type="checkbox"> Ich habe Satzstellung und Rechtschreibung geprüft.</label>':
+ '<p><b>Verbesserungstipp:</b> Nenne mindestens einen Grund oder ein Beispiel. Bei einer Partneraufgabe: Reagiere auf einen Vorschlag und stelle selbst eine Frage.</p>'+
+ '<label class="b1x-check"><input type="checkbox"> Ich habe die wichtigsten Punkte beantwortet.</label>'+
+ '<label class="b1x-check"><input type="checkbox"> Ich habe meine Meinung begründet oder ein Beispiel genannt.</label>'+
+ '<label class="b1x-check"><input type="checkbox"> Ich habe eine passende Rückfrage oder Reaktion vorbereitet.</label>')+
+ '<p class="b1x-note">Freiwillige Lernkontrolle – keine automatische Bewertung. Die Häkchen sind nicht erforderlich, um fortzufahren.</p></details>':'')+
+ '<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
  if(['lesen','hoeren','sprach'].includes(p[0])){const radios=root.querySelectorAll('input[name="b1x-answer"]');radios.forEach(r=>{if(Number(r.value)===pendingChoice)r.checked=true;r.addEventListener('change',()=>{pendingChoice=Number(r.value);saveCheckpoint();});});}
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;saveCheckpoint();speak(t.audio,t.dialogue);};}
