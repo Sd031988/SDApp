@@ -579,7 +579,7 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  (getCheckpoint()?'<button id="b1x-resume" class="b1x-primary">↩ Unterbrochene Prüfung fortsetzen</button>':'')+
- '<button id="b1x-writing-trainer" class="b1x-card">✍ B1-Schreibtrainer</button><button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
+ '<button id="b1x-speaking-trainer" class="b1x-card">🎙 B1-Sprechtrainer</button><button id="b1x-writing-trainer" class="b1x-card">✍ B1-Schreibtrainer</button><button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
  '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist (60 Minuten Lesen, anschließend die verbleibende Zeit für Sprachbausteine). Dies ist eine vereinfachte Trainingsaufteilung; bei Einzelübungen gelten getrennte Zeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 B1-Ergebnisse und Schreibentwürfe löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
@@ -587,6 +587,7 @@ function home(){
  if(el('b1x-resume'))el('b1x-resume').onclick=resumeCheckpoint;
  el('b1x-start').onclick=()=>{if(getCheckpoint()&&!confirm('Eine unterbrochene Prüfung ist gespeichert. Neue Prüfung starten und bisherigen Fortschritt ersetzen?'))return;clearCheckpoint();running=true;results={};telcSharedDeadline=0;start(0);};
  el('b1x-marked-practice').onclick=markedPractice;
+ el('b1x-speaking-trainer').onclick=speakingTrainer;
  el('b1x-writing-trainer').onclick=writingTrainer;
  el('b1x-dashboard').onclick=dashboard;
  el('b1x-week-plan').onclick=weekPlan;
@@ -975,6 +976,32 @@ const writingTopics=[
  {title:'Einladung beantworten',prompt:'Ein Freund lädt dich zum Geburtstag ein. Bedanke dich, sage zu oder ab und stelle eine Frage zur Feier.',sample:'Liebe Maria, vielen Dank für deine Einladung! Ich komme sehr gern zu deiner Feier. Soll ich etwas zu essen mitbringen? Ich freue mich auf Samstag. Liebe Grüße'},
  {title:'Meinung: Online lernen',prompt:'Schreibe deine Meinung zum Online-Lernen. Nenne einen Vorteil, einen Nachteil und ein persönliches Beispiel.',sample:'Meiner Meinung nach ist Online-Lernen praktisch, weil man zu Hause lernen kann. Ein Nachteil ist, dass man weniger Kontakt zu anderen hat. Ich lerne selbst gern online, aber manchmal brauche ich Hilfe.'}
 ];
+function speakingTrainer(){
+ const topics=['Stell dich vor: Name, Beruf, Hobbys und warum du Deutsch lernst.','Erzähle von einem schönen Wochenende: Wo warst du und was hast du gemacht?','Was ist besser: öffentliche Verkehrsmittel oder Auto? Begründe deine Meinung.'];
+ let recorder=null,chunks=[],audioUrl=null;
+ view('<h2>B1-Sprechtrainer</h2><p class="b1x-note">Freiwillige Aufnahme zum Selbstanhören. Keine automatische Aussprachebewertung. Das Mikrofon benötigt Browser-Erlaubnis und eine sichere HTTPS-Verbindung. Die Aufnahme wird nicht hochgeladen.</p>'+
+ '<label for="b1x-speak-topic">Sprechthema</label><select id="b1x-speak-topic" class="b1x-select">'+topics.map((t,i)=>'<option value="'+i+'">Thema '+(i+1)+'</option>').join('')+'</select>'+
+ '<div id="b1x-speak-prompt" class="b1x-passage">'+esc(topics[0])+'</div>'+
+ '<button id="b1x-speak-record" class="b1x-primary">● Aufnahme starten</button><button id="b1x-speak-stop" class="b1x-card" disabled>■ Aufnahme beenden</button>'+
+ '<p id="b1x-speak-status" role="status" class="b1x-note">Noch keine Aufnahme.</p><div id="b1x-speak-player"></div>'+
+ '<div class="b1x-passage"><b>Nach dem Anhören prüfen:</b><p>Habe ich verständlich und in vollständigen Sätzen gesprochen? Habe ich meine Meinung begründet? Habe ich passende Beispiele genannt?</p></div>'+
+ '<button id="b1x-speak-home" class="b1x-card">Zurück zur Auswahl</button>');
+ const record=el('b1x-speak-record'),stop=el('b1x-speak-stop'),status=el('b1x-speak-status'),player=el('b1x-speak-player');
+ const cleanup=()=>{if(recorder&&recorder.state==='recording')recorder.stop();if(audioUrl)URL.revokeObjectURL(audioUrl);};
+ el('b1x-speak-topic').onchange=e=>{el('b1x-speak-prompt').textContent=topics[Number(e.target.value)];};
+ record.onclick=async()=>{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined'){status.textContent='Aufnahme wird von diesem Browser nicht unterstützt.';return;}
+  try{
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   recorder=new MediaRecorder(stream);chunks=[];
+   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+   recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());record.disabled=false;stop.disabled=true;if(!chunks.length)return;if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(new Blob(chunks,{type:recorder.mimeType||'audio/webm'}));player.replaceChildren();const a=document.createElement('audio');a.controls=true;a.src=audioUrl;player.appendChild(a);status.textContent='Aufnahme bereit zum Anhören. Sie wird nicht dauerhaft gespeichert.';};
+   recorder.start();record.disabled=true;stop.disabled=false;status.textContent='Aufnahme läuft …';
+  }catch(_){status.textContent='Mikrofon nicht verfügbar oder Berechtigung verweigert.';}
+ };
+ stop.onclick=()=>{if(recorder&&recorder.state==='recording')recorder.stop();};
+ el('b1x-speak-home').onclick=()=>{cleanup();home();};
+}
 function writingTrainer(){
  const saved=(()=>{try{return JSON.parse(localStorage.getItem(trainerKey)||'{}')}catch(_){return {}}})();
  const chosen=Number.isInteger(saved.topic)&&saved.topic>=0&&saved.topic<writingTopics.length?saved.topic:0;
