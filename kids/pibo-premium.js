@@ -4,7 +4,7 @@
 'use strict';
 const GROUPS=Object.freeze({
  care:['pet','feed','sleep','wash','scrub','rinse','dry','lamp','foodchoice','potty','flush'],
- games:['play','minigame','mousegame'],
+ games:['play','minigame','mousegame','gardenPlay'],
  style:['outfit','decorate','photo'],
  extras:['sound','catVoice','talk','surprise']
 });
