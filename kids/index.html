@@ -58,7 +58,7 @@ import {PiboCare} from './pibo-care.js';
 import {addStars,claimDailyGift,normalizeStars,localDay} from './pibo-rewards.mjs';
 import {facePose} from './pibo-face.mjs';
 import {bodyPose} from './pibo-motion.mjs';
-import {voiceLoudness,mouthWhileSpeaking} from './pibo-voice.mjs';
+import {voiceLoudness,mouthWhileSpeaking,nextTalkingTurn} from './pibo-voice.mjs';
 import {decoratePibo} from './pibo-character.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
@@ -282,6 +282,7 @@ $('outfit').addEventListener('click',()=>{$('wardrobe').hidden=!$('wardrobe').hi
 $('mousegame').addEventListener('click',()=>startMiniGame('mouse'));
 $('decorate').addEventListener('click',()=>{const colors=[0xd9e8fb,0xffe4d6,0xdaf1df,0xefe1fa,0xffefb9,0xcce9ec,0xf4d9e5];roomColor=(roomColor+1)%colors.length;wall.color.setHex(colors[roomColor]);extras.room=roomColor;extras.roomColors??={};extras.roomColors[currentRoom]=colors[roomColor];saveExtras();$('say').textContent='Dein Zimmer hat eine neue Farbe! 🎨';sound('select')});
 const talkButton=$('talk');
+let micMonitor=null,micSource=null;
 let voicePlayback=null;
 function finishVoice(){
  const previous=voicePlayback;
@@ -348,7 +349,10 @@ talkButton.addEventListener('click',async()=>{
    const chunks=[];
    recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
    recorder.onstop=async()=>{
-     clearTimeout(recordTimer);stream.getTracks().forEach(t=>t.stop());recordingStream=null;
+     clearTimeout(recordTimer);
+     if(micMonitor){clearInterval(micMonitor);micMonitor=null}
+     if(micSource){try{micSource.disconnect()}catch{} micSource=null}
+     stream.getTracks().forEach(t=>t.stop());recordingStream=null;
      talkButton.textContent='🎙️ Nachsprechen';talkButton.setAttribute('aria-pressed','false');
      const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
      if(!blob.size){$('say').textContent='Keine Stimme aufgenommen.';return}
@@ -356,8 +360,24 @@ talkButton.addEventListener('click',async()=>{
      await replayVoice(blob)
    };
    recorder.start();talkButton.textContent='⏹️ Aufnahme stoppen';talkButton.setAttribute('aria-pressed','true');
-   $('say').textContent='Sprich jetzt! Maximal 6 Sekunden. 🎤';
-   recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop()},6000)
+   $('say').textContent='Sprich jetzt! Pibo hört auf, wenn du fertig bist (maximal 10 Sekunden). 🎤';
+   // Voice-activity analysis stays inside the browser and never connects to speakers or servers.
+   const ctx=piboAudio.ctx;
+   if(ctx?.createMediaStreamSource&&ctx?.createAnalyser){
+     try{
+       micSource=ctx.createMediaStreamSource(stream);
+       const meter=ctx.createAnalyser();meter.fftSize=512;meter.smoothingTimeConstant=.6;
+       micSource.connect(meter);
+       const sample=new Uint8Array(meter.fftSize);
+       let turn=nextTalkingTurn(null,0,performance.now());
+       micMonitor=setInterval(()=>{
+         if(recorder?.state!=='recording')return;
+         turn=nextTalkingTurn(turn,voiceLoudness(meter,sample),performance.now());
+         if(turn.stop)recorder.stop();
+       },100);
+     }catch(e){console.warn('Microphone silence detection unavailable; manual stop still works',e)}
+   }
+   recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop()},9500)
  }catch{
    recordingStream?.getTracks().forEach(t=>t.stop());recordingStream=null;
    talkButton.textContent='🎙️ Nachsprechen';talkButton.setAttribute('aria-pressed','false');
@@ -366,6 +386,8 @@ talkButton.addEventListener('click',async()=>{
 });
 window.addEventListener('pagehide',()=>{
  if(recorder?.state==='recording')recorder.stop();
+ if(micMonitor){clearInterval(micMonitor);micMonitor=null}
+ if(micSource){try{micSource.disconnect()}catch{} micSource=null}
  recordingStream?.getTracks().forEach(t=>t.stop());
  try{voicePlayback?.source?.stop()}catch{}
  try{voicePlayback?.player?.pause()}catch{}
