@@ -194,7 +194,7 @@ addChoice('Alphabetisierung',()=>{level='alpha';unit=0;open();show();});
 addChoice('A1 lernen',()=>{level='a1';unit=0;open();show();});
 addChoice('A2 lernen',()=>{level='a2';unit=0;open();show();});
 addChoice('B1 lernen',()=>{close();const buttons=Array.from(document.querySelectorAll('#lBody button, #learn button'));const target=buttons.find(b=>/^B1(?:\s*[–-]\s*[^\n]+)?$/i.test(b.textContent.trim())&&!/Prüfung|Muster/i.test(b.textContent));if(target){target.click();return;}const section=document.getElementById('lBody');if(section)section.scrollIntoView({behavior:'smooth'});});
-addChoice('B1-Prüfungen',()=>{close();const target=document.getElementById('sdB1FixedEntry')||document.getElementById('sdB1FullEntry');if(target)target.click();});
+addChoice('B1-Prüfungen',()=>{close();const target=document.getElementById('sdB1FixedEntry')||document.getElementById('sdB1FullEntry');if(target){target.click();return;}const notice=document.createElement('p');notice.setAttribute('role','status');notice.textContent='Die B1-Musterprüfungen sind gerade nicht verfügbar. Bitte lade die Seite neu.';notice.style.cssText='padding:12px;color:#fff;background:#4b2630;border-radius:8px';entry.insertAdjacentElement('afterend',notice);setTimeout(()=>notice.remove(),6000);});
 entry.onclick=()=>{const next=menu.hidden;menu.hidden=!next;menu.style.display=next?'grid':'none';entry.setAttribute('aria-expanded',String(next));};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){hideMenu();entry.focus();}});
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!entry.contains(e.target))hideMenu();});
