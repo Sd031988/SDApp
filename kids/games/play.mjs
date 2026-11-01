@@ -2,6 +2,7 @@ import {findGame,miniIds} from './catalog.mjs';
 import {STORAGE_KEY,PETS,COLOR_KEYS,CITY_JOBS,QUESTIONS,TREASURE_ITEMS,TREASURE_KEYS,TREASURE_EXIT,
  initialState,sanitize,visit,action,restartGame} from './rules.mjs';
 import {readSettings,saveSettings} from './profile.mjs';
+import {SDGameSound,cueForMini,loadSoundSettings,saveSoundSettings} from '../sd-sound.mjs';
 const $=id=>document.getElementById(id);
 const id=new URLSearchParams(location.search).get('game');
 if(!miniIds.includes(id)){
@@ -20,7 +21,19 @@ try{save=sanitize(localStorage.getItem(STORAGE_KEY))}catch{save=initialState()}
 visit(save,id);
 const g=save.games[id], keys={left:false,right:false,up:false,down:false};
 const prefs=readSettings();prefs.lastPlayed=id;saveSettings(prefs);
-let tool='plant',paused=false,soundOn=prefs.sound,reducedMotion=prefs.reducedMotion,audio=null,last=0,elapsed=0;
+const savedAudio=loadSoundSettings();
+let tool='plant',paused=false,soundOn=savedAudio.enabled||prefs.sound,reducedMotion=prefs.reducedMotion,last=0,elapsed=0;
+const sounds=new SDGameSound({enabled:soundOn,volume:savedAudio.volume});
+const volumeInput=$('volume'),volumeValue=$('volumeValue');
+volumeInput.value=String(Math.round(sounds.volume*100));
+volumeValue.textContent=volumeInput.value+' %';
+volumeInput.addEventListener('input',()=>{
+ sounds.setVolume(Number(volumeInput.value)/100);
+ volumeValue.textContent=Math.round(sounds.volume*100)+' %';
+ saveSoundSettings({enabled:soundOn,volume:sounds.volume});
+ if(soundOn)sounds.pulse('select',250);
+});
+
 const releaseKeys=()=>Object.keys(keys).forEach(k=>keys[k]=false);
 function togglePause(force){
  paused=typeof force==='boolean'?force:!paused;
@@ -28,6 +41,7 @@ function togglePause(force){
  $('pauseShade').hidden=!paused;
  $('pause').setAttribute('aria-pressed',String(paused));
  $('pause').textContent=paused?'▶ Weiter':'⏸️ Pause';
+ if(!paused&&sounds.enabled)sounds.play('select');
  if(!paused)last=0;
 }
 $('pause').addEventListener('click',()=>togglePause());
@@ -70,26 +84,25 @@ function persist(){
 }
 let noticeTimeout=0;
 function message(text){$('message').textContent=text;clearTimeout(noticeTimeout)}
-function beep(freq=600){
- if(!soundOn)return;
- try{
-  audio??=new (window.AudioContext||window.webkitAudioContext)();
-  if(audio.state==='suspended')audio.resume().catch(()=>{});
-  const osc=audio.createOscillator(),gain=audio.createGain(),t=audio.currentTime;
-  osc.type='sine';osc.frequency.setValueAtTime(freq,t);
-  gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.055,t+.015);
-  gain.gain.exponentialRampToValueAtTime(.0001,t+.14);
-  osc.connect(gain);gain.connect(audio.destination);osc.start(t);osc.stop(t+.16);
- }catch{}
-}
 function perform(kind,payload){
  if(paused)return false;
+ const before={...g,keys:g.keys?.length,found:g.found?.length};
  const result=action(save,id,kind,payload||{});
  if(result.ok){
   persist();message(result.message+(result.reward?' ⭐ +'+result.reward:''));
-  if(result.reward)beep(750);else beep(380);
+  let cue=cueForMini(id,kind,true,result.reward);
+  if(id==='treasure'){
+   if(g.finished&&!before.finished)cue='finish';
+   else if(g.keys.length>before.keys)cue='key';
+   else if(g.found.length>before.found)cue='treasure';
+  }
+  if(id==='kart'&&g.laps>before.laps)cue='lap';
+  if(id==='city'&&g.done.length>before.done.length)cue='finish';
+  if(id==='learn'&&result.message.startsWith('💡'))cue='wrong';
+  sounds.play(cue);
+  if(result.reward&&cue!=='finish'&&cue!=='reward'&&cue!=='lap')sounds.play('reward');
   updateHUD();updateActions();draw();
- }else{message(result.message);beep(180)}
+ }else{message(result.message);sounds.pulse('error',350)}
  return result.ok;
 }
 function drawRound(x,y,w,h,r,color){
@@ -248,13 +261,14 @@ function updateObby(dt){
  for(let i=0;i<4;i++){
   const [x,y,w]=levels[g.level].platforms[i];
   if(obby.x>x+11&&obby.x<x+w-9&&obby.vy>=0&&before<=y+7&&obby.y>=y){
+   if(!obby.grounded)sounds.pulse('land',130);
    obby.y=y;obby.vy=0;obby.grounded=true;
    if(i===1&&g.checkpoint<1)perform('checkpoint',{index:1});
    if(i===2&&g.checkpoint<2)perform('checkpoint',{index:2});
    if(i===3&&g.checkpoint>=2&&obby.x>x+w*.48){perform('finish');resetObby()}
   }
  }
- if(obby.y>650){resetObby();message('☁️ Kein Problem! Versuche es ab deinem Checkpoint erneut.')}
+ if(obby.y>650){sounds.play('cancel');resetObby();message('☁️ Kein Problem! Versuche es ab deinem Checkpoint erneut.')}
 }
 function updateKart(dt){
  const throttle=Number(keys.up)-Number(keys.down),turn=Number(keys.right)-Number(keys.left);
@@ -303,7 +317,7 @@ function updateActions(){
   }
   button('✅ '+CITY_JOBS[g.job].tasks[g.step],()=>perform('task'));
  }
- if(id==='kart'){button('🏎️ Kart zurück an den Start',()=>{kart.x=295;kart.y=473;kart.angle=0;kart.speed=0;message('Los geht die nächste Runde!')})}
+ if(id==='kart'){button('🏎️ Kart zurück an den Start',()=>{kart.x=295;kart.y=473;kart.angle=0;kart.speed=0;sounds.play('select');message('Los geht die nächste Runde!')})}
  if(id==='treasure'){button('🗝️ '+g.keys.length+'/2 Schlüssel · 💎 '+g.found.length+'/3 Schätze',()=>message('Suche die Symbole auf der Insel!'))}
  if(id==='fashion'){
   for(const [key,label] of [['hat','👒 Hut'],['shirt','👕 Shirt'],['shoes','👟 Schuhe']]){
@@ -355,7 +369,7 @@ document.querySelectorAll('[data-move]').forEach(b=>{
 });
 function jump(){
  if(paused)return;
- if(id==='obby'&&obby.grounded){obby.vy=-680;obby.grounded=false;beep(450)}
+ if(id==='obby'&&obby.grounded){obby.vy=-680;obby.grounded=false;sounds.play('jump')}
  else if(id==='treasure')moveOnce('up');
  else if(id==='pet')perform('pet');
  else if(id==='city')perform('task');
@@ -365,15 +379,15 @@ function jump(){
 $('jump').addEventListener('click',jump);
 canvas.addEventListener('click',onCanvasClick);
 $('sound').addEventListener('click',()=>{
- soundOn=!soundOn;prefs.sound=soundOn;saveSettings(prefs);$('sound').setAttribute('aria-pressed',String(soundOn));
- $('sound').textContent=soundOn?'🔊 Ton an':'🔇 Ton aus';if(soundOn)beep();
+ soundOn=!soundOn;prefs.sound=soundOn;saveSettings(prefs);sounds.setEnabled(soundOn);saveSoundSettings({enabled:soundOn,volume:sounds.volume});$('sound').setAttribute('aria-pressed',String(soundOn));
+ $('sound').textContent=soundOn?'🔊 Ton an':'🔇 Ton aus';if(soundOn)sounds.play('select');
 });
 $('reset').addEventListener('click',()=>{
  if(!window.confirm('Nur dieses Minispiel zurücksetzen? Deine gesammelten Spielsterne bleiben erhalten.'))return;
  restartGame(save,id);persist();
  if(id==='obby')resetObby();
  if(id==='kart')Object.assign(kart,{x:295,y:473,angle:0,speed:0});
- message('Minispiel zurückgesetzt.');updateHUD();updateActions();draw();
+ sounds.play('select');message('Minispiel zurückgesetzt.');updateHUD();updateActions();draw();
 });
 let lastStaticDraw=0;
 function frame(now){
@@ -381,6 +395,9 @@ function frame(now){
  const dt=Math.min(.035,Math.max(0,(now-last)/1000||.016));last=now;
  if(!paused&&!document.hidden){
   elapsed+=dt;
+  if(id==='kart'&&Math.abs(kart.speed)>38)sounds.pulse('kart',Math.abs(kart.speed)>170?320:550);
+  if(id==='obby'&&(keys.left||keys.right)&&obby.grounded)sounds.pulse('step',280);
+  if(id==='garden'||id==='pet')sounds.pulse('bird',18000);
   if(id==='obby')updateObby(dt);
   if(id==='kart')updateKart(dt);
   if(id==='obby'||id==='kart')draw();
