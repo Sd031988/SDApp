@@ -309,6 +309,28 @@ function question(){
  };
  tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent='⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());clear();finish();}},1000);
 }
+function selfCheckMarkup(section,entries){
+ const isWrite=section==='schreiben';
+ const criteria=isWrite?[
+  ['inhalt','Alle geforderten Inhaltspunkte angesprochen'],
+  ['aufbau','Passende Anrede, Einleitung, Schluss und Gruß'],
+  ['verstaendlichkeit','Aussagen sind verständlich und logisch verbunden'],
+  ['wortschatz','Passende Wörter und höfliche Formulierungen'],
+  ['sprache','Grammatik, Rechtschreibung und Satzbau kontrolliert']
+ ]:[
+  ['aufgabe','Auf alle Gesprächsaufgaben eingegangen'],
+  ['struktur','Gedanken verständlich und geordnet ausgedrückt'],
+  ['austausch','Fragen gestellt und auf den Partner reagiert'],
+  ['wortschatz','Passenden Wortschatz verwendet'],
+  ['sprache','Verständliche Aussprache und angemessene Grammatik']
+ ];
+ return '<details class="b1x-passage"><summary>Selbstkontrolle: '+(isWrite?'Schreiben':'Sprechen')+'</summary>'+
+ '<p class="b1x-note">Diese Checkliste ist eine Lernhilfe, kein offizielles Bewertungsraster. Setze ein Häkchen nur, wenn du den Punkt tatsächlich erfüllt hast.</p>'+
+ criteria.map(c=>'<label class="b1x-check"><input type="checkbox"> '+esc(c[1])+'</label>').join('')+
+ (isWrite?'<p class="b1x-note">Prüfe außerdem die Aufgabenstellung: Wurden alle verlangten Informationen genannt? Ist die Sprache zur Situation passend?</p>':
+ '<p class="b1x-note">Für eine verlässliche Einschätzung der Aussprache und Interaktion ist Rückmeldung von einer Lehrkraft oder einem Gesprächspartner hilfreich.</p>')+
+ '</details>';
+}
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?answers.filter((a,i)=>a===list[i].answer).length:null;
  const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000)};
@@ -322,8 +344,8 @@ function finish(){
   '<h2>Prüfungsteil beendet</h2><p>Für '+esc(p[1])+' ist eine Bewertung durch eine qualifizierte Person erforderlich. Es wurde keine automatische B1-Einstufung vorgenommen.</p>';
  const summary=completed?'<h3>Gesamtübersicht – Muster '+set+'</h3><div class="b1x-passage">'+E[exam].parts.map(x=>{const z=results[x[0]];return '<p><b>'+esc(x[1])+':</b> '+(z?(z.correct===null?'Bearbeitet, manuelle Bewertung erforderlich':z.correct+' / '+z.total+' richtige Antworten'):'Nicht bearbeitet')+'</p>';}).join('')+'</div><p class="b1x-note">Keine offizielle Gesamtpunktzahl oder Bestehensentscheidung. Schreiben und Sprechen müssen fachlich beurteilt werden.</p>':'';
  const review=running&&next?'':completed?
-  E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[z.answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>';}).join(''):
-  '<div class="b1x-passage">'+(auto?list.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>';
+  E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[z.answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>'+(['schreiben','sprechen'].includes(x[0])?selfCheckMarkup(x[0],z.answers):'');}).join(''):
+  '<div class="b1x-passage">'+(auto?list.map((t,i)=>'<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(t.options[answers[i]]||'–')+' · Lösung: '+esc(t.options[t.answer])+'</small></p>').join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>'+(auto?'':selfCheckMarkup(p[0],answers));
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+review+
  '<button id="b1x-continue" class="b1x-primary">'+(next?'Weiter: '+esc(E[exam].parts[part+1][1]):'Zur Übersicht')+'</button>');
  el('b1x-continue').onclick=()=>next?start(part+1):home();
@@ -348,7 +370,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-stack{display:grid;gap:10px;margin:12px 0}
 .b1x-card{display:block;text-align:left;background:#191c29;border:1px solid #3e4257;border-radius:12px;color:#fff;padding:15px;font:inherit;cursor:pointer}
 .b1x-card.active{border-color:#fb923c;background:#3a241d}.b1x-card small{display:block;color:#b5bacb;margin-top:5px}
-.b1x-card input{margin-right:8px}
+.b1x-card input{margin-right:8px}.b1x-check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer}.b1x-check input{width:18px;height:18px;flex:none;accent-color:#fb923c}
 .b1x-passage{background:#1b1e2b;border:1px solid #3e4257;padding:16px;border-radius:12px;line-height:1.8;white-space:pre-wrap;margin:14px 0}
 .b1x-primary,.b1x-audio{width:100%;background:#c2410c;border:0;color:#fff;padding:15px;border-radius:12px;font:inherit;font-weight:700;margin:14px 0;cursor:pointer}
 .b1x-audio{background:#334155}
