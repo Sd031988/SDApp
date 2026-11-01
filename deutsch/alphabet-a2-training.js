@@ -199,7 +199,7 @@ addChoice('B1-Prüfungen',()=>{close();const target=document.getElementById('sdB
 entry.onclick=()=>{const next=menu.hidden;menu.hidden=!next;menu.style.display=next?'grid':'none';entry.setAttribute('aria-expanded',String(next));};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){hideMenu();entry.focus();}});
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!entry.contains(e.target))hideMenu();});
-function mount(){const host=document.getElementById('lBody');if(!host||!host.parentNode)return;if(!entry.isConnected)host.parentNode.insertBefore(entry,host);if(!menu.isConnected)entry.insertAdjacentElement('afterend',menu);}
+function mount(){const host=document.getElementById('lBody');if(!host||!host.parentNode)return;if(!entry.isConnected)host.parentNode.insertBefore(entry,host);if(!menu.isConnected||menu.previousElementSibling!==entry)entry.insertAdjacentElement('afterend',menu);}
 function ensureMount(){mount();if(!document.getElementById('sdPreB1Entry'))setTimeout(ensureMount,400);}
 // Keep the navigation available when the learning page rebuilds its content.
 const navigationObserver=new MutationObserver(()=>{if(!entry.isConnected||!menu.isConnected)mount();});
