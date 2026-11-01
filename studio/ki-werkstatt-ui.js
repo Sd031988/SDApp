@@ -57,6 +57,32 @@ function openDialog(mode){
  $('kiGoal').focus();
 }
 function openChangeDialog(){openDialog('change');}
+function openServices(){
+ if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
+ $('kiOverlay').hidden=true;
+ $('kiServicesOverlay').hidden=false;
+ $('kiServicesQuestion').focus();
+}
+function closeServices(){$('kiServicesOverlay').hidden=true;}
+function servicesPrompt(){
+ const goal=$('kiServicesQuestion').value.trim();
+ if(!goal){$('kiServicesStatus').textContent='Bitte zuerst eine Frage oder gewünschte Änderung eingeben.';return ''}
+ // Include project filenames and stable output format, but never transfer source or credentials.
+ return core.buildPrompt(goal,{name:S.p?.name||'SD-Projekt',dateien:currentFiles()},S.aktiv,null);
+}
+async function copyServicesPrompt(){
+ const request=servicesPrompt();if(!request)return;
+ try{
+  if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+  await navigator.clipboard.writeText(request);
+  $('kiServicesStatus').textContent='✓ Anfrage kopiert. Öffne Google KI und füge sie dort ein. Keine Projektinhalte wurden automatisch übermittelt.';
+  $('kiServicesClipboard').hidden=true;
+ }catch(e){
+  const box=$('kiServicesClipboard');box.hidden=false;box.value=request;
+  box.focus();box.select();
+  $('kiServicesStatus').textContent='Manuelles Kopieren: Der Text ist markiert. Danach Google KI öffnen.';
+ }
+}
 function openDialogWithCode(text){
  openDialog();
  if($('kiOverlay').hidden)return false;
@@ -264,6 +290,16 @@ function setup(){
  const button=$('kiCodeBtn'),overlay=$('kiOverlay');if(!button||!overlay)return;
  button.addEventListener('click',()=>openDialog());
  $('kiChangeBtn').addEventListener('click',openChangeDialog);
+ const serviceBtn=$('kiServicesBtn'),serviceOverlay=$('kiServicesOverlay');
+ if(serviceBtn&&serviceOverlay){
+  serviceBtn.addEventListener('click',openServices);
+  $('kiServicesClose').addEventListener('click',closeServices);
+  serviceOverlay.addEventListener('click',e=>{if(e.target===serviceOverlay)closeServices()});
+  $('kiServicesCopy').addEventListener('click',copyServicesPrompt);
+  $('kiServicesCode').addEventListener('click',()=>{closeServices();openDialog();$('kiResult').focus()});
+  $('kiServicesChange').addEventListener('click',()=>{closeServices();openChangeDialog()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!serviceOverlay.hidden){e.preventDefault();closeServices()}});
+ }
  $('kiSources').addEventListener('change',()=>{$('kiChangeConsent').checked=false;$('kiClipboard').value='';$('kiClipboard').hidden=true;status('Dateiauswahl geändert. Bitte die Freigabe der Inhalte erneut bestätigen.');});
  $('kiChangeConsent').addEventListener('change',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiGoal').addEventListener('input',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
@@ -283,7 +319,7 @@ function setup(){
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
- window.SDKICodingUI={openDialog,openChangeDialog,openDialogWithCode,analyse,apply,applyDirect,currentFiles};
+ window.SDKICodingUI={openDialog,openChangeDialog,openServices,openDialogWithCode,analyse,apply,applyDirect,currentFiles};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
