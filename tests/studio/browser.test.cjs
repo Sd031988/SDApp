@@ -587,6 +587,52 @@ const assert = require('node:assert/strict');
     assert(report.fails.some(x=>x.kind==='asset'));
     assert(report.fails.some(x=>x.kind==='secret'));
 
+    // Browser-extension hand-off: only user-selected text is offered to the
+    // existing reviewed KI import; never run, overwrite or publish automatically.
+    await page.setViewportSize({width:1280,height:900});
+    const bridgeBefore=await page.evaluate(()=>({
+      files:JSON.stringify(S.p.dateien),versions:S.p.versionen.length,project:S.p.name
+    }));
+    await page.evaluate(()=>{
+      const fence=String.fromCharCode(96).repeat(3);
+      window.__sdBridgeAck=null;
+      window.addEventListener('message',e=>{
+        if(e.data?.type==='SD_STUDIO_SELECTED_CHAT_ACK')window.__sdBridgeAck=e.data.nonce;
+      });
+      window.postMessage({type:'SD_STUDIO_SELECTED_CHAT_TEXT',version:1,
+        nonce:'d4f6c1ae-69da-43ee-9123-09951d20f655',provider:'chatgpt',
+        text:'### Datei: index.html\n'+fence+'html\n<!doctype html><h1>ChatGPT-Auswahl</h1>\n'+fence
+      },location.origin);
+    });
+    await page.waitForFunction(()=>window.__sdBridgeAck==='d4f6c1ae-69da-43ee-9123-09951d20f655',{timeout:12000});
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true,'ChatGPT selected answer opens code review');
+    assert.match(await page.locator('#kiResult').inputValue(),/ChatGPT-Auswahl/);
+    assert.equal(await page.locator('#kiFiles .kiFile').count(),1,'ChatGPT code parsed into a single file');
+    assert.equal(await page.locator('#kiDirect').isEnabled(),true);
+    assert.match(await page.locator('#kiStatus').innerText(),/ChatGPT-Auswahl angekommen/);
+    assert.equal(await page.locator('.kiBridgeHint a').getAttribute('href'),'./chatgpt-bruecke.html');
+    const bridgeAfter=await page.evaluate(()=>({
+      files:JSON.stringify(S.p.dateien),versions:S.p.versionen.length,project:S.p.name
+    }));
+    assert.deepEqual(bridgeAfter,bridgeBefore,'Receiving ChatGPT text cannot alter projects');
+    await page.locator('#kiClose').click();
+    await page.evaluate(()=>window.postMessage({type:'SD_STUDIO_SELECTED_CHAT_TEXT',version:1,
+      nonce:'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',provider:'untrusted',
+      text:'### Datei: index.html'},location.origin));
+    assert.equal(await page.locator('#kiOverlay').isVisible(),false,'Unknown providers are ignored');
+
+    // Installation page creates a real ZIP in the browser, not a server upload.
+    await page.goto('http://127.0.0.1:8765/studio/chatgpt-bruecke.html',{waitUntil:'domcontentloaded'});
+    assert.match(await page.title(),/ChatGPT.*SD Code-Studio/);
+    const downloading=page.waitForEvent('download',{timeout:15000});
+    await page.locator('#download').click();
+    const downloaded=await downloading;
+    assert.equal(downloaded.suggestedFilename(),'SD-Code-Studio-ChatGPT-Bruecke.zip');
+    assert.match(await page.locator('#status').innerText(),/ZIP erstellt/);
+    const downloadedFile=require('node:fs').readFileSync(await downloaded.path());
+    assert.equal(downloadedFile.readUInt32LE(0),0x04034b50,'Downloaded extension ZIP must have a valid local file header');
+    assert(downloadedFile.length>2000);
+
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
     if(browser) await browser.close();
