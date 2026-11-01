@@ -95,6 +95,12 @@ const VORLAGEN = [
 
 /* ---------------- Projekte ---------------- */
 async function projektOeffnen(name, datei) {
+  // Offene Editor-Änderungen müssen vor dem Projektwechsel dauerhaft
+  // gespeichert sein; bei einem Fehler bleibt das aktuelle Projekt offen.
+  if (S.p && S.geaendert) {
+    try { await speichernJetzt(); }
+    catch (err) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
+  }
   const p = await projLesen(name); if (!p) { toast('Projekt nicht gefunden'); return; }
   S.p = p; S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; probleme();
   store.set('sdStudioLetztes', name); $('projektName').textContent = name;
@@ -416,7 +422,11 @@ function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung
 function startSeite() { const d = Object.keys(S.p.dateien); if (S.aktiv && /\.html?$/i.test(S.aktiv)) return S.aktiv; return d.find(x => x === 'index.html') || d.find(x => /(^|\/)index\.html$/.test(x)) || d.find(x => /\.html?$/i.test(x)); }
 async function vorschau(neu) {
   if (!S.p) return; const start = startSeite(); if (!start) { $('vorschau').hidden = true; return; }
-  await speichernJetzt(); $('vorschau').hidden = false; S.problemeVorschau = []; probleme(); if (neu) S.konsole = [];
+  const vorschauProjekt = S.p;
+  try { await speichernJetzt(); }
+  catch (err) { toast('Vorschau nicht aktualisiert: Speichern fehlgeschlagen.'); return; }
+  if (S.p !== vorschauProjekt) return;
+  $('vorschau').hidden = false; S.problemeVorschau = []; probleme(); if (neu) S.konsole = [];
   const f = $('frame');
   if (S.swBereit) { const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
     if (neu || !f.src.includes('/vorschau/') || !f.src.includes('/vorschau/' + encodeURIComponent(S.p.name) + '/')) { f.removeAttribute('srcdoc'); f.src = url; } else { try { f.contentWindow.location.reload(); } catch (e) { f.src = url; } }
