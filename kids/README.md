@@ -1,40 +1,51 @@
-# Pibo 3D – Entwicklungsstand
+# SD Hub Kids · Pibo 3D
 
-Pibo ist ein **eigenständiges** virtuelles Katzenspiel innerhalb von SD Hub. My Talking Tom 2 dient als Referenz für die Art der Interaktionen, nicht als Quelle für geschützte Modelle, Figuren, Grafiken, Musik oder Originalgeräusche.
+Pibo ist ein eigenständiges virtuelles Katzenspiel innerhalb von SD Hub. Alle gezeichneten 3D-Grundformen, Animationen und Töne im Repository sind original programmierte Inhalte. Ein fremdes kommerzielles Haustierspiel ist ausschließlich Inspiration für allgemeine Interaktionstypen, **keine Quelle für geschützte Assets**.
 
-## Architektur
+## Implementiert
+- Fünf Räume (Wohnzimmer, Küche, Bad, Schlafzimmer, Toilette), Pflegewerte und lokal gespeicherter Spielstand.
+- Pflegeabläufe für Füttern, Kauen, Baden, Schlafen und Toilette in `pibo-care.js`.
+- Gesicht und Körper: Blinzeln, Blickrichtung, Augenbrauen, Mund-/Kaubewegung, Atmung, Pfoten, Hinterläufe, Ohrwackeln, Schwanzbewegung, Sprung, Streichelreaktionen. Reproduzierbare Posen in `pibo-face.mjs` und `pibo-motion.mjs`.
+- Futter per antippbarem Menü oder per Maus-Drag-and-drop / Touch- bzw. Stift-Ziehen auf Pibo.
+- Zwölf Outfits, Zimmerfarben, zwei Minispiele, tägliches Geschenk und auf Wunsch lokale Mikrofonaufnahme mit Nachsprechen.
+- Originale synthetisierte Geräusche in `pibo-audio.js`.
+- Sterne als **rein lokale, nicht handelbare Spielpunkte** mit Obergrenze und Tagesgeschenk-Sperre in `pibo-rewards.mjs`. Dies ist **kein Token auf einer Blockchain**, keine Wallet und kein Geldwert.
+- Keine Benutzerkonten, Käufe oder Drittanbieterwerbung im Kids-Spiel. Das Mikrofon wird nur nach ausdrücklicher Freigabe verwendet; Aufnahmen werden nicht an einen Server geschickt.
 
-- `index.html`: UI, fünf 3D-Zimmer, Pibo-Modell, Pflegewerte, Kleiderschrank, Tagesgeschenk, Ball- und Mausspiel, Mikrofonaufnahme, lokaler Spielstand.
-- `pibo-care.js`: eigenständiger Animationsablauf für Füttern, Baden, Schlafen und Toilette; 3D-Lebensmittel, Schaum, Bettdecke und Spüleffekt.
-- `pibo-audio.js`: selbst programmierte **synthetische** Geräusche für Miauen, Schnurren, Schritte, Kauen, Wasser, Spülen, Pupsen, Schlafen und Belohnungen. **Keine echten Katzenaufnahmen.**
-- `pibo-smoke.js` / `pibo-smoke-test.mjs`: Browser-Logik-Smoketest mit Three.js-/DOM-Mocks.
-- `.github/workflows/pibo-smoke.yml`: CI-Workflow für Syntax und Smoketest.
-
-## Testen
-
-Aus dem Repository-Stammverzeichnis:
+## Tests
 
 ```sh
 node --check kids/pibo-care.js
 node --check kids/pibo-audio.js
 node --check kids/pibo-smoke.js
+node --check kids/pibo-face.mjs
+node --check kids/pibo-motion.mjs
+node --check kids/pibo-rewards.mjs
+node kids/pibo-face.test.mjs
+node kids/pibo-motion.test.mjs
+node kids/pibo-rewards.test.mjs
 node kids/pibo-smoke-test.mjs
 ```
 
-Der Headless-Test deckt Initialisierung, Navigation durch alle fünf Zimmer, Futterauswahl, Animationsabläufe, Toilettenspülung, zwölf Outfits, Geschenke, Ball- und Mausspiel mit Touch-Ereignissen und Punkten sowie das Speichern ab. Er **prüft keine echte WebGL-Grafik, echte Audioausgabe oder Touchscreen-Hardware**.
+Automatisch im GitHub-Workflow `.github/workflows/pibo-smoke.yml`.
 
-Manuelle Prüfung in aktuellen Chrome-/Safari-Versionen (Desktop und Mobilgerät): Seite laden, jedes Zimmer betreten, Futter auswählen und füttern, Bad/Toilette/Bett mit komplettem Ablauf, Outfitwahl, zwei Minispiele mit Timer, Mikrofon erlauben/ablehnen, Ton an/aus, Tagesgeschenk nur einmal, Spielstand nach Neuladen, Foto und verschiedene Displaygrößen. Bei der Live-Version zusätzlich den Abruf der CDN-3D-Bibliothek prüfen.
+Zusätzlich sind Playwright-Browsertests für Desktop- und Mobil-Chromium definiert. Sie testen das echte WebGL-Spiel mit einem lokalen HTTP-Server und geladenem Three.js-Modul. Dafür sind Netzwerk und die Browser-Binaries nötig.
 
-## Noch nicht Premium-Niveau
+```sh
+cd kids
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
 
-Das aktuelle Katzenmodell und die Möbel bestehen überwiegend aus einfachen 3D-Grundformen. Die Pflegeanimationen sind programmierte Bewegungssequenzen, **keine professionell geriggten Charakteranimationen**. Die Geräusche sind verbessert und unterscheiden sich nach Handlung, aber sie sind synthetisch und nicht mit hochwertigen Tier- und Foley-Aufnahmen vergleichbar. Die Speisen sind nicht per Drag-and-drop greifbar. Die Toilette, die Badewanne und das Bett benötigen detailliertere Interaktionen. Echte WebGL-, iOS- und Android-End-to-End-Tests stehen noch aus.
+Der GitHub-Workflow `.github/workflows/kids-browser.yml` startet diese Tests nach Kids-Code-Änderungen. Die Browsertests ersetzen keine Tests auf physischer Android- oder iOS-Hardware.
 
-## Nächste Entwicklungsprioritäten
+## Grenzen und offene Abnahme
 
-1. Eigenes hochwertiges, lizenziertes glTF-Katzenmodell mit Skelett, Gesichtsmorphs, Pfoten, Augenlidern und maßgeschneiderten Animationen.
-2. Detaillierte 3D-Umgebungen und präzise Positionierung der Katze an Toilette, Wanne, Esstisch und Bett.
-3. Eigene oder einzeln lizenzgeprüfte Tier-, Wasser-, Schritt- und Essensaufnahmen, inklusive Lautstärkeabgleich und Kinderlautstärkeschutz.
-4. Drag-and-drop-Füttern, echtes Seifen-/Abspülspiel, Toilettenspülung per Tap, Kleidungsvorschau und umfangreichere Minispiele.
-5. Echte Browser- und Touchscreen-Tests, Performanceprofiling, Barrierefreiheit und Offlinefähigkeit.
+- Pibo ist eine prozedural aus 3D-Grundformen gebaute Figur; **noch kein professionelles glTF-Modell mit Skelett/Morph Targets**.
+- Bewegung und Sound sind bewusst original erstellt und funktional, nicht qualitativ vergleichbar mit professionellen Tier- und Foley-Aufnahmen oder von Animatoren geriggten Figuren.
+- Eine Aufnahme ist optional, die Ausgabe läuft lokal. Audio-Berechtigungen und Lautstärke auf Endgeräten müssen separat geprüft werden.
+- CDN-Import von Three.js benötigt eine Internetverbindung. Ein kompletter Offline-Betrieb ist noch nicht vorhanden.
+- Für Veröffentlichung als vollständig abgenommen fehlen echte iOS-/Android-Hardwaretests, GPU-Performanceprofiling, Barrierefreiheitsprüfung und rechtliche Prüfung eines möglichen echten Crypto-Token-Konzepts. Ein echter Token wird **nicht** in den Kinderbereich eingebaut.
 
-**Nicht als fertig bezeichnen**, bevor die visuelle und akustische Qualität sowie die Interaktionen auf echten Geräten nachgewiesen wurden.
+Zur laufenden Projektplanung: [PROJECT_ROADMAP.md](PROJECT_ROADMAP.md). **Produktionsreife nicht behaupten, bevor die offenen Punkte nachgewiesen sind.**
