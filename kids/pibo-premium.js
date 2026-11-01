@@ -6,7 +6,7 @@ const GROUPS=Object.freeze({
  care:['pet','feed','sleep','wash','scrub','foodchoice','potty','flush'],
  games:['play','minigame','mousegame'],
  style:['outfit','decorate','photo'],
- extras:['sound','talk','surprise']
+ extras:['sound','catVoice','talk','surprise']
 });
 function groupOf(button){
  const name=button.dataset?.act||button.id;
