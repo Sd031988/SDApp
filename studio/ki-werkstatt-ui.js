@@ -50,7 +50,7 @@ function openDialog(mode){
  $('kiProject').textContent=S.p?'Aktuelles Projekt: '+S.p.name:'Noch kein Projekt geöffnet.';
  $('kiOverlay').hidden=false;
  parsed=null;stagedSnapshot=null;stagedProject=null;
- $('kiResult').value='';$('kiFiles').replaceChildren();$('kiApply').disabled=true;$('kiDirect').disabled=true;
+ $('kiResult').value='';$('kiFiles').replaceChildren();$('kiDiff').hidden=true;$('kiApply').disabled=true;$('kiDirect').disabled=true;
  $('kiInclude').checked=false;$('kiClipboard').hidden=true;
  selectMode(mode);
  status('Beschreibe die Aufgabe. Erstelle die Anfrage und füge danach den KI-Code hier ein.');
@@ -163,6 +163,20 @@ function openSelectedInEditor(files){
  dateiOeffnen(preferred.path);
  if(typeof ansicht==='function')ansicht('code');
 }
+function diffAnzeigen(path){
+ const file=parsed?.files.find(f=>f.path===path);if(!file)return;
+ const old=currentFiles()[path]??'';
+ const q=window.SDStudioQualitaet;
+ const d=q?q.fileDiff(old,file.content):{oldLines:0,newLines:0,startLine:1};
+ $('kiDiff').hidden=false;
+ $('kiDiffName').textContent=path;
+ $('kiDiffInfo').textContent=(old?'Ersetzte/geänderte Zeilen ab ':'Neue Datei ab ')+'Zeile '+d.startLine+
+   ' · alt: '+d.oldLines+' Zeile(n), neu: '+d.newLines+' Zeile(n). '+
+   'Die Vorschau zeigt den vollständigen Code bis maximal 70.000 Zeichen pro Seite.';
+ $('kiDiffOld').textContent=old.slice(0,70000)||(old?'':'(neue Datei)');
+ $('kiDiffNew').textContent=file.content.slice(0,70000);
+ $('kiDiff').scrollIntoView({block:'nearest'});
+}
 function renderPlan(){
  const list=$('kiFiles');list.replaceChildren();
  if(!parsed)return;
@@ -172,12 +186,15 @@ function renderPlan(){
  }
  for(const file of plan){
   const label=node('label','kiFile'),checkbox=node('input');checkbox.type='checkbox';checkbox.checked=true;checkbox.dataset.path=file.path;
-  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',(file.status==='ersetzt in Kopie'?'bestehende Datei – Änderung prüfen':file.status)+' · '+file.language.toUpperCase()+' · '+file.content.split('\n').length+' Zeilen'));label.append(checkbox,detail);list.append(label);
+  const detail=node('span','kiFileName');detail.append(node('strong','',file.path),node('small','',(file.status==='ersetzt in Kopie'?'bestehende Datei – Änderung prüfen':file.status)+' · '+file.language.toUpperCase()+' · '+file.content.split('\n').length+' Zeilen'));
+ const compare=node('button','kiDiffShow','🔎 Vergleichen');compare.type='button';compare.dataset.path=file.path;
+ label.append(checkbox,detail,compare);list.append(label);
  }
  updateActions();
  status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
 }
 function analyse(){
+ $('kiDiff').hidden=true;
  parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
  stagedSnapshot=currentFiles();
@@ -212,6 +229,10 @@ async function applyDirect(){
   status('Datei „'+f.path+'“ wurde inzwischen verändert. Bitte erneut analysieren.',true);return;
  }
  const changes=selected.filter(f=>latest[f.path]!==f.content);
+ const risk=window.SDStudioQualitaet?.preflight(
+   Object.fromEntries(changes.map(f=>[f.path,f.content])),null)||[];
+ const secrets=risk.filter(i=>i.kind==='secret');
+ if(secrets.length){status('Sicherheitsprüfung blockiert den Import: '+secrets.map(i=>i.file).join(', ')+'. Bitte Zugangsdaten entfernen.',true);return}
  const replaced=changes.filter(f=>Object.prototype.hasOwnProperty.call(latest,f.path)).length;
  if(changes.length&&!window.confirm(
   'Ausgewählte KI-Dateien DIREKT in das geöffnete Projekt „'+S.p.name+'“ übernehmen?\n\n'+
@@ -312,6 +333,8 @@ function setup(){
  $('kiGemini').addEventListener('click',()=>openAI('https://gemini.google.com/'));
  $('kiAnalyse').addEventListener('click',analyse);
  $('kiFiles').addEventListener('change',updateActions);
+ $('kiFiles').addEventListener('click',e=>{const b=e.target.closest('.kiDiffShow');if(b)diffAnzeigen(b.dataset.path)});
+ $('kiDiffClose').addEventListener('click',()=>{$('kiDiff').hidden=true});
  $('kiDirect').addEventListener('click',applyDirect);
  $('kiPaste').addEventListener('click',pasteWholeAnswer);
  $('kiApply').addEventListener('click',apply);
@@ -319,7 +342,7 @@ function setup(){
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
- window.SDKICodingUI={openDialog,openChangeDialog,openServices,openDialogWithCode,analyse,apply,applyDirect,currentFiles};
+ window.SDKICodingUI={openDialog,openChangeDialog,openServices,openDialogWithCode,analyse,apply,applyDirect,currentFiles,diffAnzeigen};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
