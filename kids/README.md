@@ -113,3 +113,14 @@ konkrete offene Aufgabenliste, **keine** Fertigstellungsbestätigung.
 - **Nächster Schritt:** Den neuen Chromium-Desktop-/Mobil-Touch-Test im CI auswerten, tatsächliche Tool-Treffer und Kameraperspektiven auf echten Geräten messen, danach 3D-Werkzeugmodelle, Wasserpartikel und weiche Bewegungsübergänge ausbauen.
 
 **Status im Vergleichskatalog:** `pibo-benchmark.json` führt das Bad weiterhin nur als `teilweise`; offene Tests und fehlende Produktionsmerkmale sind ausdrücklich dokumentiert.
+
+
+## Qualitätsdurchlauf 02.11.2026 – sichtbarer 3D-Schaum und bewegte Duschpartikel
+
+- **Umgesetzt:** Zwölf selbst generierte Schaum-Patches sind an Pibos tatsächlicher 3D-Katze befestigt und bewegen sich mit dem Rumpf. Beim Einseifen werden schrittweise mehr Patches sichtbar; beim Abspülen verschwinden sie. Dadurch ist die Reinigung nicht nur eine Änderung eines Pflegewerts.
+- **Umgesetzt:** Der bereits ziehbare 3D-Duschkopf besitzt eine eigene Düse und neun wiederverwendete Wassertropfen als echte 3D-Geometrie. Beim Ziehen bewegt sich der Wasserstrahl mit der Dusche; nach 300 ms ohne Bewegung erlischt er. Es wird nicht in jedem Frame neue Geometrie erzeugt.
+- **Ressourcenschutz:** Beim Unterbrechen oder Beenden einer Pflegeaktion werden auch die an der Katze befestigten Schaum-Geometrien und Materialien explizit entsorgt. Spielstände, Räume und andere SD-Hub-Bereiche wurden nicht verändert.
+- **Tatsächlich geprüft:** pibo-care.js wurde im JavaScript-V8-Parser kompiliert; die vorhandenen Pflege-Unit-Szenarien und neue Regressionen für Schaumaufbau, neun Tropfen, Drag-Aktivierung, Inaktivitätsabschaltung, Abspülen und GPU-Ressourcenbereinigung liefen mit Three.js-Testdoubles erfolgreich. Der Benchmark blieb bewusst bei **26 Kriterien: 20 teilweise, 6 fehlen**.
+- **Nicht bestätigt:** Ein echter Node-CI-Lauf, Playwright-Desktop-/Mobil-Chromium, WebGL-Rendering, echte iOS-/Android-GPUs, FPS-Messungen sowie der neue GitHub-Actions-/Pages-Status konnten in diesem Durchlauf nicht unabhängig verifiziert werden. Der GitHub-Connector meldete für den vorangehenden Commit keine kombinierten Statuschecks und keine abrufbaren PR-Workflow-Runs; das ist **kein Beleg** für erfolgreiches CI.
+- **Quellenvergleich 02.11.2026:** Die offizielle Herstellerseite und der Google-Play-Eintrag (zuletzt aktualisiert 27.10.2026) beschreiben Pflege, Stimme, Outfits, Offline-Minispiele und Welterkundung; die Herstellerinformation vom 04.06.2026 zeigt freie Gartenbewegung. Pibo besitzt weiterhin keine vergleichbare freie 3D-Erkundung, hochwertige Flüssigkeitssimulation oder professionelles Skelettmodell. Keine geschützten Fremdassets verwendet.
+- **Nächster konkreter Schritt:** Desktop- und Mobil-Chromium-WebGL-Test der Duschpartikel sowie Berührungstreffer auswerten und korrigieren; anschließend originalen Rigg-/Animationsübergang und realistische Wasser-/Schaumreaktion auf das Fell.
