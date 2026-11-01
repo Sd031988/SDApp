@@ -89,8 +89,8 @@ test('pending selection is only available from official Studio, deleted after AC
 test('extension has no ChatGPT session/cookie or private message access',()=>{
  const manifest=JSON.parse(fs.readFileSync(path.join(extension,'manifest.json'),'utf8'));
  assert.equal(manifest.manifest_version,3);
- assert.deepEqual(manifest.permissions,['contextMenus','storage','tabs']);
- assert.equal(manifest.host_permissions,undefined);
+ assert.deepEqual(manifest.permissions,['contextMenus','storage']);
+ assert.deepEqual(manifest.host_permissions,['https://www.thesdhub.com/studio/*','https://thesdhub.com/studio/*']);
  assert(manifest.content_scripts.every(s=>s.matches.every(m=>/thesdhub\.com\/studio/.test(m))));
  assert(!manifest.content_scripts.some(s=>s.matches.some(m=>/chatgpt|google/.test(m))));
 });
