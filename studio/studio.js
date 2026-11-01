@@ -250,6 +250,8 @@ function editorLaden() {
     const lade = (u, css) => new Promise((ja, nein) => { const e = document.createElement(css ? 'link' : 'script'); if (css) { e.rel = 'stylesheet'; e.href = u; } else e.src = u; e.onload = ja; e.onerror = nein; document.head.appendChild(e); });
     const opt = u => lade(CM_BASE + u + '.min.js').catch(() => {});
     lade(CM_BASE + 'codemirror.min.css', true).then(() => lade(CM_BASE + 'codemirror.min.js'))
+      // TOML and other modes depend on defineSimpleMode; load addon before parallel modes.
+      .then(() => lade(CM_BASE + 'addon/mode/simple.min.js'))
       .then(() => Promise.all(['mode/clike/clike', 'mode/rust/rust', 'mode/go/go', 'mode/python/python', 'mode/javascript/javascript', 'mode/xml/xml', 'mode/css/css', 'mode/toml/toml', 'mode/shell/shell', 'mode/sql/sql', 'mode/markdown/markdown', 'mode/yaml/yaml',
         'addon/search/searchcursor', 'addon/dialog/dialog', 'addon/edit/matchbrackets', 'addon/edit/closebrackets', 'addon/selection/active-line', 'addon/comment/comment', 'addon/fold/foldcode', 'addon/hint/show-hint', 'addon/edit/matchtags', 'addon/display/placeholder'].map(opt)))
       .then(() => Promise.all(['mode/htmlmixed/htmlmixed', 'mode/jsx/jsx', 'mode/php/php', 'addon/search/search', 'addon/search/jump-to-line', 'addon/edit/closetag', 'addon/fold/foldgutter', 'addon/fold/brace-fold', 'addon/fold/indent-fold', 'addon/fold/xml-fold', 'addon/hint/anyword-hint', 'addon/hint/javascript-hint', 'addon/hint/css-hint', 'addon/hint/xml-hint', 'addon/hint/html-hint'].map(opt)))
