@@ -58,6 +58,7 @@ import {PiboCare} from './pibo-care.js';
 import {addStars,claimDailyGift,normalizeStars,localDay} from './pibo-rewards.mjs';
 import {facePose} from './pibo-face.mjs';
 import {bodyPose} from './pibo-motion.mjs';
+import {voiceLoudness,mouthWhileSpeaking} from './pibo-voice.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
 try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&typeof saved==='object')for(const k of Object.keys(defaults))if(Number.isFinite(saved[k]))state[k]=Math.max(0,Math.min(100,saved[k]));}catch{}
@@ -97,7 +98,12 @@ $('piboVolume').addEventListener('input',()=>{
  if(soundOn)piboAudio.play('select');
 });
 syncPiboSound();
-function sound(type){if(soundOn)piboAudio.play(type)}
+let meowUntil=0;
+function sound(type){
+ if(!soundOn)return;
+ piboAudio.play(type);
+ if(type==='meow')meowUntil=performance.now()+850;
+}
 $('catVoice').addEventListener('click',()=>{
  if(!soundOn){$('say').textContent='Schalte zuerst den Ton an, um Pibos echtes Miauen zu hören. 🔊';return}
  sound('meow');$('say').textContent='Miauu! Pibo spricht wie eine echte Katze. 🐱';
@@ -274,23 +280,59 @@ $('outfit').addEventListener('click',()=>{$('wardrobe').hidden=!$('wardrobe').hi
 $('mousegame').addEventListener('click',()=>startMiniGame('mouse'));
 $('decorate').addEventListener('click',()=>{const colors=[0xd9e8fb,0xffe4d6,0xdaf1df,0xefe1fa,0xffefb9,0xcce9ec,0xf4d9e5];roomColor=(roomColor+1)%colors.length;wall.color.setHex(colors[roomColor]);extras.room=roomColor;extras.roomColors??={};extras.roomColors[currentRoom]=colors[roomColor];saveExtras();$('say').textContent='Dein Zimmer hat eine neue Farbe! 🎨';sound('select')});
 const talkButton=$('talk');
+let voicePlayback=null;
+function finishVoice(){
+ const previous=voicePlayback;
+ voicePlayback=null;
+ if(!previous)return;
+ if(previous.url)URL.revokeObjectURL(previous.url);
+ // Audio callbacks can fire later; object identity guards their ownership.
+}
 async function replayVoice(blob){
  if(!soundOn)return;
+ if(voicePlayback){
+   try{voicePlayback.source?.stop()}catch{}
+   try{voicePlayback.player?.pause()}catch{}
+   finishVoice();
+ }
  try{
-   const ctx=piboAudio.ensure();
-   if(ctx){
+   const ctx=piboAudio.ensure?.();
+   if(ctx&&typeof ctx.decodeAudioData==='function'){
      await ctx.resume();
      const buffer=await ctx.decodeAudioData(await blob.arrayBuffer());
      const source=ctx.createBufferSource(),gain=ctx.createGain();
-     source.buffer=buffer;source.playbackRate.value=1.34;gain.gain.value=.85;
-     source.connect(gain);gain.connect(piboAudio.master||ctx.destination);source.start();
-     return
+     const analyser=typeof ctx.createAnalyser==='function'?ctx.createAnalyser():null;
+     const samples=analyser?new Uint8Array(512):null;
+     source.buffer=buffer;source.playbackRate.value=1.34;
+     if(analyser){
+       analyser.fftSize=512;
+       analyser.smoothingTimeConstant=.55;
+       source.connect(analyser);analyser.connect(gain);
+     }else source.connect(gain);
+     gain.gain.value=.85;
+     gain.connect(piboAudio.master||ctx.destination);
+     const current={source,analyser,samples,started:performance.now(),active:true};
+     voicePlayback=current;
+     source.onended=()=>{if(voicePlayback===current)finishVoice()};
+     source.start();
+     return;
    }
- }catch(e){console.warn('WebAudio voice playback unavailable; trying browser player',e)}
- const url=URL.createObjectURL(blob),voice=new Audio(url);voice.volume=piboVolume;
- voice.playbackRate=1.34;voice.preservesPitch=false;
- voice.onended=()=>URL.revokeObjectURL(url);voice.onerror=()=>URL.revokeObjectURL(url);
- try{await voice.play()}catch{URL.revokeObjectURL(url);$('say').textContent='Die Wiedergabe wurde vom Browser blockiert.'}
+ }catch(e){console.warn('WebAudio playback unavailable; trying local browser audio',e)}
+ let url;
+ try{
+   url=URL.createObjectURL(blob);
+   const player=new Audio(url);
+   player.volume=piboVolume;player.playbackRate=1.34;player.preservesPitch=false;
+   const current={player,url,started:performance.now(),active:true};
+   voicePlayback=current;
+   player.onended=()=>{if(voicePlayback===current)finishVoice()};
+   player.onerror=()=>{if(voicePlayback===current)finishVoice()};
+   await player.play();
+ }catch{
+   if(voicePlayback?.url===url)finishVoice();
+   else if(url)URL.revokeObjectURL(url);
+   $('say').textContent='Die Sprachwiedergabe wurde vom Browser blockiert.';
+ }
 }
 talkButton.addEventListener('click',async()=>{
  if(recorder?.state==='recording'){recorder.stop();return}
@@ -320,7 +362,13 @@ talkButton.addEventListener('click',async()=>{
    $('say').textContent='Mikrofon nicht verfügbar oder nicht erlaubt. Du kannst ohne Mikrofon spielen.'
  }
 });
-window.addEventListener('pagehide',()=>{if(recorder?.state==='recording')recorder.stop();recordingStream?.getTracks().forEach(t=>t.stop())});
+window.addEventListener('pagehide',()=>{
+ if(recorder?.state==='recording')recorder.stop();
+ recordingStream?.getTracks().forEach(t=>t.stop());
+ try{voicePlayback?.source?.stop()}catch{}
+ try{voicePlayback?.player?.pause()}catch{}
+ finishVoice();
+});
 $('surprise').addEventListener('click',()=>{
  const today=localDay();
  if(extras.lastGift===today){$('say').textContent='Dein nächstes Geschenk gibt es morgen! 🎁';return}
@@ -383,11 +431,19 @@ function animate(){
  else if(gameActive||mouseActive)updateGameHud();
  care?.update(t,now);
  const face=facePose(t,mode,care?.active?.type||null,care?.active?.phase??-1,reduced);
+ const voiceLevel=voicePlayback?.analyser?voiceLoudness(voicePlayback.analyser,voicePlayback.samples):0;
+ const voiceFace=mouthWhileSpeaking(t,voiceLevel,!!voicePlayback?.active,reduced);
+ const meowing=now<meowUntil&&!voicePlayback;
+ const naturalMeow=meowing?.14+.12*Math.abs(Math.sin(t*14)):0;
  for(const lid of eyes){lid.scale.y=.015+.285*face.eyeClose;lid.visible=face.eyeClose>.01}
  eyeBrows.forEach((b,j)=>{b.rotation.z=face.browTilt*(j===0?-1:1)});
  pupils.forEach(p=>{p.colored.position.x=p.x+face.lookX;p.pupil.position.x=p.x+face.lookX});
- if(!care?.active){mouth.scale.y=face.mouthOpen;head.rotation.x+=face.headBob}
- else if(care.active.type==='feed'&&care.active.phase===2)mouth.scale.y=Math.max(mouth.scale.y,face.mouthOpen);
+ if(!care?.active){
+   mouth.scale.y=Math.max(face.mouthOpen,voiceFace.open,naturalMeow);
+   head.rotation.x+=face.headBob+voiceFace.nod;
+   head.rotation.z+=voiceFace.lean;
+ }else if(care.active.type==='feed'&&care.active.phase===2)mouth.scale.y=Math.max(mouth.scale.y,face.mouthOpen);
+ if(voicePlayback?.active&&care?.active)mouth.scale.y=Math.max(mouth.scale.y,voiceFace.open);
  renderer.render(scene,camera);
 }
 animate();render();
