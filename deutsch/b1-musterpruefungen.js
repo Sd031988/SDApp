@@ -606,6 +606,19 @@ function resumeCheckpoint(){
  if(idx===tasks.length){finish();return;}
  question();
 }
+
+// Multilingual orientation: original examination questions remain in German.
+const B1_HELP={
+de:['Prüfung verstehen','Wähle Goethe, telc oder DTZ und danach einen Übungssatz.','Lesen: Lies die Texte und beantworte die Fragen.','Hören: Höre die Aufnahmen aufmerksam an und wähle Antworten.','Schreiben: Schreibe eigene Texte. Eine Lehrkraft sollte sie bewerten.','Sprechen: Übe Gespräche und Präsentationen laut.','Zeit und Ergebnisse: Beachte den Timer. Ergebnisse sind Trainingswerte, kein Zertifikat.'],
+en:['Understand the exam','Choose Goethe, telc or DTZ, then select a practice test.','Reading: Read the texts and answer the questions.','Listening: Listen carefully and select your answers.','Writing: Write your own texts. A teacher should assess them.','Speaking: Practise dialogues and presentations aloud.','Time and results: Watch the timer. Scores are practice feedback, not a certificate.'],
+fa:['راهنمای امتحان','ابتدا گوته، telc یا DTZ و سپس یک نمونه امتحان را انتخاب کنید.','خواندن: متن‌ها را بخوانید و به پرسش‌ها پاسخ دهید.','شنیدن: با دقت گوش دهید و پاسخ مناسب را انتخاب کنید.','نوشتن: متن خود را بنویسید. بهتر است آموزگار آن را ارزیابی کند.','صحبت کردن: گفت‌وگو و ارائه را با صدای بلند تمرین کنید.','زمان و نتیجه: به زمان‌سنج توجه کنید. نتیجه فقط برای تمرین است، نه مدرک رسمی.'],
+ur:['امتحان کی رہنمائی','پہلے گوئٹے، telc یا DTZ اور پھر مشقی پرچہ منتخب کریں۔','پڑھنا: عبارت پڑھیں اور سوالات کے جواب دیں۔','سننا: توجہ سے سنیں اور درست جواب منتخب کریں۔','لکھنا: اپنا متن لکھیں؛ استاد سے جانچ کروائیں۔','بولنا: مکالمے اور پیشکش بلند آواز سے مشق کریں۔','وقت اور نتیجہ: ٹائمر دیکھیں۔ یہ صرف مشقی نتیجہ ہے، سرٹیفکیٹ نہیں۔'],
+ti:['መምርሒ ፈተና','Goethe, telc ወይ DTZ ምረጽ፣ ድሕሪኡ ናይ ልምምድ ፈተና ምረጽ።','ንባብ፦ ጽሑፋት ኣንብብ እሞ ሕቶታት መልስ።','ምስማዕ፦ ብጥንቃቐ ስማዕ እሞ መልሲ ምረጽ።','ምጽሓፍ፦ ናትካ ጽሑፍ ጽሓፍ፤ መምህር ክግምግሞ ይግባእ።','ምዝራብ፦ ዝርርብን መግለጺን ብዓውታ ተለማመድ።','ግዜን ውጽኢትን፦ ሰዓት ተኸታተል። እዚ ልምምድ ጥራይ እዩ።']
+};
+function b1HelpLanguage(){try{const p=JSON.parse(localStorage.getItem('sdLernProfil')||'{}');return p.lang||'de'}catch(e){return 'de'}}
+function b1HelpPanel(){const lang=b1HelpLanguage();return '<details class="b1x-help" open><summary>🌐 Prüfungsablauf erklären / Exam guide</summary><label for="b1x-help-lang">Sprache / Language: </label><select id="b1x-help-lang">'+[['de','Deutsch'],['en','English'],['fa','دری / فارسی'],['ur','اردو'],['ti','ትግርኛ']].map(([k,v])=>'<option value="'+k+'" '+(k===lang?'selected':'')+'>'+v+'</option>').join('')+'</select><div id="b1x-help-content"></div></details>'}
+function b1HelpRender(){const sel=el('b1x-help-lang'),out=el('b1x-help-content');if(!sel||!out)return;const a=B1_HELP[sel.value]||B1_HELP.de;out.dir=['fa','ur'].includes(sel.value)?'rtl':'ltr';out.innerHTML='<h3>'+esc(a[0])+'</h3><ol>'+a.slice(1).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ol>';sel.onchange=()=>{try{localStorage.setItem('sdB1HelpLang',sel.value)}catch(e){}b1HelpRender()};try{const saved=localStorage.getItem('sdB1HelpLang');if(saved&&B1_HELP[saved]&&sel.value!==saved){sel.value=saved;b1HelpRender()}}catch(e){}}
+
 function home(){
  clear();running=false;
  view('<h2>Prüfung auswählen</h2><p class="b1x-note">Unabhängiges Übungsmaterial. Keine offizielle Prüfung, kein offizielles Zertifikat. Die Aufgaben sind eigens erstellt und orientieren sich an der Anzahl der Prüfungsteile. Es handelt sich um Übungsentwürfe, nicht um originalgetreue Prüfungssimulationen.</p>'+
