@@ -5,6 +5,7 @@ on:
     paths:
       - "mein-sd-hub/**"
       - "tests/mein-sd-hub*.cjs"
+      - "tests/hub-homepage*.cjs"
       - "index.html"
       - ".github/workflows/mein-sd-hub-quality.yml"
   workflow_dispatch:
@@ -23,10 +24,12 @@ jobs:
         with:
           node-version: "22"
       - name: Validate course, routes, links and state
-        run: node --test tests/mein-sd-hub.test.cjs
+        run: node --test tests/mein-sd-hub.test.cjs tests/hub-homepage.test.cjs
       - name: Install Playwright and Chromium
         run: |
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser journey
-        run: node tests/mein-sd-hub.browser.cjs
+        run: |
+          node tests/mein-sd-hub.browser.cjs
+          node tests/hub-homepage.browser.cjs
