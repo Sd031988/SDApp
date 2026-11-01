@@ -8,6 +8,7 @@
 .pibo-sound label{font-weight:800}.pibo-sound input{accent-color:#7667df;width:min(240px,45vw);touch-action:manipulation}
 .sd-kids-hub{display:inline-block;color:#304d72;background:#ffffffc9;border:1px solid #b9cfe8;border-radius:12px;padding:9px 13px;font-size:.88rem;text-decoration:none;font-weight:800;margin:6px}.sd-kids-hub:hover{background:white}
 .pibo-sound output{font-weight:800;min-width:48px}.kids-play-now{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:13px auto 17px;max-width:850px;padding:0 16px}.kids-play-now a{min-height:66px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:19px;background:#fff;border:2px solid #c3b7ee;box-shadow:0 5px 0 #c9c1e8;color:#3a3368;font-size:1rem;font-weight:850;padding:10px 7px;text-decoration:none}.kids-play-now a:hover,.kids-play-now a:focus-visible{background:#f8f2ff;transform:translateY(-2px)}.fallback a{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:9px 12px;margin:5px;background:#664ab3;color:#fff;text-decoration:none;font-weight:800}.fallback a:focus-visible{outline:3px solid #ffcc4e;outline-offset:3px}@media(max-width:520px){.kids-play-now{grid-template-columns:1fr 1fr;gap:8px}.kids-play-now a{font-size:.85rem;min-height:61px}.kids-play-now a:first-child{grid-column:1/-1}}
+.pibo-bath-tool-hint{position:absolute;z-index:3;pointer-events:none;transform:translate(-50%,-175%);padding:6px 10px;border-radius:12px;background:#ffffffed;color:#254b65;font-weight:850;font-size:.82rem;box-shadow:0 3px 14px #183c5550;white-space:nowrap}.pibo-bath-tool-hint[hidden]{display:none}
 </style><link rel="stylesheet" href="../sd-workspace.css?v=20261101-appshell-1">
 <script defer src="../sd-workspace.js?v=20261101-appshell-1" data-sd-app="pibo" data-sd-mode="compact"></script>
 <link rel="stylesheet" href="./pibo-premium.css?v=20261101-premium-1">
@@ -20,7 +21,7 @@
 </div></header>
 <main class="wrap"><section class="panel" aria-label="Pibos virtuelles Zuhause">
 <div class="pibo-play-view" aria-label="Pibo bleibt beim Spielen sichtbar">
-<div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div id="piboMouthTarget" aria-hidden="true" hidden>🐱 Mund</div><div id="sleepStars" aria-hidden="true" hidden>🌙 ✨ Zzz</div><div class="fallback" id="fallback"><div><strong>🐱</strong><span id="piboLoadStatus">Pibo 3D wird geladen …</span><p style="margin:8px 0;font-size:.88rem">Du kannst inzwischen ein Spiel starten:</p><a href="./games/play.html?game=obby">🏁 Obby spielen</a><a href="./games/play.html?game=pet">🐶 Tierinsel</a></div></div></div>
+<div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div id="piboMouthTarget" aria-hidden="true" hidden>🐱 Mund</div><div id="sleepStars" aria-hidden="true" hidden>🌙 ✨ Zzz</div><div id="bathToolHint" class="pibo-bath-tool-hint" aria-hidden="true" hidden></div><div class="fallback" id="fallback"><div><strong>🐱</strong><span id="piboLoadStatus">Pibo 3D wird geladen …</span><p style="margin:8px 0;font-size:.88rem">Du kannst inzwischen ein Spiel starten:</p><a href="./games/play.html?game=obby">🏁 Obby spielen</a><a href="./games/play.html?game=pet">🐶 Tierinsel</a></div></div></div>
 </div>
 <div class="pibo-controls">
 <div class="pibo-controls-head"><span class="pibo-eyebrow">DEINE KATZE · LIVE</span><h2>Spiel mit Pibo!</h2><p>Wähle eine Aktion. Pibo bleibt dabei im Bild.</p></div>
@@ -630,6 +631,16 @@ function animate(){
  if((gameActive||mouseActive)&&now>=gameUntil)finishMiniGame();
  else if(gameActive||mouseActive)updateGameHud();
  care?.update(t,now);
+ const hint=$('bathToolHint');
+ const bathTool=care?.active?.type==='wash'?care.props.children.find(o=>o.visible&&o.userData?.piboCareTool):null;
+ if(bathTool){
+   const pos=bathTool.getWorldPosition(new THREE.Vector3()).project(camera);
+   hint.hidden=false;
+   const label=bathTool.userData.piboCareTool==='rinse'?'🚿 Dusche ziehen':'🧻 Handtuch ziehen';
+   if(hint.textContent!==label)hint.textContent=label;
+   hint.style.left=((pos.x+1)*.5*stage.clientWidth)+'px';
+   hint.style.top=((1-pos.y)*.5*stage.clientHeight)+'px';
+ }else hint.hidden=true;
  const face=facePose(t,mode,care?.active?.type||null,care?.active?.phase??-1,reduced);
  const voiceLevel=voicePlayback?.analyser?voiceLoudness(voicePlayback.analyser,voicePlayback.samples):0;
  const voiceFace=mouthWhileSpeaking(t,voiceLevel,!!voicePlayback?.active,reduced);
