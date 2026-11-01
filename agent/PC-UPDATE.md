@@ -8,6 +8,35 @@ Das Online-Code-Studio ist unter `studio/` abgelegt. Der verschlüsselte lokale 
 
 Der verwaltete Web-Agent `agent/app-<version>.enc` und die native PC-ZIP verwenden laut `agent/zugang.json` dieselbe Release-Version. Bitte die bestehenden Zugangs- und Update-Regeln des lokalen Agents beibehalten.
 
+## Geschütztes PC-Update in zwei Schritten
+
+Der neue Update-Helfer ist für den **ursprünglichen lokalen Agenten** gedacht,
+nicht für die separate PC-Online-Version.
+
+Der Administratorschlüssel darf **nur über eine lokale Umgebungsvariable**
+namens `ADMIN_CODE` übergeben werden. Niemals Schlüssel in GitHub, Dateien,
+Workflow-Logs oder Issues speichern. Im Chat geteilte Schlüssel nach der
+Verwendung erneuern.
+
+1. Mit einem **privaten Ordner außerhalb des Repositories** vorbereiten:
+   `node tools/agent_pc_update.cjs prepare /privater/ordner`
+   (unter Windows beispielsweise `C:\SD-Lotze-Privat\pc-update`).
+   Der Befehl entschlüsselt die Originaldateien nur lokal, gleicht die
+   Studio-Dateien ab und stoppt bei unbekannter PC-ZIP-Struktur.
+2. Die vorbereitete PC-ZIP in einer Testumgebung vollständig prüfen:
+   ▶ Ausführen, Projekte, Chats, Design-Studio, lokale Agent-Funktionen und
+   den alten Knopf „Nach Updates suchen“.
+3. Nur **nach erfolgreich abgeschlossenem PC-Test** freigeben:
+   `node tools/agent_pc_update.cjs release /privater/ordner --tested`.
+   Der Helfer überprüft Datei-Prüfsummen und die Studio-Version und schreibt
+   die neuen verschlüsselten Pakete in den lokalen Repository-Ordner.
+4. **Anschließend über den autorisierten GitHub-Zugriff committen und pushen.**
+   Erst dann kann der bisherige lokale Agent ein neues Update erhalten.
+5. Den privaten Ordner mit entschlüsselten Dateien anschließend sicher löschen.
+
+**Noch nicht durchgeführt:** Der neue Ablauf wurde in CI getestet, aber nicht
+gegen das echte verschlüsselte PC-Originalpaket ausgeführt. Das Teilen des
+Administratorschlüssels allein veröffentlicht keine PC-Aktualisierung.
 ## Sichere Aktualisierung
 
 1. **Nur autorisierte Verwaltung:** Mit der vorhandenen Administrationsfunktion und einem nicht im Repository gespeicherten Admin-Schlüssel den aktuellen verschlüsselten Agenten **außerhalb des Repositories** entschlüsseln. Der geschützte PC-Quellcode ist hier nicht offen verfügbar.
