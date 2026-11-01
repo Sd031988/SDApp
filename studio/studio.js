@@ -409,13 +409,22 @@ async function zipEinlesen(f, ziel = S.p.dateien) {
   for (let i = buf.length - 22; i >= Math.max(0, buf.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { ende = i; break; }
   if (ende < 0) { alert('Das ist keine gültige ZIP-Datei.'); return 0; }
   const anzahl = dv.getUint16(ende + 10, true); let p = dv.getUint32(ende + 16, true), n = 0; const dec = new TextDecoder();
+  if (anzahl > 2000) throw new Error('ZIP enthält zu viele Dateien (maximal 2000).');
+  let gesamtEntpackt = 0;
   const namen = [];
-  for (let i = 0; i < anzahl; i++) { const art = dv.getUint16(p + 10, true), gr = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), kl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+  for (let i = 0; i < anzahl; i++) {
+    if (p + 46 > buf.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('Beschädigtes ZIP-Dateiverzeichnis.');
+    const art = dv.getUint16(p + 10, true), gr = dv.getUint32(p + 20, true), entpackt = dv.getUint32(p + 24, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), kl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+    if (p + 46 + nl + xl + kl > buf.length) throw new Error('Ungültiger ZIP-Eintrag.');
+    gesamtEntpackt += entpackt;
+    if (gesamtEntpackt > 100e6 || entpackt > 20e6) throw new Error('ZIP enthält zu große entpackte Dateien.');
     namen.push({ name: dec.decode(buf.subarray(p + 46, p + 46 + nl)), art, gr, lo }); p += 46 + nl + xl + kl; }
   const gemeinsam = (() => { const erste = namen.filter(x => !x.name.endsWith('/')).map(x => x.name.split('/')[0]); return erste.length && erste.every(x => x === erste[0]) && namen.every(x => x.name.includes('/')) ? erste[0] + '/' : ''; })();
   for (const z of namen) { if (z.name.endsWith('/') || /(^|\/)(__MACOSX|\.git|node_modules)\//.test(z.name)) continue;
     const pfad = sicherPfad(z.name.slice(gemeinsam.length)); if (!pfad) continue;
+    if (z.lo + 30 > buf.length || dv.getUint32(z.lo, true) !== 0x04034b50) throw new Error('Beschädigter ZIP-Dateieintrag.');
     const nl = dv.getUint16(z.lo + 26, true), xl = dv.getUint16(z.lo + 28, true), start = z.lo + 30 + nl + xl;
+    if (start + z.gr > buf.length) throw new Error('ZIP-Datei ist unvollständig.');
     let daten = buf.subarray(start, start + z.gr);
     if (z.art === 8) { try { daten = new Uint8Array(await new Response(new Blob([daten]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { continue; } }
     else if (z.art !== 0) continue;
