@@ -57,6 +57,11 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 #backupFile{display:none}#empty{padding:18px;font-weight:800;color:#d7e3fc}
 @media(max-width:630px){.toolbar{align-items:stretch}.toolbar h2{width:100%}.search{max-width:none}.library-bar{align-items:stretch}
 .library-tools>*{flex:1}}
+.hubAudio{display:flex;gap:10px;flex-wrap:wrap;align-items:center;position:relative;z-index:2;margin-top:12px}
+.hubAudio button{background:#162d52;border-color:#ffffff88;font-size:.9rem;min-height:45px}
+.hubAudio button[aria-pressed=true]{background:#ffdf93;color:#1e2a4e}
+.hubAudio label{font-size:.88rem;font-weight:800}.hubAudio input{accent-color:#ffe49b;min-width:120px;touch-action:manipulation}
+.hubAudio output{font-weight:800;min-width:45px}
 </style></head><body>
 <header>
 <div class="nav"><a class="back" href="../../index.html">← SD Hub</a><strong>✨ SD KIDS · SPIELEWELT</strong><a class="back" href="../index.html">🐱 Pibo</a></div>
@@ -67,6 +72,11 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="totalStars">⭐ Minispiele: 0 Sterne</span>
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="playedGames">🎮 Gestartet: 0/8</span>
 <span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="completedGames">🏆 Erfolge: 0/8</span>
+</div>
+<div class="hubAudio" aria-label="Sounds für alle SD Kids Spiele">
+<button type="button" id="hubSound" aria-pressed="false">🔇 Sound aktivieren</button>
+<label for="hubVolume">🔉 Lautstärke</label><input type="range" id="hubVolume" min="0" max="100" step="5" value="65">
+<output id="hubVolumeLabel" for="hubVolume">65 %</output>
 </div>
 </section>
 </header>
@@ -101,6 +111,26 @@ border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;
 import {catalog} from './catalog.mjs';
 import {readProfile,readSettings,toggleFavorite,saveSettings,achievements,backupData,restoreBackup} from './profile.mjs';
 import {STORAGE_KEY} from './rules.mjs';
+import {SDGameSound,loadSoundSettings,saveSoundSettings} from '../sd-sound.mjs';
+const soundEngine=new SDGameSound(loadSoundSettings());
+const hubButton=document.getElementById('hubSound'),hubVolume=document.getElementById('hubVolume'),hubLabel=document.getElementById('hubVolumeLabel');
+function syncHubSound(){
+ hubButton.setAttribute('aria-pressed',String(soundEngine.enabled));
+ hubButton.textContent=soundEngine.enabled?'🔊 Sound an':'🔇 Sound aktivieren';
+ hubVolume.value=String(Math.round(soundEngine.volume*100));
+ hubLabel.textContent=hubVolume.value+' %';
+}
+hubButton.addEventListener('click',()=>{
+ soundEngine.setEnabled(!soundEngine.enabled);
+ saveSoundSettings({enabled:soundEngine.enabled,volume:soundEngine.volume});
+ syncHubSound();if(soundEngine.enabled)soundEngine.play('select');
+});
+hubVolume.addEventListener('input',()=>{
+ soundEngine.setVolume(Number(hubVolume.value)/100);
+ saveSoundSettings({enabled:soundEngine.enabled,volume:soundEngine.volume});
+ syncHubSound();if(soundEngine.enabled)soundEngine.pulse('select',280);
+});
+syncHubSound();
 const grid=document.getElementById('gameGrid'),count=document.getElementById('count'),empty=document.getElementById('empty');
 let profile=readProfile(),preferences=readSettings(),filter='Alle';
 const selected=()=>document.getElementById('gameSearch').value.trim().toLocaleLowerCase('de');
@@ -136,7 +166,7 @@ function render(){
   favorite.textContent=preferences.favorites.includes(g.id)?'♥':'♡';
   favorite.setAttribute('aria-label',g.name+(preferences.favorites.includes(g.id)?' aus Favoriten entfernen':' zu Favoriten hinzufügen'));
   favorite.setAttribute('aria-pressed',String(preferences.favorites.includes(g.id)));
-  favorite.addEventListener('click',()=>{toggleFavorite(preferences,g.id);saveSettings(preferences);render()});
+  favorite.addEventListener('click',()=>{toggleFavorite(preferences,g.id);soundEngine.play('select');saveSettings(preferences);render()});
   art.append(favorite);
   const info=document.createElement('div');info.className='info';
   const genre=document.createElement('span');genre.className='genre';genre.textContent=g.genre;
@@ -153,11 +183,11 @@ function render(){
  }
 }
 document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
- filter=b.dataset.filter;
+ filter=b.dataset.filter;soundEngine.play('select');
  document.querySelectorAll('[data-filter]').forEach(c=>c.setAttribute('aria-pressed',String(b===c)));render();
 }));
 document.getElementById('gameSearch').addEventListener('input',render);
-document.getElementById('sortGames').addEventListener('change',render);
+document.getElementById('sortGames').addEventListener('change',()=>{soundEngine.play('select');render()});
 document.getElementById('exportSave').addEventListener('click',()=>{
  const blob=new Blob([JSON.stringify(backupData(profile,preferences),null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sd-kids-spielstand.json';
@@ -175,7 +205,7 @@ document.getElementById('backupFile').addEventListener('change',async e=>{
   localStorage.setItem(STORAGE_KEY,JSON.stringify(restore.profile));
   if(!saveSettings(restore.settings))throw Error('Einstellungen können nicht gespeichert werden');
   profile=restore.profile;preferences=restore.settings;
-  status.textContent='✓ Dein Spielstand wurde geladen.';
+  status.textContent='✓ Dein Spielstand wurde geladen.';soundEngine.play('success');
   renderStats();render();
  }catch(error){status.textContent='Laden fehlgeschlagen: '+error.message}
 });
