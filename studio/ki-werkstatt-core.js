@@ -32,7 +32,10 @@ function filenameFromFence(info){
 function fileFromHeading(line){
  let s=String(line||'').trim().replace(/^#{1,6}\s*/,'').replace(/^[-*]\s+/,'').replace(/^\*{1,2}|\*{1,2}$/g,'').trim();
  const labeled=s.match(/^(?:Datei|File(?:name)?|Pfad|Path|Dateiname)\s*[:\-–]\s*(.+)$/i);
- if(labeled)s=labeled[1].trim();
+ if(labeled){
+  // Keep even unsafe explicit paths so parse() rejects them rather than silently guessing app.js.
+  return labeled[1].trim().replace(/^[\x60"']+|[\x60"']+$/g,'');
+ }
  s=s.replace(/^\x60+|\x60+$/g,'').replace(/[\x60]+/g,'').replace(/:\s*$/,'').trim();
  const m=s.match(/^([^\s]+)\s*(?:\([a-zA-Z+#\s]+\))?$/);
  return filename(m?m[1]:s);
