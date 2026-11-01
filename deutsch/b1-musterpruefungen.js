@@ -325,7 +325,7 @@ function speak(t,dialogue){
 }
 function gapPassage(t){
  const safe=esc(t.passage),current=t.j+1;
- return safe.replace(/\\[(\\d+)\\]/g,(_,number)=>Number(number)===current?'<mark class="b1x-current-gap" aria-label="Aktuelle Lücke '+number+'">['+number+']</mark>':'<span class="b1x-other-gap">['+number+']</span>');
+ return safe.replace(/\[(\d+)\]/g,(_,number)=>Number(number)===current?'<mark class="b1x-current-gap" aria-label="Aktuelle Lücke '+number+'">['+number+']</mark>':'<span class="b1x-other-gap">['+number+']</span>');
 }
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
