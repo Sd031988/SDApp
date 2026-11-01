@@ -194,6 +194,58 @@ const listeningDialogues=[
  ],['Wo ist der Treffpunkt?','Was sollen die Teilnehmer mitnehmen?','Was passiert bei starkem Regen?']]
 ];
 const dialogueSceneIndices=[1,2,5,8];
+const listeningExplanations=[
+ [
+  "Es handelt sich um eine Änderung im Zugverkehr: Der Regionalzug nach Mannheim fährt von einem anderen Gleis.",
+  "Der Zug fährt heute von Gleis sieben statt von Gleis vier. Der Ticketpreis wird nicht geändert.",
+  "Die Reisenden sollen die Anzeigen am Bahnsteig beachten, weil es wegen Bauarbeiten auch eine Verspätung geben kann."
+ ],
+ [
+  "Der Kurs beginnt am 14. April. Die anderen Daten werden nicht genannt.",
+  "Die Unterrichtstage sind Montag und Mittwoch; der Kurs beginnt jeweils um 18 Uhr.",
+  "Zum ersten Termin werden ein Ausweis und ein Stift benötigt, nicht ein Laptop."
+ ],
+ [
+  "Jana verschiebt das Kundentreffen von neun Uhr auf halb elf, also 10:30 Uhr.",
+  "Das Treffen findet im Besprechungsraum im zweiten Stock statt, nicht am Bahnhof.",
+  "Samir soll die aktuellen Unterlagen zum Kundentreffen mitbringen."
+ ],
+ [
+  "Wegen der Wettervorhersage wird das Abendkonzert in die Stadthalle verlegt. Das Kinderprogramm bleibt im Park.",
+  "Das Stadtfest beginnt am Samstag um elf Uhr. Die Angabe betrifft den Beginn des Festes.",
+  "Der Eintritt ist überall frei. Es wird also kein Eintrittspreis verlangt."
+ ],
+ [
+  "Die Praxis bietet als Ersatztermin Freitag um 10:15 Uhr an, weil der Donnerstagstermin verschoben wird.",
+  "Die Patientin oder der Patient soll den neuen Termin bis morgen Mittag telefonisch bestätigen.",
+  "Die Nachricht kommt von der Praxis Berger, also von einer Arztpraxis."
+ ],
+ [
+  "Die Wohnungsbesichtigung findet morgen um 17 Uhr statt, nicht heute.",
+  "Der Vermieter wartet am Hauseingang in der Lindenstraße. Der dritte Stock beschreibt die Lage der Wohnung.",
+  "Die Interessentin soll zunächst keine Unterlagen mitbringen. Alles wird vor Ort besprochen."
+ ],
+ [
+  "Der Informationsabend für Eltern beginnt am Dienstag um 19 Uhr.",
+  "Die Veranstaltung findet in der Aula statt, nicht im Park oder in der Mensa.",
+  "Es geht um die Klassenfahrt im Juni und ihre Kosten."
+ ],
+ [
+  "Nur Winterjacken werden in der Durchsage als reduzierte Waren genannt.",
+  "Der Rabatt beträgt zwanzig Prozent, nicht zehn oder dreißig Prozent.",
+  "Reduzierte Waren können ausschließlich an der Kasse im Erdgeschoss bezahlt werden."
+ ],
+ [
+  "Die Gruppe trifft sich am Sonntag um neun Uhr am Bahnhof und fährt von dort mit dem Bus.",
+  "Für den Ausflug soll man etwas zu trinken und eine Regenjacke mitnehmen.",
+  "Bei starkem Regen findet statt der Wanderung ein Museumsbesuch statt."
+ ],
+ [
+  "Die Mitgliederversammlung wird auf den nächsten Freitag verschoben und beginnt um 18:30 Uhr.",
+  "Die Versammlung findet im Gemeinschaftshaus statt, nicht im Rathaus.",
+  "Mitglieder, die nicht teilnehmen können, dürfen Vorschläge per E-Mail schicken."
+ ]
+];
 const listeningPrompts=[
  ['Wovon handelt die Durchsage?','Was ändert sich?','Was sollen die Fahrgäste beachten?'],
  ['Wann beginnt der Kurs?','An welchen Tagen findet der Kurs statt?','Was soll man mitbringen?'],
@@ -287,7 +339,7 @@ function items(section){
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
        // Bei Mitteilungen wird exakt der Text abgespielt, zu dem die Fragen erstellt wurden.
        // Dialoge werden separat über extraListening ausgewählt.
-       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],dialogue:null,kind:kinds[g]+' · Mitteilung'});
+       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],dialogue:null,explanation:listeningExplanations[sceneIndex][qIndex],kind:kinds[g]+' · Mitteilung'});
        continue;
      }
      if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&g===0)||(exam==='dtz'&&g===2))){
