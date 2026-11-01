@@ -579,7 +579,7 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  (getCheckpoint()?'<button id="b1x-resume" class="b1x-primary">↩ Unterbrochene Prüfung fortsetzen</button>':'')+
- '<button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
+ '<button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
  '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist (60 Minuten Lesen, anschließend die verbleibende Zeit für Sprachbausteine). Dies ist eine vereinfachte Trainingsaufteilung; bei Einzelübungen gelten getrennte Zeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 B1-Ergebnisse und Schreibentwürfe löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
@@ -587,6 +587,7 @@ function home(){
  if(el('b1x-resume'))el('b1x-resume').onclick=resumeCheckpoint;
  el('b1x-start').onclick=()=>{if(getCheckpoint()&&!confirm('Eine unterbrochene Prüfung ist gespeichert. Neue Prüfung starten und bisherigen Fortschritt ersetzen?'))return;clearCheckpoint();running=true;results={};telcSharedDeadline=0;start(0);};
  el('b1x-marked-practice').onclick=markedPractice;
+ el('b1x-dashboard').onclick=dashboard;
  el('b1x-week-plan').onclick=weekPlan;
  if(el('b1x-history'))el('b1x-history').onclick=history;
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse, Schreibentwürfe und die Wochenverläufe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');localStorage.removeItem(weekPlanKey);localStorage.removeItem(weekArchiveKey);clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
@@ -952,6 +953,20 @@ function weekPlan(){
  root.querySelectorAll('[data-week-day]').forEach(input=>input.onchange=()=>{const current=getWeekChecks();current[Number(input.dataset.weekDay)]=input.checked;try{localStorage.setItem(weekPlanKey,JSON.stringify(current));}catch(_){}weekPlan();});
  el('b1x-week-reset').onclick=()=>{if(confirm('Diese Lernwoche abschließen, ihren Fortschritt im Wochenvergleich speichern und einen neuen Plan beginnen?')){try{const a=getWeekArchive();a.push({date:new Date().toISOString(),done:getWeekChecks().filter(Boolean).length});localStorage.setItem(weekArchiveKey,JSON.stringify(a.slice(-24)));localStorage.removeItem(weekPlanKey);}catch(_){alert('Der Wochenfortschritt konnte nicht gespeichert werden.');return;}weekPlan();}};
  el('b1x-week-home').onclick=home;
+}
+function dashboard(){
+ const saved=getSaved(),done=getWeekChecks().filter(Boolean).length,archive=getWeekArchive();
+ const stats=['lesen','hoeren','sprach'].map(id=>{const a=saved.filter(x=>x.part===id&&Number.isFinite(x.correct)&&Number.isFinite(x.total)&&x.total>0);const total=a.reduce((n,x)=>n+x.total,0);return {id,total,percent:total?Math.round(100*a.reduce((n,x)=>n+x.correct,0)/total):null};});
+ const focus=stats.filter(x=>x.total>0).sort((a,b)=>a.percent-b.percent)[0]||stats[0];
+ let streak=0;for(let i=archive.length-1;i>=0&&archive[i].done===7;i--)streak++;
+ const marks=saved.reduce((n,x)=>n+(Array.isArray(x.marked)?x.marked.length:0),0);
+ view('<h2>Mein B1-Lern-Dashboard</h2><p class="b1x-note">Lokale Trainingswerte, keine offiziellen Prüfungsnoten.</p>'+
+ '<div class="b1x-grid"><div class="b1x-passage">Wochenplan: <b>'+done+'/7</b></div><div class="b1x-passage">Lernserie: <b>'+streak+' volle Wochen</b></div><div class="b1x-passage">Markierungen: <b>'+marks+'</b></div></div>'+
+ '<h3>Lernstatistik</h3>'+stats.map(x=>'<div class="b1x-passage"><b>'+({lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'}[x.id])+'</b><p>'+(x.percent===null?'Noch keine Daten':x.percent+' % richtig · '+x.total+' Aufgaben')+'</p>'+(x.percent===null?'':'<div class="b1x-progress"><div style="width:'+x.percent+'%"></div></div>')+'</div>').join('')+
+ '<p><b>Empfehlung:</b> '+(focus.total?'Übe '+({lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'}[focus.id])+' als Nächstes.':'Beginne mit Lesen.')+'</p>'+
+ '<button id="b1x-dash-go" class="b1x-primary">Empfohlene Übung starten</button><button id="b1x-dash-week" class="b1x-card">Wochenplan und Vergleich</button><button id="b1x-dash-mark" class="b1x-card">Markierte Fragen</button><button id="b1x-dash-results" class="b1x-card">Alle Ergebnisse</button><button id="b1x-dash-back" class="b1x-card">Zurück</button>');
+ el('b1x-dash-week').onclick=weekPlan;el('b1x-dash-mark').onclick=markedPractice;el('b1x-dash-results').onclick=history;el('b1x-dash-back').onclick=home;
+ el('b1x-dash-go').onclick=()=>{const x=saved.slice().reverse().find(z=>z.part===focus.id&&E[z.exam]&&E[z.exam].parts.some(p=>p[0]===focus.id));const e=x?x.exam:exam,n=x?x.set:set,p=E[e].parts.findIndex(z=>z[0]===focus.id);if(p<0)return;if(getCheckpoint()&&!confirm('Gespeicherte Prüfung ersetzen?'))return;clearCheckpoint();exam=e;set=n;running=false;start(p);};
 }
 function history(){
  const saved=getSaved().slice().reverse();
