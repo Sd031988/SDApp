@@ -8,3 +8,29 @@ test('reload keeps lesson position',async({page})=>{await open(page);await page.
 test('old progress is migrated',async({page})=>{await page.goto(base+'/deutsch/');await page.evaluate(()=>{localStorage.removeItem('sdHubUnifiedProgressV1');localStorage.setItem('sd-30-lernwerk-v1',JSON.stringify({'alpha:0':true}))});await page.reload();await page.locator('#sdpath-workshop').click();await expect(page.locator('#sdun-progress')).toContainText('1 von 36')});
 test('mobile next lesson works',async({page})=>{await page.setViewportSize({width:375,height:812});await open(page);await page.locator('#sdpath-workshop').click();await page.locator('#sdun-next').click();await expect(page.locator('#sdun-jump')).toHaveValue('1')});
 test('course to workshop transition',async({page})=>{await open(page);await page.locator('[data-sdpath="a1"]').click();await expect(page.locator('#preB1')).toBeAttached();await page.locator('#pre-close').click();await page.locator('#sdpath-workshop').click();await expect(page.locator('#sdHubUnifiedLessons')).toBeVisible()});
+
+test('migration preserves A1 and B1 completions from all legacy sets',async({page})=>{
+ await page.goto(base+'/deutsch/');
+ await page.evaluate(()=>{
+  for(const k of ['sdHubUnifiedProgressV1','sd-30-lernwerk-v1','sdLernwerk50V1','sdHub100PracticeV1'])localStorage.removeItem(k);
+  localStorage.setItem('sd-30-lernwerk-v1',JSON.stringify({'a1:0':true}));
+  localStorage.setItem('sdLernwerk50V1',JSON.stringify({'a1:0':true}));
+  localStorage.setItem('sdHub100PracticeV1',JSON.stringify({'b1:0':true}));
+ });
+ await page.reload();await page.locator('#sdpath-workshop').click();
+ await page.locator('[data-sdun-level="a1"]').click();
+ await expect(page.locator('#sdun-progress')).toContainText('2 von 40');
+ await page.locator('[data-sdun-level="b1"]').click();
+ await expect(page.locator('#sdun-progress')).toContainText('1 von 40');
+});
+test('migration repairs already migrated progress without deleting it',async({page})=>{
+ await page.goto(base+'/deutsch/');
+ await page.evaluate(()=>{
+  localStorage.setItem('sdHubUnifiedProgressV1',JSON.stringify({migrated:true,'30:alpha:0':true}));
+  localStorage.setItem('sd-30-lernwerk-v1',JSON.stringify({'a1:0':true}));
+ });
+ await page.reload();await page.locator('#sdpath-workshop').click();
+ await expect(page.locator('#sdun-progress')).toContainText('1 von 36');
+ await page.locator('[data-sdun-level="a1"]').click();
+ await expect(page.locator('#sdun-progress')).toContainText('1 von 40');
+});
