@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171e49"><meta name="description" content="SD Hub Kids – kostenlose, kindgerechte Browser-Spiele: Pibo, BlockWorld, Abenteuer, Basteln, Rennen und Lernen.">
+<title>SD Kids Spielewelt | Alle Spiele</title>
+<style>
+:root{font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:#f5f7ff;background:#0f1636}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#4b4396,transparent 40%),radial-gradient(circle at 95% 10%,#155c78,transparent 37%),#101735;min-height:100vh}
+a{color:inherit}a:focus-visible,button:focus-visible{outline:3px solid #ffe59c;outline-offset:3px}
+header{max-width:1230px;margin:auto;padding:20px clamp(15px,4vw,40px) 10px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.back{font-weight:800;text-decoration:none;background:#ffffff1c;border:1px solid #fff4;padding:9px 17px;border-radius:100px}
+.hero{margin:25px 0 20px;border:1px solid #ffffff39;border-radius:28px;padding:clamp(22px,5vw,50px);background:linear-gradient(110deg,#654cc7cc,#2480b588 65%,#1b885d88);position:relative;overflow:hidden}
+.hero:after{content:"🎮 🧱 🌟";font-size:clamp(2rem,6vw,5rem);position:absolute;right:3%;bottom:15px;opacity:.8;letter-spacing:.3rem}
+.hero h1{font-size:clamp(2rem,5vw,4.2rem);letter-spacing:-.04em;margin:0 0 12px;line-height:1.08;max-width:690px}.hero p{max-width:610px;font-size:1.1rem;line-height:1.7;margin:0;color:#f6edff}
+.featured{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;position:relative;z-index:1}
+.featured a{border-radius:12px;background:#fff;color:#27345a;text-decoration:none;padding:12px 18px;font-weight:900}
+.featured a+ a{background:#ffe8ab}
+main{max-width:1230px;padding:0 clamp(15px,4vw,40px) 60px;margin:auto}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:25px 0}
+.toolbar h2{font-size:1.35rem;margin:0 auto 0 0}
+button{cursor:pointer;font:inherit;color:#fff;background:#ffffff1e;border:1px solid #fff4;border-radius:30px;padding:7px 14px;font-weight:700}
+button[aria-pressed=true]{background:#fff;color:#1c2c5a}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:17px}
+.game{border-radius:22px;overflow:hidden;background:#192344;border:1px solid #ffffff28;box-shadow:0 12px 32px #07102a66;transition:transform .15s,border-color .15s;min-height:325px;display:flex;flex-direction:column}
+.game:hover{transform:translateY(-4px);border-color:#fff8}
+.art{height:147px;display:grid;place-items:center;position:relative;isolation:isolate;font-size:4.9rem;background:linear-gradient(130deg,var(--accent),#192d65)}
+.art:before{content:'';width:155px;height:155px;border:22px solid #fff2;border-radius:32px;position:absolute;transform:rotate(23deg);z-index:-1}
+.art .tag{position:absolute;top:11px;right:11px;background:#101b3dcc;padding:5px 10px;border-radius:100px;font-size:.72rem;font-weight:800}
+.info{padding:16px;flex:1;display:flex;flex-direction:column;gap:7px}
+.info h3{font-size:1.2rem;margin:0}.info p{color:#c8d4ee;font-size:.87rem;line-height:1.5;margin:0;flex:1}.genre{font-size:.75rem;color:#fce4aa;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.play{display:inline-block;margin-top:10px;background:#eff7ff;color:#1e3156;border-radius:12px;text-align:center;text-decoration:none;padding:10px;font-weight:900}
+.note{margin:25px 0;border:1px solid #ffffff30;border-radius:20px;padding:18px;background:#ffffff0d;color:#d1e1f9;font-size:.9rem}
+footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;color:#b5c5e5}
+@media(max-width:600px){.hero:after{position:static;display:block;text-align:center;opacity:.65;margin-top:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.art{height:112px;font-size:3.2rem}.info{padding:10px}.game{min-height:285px}.info h3{font-size:1rem}.info p{font-size:.77rem}.hero{padding:22px}}
+@media(max-width:370px){.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.game{transition:none}.game:hover{transform:none}}
+</style></head><body>
+<header>
+<div class="nav"><a class="back" href="../../index.html">← SD Hub</a><strong>✨ SD KIDS · SPIELEWELT</strong><a class="back" href="../index.html">🐱 Pibo</a></div>
+<section class="hero"><h1>Deine Spielewelt.<br>Dein Abenteuer.</h1>
+<p>Entdecken, bauen, spielen und lernen – in zehn eigenen SD Kids Spielen. Kostenlos, ohne Konto, ohne Werbung und ohne In-App-Käufe.</p>
+<div class="featured"><a href="../blockworld/">🧱 In 3D bauen</a><a href="./play.html?game=obby">🏁 Obby spielen</a></div>
+</section>
+</header>
+<main><div class="toolbar"><h2>🎲 Alle Spiele <span id="count">(10)</span></h2><div id="filters" role="group" aria-label="Spiele filtern"><button data-filter="Alle" aria-pressed="true">Alle</button><button data-filter="3D" aria-pressed="false">3D</button><button data-filter="2D" aria-pressed="false">Minispiele</button></div></div>
+<section class="grid" id="gameGrid" aria-label="Spielekatalog">
+<noscript>Bitte JavaScript aktivieren, um alle Spiele anzuzeigen. <a href="../index.html">Pibo</a> · <a href="../blockworld/">BlockWorld</a>.</noscript>
+</section>
+<div class="note"><strong>🛡️ Kindgerecht:</strong> Alle neuen Minispiele funktionieren direkt auf deinem Gerät. Sterne sind nur virtuelle Spielpunkte und kein Geld. Im 3D-Spiel BlockWorld können Kinder freiwillig einen gemeinsamen Raum auf dem bestehenden Render-Server betreten – ohne öffentlichen Chat. Eltern sollten die Nutzung von Online-Räumen begleiten. Deine Minispiel-Fortschritte bleiben im Browser.</div>
+</main>
+<footer>SD Kids ist eine unabhängige Spieleplattform von SD Hub; keine Roblox-App. Die acht neuen 2D-Minispiele sind bewusst kleiner als unsere 3D-Spiele Pibo und BlockWorld. Alle Figuren, Welten und Spielideen sind eigenständig umgesetzt.</footer>
+<script type="module">
+import {catalog} from './catalog.mjs';
+const grid=document.getElementById('gameGrid'),count=document.getElementById('count');
+function render(filter='Alle'){
+ const items=catalog.filter(g=>filter==='Alle'||(filter==='3D'?g.tag.includes('3D'):g.tag.includes('Mini')));
+ count.textContent='('+items.length+')';
+ grid.replaceChildren();
+ for(const g of items){
+  const card=document.createElement('article');card.className='game';card.style.setProperty('--accent',g.accent);
+  const art=document.createElement('div');art.className='art';art.textContent=g.emoji;
+  const tag=document.createElement('span');tag.className='tag';tag.textContent=g.tag;art.append(tag);
+  const info=document.createElement('div');info.className='info';
+  const genre=document.createElement('span');genre.className='genre';genre.textContent=g.genre;
+  const title=document.createElement('h3');title.textContent=g.name;
+  const desc=document.createElement('p');desc.textContent=g.description;
+  const link=document.createElement('a');link.className='play';link.href=g.href;link.textContent='▶ Jetzt spielen';link.setAttribute('aria-label',g.name+' spielen');
+  info.append(genre,title,desc,link);card.append(art,info);grid.append(card);
+ }
+}
+document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('[data-filter]').forEach(c=>c.setAttribute('aria-pressed',String(b===c)));
+ render(b.dataset.filter);
+}));
+render();
+</script></body></html>
