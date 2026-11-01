@@ -6,7 +6,7 @@
 <title>SD Code-Studio – Code-Editor im Browser</title>
 <meta name="description" content="Professioneller Code-Editor im Browser: Webseiten mit Live-Vorschau, Python, C++, Java, C#, Rust und Go ausführen, Vorlagen, Suche, Versionen, ZIP – ohne Installation.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-google-guest-2">
+<link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-quality-1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#221b3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -165,7 +165,8 @@ button,input,select,textarea{font:inherit;color:inherit}
       <div class="sk"><span>PROJEKT</span></div>
       <div class="sl"><button id="zipBtn">⬇ Als ZIP herunterladen</button><button id="htmlBtn">⬇ Als eine HTML-Datei</button>
         <button onclick="document.getElementById('hochOrdner').click()">⬆ Ordner hochladen</button><button onclick="document.getElementById('hochZip').click()">⬆ ZIP öffnen</button>
-        <div class="hinweis">Deine Projekte liegen nur in diesem Browser. Sichere wichtige Projekte als ZIP.</div></div>
+        <div class="hinweis">Deine Projekte liegen nur in diesem Browser. Sichere wichtige Projekte als ZIP. Eine automatische GitHub-/Cloud-Synchronisierung erfordert eine separate, ausdrücklich erlaubte Verbindung.</div>
+        <button id="projektCheckBtn" type="button">🛡 Projekt auf Veröffentlichung prüfen</button></div>
     </div>
     <div data-panel="suche" hidden>
       <div class="sk"><span>SUCHEN</span></div>
@@ -261,6 +262,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   <label style="display:grid;gap:4px">Name der Seite <input id="onName" maxlength="40" spellcheck="false" placeholder="mein-cafe"></label>
   <code id="onUrl" style="color:var(--smut);word-break:break-all"></code>
   <label class="kl" style="align-items:flex-start"><input type="checkbox" id="onRecht" style="margin-top:3px"> <span>Ich habe die Rechte an Texten und Bildern. Die Seite enthält keine Betrugs-, Hass- oder illegalen Inhalte und keine Anmeldeseiten fremder Firmen. Ich weiß: Die Seite ist öffentlich und trägt einen „Melden“-Link.</span></label>
+  <div id="onVorpruefung" class="onVorpruefung" aria-live="polite">Projektprüfung wird beim Öffnen angezeigt.</div>
+  <div class="reihe"><button id="onZip" type="button">💾 Vorher ZIP sichern</button></div>
   <div id="onErg"></div>
   <div class="reihe"><span style="flex:1"></span><button id="onZu">Schließen</button><button class="primary" id="onLos">🌐 Jetzt online stellen</button></div>
 </div></div>
@@ -335,6 +338,14 @@ button,input,select,textarea{font:inherit;color:inherit}
       <button type="button" id="kiApply" class="kiPrimary" disabled>📁 Als neue Projektkopie übernehmen</button>
     </div>
     <div id="kiFiles" class="kiFiles" aria-label="Erkannte Dateien"></div>
+    <section id="kiDiff" class="kiDiff" hidden aria-label="Änderungsvorschau">
+      <div class="kiDiffHead"><strong id="kiDiffName">Dateivergleich</strong><button type="button" id="kiDiffClose">✕ Schließen</button></div>
+      <p id="kiDiffInfo" class="kiHint"></p>
+      <div class="kiDiffColumns">
+        <div><strong>Bisheriger Code</strong><pre id="kiDiffOld"></pre></div>
+        <div><strong>Neuer KI-Code</strong><pre id="kiDiffNew"></pre></div>
+      </div>
+    </section>
     <div class="kiDirectRow">
       <button type="button" id="kiDirect" disabled>➡️ Ausgewählte Dateien direkt in den Code-Editor übernehmen</button>
       <p class="kiHint">Öffnet index.html und weitere ausgewählte Code-Dateien im aktuellen Projekt. Bei Änderungen wird vorher ein Stand unter 🕘 Versionen gesichert. Kein automatisches Ausführen.</p>
@@ -344,9 +355,10 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
 </section>
 <script src="./studio-diagnose.js?v=20261101-autodiagnose-1"></script>
-<script src="studio.js?v=20261101-runtime-bridge-2"></script>
+<script src="./studio-qualitaet.js?v=20261101-quality-1"></script>
+<script src="studio.js?v=20261101-quality-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261101-change-request-1"></script>
-<script src="./ki-werkstatt-ui.js?v=20261101-google-guest-2"></script>
+<script src="./ki-werkstatt-ui.js?v=20261101-quality-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){
