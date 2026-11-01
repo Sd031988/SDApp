@@ -21,7 +21,7 @@ for(const name of ['obby','pet','garden','city','kart','treasure','fashion','lea
   await page.goto('/kids/games/play.html?game='+name);
   await expect.poll(()=>page.evaluate(()=>window.__sdMiniReady?.id),{timeout:10000}).toBe(name);
   await expect(page.locator('#stage')).toBeVisible();
-  await expect(page.locator('#title')).not.toHaveText('🎮 SD Kids');
+  await expect(page.locator('#title')).not.toHaveText('🎮 Spiele');
   const data=await page.evaluate(()=>localStorage.getItem('sd-kids-games-v1'));
   expect(data).toContain('"'+name+'"');
   if(name==='pet'){
