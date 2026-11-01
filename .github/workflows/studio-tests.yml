@@ -22,9 +22,12 @@ jobs:
         with:
           node-version: 22
       - name: JavaScript-Syntax prüfen
-        run: node --check studio/studio.js
+        run: |
+          node --check studio/studio.js
+          node --check studio/ki-werkstatt-core.js
+          node --check studio/ki-werkstatt-ui.js
       - name: Projektanalyse und Export prüfen
-        run: node --test tests/studio/studio.test.cjs
+        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs
 
   browser-smoke:
     runs-on: ubuntu-latest
