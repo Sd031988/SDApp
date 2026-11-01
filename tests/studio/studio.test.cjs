@@ -63,3 +63,14 @@ test('KI-Projekt-Assistent besitzt getrennte Projektanlage und KI-Anweisung', ()
   assert(source.includes("while (await projLesen(name)) name = nameBasis + '-' + nr++"));
   assert(source.includes('navigator.clipboard.writeText(anweisung)'));
 });
+
+test('JSON error finder reports the correct line even if the JS engine omits position', () => {
+  const diagnostic = extract('function editorJsonDiagnose(', 'function editorDiagnoseAktualisieren()');
+  const context = vm.createContext({});
+  vm.runInContext(diagnostic + '\nthis.check=editorJsonDiagnose;', context);
+  assert.equal(context.check('{"ok":true}','settings.json'),null);
+  assert.equal(context.check('broken','notes.txt'),null);
+  assert.equal(context.check('{\n"ok": true,\n"bad": }','settings.json').line,2);
+  assert.equal(context.check('{"ok": }','settings.json').line,0);
+  assert(context.check('{broken}','settings.json').message.length>0);
+});
