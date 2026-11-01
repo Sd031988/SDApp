@@ -231,9 +231,11 @@ const assert = require('node:assert/strict');
     assert.equal(aiAfter.originalUnchanged,aiBefore.files,'Originalprojekt darf nicht verändert werden');
     assert.equal(await page.locator('#kiOverlay').isVisible(),false);
     assert.equal(await page.locator('#vorschau').isVisible(),false,'KI-Code darf nicht automatisch starten');
+    page.once('dialog',dialog=>dialog.accept()); // Explicit consent to execute untrusted AI code.
     await page.locator('#starten').click();
     assert.equal(await page.locator('#starten').count(),1);
     assert.equal(await page.locator('#vorschau').isVisible(),true,'Ausführen öffnet die Vorschau');
+    assert.equal((await page.locator('#frame').getAttribute('sandbox')).includes('allow-same-origin'),false,'KI-Vorschau isoliert');
 
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
