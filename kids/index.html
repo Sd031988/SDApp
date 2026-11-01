@@ -8,7 +8,7 @@
 <div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div class="fallback" id="fallback"><div><strong>🐱</strong>Pibo wacht auf …</div></div></div>
 <div class="care-status" id="careStatus" hidden><span id="careLabel">Pibo beschäftigt sich</span><div class="care-track"><div id="careFill"></div></div></div><div id="gameHud" role="status" aria-live="off" hidden style="text-align:center;background:#e9f6ff;border-radius:16px;padding:9px;font-weight:800">🎯 <span id="gameName"></span> · Punkte: <span id="gamePoints">0</span> · ⏱️ <span id="gameSeconds">30</span>s</div><div id="starsHud" role="status" aria-live="polite" style="text-align:center;font-weight:800;padding:8px">⭐ Sterne: <span id="starsCount">0</span> · Nur Spielpunkte, kein echtes Geld</div><div id="giftReveal" role="status" aria-live="polite" hidden style="text-align:center;background:#fff2c6;border-radius:18px;padding:12px;margin:8px auto;font-weight:800"></div><div id="sceneEffect" aria-live="polite" style="text-align:center;font-size:1.5rem;min-height:36px"></div><div class="bubble" id="say" role="status" aria-live="polite">Miau! Komm und spiel mit mir! 💙</div>
 <div class="stats"><div><label>🍎 Satt</label><div class="track"><div class="fill" id="food"></div></div></div><div><label>💗 Freude</label><div class="track"><div class="fill" id="joy"></div></div></div><div><label>⚡ Energie</label><div class="track"><div class="fill" id="energy"></div></div></div><div><label>🫧 Sauber</label><div class="track"><div class="fill" id="clean"></div></div></div></div>
-<div id="foodShelf" class="choice-shelf" aria-label="Pibos Speisekarte" hidden><button data-food="0" aria-pressed="true"><span>🐟</span>Fisch</button><button data-food="1" aria-pressed="false"><span>🍗</span>Hähnchen</button><button data-food="2" aria-pressed="false"><span>🥕</span>Karotte</button><button data-food="3" aria-pressed="false"><span>🍎</span>Apfel</button><button data-food="4" aria-pressed="false"><span>🥣</span>Futter</button></div><div id="wardrobe" class="choice-shelf" aria-label="Pibos Kleiderschrank" hidden></div><nav class="rooms" aria-label="Pibos Zimmer"><button data-room="living">🛋️ Wohnzimmer</button><button data-room="kitchen">🍽️ Küche</button><button data-room="bedroom">🛏️ Schlafzimmer</button><button data-room="bathroom">🛁 Badezimmer</button><button data-room="toilet">🚽 Toilette</button></nav><div class="actions"><button data-act="pet">🤗 Streicheln</button><button data-act="feed">🐟 Füttern</button><button data-act="play">🧶 Spielen</button><button data-act="sleep">🌙 Schlafen</button><button data-act="wash">🫧 Waschen</button><button id="sound" aria-pressed="true">🔊 Ton an</button><button id="talk" aria-pressed="false">🎙️ Nachsprechen</button><button id="minigame">🎯 Ball fangen</button><button id="decorate">🎨 Zimmerfarbe</button><button id="outfit">🎀 Pibo anziehen</button><button id="mousegame">🐭 Maus suchen</button><button id="surprise">🎁 Tagesgeschenk</button><button id="photo">📸 Foto</button><button id="potty">🚽 Toilette benutzen</button><button id="foodchoice">🍎 Essen auswählen</button></div>
+<div id="foodShelf" class="choice-shelf" aria-label="Pibos Speisekarte" hidden><span style="flex-basis:100%;text-align:center;font-size:.9rem">Essen antippen und füttern – oder direkt auf Pibo ziehen.</span><button data-food="0" aria-pressed="true"><span>🐟</span>Fisch</button><button data-food="1" aria-pressed="false"><span>🍗</span>Hähnchen</button><button data-food="2" aria-pressed="false"><span>🥕</span>Karotte</button><button data-food="3" aria-pressed="false"><span>🍎</span>Apfel</button><button data-food="4" aria-pressed="false"><span>🥣</span>Futter</button></div><div id="wardrobe" class="choice-shelf" aria-label="Pibos Kleiderschrank" hidden></div><nav class="rooms" aria-label="Pibos Zimmer"><button data-room="living">🛋️ Wohnzimmer</button><button data-room="kitchen">🍽️ Küche</button><button data-room="bedroom">🛏️ Schlafzimmer</button><button data-room="bathroom">🛁 Badezimmer</button><button data-room="toilet">🚽 Toilette</button></nav><div class="actions"><button data-act="pet">🤗 Streicheln</button><button data-act="feed">🐟 Füttern</button><button data-act="play">🧶 Spielen</button><button data-act="sleep">🌙 Schlafen</button><button data-act="wash">🫧 Waschen</button><button id="sound" aria-pressed="true">🔊 Ton an</button><button id="talk" aria-pressed="false">🎙️ Nachsprechen</button><button id="minigame">🎯 Ball fangen</button><button id="decorate">🎨 Zimmerfarbe</button><button id="outfit">🎀 Pibo anziehen</button><button id="mousegame">🐭 Maus suchen</button><button id="surprise">🎁 Tagesgeschenk</button><button id="photo">📸 Foto</button><button id="potty">🚽 Toilette benutzen</button><button id="foodchoice">🍎 Essen auswählen</button></div>
 <p class="note">Keine Werbung · Keine Käufe · Keine Anmeldung · Spielstand auf diesem Gerät<br>Mikrofon nur nach Zustimmung; Aufnahmen bleiben im Browser und werden nicht hochgeladen. 3D benötigt WebGL und eine Internetverbindung zum Laden der 3D-Bibliothek.</p>
 </section></main>
 <script type="module">
@@ -33,7 +33,24 @@ const piboAudio=new PiboAudio();
 function sound(type){if(soundOn)piboAudio.play(type)}
 function act(type){if(type==='feed'&&currentRoom!=='kitchen')switchRoom('kitchen');if(type==='sleep'&&currentRoom!=='bedroom')switchRoom('bedroom');if(type==='wash'&&currentRoom!=='bathroom')switchRoom('bathroom');if(type==='play'&&state.energy<12){$('say').textContent='Pibo ist müde. Lass ihn erst schlafen! 💤';sound('meow');return}const effects={pet:{joy:10},feed:{food:22,clean:-3},play:{joy:20,energy:-13,food:-7,clean:-4},sleep:{energy:30,food:-5},wash:{clean:27,joy:-2}};for(const [k,v] of Object.entries(effects[type]))state[k]=clamp(state[k]+v);const messages={pet:'Prrrr! Noch mehr Streicheleinheiten! 💙',feed:'Miau! Das schmeckt lecker! 🐟',play:'Juhu! Fang den Ball! 🧶',sleep:'Gute Nacht, Pibo! 💤',wash:'Jetzt bin ich wieder sauber! 🫧'};$('say').textContent=messages[type];mode=type;modeUntil=performance.now()+ (type==='sleep'?9000:type==='wash'||type==='feed'?7000:5500);if(['feed','wash','sleep'].includes(type))startInteraction(type);if(type==='feed')showEffect(foods[foodIndex][0]+' 🍽️','Pibo frisst '+foods[foodIndex][1]+'!');if(type==='wash')showEffect('🛁 🫧 🧼','Pibo badet mit Seife und Schaum!',4300);if(type==='sleep')showEffect('🛏️ 🌙 💤','Pibo schläft im Bett!',5800);if(type==='play')showEffect('⚽ 🐾','Pibo jagt den Ball!');sound(type==='feed'?'chew':type==='wash'?'water':type==='sleep'?'snore':type==='pet'?'purr':'meow');render()}
 document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()=>act(b.dataset.act)));$('sound').addEventListener('click',()=>{soundOn=!soundOn;$('sound').textContent=soundOn?'🔊 Ton an':'🔇 Ton aus';$('sound').setAttribute('aria-pressed',String(soundOn))});
-const stage=$('stage'),scene=new THREE.Scene();scene.background=new THREE.Color(0xd4eaff);const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(0,2.3,8.8);camera.lookAt(0,1.35,0);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);$('fallback').remove();
+const stage=$('stage'),scene=new THREE.Scene();
+function dropFood(index){
+ if(!selectFood(index))return;
+ if(currentRoom!=='kitchen')switchRoom('kitchen');
+ act('feed');
+}
+stage.addEventListener('pointerup',e=>{
+ if(!draggedFood||draggedFood.pointerId!==e.pointerId)return;
+ const index=draggedFood.index;draggedFood=null;dropFood(index);
+});
+window.addEventListener('pointerup',()=>{draggedFood=null});
+window.addEventListener('pointercancel',()=>{draggedFood=null});
+stage.addEventListener('dragover',e=>{if(e.dataTransfer?.types?.includes('text/plain'))e.preventDefault()});
+stage.addEventListener('drop',e=>{
+ const data=e.dataTransfer?.getData('text/plain')||'';
+ if(!data.startsWith('pibo-food:'))return;
+ e.preventDefault();dropFood(data.slice(10));
+});scene.background=new THREE.Color(0xd4eaff);const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(0,2.3,8.8);camera.lookAt(0,1.35,0);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);$('fallback').remove();
 scene.add(new THREE.HemisphereLight(0xffffff,0x9d8f83,2.1));const sun=new THREE.DirectionalLight(0xffffff,2.8);sun.position.set(-3,8,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-6;sun.shadow.camera.right=6;sun.shadow.camera.top=6;sun.shadow.camera.bottom=-6;scene.add(sun);
 const mat=(c,rough=.88)=>new THREE.MeshStandardMaterial({color:c,roughness:rough}),fur=mat(0xf5b965),cream=mat(0xffedcf),stripe=mat(0xd78a3f),pink=mat(0xf08b99),dark=mat(0x25223b),iris=mat(0x57ad8b,.3),white=mat(0xffffff,.22),floor=mat(0xe7c49f),wall=mat(0xd9e8fb);
 function ell(parent,m,x,y,z,sx,sy,sz){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),m);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh}
@@ -42,7 +59,26 @@ const back=new THREE.Mesh(new THREE.PlaneGeometry(200,30),wall);back.position.se
 const rug=new THREE.Mesh(new THREE.CylinderGeometry(2.3,2.3,.035,64),mat(0xc6b4e9));rug.position.y=.035;rug.receiveShadow=true;scene.add(rug);
 let foodIndex=0;const foods=[['🐟','Fisch'],['🍗','Hähnchen'],['🥕','Karotte'],['🍎','Apfel'],['🥣','Katzenfutter']];let effectTimer=0;
 function showEffect(emoji,description,duration=2800){$('sceneEffect').textContent=emoji+' '+description;clearTimeout(effectTimer);effectTimer=setTimeout(()=>{$('sceneEffect').textContent=''},duration)}
-document.querySelectorAll('[data-food]').forEach(b=>b.addEventListener('click',()=>{foodIndex=Number(b.dataset.food);document.querySelectorAll('[data-food]').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));showEffect(foods[foodIndex][0],'Ausgewählt: '+foods[foodIndex][1]);sound('select')}));
+let draggedFood=null;
+function selectFood(index){
+ const n=Number(index);if(!Number.isInteger(n)||n<0||n>=foods.length)return false;
+ foodIndex=n;
+ document.querySelectorAll('[data-food]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.food)===foodIndex)));
+ showEffect(foods[foodIndex][0],'Ausgewählt: '+foods[foodIndex][1]);sound('select');
+ return true;
+}
+document.querySelectorAll('[data-food]').forEach(b=>{
+ b.draggable=true;
+ b.addEventListener('click',()=>selectFood(b.dataset.food));
+ b.addEventListener('dragstart',e=>{
+   draggedFood=null;
+   if(e.dataTransfer){e.dataTransfer.setData('text/plain','pibo-food:'+b.dataset.food);e.dataTransfer.effectAllowed='copy'}
+ });
+ b.addEventListener('pointerdown',e=>{
+   if(e.pointerType==='touch'||e.pointerType==='pen')draggedFood={index:Number(b.dataset.food),pointerId:e.pointerId};
+ });
+ b.addEventListener('pointerup',()=>{draggedFood=null});
+});
 const roomProps=new THREE.Group();scene.add(roomProps);let currentRoom='living';
 const roomPalette={living:0xe9dcff,kitchen:0xffefce,bedroom:0xd7e2ff,bathroom:0xd3f3f6,toilet:0xe2f3e4};
 function cube(p,color,x,y,z,w,h,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;p.add(m);return m}
