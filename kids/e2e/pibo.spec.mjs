@@ -56,6 +56,10 @@ test('Pibo cat remains visible above care controls on desktop and small phones',
     expect(box.y).toBeGreaterThanOrEqual(-4);
     expect(box.y+box.height).toBeLessThanOrEqual(844);
   }
+  await page.locator('[data-pibo-tab="extras"]').click();
+  await expect(page.locator('#catVoice')).toBeVisible();
+  await page.locator('#catVoice').click();
+  await expect(page.locator('#say')).toContainText('echte Katze');
   await page.locator('[data-pibo-tab="games"]').click();
   await expect(page.locator('#minigame')).toBeVisible();
   await expect(page.locator('#scrub')).toBeHidden();
