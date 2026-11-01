@@ -1,5 +1,6 @@
 <!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#141b42"><title>SD Kids | Spiel</title>
+<meta name="theme-color" content="#141b42">
+<link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml"><title>SD Kids | Spiel</title>
 <style>
 :root{font:16px/1.5 system-ui,-apple-system,sans-serif;color:#f9faff;background:#121c3f}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#283b70,#171f44 46%,#292052);min-height:100vh}
@@ -90,4 +91,5 @@ body{background:radial-gradient(circle at 4% -10%,#4464a3,transparent 37%),radia
 </main>
 <footer>Die neuen SD Kids Minispiele sind eigenständige 2D-Browserspiele. Pibo und BlockWorld bleiben als separate 3D-Spiele verfügbar. Keine offenen Chats oder Nutzer-Uploads.</footer>
 <script type="module" src="./play.mjs"></script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});</script>
 </body></html>
