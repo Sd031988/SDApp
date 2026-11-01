@@ -109,13 +109,13 @@ async function apply(){
   const project={name,dateien:files,haupt:original?.haupt||selected.find(f=>/(^|\/)index\.html$/i.test(f.path))?.path||selected[0].path,
    versionen:[],erstellt:Date.now(),kiQuelle:original?.name||null};
   await projSchreiben(project);
-  await projektOeffnen(name,selected[0].path);
+  await projektOeffnen(name,selected[0].path,{keineAutoVorschau:true});
   if(S.p?.name!==name)throw Error('Neue Projektkopie konnte nicht geöffnet werden');
   closeDialog();
   ausgabe('✨ KI-Code in einer neuen Projektkopie gespeichert: '+name+'\n'+list+
    '\nOriginal nicht überschrieben. Prüfen und mit ▶ Ausführen testen.');
   if(typeof ansicht==='function')ansicht('code');
-  toast('✨ KI-Code gespeichert. ▶ Ausführen zum Testen.');
+  toast('✨ KI-Code gespeichert, NICHT ausgeführt. ▶ Ausführen zum Testen.');
  }catch(e){console.error(e);status('Import fehlgeschlagen: '+(e?.message||String(e))+'. Original bleibt erhalten.',true);}
  finally{busy=false;$('kiApply').disabled=false}
 }
