@@ -11,7 +11,7 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
    constructor(...args){this.children=[];this.position=vec();this.rotation=vec();this.scale=vec(1,1,1);this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.shadowMap={};this.userData={};this.geometry={dispose(){}};this.material={color:{setHex(){}},dispose(){}};this.style={};this.visible=true;this.domElement=element('canvas');this.domElement.toDataURL=()=>'data:image/png;base64,abc';this.clock=0}
    add(o){this.children.push(o)}remove(o){this.children=this.children.filter(x=>x!==o)}
    traverse(f){f(this);for(const c of this.children)c.traverse(f)}
-   set(...a){this.position.set(...a);return this}setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}intersectObjects(){return [{point:{x:0,y:1.8,z:.8}}]}intersectObject(){return [{point:{x:0,y:1,z:1}}]}getElapsedTime(){return this.clock+=.2}dispose(){}
+   set(...a){this.position.set(...a);return this}setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}getWorldPosition(v){v.x=this.position.x;v.y=this.position.y;v.z=this.position.z;return v}project(){this.x/=5;this.y/=5;return this}intersectObjects(){return [{point:{x:0,y:1.8,z:.8}}]}intersectObject(){return [{point:{x:0,y:1,z:1}}]}getElapsedTime(){return this.clock+=.2}dispose(){}
  }
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element(id));return elements.get(id)};
  const tags=[...html.matchAll(/<button\b([^>]*)>/g)].map(x=>x[1]),groups={act:[],room:[],food:[]};
@@ -47,8 +47,11 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  get('stage').handlers.pointerup({pointerId:9});
  frame(50);
  click('act','feed');frame(50);
- click('act','wash');click('scrub');click('scrub');click('scrub');
- click('rinse');click('dry');frame(50);
+ click('act','wash');click('scrub');click('scrub');click('scrub');frame();
+ if(get('bathToolHint').hidden||!get('bathToolHint').textContent.includes('Dusche'))throw Error('3D shower hint did not follow staged bath');
+ click('rinse');frame();
+ if(get('bathToolHint').hidden||!get('bathToolHint').textContent.includes('Handtuch'))throw Error('3D towel hint missing after rinse');
+ click('dry');frame(50);
  if(!get('say').textContent.includes('Alles trocken'))throw Error('Interactive bath did not reach towel/dry finish');
  click('act','sleep');frame(65);
  const flushBefore=sounds.filter(s=>s==='flush').length;
@@ -68,5 +71,5 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  click('mousegame');click('photo');frame();
  if(!storage.has('sd-kids-pibo-v1'))throw Error('Game progress not persisted');
  if(!sounds.includes('chew')||!sounds.includes('flush')||!sounds.includes('splash'))throw Error('Missing care sound triggers: '+sounds.join(','));
- return {status:'PASS',checks:['startup','5 room navigation','food choice','desktop and touch food drop','daily gift once','visible stars','feeding','interactive scrubbing','manual shower rinse and towel','bathing','sleeping','single toilet flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
+ return {status:'PASS',checks:['startup','5 room navigation','food choice','desktop and touch food drop','daily gift once','visible stars','feeding','interactive scrubbing','manual shower rinse and towel','world-projected 3D bath tool hints','bathing','sleeping','single toilet flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
 }
