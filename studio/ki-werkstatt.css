@@ -31,3 +31,35 @@
 #kiOverlay #kiPromptPreview{justify-self:start;font-size:12px}
 #kiOverlay #kiClipboard:not([hidden]){max-height:180px;overflow:auto}
 @media(max-width:800px){#kiChangeBtn{font-size:12px;padding:5px 8px!important}#kiChangeBox{padding:9px}.kiSource{padding:9px}}
+
+/* Google KI gateway: guest-first, no SD login, explicit provider links. */
+#kiServicesBtn{background:linear-gradient(120deg,#1e5a70,#237b6c)!important;color:white!important;border:1px solid #57bda7!important;font-weight:800;flex:0 0 auto}
+#kiServicesOverlay[hidden],#kiServicesClipboard[hidden]{display:none!important}
+#kiServicesOverlay{position:fixed;inset:0;z-index:115;background:#080a17e8;display:grid;place-items:center;padding:12px;color:#f4f2ff}
+.kiServicesDialog{display:grid;gap:13px;width:min(840px,100%);max-height:94dvh;overflow:auto;background:#211d38;border:1px solid #695996;border-radius:18px;padding:21px;box-shadow:0 20px 70px #0009;font:14px/1.5 system-ui,sans-serif}
+.kiServicesHead{display:flex;justify-content:space-between;align-items:start;gap:14px}
+.kiServicesHead h2{margin:0;font-size:clamp(21px,4vw,27px)}
+.kiServicesHead p{margin:5px 0 0;font-size:12px;color:#cfc3ec}
+.kiServicesEyebrow{font-size:11px!important;font-weight:800;color:#9ef0c6!important;letter-spacing:.08em}
+#kiServicesOverlay button,.kiServicesOpen{display:inline-flex;align-items:center;justify-content:center;text-align:center;border-radius:9px;border:1px solid #7f70a8;background:#3d315c;color:white;text-decoration:none;font:750 13px/1.4 system-ui,sans-serif;padding:10px 13px;cursor:pointer;min-height:42px;overflow-wrap:anywhere}
+#kiServicesOverlay button:hover,.kiServicesOpen:hover{background:#514174}
+#kiServicesClose{flex:none}
+.kiServicesInfo{margin:0;padding:11px;background:#2a314a;border-left:3px solid #8fe8b9;border-radius:8px;color:#e9e6f1;font-size:12px}
+.kiServicesQuick{display:grid;gap:9px;padding:14px;background:#282341;border:1px solid #5c5282;border-radius:12px}
+.kiServicesQuick label{font-weight:750}
+#kiServicesQuestion,#kiServicesClipboard{width:100%;min-height:98px;background:#141129;border:1px solid #7669a0;border-radius:9px;color:#f4f2ff;padding:10px;font:13px/1.55 ui-monospace,monospace;resize:vertical}
+#kiServicesClipboard{min-height:72px}
+.kiServicesActions{display:flex;gap:9px;flex-wrap:wrap}
+.kiServicesActions>*{flex:1 1 190px}
+.kiServicesPrimary{background:linear-gradient(100deg,#12695b,#2c8877)!important;border-color:#6dddb6!important}
+#kiServicesStatus{margin:0;font-size:12px;color:#adebd5}
+.kiServicesGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kiServicesCard{display:grid;align-content:start;gap:9px;padding:14px;border:1px solid #61527f;background:#272139;border-radius:12px}
+.kiServicesCard h3{margin:0;font-size:16px}
+.kiServicesCard p{font-size:12px;color:#d8cdeb;margin:0}
+.kiServicesCard .kiServicesOpen{margin-top:auto}
+.kiServicesSymbol{font-size:24px}
+.kiServicesSteps{display:grid;gap:4px;padding:11px 13px;border:1px solid #655c80;border-radius:11px}
+.kiServicesSteps p{margin:0;color:#d1c7eb;font-size:12px}
+#kiServicesOverlay :is(button,a,textarea):focus-visible{outline:3px solid #ffe093;outline-offset:2px}
+@media(max-width:800px){#kiServicesBtn{font-size:12px;padding:5px 8px!important}#kiServicesOverlay{padding:4px;align-items:end}.kiServicesDialog{max-height:94dvh;padding:14px;border-radius:18px 18px 0 0}.kiServicesGrid{grid-template-columns:1fr}.kiServicesQuick{padding:10px}.kiServicesActions>*{flex:1 1 100%}}
