@@ -327,6 +327,10 @@ function gapPassage(t){
  const safe=esc(t.passage),current=t.j+1;
  return safe.replace(/\[(\d+)\]/g,(_,number)=>Number(number)===current?'<mark class="b1x-current-gap" aria-label="Aktuelle Lücke '+number+'">['+number+']</mark>':'<span class="b1x-other-gap">['+number+']</span>');
 }
+function timerText(seconds){
+ const left=Math.max(0,Math.ceil(seconds));
+ return '⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');
+}
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
  const count=p[3].slice(0,t.g).reduce((a,b)=>a+b,0)+1;
@@ -336,7 +340,7 @@ function question(){
  '<h3>'+esc(t.q)+'</h3><p class="b1x-note">'+esc(t.hint)+'</p><textarea id="b1x-text" rows="9" placeholder="'+(p[0]==='sprechen'?'Notizen zur mündlichen Antwort …':'Deine Antwort …')+'"></textarea><div id="b1x-count" class="b1x-note">0 Wörter</div>';
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+' · '+esc(p[1])+'</p>'+
  '<div class="b1x-meta"><span>Teil '+(t.g+1)+'/'+p[3].length+' · '+esc(t.kind)+'</span><span>Aufgabe '+(idx+1)+'/'+list.length+'</span></div>'+
- '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">⏱ '+p[2]+':00</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
+ '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">'+timerText((deadline-Date.now())/1000)+'</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
@@ -349,7 +353,7 @@ function question(){
   }else val=el('b1x-text').value.trim();
   answers.push(val);idx++;plays=0;question();
  };
- tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent='⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
+ tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
 function selfCheckMarkup(section,entries){
  const isWrite=section==='schreiben';
