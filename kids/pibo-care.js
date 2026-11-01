@@ -56,7 +56,7 @@ export class PiboCare {
     const sponge=this.props.children.find(obj=>obj.userData?.sponge);
     if(sponge){sponge.position.x=-1.8+.10*Math.sin(i.scrubs*1.7);sponge.rotation.z=.22*Math.sin(i.scrubs*1.3)}
     for(const b of this.props.children){
-      if(b.userData?.bubble!==undefined)b.scale.setScalar(1+.15*Math.sin(i.scrubs+b.userData.bubble));
+      if(b.userData?.bubble!==undefined)b.scale.setScalar((.075+(b.userData.bubble%3)*.025)*(1+.15*Math.sin(i.scrubs+b.userData.bubble)));
     }
     if(i.scrubs%3===0)this.sound('splash');
     this.onStatus(true,'Einseifen: '+Math.min(6,i.scrubs)+'/6',Math.min(1,i.scrubs/6));
