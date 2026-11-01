@@ -110,7 +110,7 @@ async function projektOeffnen(name, datei, optionen) {
   baum(); if (haupt) dateiOeffnen(haupt); else { editorLeer(); }
   tabsZeigen(); status(); projektListe();
   // Imported AI code must not execute automatically when a fresh project copy opens.
-  if (istWebProjekt() && !(optionen && optionen.keineAutoVorschau)) vorschau(true); else { $('vorschau').hidden = true; }
+  if (istWebProjekt() && !(optionen && optionen.keineAutoVorschau) && !Object.prototype.hasOwnProperty.call(S.p,'kiQuelle')) vorschau(true); else { $('vorschau').hidden = true; }
 }
 async function projektNeu(vorlageId, nameVorschlag) {
   const v = VORLAGEN.find(x => x.id === vorlageId) || VORLAGEN[0];
@@ -897,6 +897,8 @@ async function vorschau(neu) {
   if (S.p !== vorschauProjekt) return;
   $('vorschau').hidden = false; S.problemeVorschau = []; probleme(); if (neu) S.konsole = [];
   const f = $('frame');
+  // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
+  f.setAttribute('sandbox', Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
   if (S.swBereit) { const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
     if (neu || !f.src.includes('/vorschau/') || !f.src.includes('/vorschau/' + encodeURIComponent(S.p.name) + '/')) { f.removeAttribute('srcdoc'); f.src = url; } else { try { f.contentWindow.location.reload(); } catch (e) { f.src = url; } }
     $('url').value = new URL(url, location.href).pathname.replace(/^.*\/vorschau\//, '/'); }
@@ -955,6 +957,7 @@ function probleme() { const box = $('problemListe'); box.innerHTML = ''; const a
 
 /* ---------------- Ausführen ---------------- */
 async function ausfuehren() {
+  if (S.p && Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') && !confirm('Dieser Code wurde von einer KI vorgeschlagen und nicht automatisch geprüft. Möchtest du ihn jetzt in einer isolierten Browser-Vorschau ausführen?\n\nUnbekannten Code nie mit privaten Daten oder Zugangsdaten testen.')) return;
   if (!S.p) { vorlagenWaehlen(); return; }
   if (S.aktiv && programmSprache(S.aktiv)) return programmStarten();
   if (S.aktiv && /\.(m?js|cjs|ts)$/.test(S.aktiv)) { const t = S.p.dateien[S.aktiv] || '', name = S.aktiv.split('/').pop();
