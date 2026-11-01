@@ -31,7 +31,7 @@ export class PiboCare {
       const o=this.props.children[0];this.props.remove(o);
       o.traverse(n=>{n.geometry?.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material?.dispose()})
     }
-    this.active=null;this.cat.position.set(0,0,0);this.cat.rotation.set(0,0,0);
+    this.active=null;this.head.rotation.set(0,0,0);this.mouth.scale.y=.04;for(const paw of this.paws)paw.position.y=.21;this.cat.position.set(0,0,0);this.cat.rotation.set(0,0,0);
     this.cat.scale.set(1,1,1);this.camera.position.x=0;this.camera.lookAt(0,1.35,0);
     this.onStatus(false,'',0)
   }
