@@ -105,8 +105,8 @@ export class PiboCare {
     }
     if(i.type==='toilet'){
       const sitting=smooth((p-.23)/.15)*(1-smooth((p-.82)/.14));
-      this.cat.position.y=-.28*sitting;this.cat.scale.y=1-.2*sitting;this.cat.rotation.y=.35*sitting;
-      if(i.water.visible)i.water.rotation.z+=.17
+      this.cat.position.y=-.28*sitting;this.cat.scale.y=1-.2*sitting;this.cat.rotation.y=.35*sitting;this.head.rotation.x=.035+.09*sitting;this.head.rotation.z=.025*Math.sin(t*3)*sitting;
+      if(i.water.visible){i.water.rotation.z+=.17;i.water.scale.setScalar(1+.12*Math.sin(t*12))}
     }
     this.camera.position.x+=(target*.32*near-this.camera.position.x)*.055;
     this.camera.lookAt(this.camera.position.x*.35,1.35,0)
