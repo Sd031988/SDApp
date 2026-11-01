@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "SD Code-Studio – KI-Antwort übertragen",
+  "version": "1.0.0",
+  "description": "Nur von dir markierte ChatGPT-/Gemini-Antworten zur sicheren Prüfung ans SD Code-Studio senden.",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "tabs"
+  ],
+  "action": {
+    "default_title": "SD Code-Studio – Textauswahl senden"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.thesdhub.com/studio/*",
+        "https://thesdhub.com/studio/*"
+      ],
+      "js": [
+        "studio-bridge.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
