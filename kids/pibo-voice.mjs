@@ -21,3 +21,18 @@ export function mouthWhileSpeaking(seconds,level,active,reduced=false){
   lean:reduced?0:.022*Math.sin(seconds*4.2)
  };
 }
+
+/* Stop automatically once a speaking child becomes quiet. Works entirely in
+   the browser on the granted microphone stream, with a hard time limit. */
+export function nextTalkingTurn(previous,amplitude,now,options={}){
+ const threshold=Number.isFinite(options.threshold)?options.threshold:.17;
+ const silenceMs=Number.isFinite(options.silenceMs)?options.silenceMs:1150;
+ const maxMs=Number.isFinite(options.maxMs)?options.maxMs:9500;
+ const started=previous?.started??now;
+ const heard=!!previous?.heard||Number(amplitude)>=threshold;
+ const lastVoice=Number(amplitude)>=threshold?now:previous?.lastVoice??started;
+ return {
+   started,heard,lastVoice,
+   stop:now-started>=maxMs||(heard&&now-lastVoice>=silenceMs)
+ };
+}
