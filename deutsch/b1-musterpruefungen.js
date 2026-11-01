@@ -579,7 +579,7 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  (getCheckpoint()?'<button id="b1x-resume" class="b1x-primary">↩ Unterbrochene Prüfung fortsetzen</button>':'')+
- '<button id="b1x-speaking-trainer" class="b1x-card">🎙 B1-Sprechtrainer</button><button id="b1x-writing-trainer" class="b1x-card">✍ B1-Schreibtrainer</button><button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
+ '<button id="b1x-listening-trainer" class="b1x-card">🎧 Freies Hörtraining</button><button id="b1x-speaking-trainer" class="b1x-card">🎙 B1-Sprechtrainer</button><button id="b1x-writing-trainer" class="b1x-card">✍ B1-Schreibtrainer</button><button id="b1x-dashboard" class="b1x-primary">📈 Mein Lern-Dashboard</button><button id="b1x-week-plan" class="b1x-card" type="button">📅 7-Tage-B1-Lernplan</button><button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-marked-practice" class="b1x-card" type="button">★ Markierte Fragen wiederholen</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
  '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist (60 Minuten Lesen, anschließend die verbleibende Zeit für Sprachbausteine). Dies ist eine vereinfachte Trainingsaufteilung; bei Einzelübungen gelten getrennte Zeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 B1-Ergebnisse und Schreibentwürfe löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
@@ -587,6 +587,7 @@ function home(){
  if(el('b1x-resume'))el('b1x-resume').onclick=resumeCheckpoint;
  el('b1x-start').onclick=()=>{if(getCheckpoint()&&!confirm('Eine unterbrochene Prüfung ist gespeichert. Neue Prüfung starten und bisherigen Fortschritt ersetzen?'))return;clearCheckpoint();running=true;results={};telcSharedDeadline=0;start(0);};
  el('b1x-marked-practice').onclick=markedPractice;
+ el('b1x-listening-trainer').onclick=listeningTrainer;
  el('b1x-speaking-trainer').onclick=speakingTrainer;
  el('b1x-writing-trainer').onclick=writingTrainer;
  el('b1x-dashboard').onclick=dashboard;
@@ -964,7 +965,7 @@ function dashboard(){
  const marks=saved.reduce((n,x)=>n+(Array.isArray(x.marked)?x.marked.length:0),0);
  view('<h2>Mein B1-Lern-Dashboard</h2><p class="b1x-note">Lokale Trainingswerte, keine offiziellen Prüfungsnoten.</p>'+
  '<div class="b1x-grid"><div class="b1x-passage">Wochenplan: <b>'+done+'/7</b></div><div class="b1x-passage">Lernserie: <b>'+streak+' volle Wochen</b></div><div class="b1x-passage">Markierungen: <b>'+marks+'</b></div></div>'+
- '<h3>Lernstatistik</h3>'+stats.map(x=>'<div class="b1x-passage"><b>'+({lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'}[x.id])+'</b><p>'+(x.percent===null?'Noch keine Daten':x.percent+' % richtig · '+x.total+' Aufgaben')+'</p>'+(x.percent===null?'':'<div class="b1x-progress"><div style="width:'+x.percent+'%"></div></div>')+'</div>').join('')+
+ achievementMarkup()+'<h3>Lernstatistik</h3>'+stats.map(x=>'<div class="b1x-passage"><b>'+({lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'}[x.id])+'</b><p>'+(x.percent===null?'Noch keine Daten':x.percent+' % richtig · '+x.total+' Aufgaben')+'</p>'+(x.percent===null?'':'<div class="b1x-progress"><div style="width:'+x.percent+'%"></div></div>')+'</div>').join('')+
  '<p><b>Empfehlung:</b> '+(focus.total?'Übe '+({lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'}[focus.id])+' als Nächstes.':'Beginne mit Lesen.')+'</p>'+
  '<button id="b1x-dash-go" class="b1x-primary">Empfohlene Übung starten</button><button id="b1x-dash-week" class="b1x-card">Wochenplan und Vergleich</button><button id="b1x-dash-mark" class="b1x-card">Markierte Fragen</button><button id="b1x-dash-results" class="b1x-card">Alle Ergebnisse</button><button id="b1x-dash-back" class="b1x-card">Zurück</button>');
  el('b1x-dash-week').onclick=weekPlan;el('b1x-dash-mark').onclick=markedPractice;el('b1x-dash-results').onclick=history;el('b1x-dash-back').onclick=home;
@@ -976,6 +977,35 @@ const writingTopics=[
  {title:'Einladung beantworten',prompt:'Ein Freund lädt dich zum Geburtstag ein. Bedanke dich, sage zu oder ab und stelle eine Frage zur Feier.',sample:'Liebe Maria, vielen Dank für deine Einladung! Ich komme sehr gern zu deiner Feier. Soll ich etwas zu essen mitbringen? Ich freue mich auf Samstag. Liebe Grüße'},
  {title:'Meinung: Online lernen',prompt:'Schreibe deine Meinung zum Online-Lernen. Nenne einen Vorteil, einen Nachteil und ein persönliches Beispiel.',sample:'Meiner Meinung nach ist Online-Lernen praktisch, weil man zu Hause lernen kann. Ein Nachteil ist, dass man weniger Kontakt zu anderen hat. Ich lerne selbst gern online, aber manchmal brauche ich Hilfe.'}
 ];
+function listeningTrainer(){
+ let index=0,show=false;
+ const scenes=listeningScenes;
+ function render(){
+  const scene=scenes[index],questions=listeningPrompts[index],answers=listeningAnswers[index];
+  view('<h2>Freies B1-Hörtraining</h2><p class="b1x-note">Zusatztraining ohne Prüfungszeitlimit. Die Sprachausgabe deines Geräts kann je nach System einen Onlinedienst nutzen.</p>'+
+  '<label for="b1x-listen-select">Hörtext auswählen</label><select id="b1x-listen-select" class="b1x-select">'+scenes.map((_,i)=>'<option value="'+i+'" '+(i===index?'selected':'')+'>Hörtext '+(i+1)+'</option>').join('')+'</select>'+
+  '<button id="b1x-listen-play" class="b1x-primary">▶ Hörtext anhören</button>'+
+  questions.map((q,i)=>'<div class="b1x-passage"><b>Frage '+(i+1)+'</b><p>'+esc(q)+'</p></div>').join('')+
+  '<button id="b1x-listen-reveal" class="b1x-card">Antworten und Text '+(show?'verbergen':'anzeigen')+'</button>'+
+  (show?'<div class="b1x-passage"><b>Antworten</b><p>'+answers.map((a,i)=>(i+1)+'. '+esc(Array.isArray(a)?a.join(' / '):String(a))).join(' · ')+'</p><b>Hörtext</b><p>'+esc(typeof scene==='string'?scene:JSON.stringify(scene))+'</p></div>':'')+
+  '<button id="b1x-listen-back" class="b1x-card">Zurück zur Auswahl</button>');
+  el('b1x-listen-select').onchange=e=>{index=Number(e.target.value);show=false;render();};
+  el('b1x-listen-play').onclick=()=>{if(!('speechSynthesis' in window)){alert('Sprachausgabe ist hier nicht verfügbar.');return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(typeof scene==='string'?scene:JSON.stringify(scene));u.lang='de-DE';u.rate=.88;window.speechSynthesis.speak(u);};
+  el('b1x-listen-reveal').onclick=()=>{show=!show;render();};
+  el('b1x-listen-back').onclick=()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel();home();};
+ }
+ render();
+}
+function achievementMarkup(){
+ const saved=getSaved(),weeks=getWeekArchive(),days=getWeekChecks().filter(Boolean).length;
+ const badges=[
+ ['Erster Schritt',saved.length>=1,'Mindestens einen Übungsteil abgeschlossen'],
+ ['Dranbleiben',days>=5,'Fünf Aufgaben im aktuellen Wochenplan abgehakt'],
+ ['Volle Lernwoche',weeks.some(x=>x.done===7),'Eine vollständige Woche gespeichert'],
+ ['Übungserfahrung',saved.length>=10,'Zehn Übungsergebnisse gespeichert']
+ ];
+ return '<div class="b1x-passage"><h3>Meine Lernabzeichen</h3><p class="b1x-note">Motivation statt offizieller Leistungsbewertung.</p>'+badges.map(b=>'<p>'+(b[1]?'🏅 ':'○ ')+'<b>'+b[0]+'</b> · '+b[2]+(b[1]?' (erreicht)':' (noch offen)')+'</p>').join('')+'</div>';
+}
 function speakingTrainer(){
  const topics=['Stell dich vor: Name, Beruf, Hobbys und warum du Deutsch lernst.','Erzähle von einem schönen Wochenende: Wo warst du und was hast du gemacht?','Was ist besser: öffentliche Verkehrsmittel oder Auto? Begründe deine Meinung.'];
  let recorder=null,chunks=[],audioUrl=null;
