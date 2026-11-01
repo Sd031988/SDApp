@@ -118,13 +118,27 @@ const assert = require('node:assert/strict');
       pythonOk:lernAufgabePruefen('python',"name = 'Ada'\nprint(name)"),
       unknown:lernAufgabePruefen('unknown','anything')
     }));
-    assert.equal(lessons.count,4);
+    assert.equal(lessons.count,9);
     assert.equal(lessons.htmlOk,true);
     assert.equal(lessons.htmlBad,false);
     assert.equal(lessons.cssOk,true);
     assert.equal(lessons.jsOk,true);
     assert.equal(lessons.pythonOk,true);
     assert.equal(lessons.unknown,false);
+    const advanced = await page.evaluate(() => ({
+      layout:lernAufgabePruefen('css-layout','.container { display: flex; gap: 12px; }'),
+      functions:lernAufgabePruefen('javascript-functions','function addieren(a,b) { return a + b; }'),
+      loops:lernAufgabePruefen('python-loops','for i in range(5):\n    print(i)'),
+      project:lernAufgabePruefen('web-project','<h1>Titel</h1><nav></nav><main><section></section><section></section></main>'),
+      incomplete:lernKursStatus({}).fertig,
+      complete:lernKursStatus(Object.fromEntries(LERN_LEKTIONEN.map(l=>[l.id,'abgeschlossen']))).fertig
+    }));
+    assert.equal(advanced.layout,true);
+    assert.equal(advanced.functions,true);
+    assert.equal(advanced.loops,true);
+    assert.equal(advanced.project,true);
+    assert.equal(advanced.incomplete,false);
+    assert.equal(advanced.complete,true);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
