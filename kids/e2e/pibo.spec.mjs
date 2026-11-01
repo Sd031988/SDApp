@@ -115,3 +115,28 @@ test('Pibo interactive hands-on care: food-to-mouth, soap/rinse/dry, toilet and 
   const docWidth=await page.evaluate(()=>document.documentElement.scrollWidth);
   expect(docWidth).toBeLessThanOrEqual((isMobile?390:1280)+3);
 });
+
+
+test('Pibo original garden is a playable sixth 3D room on PC and phone',async({page,isMobile})=>{
+ const width=isMobile?390:1280;
+ await page.setViewportSize({width,height:844});
+ await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#stage canvas')).toBeVisible({timeout:30000});
+ await page.locator('[data-room="garden"]').click();
+ await expect(page.locator('#roomTitle')).toContainText('Garten');
+ await expect(page.locator('#say')).toContainText('Schmetterlinge');
+ await page.locator('[data-pibo-tab="games"]').click();
+ await expect(page.locator('#gardenPlay')).toBeVisible();
+ await page.locator('#gardenPlay').click();
+ await expect(page.locator('#sceneEffect')).toContainText('Garten');
+ const widthActual=await page.evaluate(()=>document.documentElement.scrollWidth);
+ expect(widthActual).toBeLessThanOrEqual(width+3);
+ // Tap in open 3D scene: should never crash or navigate away.
+ const b=await page.locator('#stage canvas').boundingBox();
+ await page.mouse.click(b.x+b.width/2,b.y+b.height/2);
+ await expect(page.locator('#stage canvas')).toBeVisible();
+ await page.locator('[data-room="living"]').click();
+ await expect(page.locator('#roomTitle')).toContainText('Wohnzimmer');
+ await page.locator('[data-room="garden"]').click();
+ await expect(page.locator('#roomTitle')).toContainText('Garten');
+});
