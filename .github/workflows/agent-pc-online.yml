@@ -1,0 +1,61 @@
+name: SD Lotze Online – PC Installer
+on:
+  push:
+    paths:
+      - 'agent/pc-online/**'
+      - '.github/workflows/agent-pc-online.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  quality:
+    name: PC-Online Sicherheits- und Funktionstests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript prüfen
+        run: |
+          node --check agent/pc-online/main.cjs
+          node --check agent/pc-online/url-policy.cjs
+          node --test agent/pc-online/tests/*.test.cjs
+  installer:
+    name: Installer – ${{ matrix.platform }}
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            target: win
+          - os: macos-latest
+            platform: mac
+            target: mac
+          - os: ubuntu-22.04
+            platform: linux
+            target: linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: agent/pc-online
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhängigkeiten installieren
+        run: npm install --no-audit --no-fund
+      - name: Plattformpaket erstellen
+        run: npx electron-builder --${{ matrix.target }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sd-lotze-online-${{ matrix.platform }}
+          path: agent/pc-online/dist/**
+          if-no-files-found: error
+          retention-days: 30
