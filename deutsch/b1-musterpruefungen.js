@@ -209,7 +209,7 @@ const grammar=[
 ];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el=id=>document.getElementById(id);
-let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0,plays=0,telcSharedDeadline=0;
+let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0,plays=0,telcSharedDeadline=0,pendingChoice=null;
 const k=(n,s)=>themes[(n+s*7)%themes.length];
 function items(section){
  const [id,,minutes,groups,kinds]=section;const result=[];
@@ -298,12 +298,12 @@ function getCheckpoint(){
  try{const x=JSON.parse(localStorage.getItem(checkpointKey)||'null');return x&&E[x.exam]&&Number.isInteger(x.set)&&x.set>=1&&x.set<=5&&Number.isInteger(x.part)&&x.part>=0&&x.part<E[x.exam].parts.length&&Number.isInteger(x.idx)&&Array.isArray(x.answers)&&Number.isFinite(x.deadline)&&Number.isFinite(x.began)&&typeof x.running==='boolean'?x:null;}catch(_){return null;}
 }
 function saveCheckpoint(){
- try{localStorage.setItem(checkpointKey,JSON.stringify({exam,set,part,idx,answers:answers.slice(),began,deadline,plays,running,results,telcSharedDeadline,updated:Date.now()}));}catch(_){}
+ try{localStorage.setItem(checkpointKey,JSON.stringify({exam,set,part,idx,answers:answers.slice(),began,deadline,plays,running,results,telcSharedDeadline,pendingChoice,updated:Date.now()}));}catch(_){}
 }
 function clearCheckpoint(){try{localStorage.removeItem(checkpointKey);}catch(_){}}
 function resumeCheckpoint(){
  const x=getCheckpoint();if(!x)return;
- exam=x.exam;set=x.set;part=x.part;idx=x.idx;answers=x.answers;began=x.began;deadline=x.deadline;plays=x.plays||0;running=x.running;results=x.results||{};telcSharedDeadline=x.telcSharedDeadline||0;
+ exam=x.exam;set=x.set;part=x.part;idx=x.idx;answers=x.answers;began=x.began;deadline=x.deadline;plays=x.plays||0;running=x.running;results=x.results||{};telcSharedDeadline=x.telcSharedDeadline||0;pendingChoice=Number.isInteger(x.pendingChoice)?x.pendingChoice:null;
  const tasks=items(E[exam].parts[part]);if(idx<0||idx>tasks.length||answers.length!==idx){clearCheckpoint();home();return;}
  if(idx===tasks.length){finish();return;}
  question();
@@ -325,7 +325,7 @@ function home(){
  if(el('b1x-history'))el('b1x-history').onclick=history;
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse und Schreibentwürfe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
 }
-function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
+function start(i){clear();part=i;idx=0;answers=[];plays=0;pendingChoice=null;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
 function speak(t,dialogue){
  if(!('speechSynthesis'in window)){alert('Dein Browser unterstützt diese Sprachausgabe nicht.');return;}
  const synth=window.speechSynthesis;synth.cancel();
@@ -357,7 +357,7 @@ function captureCurrentAnswer(){
  if(answers.length>idx)return;
  if(['lesen','hoeren','sprach'].includes(p[0])){
   const chosen=root&&root.querySelector('input[name="b1x-answer"]:checked');
-  answers.push(chosen?Number(chosen.value):null);
+  answers.push(chosen?Number(chosen.value):pendingChoice);
  }else{
   const field=el('b1x-text');
   answers.push(field?field.value.trim():null);
@@ -376,6 +376,7 @@ function question(){
  '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">'+timerText((deadline-Date.now())/1000)+'</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
+ if(['lesen','hoeren','sprach'].includes(p[0])){const radios=root.querySelectorAll('input[name="b1x-answer"]');radios.forEach(r=>{if(Number(r.value)===pendingChoice)r.checked=true;r.addEventListener('change',()=>{pendingChoice=Number(r.value);saveCheckpoint();});});}
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;saveCheckpoint();speak(t.audio,t.dialogue);};}
  if(el('b1x-text')){const saved=readDraft();if(saved!==null)el('b1x-text').value=saved;const update=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';saveDraft(el('b1x-text').value);};el('b1x-text').oninput=update;el('b1x-count').textContent=(el('b1x-text').value.trim()?el('b1x-text').value.trim().split(/\s+/).length:0)+' Wörter';}
  el('b1x-next').onclick=()=>{
@@ -385,7 +386,7 @@ function question(){
    const c=root.querySelector('input[name="b1x-answer"]:checked');
    if(!c){if(!confirm('Ohne Antwort zur nächsten Aufgabe?'))return;val=null;}else val=Number(c.value);
   }else val=el('b1x-text').value.trim();
-  answers.push(val);if(['schreiben','sprechen'].includes(p[0]))removeDraft();idx++;plays=0;saveCheckpoint();question();
+  answers.push(val);if(['schreiben','sprechen'].includes(p[0]))removeDraft();idx++;plays=0;pendingChoice=null;saveCheckpoint();question();
  };
  tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent=timerText(left);if(left===0){const pNow=E[exam].parts[part];captureCurrentAnswer();while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
@@ -419,7 +420,7 @@ function reviewTask(t,answer,i,withTranscript){
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
  const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000),deadline};
- results[p[0]]=record;clearCheckpoint();if(['schreiben','sprechen'].includes(p[0]))removeDraft();
+ results[p[0]]=record;pendingChoice=null;clearCheckpoint();if(['schreiben','sprechen'].includes(p[0]))removeDraft();
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
  const next=running&&part+1<E[exam].parts.length;
  const completed=running&&!next;
