@@ -341,6 +341,27 @@ const assert = require('node:assert/strict');
     assert.equal(mobileDirect.active,'index.html');
     assert.equal(mobileDirect.versions,directAfter.versionCount,'Identical code must not create another backup');
 
+    // Read-only diagnostics: detect missing files during editing and stage KI fixes.
+    await page.setViewportSize({width:1280,height:900});
+    await page.evaluate(() => {
+      dateiOeffnen('index.html');
+      const cm=S.cm;
+      const end=cm.lastLine();
+      cm.replaceRange('\n<script src="missing-diagnose-file.js"></script>',{line:end,ch:cm.getLine(end).length},undefined,'+input');
+    });
+    await page.waitForFunction(()=>S.problemeAnalyse.some(x=>/missing-diagnose-file.js/.test(x.text)),{timeout:12000});
+    await page.locator('#diagnoseBtn').click();
+    assert.equal(await page.locator('#unten [data-feld="probleme"]').isVisible(),true,'Diagnostics panel opens');
+    const diagText=await page.locator('#problemListe').innerText();
+    assert.match(diagText,/missing-diagnose-file.js/,'Newly edited broken reference is recognized');
+    assert.equal(await page.locator('#diagnoseKI').isEnabled(),true);
+    await page.locator('#diagnoseKI').click();
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true,'Repair action opens safe KI workflow');
+    assert.match(await page.locator('#kiGoal').inputValue(),/missing-diagnose-file.js/);
+    assert.equal(await page.locator('#kiInclude').isChecked(),false,'No source files shared by default');
+    assert.equal(await page.locator('#kiResult').inputValue(),'','No automatic AI code injected');
+    await page.locator('#kiClose').click();
+
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
