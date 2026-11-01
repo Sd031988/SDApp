@@ -127,3 +127,20 @@ test('Mini-games support pause, reduced motion and persisted sound preferences',
  await expect(page.locator('#saveIndicator')).toContainText('gespeichert');
  expect(errors).toEqual([]);
 });
+
+test('The eight SD Kids mini-games remain playable offline after first installation',async({page,context})=>{
+ await page.goto('/kids/games/');
+ await expect(page.locator('.game')).toHaveCount(10);
+ await page.waitForFunction(async()=>{
+  if(!('serviceWorker' in navigator))return false;
+  const reg=await navigator.serviceWorker.ready;
+  return Boolean(reg.active&&navigator.serviceWorker.controller);
+ },undefined,{timeout:25000});
+ await context.setOffline(true);
+ try{
+  await page.goto('/kids/games/play.html?game=pet',{waitUntil:'domcontentloaded'});
+  await expect.poll(()=>page.evaluate(()=>window.__sdMiniReady?.id),{timeout:10000}).toBe('pet');
+  await page.getByRole('button',{name:'🍎 Füttern'}).click();
+  await expect(page.locator('#message')).toContainText('Lecker');
+ }finally{await context.setOffline(false)}
+});
