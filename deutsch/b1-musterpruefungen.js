@@ -64,6 +64,18 @@ const matchingNeeds=[
  ['Du willst nach der Arbeit Buchhaltung lernen.','I'],
  ['Du möchtest am Sonntag mit einer Gruppe draußen unterwegs sein.','J']
 ];
+const matchingExplanations=[
+ "Anzeige A bietet kostenloses Deutschsprechen ohne Anmeldung. Genau das wird in der Situation gesucht.",
+ "Anzeige B nennt Fahrradreparaturen und Termine am Dienstagnachmittag. Beides passt zum kaputten Fahrrad und zur verfügbaren Zeit.",
+ "Anzeige C bietet Betreuung für Kinder ab drei Jahren, auch am Freitagabend bis 22 Uhr. Das vierjährige Kind erfüllt die Altersbedingung.",
+ "Anzeige D bietet eine Zweizimmerwohnung nur zehn Gehminuten vom Bahnhof entfernt. Damit passt sie zum Wunsch nach einer kleinen, fußläufig erreichbaren Wohnung.",
+ "Anzeige E richtet sich an ältere Menschen und erklärt den Umgang mit Smartphones und E-Mails. Das passt zum Lernwunsch der Großmutter.",
+ "Anzeige F ist ein Anfängerschwimmkurs für Erwachsene am Donnerstagabend um 18 Uhr. Sowohl das Niveau als auch der Termin passen.",
+ "Anzeige G bietet Gitarrenunterricht für Erwachsene am Montag nach der Arbeit. Das passt zur Berufstätigkeit und zum gewünschten Instrument.",
+ "Anzeige H ist ein Gemeinschaftsgarten mit Gemüseanbau am Samstag um 10 Uhr. Tätigkeit und Wochentag stimmen überein.",
+ "Anzeige I beschreibt einen Buchhaltungskurs am Abend, also nach der Arbeit. Genau dieses Fach wird gesucht.",
+ "Anzeige J bietet gemeinsames Wandern am Sonntag. Damit stimmen Aktivität, Gruppenteilnahme und Wochentag überein."
+];
 const readingClaims=[
  ['Lara möchte prüfen, wie sie abends von der Wohnung nach Hause kommt.','Lara hat die Wohnung bereits gemietet.'],
  ['Für die Smartphone-Beratung muss man sich spätestens am Donnerstag anmelden.','Alle Teilnehmenden müssen ein eigenes Smartphone mitbringen.'],
@@ -430,7 +442,7 @@ function items(section){
        const pool=matchingOffers.filter(o=>poolIds.includes(o[0])).sort((a,b)=>a[0].localeCompare(b[0]));
        const options=pool.map(o=>o[0]+' · '+o[1]),answer=pool.findIndex(o=>o[0]===need[1]);
        const passage='Lies die folgenden Anzeigen. '+(distractorIds.length?'Einige Anzeigen passen zu keiner Situation. ':'')+'\\n\\n'+pool.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
-       result.push({g,j,q:'Situation '+(j+1)+': '+need[0],options,answer,passage,kind:'Anzeigen zuordnen · gemeinsamer Anzeigenpool'});
+       result.push({g,j,q:'Situation '+(j+1)+': '+need[0],options,answer,passage,explanation:matchingExplanations[needIndex],kind:'Anzeigen zuordnen · gemeinsamer Anzeigenpool'});
        continue;
      }
      if(id==='lesen'&&exam==='goethe'&&(g===0||g===3)){
