@@ -61,7 +61,13 @@ app.whenReady().then(async()=>{
  pageSession.setPermissionRequestHandler((contents,permission,callback,details)=>{
   const origin=details?.requestingUrl||contents.getURL();
   const types=details?.mediaTypes||[];
-  callback(permission==='media'&&isOfficialAgentUrl(origin)&&types.includes('audio')&&!types.includes('video'));
+  if(permission!=='media'||!isOfficialAgentUrl(origin)||!types.includes('audio')||types.includes('video')) {
+   callback(false);return;
+  }
+  dialog.showMessageBox({type:'question',message:'Mikrofon für SD Lotze erlauben?',
+    detail:'Nur die offizielle SD-Lotze-Seite erhält Zugriff, wenn du es hier ausdrücklich erlaubst.',
+    buttons:['Nicht erlauben','Mikrofon erlauben'],defaultId:0,cancelId:0})
+   .then(result=>callback(result.response===1)).catch(()=>callback(false));
  });
  makeMenu();
  createWindow();
