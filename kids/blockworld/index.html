@@ -16,6 +16,12 @@ header{max-width:1320px;margin:auto;display:flex;align-items:center;gap:12px;fle
 .layout{max-width:1320px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:12px;padding:6px 12px 28px}
 .playarea{min-width:0}.world{height:min(70vh,690px);min-height:420px;position:relative;border:1px solid #91bcff66;border-radius:22px;overflow:hidden;background:linear-gradient(#79c9fb,#e9f7ff);box-shadow:0 25px 60px #080e2488;touch-action:none}
 canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+canvas:focus-visible{outline:3px solid #ffe29a;outline-offset:-4px}
+.world:fullscreen{height:100vh;width:100vw;border-radius:0}
+.pauseCover{position:absolute;inset:0;z-index:12;background:#14294ddf;display:grid;place-content:center;text-align:center;gap:15px;padding:18px;backdrop-filter:blur(4px)}
+.pauseCover[hidden]{display:none}.pauseCover strong{font-size:clamp(2rem,5vw,4rem)}.pauseCover button{background:#ffe29a;color:#203152;font-size:1.1rem}
+.gameTools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center}.gameTools button{min-height:45px}
+@media(max-width:600px){.gameTools button{flex:1}}
 .hud{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:7px;flex-wrap:wrap;align-items:start;pointer-events:none}
 .pill{background:#12264be3;border:1px solid #ffffff35;border-radius:14px;padding:7px 11px;box-shadow:0 4px 18px #0e1a3359;font-size:.82rem;font-weight:850;backdrop-filter:blur(7px)}
 #notice{position:absolute;left:50%;top:68px;transform:translateX(-50%);max-width:85%;width:max-content;background:#142b50eb;border-radius:16px;border:1px solid #a8d7ff7a;text-align:center;padding:11px 15px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s}
@@ -47,7 +53,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 </style>
 </head>
 <body>
-<header><a href="../index.html">← Pibo &amp; Kids</a><h1>🧱 SD BlockWorld</h1><span class="subtitle">Deine 3D-Welt zum Entdecken, Spielen und Bauen</span><a href="../../index.html">SD Hub</a></header>
+<header><a href="../games/">← 🎮 Alle Spiele</a><h1>🧱 SD BlockWorld</h1><span class="subtitle">Deine 3D-Welt zum Entdecken, Spielen und Bauen</span><a href="../../index.html">SD Hub</a></header>
 <main class="layout">
 <section class="playarea" aria-label="Spielwelt">
 <div class="world" id="world">
@@ -67,7 +73,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
    <button type="button" data-key="right" aria-label="Rechts">▶</button>
   </div>
   <button class="jump" id="jump" type="button">⬆ Springen</button>
+  <div id="pauseCover" class="pauseCover" hidden role="status"><strong>⏸️ Pause</strong><p>Dein Abenteuer wartet auf dich.</p><button type="button" id="resumeWorld">▶ Weiter</button></div>
 </div>
+<div class="gameTools" aria-label="Spieloptionen"><button type="button" id="pauseWorld" aria-pressed="false">⏸️ Pause</button><button type="button" id="fullWorld">⛶ Vollbild</button><a href="../games/" style="color:#fff;padding:10px 13px;font-weight:800">🎮 Zur Spielewelt</a></div>
 <p class="controls">⌨️ <strong>WASD / Pfeile</strong> bewegen · <strong>Leertaste</strong> springen · <strong>Maus ziehen</strong> Kamera drehen · <strong>B</strong> bauen · <strong>E</strong> Block setzen · <strong>R</strong> Block entfernen. Auf dem Handy die Pfeile und Springen nutzen.</p>
 </section>
 <aside class="side">
