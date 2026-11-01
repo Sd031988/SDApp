@@ -816,6 +816,34 @@ function finish(){
 function getSaved(){
  try{return JSON.parse(localStorage.getItem('sdB1FullResults')||'[]').filter(x=>x&&typeof x==='object');}catch(_){return [];}
 }
+function startMarkedRetest(cards){
+ const pool=cards.filter(x=>x.auto).slice(0,30);
+ if(!pool.length){alert('Es sind noch keine automatisch auswertbaren Fragen markiert.');return;}
+ let position=0,correct=0,attempted=0;
+ function show(){
+  const x=pool[position],t=x.task;
+  const passage=t.passage?'<div class="b1x-passage">'+esc(t.passage)+'</div>':'';
+  view('<h2>★ Wiederholungstraining</h2><p class="b1x-note">Frage '+(position+1)+' von '+pool.length+' · '+esc(x.section)+' · Muster '+x.set+'. Ohne Zeitdruck; ursprüngliche Prüfungsergebnisse bleiben unverändert. Hörtexte werden nicht erneut abgespielt.</p>'+
+   passage+'<h3>'+esc(t.q)+'</h3>'+
+   '<div class="b1x-stack" role="radiogroup" aria-label="Antwort im Wiederholungstraining">'+t.options.map((o,i)=>'<label class="b1x-card"><input type="radio" name="b1x-retest-answer" value="'+i+'"> '+esc(o)+'</label>').join('')+'</div>'+
+   '<div id="b1x-retest-feedback" aria-live="polite"></div><button id="b1x-retest-check" class="b1x-primary">Antwort prüfen</button><button id="b1x-retest-exit" class="b1x-card" type="button">Training verlassen</button>');
+  el('b1x-retest-exit').onclick=markedPractice;
+  el('b1x-retest-check').onclick=()=>{
+   const checked=root.querySelector('input[name="b1x-retest-answer"]:checked');
+   if(!checked){alert('Bitte wähle zuerst eine Antwort aus.');return;}
+   const choice=Number(checked.value);
+   attempted++;if(choice===t.answer)correct++;
+   root.querySelectorAll('input[name="b1x-retest-answer"]').forEach(input=>input.disabled=true);
+   el('b1x-retest-feedback').innerHTML='<div class="b1x-passage"><b>'+(choice===t.answer?'Richtig!':'Noch nicht richtig.')+'</b><p>Richtige Lösung: '+esc(t.options[t.answer])+'</p><p>'+esc(t.explanation||'Vergleiche die richtige Lösung mit der Aufgabenstellung.')+'</p></div>';
+   const b=el('b1x-retest-check');b.textContent=position===pool.length-1?'Ergebnis ansehen':'Nächste Frage';
+   b.onclick=()=>{position++;if(position<pool.length)show();else{
+    view('<h2>Wiederholung abgeschlossen</h2><p><b>'+correct+' von '+attempted+' richtig</b></p><p class="b1x-note">Nur dieses Wiederholungstraining wurde ausgewertet. Keine offizielle Note; deine ursprünglichen Ergebnisse wurden nicht verändert.</p><button id="b1x-retest-again" class="b1x-primary">Erneut trainieren</button><button id="b1x-retest-home" class="b1x-card">Zurück zu markierten Fragen</button>');
+    el('b1x-retest-again').onclick=()=>startMarkedRetest(cards);el('b1x-retest-home').onclick=markedPractice;
+   }};
+  };
+ }
+ show();
+}
 function markedPractice(){
  const saved=getSaved().filter(x=>E[x.exam]&&Number.isInteger(x.set)&&x.set>=1&&x.set<=5&&Array.isArray(x.marked)&&x.marked.length&&Array.isArray(x.answers));
  const oldExam=exam,oldSet=set;
@@ -833,8 +861,8 @@ function markedPractice(){
  });
  exam=oldExam;set=oldSet;
  view('<h2>★ Markierte Fragen wiederholen</h2>'+
- '<p class="b1x-note">Gespeicherte Markierungen aus abgeschlossenen Übungen auf diesem Gerät. Die Fragen werden hier nachträglich mit Lösungen gezeigt. Keine erneute Prüfung, keine Bewertung und kein erneutes Abspielen begrenzter Hörtexte.</p>'+
- (cards.length?'<p><b>'+cards.length+' markierte Aufgaben</b> aus deinen bisherigen Übungen.</p>'+
+ '<p class="b1x-note">Gespeicherte Markierungen aus abgeschlossenen Übungen auf diesem Gerät. Die Fragen werden hier nachträglich mit Lösungen gezeigt. Im freiwilligen Wiederholungstraining können Auswahlfragen erneut beantwortet werden, ohne die ursprüngliche Prüfung zu verändern. Begrenzte Hörtexte werden nicht erneut abgespielt.</p>'+
+ (cards.length?'<p><b>'+cards.length+' markierte Aufgaben</b> aus deinen bisherigen Übungen.</p><button id="b1x-retest-start" class="b1x-primary" type="button">▶ Markierte Auswahlfragen erneut beantworten</button>'+
  cards.slice(0,80).map((x,i)=>'<details class="b1x-passage"><summary>★ '+esc(E[x.exam].name)+' · Muster '+x.set+' · '+esc(x.section)+' · Aufgabe '+(x.index+1)+'</summary>'+
  (x.auto?reviewTask(x.task,x.answer,x.index,x.task.audio!==undefined):
  '<p><b>Aufgabe:</b> '+esc(x.task.q)+'</p><p><b>Deine Antwort:</b> '+esc(x.answer||'Keine Antwort')+'</p><p class="b1x-note">Schreiben und Sprechen benötigen eine menschliche Rückmeldung.</p>')+
@@ -843,6 +871,7 @@ function markedPractice(){
  '<p>Noch keine markierten Aufgaben aus abgeschlossenen Übungen vorhanden. Markiere während einer Übung eine Frage mit ☆ und schließe den Prüfungsteil ab.</p>')+
  '<button id="b1x-home" class="b1x-primary">Zurück zur Auswahl</button>');
  el('b1x-home').onclick=home;
+ if(el('b1x-retest-start'))el('b1x-retest-start').onclick=()=>startMarkedRetest(cards);
 }
 function history(){
  const saved=getSaved().slice().reverse();
