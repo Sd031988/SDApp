@@ -49,6 +49,12 @@
             </div>
         </form>
         <p class="klein" data-t="anfrage">Noch keinen Schlüssel? Anfragen unter <a href="mailto:kontakt@thesdhub.com">kontakt@thesdhub.com</a>.</p>
+        <div class="klein" style="border-top:1px solid var(--line);padding-top:12px">
+            <strong data-t="pcTitel">🖥 PC-Version mit aktuellen Online-Funktionen</strong>
+            <p style="margin:6px 0" data-t="pcText">Für Windows, Mac und Linux gibt es zusätzlich eine PC-Online-Version, die beim Start die aktuelle SD-Lotze-Webseite lädt. Die bisherige fortgeschrittene PC-Version mit lokalen Funktionen bleibt separat geschützt.</p>
+            <a href="https://github.com/Sd031988/SDApp/actions/workflows/agent-pc-online.yml" target="_blank" rel="noopener noreferrer" data-t="pcLink">PC-Installer auf GitHub ansehen ↗</a>
+            <p style="margin-top:6px" data-t="pcHinweis">Für GitHub-Downloads kann eine Anmeldung nötig sein. Der SD-Lotze-Zugangsschlüssel bleibt erforderlich.</p>
+        </div>
     </main>
     <script>
         (function () {
@@ -59,6 +65,10 @@
                 de: { falsch: 'Dieser Schlüssel ist ungültig oder wurde entzogen.', format: 'Bitte den kompletten Schlüssel eingeben (beginnt mit SDL-).', netz: 'Keine Verbindung – bitte Internet prüfen und erneut versuchen.', oeffnet: 'Wird entschlüsselt …' },
                 en: { zurueck: '← Back to SD Hub', sub: 'Protected area', text: 'This area is only accessible with a personal access key from SD. It contains the AI agent SD Lotze (with GLM-5.3) and the PC agent download.',
                     label: 'Access key', merken: 'Remember on this device', los: 'Open', anfrage: 'No key yet? Request one at <a href="mailto:kontakt@thesdhub.com">kontakt@thesdhub.com</a>.',
+                    pcTitel: '🖥 PC edition with current online features',
+                    pcText: 'Windows, macOS and Linux users can launch the current SD Lotze website in a separate desktop app. The original advanced PC package with local features remains separately protected.',
+                    pcLink: 'View PC installers on GitHub ↗',
+                    pcHinweis: 'A GitHub account may be required for build downloads. A valid SD Lotze access key remains required.',
                     falsch: 'This key is invalid or has been revoked.', format: 'Please enter the complete key (starts with SDL-).', netz: 'No connection – please check the internet and try again.', oeffnet: 'Decrypting …' }
             };
             const t = k => (T[sprache] && T[sprache][k]) || T.de[k];
