@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {
+ MAX_BLOCKS,MAX_TOKENS,CRYSTALS,PARKOUR,restoreSave,newSave,placeBlock,
+ removeBlock,claimCrystal,reachParkour,landingY,cleanName,localDay,addTokens
+} from './core.mjs';
+const day='2026-11-01';
+const s=newSave(day);
+assert.equal(localDay(new Date(2026,10,1)),day);
+assert.equal(cleanName('<script> Sue!'), 'script Sue');
+assert.equal(placeBlock(s,{x:4,z:4,level:0,color:'mint'}),true);
+assert.equal(placeBlock(s,{x:4,z:4,level:0,color:'mint'}),false);
+assert.equal(placeBlock(s,{x:3,z:4,level:0,color:'mint'}),false);
+assert.equal(placeBlock(s,{x:0,z:6,level:0,color:'blue'}),false);
+for(let i=0;i<4;i++)assert.equal(placeBlock(s,{x:6+i*2,z:4,level:0,color:'blue'}),true);
+assert.equal(s.tokens,15);
+assert.equal(s.buildRewards,1);
+assert.equal(removeBlock(s,{x:4,z:4,level:0,color:'mint'}),true);
+assert.equal(removeBlock(s,{x:4,z:4,level:0,color:'mint'}),false);
+assert.equal(claimCrystal(s,0),true);
+assert.equal(claimCrystal(s,0),false);
+assert.equal(s.tokens,20);
+assert.equal(landingY(2,1,8,4,s),1.6);
+assert.equal(landingY(.1,-.2,0,0,s),0);
+for(let i=0;i<PARKOUR.length;i++)assert.equal(reachParkour(s,i),true);
+assert.equal(s.parkourWins,1);
+assert.equal(s.tokens,50);
+assert.equal(reachParkour(s,3),false);
+assert.equal(addTokens(s,1e9),MAX_TOKENS-50);
+const restored=restoreSave(JSON.stringify(s),day);
+assert.equal(restored.tokens,MAX_TOKENS);
+assert.equal(restored.blocks.length,4);
+assert.equal(restoreSave('invalid',day).tokens,0);
+assert.equal(restoreSave({tokens:-100,x:9999,z:-100,nickname:'<bad>',avatarColor:'hax'},day).avatarColor,'blue');
+assert.equal(restoreSave(JSON.stringify(s),'2026-11-02').crystals.length,0);
+assert.equal(restoreSave(JSON.stringify(s),'2026-11-02').parkourProgress,0);
+const many=newSave(day);
+for(let x=-20;x<=20;x+=2)for(let z=-20;z<=20;z+=2)for(let level=0;level<4;level++)placeBlock(many,{x,z,level,color:'pink'});
+assert.equal(many.blocks.length,MAX_BLOCKS);
+assert.equal(placeBlock(many,{x:18,z:20,level:3,color:'pink'}),false);
+assert.equal(CRYSTALS.length,12);
+console.log('PASS: BlockWorld save, collision, building, rewards and parkour');
