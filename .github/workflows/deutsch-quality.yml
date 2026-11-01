@@ -1,0 +1,28 @@
+name: SD Deutsch Qualität
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deutsch/**"
+      - "tests/deutsch-quality.test.cjs"
+      - "index.html"
+      - ".github/workflows/deutsch-quality.yml"
+  pull_request:
+    paths:
+      - "deutsch/**"
+      - "tests/deutsch-quality.test.cjs"
+      - "index.html"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  course-and-b1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check all learning levels, course translations and B1 exam material
+        run: node --test tests/deutsch-quality.test.cjs
