@@ -11,10 +11,18 @@ export class PiboAudio {
     };
     this.realVoice=null;this.meowTurn=0;
   }
+  stop(){
+    const voice=this.realVoice;
+    this.realVoice=null;
+    if(voice){
+      voice._piboStopped=true;
+      try{voice.pause()}catch{}
+    }
+  }
   playRecording(type){
     if(!this.realCatClips[type]||typeof window==='undefined'||typeof window.Audio!=='function')return false;
     try{
-      if(this.realVoice){this.realVoice.pause();this.realVoice=null}
+      this.stop();
       const candidates=this.realCatClips[type];
       const url=Array.isArray(candidates)?candidates[this.meowTurn++%candidates.length]:candidates;
       const voice=new window.Audio(url);
@@ -23,7 +31,7 @@ export class PiboAudio {
       this.realVoice=voice;
       let finished=false;
       const fallback=()=>{
-        if(finished)return;finished=true;
+        if(finished||voice._piboStopped)return;finished=true;
         if(this.realVoice===voice)this.realVoice=null;
         this.playSynth(type);
       };
