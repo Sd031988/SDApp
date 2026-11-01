@@ -6,7 +6,7 @@
 <title>SD Code-Studio – Code-Editor im Browser</title>
 <meta name="description" content="Professioneller Code-Editor im Browser: Webseiten mit Live-Vorschau, Python, C++, Java, C#, Rust und Go ausführen, Vorlagen, Suche, Versionen, ZIP – ohne Installation.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-change-request-1">
+<link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-ki-services-1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#221b3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -141,6 +141,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <button id="einfuegenBtn" title="Anleitung oder Code einfügen → Ordner und Dateien automatisch">📋 <span class="lang">Einfügen</span></button>
     <button id="kiCodeBtn" title="Mit KI programmieren – ChatGPT/Gemini-Code prüfen und sicher einfügen" type="button">✨ KI Coding</button>
     <button id="kiChangeBtn" title="Wünsche eine Änderung an deinem geöffneten Projekt und übernimm den korrigierten Code" type="button">✏️ Ändern</button>
+    <button id="kiServicesBtn" title="Google KI, Google AI Studio und ChatGPT öffnen oder dort anmelden" type="button">🤖 KI-Dienste</button>
     <button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button>
     <button id="designBtn" title="Im Design-Studio gestalten – ohne Code">🎨 <span class="lang">Design</span></button>
     <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
@@ -265,6 +266,42 @@ button,input,select,textarea{font:inherit;color:inherit}
 </div></div>
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
+
+<section id="kiServicesOverlay" hidden aria-label="KI-Dienste öffnen">
+  <div class="kiServicesDialog" role="dialog" aria-modal="true" aria-labelledby="kiServicesTitle">
+    <div class="kiServicesHead">
+      <div><p class="kiServicesEyebrow">SD Code-Studio · KI-Zugänge</p><h2 id="kiServicesTitle">🤖 Google KI &amp; ChatGPT</h2>
+        <p>Wähle deinen KI-Dienst zum Programmieren. Eine zusätzliche Registrierung bei SD Code-Studio ist dafür nicht erforderlich.</p></div>
+      <button id="kiServicesClose" type="button" aria-label="KI-Dienste schließen">✕</button>
+    </div>
+    <p class="kiServicesInfo">Die Anmeldung findet ausschließlich auf der offiziellen Webseite des Anbieters statt. SD Code-Studio erhält keine Passwörter und kann dich nicht bei Google oder ChatGPT anmelden. Für manche Gemini-Funktionen ist keine Anmeldung erforderlich; weitere Funktionen benötigen ein Google-Konto.</p>
+    <div class="kiServicesGrid">
+      <article class="kiServicesCard">
+        <span class="kiServicesSymbol">✦</span><h3>Google Gemini</h3>
+        <p>Google-KI für Texte, Programmierung und Änderungen an Webseiten. Mit vorhandenem Google-Konto anmelden oder verfügbare Funktionen ohne Anmeldung nutzen.</p>
+        <a class="kiServicesOpen" href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer">Google Gemini öffnen ↗</a>
+      </article>
+      <article class="kiServicesCard">
+        <span class="kiServicesSymbol">⌘</span><h3>ChatGPT</h3>
+        <p>Frage ChatGPT nach vollständigen HTML-, CSS-, JavaScript- oder anderen Projektdateien. Anmeldung oder Registrierung beim Anbieter nach dessen Vorgaben.</p>
+        <a class="kiServicesOpen" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT öffnen ↗</a>
+      </article>
+      <article class="kiServicesCard">
+        <span class="kiServicesSymbol">⚙</span><h3>Google AI Studio</h3>
+        <p>Zusätzlicher Google-Entwicklerbereich für KI-Experimente und Programmierprojekte. Google-Konto kann erforderlich sein.</p>
+        <a class="kiServicesOpen" href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio öffnen ↗</a>
+      </article>
+    </div>
+    <div class="kiServicesSteps">
+      <strong>So kommt der Code zurück ins SD Code-Studio:</strong>
+      <p>1. KI-Dienst öffnen und Code erstellen lassen. 2. KI-Antwort kopieren. 3. Hier „KI-Code einfügen“ wählen, Dateien prüfen und übernehmen.</p>
+    </div>
+    <div class="kiServicesActions">
+      <button id="kiServicesCode" type="button">📋 KI-Code einfügen</button>
+      <button id="kiServicesChange" type="button">✏️ Bestehendes Projekt ändern</button>
+    </div>
+  </div>
+</section>
 <section id="kiOverlay" hidden aria-label="KI Coding Dialog">
   <div class="kiDialog" role="dialog" aria-modal="true" aria-labelledby="kiTitle">
     <div class="kiHead"><div><span class="kiEyebrow">SD Code-Studio · KI-Werkstatt</span><h2 id="kiTitle">✨ Mit KI programmieren</h2><p id="kiProject"></p></div><button type="button" id="kiClose" aria-label="KI-Coding schließen">✕</button></div>
@@ -304,7 +341,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./studio-diagnose.js?v=20261101-autodiagnose-1"></script>
 <script src="studio.js?v=20261101-runtime-bridge-2"></script>
 <script src="./ki-werkstatt-core.js?v=20261101-change-request-1"></script>
-<script src="./ki-werkstatt-ui.js?v=20261101-change-request-1"></script>
+<script src="./ki-werkstatt-ui.js?v=20261101-ki-services-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){
