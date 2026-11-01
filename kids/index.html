@@ -122,6 +122,7 @@ document.querySelectorAll('[data-act]').forEach(b=>b.addEventListener('click',()
  syncPiboSound();savePiboSound();
  if(soundOn){sound('select');return}
  piboAudio.stop?.();
+ try{window.speechSynthesis?.cancel()}catch{}
  try{voicePlayback?.source?.stop()}catch{}
  try{voicePlayback?.player?.pause()}catch{}
  finishVoice();
