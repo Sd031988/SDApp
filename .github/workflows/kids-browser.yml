@@ -1,0 +1,32 @@
+name: SD Hub Kids browser checks
+on:
+  push:
+    paths:
+      - 'kids/**'
+      - '.github/workflows/kids-browser.yml'
+  pull_request:
+    paths:
+      - 'kids/**'
+      - '.github/workflows/kids-browser.yml'
+  workflow_dispatch:
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test runtime
+        run: npm install --prefix kids --no-audit --no-fund
+      - name: Install browser
+        run: cd kids && npx playwright install --with-deps chromium
+      - name: Exercise real WebGL on desktop and mobile Chromium
+        run: cd kids && npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pibo-playwright-debug
+          path: kids/test-results/
+          retention-days: 5
