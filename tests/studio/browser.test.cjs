@@ -68,6 +68,14 @@ const assert = require('node:assert/strict');
     assert.equal(analysis.start,'index.html');
     assert.equal(analysis.sprache,'HTML');
     assert(analysis.ordner.includes('css'));
+    const builder = await page.evaluate(() => ({
+      web: appBuilderPlan({'index.html':'<h1>Hallo</h1>'}).optionen.map(x=>x.id),
+      react: appBuilderPlan({'package.json':JSON.stringify({dependencies:{react:'19'},scripts:{build:'vite build'}})}).optionen.map(x=>x.id),
+      empty: appBuilderPlan({}).optionen.length
+    }));
+    assert.deepEqual(builder.web,['web','desktop']);
+    assert.deepEqual(builder.react,['framework']);
+    assert.equal(builder.empty,0);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
