@@ -187,6 +187,20 @@ const assert = require('node:assert/strict');
     assert.equal(jsonDiagnostics.other,null);
     assert(jsonDiagnostics.invalid && jsonDiagnostics.invalid.message);
     assert(jsonDiagnostics.multi && jsonDiagnostics.multi.line>=1);
+    const pasteUpload = await page.evaluate(() => {
+      einfuegenDialog('');
+      return {
+        zip:!!document.querySelector('#efZipDatei[type=file]'),
+        folder:document.querySelector('#efOrdnerDatei')?.hasAttribute('webkitdirectory'),
+        files:document.querySelector('#efMehrDateien')?.multiple,
+        handler:typeof einfuegenDateienImportieren,
+        oldProject:S.p?.name||null
+      };
+    });
+    assert.equal(pasteUpload.zip,true,'ZIP-Schaltfläche im Einfügen-Dialog');
+    assert.equal(pasteUpload.folder,true,'Ordnerauswahl');
+    assert.equal(pasteUpload.files,true,'Mehrfach-Dateiauswahl');
+    assert.equal(pasteUpload.handler,'function');
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
