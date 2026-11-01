@@ -122,9 +122,52 @@ $('outfit').addEventListener('click',()=>{$('wardrobe').hidden=!$('wardrobe').hi
 $('mousegame').addEventListener('click',()=>{mouseActive=!mouseActive;mouseScore=0;mouse.visible=mouseActive;gameActive=false;$('minigame').textContent='🎯 Ball fangen';$('mousegame').textContent=mouseActive?'🛑 Mausspiel beenden':'🐭 Maus suchen';$('say').textContent=mouseActive?'Wo ist die kleine Maus? Tippe sie an! 🐭':'Gut gemacht! 🐾'});
 $('decorate').addEventListener('click',()=>{const colors=[0xd9e8fb,0xffe4d6,0xdaf1df,0xefe1fa,0xffefb9,0xcce9ec,0xf4d9e5];roomColor=(roomColor+1)%colors.length;wall.color.setHex(colors[roomColor]);extras.room=roomColor;extras.roomColors??={};extras.roomColors[currentRoom]=colors[roomColor];saveExtras();$('say').textContent='Dein Zimmer hat eine neue Farbe! 🎨'});
 const talkButton=$('talk');
-talkButton.addEventListener('click',async()=>{if(recorder&&recorder.state==='recording'){recorder.stop();return}
-if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){$('say').textContent='Dein Browser unterstützt diese Aufnahmefunktion leider nicht.';return}
-try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});recordingStream=stream;const mime=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':undefined;recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{clearTimeout(recordTimer);stream.getTracks().forEach(t=>t.stop());recordingStream=null;talkButton.textContent='🎙️ Nachsprechen';talkButton.setAttribute('aria-pressed','false');const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});if(!blob.size)return;const url=URL.createObjectURL(blob);const voice=new Audio(url);voice.playbackRate=1.3;voice.preservesPitch=false;voice.onended=()=>URL.revokeObjectURL(url);voice.onerror=()=>URL.revokeObjectURL(url);voice.play().catch(()=>{$('say').textContent='Wiedergabe nicht möglich.'});$('say').textContent='Pibo spricht dir nach! 🐱'};recorder.start();talkButton.textContent='⏹️ Aufnahme stoppen';talkButton.setAttribute('aria-pressed','true');$('say').textContent='Sprich jetzt! Maximal 6 Sekunden. 🎤';recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop()},6000)}catch{$('say').textContent='Mikrofon nicht verfügbar oder nicht erlaubt. Du kannst ohne Mikrofon weiterspielen.'}});
+async function replayVoice(blob){
+ if(!soundOn)return;
+ try{
+   const ctx=piboAudio.ensure();
+   if(ctx){
+     await ctx.resume();
+     const buffer=await ctx.decodeAudioData(await blob.arrayBuffer());
+     const source=ctx.createBufferSource(),gain=ctx.createGain();
+     source.buffer=buffer;source.playbackRate.value=1.34;gain.gain.value=.85;
+     source.connect(gain);gain.connect(ctx.destination);source.start();
+     return
+   }
+ }catch(e){console.warn('WebAudio voice playback unavailable; trying browser player',e)}
+ const url=URL.createObjectURL(blob),voice=new Audio(url);
+ voice.playbackRate=1.34;voice.preservesPitch=false;
+ voice.onended=()=>URL.revokeObjectURL(url);voice.onerror=()=>URL.revokeObjectURL(url);
+ try{await voice.play()}catch{URL.revokeObjectURL(url);$('say').textContent='Die Wiedergabe wurde vom Browser blockiert.'}
+}
+talkButton.addEventListener('click',async()=>{
+ if(recorder?.state==='recording'){recorder.stop();return}
+ if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){$('say').textContent='Dein Browser unterstützt die Aufnahmefunktion leider nicht.';return}
+ try{
+   piboAudio.ensure()?.resume().catch(()=>{});
+   const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+   recordingStream=stream;
+   const options=['audio/webm;codecs=opus','audio/webm','audio/mp4'].find(t=>MediaRecorder.isTypeSupported(t));
+   recorder=new MediaRecorder(stream,options?{mimeType:options}:undefined);
+   const chunks=[];
+   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+   recorder.onstop=async()=>{
+     clearTimeout(recordTimer);stream.getTracks().forEach(t=>t.stop());recordingStream=null;
+     talkButton.textContent='🎙️ Nachsprechen';talkButton.setAttribute('aria-pressed','false');
+     const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
+     if(!blob.size){$('say').textContent='Keine Stimme aufgenommen.';return}
+     $('say').textContent='Pibo spricht dir nach! 🐱';
+     await replayVoice(blob)
+   };
+   recorder.start();talkButton.textContent='⏹️ Aufnahme stoppen';talkButton.setAttribute('aria-pressed','true');
+   $('say').textContent='Sprich jetzt! Maximal 6 Sekunden. 🎤';
+   recordTimer=setTimeout(()=>{if(recorder?.state==='recording')recorder.stop()},6000)
+ }catch{
+   recordingStream?.getTracks().forEach(t=>t.stop());recordingStream=null;
+   talkButton.textContent='🎙️ Nachsprechen';talkButton.setAttribute('aria-pressed','false');
+   $('say').textContent='Mikrofon nicht verfügbar oder nicht erlaubt. Du kannst ohne Mikrofon spielen.'
+ }
+});
 window.addEventListener('pagehide',()=>{if(recorder?.state==='recording')recorder.stop();recordingStream?.getTracks().forEach(t=>t.stop())});
 $('surprise').addEventListener('click',()=>{
  const today=new Date().toLocaleDateString('en-CA');
