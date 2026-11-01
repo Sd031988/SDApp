@@ -27,6 +27,35 @@ const assert = require('node:assert/strict');
     await page.goto('http://127.0.0.1:8765/studio/index.html', {waitUntil:'domcontentloaded',timeout:30000});
     await page.waitForTimeout(1200);
     assert.match(await page.title(), /Code-Studio/);
+    // Regression: new AI buttons must never push ▶ Ausführen outside of the screen.
+    await page.locator('#app').waitFor({state:'visible',timeout:15000});
+    for (const width of [1600,1280,1080,1024,900,801,800,600,390,320]) {
+      await page.setViewportSize({width,height:800});
+      const metrics=await page.evaluate(()=>{
+        const run=document.querySelector('#starten'),more=document.querySelector('#kopfMehr');
+        const toolbar=document.querySelector('#kopfWerkzeuge');
+        const r=run.getBoundingClientRect(),m=more.getBoundingClientRect();
+        const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+        return {run:{left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height},
+          more:{left:m.left,right:m.right,width:m.width},
+          hit:hit?.closest('#starten')===run,
+          display:getComputedStyle(run).display,screen:document.documentElement.clientWidth,
+          toolsWidth:toolbar.clientWidth,toolsScrollWidth:toolbar.scrollWidth};
+      });
+      assert(metrics.run.width>70&&metrics.run.height>=30,'Run button is not properly sized at '+width);
+      assert(metrics.run.left>=-1&&metrics.run.right<=metrics.screen+1,
+        'Run button outside screen at '+width+': '+JSON.stringify(metrics));
+      assert(metrics.more.left>=-1&&metrics.more.right<=metrics.screen+1,'More menu outside screen at '+width);
+      assert.equal(metrics.hit,true,'Run button must remain clickable at '+width);
+      assert.notEqual(metrics.display,'none','Run button hidden at '+width);
+      if(width===1080) assert(metrics.toolsScrollWidth>metrics.toolsWidth,'Additional tools must scroll instead of hiding Run');
+    }
+    await page.setViewportSize({width:1080,height:800});
+    await page.locator('#kopfMehr').click();
+    assert.match(await page.locator('#palListe').innerText(),/▶ Ausführen/,'Fallback Run is available in More menu');
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({width:1280,height:900});
+
     const result = await page.evaluate(() => ({
       check: typeof projektPruefen,
       framework: typeof frameworkErkennen,
