@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "reference": "My Talking Tom 2",
-  "reviewed": "2026-11-01",
+  "reviewed": "2026-11-02",
   "scope": "Nur beobachtbare generische Mechaniken und technische Qualitätsmerkmale vergleichen. Keine geschützten Assets, TOM-Figur oder markenbezogene Inhalte kopieren.",
   "sources": {
     "official": "https://talkingtomandfriends.com/apps/my-talking-tom-2",
@@ -80,7 +80,7 @@
         "kids/pibo-care.test.mjs",
         "kids/e2e/pibo.spec.mjs"
       ],
-      "implementation": "Neu: prozedurale 3D-Dusche und 3D-Handtuch werden nach der passenden Pflegephase sichtbar; per Raycast und Pointer-/Touch-Drag auf Pibos tatsächliches 3D-Katzenmodell gezogen. UI-Knöpfe bleiben als barrierearme Alternative erhalten. Professionelle Tool-Modelle, Flüssigkeitsphysik und reale Hardwaretests fehlen."
+      "implementation": "Prozedurale 3D-Dusche und Handtuch mit Raycast-Drag auf Pibos Katzenmodell. Neu am 02.11.2026: zwölf originale, an Pibos bewegtem Körper befestigte 3D-Schaumpatches, die beim Einseifen anwachsen und beim Abspülen verschwinden; neun wiederverwendete 3D-Wassertropfen am Duschkopf, beim Ziehen sichtbar und nach 300 ms Inaktivität abgeschaltet. Pflege-Unit-Regressionen im JS-Mock geprüft. Keine realistische Flüssigkeitsphysik, keine professionellen Tool-Modelle und keine bestätigten WebGL-/Hardwaretests."
     },
     {
       "id": "toilette",
