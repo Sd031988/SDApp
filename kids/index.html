@@ -59,6 +59,7 @@ import {addStars,claimDailyGift,normalizeStars,localDay} from './pibo-rewards.mj
 import {facePose} from './pibo-face.mjs';
 import {bodyPose} from './pibo-motion.mjs';
 import {voiceLoudness,mouthWhileSpeaking} from './pibo-voice.mjs';
+import {decoratePibo} from './pibo-character.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
 try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&typeof saved==='object')for(const k of Object.keys(defaults))if(Number.isFinite(saved[k]))state[k]=Math.max(0,Math.min(100,saved[k]));}catch{}
@@ -220,6 +221,7 @@ const mouse=new THREE.Group();scene.add(mouse);mouse.visible=false;ell(mouse,mat
 const eyes=[];for(const x of [-.31,.31]){const lid=ell(head,fur,x,.1,.58,.247,.015,.135);eyes.push(lid)}
 const eyeBrows=[];for(const x of [-.31,.31]){const b=ell(head,stripe,x,.43,.54,.19,.04,.055);eyeBrows.push(b)}
 const cheeks=[];for(const x of [-.49,.49]){cheeks.push(ell(head,pink,x,-.27,.61,.15,.065,.025))}
+const piboDetails=decoratePibo({THREE,cat,head,ell,mat});
 care=new PiboCare({THREE,scene,cat,head,mouth,paws,camera,sound,onStatus:(active,label,p)=>{$('careStatus').hidden=!active;$('careLabel').textContent=label;$('careFill').style.width=Math.round(p*100)+'%'}});
 let reactionSide=1;
 function bodyReaction(part){reactionSide*=-1;mode=part;modeUntil=performance.now()+1200;const messages={paw:'Huch! Meine Pfote kitzelt! 🐾',belly:'Hihihi! Das kitzelt am Bauch! 😹',nose:'Hatschi! Meine Nase! 🤧',ear:'Meine Ohren hören alles! 👂',tail:'Hoppla, mein Schwanz! 🐈'};$('say').textContent=messages[part];state.joy=clamp(state.joy+2);sound(part==='belly'?'purr':'meow');render()}
@@ -444,6 +446,7 @@ function animate(){
    head.rotation.z+=voiceFace.lean;
  }else if(care.active.type==='feed'&&care.active.phase===2)mouth.scale.y=Math.max(mouth.scale.y,face.mouthOpen);
  if(voicePlayback?.active&&care?.active)mouth.scale.y=Math.max(mouth.scale.y,voiceFace.open);
+ piboDetails.update(t,mouth.scale.y,reduced);
  renderer.render(scene,camera);
 }
 animate();render();
