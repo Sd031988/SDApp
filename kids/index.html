@@ -55,7 +55,7 @@ document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',(
 const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 let care=null;
 function clearInteraction(){care?.stop()}
-function startInteraction(type){care?.start(type,foodIndex);if(type==='feed')showEffect(foods[foodIndex][0],'Pibo frisst '+foods[foodIndex][1],7000);if(type==='wash')showEffect('🛁 🫧','Pibo steigt in die Badewanne',7000);if(type==='sleep')showEffect('🛏️ 💤','Pibo schläft in seinem Bett',9000);if(type==='toilet')showEffect('🚽 💦','Pibo benutzt die Toilette und spült',7500)}
+function startInteraction(type){care?.start(type,foodIndex,performance.now());if(type==='feed')showEffect(foods[foodIndex][0],'Pibo frisst '+foods[foodIndex][1],7000);if(type==='wash')showEffect('🛁 🫧','Pibo steigt in die Badewanne',7000);if(type==='sleep')showEffect('🛏️ 💤','Pibo schläft in seinem Bett',9000);if(type==='toilet')showEffect('🚽 💦','Pibo benutzt die Toilette und spült',7500)}
 
 const paws=[];for(const side of [-1,1])paws.push(ell(cat,fur,side*.43,.21,.54,.25,.19,.3));const head=new THREE.Group();head.position.set(0,1.94,.27);cat.add(head);ell(head,fur,0,0,0,.76,.7,.66);ell(head,cream,0,-.3,.51,.56,.34,.25);
 function ear(x){const outer=new THREE.Mesh(new THREE.ConeGeometry(.29,.62,3),fur);outer.position.set(x,.72,0);outer.rotation.z=x<0?.19:-.19;outer.rotation.y=Math.PI/2;head.add(outer);const inner=new THREE.Mesh(new THREE.ConeGeometry(.17,.42,3),pink);inner.position.set(x,.73,.08);inner.rotation.z=x<0?.19:-.19;inner.rotation.y=Math.PI/2;head.add(inner)}ear(-.5);ear(.5);
