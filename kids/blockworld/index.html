@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121e42">
+<meta name="description" content="SD BlockWorld: Deine eigene 3D-Blockwelt. Entdecken, bauen und spielen, kostenlos und ohne Anmeldung.">
+<title>SD BlockWorld – 3D-Spiel | SD Hub Kids</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85'%3E🧱%3C/text%3E%3C/svg%3E">
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;--ink:#f8fbff;--muted:#cad8f7;--line:#7487bc44;--panel:#192c56e8;--hot:#fce46e;--blue:#76d9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 30% -20%,#465bb6,#111b3b 70%);color:var(--ink)}
+button,input{font:inherit}button{cursor:pointer;border:1px solid #ffffff39;border-radius:13px;background:#314d83;color:#fff;font-weight:750;padding:10px 13px;touch-action:manipulation}
+button:hover{background:#4465a0}button:focus-visible,input:focus-visible{outline:3px solid var(--hot);outline-offset:2px}button[aria-pressed=true]{background:#f7cc51;color:#1f2d4a}
+header{max-width:1320px;margin:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px 8px}header a{color:#cfe6ff;text-decoration:none;font-weight:700}h1{margin:0;font-size:clamp(1.3rem,3.5vw,2rem)}.subtitle{color:var(--muted);font-size:.88rem;margin-left:auto}
+.layout{max-width:1320px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:12px;padding:6px 12px 28px}
+.playarea{min-width:0}.world{height:min(70vh,690px);min-height:420px;position:relative;border:1px solid #91bcff66;border-radius:22px;overflow:hidden;background:linear-gradient(#79c9fb,#e9f7ff);box-shadow:0 25px 60px #080e2488;touch-action:none}
+canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+.hud{position:absolute;left:12px;right:12px;top:12px;display:flex;gap:7px;flex-wrap:wrap;align-items:start;pointer-events:none}
+.pill{background:#12264be3;border:1px solid #ffffff35;border-radius:14px;padding:7px 11px;box-shadow:0 4px 18px #0e1a3359;font-size:.82rem;font-weight:850;backdrop-filter:blur(7px)}
+#notice{position:absolute;left:50%;top:68px;transform:translateX(-50%);max-width:85%;width:max-content;background:#142b50eb;border-radius:16px;border:1px solid #a8d7ff7a;text-align:center;padding:11px 15px;font-weight:800;pointer-events:none;opacity:0;transition:opacity .2s}
+#notice.visible{opacity:1}
+#fallback{position:absolute;inset:0;display:grid;place-content:center;text-align:center;background:linear-gradient(135deg,#537db6,#283f7a);padding:28px;font-size:1.15rem}
+#fallback[hidden]{display:none}
+#fallback span{font-size:3.8rem}
+.pad{position:absolute;bottom:14px;left:14px;display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:5px;user-select:none}
+.pad button{border-radius:16px;background:#14294cbf;border:1px solid #f5faff77;box-shadow:0 3px 10px #13274f70;padding:0;font-size:1.6rem}
+.pad [data-key=forward]{grid-column:2}.pad [data-key=left]{grid-column:1;grid-row:2}.pad [data-key=back]{grid-column:2;grid-row:2}.pad [data-key=right]{grid-column:3;grid-row:2}
+.jump{position:absolute;bottom:18px;right:15px;border-radius:50%;width:78px;height:78px;background:#ffd969;color:#1c294e;box-shadow:0 6px 20px #171c4f80}
+.side{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:14px;box-shadow:0 10px 25px #060f2844}
+.panel h2{font-size:1rem;margin:0 0 9px}.panel p{font-size:.83rem;line-height:1.55;margin:6px 0;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:6px}.row button{flex:1;min-width:72px;padding:9px 6px;font-size:.78rem}
+#quests{padding-left:19px;font-size:.87rem;line-height:1.8;margin:0}
+#quests li.done{color:#a6ffcf}
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:9px 0}
+.palette button{padding:0;width:100%;aspect-ratio:1;min-width:0;border-radius:10px;border:3px solid transparent}
+.palette button[aria-pressed=true]{border-color:#fff;box-shadow:0 0 0 2px #17335f}
+.palette [data-color=mint]{background:#5ee2ba}.palette [data-color=blue]{background:#70b7ff}.palette [data-color=pink]{background:#ff82b4}.palette [data-color=yellow]{background:#ffda66}.palette [data-color=purple]{background:#a68cff}.palette [data-color=orange]{background:#ff9c63}
+.name{width:100%;background:#101f43;border:1px solid #ffffff65;border-radius:11px;padding:10px;color:#fff}
+.controls{margin:10px 0;font-size:.84rem;color:var(--muted);line-height:1.55}.footer{max-width:1320px;margin:0 auto;padding:0 18px 24px;font-size:.79rem;color:#aec1eb}
+#buildControls[hidden]{display:none}
+#builderBadge{color:#ffdf85}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.world{height:61vh;min-height:390px}}
+@media(max-width:540px){header{gap:7px}header .subtitle{width:100%;margin:0}.layout{padding:4px 8px 18px}.side{grid-template-columns:1fr}.world{height:62vh;min-height:360px}.pad{bottom:10px;left:9px;grid-template-columns:repeat(3,45px);grid-template-rows:repeat(2,45px)}.jump{width:65px;height:65px}.hud{left:7px;right:7px;top:7px}.pill{font-size:.71rem;padding:6px 7px}#notice{top:62px;font-size:.8rem}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header><a href="../index.html">← Pibo &amp; Kids</a><h1>🧱 SD BlockWorld</h1><span class="subtitle">Deine 3D-Welt zum Entdecken, Spielen und Bauen</span><a href="../../index.html">SD Hub</a></header>
+<main class="layout">
+<section class="playarea" aria-label="Spielwelt">
+<div class="world" id="world">
+  <div id="fallback" role="status"><span>🌈</span><strong>Deine Blockwelt startet …</strong><p>3D braucht einen modernen Browser und eine Internetverbindung.</p></div>
+  <div class="hud" aria-label="Spielstand">
+    <div class="pill">⭐ Sterne: <span id="tokens">0</span></div>
+    <div class="pill">💎 Kristalle: <span id="crystals">0</span>/12</div>
+    <div class="pill">🧱 Gebaut: <span id="builds">0</span></div>
+    <div class="pill">🏁 Parcours: <span id="obby">0</span>/6</div>
+    <div class="pill" id="builderBadge" hidden>🔨 Baumodus</div>
+  </div>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <div class="pad" aria-label="Bewegung">
+   <button type="button" data-key="forward" aria-label="Vorwärts">▲</button>
+   <button type="button" data-key="left" aria-label="Links">◀</button>
+   <button type="button" data-key="back" aria-label="Zurück">▼</button>
+   <button type="button" data-key="right" aria-label="Rechts">▶</button>
+  </div>
+  <button class="jump" id="jump" type="button">⬆ Springen</button>
+</div>
+<p class="controls">⌨️ <strong>WASD / Pfeile</strong> bewegen · <strong>Leertaste</strong> springen · <strong>Maus ziehen</strong> Kamera drehen · <strong>B</strong> bauen · <strong>E</strong> Block setzen · <strong>R</strong> Block entfernen. Auf dem Handy die Pfeile und Springen nutzen.</p>
+</section>
+<aside class="side">
+  <section class="panel">
+    <h2>🌍 Entdecke deine Welt</h2>
+    <p>Erkunde das Dorf, sammle Kristalle und springe über die schwebenden Plattformen. Kein Zeitdruck!</p>
+    <div class="row"><button type="button" data-travel="village">🏡 Dorf</button><button type="button" data-travel="crystals">💎 Feld</button><button type="button" data-travel="obby">🏁 Parcours</button><button type="button" data-travel="build">🔨 Bauplatz</button></div>
+  </section>
+  <section class="panel">
+    <h2>🏆 Deine Aufgaben</h2>
+    <ul id="quests">
+      <li id="questCrystal">💎 Sammle 12 Kristalle</li>
+      <li id="questBuild">🧱 Baue 5 eigene Blöcke</li>
+      <li id="questObby">🏁 Schaffe den Sprung-Parcours</li>
+    </ul>
+    <p>Für Kristalle, Bauen und den Parcours gibt es Sterne. Die Sterne sind nur lokale Spielpunkte, keine Kryptowährung.</p>
+  </section>
+  <section class="panel">
+    <h2>🔨 Kreativ-Werkstatt</h2>
+    <div class="row"><button id="mode" type="button" aria-pressed="false">Baumodus einschalten</button></div>
+    <div id="buildControls" hidden>
+      <p>Tippe auf den Boden oder verwende „Setzen“. Im Löschmodus einen Block antippen.</p>
+      <div class="palette" aria-label="Blockfarbe">
+        <button data-color="mint" type="button" aria-label="Mint" aria-pressed="true"></button>
+        <button data-color="blue" type="button" aria-label="Blau"></button>
+        <button data-color="pink" type="button" aria-label="Pink"></button>
+        <button data-color="yellow" type="button" aria-label="Gelb"></button>
+        <button data-color="purple" type="button" aria-label="Lila"></button>
+        <button data-color="orange" type="button" aria-label="Orange"></button>
+      </div>
+      <p>Höhe: <strong id="level">1</strong> von 4</p>
+      <div class="row"><button id="down" type="button">− Höhe</button><button id="up" type="button">+ Höhe</button></div>
+      <div class="row"><button id="place" type="button">➕ Setzen</button><button id="eraseMode" type="button" aria-pressed="false">🗑 Löschen</button></div>
+    </div>
+    <p>Deine Bauwerke werden automatisch auf diesem Gerät gespeichert (maximal 350 Blöcke).</p>
+  </section>
+  <section class="panel">
+    <h2>😎 Meine Spielfigur</h2>
+    <label for="nickname">Name (nur auf deinem Gerät)</label>
+    <input class="name" id="nickname" maxlength="18" autocomplete="off" value="Explorer">
+    <p>Outfit-Farbe</p>
+    <div class="row"><button type="button" data-outfit="blue">💙 Blau</button><button type="button" data-outfit="mint">💚 Grün</button><button type="button" data-outfit="pink">💗 Pink</button><button type="button" data-outfit="purple">💜 Lila</button></div>
+    <div class="row" style="margin-top:9px"><button id="save" type="button">💾 Speichern</button><button id="reset" type="button">↩ Neu starten</button></div>
+  </section>
+</aside>
+</main>
+<footer class="footer">SD BlockWorld ist ein eigenes SD-Hub-Kids-Spiel, keine Roblox-App und nicht mit Roblox verbunden. Einzelspieler-Spiel ohne Chat, Anmeldung, Echtgeld oder Käufe. Spielstände bleiben im Browser. Keine geschützten Roblox-Figuren oder Spielwelten werden verwendet. Zum Laden der 3D-Bibliothek ist Internet erforderlich.</footer>
+<script type="module" src="./game.mjs"></script>
+</body></html>
