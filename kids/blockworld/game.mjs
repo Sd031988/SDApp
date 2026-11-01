@@ -200,6 +200,13 @@ function drawBlock(b){
  mesh.userData.block=b;mesh.castShadow=true;mesh.receiveShadow=true;
  blockGroup.add(mesh);blockMeshes.set(keyFor(b),mesh);return mesh;
 }
+function rebuildBlockMeshes(){
+ for(const mesh of blockMeshes.values()){
+  blockGroup.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();
+ }
+ blockMeshes.clear();
+ for(const b of state.blocks)drawBlock(b);
+}
 function drawCrystal(c){
  const mesh=new THREE.Mesh(new THREE.OctahedronGeometry(.53),new THREE.MeshStandardMaterial({
   color:0x60e9fb,emissive:0x1492a8,emissiveIntensity:.55,metalness:.28,roughness:.25
@@ -318,6 +325,28 @@ function bindControls(){
   state.avatarColor=button.dataset.outfit;renderAvatarColor();changed();
  });
  for(const button of document.querySelectorAll('[data-travel]'))button.addEventListener('click',()=>teleport(button.dataset.travel));
+ $('exportWorld').addEventListener('click',()=>{
+  const payload={kind:'sd-blockworld-map',version:1,blocks:state.blocks};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const link=document.createElement('a'),url=URL.createObjectURL(blob);
+  link.href=url;link.download='meine-sd-blockworld.json';document.body.appendChild(link);
+  link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+  notify('📤 Deine Welt wurde als Datei gespeichert.');
+ });
+ $('importWorld').addEventListener('click',()=>$('importFile').click());
+ $('importFile').addEventListener('change',async event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  event.target.value='';
+  if(file.size>150000){notify('Diese Welt-Datei ist zu groß.');return}
+  try{
+   const data=JSON.parse(await file.text());
+   if(data.kind!=='sd-blockworld-map'||!Array.isArray(data.blocks))throw Error('unknown map');
+   const validated=restoreSave({blocks:data.blocks},localDay());
+   state.blocks=validated.blocks;
+   rebuildBlockMeshes();changed();saveNow();
+   notify('📥 Deine Blockwelt ist geladen! '+state.blocks.length+' Blöcke.');
+  }catch{notify('Die Datei ist keine gültige SD-BlockWorld-Welt.')}
+ });
  $('nickname').addEventListener('change',()=>{
   state.nickname=cleanName($('nickname').value);$('nickname').value=state.nickname;changed();notify('Hallo, '+state.nickname+'!');
  });
