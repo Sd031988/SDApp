@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c3533">
+<meta name="description" content="Mein SD Hub: persönliches Dashboard, Wegweiser, Akademie, Alltag in Deutschland, Projektwerkstatt und Sprachtrainer.">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./styles.css">
+<title>Mein SD Hub – Lernen, gestalten, entdecken</title>
+</head>
+<body>
+<header class="top"><div class="wrap top-inner">
+<a class="brand" href="/" aria-label="Zur SD Hub Startseite"><img src="/icon.svg" alt="" width="40" height="40"><span>SD Hub</span></a>
+<nav aria-label="Schnellnavigation">
+<a href="/">← Startseite</a>
+<a href="/deutsch/">Deutsch</a>
+<a href="/studio/">Code-Studio</a>
+<a href="/kids/">Pibo</a>
+</nav>
+</div></header>
+<section class="hero" aria-labelledby="hero-title"><div class="wrap hero-in"><div>
+<span class="overline">SD Hub · Persönlicher Bereich</span>
+<h1 id="hero-title">Deine Ideen.<br><em>Deine Möglichkeiten.</em></h1>
+<p class="lead">Entdecke den passenden Weg, lerne neue Fähigkeiten, behalte deine Fortschritte im Blick und probiere eigene Projekte aus. Alles an einem Ort – ohne Anmeldung für diesen Bereich.</p>
+<div class="hero-actions"><a href="#wegweiser" class="btn primary" data-tablink="wegweiser">Mein Ziel finden ↗</a><a href="#akademie" class="btn outline" data-tablink="akademie">Etwas lernen ↗</a></div>
+</div><div class="overview-glass" aria-hidden="true"><div class="glass-title">Was möchtest du heute machen?</div><div class="glass-icons">
+<span><b>🧭</b>Weg finden</span><span><b>🎓</b>Lernen</span><span><b>🗓️</b>Planen</span><span><b>💻</b>Gestalten</span><span><b>🗣️</b>Sprechen</span><span><b>⭐</b>Merken</span></div><p class="glass-note">Sechs Bereiche, die zusammenarbeiten.</p></div></div></section>
+<div class="tabs-shell"><nav class="wrap tabs" aria-label="Mein SD Hub Bereiche" id="tabs">
+<button class="tab active" type="button" data-tab="uebersicht" aria-controls="uebersicht" aria-selected="true"><em>🏠</em> Übersicht</button>
+<button class="tab" type="button" data-tab="wegweiser" aria-controls="wegweiser" aria-selected="false"><em>🧭</em> Wegweiser</button>
+<button class="tab" type="button" data-tab="akademie" aria-controls="akademie" aria-selected="false"><em>🎓</em> Akademie</button>
+<button class="tab" type="button" data-tab="leben" aria-controls="leben" aria-selected="false"><em>📋</em> Mein Weg</button>
+<button class="tab" type="button" data-tab="projekte" aria-controls="projekte" aria-selected="false"><em>💻</em> Projekte</button>
+<button class="tab" type="button" data-tab="sprache" aria-controls="sprache" aria-selected="false"><em>🗣️</em> Sprachtrainer</button>
+</nav></div>
+<main class="wrap main">
+<section class="module" id="uebersicht" aria-label="Meine SD Hub Übersicht">
+<div class="module-head"><span class="overline">Mein SD Hub</span><h2>Dein persönlicher Überblick</h2><p>Alles Wichtige an einem Ort. Fortschritte, Favoriten und die zuletzt geöffneten Anwendungen bleiben auf diesem Gerät gespeichert.</p></div>
+<div class="stack">
+<div class="panel dashboard-intro"><div><h3 id="greeting">Willkommen im SD Hub!</h3><p class="panel-sub">Gestalte deinen Lern- und Arbeitsbereich ganz nach deinen Wünschen.</p></div><label for="nickname">Wie sollen wir dich begrüßen?<input id="nickname" type="text" autocomplete="off" maxlength="40" placeholder="Optionaler Vorname"></label></div>
+<div class="stats" aria-label="Persönliche Fortschritte"><div class="stat"><strong id="statLessons">0</strong><span>Lektionen abgeschlossen</span></div><div class="stat"><strong id="statSteps">0</strong><span>Schritte erledigt</span></div><div class="stat"><strong id="statFavs">0</strong><span>Lieblingswerkzeuge</span></div></div>
+<div class="two-col">
+<div class="panel"><h3>⭐ Meine Favoriten</h3><p class="panel-sub">Markiere Werkzeuge mit einem Stern, um sie schnell wiederzufinden.</p><div class="simple-list" id="favoritesList"></div><div style="margin-top:15px"><button class="btn outline small" type="button" data-goto="wegweiser">Weitere Werkzeuge finden ↗</button></div></div>
+<div class="panel"><h3>🕘 Zuletzt geöffnet</h3><p class="panel-sub">Hier erscheinen Werkzeuge, die du aus diesem Bereich aufgerufen hast.</p><div class="simple-list" id="recentList"></div><div style="margin-top:15px"><button class="btn outline small" type="button" data-goto="akademie">Zum Lernbereich ↗</button></div></div>
+</div>
+<div class="panel"><h3>🔒 Daten & Privatsphäre</h3><p>Dieser neue Bereich speichert seine Favoriten, Fortschritte und Einstellungen ausschließlich im Browser auf deinem Gerät. Es findet <strong>keine automatische Cloud-Synchronisierung</strong> statt. Du kannst deine Daten exportieren, wieder importieren oder löschen. Nutze auf gemeinsam verwendeten Geräten keine privaten Angaben.</p><div class="privacy-actions"><button id="exportState" type="button">⬇ Daten sichern (JSON)</button><button id="importState" type="button">⬆ Sicherung importieren</button><input id="importFile" class="visually-hidden" type="file" accept=".json,application/json" aria-label="JSON-Sicherung wählen"><button id="clearState" class="danger" type="button">Alle lokalen Daten löschen</button></div><p id="storageStatus" role="status" class="message"></p></div>
+</div>
+</section>
+<section class="module" id="wegweiser" hidden aria-label="Intelligenter SD Wegweiser">
+<div class="module-head"><span class="overline">Dein nächster Schritt</span><h2>Was möchtest du heute erreichen?</h2><p>Wähle ein Ziel oder beschreibe es in eigenen Worten. Der Wegweiser schlägt dir passende SD-Hub-Werkzeuge vor. Die Suche funktioniert lokal und benötigt keine KI-Verbindung.</p></div>
+<div class="goal-grid" id="goalGrid"></div>
+<div class="panel" style="margin-top:19px"><h3>Oder beschreibe dein Ziel</h3><div class="search-row"><input id="goalSearch" type="search" placeholder="Zum Beispiel: Ich möchte B1 üben …" autocomplete="off" aria-label="Ziel in eigenen Worten beschreiben"><button id="goalSearchBtn" type="button" class="btn primary">Passende Hilfe finden</button></div><p id="goalStatus" class="panel-sub" role="status"></p></div>
+<div class="module-head" style="margin-top:28px"><h2 style="font-size:27px">Das könnte dir helfen</h2></div><div class="result-grid" id="wayResults"></div>
+</section>
+<section class="module" id="akademie" hidden aria-label="SD Akademie">
+<div class="module-head"><span class="overline">SD Akademie</span><h2>Lerne in deinem Tempo.</h2><p>16 kurze Einstiegslektionen in vier Themenbereichen. Lies die Erklärung, beantworte eine Übungsfrage und sammle Lernfortschritte. Die Übungen sind Lernhilfen und keine anerkannten Abschlussprüfungen.</p></div>
+<div class="course-grid" id="courses"></div>
+<div class="panel" style="margin-top:18px"><h3 id="courseHeading">Wähle deinen Lernbereich</h3><p class="panel-sub" id="courseSummary"></p><div class="lesson-list" id="lessonList"></div><div id="lessonDetail"></div></div>
+<div class="hint" style="margin-top:18px">Für einen vollständigen Deutschkurs und längere Prüfungen öffne bitte den <a href="/deutsch/" style="font-weight:800;text-decoration:underline" data-track="deutsch">bestehenden Deutsch-Lernbereich</a>.</div>
+</section>
+<section class="module" id="leben" hidden aria-label="Wegweiser für Alltag in Deutschland">
+<div class="module-head"><span class="overline">Ankommen & Leben</span><h2>Schritt für Schritt vorankommen.</h2><p>Vier praktische Orientierungspfade für Alltag, Arbeit, Wohnung und Familie. Du kannst Punkte abhaken; sie bleiben auf deinem Gerät gespeichert.</p></div>
+<div class="warning">Diese Checklisten sind allgemeine Orientierung, keine Rechts-, Migrations- oder Behördenberatung. Anforderungen und Fristen hängen vom Einzelfall ab.</div>
+<div class="path-grid" id="pathGrid" style="margin-top:18px"></div>
+<div class="panel" style="margin-top:19px"><h3 id="pathHeading"></h3><p id="pathSummary"></p><div id="pathSteps" class="step-list"></div></div>
+</section>
+<section class="module" id="projekte" hidden aria-label="SD Projektwerkstatt">
+<div class="module-head"><span class="overline">SD Projektwerkstatt</span><h2>Aus einer Idee wird ein Projekt.</h2><p>Entdecke vier eigenständige HTML-Projektvorlagen. Sie sind sofort in der Vorschau sichtbar und lassen sich als Datei herunterladen. Anschließend kannst du sie im SD Code-Studio weiterbearbeiten.</p></div>
+<div class="project-grid" id="projectGrid"></div>
+<div class="panel" style="margin-top:20px"><h3 id="projectHeading"></h3><p id="projectDescription"></p><div class="hero-actions" style="margin-top:9px"><button class="btn primary" type="button" id="downloadProject">⬇ Vorlage herunterladen</button><a href="/studio/" class="btn outline" data-track="studio">SD Code-Studio öffnen ↗</a><a href="/design/" class="btn outline" data-track="design">Design-Studio ↗</a></div><iframe title="Projektvorschau" class="preview-frame" id="projectPreview" sandbox="" loading="lazy"></iframe><p class="panel-sub" style="margin:12px 0 0">Die Vorschau läuft in einem isolierten Fenster. Die heruntergeladene Datei ist eine lokale HTML-Vorlage.</p></div>
+</section>
+<section class="module" id="sprache" hidden aria-label="Mehrsprachiger Sprachtrainer">
+<div class="module-head"><span class="overline">SD Sprachtrainer</span><h2>Deutsch hören und sprechen.</h2><p>Höre nützliche deutsche Sätze und lies eine Übersetzung. Übe in deinem Tempo mit langsamer oder normaler Wiedergabe. Der Ton wird durch die Sprachfunktion deines Browsers erzeugt.</p></div>
+<div class="panel"><div class="language-controls"><label for="translateLang">Übersetzung<select id="translateLang"><option value="en">English</option><option value="fa">فارسی / Dari</option><option value="ur">اردو</option><option value="ti">ትግርኛ</option></select></label><label for="speechSpeed">Sprechgeschwindigkeit<select id="speechSpeed"><option value="0.78">Langsam</option><option value="1">Normal</option></select></label></div><p class="panel-sub" style="margin-top:13px">Die Beispielsätze sind Lernmaterial, keine beglaubigten Übersetzungen. Für längere Texte und umfassende Übungen nutze den <a href="/deutsch/" data-track="deutsch" style="font-weight:800;text-decoration:underline">Deutschbereich</a>. Die Aussprache kann je nach Gerät unterschiedlich klingen.</p><p id="speechStatus" class="message" role="status"></p></div>
+<div id="phraseList" class="phrase-list" style="margin-top:18px"></div>
+</section>
+</main>
+<footer class="footer"><div class="wrap footer-in"><div><b>SD Hub</b> · Lernen. Gestalten. Entdecken.<div>Mein SD Hub · Browserbasierter persönlicher Bereich</div></div><div class="footer-links"><a href="/">Startseite</a><a href="/datenschutz.html">Datenschutz</a><a href="/impressum.html">Impressum</a></div></div></footer>
+<script src="./data.js" defer></script>
+<script src="./app.js" defer></script>
+</body></html>
