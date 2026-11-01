@@ -19,6 +19,17 @@ Der Hub enthält **10 spielbare Spiele**, davon die beiden bestehenden eigenstä
 | SD Fashion Studio | 2D | Avatar-Mode mit variablen Hut-/Shirt-/Schuhfarben, Looks |
 | SD Lern-Abenteuer | 2D | 16 Aufgaben zu Deutsch, Rechnen, Wissen und Logik |
 
+## Professionelle Plattformfunktionen (Ausbaustufe 2)
+
+- Durchsuchbare Spielebibliothek mit Genre-Filtern, Favoriten und Sortierung („Empfohlen“, „Favoriten zuerst“, „Zuletzt gespielt“, alphabetisch).
+- Acht sichtbar freischaltbare Spielerfolge, gesammelt aus den **tatsächlichen, lokal gespeicherten Minispiel-Fortschritten**. Die beiden 3D-Spiele bleiben eigenständige Produkte.
+- Lokale Sicherung per JSON-Export und validierter Import. Zum Überschreiben ist eine ausdrückliche Bestätigung erforderlich. Es werden keine Pibo-/BlockWorld-Speicherstände in dieses Minispiel-Backup kopiert.
+- Einheitliches Spiel-Fenster mit **Pause/Fortsetzen**, Vollbildtaste (falls vom Browser unterstützt), großen Bildschirmsteuerungen und **Ton-/Bewegungseinstellungen**, die im Browser lokal gespeichert werden.
+- **Leichtere Offline-Nutzung der acht 2D-Minispiele**: Der installierbare Spielebereich registriert einen auf `/kids/games/` begrenzten Service Worker. Nach einem erfolgreichen ersten Laden werden nur die Mini-Spiel-Oberflächen/-Module für späteres Spielen offline vorgehalten. Die 3D-Bereiche Pibo und BlockWorld sind nicht im Offline-Cache und können weiterhin Internet benötigen.
+- Wiederholung von Minispielen löscht nicht die bereits ausgezahlten erstmaligen Sternmeilensteine (kein leichtes Verdoppeln der Belohnung durch „Neu starten“).
+- Sanft animierte, selbst gezeichnete Canvas-Dekoration und besseres Kart-Fahrgefühl; abgeschwächte Bewegung auf Wunsch.
+- Zusätzlich Browser-Regressionstests für Suche, Favoriten, Import/Export, Pause, Ton, reduzierte Bewegung, Offline-Minispiele, BlockWorld-Pause und mobile Ansichten.
+
 ## Technik
 
 - `index.html`: responsive Startseite mit Filter, Spiellinks, Datenschutzinformationen.
@@ -26,6 +37,8 @@ Der Hub enthält **10 spielbare Spiele**, davon die beiden bestehenden eigenstä
 - `play.html` + `play.mjs`: Canvas-Spieloberfläche und die individuellen Steuerungen/Zeichnungen von acht Minispielen.
 - `rules.mjs`: testbare Regeln für jedes Minispiel, begrenzte Sternvergaben, gespeicherte Fortschritte.
 - `rules.test.mjs`: Unit-Tests zu allen acht Spielen, Speicherschutz und Belohnungen.
+- `profile.mjs` / `profile.test.mjs`: private Favoriten, Einstellungen, acht Erfolge, Backup-Sanitizing und sichere Wiederholung.
+- `manifest.webmanifest`, `icon.svg`, `sw.js`: eigenständiger Mini-Spiele-Bereich mit Cache ausschließlich innerhalb dieses Pfades.
 - `../e2e/games-platform.spec.mjs`: Playwright-E2E-Prüfung des Spielekatalogs sowie aller Minispiel-Starts und wichtiger Interaktionen.
 - `../../.github/workflows/pibo-smoke.yml`: Node-Syntax-/Unit-Tests; `../../.github/workflows/kids-browser.yml`: Chromium-Tests für Desktop und Mobile-Emulation.
 
@@ -48,6 +61,8 @@ Dies ist eine erste zusammenhängende **Browser-Spieleplattform** mit acht klein
 ```sh
 node --check kids/games/play.mjs
 node kids/games/rules.test.mjs
+node kids/games/profile.test.mjs
+node --check kids/games/sw.js
 cd kids
 npm install
 npx playwright install chromium
