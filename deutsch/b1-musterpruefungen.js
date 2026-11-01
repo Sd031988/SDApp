@@ -887,13 +887,47 @@ function learningStatsMarkup(records){
  return '<h3>Persönliche Lernübersicht</h3><p class="b1x-note">Die Trefferquoten fassen alle auf diesem Gerät gespeicherten, automatisch bewerteten Aufgaben zusammen. Sie sind keine offiziellen Prüfungsnoten oder B1-Nachweise. Verschiedene Übungssätze können mehrfach enthalten sein.</p>'+
  rows+'<p class="b1x-note">Schreiben und Sprechen: '+manual+' abgeschlossene Übung(en), ohne automatische Bewertung. Für eine Einschätzung ist menschliches Feedback erforderlich.</p>';
 }
+function personalPlan(records){
+ const labels={lesen:'Lesen',hoeren:'Hören',sprach:'Sprachbausteine'};
+ const tips={lesen:'Schlüsselwörter im Text markieren und die Antwort mit einer Textstelle belegen.',hoeren:'Auf Zeiten, Zahlen und Ortsangaben achten; wichtige Wörter nach dem Hören notieren.',sprach:'Verbposition, Artikel und Präpositionen gezielt wiederholen.'};
+ const rows=Object.keys(labels).map(id=>{
+  const entries=records.filter(x=>x.part===id&&Number.isFinite(x.correct)&&Number.isFinite(x.total)&&x.total>0&&x.correct>=0&&x.correct<=x.total);
+  const total=entries.reduce((n,x)=>n+x.total,0),correct=entries.reduce((n,x)=>n+x.correct,0);
+  return {id,label:labels[id],percent:total?Math.round(correct/total*100):null,total};
+ });
+ const practiced=rows.filter(x=>x.total>0).sort((a,b)=>a.percent-b.percent);
+ const focus=practiced[0]||rows.find(x=>x.id==='lesen');
+ const examWithFocus=records.find(x=>x.part===focus.id&&E[x.exam]&&E[x.exam].parts.some(p=>p[0]===focus.id));
+ const chosenExam=examWithFocus?examWithFocus.exam:exam;
+ const chosenSet=examWithFocus?examWithFocus.set:set;
+ const available=E[chosenExam].parts.findIndex(p=>p[0]===focus.id);
+ const recommendation=practiced.length?'Dein aktueller Übungsschwerpunkt: '+focus.label+' ('+focus.percent+' % richtig in gespeicherten Übungen).':'Beginne mit Lesen, um erste Lernergebnisse zu sammeln.';
+ return '<section class="b1x-passage"><h3>Dein persönlicher Lernplan</h3>'+
+ '<p>'+esc(recommendation)+'</p>'+
+ '<ol><li><b>Heute (15 Minuten):</b> '+esc(tips[focus.id])+'</li>'+
+ '<li><b>Danach:</b> Einen vollständigen Übungsteil „'+esc(focus.label)+'“ bearbeiten und die Erklärungen zu Fehlern lesen.</li>'+
+ '<li><b>Beim nächsten Lernen:</b> Markierte schwierige Fragen erneut trainieren; anschließend eine Schreib- oder Sprechaufgabe mit menschlicher Rückmeldung üben.</li></ol>'+
+ '<p class="b1x-note">Der Plan basiert auf lokal gespeicherten Treffern, nicht auf einer offiziellen B1-Einstufung. Bei wenig Daten ist die Empfehlung nur eine erste Orientierung.</p>'+
+ '<button id="b1x-plan-start" class="b1x-primary" type="button">▶ Empfohlenen Übungsteil starten</button></section>';
+}
 function history(){
  const saved=getSaved().slice().reverse();
  view('<h2>Deine bisherigen Übungsergebnisse</h2><p class="b1x-note">Nur auf diesem Gerät gespeichert. Nicht mit offiziellen Prüfungsergebnissen vergleichbar.</p>'+
  learningStatsMarkup(saved)+
+ personalPlan(saved)+
  (saved.length?saved.slice(0,30).map(x=>'<div class="b1x-passage"><b>'+esc(E[x.exam]?.name||x.exam)+' · Muster '+esc(x.set)+'</b><p>'+esc(x.part)+' · '+esc(new Date(x.date).toLocaleDateString('de-DE'))+'</p><small>'+(x.correct===null?'Manuelle Bewertung erforderlich':esc(x.correct)+' / '+esc(x.total)+' richtig')+'</small></div>').join(''):'<p>Noch keine Ergebnisse gespeichert.</p>')+
  '<button id="b1x-home" class="b1x-primary">Zurück zur Auswahl</button>');
  el('b1x-home').onclick=home;
+ el('b1x-plan-start').onclick=()=>{
+  const rows=['lesen','hoeren','sprach'].map(id=>{const a=saved.filter(x=>x.part===id&&Number.isFinite(x.correct)&&Number.isFinite(x.total)&&x.total>0&&x.correct>=0&&x.correct<=x.total);const total=a.reduce((n,x)=>n+x.total,0);return {id,total,rate:total?a.reduce((n,x)=>n+x.correct,0)/total:Infinity};}).filter(x=>x.total>0).sort((a,b)=>a.rate-b.rate);
+  const target=rows.length?rows[0].id:'lesen';
+  const source=saved.find(x=>x.part===target&&E[x.exam]&&E[x.exam].parts.some(p=>p[0]===target));
+  const nextExam=source?source.exam:exam,nextSet=source?source.set:set;
+  const nextPart=E[nextExam].parts.findIndex(p=>p[0]===target);
+  if(nextPart<0)return;
+  if(getCheckpoint()&&!confirm('Unterbrochene Prüfung durch diese empfohlene Übung ersetzen?'))return;
+  clearCheckpoint();exam=nextExam;set=nextSet;running=false;start(nextPart);
+ };
 }
 const css=document.createElement('style');css.textContent=`
 #b1x{height:100%;min-height:0;overflow-y:auto;background:#0b0c13;color:#f9fafb;flex:1}
