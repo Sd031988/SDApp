@@ -873,9 +873,24 @@ function markedPractice(){
  el('b1x-home').onclick=home;
  if(el('b1x-retest-start'))el('b1x-retest-start').onclick=()=>startMarkedRetest(cards);
 }
+function learningStatsMarkup(records){
+ const sections=[['lesen','Lesen'],['hoeren','Hören'],['sprach','Sprachbausteine']];
+ const rows=sections.map(([id,label])=>{
+  const entries=records.filter(x=>x.part===id&&Number.isFinite(x.correct)&&Number.isFinite(x.total)&&x.total>0&&x.correct>=0&&x.correct<=x.total);
+  const correct=entries.reduce((n,x)=>n+x.correct,0),total=entries.reduce((n,x)=>n+x.total,0);
+  const percent=total?Math.round(correct/total*100):null;
+  const suggestion=id==='lesen'?'Achte auf Schlüsselwörter und Textbelege.':id==='hoeren'?'Übe das Verstehen von Uhrzeiten, Orten und wichtigen Details.':'Wiederhole Verbformen, Satzstellung und passende Wörter.';
+  return '<div class="b1x-passage"><b>'+label+'</b><p>'+(percent===null?'Noch keine automatisch ausgewerteten Ergebnisse.':percent+' % richtige Antworten · '+correct+' von '+total+' Aufgaben · '+entries.length+' abgeschlossene Übung(en)')+'</p>'+
+   (percent===null?'': '<div class="b1x-progress" role="progressbar" aria-label="'+label+' Übungstrefferquote" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'"><div style="width:'+percent+'%"></div></div><p class="b1x-note">'+(percent>=80?'Aktuell eine Stärke. Weiter regelmäßig üben.':percent>=60?'Weiter festigen: ':'Hier lohnt sich gezieltes Training: ')+suggestion+'</p>')+'</div>';
+ }).join('');
+ const manual=records.filter(x=>x.part==='schreiben'||x.part==='sprechen').length;
+ return '<h3>Persönliche Lernübersicht</h3><p class="b1x-note">Die Trefferquoten fassen alle auf diesem Gerät gespeicherten, automatisch bewerteten Aufgaben zusammen. Sie sind keine offiziellen Prüfungsnoten oder B1-Nachweise. Verschiedene Übungssätze können mehrfach enthalten sein.</p>'+
+ rows+'<p class="b1x-note">Schreiben und Sprechen: '+manual+' abgeschlossene Übung(en), ohne automatische Bewertung. Für eine Einschätzung ist menschliches Feedback erforderlich.</p>';
+}
 function history(){
  const saved=getSaved().slice().reverse();
  view('<h2>Deine bisherigen Übungsergebnisse</h2><p class="b1x-note">Nur auf diesem Gerät gespeichert. Nicht mit offiziellen Prüfungsergebnissen vergleichbar.</p>'+
+ learningStatsMarkup(saved)+
  (saved.length?saved.slice(0,30).map(x=>'<div class="b1x-passage"><b>'+esc(E[x.exam]?.name||x.exam)+' · Muster '+esc(x.set)+'</b><p>'+esc(x.part)+' · '+esc(new Date(x.date).toLocaleDateString('de-DE'))+'</p><small>'+(x.correct===null?'Manuelle Bewertung erforderlich':esc(x.correct)+' / '+esc(x.total)+' richtig')+'</small></div>').join(''):'<p>Noch keine Ergebnisse gespeichert.</p>')+
  '<button id="b1x-home" class="b1x-primary">Zurück zur Auswahl</button>');
  el('b1x-home').onclick=home;
