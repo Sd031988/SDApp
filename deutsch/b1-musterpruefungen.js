@@ -447,13 +447,29 @@ function selfCheckMarkup(section,entries){
  '<p class="b1x-note">Für eine verlässliche Einschätzung der Aussprache und Interaktion ist Rückmeldung von einer Lehrkraft oder einem Gesprächspartner hilfreich.</p>')+
  '</details>';
 }
+function explainAnswer(t,withTranscript){
+ const solution=t.options[t.answer];
+ if(withTranscript){
+   const source=t.audio||'';
+   const at=source.toLowerCase().indexOf(solution.toLowerCase());
+   if(at>=0){
+     const from=Math.max(0,at-60),to=Math.min(source.length,at+solution.length+60);
+     return 'Textbeleg: „'+(from?'…':'')+source.slice(from,to).trim()+(to<source.length?'…':'')+'“';
+   }
+   return 'Lösung: „'+solution+'“. Die Aussage kann im Hörtext anders formuliert sein; prüfe das Transkript.';
+ }
+ if(t.kind&&t.kind.includes('Anzeigen zuordnen'))return 'Passende Anzeige: „'+solution+'“. Vergleiche die Bedingungen der Situation mit der Anzeige.';
+ if(t.kind&&(t.kind.includes('Lückentext')||t.kind.includes('Wortwahl')))return 'Vorgesehene Ergänzung: „'+solution+'“. Prüfe Wortart, Grammatik und Satzsinn.';
+ if(t.options.length===2)return 'Laut Lösungsschlüssel ist die Aussage '+(t.answer===0?'richtig / Ja':'falsch / Nein')+'. Prüfe die Angaben im Text.';
+ return 'Richtige Antwort: „'+solution+'“. Vergleiche die Information mit dem Lesetext.';
+}
 function reviewTask(t,answer,i,withTranscript){
  const selected=answer===null||answer===undefined?'–':t.options[answer]||'–';
  const correct=answer===t.answer;
  const status=answer===null||answer===undefined?'Nicht beantwortet':correct?'Richtig beantwortet':'Noch einmal üben';
  const evidence=withTranscript?'Höre die Aufnahme erneut oder lies den Hörtext. Suche die Stelle, die die richtige Antwort belegt.':t.kind&&t.kind.includes('Anzeigen zuordnen')?'Vergleiche die Angaben der Situation mit der passenden Anzeige. Achte auf die konkreten Bedingungen.':t.kind&&t.kind.includes('Lückentext')||t.kind&&t.kind.includes('Wortwahl')?'Setze die richtige Lösung in die Lücke ein und prüfe Grammatik und Satzbedeutung.':'Suche im Lesetext die Information, die diese Lösung bestätigt oder die falsche Aussage widerlegt.';
  const base='<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>'+esc(status)+' · Deine Antwort: '+esc(selected)+' · Lösung: '+esc(t.options[t.answer])+'</small></p>';
- const guidance='<details class="b1x-transcript"><summary>So überprüfst du die Lösung</summary><p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
+ const guidance='<details class="b1x-transcript"><summary>Erklärung und Textbeleg</summary><p>'+esc(explainAnswer(t,withTranscript))+'</p><p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
  return base+guidance+(withTranscript&&t.audio?'<details class="b1x-transcript"><summary>Hörtext zu Aufgabe '+(i+1)+' nachlesen</summary><p>'+esc(t.dialogue?t.dialogue.map(turn=>turn[0]+': '+turn[1]).join('\\n'):t.audio)+'</p></details>':'');
 }
 function finish(){
