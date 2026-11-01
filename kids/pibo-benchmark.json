@@ -77,8 +77,10 @@
       "acceptance": "Finger trifft direkt Fell; Wasser/Schaum/Handtuch besitzen hochwertige visuelle und akustische Rückmeldungen",
       "evidence": [
         "kids/pibo-care.js",
-        "kids/pibo-care.test.mjs"
-      ]
+        "kids/pibo-care.test.mjs",
+        "kids/e2e/pibo.spec.mjs"
+      ],
+      "implementation": "Neu: prozedurale 3D-Dusche und 3D-Handtuch werden nach der passenden Pflegephase sichtbar; per Raycast und Pointer-/Touch-Drag auf Pibos tatsächliches 3D-Katzenmodell gezogen. UI-Knöpfe bleiben als barrierearme Alternative erhalten. Professionelle Tool-Modelle, Flüssigkeitsphysik und reale Hardwaretests fehlen."
     },
     {
       "id": "toilette",
@@ -272,5 +274,34 @@
         "kids/README.md"
       ]
     }
-  ]
+  ],
+  "last_iteration": {
+    "date": "2026-11-01",
+    "focus": "Interaktives 3D-Bad: Dusche und Handtuch an Pibos tatsächlichem Körper per Finger/Maus ziehen",
+    "reference_checked": [
+      "official",
+      "google_play",
+      "bathroom_2026",
+      "backyard_2026"
+    ],
+    "implementation_files": [
+      "kids/pibo-care.js",
+      "kids/index.html"
+    ],
+    "test_files": [
+      "kids/pibo-care.test.mjs",
+      "kids/e2e/pibo.spec.mjs"
+    ],
+    "verified": [
+      "PiboCare-Syntaxprüfung",
+      "Inline-JavaScript-Syntaxprüfung",
+      "PiboCare-Unit-/Regressionstests mit Three.js-Testdoubles erfolgreich"
+    ],
+    "unverified": [
+      "Echte WebGL-Playwright-Läufe auf Desktop/Mobil-Chromium im aktuellen Durchlauf nicht lokal ausgeführt",
+      "GitHub-Actions-Status für Push-Workflows über verfügbaren Connector nicht abrufbar",
+      "Physische Android-/iOS-Touchtests und GPU-FPS-Messungen fehlen"
+    ],
+    "next": "GitHub-Browserworkflow auswerten und eventuelle Touch-Raycaster-/Projektionsfehler reparieren; danach eigene hochwertig modellierte Badwerkzeuge und Flüssigkeits-Partikel."
+  }
 }
