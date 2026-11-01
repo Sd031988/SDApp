@@ -140,3 +140,44 @@ test('Pibo original garden is a playable sixth 3D room on PC and phone',async({p
  await page.locator('[data-room="garden"]').click();
  await expect(page.locator('#roomTitle')).toContainText('Garten');
 });
+
+
+test('Pibo 3D shower and towel can be dragged onto the actual cat on desktop and mobile',async({page,isMobile})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.setViewportSize({width:isMobile?390:1280,height:844});
+  await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('#stage canvas')).toBeVisible({timeout:30000});
+  await page.locator('[data-act="wash"]').click();
+  for(let i=0;i<3;i++)await page.locator('#scrub').click();
+  await expect(page.locator('#bathToolHint')).toContainText('Dusche');
+  // Allow the real 3D cat to walk into the bath before aiming at its mesh.
+  await page.waitForTimeout(5200);
+  async function dragTool(kind){
+    await page.locator('#stage').scrollIntoViewIfNeeded();
+    const hint=page.locator('#bathToolHint');
+    await expect(hint).toContainText(kind==='rinse'?'Dusche':'Handtuch');
+    const c=await page.evaluate(()=>{
+      const stage=document.querySelector('#stage').getBoundingClientRect();
+      const hint=document.querySelector('#bathToolHint');
+      return {x:stage.left+parseFloat(hint.style.left),y:stage.top+parseFloat(hint.style.top),height:stage.height};
+    });
+    const x=c.x-c.height*.16,y=c.y+c.height*(kind==='rinse'?.18:.09);
+    if(isMobile){
+      // Actual Chromium touch input, not a mouse click disguised as a touch test.
+      const session=await page.context().newCDPSession(page);
+      await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:c.x,y:c.y,id:1}]});
+      for(let i=1;i<=16;i++)await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:c.x+(x-c.x)*i/16,y:c.y+(y-c.y)*i/16,id:1}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await session.detach();
+    }else{
+      await page.mouse.move(c.x,c.y);await page.mouse.down();
+      await page.mouse.move(x,y,{steps:16});await page.mouse.up();
+    }
+  }
+  await dragTool('rinse');
+  await expect(page.locator('#say')).toContainText('Seife ist weg');
+  await expect(page.locator('#bathToolHint')).toContainText('Handtuch');
+  await dragTool('dry');
+  await expect(page.locator('#say')).toContainText('Alles trocken');
+  expect(errors).toEqual([]);
+});
