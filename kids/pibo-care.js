@@ -35,10 +35,10 @@ export class PiboCare {
     this.cat.scale.set(1,1,1);this.camera.position.x=0;this.camera.lookAt(0,1.35,0);
     this.onStatus(false,'',0)
   }
-  start(type,index=0,now=performance.now()){
-    this.stop();const duration=type==='sleep'?9000:type==='toilet'?7500:7000;
-    const i=this.active={type,start:now,duration,phase:-1,lastSound:now,food:null,blanket:null,water:null};
-    if(type==='feed')i.food=this.food(index);
+  start(type,index=0,now=performance.now(),options={}){
+    this.stop();const duration=type==='sleep'?9000:type==='toilet'?7500:type==='wash'?20000:type==='feed'&&options.direct?2700:7000;
+    const i=this.active={type,start:now,duration,phase:-1,lastSound:now,food:null,blanket:null,water:null,direct:!!options.direct,scrubs:0,rinsed:false,dried:false};
+    if(type==='feed'){i.food=this.food(index);if(i.direct)i.food.position.set(.68,1.55,.94)}
     if(type==='wash'){
       for(let n=0;n<20;n++){const b=this.orb(0xe2faff,-3.2+(n%5)*.33,.95+Math.floor(n/5)*.18,-1.3,.075+(n%3)*.025,.075+(n%3)*.025,.075+(n%3)*.025);b.userData.bubble=n}
       const sponge=this.box(0xf8d16b,-1.8,1.35,-1.1,.3,.16,.25);sponge.userData.sponge=true
@@ -62,6 +62,32 @@ export class PiboCare {
     this.onStatus(true,'Einseifen: '+Math.min(6,i.scrubs)+'/6',Math.min(1,i.scrubs/6));
     return true
   }
+  rinse(){
+    const i=this.active;
+    if(i?.type!=='wash'||i.scrubs<3||i.rinsed)return false;
+    i.rinsed=true;
+    for(const bubble of this.props.children)if(bubble.userData?.bubble!==undefined)bubble.visible=false;
+    // Three short spray droplets make the shower visibly work, instead of only changing a number.
+    for(let j=0;j<12;j++){
+      const drop=this.orb(0x77d5fa,-2.8+(j%4)*.24,2.2-Math.floor(j/4)*.3,-.68,.045,.13,.045);
+      drop.userData.waterDrop=j;
+    }
+    this.sound('water');
+    this.sound('splash');
+    this.onStatus(true,'Wasser läuft – jetzt mit dem Handtuch abtrocknen! 🚿',.85);
+    return true;
+  }
+  dry(){
+    const i=this.active;
+    if(i?.type!=='wash'||!i.rinsed||i.dried)return false;
+    i.dried=true;
+    const towel=this.box(0xffc7d8,-2.6,1.32,-.35,.95,.54,.10);
+    towel.userData.towel=true;
+    this.sound('select');
+    this.onStatus(true,'Geschafft! Pibo ist sauber und trocken! ✨',1);
+    i.start=performance.now()-i.duration*.91;
+    return true;
+  }
   flush(){
     const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<2)return false;
     i.flushed=true;
@@ -77,14 +103,19 @@ export class PiboCare {
     const labels={feed:['Zum Futter gehen','Essen ansehen','Lecker kauen','Fertig!'],wash:['In die Wanne steigen','Einseifen','Abspülen','Abtrocknen'],sleep:['Zum Bett gehen','Hinlegen','Schlafen','Aufwachen'],toilet:['Zur Toilette gehen','Hinsetzen','Toilette benutzen','Spülen']};
     if(phase!==i.phase){
       i.phase=phase;
-      if(i.type==='wash'&&phase===2)this.sound('splash');
+      // In the interactive bath, the player chooses when soap is rinsed away.
       if(i.type==='sleep'&&phase===2)this.sound('snore');
       if(i.type==='toilet'&&phase===2)this.sound('fart');
       if(i.type==='toilet'&&phase===3)this.flush()
     }
-    if(!i.lastStatusAt||now-i.lastStatusAt>=80||phase!==i.lastStatusPhase){this.onStatus(true,labels[i.type][phase],p);i.lastStatusAt=now;i.lastStatusPhase=phase}
+    if(!i.lastStatusAt||now-i.lastStatusAt>=80||phase!==i.lastStatusPhase){
+      const bathLabel=i.dried?'Abtrocknen fertig':i.rinsed?'Mit Handtuch abtrocknen':i.scrubs>=3?'Jetzt mit der Dusche abspülen':'Über Pibo reiben und einseifen';
+      const label=i.type==='wash'?bathLabel:labels[i.type][phase];
+      const progress=i.type==='wash'?(i.dried?1:i.rinsed?.85:Math.min(.7,i.scrubs/6*.7)):p;
+      this.onStatus(true,label,progress);i.lastStatusAt=now;i.lastStatusPhase=phase
+    }
     const smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
-    const near=smooth(p/.22)*(1-smooth((p-.84)/.16));
+    const near=i.direct&&i.type==='feed'?0:smooth(p/.22)*(1-smooth((p-.84)/.16));
     const target=i.type==='feed'?0:i.type==='wash'?-2.55:i.type==='sleep'?-3.1:-2.35;
     this.cat.position.set(target*near,Math.sin(t*18)*.03*near,(i.type==='feed'?0:-1.12)*near);
     this.cat.rotation.set(0,0,0);this.cat.scale.set(1,1,1);
@@ -98,20 +129,26 @@ export class PiboCare {
       this.paws[j].position.y=.21+stride+eating+scrubbing;
     }
     if(i.type==='feed'){
-      const q=smooth((p-.22)/.37),f=i.food;
-      f.position.set(1.45*(1-q),.62+1.07*q,1.25-.2*q);
-      f.scale.setScalar(Math.max(.001,1-smooth((p-.57)/.17)));
-      if(p>.42&&p<.78){
+      const q=i.direct?smooth((p-.08)/.48):smooth((p-.22)/.37),f=i.food;
+      if(i.direct)f.position.set(.68*(1-q),1.55+.09*q,.94+.1*q);
+      else f.position.set(1.45*(1-q),.62+1.07*q,1.25-.2*q);
+      f.scale.setScalar(Math.max(.001,1-smooth((p-(i.direct?.49:.57))/.19)));
+      if(p>(i.direct?.24:.42)&&p<.78){
         const bite=Math.abs(Math.sin(t*21));this.head.rotation.x=.12+.09*Math.sin(t*21);this.mouth.scale.y=.04+.13*bite;
         this.cat.scale.y=1-.025*bite;
         if(now-i.lastSound>480){this.sound('chew');i.lastSound=now}
       }
     }
     if(i.type==='wash'){
+      if(i.dried&&p>.97){this.stop();return}
       const inside=smooth((p-.22)/.16)*(1-smooth((p-.79)/.12));
       this.cat.position.y=.15*inside;this.cat.scale.setScalar(1-.26*inside);
       for(const b of this.props.children){
-        if(b.userData.bubble!==undefined){const n=b.userData.bubble;b.position.y=.9+((t*.32+n*.17)%1.2);b.position.x=-3.2+(n%5)*.33+.08*Math.sin(t*2+n)}
+        if(b.userData.bubble!==undefined){const n=b.userData.bubble;
+          if(i.scrubs>0&&!i.rinsed){b.position.y=1.0+((t*.23+n*.17)%1.25);b.position.x=-3.05+(n%5)*.31+.08*Math.sin(t*2+n)}
+          else{b.position.y=.9+((t*.32+n*.17)%1.2);b.position.x=-3.2+(n%5)*.33+.08*Math.sin(t*2+n)}
+        }
+        if(b.userData.waterDrop!==undefined){const n=b.userData.waterDrop;b.position.y=2.3-((t*2+n*.26)%2);b.position.x=-2.85+(n%4)*.24}
         if(b.userData.sponge)b.position.y=1.25+.15*Math.sin(t*5)
       }
       if(p>.4&&p<.8){this.head.rotation.z=.13*Math.sin(t*6);this.cat.rotation.y=.045*Math.sin(t*4);this.head.rotation.x=.07*Math.sin(t*8)}
