@@ -233,7 +233,18 @@
         .sd-persoenlich .sd-p-links a{display:inline-flex;align-items:center;border:1px solid #d5e6db;background:white;border-radius:11px;padding:9px 12px;font-weight:700;font-size:.84rem;text-decoration:none}
         .sd-persoenlich .sd-p-links a:hover{background:#dcf7e7;border-color:#80d5ae}
         @media(max-width:650px){.sd-persoenlich{padding:19px 17px;margin-top:18px}.sd-persoenlich .sd-p-start{width:100%}.sd-persoenlich .sd-p-links a{font-size:.8rem;padding:8px 10px}}
-    </style>
+    
+        /* Unified SD Hub dashboard entry: preserves all existing app links. */
+        .sd-dashboard-launch{display:inline-flex;gap:11px;align-items:center;margin:17px 0 7px;padding:11px 13px;max-width:390px;width:100%;
+          border-radius:16px;background:#f3fff6;color:#164537!important;border:1px solid #ace6c2;box-shadow:0 10px 25px #09251b26;text-decoration:none!important}
+        .sd-dashboard-launch-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:#d4f6e3;color:#126b55;font-size:27px}
+        .sd-dashboard-launch span:nth-child(2){flex:1;min-width:0;display:grid;gap:3px}
+        .sd-dashboard-launch strong{font-size:14px;line-height:1.2;color:#124939}
+        .sd-dashboard-launch small{font-size:11px;line-height:1.35;color:#527567}
+        .sd-dashboard-launch:hover{transform:translateY(-2px);border-color:#33bd91}
+        .sd-dashboard-launch:focus-visible{outline:3px solid #ffce53;outline-offset:3px}
+        @media(max-width:550px){.sd-dashboard-launch{max-width:none;margin-top:12px}}
+</style>
 </head>
 <body>
     <header class="kopf">
@@ -249,6 +260,11 @@
                 <div>
                     <h1 data-i18n="h1">Lernen. Gestalten. Entdecken.</h1>
                     <p class="unter" data-i18n="lead">Ob Deutschkurs, Bewerbung, Dokumente, KI, eigene Webseiten oder Spiele für Kinder: Entdecke die vielen Möglichkeiten im SD Hub – alles an einem Ort.</p>
+                    <a class="sd-dashboard-launch" href="mein-sd-hub/" aria-label="Mein SD Hub Dashboard mit allen Apps aufrufen">
+                      <span class="sd-dashboard-launch-icon" aria-hidden="true">▦</span>
+                      <span><strong>Zum neuen SD Hub Dashboard</strong><small>Alle Apps übersichtlich · PC & Handy</small></span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
                     <div class="suche" role="search">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                         <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen" aria-describedby="treffer">
