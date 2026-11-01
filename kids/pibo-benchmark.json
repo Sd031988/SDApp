@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "reference": "My Talking Tom 2",
+  "reviewed": "2026-11-01",
+  "scope": "Nur beobachtbare generische Mechaniken und technische Qualitätsmerkmale vergleichen. Keine geschützten Assets, TOM-Figur oder markenbezogene Inhalte kopieren.",
+  "sources": {
+    "official": "https://talkingtomandfriends.com/apps/my-talking-tom-2",
+    "google_play": "https://play.google.com/store/apps/details?id=com.outfit7.mytalkingtom2",
+    "bathroom_2026": "https://www.globenewswire.com/news-release/2026/03/19/3258907/0/en/My-Talking-Tom-Friends-Adds-a-Second-Floor-My-Talking-Tom-2-Expands-Bathroom-Gameplay.html",
+    "backyard_2026": "https://www.globenewswire.com/news-release/2026/06/04/3306674/0/en/my-talking-tom-2-reworks-its-backyard-into-a-playable-world.html",
+    "adventure_2026": "https://www.gamespress.com/en-US/My-Talking-Tom-2-Introduces-Spooky-Quest-a-Brand-New-Dungeon-Crawler-A"
+  },
+  "rating_legend": {
+    "teilweise": "Mechanik im Code vorhanden, aber nicht auf professionellem Niveau nachgewiesen.",
+    "fehlt": "Für diesen Qualitätsmaßstab keine hinreichende Implementierung im Repository nachgewiesen.",
+    "basis": "Mechanik und zugehörige Tests existieren; Qualitätsparität weiterhin separat verifizieren."
+  },
+  "criteria": [
+    {
+      "id": "figurenmodell",
+      "area": "Grafik",
+      "status": "fehlt",
+      "reference": "Professionell geriggte, unverwechselbare Pibo-Figur mit sauberer Silhouette und realistischen Fellmaterialien",
+      "acceptance": "Originales GLB-Modell, geprüfte Knochenanimationen und klare mobile Performance; keine geschützten Tom-Assets",
+      "evidence": [
+        "kids/pibo-character.mjs"
+      ]
+    },
+    {
+      "id": "gesicht",
+      "area": "Animation",
+      "status": "teilweise",
+      "reference": "Augenlider, Pupillen, Schnauze, Ohrbewegung, Zunge und Emotionen",
+      "acceptance": "Mindestens sechs reproduzierbar animierte Emotionen, Tests der Mimik und Morph-Target- oder Rig-Übergänge",
+      "evidence": [
+        "kids/pibo-face.mjs",
+        "kids/pibo-voice.mjs"
+      ]
+    },
+    {
+      "id": "koerper",
+      "area": "Animation",
+      "status": "teilweise",
+      "reference": "Gehen, Sitzen, Liegen, Springen, Kraulen und Fallen",
+      "acceptance": "Physikalisch plausible weiche Übergänge sowie Arm-/Pfoten-/Rumpfbewegungen, ohne sichtbares Durchdringen",
+      "evidence": [
+        "kids/pibo-motion.mjs",
+        "kids/pibo-care.js"
+      ]
+    },
+    {
+      "id": "futtermund",
+      "area": "Pflege",
+      "status": "teilweise",
+      "reference": "Lebensmittel vom Vorrat zum Mund ziehen, unterschiedliche Kauanimationen und Reaktionen",
+      "acceptance": "Exakte 3D-Mundprojektion für wechselnde Kameraperspektiven und getestete Drag-Gesten auf echten Touchgeräten",
+      "evidence": [
+        "kids/pibo-interactions.mjs",
+        "kids/e2e/pibo.spec.mjs"
+      ]
+    },
+    {
+      "id": "essenvielfalt",
+      "area": "Pflege",
+      "status": "teilweise",
+      "reference": "Abwechslungsreiche Lebensmittel inklusive lustiger Reaktionen",
+      "acceptance": "Mehr als 20 eigenständige Lebensmittel, klar erkennbare 3D-Objekte und unterschiedliche sichere Reaktionen",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "bad",
+      "area": "Pflege",
+      "status": "teilweise",
+      "reference": "Baden mit Seife, Einreiben, Dusche und Abtrocknen",
+      "acceptance": "Finger trifft direkt Fell; Wasser/Schaum/Handtuch besitzen hochwertige visuelle und akustische Rückmeldungen",
+      "evidence": [
+        "kids/pibo-care.js",
+        "kids/pibo-care.test.mjs"
+      ]
+    },
+    {
+      "id": "toilette",
+      "area": "Pflege",
+      "status": "teilweise",
+      "reference": "Toilette, Hinsetzen, Geräusche, eigenständiges Spülen",
+      "acceptance": "Plausible Körperbewegung, sichtbare Spülung, robuste Reihenfolge auf echten Geräten",
+      "evidence": [
+        "kids/pibo-care.js"
+      ]
+    },
+    {
+      "id": "schlaf",
+      "area": "Pflege",
+      "status": "teilweise",
+      "reference": "Bett, Lichtschalter, Augen schließen und Schlafgeräusche",
+      "acceptance": "Decke bewegt sich sichtbar; Aufstehen und Schlafen gehen besitzen natürlich ineinander übergehende Animationen",
+      "evidence": [
+        "kids/pibo-care.js"
+      ]
+    },
+    {
+      "id": "zahnputzen_heilen",
+      "area": "Pflege",
+      "status": "fehlt",
+      "reference": "Weitere Pflegeinteraktionen wie Zähneputzen und harmlose Wunden versorgen",
+      "acceptance": "Eigene kindgerechte Pflege-Minispiele mit sichtbaren Interaktionen und Tests",
+      "evidence": []
+    },
+    {
+      "id": "stimme",
+      "area": "Audio",
+      "status": "teilweise",
+      "reference": "Gesagtes lokal aufnehmen und als Katzenstimme wiedergeben",
+      "acceptance": "Robuste iPhone/Android-Tonwiedergabe, präzise Lippensynchronität, keine Datenübertragung",
+      "evidence": [
+        "kids/pibo-voice.mjs",
+        "kids/pibo-voice.test.mjs"
+      ]
+    },
+    {
+      "id": "echtekatzenlaute",
+      "area": "Audio",
+      "status": "teilweise",
+      "reference": "Rechtmäßig lizenzierte echte Miauen-/Schnurr-Aufnahmen sowie weitere eigene Effekte",
+      "acceptance": "Umfangreiche eigene Soundbibliothek, klare Lizenznachweise, Mixing, Offline-Cache und Lautstärketests",
+      "evidence": [
+        "kids/pibo-audio.js",
+        "kids/Pibo-Sound-Lizenzen.md"
+      ]
+    },
+    {
+      "id": "interaktionen",
+      "area": "Reaktionen",
+      "status": "teilweise",
+      "reference": "Auf Berührungen an Pfoten, Ohren, Nase, Bauch und Schwanz reagieren",
+      "acceptance": "Trefferzonen direkt am bewegten 3D-Modell, visuell und akustisch passende individuelle Reaktionen",
+      "evidence": [
+        "kids/index.html",
+        "kids/pibo-interactions.mjs"
+      ]
+    },
+    {
+      "id": "reaktionsvielfalt",
+      "area": "Reaktionen",
+      "status": "fehlt",
+      "reference": "Vielfältige unabhängige Persönlichkeitszustände und spontane Reaktionen",
+      "acceptance": "System für Müdigkeit, Freude, Hunger, Überraschung mit 25+ eindeutig unterschiedlichen, getesteten Bewegungsabläufen",
+      "evidence": []
+    },
+    {
+      "id": "wohnzimmer",
+      "area": "Räume",
+      "status": "teilweise",
+      "reference": "Wohnzimmer zum Spielen und Interagieren",
+      "acceptance": "Hochwertiges originelles Raumdesign, vielfältige physisch benutzbare Objekte",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "kueche",
+      "area": "Räume",
+      "status": "teilweise",
+      "reference": "Küche mit Essen und sichtbarer Aufnahme",
+      "acceptance": "Anfassbare 3D-Küchenobjekte, stimmiges Licht/Material und nutzbarer Futtervorrat",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "badzimmer",
+      "area": "Räume",
+      "status": "teilweise",
+      "reference": "Badezimmer mit Wanne, Wasser und sichtbarer Seife",
+      "acceptance": "Vollständig räumliche Badewanne, Wasser/Schaum mit Bewegungsreaktion, nicht nur UI-Text",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "schlafzimmer",
+      "area": "Räume",
+      "status": "teilweise",
+      "reference": "Schlafzimmer mit Bett und Nachtmodus",
+      "acceptance": "Einbettung des Körpers in Bett/Decke, Lichtwechsel und ruckfreies Schlafen",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "garten",
+      "area": "Räume",
+      "status": "teilweise",
+      "reference": "Eigener Garten mit Teich, Pflanzen, Windrad und Schmetterlingen",
+      "acceptance": "Verbundenes begehbares Areal, freie Wegwahl, interaktive Objekte ohne abrupte Raumwechsel",
+      "evidence": [
+        "kids/pibo-garden.mjs"
+      ]
+    },
+    {
+      "id": "freie_erkundung",
+      "area": "Räume",
+      "status": "fehlt",
+      "reference": "Direktes Gehen durch verbundene frei begehbare 3D-Räume und Weltzonen",
+      "acceptance": "Eigener Navigation-Mesh/Wegefindung, Kollisionsprüfung und flüssige Kameraführung",
+      "evidence": []
+    },
+    {
+      "id": "haustiere",
+      "area": "Spielwelt",
+      "status": "fehlt",
+      "reference": "Eigene kleine Begleittiere mit Verhalten und gemeinsamen Reaktionen",
+      "acceptance": "Drei oder mehr unverwechselbare selbst entworfene Begleiter mit Interaktionen",
+      "evidence": []
+    },
+    {
+      "id": "minispiele",
+      "area": "Spiele",
+      "status": "teilweise",
+      "reference": "Eigenständige 3D-Minispiele und kleine Belohnungen",
+      "acceptance": "Mehrere vollständig eigene 3D-Spiele mit unterschiedlichen Mechaniken statt nur Punktetippen",
+      "evidence": [
+        "kids/index.html",
+        "kids/games/catalog.mjs"
+      ]
+    },
+    {
+      "id": "reisen",
+      "area": "Spielwelt",
+      "status": "fehlt",
+      "reference": "Zusätzliche eigene entdeckbare Zielwelten und Belohnungen",
+      "acceptance": "Mehrere originelle Welten mit Fortschritt und verschiedenen Aktivitäten",
+      "evidence": []
+    },
+    {
+      "id": "anpassen",
+      "area": "Gestaltung",
+      "status": "teilweise",
+      "reference": "Kleidung und Raumfarben wechseln",
+      "acceptance": "Kleidungssets, Möbeländerungen, visueller Katalog und sichere Spielstandpersistenz",
+      "evidence": [
+        "kids/index.html"
+      ]
+    },
+    {
+      "id": "offline",
+      "area": "Technik",
+      "status": "fehlt",
+      "reference": "Pibo nach erstmaliger Installation ohne externes Netzwerk spielbar",
+      "acceptance": "Lokale Three.js-Bibliothek, Sounddateien sowie Offline-Cache und Offline-Test",
+      "evidence": []
+    },
+    {
+      "id": "mobiltest",
+      "area": "Qualität",
+      "status": "teilweise",
+      "reference": "Automatisierte Touch-/Desktop-Browsertests und Grundfunktionen",
+      "acceptance": "Abnahmetests auf echter iPhone-/Android-Hardware plus FPS-/Speicher-Messung",
+      "evidence": [
+        "kids/e2e/pibo.spec.mjs"
+      ]
+    },
+    {
+      "id": "datenschutz",
+      "area": "Qualität",
+      "status": "teilweise",
+      "reference": "Kinderfreundliches Spiel ohne Login/Käufe und lokale Mikrofonaufnahme",
+      "acceptance": "Vollständiger Datenschutz- und Sicherheitsreview einschließlich externer Audio-/CDN-Requests",
+      "evidence": [
+        "kids/README.md"
+      ]
+    }
+  ]
+}
