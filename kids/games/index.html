@@ -39,6 +39,11 @@ footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;colo
 <section class="hero"><h1>Deine Spielewelt.<br>Dein Abenteuer.</h1>
 <p>Entdecken, bauen, spielen und lernen – in zehn eigenen SD Kids Spielen. Kostenlos, ohne Konto, ohne Werbung und ohne In-App-Käufe.</p>
 <div class="featured"><a href="../blockworld/">🧱 In 3D bauen</a><a href="./play.html?game=obby">🏁 Obby spielen</a></div>
+<div id="playerStats" style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap" aria-label="Dein Spielstand">
+<span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="totalStars">⭐ Minispiele: 0 Sterne</span>
+<span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="playedGames">🎮 Gestartet: 0/8</span>
+<span style="background:#14284aab;padding:7px 13px;border-radius:16px;font-weight:800" id="completedGames">🏆 Erfolge: 0/8</span>
+</div>
 </section>
 </header>
 <main><div class="toolbar"><h2>🎲 Alle Spiele <span id="count">(10)</span></h2><div id="filters" role="group" aria-label="Spiele filtern"><button data-filter="Alle" aria-pressed="true">Alle</button><button data-filter="3D" aria-pressed="false">3D</button><button data-filter="2D" aria-pressed="false">Minispiele</button></div></div>
@@ -50,6 +55,17 @@ footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;colo
 <footer>SD Kids ist eine unabhängige Spieleplattform von SD Hub; keine Roblox-App. Die acht neuen 2D-Minispiele sind bewusst kleiner als unsere 3D-Spiele Pibo und BlockWorld. Alle Figuren, Welten und Spielideen sind eigenständig umgesetzt.</footer>
 <script type="module">
 import {catalog} from './catalog.mjs';
+import {STORAGE_KEY,sanitize} from './rules.mjs';
+let profile;
+try{profile=sanitize(localStorage.getItem(STORAGE_KEY))}catch{profile=sanitize(null)}
+const gg=profile.games;
+const achievements=[
+ gg.obby.completed>=1,gg.pet.actions>=5,gg.garden.harvest>=1,gg.city.done.length>=1,
+ gg.kart.laps>=1,gg.treasure.finished,gg.fashion.shown.length>=1,gg.learn.solved.length>=1
+];
+document.getElementById('totalStars').textContent='⭐ Minispiele: '+profile.stars+' Sterne';
+document.getElementById('playedGames').textContent='🎮 Gestartet: '+profile.visited.length+'/8';
+document.getElementById('completedGames').textContent='🏆 Erfolge: '+achievements.filter(Boolean).length+'/8';
 const grid=document.getElementById('gameGrid'),count=document.getElementById('count');
 function render(filter='Alle'){
  const items=catalog.filter(g=>filter==='Alle'||(filter==='3D'?g.tag.includes('3D'):g.tag.includes('Mini')));
