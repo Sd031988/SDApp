@@ -644,6 +644,54 @@ async function projektAssistent() {
   }
 }
 
+
+/* Ein-Klick-App-Builder: nur Export-Kopien, niemals Projektdateien verändern. */
+function appBuilderPlan(dateien) {
+  const pruefung = projektPruefen(dateien);
+  const framework = pruefung.info && !pruefung.info.fehler ? pruefung.info : null;
+  const html = pruefung.html;
+  const optionen = [];
+  if (html && !framework) {
+    optionen.push({id:'web', name:'Web-App (ZIP mit allen Quelldateien)'});
+    optionen.push({id:'desktop', name:'Desktop-Installer (Windows, macOS, Linux via GitHub Actions)'});
+  }
+  if (framework && framework.build) optionen.push({id:'framework', name:framework.name + ' – Build-Paket für GitHub Actions'});
+  if (html && framework) optionen.push({id:'source', name:'Quellcode als ZIP (kein fertiger Framework-Build)'});
+  return {pruefung, framework, html, optionen};
+}
+async function einKlickAppBuilder() {
+  if (!S.p) { alert('Bitte zuerst ein Projekt öffnen oder ZIP importieren.'); return; }
+  const projekt = S.p;
+  try { await speichernJetzt(); } catch (e) { alert('Export abgebrochen: Projekt konnte nicht gespeichert werden.'); return; }
+  if (S.p !== projekt) return;
+  const plan = appBuilderPlan(projekt.dateien);
+  if (!plan.optionen.length) {
+    alert('Für dieses Projekt ist noch kein passender App-Export verfügbar.\n\n' + plan.pruefung.meldungen.join('\n'));
+    return;
+  }
+  const auswahl = prompt(
+    '📦 Ein-Klick-App-Builder – ' + projekt.name + '\n\n' +
+    plan.optionen.map((o,i) => (i+1) + '. ' + o.name).join('\n') +
+    '\n\nProjektprüfung:\n' + plan.pruefung.meldungen.slice(0, 8).join('\n') +
+    '\n\nNummer eingeben (Abbrechen = keine Änderung):', '1'
+  );
+  if (auswahl === null) return;
+  const nummer = Number(auswahl.trim());
+  if (!Number.isInteger(nummer) || nummer < 1 || nummer > plan.optionen.length) {
+    alert('Bitte eine gültige Nummer auswählen.'); return;
+  }
+  const typ = plan.optionen[nummer-1].id;
+  if (typ === 'desktop') {
+    if (!confirm('Desktop-Export vorbereiten?\n\nEs wird ein ZIP mit Electron und GitHub-Actions-Build für Windows, macOS und Linux heruntergeladen. Fertige Installer werden erst beim Build erstellt. Codesignierung ist nicht enthalten. Das Originalprojekt bleibt unverändert.')) return;
+    await desktopExport();
+  } else if (typ === 'framework') {
+    frameworkBuildExport(projekt.dateien, projekt.name, plan.framework);
+  } else {
+    herunterladen(zipBauen({...projekt.dateien}), slug(projekt.name) + (typ === 'source' ? '-quellcode' : '-web-app') + '.zip');
+    toast('Projektkopie als ZIP exportiert.');
+  }
+}
+
 async function desktopExport() {
   if (!S.p) return;
   const projekt = S.p;
@@ -807,7 +855,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
