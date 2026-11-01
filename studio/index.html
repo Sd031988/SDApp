@@ -210,6 +210,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 <div id="einfuegen" class="dialog" hidden><div class="karte">
   <b>📋 Anleitung oder Code einfügen → Projekt automatisch aufbauen</b>
   <div class="hinweis" style="padding:0">Füge eine komplette Anleitung ein (z. B. aus ChatGPT, Gemini oder einem Tutorial) – mit Ordnerbaum, Dateinamen und Code-Blöcken. Ordner und Dateien werden automatisch angelegt.</div>
+  <div class="reihe" style="gap:10px;flex-wrap:wrap;margin:12px 0">
+  <label class="primary" style="cursor:pointer;padding:9px 13px;border-radius:9px">📦 ZIP hochladen<input id="efZipDatei" type="file" accept=".zip,application/zip" hidden></label>
+  <label style="cursor:pointer;padding:9px 13px;border:1px solid #626278;border-radius:9px">📁 Ordner hochladen<input id="efOrdnerDatei" type="file" webkitdirectory directory multiple hidden></label>
+  <label style="cursor:pointer;padding:9px 13px;border:1px solid #626278;border-radius:9px">📄 Dateien hochladen<input id="efMehrDateien" type="file" multiple hidden></label>
+</div>
+<div class="hinweis" style="padding:0">ZIP, Ordner oder Dateien auswählen: SD Code-Studio erkennt die Projektstruktur und legt eine neue Projektkopie an. Bestehende Projekte bleiben unverändert.</div>
   <div id="efTeile"><textarea id="efText" spellcheck="false" placeholder="Hier einfügen (Strg+V) …"></textarea><div id="efVorschau"></div></div>
   <div class="reihe"><label>Projektname: <input id="efName" style="width:220px"></label><span style="flex:1"></span><button id="efNurText">Nur als Text einfügen</button><button id="efZu">Abbrechen</button><button class="primary" id="efLos">🏗 Projekt aufbauen</button></div>
 </div></div>
@@ -239,7 +245,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 </div></div>
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
-<script src="studio.js?v=a9cdbb2f"></script>
+<script src="studio.js?v=216f5af6"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){
