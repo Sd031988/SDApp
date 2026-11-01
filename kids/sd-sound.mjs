@@ -4,7 +4,7 @@ export const SOUND_STORAGE_KEY='sd-kids-audio-v1';
 export const SOUND_CUES=Object.freeze([
  'select','cancel','error','success','reward','jump','land','step','checkpoint','finish',
  'collect','build','remove','teleport','water','plant','harvest','feed','pet','sleep',
- 'task','kart','lap','key','treasure','fashion','correct','wrong','join','leave','bird','bell','purr','meow'
+ 'task','kart','lap','key','treasure','fashion','correct','wrong','join','leave','bird','bell','purr','meow','dog','bunny','fox','siren','heartbeat','parcel'
 ]);
 const cueSet=new Set(SOUND_CUES);
 const clamp=(n,low,high)=>Math.min(high,Math.max(low,Number.isFinite(Number(n))?Number(n):low));
@@ -127,6 +127,22 @@ export class SDGameSound{
     case 'pet':case 'purr':
      n(70,0,.64,56,'sawtooth',.065);h(.03,.6,250,180,.033,'lowpass');break;
     case 'meow':n(420,0,.28,650,'triangle',.13);n(650,.27,.28,300,'triangle',.11);break;
+    case 'dog':
+     // Short warm double bark, not a cat purr.
+     n(230,0,.16,135,'sawtooth',.14);h(0,.14,700,350,.07);
+     n(255,.20,.15,150,'sawtooth',.12);h(.20,.12,750,410,.065);break;
+    case 'bunny':
+     // Tiny soft sniff and tooth-click.
+     h(0,.10,1180,650,.027);n(890,.11,.065,730,'sine',.034);h(.20,.08,1050,620,.026);break;
+    case 'fox':
+     n(740,0,.22,470,'triangle',.10);h(.03,.16,1250,620,.040);
+     n(640,.24,.17,390,'triangle',.07);break;
+    case 'siren':
+     n(610,0,.27,910,'sine',.085);n(910,.28,.28,590,'sine',.078);break;
+    case 'heartbeat':
+     n(85,0,.16,53,'sine',.13);n(105,.22,.13,60,'sine',.085);break;
+    case 'parcel':
+     h(0,.09,360,150,.065,'lowpass');n(610,.09,.15,760,'sine',.085);break;
     case 'sleep':n(170,0,.46,115,'sine',.085);n(145,.53,.52,90,'sine',.055);break;
     case 'task':n(510,0,.13,640,'triangle',.10);n(700,.10,.18,840,'sine',.07);break;
     case 'kart':n(105,0,.17,260,'sawtooth',.065);h(.02,.15,180,280,.04,'lowpass');break;
