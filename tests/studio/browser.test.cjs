@@ -94,6 +94,21 @@ const assert = require('node:assert/strict');
     assert(diagnostics.broken.some(x=>x.typ==='referenz'&&x.reparatur.ziel==='css/missing.css'));
     assert(diagnostics.broken.some(x=>x.typ==='referenz'&&x.reparatur.ziel==='js/missing.js'));
     assert.equal(diagnostics.valid.length,0);
+    const github = await page.evaluate(() => ({
+      valid:githubAdressePruefen('https://github.com/example/my-app'),
+      short:githubAdressePruefen('example/my-app'),
+      invalid:githubAdressePruefen('https://evil.example/example/my-app'),
+      safe:githubPfadSicher('src/index.js'),
+      traversal:githubPfadSicher('../private.txt'),
+      dependencies:githubPfadSicher('node_modules/test.js')
+    }));
+    assert.equal(github.valid.owner,'example');
+    assert.equal(github.valid.repo,'my-app');
+    assert.equal(github.short.repo,'my-app');
+    assert.equal(github.invalid,null);
+    assert.equal(github.safe,true);
+    assert.equal(github.traversal,false);
+    assert.equal(github.dependencies,false);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
