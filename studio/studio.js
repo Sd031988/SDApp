@@ -1085,13 +1085,50 @@ function lernZertifikat() {
   win.document.close();
 }
 
+
+/* Kursdidaktik: Erklärungen, Verständnisfragen und sichere Fortschrittsprüfung. */
+const LERN_WISSEN = {
+ html:['HTML beschreibt die Struktur einer Webseite. Eine Überschrift verwendet h1, Fließtext p.','Welches Element bezeichnet eine Hauptüberschrift?',['<h1>','<p>','<div>'],0],
+ css:['CSS gestaltet die Darstellung. Selektoren bestimmen, welche Elemente Regeln erhalten.','Welche Eigenschaft legt die Hintergrundfarbe fest?',['color','background-color','font-size'],1],
+ javascript:['JavaScript verarbeitet Daten und Ereignisse. const und let deklarieren Variablen.','Welche Anweisung schreibt eine Nachricht in die Entwicklerkonsole?',['alert.log()','console.log()','print()'],1],
+ python:['Python verwendet Einrückungen für Codeblöcke. print gibt Werte aus.','Welche Funktion gibt in Python einen Wert aus?',['echo()','console.log()','print()'],2],
+ 'html-links':['Links werden mit a und href erstellt. Bilder brauchen ein src und einen aussagekräftigen alt-Text.','Welches Attribut beschreibt ein Bild für Screenreader?',['href','alt','target'],1],
+ 'css-layout':['Flexbox ordnet Elemente entlang einer Achse an. gap steuert den Abstand zwischen ihnen.','Welche CSS-Eigenschaft aktiviert Flexbox?',['display','position','visibility'],0],
+ 'javascript-functions':['Funktionen bündeln wiederverwendbare Anweisungen. return liefert einen Wert zurück.','Welches Schlüsselwort gibt einen Wert aus einer Funktion zurück?',['break','return','continue'],1],
+ 'python-loops':['Eine for-Schleife wiederholt Anweisungen für jedes Element einer Folge. range(5) erzeugt fünf Werte.','Wie oft durchläuft for x in range(5) die Schleife?',['4-mal','5-mal','6-mal'],1],
+ 'web-project':['Ein Portfolio nutzt semantische Bereiche: nav für Navigation, main für Hauptinhalt und section für Themenbereiche.','Welches HTML-Element markiert die Hauptinhalte einer Seite?',['<aside>','<main>','<footer>'],1]
+};
+function lernQuizPruefen(id,antwort) {
+  const wissen=LERN_WISSEN[id];
+  return !!wissen && Number.isInteger(antwort) && antwort===wissen[3];
+}
+function lernLektionAusProjekt(projekt) {
+  if (!projekt || !projekt.dateien || !projekt.dateien['LEKTION.md']) return null;
+  const treffer=String(projekt.name).match(/^lernen-(.+?)(?:-\d+)?$/);
+  return treffer ? LERN_LEKTIONEN.find(l=>l.id===treffer[1])||null : null;
+}
+function lernNaechsteLektion(fortschritt) {
+  return LERN_LEKTIONEN.find(l=>fortschritt[l.id]!=='abgeschlossen')||null;
+}
+function lernQuizFrage(lektion) {
+  const w=LERN_WISSEN[lektion.id];
+  const eingabe=prompt('📚 '+lektion.titel+'\n\n'+w[0]+'\n\nWissensfrage: '+w[1]+'\n'+
+    w[2].map((a,i)=>(i+1)+'. '+a).join('\n')+'\n\nAntwort (1–3):');
+  if (eingabe===null) return null;
+  const nummer=Number(eingabe);
+  return Number.isInteger(nummer)&&lernQuizPruefen(lektion.id,nummer-1);
+}
+
 function lernAufgabePruefen(id,code) {
   const lektion=LERN_LEKTIONEN.find(x=>x.id===id);
   return !!lektion && typeof code==='string' && lektion.pruefen(code);
 }
 async function programmierLernmodus() {
-  const auswahl=prompt('🎓 Programmier-Lernmodus\n\n'+LERN_LEKTIONEN.map((l,i)=>(i+1)+'. '+l.titel).join('\n')+
-    '\n\nWähle eine Lektion (1–'+LERN_LEKTIONEN.length+'):','1');
+  const bisher=store.get('sdStudioLernfortschritt',{})||{};
+  const naechste=lernNaechsteLektion(bisher);
+  const auswahl=prompt('🎓 Programmier-Lernmodus – Lernpfad\n\n'+LERN_LEKTIONEN.map((l,i)=>(i+1)+'. '+(bisher[l.id]==='abgeschlossen'?'✓ ':'')+l.titel).join('\n')+
+    '\n\nWähle eine Lektion (1–'+LERN_LEKTIONEN.length+'): ',String(Math.max(1,LERN_LEKTIONEN.indexOf(naechste)+1)));
+
   if (auswahl===null) return;
   const index=Number(auswahl)-1, lektion=LERN_LEKTIONEN[index];
   if (!Number.isInteger(index)||!lektion) { alert('Bitte eine gültige Lektionsnummer eingeben.'); return; }
@@ -1105,7 +1142,7 @@ async function programmierLernmodus() {
     try { await speichernJetzt(); } catch(e) { toast('Lernmodus abgebrochen: Speichern fehlgeschlagen.'); return; }
   }
   await projSchreiben({name,dateien:{[lektion.datei]:lektion.code,
-    'LEKTION.md':'# '+lektion.titel+'\n\n'+lektion.aufgabe+
+    'LEKTION.md':'# '+lektion.titel+'\n\n## Erklärung\n'+LERN_WISSEN[lektion.id][0]+'\n\n## Aufgabe\n'+lektion.aufgabe+
     '\n\nÖffne die Befehlspalette und wähle „🎓 Lernaufgabe prüfen“, sobald du fertig bist.\n'},
     haupt:lektion.datei,versionen:[],erstellt:Date.now()});
   await projektOeffnen(name);
@@ -1115,15 +1152,18 @@ async function programmierLernmodus() {
 }
 async function lernaufgabePruefen() {
   if(!S.p) { alert('Bitte zuerst ein Lernprojekt öffnen.'); return; }
-  const match=S.p.name.match(/^lernen-(html-links|css-layout|javascript-functions|python-loops|web-project|html|css|javascript|python)(?:-\d+)?$/);
-  const lektion=match&&LERN_LEKTIONEN.find(l=>l.id===match[1]);
-  if(!lektion||!S.p.dateien['LEKTION.md']) { alert('Dies ist kein Lernmodus-Projekt. Starte zuerst eine Lektion.'); return; }
+  const lektion=lernLektionAusProjekt(S.p);
+  if(!lektion) { alert('Dies ist kein Lernmodus-Projekt. Starte zuerst eine Lektion.'); return; }
   try { await speichernJetzt(); } catch(e) { toast('Prüfung abgebrochen: Speichern fehlgeschlagen.'); return; }
   const ok=lernAufgabePruefen(lektion.id,S.p.dateien[lektion.datei]);
   if(ok) {
+    const quiz=lernQuizFrage(lektion);
+    if(quiz===null) { alert('Codeprüfung bestanden. Die Wissensfrage ist noch offen.'); return; }
+    if(!quiz) { alert('Codeprüfung bestanden, aber die Wissensfrage ist noch nicht richtig. Lies die Erklärung in LEKTION.md und versuche es erneut.'); return; }
     const fortschritt=store.get('sdStudioLernfortschritt',{})||{};
     fortschritt[lektion.id]='abgeschlossen'; store.set('sdStudioLernfortschritt',fortschritt);
-    alert('✅ Aufgabe erfüllt! '+lektion.titel+'\n\nFortschritt wurde in diesem Browser gespeichert.');
+    const naechste=lernNaechsteLektion(fortschritt);
+    alert('✅ Codeaufgabe und Wissensfrage bestanden! '+lektion.titel+'\n\n'+(naechste?'Nächste Lektion: '+naechste.titel:'Alle Lektionen abgeschlossen! Zertifikat freigeschaltet.')+'\n\nFortschritt wurde in diesem Browser gespeichert.');
   } else alert('Noch nicht ganz geschafft.\n\nAufgabe: '+lektion.aufgabe+'\n\nTipp: '+lektion.tipp+
     '\n\nDie Prüfung erkennt einfache Code-Muster, führt den Code aber nicht aus.');
 }
