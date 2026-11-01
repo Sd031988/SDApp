@@ -133,3 +133,31 @@ export function action(save,id,kind,payload={}){
  if(reward)earn(save,reward);
  return {ok:true,message,reward};
 }
+
+// Resets the current activity without recreating previously earned milestones.
+// In particular, this prevents farming first-time rewards by resetting a minigame.
+export function restartGame(save,id){
+ if(!miniIds.includes(id)||!save?.games?.[id])return false;
+ const previous=save.games[id],fresh=initialState().games[id];
+ if(id==='obby'){
+  fresh.level=previous.level;fresh.completed=previous.completed;
+ }else if(id==='pet'){
+  fresh.selected=previous.selected;fresh.actions=previous.actions;fresh.awarded=previous.awarded;
+ }else if(id==='garden'){
+  fresh.harvest=previous.harvest;
+ }else if(id==='city'){
+  fresh.done=[...previous.done];
+ }else if(id==='kart'){
+  fresh.laps=previous.laps;fresh.awarded=previous.awarded;
+ }else if(id==='treasure'){
+  // Previously found treasures and the completed reward remain claimed.
+  fresh.found=[...previous.found];fresh.keys=[...previous.keys];fresh.finished=previous.finished;
+ }else if(id==='fashion'){
+  fresh.shown=[...previous.shown];
+ }else if(id==='learn'){
+  fresh.solved=[...previous.solved];fresh.correct=previous.correct;
+ }
+ Object.keys(previous).forEach(k=>delete previous[k]);
+ Object.assign(previous,fresh);
+ return true;
+}
