@@ -60,3 +60,66 @@ test("AI module avoids network calls and requires confirmation for copy creation
  assert.ok(source.includes("window.confirm("));
  assert.ok(!source.includes("fetch("));
 });
+
+
+test("full AI answer imports HTML CSS JavaScript Python Java and ignores explanation text",()=>{
+ const answer=[
+  "Hier findest du eine vollständige Lösung.",
+  "### Datei: index.html",tick+"html","<html><head><link rel='stylesheet' href='style.css'></head><body><script src='app.js'></script></body></html>",tick,
+  "Wichtig: Die Erklärung gehört NICHT in die Dateien.",
+  "### Datei: style.css",tick+"css","body { color: blue; }",tick,
+  "### Datei: js/app.js",tick+"javascript","console.log('ok')",tick,
+  "Java-Teil:",tick+"java","public class Main { public static void main(String[] args) {} }",tick,
+  "Python-Teil:",tick+"python","print('Hallo')",tick,
+  "Abschließende Erklärung mit Installationstipps."
+ ].join("\n");
+ const result=core.parse(answer,null,{});
+ assert.deepEqual(result.errors,[]);
+ assert.deepEqual(result.files.map(x=>x.path),["index.html","style.css","js/app.js","Main.java","main.py"]);
+ for(const f of result.files){
+  assert.ok(!f.content.includes("Wichtig: Die Erklärung"));
+  assert.ok(!f.content.includes("Abschließende Erklärung"));
+ }
+ assert.equal(result.files[4].content,"print('Hallo')\n");
+});
+test("supports Kotlin C++ C# Rust Go TypeScript PHP Ruby PowerShell and SQL as separate files",()=>{
+ const languages=["kotlin","cpp","csharp","rust","go","typescript","php","ruby","powershell","sql"];
+ const source=languages.map((lang,i)=>tick+lang+"\n"+(lang==="cpp"?"#include <iostream>":"code_"+i+"();")+"\n"+tick).join("\nErklärende Zeile.\n");
+ const result=core.parse(source);
+ assert.deepEqual(result.errors,[]);
+ assert.equal(result.files.length,languages.length);
+ assert.deepEqual(result.files.map(f=>f.path),["Main.kt","main.cpp","Program.cs","src/main.rs","main.go","app.ts","index.php","main.rb","script.ps1","query.sql"]);
+});
+test("implicit multiple JavaScript blocks get distinct files, never silently overwrite",()=>{
+ const result=core.parse(tick+"js\nconst a=1\n"+tick+"\nErklärung\n"+tick+"javascript\nconst b=2\n"+tick);
+ assert.deepEqual(result.errors,[]);
+ assert.deepEqual(result.files.map(x=>x.path),["app.js","app-2.js"]);
+ assert.ok(result.warnings.length);
+});
+test("plain prose and shell installation commands are skipped, not copied into files",()=>{
+ const source="Please run this command:\n"+tick+"bash\nnpm install react\n"+tick+"\nAnleitung\n"+tick+"text\nThis is a paragraph\n"+tick+"\n"+tick+"python\nprint(5)\n"+tick;
+ const result=core.parse(source);
+ assert.deepEqual(result.files.map(x=>x.path),["main.py"]);
+ assert.equal(result.files.length,1);
+ assert.ok(result.skipped>=2);
+});
+test("explicit unsafe file headings fail instead of silently being renamed",()=>{
+ const result=core.parse("### Datei: ../private.js\n"+tick+"javascript\nconsole.log(1)\n"+tick);
+ assert.equal(result.files.length,0);
+ assert.ok(result.errors.some(x=>/Unsicherer/.test(x)));
+});
+test("missing file heading can map uniquely to an existing project file by extension",()=>{
+ const result=core.parse(tick+"python\nprint('hello')\n"+tick,"index.html",{"src/services/main.py":"old","index.html":"<h1/>"});
+ assert.deepEqual(result.files.map(x=>x.path),["src/services/main.py"]);
+});
+test("code-only raw content works but ordinary ChatGPT prose is not taken as code",()=>{
+ assert.deepEqual(core.parse("const x=1;").files.map(x=>x.path),["app.js"]);
+ assert.ok(core.parse("This is an explanation, not code.").errors.length);
+});
+test("prompt asks for all required code languages in one copyable package",()=>{
+ const prompt=core.buildPrompt("Website mit Java",null,null);
+ assert.ok(prompt.includes("KOMPLETTER CODE"));
+ assert.ok(prompt.includes("Python"));
+ assert.ok(prompt.includes("Java"));
+ assert.ok(prompt.includes("genau EINMAL"));
+});
