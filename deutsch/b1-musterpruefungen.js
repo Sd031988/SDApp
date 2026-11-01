@@ -373,6 +373,68 @@ const grammarLetters=[
  ['Bewerbung für ein Praktikum','Sehr geehrte Damen und Herren,\\n\\nich habe Ihre Anzeige für ein Praktikum [1] Ihrer Webseite gelesen. Zurzeit besuche ich einen Deutschkurs und möchte [2] Berufserfahrung sammeln. Besonders interessiere ich mich [3] die Arbeit in Ihrem Unternehmen. Ich habe bereits sechs Monate [4] einem Geschäft gearbeitet. Dort war ich [5] die Kundenberatung verantwortlich. Über die Möglichkeit eines Gesprächs würde ich mich sehr [6]. Könnten Sie mir bitte mitteilen, [7] Unterlagen Sie benötigen? Meinen Lebenslauf kann ich Ihnen sofort [8]. Ich bin ab Mai verfügbar und freue mich [9] Ihre Rückmeldung.\\n\\nMit freundlichen [10]\\nNora Özdemir',[
  ['auf','bei','zu'],['mehr','viele','mehrere'],['für','mit','an'],['in','auf','zu'],['für','auf','an'],['freuen','freut','gefreut'],['welche','welcher','welches'],['schicken','geschickt','schickt'],['auf','an','über'],['Grüßen','Gruß','Grüße']]]
 ];
+const grammarExplanations=[
+ [
+  "„sich interessieren für“ verlangt die Präposition „für“ mit Akkusativ: für Ihren Deutschkurs.",
+  "Bei „im Internet“ steht „im“ als Kurzform von „in dem“.",
+  "Das Relativpronomen „der“ bezieht sich auf „einen Kurs“ (maskulin, Subjekt im Relativsatz).",
+  "In der indirekten Frage nach dem Zeitpunkt steht „wann“: wann der Kurs beginnt.",
+  "„ob“ leitet eine indirekte Ja-Nein-Frage ein: ob die Anmeldung möglich ist.",
+  "Nach „seit“ steht der Dativ: seit einem Jahr.",
+  "„dass“ leitet einen Inhaltssatz ein: Wichtig ist mir, dass ich mehr sprechen kann.",
+  "„Plätze“ ist Plural; deshalb lautet die Verbform „sind“.",
+  "Die feste Angabe lautet „per E-Mail“; sie beschreibt den Übermittlungsweg.",
+  "„Vielen Dank für“ verlangt die Präposition „für“."
+ ],
+ [
+  "Im Perfekt steht das Partizip II „gefunden“ nach „habe“.",
+  "Die feste Wendung lautet „nicht weit von“; „von“ steht mit Dativ.",
+  "„dass“ leitet den Inhalt ein, über den sich Lena freut.",
+  "„alle meine Möbel“ verwendet den Pluralbegleiter „alle“.",
+  "Nach „Könntest du mir ...?“ steht der Infinitiv „helfen“.",
+  "Als Treffpunkt vor einem Gebäude sagt man „vor dem alten Haus“ (Dativ).",
+  "Im Hauptsatz steht das finite Verb an zweiter Stelle: „sind wir ... fertig“.",
+  "„ob“ leitet eine indirekte Ja-Nein-Frage ein: ob er Zeit hat.",
+  "Die Verbindung lautet „jemanden zu etwas einladen“: zu einem Essen.",
+  "„jemandem Bescheid geben“ ist eine feste Wendung."
+ ],
+ [
+  "Nach „kann“ steht der Infinitiv „wahrnehmen“.",
+  "Nach „weil ich ...“ steht das finite Modalverb am Ende: „arbeiten muss“.",
+  "„sich für etwas entschuldigen“ verlangt hier den Infinitiv „entschuldigen“.",
+  "„einen neuen Termin“ ist Akkusativ maskulin nach „vereinbaren“.",
+  "Bei einer Tageszeit heißt es „am Nachmittag“.",
+  "Der Konjunktiv II „könnte“ formuliert die höfliche Möglichkeit.",
+  "„welche Termine“ steht im Plural; gefragt wird nach den verfügbaren Terminen.",
+  "Die feste Verbindung lautet „sich auf eine Antwort freuen“.",
+  "Die Wendung heißt „im Voraus“.",
+  "Die Grußformel lautet „Mit freundlichen Grüßen“."
+ ],
+ [
+  "Bei Wochentagen verwendet man „am“: am Samstag.",
+  "„damit“ drückt den Zweck aus: Wir beginnen so, dass alle teilnehmen können.",
+  "Nach „möchte“ steht der Infinitiv „mitbringen“.",
+  "„Personen, die ... helfen“: Das Relativpronomen „die“ ist Plural im Nominativ.",
+  "Im Passiv mit „werden“ steht das Partizip II „aufgestellt“.",
+  "Das trennbare Verb lautet „mitbringen“: „Bringt ... mit“.",
+  "Ein Ort innerhalb eines Raums wird mit „im Vereinsraum“ angegeben.",
+  "„dass“ leitet den Inhalt der Freude ein: dass viele Gäste kommen.",
+  "Die Verbindung lautet „sich an jemanden wenden“: an uns.",
+  "Die feste Formulierung heißt „Vielen Dank für eure Unterstützung“."
+ ],
+ [
+  "Bei Internetseiten ist „auf Ihrer Webseite“ üblich.",
+  "„Berufserfahrung“ ist hier nicht zählbar; „mehr Berufserfahrung“ passt.",
+  "Die Verbindung lautet „sich interessieren für“ mit Akkusativ.",
+  "Für den Arbeitsplatz heißt es „in einem Geschäft arbeiten“.",
+  "Die Verbindung lautet „für etwas verantwortlich sein“.",
+  "Nach „würde“ steht der Infinitiv „freuen“.",
+  "„welche Unterlagen“ ist eine indirekte Frage mit Plural.",
+  "Nach „kann“ steht der Infinitiv „schicken“.",
+  "„sich auf eine Rückmeldung freuen“ bezeichnet etwas Erwartetes.",
+  "Die Grußformel lautet „Mit freundlichen Grüßen“."
+ ]
+];
 const grammar=[
  ['Ich freue mich ___ deine Nachricht.',['auf','an','mit'],0],
  ['Wir treffen uns ___ Samstag.',['am','im','um'],0],
@@ -408,7 +470,7 @@ function items(section){
        const letter=grammarLetters[(set-1+g)%grammarLetters.length];
        const correctOptions=letter[2][j],options=correctOptions.slice(),correct=options[0],pos=(n+set)%3;
        options[0]=options[pos];options[pos]=correct;
-       result.push({g,j,q:'Welche Ergänzung passt in Lücke '+(j+1)+'?',options,answer:pos,passage:letter[0]+'\\n\\n'+letter[1],kind:kinds[g]+' · zusammenhängender Text'});
+       result.push({g,j,q:'Welche Ergänzung passt in Lücke '+(j+1)+'?',options,answer:pos,passage:letter[0]+'\\n\\n'+letter[1],explanation:grammarExplanations[(set-1+g)%grammarLetters.length][j],kind:kinds[g]+' · zusammenhängender Text'});
        continue;
      }
      if(id==='hoeren'){
