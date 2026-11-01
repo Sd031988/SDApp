@@ -156,7 +156,7 @@ const listeningDialogues=[
  ['Vermieter','Direkt am Hauseingang in der Lindenstraße.'],
  ['Interessentin','Soll ich schon meine Unterlagen mitbringen?'],
  ['Vermieter','Nein, wir besprechen zunächst alles vor Ort.']
- ],['Wann ist die Besichtigung?','Wo wartet der Vermieter?','Was muss man mitbringen?']],
+ ],['Wann ist die Besichtigung?','Wo wartet der Vermieter?','Muss man Unterlagen mitbringen?']],
  ['Sonntagsausflug',[
  ['Freundin','Hallo Lea, kommst du am Sonntag mit uns wandern?'],
  ['Freund','Gerne. Wo treffen wir uns?'],
@@ -184,7 +184,7 @@ const listeningAnswers=[
  [['Um halb elf','Um neun','Um zwölf'],['Im zweiten Stock','Im Erdgeschoss','Am Bahnhof'],['Aktuelle Unterlagen','Einen Kuchen','Seinen Reisepass']],
  [['In der Stadthalle','Im Park','Auf dem Marktplatz'],['Um elf Uhr','Um acht Uhr','Um 19 Uhr'],['Nichts','Fünf Euro','Zehn Euro']],
  [['Freitag um 10:15 Uhr','Donnerstag um 10:15 Uhr','Freitag um 15 Uhr'],['Telefonisch bestätigen','Persönlich vorbeikommen','Eine Rechnung bezahlen'],['Eine Arztpraxis','Eine Schule','Ein Geschäft']],
- [['Morgen um 17 Uhr','Heute um 17 Uhr','Morgen um 19 Uhr'],['Am Hauseingang','In der Küche','An der Bushaltestelle'],['Keine Unterlagen','Eine Gehaltsabrechnung','Ein Passfoto']],
+ [['Morgen um 17 Uhr','Heute um 17 Uhr','Morgen um 19 Uhr'],['Am Hauseingang','In der Küche','An der Bushaltestelle'],['Nein, noch nicht','Ja, eine Gehaltsabrechnung','Ja, ein Passfoto']],
  [['Um 19 Uhr','Um 17 Uhr','Um 20 Uhr'],['In der Aula','Im Park','In der Mensa'],['Um eine Klassenfahrt','Um einen Umzug','Um ein Sportfest']],
  [['Winterjacken','Schuhe','Schulbücher'],['Zwanzig Prozent','Zehn Prozent','Dreißig Prozent'],['Im Erdgeschoss','Im ersten Stock','Online']],
  [['Am Bahnhof','Am Rathaus','Im Museum'],['Getränk und Regenjacke','Fahrrad und Helm','Laptop und Heft'],['Sie gehen ins Museum','Sie bleiben im Bahnhof','Sie fahren ans Meer']],
