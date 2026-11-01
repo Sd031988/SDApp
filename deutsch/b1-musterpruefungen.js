@@ -92,6 +92,20 @@ const letters=[
 const talk=['Ein gemeinsamer Ausflug','Eine Geburtstagsfeier','Ein Besuch bei Freunden','Ein Lerntreffen','Ein Sportnachmittag'];
 const opinions=['Sollten Jugendliche täglich Sport treiben?','Sind öffentliche Verkehrsmittel besser als das Auto?','Sollte man lieber online oder im Geschäft einkaufen?','Sind gemeinsame Mahlzeiten in Familien wichtig?','Sollten Schulen mehr digitale Medien nutzen?'];
 const formalSituations=['Du kannst einen Termin bei einer Beratungsstelle nicht wahrnehmen.','Du hast einen Kurs gebucht, musst aber kurzfristig absagen.','Du hast eine Einladung zu einem Vorstellungsgespräch erhalten, bist aber verhindert.','Du hast einen Besichtigungstermin für eine Wohnung verpasst.','Du kannst an einem Elternabend nicht teilnehmen.'];
+const oralCards=[
+ {topic:'Ein gemeinsamer Ausflug',goal:'Ihr organisiert einen Ausflug für eine Gruppe von acht Personen.',points:['Wohin und warum?','Wann und wie lange?','Anreise und Treffpunkt?','Kosten und Verpflegung?'],partner:'Ich würde lieber mit dem Zug fahren. Was meinst du?'},
+ {topic:'Eine Geburtstagsfeier',goal:'Ihr plant eine kleine Überraschungsfeier für eine Freundin.',points:['Ort und Termin?','Gäste einladen?','Essen und Getränke?','Geschenk und Aufgabenverteilung?'],partner:'Wir könnten zu Hause feiern. Hast du eine andere Idee?'},
+ {topic:'Ein Besuch bei Freunden',goal:'Ihr möchtet gemeinsam Freunde in einer anderen Stadt besuchen.',points:['Termin vereinbaren?','Fahrt organisieren?','Mitbringsel?','Programm vor Ort?'],partner:'Ich habe nur am Samstag Zeit. Passt dir das?'},
+ {topic:'Ein Lerntreffen',goal:'Ihr plant ein regelmäßiges Lerntreffen für eine Deutschprüfung.',points:['Ort und Uhrzeit?','Welche Themen üben?','Materialien mitbringen?','Wie oft treffen?'],partner:'Ich möchte besonders das Sprechen üben. Und du?'},
+ {topic:'Ein Sportnachmittag',goal:'Ihr organisiert einen Sportnachmittag für euren Verein.',points:['Welche Sportarten?','Ort und Wetteralternative?','Teilnehmer informieren?','Getränke und Material?'],partner:'Vielleicht brauchen wir auch einen Raum bei Regen. Was schlägst du vor?'}
+];
+const presentationCards=[
+ {topic:'Öffentliche Verkehrsmittel oder Auto?',experience:'Wie bist du früher zur Schule oder Arbeit gefahren?',compare:'Vergleiche Kosten, Umwelt und Bequemlichkeit.'},
+ {topic:'Online einkaufen oder im Geschäft?',experience:'Erzähle von einem Einkauf, den du gut oder schlecht fandest.',compare:'Vergleiche Auswahl, Beratung und Rückgabe.'},
+ {topic:'Gesund leben im Alltag',experience:'Welche Gewohnheit hilft dir persönlich?',compare:'Sprich über Bewegung, Ernährung und Zeit.'},
+ {topic:'Deutsch lernen mit anderen',experience:'Wie lernst du am liebsten?',compare:'Vergleiche Lernen allein, im Kurs und mit Freunden.'},
+ {topic:'Wohnen in der Stadt oder auf dem Land?',experience:'Wo hast du schon gewohnt?',compare:'Vergleiche Verkehr, Ruhe und Freizeitangebote.'}
+];
 const listeningScenes=[
  ['Bahnhof','Guten Tag, hier ist die Reiseauskunft. Der Regionalzug nach Mannheim fährt heute ausnahmsweise von Gleis sieben statt Gleis vier. Wegen Bauarbeiten kann sich die Ankunft um ungefähr zehn Minuten verspäten. Bitte achten Sie auf die Anzeigen am Bahnsteig.'],
  ['Kursanmeldung','Guten Morgen, Frau Kaya. Sie hatten nach dem Abendkurs gefragt. Der Kurs beginnt am 14. April, jeweils montags und mittwochs um 18 Uhr. Bitte bringen Sie zum ersten Termin Ihren Ausweis und einen Stift mit. Die Kursgebühr können Sie auch in zwei Raten bezahlen.'],
@@ -240,7 +254,11 @@ function items(section){
      result.push({g,j,q,hint:isGoethe&&g===1?'Etwa 80 Wörter, eigene Meinung und Beispiele.':isGoethe&&g===2?'Etwa 40 Wörter, mit Anrede und Gruß.':prompt[1],kind:kinds[g]});
    } else {
      const q=exam==='goethe'?(g===0?'Plane gemeinsam mit einem Partner: '+talk[(set+1)%talk.length]+'. Sprecht über Termin, Ort, Aufgaben, Vorschläge und eine gemeinsame Entscheidung.':g===1?'Präsentiere das Thema „'+talk[(set-1)%talk.length]+'“: Einleitung, eigene Erfahrungen, Situation in deinem Herkunftsland, Vor- und Nachteile, eigene Meinung und Schluss.':'Reagiere auf Fragen und Rückmeldungen zur Präsentation. Stelle auch deinem Partner eine passende Frage.'):(exam==='telc'?(g===0?'Lerne deinen Gesprächspartner kennen: Name, Wohnort, Beruf, Familie, Freizeit und Sprachlernen. Stelle Rückfragen.':g===1?'Sprecht über eure Erfahrungen und Meinungen zum Thema „'+talk[(set-1)%talk.length]+'“. Reagiere auf die Aussagen deines Partners.':'Plane gemeinsam mit deinem Partner: '+talk[(set+1)%talk.length]+'. Findet eine gemeinsame Lösung.'):(g===0?'Stelle dich vor: Name, Herkunft, Wohnort, Familie, Beruf, Sprachen und Freizeit. Beantworte Nachfragen.':g===1?'Beschreibe eigene Erfahrungen und deine Meinung zum Thema „'+talk[(set-1)%talk.length]+'“. Gehe auf Rückfragen ein.':'Plane mit einem Gesprächspartner: '+talk[(set+1)%talk.length]+'. Sprecht über Termin, Ort, Aufgaben und Kosten.'));
-     result.push({g,j,q,hint:'Sprich frei. Die automatische Bewertung ersetzt keine menschliche Prüfung.',kind:kinds[g]});
+     const card=oralCards[(set-1)%oralCards.length],presentation=presentationCards[(set-1)%presentationCards.length];
+     const plan=card.goal+'\\n\\nBesprecht gemeinsam:\\n• '+card.points.join('\\n• ')+'\\n\\nDein Gesprächspartner sagt: „'+card.partner+'“';
+     const talkCard='Thema: '+presentation.topic+'\\n\\nEigene Erfahrung: '+presentation.experience+'\\nVergleich: '+presentation.compare+'\\n\\nBegründe deine Meinung und reagiere auf Rückfragen.';
+     const scenario=exam==='goethe'?(g===0?plan:g===1?talkCard:'Dein Partner fragt: „Welcher Punkt war für dich am wichtigsten und warum?“ Antworte und stelle anschließend eine eigene Frage.'):(exam==='telc'?(g===0?'Partnerfrage: „Wie lange lernst du schon Deutsch und was machst du gern in deiner Freizeit?“ Stelle auch zwei eigene Fragen.':g===1?talkCard:plan):(g===0?'Prüferfrage: „Warum lernst du Deutsch und wie sieht dein Alltag aus?“ Erzähle mit Beispielen.':g===1?talkCard:plan));
+     result.push({g,j,q,hint:'Rollenkarten-Übung: Sprich möglichst frei. '+scenario+'\\n\\nDie automatische Bewertung ersetzt keine menschliche Prüfung.',kind:kinds[g]});
    }
  }});
  return result;
