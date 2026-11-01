@@ -48,7 +48,7 @@ export function restoreBackup(raw){
  let obj;
  try{obj=JSON.parse(raw)}catch{throw Error('Keine gültige JSON-Datei')}
  if(!obj||obj.format!==SAVE_FORMAT||obj.version!==BACKUP_VERSION||!obj.games||!obj.settings){
-  throw Error('Keine gültige SD Kids Sicherung');
+  throw Error('Keine gültige Spiele-Sicherung');
  }
  return {profile:sanitize(obj.games),settings:safeSettings(obj.settings)};
 }
