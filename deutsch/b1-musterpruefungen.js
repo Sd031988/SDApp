@@ -300,7 +300,7 @@ function home(){
  '<h3>Mustersatz auswählen</h3><div class="b1x-grid">'+[1,2,3,4,5].map(n=>'<button data-set="'+n+'" class="b1x-card '+(set===n?'active':'')+'">Muster '+n+'</button>').join('')+'</div>'+
  '<h3>Alle Prüfungsteile</h3><div class="b1x-stack">'+E[exam].parts.map((p,i)=>'<button data-part="'+i+'" class="b1x-card"><b>'+esc(p[1])+'</b><small>'+p[2]+' Minuten · '+p[3].reduce((a,b)=>a+b,0)+' Aufgaben · '+p[3].length+' Teile</small></button>').join('')+'</div>'+
  '<button id="b1x-start" class="b1x-primary">▶ Mustersatz '+set+' vollständig starten</button><button id="b1x-history" class="b1x-card" type="button">📊 Bisherige Ergebnisse ansehen</button>'+
- '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc werden Lesen und Sprachbausteine hier mit getrennten Übungszeiten statt einer gemeinsamen Prüfungszeit angezeigt.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 Gespeicherte B1-Antworten löschen</button>');
+ '<p class="b1x-note">Die Antworten werden nur lokal im Browser gespeichert. Die Hörtexte werden mit der Sprachausgabe des Geräts vorgelesen; je nach Betriebssystem kann diese einen Online-Sprachdienst nutzen. Keine offizielle Bewertung. Zuordnungsaufgaben und Prüfungsgespräche sind vereinfacht. Bei telc teilen sich Lesen und Sprachbausteine im vollständigen Mustersatz eine gemeinsame 90-Minuten-Frist; bei Einzelübungen gelten getrennte Trainingszeiten.</p><button id="b1x-delete" class="b1x-card" type="button">🗑 Gespeicherte B1-Antworten löschen</button>');
  root.querySelectorAll('[data-exam]').forEach(b=>b.onclick=()=>{exam=b.dataset.exam;set=1;home();});
  root.querySelectorAll('[data-set]').forEach(b=>b.onclick=()=>{set=Number(b.dataset.set);home();});
  root.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>{running=false;start(Number(b.dataset.part));});
@@ -308,7 +308,7 @@ function home(){
  if(el('b1x-history'))el('b1x-history').onclick=history;
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Übungsergebnisse löschen?')){localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');alert('Die lokal gespeicherten B1-Ergebnisse wurden gelöscht.');}};
 }
-function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];deadline=began+(p[2]||30)*60000;question();}
+function start(i){clear();part=i;idx=0;answers=[];plays=0;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&p[0]==='sprach'&&results.lesen;deadline=sharedTelc?Math.max(Date.now(),results.lesen.deadline||Date.now()):began+(p[2]||30)*60000;question();}
 function speak(t,dialogue){
  if(!('speechSynthesis'in window)){alert('Dein Browser unterstützt diese Sprachausgabe nicht.');return;}
  const synth=window.speechSynthesis;synth.cancel();
@@ -380,7 +380,7 @@ function reviewTask(t,answer,i,withTranscript){
 }
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
- const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000)};
+ const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000),deadline};
  results[p[0]]=record;
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
  const next=running&&part+1<E[exam].parts.length;
