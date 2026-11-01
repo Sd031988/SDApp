@@ -446,6 +446,45 @@ const assert = require('node:assert/strict');
     assert.equal(changeAfter.active,'index.html');
     assert.match(changeAfter.html,/Geändert vom Assistenten/);
 
+    // Google KI guest-first area: no provider credentials, direct official links,
+    // and safe copy-only preparation for use without a ChatGPT/Gemini account.
+    await page.setViewportSize({width:1280,height:900});
+    assert.equal(await page.locator('#kiServicesBtn').count(),1,'Guest-first Google KI navigation exists');
+    await page.locator('#kiServicesBtn').click();
+    assert.equal(await page.locator('#kiServicesOverlay').isVisible(),true);
+    assert.match(await page.locator('#kiServicesOverlay').innerText(),/ohne Registrierung/);
+    assert.match(await page.locator('#kiServicesOverlay').innerText(),/hängt jedoch von Land, Gerät und Funktion ab/);
+    assert.equal(await page.locator('#kiServicesGoogle').getAttribute('href'),'https://www.google.com/ai');
+    assert.equal(await page.locator('#kiServicesGoogle').getAttribute('target'),'_blank');
+    assert.equal(await page.locator('#kiServicesGoogle').getAttribute('rel'),'noopener noreferrer');
+    assert.equal(await page.locator('#kiServicesOverlay input[type="password"]').count(),0,'Studio never collects provider passwords');
+    await page.evaluate(()=>{
+      Object.defineProperty(navigator,'clipboard',{
+        configurable:true,
+        value:{writeText:async value=>{window.__googleGuestCopied=String(value)}}
+      });
+    });
+    await page.locator('#kiServicesQuestion').fill('Ergänze einen Quittungsdruck-Knopf');
+    await page.locator('#kiServicesCopy').click();
+    const guestPrompt=await page.evaluate(()=>window.__googleGuestCopied);
+    assert.match(guestPrompt,/Ergänze einen Quittungsdruck-Knopf/);
+    assert.match(guestPrompt,/### Datei: relativer\/pfad.ext/,'Google prompt uses supported studio import format');
+    assert(!guestPrompt.includes('Geändert vom Assistenten'),'Existing project source must never be shared automatically');
+    assert.equal(await page.locator('#kiServicesClipboard').isVisible(),false);
+    await page.locator('#kiServicesCode').click();
+    assert.equal(await page.locator('#kiServicesOverlay').isVisible(),false);
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true,'Guest Google code can be reimported');
+    await page.locator('#kiClose').click();
+    await page.locator('#kiServicesBtn').click();
+    await page.locator('#kiServicesChange').click();
+    assert.equal(await page.locator('#kiChangeBox').isVisible(),true,'Google answer can update existing project after file approval');
+    assert.equal(await page.locator('#kiChangeConsent').isChecked(),false);
+    await page.locator('#kiClose').click();
+    await page.setViewportSize({width:390,height:844});
+    await page.evaluate(()=>handyMehr());
+    assert.match(await page.locator('#palListe').innerText(),/Google KI ohne Konto/);
+    await page.keyboard.press('Escape');
+
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
     if(browser) await browser.close();
