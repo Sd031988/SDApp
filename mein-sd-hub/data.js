@@ -3,7 +3,7 @@
 "use strict";
 const items=[
 {id:"deutsch",title:"Deutsch lernen",icon:"📚",category:"Lernen",href:"/deutsch/",keywords:"deutsch a1 a2 b1 alphabet lesen hören schreiben sprechen sprache vokabeln wortschatz grammatik prüfung kurs lernen",description:"Vom Alphabet bis B1 lernen.",color:"#4cc79e"},
-{id:"b1",title:"B1-Prüfungstraining",icon:"🎓",category:"Lernen",href:"/deutsch/b1-pruefung.html",keywords:"test musterprüfung zertifikat prüfung b1 lesen hören sprechen schreiben telc goethe",description:"Lesen, Hören, Schreiben und Sprechen üben.",color:"#4cc79e"},
+{id:"b1",title:"B1-Prüfungstraining",icon:"🎓",category:"Lernen",href:"/deutsch/b1-pruefung.html",keywords:"test musterprüfung zertifikat prüfung b1 lesen hören sprechen schreiben telc goethe üben training",description:"Lesen, Hören, Schreiben und Sprechen üben.",color:"#4cc79e"},
 {id:"jobs",title:"Lebenslauf & Bewerbung",icon:"💼",category:"Arbeit",href:"/Lebenslauf_app.html",keywords:"arbeit bewerbung lebenslauf cv anschreiben job beruf jobs stelle finden",description:"Eine Bewerbung vorbereiten.",color:"#75aff3"},
 {id:"bewerbungen",title:"Bewerbungs-Tracker",icon:"📋",category:"Arbeit",href:"/bewerbungen/",keywords:"arbeit jobs bewerbungen nachverfolgen planen interview",description:"Bewerbungen im Blick behalten.",color:"#75aff3"},
 {id:"anerkennung",title:"Abschlüsse anerkennen",icon:"🏅",category:"Arbeit",href:"/anerkennung/",keywords:"beruf abschluss anerkennung ausland deutschland diplom",description:"Orientierung zur Berufsanerkennung.",color:"#75aff3"},
@@ -103,9 +103,9 @@ const projects=[
 {id:"task",icon:"✅",title:"Mini-Aufgabenliste",type:"Mini-App",subtitle:"Eine kleine Aufgabenliste mit lokalen Daten.",colors:["#aa623c","#fff1e0"],file:"aufgabenliste.html"}
 ];
 function normalize(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("de").trim().replace(/\s+/g," ")}
-function recommend(input,limit){const q=normalize(input);if(!q)return [];const words=q.split(/[^a-z0-9äöüß]+/).filter(w=>w.length>2);const ranked=items.map(item=>{let score=0;const title=normalize(item.title),hay=normalize(item.title+" "+item.keywords+" "+item.description);if(title.includes(q))score+=8;if(hay.includes(q))score+=6;for(const w of words){if(title.includes(w))score+=4;else if(hay.includes(w))score+=2;}return{...item,score}}).filter(item=>item.score>0).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,"de"));return ranked.slice(0,Math.min(Math.max(Number(limit)||4,1),8))}
+function recommend(input,limit){const q=normalize(input);if(!q)return [];const words=q.split(/[^a-z0-9äöüß]+/).filter(w=>w.length>2||(/[0-9]/.test(w)&&w.length>=2));const ranked=items.map(item=>{let score=0;const title=normalize(item.title),hay=normalize(item.title+" "+item.keywords+" "+item.description);if(title.includes(q))score+=8;if(hay.includes(q))score+=6;for(const w of words){if(title.includes(w))score+=4;else if(hay.includes(w))score+=2;}return{...item,score}}).filter(item=>item.score>0).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,"de"));return ranked.slice(0,Math.min(Math.max(Number(limit)||4,1),8))}
 const storageKey="sdhub.personal.v1";
-const initial=()=>({version:1,completedLessons:[],completedSteps:[],favorites:["deutsch","studio","pibo"],recent:[],nickname:"",updatedAt:""});
+const initial=()=>({version:1,completedLessons:[],completedSteps:[],favorites:[],recent:[],nickname:"",updatedAt:""});
 function cleanString(v,n){return typeof v==="string"?v.slice(0,n):""}
 function uniqueAllowed(v,valid,max){return Array.isArray(v)?Array.from(new Set(v.filter(x=>typeof x==="string"&&valid.includes(x)))).slice(0,max):[]}
 function sanitizeState(input){const s=initial();if(!input||typeof input!=="object"||Array.isArray(input))return s;
