@@ -11,7 +11,7 @@ export function runPiboSmoke(html,careSource){
    constructor(...args){this.children=[];this.position=vec();this.rotation=vec();this.scale=vec(1,1,1);this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.shadowMap={};this.userData={};this.geometry={dispose(){}};this.material={color:{setHex(){}},dispose(){}};this.style={};this.visible=true;this.domElement=element('canvas');this.domElement.toDataURL=()=>'data:image/png;base64,abc';this.clock=0}
    add(o){this.children.push(o)}remove(o){this.children=this.children.filter(x=>x!==o)}
    traverse(f){f(this);for(const c of this.children)c.traverse(f)}
-   setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}intersectObjects(){return []}getElapsedTime(){return this.clock+=.2}dispose(){}
+   setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}intersectObjects(){return [{point:{x:0,y:1.8,z:.8}}]}intersectObject(){return [{point:{x:0,y:1,z:1}}]}getElapsedTime(){return this.clock+=.2}dispose(){}
  }
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element(id));return elements.get(id)};
  const tags=[...html.matchAll(/<button\b([^>]*)>/g)].map(x=>x[1]),groups={act:[],room:[],food:[]};
@@ -36,8 +36,15 @@ export function runPiboSmoke(html,careSource){
  click('act','sleep');frame(65);
  click('potty');frame(55);
  click('outfit');if(wardrobeButtons.length!==12)throw Error('Wardrobe has '+wardrobeButtons.length+' outfits, expected 12');
- wardrobeButtons[11].click();click('surprise');click('minigame');click('mousegame');click('photo');frame();
+ wardrobeButtons[11].click();click('surprise');click('surprise');
+ const canvas=get('stage').children[0];if(!canvas?.handlers?.pointerdown)throw Error('Missing canvas pointer input');
+ click('minigame');for(let n=0;n<9;n++)canvas.handlers.pointerdown({clientX:400,clientY:250,pointerId:1});
+ if(get('gamePoints').textContent!=='9')throw Error('Ball scoring broken');
+ frame(210);if(!get('gameHud').hidden)throw Error('Ball timer did not end');
+ click('mousegame');for(let n=0;n<3;n++)canvas.handlers.pointerdown({clientX:400,clientY:250,pointerId:1});
+ if(get('gamePoints').textContent!=='3')throw Error('Mouse scoring broken');
+ click('mousegame');click('photo');frame();
  if(!storage.has('sd-kids-pibo-v1'))throw Error('Game progress not persisted');
  if(!sounds.includes('chew')||!sounds.includes('flush')||!sounds.includes('splash'))throw Error('Missing care sound triggers: '+sounds.join(','));
- return {status:'PASS',checks:['startup','5 room navigation','food choice','feeding','bathing','sleeping','toilet and flush','12 outfits','daily gift','two minigame toggles','photo','local save'],sounds:[...new Set(sounds)],frames:226}
+ return {status:'PASS',checks:['startup','5 room navigation','food choice','feeding','bathing','sleeping','toilet and flush','12 outfits','daily gift','timed ball and mouse scoring','photo','local save'],sounds:[...new Set(sounds)],frames:436}
 }
