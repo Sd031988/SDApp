@@ -30,3 +30,21 @@ test('dashboard closes exam, workshop and course overlays',()=>{
  const dashboard=fs.readFileSync('deutsch/lernweg-dashboard.js','utf8');
  for(const selector of ["$('b1x')","$('preB1')","$('sdHubUnifiedLessons')"])assert.ok(dashboard.includes(selector),selector);
 });
+
+test('grammar help matches the topic without treating every article as a grammar question',()=>{
+ const section=source.slice(source.indexOf('const topicGuides='),source.indexOf('function render()'));
+ assert.ok(section.startsWith('const topicGuides='),'Topic guide catalog is available');
+ const guideFor=new Function('item',section+'return guideFor(item)');
+ const article=lessons.find(t=>t.lv==='a1'&&t.q==='Welcher Artikel passt zu Mutter?');
+ const residence=lessons.find(t=>t.lv==='a1'&&t.q==='Welche Antwort passt zu Wo wohnst du?');
+ const time=lessons.find(t=>t.lv==='a1'&&t.q==='Was bedeutet halb neun?');
+ assert.ok(article&&residence&&time,'Representative A1 questions are available');
+ assert.equal(guideFor(article).title,'Artikel und Nomen');
+ assert.equal(guideFor(residence).title,'Hinweis zu dieser Aufgabe');
+ assert.equal(guideFor(time).title,'Hinweis zu dieser Aufgabe');
+ for(const item of lessons){
+  const guide=guideFor(item);
+  assert.ok(guide.title&&guide.rule&&guide.example,key(item));
+  assert.equal(typeof guide.example,'string',key(item));
+ }
+});
