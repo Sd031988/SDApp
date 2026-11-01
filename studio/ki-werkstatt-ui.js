@@ -29,6 +29,14 @@ function openDialog(){
  status('Beschreibe die Aufgabe. Erstelle die Anfrage und füge danach den KI-Code hier ein.');
  $('kiGoal').focus();
 }
+function openDialogWithCode(text){
+ openDialog();
+ if($('kiOverlay').hidden)return false;
+ $('kiResult').value=String(text||'');
+ if($('kiResult').value.trim())analyse();
+ $('kiResult').scrollIntoView({block:'nearest'});
+ return true;
+}
 function closeDialog(){$('kiOverlay').hidden=true;}
 function selectedSource(){
  if(!$('kiInclude').checked||!S.p||!S.aktiv)return null;
@@ -152,7 +160,7 @@ function setup(){
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
- window.SDKICodingUI={openDialog,analyse,apply,currentFiles};
+ window.SDKICodingUI={openDialog,openDialogWithCode,analyse,apply,currentFiles};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
