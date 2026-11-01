@@ -230,7 +230,7 @@ const assert = require('node:assert/strict');
       '<!doctype html><html lang="de"><head><title>KI Test</title><link href="css/style.css" rel="stylesheet"></head><body><h1 id="kiTest">Funktioniert</h1><script src="js/app.js"></script></body></html>',ticks,
       'Die Erklärung für CSS wird nicht übernommen.',
       '### Datei: css/style.css',ticks+'css','body { color: #222; }',ticks,
-      '### Datei: js/app.js',ticks+'javascript','console.log("JS-Code erkannt")',ticks,
+      '### Datei: js/app.js',ticks+'javascript','window.__kiJavaScriptLaeuft = true; console.log("JS-Code erkannt")',ticks,
       'Jetzt kommt ein Python-Programm.',ticks+'python','print("Python erkannt")',ticks,
       'Jetzt kommt ein Java-Programm.',ticks+'java','public class Main { public static void main(String[] args) {} }',ticks,
       'Dies ist nur eine abschließende Erklärung.'
@@ -272,6 +272,22 @@ const assert = require('node:assert/strict');
     await page.locator('#vorschau').waitFor({state:'visible',timeout:12000}); // Preview saves before opening.
     assert.equal(await page.locator('#vorschau').isVisible(),true,'Ausführen öffnet die Vorschau');
     assert.equal((await page.locator('#frame').getAttribute('sandbox')).includes('allow-same-origin'),false,'KI-Vorschau isoliert');
+
+    // Regression: even if a Service Worker is ready, the sandboxed AI iframe must
+    // show the stored files, not navigate to a GitHub Pages 404 URL.
+    assert.equal(await page.locator('#frame').getAttribute('src'),null,'KI-Vorschau must not navigate to a GitHub URL');
+    const previewHtml=await page.locator('#frame').getAttribute('srcdoc');
+    assert.match(previewHtml,/id="kiTest"/,'HTML comes from the imported project');
+    assert.match(previewHtml,/body \{ color: #222; \}/,'CSS is bundled into the preview');
+    assert.match(previewHtml,/__kiJavaScriptLaeuft/,'JavaScript is bundled into the preview');
+    await page.frameLocator('#frame').locator('#kiTest').waitFor({state:'visible',timeout:12000});
+    const rendered=await page.frameLocator('#frame').locator('body').evaluate(el=>({
+      text:el.innerText, css:getComputedStyle(el).color, js:window.__kiJavaScriptLaeuft===true
+    }));
+    assert.match(rendered.text,/Funktioniert/,'Preview must render the actual web page rather than 404');
+    assert.equal(rendered.css,'rgb(34, 34, 34)','Imported stylesheet must apply');
+    assert.equal(rendered.js,true,'Imported JavaScript must execute after explicit Run');
+
 
 
     // Direct import: update current project, keep a version backup and open index.html in the actual editor.
