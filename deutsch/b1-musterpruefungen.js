@@ -508,14 +508,14 @@ function items(section){
        continue;
      }
      if(id==='lesen'&&exam==='goethe'&&(g===0||g===3)){
-       const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
+       const textIndex=(j+(set-1)*7+(g===3?6:0))%readingTexts.length;
        const rd=readingTexts[textIndex],truth=(j+set+(g===3?1:0))%2===0;
        const statement=readingClaims[textIndex][truth?0:1];
        result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],explanation:readingClaimExplanations[textIndex][truth?0:1],kind:'Leseverstehen · '+kinds[g]});
        continue;
      }
      if(id==='lesen'){
-       const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
+       const textIndex=(j+(set-1)*7+(exam==='goethe'?(g===4?6:0):exam==='telc'?(g===2?5:0):g*5))%readingTexts.length;
        const rd=readingTexts[textIndex],options=rd.slice(3,6),correct=options[0],pos=(n+set+g)%3;
        options[0]=options[pos];options[pos]=correct;
        result.push({g,j,q:rd[2],options,answer:pos,passage:rd[0]+'\\n\\n'+rd[1],explanation:readingExplanations[textIndex],kind:'Leseverstehen · '+kinds[g]});
