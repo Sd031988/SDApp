@@ -241,7 +241,7 @@ function items(section){
        continue;
      }
      if(id==='hoeren'){
-       const sceneIndex=(g*2+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
+       const sceneIndex=(g*3+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
        const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
        const dialogueAt=dialogueSceneIndices.indexOf(sceneIndex);
