@@ -38,8 +38,14 @@ const grammarNotes={
  a1:['Ein deutscher Hauptsatz hat das konjugierte Verb normalerweise an zweiter Position: Ich lerne heute Deutsch.','Bei Ja-Nein-Fragen steht das Verb meist zuerst: Lernst du Deutsch?','Nomen beginnen im Deutschen mit einem Großbuchstaben. Lerne Artikel und Nomen zusammen.'],
  a2:['In Nebensätzen mit weil und dass steht das konjugierte Verb am Ende.','Nach mit steht der Dativ: mit dem Bus.','Bei höflichen Bitten hilft Konjunktiv II: Könnten Sie mir bitte helfen?']
 };
+const targetedGrammar={
+ alpha:{'Umlaute':'Ä, Ö und Ü sind eigene Laute. Sprich Ä wie in Äpfel, Ö wie in Öl und Ü wie in Übung.','Weitere Umlaute':'Das ß heißt Eszett. Es klingt wie ein scharfes s: Straße.','Doppellaute':'ei klingt wie in Eis; au klingt wie in Auto.','Silben lesen':'Lies zuerst Ma und ma. Zusammen wird daraus Mama.'},
+ a1:{'Artikel':'Lerne Nomen immer mit Artikel: der Tisch, die Lampe, das Buch.','Mehrzahl':'Die Mehrzahl ist unterschiedlich: das Kind – die Kinder; das Buch – die Bücher.','Präsens':'lernen: ich lerne, du lernst, er oder sie lernt, wir lernen.','Verneinung':'kein verneint oft ein Nomen: kein Auto. nicht verneint andere Satzteile: Ich komme nicht.','Akkusativ':'Bei maskulinen Nomen wird der zu den und ein zu einen: Ich sehe einen Hund.','Modalverben':'Bei Modalverben steht das zweite Verb meist am Ende: Ich muss heute arbeiten.','Trennbare Verben':'Im Hauptsatz steht die Vorsilbe am Ende: Ich stehe um sieben Uhr auf.'},
+ a2:{'Vergangenheit':'Das Perfekt besteht aus haben oder sein und dem Partizip II: Ich habe gelernt. Ich bin gegangen.','Dativ':'Nach mit steht der Dativ: mit dem Bus. Bei helfen steht die Person im Dativ: meiner Mutter.','Nebensätze':'Nach weil und dass steht das konjugierte Verb am Ende: Ich bleibe zu Hause, weil ich krank bin.','Vergleiche':'schnell – schneller – am schnellsten; gut – besser – am besten.','Konjunktiv II':'Könnten Sie mir helfen? ist höflicher als Helfen Sie mir!','Wechselpräpositionen':'Wo? auf dem Tisch (Dativ). Wohin? auf den Tisch (Akkusativ).','Briefe schreiben':'Formell: Sehr geehrte Damen und Herren, … Mit freundlichen Grüßen'}
+};
 function grammarMarkup(){
- return '<section class="pre-card"><h3>Grammatik und Lerntipps</h3><ul>'+grammarNotes[level].map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p>Lies die Beispiele laut und bilde eigene Sätze. Diese Hinweise ersetzen kein vollständiges Grammatikbuch.</p></section>';
+ const specific=targetedGrammar[level][levels[level].units[unit][0]];
+ return '<section class="pre-card"><h3>Grammatik und Lerntipps</h3>'+(specific?'<p><b>Zu dieser Lektion:</b> '+esc(specific)+'</p>':'')+'<ul>'+grammarNotes[level].map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p>Lies die Beispiele laut und bilde eigene Sätze. Diese Hinweise ersetzen kein vollständiges Grammatikbuch.</p></section>';
 }
 const readingTexts={
  alpha:[
