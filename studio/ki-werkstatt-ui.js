@@ -83,8 +83,8 @@ function updateActions(){
 }
 function openSelectedInEditor(files){
  const preferred=files.find(f=>f.path==='index.html')||
-   files.find(f=>/(^|\\/)index\\.html?$/i.test(f.path))||
-   files.find(f=>/\\.html?$/i.test(f.path))||files[0];
+   files.find(f=>/(^|\/)index\.html?$/i.test(f.path))||
+   files.find(f=>/\.html?$/i.test(f.path))||files[0];
  for(const file of files){
   if(!S.tabs.includes(file.path)&&S.tabs.length<18)S.tabs.push(file.path);
   const parts=file.path.split('/').slice(0,-1);
@@ -145,10 +145,10 @@ async function applyDirect(){
  const changes=selected.filter(f=>latest[f.path]!==f.content);
  const replaced=changes.filter(f=>Object.prototype.hasOwnProperty.call(latest,f.path)).length;
  if(changes.length&&!window.confirm(
-  'Ausgewählte KI-Dateien DIREKT in das geöffnete Projekt „'+S.p.name+'“ übernehmen?\\n\\n'+
-  changes.length+' neue/geänderte Datei(en), davon '+replaced+' bestehende Datei(en) ersetzen.\\n'+
-  changes.map(f=>'• '+f.path).join('\\n')+
-  '\\n\\nVorher wird eine Sicherung unter 🕘 Versionen gespeichert. Der Code wird NICHT automatisch ausgeführt.'
+  'Ausgewählte KI-Dateien DIREKT in das geöffnete Projekt „'+S.p.name+'“ übernehmen?\n\n'+
+  changes.length+' neue/geänderte Datei(en), davon '+replaced+' bestehende Datei(en) ersetzen.\n'+
+  changes.map(f=>'• '+f.path).join('\n')+
+  '\n\nVorher wird eine Sicherung unter 🕘 Versionen gespeichert. Der Code wird NICHT automatisch ausgeführt.'
  ))return;
  busy=true;updateActions();
  const project=S.p;
@@ -177,7 +177,7 @@ async function applyDirect(){
   openSelectedInEditor(selected);
   closeDialog();
   ausgabe('➡️ KI-Code direkt in den Code-Editor übernommen: '+selected.map(f=>f.path).join(', ')+
-   '\\n'+(changes.length?'Vorherige Version gespeichert. ':'Dateien waren bereits vorhanden. ')+
+   '\n'+(changes.length?'Vorherige Version gespeichert. ':'Dateien waren bereits vorhanden. ')+
    'Nicht automatisch ausgeführt – mit ▶ Ausführen prüfen.');
   toast('✅ '+selected.length+' Datei(en) im Code-Editor geöffnet.');
  }catch(e){console.error(e);status('Direkte Übernahme fehlgeschlagen: '+(e?.message||String(e)),true)}
