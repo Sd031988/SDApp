@@ -27,6 +27,8 @@ export class PiboCare {
     g.position.set(1.45,.62,1.25);return g
   }
   stop(){
+    // Foam is attached to Pibo, so dispose it separately from room props.
+    if(this.active?.foam){const foam=this.active.foam;this.cat.remove(foam);foam.traverse(n=>{n.geometry?.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material?.dispose()})}
     while(this.props.children.length){
       const o=this.props.children[0];this.props.remove(o);
       o.traverse(n=>{n.geometry?.dispose();if(Array.isArray(n.material))n.material.forEach(m=>m.dispose());else n.material?.dispose()})
@@ -37,14 +39,27 @@ export class PiboCare {
   }
   start(type,index=0,now=performance.now(),options={}){
     this.stop();const duration=type==='sleep'?9000:type==='toilet'?7500:type==='wash'?20000:type==='feed'&&options.direct?2700:7000;
-    const i=this.active={type,start:now,duration,phase:-1,lastSound:now,food:null,blanket:null,water:null,direct:!!options.direct,scrubs:0,rinsed:false,dried:false};
+    const i=this.active={type,start:now,duration,phase:-1,lastSound:now,food:null,blanket:null,water:null,direct:!!options.direct,scrubs:0,rinsed:false,dried:false,foam:null,sprayUntil:0};
     if(type==='feed'){i.food=this.food(index);if(i.direct)i.food.position.set(.68,1.55,.94)}
     if(type==='wash'){
       for(let n=0;n<20;n++){const b=this.orb(0xe2faff,-3.2+(n%5)*.33,.95+Math.floor(n/5)*.18,-1.3,.075+(n%3)*.025,.075+(n%3)*.025,.075+(n%3)*.025);b.userData.bubble=n}
       const sponge=this.box(0xf8d16b,-1.8,1.35,-1.1,.3,.16,.25);sponge.userData.sponge=true;
+      // Original foam patches follow the moving 3D torso instead of floating in the room.
+      i.foam=new this.THREE.Group();this.cat.add(i.foam);
+      for(let n=0;n<12;n++){
+        const x=(n%4-1.5)*.19,y=.95+Math.floor(n/4)*.22,z=.65-.04*(n%3);
+        const patch=this.orb(0xe7f9ff,x,y,z,.09,.075,.07,i.foam);
+        patch.userData.foamPatch=n;patch.visible=false
+      }
       // Real scene tools: drag the shower head or towel onto Pibo's 3D body.
       const shower=this.mesh(new this.THREE.CylinderGeometry(.16,.16,.38,16),0x4c9ed4,-1.45,2.18,-.35);
       shower.rotation.z=-.6;shower.userData.piboCareTool='rinse';shower.visible=false;
+      this.mesh(new this.THREE.CylinderGeometry(.22,.18,.09,16),0xb9e4f5,0,-.23,0,shower);
+      // Reusable animated droplets move together with the hand-held shower.
+      for(let n=0;n<9;n++){
+        const drop=this.orb(0x72d5f9,(n%3-1)*.10,-.34-Math.floor(n/3)*.16,.08,.032,.085,.032,shower);
+        drop.userData.sprayDrop=n;drop.visible=false
+      }
       const towel=this.box(0xffc7d8,-1.5,1.5,-.35,.85,.5,.1);
       towel.userData.piboCareTool='dry';towel.visible=false
     }
@@ -63,6 +78,7 @@ export class PiboCare {
     for(const b of this.props.children){
       if(b.userData?.bubble!==undefined)b.scale.setScalar((.075+(b.userData.bubble%3)*.025)*(1+.15*Math.sin(i.scrubs+b.userData.bubble)));
     }
+    if(i.foam)for(const patch of i.foam.children)patch.visible=patch.userData.foamPatch<i.scrubs*2;
     if(i.scrubs>=3){const shower=this.props.children.find(o=>o.userData?.piboCareTool==='rinse');if(shower)shower.visible=true}
     if(i.scrubs%3===0)this.sound('splash');
     this.onStatus(true,'Einseifen: '+Math.min(6,i.scrubs)+'/6',Math.min(1,i.scrubs/6));
@@ -72,6 +88,7 @@ export class PiboCare {
     const i=this.active;
     if(i?.type!=='wash'||i.scrubs<3||i.rinsed)return false;
     i.rinsed=true;
+    if(i.foam)for(const patch of i.foam.children)patch.visible=false;
     const shower=this.props.children.find(o=>o.userData?.piboCareTool==='rinse');if(shower)shower.visible=false;
     const towel=this.props.children.find(o=>o.userData?.piboCareTool==='dry');if(towel)towel.visible=true;
     for(const bubble of this.props.children)if(bubble.userData?.bubble!==undefined)bubble.visible=false;
@@ -102,6 +119,10 @@ export class PiboCare {
     if(!tool)return false;
     tool.position.x=Math.max(-4,Math.min(4,point.x));
     tool.position.y=Math.max(.5,Math.min(3,point.y));
+    if(type==='rinse'){
+      this.active.sprayUntil=performance.now()+300;
+      for(const drop of tool.children)if(drop.userData?.sprayDrop!==undefined)drop.visible=true
+    }
     return true
   }
   flush(){
@@ -163,6 +184,17 @@ export class PiboCare {
       }
     }
     if(i.type==='wash'){
+      if(i.foam)for(const patch of i.foam.children){
+        const n=patch.userData.foamPatch;
+        patch.position.y=.95+Math.floor(n/4)*.22+.025*Math.sin(t*3+n)
+      }
+      const shower=this.props.children.find(o=>o.userData?.piboCareTool==='rinse');
+      if(shower)for(const drop of shower.children){
+        const n=drop.userData?.sprayDrop;if(n===undefined)continue;
+        drop.visible=!i.rinsed&&now<i.sprayUntil;
+        drop.position.x=(n%3-1)*.10+.035*Math.sin(t*9+n);
+        drop.position.y=-.34-((t*3+n*.17)%.65)
+      }
       if(i.dried&&p>.97){this.stop();return}
       const inside=smooth((p-.22)/.16)*(1-smooth((p-.79)/.12));
       this.cat.position.y=.15*inside;this.cat.scale.setScalar(1-.26*inside);
