@@ -28,7 +28,7 @@ export function runPiboSmoke(html,careSource){
  if(!js)throw Error('No game script found');
  const launch=new Function('THREE','PiboAudio','PiboCare','window','document','localStorage','performance','navigator','requestAnimationFrame','ResizeObserver','devicePixelRatio','setTimeout','clearTimeout',js);
  launch(THREE,PiboAudio,PiboCare,win,document,localStorage,performance,navigator,requestAnimationFrame,ResizeObserver,1,setTimeout,clearTimeout);
- const click=(key,val)=>{const b=groups[key]?.find(x=>x.dataset[key]===val)||get(val);if(!b?.handlers?.click)throw Error('Missing click '+key+':'+val);b.click()};
+ const click=(key,val)=>{const b=groups[key]?.find(x=>x.dataset[key]===val)||get(val===undefined?key:val);if(!b?.handlers?.click)throw Error('Missing click '+key+':'+val);b.click()};
  const frame=(n=1)=>{for(let i=0;i<n;i++){now+=150;const cb=frames.shift();if(!cb)throw Error('No animation frame');cb()}};
  for(const room of ['living','kitchen','bedroom','bathroom','toilet']){click('room',room);frame()}
  click('food','3');click('act','feed');frame(50);
