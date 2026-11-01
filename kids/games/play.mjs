@@ -98,6 +98,12 @@ function perform(kind,payload){
    else if(g.keys.length>before.keys)cue='key';
    else if(g.found.length>before.found)cue='treasure';
   }
+  if(id==='pet'&&(kind==='choose'||kind==='pet')){
+   cue=['dog',kind==='pet'?'purr':'meow','bunny','fox'][g.selected]||'pet';
+  }
+  if(id==='city'&&kind==='task'&&g.done.length===before.done.length){
+   cue={fire:'siren',health:'heartbeat',mail:'parcel',school:'bell'}[g.job]||'task';
+  }
   if(id==='kart'&&g.laps>before.laps)cue='lap';
   if(id==='city'&&g.done.length>before.done.length)cue='finish';
   if(id==='learn'&&result.message.startsWith('💡'))cue='wrong';
