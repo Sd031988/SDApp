@@ -6,6 +6,8 @@ on:
       - 'agent/app-*.enc'
       - 'agent/pc-agent/*.enc'
       - 'tools/agent_zugang.cjs'
+      - 'tools/pc_studio_sync.py'
+      - 'studio/**'
       - 'tests/agent/**'
       - '.github/workflows/agent-release-check.yml'
   pull_request:
@@ -14,6 +16,8 @@ on:
       - 'agent/app-*.enc'
       - 'agent/pc-agent/*.enc'
       - 'tools/agent_zugang.cjs'
+      - 'tools/pc_studio_sync.py'
+      - 'studio/**'
       - 'tests/agent/**'
       - '.github/workflows/agent-release-check.yml'
   workflow_dispatch:
@@ -31,3 +35,7 @@ jobs:
         run: |
           node --check tools/agent_zugang.cjs
           node --test tests/agent/*.test.cjs
+      - name: PC-Studio Synchronisierung sicher prüfen
+        run: |
+          python3 -m py_compile tools/pc_studio_sync.py
+          python3 -m unittest discover -s tests/agent -p 'test_pc_studio_sync.py' -v
