@@ -10,6 +10,7 @@ const rewards=readFileSync(join(dir,'pibo-rewards.mjs'),'utf8');
 const face=readFileSync(join(dir,'pibo-face.mjs'),'utf8');
 const motion=readFileSync(join(dir,'pibo-motion.mjs'),'utf8');
 const voice=readFileSync(join(dir,'pibo-voice.mjs'),'utf8');
-const result=runPiboSmoke(html,care,rewards,face,motion,voice);
+const character=readFileSync(join(dir,'pibo-character.mjs'),'utf8');
+const result=runPiboSmoke(html,care,rewards,face,motion,voice,character);
 console.log(JSON.stringify(result,null,2));
 if(result.status!=='PASS')process.exitCode=1;
