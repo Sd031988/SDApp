@@ -14,9 +14,9 @@ assert(css.includes('.actions button[hidden]'),'Inactive action groups should no
 assert(css.includes('height:clamp(240px,43dvh,410px)'),'Mobile stage must have a bounded height');
 const actions=[...html.matchAll(/<button\b([^>]*)>/g)]
  .map(m=>({act:m[1].match(/\bdata-act="([^"]+)"/)?.[1],id:m[1].match(/\bid="([^"]+)"/)?.[1]}))
- .filter(b=>b.act||['scrub','foodchoice','potty','flush','sound','catVoice','talk','surprise','minigame','mousegame','decorate','outfit','photo'].includes(b.id));
+ .filter(b=>b.act||['scrub','rinse','dry','lamp','foodchoice','potty','flush','sound','catVoice','talk','surprise','minigame','mousegame','decorate','outfit','photo'].includes(b.id));
 const grouped={
- care:['pet','feed','sleep','wash','scrub','foodchoice','potty','flush'],
+ care:['pet','feed','sleep','wash','scrub','rinse','dry','lamp','foodchoice','potty','flush'],
  games:['play','minigame','mousegame'],
  style:['outfit','decorate','photo'],
  extras:['sound','catVoice','talk','surprise']
