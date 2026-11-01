@@ -485,6 +485,77 @@ const assert = require('node:assert/strict');
     assert.match(await page.locator('#palListe').innerText(),/Google KI ohne Konto/);
     await page.keyboard.press('Escape');
 
+    // AI comparison: side-by-side old/new code, with no writes until explicitly confirmed.
+    await page.setViewportSize({width:1280,height:900});
+    await page.locator('#kiCodeBtn').click();
+    const beforeDiff=await page.evaluate(()=>({html:S.p.dateien['index.html'],versionCount:S.p.versionen.length}));
+    await page.locator('#kiResult').fill('### Datei: index.html\n'+ticks+'html\n<!doctype html><title>Vergleich</title><h1>Vorschau statt Speichern</h1>\n'+ticks);
+    await page.locator('#kiAnalyse').click();
+    await page.locator('#kiFiles .kiDiffShow').click();
+    assert.equal(await page.locator('#kiDiff').isVisible(),true,'Code comparison dialog should open');
+    assert.match(await page.locator('#kiDiffOld').innerText(),/Geändert vom Assistenten/);
+    assert.match(await page.locator('#kiDiffNew').innerText(),/Vorschau statt Speichern/);
+    assert.equal((await page.evaluate(()=>S.p.dateien['index.html'])),beforeDiff.html,'Comparison must never modify code');
+    await page.locator('#kiDiffClose').click();
+    assert.equal(await page.locator('#kiDiff').isVisible(),false);
+    await page.locator('#kiClose').click();
+    assert.equal((await page.evaluate(()=>S.p.versionen.length)),beforeDiff.versionCount,'Comparison must not create backups');
+
+    // Visual text mode: double-click real rendered text and save with a version snapshot.
+    await page.evaluate(async ()=>{
+      S.p.dateien['js/app.js']='console.log("visual test");';
+      delete S.docs['js/app.js'];
+      await projSchreiben(S.p);
+      dateiOeffnen('index.html');
+    });
+    page.once('dialog',d=>d.accept());
+    await page.locator('#starten').click();
+    await page.locator('#vorschau').waitFor({state:'visible',timeout:12000});
+    const visualBefore=await page.evaluate(()=>({source:S.p.dateien['index.html'],versions:S.p.versionen.length}));
+    await page.locator('#visTextBtn').click();
+    await page.frameLocator('#frame').locator('#direkt').waitFor({state:'visible',timeout:12000});
+    page.once('dialog',d=>d.accept('Visuell erfolgreich geändert'));
+    await page.frameLocator('#frame').locator('#direkt').dblclick();
+    await page.waitForFunction(()=>S.p.dateien['index.html'].includes('Visuell erfolgreich geändert'),{timeout:12000});
+    const visualAfter=await page.evaluate(()=>({
+      source:S.p.dateien['index.html'],versions:S.p.versionen.length,
+      saved:S.p.versionen[0]?.dateien['index.html'],
+      sandbox:document.querySelector('#frame').getAttribute('sandbox')
+    }));
+    assert.equal(visualAfter.saved,visualBefore.source,'Visual edits need a rollback snapshot');
+    assert.equal(visualAfter.versions,visualBefore.versions+1);
+    assert(!visualAfter.sandbox.includes('allow-same-origin'),'Text editor must use an isolated iframe');
+    await page.locator('#visTextBtn').click();
+
+    // Native module import preview must work for local dependencies without a bundler.
+    await page.evaluate(async ()=>{
+      S.p.dateien['index.html']='<!doctype html><html><body><h1 id="moduleReady">Module</h1><script type="module" src="js/module-entry.mjs"></script></body></html>';
+      S.p.dateien['js/module-entry.mjs']='import {answer} from "./module-helper.mjs"; document.body.dataset.answer=answer;';
+      S.p.dateien['js/module-helper.mjs']='export const answer=42;';
+      delete S.docs['index.html'];
+      await projSchreiben(S.p);
+      dateiOeffnen('index.html');
+    });
+    page.once('dialog',d=>d.accept());
+    await page.locator('#starten').click();
+    await page.frameLocator('#frame').locator('#moduleReady').waitFor({state:'visible',timeout:12000});
+    await page.waitForFunction(()=>{
+      const frame=document.querySelector('#frame');
+      try{return !!frame&&frame.contentDocument?.body.dataset.answer==='42'}catch(_){return false}
+    },{timeout:3000}).catch(()=>{});
+    // Opaque-origin sandbox cannot be inspected from the Studio parent.
+    await page.frameLocator('#frame').locator('body[data-answer="42"]').waitFor({state:'visible',timeout:12000});
+    assert.equal(await page.frameLocator('#frame').locator('body').getAttribute('data-answer'),'42');
+
+    // Publication preflight must refuse broken links and private key files.
+    const report=await page.evaluate(()=>qualitaetBericht({
+      'index.html':'<script src="missing.js"></script>',
+      '.env':'API_KEY=private',
+      'secret.pem':'-----BEGIN PRIVATE KEY-----'
+    }));
+    assert(report.fails.some(x=>x.kind==='asset'));
+    assert(report.fails.some(x=>x.kind==='secret'));
+
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
     if(browser) await browser.close();
