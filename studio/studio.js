@@ -388,14 +388,31 @@ async function loeschen(pfad, istOrdner) {
   betroffen.forEach(k => { delete S.p.dateien[k]; if (S.tabs.includes(k)) tabZu(k); });
   await projSchreiben(S.p); baum(); ausgabe('🗑 Gelöscht: ' + pfad + ' (in 🕘 Versionen wiederherstellbar)');
 }
+function projektStartdateiFinden(dateien) {
+ const pfade=Object.keys(dateien);
+ const prioritaet=['index.html','public/index.html','dist/index.html','build/index.html','src/index.html','main.py','app.py','server.py','main.js','app.js','index.js','src/main.ts','src/main.js','src/App.tsx','src/App.jsx','main.go','Main.java'];
+ for(const p of prioritaet)if(Object.prototype.hasOwnProperty.call(dateien,p))return p;
+ const html=pfade.find(p=>/(^|\/)index\.html?$/i.test(p))||pfade.find(p=>/\.html?$/i.test(p));
+ if(html)return html;
+ const pkg=(()=>{try{return JSON.parse(dateien['package.json']||'{}')}catch{return {}}})();
+ for(const p of [pkg.main,pkg.module].filter(x=>typeof x==='string'))if(Object.prototype.hasOwnProperty.call(dateien,p))return p;
+ return pfade.find(p=>/(^|\/)(main|app|index|server)\.(py|js|ts|go|java|rs|php|cpp|cs)$/i.test(p))||
+ pfade.find(p=>/\.(py|js|ts|go|java|rs|php|cpp|cs)$/i.test(p))||'';
+}
+function projektImportBericht(analyse) {
+ return ['📋 Automatische Projektanalyse','Dateien: '+analyse.pfade.length,'Sprache: '+analyse.sprache,
+ 'Framework: '+(analyse.framework?.name||'Nicht erkannt'),
+ 'Startdatei: '+(analyse.start||'Nicht gefunden'),
+ 'Hinweis: HTML-Webseiten erhalten eine direkte Vorschau. Frameworks mit Build-Schritt benötigen eine passende Build-Umgebung.',
+ '',...analyse.hinweise].join('\n');
+}
+
 function zipProjektAnalyse(dateien) {
   const pfade = Object.keys(dateien).sort();
   const framework = frameworkErkennen(dateien);
   const pruefung = projektPruefen(dateien);
   const pkg = (() => { try { return JSON.parse(dateien['package.json'] || '{}'); } catch (e) { return {}; } })();
-  const start = pfade.includes('index.html') ? 'index.html' :
-    pfade.find(p => /(^|\/)index\.html?$/i.test(p)) ||
-    pfade.find(p => /\.html?$/i.test(p)) || '';
+  const start = projektStartdateiFinden(dateien);
   const sprache = pfade.some(p => /\.(ts|tsx)$/i.test(p)) ? 'TypeScript' :
     pfade.some(p => /\.(jsx|js|mjs)$/i.test(p)) ? 'JavaScript' :
     pfade.some(p => /\.py$/i.test(p)) ? 'Python' :
@@ -447,7 +464,7 @@ async function hochladen(dateien) {
       if (S.p && S.geaendert) await speichernJetzt();
       await projSchreiben({ name, dateien: dateienNeu, haupt: analyse.start, versionen: [], erstellt: Date.now() });
       await projektOeffnen(name);
-      ausgabe('⬆ ZIP importiert: ' + n + ' Dateien. ' + (analyse.framework ? 'Framework: ' + analyse.framework.name + '. ' : '') + (analyse.start ? 'Startdatei: ' + analyse.start + '. ' : '') + 'Originalprojekt bleibt erhalten.');
+      ausgabe('⬆ ZIP importiert: ' + n + ' Dateien. Originalprojekt bleibt erhalten.\n\n' + projektImportBericht(analyse));
     } catch (err) { console.error(err); toast('ZIP-Import fehlgeschlagen.'); }
     return;
   }
@@ -1494,7 +1511,7 @@ async function einfuegenDateienImportieren(dateien,istOrdner=false) {
  if(S.p&&S.geaendert)await speichernJetzt();
  await projSchreiben({name,dateien:neu,haupt:analyse.start||analyse.pfade[0],versionen:[],erstellt:Date.now()});
  await projektOeffnen(name);
- ausgabe('📦 Import abgeschlossen: '+analyse.pfade.length+' Dateien. '+analyse.hinweise.join('\n'));
+ ausgabe('📦 Import abgeschlossen.\n\n'+projektImportBericht(analyse));
  if(typeof ansicht==='function')ansicht('code');
 }
 
