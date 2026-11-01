@@ -7,6 +7,7 @@ on:
       - 'agent/pc-agent/*.enc'
       - 'tools/agent_zugang.cjs'
       - 'tools/pc_studio_sync.py'
+      - 'tools/agent_pc_update.cjs'
       - 'studio/**'
       - 'tests/agent/**'
       - '.github/workflows/agent-release-check.yml'
@@ -17,6 +18,7 @@ on:
       - 'agent/pc-agent/*.enc'
       - 'tools/agent_zugang.cjs'
       - 'tools/pc_studio_sync.py'
+      - 'tools/agent_pc_update.cjs'
       - 'studio/**'
       - 'tests/agent/**'
       - '.github/workflows/agent-release-check.yml'
@@ -34,6 +36,7 @@ jobs:
       - name: Verschlüsselte Web- und PC-Versionen vergleichen
         run: |
           node --check tools/agent_zugang.cjs
+          node --check tools/agent_pc_update.cjs
           node --test tests/agent/*.test.cjs
       - name: PC-Studio Synchronisierung sicher prüfen
         run: |
