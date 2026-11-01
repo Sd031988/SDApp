@@ -29,7 +29,7 @@ const themes=[
  ['Reise','Der Reiseveranstalter empfiehlt, zwei Stunden vor Abflug am Flughafen zu sein. Der Check-in erfolgt in Halle B.','Wo ist der Check-in?','In Halle B','In Halle A','Am Bahnhof'],
  ['Apotheke','Die Apotheke am Markt übernimmt heute den Notdienst. Sie ist deshalb auch nach 20 Uhr geöffnet.','Warum ist die Apotheke länger geöffnet?','Wegen des Notdienstes','Wegen eines Festes','Wegen einer Schulung'],
  ['Park','Hunde dürfen auf der Hundewiese frei laufen. Auf den übrigen Wegen müssen sie angeleint bleiben.','Wo dürfen Hunde ohne Leine laufen?','Auf der Hundewiese','Auf allen Wegen','Auf dem Spielplatz'],
- ['Musikschule','Das Konzert der Musikschule beginnt am Freitag um 19 Uhr. Der Eintritt ist frei, die Plätze sind begrenzt.','Wie viel kostet der Eintritt?','Nichts','Fünf Euro','Zehn Euro'],
+ ['Musikschule','Das Konzert der Musikschule beginnt am Freitag um 19 Uhr. Der Eintritt ist frei, die Plätze sind begrenzt.','Wie viel kostet der Eintritt?','Nichts','Fünf Euro für das Konzert','Zehn Euro für das Stadtfest'],
  ['Onlinekurs','Die Sprachschule bietet ab April einen Onlinekurs an. Unterricht ist dienstags und donnerstags am Abend.','An welchen Tagen findet der Unterricht statt?','Dienstag und Donnerstag','Montag und Mittwoch','Samstag und Sonntag'],
  ['Strom','Wegen Wartungsarbeiten wird am Mittwoch zwischen neun und elf Uhr der Strom unterbrochen.','Warum gibt es keinen Strom?','Wegen Wartungsarbeiten','Wegen eines Unwetters','Wegen eines Umzugs'],
  ['Garten','Der Gemeinschaftsgarten sucht freiwillige Helfer. Die Gruppe trifft sich jeden Samstagvormittag am Eingang.','Wann trifft sich die Gruppe?','Samstagvormittag','Montagabend','Freitagnacht'],
@@ -352,16 +352,16 @@ const listeningPrompts=[
  ['Wann ist die Versammlung?','Wo findet sie statt?','Was können Abwesende tun?']
 ];
 const listeningAnswers=[
- [['Eine Zugänderung','Ein neues Restaurant','Eine Schulprüfung'],['Das Gleis','Der Ticketpreis','Der Bahnhof'],['Die Anzeigen am Bahnsteig','Die Speisekarte','Den Wetterbericht']],
- [['Am 14. April','Am 14. Mai','Am 4. April'],['Montags und mittwochs','Dienstags und donnerstags','Nur samstags'],['Ausweis und Stift','Laptop und Kopfhörer','Sportkleidung']],
- [['Um halb elf','Um neun','Um zwölf'],['Im zweiten Stock','Im Erdgeschoss','Am Bahnhof'],['Aktuelle Unterlagen','Einen Kuchen','Seinen Reisepass']],
- [['In der Stadthalle','Im Park','Auf dem Marktplatz'],['Um elf Uhr','Um acht Uhr','Um 19 Uhr'],['Nichts','Fünf Euro','Zehn Euro']],
- [['Freitag um 10:15 Uhr','Donnerstag um 10:15 Uhr','Freitag um 15 Uhr'],['Telefonisch bestätigen','Persönlich vorbeikommen','Eine Rechnung bezahlen'],['Eine Arztpraxis','Eine Schule','Ein Geschäft']],
- [['Morgen um 17 Uhr','Heute um 17 Uhr','Morgen um 19 Uhr'],['Am Hauseingang','In der Küche','An der Bushaltestelle'],['Nein, zunächst keine Unterlagen','Ja, eine Gehaltsabrechnung','Ja, ein Passfoto']],
- [['Um 19 Uhr','Um 17 Uhr','Um 20 Uhr'],['In der Aula','Im Park','In der Mensa'],['Um eine Klassenfahrt','Um einen Umzug','Um ein Sportfest']],
- [['Winterjacken','Schuhe','Schulbücher'],['Zwanzig Prozent','Zehn Prozent','Dreißig Prozent'],['Im Erdgeschoss','Im ersten Stock','Online']],
- [['Am Bahnhof','Am Rathaus','Im Museum'],['Getränk und Regenjacke','Fahrrad und Helm','Laptop und Heft'],['Sie gehen ins Museum','Sie bleiben im Bahnhof','Sie fahren ans Meer']],
- [['Am Freitag','Am Montag','Am Mittwoch'],['Im Gemeinschaftshaus','Im Rathaus','In der Schule'],['Vorschläge per E-Mail schicken','Nur telefonisch abstimmen','Nichts mitteilen']]
+ [['Eine Zugänderung','Eine Änderung des Fahrpreises','Eine Sperrung des Bahnhofs'],['Das Gleis','Der Ticketpreis','Der Bahnhof'],['Die Anzeigen am Bahnsteig','Die Fahrkartenautomaten','Den Zugfahrplan von morgen']],
+ [['Am 14. April','Am 14. Mai','Am 4. April'],['Montags und mittwochs','Dienstags und donnerstags','Nur samstags'],['Ausweis und Stift','Ausweis und Kursbuch','Stift und Teilnahmebescheinigung']],
+ [['Um halb elf','Um neun','Um zwölf'],['Im zweiten Stock','Im Erdgeschoss','Am Bahnhof'],['Aktuelle Unterlagen','Die alten Unterlagen','Den Vertrag vom letzten Jahr']],
+ [['In der Stadthalle','Im Park beim Kinderprogramm','Auf dem Marktplatz'],['Um elf Uhr','Um acht Uhr','Um 19 Uhr'],['Nichts','Fünf Euro','Zehn Euro']],
+ [['Freitag um 10:15 Uhr','Donnerstag um 10:15 Uhr','Freitag um 15 Uhr'],['Telefonisch bestätigen','Den alten Termin bestätigen','Bis Freitag auf einen Rückruf warten'],['Eine Arztpraxis','Die Patientin selbst','Die Krankenkasse']],
+ [['Morgen um 17 Uhr','Heute um 17 Uhr','Morgen um 19 Uhr'],['Am Hauseingang','Vor der Wohnung im dritten Stock','Am Eingang des Nachbarhauses'],['Nein, zunächst keine Unterlagen','Ja, eine Gehaltsabrechnung','Ja, ein Passfoto']],
+ [['Um 19 Uhr','Um 17 Uhr','Um 20 Uhr'],['In der Aula','Im Klassenzimmer','Im Sekretariat'],['Um eine Klassenfahrt','Um die Kosten eines Schulfests','Um die Zeugnisse der Klasse']],
+ [['Winterjacken','Alle Winterkleidungsstücke','Nur Wintermäntel'],['Zwanzig Prozent','Zehn Prozent','Fünfundzwanzig Prozent'],['Im Erdgeschoss','An jeder Kasse im Kaufhaus','Nur an der Information']],
+ [['Am Bahnhof','An der Bushaltestelle beim Rathaus','Direkt am Wanderweg'],['Getränk und Regenjacke','Getränk und Wanderschuhe','Regenschirm und Fahrradhelm'],['Sie gehen ins Museum','Sie verschieben die Wanderung auf Montag','Sie gehen trotzdem wandern']],
+ [['Am Freitag','Am Montag','Am Mittwoch'],['Im Gemeinschaftshaus','Im Vereinsbüro','In der Sporthalle'],['Vorschläge per E-Mail schicken','Ihre Vorschläge erst am Freitag abgeben','Einen Vertreter zur Versammlung schicken']]
 ];
 const grammarLetters=[
  ['E-Mail an einen Sprachkurs','Guten Tag,\\n\\nich interessiere mich sehr [1] Ihren Deutschkurs. Ich habe Ihre Anzeige gestern [2] Internet gelesen. Da ich tagsüber arbeite, suche ich einen Kurs, [3] am Abend stattfindet. Können Sie mir bitte sagen, [4] der nächste Kurs beginnt? Außerdem möchte ich wissen, [5] die Anmeldung online möglich ist. Ich lerne seit [6] Jahr Deutsch und möchte meine Kenntnisse verbessern. Besonders wichtig ist mir, [7] ich mehr sprechen kann. Falls noch Plätze frei [8], würde ich mich gern anmelden. Bitte schicken Sie mir die Informationen [9] E-Mail. Vielen Dank [10] Ihre Hilfe.\\n\\nMit freundlichen Grüßen\\nSamira Kaya',[
