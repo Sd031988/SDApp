@@ -362,7 +362,40 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#kiResult').inputValue(),'','No automatic AI code injected');
     await page.locator('#kiClose').click();
 
-    assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
+    // Runtime diagnostics must travel from the isolated srcdoc iframe back to the Studio.
+    await page.setViewportSize({width:1280,height:900});
+    await page.evaluate(async () => {
+      const source = 'console.log("BRIDGE_KONSOLE_OK");\nconsole.error("BRIDGE_FEHLER_KONSOLE");\nthrow new Error("KONTROLLIERTER_TESTLAUFZEITFEHLER");';
+      S.p.dateien['js/app.js'] = source;
+      delete S.docs['js/app.js'];
+      await projSchreiben(S.p);
+      dateiOeffnen('index.html');
+    });
+    page.once('dialog', dialog=>dialog.accept());
+    await page.locator('#starten').click();
+    await page.waitForFunction(() =>
+      S.problemeVorschau.some(p => p.text.includes('KONTROLLIERTER_TESTLAUFZEITFEHLER')),
+      {timeout:12000});
+    const bridgeResult=await page.evaluate(() => ({
+      sandbox:document.querySelector('#frame').getAttribute('sandbox'),
+      frameSrc:document.querySelector('#frame').getAttribute('src'),
+      log:S.konsole.some(m=>m.text.includes('BRIDGE_KONSOLE_OK')),
+      errorLog:S.konsole.some(m=>m.text.includes('BRIDGE_FEHLER_KONSOLE')),
+      runtime:S.problemeVorschau.find(p=>p.text.includes('KONTROLLIERTER_TESTLAUFZEITFEHLER')),
+      diagnosticsVisible:document.querySelector('#problemListe').textContent.includes('KONTROLLIERTER_TESTLAUFZEITFEHLER')
+    }));
+    assert.equal(bridgeResult.frameSrc,null,'The AI preview must not navigate to GitHub Pages');
+    assert(!bridgeResult.sandbox.includes('allow-same-origin'),'Sandboxed source code never receives Studio origin');
+    assert.equal(bridgeResult.log,true,'Console output arrives in Studio');
+    assert.equal(bridgeResult.errorLog,true,'console.error arrives in Studio');
+    assert.equal(bridgeResult.diagnosticsVisible,true,'Uncaught errors are shown in the diagnosis panel');
+    assert.equal(bridgeResult.runtime.datei,'js/app.js','Diagnostics should identify the imported JS file');
+    assert(bridgeResult.runtime.zeile>=1,'Diagnostics should identify a line number');
+    // Uncaught exception is intentionally created by this smoke test.
+    const unexpectedErrors=errors.filter(e=>!e.includes('KONTROLLIERTER_TESTLAUFZEITFEHLER'));
+    assert.equal(unexpectedErrors.length,0,'Unexpected browser errors: '+unexpectedErrors.join(' | '));
+
+
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
     if(browser) await browser.close();
