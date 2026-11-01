@@ -144,3 +144,56 @@ test('The eight SD Kids mini-games remain playable offline after first installat
   await expect(page.locator('#message')).toContainText('Lecker');
  }finally{await context.setOffline(false)}
 });
+
+
+test('Mini-game sound makes actual Web Audio notes and saves the chosen volume',async({page})=>{
+ await page.addInitScript(()=>{
+  window.__audioVoices=0;
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(C){
+   const original=C.prototype.createOscillator;
+   C.prototype.createOscillator=function(...args){
+    const osc=original.apply(this,args),start=osc.start;
+    osc.start=function(...params){window.__audioVoices++;return start.apply(this,params)};
+    return osc;
+   };
+  }
+ });
+ await page.goto('/kids/games/play.html?game=garden');
+ await expect.poll(()=>page.evaluate(()=>window.__sdMiniReady?.id)).toBe('garden');
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+ expect(await page.evaluate(()=>window.__audioVoices)).toBe(0);
+ await page.locator('#sound').click();
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await expect.poll(()=>page.evaluate(()=>window.__audioVoices)).toBeGreaterThan(0);
+ const count=await page.evaluate(()=>window.__audioVoices);
+ await page.locator('#volume').fill('35');
+ await page.locator('#volume').dispatchEvent('input');
+ await page.getByRole('button',{name:/Samen pflanzen/}).click();
+ await page.locator('#actions [aria-label^="Beet 1"]').click();
+ await expect.poll(()=>page.evaluate(()=>window.__audioVoices)).toBeGreaterThan(count);
+ await expect(page.locator('#message')).toContainText('Samen gepflanzt');
+ await page.reload();
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#volume')).toHaveValue('35');
+});
+
+test('Pibo and BlockWorld reuse SD Kids sound level and provide original action cues',async({page})=>{
+ await page.goto('/kids/games/play.html?game=fashion');
+ await page.locator('#sound').click();
+ await page.locator('#volume').fill('50');
+ await page.locator('#volume').dispatchEvent('input');
+ await page.goto('/kids/blockworld/');
+ await expect.poll(()=>page.evaluate(()=>window.__blockWorldReady||false),{timeout:30000}).toBe(true);
+ await expect(page.locator('#worldSound')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#worldVolume')).toHaveValue('50');
+ await page.locator('[data-travel="build"]').click();
+ await page.locator('#place').click();
+ await expect(page.locator('#builds')).toHaveText('1');
+ await page.goto('/kids/');
+ await expect(page.locator('#fallback')).toHaveCount(0,{timeout:30000});
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('#piboVolume')).toHaveValue('50');
+ await page.locator('[data-act="pet"]').click();
+ await expect(page.locator('#say')).toContainText('Prrrr');
+});
