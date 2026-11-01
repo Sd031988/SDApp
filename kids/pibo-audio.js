@@ -5,16 +5,19 @@ export class PiboAudio {
   constructor(){
     this.ctx=null;this.master=null;this.noiseBuffer=null;this.volume=.65;
     this.realCatClips={
-      meow:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maullido_de_gata_hembra_joven.ogg',
+      meow:['https://commons.wikimedia.org/wiki/Special:Redirect/file/Maullido_de_gata_hembra_joven.ogg',
+        'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maullido_de_gata_hembra.ogg'],
       purr:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Whiskers%27_purr.ogg'
     };
-    this.realVoice=null;
+    this.realVoice=null;this.meowTurn=0;
   }
   playRecording(type){
     if(!this.realCatClips[type]||typeof window==='undefined'||typeof window.Audio!=='function')return false;
     try{
       if(this.realVoice){this.realVoice.pause();this.realVoice=null}
-      const voice=new window.Audio(this.realCatClips[type]);
+      const candidates=this.realCatClips[type];
+      const url=Array.isArray(candidates)?candidates[this.meowTurn++%candidates.length]:candidates;
+      const voice=new window.Audio(url);
       voice.preload='none';
       voice.volume=Math.min(1,Math.max(0,this.volume*.9));
       this.realVoice=voice;
