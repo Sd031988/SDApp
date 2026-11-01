@@ -76,3 +76,10 @@
 .kiDiffColumns pre{margin:0;padding:10px;white-space:pre;overflow:auto;max-height:380px;max-width:100%;border:1px solid #4c426d;border-radius:8px;background:#100e21;color:#e9e3f5;font:11px/1.55 ui-monospace,monospace;tab-size:2}
 .onVorpruefung{border:1px solid #675e7d;border-radius:9px;padding:8px;white-space:pre-wrap;font-size:12px;line-height:1.5}
 @media(max-width:800px){.kiDiffColumns{grid-template-columns:1fr}.kiDiffColumns pre{max-height:220px}.kiFile{flex-wrap:wrap}.kiFile .kiFileName{flex:1 1 55%}}
+
+/* Optional ChatGPT/Gemini selection hand-off: never sends any login data. */
+.kiBridgeHint{display:grid;gap:6px;background:#203b3a;border:1px solid #539c84;border-radius:11px;padding:10px 13px}
+.kiBridgeHint strong{font-size:13px;color:#cbf9dc}
+.kiBridgeHint p{font-size:12px;color:#d6f3e5;margin:0}
+.kiBridgeHint a{color:#9efcd2;font-size:12px;font-weight:750;text-decoration:underline}
+.kiBridgeHint a:focus-visible{outline:2px solid #fff;outline-offset:3px}
