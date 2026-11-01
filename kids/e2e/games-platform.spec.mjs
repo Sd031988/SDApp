@@ -195,3 +195,22 @@ test('Pibo and BlockWorld reuse SD Kids sound level and provide original action 
  await page.locator('[data-act="pet"]').click();
  await expect(page.locator('#say')).toContainText('Prrrr');
 });
+
+test('Muting sound in the central games portal stays muted in every game',async({page})=>{
+ await page.goto('/kids/games/play.html?game=pet');
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+ await page.locator('#sound').click();
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
+ await page.goto('/kids/games/');
+ await expect(page.locator('#hubSound')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#hubSound').click();
+ await expect(page.locator('#hubSound')).toHaveAttribute('aria-pressed','false');
+ await page.goto('/kids/games/play.html?game=pet');
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+ await page.goto('/kids/blockworld/');
+ await expect.poll(()=>page.evaluate(()=>window.__blockWorldReady||false),{timeout:30000}).toBe(true);
+ await expect(page.locator('#worldSound')).toHaveAttribute('aria-pressed','false');
+ await page.goto('/kids/');
+ await expect(page.locator('#fallback')).toHaveCount(0,{timeout:30000});
+ await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+});
