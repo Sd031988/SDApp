@@ -47,5 +47,7 @@ jobs:
           node kids/games/rules.test.mjs
           node --check kids/games/profile.mjs
           node kids/games/profile.test.mjs
+          node --check kids/games/sw.js
+          node -e "const m=JSON.parse(require('fs').readFileSync('kids/games/manifest.webmanifest','utf8')); if(!m.name||!m.start_url) process.exit(1)"
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
