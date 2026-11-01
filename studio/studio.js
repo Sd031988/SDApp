@@ -2043,7 +2043,7 @@ function ansicht(n) { if (!istHandy()) return; const app = $('app');
   if (n === 'vorschau' && $('vorschau').hidden) { if (startSeite && S.p && startSeite()) vorschau(true); else { toast('Keine Webseite zum Anzeigen – ▶ startet Programme in der Ausgabe.'); } }
   if (n === 'ausgabe') { const sichtbar = document.querySelector('#unten [data-feld]:not([hidden])'); if (!sichtbar) unten('ausgabe'); $('haupt').classList.remove('untenZu'); }
   setTimeout(() => S.cm && S.cm.refresh(), 40); }
-function handyMehr() { const B = [['＋ Neue Datei', () => neueDatei('')], ['＋ Neues Projekt (Vorlagen)', vorlagenWaehlen], ['📋 Anleitung/Code einfügen', () => einfuegenDialog('')], ['🤖 Google KI ohne Konto ausprobieren', () => window.SDKICodingUI?.openServices()], ['✏️ Projekt mit KI ändern', () => window.SDKICodingUI?.openChangeDialog()], ['✨ KI Coding', () => window.SDKICodingUI?.openDialog()], ['🎨 Im Design-Studio gestalten', designOeffnen],
+function handyMehr() { const B = [['▶ Ausführen', ausfuehren], ['＋ Neue Datei', () => neueDatei('')], ['＋ Neues Projekt (Vorlagen)', vorlagenWaehlen], ['📋 Anleitung/Code einfügen', () => einfuegenDialog('')], ['🤖 Google KI ohne Konto ausprobieren', () => window.SDKICodingUI?.openServices()], ['✏️ Projekt mit KI ändern', () => window.SDKICodingUI?.openChangeDialog()], ['✨ KI Coding', () => window.SDKICodingUI?.openDialog()], ['🩺 Projekt prüfen', diagnoseAnzeigen], ['🎨 Im Design-Studio gestalten', designOeffnen],
   [(S.frei ? '🌐' : '🔒') + ' Online stellen', onlineDialog], ['🔍 In allen Dateien suchen', () => { ansicht('dateien'); seite('suche'); }], ['🕘 Versionen', () => { ansicht('dateien'); seite('versionen'); }], ['⚙ Einstellungen', () => { ansicht('dateien'); seite('einst'); }],
   ['✨ Code formatieren', formatieren], ['💻 Auf meinem PC ausführen', aufPcAusfuehren], ['🛡 Projekt auf Veröffentlichung prüfen', projektCheckAnzeigen], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
   palette(B.map(([l, fn]) => ({ label: l, fn })), 'Was möchtest du tun?', x => x.fn()); }
@@ -2109,7 +2109,7 @@ function verdrahten() {
   document.querySelectorAll('#untenTabs button[data-u]').forEach(b => b.onclick = () => unten(b.dataset.u)); $('untenZu').onclick = () => { $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('projektWahl').onchange = () => { const v = $('projektWahl').value; if (v === '__neu') { projektListe(); vorlagenWaehlen(); } else projektOeffnen(v); };
   $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen; $('onlineBtn').onclick = onlineDialog;
-  $('starten').onclick = ausfuehren; $('diagnoseBtn').onclick = diagnoseAnzeigen;
+  $('starten').onclick = ausfuehren; $('kopfMehr').onclick = handyMehr; $('diagnoseBtn').onclick = diagnoseAnzeigen;
   $('diagnoseErneut').onclick = diagnoseAnzeigen; $('diagnoseKI').onclick = diagnoseKIStarten;
   $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
