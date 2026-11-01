@@ -34,3 +34,5 @@ test('migration repairs already migrated progress without deleting it',async({pa
  await page.locator('[data-sdun-level="a1"]').click();
  await expect(page.locator('#sdun-progress')).toContainText('1 von 40');
 });
+
+test('level selection without a learner profile does not crash',async({page})=>{await open(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));const levelButton=page.locator('#lLvChange,#lLvBtn').filter({visible:true}).first();if(await levelButton.count()){await levelButton.click();await expect(page.locator('#lBody')).toBeAttached()}expect(errors).toEqual([])});
