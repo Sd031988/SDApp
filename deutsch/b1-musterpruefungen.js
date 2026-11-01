@@ -333,6 +333,7 @@ function timerText(seconds){
 }
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
+ if(Date.now()>=deadline){while(answers.length<list.length)answers.push(null);finish();return;}
  const count=p[3].slice(0,t.g).reduce((a,b)=>a+b,0)+1;
  const body=(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach')?
  (p[0]==='hoeren'?'<button id="b1x-audio" class="b1x-audio">🔊 Hörtext abspielen</button>':'<div class="b1x-passage">'+(p[0]==='sprach'?gapPassage(t):esc(t.passage))+'</div>')+
@@ -346,6 +347,7 @@ function question(){
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
  if(el('b1x-text'))el('b1x-text').oninput=()=>{const a=el('b1x-text').value.trim();el('b1x-count').textContent=(a?a.split(/\s+/).length:0)+' Wörter';};
  el('b1x-next').onclick=()=>{
+  if(Date.now()>=deadline){if(['schreiben','sprechen'].includes(p[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<list.length)answers.push(null);finish();return;}
   let val;
   if(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach'){
    const c=root.querySelector('input[name="b1x-answer"]:checked');
