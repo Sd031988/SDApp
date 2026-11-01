@@ -304,7 +304,8 @@ function clearCheckpoint(){try{localStorage.removeItem(checkpointKey);}catch(_){
 function resumeCheckpoint(){
  const x=getCheckpoint();if(!x)return;
  exam=x.exam;set=x.set;part=x.part;idx=x.idx;answers=x.answers;began=x.began;deadline=x.deadline;plays=x.plays||0;running=x.running;results=x.results||{};telcSharedDeadline=x.telcSharedDeadline||0;
- const tasks=items(E[exam].parts[part]);if(idx<0||idx>=tasks.length||answers.length!==idx){clearCheckpoint();home();return;}
+ const tasks=items(E[exam].parts[part]);if(idx<0||idx>tasks.length||answers.length!==idx){clearCheckpoint();home();return;}
+ if(idx===tasks.length){finish();return;}
  question();
 }
 function home(){
