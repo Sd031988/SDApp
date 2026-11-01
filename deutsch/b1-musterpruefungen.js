@@ -461,7 +461,7 @@ const grammar=[
 ];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const el=id=>document.getElementById(id);
-let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0,plays=0,telcSharedDeadline=0,pendingChoice=null;
+let exam='dtz',set=1,part=0,idx=0,answers=[],began=0,tick=null,root=null,host=null,results={},running=false,deadline=0,plays=0,telcSharedDeadline=0,pendingChoice=null,marked=[];
 const k=(n,s)=>themes[(n+s*7)%themes.length];
 function items(section){
  const [id,,minutes,groups,kinds]=section;const result=[];
@@ -562,12 +562,12 @@ function getCheckpoint(){
  try{const x=JSON.parse(localStorage.getItem(checkpointKey)||'null');return x&&E[x.exam]&&Number.isInteger(x.set)&&x.set>=1&&x.set<=5&&Number.isInteger(x.part)&&x.part>=0&&x.part<E[x.exam].parts.length&&Number.isInteger(x.idx)&&Array.isArray(x.answers)&&Number.isFinite(x.deadline)&&Number.isFinite(x.began)&&typeof x.running==='boolean'?x:null;}catch(_){return null;}
 }
 function saveCheckpoint(){
- try{localStorage.setItem(checkpointKey,JSON.stringify({exam,set,part,idx,answers:answers.slice(),began,deadline,plays,running,results,telcSharedDeadline,pendingChoice,updated:Date.now()}));}catch(_){}
+ try{localStorage.setItem(checkpointKey,JSON.stringify({exam,set,part,idx,answers:answers.slice(),began,deadline,plays,running,results,telcSharedDeadline,pendingChoice,marked:marked.slice(),updated:Date.now()}));}catch(_){}
 }
 function clearCheckpoint(){try{localStorage.removeItem(checkpointKey);}catch(_){}}
 function resumeCheckpoint(){
  const x=getCheckpoint();if(!x)return;
- exam=x.exam;set=x.set;part=x.part;idx=x.idx;answers=x.answers;began=x.began;deadline=x.deadline;plays=x.plays||0;running=x.running;results=x.results||{};telcSharedDeadline=x.telcSharedDeadline||0;pendingChoice=Number.isInteger(x.pendingChoice)?x.pendingChoice:null;
+ exam=x.exam;set=x.set;part=x.part;idx=x.idx;answers=x.answers;began=x.began;deadline=x.deadline;plays=x.plays||0;running=x.running;results=x.results||{};telcSharedDeadline=x.telcSharedDeadline||0;pendingChoice=Number.isInteger(x.pendingChoice)?x.pendingChoice:null;marked=Array.isArray(x.marked)?x.marked.filter(n=>Number.isInteger(n)&&n>=0&&n<items(E[exam].parts[part]).length):[];
  const tasks=items(E[exam].parts[part]);if(idx<0||idx>tasks.length||answers.length!==idx){clearCheckpoint();home();return;}
  if(idx===tasks.length){finish();return;}
  question();
@@ -589,7 +589,7 @@ function home(){
  if(el('b1x-history'))el('b1x-history').onclick=history;
  if(el('b1x-delete'))el('b1x-delete').onclick=()=>{if(confirm('Alle auf diesem Gerät gespeicherten B1-Ergebnisse und Schreibentwürfe löschen?')){try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith('sdB1Draft:'))localStorage.removeItem(key);}localStorage.removeItem('sdB1FullResults');localStorage.removeItem('sdB1Pruefungen');clearCheckpoint();alert('B1-Ergebnisse und Schreibentwürfe wurden auf diesem Gerät gelöscht.');}catch(_){alert('Die Daten konnten nicht vollständig gelöscht werden. Bitte prüfe die Browser-Einstellungen.');}}};
 }
-function start(i){clear();part=i;idx=0;answers=[];plays=0;pendingChoice=null;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
+function start(i){clear();part=i;idx=0;answers=[];marked=[];plays=0;pendingChoice=null;began=Date.now();const p=E[exam].parts[i];const sharedTelc=exam==='telc'&&running&&(p[0]==='lesen'||p[0]==='sprach');if(sharedTelc&&p[0]==='lesen')telcSharedDeadline=began+90*60000;deadline=sharedTelc?(p[0]==='lesen'?Math.min(telcSharedDeadline,began+60*60000):telcSharedDeadline):began+(p[2]||30)*60000;saveCheckpoint();question();}
 function speak(t,dialogue){
  if(!('speechSynthesis'in window)){alert('Dein Browser unterstützt diese Sprachausgabe nicht.');return;}
  const synth=window.speechSynthesis;synth.cancel();
@@ -634,10 +634,10 @@ function taskOverviewMarkup(list,section){
  const remaining=list.length-idx-1;
  const buttons=list.map((t,i)=>{
   const status=i<answers.length?(answers[i]!==null&&answers[i]!==undefined&&answers[i]!==''?'Beantwortet':'Ohne Antwort'):i===idx?(currentAnswered?'Auswahl vorhanden':'Aktuell'):'Noch nicht bearbeitet';
-  return '<span class="b1x-overview-item'+(i===idx?' is-current':'')+(i<answers.length&&status==='Beantwortet'?' is-done':'')+'" title="'+esc(status)+'" aria-label="Aufgabe '+(i+1)+': '+esc(status)+'">'+(i+1)+'</span>';
+  return '<span class="b1x-overview-item'+(i===idx?' is-current':'')+(marked.includes(i)?' is-marked':'')+(i<answers.length&&status==='Beantwortet'?' is-done':'')+'" title="'+esc(status)+'" aria-label="Aufgabe '+(i+1)+': '+esc(status)+'">'+(marked.includes(i)?'★ ':'')+(i+1)+'</span>';
  }).join('');
  return '<details class="b1x-passage b1x-overview"><summary>Aufgabenübersicht · '+completed+' beantwortet, '+unanswered+' übersprungen</summary>'+
- '<p class="b1x-note">Orange: aktuelle Aufgabe · Grün: beantwortet · Grau: noch offen. '+remaining+' weitere Aufgaben folgen. Die Übersicht dient nur zur Orientierung; ein Zurückspringen ist in diesem Trainingsmodus nicht möglich.</p>'+
+ '<p class="b1x-note">Orange: aktuelle Aufgabe · Grün: beantwortet · Stern: zum Wiederholen markiert · Grau: noch offen. '+remaining+' weitere Aufgaben folgen. Die Übersicht dient nur zur Orientierung; ein Zurückspringen ist in diesem Trainingsmodus nicht möglich.</p>'+
  '<div class="b1x-overview-grid" aria-label="Aufgabenstatus">'+buttons+'</div></details>';
 }
 function question(){
@@ -652,6 +652,7 @@ function question(){
  '<div class="b1x-meta"><span>Teil '+(t.g+1)+'/'+p[3].length+' · '+esc(t.kind)+'</span><span>Aufgabe '+(idx+1)+'/'+list.length+'</span></div>'+
  '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">'+timerText((deadline-Date.now())/1000)+'</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
  taskOverviewMarkup(list,p[0])+
+ '<button id="b1x-mark" type="button" class="b1x-mark" aria-pressed="'+marked.includes(idx)+'">'+(marked.includes(idx)?'★ Markierung entfernen':'☆ Frage für später markieren')+'</button>'+
  body+(['schreiben','sprechen'].includes(p[0])?
  '<details class="b1x-passage" id="b1x-before-submit"><summary>Vor der Abgabe: kurze Selbstkontrolle</summary>'+
  (p[0]==='schreiben'?
@@ -665,6 +666,7 @@ function question(){
  '<label class="b1x-check"><input type="checkbox"> Ich habe eine passende Rückfrage oder Reaktion vorbereitet.</label>')+
  '<p class="b1x-note">Freiwillige Lernkontrolle – keine automatische Bewertung. Die Häkchen sind nicht erforderlich, um fortzufahren.</p></details>':'')+
  '<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
+ el('b1x-mark').onclick=()=>{if(marked.includes(idx))marked=marked.filter(n=>n!==idx);else marked.push(idx);saveCheckpoint();el('b1x-mark').textContent=marked.includes(idx)?'★ Markierung entfernen':'☆ Frage für später markieren';el('b1x-mark').setAttribute('aria-pressed',String(marked.includes(idx)));};
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
  if(['lesen','hoeren','sprach'].includes(p[0])){const radios=root.querySelectorAll('input[name="b1x-answer"]');radios.forEach(r=>{if(Number(r.value)===pendingChoice)r.checked=true;r.addEventListener('change',()=>{pendingChoice=Number(r.value);saveCheckpoint();});});}
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;saveCheckpoint();speak(t.audio,t.dialogue);};}
@@ -792,7 +794,7 @@ function reviewTask(t,answer,i,withTranscript){
 }
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
- const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000),deadline};
+ const record={exam,set,part:p[0],marked:marked.slice(),date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000),deadline};
  results[p[0]]=record;pendingChoice=null;clearCheckpoint();if(['schreiben','sprechen'].includes(p[0]))removeDraft();
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
  const next=running&&part+1<E[exam].parts.length;
@@ -805,7 +807,8 @@ function finish(){
  const review=running&&next?'':completed?
   E[exam].parts.map(x=>{const z=results[x[0]];if(!z)return '';const tasks=items(x);return '<details class="b1x-passage"><summary>Lösungen und Antworten: '+esc(x[1])+'</summary>'+(['lesen','hoeren','sprach'].includes(x[0])?tasks.map((t,i)=>reviewTask(t,z.answers[i],i,x[0]==='hoeren')).join(''):z.answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</details>'+(['schreiben','sprechen'].includes(x[0])?selfCheckMarkup(x[0],z.answers,tasks):'');}).join(''):
   '<div class="b1x-passage">'+(auto?list.map((t,i)=>reviewTask(t,answers[i],i,p[0]==='hoeren')).join(''):answers.map((a,i)=>'<p><b>Aufgabe '+(i+1)+':</b> '+esc(a||'Keine Antwort')+'</p>').join(''))+'</div>'+(auto?'':selfCheckMarkup(p[0],answers,list));
- view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+review+
+ const markedReview=running&&next?'':completed?E[exam].parts.map(x=>{const z=results[x[0]];return z&&z.marked&&z.marked.length?'<details class="b1x-passage"><summary>★ Markierte Fragen: '+esc(x[1])+' ('+z.marked.length+')</summary>'+z.marked.map(i=>{const t=items(x)[i];return t?'<p><b>Aufgabe '+(i+1)+':</b> '+esc(t.q)+'</p>':'';}).join('')+'</details>':'';}).join(''):marked.length?'<details class="b1x-passage"><summary>★ Markierte Fragen ('+marked.length+')</summary>'+marked.map(i=>{const t=list[i];return t?'<p><b>Aufgabe '+(i+1)+':</b> '+esc(t.q)+'</p>':'';}).join('')+'</details>':'';
+ view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+'</p>'+text+summary+markedReview+review+
  '<button id="b1x-continue" class="b1x-primary">'+(next?'Weiter: '+esc(E[exam].parts[part+1][1]):'Zur Übersicht')+'</button>');
  el('b1x-continue').onclick=()=>next?start(part+1):home();
 }
@@ -862,6 +865,8 @@ const css=document.createElement('style');css.textContent=`
 .b1x-overview-item.is-done{background:#14532d;border-color:#22c55e;color:#fff}
 .b1x-overview-item.is-current{background:#9a3412;border:2px solid #fdba74;color:#fff}
 .b1x-overview summary{cursor:pointer;font-weight:700}
+.b1x-mark{width:100%;min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px;font:inherit;cursor:pointer}
+.b1x-overview-item.is-marked{box-shadow:inset 0 0 0 2px #facc15}
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
