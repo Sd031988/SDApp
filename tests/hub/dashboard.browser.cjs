@@ -58,6 +58,7 @@ const assert=require('node:assert/strict');
    assert.equal(m.display,'grid','Mobile More visible at '+width);
    assert(m.moreWidth>=50,'Mobile More touch size at '+width);
    assert(m.navTop>600&&m.navBottom<=m.screen+2,'Bottom nav position at '+width);
+   if(m.docWidth>width+2){const bad=await page.evaluate(()=>[...document.querySelectorAll('body *')].map(el=>({name:el.tagName,cls:String(el.className).slice(0,70),r:el.getBoundingClientRect()})).filter(x=>x.r.width&&x.r.right>innerWidth+2).sort((a,b)=>b.r.right-a.r.right).slice(0,8).map(x=>x.name+'.'+x.cls+': '+Math.round(x.r.right)));console.log('Mobile overflow candidates at '+width+': '+bad.join(' | '));}
    assert(m.docWidth<=width+2,'Mobile horizontal overflow at '+width+': '+JSON.stringify(m));
   }
   await page.setViewportSize({width:390,height:844});
