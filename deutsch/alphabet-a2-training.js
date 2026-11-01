@@ -200,5 +200,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){hideM
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!entry.contains(e.target))hideMenu();});
 function mount(){if(document.getElementById('sdPreB1Entry'))return;const host=document.getElementById('lBody');if(!host||!host.parentNode)return;host.parentNode.insertBefore(entry,host);entry.insertAdjacentElement('afterend',menu);}
 function ensureMount(){mount();if(!document.getElementById('sdPreB1Entry'))setTimeout(ensureMount,400);}
+// Keep the navigation available when the learning page rebuilds its content.
+const navigationObserver=new MutationObserver(()=>{if(!document.getElementById('sdPreB1Entry'))mount();});
+navigationObserver.observe(document.documentElement,{childList:true,subtree:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureMount);else ensureMount();
 })();
