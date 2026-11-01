@@ -14,12 +14,12 @@ assert(css.includes('.actions button[hidden]'),'Inactive action groups should no
 assert(css.includes('height:clamp(240px,43dvh,410px)'),'Mobile stage must have a bounded height');
 const actions=[...html.matchAll(/<button\b([^>]*)>/g)]
  .map(m=>({act:m[1].match(/\bdata-act="([^"]+)"/)?.[1],id:m[1].match(/\bid="([^"]+)"/)?.[1]}))
- .filter(b=>b.act||['scrub','foodchoice','potty','flush','sound','talk','surprise','minigame','mousegame','decorate','outfit','photo'].includes(b.id));
+ .filter(b=>b.act||['scrub','foodchoice','potty','flush','sound','catVoice','talk','surprise','minigame','mousegame','decorate','outfit','photo'].includes(b.id));
 const grouped={
  care:['pet','feed','sleep','wash','scrub','foodchoice','potty','flush'],
  games:['play','minigame','mousegame'],
  style:['outfit','decorate','photo'],
- extras:['sound','talk','surprise']
+ extras:['sound','catVoice','talk','surprise']
 };
 const seen=[...Object.values(grouped).flat()];
 for(const b of actions){const name=b.act||b.id;assert(seen.includes(name),'Pibo action unassigned to category: '+name)}
@@ -40,5 +40,9 @@ try{
  assert(urls[1].includes('Whiskers%27_purr.ogg'));
  assert(Math.abs(audio.realVoice.volume-.315)<.0001);
  audio.setVolume(0);assert.equal(audio.realVoice.volume,0);
+ audio.play('meow');
+ assert(urls[2].includes('Maullido_de_gata_hembra.ogg'),'Second meow must sound different');
+ audio.stop();
+ assert.equal(audio.realVoice,null,'Mute stops active real cat audio immediately');
 }finally{globalThis.window=oldWindow}
 console.log('PASS: Modern cat-first 3D layout, category assignments, real cat sound sources, volume and mute');
