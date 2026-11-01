@@ -553,6 +553,19 @@ function close(){
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}clear();if(root)root.remove();root=null;if(host)host.style.display='';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='';host=null;}
 let holdTimer=null,holdPoint=null;
 function stopHold(){if(holdTimer!==null)clearTimeout(holdTimer);holdTimer=null;holdPoint=null;}
+function addReadingButtons(){
+ if(running||!root||!('speechSynthesis' in window))return;
+ root.querySelectorAll('.b1x-passage p').forEach(p=>{
+  if(p.closest('label,details')||p.querySelector('button'))return;
+  const words=(p.textContent||'').trim().replace(/\s+/g,' ');
+  if(words.length<70||words.length>1500)return;
+  const button=document.createElement('button');
+  button.type='button';button.className='b1x-read-aloud';
+  button.textContent='🔊 Vorlesen';button.setAttribute('aria-label','Diesen Absatz auf Deutsch vorlesen');
+  button.onclick=()=>{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);u.lang='de-DE';u.rate=.9;window.speechSynthesis.speak(u);};
+  p.insertAdjacentElement('afterend',button);
+ });
+}
 function setupHold(){
  root.addEventListener('pointerdown',e=>{
   if(e.pointerType!=='touch'||running||!('speechSynthesis' in window))return;
@@ -573,6 +586,7 @@ function view(html){
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}
  root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+html+'</div>';
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
+ addReadingButtons();
 }
 function open(){
  if(root)return;host=el('lBody');if(!host)return;host.style.display='none';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='none';root=document.createElement('div');root.id='b1x';host.parentNode.insertBefore(root,host.nextSibling);setupHold();home();
@@ -1135,7 +1149,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-overview summary{cursor:pointer;font-weight:700}
 .b1x-mark{width:100%;min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px;font:inherit;cursor:pointer}
 .b1x-overview-item.is-marked{box-shadow:inset 0 0 0 2px #facc15}
-#b1x-write-answer,#b1x-write-topic{width:100%;min-height:48px;background:#191c29;color:#fff;border:1px solid #6b7280;border-radius:10px;padding:12px;font:inherit;font-size:16px}#b1x-write-answer{min-height:220px;resize:vertical}.b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
+#b1x-write-answer,#b1x-write-topic{width:100%;min-height:48px;background:#191c29;color:#fff;border:1px solid #6b7280;border-radius:10px;padding:12px;font:inherit;font-size:16px}#b1x-write-answer{min-height:220px;resize:vertical}.b1x-read-aloud{min-height:44px;border:1px solid #fb923c;border-radius:10px;background:#29202a;color:#fed7aa;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation}.b1x-read-aloud:focus-visible{outline:3px solid #fdba74;outline-offset:3px}.b1x-week-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:12px}
 /* Dashboard and study screens: narrow-device and accessible touch layout. */
 #b1x .b1x-grid>*{min-width:0}
 #b1x .b1x-passage h3{margin:0 0 10px;line-height:1.35}
