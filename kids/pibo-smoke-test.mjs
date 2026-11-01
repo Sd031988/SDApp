@@ -12,6 +12,7 @@ const motion=readFileSync(join(dir,'pibo-motion.mjs'),'utf8');
 const voice=readFileSync(join(dir,'pibo-voice.mjs'),'utf8');
 const character=readFileSync(join(dir,'pibo-character.mjs'),'utf8');
 const interaction=readFileSync(join(dir,'pibo-interactions.mjs'),'utf8');
-const result=runPiboSmoke(html,care,rewards,face,motion,voice,character,interaction);
+const garden=readFileSync(join(dir,'pibo-garden.mjs'),'utf8');
+const result=runPiboSmoke(html,care,rewards,face,motion,voice,character,interaction,garden);
 console.log(JSON.stringify(result,null,2));
 if(result.status!=='PASS')process.exitCode=1;
