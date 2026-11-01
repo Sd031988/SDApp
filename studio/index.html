@@ -6,6 +6,7 @@
 <title>SD Code-Studio – Code-Editor im Browser</title>
 <meta name="description" content="Professioneller Code-Editor im Browser: Webseiten mit Live-Vorschau, Python, C++, Java, C#, Rust und Go ausführen, Vorlagen, Suche, Versionen, ZIP – ohne Installation.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./ki-werkstatt.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#221b3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,6 +132,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <button id="neuDatei" title="Neue Datei">＋ <span class="lang">Datei</span></button>
     <button id="neuProjekt" title="Neues Projekt mit Vorlage">＋ <span class="lang">Projekt</span></button>
     <button id="einfuegenBtn" title="Anleitung oder Code einfügen → Ordner und Dateien automatisch">📋 <span class="lang">Einfügen</span></button>
+    <button id="kiCodeBtn" title="Mit KI programmieren – ChatGPT/Gemini-Code prüfen und sicher einfügen" type="button">✨ KI Coding</button>
     <button id="designBtn" title="Im Design-Studio gestalten – ohne Code">🎨 <span class="lang">Design</span></button>
     <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
     <span class="luecke"></span>
@@ -247,7 +249,34 @@ button,input,select,textarea{font:inherit;color:inherit}
 </div></div>
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
+<section id="kiOverlay" hidden aria-label="KI Coding Dialog">
+  <div class="kiDialog" role="dialog" aria-modal="true" aria-labelledby="kiTitle">
+    <div class="kiHead"><div><span class="kiEyebrow">SD Code-Studio · KI-Werkstatt</span><h2 id="kiTitle">✨ Mit KI programmieren</h2><p id="kiProject"></p></div><button type="button" id="kiClose" aria-label="KI-Coding schließen">✕</button></div>
+    <p class="kiNote"><strong>Ohne API-Schlüssel:</strong> ChatGPT oder Gemini in einem neuen Tab verwenden. Das Studio sendet keine Projektdateien automatisch an diese Dienste. Eine echte KI-Unterhaltung direkt hier erfordert eine autorisierte Integration.</p>
+    <label class="kiLabel" for="kiGoal">1. Was möchtest du programmieren?</label>
+    <textarea id="kiGoal" rows="3" maxlength="3000" placeholder="Zum Beispiel: Baue eine Webseite mit Startseite, Galerie und Kontakt."></textarea>
+    <label class="kiCheck"><input id="kiInclude" type="checkbox"> Inhalt meiner geöffneten Datei freiwillig in die kopierbare Anfrage aufnehmen (niemals Zugangsdaten)</label>
+    <div class="kiActions">
+      <button type="button" id="kiCopy">📋 Anfrage kopieren</button>
+      <button type="button" id="kiChatGPT">ChatGPT öffnen ↗</button>
+      <button type="button" id="kiGemini">Gemini öffnen ↗</button>
+    </div>
+    <textarea id="kiClipboard" rows="4" hidden readonly aria-label="KI-Anfrage manuell kopieren"></textarea>
+    <label class="kiLabel" for="kiResult">2. KI-Antwort mit Code einfügen</label>
+    <p class="kiHint">Jede Datei mit „### Datei: ordner/name.ext“ und einem vollständigen Codeblock angeben. Unterstützt HTML, CSS, JavaScript, Python und weitere Textformate.</p>
+    <textarea id="kiResult" rows="7" spellcheck="false" placeholder="### Datei: index.html&#10;&#96;&#96;&#96;html&#10;&lt;!doctype html&gt; ...&#10;&#96;&#96;&#96;&#10;&#10;### Datei: css/style.css&#10;&#96;&#96;&#96;css&#10;body { ... }&#10;&#96;&#96;&#96;"></textarea>
+    <div class="kiActions">
+      <button type="button" id="kiAnalyse">🔎 Dateien automatisch erkennen</button>
+      <button type="button" id="kiApply" class="kiPrimary" disabled>📁 Als neue Projektkopie übernehmen</button>
+    </div>
+    <div id="kiFiles" class="kiFiles" aria-label="Erkannte Dateien"></div>
+    <p id="kiStatus" role="status" aria-live="polite"></p>
+    <p class="kiHint">Nach der Übernahme prüfst du die Dateien und klickst im Studio auf <strong>▶ Ausführen</strong>. Das Originalprojekt bleibt erhalten. Unbekannten KI-Code zuerst in der Vorschau testen.</p>
+  </div>
+</section>
 <script src="studio.js?v=44fc58f7"></script>
+<script src="./ki-werkstatt-core.js"></script>
+<script src="./ki-werkstatt-ui.js"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){
