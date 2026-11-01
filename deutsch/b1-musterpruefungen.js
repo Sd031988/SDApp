@@ -489,7 +489,7 @@ function items(section){
          result.push({g,j,q:question[0],options,answer:pos,passage:audio,audio,dialogue:ex.dialogue,explanation:dialogueExplanations[extraIndex][qIndex],kind:kinds[g]+' · Gespräch'});
          continue;
        }
-       const sceneIndex=(g*3+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
+       const sceneIndex=(g*3+Math.floor(j/3)+(set-1)*2+(exam==='goethe'&&g===3&&j>=6?3:0))%listeningScenes.length;
        const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
        // Bei Mitteilungen wird exakt der Text abgespielt, zu dem die Fragen erstellt wurden.
