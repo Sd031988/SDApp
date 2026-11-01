@@ -227,10 +227,12 @@ const assert = require('node:assert/strict');
     assert.match(aiAfter.html,/id="kiTest"/);
     assert.equal(aiAfter.css,'body { color: #222; }\n');
     // Saving an independent copy must leave all prior files intact.
-    assert(aiAfter.originalUnchanged.includes('index.html'));
+    assert.equal(aiAfter.originalUnchanged,aiBefore.files,'Originalprojekt darf nicht verändert werden');
     assert.equal(await page.locator('#kiOverlay').isVisible(),false);
+    assert.equal(await page.locator('#vorschau').isVisible(),false,'KI-Code darf nicht automatisch starten');
     await page.locator('#starten').click();
     assert.equal(await page.locator('#starten').count(),1);
+    assert.equal(await page.locator('#vorschau').isVisible(),true,'Ausführen öffnet die Vorschau');
 
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
