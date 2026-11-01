@@ -91,6 +91,24 @@ function openDialogWithCode(text){
  $('kiResult').scrollIntoView({block:'nearest'});
  return true;
 }
+// Trusted local hand-off from the optional, explicitly installed Chrome bridge.
+// No ChatGPT cookies, passwords, browsing history or browser storage are requested.
+const bridgeSeen=new Set();
+function acceptBrowserBridge(event){
+ if(event.source!==window||event.origin!==location.origin)return;
+ const m=event.data;
+ if(!m||m.type!=='SD_STUDIO_SELECTED_CHAT_TEXT'||m.version!==1||
+   typeof m.nonce!=='string'||!/^[-a-f0-9]{12,80}$/i.test(m.nonce)||
+   !['chatgpt','gemini'].includes(m.provider)||
+   typeof m.text!=='string'||!m.text.trim()||m.text.length>250000)return;
+ if(bridgeSeen.has(m.nonce))return;
+ if(!S.gestartet||!S.p)return; // Browser extension keeps the pending selection until the Studio is ready.
+ if(!openDialogWithCode(m.text))return;
+ bridgeSeen.add(m.nonce);
+ if(bridgeSeen.size>100)bridgeSeen.delete(bridgeSeen.values().next().value);
+ status('✓ '+(m.provider==='chatgpt'?'ChatGPT':'Gemini')+'-Auswahl angekommen. Nur erkannte Code-Dateien sind vorbereitet. Bitte prüfen, vergleichen und die Übernahme ausdrücklich bestätigen.');
+ window.postMessage({type:'SD_STUDIO_SELECTED_CHAT_ACK',version:1,nonce:m.nonce},location.origin);
+}
 function closeDialog(){$('kiOverlay').hidden=true;}
 function selectedSource(){
  if(!$('kiInclude').checked||!S.p||!S.aktiv)return null;
@@ -308,6 +326,7 @@ async function apply(){
  finally{busy=false;updateActions()}
 }
 function setup(){
+ window.addEventListener('message',acceptBrowserBridge);
  const button=$('kiCodeBtn'),overlay=$('kiOverlay');if(!button||!overlay)return;
  button.addEventListener('click',()=>openDialog());
  $('kiChangeBtn').addEventListener('click',openChangeDialog);
