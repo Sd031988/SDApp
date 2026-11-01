@@ -81,6 +81,68 @@ const readingClaims=[
  ['Während der Bauphase gibt es eine ausgeschilderte Umleitung für Radfahrer.','Der neue Radweg ist ausschließlich für Touristen gedacht.'],
  ['Die Musikschule bietet seit September auch Kurse für Erwachsene an.','Man kann die Instrumente ein ganzes Jahr kostenlos ausleihen.']
 ];
+const readingClaimExplanations=[
+ [
+  "Der Text sagt ausdrücklich, dass Lara noch prüfen möchte, wie sie abends nach Hause kommt.",
+  "Lara hat die Wohnung nur besichtigt und prüft noch die Verbindung. Von einem abgeschlossenen Mietvertrag steht nichts."
+ ],
+ [
+  "Der Text nennt eine Anmeldung bis Donnerstag, weil die Plätze begrenzt sind.",
+  "Das Zentrum stellt Smartphones bereit. Deshalb müssen die Teilnehmenden kein eigenes Gerät mitbringen."
+ ],
+ [
+  "Das Team hat sich nach der ursprünglich geplanten Radtour für eine Wanderung entschieden.",
+  "Die Radtour war nur der ursprüngliche Plan. Tatsächlich findet eine Wanderung statt."
+ ],
+ [
+  "Im Text steht, dass die Teilnehmenden ihre Gesprächsthemen selbst vorschlagen.",
+  "Das Sprachcafé hat ausdrücklich keine Noten und keine Lehrkraft."
+ ],
+ [
+  "Die Straße vor der Schule ist morgens für private Autos gesperrt.",
+  "Die Schule empfiehlt, zu Fuß zu gehen oder die neue Haltestelle zu nutzen, nicht direkt mit dem Auto vorzufahren."
+ ],
+ [
+  "Notwendige Ersatzteile bezahlen die Besucher selbst, obwohl die Hilfe kostenlos ist.",
+  "Das Team verspricht ausdrücklich nicht, dass jedes Gerät repariert werden kann."
+ ],
+ [
+  "Die Wege zum See bleiben während der Bauarbeiten geöffnet.",
+  "Das Café am Eingang bleibt während der gesamten Bauzeit geöffnet."
+ ],
+ [
+  "Miriam hat inzwischen feste Lernzeiten eingerichtet und tauscht sich mit anderen aus.",
+  "Der Buchhaltungskurs findet abends statt, nicht morgens."
+ ],
+ [
+  "Bei starkem Wind ziehen die Stände in die benachbarte Halle um.",
+  "Auch bei Regen findet der Markt statt; bei starkem Wind wechseln die Stände nur den Ort."
+ ],
+ [
+  "Der Text verlangt für die Ausleihe von Büchern einen Bibliotheksausweis.",
+  "In den ruhigen Lernräumen ist Telefonieren ausdrücklich verboten."
+ ],
+ [
+  "Für Workshops ist wegen der wenigen Plätze eine Anmeldung notwendig.",
+  "Die Vorträge können ausdrücklich ohne Anmeldung besucht werden."
+ ],
+ [
+  "An der Paketstation kann man auch außerhalb der Öffnungszeiten Sendungen abholen.",
+  "Große Pakete müssen weiterhin in der Filiale abgeholt werden, weil die Fächer zu klein sind."
+ ],
+ [
+  "Bei schlechtem Wetter wird das Fest ins Gemeindehaus verlegt.",
+  "Die Getränke stellt der Verein bereit; Gäste sollen möglichst etwas für das Buffet mitbringen."
+ ],
+ [
+  "Während der Bauphase müssen Radfahrer eine ausgeschilderte Umleitung nutzen.",
+  "Der neue Radweg soll besonders Berufspendlern helfen, nicht ausschließlich Touristen."
+ ],
+ [
+  "Seit September bietet die Musikschule auch Unterricht für Erwachsene an.",
+  "Die Ausleihe ist nur für die ersten vier Wochen vorgesehen, nicht für ein ganzes Jahr."
+ ]
+];
 const readingTexts=[
  ['Wohnungssuche','Seit drei Monaten sucht Lara eine größere Wohnung. Sie arbeitet im Krankenhaus und möchte deshalb nicht weit von der Arbeit entfernt wohnen. Gestern hat sie eine Wohnung besichtigt, die hell und ruhig ist. Die Miete passt zu ihrem Budget, aber die Bushaltestelle liegt zwanzig Minuten zu Fuß entfernt. Lara möchte deshalb vor ihrer Entscheidung noch prüfen, wie sie abends nach Hause kommt.','Was möchte Lara vor ihrer Entscheidung prüfen?','Die Verbindung am Abend','Die Öffnungszeiten des Krankenhauses','Die Farbe der Wände'],
  ['Freiwilligenarbeit','Im Nachbarschaftszentrum helfen jeden Samstag Freiwillige älteren Menschen beim Umgang mit Smartphones. Wer teilnehmen möchte, muss kein eigenes Gerät besitzen, denn das Zentrum stellt einige Geräte bereit. Die Beratung ist kostenlos. Weil die Plätze begrenzt sind, ist eine Anmeldung bis Donnerstag erforderlich.','Was müssen Interessierte tun?','Sich bis Donnerstag anmelden','Ein neues Smartphone kaufen','Am Freitag bezahlen'],
@@ -375,7 +437,7 @@ function items(section){
        const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
        const rd=readingTexts[textIndex],truth=(j+set)%2===0;
        const statement=readingClaims[textIndex][truth?0:1];
-       result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],kind:'Leseverstehen · '+kinds[g]});
+       result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],explanation:readingClaimExplanations[textIndex][truth?0:1],kind:'Leseverstehen · '+kinds[g]});
        continue;
      }
      if(id==='lesen'){
