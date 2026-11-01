@@ -91,5 +91,5 @@ body{background:radial-gradient(circle at 4% -10%,#4464a3,transparent 37%),radia
 </main>
 <footer>Die neuen SD Kids Minispiele sind eigenständige 2D-Browserspiele. Pibo und BlockWorld bleiben als separate 3D-Spiele verfügbar. Keine offenen Chats oder Nutzer-Uploads.</footer>
 <script type="module" src="./play.mjs"></script>
-<script>if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});</script>
+<script>if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('./sw.js').catch(()=>{});</script>
 </body></html>
