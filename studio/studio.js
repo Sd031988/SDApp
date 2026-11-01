@@ -903,10 +903,20 @@ async function vorschau(neu) {
   const f = $('frame');
   // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
   f.setAttribute('sandbox', Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
-  if (S.swBereit) { const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
+  // Sandboxed AI iframes have an opaque origin. Browsers can bypass the
+  // Service Worker on their navigations and display GitHub Pages' real 404.
+  // Load the project files directly as srcdoc instead; CSS/JS is bundled
+  // by htmlZusammenbauen(). Keep allow-same-origin OFF for untrusted AI code.
+  const istKiProjekt = Object.prototype.hasOwnProperty.call(S.p, 'kiQuelle');
+  if (istKiProjekt || !S.swBereit) {
+    f.removeAttribute('src');
+    f.srcdoc = htmlZusammenbauen(start);
+    $('url').value = '/' + start + ' (sichere lokale Vorschau)';
+  } else {
+    const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
     if (neu || !f.src.includes('/vorschau/') || !f.src.includes('/vorschau/' + encodeURIComponent(S.p.name) + '/')) { f.removeAttribute('srcdoc'); f.src = url; } else { try { f.contentWindow.location.reload(); } catch (e) { f.src = url; } }
-    $('url').value = new URL(url, location.href).pathname.replace(/^.*\/vorschau\//, '/'); }
-  else { f.removeAttribute('src'); f.srcdoc = htmlZusammenbauen(start); $('url').value = '/' + start + ' (einfache Vorschau)'; }
+    $('url').value = new URL(url, location.href).pathname.replace(/^.*\/vorschau\//, '/');
+  }
   if (neu) konfetti();
 }
 window.addEventListener('message', e => { const m = e.data; if (!m || !m.sdVorschau || e.source !== $('frame').contentWindow) return;
