@@ -196,7 +196,8 @@ addChoice('A2 lernen',()=>{level='a2';unit=0;open();show();});
 addChoice('B1 lernen',()=>{close();const target=document.querySelector('#learn [data-lv="B1"], #learn [data-level="B1"], #learn button[data-level="b1"]');if(target)target.click();else{const candidates=Array.from(document.querySelectorAll('#lBody button, #learn button')).filter(b=>/^B1(?:\\s|$)/i.test(b.textContent.trim())&&!/Prüfung|Muster/i.test(b.textContent));if(candidates[0])candidates[0].click();else document.getElementById('lBody')?.scrollIntoView({behavior:'smooth'});}});
 addChoice('B1-Prüfungen',()=>{close();const target=document.getElementById('sdB1FixedEntry')||document.getElementById('sdB1FullEntry');if(target)target.click();});
 entry.onclick=()=>{const next=menu.hidden;menu.hidden=!next;menu.style.display=next?'grid':'none';entry.setAttribute('aria-expanded',String(next));};
-document.addEventListener('keydown',e=>{if(e.key==='Escape')hideMenu();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!menu.hidden){hideMenu();entry.focus();}});
+document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!menu.contains(e.target)&&!entry.contains(e.target))hideMenu();});
 function mount(){if(document.getElementById('sdPreB1Entry'))return;const host=document.getElementById('lBody');if(!host||!host.parentNode)return;host.parentNode.insertBefore(entry,host);entry.insertAdjacentElement('afterend',menu);}
 function ensureMount(){mount();if(!document.getElementById('sdPreB1Entry'))setTimeout(ensureMount,400);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureMount);else ensureMount();
