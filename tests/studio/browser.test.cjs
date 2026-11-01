@@ -201,6 +201,37 @@ const assert = require('node:assert/strict');
     assert.equal(pasteUpload.folder,true,'Ordnerauswahl');
     assert.equal(pasteUpload.files,true,'Mehrfach-Dateiauswahl');
     assert.equal(pasteUpload.handler,'function');
+    // KI Coding: real browser flow, review, copy creation, then existing ▶ execute.
+    assert.equal(await page.locator('#kiCodeBtn').count(),1,'KI Coding button visible');
+    await page.locator('#kiCodeBtn').click();
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true);
+    await page.locator('#kiGoal').fill('Erstelle eine kleine Webseite mit Überschrift.');
+    const aiBefore=await page.evaluate(()=>({name:S.p.name,files:JSON.stringify(S.p.dateien)}));
+    const aiAnswer='### Datei: index.html\n'+String.fromCharCode(96).repeat(3)+'html\n'+
+      '<!doctype html><html lang="de"><head><title>KI Test</title></head><body><h1 id="kiTest">Funktioniert</h1></body></html>\n'+
+      String.fromCharCode(96).repeat(3)+'\n\n'+
+      '### Datei: css/style.css\n'+String.fromCharCode(96).repeat(3)+'css\nbody { color: #222; }\n'+String.fromCharCode(96).repeat(3);
+    await page.locator('#kiResult').fill(aiAnswer);
+    await page.locator('#kiAnalyse').click();
+    assert.equal(await page.locator('#kiFiles .kiFile').count(),2,'Two separate files routed');
+    assert.equal(await page.locator('#kiApply').isEnabled(),true);
+    page.once('dialog',dialog=>dialog.accept());
+    await page.locator('#kiApply').click();
+    await page.waitForFunction(old=>S.p&&S.p.name!==old,aiBefore.name,{timeout:12000});
+    const aiAfter=await page.evaluate(async oldName=>{
+      const old=await projLesen(oldName),current=S.p;
+      return {newName:current.name,originalName:old.name,hasOriginal:old.dateien['index.html']!==undefined,
+        originalUnchanged:JSON.stringify(old.dateien),html:current.dateien['index.html'],css:current.dateien['css/style.css']};
+    },aiBefore.name);
+    assert.notEqual(aiAfter.newName,aiAfter.originalName);
+    assert.match(aiAfter.html,/id="kiTest"/);
+    assert.equal(aiAfter.css,'body { color: #222; }\n');
+    // Saving an independent copy must leave all prior files intact.
+    assert(aiAfter.originalUnchanged.includes('index.html'));
+    assert.equal(await page.locator('#kiOverlay').isVisible(),false);
+    await page.locator('#starten').click();
+    assert.equal(await page.locator('#starten').count(),1);
+
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
