@@ -677,6 +677,25 @@ function taskSpecificHelp(section,tasks){
  tasks.map((t,i)=>'<p><b>Aufgabe '+(i+1)+' · '+esc(t.kind||'Übung')+':</b> '+(bank[(t.kind||'').split(' · ').pop()]||'Formuliere eigene Beispiele, Gründe und passende Rückfragen.')+'</p>').join('')+
  '<p class="b1x-note">Die Satzanfänge sind Beispiele und müssen an die konkrete Situation angepasst werden.</p></div>';
 }
+function commonB1Mistakes(section){
+ const rules=section==='schreiben'?[
+ ['Satzstellung nach „weil“','Falsch: „Ich komme nicht, weil ich muss arbeiten.“','Richtig: „Ich komme nicht, weil ich arbeiten muss.“'],
+ ['Höfliche Bitte statt Befehl','Weniger höflich: „Geben Sie mir einen Termin.“','Höflicher: „Könnten Sie mir bitte einen Termin anbieten?“'],
+ ['Meinung mit Begründung','Zu kurz: „Ich finde Busse gut.“','Besser: „Ich fahre gern mit dem Bus, weil ich dabei lesen kann.“'],
+ ['Anrede und Gruß abstimmen','Nicht mischen: „Liebe Frau Müller“ und „Viele Grüße“ in einem sehr formellen Brief.','Zum Beispiel: „Sehr geehrte Frau Müller, … Mit freundlichen Grüßen“'],
+ ['Alle Inhaltspunkte prüfen','Zu wenig: Nur die Absage nennen.','Besser: Absage, Grund und konkreten Ersatztermin ansprechen.']
+ ]:[
+ ['Satzstellung nach „dass“','Falsch: „Ich denke, dass wir können am Samstag gehen.“','Richtig: „Ich denke, dass wir am Samstag gehen können.“'],
+ ['Meinung erklären','Zu kurz: „Das ist gut.“','Besser: „Ich finde das gut, weil wir dadurch Zeit sparen.“'],
+ ['Auf Partner reagieren','Wenig hilfreich: Nur „Ja“ oder „Nein“ sagen.','Besser: „Das klingt gut. Allerdings habe ich am Vormittag keine Zeit.“'],
+ ['Nachfragen stellen','Zu wenig: Nur über sich selbst sprechen.','Besser: „Wie ist das bei dir? Was würdest du vorschlagen?“'],
+ ['Verständlich sprechen','Schwierig: Zu lange Sätze ohne Pause.','Besser: Kurze, vollständige Sätze bilden und wichtige Wörter deutlich sprechen.']
+ ];
+ return '<details class="b1x-passage"><summary>Häufige B1-Fehler vermeiden</summary>'+
+ '<p class="b1x-note">Beispiele zur Selbstkorrektur, keine automatische Fehleranalyse deiner Antwort.</p>'+
+ rules.map(x=>'<p><b>'+esc(x[0])+'</b><br>'+esc(x[1])+'<br>'+esc(x[2])+'</p>').join('')+
+ '</details>';
+}
 function selfCheckMarkup(section,entries,tasks){
  const isWrite=section==='schreiben';
  const criteria=isWrite?[
@@ -696,6 +715,7 @@ function selfCheckMarkup(section,entries,tasks){
  '<p class="b1x-note">Diese Checkliste ist eine Lernhilfe, kein offizielles Bewertungsraster. Setze ein Häkchen nur, wenn du den Punkt tatsächlich erfüllt hast.</p>'+
  criteria.map(c=>'<label class="b1x-check"><input type="checkbox"> '+esc(c[1])+'</label>').join('')+
  taskSpecificHelp(section,tasks)+
+ commonB1Mistakes(section)+
  (isWrite?'<p class="b1x-note">Prüfe außerdem die Aufgabenstellung: Wurden alle verlangten Informationen genannt? Ist die Sprache zur Situation passend?</p>':
  '<p class="b1x-note">Für eine verlässliche Einschätzung der Aussprache und Interaktion ist Rückmeldung von einer Lehrkraft oder einem Gesprächspartner hilfreich.</p>')+
  '<details class="b1x-passage"><summary>Formulierungshilfen und kurze B1-Beispiele</summary>'+
