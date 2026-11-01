@@ -127,12 +127,42 @@ button,input,select,textarea{font:inherit;color:inherit}
   #online .reihe button,#online .reihe a{padding:10px 12px!important}
   #toast{bottom:76px;max-width:92vw}
 }
+
+/* 2026-11-01: Pin the Run action. Only the tools scroll, never ▶ Ausführen. */
+#kopf{overflow:hidden;min-width:0}
+#kopfWerkzeuge{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;white-space:nowrap;height:100%;overscroll-behavior-x:contain}
+#kopfWerkzeuge>*{flex-shrink:0}
+#kopfWerkzeuge .luecke{display:none}
+#kopfWerkzeuge #projektWahl{flex:0 0 190px;max-width:190px;min-width:90px}
+#kopfAktionen{display:flex;align-items:center;gap:6px;flex:0 0 auto;
+  padding-left:8px;background:var(--sside);border-left:1px solid var(--sline);height:100%;position:relative;z-index:4}
+#kopfAktionen #kopfMehr{padding:5px 8px!important;white-space:nowrap}
+#kopfAktionen #starten{display:inline-flex!important;align-items:center;justify-content:center;
+  min-height:34px;white-space:nowrap;flex-shrink:0;visibility:visible!important}
+#kopfWerkzeuge:focus-visible{outline:2px solid var(--sacc);outline-offset:-2px}
+@media(max-width:800px){
+  #kopf{overflow:hidden}
+  #kopfWerkzeuge{flex:1 1 0;overflow:hidden}
+  #kopfWerkzeuge #projektWahl{flex:1 1 auto;max-width:none;min-width:0}
+  #kopfWerkzeuge :is(#kiCodeBtn,#kiChangeBtn,#kiServicesBtn,#diagnoseBtn,.sd-hub-link){display:none!important}
+  #kopfAktionen{gap:4px;padding-left:4px}
+  #kopfAktionen #kopfMehr{font-size:0;padding:5px 7px!important}
+  #kopfAktionen #kopfMehr::before{content:"☰";font-size:19px}
+  #kopfAktionen #starten{height:38px;min-height:38px;font-size:14px;padding:0 11px!important}
+}
+@media(max-width:390px){
+  #kopfAktionen #kont{display:none!important}
+  #kopfAktionen #starten{padding:0 8px!important;font-size:13px}
+  #kopfWerkzeuge .logo{display:none}
+}
 </style>
 <style>.sd-json-fehler{background:rgba(235,65,65,.24);border-bottom:2px wavy #f66}</style>
 </head>
 <body>
 <div id="app" hidden>
   <div id="kopf">
+    <div id="kopfWerkzeuge" tabindex="0" aria-label="Projektwahl und Werkzeuge, horizontal scrollbar">
     <span class="logo">⟨/⟩ SD Code-Studio</span>
     <select id="projektWahl" title="Projekt wechseln"></select>
     <button id="befehleBtn" title="Alle Befehle (Strg+Umschalt+P)">⌘ <span class="lang">Befehle</span></button>
@@ -147,8 +177,12 @@ button,input,select,textarea{font:inherit;color:inherit}
     <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
     <span class="luecke"></span>
     <a class="sd-hub-link" href="../mein-sd-hub/#projekte" target="_blank" rel="noopener" title="Mein SD Hub Projektwerkstatt in einem neuen Tab öffnen">🏠 Mein SD Hub ↗</a>
-    <button id="kont"></button>
-    <button id="starten" class="primary">▶ Ausführen</button>
+    </div>
+    <div id="kopfAktionen">
+      <button id="kopfMehr" type="button" title="Alle wichtigen Werkzeuge anzeigen" aria-label="Weitere Werkzeuge anzeigen">☰ Mehr</button>
+      <button id="kont"></button>
+      <button id="starten" class="primary" type="button" title="Projekt ausführen (F5 oder Strg+Enter)" aria-keyshortcuts="F5 Control+Enter">▶ Ausführen</button>
+    </div>
   </div>
   <div id="akt">
     <button data-s="explorer" class="an" title="Explorer">📁</button>
