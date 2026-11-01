@@ -548,9 +548,12 @@ function items(section){
  return result;
 }
 function clear(){if(tick)clearInterval(tick);tick=null;if('speechSynthesis'in window)speechSynthesis.cancel();}
-function close(){clear();if(root)root.remove();root=null;if(host)host.style.display='';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='';host=null;}
+function close(){
+ if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}clear();if(root)root.remove();root=null;if(host)host.style.display='';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='';host=null;}
+let activeTrainerCleanup=null;
 function view(html){
  if(!root)return;
+ if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}
  root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+html+'</div>';
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
 }
@@ -1018,6 +1021,7 @@ function speakingTrainer(){
  '<button id="b1x-speak-home" class="b1x-card">Zurück zur Auswahl</button>');
  const record=el('b1x-speak-record'),stop=el('b1x-speak-stop'),status=el('b1x-speak-status'),player=el('b1x-speak-player');
  const cleanup=()=>{if(recorder&&recorder.state==='recording')recorder.stop();if(audioUrl)URL.revokeObjectURL(audioUrl);};
+ activeTrainerCleanup=cleanup;
  el('b1x-speak-topic').onchange=e=>{el('b1x-speak-prompt').textContent=topics[Number(e.target.value)];};
  record.onclick=async()=>{
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||typeof MediaRecorder==='undefined'){status.textContent='Aufnahme wird von diesem Browser nicht unterstützt.';return;}
@@ -1030,7 +1034,7 @@ function speakingTrainer(){
   }catch(_){status.textContent='Mikrofon nicht verfügbar oder Berechtigung verweigert.';}
  };
  stop.onclick=()=>{if(recorder&&recorder.state==='recording')recorder.stop();};
- el('b1x-speak-home').onclick=()=>{cleanup();home();};
+ el('b1x-speak-home').onclick=home;
 }
 function writingTrainer(){
  const saved=(()=>{try{return JSON.parse(localStorage.getItem(trainerKey)||'{}')}catch(_){return {}}})();
