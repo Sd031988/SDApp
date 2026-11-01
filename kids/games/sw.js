@@ -1,5 +1,5 @@
 // Offline support only for SD Kids 2D mini-games. Does not control BlockWorld, Pibo or the hub root.
-const CACHE='sd-kids-mini-v4';
+const CACHE='sd-kids-mini-v5';
 const ASSETS=['./','./index.html','./play.html','./catalog.mjs','./rules.mjs','./profile.mjs','./play.mjs','../sd-sound.mjs','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
