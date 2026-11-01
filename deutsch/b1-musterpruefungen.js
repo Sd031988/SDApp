@@ -445,10 +445,10 @@ const css=document.createElement('style');css.textContent=`
 #b1x-text{width:100%;box-sizing:border-box;min-height:190px;background:#191c29;border:1px solid #565b70;color:white;padding:14px;border-radius:12px;font:inherit}
 `;document.head.appendChild(css);
 function attach(){
- if(root)return;const h=el('lBody');if(!h||!h.querySelector('#lTrainBtn')||h.querySelector('#sdB1FullEntry'))return;
+ if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
  const b=document.createElement('button');b.id='sdB1FullEntry';b.type='button';b.className='b1-entry';b.innerHTML='<b>🎓 B1-Musterprüfungen</b><small>Goethe · telc · DTZ – je 5 Mustersätze</small>';b.onclick=open;
  const old=h.querySelector('#sdB1Entry');if(old)old.remove();
- const tiles=h.querySelector('.l-kacheln');if(tiles)tiles.insertAdjacentElement('afterend',b);
+ const tiles=h.querySelector('.l-kacheln');if(tiles)tiles.insertAdjacentElement('afterend',b);else h.querySelector('.l-wrap').insertAdjacentElement('afterbegin',b);
 }
 new MutationObserver(attach).observe(document.documentElement,{childList:true,subtree:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
