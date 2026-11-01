@@ -218,9 +218,23 @@ function drawLearn(){
  txt(q.q,400,285,27,'#24325e','center');
  q.answers.forEach((answer,i)=>card((i+1)+'. '+answer,94,385+i*58,612,48,i%2===0?'#e2ebff':'#f2e7ff'));
 }
+function drawSparkles(){
+ if(reducedMotion)return;
+ // Low-cost original vector particles; never cover the central game controls.
+ ctx.save();
+ for(let i=0;i<9;i++){
+  const x=(i%2?742:39)+(i%3-1)*18;
+  const y=100+i*50+Math.sin(elapsed*1.6+i)*9;
+  const r=2+Math.abs(Math.sin(elapsed*1.3+i))*.85;
+  ctx.fillStyle='rgba(255,255,255,.38)';
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
+}
 function draw(){
  ctx.clearRect(0,0,800,600);
  ({obby:drawObby,pet:drawPet,garden:drawGarden,city:drawCity,kart:drawKart,treasure:drawTreasure,fashion:drawFashion,learn:drawLearn})[id]();
+ drawSparkles();
 }
 function resetObby(){
  const p=levels[g.level].platforms[g.checkpoint];
@@ -245,6 +259,10 @@ function updateObby(dt){
 function updateKart(dt){
  const throttle=Number(keys.up)-Number(keys.down),turn=Number(keys.right)-Number(keys.left);
  kart.speed=(kart.speed+throttle*385*dt)*Math.pow(.96,dt*60);
+ // Grass slows cars down; returning to the track rewards smoother driving.
+ const outer=kart.x>80&&kart.x<720&&kart.y>82&&kart.y<547;
+ const inner=kart.x>215&&kart.x<583&&kart.y>203&&kart.y<437;
+ if(!outer||inner)kart.speed*=Math.pow(.89,dt*60);
  kart.speed=Math.max(-125,Math.min(270,kart.speed));
  if(Math.abs(kart.speed)>6)kart.angle+=turn*2.8*dt*(kart.speed>=0?1:-1);
  kart.x=Math.max(35,Math.min(765,kart.x+Math.cos(kart.angle)*kart.speed*dt));
@@ -357,6 +375,7 @@ $('reset').addEventListener('click',()=>{
  if(id==='kart')Object.assign(kart,{x:295,y:473,angle:0,speed:0});
  message('Minispiel zurückgesetzt.');updateHUD();updateActions();draw();
 });
+let lastStaticDraw=0;
 function frame(now){
  // Clamp time after a suspended tab, keep CPU usage low while paused or hidden.
  const dt=Math.min(.035,Math.max(0,(now-last)/1000||.016));last=now;
@@ -365,6 +384,7 @@ function frame(now){
   if(id==='obby')updateObby(dt);
   if(id==='kart')updateKart(dt);
   if(id==='obby'||id==='kart')draw();
+  else if(now-lastStaticDraw>140){draw();lastStaticDraw=now}
  }
  requestAnimationFrame(frame);
 }
