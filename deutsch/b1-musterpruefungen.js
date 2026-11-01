@@ -987,10 +987,10 @@ function listeningTrainer(){
   '<button id="b1x-listen-play" class="b1x-primary">▶ Hörtext anhören</button>'+
   questions.map((q,i)=>'<div class="b1x-passage"><b>Frage '+(i+1)+'</b><p>'+esc(q)+'</p></div>').join('')+
   '<button id="b1x-listen-reveal" class="b1x-card">Antworten und Text '+(show?'verbergen':'anzeigen')+'</button>'+
-  (show?'<div class="b1x-passage"><b>Antworten</b><p>'+answers.map((a,i)=>(i+1)+'. '+esc(Array.isArray(a)?a.join(' / '):String(a))).join(' · ')+'</p><b>Hörtext</b><p>'+esc(typeof scene==='string'?scene:JSON.stringify(scene))+'</p></div>':'')+
+  (show?'<div class="b1x-passage"><b>Antworten</b><p>'+answers.map((a,i)=>(i+1)+'. '+esc(Array.isArray(a)?a[0]:String(a))).join(' · ')+'</p><b>Hörtext</b><p>'+esc(Array.isArray(scene)?scene[1]:String(scene))+'</p></div>':'')+
   '<button id="b1x-listen-back" class="b1x-card">Zurück zur Auswahl</button>');
   el('b1x-listen-select').onchange=e=>{index=Number(e.target.value);show=false;render();};
-  el('b1x-listen-play').onclick=()=>{if(!('speechSynthesis' in window)){alert('Sprachausgabe ist hier nicht verfügbar.');return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(typeof scene==='string'?scene:JSON.stringify(scene));u.lang='de-DE';u.rate=.88;window.speechSynthesis.speak(u);};
+  el('b1x-listen-play').onclick=()=>{if(!('speechSynthesis' in window)){alert('Sprachausgabe ist hier nicht verfügbar.');return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(Array.isArray(scene)?scene[1]:String(scene));u.lang='de-DE';u.rate=.88;window.speechSynthesis.speak(u);};
   el('b1x-listen-reveal').onclick=()=>{show=!show;render();};
   el('b1x-listen-back').onclick=()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel();home();};
  }
