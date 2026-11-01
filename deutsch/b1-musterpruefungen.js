@@ -584,7 +584,7 @@ function view(html){
  if(!root)return;
  stopHold();
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}
- root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+html+'</div>';
+ root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+b1HelpPanel()+html+'</div>';b1HelpRender();
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
  addReadingButtons();
 }
