@@ -15,12 +15,14 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js';
 import {PiboAudio} from './pibo-audio.js';
 import {PiboCare} from './pibo-care.js';
+import {addStars,claimDailyGift,normalizeStars,localDay} from './pibo-rewards.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
 try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&typeof saved==='object')for(const k of Object.keys(defaults))if(Number.isFinite(saved[k]))state[k]=Math.max(0,Math.min(100,saved[k]));}catch{}
 const clamp=n=>Math.max(0,Math.min(100,n));
 const extrasKey='sd-kids-pibo-extras-v2';let extras={lastGift:'',outfit:0,room:0,lastSeen:Date.now()};
 try{const x=JSON.parse(localStorage.getItem(extrasKey));if(x&&typeof x==='object')extras={...extras,...x}}catch{}
+extras.stars=normalizeStars(extras.stars);
 const hours=Math.min(12,Math.max(0,(Date.now()-Number(extras.lastSeen||Date.now()))/3600000));state.food=clamp(state.food-hours*1.8);state.energy=clamp(state.energy-hours*.5);state.clean=clamp(state.clean-hours*.8);
 function saveExtras(){extras.lastSeen=Date.now();try{localStorage.setItem(extrasKey,JSON.stringify(extras))}catch{}}
 
@@ -124,7 +126,7 @@ function finishMiniGame(){
  if(!gameActive&&!mouseActive)return;
  const score=gameActive?gameScore:mouseScore,stars=Math.min(10,Math.floor(score/3));
  gameActive=false;mouseActive=false;mouse.visible=false;gameUntil=0;ball.visible=currentRoom==='living';
- extras.stars=(Number(extras.stars)||0)+stars;saveExtras();
+ addStars(extras,stars);saveExtras();
  $('minigame').textContent='🎯 Ball fangen';$('mousegame').textContent='🐭 Maus suchen';
  $('gameHud').hidden=true;$('say').textContent='Gut gespielt! '+score+' Treffer · ⭐ '+stars+' Sterne gewonnen!';
  if(stars>0)sound('gift')
@@ -195,10 +197,10 @@ talkButton.addEventListener('click',async()=>{
 });
 window.addEventListener('pagehide',()=>{if(recorder?.state==='recording')recorder.stop();recordingStream?.getTracks().forEach(t=>t.stop())});
 $('surprise').addEventListener('click',()=>{
- const today=new Date().toLocaleDateString('en-CA');
+ const today=localDay();
  if(extras.lastGift===today){$('say').textContent='Dein nächstes Geschenk gibt es morgen! 🎁';return}
  const rewards=[{emoji:'⭐',label:'5 Sterne',stars:5},{emoji:'🧸',label:'Kuscheltier und Freude',joy:25},{emoji:'🐟',label:'Leckeres Futter',food:25},{emoji:'🌈',label:'Regenbogen-Bonus',joy:10,energy:15,food:10}];
- const reward=rewards[Math.floor(Date.now()/86400000)%rewards.length];extras.lastGift=today;extras.stars=(Number(extras.stars)||0)+(reward.stars||0);extras.gifts=(Number(extras.gifts)||0)+1;
+ const reward=rewards[Math.floor(Date.now()/86400000)%rewards.length];if(!claimDailyGift(extras,today,reward))return;
  for(const k of ['food','joy','energy'])if(reward[k])state[k]=clamp(state[k]+reward[k]);
  saveExtras();render();$('giftReveal').hidden=false;$('giftReveal').textContent='🎁 ✨ '+reward.emoji+' '+reward.label+'! · Sterne: '+extras.stars;
  $('say').textContent='Pibo hat sein Geschenk ausgepackt! 🎉';sound('gift');showEffect('🎁 🌟',reward.label,5500);
