@@ -4,7 +4,7 @@
  * Der Admin-Schlüssel kommt NUR über die Umgebungsvariable ADMIN_CODE, nie als Datei ins Repository.
  *   ADMIN_CODE=SDL-ADMN-... node tools/agent_zugang.cjs einrichten   <klartext.html> <pc.zip>
  *   ADMIN_CODE=SDL-ADMN-... node tools/agent_zugang.cjs entschluesseln <zielordner außerhalb des Repos>
- *   ADMIN_CODE=SDL-ADMN-... node tools/agent_zugang.cjs verschluesseln <klartext.html> [pc.zip]
+ *   ADMIN_CODE=SDL-ADMN-... node tools/agent_zugang.cjs verschluesseln <klartext.html> <aktualisierte-pc.zip>
  *
  * Ablauf bei Änderungen an SD Lotze: entschluesseln -> app.html bearbeiten -> verschluesseln -> committen.
  * Personen hinzufügen/entziehen: über agent/zugang.html (Verwaltungsseite).
@@ -63,10 +63,17 @@ async function kHolen() {
     fs.writeFileSync(path.join(a1, 'pc.zip'), await z.entschluessle(d ? await z.aesKey(d) : key, lese(path.join(AGENT, 'pc-agent', 'pc-' + zug.ver + '.enc'))));
     console.log('Entschlüsselt nach ' + a1 + ' (app.html, pc.zip)');
   } else if (cmd === 'verschluesseln') {
-    if (!a1) fehler('verschluesseln <klartext.html> [pc.zip]');
+    // Jede Online-Veröffentlichung braucht ein aktualisiertes PC-Paket.
+    // Sonst erhielten PC-Nutzer nur die alte Version (stille Funktionsabweichung).
+    if (!a1 || !a2) fehler('verschluesseln <klartext.html> <aktualisierte-pc.zip> – beide Versionen zusammen aktualisieren');
     let { zug, k, d } = await kHolen(); const key = await z.aesKey(k), ver = neueVersion();
     const altZip = path.join(AGENT, 'pc-agent', 'pc-' + zug.ver + '.enc');
-    const zip = a2 ? new Uint8Array(fs.readFileSync(a2)) : await z.entschluessle(d ? await z.aesKey(d) : key, lese(altZip));
+    const zip = new Uint8Array(fs.readFileSync(a2));
+    const alt = await z.entschluessle(d ? await z.aesKey(d) : key, lese(altZip));
+    if (Buffer.compare(Buffer.from(zip), Buffer.from(alt)) === 0)
+      fehler('Das PC-Paket ist unverändert. Neue PC-Version zuerst erstellen und testen; Online-Update abgebrochen.');
+    if (zip.length < 1000 || !Buffer.from(zip).subarray(0, 4).equals(Buffer.from([0x50,0x4b,0x03,0x04])))
+      fehler('PC-Paket muss eine gültig beginnende ZIP-Datei sein.');
     if (!d) {   // Umstellung: eigener Download-Schluessel, zunaechst nur fuer den Admin freigegeben
       d = z.zufall(32); const a = await z.einpacken(d, code, zug.iter); zug.dl = { [a.id]: a.eintrag };
       console.log('Download-Freigabe eingerichtet: nur Admin. Personen in agent/zugang.html freigeben.');
