@@ -63,3 +63,16 @@
 .kiServicesSteps p{margin:0;color:#d1c7eb;font-size:12px}
 #kiServicesOverlay :is(button,a,textarea):focus-visible{outline:3px solid #ffe093;outline-offset:2px}
 @media(max-width:800px){#kiServicesBtn{font-size:12px;padding:5px 8px!important}#kiServicesOverlay{padding:4px;align-items:end}.kiServicesDialog{max-height:94dvh;padding:14px;border-radius:18px 18px 0 0}.kiServicesGrid{grid-template-columns:1fr}.kiServicesQuick{padding:10px}.kiServicesActions>*{flex:1 1 100%}}
+
+/* Review AI changes before accepting them. Old/new code is never executed here. */
+#kiDiff[hidden]{display:none!important}
+.kiDiff{display:grid;gap:9px;padding:12px;border:1px solid #7b66b2;border-radius:12px;background:#18152c}
+.kiDiffHead{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.kiDiffHead strong{overflow-wrap:anywhere}
+#kiOverlay .kiDiffShow{margin-left:auto;font-size:12px;min-height:34px;padding:5px 8px;background:#372d5d;flex:none}
+.kiDiffColumns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kiDiffColumns>div{min-width:0;display:grid;grid-template-rows:auto 1fr;gap:5px}
+.kiDiffColumns strong{font-size:12px;color:#dbcdf7}
+.kiDiffColumns pre{margin:0;padding:10px;white-space:pre;overflow:auto;max-height:380px;max-width:100%;border:1px solid #4c426d;border-radius:8px;background:#100e21;color:#e9e3f5;font:11px/1.55 ui-monospace,monospace;tab-size:2}
+.onVorpruefung{border:1px solid #675e7d;border-radius:9px;padding:8px;white-space:pre-wrap;font-size:12px;line-height:1.5}
+@media(max-width:800px){.kiDiffColumns{grid-template-columns:1fr}.kiDiffColumns pre{max-height:220px}.kiFile{flex-wrap:wrap}.kiFile .kiFileName{flex:1 1 55%}}
