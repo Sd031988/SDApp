@@ -33,6 +33,40 @@ Alle bisherigen Kategorien, Links und Bereiche bleiben erhalten.
 `tests/hub/dashboard.browser.cjs`. GitHub Actions:
 `hub-dashboard.yml` und bestehende Mein-SD-Hub-Qualitätsprüfung.
 
+## Gemeinsame Navigation innerhalb der Anwendungen (neu)
+
+Die SD Hub Apps nutzen jetzt ein gemeinsames, eigenständiges Navigationsmodul:
+- `sd-workspace.js` – datensparsame, lokale App-Wechselnavigation
+- `sd-workspace.css` – Designfarben und responsives App-Menü
+- `sd-bereich.css` – aktualisierte Karten, Formulare und Farben für kleine Verwaltungs-Apps
+
+**Normale Apps:** feste Orientierung als App-Leiste oben mit Dashboard-Link,
+auf Handys zusätzlich eine untere Navigation (Dashboard, Code-Studio, KI,
+Alle Apps). Die individuelle App-Funktionalität bleibt unverändert.
+
+**Vollbild-/Spezial-Apps:** Code-Studio, Design-Studio, Deutschlernen,
+B1-Prüfung, KI-Assistent, Pibo, BlockWorld und eine Online-PDF-Oberfläche
+verwenden stattdessen einen kleinen, aufklappbaren SD-Hub-Schalter, damit
+ihre Arbeitsflächen, Chats, Lerninhalte und Spielflächen nicht durch einen
+zweiten Navigationsstreifen verkleinert werden.
+
+Das gemeinsame Menü ist in mehr als zwei Dutzend HTML-Anwendungsseiten
+eingebaut; es verlinkt die wesentlichen Apps und die persönliche Übersicht.
+Es liest keine privaten Daten aus anderen Apps aus, verwendet keine
+Administratorcodes und sendet keine Telemetrie.
+
+Die automatisierten Tests `tests/hub/app-workspace.test.cjs` und
+`tests/hub/app-workspace.browser.cjs` prüfen die App-Einbindung und den
+Aufruf auf Laptop und Handy. Der Workflow
+`.github/workflows/app-workspace.yml` führt diese Tests bei Änderungen aus.
+
+**Noch offen:** Tiefgreifende Neubauten der **internen** Editoren,
+Spielwelten oder Chatfunktionen sind damit nicht erfolgt. Das
+verschlüsselte **lokale PC-Agentenpaket** wurde nicht neu gebaut; es
+braucht weiterhin den gesonderten, getesteten Update- und
+Freigabeprozess. Der in einer früheren Unterhaltung geteilte
+Administratorschlüssel wurde nicht im Repository gespeichert.
+
 ## Weiterer gemeinsamer Ausbau der Anwendungen
 
 Die neue Übersicht bündelt die **bestehenden Apps**, statt ihre eigenen
