@@ -139,6 +139,22 @@ const assert = require('node:assert/strict');
     assert.equal(advanced.project,true);
     assert.equal(advanced.incomplete,false);
     assert.equal(advanced.complete,true);
+    const course = await page.evaluate(() => ({
+      quizCorrect:lernQuizPruefen('html',0),
+      quizWrong:lernQuizPruefen('html',1),
+      quizUnknown:lernQuizPruefen('missing',0),
+      next:lernNaechsteLektion({html:'abgeschlossen'}).id,
+      first:lernNaechsteLektion({}).id,
+      project:lernLektionAusProjekt({name:'lernen-css-layout-2',dateien:{'LEKTION.md':'Übung'}})?.id,
+      unrelated:lernLektionAusProjekt({name:'website',dateien:{'LEKTION.md':'Übung'}})
+    }));
+    assert.equal(course.quizCorrect,true);
+    assert.equal(course.quizWrong,false);
+    assert.equal(course.quizUnknown,false);
+    assert.equal(course.first,'html');
+    assert.equal(course.next,'css');
+    assert.equal(course.project,'css-layout');
+    assert.equal(course.unrelated,null);
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
