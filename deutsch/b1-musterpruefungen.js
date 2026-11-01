@@ -232,6 +232,13 @@ function items(section){
        result.push({g,j,q:'Situation '+(j+1)+': '+need[0],options,answer,passage,kind:'Anzeigen zuordnen · gemeinsamer Anzeigenpool'});
        continue;
      }
+     if(id==='lesen'&&exam==='goethe'&&(g===0||g===3)){
+       const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
+       const rd=readingTexts[textIndex],truth=(j+set)%2===0;
+       const statement=truth?rd[3]:rd[4];
+       result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],kind:'Leseverstehen · '+kinds[g]});
+       continue;
+     }
      if(id==='lesen'){
        const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
        const rd=readingTexts[textIndex],options=rd.slice(3,6),correct=options[0],pos=(n+set+g)%3;
@@ -325,7 +332,7 @@ function question(){
   }else val=el('b1x-text').value.trim();
   answers.push(val);idx++;plays=0;question();
  };
- tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent='⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());clear();finish();}},1000);
+ tick=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));if(el('b1x-clock'))el('b1x-clock').textContent='⏱ '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left===0){const pNow=E[exam].parts[part];if(['schreiben','sprechen'].includes(pNow[0])&&el('b1x-text'))answers.push(el('b1x-text').value.trim());while(answers.length<items(pNow).length)answers.push(null);clear();finish();}},1000);
 }
 function selfCheckMarkup(section,entries){
  const isWrite=section==='schreiben';
@@ -350,8 +357,8 @@ function selfCheckMarkup(section,entries){
  '</details>';
 }
 function finish(){
- clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?answers.filter((a,i)=>a===list[i].answer).length:null;
- const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000)};
+ clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
+ const record={exam,set,part:p[0],date:new Date().toISOString(),correct,total:list.length,answered:answers.filter(a=>a!==null&&a!==undefined&&a!=='').length,answers:answers.slice(),elapsed:Math.round((Date.now()-began)/1000)};
  results[p[0]]=record;
  try{const old=getSaved();old.push(record);localStorage.setItem('sdB1FullResults',JSON.stringify(old.slice(-60)));}catch(_){}
  const next=running&&part+1<E[exam].parts.length;
