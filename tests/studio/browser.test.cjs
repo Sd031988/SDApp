@@ -76,6 +76,16 @@ const assert = require('node:assert/strict');
     assert.deepEqual(builder.web,['web','desktop']);
     assert.deepEqual(builder.react,['framework']);
     assert.equal(builder.empty,0);
+    const design = await page.evaluate(() => {
+      const original = '<!doctype html><html><head><title>Alt</title></head><body><main><h1>Vorher</h1><p>Original</p></main></body></html>';
+      const changed = websiteDesignVorschlag(original,{titel:'Neu',ueberschrift:'Nachher',beschreibung:'Bearbeitet',farbe:'#336699'});
+      return {original,changed};
+    });
+    assert(design.changed.includes('<title>Neu</title>'));
+    assert(design.changed.includes('Nachher'));
+    assert(design.changed.includes('Bearbeitet'));
+    assert(design.changed.includes('#336699'));
+    assert(design.original.includes('Vorher'));
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
