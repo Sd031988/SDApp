@@ -63,7 +63,7 @@ export class PiboCare {
       if(i.type==='toilet'&&phase===2)this.sound('fart');
       if(i.type==='toilet'&&phase===3){i.water.visible=true;this.sound('flush')}
     }
-    this.onStatus(true,labels[i.type][phase],p);
+    if(!i.lastStatusAt||now-i.lastStatusAt>=80||phase!==i.lastStatusPhase){this.onStatus(true,labels[i.type][phase],p);i.lastStatusAt=now;i.lastStatusPhase=phase}
     const smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
     const near=smooth(p/.22)*(1-smooth((p-.84)/.16));
     const target=i.type==='feed'?0:i.type==='wash'?-2.55:i.type==='sleep'?-3.1:-2.35;
