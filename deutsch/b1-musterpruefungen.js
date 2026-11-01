@@ -510,7 +510,7 @@ function items(section){
        continue;
      }
      if(id==='lesen'&&exam==='goethe'&&(g===0||g===3)){
-       const textIndex=(j+(set-1)*7+(g===3?6:0))%readingTexts.length;
+       const textIndex=(j+(set-1)*7+(g===3?6:0))%readingClaims.length;
        const rd=readingTexts[textIndex],truth=(j+set+(g===3?1:0))%2===0;
        const statement=readingClaims[textIndex][truth?0:1];
        result.push({g,j,q:'Aussage: '+statement,options:g===0?['Richtig','Falsch']:['Ja','Nein'],answer:truth?0:1,passage:rd[0]+'\\n\\n'+rd[1],explanation:readingClaimExplanations[textIndex][truth?0:1],kind:'Leseverstehen · '+kinds[g]});
