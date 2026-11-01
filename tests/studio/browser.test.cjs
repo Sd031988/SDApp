@@ -118,7 +118,7 @@ const assert = require('node:assert/strict');
       pythonOk:lernAufgabePruefen('python',"name = 'Ada'\nprint(name)"),
       unknown:lernAufgabePruefen('unknown','anything')
     }));
-    assert.equal(lessons.count,9);
+    assert.equal(lessons.count,11);
     assert.equal(lessons.htmlOk,true);
     assert.equal(lessons.htmlBad,false);
     assert.equal(lessons.cssOk,true);
@@ -155,6 +155,28 @@ const assert = require('node:assert/strict');
     assert.equal(course.next,'css');
     assert.equal(course.project,'css-layout');
     assert.equal(course.unrelated,null);
+    const executable = await page.evaluate(async () => ({
+      pass:await lernCodeTesten('javascript-functions','function addieren(a,b){return a+b;}'),
+      fail:await lernCodeTesten('javascript-functions','function addieren(a,b){return a-b;}'),
+      condition:await lernCodeTesten('js-conditions','function istVolljaehrig(alter){return alter>=18;}'),
+      array:await lernCodeTesten('js-arrays','function summe(zahlen){return zahlen.reduce((a,b)=>a+b,0);}')
+    }));
+    assert.equal(executable.pass.bestanden,true,'Ausführbarer Additions-Test');
+    assert.equal(executable.fail.bestanden,false,'Fehlerhafter Code muss durchfallen');
+    assert.equal(executable.condition.bestanden,true,'Bedingungstest');
+    assert.equal(executable.array.bestanden,true,'Arraytest');
+    const endToEnd = await page.evaluate(async () => {
+      const before = {name:'bestehendes-projekt',dateien:{'index.html':'ORIGINAL'}};
+      const unchanged = JSON.stringify(before);
+      const lesson = LERN_LEKTIONEN.find(l=>l.id==='js-conditions');
+      const valid = lernQuizPruefen(lesson.id,1);
+      const next = lernNaechsteLektion({'html':'abgeschlossen'}).id;
+      return {valid,next,unchanged:JSON.stringify(before)===unchanged,lesson:lesson.id};
+    });
+    assert.equal(endToEnd.valid,true);
+    assert.equal(endToEnd.next,'css');
+    assert.equal(endToEnd.unchanged,true);
+    assert.equal(endToEnd.lesson,'js-conditions');
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
