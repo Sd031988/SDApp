@@ -584,7 +584,7 @@ function view(html){
  if(!root)return;
  stopHold();
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}
- root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+b1HelpPanel()+html+'</div>';b1HelpRender();
+ root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><a href="b1-papierpruefung.html" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;padding:8px">🖨️ A4-Prüfungsbogen</a><button id="b1x-close">✕</button></div>'+b1HelpPanel()+html+'</div>';b1HelpRender();
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
  addReadingButtons();
 }
