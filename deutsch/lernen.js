@@ -509,8 +509,9 @@
     }).join('') + '</div>';
   }
   function showLevels() {
-    stopAll(); L.view = 'levels'; topbar();
     const p = prof();
+    if (!p) { showProfiles(); return; }
+    stopAll(); L.view = 'levels'; topbar();
     body('<h2 class="l-h">🎚️ ' + bi('Niveau wählen', 'levels') + '</h2>' +
       '<p class="l-note">Alles in der App – Lektionen, Training, Wörterbuch und Grammatik – zeigt dann <b>nur dieses Niveau</b>. Dein Stand in jedem Niveau bleibt gespeichert.</p>' +
       levelCards(p, p.level) +
