@@ -290,12 +290,15 @@
     ],
     "test_files": [
       "kids/pibo-care.test.mjs",
-      "kids/e2e/pibo.spec.mjs"
+      "kids/e2e/pibo.spec.mjs",
+      "kids/pibo-smoke.js"
     ],
     "verified": [
       "PiboCare-Syntaxprüfung",
       "Inline-JavaScript-Syntaxprüfung",
-      "PiboCare-Unit-/Regressionstests mit Three.js-Testdoubles erfolgreich"
+      "PiboCare-Unit-/Regressionstests mit Three.js-Testdoubles erfolgreich",
+      "Pibo-Headless-Smoke: 18 Abläufe, 436 simulierte Frames, PASS (kein echtes WebGL)",
+      "Benchmark: 26 Kriterien, 20 teilweise, 6 fehlen; alle 15 Nachweisdateien auf main gefunden"
     ],
     "unverified": [
       "Echte WebGL-Playwright-Läufe auf Desktop/Mobil-Chromium im aktuellen Durchlauf nicht lokal ausgeführt",
