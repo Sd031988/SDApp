@@ -208,13 +208,24 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
     await page.locator('#kiGoal').fill('Erstelle eine kleine Webseite mit Überschrift.');
     const aiBefore=await page.evaluate(()=>({name:S.p.name,files:JSON.stringify(S.p.dateien)}));
-    const aiAnswer='### Datei: index.html\n'+String.fromCharCode(96).repeat(3)+'html\n'+
-      '<!doctype html><html lang="de"><head><title>KI Test</title></head><body><h1 id="kiTest">Funktioniert</h1></body></html>\n'+
-      String.fromCharCode(96).repeat(3)+'\n\n'+
-      '### Datei: css/style.css\n'+String.fromCharCode(96).repeat(3)+'css\nbody { color: #222; }\n'+String.fromCharCode(96).repeat(3);
+    const ticks=String.fromCharCode(96).repeat(3);
+    const aiAnswer=[
+      'Hier sind alle Dateien für dein Projekt.',
+      '### Datei: index.html',ticks+'html',
+      '<!doctype html><html lang="de"><head><title>KI Test</title><link href="css/style.css" rel="stylesheet"></head><body><h1 id="kiTest">Funktioniert</h1><script src="js/app.js"></script></body></html>',ticks,
+      'Die Erklärung für CSS wird nicht übernommen.',
+      '### Datei: css/style.css',ticks+'css','body { color: #222; }',ticks,
+      '### Datei: js/app.js',ticks+'javascript','console.log("JS-Code erkannt")',ticks,
+      'Jetzt kommt ein Python-Programm.',ticks+'python','print("Python erkannt")',ticks,
+      'Jetzt kommt ein Java-Programm.',ticks+'java','public class Main { public static void main(String[] args) {} }',ticks,
+      'Dies ist nur eine abschließende Erklärung.'
+    ].join('\n');
     await page.locator('#kiResult').fill(aiAnswer);
-    await page.locator('#kiAnalyse').click();
-    assert.equal(await page.locator('#kiFiles .kiFile').count(),2,'Two separate files routed');
+    await page.locator('#kiResult').dispatchEvent('paste');
+    await page.waitForFunction(()=>document.querySelectorAll('#kiFiles .kiFile').length===5,{timeout:5000});
+    assert.equal(await page.locator('#kiFiles .kiFile').count(),5,'HTML CSS JavaScript Python and Java routed');
+    for(const file of ['index.html','css/style.css','js/app.js','main.py','Main.java'])
+      assert((await page.locator('#kiFiles').innerText()).includes(file),'missing mapped file '+file);
     assert.equal(await page.locator('#kiApply').isEnabled(),true);
     page.once('dialog',dialog=>dialog.accept());
     await page.locator('#kiApply').click();
@@ -222,11 +233,16 @@ const assert = require('node:assert/strict');
     const aiAfter=await page.evaluate(async oldName=>{
       const old=await projLesen(oldName),current=S.p;
       return {newName:current.name,originalName:old.name,hasOriginal:old.dateien['index.html']!==undefined,
-        originalUnchanged:JSON.stringify(old.dateien),html:current.dateien['index.html'],css:current.dateien['css/style.css']};
+        originalUnchanged:JSON.stringify(old.dateien),html:current.dateien['index.html'],css:current.dateien['css/style.css'],
+        javascript:current.dateien['js/app.js'],python:current.dateien['main.py'],java:current.dateien['Main.java']};
     },aiBefore.name);
     assert.notEqual(aiAfter.newName,aiAfter.originalName);
     assert.match(aiAfter.html,/id="kiTest"/);
     assert.equal(aiAfter.css,'body { color: #222; }\n');
+    assert.match(aiAfter.javascript,/JS-Code erkannt/);
+    assert.match(aiAfter.python,/Python erkannt/);
+    assert.match(aiAfter.java,/public class Main/);
+    assert(!aiAfter.javascript.includes('Die Erklärung'),'Erklärungstext darf nicht als Code gespeichert werden');
     // Saving an independent copy must leave all prior files intact.
     assert.equal(aiAfter.originalUnchanged,aiBefore.files,'Originalprojekt darf nicht verändert werden');
     assert.equal(await page.locator('#kiOverlay').isVisible(),false);
