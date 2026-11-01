@@ -123,3 +123,39 @@ test("prompt asks for all required code languages in one copyable package",()=>{
  assert.ok(prompt.includes("Java"));
  assert.ok(prompt.includes("genau EINMAL"));
 });
+
+test("change assistant recommends active HTML and linked CSS JS but not unrelated files",()=>{
+ const project={dateien:{
+  "index.html":'<link href="css/style.css" rel="stylesheet"><script src="js/app.js"></script>',
+  "css/style.css":"body {color:#333}",
+  "js/app.js":"console.log(1)",
+  "main.py":"print('irrelevant')"
+ }};
+ assert.deepEqual(core.suggestChangeFiles(project,"index.html"),["index.html","css/style.css","js/app.js"]);
+});
+test("change prompts include only user-approved complete file contents",()=>{
+ const project={name:"Rechnungen",dateien:{"index.html":"<h1>Meine Rechnung</h1>","style.css":"body{color:orange}","private.py":"print('never share')"}};
+ const request=core.buildChangePrompt("Knopf zum Drucken hinzufügen",project,["index.html","style.css"]);
+ assert(request.includes("<h1>Meine Rechnung</h1>"));
+ assert(request.includes("body{color:orange}"));
+ assert(!request.includes("print('never share')"));
+ assert(request.includes("Unveränderte Dateien NICHT erneut ausgeben"));
+ assert(request.includes("Knopf zum Drucken hinzufügen"));
+ assert(request.includes("### Datei:"));
+ assert.equal(project.dateien["index.html"],"<h1>Meine Rechnung</h1>");
+});
+test("change prompts reject secrets, missing paths, oversized and empty selection",()=>{
+ const project={name:"safe",dateien:{
+  "app.js":"console.log('hello')",
+  "password.js":'const password = "super-secret-value";',
+  "too-big.js":"x".repeat(55001)
+ }};
+ assert.equal(core.changeFileAllowed("password.js",project.dateien["password.js"]),false);
+ assert.equal(core.changeFileAllowed(".env","A=B"),false);
+ assert.equal(core.changeFileAllowed("main.js","-----BEGIN PRIVATE KEY-----"),false);
+ assert.throws(()=>core.buildChangePrompt("Test",project,["password.js"]),/Zugangsdaten|ungeeignet/);
+ assert.throws(()=>core.buildChangePrompt("Test",project,["missing.js"]),/nicht mehr vorhanden/);
+ assert.throws(()=>core.buildChangePrompt("Test",project,["too-big.js"]),/zu groß/);
+ assert.throws(()=>core.buildChangePrompt("Test",project,[]),/mindestens eine/);
+ assert.throws(()=>core.buildChangePrompt(" ",project,["app.js"]),/Änderung beschreiben/);
+});
