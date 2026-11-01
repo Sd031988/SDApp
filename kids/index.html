@@ -224,6 +224,15 @@ window.addEventListener('pointerup',foodDragEnd);
 window.addEventListener('pointercancel',clearFoodDrag);
 const roomProps=new THREE.Group();scene.add(roomProps);let currentRoom='living';
 const roomPalette={living:0xe9dcff,kitchen:0xffefce,bedroom:0xd7e2ff,bathroom:0xd3f3f6,toilet:0xe2f3e4};
+let lightsOff=false;
+function setNight(enabled){
+ lightsOff=!!enabled;
+ sun.intensity=lightsOff?.28:2.8;
+ stage.classList?.toggle('pibo-night',lightsOff);
+ $('sleepStars').hidden=!lightsOff;
+ $('lamp').textContent=lightsOff?'💡 Licht an':'💡 Licht aus';
+ scene.background.setHex(lightsOff?0x172440:roomPalette[currentRoom]||roomPalette.living);
+}
 function cube(p,color,x,y,z,w,h,d){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;p.add(m);return m}
 function propBall(p,color,x,y,z,r){return ell(p,mat(color),x,y,z,r,r,r)}
 function furnish(room){while(roomProps.children.length){const child=roomProps.children[0];roomProps.remove(child);child.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose()})}back.material.color.setHex((extras.roomColors&&extras.roomColors[room])||roomPalette[room]);scene.background.setHex(roomPalette[room]);rug.visible=room==='living'||room==='bedroom';ball.visible=room==='living'||gameActive;
@@ -263,12 +272,12 @@ if(room==='toilet'){
  cube(roomProps,0xfafafa,2.4,1.4,-3.6,.55,.6,.08);cube(roomProps,0xd4e6ee,2.5,1.15,-1.2,.55,.06,.5)
 }
 }
-function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];saveExtras()}
+function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='bedroom'&&lightsOff)setNight(false);if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];saveExtras()}
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>{switchRoom(b.dataset.room);sound('select')}));
 const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 let care=null;
 function clearInteraction(){care?.stop()}
-function startInteraction(type){care?.start(type,foodIndex,performance.now());if(type==='feed')showEffect(foods[foodIndex][0],'Pibo frisst '+foods[foodIndex][1],7000);if(type==='wash')showEffect('🛁 🫧','Pibo steigt in die Badewanne',7000);if(type==='sleep')showEffect('🛏️ 💤','Pibo schläft in seinem Bett',9000);if(type==='toilet')showEffect('🚽 💦','Pibo benutzt die Toilette und spült',7500)}
+function startInteraction(type,options={}){care?.start(type,foodIndex,performance.now(),options);if(type==='feed')showEffect(foods[foodIndex][0],'Pibo frisst '+foods[foodIndex][1],7000);if(type==='wash')showEffect('🛁 🫧','Pibo steigt in die Badewanne',7000);if(type==='sleep')showEffect('🛏️ 💤','Pibo schläft in seinem Bett',9000);if(type==='toilet')showEffect('🚽 💦','Pibo benutzt die Toilette und spült',7500)}
 
 const paws=[];for(const side of [-1,1])paws.push(ell(cat,fur,side*.43,.21,.54,.25,.19,.3));const head=new THREE.Group();head.position.set(0,1.94,.27);cat.add(head);ell(head,fur,0,0,0,.76,.7,.66);ell(head,cream,0,-.3,.51,.56,.34,.25);
 const ears=[];function ear(x){const outer=new THREE.Mesh(new THREE.ConeGeometry(.29,.62,3),fur);outer.position.set(x,.72,0);outer.rotation.z=x<0?.19:-.19;outer.rotation.y=Math.PI/2;head.add(outer);const inner=new THREE.Mesh(new THREE.ConeGeometry(.17,.42,3),pink);inner.position.set(x,.73,.08);inner.rotation.z=x<0?.19:-.19;inner.rotation.y=Math.PI/2;head.add(inner);ears.push({outer,inner,rest:x<0?.19:-.19})}ear(-.5);ear(.5);
@@ -289,15 +298,42 @@ const cheeks=[];for(const x of [-.49,.49]){cheeks.push(ell(head,pink,x,-.27,.61,
 const piboDetails=decoratePibo({THREE,cat,head,ell,mat});
 care=new PiboCare({THREE,scene,cat,head,mouth,paws,camera,sound,onStatus:(active,label,p)=>{$('careStatus').hidden=!active;$('careLabel').textContent=label;$('careFill').style.width=Math.round(p*100)+'%'}});
 let reactionSide=1;
-function bodyReaction(part){reactionSide*=-1;mode=part;modeUntil=performance.now()+1200;const messages={paw:'Huch! Meine Pfote kitzelt! 🐾',belly:'Hihihi! Das kitzelt am Bauch! 😹',nose:'Hatschi! Meine Nase! 🤧',ear:'Meine Ohren hören alles! 👂',tail:'Hoppla, mein Schwanz! 🐈'};$('say').textContent=messages[part];state.joy=clamp(state.joy+2);sound(part==='belly'?'purr':'meow');render()}
+let pawTouches=0,lastPawSpeech=0;
+function speakPibo(text){
+ if(!soundOn||!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;
+ try{
+   window.speechSynthesis.cancel();
+   const speech=new window.SpeechSynthesisUtterance(text);
+   speech.lang='de-DE';speech.pitch=1.65;speech.rate=1.12;speech.volume=Math.min(1,piboVolume);
+   window.speechSynthesis.speak(speech);return true
+ }catch{return false}
+}
+function bodyReaction(part){
+ reactionSide*=-1;mode=part;modeUntil=performance.now()+1400;
+ const messages={
+  paw:pawReaction(pawTouches++),belly:'Hihihi! Mein Bauch kitzelt! 😹',
+  nose:'Hatschi! Meine Nase! 🤧',ear:'Hui, das sind meine Ohren! 👂',
+  tail:'Oh, mein Schwanz! 🐈'
+ };
+ $('say').textContent=messages[part];
+ state.joy=clamp(state.joy+(part==='paw'?1:2));
+ if(part==='paw'&&performance.now()-lastPawSpeech>1700){
+   lastPawSpeech=performance.now();
+   const said=speakPibo('Nö, nö, nö! Nicht meine Pfötchen!');
+   if(!said)sound('meow');
+ }else sound(part==='belly'?'purr':'meow');
+ render()
+}
 const clock=new THREE.Clock();let blink=0;const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let stroking=false,lastStroke=0;
 function heartAt(x,y){const h=document.createElement('span');h.className='heart';h.textContent=['💗','💕','✨'][Math.floor(Math.random()*3)];h.style.left=x+'px';h.style.top=y+'px';$('hearts').appendChild(h);setTimeout(()=>h.remove(),1150)}
 function rayAt(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);return rect}
 function stroke(e){const rect=rayAt(e),hits=raycaster.intersectObjects(cat.children,true);if(!hits.length)return false;const now=performance.now();if(now-lastStroke>180){lastStroke=now;heartAt(e.clientX-rect.left,e.clientY-rect.top);head.rotation.z=.12*Math.sin(now/180);if(now-(window.lastPiboReward||0)>1200){window.lastPiboReward=now;act('pet')}else{$('say').textContent='Prrrr … Pibo genießt das Streicheln! 😻'}}return true}
 let lastScrub=0;
 renderer.domElement.addEventListener('pointermove',e=>{
- if(care?.active?.type==='wash'&&(e.buttons||e.pressure>0)&&performance.now()-lastScrub>=240){
+ if(care?.active?.type==='wash'&&!care.active.rinsed&&(e.buttons||e.pressure>0)&&performance.now()-lastScrub>=240){
    lastScrub=performance.now();
+   rayAt(e);
+   if(!raycaster.intersectObjects(cat.children,true).length)return;
    if(care.scrub()){state.clean=clamp(state.clean+1);render()}
    return;
  }
@@ -306,7 +342,7 @@ renderer.domElement.addEventListener('pointermove',e=>{
 renderer.domElement.addEventListener('pointerup',()=>{stroking=false});
 renderer.domElement.addEventListener('pointercancel',()=>{stroking=false});
 window.addEventListener('pointerup',()=>{stroking=false});
-renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);if(mouseActive&&raycaster.intersectObjects(mouse.children,true).length){mouseScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+4);$('say').textContent='🐭 Maus gefunden! Punkte: '+mouseScore;mouse.position.x=(Math.random()-.5)*3;mouse.position.z=.7+Math.random()*.8;render();return}if(gameActive&&raycaster.intersectObject(ball,true).length){gameScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+3);$('say').textContent='🎯 Treffer! Punkte: '+gameScore;ball.position.x=(Math.random()-.5)*3;ball.position.z=.6+Math.random()*.8;render();return}const hits=raycaster.intersectObjects(cat.children,true);if(hits.length){stroking=true;try{renderer.domElement.setPointerCapture(e.pointerId)}catch{}const hit=hits[0].point;if(hit.y>2.48)bodyReaction('ear');else if(hit.y>1.65&&hit.z>.70)bodyReaction('nose');else if(hit.y>1.55)stroke(e);else if(hit.y<.58)bodyReaction('paw');else if(hit.x>.6&&hit.z<.3)bodyReaction('tail');else if(hit.z>.35)bodyReaction('belly');else stroke(e)}});renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','button');renderer.domElement.setAttribute('aria-label','Pibo streicheln');renderer.domElement.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act('pet')}});
+renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);if(mouseActive&&raycaster.intersectObjects(mouse.children,true).length){mouseScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+4);$('say').textContent='🐭 Maus gefunden! Punkte: '+mouseScore;mouse.position.x=(Math.random()-.5)*3;mouse.position.z=.7+Math.random()*.8;render();return}if(gameActive&&raycaster.intersectObject(ball,true).length){gameScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+3);$('say').textContent='🎯 Treffer! Punkte: '+gameScore;ball.position.x=(Math.random()-.5)*3;ball.position.z=.6+Math.random()*.8;render();return}const hits=raycaster.intersectObjects(cat.children,true);if(hits.length){stroking=true;try{renderer.domElement.setPointerCapture(e.pointerId)}catch{}const hit=hits[0].point;if(hit.y>2.48)bodyReaction('ear');else if(hit.y>1.65&&hit.z>.70)bodyReaction('nose');else if(hit.y>1.55)stroke(e);else if(hit.y<1.08)bodyReaction('paw');else if(hit.x>.6&&hit.z<.3)bodyReaction('tail');else if(hit.z>.35)bodyReaction('belly');else stroke(e)}});renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','button');renderer.domElement.setAttribute('aria-label','Pibo streicheln');renderer.domElement.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act('pet')}});
 function updateGameHud(){
  $('gameHud').hidden=!(gameActive||mouseActive);$('gameName').textContent=gameActive?'Ball fangen':'Maus suchen';
  $('gamePoints').textContent=String(gameActive?gameScore:mouseScore);
@@ -338,6 +374,39 @@ $('potty').addEventListener('click',()=>{switchRoom('toilet');mode='toilet';mode
 $('scrub').addEventListener('click',()=>{
  if(care?.active?.type!=='wash')act('wash');
  if(care?.scrub()){state.clean=clamp(state.clean+2);render();$('say').textContent='Pibo wird sauber eingeseift! 🧽'}
+});
+$('rinse').addEventListener('click',()=>{
+ if(care?.rinse()){
+   state.clean=clamp(state.clean+12);
+   $('say').textContent='Plitsch, platsch! Die Seife ist weg. Jetzt abtrocknen! 🚿';
+   showEffect('🚿 💧','Frisches Wasser fließt über Pibo!',4000);
+   render();return
+ }
+ $('say').textContent=care?.active?.type==='wash'?'Erst Pibo gut einseifen – reibe mit dem Finger über seine Katze! 🧼':'Erst ins Badezimmer gehen und Pibo waschen! 🛁';
+});
+$('dry').addEventListener('click',()=>{
+ if(care?.dry()){
+   state.clean=clamp(state.clean+16);
+   state.joy=clamp(state.joy+4);
+   $('say').textContent='Alles trocken! Pibo fühlt sich wieder pudelwohl! 😻';
+   showEffect('🧻 ✨','Pibo ist frisch gewaschen!',4500);
+   render();return
+ }
+ $('say').textContent='Zuerst Seife auftragen und unter der Dusche abspülen. 🧼 🚿';
+});
+$('lamp').addEventListener('click',()=>{
+ if(currentRoom!=='bedroom')switchRoom('bedroom');
+ setNight(!lightsOff);
+ if(lightsOff){
+   mode='sleep';modeUntil=performance.now()+9000;
+   startInteraction('sleep');
+   $('say').textContent='Pssst … Licht aus. Pibo schläft tief und fest! 💤';
+   sound('snore');
+ }else{
+   care?.stop();mode='idle';
+   $('say').textContent='Guten Morgen, Pibo! Die Sonne scheint! ☀️';
+   sound('meow');
+ }
 });
 $('flush').addEventListener('click',()=>{
  if(care?.flush()){$('say').textContent='Super! Die Toilette ist gespült! 🚽';return}
