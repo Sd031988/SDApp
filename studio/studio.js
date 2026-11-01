@@ -1115,8 +1115,9 @@ function lernQuizFrage(lektion) {
   const eingabe=prompt('📚 '+lektion.titel+'\n\n'+w[0]+'\n\nWissensfrage: '+w[1]+'\n'+
     w[2].map((a,i)=>(i+1)+'. '+a).join('\n')+'\n\nAntwort (1–3):');
   if (eingabe===null) return null;
+  if (!/^[1-3]$/.test(eingabe.trim())) return false;
   const nummer=Number(eingabe);
-  return Number.isInteger(nummer)&&lernQuizPruefen(lektion.id,nummer-1);
+  return lernQuizPruefen(lektion.id,nummer-1);
 }
 
 function lernAufgabePruefen(id,code) {
