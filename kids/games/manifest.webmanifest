@@ -1,8 +1,8 @@
 {
   "id": "/kids/games/",
-  "name": "SD Kids Spielewelt",
-  "short_name": "SD Kids",
-  "description": "Zehn kostenlose SD Kids Spiele, davon acht Minispiele auch offline nach dem ersten Laden.",
+  "name": "Spiele – SD Hub",
+  "short_name": "Spiele",
+  "description": "Zehn kostenlose Spiele, davon acht Minispiele auch offline nach dem ersten Laden.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
