@@ -12,6 +12,7 @@ const findPath=id=>D.paths.find(x=>x.id===id);
 const findProject=id=>D.projects.find(x=>x.id===id);
 const REC=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recognizer=null,storageWorks=true;
+let appFilter="Alle",appSearch="";
 function readState(){try{const value=localStorage.getItem(D.storageKey);return value?D.sanitizeState(JSON.parse(value)):D.initial()}catch(e){storageWorks=false;return D.initial()}}
 let state=readState();
 function flash(message){$("storageStatus").textContent=message}
@@ -24,14 +25,67 @@ document.querySelectorAll(".module").forEach(m=>m.hidden=m.id!==id);
 document.querySelectorAll(".tab").forEach(b=>{const active=b.dataset.tab===id;b.classList.toggle("active",active);b.setAttribute("aria-selected",String(active));if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 try{history.replaceState(null,"","#"+id)}catch(e){}
 if(id!=="sprache")stopSpeech();
+const more=$("mobileMore"),menu=$("mobileNavMenu");if(more&&menu){more.setAttribute("aria-expanded","false");menu.hidden=true;more.classList.toggle("active",["leben","sprache"].includes(id));}
 if(scroll)window.scrollTo({top:document.querySelector(".tabs-shell").offsetTop,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
 }
 document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>setTab(btn.dataset.tab,true)));
+const mobileMore=$("mobileMore"),mobileMenu=$("mobileNavMenu");
+mobileMore?.addEventListener("click",()=>{
+ const open=mobileMenu.hidden;
+ mobileMenu.hidden=!open;
+ mobileMore.setAttribute("aria-expanded",String(open));
+});
+mobileMenu?.querySelectorAll("[data-mobile-tab]").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.mobileTab,true)));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&mobileMenu&&!mobileMenu.hidden){mobileMenu.hidden=true;mobileMore.setAttribute("aria-expanded","false");mobileMore.focus()}});
+document.addEventListener("click",e=>{if(mobileMenu&&!mobileMenu.hidden&&!e.target.closest(".tabs-shell")){mobileMenu.hidden=true;mobileMore.setAttribute("aria-expanded","false")}});
 document.querySelectorAll("[data-tablink]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();setTab(a.dataset.tablink,true)}));
 document.addEventListener("click",e=>{const b=e.target.closest("[data-goto]");if(b)setTab(b.dataset.goto,true);const a=e.target.closest("a[data-track]");if(a)track(a.dataset.track)});
 window.addEventListener("hashchange",()=>setTab(location.hash.slice(1),false));
 function clearChildren(id){$(id).replaceChildren()}
 function simpleLink(item){const a=itemLink(item,null,"simple-link");a.replaceChildren();node("span","",item.icon+"  "+item.title,a);node("span","","↗",a);return a}
+function renderApps(){
+ const box=$("appDirectory");if(!box)return;
+ box.replaceChildren();
+ const cats=["Alle",...new Set(D.items.map(it=>it.category))];
+ const filters=$("appFilters");filters.replaceChildren();
+ cats.forEach(cat=>{
+  const b=node("button","",cat,filters);
+  b.type="button";b.setAttribute("aria-pressed",String(cat===appFilter));
+  b.addEventListener("click",()=>{appFilter=cat;renderApps()});
+ });
+ let visible=0;
+ for(const it of D.items){
+  const term=(it.title+" "+it.description+" "+it.category+" "+it.keywords).toLocaleLowerCase("de");
+  const match=(appFilter==="Alle"||it.category===appFilter)&&(!appSearch||term.includes(appSearch));
+  if(!match)continue;
+  visible++;
+  const card=node("article","sd-app-card",undefined,box);
+  const a=node("a","sd-app-open",undefined,card);a.href=it.href;a.dataset.track=it.id;
+  const icon=node("span","sd-app-icon",it.icon,a);icon.style.setProperty("--sd-icon-bg",it.color+"33");
+  const copy=node("span","sd-app-copy",undefined,a);
+  node("span","sd-app-name",it.title,copy);
+  node("small","sd-app-description",it.description,copy);
+  const star=node("button","sd-app-star",state.favorites.includes(it.id)?"★":"☆",card);
+  star.type="button";
+  star.setAttribute("aria-pressed",String(state.favorites.includes(it.id)));
+  star.setAttribute("aria-label",(state.favorites.includes(it.id)?"Aus Favoriten entfernen: ":"Als Favorit merken: ")+it.title);
+  star.addEventListener("click",()=>toggleFavorite(it.id));
+ }
+ $("appEmpty").hidden=visible!==0;
+}
+$("appSearch").addEventListener("input",e=>{appSearch=e.target.value.trim().toLocaleLowerCase("de");renderApps()});
+const themeBtn=$("themeSwitch");
+let mode="light";try{mode=localStorage.getItem("sdhub-theme-v1")==="dark"?"dark":"light"}catch(e){}
+function setTheme(value){
+ mode=value==="dark"?"dark":"light";
+ document.documentElement.dataset.sdTheme=mode;
+ themeBtn.setAttribute("aria-pressed",String(mode==="dark"));
+ themeBtn.setAttribute("aria-label",mode==="dark"?"Helles Design aktivieren":"Dunkles Design aktivieren");
+ themeBtn.querySelector("span").textContent=mode==="dark"?"Hell":"Dunkel";
+ try{localStorage.setItem("sdhub-theme-v1",mode)}catch(e){}
+}
+themeBtn.addEventListener("click",()=>setTheme(mode==="dark"?"light":"dark"));
+setTheme(mode);
 function renderDashboard(){
 $("greeting").textContent=state.nickname?"Hallo, "+state.nickname+"!":"Willkommen im SD Hub!";
 if($("nickname")!==document.activeElement)$("nickname").value=state.nickname;
@@ -44,6 +98,7 @@ if(!favs.length)node("p","panel-sub","Noch keine Favoriten. Wähle im Wegweiser 
 else favs.forEach(it=>$("favoritesList").append(simpleLink(it)));
 if(!recent.length)node("p","panel-sub","Hier ist es noch leer. Öffne eines deiner Werkzeuge.",$("recentList"));
 else recent.forEach(it=>$("recentList").append(simpleLink(it)));
+renderApps();
 }
 $("nickname").addEventListener("input",e=>{state.nickname=e.target.value.slice(0,40).replace(/[<>]/g,"");save()});
 $("exportState").addEventListener("click",()=>downloadText("mein-sd-hub-sicherung.json",JSON.stringify({...state,version:1},null,2),"application/json;charset=utf-8"));
