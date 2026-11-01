@@ -73,3 +73,16 @@ test('optional shared Render room displays peer avatars and shared blocks withou
  await expect(page.locator('#onlineLeave')).toBeDisabled();
  expect(requests).toContain('join');
 });
+
+test('BlockWorld has professional in-game pause and return to the games library',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/kids/blockworld/',{waitUntil:'domcontentloaded'});
+ await expect.poll(()=>page.evaluate(()=>window.__blockWorldReady||false),{timeout:30000}).toBe(true);
+ await page.locator('#pauseWorld').click();
+ await expect(page.locator('#pauseCover')).toBeVisible();
+ await expect(page.locator('#pauseWorld')).toHaveAttribute('aria-pressed','true');
+ await page.locator('#resumeWorld').click();
+ await expect(page.locator('#pauseCover')).toBeHidden();
+ await expect(page.locator('header a[href="../games/"]')).toBeVisible();
+ expect(errors).toEqual([]);
+});
