@@ -27,11 +27,27 @@ Die [SD Kids Spielezentrale](https://thesdhub.com/kids/games/) enthält **Pibo 3
 
 **Nachgewiesene Grundlagen:** Quellcode in `kids/games/`, automatisierte Node-Tests der Minispielregeln und Browser-E2E-Tests in GitHub Actions.
 
+### Plattform-Qualität – Ausbaustufe 2
+
+- [x] Spiele suchen, filtern, favorisieren und sortieren
+- [x] Acht lokale Spielerfolge und verständlicher Überblick über Fortschritte
+- [x] Spielstand als validierte Datei sichern und wiederherstellen
+- [x] Pausenfunktion, Vollbildoption und gespeicherte Ton-/Bewegungswünsche in den Minispielen
+- [x] Sanfte dekorative Canvas-Animationen mit Option für weniger Bewegung
+- [x] Begrenzung wiederholter Einmal-Belohnungen beim Zurücksetzen eines Minispiels
+- [x] Gemeinsame Navigation zwischen Spielen, Pibo und BlockWorld
+- [x] Installierbarer Spielebereich und eng begrenzter Offline-Cache für die acht Minispiele
+- [x] Zusätzliche Browser-Tests für Suche, Favoriten, Backup, Pause und Offline-Laden
+- [ ] Reale iOS-/Android-Hardwaretests und unabhängiger Accessibility-/Kinderdatenschutz-Audit
+- [ ] Professionelle eigenständige 3D-Umsetzungen der acht Minispiele und weitergehende Multiplayer-Funktionen
+
+Die erreichten Punkte sind durch Quellcode und CI nachprüfbar; dies ersetzt noch keine Freigabe für einen großen, öffentlichen Kinder-Mehrspielerdienst.
+
 ## Ausbau der Minispiele zu großen 3D-Welten
 
 
 
-**Phase A: SD Kids Spielezentrale.** Zentralen Startbildschirm mit Kacheln für bereits vorhandene und neue Spiele, klarer Kennzeichnung von „Spielbar“ versus „In Entwicklung“. Gemeinsames Designsystem, Tastatur-/Touchsteuerung, Alters-/Elternhinweise; keine personenbezogenen Online-Profile.
+**Phase A: SD Kids Spielezentrale (erste Version umgesetzt, Qualitätssicherung läuft).** Zentralen Startbildschirm mit Kacheln für bereits vorhandene und neue Spiele, klarer Kennzeichnung von „Spielbar“ versus „In Entwicklung“. Gemeinsames Designsystem, Tastatur-/Touchsteuerung, Alters-/Elternhinweise; keine personenbezogenen Online-Profile.
 
 **Phase B: SD Obby Tower.** Eigenes Levelpaket mit mindestens drei Themen, Checkpoints, Levelabschluss, Wiederholbarkeit, niedrigem Einstiegshindernis. Auf bestehende BlockWorld-Kamera, Spielfigur und Kollisionslogik aufbauen. Erst als Solo-Spiel abnehmen; optional mit geteilten Bewegungsdaten.
 
