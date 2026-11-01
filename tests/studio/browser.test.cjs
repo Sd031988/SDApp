@@ -202,6 +202,7 @@ const assert = require('node:assert/strict');
     assert.equal(pasteUpload.files,true,'Mehrfach-Dateiauswahl');
     assert.equal(pasteUpload.handler,'function');
     // KI Coding: real browser flow, review, copy creation, then existing ▶ execute.
+    await page.locator('#efZu').click(); // Close earlier Import dialog before starting AI workflow.
     assert.equal(await page.locator('#kiCodeBtn').count(),1,'KI Coding button visible');
     await page.locator('#kiCodeBtn').click();
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
