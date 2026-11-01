@@ -9,7 +9,7 @@ const $ = id => document.getElementById(id);
 const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* voll */ } } };
 const CM_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
-const S = { p: null, tabs: [], aktiv: null, docs: {}, cm: null, ta: null, offen: new Set(), swBereit: false, problemeVorschau: [], problemeProgramm: [], konsole: [], frei: false };
+const S = { p: null, tabs: [], aktiv: null, docs: {}, cm: null, ta: null, offen: new Set(), swBereit: false, problemeVorschau: [], problemeProgramm: [], problemeAnalyse: [], konsole: [], frei: false };
 
 /* ---------------- Speicher ---------------- */
 let dbP = null;
@@ -102,7 +102,7 @@ async function projektOeffnen(name, datei, optionen) {
     catch (err) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
   }
   const p = await projLesen(name); if (!p) { toast('Projekt nicht gefunden'); return; }
-  S.p = p; S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; probleme();
+  S.p = p; S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; S.problemeAnalyse = []; diagnoseAktualisieren();
   if (Object.prototype.hasOwnProperty.call(p,'kiQuelle')) {
     // Stop any earlier preview immediately; the AI copy must remain inactive until ▶ Run.
     const frame=$('frame');frame.removeAttribute('src');frame.srcdoc='';frame.setAttribute('sandbox','allow-scripts allow-forms');
@@ -238,6 +238,7 @@ function speichernBald() {
   speicherRevision++;
   S.geaendert = true;
   status();
+  diagnoseBald();
   clearTimeout(speicherT);
   speicherT = setTimeout(async () => {
     try {
@@ -899,7 +900,7 @@ async function vorschau(neu) {
   try { await speichernJetzt(); }
   catch (err) { toast('Vorschau nicht aktualisiert: Speichern fehlgeschlagen.'); return; }
   if (S.p !== vorschauProjekt) return;
-  $('vorschau').hidden = false; S.problemeVorschau = []; probleme(); if (neu) S.konsole = [];
+  $('vorschau').hidden = false; S.problemeVorschau = []; diagnoseAktualisieren(); if (neu) S.konsole = [];
   const f = $('frame');
   // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
   f.setAttribute('sandbox', Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
@@ -965,9 +966,67 @@ async function programmStarten(spWahl) {
 function fehlerSammeln(text, haupt) { const zeilen = text.split('\n'); const funde = []; zeilen.forEach(z => { for (const m of z.matchAll(/([\w./-]+\.(?:c|cc|cpp|cxx|h|hpp|cs|java|rs|go|py))(?::(\d+)|\((\d+),\d+\)|", line (\d+))/g)) { let k = m[1].replace(/^\.\//, ''); const nr = +(m[2] || m[3] || m[4]); const voll = S.p.dateien[k] != null ? k : Object.keys(S.p.dateien).find(x => x.endsWith('/' + k) || x.split('/').pop() === k.split('/').pop()) || haupt; funde.push({ text: z.trim(), datei: voll, zeile: nr }); } });
   const letzte = zeilen.reverse().find(z => /^\w*(Error|Exception)\b/.test(z.trim())); if (letzte && funde.length) funde[funde.length - 1].text = letzte.trim() + '  ·  ' + funde[funde.length - 1].datei + ':' + funde[funde.length - 1].zeile;
   S.problemeProgramm = funde.slice(0, 50); probleme(); if (funde.length) unten('probleme'); }
-function probleme() { const box = $('problemListe'); box.innerHTML = ''; const alle = [...S.problemeProgramm, ...S.problemeVorschau];
-  alle.forEach(p => { const z = document.createElement('div'); z.className = 'pr'; z.textContent = '⨯ ' + (p.datei ? p.datei + (p.zeile ? ':' + p.zeile : '') + '  ' : '') + p.text; if (p.datei && S.p && S.p.dateien[p.datei] != null) z.onclick = () => dateiOeffnen(p.datei, p.zeile); box.appendChild(z); });
-  if (!alle.length) box.innerHTML = '<div class="hinweis">Keine Probleme gefunden. ✨</div>'; $('problemAnz').textContent = alle.length || ''; $('sbProbleme').textContent = '⨯ ' + alle.length; }
+let diagnoseTimer = null;
+function diagnoseAktualisieren() {
+  if (!S.p || !window.SDKIDiagnose) { S.problemeAnalyse = []; probleme(); return []; }
+  const files = { ...S.p.dateien };
+  for (const [name, doc] of Object.entries(S.docs)) {
+    if (doc && typeof doc.getValue === 'function') files[name] = doc.getValue();
+  }
+  try { S.problemeAnalyse = window.SDKIDiagnose.inspect(files); }
+  catch (e) { console.warn('Studio-Diagnose:', e); S.problemeAnalyse = []; }
+  probleme();
+  return S.problemeAnalyse;
+}
+function diagnoseBald() {
+  clearTimeout(diagnoseTimer);
+  diagnoseTimer = setTimeout(() => diagnoseAktualisieren(), 350);
+}
+function diagnoseAnzeigen() {
+  const issues = diagnoseAktualisieren();
+  unten('probleme');
+  if (typeof istHandy === 'function' && istHandy()) ansicht('ausgabe');
+  toast(issues.length ? '🩺 ' + issues.length + ' mögliche Probleme gefunden.' : '✓ Keine Fehler in den geprüften Webdateien erkannt.');
+}
+function diagnoseKIStarten() {
+  const alle = [...(S.problemeAnalyse || []), ...S.problemeProgramm, ...S.problemeVorschau];
+  if (!S.p || !alle.length) { toast('Keine Probleme für die KI-Korrektur vorhanden.'); return; }
+  if (!window.SDKICodingUI || !window.SDKIDiagnose) { toast('KI-Werkstatt ist nicht geladen.'); return; }
+  window.SDKICodingUI.openDialog();
+  if ($('kiOverlay').hidden) return;
+  const normalized = alle.map(p => ({ file: p.file || p.datei || '(Vorschau)',
+    line: p.line || p.zeile || 1, text: p.text || '', suggestion: p.suggestion || 'Fehler prüfen.' }));
+  $('kiGoal').value = window.SDKIDiagnose.fixPrompt(normalized, S.p.name).slice(0, 3000);
+  $('kiGoal').focus();
+}
+function probleme() {
+  const box = $('problemListe'); box.replaceChildren();
+  const alle = [...(S.problemeAnalyse || []), ...S.problemeProgramm, ...S.problemeVorschau];
+  alle.forEach(p => {
+    const z = document.createElement('div'), warn = p.severity === 'warning';
+    z.className = 'pr ' + (warn ? 'warn' : 'error');
+    const file = p.file || p.datei, line = p.line || p.zeile;
+    z.textContent = (warn ? '⚠ ' : '⨯ ') + (file ? file + (line ? ':' + line : '') + '  ' : '') +
+      p.text + (p.suggestion ? ' – ' + p.suggestion : '');
+    if (file && S.p && S.p.dateien[file] != null) {
+      z.tabIndex = 0; z.title = 'Datei an dieser Stelle öffnen';
+      z.onclick = () => { dateiOeffnen(file, line); if (typeof istHandy === 'function' && istHandy()) ansicht('code'); };
+      z.onkeydown = e => { if (e.key === 'Enter') z.click(); };
+    }
+    box.appendChild(z);
+  });
+  if (!alle.length) {
+    const tip = document.createElement('div'); tip.className = 'hinweis';
+    tip.textContent = '✓ Keine Probleme in den geprüften Dateien erkannt. Externe Dienste und Framework-Builds sind nicht vollständig prüfbar.';
+    box.appendChild(tip);
+  }
+  $('problemAnz').textContent = alle.length || '';
+  $('sbProbleme').textContent = '⨯ ' + alle.length;
+  if ($('diagnoseKI')) $('diagnoseKI').disabled = !alle.length;
+  if ($('diagnoseStand')) $('diagnoseStand').textContent =
+    (S.problemeAnalyse || []).length + ' statische Hinweise · ' +
+    (S.problemeVorschau.length + S.problemeProgramm.length) + ' Laufzeitmeldungen';
+}
 
 /* ---------------- Ausführen ---------------- */
 async function ausfuehren() {
@@ -1928,7 +1987,9 @@ function verdrahten() {
   document.querySelectorAll('#untenTabs button[data-u]').forEach(b => b.onclick = () => unten(b.dataset.u)); $('untenZu').onclick = () => { $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('projektWahl').onchange = () => { const v = $('projektWahl').value; if (v === '__neu') { projektListe(); vorlagenWaehlen(); } else projektOeffnen(v); };
   $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen; $('onlineBtn').onclick = onlineDialog;
-  $('starten').onclick = ausfuehren; $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
+  $('starten').onclick = ausfuehren; $('diagnoseBtn').onclick = diagnoseAnzeigen;
+  $('diagnoseErneut').onclick = diagnoseAnzeigen; $('diagnoseKI').onclick = diagnoseKIStarten;
+  $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
   ['hochDatei', 'hochOrdner', 'hochZip'].forEach(id => $(id).onchange = () => { hochladen([...$(id).files]); $(id).value = ''; });
   $('kont').onclick = () => { if (!S.frei) sperre(true); };
