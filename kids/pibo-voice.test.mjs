@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {voiceLoudness,mouthWhileSpeaking} from './pibo-voice.mjs';
+const arr=new Uint8Array(256);
+assert.equal(voiceLoudness({getByteTimeDomainData:data=>data.fill(128)},arr),0);
+const l=voiceLoudness({getByteTimeDomainData:data=>data.forEach((_,i)=>data[i]=i%2?218:38)},arr);
+assert(l>.9&&l<=1,'Audible recording opens cat mouth');
+assert.equal(voiceLoudness(null,arr),0);
+assert.equal(mouthWhileSpeaking(1,.8,false).open,0);
+const loud=mouthWhileSpeaking(.7,.8,true);
+const quiet=mouthWhileSpeaking(.7,.08,true);
+assert(loud.open>quiet.open,'Mouth follows amplitude instead of fixed fake motion');
+assert.equal(mouthWhileSpeaking(.7,.8,true,true).nod,0,'Reduced-motion preference supported');
+assert(loud.open<.65,'Prevent impossible mouth distortion');
+console.log('PASS: local talking voice amplitude, mouth movement, reduce motion, no network');
