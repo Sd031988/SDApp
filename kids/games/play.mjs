@@ -22,7 +22,9 @@ visit(save,id);
 const g=save.games[id], keys={left:false,right:false,up:false,down:false};
 const prefs=readSettings();prefs.lastPlayed=id;saveSettings(prefs);
 const savedAudio=loadSoundSettings();
-let tool='plant',paused=false,soundOn=savedAudio.enabled||prefs.sound,reducedMotion=prefs.reducedMotion,last=0,elapsed=0;
+let sharedAudioConfigured=false;
+try{sharedAudioConfigured=localStorage.getItem('sd-kids-audio-v1')!==null}catch{}
+let tool='plant',paused=false,soundOn=sharedAudioConfigured?savedAudio.enabled:prefs.sound,reducedMotion=prefs.reducedMotion,last=0,elapsed=0;
 const sounds=new SDGameSound({enabled:soundOn,volume:savedAudio.volume});
 const volumeInput=$('volume'),volumeValue=$('volumeValue');
 volumeInput.value=String(Math.round(sounds.volume*100));
