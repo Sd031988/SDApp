@@ -201,6 +201,18 @@ const assert = require('node:assert/strict');
     assert.equal(pasteUpload.folder,true,'Ordnerauswahl');
     assert.equal(pasteUpload.files,true,'Mehrfach-Dateiauswahl');
     assert.equal(pasteUpload.handler,'function');
+    // One fenced block pasted into the editor must open the code-only importer.
+    const intercepted=await page.evaluate(()=>{
+      const tick=String.fromCharCode(96).repeat(3);
+      const before=S.aktiv;
+      const single=abIstAnleitung(tick+'python\nprint(1)\n'+tick);
+      const mixed=abIstAnleitung('Hier ist die Lösung:\n'+tick+'html\n<h1>Hallo</h1>\n'+tick+'\n'+tick+'js\nconsole.log(1)\n'+tick);
+      S.aktiv='README.md';
+      const markdown=abIstAnleitung(tick+'python\nprint(1)\n'+tick);
+      S.aktiv=before;
+      return {single,mixed,markdown};
+    });
+    assert.deepEqual(intercepted,{single:true,mixed:true,markdown:false});
     // KI Coding: real browser flow, review, copy creation, then existing ▶ execute.
     await page.locator('#efZu').click(); // Close earlier Import dialog.
     assert.equal(await page.locator('#kiCodeBtn').count(),1,'KI Coding button visible');
