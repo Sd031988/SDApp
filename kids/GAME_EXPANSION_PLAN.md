@@ -1,6 +1,6 @@
 # SD Hub Kids – Spielekatalog & Ausbauplan
 
-Stand: 2026-11-01. **Dieses Dokument beschreibt Ideen, nicht fertige Spiele.**
+Stand: 2026-11-01. **Status aktualisiert:** Die Spielezentrale mit zehn spielbaren Titeln ist nun programmiert. Die acht neu hinzugekommenen Spielkonzepte sind derzeit **kleinere 2D-Minispiele**; die größeren 3D-/Multiplayer-Ausbaustufen sind weiterhin offen.
 
 ## Ausgangslage
 
@@ -21,7 +21,15 @@ Gemeinsame, kurzlebige Online-Räume nutzen den bestehenden Render-Dienst des Pr
 | 8 | **SD Lern-Abenteuer** | Bewegung + Deutsch-/Rechen-/Logik-Rätsel, Level | Optional gemeinsame Rätsel, kein öffentlicher Chat | Deutschlern-Inhalte nur mit passender Altersstufe | mittel |
 | 9 | **SD Fluglabor** | Kreative Fluggeräte bauen, Physik testen und Zielinseln erreichen | Später geteilte Blaupausen nach Validierung | BlockWorld-Bau-Editor | hoch |
 
-## Empfohlener Reihenfolge
+## Bereits ausgelieferte erste Version
+
+Die [SD Kids Spielezentrale](https://thesdhub.com/kids/games/) enthält **Pibo 3D**, **BlockWorld 3D** und acht einzeln spielbare 2D-Minispiele (Obby, Pet, Garden, City, Kart, Treasure, Fashion, Lern-Abenteuer). Die Minispiele haben konkrete Regeln, mobile/Tastatur-Steuerung und lokal gespeicherte Fortschritte. Sie sind keine fertigen dreidimensionalen Großspiele oder Roblox-Server. Die acht neuen Spielpunkte werden derzeit nur **innerhalb der Minispiele** geteilt und nicht mit Pibo/BlockWorld synchronisiert.
+
+**Nachgewiesene Grundlagen:** Quellcode in `kids/games/`, automatisierte Node-Tests der Minispielregeln und Browser-E2E-Tests in GitHub Actions.
+
+## Ausbau der Minispiele zu großen 3D-Welten
+
+
 
 **Phase A: SD Kids Spielezentrale.** Zentralen Startbildschirm mit Kacheln für bereits vorhandene und neue Spiele, klarer Kennzeichnung von „Spielbar“ versus „In Entwicklung“. Gemeinsames Designsystem, Tastatur-/Touchsteuerung, Alters-/Elternhinweise; keine personenbezogenen Online-Profile.
 
@@ -46,7 +54,7 @@ Gemeinsame, kurzlebige Online-Räume nutzen den bestehenden Render-Dienst des Pr
 
 ## Nächste konkrete Umsetzung
 
-1. `kids/games/` als Spielezentrale mit anklickbaren Kacheln anlegen.
+1. **Bereits erledigt:** `kids/games/` enthält jetzt die Spielezentrale mit zehn spielbaren Titeln, Filtern und lokalen Erfolgsanzeigen.
 2. **SD Obby Tower** als nächstes eigenständiges Spiel beginnen, ohne vorhandenes BlockWorld/Pibo zu beschädigen.
 3. Gemeinsame Sterne/Inventar-/Profilarchitektur konzipieren und erst nach Datenschutz-/Sicherheitsprüfung serverseitig einführen.
 4. Für jedes weitere Spiel eigene Abnahmetests, Kinder-Sicherheit, Touch-Performance und Offline-Fallbacks bereitstellen.
