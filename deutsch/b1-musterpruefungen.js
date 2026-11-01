@@ -449,8 +449,12 @@ function selfCheckMarkup(section,entries){
 }
 function reviewTask(t,answer,i,withTranscript){
  const selected=answer===null||answer===undefined?'–':t.options[answer]||'–';
- const base='<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>Deine Antwort: '+esc(selected)+' · Lösung: '+esc(t.options[t.answer])+'</small></p>';
- return base+(withTranscript&&t.audio?'<details class="b1x-transcript"><summary>Hörtext zu Aufgabe '+(i+1)+' nachlesen</summary><p>'+esc(t.dialogue?t.dialogue.map(turn=>turn[0]+': '+turn[1]).join('\\n'):t.audio)+'</p></details>':'');
+ const correct=answer===t.answer;
+ const status=answer===null||answer===undefined?'Nicht beantwortet':correct?'Richtig beantwortet':'Noch einmal üben';
+ const evidence=withTranscript?'Höre die Aufnahme erneut oder lies den Hörtext. Suche die Stelle, die die richtige Antwort belegt.':t.kind&&t.kind.includes('Anzeigen zuordnen')?'Vergleiche die Angaben der Situation mit der passenden Anzeige. Achte auf die konkreten Bedingungen.':t.kind&&t.kind.includes('Lückentext')||t.kind&&t.kind.includes('Wortwahl')?'Setze die richtige Lösung in die Lücke ein und prüfe Grammatik und Satzbedeutung.':'Suche im Lesetext die Information, die diese Lösung bestätigt oder die falsche Aussage widerlegt.';
+ const base='<p><b>'+(i+1)+'.</b> '+esc(t.q)+'<br><small>'+esc(status)+' · Deine Antwort: '+esc(selected)+' · Lösung: '+esc(t.options[t.answer])+'</small></p>';
+ const guidance='<details class="b1x-transcript"><summary>So überprüfst du die Lösung</summary><p>'+esc(evidence)+'</p>'+(withTranscript?'':'<p>'+esc(t.passage||'')+'</p>')+'</details>';
+ return base+guidance+(withTranscript&&t.audio?'<details class="b1x-transcript"><summary>Hörtext zu Aufgabe '+(i+1)+' nachlesen</summary><p>'+esc(t.dialogue?t.dialogue.map(turn=>turn[0]+': '+turn[1]).join('\\n'):t.audio)+'</p></details>':'');
 }
 function finish(){
  clear();const p=E[exam].parts[part],list=items(p),auto=['lesen','hoeren','sprach'].includes(p[0]);const correct=auto?list.reduce((sum,t,i)=>sum+(answers[i]===t.answer?1:0),0):null;
