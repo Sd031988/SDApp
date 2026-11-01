@@ -1464,6 +1464,40 @@ function abRohCode(text){const t=String(text||"").trim();if(!t||/```/.test(t))re
   if(codeArtig<Math.max(1,zeilen.length*0.3))return null;const datei=nameAusInhalt(t,"");if(!datei)return null;return {datei,code:t+"\n",sprache:abSprache(datei)}}
 function abIstAnleitung(t){t=String(t||"");const fences=(t.match(/```/g)||[]).length/2;return fences>=2||(fences>=1&&/[├└]──/.test(t))}
 
+
+/* Uploads im Einfügen-Dialog erzeugen grundsätzlich ein neues Projekt. */
+async function einfuegenDateienImportieren(dateien,istOrdner=false) {
+ const liste=Array.from(dateien||[]);
+ if(!liste.length)return;
+ if(liste.length===1&&/\.zip$/i.test(liste[0].name))return hochladen(liste);
+ if(liste.some(f=>/\.zip$/i.test(f.name))){alert('ZIP-Dateien bitte einzeln auswählen.');return;}
+ if(liste.length>2000){alert('Maximal 2000 Dateien pro Import.');return;}
+ const neu={},root=istOrdner&&liste[0].webkitRelativePath?liste[0].webkitRelativePath.split('/')[0]:'';
+ let bytes=0;
+ for(const f of liste){
+  if(f.size>20e6){alert('Datei zu groß: '+f.name+' (maximal 20 MB).');return;}
+  bytes+=f.size;if(bytes>100e6){alert('Import zu groß (maximal 100 MB).');return;}
+  const raw=istOrdner&&f.webkitRelativePath?f.webkitRelativePath.split('/').slice(1).join('/'):f.name;
+  const pfad=sicherPfad(raw);
+  if(!pfad||/(^|\/)(\.git|node_modules)(\/|$)/.test(pfad))continue;
+  if(Object.prototype.hasOwnProperty.call(neu,pfad)){alert('Doppelter Dateipfad: '+pfad);return;}
+  neu[pfad]=await dateiLesen(f);
+ }
+ if(!Object.keys(neu).length){alert('Keine unterstützten Dateien gefunden.');return;}
+ const analyse=zipProjektAnalyse(neu);
+ const basis=slug(root||(liste.length===1?liste[0].name.replace(/\.[^.]+$/,''):'importiertes-projekt'))||'importiertes-projekt';
+ let name=basis,n=2;while(await projLesen(name))name=basis+'-'+n++;
+ if(!confirm('Automatischer Projektimport\n\nNeues Projekt: '+name+'\nDateien: '+analyse.pfade.length+
+ '\nSprache: '+analyse.sprache+'\nFramework: '+(analyse.framework?.name||'Nicht erkannt')+
+ '\nStartdatei: '+(analyse.start||'Automatisch wählen')+
+ '\n\nOK: Neues Projekt anlegen. Bestehende Projekte bleiben unverändert.'))return;
+ if(S.p&&S.geaendert)await speichernJetzt();
+ await projSchreiben({name,dateien:neu,haupt:analyse.start||analyse.pfade[0],versionen:[],erstellt:Date.now()});
+ await projektOeffnen(name);
+ ausgabe('📦 Import abgeschlossen: '+analyse.pfade.length+' Dateien. '+analyse.hinweise.join('\n'));
+ if(typeof ansicht==='function')ansicht('code');
+}
+
 function einfuegenDialog(text) {
   const box = $('einfuegen'); box.hidden = false; const ta = $('efText'), vor = $('efVorschau'); let erg = null, nameHand = false, ziel = null;
   const offenSpr = S.aktiv ? abSprache(S.aktiv) : null;
@@ -1485,6 +1519,10 @@ function einfuegenDialog(text) {
     erg.ordner.filter(o => !dat.some(d => d.startsWith(o + '/'))).forEach(o => h('   📁 ' + o + '/  (leer)', 'mono grau'));
     dat.forEach(d => { const z = erg.dateien[d].split('\n').filter(Boolean).length; h('   ' + icon(d) + ' ' + d + '  ' + (z ? z + ' Zeilen' : '(leer)'), 'mono'); });
     if (erg.befehle.length) { h('⌨ Befehle aus der Anleitung (laufen nur in der PC-Version):', 'fett'); erg.befehle.forEach(c => h('   ❯ ' + c, 'mono grau')); } };
+  const zipInput=$('efZipDatei'),ordnerInput=$('efOrdnerDatei'),dateiInput=$('efMehrDateien');
+  if(zipInput)zipInput.onchange=async()=>{const fs=zipInput.files;box.hidden=true;try{await einfuegenDateienImportieren(fs);}catch(e){console.error(e);alert('ZIP-Import fehlgeschlagen: '+e.message);}finally{zipInput.value='';}};
+  if(ordnerInput)ordnerInput.onchange=async()=>{const fs=ordnerInput.files;box.hidden=true;try{await einfuegenDateienImportieren(fs,true);}catch(e){console.error(e);alert('Ordnerimport fehlgeschlagen: '+e.message);}finally{ordnerInput.value='';}};
+  if(dateiInput)dateiInput.onchange=async()=>{const fs=dateiInput.files;box.hidden=true;try{await einfuegenDateienImportieren(fs);}catch(e){console.error(e);alert('Dateiimport fehlgeschlagen: '+e.message);}finally{dateiInput.value='';}};
   ta.oninput = zeigen; $('efName').oninput = () => { nameHand = true; zeigen(); };
   $('efZu').onclick = () => { box.hidden = true; };
   $('efNurText').onclick = () => { const t = ta.value; box.hidden = true; if (S.cm && S.aktiv) S.cm.replaceSelection(t); };
