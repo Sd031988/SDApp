@@ -627,6 +627,19 @@ function captureCurrentAnswer(){
   answers.push(field?field.value.trim():null);
  }
 }
+function taskOverviewMarkup(list,section){
+ const completed=answers.filter(a=>a!==null&&a!==undefined&&a!=='').length;
+ const unanswered=answers.length-completed;
+ const currentAnswered=['lesen','hoeren','sprach'].includes(section)?Number.isInteger(pendingChoice):Boolean(readDraft()&&readDraft().trim());
+ const remaining=list.length-idx-1;
+ const buttons=list.map((t,i)=>{
+  const status=i<answers.length?(answers[i]!==null&&answers[i]!==undefined&&answers[i]!==''?'Beantwortet':'Ohne Antwort'):i===idx?(currentAnswered?'Auswahl vorhanden':'Aktuell'):'Noch nicht bearbeitet';
+  return '<span class="b1x-overview-item'+(i===idx?' is-current':'')+(i<answers.length&&status==='Beantwortet'?' is-done':'')+'" title="'+esc(status)+'" aria-label="Aufgabe '+(i+1)+': '+esc(status)+'">'+(i+1)+'</span>';
+ }).join('');
+ return '<details class="b1x-passage b1x-overview"><summary>Aufgabenübersicht · '+completed+' beantwortet, '+unanswered+' übersprungen</summary>'+
+ '<p class="b1x-note">Orange: aktuelle Aufgabe · Grün: beantwortet · Grau: noch offen. '+remaining+' weitere Aufgaben folgen. Die Übersicht dient nur zur Orientierung; ein Zurückspringen ist in diesem Trainingsmodus nicht möglich.</p>'+
+ '<div class="b1x-overview-grid" aria-label="Aufgabenstatus">'+buttons+'</div></details>';
+}
 function question(){
  clear();const p=E[exam].parts[part],list=items(p),t=list[idx];if(!t){finish();return;}
  if(Date.now()>=deadline){captureCurrentAnswer();while(answers.length<list.length)answers.push(null);finish();return;}
@@ -638,6 +651,7 @@ function question(){
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+' · '+esc(p[1])+'</p>'+
  '<div class="b1x-meta"><span>Teil '+(t.g+1)+'/'+p[3].length+' · '+esc(t.kind)+'</span><span>Aufgabe '+(idx+1)+'/'+list.length+'</span></div>'+
  '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">'+timerText((deadline-Date.now())/1000)+'</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
+ taskOverviewMarkup(list,p[0])+
  body+(['schreiben','sprechen'].includes(p[0])?
  '<details class="b1x-passage" id="b1x-before-submit"><summary>Vor der Abgabe: kurze Selbstkontrolle</summary>'+
  (p[0]==='schreiben'?
@@ -842,6 +856,12 @@ const css=document.createElement('style');css.textContent=`
  #b1x-text{min-height:220px}
 }
 @media(prefers-reduced-motion:reduce){.b1x-progress>div{transition:none}}
+
+.b1x-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:7px;margin-top:12px}
+.b1x-overview-item{display:grid;place-items:center;min-height:42px;border:1px solid #5b6074;border-radius:9px;background:#242738;color:#e5e7eb;font-weight:700;font-size:13px}
+.b1x-overview-item.is-done{background:#14532d;border-color:#22c55e;color:#fff}
+.b1x-overview-item.is-current{background:#9a3412;border:2px solid #fdba74;color:#fff}
+.b1x-overview summary{cursor:pointer;font-weight:700}
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
