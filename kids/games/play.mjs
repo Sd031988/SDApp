@@ -12,7 +12,7 @@ if(!miniIds.includes(id)){
  throw Error('Unknown mini game '+id);
 }
 const info=findGame(id);
-$('title').textContent=info.emoji+' '+info.name;document.title=info.name+' | SD Kids';
+$('title').textContent=info.emoji+' '+info.name;document.title=info.name+' | Spiele';
 $('description').textContent=info.description;
 const canvas=$('stage'),ctx=canvas.getContext('2d');
 if(!ctx)throw Error('Canvas 2D unavailable');
