@@ -64,6 +64,29 @@ const readingTexts={
  ['Ein Ausflug','Obwohl das Wetter am Morgen schlecht war, fuhr die Familie mit dem Zug nach Heidelberg. Am Nachmittag schien die Sonne, und alle machten einen Spaziergang am Fluss.','Wie ist die Familie gefahren?',['mit dem Bus','mit dem Auto','mit dem Zug'],2]
  ]
 };
+const extraReadingTexts={
+ alpha:[
+ ['In der Schule','Nina hat ein Heft. Sie malt eine Sonne. Die Sonne ist gelb.','Was malt Nina?',['einen Baum','eine Sonne','ein Haus'],1],
+ ['Der Hund','Omar hat einen Hund. Er heißt Max. Max ist klein.','Wie heißt der Hund?',['Max','Leo','Ben'],0],
+ ['Am Tisch','Mila isst Reis. Papa trinkt Tee. Beide sitzen am Tisch.','Was trinkt Papa?',['Wasser','Saft','Tee'],2],
+ ['Im Park','Sara geht in den Park. Sie sieht drei Enten.','Wie viele Enten sieht Sara?',['zwei','drei','vier'],1]
+ ],
+ a1:[
+ ['Der Deutschkurs','Am Montag beginnt der Deutschkurs um neun Uhr. Farid kommt zehn Minuten früher und bringt sein Buch mit.','Wann beginnt der Kurs?',['um neun Uhr','um zehn Uhr','um acht Uhr'],0],
+ ['Der neue Nachbar','Unser neuer Nachbar heißt Daniel. Er wohnt im zweiten Stock und arbeitet in einer Bäckerei.','Wo arbeitet Daniel?',['im Krankenhaus','in einer Bäckerei','in einer Schule'],1],
+ ['Ein Brief','Liebe Frau Roth, leider kann ich morgen nicht zum Termin kommen. Ich bin krank. Können wir einen neuen Termin machen? Viele Grüße, Amina.','Warum kann Amina nicht kommen?',['Sie ist krank.','Sie ist im Urlaub.','Sie arbeitet.'],0],
+ ['Auf dem Markt','Am Samstag kauft Leyla Tomaten und Kartoffeln. Die Tomaten kosten drei Euro, die Kartoffeln zwei Euro.','Wie viel kosten die Kartoffeln?',['drei Euro','vier Euro','zwei Euro'],2],
+ ['Mit dem Zug','Der Zug nach Köln fährt heute um 14:20 Uhr von Gleis vier ab. Bitte warten Sie hinter der gelben Linie.','Von welchem Gleis fährt der Zug?',['Gleis drei','Gleis vier','Gleis fünf'],1]
+ ],
+ a2:[
+ ['Eine Bewerbung','Mariam sucht eine Ausbildung im Büro. Sie hat bereits ein Praktikum gemacht und schickt ihre Bewerbung an drei Firmen. Nächste Woche hat sie ein Vorstellungsgespräch.','Was hat Mariam bereits gemacht?',['ein Praktikum','eine Ausbildung abgeschlossen','ein Studium begonnen'],0],
+ ['Das Fahrrad','Nachdem Ben sein Fahrrad repariert hatte, fuhr er zum See. Dort traf er Freunde, die schon seit einer Stunde warteten.','Wohin fuhr Ben?',['zum Bahnhof','zum See','zum Supermarkt'],1],
+ ['Die Nachbarschaft','In unserem Haus planen die Nachbarn ein gemeinsames Fest. Jeder bringt etwas zu essen mit. Das Fest findet am Freitag im Innenhof statt.','Wo findet das Fest statt?',['im Innenhof','im Restaurant','im Park'],0],
+ ['Der Sprachkurs','Weil ihr Deutschkurs bald endet, möchte Elena weiterlernen. Sie informiert sich über einen B1-Kurs, der zweimal pro Woche am Abend stattfindet.','Wie oft findet der B1-Kurs statt?',['jeden Tag','einmal im Monat','zweimal pro Woche'],2],
+ ['Ein Paket','Herr Özdemir war nicht zu Hause, als der Paketbote klingelte. Deshalb liegt sein Paket jetzt in einer Filiale. Er kann es ab morgen mit seinem Ausweis abholen.','Was braucht Herr Özdemir zur Abholung?',['seinen Ausweis','seine Fahrkarte','seinen Schlüssel'],0]
+ ]
+};
+for(const key of Object.keys(extraReadingTexts))readingTexts[key].push(...extraReadingTexts[key]);
 function flashcardMarkup(){
  const words=vocabulary[level],i=(unit*7)%words.length,w=words[i];
  return '<section class="pre-card"><h3>🗂️ Lernkarte: Erst erinnern, dann aufdecken</h3><p>Versuche zuerst, die Bedeutung selbst zu sagen.</p><div class="pre-flashcard"><strong>'+esc(w[0])+'</strong><button id="pre-flash-speak" aria-label="Deutsches Wort anhören">🔊</button></div><button id="pre-flash-reveal" aria-expanded="false">Bedeutung aufdecken</button><p id="pre-flash-answer" role="status" hidden><b>'+esc(w[1])+'</b></p><p class="pre-note">Lautes Erinnern hilft beim Üben. Danach kannst du die Bedeutung vergleichen.</p></section>';
