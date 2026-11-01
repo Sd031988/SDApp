@@ -91,3 +91,27 @@ body.pibo-premium a:focus-visible,body.pibo-premium button:focus-visible{outline
  .pibo-action-tabs button{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){body.pibo-premium .actions button{transition:none!important}}
+
+/* Pibo's hands-on feeding, bathing and bedtime layers (never cover input). */
+#piboMouthTarget{position:absolute;z-index:6;display:grid;place-items:center;
+ transform:translate(-50%,-50%);width:clamp(64px,17%,104px);height:clamp(57px,18%,100px);
+ border-radius:50%;border:3px dashed #ffdd67;background:#fffbeb89;color:#794b0f;
+ font-size:12px;font-weight:900;text-shadow:0 1px 1px #fff;pointer-events:none;
+ box-shadow:0 0 0 6px #fff8,0 0 23px #ffc155aa;animation:piboTargetPulse 1.1s ease-in-out infinite}
+#piboMouthTarget[hidden],#sleepStars[hidden]{display:none!important}
+#piboMouthTarget.pibo-food-hit{background:#b6fad4dd;border-color:#25bb86;color:#155942}
+@keyframes piboTargetPulse{50%{box-shadow:0 0 0 10px #fff8,0 0 26px #ffbf60bb}}
+.pibo-food-ghost{position:fixed;left:0;top:0;z-index:2147482002;pointer-events:none;
+ transform:translate(-50%,-50%);font-size:clamp(39px,6vw,60px);line-height:1.2;
+ filter:drop-shadow(0 5px 5px #25164366);user-select:none}
+body.pibo-premium #foodShelf button[data-food]{touch-action:none;user-select:none;cursor:grab}
+body.pibo-premium #foodShelf button[data-food]:active{cursor:grabbing}
+body.pibo-premium .actions :is(#rinse,#dry,#lamp){background:linear-gradient(135deg,#def6ff,#f3faff);border-color:#b5e7f7}
+body.pibo-premium .stage.pibo-night{box-shadow:inset 0 0 0 2px #57628b,0 9px 29px #0b193777}
+body.pibo-premium #sleepStars{position:absolute;left:50%;top:16%;transform:translateX(-50%);
+ z-index:5;pointer-events:none;border-radius:20px;padding:9px 14px;
+ font-weight:900;font-size:clamp(15px,2vw,24px);letter-spacing:.06em;
+ color:#fff5bf;background:#172749b8;box-shadow:0 4px 18px #07142666;
+ animation:piboSleepBreath 2s ease-in-out infinite}
+@keyframes piboSleepBreath{50%{opacity:.67;transform:translateX(-50%) translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){#piboMouthTarget,#sleepStars{animation:none!important}}
