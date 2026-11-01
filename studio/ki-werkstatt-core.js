@@ -129,7 +129,7 @@ function parse(text,activeFile,existingFiles){
 function buildPlan(parsed,existing){
  const current=existing&&typeof existing==='object'?existing:{};
  const files=(parsed&&parsed.files)||[];
- return files.map(f=>({path:f.path,content:f.content,status:Object.prototype.hasOwnProperty.call(current,f.path)?(current[f.path]===f.content?'unverändert':'ersetzt in Kopie'):'neu',oldLength:typeof current[f.path]==='string'?current[f.path].length:0}));
+ return files.map(f=>({path:f.path,content:f.content,language:f.language||f.path.split('.').pop(),status:Object.prototype.hasOwnProperty.call(current,f.path)?(current[f.path]===f.content?'unverändert':'ersetzt in Kopie'):'neu',oldLength:typeof current[f.path]==='string'?current[f.path].length:0}));
 }
 function buildPrompt(goal,project,selectedFile,source){
  const task=String(goal||'').trim().slice(0,3000);
