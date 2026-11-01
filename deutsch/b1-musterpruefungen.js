@@ -479,8 +479,8 @@ function items(section){
        // Gesprächsgruppen unterscheiden sich je nach Prüfungsanbieter.
        // Die übrigen Gruppen trainieren Durchsagen und kurze Mitteilungen.
        const dialogueGroups={goethe:[1,3],telc:[1],dtz:[1,3]};
-       const useExtendedDialogue=dialogueGroups[exam].includes(g);
-       const extraIndex=(g+(g===3?1:0)+Math.floor(j/3)+set-1)%extraListening.length;
+       const useExtendedDialogue=dialogueGroups[exam].includes(g)&&!(exam==='goethe'&&g===3&&j>=6);
+       const extraIndex=(g+Math.floor(j/3)+set-1)%extraListening.length;
        if(useExtendedDialogue){
          const ex=extraListening[extraIndex],qIndex=j%3,question=ex.questions[qIndex];
          const options=question.slice(1),correct=options[0],pos=(n+set)%3;
