@@ -29,12 +29,18 @@ jobs:
           node --check kids/pibo-motion.mjs
           node --check kids/pibo-voice.mjs
           node --check kids/pibo-character.mjs
+          node --check kids/pibo-interactions.mjs
       - name: Verify local star rewards and daily limits
         run: node kids/pibo-rewards.test.mjs
       - name: Verify facial animations
         run: node kids/pibo-face.test.mjs
       - name: Verify body motion and transitions
         run: node kids/pibo-motion.test.mjs
+      - name: Verify speech, character design and direct care gestures
+        run: |
+          node kids/pibo-voice.test.mjs
+          node kids/pibo-character.test.mjs
+          node kids/pibo-interactions.test.mjs
       - name: Verify BlockWorld sandbox and game logic
         run: |
           node --check kids/blockworld/core.mjs
