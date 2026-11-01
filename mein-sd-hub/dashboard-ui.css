@@ -132,6 +132,11 @@ body{background:var(--sd-bg);color:var(--sd-ink)}
  .hub-shell .panel{padding:17px}
 }
 @media(max-width:370px){
+ /* At very small widths, independently scrolling filters must never widen the document. */
+ html,body{max-width:100%;overflow-x:clip}
+ .hub-shell,.hub-shell .main,.hub-shell .module,.launch-section{min-width:0;max-width:100%}
+ .hub-shell :is(input,button,.panel,.stat){max-width:100%}
+ .app-filter{max-width:100%;contain:inline-size}
  .featured-grid{grid-template-columns:1fr}
  .featured{grid-template-columns:44px 1fr;grid-template-rows:auto;min-height:70px;align-items:center}
  .featured small{font-size:11px}.featured b{font-size:13px}
