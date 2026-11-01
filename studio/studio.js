@@ -346,11 +346,39 @@ async function loeschen(pfad, istOrdner) {
   await projSchreiben(S.p); baum(); ausgabe('🗑 Gelöscht: ' + pfad + ' (in 🕘 Versionen wiederherstellbar)');
 }
 async function hochladen(dateien) {
+  const liste = Array.from(dateien);
+  if (!liste.length) return;
+  const zipDateien = liste.filter(f => /\.zip$/i.test(f.name));
+  // ZIP-Archive standardmäßig in ein NEUES Projekt importieren.
+  // Damit können gleichnamige Dateien bestehende Arbeiten nicht überschreiben.
+  if (zipDateien.length) {
+    if (liste.length !== 1) { alert('Bitte ZIP-Archive einzeln hochladen. Weitere Dateien anschließend hinzufügen.'); return; }
+    const f = zipDateien[0];
+    if (f.size > 80e6) { alert('ZIP ist zu groß (maximal 80 MB).'); return; }
+    const nameBasis = slug(f.name.replace(/\.zip$/i, '')) || 'zip-projekt';
+    let name = nameBasis, nr = 2;
+    while (await projLesen(name)) name = nameBasis + '-' + nr++;
+    const dateienNeu = {};
+    let n;
+    try { n = await zipEinlesen(f, dateienNeu); }
+    catch (err) { console.error(err); alert('ZIP konnte nicht vollständig gelesen werden: ' + err.message); return; }
+    if (!n) { toast('Keine unterstützten Dateien im ZIP gefunden.'); return; }
+    try {
+      if (S.p && S.geaendert) await speichernJetzt();
+      await projSchreiben({ name, dateien: dateienNeu, haupt: Object.keys(dateienNeu).find(p => p === 'index.html') || Object.keys(dateienNeu).find(p => p.endsWith('/index.html')) || '', versionen: [], erstellt: Date.now() });
+      await projektOeffnen(name);
+      ausgabe('⬆ ZIP importiert: ' + n + ' Dateien automatisch nach Ordnern und Dateitypen einsortiert. Originalprojekt bleibt erhalten.');
+    } catch (err) { console.error(err); toast('ZIP-Import fehlgeschlagen.'); }
+    return;
+  }
   if (!S.p) { await projektNeu('leer', 'hochgeladen'); if (!S.p) return; }
   let n = 0;
-  for (const f of dateien) { const pfad = sicherPfad(f.webkitRelativePath ? f.webkitRelativePath.split('/').slice(1).join('/') : f.name); if (!pfad || f.size > 8e6) continue;
-    if (/\.zip$/i.test(f.name)) { n += await zipEinlesen(f); continue; }
-    S.p.dateien[pfad] = await dateiLesen(f); n++; }
+  for (const f of liste) {
+    const pfad = sicherPfad(f.webkitRelativePath ? f.webkitRelativePath.split('/').slice(1).join('/') : f.name);
+    if (!pfad || f.size > 8e6) continue;
+    if (S.p.dateien[pfad] != null && !confirm('Datei „' + pfad + '“ existiert bereits. Überschreiben?')) continue;
+    S.p.dateien[pfad] = await dateiLesen(f); n++;
+  }
   await projSchreiben(S.p); baum(); ausgabe('⬆ ' + n + ' Datei(en) hinzugefügt.');
   if (istWebProjekt()) vorschau(true);
 }
@@ -374,7 +402,7 @@ function zipBauen(dateien) {
   e.setUint32(0, 0x06054b50, true); e.setUint16(8, Object.keys(dateien).length, true); e.setUint16(10, Object.keys(dateien).length, true); e.setUint32(12, zLaenge, true); e.setUint32(16, off, true);
   return new Blob([...teile, ...zentral, new Uint8Array(e.buffer)], { type: 'application/zip' });
 }
-async function zipEinlesen(f) {
+async function zipEinlesen(f, ziel = S.p.dateien) {
   const buf = new Uint8Array(await f.arrayBuffer()), dv = new DataView(buf.buffer); let ende = -1;
   for (let i = buf.length - 22; i >= Math.max(0, buf.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { ende = i; break; }
   if (ende < 0) { alert('Das ist keine gültige ZIP-Datei.'); return 0; }
@@ -390,8 +418,8 @@ async function zipEinlesen(f) {
     if (z.art === 8) { try { daten = new Uint8Array(await new Response(new Blob([daten]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch (e) { continue; } }
     else if (z.art !== 0) continue;
     const textArt = /\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|py|java|cs|c|cc|cpp|h|hpp|rs|go|kt|php|rb|sql|ya?ml|toml|svg|xml|csv|env|gitignore|vue|svelte|lock)$/i.test(pfad) || !/\./.test(pfad.split('/').pop());
-    if (textArt) S.p.dateien[pfad] = dec.decode(daten);
-    else { let s = ''; for (let i = 0; i < daten.length; i += 0x8000) s += String.fromCharCode.apply(null, daten.subarray(i, i + 0x8000)); S.p.dateien[pfad] = 'data:' + (mimeVon(pfad)) + ';base64,' + btoa(s); }
+    if (textArt) ziel[pfad] = dec.decode(daten);
+    else { let s = ''; for (let i = 0; i < daten.length; i += 0x8000) s += String.fromCharCode.apply(null, daten.subarray(i, i + 0x8000)); ziel[pfad] = 'data:' + (mimeVon(pfad)) + ';base64,' + btoa(s); }
     n++; }
   return n;
 }
