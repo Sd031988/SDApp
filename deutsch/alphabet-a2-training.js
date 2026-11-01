@@ -125,7 +125,7 @@ function writingMarkup(){
  return '<section class="pre-card"><h3>Schreiben üben</h3><p>'+esc(prompt)+'</p><label for="pre-draft">Dein Text</label><textarea id="pre-draft" rows="6" placeholder="Hier schreiben …">'+esc(draft)+'</textarea><p id="pre-draft-count" role="status" class="pre-note"></p><p>Dein Entwurf wird nur auf diesem Gerät gespeichert. Es gibt keine automatische Grammatiknote.</p><button id="pre-draft-clear">Entwurf löschen</button></section>';
 }
 const vocabReviewKey='sdPreB1VocabularyReviewV1';
-function reviewData(){try{const x=JSON.parse(localStorage.getItem(vocabReviewKey)||'{}');return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}catch(_){return {}}}
+function reviewData(){try{const raw=JSON.parse(localStorage.getItem(vocabReviewKey)||'{}');if(!raw||typeof raw!=='object'||Array.isArray(raw))return {};const clean={};for(const [id,item] of Object.entries(raw)){if(!item||typeof item!=='object'||Array.isArray(item))continue;const stage=Number(item.stage),next=Number(item.next);if(!Number.isFinite(stage)||!Number.isFinite(next)||next<0)continue;clean[id]={stage:Math.max(0,Math.min(4,Math.trunc(stage))),next};}return clean;}catch(_){return {}}}
 function saveReview(x){try{localStorage.setItem(vocabReviewKey,JSON.stringify(x))}catch(_){}}
 function reviewMarkup(){
  const data=reviewData(),due=vocabulary[level].map((w,i)=>({w,i,entry:data[level+':'+i]})).filter(x=>x.entry&&x.entry.next<=Date.now());
