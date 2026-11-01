@@ -38,10 +38,11 @@ export class PiboAudio {
         overtone.frequency.exponentialRampToValueAtTime(540,t+.565);
         this.noise(t+.04,.42,.014,'bandpass',1150,480);
       } else if(type==='purr'){
-        const carrier=this.tone(65,t,.85,.09,'sawtooth',58);
-        const lfo=c.createOscillator(),mod=c.createGain();lfo.frequency.value=24;mod.gain.value=.025;
-        lfo.connect(mod);mod.connect(carrier.connect?this.master.gain:this.master.gain);
-        lfo.start(t);lfo.stop(t+.85);this.noise(t,.8,.028,'lowpass',260,210);
+        const voice=c.createOscillator(),vibrato=c.createOscillator(),depth=c.createGain(),envelope=this.gain(t,.85,.065);
+        voice.type='sawtooth';voice.frequency.setValueAtTime(66,t);voice.frequency.exponentialRampToValueAtTime(58,t+.85);
+        vibrato.frequency.value=24;depth.gain.value=.025;vibrato.connect(depth);depth.connect(envelope.gain);
+        voice.connect(envelope);voice.start(t);voice.stop(t+.87);vibrato.start(t);vibrato.stop(t+.85);
+        this.noise(t,.8,.028,'lowpass',260,210);
       } else if(type==='chew'){
         for(let i=0;i<3;i++){this.noise(t+i*.21,.1,.07,'lowpass',650,260);this.tone(170,t+i*.21,.075,.03,'sine',95)}
       } else if(type==='step'){
