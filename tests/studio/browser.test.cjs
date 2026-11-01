@@ -234,6 +234,7 @@ const assert = require('node:assert/strict');
     page.once('dialog',dialog=>dialog.accept()); // Explicit consent to execute untrusted AI code.
     await page.locator('#starten').click();
     assert.equal(await page.locator('#starten').count(),1);
+    await page.locator('#vorschau').waitFor({state:'visible',timeout:12000}); // Preview saves before opening.
     assert.equal(await page.locator('#vorschau').isVisible(),true,'Ausführen öffnet die Vorschau');
     assert.equal((await page.locator('#frame').getAttribute('sandbox')).includes('allow-same-origin'),false,'KI-Vorschau isoliert');
 
