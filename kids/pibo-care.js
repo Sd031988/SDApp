@@ -50,6 +50,25 @@ export class PiboCare {
     }
     this.sound('step');this.onStatus(true,'Pibo macht sich bereit',0)
   }
+  scrub(){
+    const i=this.active;if(i?.type!=='wash')return false;
+    i.scrubs=Math.min(12,(i.scrubs||0)+1);
+    const sponge=this.props.children.find(obj=>obj.userData?.sponge);
+    if(sponge){sponge.position.x=-1.8+.10*Math.sin(i.scrubs*1.7);sponge.rotation.z=.22*Math.sin(i.scrubs*1.3)}
+    for(const b of this.props.children){
+      if(b.userData?.bubble!==undefined)b.scale.setScalar(1+.15*Math.sin(i.scrubs+b.userData.bubble));
+    }
+    if(i.scrubs%3===0)this.sound('splash');
+    this.onStatus(true,'Einseifen: '+Math.min(6,i.scrubs)+'/6',Math.min(1,i.scrubs/6));
+    return true
+  }
+  flush(){
+    const i=this.active;if(i?.type!=='toilet'||i.flushed||i.phase<2)return false;
+    i.flushed=true;
+    if(i.water)i.water.visible=true;
+    this.sound('flush');this.onStatus(true,'Gespült!',1);
+    return true
+  }
   update(t,now=performance.now()){
     const i=this.active;if(!i)return;
     const p=Math.min(1,(now-i.start)/i.duration);
@@ -61,7 +80,7 @@ export class PiboCare {
       if(i.type==='wash'&&phase===2)this.sound('splash');
       if(i.type==='sleep'&&phase===2)this.sound('snore');
       if(i.type==='toilet'&&phase===2)this.sound('fart');
-      if(i.type==='toilet'&&phase===3){i.water.visible=true;this.sound('flush')}
+      if(i.type==='toilet'&&phase===3)this.flush()
     }
     if(!i.lastStatusAt||now-i.lastStatusAt>=80||phase!==i.lastStatusPhase){this.onStatus(true,labels[i.type][phase],p);i.lastStatusAt=now;i.lastStatusPhase=phase}
     const smooth=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
