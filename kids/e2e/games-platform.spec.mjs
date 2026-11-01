@@ -4,7 +4,7 @@ test('Kids games portal shows ten real playable entries and filters',async({page
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/kids/games/',{waitUntil:'domcontentloaded'});
  await expect(page.locator('.game')).toHaveCount(10);
- await expect(page.locator('a[href*="play.html?game="]')).toHaveCount(8);
+ await expect(page.locator('.game a[href*="play.html?game="]')).toHaveCount(8);
  await page.getByRole('button',{name:'3D',exact:true}).click();
  await expect(page.locator('.game')).toHaveCount(2);
  await page.getByRole('button',{name:'Minispiele'}).click();
