@@ -32,5 +32,10 @@ jobs:
         run: node kids/pibo-face.test.mjs
       - name: Verify body motion and transitions
         run: node kids/pibo-motion.test.mjs
+      - name: Verify BlockWorld sandbox and game logic
+        run: |
+          node --check kids/blockworld/core.mjs
+          node --check kids/blockworld/game.mjs
+          node kids/blockworld/core.test.mjs
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
