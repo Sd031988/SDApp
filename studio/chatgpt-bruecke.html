@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChatGPT mit SD Code-Studio verbinden</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;background:#120f26;color:#f4f1ff;font:15px/1.65 system-ui,sans-serif}
+main{width:min(820px,calc(100% - 30px));margin:35px auto 60px}
+a{color:#baa3ff}h1{font-size:clamp(24px,4vw,36px);line-height:1.25}
+h2{font-size:19px;margin-bottom:9px}.muted{color:#c2b9dc}
+.card{background:#211a3b;border:1px solid #4e3b75;border-radius:16px;padding:22px;margin:17px 0}
+button,.linkButton{display:inline-block;background:#7d4ff1;color:white;border:0;border-radius:10px;padding:12px 17px;font-weight:750;font-size:14px;cursor:pointer;text-decoration:none}
+button:hover,.linkButton:hover{background:#925ff8}button:disabled{opacity:.5}
+ol{padding-left:22px}li{margin-bottom:9px}
+.notice{border-left:3px solid #86e4b7;background:#213a39;padding:12px 15px;border-radius:8px}
+#status{min-height:22px;color:#b9f4d0}
+small{color:#c5bfd5}
+</style>
+</head>
+<body>
+<main>
+<p><a href="./">← Zurück zum SD Code-Studio</a></p>
+<h1>🔗 ChatGPT-Antwort direkt ins SD Code-Studio bringen</h1>
+<p class="muted">Mit deinem bestehenden ChatGPT-Konto, ohne API-Schlüssel und ohne Zugriff auf andere private Chats. Du bestimmst selbst, welchen Text du überträgst.</p>
+<div class="card">
+  <h2>1. Kostenlose Chrome-Erweiterung herunterladen</h2>
+  <p>Die Erweiterung fügt in ChatGPT und Google Gemini beim Markieren von Text eine Rechtsklick-Aktion hinzu. Sie liest nur den Text, den du selbst markiert und ausdrücklich zum Senden ausgewählt hast.</p>
+  <button id="download" type="button">⬇ Chrome-Erweiterung als ZIP herunterladen</button>
+  <p id="status" role="status" aria-live="polite"></p>
+  <small>Die ZIP wird aus drei öffentlichen Dateien direkt in deinem Browser zusammengestellt. Sie enthält keine Kontodaten oder Passwörter.</small>
+</div>
+<div class="card">
+  <h2>2. Erweiterung einmalig in Chrome einrichten</h2>
+  <ol>
+    <li>ZIP entpacken – du bekommst einen Ordner mit <code>manifest.json</code>, <code>background.js</code> und <code>studio-bridge.js</code>.</li>
+    <li>In Chrome <code>chrome://extensions</code> öffnen.</li>
+    <li><strong>Entwicklermodus</strong> einschalten und <strong>Entpackte Erweiterung laden</strong> wählen.</li>
+    <li>Den entpackten Ordner auswählen.</li>
+  </ol>
+  <p class="muted">Diese Variante wird lokal installiert und ist derzeit keine im Chrome Web Store veröffentlichte Erweiterung. Prüfe die Berechtigungen vor der Installation.</p>
+</div>
+<div class="card">
+  <h2>3. Antwort mit einem Klick ins Studio übertragen</h2>
+  <ol>
+    <li><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">ChatGPT öffnen</a> und dich in deinem eigenen Konto anmelden, falls nötig.</li>
+    <li>Die gewünschte ChatGPT-Antwort oder einen Codeabschnitt markieren.</li>
+    <li>Rechtsklick → <strong>Ausgewählten KI-Text an SD Code-Studio senden</strong>.</li>
+    <li>Das Studio öffnet sich. Es erkennt HTML, CSS, JavaScript und andere Dateien. Vergleiche die Änderungen und übernimm die gewünschten Dateien erst nach deiner Freigabe.</li>
+  </ol>
+  <p class="notice"><strong>Datenschutz:</strong> Keine automatische Anmeldung, kein Zugriff auf ChatGPT-Passwörter oder Cookies, kein heimliches Lesen deines Chatverlaufs. Die Auswahl wird nur kurz im Sitzungsspeicher deiner Chrome-Erweiterung gehalten und nicht an unseren Server hochgeladen.</p>
+</div>
+<div class="card">
+  <h2>Ohne Erweiterung</h2>
+  <p>Du kannst weiterhin in ChatGPT auf <strong>Kopieren</strong> klicken und im SD Code-Studio unter <strong>✨ KI Coding → Gesamte KI-Antwort einfügen</strong> den vollständigen Text einfügen.</p>
+  <a class="linkButton" href="./">SD Code-Studio öffnen</a>
+  <p><small>Hinweis: Der ursprüngliche lokale SD-Agent unter localhost benötigt sein eigenes geprüftes PC-Update, bevor diese Funktion dort integriert ist.</small></p>
+</div>
+</main>
+<script src="./chatgpt-transfer-zip.js"></script>
+<script>
+(function(){
+  'use strict';
+  const names=['manifest.json','background.js','studio-bridge.js'];
+  const button=document.getElementById('download'),status=document.getElementById('status');
+  button.addEventListener('click',async()=>{
+    button.disabled=true;status.textContent='Erweiterungsdateien werden zusammengestellt …';
+    try{
+      const files=[];
+      for(const name of names){
+        const response=await fetch('./chatgpt-transfer-extension/'+name,{cache:'no-store'});
+        if(!response.ok)throw new Error('Datei '+name+' konnte nicht geladen werden.');
+        files.push({name,text:await response.text()});
+      }
+      const bytes=SDChatBridgeZip.archive(files);
+      const link=document.createElement('a');
+      const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'}));
+      link.href=url;link.download='SD-Code-Studio-ChatGPT-Bruecke.zip';
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+      status.textContent='✓ ZIP erstellt. Danach entpacken und in Chrome als Erweiterung laden.';
+    }catch(error){status.textContent='Download fehlgeschlagen: '+error.message+' – öffne alternativ den Erweiterungsordner auf GitHub.';}
+    finally{button.disabled=false;}
+  });
+})();
+</script>
+</body>
+</html>
