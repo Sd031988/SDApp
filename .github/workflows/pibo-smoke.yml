@@ -39,5 +39,11 @@ jobs:
           node kids/blockworld/core.test.mjs
           node --check kids/blockworld/online.mjs
           node kids/blockworld/online.test.mjs
+      - name: Verify SD Kids eight mini-game engines and ten-game catalog
+        run: |
+          node --check kids/games/catalog.mjs
+          node --check kids/games/rules.mjs
+          node --check kids/games/play.mjs
+          node kids/games/rules.test.mjs
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
