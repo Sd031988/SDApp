@@ -549,16 +549,33 @@ function items(section){
 }
 function clear(){if(tick)clearInterval(tick);tick=null;if('speechSynthesis'in window)speechSynthesis.cancel();}
 function close(){
+ stopHold();
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}clear();if(root)root.remove();root=null;if(host)host.style.display='';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='';host=null;}
+let holdTimer=null,holdPoint=null;
+function stopHold(){if(holdTimer!==null)clearTimeout(holdTimer);holdTimer=null;holdPoint=null;}
+function setupHold(){
+ root.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch'||running||!('speechSynthesis' in window))return;
+  if(e.target.closest('button,input,textarea,select,a,label,summary,.b1x-nav'))return;
+  const node=e.target.closest('p,h2,h3,li');if(!node)return;
+  const words=(node.textContent||'').trim().replace(/\s+/g,' ');
+  if(!words||words.length>700)return;
+  stopHold();holdPoint={x:e.clientX,y:e.clientY};
+  holdTimer=setTimeout(()=>{holdTimer=null;holdPoint=null;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words);u.lang='de-DE';u.rate=.9;window.speechSynthesis.speak(u);},1000);
+ },{passive:true});
+ root.addEventListener('pointermove',e=>{if(holdPoint&&Math.hypot(e.clientX-holdPoint.x,e.clientY-holdPoint.y)>12)stopHold();},{passive:true});
+ ['pointerup','pointercancel','scroll'].forEach(n=>root.addEventListener(n,stopHold,{passive:true}));
+}
 let activeTrainerCleanup=null;
 function view(html){
  if(!root)return;
+ stopHold();
  if(activeTrainerCleanup){const cleanup=activeTrainerCleanup;activeTrainerCleanup=null;cleanup();}
  root.innerHTML='<div class="b1x-wrap"><div class="b1x-nav"><button id="b1x-back">‹ Zurück</button><strong>🎓 B1-Prüfungstraining</strong><button id="b1x-close">✕</button></div>'+html+'</div>';
  el('b1x-close').onclick=close;el('b1x-back').onclick=home;
 }
 function open(){
- if(root)return;host=el('lBody');if(!host)return;host.style.display='none';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='none';root=document.createElement('div');root.id='b1x';host.parentNode.insertBefore(root,host.nextSibling);home();
+ if(root)return;host=el('lBody');if(!host)return;host.style.display='none';const fixed=el('sdB1FixedEntry');if(fixed)fixed.style.display='none';root=document.createElement('div');root.id='b1x';host.parentNode.insertBefore(root,host.nextSibling);setupHold();home();
 }
 const checkpointKey='sdB1ExamCheckpointV1';
 function getCheckpoint(){
