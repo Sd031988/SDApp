@@ -98,6 +98,23 @@ const readingTexts=[
  ['Radweg','Die Stadt baut einen neuen Radweg zwischen dem Bahnhof und dem Industriegebiet. Er soll vor allem Menschen helfen, die mit dem Fahrrad zur Arbeit fahren. Während der Bauphase müssen Radfahrer eine ausgeschilderte Umleitung nutzen. Die Stadt veröffentlicht aktuelle Informationen auf ihrer Internetseite.','Wer soll besonders vom neuen Radweg profitieren?','Menschen auf dem Arbeitsweg','Nur Touristen','Ausschließlich Kinder'],
  ['Musikunterricht','Seit September bietet die Musikschule auch Unterricht für Erwachsene an. Die Kurse finden abends statt, damit Berufstätige teilnehmen können. Instrumente können für die ersten vier Wochen ausgeliehen werden. Danach müssen die Teilnehmenden ein eigenes Instrument mitbringen oder eines dauerhaft mieten.','Wie lange kann man anfangs ein Instrument ausleihen?','Vier Wochen','Vier Monate','Ein ganzes Jahr']
 ];
+const readingExplanations=[
+ "Im Text möchte Lara vor der Entscheidung prüfen, wie sie abends nach Hause kommt. Entscheidend ist die Busverbindung, nicht die Helligkeit der Wohnung.",
+ "Wegen der begrenzten Plätze muss man sich bis Donnerstag anmelden. Ein eigenes Smartphone ist nicht nötig, und die Beratung ist kostenlos.",
+ "Die Radtour wurde durch eine Wanderung ersetzt, weil einige Kolleginnen und Kollegen nicht Fahrrad fahren können. Das Restaurant ist nicht der Grund.",
+ "Die Teilnehmenden schlagen die Gesprächsthemen selbst vor. Es gibt dort weder Noten noch eine Lehrkraft.",
+ "Die Straße direkt vor der Schule ist morgens für private Autos gesperrt. Zu Fuß gehen und die neue Haltestelle nutzen bleiben möglich.",
+ "Die Hilfe im Reparaturcafé ist kostenlos, aber notwendige Ersatzteile bezahlen die Besucher selbst.",
+ "Während der Bauarbeiten ist die große Wiese nicht nutzbar. Die Wege zum See und das Café bleiben geöffnet.",
+ "Miriam helfen feste Lernzeiten und der regelmäßige Austausch mit anderen Teilnehmenden. Sie lernt weiterhin nach der Arbeit.",
+ "Bei starkem Wind ziehen die Marktstände in die benachbarte Halle um. Der Markt findet weiterhin statt, und die Öffnungszeiten bleiben gleich.",
+ "Ein Bibliotheksausweis wird für die Ausleihe von Büchern benötigt. WLAN und Arbeitsplatzreservierung sind kostenlos nutzbar.",
+ "Für Workshops muss man sich wegen der begrenzten Plätze anmelden. Die Vorträge sind ohne Anmeldung zugänglich.",
+ "Große Pakete müssen weiterhin in der Filiale abgeholt werden, weil die Fächer der Paketstation zu klein sind.",
+ "Der Verein stellt die Getränke bereit. Gäste sollen nach Möglichkeit etwas für das Buffet mitbringen.",
+ "Der Radweg ist besonders für Menschen gedacht, die mit dem Fahrrad zur Arbeit fahren. Während des Baus gibt es eine Umleitung.",
+ "Instrumente kann man in den ersten vier Wochen ausleihen. Danach braucht man ein eigenes oder dauerhaft gemietetes Instrument."
+];
 const contexts=['Im Stadtteil Nord','In der kommenden Woche','Für alle Interessierten','Nach einer kurzen Änderung','Wegen der aktuellen Planung'];
 const letters=[
  ['Du möchtest einen Deutschkurs besuchen, aber der angebotene Termin passt nicht. Schreibe an die Schule und frage nach einer Alternative.','Schreibe den Grund, deinen Terminwunsch und eine konkrete Frage.'],
@@ -365,7 +382,7 @@ function items(section){
        const textIndex=(n+(set-1)*7+g*3)%readingTexts.length;
        const rd=readingTexts[textIndex],options=rd.slice(3,6),correct=options[0],pos=(n+set+g)%3;
        options[0]=options[pos];options[pos]=correct;
-       result.push({g,j,q:rd[2],options,answer:pos,passage:rd[0]+'\\n\\n'+rd[1],kind:'Leseverstehen · '+kinds[g]});
+       result.push({g,j,q:rd[2],options,answer:pos,passage:rd[0]+'\\n\\n'+rd[1],explanation:readingExplanations[textIndex],kind:'Leseverstehen · '+kinds[g]});
        continue;
      }
      const isBinary=(exam==='goethe'&&((id==='lesen'&&(g===0||g===3))||(id==='hoeren'&&(g===0&&j%2===0||g===2))))||(exam==='telc'&&id==='hoeren');
