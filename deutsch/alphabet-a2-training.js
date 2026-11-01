@@ -35,6 +35,27 @@ const grammarNotes={
 function grammarMarkup(){
  return '<section class="pre-card"><h3>Grammatik und Lerntipps</h3><ul>'+grammarNotes[level].map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul><p>Lies die Beispiele laut und bilde eigene Sätze. Diese Hinweise ersetzen kein vollständiges Grammatikbuch.</p></section>';
 }
+const readingTexts={
+ alpha:[
+ ['Im Haus','Das ist Mia. Mia ist im Haus. Mia liest.','Wer ist im Haus?',['Mia','Ben','Sara'],0],
+ ['Am See','Ali ist am See. Ali sieht einen Fisch.','Was sieht Ali?',['einen Zug','einen Fisch','ein Auto'],1],
+ ['Der Ball','Tom hat einen Ball. Der Ball ist rot.','Welche Farbe hat der Ball?',['rot','blau','grün'],0]
+ ],
+ a1:[
+ ['Mein Tag','Ich heiße Samira und wohne in Bonn. Jeden Morgen fahre ich mit dem Bus zur Arbeit. Am Abend koche ich und lese ein Buch.','Wie fährt Samira zur Arbeit?',['mit dem Auto','mit dem Bus','mit dem Fahrrad'],1],
+ ['Im Supermarkt','Heute kauft Paul Brot, Milch und Äpfel. Er bezahlt zwölf Euro und geht danach nach Hause.','Was kauft Paul?',['Brot, Milch und Äpfel','Reis und Tee','Schuhe'],0],
+ ['Eine Einladung','Hallo Eva, ich feiere am Samstag um 16 Uhr Geburtstag. Kannst du kommen? Liebe Grüße, Lina.','Wann ist die Feier?',['am Freitag','am Sonntag','am Samstag'],2]
+ ],
+ a2:[
+ ['Termin beim Arzt','Frau Kaya hat am Dienstag um 10 Uhr einen Termin beim Arzt. Weil sie arbeiten muss, ruft sie in der Praxis an. Sie bekommt einen neuen Termin am Donnerstag um 11 Uhr.','Wann ist der neue Termin?',['Donnerstag um 11 Uhr','Dienstag um 10 Uhr','Mittwoch um 9 Uhr'],0],
+ ['Die Wohnung','Seit gestern funktioniert die Heizung in Herrn Müllers Wohnung nicht. Er schreibt der Hausverwaltung eine E-Mail und bittet um eine schnelle Reparatur.','Warum schreibt Herr Müller?',['Er möchte umziehen.','Die Heizung ist kaputt.','Er sucht Arbeit.'],1],
+ ['Ein Ausflug','Obwohl das Wetter am Morgen schlecht war, fuhr die Familie mit dem Zug nach Heidelberg. Am Nachmittag schien die Sonne, und alle machten einen Spaziergang am Fluss.','Wie ist die Familie gefahren?',['mit dem Bus','mit dem Auto','mit dem Zug'],2]
+ ]
+};
+function readingMarkup(){
+ const [title,story,question,options]=readingTexts[level][unit%3];
+ return '<section class="pre-card"><h3>Lesen und Verstehen · '+esc(title)+'</h3><p>'+esc(story)+'</p><button id="pre-read-play">🔊 Text anhören</button><fieldset class="pre-question"><legend>'+esc(question)+'</legend>'+options.map((x,i)=>'<label><input type="radio" name="pre-read-answer" value="'+i+'"> '+esc(x)+'</label>').join('')+'</fieldset><button id="pre-read-check">Leseverständnis prüfen</button><p id="pre-read-feedback" role="status"></p></section>';
+}
 const writingPrompts={
  alpha:['Schreibe deinen Vornamen.','Schreibe drei Wörter aus der Lektion.','Schreibe einen kurzen Satz: Ich lerne Deutsch.'],
  a1:['Stell dich in vier Sätzen vor: Name, Wohnort, Beruf und Hobby.','Schreibe eine kurze Nachricht: Du kommst heute zehn Minuten später.','Schreibe eine Einkaufsliste mit fünf Lebensmitteln.'],
@@ -61,7 +82,10 @@ function quizMarkup(){
 }
 function show(){
  const data=levels[level],p=progress(),done=data.units.filter((_,i)=>p[level+':'+i]).length;
- panel.innerHTML='<div class="pre-wrap"><div class="pre-nav"><strong>📚 Alphabetisierung bis A2</strong><button id="pre-close">✕ Schließen</button></div><p>Eigenständige Übungen, keine offizielle Prüfung. Lernstand nur in diesem Browser.</p><div class="pre-tabs">'+Object.entries(levels).map(([id,x])=>'<button data-level="'+id+'" '+(id===level?'aria-current="true"':'')+'>'+esc(x.title)+'</button>').join('')+'</div><p><b>'+done+' von '+data.units.length+' Lektionen abgeschlossen</b></p><div class="pre-tabs">'+data.units.map((x,i)=>'<button data-unit="'+i+'" '+(i===unit?'aria-current="true"':'')+'>'+(p[level+':'+i]?'✓ ':'')+esc(x[0])+'</button>').join('')+'</div><section class="pre-card"><h3>'+esc(data.units[unit][0])+'</h3><p>Höre zu, sprich nach und wiederhole die Wörter.</p>'+[1,3].map(i=>'<div class="pre-line"><span><b>'+esc(data.units[unit][i])+'</b><small>'+esc(data.units[unit][i+1])+'</small></span><button data-say="'+i+'" aria-label="Beispiel vorlesen">🔊 Vorlesen</button></div>').join('')+'<button id="pre-done">✓ Lektion als gelernt markieren</button></section><section class="pre-card"><h3>Wortschatz · '+vocabulary[level].length+' Wörter</h3><p>Tippe auf 🔊, um ein Wort zu hören.</p><div class="pre-words">'+vocabulary[level].map((w,i)=>'<div class="pre-word"><span><b>'+esc(w[0])+'</b><small>'+esc(w[1])+'</small></span><button data-word="'+i+'" aria-label="'+esc(w[0])+' vorlesen">🔊</button></div>').join('')+'</div></section>'+grammarMarkup()+listeningMarkup()+writingMarkup()+quizMarkup()+'<button id="pre-next">Nächste Lektion →</button></div>';
+ panel.innerHTML='<div class="pre-wrap"><div class="pre-nav"><strong>📚 Alphabetisierung bis A2</strong><button id="pre-close">✕ Schließen</button></div><p>Eigenständige Übungen, keine offizielle Prüfung. Lernstand nur in diesem Browser.</p><div class="pre-tabs">'+Object.entries(levels).map(([id,x])=>'<button data-level="'+id+'" '+(id===level?'aria-current="true"':'')+'>'+esc(x.title)+'</button>').join('')+'</div><p><b>'+done+' von '+data.units.length+' Lektionen abgeschlossen</b></p><div class="pre-tabs">'+data.units.map((x,i)=>'<button data-unit="'+i+'" '+(i===unit?'aria-current="true"':'')+'>'+(p[level+':'+i]?'✓ ':'')+esc(x[0])+'</button>').join('')+'</div><section class="pre-card"><h3>'+esc(data.units[unit][0])+'</h3><p>Höre zu, sprich nach und wiederhole die Wörter.</p>'+[1,3].map(i=>'<div class="pre-line"><span><b>'+esc(data.units[unit][i])+'</b><small>'+esc(data.units[unit][i+1])+'</small></span><button data-say="'+i+'" aria-label="Beispiel vorlesen">🔊 Vorlesen</button></div>').join('')+'<button id="pre-done">✓ Lektion als gelernt markieren</button></section><section class="pre-card"><h3>Wortschatz · '+vocabulary[level].length+' Wörter</h3><p>Tippe auf 🔊, um ein Wort zu hören.</p><div class="pre-words">'+vocabulary[level].map((w,i)=>'<div class="pre-word"><span><b>'+esc(w[0])+'</b><small>'+esc(w[1])+'</small></span><button data-word="'+i+'" aria-label="'+esc(w[0])+' vorlesen">🔊</button></div>').join('')+'</div></section>'+grammarMarkup()+readingMarkup()+listeningMarkup()+writingMarkup()+quizMarkup()+'<button id="pre-next">Nächste Lektion →</button></div>';
+ const reading=readingTexts[level][unit%3];
+ panel.querySelector('#pre-read-play').onclick=()=>speak(reading[1]);
+ panel.querySelector('#pre-read-check').onclick=()=>{const selected=panel.querySelector('input[name="pre-read-answer"]:checked');panel.querySelector('#pre-read-feedback').textContent=!selected?'Bitte wähle zuerst eine Antwort.':Number(selected.value)===reading[4]?'✓ Richtig!':'Noch nicht richtig. Richtige Antwort: '+reading[3][reading[4]];};
  const dictationText=data.units[unit][unit%2?3:1];
  panel.querySelector('#pre-dictation-play').onclick=()=>speak(dictationText);
  panel.querySelector('#pre-dictation-check').onclick=()=>{const normalize=t=>t.toLocaleLowerCase('de-DE').replace(/[^a-zäöüß0-9 ]/gi,'').replace(/\s+/g,' ').trim();const entered=panel.querySelector('#pre-dictation-answer').value;panel.querySelector('#pre-dictation-feedback').textContent=normalize(entered)===normalize(dictationText)?'✓ Richtig gehört!':'Noch nicht ganz. Lösung: '+dictationText;};
