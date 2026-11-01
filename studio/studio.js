@@ -363,6 +363,8 @@ async function hochladen(dateien) {
     try { n = await zipEinlesen(f, dateienNeu); }
     catch (err) { console.error(err); alert('ZIP konnte nicht vollständig gelesen werden: ' + err.message); return; }
     if (!n) { toast('Keine unterstützten Dateien im ZIP gefunden.'); return; }
+    const framework = frameworkErkennen(dateienNeu);
+    if (framework && !framework.fehler) toast('Framework erkannt: ' + framework.name + ' – Build über Befehlspalette möglich.');
     try {
       if (S.p && S.geaendert) await speichernJetzt();
       await projSchreiben({ name, dateien: dateienNeu, haupt: Object.keys(dateienNeu).find(p => p === 'index.html') || Object.keys(dateienNeu).find(p => p.endsWith('/index.html')) || '', versionen: [], erstellt: Date.now() });
@@ -428,6 +430,69 @@ function herunterladen(blob, name) { const a = document.createElement('a'); a.hr
 async function zipExport() { if (!S.p) return; await speichernJetzt(); herunterladen(zipBauen(S.p.dateien), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
 
 /* Desktop-App als eigenständiges Electron-Projekt exportieren. */
+
+// Framework-Projekte werden erkannt, ohne ihren Quellcode zu verändern.
+function frameworkErkennen(dateien) {
+  let pkg;
+  try { pkg = JSON.parse(dateien['package.json'] || '{}'); } catch (e) { return {name:'Unbekannt', fehler:'package.json ist kein gültiges JSON'}; }
+  const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+  const name = deps['@angular/core'] ? 'Angular' : deps['next'] ? 'Next.js' : deps['nuxt'] ? 'Nuxt' : deps['vue'] ? 'Vue' : deps['react'] ? 'React' : deps['svelte'] ? 'Svelte' : deps['vite'] ? 'Vite' : null;
+  if (!name) return null;
+  const scripts = pkg.scripts || {};
+  return { name, build: typeof scripts.build === 'string' && !!scripts.build.trim(), ausgabe: deps['next'] ? 'out' : deps['@angular/core'] ? 'dist' : deps['nuxt'] ? '.output/public' : 'dist' };
+}
+function frameworkBuildExport(dateien, projektName, info) {
+  const ausgabe = prompt('Build-Ausgabeordner für ' + info.name + ' (bei Angular ggf. dist/PROJEKT/browser):', info.ausgabe);
+  if (ausgabe === null) return;
+  const ordner = sicherPfad(ausgabe);
+  if (!ordner || ordner.startsWith('.') && ordner !== '.output/public') { alert('Ungültiger Ausgabeordner.'); return; }
+  const kopie = { ...dateien };
+  const workflow = [
+    'name: Framework-Projekt bauen',
+    'on:',
+    '  workflow_dispatch:',
+    'permissions:',
+    '  contents: read',
+    'jobs:',
+    '  build:',
+    '    runs-on: ubuntu-latest',
+    '    steps:',
+    '      - uses: actions/checkout@v4',
+    '      - uses: actions/setup-node@v4',
+    '        with:',
+    '          node-version: 22',
+    '      - run: npm install --no-audit --no-fund',
+    '      - run: npm run build',
+    '      - uses: actions/upload-artifact@v4',
+    '        with:',
+    '          name: fertige-webseite',
+    '          path: ' + JSON.stringify(ordner),
+    '          if-no-files-found: error'
+  ].join('\n');
+  kopie['.github/workflows/sd-framework-build.yml'] = workflow;
+  kopie['SD-STUDIO-BUILD-ANLEITUNG.md'] =
+    '# ' + info.name + ' – Projekt-Build\n\nDieses ZIP enthält den unveränderten Quellcode und einen GitHub-Actions-Build.\n' +
+    '1. In ein neues GitHub-Repository hochladen.\n2. Actions → Framework-Projekt bauen → Run workflow.\n' +
+    '3. Das Artefakt fertige-webseite herunterladen.\n\n' +
+    'Build-Ausgabe: ' + ordner + '\n\n' +
+    'Das Studio führt npm-Pakete aus Sicherheitsgründen nicht direkt im Browser aus.\n' +
+    'Bei Next.js ist für eine statische Ausgabe gegebenenfalls output: export in next.config erforderlich.\n' +
+    'Bei serverseitigen Framework-Funktionen ist ein eigener Server notwendig.\n';
+  herunterladen(zipBauen(kopie), slug(projektName) + '-framework-build.zip');
+  toast(info.name + '-Projekt mit GitHub-Actions-Build exportiert');
+}
+async function frameworkProjektExport() {
+  if (!S.p) return;
+  const p = S.p;
+  try { await speichernJetzt(); } catch (e) { return; }
+  if (S.p !== p) return;
+  const info = frameworkErkennen(p.dateien);
+  if (!info) { alert('Kein unterstütztes Framework in package.json erkannt. Für HTML/CSS/JS nutze den normalen Desktop-Export.'); return; }
+  if (info.fehler) { alert(info.fehler); return; }
+  if (!info.build) { alert(info.name + ' erkannt, aber in package.json fehlt ein build-Skript.'); return; }
+  frameworkBuildExport(p.dateien, p.name, info);
+}
+
 async function desktopExport() {
   if (!S.p) return;
   const projekt = S.p;
@@ -591,7 +656,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
