@@ -1,0 +1,32 @@
+name: Mein SD Hub Quality
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mein-sd-hub/**"
+      - "tests/mein-sd-hub*.cjs"
+      - "index.html"
+      - ".github/workflows/mein-sd-hub-quality.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Functional and browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate course, routes, links and state
+        run: node --test tests/mein-sd-hub.test.cjs
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run desktop and mobile browser journey
+        run: node tests/mein-sd-hub.browser.cjs
