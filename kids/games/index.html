@@ -33,6 +33,29 @@ footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;colo
 @media(max-width:600px){.hero:after{position:static;display:block;text-align:center;opacity:.65;margin-top:12px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.art{height:112px;font-size:3.2rem}.info{padding:10px}.game{min-height:285px}.info h3{font-size:1rem}.info p{font-size:.77rem}.hero{padding:22px}}
 @media(max-width:370px){.grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.game{transition:none}.game:hover{transform:none}}
+
+/* SD Kids 2.0: unified accessible navigation, progress and creator-friendly library */
+.toolbar{gap:12px}.game{position:relative;outline-offset:4px}.game:focus-within{border-color:#c2eaff}
+.search{min-width:190px;max-width:340px;width:100%;border:1px solid #ffffff70;background:#131f42;color:#fff;
+border-radius:18px;padding:10px 14px;min-height:47px;font:inherit}
+.search::placeholder{color:#c8d8f0}
+.search:focus-visible{outline:3px solid #ffdf96;outline-offset:2px}
+#filters{display:flex;flex-wrap:wrap;gap:7px}
+#filters button{min-height:45px}.favorite{position:absolute;z-index:3;top:12px;left:12px;border-radius:50%;
+border:2px solid #fff9;background:#16254bbf;width:43px;height:43px;display:grid;place-items:center;padding:0;font-size:1.3rem}
+.favorite[aria-pressed=true]{background:#ffe092;color:#533b13}
+.status{display:inline-flex;align-items:center;gap:5px;color:#bafbd2;font-size:.75rem;font-weight:800}
+.library-bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0 24px}
+.library-bar label{font-weight:800}.library-bar select{background:#1a2b50;color:#fff;border:1px solid #ffffff55;border-radius:12px;padding:9px 13px;font:inherit}
+.achievements{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;padding:0;list-style:none}
+.achievement{padding:12px;border-radius:15px;border:1px solid #ffffff25;background:#17254a;color:#adbfda;text-align:center}
+.achievement.unlocked{background:#183f54;color:#f2fffb;border-color:#68cfac80}
+.achievement strong{display:block;margin-top:4px;font-size:.84rem}
+.library-tools{display:flex;gap:9px;flex-wrap:wrap}
+.library-tools button{border-radius:12px;min-height:45px;padding:10px 14px;background:#304c82}
+#backupFile{display:none}#empty{padding:18px;font-weight:800;color:#d7e3fc}
+@media(max-width:630px){.toolbar{align-items:stretch}.toolbar h2{width:100%}.search{max-width:none}.library-bar{align-items:stretch}
+.library-tools>*{flex:1}}
 </style></head><body>
 <header>
 <div class="nav"><a class="back" href="../../index.html">← SD Hub</a><strong>✨ SD KIDS · SPIELEWELT</strong><a class="back" href="../index.html">🐱 Pibo</a></div>
@@ -46,46 +69,117 @@ footer{font-size:.83rem;max-width:1230px;margin:auto;padding:14px 35px 34px;colo
 </div>
 </section>
 </header>
-<main><div class="toolbar"><h2>🎲 Alle Spiele <span id="count">(10)</span></h2><div id="filters" role="group" aria-label="Spiele filtern"><button data-filter="Alle" aria-pressed="true">Alle</button><button data-filter="3D" aria-pressed="false">3D</button><button data-filter="2D" aria-pressed="false">Minispiele</button></div></div>
+<main><div class="toolbar"><h2>🎲 Alle Spiele <span id="count">(10)</span></h2><div id="filters" role="group" aria-label="Spiele filtern"><button data-filter="Alle" aria-pressed="true">Alle</button><button data-filter="3D" aria-pressed="false">3D</button><button data-filter="2D" aria-pressed="false">Minispiele</button><button data-filter="Favoriten" aria-pressed="false">♡ Favoriten</button></div></div>
+<div class="library-bar">
+<label for="gameSearch">🔎 Spiele suchen</label><input id="gameSearch" class="search" type="search" maxlength="50" placeholder="Name, Genre oder Abenteuer …" autocomplete="off">
+<label for="sortGames">Sortierung <select id="sortGames" aria-label="Spiele sortieren"><option value="default">Empfohlen</option><option value="favorite">Favoriten zuerst</option><option value="recent">Zuletzt gespielt</option><option value="name">Alphabetisch</option></select></label>
+</div>
 <section class="grid" id="gameGrid" aria-label="Spielekatalog">
 <noscript>Bitte JavaScript aktivieren, um alle Spiele anzuzeigen. <a href="../index.html">Pibo</a> · <a href="../blockworld/">BlockWorld</a>.</noscript>
+</section>
+<p id="empty" hidden role="status">Keine Spiele gefunden. Probiere einen anderen Suchbegriff oder Filter.</p>
+<section class="note" aria-labelledby="achievementsTitle">
+<h2 id="achievementsTitle">🏆 Deine Erfolge</h2>
+<p>Erreiche Ziele in den acht Minispielen. Die Erfolge werden nur auf diesem Gerät gespeichert.</p>
+<ul id="achievementGrid" class="achievements"></ul>
+</section>
+<section class="note" aria-labelledby="saveTitle">
+<h2 id="saveTitle">💾 Mein Spielstand</h2>
+<p>Sichere deine Minispiele und Favoriten als Datei oder lade deine eigene Sicherung wieder. Die Datei enthält nur deine lokalen Spielfortschritte und Einstellungen.</p>
+<div class="library-tools">
+<button type="button" id="exportSave">📤 Spielstand sichern</button>
+<button type="button" id="importSave">📥 Spielstand laden</button>
+<input type="file" id="backupFile" accept=".json,application/json">
+</div>
+<p id="backupStatus" role="status" aria-live="polite"></p>
 </section>
 <div class="note"><strong>🛡️ Kindgerecht:</strong> Alle neuen Minispiele funktionieren direkt auf deinem Gerät. Sterne sind nur virtuelle Spielpunkte und kein Geld. Im 3D-Spiel BlockWorld können Kinder freiwillig einen gemeinsamen Raum auf dem bestehenden Render-Server betreten – ohne öffentlichen Chat. Eltern sollten die Nutzung von Online-Räumen begleiten. Deine Minispiel-Fortschritte bleiben im Browser.</div>
 </main>
 <footer>SD Kids ist eine unabhängige Spieleplattform von SD Hub; keine Roblox-App. Die acht neuen 2D-Minispiele sind bewusst kleiner als unsere 3D-Spiele Pibo und BlockWorld. Alle Figuren, Welten und Spielideen sind eigenständig umgesetzt.</footer>
 <script type="module">
 import {catalog} from './catalog.mjs';
-import {STORAGE_KEY,sanitize} from './rules.mjs';
-let profile;
-try{profile=sanitize(localStorage.getItem(STORAGE_KEY))}catch{profile=sanitize(null)}
-const gg=profile.games;
-const achievements=[
- gg.obby.completed>=1,gg.pet.actions>=5,gg.garden.harvest>=1,gg.city.done.length>=1,
- gg.kart.laps>=1,gg.treasure.finished,gg.fashion.shown.length>=1,gg.learn.solved.length>=1
-];
-document.getElementById('totalStars').textContent='⭐ Minispiele: '+profile.stars+' Sterne';
-document.getElementById('playedGames').textContent='🎮 Gestartet: '+profile.visited.length+'/8';
-document.getElementById('completedGames').textContent='🏆 Erfolge: '+achievements.filter(Boolean).length+'/8';
-const grid=document.getElementById('gameGrid'),count=document.getElementById('count');
-function render(filter='Alle'){
- const items=catalog.filter(g=>filter==='Alle'||(filter==='3D'?g.tag.includes('3D'):g.tag.includes('Mini')));
+import {readProfile,readSettings,toggleFavorite,saveSettings,achievements,backupData,restoreBackup} from './profile.mjs';
+import {STORAGE_KEY} from './rules.mjs';
+const grid=document.getElementById('gameGrid'),count=document.getElementById('count'),empty=document.getElementById('empty');
+let profile=readProfile(),preferences=readSettings(),filter='Alle';
+const selected=()=>document.getElementById('gameSearch').value.trim().toLocaleLowerCase('de');
+const lastPlayed=id=>id===preferences.lastPlayed?1:0;
+function renderStats(){
+ const badges=achievements(profile);
+ document.getElementById('totalStars').textContent='⭐ Minispiele: '+profile.stars+' Sterne';
+ document.getElementById('playedGames').textContent='🎮 Gestartet: '+profile.visited.length+'/8';
+ document.getElementById('completedGames').textContent='🏆 Erfolge: '+badges.filter(b=>b.unlocked).length+'/8';
+ const list=document.getElementById('achievementGrid');list.replaceChildren();
+ for(const badge of badges){
+  const li=document.createElement('li');li.className='achievement'+(badge.unlocked?' unlocked':'');
+  li.textContent=badge.unlocked?badge.emoji:'🔒';
+  const name=document.createElement('strong');name.textContent=badge.name;li.append(name);list.append(li);
+ }
+}
+function render(){
+ const query=selected(),mode=document.getElementById('sortGames').value;
+ const items=catalog.filter(g=>
+  (filter==='Alle'||(filter==='3D'?g.tag.includes('3D'):filter==='2D'?g.tag.includes('Mini'):preferences.favorites.includes(g.id)))&&
+  (!query||(g.name+' '+g.genre+' '+g.description).toLocaleLowerCase('de').includes(query))
+ );
+ if(mode==='name')items.sort((a,b)=>a.name.localeCompare(b.name,'de'));
+ if(mode==='favorite')items.sort((a,b)=>Number(preferences.favorites.includes(b.id))-Number(preferences.favorites.includes(a.id)));
+ if(mode==='recent')items.sort((a,b)=>lastPlayed(b.id)-lastPlayed(a.id));
  count.textContent='('+items.length+')';
- grid.replaceChildren();
+ empty.hidden=items.length>0;grid.replaceChildren();
  for(const g of items){
   const card=document.createElement('article');card.className='game';card.style.setProperty('--accent',g.accent);
   const art=document.createElement('div');art.className='art';art.textContent=g.emoji;
   const tag=document.createElement('span');tag.className='tag';tag.textContent=g.tag;art.append(tag);
+  const favorite=document.createElement('button');favorite.type='button';favorite.className='favorite';
+  favorite.textContent=preferences.favorites.includes(g.id)?'♥':'♡';
+  favorite.setAttribute('aria-label',g.name+(preferences.favorites.includes(g.id)?' aus Favoriten entfernen':' zu Favoriten hinzufügen'));
+  favorite.setAttribute('aria-pressed',String(preferences.favorites.includes(g.id)));
+  favorite.addEventListener('click',()=>{toggleFavorite(preferences,g.id);saveSettings(preferences);render()});
+  art.append(favorite);
   const info=document.createElement('div');info.className='info';
   const genre=document.createElement('span');genre.className='genre';genre.textContent=g.genre;
   const title=document.createElement('h3');title.textContent=g.name;
   const desc=document.createElement('p');desc.textContent=g.description;
-  const link=document.createElement('a');link.className='play';link.href=g.href;link.textContent='▶ Jetzt spielen';link.setAttribute('aria-label',g.name+' spielen');
-  info.append(genre,title,desc,link);card.append(art,info);grid.append(card);
+  const status=document.createElement('span');status.className='status';
+  status.textContent=g.tag.includes('Mini')?(profile.visited.includes(g.id)?'✓ Schon gespielt':'● Neu entdecken'):'✓ 3D-Abenteuer';
+  const link=document.createElement('a');link.className='play';link.href=g.href;link.textContent='▶ Jetzt spielen';
+  link.setAttribute('aria-label',g.name+' spielen');
+  link.addEventListener('click',()=>{
+   preferences.lastPlayed=g.id;saveSettings(preferences);
+  });
+  info.append(genre,title,desc,status,link);card.append(art,info);grid.append(card);
  }
 }
 document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{
- document.querySelectorAll('[data-filter]').forEach(c=>c.setAttribute('aria-pressed',String(b===c)));
- render(b.dataset.filter);
+ filter=b.dataset.filter;
+ document.querySelectorAll('[data-filter]').forEach(c=>c.setAttribute('aria-pressed',String(b===c)));render();
 }));
-render();
+document.getElementById('gameSearch').addEventListener('input',render);
+document.getElementById('sortGames').addEventListener('change',render);
+document.getElementById('exportSave').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify(backupData(profile,preferences),null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sd-kids-spielstand.json';
+ document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ document.getElementById('backupStatus').textContent='✓ Sicherungsdatei wurde bereitgestellt.';
+});
+document.getElementById('importSave').addEventListener('click',()=>document.getElementById('backupFile').click());
+document.getElementById('backupFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];e.target.value='';if(!file)return;
+ const status=document.getElementById('backupStatus');
+ if(file.size>150000){status.textContent='Datei zu groß (maximal 150 KB).';return}
+ if(!window.confirm('Deinen bisherigen Minispiel-Spielstand durch diese Sicherung ersetzen?'))return;
+ try{
+  const restore=restoreBackup(await file.text());
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(restore.profile));
+  if(!saveSettings(restore.settings))throw Error('Einstellungen können nicht gespeichert werden');
+  profile=restore.profile;preferences=restore.settings;
+  status.textContent='✓ Dein Spielstand wurde geladen.';
+  renderStats();render();
+ }catch(error){status.textContent='Laden fehlgeschlagen: '+error.message}
+});
+window.addEventListener('pageshow',()=>{
+ profile=readProfile();preferences=readSettings();renderStats();render();
+});
+renderStats();render();
 </script></body></html>
