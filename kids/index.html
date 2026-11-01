@@ -6,7 +6,7 @@
 .choice-shelf{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0;padding:12px;background:#fff9f1;border:1px solid #e6d6f3;border-radius:18px}.choice-shelf[hidden]{display:none}.choice-shelf button{min-width:85px;min-height:58px;padding:9px 10px;background:#fff;border:2px solid #ddd7f3}.choice-shelf button[aria-pressed="true"]{background:#d9f4ed;border-color:#24a995}.choice-shelf button span{display:block;font-size:1.6rem}.care-status{display:flex;gap:10px;align-items:center;justify-content:center;min-height:32px;margin:8px auto;font-weight:700}.care-track{height:9px;background:#e8e6fa;border-radius:12px;overflow:hidden;flex:1;max-width:220px}.care-track>div{height:100%;width:0;background:#5cbba9;transition:width .1s}.care-status[hidden]{display:none}canvas{touch-action:none}.stage{isolation:isolate}@media(max-width:520px){.choice-shelf button{min-width:68px;font-size:.83rem}.rooms button{font-size:.75rem}}
 </style></head><body><header><a href="../index.html">← Zurück zum SD Hub</a><h1>🐾 Pibo 3D</h1><p>Deine kleine lebendige Spielkatze</p></header><main class="wrap"><section class="panel" aria-label="Pibos virtuelles Zuhause">
 <div class="stage" id="stage"><div id="roomTitle" style="position:absolute;right:12px;top:12px;background:#ffffffdd;border-radius:20px;padding:7px 12px;font-size:.83rem;font-weight:800;pointer-events:none;z-index:2">🛋️ Wohnzimmer</div><div class="tag">👆 Pibo am Kopf streicheln oder über sein Fell wischen!</div><div id="hearts" aria-hidden="true"></div><div class="fallback" id="fallback"><div><strong>🐱</strong>Pibo wacht auf …</div></div></div>
-<div class="care-status" id="careStatus" hidden><span id="careLabel">Pibo beschäftigt sich</span><div class="care-track"><div id="careFill"></div></div></div><div id="giftReveal" role="status" aria-live="polite" hidden style="text-align:center;background:#fff2c6;border-radius:18px;padding:12px;margin:8px auto;font-weight:800"></div><div id="sceneEffect" aria-live="polite" style="text-align:center;font-size:1.5rem;min-height:36px"></div><div class="bubble" id="say" role="status" aria-live="polite">Miau! Komm und spiel mit mir! 💙</div>
+<div class="care-status" id="careStatus" hidden><span id="careLabel">Pibo beschäftigt sich</span><div class="care-track"><div id="careFill"></div></div></div><div id="gameHud" role="status" aria-live="off" hidden style="text-align:center;background:#e9f6ff;border-radius:16px;padding:9px;font-weight:800">🎯 <span id="gameName"></span> · Punkte: <span id="gamePoints">0</span> · ⏱️ <span id="gameSeconds">30</span>s</div><div id="giftReveal" role="status" aria-live="polite" hidden style="text-align:center;background:#fff2c6;border-radius:18px;padding:12px;margin:8px auto;font-weight:800"></div><div id="sceneEffect" aria-live="polite" style="text-align:center;font-size:1.5rem;min-height:36px"></div><div class="bubble" id="say" role="status" aria-live="polite">Miau! Komm und spiel mit mir! 💙</div>
 <div class="stats"><div><label>🍎 Satt</label><div class="track"><div class="fill" id="food"></div></div></div><div><label>💗 Freude</label><div class="track"><div class="fill" id="joy"></div></div></div><div><label>⚡ Energie</label><div class="track"><div class="fill" id="energy"></div></div></div><div><label>🫧 Sauber</label><div class="track"><div class="fill" id="clean"></div></div></div></div>
 <div id="foodShelf" class="choice-shelf" aria-label="Pibos Speisekarte" hidden><button data-food="0" aria-pressed="true"><span>🐟</span>Fisch</button><button data-food="1" aria-pressed="false"><span>🍗</span>Hähnchen</button><button data-food="2" aria-pressed="false"><span>🥕</span>Karotte</button><button data-food="3" aria-pressed="false"><span>🍎</span>Apfel</button><button data-food="4" aria-pressed="false"><span>🥣</span>Futter</button></div><div id="wardrobe" class="choice-shelf" aria-label="Pibos Kleiderschrank" hidden></div><nav class="rooms" aria-label="Pibos Zimmer"><button data-room="living">🛋️ Wohnzimmer</button><button data-room="kitchen">🍽️ Küche</button><button data-room="bedroom">🛏️ Schlafzimmer</button><button data-room="bathroom">🛁 Badezimmer</button><button data-room="toilet">🚽 Toilette</button></nav><div class="actions"><button data-act="pet">🤗 Streicheln</button><button data-act="feed">🐟 Füttern</button><button data-act="play">🧶 Spielen</button><button data-act="sleep">🌙 Schlafen</button><button data-act="wash">🫧 Waschen</button><button id="sound" aria-pressed="true">🔊 Ton an</button><button id="talk" aria-pressed="false">🎙️ Nachsprechen</button><button id="minigame">🎯 Ball fangen</button><button id="decorate">🎨 Zimmerfarbe</button><button id="outfit">🎀 Pibo anziehen</button><button id="mousegame">🐭 Maus suchen</button><button id="surprise">🎁 Tagesgeschenk</button><button id="photo">📸 Foto</button><button id="potty">🚽 Toilette benutzen</button><button id="foodchoice">🍎 Essen auswählen</button></div>
 <p class="note">Keine Werbung · Keine Käufe · Keine Anmeldung · Spielstand auf diesem Gerät<br>Mikrofon nur nach Zustimmung; Aufnahmen bleiben im Browser und werden nicht hochgeladen. 3D benötigt WebGL und eine Internetverbindung zum Laden der 3D-Bibliothek.</p>
@@ -16,7 +16,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.m
 import {PiboAudio} from './pibo-audio.js';
 import {PiboCare} from './pibo-care.js';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
-let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
+let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
 try{const saved=JSON.parse(localStorage.getItem(key));if(saved&&typeof saved==='object')for(const k of Object.keys(defaults))if(Number.isFinite(saved[k]))state[k]=Math.max(0,Math.min(100,saved[k]));}catch{}
 const clamp=n=>Math.max(0,Math.min(100,n));
 const extrasKey='sd-kids-pibo-extras-v2';let extras={lastGift:'',outfit:0,room:0,lastSeen:Date.now()};
@@ -80,7 +80,7 @@ if(room==='toilet'){
  cube(roomProps,0xfafafa,2.4,1.4,-3.6,.55,.6,.08);cube(roomProps,0xd4e6ee,2.5,1.15,-1.2,.55,.06,.5)
 }
 }
-function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];saveExtras()}
+function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];saveExtras()}
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>switchRoom(b.dataset.room)));
 const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 let care=null;
@@ -114,12 +114,37 @@ renderer.domElement.addEventListener('pointermove',e=>{if(stroking)stroke(e)});
 renderer.domElement.addEventListener('pointerup',()=>{stroking=false});
 renderer.domElement.addEventListener('pointercancel',()=>{stroking=false});
 window.addEventListener('pointerup',()=>{stroking=false});
-renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);if(mouseActive&&raycaster.intersectObjects(mouse.children,true).length){mouseScore++;state.joy=clamp(state.joy+4);$('say').textContent='🐭 Maus gefunden! Punkte: '+mouseScore;mouse.position.x=(Math.random()-.5)*3;mouse.position.z=.7+Math.random()*.8;render();return}if(gameActive&&raycaster.intersectObject(ball,true).length){gameScore++;state.joy=clamp(state.joy+3);$('say').textContent='🎯 Treffer! Punkte: '+gameScore;ball.position.x=(Math.random()-.5)*3;ball.position.z=.6+Math.random()*.8;render();return}const hits=raycaster.intersectObjects(cat.children,true);if(hits.length){stroking=true;try{renderer.domElement.setPointerCapture(e.pointerId)}catch{}const hit=hits[0].point;if(hit.y>2.48)bodyReaction('ear');else if(hit.y>1.65&&hit.z>.70)bodyReaction('nose');else if(hit.y>1.55)stroke(e);else if(hit.y<.58)bodyReaction('paw');else if(hit.x>.6&&hit.z<.3)bodyReaction('tail');else if(hit.z>.35)bodyReaction('belly');else stroke(e)}});renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','button');renderer.domElement.setAttribute('aria-label','Pibo streicheln');renderer.domElement.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act('pet')}});
-$('minigame').addEventListener('click',()=>{gameActive=!gameActive;mouseActive=false;mouse.visible=false;$('mousegame').textContent='🐭 Maus suchen';gameScore=0;$('minigame').textContent=gameActive?'🛑 Spiel beenden':'🎯 Ball fangen';$('say').textContent=gameActive?'Tippe auf den Ball und sammle Punkte! 🎯':'Gut gespielt! 🐾';if(gameActive){ball.position.set(1.3,.28,1.2);}});
+renderer.domElement.addEventListener('pointerdown',e=>{const rect=rayAt(e);if(mouseActive&&raycaster.intersectObjects(mouse.children,true).length){mouseScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+4);$('say').textContent='🐭 Maus gefunden! Punkte: '+mouseScore;mouse.position.x=(Math.random()-.5)*3;mouse.position.z=.7+Math.random()*.8;render();return}if(gameActive&&raycaster.intersectObject(ball,true).length){gameScore++;updateGameHud();sound('select');state.joy=clamp(state.joy+3);$('say').textContent='🎯 Treffer! Punkte: '+gameScore;ball.position.x=(Math.random()-.5)*3;ball.position.z=.6+Math.random()*.8;render();return}const hits=raycaster.intersectObjects(cat.children,true);if(hits.length){stroking=true;try{renderer.domElement.setPointerCapture(e.pointerId)}catch{}const hit=hits[0].point;if(hit.y>2.48)bodyReaction('ear');else if(hit.y>1.65&&hit.z>.70)bodyReaction('nose');else if(hit.y>1.55)stroke(e);else if(hit.y<.58)bodyReaction('paw');else if(hit.x>.6&&hit.z<.3)bodyReaction('tail');else if(hit.z>.35)bodyReaction('belly');else stroke(e)}});renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','button');renderer.domElement.setAttribute('aria-label','Pibo streicheln');renderer.domElement.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act('pet')}});
+function updateGameHud(){
+ $('gameHud').hidden=!(gameActive||mouseActive);$('gameName').textContent=gameActive?'Ball fangen':'Maus suchen';
+ $('gamePoints').textContent=String(gameActive?gameScore:mouseScore);
+ $('gameSeconds').textContent=String(Math.max(0,Math.ceil((gameUntil-performance.now())/1000)))
+}
+function finishMiniGame(){
+ if(!gameActive&&!mouseActive)return;
+ const score=gameActive?gameScore:mouseScore,stars=Math.min(10,Math.floor(score/3));
+ gameActive=false;mouseActive=false;mouse.visible=false;gameUntil=0;ball.visible=currentRoom==='living';
+ extras.stars=(Number(extras.stars)||0)+stars;saveExtras();
+ $('minigame').textContent='🎯 Ball fangen';$('mousegame').textContent='🐭 Maus suchen';
+ $('gameHud').hidden=true;$('say').textContent='Gut gespielt! '+score+' Treffer · ⭐ '+stars+' Sterne gewonnen!';
+ if(stars>0)sound('gift')
+}
+function startMiniGame(type){
+ if((type==='ball'&&gameActive)||(type==='mouse'&&mouseActive)){finishMiniGame();return}
+ if(gameActive||mouseActive)finishMiniGame();
+ if(currentRoom!=='living')switchRoom('living');
+ gameActive=type==='ball';mouseActive=type==='mouse';gameScore=0;mouseScore=0;gameUntil=performance.now()+30000;
+ mouse.visible=mouseActive;ball.visible=gameActive;
+ $('minigame').textContent=gameActive?'🛑 Ballspiel beenden':'🎯 Ball fangen';
+ $('mousegame').textContent=mouseActive?'🛑 Mausspiel beenden':'🐭 Maus suchen';
+ $('say').textContent='30 Sekunden: Tippe auf '+(gameActive?'den Ball':'die Maus')+'! 🎮';
+ updateGameHud();sound('select')
+}
+$('minigame').addEventListener('click',()=>startMiniGame('ball'));
 $('foodchoice').addEventListener('click',()=>{switchRoom('kitchen');foodIndex=(foodIndex+1)%foods.length;document.querySelectorAll('[data-food]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.food)===foodIndex)));showEffect(foods[foodIndex][0],'Ausgewählt: '+foods[foodIndex][1]);$('say').textContent='Drücke jetzt Füttern!'});
 $('potty').addEventListener('click',()=>{switchRoom('toilet');mode='toilet';modeUntil=performance.now()+7500;startInteraction('toilet');showEffect('🚽 💨','Pibo benutzt die Toilette! Prrrt!',4200);state.clean=clamp(state.clean-8);state.joy=clamp(state.joy+3);render()});
 $('outfit').addEventListener('click',()=>{$('wardrobe').hidden=!$('wardrobe').hidden;if(!$('wardrobe').hidden){$('say').textContent='Wähle Pibos Lieblingskleidung! 👕';applyClothes()}});
-$('mousegame').addEventListener('click',()=>{mouseActive=!mouseActive;mouseScore=0;mouse.visible=mouseActive;gameActive=false;$('minigame').textContent='🎯 Ball fangen';$('mousegame').textContent=mouseActive?'🛑 Mausspiel beenden':'🐭 Maus suchen';$('say').textContent=mouseActive?'Wo ist die kleine Maus? Tippe sie an! 🐭':'Gut gemacht! 🐾'});
+$('mousegame').addEventListener('click',()=>startMiniGame('mouse'));
 $('decorate').addEventListener('click',()=>{const colors=[0xd9e8fb,0xffe4d6,0xdaf1df,0xefe1fa,0xffefb9,0xcce9ec,0xf4d9e5];roomColor=(roomColor+1)%colors.length;wall.color.setHex(colors[roomColor]);extras.room=roomColor;extras.roomColors??={};extras.roomColors[currentRoom]=colors[roomColor];saveExtras();$('say').textContent='Dein Zimmer hat eine neue Farbe! 🎨'});
 const talkButton=$('talk');
 async function replayVoice(blob){
@@ -215,7 +240,7 @@ function animate(){
  tail.rotation.z=.24*Math.sin(t*2.8)+(mode==='tail'?.5*Math.sin(t*16):0);tail.rotation.x=.22*Math.sin(t*1.6);
  const eyeClose=mode==='sleep'||care?.active?.type==='sleep'||(t%5.3<.13);for(const lid of eyes){lid.scale.y=eyeClose?.30:.015;lid.visible=eyeClose}
  if(!gameActive)ball.position.x=mode==='play'?1.2+.5*Math.sin(t*5):1.65;ball.rotation.z=t*.5;
- care?.update(t,performance.now());renderer.render(scene,camera)
+ if((gameActive||mouseActive)&&performance.now()>=gameUntil)finishMiniGame();else if(gameActive||mouseActive)updateGameHud();care?.update(t,performance.now());renderer.render(scene,camera)
 }
 animate();render();
 </script></body></html>
