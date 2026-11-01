@@ -1552,11 +1552,16 @@ function einfuegenDialog(text) {
     // Both "Einfügen" and "KI Coding" must use the SAME code-only parser.
     const parser = window.SDKICoding;
     const parsed = parser ? parser.parse(ta.value, S.aktiv, S.p?.dateien||{}) : null;
-    if (parsed && (parsed.files.length || (ta.value.includes('```') && parsed.errors.length))) {
+    if (!parser && /```|~~~/.test(ta.value)) {
+      erg={ki:{files:[],errors:['KI-Import noch nicht geladen. Seite aktualisieren.']}};
+      vor.replaceChildren(); const msg=document.createElement('div'); msg.textContent='KI-Dateierkennung wird noch geladen. Bitte die Seite neu laden.';vor.appendChild(msg);
+      $('efLos').disabled=true;return;
+    }
+    if (parsed && (parsed.files.length || (/(?:```|~~~)/.test(ta.value) && parsed.errors.length))) {
       erg = {ki:parsed}; vor.replaceChildren();
       const h = (message, cls) => {const e=document.createElement('div');e.textContent=message;if(cls)e.className=cls;vor.appendChild(e);};
       h('✨ KI-Code erkannt: '+parsed.files.length+' Datei(en). Nur Code wird importiert.','erkannt');
-      for (const file of parsed.files) h('  '+file.path+' ('+file.language+') · '+file.content.split('\\n').length+' Zeilen','mono');
+      for (const file of parsed.files) h('  '+file.path+' ('+file.language+') · '+file.content.split('\n').length+' Zeilen','mono');
       parsed.warnings.forEach(w=>h('ⓘ '+w,'grau'));
       parsed.errors.forEach(w=>h('⚠ '+w,'grau'));
       $('efName').disabled=true;
