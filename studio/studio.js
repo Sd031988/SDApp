@@ -540,6 +540,55 @@ function projektPruefen(dateien) {
   }
   return { info, html, meldungen };
 }
+
+/* KI-Projekt-Assistent: sichere Übergabe an KI und Import in ein NEUES Projekt.
+   Ohne angebundene KI-API werden keine erfundenen KI-Ergebnisse angezeigt. */
+function kiProjektAnweisung(wunsch) {
+  const beschreibung = String(wunsch || '').trim().slice(0, 4000);
+  if (!beschreibung) return '';
+  return [
+    'Du bist ein erfahrener Webentwickler. Erstelle ein vollständiges, direkt lauffähiges Projekt.',
+    'Wunsch des Benutzers:',
+    beschreibung,
+    '',
+    'Antworte mit vollständig ausgeschriebenen Dateien, jede Datei in einem eigenen Markdown-Codeblock.',
+    'Schreibe unmittelbar vor jeden Codeblock den relativen Dateipfad, z. B. index.html, css/style.css oder js/app.js.',
+    'Verwende für einfache Webseiten HTML, CSS und JavaScript ohne externe Build-Abhängigkeiten.',
+    'Erstelle mindestens index.html, css/style.css und js/app.js.',
+    'Verwende keine Geheimnisse, API-Schlüssel oder Zugangsdaten.',
+    'Achte darauf, dass alle lokalen Links und Dateipfade zusammenpassen.',
+    'Keine Platzhalter wie TODO oder „hier Code einfügen“.'
+  ].join('\n');
+}
+async function kiProjektAssistent() {
+  const wunsch = prompt('✨ KI-Projekt-Assistent\n\nBeschreibe deine gewünschte Website oder App:');
+  if (!wunsch || !wunsch.trim()) return;
+  const anweisung = kiProjektAnweisung(wunsch);
+  const auswahl = confirm(
+    'Projekt-Anweisung ist vorbereitet.\n\nOK: Anweisung kopieren, in einem KI-Chat verwenden und die Antwort anschließend im Studio importieren.\n\nAbbrechen: Stattdessen ein neues HTML/CSS/JS-Starterprojekt erstellen.\n\nVorhandene Projekte bleiben unverändert.'
+  );
+  if (auswahl) {
+    try { await navigator.clipboard.writeText(anweisung); toast('KI-Anweisung kopiert. KI-Antwort anschließend über „Anleitung/Code einfügen“ importieren.'); }
+    catch (e) { prompt('KI-Anweisung zum Kopieren:', anweisung); }
+    return;
+  }
+  const nameBasis = slug(wunsch).slice(0, 42) || 'ki-projekt';
+  let name = nameBasis, nr = 2;
+  while (await projLesen(name)) name = nameBasis + '-' + nr++;
+  const titel = wunsch.trim().slice(0, 100);
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const dateien = {
+    'index.html': '<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>' + esc(titel) + '</title>\n<link rel="stylesheet" href="css/style.css">\n</head>\n<body>\n<main><h1>' + esc(titel) + '</h1><p>Dein neues Projekt ist bereit. Ergänze hier die gewünschten Inhalte.</p><button id="start">Loslegen</button><p id="status" role="status"></p></main>\n<script src="js/app.js"></script>\n</body>\n</html>\n',
+    'css/style.css': 'body{margin:0;font:16px system-ui,sans-serif;background:#f5f3ff;color:#221b3d}main{max-width:760px;margin:12vh auto;padding:32px;background:white;border-radius:20px;box-shadow:0 12px 40px #221b3d16}button{background:#6d28d9;color:white;border:0;border-radius:10px;padding:12px 22px;cursor:pointer}',
+    'js/app.js': "document.getElementById('start').addEventListener('click',()=>{document.getElementById('status').textContent='Das Projekt funktioniert!';});",
+    'PROJEKT-IDEE.md': '# Projektidee\n\n' + wunsch.trim() + '\n\nDies ist ein Starterprojekt, keine KI-generierte Umsetzung. Für KI-generierten Code die KI-Anweisung verwenden.\n'
+  };
+  if (S.p && S.geaendert) { try { await speichernJetzt(); } catch (e) { toast('Neues Projekt nicht erstellt: Speichern fehlgeschlagen.'); return; } }
+  await projSchreiben({name,dateien,haupt:'index.html',versionen:[],erstellt:Date.now()});
+  await projektOeffnen(name);
+  toast('Neues Starterprojekt erstellt – bestehende Projekte bleiben unverändert.');
+}
+
 async function projektAssistent() {
   if (!S.p) { alert('Bitte zuerst ein Projekt öffnen oder ZIP importieren.'); return; }
   const p = S.p;
@@ -723,7 +772,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
