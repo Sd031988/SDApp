@@ -36,3 +36,21 @@ test('migration repairs already migrated progress without deleting it',async({pa
 });
 
 test('level selection without a learner profile does not crash',async({page})=>{await open(page);const errors=[];page.on('pageerror',e=>errors.push(e.message));const levelButton=page.locator('#lLvChange,#lLvBtn').filter({visible:true}).first();if(await levelButton.count()){await levelButton.click();await expect(page.locator('#lBody')).toBeAttached()}expect(errors).toEqual([])});
+
+test('switching from B1 exam to workshop closes exam overlay',async({page})=>{
+ await open(page);
+ await page.locator('#sdpath-exam').click();
+ await expect(page.locator('#b1x')).toBeVisible();
+ await page.locator('#sdpath-workshop').click();
+ await expect(page.locator('#b1x')).toHaveCount(0);
+ await expect(page.locator('#sdHubUnifiedLessons')).toBeVisible();
+ await expect(page.locator('#lBody')).toBeVisible();
+});
+test('switching from workshop to B1 exam closes workshop',async({page})=>{
+ await open(page);
+ await page.locator('#sdpath-workshop').click();
+ await expect(page.locator('#sdHubUnifiedLessons')).toBeVisible();
+ await page.locator('#sdpath-exam').click();
+ await expect(page.locator('#sdHubUnifiedLessons')).toHaveCount(0);
+ await expect(page.locator('#b1x')).toBeVisible();
+});
