@@ -9,7 +9,7 @@ const $ = id => document.getElementById(id);
 const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* voll */ } } };
 const CM_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
-const S = { p: null, tabs: [], aktiv: null, docs: {}, cm: null, ta: null, offen: new Set(), swBereit: false, problemeVorschau: [], problemeProgramm: [], problemeAnalyse: [], konsole: [], frei: false };
+const S = { p: null, tabs: [], aktiv: null, docs: {}, cm: null, ta: null, offen: new Set(), swBereit: false, problemeVorschau: [], problemeProgramm: [], problemeAnalyse: [], visuellerModus: false, konsole: [], frei: false };
 
 /* ---------------- Speicher ---------------- */
 let dbP = null;
@@ -102,7 +102,8 @@ async function projektOeffnen(name, datei, optionen) {
     catch (err) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
   }
   const p = await projLesen(name); if (!p) { toast('Projekt nicht gefunden'); return; }
-  S.p = p; S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; S.problemeAnalyse = []; diagnoseAktualisieren();
+  S.p = p; S.visuellerModus=false; if($('visTextBtn')){$('visTextBtn').classList.remove('an');$('visTextBtn').setAttribute('aria-pressed','false');}
+  S.tabs = []; S.docs = {}; S.aktiv = null; S.problemeVorschau = []; S.problemeProgramm = []; S.problemeAnalyse = []; diagnoseAktualisieren();
   if (Object.prototype.hasOwnProperty.call(p,'kiQuelle')) {
     // Stop any earlier preview immediately; the AI copy must remain inactive until ▶ Run.
     const frame=$('frame');frame.removeAttribute('src');frame.srcdoc='';frame.setAttribute('sandbox','allow-scripts allow-forms');
@@ -900,6 +901,13 @@ function sichereVorschauBruecke() {
     'send("fehler",[e.message||"Unbekannter JavaScript-Fehler"],file,e.lineno||null);',
     '});',
     'window.addEventListener("unhandledrejection",function(e){var reason=e.reason;send("fehler",["Promise: "+(reason&&reason.message||fmt(reason))],null,null)});',
+    'var visual=false;',
+    'window.addEventListener("message",function(e){if(e.source===P&&e.data&&typeof e.data.sdVisual==="boolean")visual=e.data.sdVisual});',
+    'window.addEventListener("dblclick",function(e){if(!visual||!e.target.closest)return;',
+    'var n=e.target.closest("h1,h2,h3,h4,p,button,a,label,span,li");if(!n||n.children.length)return;',
+    'var t=String(n.textContent||"").trim();if(!t||t.length>600)return;e.preventDefault();e.stopPropagation();',
+    'P.postMessage({sdVorschau:1,typ:"visual-text",tag:n.tagName.toLowerCase(),text:t},"*");',
+    '},true);',
     '})();'
   ].join('');
   return '<script>' + code.replace(/<\/script/gi, '<\\/script') + '<\/script>';
@@ -921,6 +929,7 @@ async function vorschau(neu) {
   if (S.p !== vorschauProjekt) return;
   $('vorschau').hidden = false; S.problemeVorschau = []; diagnoseAktualisieren(); if (neu) S.konsole = [];
   const f = $('frame');
+  f.onload=()=>{try{f.contentWindow.postMessage({sdVisual:!!S.visuellerModus},'*')}catch(_){}};
   // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
   f.setAttribute('sandbox', Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
   // Sandboxed AI iframes have an opaque origin. Browsers can bypass the
@@ -928,7 +937,7 @@ async function vorschau(neu) {
   // Load the project files directly as srcdoc instead; CSS/JS is bundled
   // by htmlZusammenbauen(). Keep allow-same-origin OFF for untrusted AI code.
   const istKiProjekt = Object.prototype.hasOwnProperty.call(S.p, 'kiQuelle');
-  if (istKiProjekt || !S.swBereit) {
+  if (S.visuellerModus || istKiProjekt || !S.swBereit) {
     // srcdoc otherwise inherits the studio origin. Never give local preview its cookies/storage.
     f.setAttribute('sandbox', 'allow-scripts allow-forms');
     f.removeAttribute('src');
@@ -942,6 +951,10 @@ async function vorschau(neu) {
   if (neu) konfetti();
 }
 window.addEventListener('message', e => { const m = e.data; if (!m || !m.sdVorschau || e.source !== $('frame').contentWindow) return;
+  if(m.typ==='visual-text'){
+    if(S.visuellerModus)visuellerTextAendern(m).catch(err=>toast('Visuelle Bearbeitung fehlgeschlagen: '+err.message));
+    return;
+  }
   S.konsole.push(m); if (S.konsole.length > 300) S.konsole.shift(); konsoleZeigen();
   if (m.typ === 'fehler' || m.typ === 'error') {
     const match = /\(([^():]+):(\d+)\)\s*$/.exec(m.text);
@@ -951,6 +964,43 @@ window.addEventListener('message', e => { const m = e.data; if (!m || !m.sdVorsc
     if (S.problemeVorschau.length > 100) S.problemeVorschau.shift();
     probleme();
   } });
+async function visuellerTextAendern(m){
+ if(!S.visuellerModus||!S.p||!window.SDStudioVisualText)return;
+ const original=S.p,oldStart=startSeite();if(!oldStart)return;
+ const originalText=String(m.text||'');
+ if(!originalText||originalText.length>600)return;
+ const neu=prompt('✏️ Text in '+oldStart+' ändern:',originalText);
+ if(neu===null||neu===originalText)return;
+ const dateien={...S.p.dateien};
+ for(const [name,doc] of Object.entries(S.docs))if(doc?.getValue)dateien[name]=doc.getValue();
+ let update;
+ try{update=window.SDStudioVisualText.replaceText(dateien[oldStart],m.tag,originalText,neu);}
+ catch(e){toast(e.message);return}
+ await versionNeu('Vor visueller Textänderung',true);
+ if(S.p!==original)throw Error('Projekt wurde gewechselt.');
+ if(S.p.dateien[oldStart]!==dateien[oldStart]&&S.docs[oldStart]?.getValue()!==dateien[oldStart])
+  throw Error('Der Quelltext wurde inzwischen geändert.');
+ S.p.dateien[oldStart]=update.content;
+ delete S.docs[oldStart];
+ await projSchreiben(S.p);
+ if(S.aktiv===oldStart)dateiOeffnen(oldStart,update.line);
+ diagnoseAktualisieren();
+ await vorschau(true);
+ toast('✓ Text geändert und vorherige Version gesichert.');
+}
+function visuellenModusSchalten(){
+ if(!S.p||!startSeite()){toast('Zum visuellen Bearbeiten zuerst eine HTML-Datei öffnen.');return}
+ S.visuellerModus=!S.visuellerModus;
+ $('visTextBtn').classList.toggle('an',S.visuellerModus);
+ $('visTextBtn').setAttribute('aria-pressed',String(S.visuellerModus));
+ if(S.visuellerModus){
+   vorschau(true);
+   toast('✏️ Textmodus: Überschrift, Text oder Knopf in der Vorschau doppelklicken.');
+ }else{
+   try{$('frame').contentWindow.postMessage({sdVisual:false},'*')}catch(_){}
+   toast('Visueller Textmodus ausgeschaltet.');
+ }
+}
 function konsoleZeigen() { const box = $('konsoleAus'); if (!box) return; box.innerHTML = ''; S.konsole.slice(-200).forEach(m => { const z = document.createElement('div'); z.className = 'kz ' + m.typ; z.textContent = ({ error: '⨯ ', fehler: '⨯ ', warn: '⚠ ', ergebnis: '← ' }[m.typ] || '') + m.text; box.appendChild(z); }); box.scrollTop = box.scrollHeight;
   const n = S.konsole.filter(m => m.typ === 'error' || m.typ === 'fehler').length; $('konsoleAnz').textContent = n ? n : ''; }
 function geraet(w) { $('frame').style.width = w; document.querySelectorAll('#geraete button').forEach(b => b.classList.toggle('an', b.dataset.w === w)); }
@@ -2061,6 +2111,8 @@ function verdrahten() {
   schalter('eUmbruch', 'umbruch', false, () => S.cm && S.cm.setOption('lineWrapping', !!einst().umbruch)); schalter('eLive', 'live', true); schalter('eChips', 'chips', true, farbChips); schalter('eKonfetti', 'konfetti', true); schalter('eVorschlaege', 'vorschlaege', true);
   $('fokusBtn').onclick = fokus;
   document.querySelectorAll('#geraete button').forEach(b => b.onclick = () => geraet(b.dataset.w)); $('neuLaden').onclick = () => vorschau(false);
+  $('visTextBtn').onclick = visuellenModusSchalten;
+  $('visTextBtn').setAttribute('aria-pressed','false');
   $('neuTab').onclick = () => {
     const frame=$('frame');
     // Never write arbitrary srcdoc into a same-origin browser tab: it would expose Studio data.
