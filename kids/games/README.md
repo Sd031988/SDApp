@@ -30,6 +30,26 @@ Der Hub enthält **10 spielbare Spiele**, davon die beiden bestehenden eigenstä
 - Sanft animierte, selbst gezeichnete Canvas-Dekoration und besseres Kart-Fahrgefühl; abgeschwächte Bewegung auf Wunsch.
 - Zusätzlich Browser-Regressionstests für Suche, Favoriten, Import/Export, Pause, Ton, reduzierte Bewegung, Offline-Minispiele, BlockWorld-Pause und mobile Ansichten.
 
+## Original-Sounds in allen zehn Spielen
+
+- **Gemeinsames Audio-Panel:** In der Spielezentrale kannst du Klänge an-/ausschalten und die Lautstärke wählen. Diese beiden Einstellungen gelten auch in BlockWorld, Pibo und den acht Minispielen (`sd-kids-audio-v1`, lokal im Browser).
+- **Eigene prozedural erzeugte Geräusche:** Das Modul `../sd-sound.mjs` erzeugt mehr als 30 unterschiedliche Signale ausschließlich im Browser (Web Audio) – ohne nachzuladende Sounddateien, externe Samples, Streams oder Musik mit fremden Rechten.
+- **Obby Tower:** Sprung, Schritte, Landung, Checkpoint, Ziel und Fall.
+- **Pet Island:** Füttern, Schnurren und Schlafen, dazu dezente Vogelstimmen.
+- **Garden World:** Samen in die Erde, Gießwasser, Ernte, Vogelstimmen.
+- **City Life:** Aufgaben und Missionsabschlüsse.
+- **Kart Rush:** Motorimpulse, Kontrolltore und Rundenabschluss; Motorsounds werden zeitlich begrenzt, um Überlastung zu vermeiden.
+- **Treasure Quest:** Schritte, Schlüssel, Schätze und Sieg.
+- **Fashion Studio:** Farbauswahl, neue Outfits und Laufsteg.
+- **Lern-Abenteuer:** Richtige/falsche Antwort, neue Aufgabe und Erfolg.
+- **BlockWorld:** Schritte, Sprung/Landung, Bauen/Löschen, Kristalle, Parkour, Teleport, Tiere/Natur und Online-Spielraum.
+- **Pibo:** Bereits vorhandene separate `pibo-audio.js`-Geräusche (Miauen, Schnurren, Kauen, Schritte, Wasser, Spülen, Schnarchen, Geschenk) wurden um gemeinsamen Lautstärkespeicher, Zimmer- und Fotoklang ergänzt. Lautstärke wirkt auch auf die lokale Sprachwiedergabe.
+- **Handy-Schutz:** Browser erlauben Audio meist erst nach einer aktiven Berührung oder einem Tastendruck. Sound ist in der Spielezentrale und den acht Minispielen standardmäßig ausgeschaltet, bis er bewusst aktiviert wird. Pibos vorhandenes Standardverhalten bleibt auf Geräten ohne gemeinsame gespeicherte Einstellungen erhalten.
+- **Kontrolle:** Jederzeit stumm stellen und Lautstärke auf 0 setzen; Sounds sind auf kurze, moderate Töne und begrenzte Raten ausgelegt. Keine Tonaufnahmen werden für Effekte verwendet.
+- **Offline:** Der isolierte Service Worker der Minispiele speichert auch das Soundmodul. Die acht 2D-Spiele bleiben nach dem ersten erfolgreichen Laden inklusive der Geräusche offline nutzbar.
+
+Validierung: `node kids/sd-sound.test.mjs` testet sämtliche Geräuschnamen auf einem simulierten Web-Audio-Kontext, Speichern, Lautstärke, zeitliche Begrenzung und Stummschaltung. Playwright prüft Web-Audio-Starts im Browser und die gemeinsamen Einstellungen über mehrere Spiele hinweg. Die akustische Qualität auf physischen iOS-/Android-Geräten muss zusätzlich mit Menschen abgenommen werden.
+
 ## Technik
 
 - `index.html`: responsive Startseite mit Filter, Spiellinks, Datenschutzinformationen.
@@ -37,6 +57,7 @@ Der Hub enthält **10 spielbare Spiele**, davon die beiden bestehenden eigenstä
 - `play.html` + `play.mjs`: Canvas-Spieloberfläche und die individuellen Steuerungen/Zeichnungen von acht Minispielen.
 - `rules.mjs`: testbare Regeln für jedes Minispiel, begrenzte Sternvergaben, gespeicherte Fortschritte.
 - `rules.test.mjs`: Unit-Tests zu allen acht Spielen, Speicherschutz und Belohnungen.
+- `../sd-sound.mjs` / `../sd-sound.test.mjs`: originales Sounddesign für die Spielewelt und BlockWorld.
 - `profile.mjs` / `profile.test.mjs`: private Favoriten, Einstellungen, acht Erfolge, Backup-Sanitizing und sichere Wiederholung.
 - `manifest.webmanifest`, `icon.svg`, `sw.js`: eigenständiger Mini-Spiele-Bereich mit Cache ausschließlich innerhalb dieses Pfades.
 - `../e2e/games-platform.spec.mjs`: Playwright-E2E-Prüfung des Spielekatalogs sowie aller Minispiel-Starts und wichtiger Interaktionen.
@@ -62,6 +83,7 @@ Dies ist eine erste zusammenhängende **Browser-Spieleplattform** mit acht klein
 node --check kids/games/play.mjs
 node kids/games/rules.test.mjs
 node kids/games/profile.test.mjs
+node kids/sd-sound.test.mjs
 node --check kids/games/sw.js
 cd kids
 npm install
