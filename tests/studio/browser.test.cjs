@@ -273,6 +273,58 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#vorschau').isVisible(),true,'Ausführen öffnet die Vorschau');
     assert.equal((await page.locator('#frame').getAttribute('sandbox')).includes('allow-same-origin'),false,'KI-Vorschau isoliert');
 
+
+    // Direct import: update current project, keep a version backup and open index.html in the actual editor.
+    const directBefore=await page.evaluate(()=>({name:S.p.name,html:S.p.dateien['index.html'],versionCount:S.p.versionen.length}));
+    const directAnswer=[
+      'KI-Erklärung vor dem Code',
+      '### Datei: index.html',ticks+'html','<!doctype html><html><head><link rel="stylesheet" href="css/style.css"></head><body><h1 id="direkt">Direkt im Editor</h1><script src="js/app.js"></script></body></html>',ticks,
+      '### Datei: css/style.css',ticks+'css','body { color: navy; }',ticks,
+      '### Datei: js/app.js',ticks+'javascript','console.log("Direktimport")',ticks,
+      '### Datei: main.py',ticks+'python','print("Direct Python")',ticks,
+      'Diese Erklärung darf nicht in die Dateien.'
+    ].join('\n');
+    await page.locator('#kiCodeBtn').click();
+    await page.locator('#kiResult').fill(directAnswer);
+    await page.locator('#kiAnalyse').click();
+    assert.equal(await page.locator('#kiDirect').isEnabled(),true,'Direkt-import button enabled for recognized code');
+    assert.equal(await page.locator('#kiFiles .kiFile').count(),4,'All recognized code files listed');
+    page.once('dialog',dialog=>dialog.accept());
+    await page.locator('#kiDirect').click();
+    await page.waitForFunction(()=>document.querySelector('#kiOverlay').hidden,{timeout:10000});
+    const directAfter=await page.evaluate(async()=>({
+      name:S.p.name,html:S.p.dateien['index.html'],python:S.p.dateien['main.py'],
+      css:S.p.dateien['css/style.css'],js:S.p.dateien['js/app.js'],active:S.aktiv,tabs:[...S.tabs],
+      backup:S.p.versionen[0]?.dateien['index.html'],versionCount:S.p.versionen.length,
+      saved:(await projLesen(S.p.name)).dateien['index.html'],editor:S.cm?.getValue?.()||S.ta?.value,
+      previewHidden:document.querySelector('#vorschau').hidden,sandbox:document.querySelector('#frame').getAttribute('sandbox')
+    }));
+    assert.equal(directAfter.name,directBefore.name,'Direct mode must not create a separate project');
+    assert.match(directAfter.html,/id="direkt"/);
+    assert.match(directAfter.python,/Direct Python/);
+    assert.match(directAfter.css,/navy/);
+    assert.match(directAfter.js,/Direktimport/);
+    assert.equal(directAfter.saved,directAfter.html,'New code persists in active project');
+    assert.equal(directAfter.editor,directAfter.html,'Actual CodeMirror editor shows the new HTML');
+    assert.equal(directAfter.active,'index.html','Direct import must activate index.html');
+    assert(directAfter.tabs.includes('main.py'),'Other languages must be available as editor tabs');
+    assert.equal(directAfter.backup,directBefore.html,'Previous HTML was saved as recoverable version');
+    assert.equal(directAfter.versionCount,directBefore.versionCount+1,'Exactly one backup version created');
+    assert.equal(directAfter.previewHidden,true,'Direct import cannot run code on its own');
+    assert.equal(directAfter.sandbox.includes('allow-same-origin'),false,'AI-imported code must remain sandboxed');
+
+    // When all files are already present, a single button should just open the editor (also on mobile).
+    await page.setViewportSize({width:390,height:844});
+    await page.locator('#kiCodeBtn').click();
+    await page.locator('#kiResult').fill(directAnswer);
+    await page.locator('#kiAnalyse').click();
+    await page.locator('#kiDirect').click(); // No overwrite dialog necessary for identical content.
+    await page.waitForFunction(()=>document.querySelector('#kiOverlay').hidden,{timeout:10000});
+    const mobileDirect=await page.evaluate(()=>({view:document.querySelector('#app').dataset.ansicht,active:S.aktiv,versions:S.p.versionen.length}));
+    assert.equal(mobileDirect.view,'code','On mobile the code view opens after direct import');
+    assert.equal(mobileDirect.active,'index.html');
+    assert.equal(mobileDirect.versions,directAfter.versionCount,'Identical code must not create another backup');
+
     assert.equal(errors.length,0,'Browser-JavaScript-Fehler: '+errors.join(' | '));
     console.log('Chromium: Studio geladen, Projekterkennung und Dateiprüfung funktionieren.');
   } finally {
