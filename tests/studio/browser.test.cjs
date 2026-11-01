@@ -202,11 +202,14 @@ const assert = require('node:assert/strict');
     assert.equal(pasteUpload.files,true,'Mehrfach-Dateiauswahl');
     assert.equal(pasteUpload.handler,'function');
     // KI Coding: real browser flow, review, copy creation, then existing ▶ execute.
-    await page.locator('#efZu').click(); // Close earlier Import dialog before starting AI workflow.
+    await page.locator('#efZu').click(); // Close earlier Import dialog.
     assert.equal(await page.locator('#kiCodeBtn').count(),1,'KI Coding button visible');
     await page.locator('#kiCodeBtn').click();
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
     await page.locator('#kiGoal').fill('Erstelle eine kleine Webseite mit Überschrift.');
+    await page.locator('#kiClose').click();
+    await page.locator('#einfuegenBtn').click();
+    assert.equal(await page.locator('#einfuegen').isVisible(),true,'Standard import dialog opens');
     const aiBefore=await page.evaluate(()=>({name:S.p.name,files:JSON.stringify(S.p.dateien)}));
     const ticks=String.fromCharCode(96).repeat(3);
     const aiAnswer=[
@@ -220,8 +223,12 @@ const assert = require('node:assert/strict');
       'Jetzt kommt ein Java-Programm.',ticks+'java','public class Main { public static void main(String[] args) {} }',ticks,
       'Dies ist nur eine abschließende Erklärung.'
     ].join('\n');
-    await page.locator('#kiResult').fill(aiAnswer);
-    await page.locator('#kiResult').dispatchEvent('paste');
+    await page.locator('#efText').fill(aiAnswer);
+    assert.match(await page.locator('#efVorschau').innerText(),/5 Datei/,'Standard import must recognize all code languages');
+    assert.match(await page.locator('#efLos').innerText(),/KI-Dateien prüfen/,'Standard import offers safe AI review');
+    await page.locator('#efLos').click();
+    assert.equal(await page.locator('#einfuegen').isVisible(),false);
+    assert.equal(await page.locator('#kiOverlay').isVisible(),true,'Standard import routes to shared AI review');
     await page.waitForFunction(()=>document.querySelectorAll('#kiFiles .kiFile').length===5,{timeout:5000});
     assert.equal(await page.locator('#kiFiles .kiFile').count(),5,'HTML CSS JavaScript Python and Java routed');
     for(const file of ['index.html','css/style.css','js/app.js','main.py','Main.java'])
