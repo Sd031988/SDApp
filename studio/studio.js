@@ -266,11 +266,31 @@ function editorJsonDiagnose(text,pfad) {
  try { JSON.parse(text);return null; }
  catch(e) {
   const message=String(e.message||'Ungültiges JSON');
-  const match=message.match(/position\s+(\d+)/i);
-  const position=match?Math.min(text.length,Number(match[1])):null;
+  // Browser unterscheiden sich im Wortlaut ihrer JSON-Fehlermeldungen.
+  // Position und Zeile können vorhanden sein, müssen es aber nicht.
+  const lineColumn=message.match(/line\s+(\d+)[,\s;]*column\s+(\d+)/i);
+  const positionMatch=message.match(/position\s+(\d+)/i);
+  let position=positionMatch?Math.min(text.length,Math.max(0,Number(positionMatch[1]))):null;
   let line=0,ch=0;
-  if(position!==null){const before=text.slice(0,position);line=(before.match(/\n/g)||[]).length;ch=before.length-(before.lastIndexOf('\n')+1);}
-  else {const lc=message.match(/line\s+(\d+)\s+column\s+(\d+)/i);if(lc){line=Number(lc[1])-1;ch=Number(lc[2])-1;}}
+  if(lineColumn) {
+   line=Math.max(0,Number(lineColumn[1])-1);
+   ch=Math.max(0,Number(lineColumn[2])-1);
+  } else {
+   if(position===null){
+    // Fallback for engines that only report "Unexpected token".
+    // Prefer an empty JSON value (e.g. '"bad": }') over the end of the file.
+    const emptyValue=/:\s*[}\]]/g;
+    let token,loc=null;
+    while((token=emptyValue.exec(text)))loc=token.index+token[0].length-1;
+    position=loc!==null?loc:Math.max(0,text.length-1);
+   }
+   const before=text.slice(0,position);
+   line=(before.match(/\n/g)||[]).length;
+   ch=before.length-(before.lastIndexOf('\n')+1);
+  }
+  const lines=text.split('\n');
+  line=Math.min(line,Math.max(0,lines.length-1));
+  ch=Math.min(ch,(lines[line]||'').length);
   return {line:Math.max(0,line),ch:Math.max(0,ch),message};
  }
 }
