@@ -493,6 +493,64 @@ async function frameworkProjektExport() {
   frameworkBuildExport(p.dateien, p.name, info);
 }
 
+
+/* Projekt-Assistent: statische Prüfung ohne Ausführen fremden Codes. */
+function projektPruefen(dateien) {
+  const pfade = Object.keys(dateien);
+  const meldungen = [];
+  const info = frameworkErkennen(dateien);
+  const html = pfade.find(p => p === 'index.html') || pfade.find(p => p.endsWith('/index.html')) || pfade.find(p => /\.html?$/i.test(p));
+  if (!pfade.length) meldungen.push('❌ Das Projekt enthält keine Dateien.');
+  if (info && info.fehler) meldungen.push('❌ ' + info.fehler);
+  else if (info) {
+    meldungen.push('✓ Framework erkannt: ' + info.name);
+    if (!info.build) meldungen.push('⚠ In package.json fehlt scripts.build.');
+    if (!pfade.includes('package-lock.json') && !pfade.includes('npm-shrinkwrap.json')) meldungen.push('⚠ Keine npm-Lockdatei vorhanden. Builds können sich zwischen Versionen unterscheiden.');
+    if (info.name === 'Next.js' || info.name === 'Nuxt') meldungen.push('⚠ Serverfunktionen können nicht als rein statische Desktop-App exportiert werden.');
+  } else if (html) meldungen.push('✓ Webprojekt erkannt. HTML-Startdatei: ' + html);
+  else meldungen.push('⚠ Keine HTML-Startdatei und kein unterstütztes Framework erkannt.');
+  if (pfade.some(p => p.split('/').includes('node_modules'))) meldungen.push('⚠ node_modules im Projekt gefunden. Für den Build besser neu installieren.');
+  if (pfade.some(p => /(^|\/)\.env(\.|$)/.test(p))) meldungen.push('⚠ Umgebungsdateien gefunden. Vor dem Export auf Zugangsdaten prüfen!');
+  for (const pfad of pfade.filter(p => /\.html?$/i.test(p)).slice(0, 30)) {
+    const inhalt = dateien[pfad];
+    if (typeof inhalt !== 'string' || istBinaer(inhalt)) continue;
+    const refs = [...inhalt.matchAll(/(?:src|href)\s*=\s*["']([^"']+)["']/gi)].map(m => m[1]);
+    for (const ref of refs) {
+      if (/^(?:https?:|data:|#|mailto:|javascript:|\/\/|\{)/i.test(ref)) continue;
+      const ziel = ref.split(/[?#]/)[0];
+      if (!ziel || ziel.startsWith('/')) continue;
+      const teile = pfad.split('/'); teile.pop();
+      for (const segment of ziel.split('/')) {
+        if (segment === '..') teile.pop();
+        else if (segment !== '.' && segment) teile.push(segment);
+      }
+      const lokal = teile.join('/');
+      if (!dateien[lokal] && !/\.(?:html?|css|js|mjs|png|jpe?g|svg|gif|webp|ico|json|woff2?)$/i.test(lokal)) continue;
+      if (dateien[lokal] == null && meldungen.length < 35) meldungen.push('⚠ Datei fehlt: ' + lokal + ' (verlinkt in ' + pfad + ')');
+    }
+  }
+  return { info, html, meldungen };
+}
+async function projektAssistent() {
+  if (!S.p) { alert('Bitte zuerst ein Projekt öffnen oder ZIP importieren.'); return; }
+  const p = S.p;
+  try { await speichernJetzt(); } catch (e) { toast('Projektprüfung: Speichern fehlgeschlagen.'); return; }
+  if (S.p !== p) return;
+  const pruefung = projektPruefen(p.dateien);
+  const angebot = pruefung.info && !pruefung.info.fehler && pruefung.info.build
+    ? 'Framework-Build vorbereiten'
+    : pruefung.html && !pruefung.info ? 'Electron-Desktop-App exportieren'
+    : null;
+  const nachricht = 'SD Studio – Projektprüfung\n\n' + pruefung.meldungen.join('\n') +
+    '\n\nDies ist eine statische Prüfung, kein ausgeführter Build.' +
+    (angebot ? '\n\nOK: ' + angebot + '\nAbbrechen: Nur Prüfung' : '');
+  if (!angebot) { alert(nachricht); return; }
+  if (confirm(nachricht)) {
+    if (pruefung.info) await frameworkProjektExport();
+    else await desktopExport();
+  }
+}
+
 async function desktopExport() {
   if (!S.p) return;
   const projekt = S.p;
@@ -656,7 +714,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
