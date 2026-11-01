@@ -1148,7 +1148,7 @@ async function lernCodeTesten(id,code) {
   const timer=setTimeout(()=>finish({bestanden:false,fehler:'Zeitlimit überschritten.'}),2000);
   const data=JSON.stringify({token,code,fn:spec.fn,cases:spec.cases}).replace(/</g,'\\u003c');
   const script='const p='+data+';let result;try{const fn=new Function(p.code+"\\nreturn "+p.fn+";")();let ok=0;for(const [args,expected] of p.cases){if(JSON.stringify(fn(...args))===JSON.stringify(expected))ok++;}result={bestanden:ok===p.cases.length,erfolgreich:ok,anzahl:p.cases.length};}catch(e){result={bestanden:false,fehler:String(e.message)}}parent.postMessage({token:p.token,result},"*");';
-  frame.srcdoc='<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39;; connect-src &#39;none&#39;"><script>'+script+'</scr'+'ipt>';
+  frame.srcdoc='<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; script-src &#39;unsafe-inline&#39; &#39;unsafe-eval&#39;; connect-src &#39;none&#39;"><script>'+script+'</scr'+'ipt>';
   document.body.appendChild(frame);
  });
 }
