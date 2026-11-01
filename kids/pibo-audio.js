@@ -1,11 +1,15 @@
 // Original, procedurally generated Pibo sound effects. No external recordings or copyrighted assets.
 export class PiboAudio {
-  constructor(){this.ctx=null;this.master=null;this.noiseBuffer=null}
+  constructor(){this.ctx=null;this.master=null;this.noiseBuffer=null;this.volume=.65}
+  setVolume(value){
+    this.volume=Math.max(0,Math.min(1,Number.isFinite(Number(value))?Number(value):.65));
+    if(this.master)this.master.gain.value=this.volume;
+  }
   ensure(){
     if(this.ctx)return this.ctx;
     const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
     const c=this.ctx=new C(),compress=c.createDynamicsCompressor(),master=this.master=c.createGain();
-    master.gain.value=.65;master.connect(compress);compress.connect(c.destination);
+    master.gain.value=this.volume;master.connect(compress);compress.connect(c.destination);
     const n=Math.floor(c.sampleRate*3),buffer=c.createBuffer(1,n,c.sampleRate),data=buffer.getChannelData(0);
     for(let i=0;i<n;i++)data[i]=Math.random()*2-1;
     this.noiseBuffer=buffer;return c
@@ -60,6 +64,8 @@ export class PiboAudio {
         for(let i=0;i<2;i++){this.noise(t+i*.85,.65,.055,'lowpass',340,120);this.tone(85,t+i*.85,.55,.035,'sine',60)}
       } else if(type==='gift'){
         [523,659,784,1047].forEach((f,i)=>this.tone(f,t+i*.14,.46,.07,'sine',f*1.015));
+      } else if(type==='photo'){
+        this.noise(t,.08,.065,'highpass',1500,600);this.tone(600,t+.045,.09,.05,'triangle',310);
       } else if(type==='select'){
         this.tone(780,t,.12,.045,'sine',1000);
       } else {
