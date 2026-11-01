@@ -151,8 +151,8 @@ if(room==='toilet'){
  cube(roomProps,0xfafafa,2.4,1.4,-3.6,.55,.6,.08);cube(roomProps,0xd4e6ee,2.5,1.15,-1.2,.55,.06,.5)
 }
 }
-function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];sound('select');saveExtras()}
-document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>switchRoom(b.dataset.room)));
+function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽'};$('say').textContent=messages[room];saveExtras()}
+document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>{switchRoom(b.dataset.room);sound('select')}));
 const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 let care=null;
 function clearInteraction(){care?.stop()}
