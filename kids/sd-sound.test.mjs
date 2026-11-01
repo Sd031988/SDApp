@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {SOUND_CUES,SDGameSound,cueForMini,soundSettings,loadSoundSettings,saveSoundSettings} from './sd-sound.mjs';
-assert.ok(SOUND_CUES.length>=30);
+assert.equal(SOUND_CUES.length,40);
+for(const cue of ['dog','bunny','fox','siren','heartbeat','parcel'])assert.ok(SOUND_CUES.includes(cue));
 assert.equal(new Set(SOUND_CUES).size,SOUND_CUES.length);
 assert.deepEqual(soundSettings('not-json'),{enabled:false,volume:.65});
 assert.deepEqual(soundSettings({enabled:'true',volume:-5}),{enabled:false,volume:0});
@@ -68,4 +69,4 @@ assert.equal(engine.play('collect'),false);assert.equal(voices,before);
 await engine.dispose();assert.equal(closed,1);
 const unsupported=new SDGameSound({enabled:true,contextFactory:()=>null});
 assert.equal(unsupported.play('jump'),false);
-console.log('PASS: 34 original cues, muted startup, mobile unlock, volume, throttle, persistence and safe fallback');
+console.log('PASS: 40 original cues, muted startup, mobile unlock, volume, throttle, persistence and safe fallback');
