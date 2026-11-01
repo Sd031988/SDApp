@@ -1,0 +1,36 @@
+name: SD Hub – Dashboard für PC und Handy
+on:
+  push:
+    paths:
+      - 'mein-sd-hub/**'
+      - 'index.html'
+      - 'tests/hub/**'
+      - '.github/workflows/hub-dashboard.yml'
+  pull_request:
+    paths:
+      - 'mein-sd-hub/**'
+      - 'index.html'
+      - 'tests/hub/**'
+      - '.github/workflows/hub-dashboard.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  responsive-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Dashboard-JavaScript prüfen
+        run: |
+          node --check mein-sd-hub/app.js
+          node --check mein-sd-hub/data.js
+          node --check tests/hub/dashboard.browser.cjs
+      - name: Chromium für PC-/Handy-Prüfung installieren
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Dashboard im Browser auf 1440 bis 320 Pixel prüfen
+        run: node tests/hub/dashboard.browser.cjs
