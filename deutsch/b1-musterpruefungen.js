@@ -263,10 +263,9 @@ function items(section){
        const sceneIndex=(g*3+Math.floor(j/3)+(set-1)*2)%listeningScenes.length;
        const scene=listeningScenes[sceneIndex],qIndex=j%3,options=listeningAnswers[sceneIndex][qIndex].slice();
        const correct=options[0],pos=(n+set)%3;options[0]=options[pos];options[pos]=correct;
-       const dialogueAt=dialogueSceneIndices.indexOf(sceneIndex);
-       const conversation=dialogueAt>=0?listeningDialogues[dialogueAt]:null;
-       const audio=conversation?conversation[1].map(turn=>turn[0]+': '+turn[1]).join(' '):scene[1];
-       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio,dialogue:conversation?conversation[1]:null,kind:kinds[g]});
+       // Bei Mitteilungen wird exakt der Text abgespielt, zu dem die Fragen erstellt wurden.
+       // Dialoge werden separat über extraListening ausgewählt.
+       result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio:scene[1],dialogue:null,kind:kinds[g]+' · Mitteilung'});
        continue;
      }
      if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&g===0)||(exam==='dtz'&&g===2))){
