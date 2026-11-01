@@ -220,15 +220,15 @@ function items(section){
        result.push({g,j,q:listeningPrompts[sceneIndex][qIndex],options,answer:pos,passage:scene[1],audio,dialogue:conversation?conversation[1]:null,kind:kinds[g]});
        continue;
      }
-     if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&(g===0||g===2))||(exam==='dtz'&&g===2))){
+     if(id==='lesen'&&((exam==='goethe'&&g===2)||(exam==='telc'&&g===0)||(exam==='dtz'&&g===2))){
        const countInGroup=groups[g],startNeed=(set*3+g)%matchingNeeds.length;
        const needIndex=(startNeed+j)%matchingNeeds.length,need=matchingNeeds[needIndex];
        const activeIds=Array.from({length:countInGroup},(_,i)=>matchingNeeds[(startNeed+i)%matchingNeeds.length][1]);
-       const distractorIds=matchingOffers.filter(o=>!activeIds.includes(o[0])).slice((set+g)%3,(set+g)%3+3).map(o=>o[0]);
+       const distractorIds=matchingOffers.filter(o=>!activeIds.includes(o[0])).slice(0,Math.min(3,matchingOffers.length-activeIds.length)).map(o=>o[0]);
        const poolIds=[...new Set([...activeIds,...distractorIds])];
        const pool=matchingOffers.filter(o=>poolIds.includes(o[0])).sort((a,b)=>a[0].localeCompare(b[0]));
        const options=pool.map(o=>o[0]+' · '+o[1]),answer=pool.findIndex(o=>o[0]===need[1]);
-       const passage='Lies die Anzeigen A–'+pool[pool.length-1][0]+'. Einige Anzeigen passen zu keiner Situation.\\n\\n'+pool.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
+       const passage='Lies die folgenden Anzeigen. '+(distractorIds.length?'Einige Anzeigen passen zu keiner Situation. ':'')+'\\n\\n'+pool.map(o=>o[0]+' — '+o[1]+'\\n'+o[2]).join('\\n\\n');
        result.push({g,j,q:'Situation '+(j+1)+': '+need[0],options,answer,passage,kind:'Anzeigen zuordnen · gemeinsamer Anzeigenpool'});
        continue;
      }
@@ -308,11 +308,11 @@ function question(){
  const count=p[3].slice(0,t.g).reduce((a,b)=>a+b,0)+1;
  const body=(p[0]==='lesen'||p[0]==='hoeren'||p[0]==='sprach')?
  (p[0]==='hoeren'?'<button id="b1x-audio" class="b1x-audio">🔊 Hörtext abspielen</button>':'<div class="b1x-passage">'+esc(t.passage)+'</div>')+
- '<h3>'+esc(t.q)+'</h3><div class="b1x-stack">'+t.options.map((o,i)=>'<label class="b1x-card"><input type="radio" name="b1x-answer" value="'+i+'"> '+esc(o)+'</label>').join('')+'</div>':
+ '<h3>'+esc(t.q)+'</h3><div class="b1x-stack" role="radiogroup" aria-label="Antwort auswählen">'+t.options.map((o,i)=>'<label class="b1x-card"><input type="radio" name="b1x-answer" value="'+i+'"> '+esc(o)+'</label>').join('')+'</div>':
  '<h3>'+esc(t.q)+'</h3><p class="b1x-note">'+esc(t.hint)+'</p><textarea id="b1x-text" rows="9" placeholder="'+(p[0]==='sprechen'?'Notizen zur mündlichen Antwort …':'Deine Antwort …')+'"></textarea><div id="b1x-count" class="b1x-note">0 Wörter</div>';
  view('<p class="b1x-note">'+esc(E[exam].name)+' · Muster '+set+' · '+esc(p[1])+'</p>'+
  '<div class="b1x-meta"><span>Teil '+(t.g+1)+'/'+p[3].length+' · '+esc(t.kind)+'</span><span>Aufgabe '+(idx+1)+'/'+list.length+'</span></div>'+
- '<div class="b1x-meta"><span id="b1x-clock">⏱ '+p[2]+':00</span><span>'+Math.round(idx/list.length*100)+' %</span></div>'+
+ '<div class="b1x-meta"><span id="b1x-clock" role="timer" aria-live="off">⏱ '+p[2]+':00</span><span>'+Math.round(idx/list.length*100)+' %</span></div><div class="b1x-progress" role="progressbar" aria-label="Aufgabenfortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(idx/list.length*100)+'"><div style="width:'+Math.round(idx/list.length*100)+'%"></div></div>'+
  body+'<button id="b1x-next" class="b1x-primary">'+(idx===list.length-1?'Teil abschließen':'Weiter')+'</button>');
  el('b1x-back').onclick=()=>{if(confirm('Diesen Prüfungsteil verlassen? Deine ungespeicherten Antworten gehen verloren.'))home();};
  if(el('b1x-audio')){const max=exam==='goethe'&&p[0]==='hoeren'&&(t.g===0||t.g===3)?2:1;el('b1x-audio').textContent='🔊 Hörtext abspielen (max. '+max+' × pro Aufgabe)';el('b1x-audio').onclick=()=>{if(plays>=max){alert('Der Hörtext wurde bereits '+max+' Mal abgespielt.');return;}plays++;speak(t.audio,t.dialogue);};}
@@ -390,7 +390,7 @@ const css=document.createElement('style');css.textContent=`
 .b1x-card.active{border-color:#fb923c;background:#3a241d}.b1x-card small{display:block;color:#b5bacb;margin-top:5px}
 .b1x-card input{margin-right:8px}.b1x-check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer}.b1x-check input{width:18px;height:18px;flex:none;accent-color:#fb923c}
 .b1x-passage{background:#1b1e2b;border:1px solid #3e4257;padding:16px;border-radius:12px;line-height:1.8;white-space:pre-wrap;margin:14px 0}
-.b1x-primary,.b1x-audio{width:100%;background:#c2410c;border:0;color:#fff;padding:15px;border-radius:12px;font:inherit;font-weight:700;margin:14px 0;cursor:pointer}
+.b1x-progress{height:7px;background:#35394c;border-radius:20px;overflow:hidden;margin:8px 0 18px}.b1x-progress>div{height:100%;background:#fb923c;transition:width .2s}.b1x-primary:focus-visible,.b1x-card:focus-within,.b1x-audio:focus-visible{outline:3px solid #fdba74;outline-offset:3px}@media(max-width:520px){.b1x-wrap{padding:10px 12px 64px}.b1x-grid{grid-template-columns:1fr}.b1x-meta{flex-wrap:wrap;font-size:13px}.b1x-nav{gap:5px}.b1x-nav button{padding:8px}}.b1x-primary,.b1x-audio{width:100%;background:#c2410c;border:0;color:#fff;padding:15px;border-radius:12px;font:inherit;font-weight:700;margin:14px 0;cursor:pointer}
 .b1x-audio{background:#334155}
 #b1x-text{width:100%;box-sizing:border-box;min-height:190px;background:#191c29;border:1px solid #565b70;color:white;padding:14px;border-radius:12px;font:inherit}
 `;document.head.appendChild(css);
