@@ -1893,17 +1893,48 @@ async function hubPost(pfad, daten, wartenText) {
   catch (e) { return { error: e.name === 'AbortError' ? 'Der Server hat nicht rechtzeitig geantwortet. Bitte gleich nochmal.' : 'Server nicht erreichbar – bist du online?' }; }
   finally { clearTimeout(t); clearTimeout(wach); }
 }
+function qualitaetBericht(files) {
+  const check=window.SDStudioQualitaet;
+  const issues=check?check.preflight(files,window.SDKIDiagnose?.inspect):[];
+  const fails=issues.filter(i=>i.severity==='error');
+  const title=fails.length?'⛔ '+fails.length+' wichtige Probleme erkannt':issues.length?'⚠ '+issues.length+' Hinweise vor der Veröffentlichung':'✓ Statische Projektprüfung ohne Befund';
+  return {issues,fails,title,lines:[title,...issues.slice(0,18).map(i=>'• '+(i.file?i.file+': ':'')+i.text)]};
+}
+function projektCheckAnzeigen() {
+  if(!S.p)return;
+  const files={...S.p.dateien};
+  for(const [name,doc] of Object.entries(S.docs))if(doc?.getValue)files[name]=doc.getValue();
+  const report=qualitaetBericht(files);
+  alert('SD Code-Studio – Veröffentlichung vorbereiten\n\n'+report.lines.join('\n')+
+    '\n\nDies ist eine statische Prüfung; ein echter Build oder externer Server-Test wird nicht ausgeführt.\n' +
+    'Vor dem Veröffentlichen das Projekt als ZIP sichern.');
+}
 function onlineDialog() {
   if (!S.p) return; const code = gemerkterCode();
   if (!S.frei || !code) { sperre(true); $('spTitel').textContent = '🔑 Online stellen braucht einen Zugangsschlüssel'; $('spText').innerHTML = 'Damit keine Betrugsseiten entstehen, können nur Menschen mit <b>Zugangsschlüssel vom KI-Agenten</b> Seiten veröffentlichen. Gib deinen Schlüssel ein – danach kannst du direkt online stellen.'; return; }
   if (!startSeite()) { alert('Zum Online-Stellen braucht das Projekt eine HTML-Datei (z. B. index.html).'); return; }
   const box = $('online'); box.hidden = false; $('onErg').innerHTML = ''; $('onLos').disabled = false;
+  const showReport=()=>{
+    const files={...S.p.dateien};
+    for(const [name,doc] of Object.entries(S.docs))if(doc?.getValue)files[name]=doc.getValue();
+    const report=qualitaetBericht(files);
+    $('onVorpruefung').textContent=report.lines.join('\n')+'\nStatische Prüfung; Build/Server gesondert prüfen.';
+    return report;
+  };
+  showReport();
+  $('onZip').onclick=()=>zipExport();
   $('onName').value = (S.p.online && S.p.online.name) || slug(S.p.name).replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   const vorschau = () => { $('onUrl').textContent = 'https://sd031988.github.io/sd-seiten/' + ($('onName').value.trim().toLowerCase() || '…') + '/'; }; $('onName').oninput = vorschau; vorschau();
   $('onRecht').checked = false; $('onZu').onclick = () => { box.hidden = true; }; box.onclick = e => { if (e.target === box) box.hidden = true; };
   $('onLos').onclick = async () => {
     if (!$('onRecht').checked) { $('onErg').innerHTML = '<p class="fehlerText">Bitte bestätige die Regeln (Häkchen).</p>'; return; }
     const name = $('onName').value.trim().toLowerCase(); await speichernJetzt();
+    const preflight=showReport();
+    if(preflight.fails.length){
+      $('onErg').textContent='Veröffentlichung gestoppt: '+preflight.fails.length+' Fehler. Bitte oben prüfen und beheben.';
+      return;
+    }
+    if(preflight.issues.length&&!confirm('Es gibt '+preflight.issues.length+' Hinweise in der Projektprüfung. Trotzdem veröffentlichen?'))return;
     $('onLos').disabled = true; const info = t => { $('onErg').innerHTML = '<p>' + esc(t) + '</p>'; }; info('⏳ Wird veröffentlicht …');
     const j = await hubPost('/hub/seite/veroeffentlichen', { code, name, dateien: S.p.dateien }, info); $('onLos').disabled = false;
     if (!j.ok) { $('onErg').innerHTML = '<p class="fehlerText">⨯ ' + esc(j.error || 'Fehler') + '</p>' + (j.gruende ? '<ul>' + j.gruende.map(g => '<li>' + esc(g) + '</li>').join('') + '</ul>' : ''); return; }
@@ -1951,7 +1982,7 @@ function ansicht(n) { if (!istHandy()) return; const app = $('app');
   setTimeout(() => S.cm && S.cm.refresh(), 40); }
 function handyMehr() { const B = [['＋ Neue Datei', () => neueDatei('')], ['＋ Neues Projekt (Vorlagen)', vorlagenWaehlen], ['📋 Anleitung/Code einfügen', () => einfuegenDialog('')], ['🤖 Google KI ohne Konto ausprobieren', () => window.SDKICodingUI?.openServices()], ['✏️ Projekt mit KI ändern', () => window.SDKICodingUI?.openChangeDialog()], ['✨ KI Coding', () => window.SDKICodingUI?.openDialog()], ['🎨 Im Design-Studio gestalten', designOeffnen],
   [(S.frei ? '🌐' : '🔒') + ' Online stellen', onlineDialog], ['🔍 In allen Dateien suchen', () => { ansicht('dateien'); seite('suche'); }], ['🕘 Versionen', () => { ansicht('dateien'); seite('versionen'); }], ['⚙ Einstellungen', () => { ansicht('dateien'); seite('einst'); }],
-  ['✨ Code formatieren', formatieren], ['💻 Auf meinem PC ausführen', aufPcAusfuehren], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
+  ['✨ Code formatieren', formatieren], ['💻 Auf meinem PC ausführen', aufPcAusfuehren], ['🛡 Projekt auf Veröffentlichung prüfen', projektCheckAnzeigen], ['⬇ Als ZIP herunterladen', zipExport], ['⬆ Dateien hochladen', () => $('hochDatei').click()], ['⌘ Alle Befehle …', () => setTimeout(befehle, 30)]];
   palette(B.map(([l, fn]) => ({ label: l, fn })), 'Was möchtest du tun?', x => x.fn()); }
 const TASTEN = ['⇥', '<', '>', '/', '=', '"', "'", '{', '}', '(', ')', '[', ']', ';', ':', '.', ',', '#', '-', '_', '+', '*', '!', '&', '|', '$', '`', '←', '→', '↶', '↷'];
 function handyEinrichten() {
@@ -2019,6 +2050,7 @@ function verdrahten() {
   $('diagnoseErneut').onclick = diagnoseAnzeigen; $('diagnoseKI').onclick = diagnoseKIStarten;
   $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
+  $('projektCheckBtn').onclick = projektCheckAnzeigen;
   ['hochDatei', 'hochOrdner', 'hochZip'].forEach(id => $(id).onchange = () => { hochladen([...$(id).files]); $(id).value = ''; });
   $('kont').onclick = () => { if (!S.frei) sperre(true); };
   $('suchQ').oninput = sucheLaufen; $('suchGross').onchange = sucheLaufen; $('ersetzAlle').onclick = ersetzenAlle;
@@ -2029,7 +2061,16 @@ function verdrahten() {
   schalter('eUmbruch', 'umbruch', false, () => S.cm && S.cm.setOption('lineWrapping', !!einst().umbruch)); schalter('eLive', 'live', true); schalter('eChips', 'chips', true, farbChips); schalter('eKonfetti', 'konfetti', true); schalter('eVorschlaege', 'vorschlaege', true);
   $('fokusBtn').onclick = fokus;
   document.querySelectorAll('#geraete button').forEach(b => b.onclick = () => geraet(b.dataset.w)); $('neuLaden').onclick = () => vorschau(false);
-  $('neuTab').onclick = () => { if (S.swBereit) window.open($('frame').src, '_blank'); else { const w = window.open(); if (w) { w.document.write($('frame').srcdoc); w.document.close(); } } };
+  $('neuTab').onclick = () => {
+    const frame=$('frame');
+    // Never write arbitrary srcdoc into a same-origin browser tab: it would expose Studio data.
+    const src=frame.getAttribute('src');
+    if(src && S.swBereit && !Object.prototype.hasOwnProperty.call(S.p||{},'kiQuelle')){
+      window.open(src,'_blank','noopener,noreferrer');
+    } else {
+      toast('Sicherheitsmodus: KI-Vorschau bleibt isoliert. Zum Weitergeben bitte das Projekt als ZIP exportieren.');
+    }
+  };
   $('vZu').onclick = () => { $('vorschau').hidden = true; setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('konsoleEin').onkeydown = e => { if (e.key === 'Enter' && $('konsoleEin').value.trim()) { const c = $('konsoleEin').value; S.konsole.push({ typ: 'befehl', text: '❯ ' + c }); konsoleZeigen(); try { $('frame').contentWindow.postMessage({ sdEval: c }, '*'); } catch (x) { /* egal */ } $('konsoleEin').value = ''; } };
   $('konsoleLeer').onclick = () => { S.konsole = []; konsoleZeigen(); };
