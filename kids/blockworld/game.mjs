@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id);
 const swatches={mint:0x52ddb2,blue:0x65b4ff,pink:0xff83af,yellow:0xffd761,purple:0xa68af6,orange:0xff9c61};
 let state=restoreSave((()=>{try{return localStorage.getItem(SAVE_KEY)}catch{return null}})(),localDay());
 let dirty=false,player=null,THREE,scene,camera,renderer,ground,blockGroup,crystalGroup;
-let buildMode=false,eraseMode=false,buildLevel=0,selectedColor='mint',yaw=0.35,pitch=.62;
+let buildMode=false,eraseMode=false,buildLevel=0,selectedColor='mint',yaw=0.35,pitch=.62,paused=false;
 let feetY=0,velocityY=0,grounded=true,jumpQueued=false,elapsed=0,lastTime=0,noticeTimer=0;
 const keys={forward:false,back:false,left:false,right:false};
 const blockMeshes=new Map(),crystalMeshes=new Map();
@@ -319,7 +319,7 @@ function rayFromPointer(e){
  const ray=new THREE.Raycaster();ray.setFromCamera(p,camera);return ray;
 }
 function clickCanvas(e){
- if(!buildMode)return;
+ if(!buildMode||paused)return;
  const ray=rayFromPointer(e);
  const blockHit=ray.intersectObjects([...blockMeshes.values()],false)[0];
  if(eraseMode){
@@ -346,7 +346,28 @@ function teleport(dest){
   obby:'🏁 Springe nacheinander auf die Plattformen!',build:'🧱 Hier ist Platz für deine Ideen!'}[dest]);
  if(dest==='build'&&!buildMode)setBuildMode(true);
 }
+function toggleWorldPause(force){
+ paused=typeof force==='boolean'?force:!paused;
+ Object.keys(keys).forEach(k=>keys[k]=false);
+ $('pauseCover').hidden=!paused;
+ $('pauseWorld').textContent=paused?'▶ Weiter':'⏸️ Pause';
+ $('pauseWorld').setAttribute('aria-pressed',String(paused));
+ if(!paused)lastTime=0;
+}
 function bindControls(){
+ $('pauseWorld').addEventListener('click',()=>toggleWorldPause());
+ $('resumeWorld').addEventListener('click',()=>toggleWorldPause(false));
+ $('fullWorld').addEventListener('click',async()=>{
+  try{
+   if(document.fullscreenElement)await document.exitFullscreen();
+   else if($('world').requestFullscreen)await $('world').requestFullscreen();
+   else notify('Vollbild wird auf diesem Gerät nicht unterstützt.');
+  }catch{notify('Vollbild ist hier nicht verfügbar.')}
+ });
+ document.addEventListener('fullscreenchange',()=>{
+  $('fullWorld').textContent=document.fullscreenElement?'⛶ Vollbild beenden':'⛶ Vollbild';
+ });
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&!paused)toggleWorldPause(true)});
  online.position=()=>({
    x:player.position.x,z:player.position.z,y:feetY,
    heading:player.rotation.y,color:state.avatarColor
@@ -365,8 +386,11 @@ function bindControls(){
  });
  window.addEventListener('pagehide',()=>online.disconnect());
  window.addEventListener('keydown',e=>{
-  if(e.target instanceof HTMLInputElement)return;
+  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLButtonElement)return;
   const k=e.code;
+  if(k==='KeyP'&&!e.repeat){e.preventDefault();toggleWorldPause();return}
+  if(k==='Escape'&&paused){e.preventDefault();toggleWorldPause(false);return}
+  if(paused)return;
   if(['KeyW','ArrowUp','KeyS','ArrowDown','KeyA','ArrowLeft','KeyD','ArrowRight','Space'].includes(k))e.preventDefault();
   if(k==='KeyW'||k==='ArrowUp')keys.forward=true;
   if(k==='KeyS'||k==='ArrowDown')keys.back=true;
@@ -391,12 +415,12 @@ function bindControls(){
  for(const b of document.querySelectorAll('[data-key]')){
   const key=b.dataset.key;
   b.addEventListener('pointerdown',e=>{
-   e.preventDefault();keys[key]=true;try{b.setPointerCapture(e.pointerId)}catch{}
+   e.preventDefault();if(paused)return;keys[key]=true;try{b.setPointerCapture(e.pointerId)}catch{}
   });
   for(const evt of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(evt,()=>keys[key]=false);
  }
- $('jump').addEventListener('pointerdown',e=>{e.preventDefault();jumpQueued=true});
- $('jump').addEventListener('click',()=>jumpQueued=true);
+ $('jump').addEventListener('pointerdown',e=>{e.preventDefault();if(!paused)jumpQueued=true});
+ $('jump').addEventListener('click',()=>{if(!paused)jumpQueued=true});
  $('mode').addEventListener('click',()=>setBuildMode(!buildMode));
  $('place').addEventListener('click',()=>{const p=pointAhead();tryPlace(p.x,p.z)});
  $('eraseMode').addEventListener('click',()=>{
@@ -466,6 +490,7 @@ function bindControls(){
 let lastSave=0,lastNPC=0,lastDailyCheck=0;
 function frame(now){
  requestAnimationFrame(frame);
+ if(paused){lastTime=now;renderer.render(scene,camera);return}
  const dt=Math.min(.045,Math.max(0,(now-lastTime)/1000||.016));lastTime=now;elapsed+=dt;
  const forward=Number(keys.forward)-Number(keys.back);
  const right=Number(keys.right)-Number(keys.left);
