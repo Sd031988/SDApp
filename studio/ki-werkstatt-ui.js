@@ -55,9 +55,14 @@ async function copyPrompt(){
 }
 function openAI(url){
  const prompt=promptText();if(!prompt)return;
- try{navigator.clipboard.writeText(prompt).catch(()=>{});}catch{}
- window.open(url,'_blank','noopener,noreferrer');
- status('Die KI-Seite wurde geöffnet. Anfrage dort einfügen. Keine automatische Konto-Verbindung.');
+ window.open(url,'_blank','noopener,noreferrer'); // user click: avoids popup blockers
+ const fallback=()=>{
+  $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;$('kiClipboard').focus();$('kiClipboard').select();
+  status('KI geöffnet. Kopieren wurde blockiert: die Anfrage ist zum manuellen Kopieren markiert.',true);
+ };
+ try{
+  navigator.clipboard.writeText(prompt).then(()=>status('KI-Seite geöffnet und Anfrage kopiert. Bitte dort einfügen.')).catch(fallback);
+ }catch{fallback()}
 }
 function renderPlan(){
  const list=$('kiFiles');list.replaceChildren();
