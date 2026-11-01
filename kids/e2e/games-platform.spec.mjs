@@ -3,6 +3,7 @@ import {test,expect} from '@playwright/test';
 test('Kids games portal shows ten real playable entries and filters',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/kids/games/',{waitUntil:'domcontentloaded'});
+ await expect.poll(()=>page.evaluate(()=>window.__sdKidsHubReady===true),{timeout:10000}).toBe(true);
  await expect(page.locator('.game')).toHaveCount(10);
  await expect(page.locator('.game a[href*="play.html?game="]')).toHaveCount(8);
  await page.getByRole('button',{name:'3D',exact:true}).click();
@@ -78,6 +79,7 @@ test('Kids minis share only their own local virtual stars',async({page})=>{
 test('Professional games portal: search, favorites, sorting, achievements and backup',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/kids/games/');
+ await expect.poll(()=>page.evaluate(()=>window.__sdKidsHubReady===true),{timeout:10000}).toBe(true);
  await expect(page.locator('.game')).toHaveCount(10);
  await page.locator('#gameSearch').fill('garden');
  await expect(page.locator('.game')).toHaveCount(1);
@@ -130,6 +132,7 @@ test('Mini-games support pause, reduced motion and persisted sound preferences',
 
 test('The eight SD Kids mini-games remain playable offline after first installation',async({page,context})=>{
  await page.goto('/kids/games/');
+ await expect.poll(()=>page.evaluate(()=>window.__sdKidsHubReady===true),{timeout:10000}).toBe(true);
  await expect(page.locator('.game')).toHaveCount(10);
  await page.waitForFunction(async()=>{
   if(!('serviceWorker' in navigator))return false;
@@ -202,6 +205,7 @@ test('Muting sound in the central games portal stays muted in every game',async(
  await page.locator('#sound').click();
  await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','true');
  await page.goto('/kids/games/');
+ await expect.poll(()=>page.evaluate(()=>window.__sdKidsHubReady===true),{timeout:10000}).toBe(true);
  await expect(page.locator('#hubSound')).toHaveAttribute('aria-pressed','true');
  await page.locator('#hubSound').click();
  await expect(page.locator('#hubSound')).toHaveAttribute('aria-pressed','false');
@@ -213,4 +217,25 @@ test('Muting sound in the central games portal stays muted in every game',async(
  await page.goto('/kids/');
  await expect(page.locator('#fallback')).toHaveCount(0,{timeout:30000});
  await expect(page.locator('#sound')).toHaveAttribute('aria-pressed','false');
+});
+
+
+test('SD Kids catalog keeps all playable links visible if the dynamic module cannot load',async({page})=>{
+ await page.route('**/kids/games/catalog.mjs',route=>route.abort('failed'));
+ await page.goto('/kids/games/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#gameGrid .game')).toHaveCount(10);
+ await expect(page.locator('#gameGrid a[href*="play.html?game="]')).toHaveCount(8);
+ await expect(page.getByRole('link',{name:'🏁 Jetzt hüpfen'})).toBeVisible();
+ await expect(page.locator('#gameGrid a[href="../index.html"]')).toHaveCount(1);
+});
+
+test('Pibo offers direct playable 2D fallback when external 3D library is unavailable',async({page})=>{
+ await page.route('https://cdn.jsdelivr.net/**',route=>route.abort('failed'));
+ await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('.kids-play-now a')).toHaveCount(3);
+ await expect(page.locator('#fallback a[href*="game=obby"]')).toBeVisible();
+ await page.locator('.kids-play-now a[href*="game=pet"]').click();
+ await expect.poll(()=>page.evaluate(()=>window.__sdMiniReady?.id),{timeout:10000}).toBe('pet');
+ await page.getByRole('button',{name:'🍎 Füttern'}).click();
+ await expect(page.locator('#message')).toContainText('Lecker');
 });
