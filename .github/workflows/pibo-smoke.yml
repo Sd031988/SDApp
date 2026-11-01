@@ -25,9 +25,12 @@ jobs:
           node --check kids/pibo-smoke.js
           node --check kids/pibo-rewards.mjs
           node --check kids/pibo-face.mjs
+          node --check kids/pibo-motion.mjs
       - name: Verify local star rewards and daily limits
         run: node kids/pibo-rewards.test.mjs
       - name: Verify facial animations
         run: node kids/pibo-face.test.mjs
+      - name: Verify body motion and transitions
+        run: node kids/pibo-motion.test.mjs
       - name: Exercise rooms, feeding, bath, sleep, toilet and games
         run: node kids/pibo-smoke-test.mjs
