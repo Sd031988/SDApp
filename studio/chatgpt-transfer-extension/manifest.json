@@ -5,8 +5,7 @@
   "description": "Nur von dir markierte ChatGPT-/Gemini-Antworten zur sicheren Prüfung ans SD Code-Studio senden.",
   "permissions": [
     "contextMenus",
-    "storage",
-    "tabs"
+    "storage"
   ],
   "action": {
     "default_title": "SD Code-Studio – Textauswahl senden"
@@ -25,5 +24,9 @@
       ],
       "run_at": "document_idle"
     }
+  ],
+  "host_permissions": [
+    "https://www.thesdhub.com/studio/*",
+    "https://thesdhub.com/studio/*"
   ]
 }
