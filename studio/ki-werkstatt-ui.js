@@ -5,7 +5,7 @@ const core=window.SDKICoding;
 if(!core)return;
 const $=id=>document.getElementById(id);
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
-let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false;
+let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false,changeMode=false;
 function currentFiles(){
  const p=typeof S!=='undefined'&&S.p;
  if(!p)return {};
@@ -19,16 +19,44 @@ function currentFiles(){
 function status(msg,problem){
  const e=$('kiStatus');e.textContent=msg;e.dataset.error=problem?'true':'false';
 }
-function openDialog(){
+function renderChangeSources(){
+ const list=$('kiSources');list.replaceChildren();
+ if(!S.p)return;
+ const files=currentFiles(),suggested=new Set(core.suggestChangeFiles({dateien:files},S.aktiv));
+ const paths=Object.keys(files).filter(p=>core.changeFileAllowed(p,files[p])).sort((a,b)=>
+   Number(suggested.has(b))-Number(suggested.has(a))||a.localeCompare(b));
+ for(const path of paths.slice(0,120)){
+  const label=node('label','kiSource'),check=node('input');check.type='checkbox';
+  check.checked=suggested.has(path);check.dataset.path=path;
+  const detail=node('span','kiFileName');detail.append(node('strong','',path),
+   node('small','',files[path].length.toLocaleString('de-DE')+' Zeichen'+(suggested.has(path)?' · vorgeschlagen':'')));
+  label.append(check,detail);list.append(label);
+ }
+ if(!paths.length)list.append(node('p','kiHint','Keine geeigneten Code-Dateien gefunden.'));
+}
+function selectMode(mode){
+ changeMode=mode==='change';
+ $('kiChangeBox').hidden=!changeMode;
+ $('kiIncludeRow').hidden=changeMode;
+ $('kiGoalLabel').textContent=changeMode?'1. Welche Änderung möchtest du an deinem bestehenden Projekt?':'1. Was möchtest du programmieren?';
+ $('kiGoal').placeholder=changeMode?'Zum Beispiel: Füge auf meiner Quittungsseite einen Drucken-Knopf hinzu und behalte alle bisherigen Funktionen.':'Zum Beispiel: Baue eine Webseite mit Startseite, Galerie und Kontakt.';
+ $('kiCopy').textContent=changeMode?'📋 Änderungsanfrage kopieren':'📋 Anfrage kopieren';
+ $('kiChangeConsent').checked=false;
+ $('kiClipboard').hidden=true;
+ if(changeMode)renderChangeSources();
+}
+function openDialog(mode){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
  $('kiProject').textContent=S.p?'Aktuelles Projekt: '+S.p.name:'Noch kein Projekt geöffnet.';
  $('kiOverlay').hidden=false;
  parsed=null;stagedSnapshot=null;stagedProject=null;
  $('kiResult').value='';$('kiFiles').replaceChildren();$('kiApply').disabled=true;$('kiDirect').disabled=true;
  $('kiInclude').checked=false;$('kiClipboard').hidden=true;
+ selectMode(mode);
  status('Beschreibe die Aufgabe. Erstelle die Anfrage und füge danach den KI-Code hier ein.');
  $('kiGoal').focus();
 }
+function openChangeDialog(){openDialog('change');}
 function openDialogWithCode(text){
  openDialog();
  if($('kiOverlay').hidden)return false;
@@ -49,7 +77,15 @@ function selectedSource(){
  return code;
 }
 function promptText(){
- const prompt=core.buildPrompt($('kiGoal').value,S.p,S.aktiv,selectedSource());
+ let prompt='';
+ if(changeMode){
+  if(!$('kiChangeConsent').checked){status('Bitte zuerst ausdrücklich bestätigen, dass du die ausgewählten Code-Dateien in die KI-Anfrage kopieren möchtest.',true);return ''}
+  const chosen=[...$('kiSources').querySelectorAll('input:checked')].map(el=>el.dataset.path);
+  try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:currentFiles()},chosen);}
+  catch(e){status(e.message||String(e),true);return ''}
+ }else{
+  prompt=core.buildPrompt($('kiGoal').value,S.p,S.aktiv,selectedSource());
+ }
  if(!prompt)status('Bitte die Programmieraufgabe beschreiben.',true);
  return prompt;
 }
@@ -60,6 +96,13 @@ async function copyPrompt(){
   $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;$('kiClipboard').focus();$('kiClipboard').select();
   status('Kopieren blockiert. Text ist markiert: bitte manuell kopieren.',true);
  }
+}
+function showPromptPreview(){
+ const prompt=promptText();if(!prompt)return;
+ $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;
+ $('kiClipboard').focus();
+ $('kiClipboard').scrollIntoView({block:'nearest'});
+ status('Änderungsanfrage angezeigt. Prüfe die Inhalte, bevor du sie kopierst.');
 }
 function openAI(url){
  const prompt=promptText();if(!prompt)return;
@@ -219,7 +262,10 @@ async function apply(){
 }
 function setup(){
  const button=$('kiCodeBtn'),overlay=$('kiOverlay');if(!button||!overlay)return;
- button.addEventListener('click',openDialog);
+ button.addEventListener('click',()=>openDialog());
+ $('kiChangeBtn').addEventListener('click',openChangeDialog);
+ $('kiSources').addEventListener('change',()=>{$('kiChangeConsent').checked=false;status('Dateiauswahl geändert. Bitte die Freigabe der Inhalte erneut bestätigen.');});
+ $('kiPromptPreview').addEventListener('click',showPromptPreview);
  $('kiClose').addEventListener('click',closeDialog);
  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden){e.preventDefault();closeDialog()}});
@@ -235,7 +281,7 @@ function setup(){
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
- window.SDKICodingUI={openDialog,openDialogWithCode,analyse,apply,applyDirect,currentFiles};
+ window.SDKICodingUI={openDialog,openChangeDialog,openDialogWithCode,analyse,apply,applyDirect,currentFiles};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
