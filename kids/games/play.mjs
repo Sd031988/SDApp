@@ -298,7 +298,7 @@ $('sound').addEventListener('click',()=>{
 });
 $('reset').addEventListener('click',()=>{
  if(!window.confirm('Nur dieses Minispiel zurücksetzen? Deine gesammelten Spielsterne bleiben erhalten.'))return;
- const fresh=initialState();save.games[id]=fresh.games[id];persist();
+ const fresh=initialState();Object.keys(g).forEach(key=>delete g[key]);Object.assign(g,fresh.games[id]);persist();
  if(id==='obby')resetObby();
  if(id==='kart')Object.assign(kart,{x:295,y:473,angle:0,speed:0});
  message('Minispiel zurückgesetzt.');updateHUD();updateActions();draw();
