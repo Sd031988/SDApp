@@ -11,15 +11,18 @@ test('Pibo loads real WebGL scene, cares for cat, and grants one gift per day',a
   await expect(page.locator('[data-food="2"]')).toHaveAttribute('aria-pressed','true');
   await page.locator('[data-act="feed"]').click();
   await expect(page.locator('#careStatus')).toBeVisible();
+  await page.locator('[data-pibo-tab="extras"]').click();
   await page.locator('#surprise').click();
   const stars=await page.locator('#starsCount').innerText();
   await page.locator('#surprise').click();
   await expect(page.locator('#starsCount')).toHaveText(stars);
   await expect(page.locator('#say')).toContainText('morgen');
   await page.locator('[data-room="living"]').click();
+  await page.locator('[data-pibo-tab="style"]').click();
   await page.locator('#outfit').click();
   await page.locator('[data-outfit="10"]').click();
   await expect(page.locator('#say')).toContainText('Super-Pibo');
+  await page.locator('[data-pibo-tab="games"]').click();
   await page.locator('#minigame').click();
   await expect(page.locator('#gameHud')).toBeVisible();
   await page.locator('#minigame').click();
@@ -28,4 +31,35 @@ test('Pibo loads real WebGL scene, cares for cat, and grants one gift per day',a
   await expect(page.locator('#fallback')).toHaveCount(0,{timeout:30000});
   await expect(page.locator('#starsCount')).toHaveText(stars);
   expect(errors).toEqual([]);
+});
+
+test('Pibo cat remains visible above care controls on desktop and small phones',async({page,isMobile})=>{
+  await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+  await expect(page.locator('#stage canvas')).toBeVisible({timeout:30000});
+  await expect(page.locator('#piboActionTabs [data-pibo-tab="care"]')).toHaveAttribute('aria-pressed','true');
+  const width=isMobile?390:1280;
+  await page.setViewportSize({width,height:844});
+  await page.locator('[data-act="feed"]').click();
+  await expect(page.locator('#roomTitle')).toContainText('Küche');
+  const before=await page.evaluate(()=>{
+    const stage=document.querySelector('#stage').getBoundingClientRect();
+    const feed=document.querySelector('[data-act="feed"]').getBoundingClientRect();
+    return {stageBottom:stage.bottom,stageTop:stage.top,feedTop:feed.top,screen:innerWidth,
+      doc:document.documentElement.scrollWidth,canvas:!!document.querySelector('#stage canvas')};
+  });
+  expect(before.canvas).toBe(true);
+  expect(before.doc).toBeLessThanOrEqual(width+3);
+  await page.locator('[data-act="wash"]').click();
+  await expect(page.locator('#roomTitle')).toContainText('Badezimmer');
+  if(isMobile){
+    const box=await page.locator('#stage').boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(-4);
+    expect(box.y+box.height).toBeLessThanOrEqual(844);
+  }
+  await page.locator('[data-pibo-tab="games"]').click();
+  await expect(page.locator('#minigame')).toBeVisible();
+  await expect(page.locator('#scrub')).toBeHidden();
+  await page.locator('[data-pibo-tab="care"]').click();
+  await expect(page.locator('#scrub')).toBeVisible();
+  await expect(page.locator('#minigame')).toBeHidden();
 });
