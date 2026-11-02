@@ -144,3 +144,27 @@ assert.deepEqual(project.parse(project.serialize(last)),last);
 assert.equal(history.redo().assets[0].name,'extra-4.glb');
 assert.notEqual(a,b);
 });
+
+test('Importierte GLB-Instanzen speichern einen eigenständigen Drehwinkel mit Undo/Redo',()=>{
+const scene=core.fresh(),h=project.history(scene);
+const obj=project.addModel(scene,makeGLB(),'rotatable.glb',2,2);
+assert.equal(obj.rotationY,0);
+h.record(scene);
+project.update(scene,obj.id,{rotationY:Math.PI/2});
+h.record(scene);
+assert.equal(scene.objects.at(-1).rotationY,Math.PI/2);
+const read=project.parse(project.serialize(scene));
+assert.equal(read.objects.at(-1).rotationY,Math.PI/2);
+const clone=project.duplicate(scene,obj.id);
+assert.equal(clone.rotationY,Math.PI/2);
+assert.equal(h.undo().objects.at(-1).rotationY,0);
+assert.equal(h.redo().objects.at(-1).rotationY,Math.PI/2);
+assert.throws(()=>project.update(scene,obj.id,{rotationY:4}),/Drehwinkel/);
+assert.throws(()=>project.update(scene,obj.id,{rotationY:Infinity}),/Drehwinkel/);
+const bad=JSON.parse(project.serialize(scene));
+bad.objects.find(o=>o.id===obj.id).rotationY='alert(1)';
+assert.throws(()=>project.parse(JSON.stringify(bad)),/Modellinstanz/);
+const old=JSON.parse(project.serialize(scene));
+delete old.objects.find(o=>o.id===obj.id).rotationY;
+assert.equal(project.parse(JSON.stringify(old)).objects.find(o=>o.id===obj.id).rotationY,0,'Alte v2-Szenen ohne Rotation bleiben lesbar');
+});

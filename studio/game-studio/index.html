@@ -7,16 +7,16 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-assets2">
-<script defer src="./scene-core.js?v=20261102-assets2"></script>
-<script defer src="./glb-core.js?v=20261102-assets2"></script>
-<script defer src="./project-assets.js?v=20261102-assets2"></script>
-<script defer src="./game.js?v=20261102-assets2"></script>
-<script defer src="./glb-preview.js?v=20261102-assets2"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-rotate3">
+<script defer src="./scene-core.js?v=20261102-rotate3"></script>
+<script defer src="./glb-core.js?v=20261102-rotate3"></script>
+<script defer src="./project-assets.js?v=20261102-rotate3"></script>
+<script defer src="./game.js?v=20261102-rotate3"></script>
+<script defer src="./glb-preview.js?v=20261102-rotate3"></script>
 </head>
 <body>
 <header class="topbar">
-<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.11</span></div>
+<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.12</span></div>
 <div class="topactions"><span class="scene-title" id="sceneName">Meine erste 3D-Welt</span><button id="saveScene" class="action primary" type="button">↓ <span>Szene speichern</span></button></div>
 </header>
 <main class="layout">
@@ -123,6 +123,7 @@
 <label for="propX">Position X <input id="propX" type="number" min="-19" max="19" step="0.5" value="0"></label>
 <label for="propZ">Position Z <input id="propZ" type="number" min="-19" max="19" step="0.5" value="0"></label>
 <label for="propScale">Größe <input id="propScale" type="number" min="0.4" max="3" step="0.1" value="1"></label>
+<label id="propRotationWrap" for="propRotation" hidden>Drehung Y (Grad) <input id="propRotation" type="number" min="-180" max="180" step="5" value="0"></label>
 <label for="propColor">Materialfarbe <select id="propColor">
 <option value="#d7a35c">Sand</option><option value="#5ebbb0">Türkis</option><option value="#8fa4e9">Blau</option><option value="#d8797d">Koralle</option><option value="#bca3e5">Lavendel</option><option value="#dbcc97">Creme</option>
 </select></label>
@@ -149,7 +150,7 @@
 <p id="glbInfo" class="glb-info" role="status" aria-live="polite">Keine GLB-Datei geladen. Die ursprüngliche Szene bleibt unverändert.</p>
 <p class="privacy glb-warning">Erste Import-Vorschau: Dreiecksgeometrie und Basisfarben. Noch keine Texturen, Skinning oder Animationen. Modelle werden eingebettet in Version-2-Projektdateien gespeichert. Maximal 8 MiB.</p>
 </section>
-<div class="side-bottom">SD GAME-STUDIO <span>v0.11 · PROJECT ASSETS</span></div>
+<div class="side-bottom">SD GAME-STUDIO <span>v0.12 · MODEL TRANSFORMS</span></div>
 </aside>
 </main>
 </body></html>
