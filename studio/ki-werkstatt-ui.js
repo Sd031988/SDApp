@@ -51,6 +51,7 @@ function openDialog(mode){
  $('kiOverlay').hidden=false;
  parsed=null;stagedSnapshot=null;stagedProject=null;
  $('kiResult').value='';$('kiFiles').replaceChildren();$('kiDiff').hidden=true;$('kiApply').disabled=true;$('kiDirect').disabled=true;
+ $('kiReview').hidden=true;$('kiReviewFindings').replaceChildren();
  $('kiInclude').checked=false;$('kiClipboard').hidden=true;
  selectMode(mode);
  status('Beschreibe die Aufgabe. Erstelle die Anfrage und füge danach den KI-Code hier ein.');
@@ -182,8 +183,48 @@ function selectedFiles(){
  const chosen=new Set([...$('kiFiles').querySelectorAll('input[type=checkbox]:checked')].map(x=>x.dataset.path));
  return parsed?.files.filter(f=>chosen.has(f.path))||[];
 }
+function renderCodeReview(){
+ const panel=$('kiReview'),items=$('kiReviewFindings'),headline=$('kiReviewSummary');
+ if(!panel||!items||!headline)return null;
+ items.replaceChildren();
+ if(!parsed||parsed.errors.length||!selectedFiles().length){panel.hidden=true;return null;}
+ panel.hidden=false;
+ const engine=window.SDKICodeReview;
+ if(!engine||typeof engine.review!=='function'){
+  headline.textContent='Lokale Codeprüfung nicht verfügbar. Bitte Studio neu laden.';
+  headline.dataset.state='blocked';return null;
+ }
+ const report=engine.review(selectedFiles(),stagedSnapshot||currentFiles());
+ headline.dataset.state=report.blocked||report.skipped?'blocked':report.warnings?'warning':'ok';
+ headline.textContent=report.blocked
+  ?'⛔ '+report.critical+' mögliche Zugangsdaten-Funde: Übernahme gesperrt.'
+  :report.skipped
+   ?'⚠️ '+report.skipped+' Datei(en) konnten nicht vollständig geprüft werden.'
+   :report.findings.length
+    ?'🛡 '+report.warnings+' Warnung(en), '+report.infos+' Hinweis(e). Bitte Vorschläge prüfen.'
+    :'✓ Keine Befunde bei den vorhandenen lokalen Prüfregeln.';
+ for(const finding of report.findings.slice(0,50)){
+  const line=node('article','kiReviewFinding');
+  line.dataset.severity=finding.severity;
+  line.append(node('strong','',finding.file+':'+finding.line+' · '+finding.title),
+    node('p','',finding.advice));
+  items.append(line);
+ }
+ if(report.truncated)items.append(node('p','kiHint','Weitere Befunde nicht angezeigt. Bitte Code zusätzlich manuell prüfen.'));
+ return report;
+}
+function checkSelectedCodeReview(){
+ const report=renderCodeReview();
+ if(!report||report.blocked||report.skipped){
+  status('Codeprüfung blockiert die Übernahme: Bitte Zugangsdaten entfernen oder unvollständig geprüfte Dateien korrigieren.',true);
+  return false;
+ }
+ return true;
+}
 function updateActions(){
- const ready=!busy&&!!parsed&&!parsed.errors.length&&selectedFiles().length>0;
+ const review=renderCodeReview();
+ const ready=!busy&&!!parsed&&!parsed.errors.length&&selectedFiles().length>0&&
+  !!review&&!review.blocked&&!review.skipped;
  $('kiApply').disabled=!ready;
  $('kiDirect').disabled=!ready;
 }
@@ -261,6 +302,7 @@ async function applyDirect(){
  if(stagedProject!==S.p.name){status('Projekt wurde gewechselt. Bitte erneut analysieren.',true);return}
  const selected=selectedFiles();
  if(!selected.length){status('Wähle mindestens eine Datei aus.',true);return}
+ if(!checkSelectedCodeReview())return;
  const latest=currentFiles();
  for(const f of selected)if((latest[f.path]??null)!==(stagedSnapshot[f.path]??null)){
   status('Datei „'+f.path+'“ wurde inzwischen verändert. Bitte erneut analysieren.',true);return;
@@ -316,6 +358,7 @@ async function apply(){
  const chosen=new Set([...$('kiFiles').querySelectorAll('input[type=checkbox]:checked')].map(x=>x.dataset.path));
  const selected=parsed.files.filter(f=>chosen.has(f.path));
  if(!selected.length){status('Wähle mindestens eine Datei aus.',true);return}
+ if(!checkSelectedCodeReview())return;
  const latest=currentFiles();
  for(const file of selected)if((latest[file.path]??null)!==(stagedSnapshot[file.path]??null)){
   status('Datei '+file.path+' wurde inzwischen bearbeitet. Bitte erneut analysieren.',true);return;
