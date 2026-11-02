@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Lokale Entwicklerwerkzeuge: JSON, Base64, URL und Textvergleich im SD Code-Studio.">
+<title>Entwickler-Tools · SD Code-Studio</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light;--page:#f6f7f8;--paper:#fff;--ink:#1d2b35;--muted:#60707d;--line:#dce2e6;--accent:#146a63;--focus:#0e8579;--soft:#eaf3f1}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+button,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}button:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #52b9aa;outline-offset:2px}
+.header{border-bottom:1px solid var(--line);background:#fff}.header-inner{max-width:1320px;margin:auto;min-height:67px;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{text-decoration:none;font-size:17px;font-weight:750;letter-spacing:-.04em}.brand span{color:var(--accent)}.back{font-weight:600;font-size:13px;text-decoration:none;border:1px solid var(--line);padding:9px 13px;border-radius:7px}.back:hover{background:var(--soft)}
+.page{max-width:1320px;margin:auto;padding:35px 24px 60px}.eyebrow{color:var(--accent);font-weight:750;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}h1{font-size:clamp(28px,4vw,39px);letter-spacing:-.045em;line-height:1.13;margin:0 0 8px;font-weight:750}.intro{margin:0;color:var(--muted);line-height:1.6;max-width:720px}
+.workspace{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start;margin-top:30px}
+.sidebar{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px}.side-title{font-size:11px;font-weight:800;color:#647783;text-transform:uppercase;letter-spacing:.1em;margin:13px 10px 8px}.side-title:first-child{margin-top:5px}
+.side-tool{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:6px;padding:10px 11px;margin:2px 0;color:var(--ink);font-weight:560}.side-tool:hover{background:#f1f5f5}.side-tool.selected{background:var(--soft);color:#08554d;font-weight:750}
+.main{min-width:0}.panel{border:1px solid var(--line);border-radius:10px;background:var(--paper);overflow:hidden}
+.panel-top{padding:18px 21px;display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap}.panel-top strong{font-size:16px;letter-spacing:-.02em}.panel-top p{font-size:12px;color:var(--muted);margin:5px 0 0}
+.select-label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.select-label select{max-width:270px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+.work-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:360px}.field{display:flex;flex-direction:column;min-width:0;padding:18px 20px 20px;gap:10px}.field+.field{border-left:1px solid var(--line)}.field label{font-size:12px;font-weight:750;color:#354952;letter-spacing:.01em}.field textarea{flex:1;min-height:260px;resize:vertical;border:1px solid var(--line);background:#fbfcfc;border-radius:7px;padding:13px;color:var(--ink);font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:normal;white-space:pre;tab-size:2}.field textarea[readonly]{background:#f7f9fa}
+#compareArea{padding:0 20px 20px;display:flex;flex-direction:column;gap:8px}#compareArea[hidden]{display:none}#compareArea textarea{min-height:115px;width:100%;resize:vertical;border:1px solid var(--line);border-radius:7px;padding:12px;background:#fbfcfc;font:13px/1.5 ui-monospace,monospace}
+.actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:13px 20px;border-top:1px solid var(--line);background:#fff}.btn{border:1px solid #ccd7db;color:#283a42;border-radius:7px;padding:10px 14px;background:white;font-weight:650}.btn:hover{background:#f3f7f7}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{background:#0b514b}
+#status{font-size:12px;color:#60707d;min-height:18px;padding:0 21px 19px}#status[data-state="error"]{color:#a22727}
+.note{border-top:1px solid var(--line);margin-top:20px;padding-top:16px;color:var(--muted);font-size:12px;line-height:1.7}
+@media(max-width:950px){.workspace{grid-template-columns:1fr}.sidebar{display:flex;gap:5px;overflow-x:auto;align-items:center}.side-title{display:none}.side-tool{width:auto;white-space:nowrap;margin:0}}
+@media(max-width:650px){.header-inner{padding:12px 15px}.page{padding:26px 13px 35px}.workspace{margin-top:22px;gap:13px}.work-fields{grid-template-columns:1fr}.field+.field{border-left:0;border-top:1px solid var(--line)}.field{padding:14px}.field textarea{min-height:170px}.panel-top{padding:16px}.select-label{width:100%;justify-content:space-between}.select-label select{max-width:210px}.actions{padding:12px}.btn{flex:1 1 auto}.brand{font-size:15px}}
+</style>
+<script defer src="./devtools.js?v=20261102-1"></script>
+</head>
+<body>
+<header class="header"><div class="header-inner">
+<a href="./index.html" class="brand">SD <span>Code-Studio</span> / Entwickler-Tools</a>
+<a class="back" href="./index.html">Zurück zum Editor</a>
+</div></header>
+<main class="page">
+<p class="eyebrow">Werkzeugkasten · Browserbasiert</p>
+<h1>Werkzeuge für deinen Code.</h1>
+<p class="intro">Texte umwandeln, Daten prüfen und Unterschiede erkennen. Alle Eingaben werden lokal im Browser verarbeitet; Projekte werden weder geöffnet noch verändert.</p>
+<div class="workspace">
+<nav class="sidebar" aria-label="Entwicklerwerkzeuge">
+<p class="side-title">Daten</p>
+<button type="button" class="side-tool selected" data-tool="json-pretty" aria-pressed="true">JSON formatieren</button>
+<button type="button" class="side-tool" data-tool="json-min" aria-pressed="false">JSON komprimieren</button>
+<p class="side-title">Kodierung</p>
+<button type="button" class="side-tool" data-tool="base64-encode" aria-pressed="false">Base64 kodieren</button>
+<button type="button" class="side-tool" data-tool="base64-decode" aria-pressed="false">Base64 dekodieren</button>
+<button type="button" class="side-tool" data-tool="url-encode" aria-pressed="false">URL kodieren</button>
+<button type="button" class="side-tool" data-tool="url-decode" aria-pressed="false">URL dekodieren</button>
+<p class="side-title">Prüfung</p>
+<button type="button" class="side-tool" data-tool="text-diff" aria-pressed="false">Texte vergleichen</button>
+</nav>
+<section class="main" aria-label="Werkzeug ausführen">
+<div class="panel">
+<div class="panel-top">
+<div><strong>Arbeitsbereich</strong><p id="description">Gültiges JSON lesbar einrücken.</p></div>
+<label class="select-label" for="tool">Werkzeug
+<select id="tool">
+<option value="json-pretty">JSON formatieren</option>
+<option value="json-min">JSON komprimieren</option>
+<option value="base64-encode">Base64 kodieren</option>
+<option value="base64-decode">Base64 dekodieren</option>
+<option value="url-encode">URL kodieren</option>
+<option value="url-decode">URL dekodieren</option>
+<option value="text-diff">Texte vergleichen</option>
+</select></label>
+</div>
+<div class="work-fields">
+<div class="field"><label for="source">EINGABE</label><textarea id="source" spellcheck="false" placeholder="Text oder Code hier einfügen …"></textarea></div>
+<div class="field"><label for="output">ERGEBNIS</label><textarea id="output" readonly spellcheck="false" placeholder="Das Ergebnis erscheint hier …"></textarea></div>
+</div>
+<div id="compareArea" hidden><label for="second">ZWEITER TEXT FÜR DEN VERGLEICH</label><textarea id="second" spellcheck="false" placeholder="Neue Version hier einfügen …"></textarea></div>
+<div class="actions">
+<button class="btn primary" id="execute" type="button">Ausführen</button>
+<button class="btn" id="autoDetect" type="button">Format erkennen</button>
+<button class="btn" id="copy" type="button">Ergebnis kopieren</button>
+<button class="btn" id="clear" type="button">Leeren</button>
+</div>
+<p id="status" data-state="ok" role="status" aria-live="polite">Bereit. Inhalte bleiben auf diesem Gerät.</p>
+</div>
+<p class="note">Datenschutz: Dieses Werkzeug sendet keine eingegebenen Texte an einen Server und lädt keine externen Bibliotheken. Die Umwandlung erfolgt ausschließlich im geöffneten Browser. Für sehr große Inhalte gelten Größenlimits. Inspiriert von den Arbeitsabläufen der Open-Source-Anwendung DevToys; der Quellcode dieser Werkzeuge ist eigenständig erstellt.</p>
+</section>
+</div>
+</main>
+</body>
+</html>
