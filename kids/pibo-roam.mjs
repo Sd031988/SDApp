@@ -97,9 +97,21 @@ function route(start,goal){
   }
   return smooth;
 }
+// Original procedural gait, phase-locked to actual travel rather than wall-clock time.
+export function gardenGait(distance,speed,turnRate=0,reducedMotion=false){
+  const phase=(Number.isFinite(distance)?Math.max(0,distance):0)*11.5;
+  const weight=clampWalk(Number.isFinite(speed)?speed/1.2:0,0,1)*(reducedMotion?.3:1);
+  const lift=a=>.16*weight*Math.pow(Math.max(0,Math.sin(a)),1.4);
+  const reach=a=>.085*weight*Math.cos(a);
+  const left=phase,right=phase+Math.PI;
+  const turn=clampWalk(Number.isFinite(turnRate)?turnRate:0,-4,4)*weight;
+  return {frontLift:[lift(left),lift(right)],hindLift:[lift(right),lift(left)],
+    frontReach:[reach(left),reach(right)],hindReach:[reach(right),reach(left)],
+    bob:.009*weight*(1-Math.cos(phase*2)),roll:-.016*turn,headYaw:.025*turn};
+}
 export class PiboRoam{
   constructor(){this.reset()}
-  reset(){this.x=0;this.z=0;this.targetX=0;this.targetZ=0;this.heading=0;this.speed=0;this.moving=false;this.path=[]}
+  reset(){this.x=0;this.z=0;this.targetX=0;this.targetZ=0;this.heading=0;this.speed=0;this.moving=false;this.path=[];this.distance=0;this.turnRate=0}
   setTarget(x,z){
     const goal=walkablePoint(x,z);
     if(!goal)return false;
@@ -116,6 +128,7 @@ export class PiboRoam{
     if(!dt)return this.pose();
     if(!this.moving){
       this.speed=Math.max(0,this.speed-4*dt);
+      this.turnRate*=Math.max(0,1-8*dt);
       return this.pose();
     }
     // A planned waypoint path never walks through the tree, pond or furniture.
@@ -129,7 +142,7 @@ export class PiboRoam{
     if(dist>1e-9&&step>0){
       const next={x:this.x+dx/dist*step,z:this.z+dz/dist*step};
       if(clearSegment({x:this.x,z:this.z},next)){
-        this.x=next.x;this.z=next.z;
+        this.x=next.x;this.z=next.z;this.distance+=step; // Only actual travel advances footfall phase.
       }else{
         // Fail closed rather than passing through a collider on a bad route.
         this.path=route({x:this.x,z:this.z},{x:this.targetX,z:this.targetZ})||[];
@@ -137,10 +150,11 @@ export class PiboRoam{
       }
       const desired=Math.atan2(dx,dz);
       const turn=Math.atan2(Math.sin(desired-this.heading),Math.cos(desired-this.heading));
-      this.heading+=turn*Math.min(1,dt*8);
+      const headingStep=turn*Math.min(1,dt*8);
+      this.heading+=headingStep;this.turnRate=headingStep/dt;
     }
     if(Math.hypot(this.targetX-this.x,this.targetZ-this.z)<=.04){
-      this.x=this.targetX;this.z=this.targetZ;this.moving=false;this.path=[];this.speed=0;
+      this.x=this.targetX;this.z=this.targetZ;this.moving=false;this.path=[]; // Keep speed briefly to blend into rest.
     }
     return this.pose();
   }
