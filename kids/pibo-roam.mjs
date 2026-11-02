@@ -109,6 +109,17 @@ export function gardenGait(distance,speed,turnRate=0,reducedMotion=false){
     frontReach:[reach(left),reach(right)],hindReach:[reach(right),reach(left)],
     bob:.009*weight*(1-Math.cos(phase*2)),roll:-.016*turn,headYaw:.025*turn};
 }
+// Time-based follow with a shared camera/target focus and gentle look-ahead.
+export function gardenCamera(focus,pose,speed,deltaSeconds,reducedMotion=false){
+ const x=Number.isFinite(focus?.x)?focus.x:0,z=Number.isFinite(focus?.z)?focus.z:0;
+ const px=Number.isFinite(pose?.x)?pose.x:0,pz=Number.isFinite(pose?.z)?pose.z:0;
+ const heading=Number.isFinite(pose?.heading)?pose.heading:0;
+ const lead=reducedMotion?0:.24*clampWalk(Number.isFinite(speed)?speed/1.75:0,0,1);
+ const targetX=px+Math.sin(heading)*lead,targetZ=pz+Math.cos(heading)*lead;
+ const dt=clampWalk(Number.isFinite(deltaSeconds)?deltaSeconds:0,0,.05);
+ const alpha=reducedMotion?1:1-Math.exp(-6*dt);
+ return {x:x+(targetX-x)*alpha,z:z+(targetZ-z)*alpha};
+}
 export class PiboRoam{
   constructor(){this.reset()}
   reset(){this.x=0;this.z=0;this.targetX=0;this.targetZ=0;this.heading=0;this.speed=0;this.moving=false;this.path=[];this.distance=0;this.turnRate=0}
