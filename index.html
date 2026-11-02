@@ -16,7 +16,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0c3533" />
-    <meta name="description" content="Deutsch lernen, Bewerbungen, Dokumente, KI, eigene Webseiten und Spiele für Kinder: Entdecke die Möglichkeiten im SD Hub." />
+    <meta name="description" content="Deutsch lernen, Bewerbungen, Dokumente, KI und eigene Software: Professionelle Werkzeuge an einem Ort." />
     <link rel="manifest" href="manifest-hub.json" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="android-assets/icon-180.png" />
@@ -260,7 +260,7 @@
             <div class="held">
                 <div>
                     <h1 data-i18n="h1">Lernen. Gestalten. Entdecken.</h1>
-                    <p class="unter" data-i18n="lead">Ob Deutschkurs, Bewerbung, Dokumente, KI, eigene Webseiten oder Spiele für Kinder: Entdecke die vielen Möglichkeiten im SD Hub – alles an einem Ort.</p>
+                    <p class="unter" data-i18n="lead">Deutsch lernen, Bewerbungen erstellen, Dokumente bearbeiten oder Software entwickeln: Deine Werkzeuge an einem Ort.</p>
                     <a class="sd-dashboard-launch" href="mein-sd-hub/" aria-label="Mein SD Hub Dashboard mit allen Apps aufrufen">
                       <span class="sd-dashboard-launch-icon" aria-hidden="true">▦</span>
                       <span><strong>Zum neuen SD Hub Dashboard</strong><small>Alle Apps übersichtlich · PC & Handy</small></span>
@@ -271,19 +271,18 @@
                         <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen" aria-describedby="treffer">
                     </div>
                     <p class="treffer" id="treffer" aria-live="polite"></p>
-                    <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="mein-sd-hub/" data-such="persönlich mein sd hub wegweiser akademie kurs lernen projekt sprache"><span aria-hidden="true">✨</span> <span data-i18n="q_personal">Mein SD Hub</span></a><a class="chip" href="kids/games/"><span aria-hidden="true">🎮</span> Spiele</a><a class="chip" href="kids/index.html"><span aria-hidden="true">🐱</span> Pibo 3D</a><a class="chip" href="kids/blockworld/index.html"><span aria-hidden="true">🧱</span> SD BlockWorld – 3D spielen</a><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
+                    <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="mein-sd-hub/" data-such="persönlich mein sd hub wegweiser akademie kurs lernen projekt sprache"><span aria-hidden="true">✨</span> <span data-i18n="q_personal">Mein SD Hub</span></a><a class="chip" href="Lebenslauf_app.html"><span aria-hidden="true">📝</span> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><span aria-hidden="true">📬</span> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><span aria-hidden="true">📸</span> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><span aria-hidden="true">📑</span> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
                 </div>
                 <div class="szene" id="szene" role="group" aria-label="Interaktive 3D-Themenordner">
                     <div class="stapel" id="stapel">
-                        <div class="lage" role="button" tabindex="0" data-thema="deutsch" style="--i:7;--farbe:#098a75"><i class="tab"></i><i class="papier"></i><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></div><div class="lage" role="button" tabindex="0" data-thema="arbeit" style="--i:6;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></div><div class="lage" role="button" tabindex="0" data-thema="post" style="--i:5;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" role="button" tabindex="0" data-thema="geld" style="--i:4;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" role="button" tabindex="0" data-thema="doku" style="--i:3;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" role="button" tabindex="0" data-thema="wohnen" style="--i:2;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></div><div class="lage" role="button" tabindex="0" data-thema="ki" style="--i:1;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI, Code &amp; Design</span></div><div class="lage" role="button" tabindex="0" data-thema="kids" style="--i:0;--farbe:#c64e95"><i class="tab"></i><i class="papier"></i><span data-i18n="t_kids">Spiele</span></div>
-                        <div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
+                        <div class="lage" role="button" tabindex="0" data-thema="deutsch" style="--i:7;--farbe:#098a75"><i class="tab"></i><i class="papier"></i><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></div><div class="lage" role="button" tabindex="0" data-thema="arbeit" style="--i:6;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></div><div class="lage" role="button" tabindex="0" data-thema="post" style="--i:5;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" role="button" tabindex="0" data-thema="geld" style="--i:4;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" role="button" tabindex="0" data-thema="doku" style="--i:3;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" role="button" tabindex="0" data-thema="wohnen" style="--i:2;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></div><div class="lage" role="button" tabindex="0" data-thema="ki" style="--i:1;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI, Code &amp; Design</span></div><div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
                         <div class="schwebt muenze"><b>€</b></div>
                         <div class="schwebt kalender"><b><em id="kalTag">1</em></b></div>
                         <div class="schwebt haken"><b>✓</b></div>
                     </div>
                 </div>
             </div>
-            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-deutsch" data-thema="deutsch" style="--farbe:#098a75"><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></a><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI, Code &amp; Design</span></a><a href="#thema-kids" data-thema="kids" style="--farbe:#c64e95"><span data-i18n="t_kids">Spiele</span></a></nav>
+            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-deutsch" data-thema="deutsch" style="--farbe:#098a75"><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></a><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI, Code &amp; Design</span></a></nav>
         </div>
     </header>
 
@@ -459,35 +458,7 @@
                     </a>
                 </div></div>
             </section>
-            <section class="thema" style="--farbe:#c64e95" data-thema="kids" id="thema-kids">
-                <h2 class="reiterkopf"><span data-i18n="t_kids">Spiele</span><small class="anzahl">6</small></h2>
-                <div class="mappe-flaeche"><div class="kacheln">
-                    <a class="kachel" href="kids/games/" data-such="kinder spiele kids games spaß spielen">
-                        <span class="symbol" aria-hidden="true">🎮</span>
-                        <span class="text"><b data-i18n="hub_games">Spiele</b><small data-i18n="hub_games_sub">Kinderspiele und kleine Abenteuer</small></span>
-                    </a>
-                    <a class="kachel" href="kids/index.html" data-such="pibo katze 3d spielen tiere kinder haustier">
-                        <span class="symbol" aria-hidden="true">🐱</span>
-                        <span class="text"><b data-i18n="hub_pibo">Pibo 3D</b><small data-i18n="hub_pibo_sub">Mit der Katze spielen und entdecken</small></span>
-                    </a>
-                    <a class="kachel" href="kids/blockworld/index.html" data-such="kinder spiel blockworld minecraft bauen block 3d">
-                        <span class="symbol" aria-hidden="true">🧱</span>
-                        <span class="text"><b data-i18n="hub_blocks">SD BlockWorld</b><small data-i18n="hub_blocks_sub">Eine kreative 3D-Blockwelt</small></span>
-                    </a>
-                    <a class="kachel" href="kids/games/play.html?game=obby" data-such="spiel sofort hüpfen obby springen parkour jump and run jump spielen kinder">
-                        <span class="symbol" aria-hidden="true">🏁</span>
-                        <span class="text"><b data-i18n="hub_kids_obby">Obby – jetzt hüpfen</b><small data-i18n="hub_kids_obby_sub">Drei Spiellevel direkt starten</small></span>
-                    </a>
-                    <a class="kachel" href="kids/games/play.html?game=pet" data-such="pet island tiere füttern pflegen hunde katze spiel kinder">
-                        <span class="symbol" aria-hidden="true">🐶</span>
-                        <span class="text"><b data-i18n="hub_kids_pet">Tierinsel – jetzt spielen</b><small data-i18n="hub_kids_pet_sub">Tiere füttern und pflegen</small></span>
-                    </a>
-                    <a class="kachel" href="kids/games/play.html?game=learn" data-such="rätsel lernen deutsch mathe logik minispiel quiz">
-                        <span class="symbol" aria-hidden="true">🧩</span>
-                        <span class="text"><b data-i18n="hub_kids_learn">Rätsel – jetzt spielen</b><small data-i18n="hub_kids_learn_sub">Deutsch, Mathe und Logik</small></span>
-                    </a>
-                </div></div>
-            </section>
+            
             <p class="nichts" id="nichts" hidden data-i18n="nichts">Dazu haben wir noch keinen Helfer. Versuch ein anderes Wort – oder frag den KI-Assistenten.</p>
 
             <section class="versprechen" aria-label="So funktioniert die Seite">
@@ -519,7 +490,7 @@
  "de": {
   "titel": "SD Hub – Lernen, gestalten und entdecken",
   "h1": "Lernen. Gestalten. Entdecken.",
-  "lead": "Ob Deutschkurs, Bewerbung, Dokumente, KI, eigene Webseiten oder Spiele für Kinder: Entdecke die vielen Möglichkeiten im SD Hub – alles an einem Ort.",
+  "lead": "Deutsch lernen, Bewerbungen erstellen, Dokumente bearbeiten oder Software entwickeln: Deine Werkzeuge an einem Ort.",
   "suche_ph": "Was möchtest du tun?",
   "suche_label": "Helfer suchen",
   "q_personal": "Mein SD Hub",
@@ -641,7 +612,7 @@
  "en": {
   "titel": "SD Hub – Learn, create and explore",
   "h1": "Learn. Create. Explore.",
-  "lead": "From German lessons and job applications to documents, AI, web projects and games for kids: explore everything SD Hub has to offer – all in one place.",
+  "lead": "Learn German, create applications, work with documents or build software: your tools, in one place.",
   "suche_ph": "What do you want to do?",
   "suche_label": "Search helpers",
   "q_personal": "My SD Hub",

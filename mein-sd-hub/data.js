@@ -25,8 +25,7 @@ const goals=[
 {id:"arbeit",emoji:"💼",title:"Arbeit finden",subtitle:"Lebenslauf, Bewerbung und Beruf",query:"arbeit bewerbung job lebenslauf",itemIds:["jobs","bewerbungen","anerkennung"]},
 {id:"alltag",emoji:"📄",title:"Alltag erledigen",subtitle:"Briefe, PDFs und Fristen",query:"brief scanner pdf behörde",itemIds:["post","pdf","fristen"]},
 {id:"kreativ",emoji:"💻",title:"Etwas entwickeln",subtitle:"Webseiten, Apps und Designs",query:"code webseite design programmieren",itemIds:["studio","design"]},
-{id:"ki",emoji:"✨",title:"KI ausprobieren",subtitle:"Fragen, Ideen und Texte",query:"ki assistent chat",itemIds:["ki","studio"]},
-{id:"spielen",emoji:"🐱",title:"Spielen",subtitle:"Pibo und Kinderspiele",query:"pibo spiele kinder",itemIds:["spiele","pibo"]}
+{id:"ki",emoji:"✨",title:"KI ausprobieren",subtitle:"Fragen, Ideen und Texte",query:"ki assistent chat",itemIds:["ki","studio"]}
 ];
 const academy=[
 {id:"german",name:"Deutsch im Alltag",icon:"🗣️",summary:"Praktische Sätze für tägliche Situationen.",lessons:[
@@ -81,7 +80,7 @@ const paths=[
 ["Briefe verständlich machen","Prüfe den Inhalt und mögliche Termine.","/post/"],
 ["Wichtige Unterlagen digitalisieren","Scanne nur notwendige Dokumente.","/scanner/"],
 ["Aufgaben und Ausgaben organisieren","Nutze die praktischen Alltagshelfer.","/haushalt/"],
-["Zeit zum Spielen einplanen","Entdecke gemeinsam die Spiele.","/kids/games/"]
+["Familienunterlagen sortieren","Bewahre wichtige Unterlagen gut auffindbar auf.","/mappe/"]
 ]}
 ];
 const phrases=[

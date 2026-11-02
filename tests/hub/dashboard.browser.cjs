@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
   const cardCount=await page.locator('.sd-app-card').count();
   assert(cardCount>=15,'All original SD Hub tools must appear');
   assert.equal(await page.locator('.featured').count(),4);
-  for(const route of ['/deutsch/','/studio/','/agent/','/kids/games/'])
+  for(const route of ['/deutsch/','/studio/','/agent/','/pdf-studio/'])
    assert(await page.locator('.featured[href="'+route+'"]').count()>0,'Missing link: '+route);
   const desktop=await page.evaluate(()=>{
    const nav=document.querySelector('#tabs').getBoundingClientRect();

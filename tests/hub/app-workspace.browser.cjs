@@ -17,7 +17,8 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('.sd-ws-brand-label strong').innerText(),'Fristen');
   await page.locator('.sd-ws-bar .sd-ws-menu-toggle').click();
   assert.equal(await page.locator('#sdWorkspacePanel').isVisible(),true);
-  assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app').count(),19);
+  assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app').count(),16);
+  assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app[href^="/kids/"]').count(),0,'Game links must be absent from work launcher');
   assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app[href="/studio/"]').count(),1);
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('#sdWorkspacePanel').isVisible(),false);
@@ -42,11 +43,16 @@ const assert=require('node:assert/strict');
 
   // Different app families keep their own original content.
   await page.setViewportSize({width:390,height:844});
-  for(const p of ['/post/','/kids/games/','/bewerbungen/']){
+  for(const p of ['/post/','/bewerbungen/']){
    await page.goto(base+p,{waitUntil:'domcontentloaded',timeout:30000});
    await page.locator('.sd-ws-dock').waitFor({state:'visible',timeout:12000});
    assert.equal(await page.locator('#sdWorkspacePanel').count(),1,p+': menu');
   }
+  // SD Play has its own navigation, no injected professional workspace dock.
+  await page.goto(base+'/kids/games/',{waitUntil:'domcontentloaded',timeout:30000});
+  assert.equal(await page.locator('.sd-ws-dock').count(),0);
+  assert.equal(await page.locator('#sdWorkspacePanel').count(),0);
+  assert.equal(await page.locator('a[href="../../play/"]').count(),1);
   // Dense applications must not gain a second toolbar covering the editor or chat.
   for(const p of ['/studio/','/deutsch/','/assistent/']){
    await page.goto(base+p,{waitUntil:'domcontentloaded',timeout:30000});
