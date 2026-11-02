@@ -29,6 +29,7 @@ jobs:
           node --check kids/pibo-motion.mjs
           node --check kids/pibo-voice.mjs
           node --check kids/pibo-character.mjs
+          node --check kids/pibo-fur.mjs
           node --check kids/pibo-interactions.mjs
           node --check kids/pibo-garden.mjs
           node --check kids/pibo-roam.mjs
@@ -42,6 +43,7 @@ jobs:
         run: |
           node kids/pibo-voice.test.mjs
           node kids/pibo-character.test.mjs
+          node kids/pibo-fur.test.mjs
           node kids/pibo-interactions.test.mjs
           node kids/pibo-care.test.mjs
           node kids/pibo-garden.test.mjs
