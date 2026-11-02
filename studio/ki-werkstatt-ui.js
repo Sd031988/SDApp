@@ -57,6 +57,25 @@ function openDialog(mode){
  $('kiGoal').focus();
 }
 function openChangeDialog(){openDialog('change');}
+/* Local Agent -> KI-Werkstatt: task and suggested file paths only.
+   Source contents remain behind the existing explicit consent checkbox. */
+function openChangeDialogWithGoal(goal,paths){
+ if(typeof goal!=='string'||!goal.trim())return false;
+ openDialog('change');
+ if($('kiOverlay').hidden)return false;
+ $('kiGoal').value=goal.slice(0,3000);
+ $('kiChangeConsent').checked=false;
+ $('kiClipboard').value='';
+ $('kiClipboard').hidden=true;
+ if(Array.isArray(paths)){
+  const wanted=new Set(paths.filter(p=>typeof p==='string').slice(0,12));
+  $('kiSources').querySelectorAll('input[data-path]').forEach(check=>{
+   check.checked=wanted.has(check.dataset.path)&&core.changeFileAllowed(check.dataset.path,currentFiles()[check.dataset.path]);
+  });
+ }
+ status('Agent-Plan übernommen. Bitte vorgeschlagene Dateien überprüfen. Inhalte werden erst nach deiner ausdrücklichen Zustimmung in die KI-Anfrage kopiert.');
+ return true;
+}
 function openServices(){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
  $('kiOverlay').hidden=true;
@@ -361,7 +380,7 @@ function setup(){
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');
- window.SDKICodingUI={openDialog,openChangeDialog,openServices,openDialogWithCode,analyse,apply,applyDirect,currentFiles,diffAnzeigen};
+ window.SDKICodingUI={openDialog,openChangeDialog,openChangeDialogWithGoal,openServices,openDialogWithCode,analyse,apply,applyDirect,currentFiles,diffAnzeigen};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();
