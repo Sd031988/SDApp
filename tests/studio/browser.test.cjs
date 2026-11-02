@@ -29,6 +29,27 @@ const assert = require('node:assert/strict');
     assert.match(await page.title(), /Code-Studio/);
     // Regression: new AI buttons must never push ▶ Ausführen outside of the screen.
     await page.locator('#app').waitFor({state:'visible',timeout:15000});
+    // Code review: no source is sent; a critical secret blocks BOTH import buttons.
+    const codeReviewChecks = await page.evaluate(()=>{
+      const engine=window.SDKICodeReview;
+      const one=engine.review([{path:'app.js',content:'eval(userInput);'}],{});
+      const blocked=engine.review([{path:'app.js',content:'const token="ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ12345";'}],{});
+      return {found:one.findings.some(f=>f.rule==='dynamic-code'),
+        blocked:blocked.blocked,exposed:JSON.stringify(blocked.findings).includes('ABCDEFGHIJKLMNOPQRSTUVWXYZ12345')};
+    });
+    assert.equal(codeReviewChecks.found,true);
+    assert.equal(codeReviewChecks.blocked,true);
+    assert.equal(codeReviewChecks.exposed,false);
+    await page.locator('#kiCodeBtn').click();
+    await page.locator('#kiResult').fill(['### Datei: app.js','~~~javascript',
+      'const token="ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ12345";','~~~'].join('\n'));
+    await page.locator('#kiAnalyse').click();
+    assert.equal(await page.locator('#kiReview').isVisible(),true);
+    assert.match(await page.locator('#kiReviewSummary').innerText(),/gesperrt/);
+    assert.equal(await page.locator('#kiDirect').isEnabled(),false);
+    assert.equal(await page.locator('#kiApply').isEnabled(),false);
+    await page.locator('#kiClose').click();
+
     // ECC-inspired review stays read-only and is accessible as a real dialog.
     await page.locator('#agentReviewBtn').click();
     assert.equal(await page.locator('#agentReviewOverlay').isVisible(),true);

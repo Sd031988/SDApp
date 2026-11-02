@@ -83,3 +83,17 @@
 .kiBridgeHint p{font-size:12px;color:#d6f3e5;margin:0}
 .kiBridgeHint a{color:#9efcd2;font-size:12px;font-weight:750;text-decoration:underline}
 .kiBridgeHint a:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* AI import: local and non-executing code review report. */
+#kiReview[hidden]{display:none!important}
+.kiReview{display:grid;gap:9px;padding:12px;border:1px solid #77629d;background:#17142b;border-radius:12px}
+.kiReview h3{font-size:15px;margin:0}
+#kiReviewSummary{padding:9px 11px;margin:0;border:1px solid #496957;border-radius:8px;background:#173027;color:#d9ffeb;font-weight:700}
+#kiReviewSummary[data-state="warning"]{border-color:#b78c51;background:#362819;color:#ffdfa2}
+#kiReviewSummary[data-state="blocked"]{border-color:#bd7474;background:#421c26;color:#ffe1e1}
+.kiReviewFindings{display:grid;gap:7px;max-height:310px;overflow:auto}
+.kiReviewFinding{padding:9px 11px;border:1px solid #5e5483;border-radius:8px;min-width:0}
+.kiReviewFinding[data-severity="critical"]{border-color:#c76e74}
+.kiReviewFinding[data-severity="warning"]{border-color:#b89c5c}
+.kiReviewFinding strong{font-size:12px;overflow-wrap:anywhere;display:block}
+.kiReviewFinding p{font-size:12px;margin:4px 0 0;color:#d6cfeb;line-height:1.5}

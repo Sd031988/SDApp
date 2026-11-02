@@ -26,6 +26,7 @@ jobs:
           node --check studio/studio.js
           node --check studio/ki-werkstatt-core.js
           node --check studio/ki-werkstatt-ui.js
+          node --check studio/ki-code-review.js
           node --check studio/studio-diagnose.js
           node --check studio/studio-qualitaet.js
           node --check studio/agent-review.js
@@ -38,7 +39,7 @@ jobs:
           node --check studio/chatgpt-transfer-extension/background.js
           node --check studio/chatgpt-transfer-extension/studio-bridge.js
       - name: Projektanalyse und Export prüfen
-        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs
+        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs
 
   browser-smoke:
     runs-on: ubuntu-latest
