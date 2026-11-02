@@ -12,17 +12,20 @@ function run(files,original,reviewFn,graphFn){
  const chosen=Array.isArray(files)?files.slice(0,MAX_FILES):[];
  const previous=original&&typeof original==='object'&&!Array.isArray(original)?original:{};
  const tests=[];
+ let overflow=false;
  const add=(id,file,label,status,rule)=>{
   if(tests.length<MAX_ITEMS)tests.push(test(id,file,label,status,rule));
+  else overflow=true;
  };
  const incomplete=!Array.isArray(files)||files.length>MAX_FILES;
  if(incomplete)add('limit','','Mehr als 40 Dateien oder ungültige Auswahl: Test unvollständig','fail','limit');
  const valid=chosen.filter(f=>f&&typeof f.path==='string'&&typeof f.content==='string'&&!f.content.startsWith('data:'));
  if(valid.length!==chosen.length)add('invalid','','Nicht lesbare Datei: Test unvollständig','fail','invalid');
  if(!valid.length)add('empty','','Keine Code-Dateien ausgewählt','fail','empty');
- const source={...previous};
- for(const f of valid)source[f.path]=f.content;
- const review=typeof reviewFn==='function'?reviewFn(valid,previous):null;
+ const source=Object.assign(Object.create(null),previous);
+ for(const f of valid)Object.defineProperty(source,f.path,{value:f.content,writable:true,enumerable:true,configurable:true});
+ let review=null;
+ try{if(typeof reviewFn==='function')review=reviewFn(valid,previous);}catch(_){}
  if(!review||review.blocked||review.skipped||review.truncated){
   add('review-blocked','','Sicherheits- oder Vollständigkeitsprüfung nicht bestanden','fail','review');
  }
@@ -52,7 +55,10 @@ function run(files,original,reviewFn,graphFn){
   }catch(_){add('graph-error','','Dateiverknüpfungen konnten nicht geprüft werden','fail','graph');}
  }
  // Completeness of the test mechanism itself is a hard gate, not a warning.
- if(tests.length>=MAX_ITEMS)add('truncated','','Testbericht abgeschnitten','fail','limit');
+ if(overflow){
+  tests.pop();
+  tests.push(test('truncated','','Testbericht abgeschnitten','fail','limit'));
+ }
  const fail=tests.filter(x=>x.status==='fail').length;
  const warnings=tests.filter(x=>x.status==='warning').length;
  return {tests,fail,warnings,passes:tests.filter(x=>x.status==='pass').length,
@@ -67,7 +73,7 @@ function compare(before,after){
  const fixed=[...prev.values()].filter(t=>!next.has(t.id));
  const introduced=[...next.values()].filter(t=>!prev.has(t.id));
  const oldCritical=before&&before.tests?.some(t=>t.rule==='review'&&t.status==='fail');
- const improved=fixed.length>0&&introduced.length===0&&!after?.blocked&&!oldCritical;
+ const improved=!!before&&!!after&&fixed.length>0&&introduced.length===0&&!after.blocked&&!oldCritical;
  return {before,after,fixed,introduced,improved,canStage:improved,
   status:introduced.length?'regressed':after?.blocked?'blocked':improved?'improved':'unchanged'};
 }
