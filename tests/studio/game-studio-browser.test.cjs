@@ -45,14 +45,15 @@ available:Boolean(el.getContext('webgl')),canvasWidth:el.width,canvasHeight:el.h
 assert.equal(previewWebgl.available,true);
 // Recover the GLB preview from a simulated GPU context loss without losing
 // the selected asset or modifying the editable scene. Some GPUs omit the extension.
-const canSimulateLoss=await page.locator('#glbPreview').evaluate(el=>
-Boolean(el.getContext('webgl').getExtension('WEBGL_lose_context')));
+const canSimulateLoss=await page.locator('#glbPreview').evaluate(el=>{
+// getExtension() returns null while the context is lost: keep the handle.
+el.__sdTestContextLoss=el.getContext('webgl').getExtension('WEBGL_lose_context');
+return Boolean(el.__sdTestContextLoss);
+});
 if(canSimulateLoss){
-await page.locator('#glbPreview').evaluate(el=>
-el.getContext('webgl').getExtension('WEBGL_lose_context').loseContext());
+await page.locator('#glbPreview').evaluate(el=>el.__sdTestContextLoss.loseContext());
 await page.waitForFunction(()=>document.getElementById('glbInfo').textContent.includes('Warte auf Wiederherstellung.'),null,{timeout:15000});
-await page.locator('#glbPreview').evaluate(el=>
-el.getContext('webgl').getExtension('WEBGL_lose_context').restoreContext());
+await page.locator('#glbPreview').evaluate(el=>el.__sdTestContextLoss.restoreContext());
 await page.waitForFunction(()=>{
 const info=document.getElementById('glbInfo');
 const gl=document.getElementById('glbPreview').getContext('webgl');
