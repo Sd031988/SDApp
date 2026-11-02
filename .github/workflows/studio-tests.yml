@@ -72,3 +72,12 @@ jobs:
           node tests/studio/test-loop-browser.test.cjs
           node tests/studio/devtools-browser.test.cjs
           node tests/studio/game-studio-browser.test.cjs
+
+      - name: Level-Editor Bildschirmprüfung
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sd-game-studio-workspace-screenshots
+          path: game-studio-workspace-artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 14
