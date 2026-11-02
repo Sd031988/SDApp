@@ -24,8 +24,11 @@
       "reference": "Einfaches prozedurales Pibo-3D-Modell ist vorhanden, professionelles Skelett-/Morph-Target-Modell fehlt",
       "acceptance": "Originales GLB-Modell, geprüfte Knochenanimationen und klare mobile Performance; keine geschützten Tom-Assets",
       "evidence": [
-        "kids/pibo-character.mjs"
-      ]
+        "kids/pibo-character.mjs",
+        "kids/pibo-character.test.mjs",
+        "kids/index.html"
+      ],
+      "implementation": "02.11.2026: Originale geometrische Vorderpfoten erhalten je drei an die animierten Pfoten gebundene Zehen und eine Unterseitenballenfläche. Das bleibt ein prozedurales Primitive-Modell ohne professionelles Rig, Fell oder unabhängige WebGL-Abnahme."
     },
     {
       "id": "gesicht",
@@ -35,8 +38,11 @@
       "acceptance": "Mindestens sechs reproduzierbar animierte Emotionen, Tests der Mimik und Morph-Target- oder Rig-Übergänge",
       "evidence": [
         "kids/pibo-face.mjs",
-        "kids/pibo-voice.mjs"
-      ]
+        "kids/pibo-voice.mjs",
+        "kids/pibo-character.mjs",
+        "kids/pibo-character.test.mjs"
+      ],
+      "implementation": "02.11.2026: Pro Auge zwei geometrische Lichtreflexe, die der bestehenden Iris-Blickrichtung folgen; Reaktion auf vorhandene Blinzel-/Mundanimationen unverändert. Keine Morph-Targets, kein professionelles Augen-Shading."
     },
     {
       "id": "koerper",
@@ -288,31 +294,35 @@
   ],
   "last_iteration": {
     "date": "2026-11-02",
-    "focus": "Bildratenunabhängige Garten-Folgekamera mit synchronisiertem Blickziel, Vorausschau und Reduced-Motion-Modus.",
+    "focus": "Sichtbare eigenständige 3D-Katzenfigur: animierte Vorderpfoten mit separaten Zehen/Ballen sowie blickrichtungsgebundene doppelte Augenreflexe.",
     "reference_checked": [
       "official",
       "google_play",
       "backyard_2026",
-      "bathroom_2026"
+      "bathroom_2026",
+      "halloween_2026"
     ],
     "implementation_files": [
-      "kids/pibo-roam.mjs",
+      "kids/pibo-character.mjs",
       "kids/index.html"
     ],
     "test_files": [
-      "kids/pibo-roam.test.mjs",
-      "kids/e2e/pibo.spec.mjs"
+      "kids/pibo-character.test.mjs",
+      "kids/pibo-face.test.mjs",
+      "kids/pibo-motion.test.mjs",
+      "kids/pibo-roam.test.mjs"
     ],
     "verified": [
-      "GitHub-main, README und Benchmark vor Änderung geprüft.",
-      "Bestehende Garten-Unit-Assertions und neue Kamera-Tests (30/60 FPS, Pause, Reduced Motion, ungültige Eingaben) in V8 mit Assert-Shim bestanden.",
-      "JavaScript-Modul und HTML-Inline-Modul in V8 syntaktisch geprüft; Spielstandformat unverändert."
+      "Aktuelles main, README und Benchmark vor Änderungen gelesen; vorheriger Automatikbericht geprüft.",
+      "V8-Ausführung der vorhandenen Pibo-Character-Tests (10 Assertions) nach neuer Zehen-/Augengeometrie erfolgreich.",
+      "V8-Ausführung der vorhandenen Face-, Motion- und Roam-Tests erfolgreich (407, 4088, 12520 Assertions).",
+      "HTML-Inline-Modul in V8 syntaktisch geparst; Aufruf übergibt vorhandene animierte Pfoten und Pupillen; kein Spielstandformat geändert."
     ],
     "unverified": [
-      "Kein vollständiger Node-/Chromium-Desktop/Mobil-/WebGL-/iOS-/Android-Test in diesem Durchlauf.",
-      "Push-CI/Pages für letzten main-Commit nicht bestätigt; ältere erfolgreiche Smoke-Jobs sind kein Beleg für neuen Code.",
-      "Kein professionelles Skelett-Rig, keine Pfoten-IK und keine zusammenhängende Hauswelt."
+      "Kein vollständiger Node-Testlauf, kein echter Desktop-/Mobil-Chromium-/WebGL-/End-to-End-Test in dieser Laufumgebung; kein GPU-/Hardwaretest.",
+      "GitHub-Statusabfrage für bisherigen main-Commit lieferte keine Statuschecks und PR-gefilterte Workflow-Abfrage keine Runs: CI/Pages nicht als erfolgreich bestätigt.",
+      "Die zusätzlichen geometrischen Details ersetzen kein hochwertiges originales GLB-Rig, keine Fell-Textur und keine professionelle Charakteranimation."
     ],
-    "next": "Echte Chromium-/WebGL-/Touch-Kamera-Abnahme und GitHub-Push-CI/Pages prüfen, anschließend Pfoten-Bodenkontakte mit Standphasen."
+    "next": "In echtem Chromium/WebGL und auf Mobilgeräten die Augen-/Pfoten-Geometrie und Touch-Kollisionen visuell prüfen; danach professionelles eigenständiges GLB-Modell mit Skelett, Morph Targets und LOD statt weiterer kleiner Primitive-Dekorationen."
   }
 }
