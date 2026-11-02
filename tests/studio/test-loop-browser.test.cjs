@@ -22,6 +22,7 @@ const assert=require('node:assert/strict');
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8878/studio/index.html',{waitUntil:'domcontentloaded',timeout:30000});
   await page.locator('#app').waitFor({state:'visible',timeout:20000});
+  await page.waitForFunction(()=>typeof S!=='undefined'&&S.gestartet&&S.p&&S.p.name,null,{timeout:25000});
   const original=await page.evaluate(()=>JSON.stringify(S.p?.dateien||{}));
   await page.locator('#kiCodeBtn').click();
   // Browser runtime is never invoked for user-supplied source: test this separately.
