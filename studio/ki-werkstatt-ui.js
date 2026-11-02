@@ -6,7 +6,7 @@ if(!core)return;
 const $=id=>document.getElementById(id);
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
 let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false,changeMode=false;
-let repairDraft=null,repairSource=null;
+let repairDraft=null,repairSource=null,testResult=null;
 function currentFiles(){
  const p=typeof S!=='undefined'&&S.p;
  if(!p)return {};
@@ -47,8 +47,12 @@ function selectMode(mode){
  if(changeMode)renderChangeSources();
 }
 function clearRepairDraft(){
- repairDraft=null;repairSource=null;
+ repairDraft=null;repairSource=null;testResult=null;
  const list=$('kiRepairProposals'),stage=$('kiRepairStage'),copy=$('kiRepairCopy');
+ const testBtn=$('kiTestRun'),report=$('kiTestResults');
+ if(testBtn)testBtn.disabled=true;
+ if(report)report.replaceChildren();
+ if($('kiTestStatus'))$('kiTestStatus').textContent='Noch keine lokalen Tests ausgeführt.';
  if(list)list.replaceChildren();
  if(stage)stage.disabled=true;
  if(copy)copy.disabled=true;
@@ -272,9 +276,56 @@ function createRepairDraft(){
   list.append(node('p','kiHint','Keine Reparaturhinweise für die ausgewählten Dateien.'));
  $('kiRepairStatus').textContent=repairDraft.proposals.length+' sichere, lokal vorbereitete Korrektur(en); '+
   repairDraft.manual.length+' weitere Hinweise zur manuellen oder KI-gestützten Prüfung. Noch nichts verändert.';
- $('kiRepairStage').disabled=!repairDraft.updatedFiles.length;
+ $('kiRepairStage').disabled=true;
+ $('kiTestRun').disabled=!repairDraft.updatedFiles.length;
  $('kiRepairCopy').disabled=!repairDraft.manual.length;
+ if(repairDraft.updatedFiles.length)$('kiTestStatus').textContent='Korrekturen vorhanden: jetzt lokale Vorher/Nachher-Tests ausführen.';
 }
+
+function runRepairChecks(selected,plan){
+ const engine=window.SDKITestLoop,review=window.SDKICodeReview?.review,
+  graph=window.SDStudioTaskAgent?.projectGraph;
+ if(!engine||!review||!graph)return null;
+ return engine.compareRepair(selected,stagedSnapshot||{},plan,review,graph);
+}
+function testRepairDraft(){
+ const report=$('kiTestResults'),summary=$('kiTestStatus');report.replaceChildren();
+ testResult=null;$('kiRepairStage').disabled=true;
+ if(!repairDraft||repairDraft.blocked||!repairDraft.updatedFiles?.length){
+  summary.textContent='Keine sichere Korrektur zum Prüfen vorbereitet.';return;
+ }
+ if(!parsed||parsed.errors.length||stagedProject!==(S.p?S.p.name:null)){
+  summary.textContent='Projekt oder KI-Dateien haben sich geändert. Bitte neu analysieren.';return;
+ }
+ const files=selectedFiles(),current=new Map(files.map(f=>[f.path,f.content]));
+ const latest=currentFiles();
+ if(!repairSource||repairSource.size!==current.size||
+   [...current].some(([path,content])=>repairSource.get(path)!==content)||
+   files.some(f=>(latest[f.path]??null)!==(stagedSnapshot?.[f.path]??null))){
+  summary.textContent='Veraltete Testbasis: Dateiauswahl oder Projekt wurden verändert. Bitte Reparatur neu planen.';
+  return;
+ }
+ testResult=runRepairChecks(files,repairDraft);
+ if(!testResult){
+  summary.textContent='Lokale Testengine fehlt. Eine Übernahme ohne Vergleich ist nicht erlaubt.';return;
+ }
+ const before=testResult.before,after=testResult.after;
+ summary.dataset.state=testResult.canStage?'improved':'blocked';
+ summary.textContent='Vorher: '+before.fail+' fehlgeschlagene Prüfungen, '+before.warnings+' Warnungen. '+
+  'Nachher: '+after.fail+' fehlgeschlagene Prüfungen, '+after.warnings+' Warnungen. '+
+  testResult.fixed.length+' behoben, '+testResult.introduced.length+' neu. '+
+  (testResult.canStage?'✓ Korrektur darf als Entwurf vorbereitet werden.':'⚠️ Korrektur nicht freigegeben.');
+ for(const item of testResult.fixed.slice(0,12)){
+  const li=node('li','','Behoben: '+item.file+' · '+item.label);report.append(li);
+ }
+ for(const item of testResult.introduced.slice(0,12)){
+  const li=node('li','','Neu: '+item.file+' · '+item.label);report.append(li);
+ }
+ if(!testResult.fixed.length&&!testResult.introduced.length)
+  report.append(node('li','','Keine nachweisbare Verbesserung. Statische Prüfungen sind kein Laufzeittest.'));
+ $('kiRepairStage').disabled=!testResult.canStage;
+}
+
 function stageRepair(){
  if(!repairDraft||repairDraft.blocked||!repairDraft.updatedFiles.length)return;
  if(!parsed||parsed.errors.length||stagedProject!==(S.p?S.p.name:null)){
@@ -294,6 +345,13 @@ function stageRepair(){
   return;
  }
  if(!checkSelectedCodeReview())return;
+ // Rerun trusted static checks on current candidate immediately before stage.
+ const verified=runRepairChecks(selected,repairDraft);
+ if(!testResult?.canStage||!verified?.canStage){
+  $('kiRepairStage').disabled=true;
+  $('kiTestStatus').textContent='Sicherheits- oder Regressionstest fehlgeschlagen. Bitte erneut prüfen.';
+  return;
+ }
  const updates=new Map(repairDraft.updatedFiles.map(f=>[f.path,f.content]));
  const count=updates.size,first=repairDraft.updatedFiles[0].path;
  const selectedNames=new Set(selected.map(f=>f.path));
@@ -303,6 +361,7 @@ function stageRepair(){
  $('kiFiles').querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=selectedNames.has(c.dataset.path));
  updateActions();
  $('kiRepairStage').disabled=true;
+ $('kiTestRun').disabled=true;
  $('kiRepairCopy').disabled=true;
  $('kiRepairStatus').textContent=count+' Datei(en) NUR in der KI-Code-Vorschau korrigiert. Bitte den Unterschied prüfen und die Übernahme später ausdrücklich bestätigen.';
  diffAnzeigen(first);
@@ -525,6 +584,7 @@ function setup(){
  $('kiAnalyse').addEventListener('click',analyse);
  $('kiFiles').addEventListener('change',()=>{clearRepairDraft();updateActions()});
  $('kiRepairPrepare').addEventListener('click',createRepairDraft);
+ $('kiTestRun').addEventListener('click',testRepairDraft);
  $('kiRepairStage').addEventListener('click',stageRepair);
  $('kiRepairCopy').addEventListener('click',copyRepairRequest);
  $('kiFiles').addEventListener('click',e=>{const b=e.target.closest('.kiDiffShow');if(b)diffAnzeigen(b.dataset.path)});
