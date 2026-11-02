@@ -6,7 +6,8 @@ if(root&&root.document)root.SDGameCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const VERSION=1,LIMIT=70,WORLD=19;
-const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill']);
+const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill','pine','bush','flower']);
+const NATURE_GROUPS=Object.freeze(['grove','garden']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
 const LIGHTS=Object.freeze(['dawn','day','sunset','night']);
 const AVATARS=Object.freeze(['explorer','sport','night']);
@@ -45,8 +46,24 @@ if(!KINDS.includes(type))throw Error('Objekttyp nicht unterstützt.');
 if(scene.objects.length>=LIMIT)throw Error('Maximal 70 Objekte erlaubt.');
 const id=Math.max(0,...scene.objects.map(o=>o.id))+1;
 if(id>10000000)throw Error('ID-Grenze erreicht.');
-const obj={id,type,x:clamp(x,-WORLD,WORLD),z:clamp(z,-WORLD,WORLD),scale:1,color:(type==='tree'||type==='hill')?'#5ebbb0':type==='rock'?'#bca3e5':PALETTE[(id-1)%PALETTE.length]};
+const obj={id,type,x:clamp(x,-WORLD,WORLD),z:clamp(z,-WORLD,WORLD),scale:1,color:(type==='tree'||type==='pine'||type==='bush'||type==='hill')?'#5ebbb0':type==='rock'?'#bca3e5':type==='flower'?'#d8797d':PALETTE[(id-1)%PALETTE.length]};
 scene.objects.push(obj);return obj;}
+function plantGroup(scene,group,x=0,z=0){
+if(!NATURE_GROUPS.includes(group)||!numeric(x,-WORLD,WORLD)||!numeric(z,-WORLD,WORLD))throw Error('Ungültige Naturgruppe oder Position.');
+const layouts={
+grove:[['pine',-3,-2,1.1],['tree',1.5,-3,1],['pine',3,1,.9],['bush',-1,2,1.25]],
+garden:[['flower',-2,-1,.9],['flower',0,-2,1.1],['flower',2,-1,.9],['bush',0,2,.8],['flower',-2.3,2.2,.8]]
+};
+const plan=layouts[group];
+if(scene.objects.length+plan.length>LIMIT)throw Error('Maximal 70 Objekte erlaubt.');
+const maxId=Math.max(0,...scene.objects.map(o=>o.id));
+if(maxId+plan.length>10000000)throw Error('ID-Grenze erreicht.');
+if(plan.some(([,dx,dz])=>Math.abs(x+dx)>WORLD||Math.abs(z+dz)>WORLD))throw Error('Naturgruppe liegt außerhalb der Welt.');
+return plan.map(([type,dx,dz,scale])=>{
+const object=add(scene,type,Math.round((x+dx)*10)/10,Math.round((z+dz)*10)/10);
+return update(scene,object.id,{scale});
+});
+}
 function update(scene,id,values){
 const obj=scene.objects.find(o=>o.id===id);if(!obj)throw Error('Objekt nicht gefunden.');
 for(const [key,value] of Object.entries(values)){
@@ -118,7 +135,7 @@ get canRedo(){return index<snapshots.length-1;}
 }
 function collides(x,z,objects){
 if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;
-return objects.some(o=>{const r=o.type==='tree'?.42*o.scale:o.type==='hill'?1.65*o.scale:o.type==='sphere'?.85*o.scale:o.type==='rock'?.76*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
+return objects.some(o=>{if(o.type==='flower')return false;const r=o.type==='tree'||o.type==='pine'?.42*o.scale:o.type==='bush'?.35*o.scale:o.type==='hill'?1.65*o.scale:o.type==='sphere'?.85*o.scale:o.type==='rock'?.76*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
 function direction(keys,azimuth=0){
 const k=keys||{},dx=(+!!k.right-+!!k.left),dz=(+!!k.back-+!!k.forward);
 const len=Math.hypot(dx,dz),magnitude=len||1,ca=Math.cos(azimuth),sa=Math.sin(azimuth);
@@ -134,5 +151,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,NATURE_GROUPS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,plantGroup,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
 });

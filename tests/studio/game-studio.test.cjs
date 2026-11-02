@@ -231,3 +231,57 @@ const player={x:0,y:0,z:0,vy:0};
 core.move(player,{forward:true,right:true},.05,[],Math.PI/3);
 assert(Math.abs(Math.hypot(player.x,player.z)-.25)<1e-8);
 });
+
+test('Naturbibliothek: Tannen, Sträucher, Blumen und Felsen bleiben serialisierbar',()=>{
+const scene=core.fresh();
+for(const type of ['pine','bush','flower']) {
+const plant=core.add(scene,type,13,13);
+assert.equal(plant.type,type);
+assert(core.PALETTE.includes(plant.color));
+assert.deepEqual(core.parse(core.serialize(scene)).objects.at(-1),plant);
+core.remove(scene,plant.id);
+}
+const flower=core.add(scene,'flower',13,13);
+assert.equal(core.collides(13,13,[flower]),false,'Blumen dürfen die Spielfigur nicht blockieren');
+const pine=core.add(scene,'pine',12,12);
+assert.equal(core.collides(12,12,[pine]),true,'Baumstämme müssen kollidieren');
+});
+test('Naturgruppen: Waldstück und Blumenwiese werden atomar angelegt und rückgängig',()=>{
+const scene=core.fresh(),history=core.createHistory(scene);
+assert.deepEqual(core.NATURE_GROUPS,['grove','garden']);
+const grove=core.plantGroup(scene,'grove',0,0);
+assert.equal(grove.length,4);
+assert.equal(scene.objects.length,10);
+assert.equal(new Set(scene.objects.map(o=>o.id)).size,10);
+assert(grove.some(o=>o.type==='pine'));
+history.record(scene);
+const garden=core.plantGroup(scene,'garden',8,8);
+assert.equal(garden.length,5);
+assert.equal(scene.objects.length,15);
+assert(garden.filter(o=>o.type==='flower').length>=3);
+assert(garden.every(o=>o.x<=core.WORLD&&o.z<=core.WORLD));
+history.record(scene);
+assert.equal(history.undo().objects.length,10);
+assert.equal(history.undo().objects.length,6);
+assert.equal(history.redo().objects.length,10);
+assert.deepEqual(core.parse(core.serialize(scene)),scene);
+});
+test('Naturgruppen respektieren Objektlimit, Kartenränder und ungültige Eingaben',()=>{
+const scene=core.fresh();
+for(const bad of ['<script>','invalid'])assert.throws(()=>core.plantGroup(scene,bad,0,0),/Naturgruppe/);
+assert.throws(()=>core.plantGroup(scene,'grove',NaN,0),/Naturgruppe/);
+assert.throws(()=>core.plantGroup(scene,'grove',18,18),/außerhalb/);
+assert.equal(scene.objects.length,6);
+while(scene.objects.length<67)core.add(scene,'box');
+const before=core.serialize(scene);
+assert.throws(()=>core.plantGroup(scene,'grove',0,0),/Maximal/);
+assert.equal(core.serialize(scene),before,'Fehler dürfen keine Teilgruppe zurücklassen');
+assert.throws(()=>core.plantGroup(scene,'garden',0,0),/Maximal/);
+assert.equal(core.serialize(scene),before);
+const nearLimit=core.fresh();
+while(nearLimit.objects.length<66)core.add(nearLimit,'box');
+const added=core.plantGroup(nearLimit,'grove',0,0);
+assert.equal(added.length,4);
+assert.equal(nearLimit.objects.length,core.LIMIT);
+assert.throws(()=>core.plantGroup(nearLimit,'garden',0,0),/Maximal/);
+});

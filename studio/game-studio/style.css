@@ -27,6 +27,14 @@
 .nature-objects button{border:1px solid #36515c;border-radius:7px;background:#1d303a;color:#c7dade;padding:8px 9px;text-align:left;font-size:11px;font-weight:600}
 .nature-objects button:hover:not(:disabled){background:#2a4850;border-color:#6aab9b}
 .nature-objects button span{display:inline-grid;place-items:center;width:22px;margin-right:6px;color:#b5d9c3}
+.nature-groups{margin-top:15px;padding:13px 0 0;border-top:1px solid var(--stroke);display:grid;gap:6px}
+.nature-groups>strong{color:#c7e6da;font-size:12px;margin-left:4px}
+.nature-groups>p{font-size:11px;color:var(--muted);margin:0 4px 5px}
+.nature-groups button{display:flex;align-items:center;gap:8px;width:100%;background:#254138;color:#d7f7e7;border:1px solid #447368;border-radius:8px;padding:9px 11px;text-align:left;font-size:11px;font-weight:700}
+.nature-groups button:hover:not(:disabled){background:#34584c;border-color:#80c7a7}
+.nature-groups button span{font-size:17px}
+.nature-groups button small{margin-left:auto;font-weight:500;color:#a8c5bb;white-space:nowrap}
+@media(max-width:750px){.nature-groups{grid-template-columns:repeat(2,minmax(0,1fr))}.nature-groups>strong,.nature-groups>p{grid-column:1/-1}.nature-groups button{flex-wrap:wrap;gap:4px}.nature-groups button small{width:100%;margin-left:0}}
 .lighting-tools{border-top:1px solid var(--stroke);padding:15px 12px 16px}
 .lighting-picker{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
 .lighting-picker button{display:grid;justify-items:center;gap:5px;min-width:0;padding:9px 1px 7px;border-radius:7px;border:1px solid #38545c;background:#1a2e37;color:#cadbdd;font-weight:600;font-size:10px}
