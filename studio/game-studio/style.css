@@ -67,3 +67,18 @@
 .touch-controls{position:absolute;inset:auto 20px 53px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.touch-controls[hidden]{display:none}.touch-controls button{pointer-events:auto;background:#142d35d9;color:#e8fff8;border:1px solid #78dfbf90;border-radius:11px;height:53px;min-width:56px;font-size:23px;font-weight:800;touch-action:none}.touch-controls button:active{background:#3a7867}.dpad{display:grid;gap:3px;justify-items:center}.dpad>div{display:flex;gap:3px}.touch-controls .jump{font-size:11px;padding:0 20px}
 @media(max-width:1070px){.layout{grid-template-columns:185px minmax(280px,1fr) 215px}.panel-header{padding:18px 13px 12px}.object-catalog{padding:0 8px 18px}.scene-title{display:none}.view-sub{display:none}}
 @media(max-width:750px){body{height:auto}.topbar{height:59px;padding:0 12px}.brand{font-size:16px}.version,.separator{display:none}.back span{display:none}.back{font-size:19px}.layout{height:auto;min-height:0;display:flex;flex-direction:column}.workspace{order:0;height:min(72dvh,670px);min-height:400px}.sidebar{order:1;border-right:0;border-top:1px solid var(--stroke);overflow:visible}.inspector{order:2;border-left:0;border-top:1px solid var(--stroke);overflow:visible}.sidebar .panel-header{padding:19px 16px 9px}.object-catalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:0 9px 13px}.object-catalog button{padding:9px 5px;display:grid;justify-items:center;gap:5px;font-size:11px}.object-catalog .add-symbol{display:none}.list-header{padding:14px}.scene-list{grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:15px}.sidefooter,.side-bottom{display:none}.inspector .panel-header{padding:17px}.empty-selection{padding:15px 15px 20px}.file-panel .file-actions{grid-template-columns:1fr 1fr}.view-label{font-size:9px}.viewport-top{padding:0 10px}.viewport-badge{top:11px;left:10px}.overlay-bottom{display:none}.touch-controls{left:12px;right:12px;bottom:20px}.touch-controls button{height:48px;min-width:48px}.action.primary{padding:9px 10px}}
+/* GPU-isolated GLB import preview */
+.glb-panel{border-top:1px solid var(--stroke);padding-bottom:16px}
+.glb-panel .panel-header{padding-bottom:9px}
+.glb-actions{padding:0 16px;display:flex;gap:7px;flex-wrap:wrap}
+.glb-actions .action{font-size:11px;flex:1}
+.glb-placeholder{margin:12px 16px 0;padding:16px 12px;border-radius:8px;border:1px dashed #45606d;color:#a8bfc7;text-align:center;font-size:11px;background:#101d25}
+.glb-preview-wrap{margin:12px 16px 0;background:#0d1b28;border:1px solid #34505d;border-radius:9px;overflow:hidden}
+.glb-preview-wrap[hidden],.glb-placeholder[hidden],.glb-actions button[hidden]{display:none}
+#glbPreview{display:block;width:100%;height:210px;touch-action:none;cursor:grab}
+#glbPreview:active{cursor:grabbing}
+.glb-help{display:block;text-align:center;color:#a3c5c6;font-size:10px;padding:5px}
+.glb-info{margin:10px 16px 0;font-size:11px;line-height:1.55;color:#b5d9ca;overflow-wrap:anywhere}
+.glb-info[data-error="true"]{color:#ffb4aa}
+.glb-panel .glb-warning{margin:9px 16px 0;line-height:1.5}
+@media(max-width:750px){#glbPreview{height:180px}.glb-actions .action{min-height:42px}}
