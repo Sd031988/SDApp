@@ -126,3 +126,6 @@ html[data-sd-theme="dark"] .app-search-label input{background:#14241f;color:#fff
 
 /* Document tools now occupy the fourth dashboard shortcut. */
 .featured-docs{border-top:3px solid #b38e56}
+
+/* Keep filter chips in their own horizontal scroller on compact phones. */
+@media(max-width:650px){.hub-shell .app-filter{max-width:100%;contain:inline-size}.hub-shell .main{max-width:100%;min-width:0}}
