@@ -1,0 +1,62 @@
+'use strict';
+const {chromium}=require('playwright');
+const {spawn}=require('node:child_process');
+const assert=require('node:assert/strict');
+(async()=>{
+ const serverScript=[
+  "const http=require('http'),fs=require('fs'),path=require('path');",
+  "http.createServer((req,res)=>{",
+  "let p;try{p=path.resolve(process.cwd(),'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));}",
+  "catch(_){res.writeHead(400).end();return;}",
+  "if(!p.startsWith(process.cwd()+path.sep)){res.writeHead(403).end();return;}",
+  "fs.stat(p,(e,st)=>{if(e||!st.isFile()){res.writeHead(404).end();return;}",
+  "res.setHeader('Content-Type',p.endsWith('.js')?'text/javascript':p.endsWith('.css')?'text/css':'text/html');",
+  "fs.createReadStream(p).pipe(res);});",
+  "}).listen(8878,'127.0.0.1');"
+ ].join('\n');
+ const server=spawn(process.execPath,['-e',serverScript],{stdio:'ignore'});
+ let browser;
+ try{
+  browser=await chromium.launch({headless:true});
+  const page=await browser.newPage();
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:8878/studio/index.html',{waitUntil:'domcontentloaded',timeout:30000});
+  await page.locator('#app').waitFor({state:'visible',timeout:20000});
+  const original=await page.evaluate(()=>JSON.stringify(S.p?.dateien||{}));
+  await page.locator('#kiCodeBtn').click();
+  const marker='window.__notExecutedByStaticTests=true';
+  await page.locator('#kiResult').fill([
+   '### Datei: index.html','~~~html',
+   '<a href="/faq" target="_blank">FAQ</a>',
+   '<script>'+marker+';</script>',
+   '~~~'
+  ].join('\n'));
+  await page.locator('#kiAnalyse').click();
+  await page.locator('#kiRepairPrepare').click();
+  assert.equal(await page.locator('#kiTestRun').isEnabled(),true);
+  await page.locator('#kiTestRun').click();
+  assert.match(await page.locator('#kiTestStatus').innerText(),/1 behoben, 0 neu/);
+  assert.equal(await page.locator('#kiRepairStage').isEnabled(),true);
+  assert.equal(await page.evaluate(()=>window.__notExecutedByStaticTests),undefined);
+  assert.equal(await page.evaluate(()=>JSON.stringify(S.p?.dateien||{})),original);
+  await page.locator('#kiRepairStage').click();
+  assert.match(await page.locator('#kiDiffNew').innerText(),/noopener noreferrer/);
+  assert.equal(await page.evaluate(()=>window.__notExecutedByStaticTests),undefined);
+  assert.equal(await page.evaluate(()=>JSON.stringify(S.p?.dateien||{})),original);
+  await page.locator('#kiDiffClose').click();
+  await page.locator('#kiClose').click();
+  const regression=await page.evaluate(()=>{
+   const loop=window.SDKITestLoop,review=window.SDKICodeReview.review,graph=window.SDStudioTaskAgent.projectGraph;
+   const base=loop.run([{path:'index.html',content:'<h1>ok</h1>'}],{},review,graph);
+   const next=loop.run([{path:'index.html',content:'<h1>ok</h1><script src="missing.js"></script>'}],{},review,graph);
+   return loop.compare(base,next);
+  });
+  assert.equal(regression.canStage,false);
+  assert(regression.introduced.some(f=>f.rule==='asset'));
+  assert.deepEqual(errors,[]);
+  console.log('Safe static before/after browser loop passed');
+ }finally{
+  await browser?.close();
+  server.kill();
+ }
+})().catch(error=>{console.error(error);process.exitCode=1});
