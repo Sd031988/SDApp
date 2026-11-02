@@ -21,7 +21,7 @@ function clearSegment(a,b){
 }
 const STEP=.2,NX=39,NZ=20;
 const nodes=Array.from({length:NX*NZ},(_,id)=>{
-  const x=B.xmin+(id%NX)*STEP,z=B.zmin+Math.floor(id/NX)*STEP;
+  const x=clampWalk(B.xmin+(id%NX)*STEP,B.xmin,B.xmax),z=clampWalk(B.zmin+Math.floor(id/NX)*STEP,B.zmin,B.zmax);
   return {x,z,valid:inside(x,z)};
 });
 export function walkablePoint(x,z){
@@ -102,7 +102,7 @@ export function gardenGait(distance,speed,turnRate=0,reducedMotion=false){
   const phase=(Number.isFinite(distance)?Math.max(0,distance):0)*11.5;
   const weight=clampWalk(Number.isFinite(speed)?speed/1.2:0,0,1)*(reducedMotion?.3:1);
   const lift=a=>.16*weight*Math.pow(Math.max(0,Math.sin(a)),1.4);
-  const reach=a=>.085*weight*Math.cos(a);
+  const reach=a=>weight?.085*weight*Math.cos(a):0;
   const left=phase,right=phase+Math.PI;
   const turn=clampWalk(Number.isFinite(turnRate)?turnRate:0,-4,4)*weight;
   return {frontLift:[lift(left),lift(right)],hindLift:[lift(right),lift(left)],
