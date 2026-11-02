@@ -1,0 +1,25 @@
+/* SD Code-Studio offline review – compact dialog for desktop and mobile */
+#agentReviewOverlay[hidden]{display:none!important}
+#agentReviewOverlay{position:fixed;inset:0;z-index:110000;background:rgba(5,7,20,.84);display:grid;place-items:center;padding:14px}
+.agentReviewDialog{width:min(900px,100%);max-height:min(90vh,900px);overflow:auto;background:#211a38;color:#ece6ff;
+ border:1px solid #64518b;border-radius:16px;box-shadow:0 20px 70px #0009;padding:20px;font:14px/1.55 system-ui,sans-serif}
+.agentReviewHead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.agentReviewHead h2{font-size:22px;margin:0}
+.agentReviewHead p{margin:4px 0 12px;color:#c9bee5}
+.agentReviewDialog button{background:#3b2d61;color:#fff;border:1px solid #8e78ba;padding:8px 12px;border-radius:8px;cursor:pointer}
+.agentReviewDialog button:hover,.agentReviewDialog button:focus-visible{background:#55417d}
+.agentReviewDialog button:disabled{opacity:.5;cursor:not-allowed}
+.agentReviewSummary{padding:10px 12px;border:1px solid #73579c;border-radius:8px;margin:8px 0;font-weight:700}
+.agentReviewSummary[data-state="blocked"]{border-color:#c17878}
+.agentReviewSummary[data-state="attention"]{border-color:#c5a761}
+.agentReviewSmall{font-size:12px;color:#c9bee5;margin:9px 0 16px}
+.agentReviewCols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.agentReviewDialog h3{margin:6px 0 8px;font-size:15px}
+.agentReviewDialog ol,.agentReviewDialog ul{margin:0 0 16px;padding-left:20px}
+.agentReviewDialog li{margin:0 0 8px}
+.agentReviewDialog li p{margin:2px 0 0;color:#c9bee5;overflow-wrap:anywhere}
+.agentReviewActions{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;border-top:1px solid #493b64}
+#agentReviewManualCopy{display:block;width:100%;min-height:95px;background:#141024;color:#ece6ff;border:1px solid #75648a;border-radius:6px;padding:8px}
+#agentReviewManualCopy[hidden]{display:none}
+#agentReviewCopyStatus{min-height:18px}
+@media(max-width:700px){#agentReviewOverlay{padding:8px}.agentReviewDialog{padding:14px;max-height:95vh}.agentReviewCols{grid-template-columns:1fr}.agentReviewHead h2{font-size:19px}}
