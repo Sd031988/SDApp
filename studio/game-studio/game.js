@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
-const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene);
 const player={x:0,y:0,z:5,vy:0};
@@ -62,19 +62,23 @@ function object(o){const s=o.scale,x=o.x,z=o.z;
 if(o.type==='box')part('box',o.color,x,s,z,s,s,s);
 if(o.type==='sphere')part('sphere',o.color,x,s,z,s,s,s);
 if(o.type==='column')part('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
+if(o.type==='rock')part('sphere',o.color,x,.75*s,z,1.05*s,.74*s,1.2*s);
+if(o.type==='hill')part('sphere',o.color,x,.1*s,z,2.3*s,.9*s,2.3*s);
 if(o.type==='tree'){part('column','#735d4b',x,1.1*s,z,.27*s,1.1*s,.27*s);part('cone',o.color,x,2.8*s,z,1.28*s,1.45*s,1.28*s);part('cone','#408d75',x,3.7*s,z,.88*s,1.1*s,.88*s);}
 if(!playing&&o.id===selected)part('box','#f8d481',x,.05,z,1.08*s,.05,1.08*s);
 }
 function character(){part('column','#416b8e',player.x,player.y+.63,player.z,.37,.6,.37);part('sphere','#e8c6a2',player.x,player.y+1.52,player.z,.43,.43,.43);part('sphere','#27394d',player.x-.14,player.y+1.59,player.z+.37,.05,.06,.05);part('sphere','#27394d',player.x+.14,player.y+1.59,player.z+.37,.05,.06,.05);}
 function dimensions(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);return{w,h};}
 function matrices(){const{w,h}=dimensions(),tx=playing?player.x:camera.targetX,tz=playing?player.z:camera.targetZ,d=playing?10:camera.distance,e=playing?.5:camera.elev;const eye=[tx+d*Math.sin(camera.azimuth)*Math.cos(e),d*Math.sin(e)+(playing?2:0),tz+d*Math.cos(camera.azimuth)*Math.cos(e)];return{view:look(eye,[tx,playing?1.1+player.y:0,tz]),proj:perspective(.838,w/h,.1,120)};}
-function render(){const m=matrices();gl.clearColor(.065,.12,.18,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));part('box','#365e54',0,-.26,0,20,.25,20);draw(grid,'#517d72',id(),gl.LINES);scene.objects.forEach(object);character();}
+const terrains={meadow:{sky:[.065,.12,.18],soil:'#365e54',grid:'#517d72'},sand:{sky:[.17,.14,.12],soil:'#a48b65',grid:'#c5a879'},snow:{sky:[.12,.17,.22],soil:'#bacbd3',grid:'#d5e3e6'}};
+function render(){const m=matrices(),terrain=terrains[scene.ground]||terrains.meadow;gl.clearColor(...terrain.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));part('box',terrain.soil,0,-.26,0,20,.25,20);draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();}
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
-function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:1)*o.scale,o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
+function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:1)*o.scale,o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
-function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();}
+function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
+function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();}
 function syncDirty(){dirty=Core.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
 function refreshHistory(){$('undoAction').disabled=playing||!history.canUndo;$('redoAction').disabled=playing||!history.canRedo;}
 function changed(msg){history.record(scene);syncDirty();say(msg);list();}
@@ -94,6 +98,11 @@ function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(
 function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
 function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
+document.querySelectorAll('[data-ground]').forEach(b=>b.addEventListener('click',()=>{
+if(playing)return;
+try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[scene.ground]+'.');}
+catch(err){say(err.message);}
+}));
 $('modeEdit').addEventListener('click',()=>mode(false));$('modePlay').addEventListener('click',()=>mode(true));
 $('saveScene').addEventListener('click',save);$('loadScene').addEventListener('click',()=>$('sceneFile').click());
 $('sceneFile').addEventListener('change',e=>{load(e.target.files[0]);e.target.value='';});

@@ -89,3 +89,36 @@ assert.equal(history.canRedo,false);
 assert.throws(()=>core.createHistory(fresh,1),/Verlaufslänge/);
 assert.throws(()=>core.createHistory(fresh,101),/Verlaufslänge/);
 });
+
+test('Landschaft: Wiese, Wüste und Schnee bleiben beim Export erhalten',()=>{
+const scene=core.fresh();
+assert.equal(scene.ground,'meadow');
+for(const ground of core.GROUNDS){
+core.setGround(scene,ground);
+const restored=core.parse(core.serialize(scene));
+assert.equal(restored.ground,ground);
+}
+assert.throws(()=>core.setGround(scene,'lava'),/Landschaftstyp/);
+assert.throws(()=>core.parse(JSON.stringify({...scene,ground:'<script>'})),/Landschaftstyp/);
+});
+test('Ältere Szenen ohne Bodenangabe laden rückwärtskompatibel als Wiese',()=>{
+const legacy=core.fresh();delete legacy.ground;
+const imported=core.parse(JSON.stringify(legacy));
+assert.equal(imported.ground,'meadow');
+assert.deepEqual(imported.objects,legacy.objects);
+const history=core.createHistory(imported);
+core.setGround(imported,'sand');
+assert.equal(history.record(imported),true);
+assert.equal(history.undo().ground,'meadow');
+assert.equal(history.redo().ground,'sand');
+});
+test('Neue Natur-Objekte Felsen und Hügel bleiben validiert und kollidieren',()=>{
+const scene=core.fresh();
+const rock=core.add(scene,'rock',12,12),hill=core.add(scene,'hill',-12,-12);
+assert.equal(rock.type,'rock');
+assert.equal(hill.type,'hill');
+assert.equal(hill.color,'#5ebbb0');
+assert.equal(core.collides(12,12,scene.objects),true);
+assert.equal(core.collides(-11,-12,scene.objects),true);
+assert.deepEqual(core.parse(core.serialize(scene)),scene);
+});
