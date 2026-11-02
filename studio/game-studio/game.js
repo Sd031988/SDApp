@@ -42,10 +42,16 @@ list.push([p,s,q]);if(!cone){list.push([s,t,q]);list.push([[0,1,0],s,t]);}list.p
 return triangles(list);}
 function buildTerrain(){
 const t=scene.terrain,vertices=[],size=Core.GRID,step=Core.STEP;
-const node=(col,row)=>[-20+col*step,t[row*size+col],-20+row*step];
+function node(col,row){
+const index=row*size+col,x=-20+col*step,z=-20+row*step;
+const lx=Math.max(col-1,0),rx=Math.min(col+1,size-1);
+const nz=Math.max(row-1,0),pz=Math.min(row+1,size-1);
+const dx=(t[row*size+rx]-t[row*size+lx])/((rx-lx)*step);
+const dz=(t[pz*size+col]-t[nz*size+col])/((pz-nz)*step);
+return{position:[x,t[index],z],normal:norm([-dx,1,-dz])};
+}
 function face(a,b,c){
-const normal=norm(cross(b.map((v,i)=>v-a[i]),c.map((v,i)=>v-a[i])));
-for(const v of [a,b,c])vertices.push(...v,...normal);
+for(const v of [a,b,c])vertices.push(...v.position,...v.normal);
 }
 for(let row=0;row<size-1;row++)for(let col=0;col<size-1;col++){
 const a=node(col,row),b=node(col+1,row),c=node(col,row+1),d=node(col+1,row+1);
@@ -59,18 +65,19 @@ function compile(type,source){const shader=gl.createShader(type);gl.shaderSource
 function setup(){
 gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
 if(!gl)throw Error('WebGL nicht verfügbar. Bitte einen Browser mit aktivierter 3D-Grafik verwenden.');
-const vertex='attribute vec3 pos;attribute vec3 normal;uniform mat4 proj,view,model;varying float light;void main(){vec3 n=normalize(mat3(model)*normal);light=.57+.43*max(dot(n,normalize(vec3(-.5,1.,.7))),0.);gl_Position=proj*view*model*vec4(pos,1.);}';
-const fragment='precision mediump float;uniform vec3 tint;varying float light;void main(){gl_FragColor=vec4(tint*light,1.);}';
+// Simple physically-inspired directional light, hemispheric fill, distance haze and procedural terrain tint.
+const vertex='attribute vec3 pos;attribute vec3 normal;uniform mat4 proj,view,model;varying vec3 worldPos;varying vec3 worldNormal;void main(){vec4 world=model*vec4(pos,1.);worldPos=world.xyz;vec3 invScale=vec3(1./max(abs(model[0][0]),.001),1./max(abs(model[1][1]),.001),1./max(abs(model[2][2]),.001));worldNormal=normalize(normal*invScale);gl_Position=proj*view*world;}';
+const fragment='precision mediump float;uniform vec3 tint,sunColor,sunDir,ambientColor,fogColor,eyePosition;uniform float terrainKind;varying vec3 worldPos,worldNormal;void main(){vec3 n=normalize(worldNormal);vec3 base=tint;if(terrainKind>.5){float slope=1.-clamp(n.y,0.,1.);float h=clamp(worldPos.y/3.,0.,1.);float variation=sin(worldPos.x*1.37)*sin(worldPos.z*1.11)*.035;if(terrainKind<1.5){base=mix(vec3(.23,.43,.29),vec3(.43,.49,.32),h*.6);base=mix(base,vec3(.39,.36,.31),smoothstep(.13,.7,slope)*.55);}else if(terrainKind<2.5){base=mix(vec3(.69,.56,.37),vec3(.83,.73,.54),h);base=mix(base,vec3(.61,.47,.35),smoothstep(.15,.75,slope)*.35);}else{base=mix(vec3(.74,.83,.88),vec3(.92,.96,1.),h);base=mix(base,vec3(.54,.66,.72),smoothstep(.13,.7,slope)*.4);}base=clamp(base+variation,0.,1.);}float lambert=max(dot(n,sunDir),0.);vec3 light=ambientColor*(.72+.28*clamp(n.y,0.,1.))+sunColor*lambert;vec3 viewDir=normalize(eyePosition-worldPos);float gloss=pow(max(dot(reflect(-sunDir,n),viewDir),0.),24.);vec3 shaded=base*light+sunColor*gloss*(terrainKind>.5?.025:.08);float distanceToEye=length(eyePosition-worldPos);float haze=clamp(1.-exp(-distanceToEye*distanceToEye/6500.),0.,.38);gl_FragColor=vec4(mix(shaded,fogColor,haze),1.);}';
 program=gl.createProgram();gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(program);
 if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('3D-Programmfehler: '+gl.getProgramInfoLog(program));
 gl.useProgram(program);
-u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint')};
+u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint'),sunColor:gl.getUniformLocation(program,'sunColor'),sunDir:gl.getUniformLocation(program,'sunDir'),ambientColor:gl.getUniformLocation(program,'ambientColor'),fogColor:gl.getUniformLocation(program,'fogColor'),eyePosition:gl.getUniformLocation(program,'eyePosition'),terrainKind:gl.getUniformLocation(program,'terrainKind')};
 gl.enableVertexAttribArray(u.pos);gl.enableVertexAttribArray(u.normal);gl.enable(gl.DEPTH_TEST);
 shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true)};grid=gridlines();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
-function draw(shape,tint,m,mode){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
+function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
 function part(shape,tint,x,y,z,a,b,c){draw(shape,tint,mm(translate(x,y,z),scale(a,b,c)));}
 function object(o){const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z),drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
 if(o.type==='box')drawPart('box',o.color,x,s,z,s,s,s);
@@ -84,16 +91,33 @@ if(!playing&&o.id===selected)drawPart('box','#f8d481',x,.05,z,1.08*s,.05,1.08*s)
 function character(){const y=player.y+Core.terrainHeight(scene.terrain,player.x,player.z);part('column','#416b8e',player.x,y+.63,player.z,.37,.6,.37);part('sphere','#e8c6a2',player.x,y+1.52,player.z,.43,.43,.43);part('sphere','#27394d',player.x-.14,y+1.59,player.z+.37,.05,.06,.05);part('sphere','#27394d',player.x+.14,y+1.59,player.z+.37,.05,.06,.05);}
 function dimensions(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);return{w,h};}
 function matrices(){const{w,h}=dimensions(),tx=playing?player.x:camera.targetX,tz=playing?player.z:camera.targetZ,d=playing?10:camera.distance,e=playing?.5:camera.elev;const eye=[tx+d*Math.sin(camera.azimuth)*Math.cos(e),d*Math.sin(e)+(playing?2:0)+(playing?Core.terrainHeight(scene.terrain,player.x,player.z):0),tz+d*Math.cos(camera.azimuth)*Math.cos(e)];const target=[tx,playing?1.1+player.y+Core.terrainHeight(scene.terrain,player.x,player.z):0,tz];return{view:look(eye,target),proj:perspective(.838,w/h,.1,120),eye,target};}
-const terrains={meadow:{sky:[.065,.12,.18],soil:'#365e54',grid:'#517d72'},sand:{sky:[.17,.14,.12],soil:'#a48b65',grid:'#c5a879'},snow:{sky:[.12,.17,.22],soil:'#bacbd3',grid:'#d5e3e6'}};
-function render(){const m=matrices(),terrain=terrains[scene.ground]||terrains.meadow;gl.clearColor(...terrain.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));part('box',terrain.soil,0,-.26,0,20,.25,20);if(terrainSource!==scene.terrain)buildTerrain();draw(terrainMesh,terrain.soil,id());draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();}
+const terrains={meadow:{soil:'#365e54',grid:'#517d72',kind:1},sand:{soil:'#a48b65',grid:'#c5a879',kind:2},snow:{soil:'#bacbd3',grid:'#d5e3e6',kind:3}};
+const lightingPresets={
+dawn:{sky:[.40,.25,.27],sun:[1,.68,.47],ambient:[.30,.28,.36],direction:[-.8,.38,.32],fog:[.40,.30,.34]},
+day:{sky:[.32,.54,.73],sun:[.89,.92,.99],ambient:[.36,.40,.43],direction:[-.5,.92,.36],fog:[.36,.52,.66]},
+sunset:{sky:[.33,.20,.30],sun:[1,.52,.32],ambient:[.30,.24,.35],direction:[.8,.29,.22],fog:[.40,.28,.35]},
+night:{sky:[.035,.052,.09],sun:[.36,.44,.63],ambient:[.13,.17,.26],direction:[.46,.57,-.4],fog:[.09,.13,.20]}
+};
+function render(){
+const m=matrices(),terrain=terrains[scene.ground]||terrains.meadow,light=lightingPresets[scene.lighting]||lightingPresets.day;
+gl.clearColor(...light.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));
+gl.uniform3fv(u.sunColor,light.sun);gl.uniform3fv(u.sunDir,norm(light.direction));gl.uniform3fv(u.ambientColor,light.ambient);
+gl.uniform3fv(u.fogColor,light.fog);gl.uniform3fv(u.eyePosition,m.eye);
+part('box',terrain.soil,0,-.26,0,20,.25,20);
+if(terrainSource!==scene.terrain)buildTerrain();
+draw(terrainMesh,terrain.soil,id(),gl.TRIANGLES,terrain.kind);
+draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
+}
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
 function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
 function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
+function refreshLighting(){document.querySelectorAll('[data-light]').forEach(b=>{const active=b.dataset.light===scene.lighting;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
 function selectBrush(tool){brush=tool;document.querySelectorAll('[data-brush]').forEach(b=>{const active=b.dataset.brush===tool;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});canvas.classList.toggle('sculpting',tool!=='orbit');$('editHint').textContent=tool==='orbit'?'Maus oder Finger ziehen: Kamera drehen · Mausrad: Zoom · Objekt antippen: auswählen':'Pinsel aktiv: Finger oder Maus über das Gelände ziehen · Mit „Kamera“ wieder drehen';}
-function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();selectBrush(brush);}
+function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();refreshLighting();selectBrush(brush);}
 function syncDirty(){dirty=Core.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
 function refreshHistory(){$('undoAction').disabled=playing||!history.canUndo;$('redoAction').disabled=playing||!history.canRedo;}
 function changed(msg){history.record(scene);syncDirty();say(msg);list();}
@@ -114,6 +138,11 @@ function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'app
 function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
 document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
+document.querySelectorAll('[data-light]').forEach(b=>b.addEventListener('click',()=>{
+if(playing)return;
+try{Core.setLighting(scene,b.dataset.light);changed('Lichtstimmung aktualisiert.');}
+catch(err){say(err.message);}
+}));
 document.querySelectorAll('[data-ground]').forEach(b=>b.addEventListener('click',()=>{
 if(playing)return;
 try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[scene.ground]+'.');}
