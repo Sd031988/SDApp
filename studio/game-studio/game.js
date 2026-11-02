@@ -53,7 +53,7 @@ return triangles(faces.map(face=>face.map(index=>points[index])));
 }
 function gem(){
 const top=[0,1,0],bottom=[0,-1,0],rim=[[1,0,0],[0,0,1],[-1,0,0],[0,0,-1]],faces=[];
-for(let i=0;i<4;i++){const a=rim[i],b=rim[(i+1)%4];faces.push([top,a,b],[bottom,b,a]);}
+for(let i=0;i<4;i++){const a=rim[i],b=rim[(i+1)%4];faces.push([top,b,a],[bottom,a,b]);}
 return triangles(faces);
 }
 function buildTerrain(){
