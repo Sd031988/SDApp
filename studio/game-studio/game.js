@@ -1,10 +1,12 @@
 /* SD Game-Studio: local WebGL 3D rendering and isolated scene editing. */
 (function(){
 'use strict';
-const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
+const Core=window.SDGameCore,Perf=window.SDGamePerformance,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
 const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
+const profiler=Perf.createProfiler();
+let profileOn=false,benchOriginal=null,lastProfUI=0,drawCallCount=0;
 const player={x:0,y:0,z:5,vy:0};
 const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
@@ -87,7 +89,7 @@ shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),b
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
-function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
+function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);if(profileOn)drawCallCount++;}
 function part(shape,tint,x,y,z,a,b,c){draw(shape,tint,mm(translate(x,y,z),scale(a,b,c)));}
 function object(o){
 const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z);
@@ -213,7 +215,7 @@ draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
 function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
-function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
+function select(id){if(benchOriginal)id=null;selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
 function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
@@ -235,18 +237,18 @@ if(playing||selected==null)return;
 try{const copy=Core.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
 catch(err){say(err.message);}
 }
-function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
-function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
+function mode(play){if(benchOriginal)return;if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
+function add(type){if(playing||benchOriginal)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
 function addNatureGroup(group){
-if(playing)return;
+if(playing||benchOriginal)return;
 try{
 const objects=Core.plantGroup(scene,group,Math.round(camera.targetX),Math.round(camera.targetZ));
 selected=objects[objects.length-1].id;
 changed((group==='grove'?'Waldstück':'Blumenwiese')+' angelegt ('+objects.length+' Objekte).');
 }catch(err){say(err.message);}
 }
-function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
-function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
+function save(){if(benchOriginal){say('Benchmark ist schreibgeschützt. Erst beenden.');return;}const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
+function load(file){if(benchOriginal||!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
 document.querySelectorAll('[data-nature-group]').forEach(b=>b.addEventListener('click',()=>addNatureGroup(b.dataset.natureGroup)));
 document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
@@ -265,10 +267,72 @@ if(playing)return;
 try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[scene.ground]+'.');}
 catch(err){say(err.message);}
 }));
+function profileReadout(){
+if(!profileOn)return;
+const stats=profiler.snapshot();
+$('perfFrames').textContent=String(stats.frames);
+$('perfFps').textContent=stats.fps.toFixed(1);
+$('perfMedian').textContent=stats.medianMs.toFixed(1)+' ms';
+$('perfP95').textContent=stats.p95Ms.toFixed(1)+' ms';
+$('perfDraws').textContent=String(stats.drawCalls);
+$('perfObjects').textContent=String(stats.objects);
+$('perfCpu').textContent=stats.renderCpuMs.toFixed(1)+' ms';
+$('perfSlow').textContent=String(stats.slowFrames);
+}
+function lockBenchmark(locked){
+document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=locked);
+for(const name of ['saveScene','loadScene','resetScene','modePlay','sceneFile','benchmarkKind'])$(name).disabled=locked;
+}
+function stopBenchmark(){
+if(!benchOriginal)return;
+const stats=profiler.snapshot(),original=benchOriginal;
+benchOriginal=null;
+scene=original.scene;
+selected=original.selected;
+Object.assign(camera,original.camera);
+Object.assign(player,original.player);
+lockBenchmark(false);
+list();syncDirty();
+$('benchmarkToggle').textContent='Testwelt starten';
+$('benchmarkResult').textContent='Letzter Test: '+original.name+' · p95 '+stats.p95Ms.toFixed(1)+' ms · '+stats.drawCalls+' Draw Calls · '+stats.frames+' Frames (Browser-Baseline, kein GPU-Timing)';
+say('Testwelt beendet. Originalszene unverändert wiederhergestellt.');
+}
+function toggleBenchmark(){
+if(benchOriginal){stopBenchmark();return;}
+if(playing)mode(false);
+let sample;
+try{sample=Perf.createBenchmark(Core,$('benchmarkKind').value)}
+catch(err){say(err.message);return;}
+benchOriginal={scene,selected,name:sample.name,camera:{...camera},player:{...player}};
+scene=sample;selected=null;
+profiler.reset();
+profileOn=true;
+$('profilerToggle').setAttribute('aria-pressed','true');
+$('profilerToggle').textContent='Profiler an';
+$('performancePanel').hidden=false;
+list();
+lockBenchmark(true);
+$('sceneName').textContent=sample.name+' · Schreibgeschützt';
+$('benchmarkToggle').textContent='Testwelt beenden';
+$('benchmarkResult').textContent='Test läuft lokal. Messwerte sind abhängig von Gerät und Browser.';
+say('Benchmark aktiv: Nur Vorschau, keine Änderungen am Projekt.');
+}
+function toggleProfile(){
+if(benchOriginal)stopBenchmark();
+profileOn=!profileOn;
+profiler.reset();
+$('performancePanel').hidden=!profileOn;
+$('profilerToggle').setAttribute('aria-pressed',String(profileOn));
+$('profilerToggle').textContent=profileOn?'Profiler an':'Profiler aus';
+if(profileOn)profileReadout();
+}
+$('profilerToggle').addEventListener('click',toggleProfile);
+$('benchmarkToggle').addEventListener('click',toggleBenchmark);
+
 $('modeEdit').addEventListener('click',()=>mode(false));$('modePlay').addEventListener('click',()=>mode(true));
 $('saveScene').addEventListener('click',save);$('loadScene').addEventListener('click',()=>$('sceneFile').click());
 $('sceneFile').addEventListener('change',e=>{load(e.target.files[0]);e.target.value='';});
-$('resetScene').addEventListener('click',()=>{if(dirty&&!window.confirm('Ungespeicherte Änderungen wirklich verwerfen?'))return;scene=Core.fresh();selected=null;changed('Beispielwelt wiederhergestellt (rückgängig möglich).');});
+$('resetScene').addEventListener('click',()=>{if(benchOriginal)return;if(dirty&&!window.confirm('Ungespeicherte Änderungen wirklich verwerfen?'))return;scene=Core.fresh();selected=null;changed('Beispielwelt wiederhergestellt (rückgängig möglich).');});
 $('deleteObject').addEventListener('click',()=>{if(selected!=null){Core.remove(scene,selected);selected=null;changed('Objekt entfernt.');}});
 $('duplicateObject').addEventListener('click',duplicateSelected);
 $('undoAction').addEventListener('click',()=>travel('undo'));
@@ -278,7 +342,7 @@ $('cameraReset').addEventListener('click',()=>{Object.assign(camera,{azimuth:.55
 const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump'};
 function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();keys[k]=down;}}
 function shortcut(e){
-if(playing||!(e.ctrlKey||e.metaKey)||e.altKey||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName)||doc.activeElement.isContentEditable)return false;
+if(benchOriginal||playing||!(e.ctrlKey||e.metaKey)||e.altKey||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName)||doc.activeElement.isContentEditable)return false;
 const k=e.key.toLowerCase();
 if(k==='z'){e.preventDefault();travel(e.shiftKey?'redo':'undo');return true;}
 if(k==='y'&&!e.shiftKey){e.preventDefault();travel('redo');return true;}
@@ -337,12 +401,19 @@ canvas.addEventListener('pointercancel',e=>{if(pointer&&pointer.id===e.pointerId
 canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.distance=clamp(camera.distance+e.deltaY*.02,6,48);}},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let before=0;function tick(now){
-const dt=before?Math.min((now-before)/1000,.05):0;before=now;
+const frameMs=before?now-before:0;
+const dt=Math.min(Math.max(0,frameMs)/1000,.05);before=now;
 if(!doc.hidden){
 const previousX=player.x,previousZ=player.z;
 if(playing)Core.move(player,keys,dt,scene.objects,camera.azimuth);
 updatePose(dt,Math.hypot(player.x-previousX,player.z-previousZ)>.00001);
+const cpuStart=profileOn?performance.now():0;
+if(profileOn)drawCallCount=0;
 render();
+if(profileOn){
+profiler.record(frameMs,drawCallCount,scene.objects.length,performance.now()-cpuStart);
+if(now-lastProfUI>500){profileReadout();lastProfUI=now;}
+}
 }
 requestAnimationFrame(tick);
 }

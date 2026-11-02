@@ -7,9 +7,10 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-nature7">
-<script defer src="./scene-core.js?v=20261102-nature7"></script>
-<script defer src="./game.js?v=20261102-nature7"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-profiler1">
+<script defer src="./scene-core.js?v=20261102-profiler1"></script>
+<script defer src="./performance.js?v=20261102-profiler1"></script>
+<script defer src="./game.js?v=20261102-profiler1"></script>
 </head>
 <body>
 <header class="topbar">
@@ -90,6 +91,7 @@
 <div class="view-modes" role="group" aria-label="Modus">
 <button id="modeEdit" class="mode active" aria-pressed="true" type="button">✦ Bearbeiten</button>
 <button id="modePlay" class="mode" aria-pressed="false" type="button">▶ Spielen</button>
+<button id="profilerToggle" class="mode profiler-toggle" aria-pressed="false" type="button">Profiler aus</button>
 </div>
 </div>
 <div class="canvas-container">
@@ -129,6 +131,28 @@
 <section class="file-panel"><div class="panel-header"><small>PROJEKT</small><strong>Szene verwalten</strong></div>
 <div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
 <p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
+</section>
+<section class="performance-tools" aria-label="3D-Performance-Messung">
+<div class="panel-header"><small>ENGINE / PERFORMANCE</small><strong>3D-Profiler</strong><p>FPS und Renderlast messen – keine Datenübertragung.</p></div>
+<div id="performancePanel" class="performance-body" hidden>
+<dl class="performance-stats">
+<div><dt>FPS (Median)</dt><dd id="perfFps">0.0</dd></div>
+<div><dt>Framezeit (Median)</dt><dd id="perfMedian">0.0 ms</dd></div>
+<div><dt>Framezeit p95</dt><dd id="perfP95">0.0 ms</dd></div>
+<div><dt>Draw Calls / Frame</dt><dd id="perfDraws">0</dd></div>
+<div><dt>Objekte in Szene</dt><dd id="perfObjects">0</dd></div>
+<div><dt>CPU-Renderaufrufe</dt><dd id="perfCpu">0.0 ms</dd></div>
+<div><dt>Langsame Frames (&gt;33,4 ms)</dt><dd id="perfSlow">0</dd></div>
+<div><dt>Messframes</dt><dd id="perfFrames">0</dd></div>
+</dl>
+<label class="benchmark-label" for="benchmarkKind">Reproduzierbare Testwelt
+<select id="benchmarkKind">
+<option value="forest">Dichter Wald</option><option value="interior">Innenraum / Architektur</option><option value="open">Offene Landschaft</option>
+</select></label>
+<button type="button" id="benchmarkToggle" class="action">Testwelt starten</button>
+<p id="benchmarkResult" class="benchmark-result">Die Testwelt ersetzt die Ansicht nur vorübergehend. Originalszene bleibt erhalten.</p>
+<p class="privacy">WebGL-/Browser-Frametimes; kein echtes GPU-Timing und kein Hardware-Benchmark. In Testwelten sind Bearbeitung und Export gesperrt.</p>
+</div>
 </section>
 <div class="side-bottom">SD GAME-STUDIO <span>v0.7 · ALPHA</span></div>
 </aside>
