@@ -8,11 +8,12 @@ if(root&&root.document)root.SDGameCore=api;
 const VERSION=1,LIMIT=70,WORLD=19;
 const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
+const LIGHTS=Object.freeze(['dawn','day','sunset','night']);
 const GRID=17,STEP=40/(GRID-1),MAX_HEIGHT=3,TOOLS=Object.freeze(['raise','lower','smooth']);
 const PALETTE=Object.freeze(['#d7a35c','#5ebbb0','#8fa4e9','#d8797d','#bca3e5','#dbcc97']);
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const numeric=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
-function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',objects:[
+function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',lighting:'day',objects:[
 {id:1,type:'tree',x:-6,z:-5,scale:1.2,color:'#5ebbb0'},
 {id:2,type:'tree',x:6,z:-5,scale:1.05,color:'#5ebbb0'},
 {id:3,type:'box',x:-3,z:2,scale:1.2,color:'#d7a35c'},
@@ -24,11 +25,13 @@ function validate(data){
 if(!data||Array.isArray(data)||typeof data!=='object'||data.version!==VERSION||typeof data.name!=='string'||!data.name.trim()||data.name.length>80||!Array.isArray(data.objects)||data.objects.length>LIMIT)throw Error('Ungültige oder zu große Szene.');
 const ground=data.ground===undefined?'meadow':data.ground;
 if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');
+const lighting=data.lighting===undefined?'day':data.lighting;
+if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');
 const terrain=data.terrain===undefined?Array(GRID*GRID).fill(0):data.terrain;
 if(!Array.isArray(terrain)||terrain.length!==GRID*GRID||!terrain.every(h=>numeric(h,0,MAX_HEIGHT)))throw Error('Ungültiges Höhenprofil des Geländes.');
 const seen=new Set();
 for(const obj of data.objects){if(!validObject(obj)||seen.has(obj.id))throw Error('Ungültiges Objekt oder doppelte ID.');seen.add(obj.id);}
-return{version:VERSION,name:data.name,ground,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
+return{version:VERSION,name:data.name,ground,lighting,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
 function parse(source){
 if(typeof source!=='string'||source.length>60000)throw Error('Szenendatei zu groß.');
 let data;try{data=JSON.parse(source)}catch(_){throw Error('Die Datei enthält kein gültiges JSON.');}
@@ -50,6 +53,7 @@ if(key==='color'?!PALETTE.includes(value):!numeric(value,key==='scale'?.4:-WORLD
 Object.assign(obj,values);return obj;}
 function remove(scene,id){const before=scene.objects.length;scene.objects=scene.objects.filter(o=>o.id!==id);return before!==scene.objects.length;}
 function setGround(scene,ground){if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');scene.ground=ground;return scene;}
+function setLighting(scene,lighting){if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');scene.lighting=lighting;return scene;}
 function duplicate(scene,id){
 const original=scene.objects.find(o=>o.id===id);
 if(!original)throw Error('Objekt nicht gefunden.');
@@ -122,5 +126,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,duplicate,terrainHeight,sculpt,createHistory,collides,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,LIGHTS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,setLighting,duplicate,terrainHeight,sculpt,createHistory,collides,move});
 });
