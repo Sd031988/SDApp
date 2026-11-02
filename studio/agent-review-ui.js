@@ -50,6 +50,29 @@ function render(result){
  byId('agentReviewManualCopy').hidden=true;
  byId('agentReviewCopy').disabled=false;
 }
+function showCapabilities(){
+ const list=byId('agentReviewCapabilities');list.replaceChildren();
+ const engine=window.SDStudioAgentSafety;
+ if(!engine)return;
+ const labels={lokal:'Lokal',freigabe:'Nur mit Bestätigung',nicht_verfuegbar:'Nicht verfügbar'};
+ for(const rule of engine.capabilityPreview())
+  appendLine(list,rule.name+' · '+(labels[rule.status]||rule.status),rule.detail);
+}
+function showImpact(files){
+ const list=byId('agentReviewImpact');list.replaceChildren();
+ const engine=window.SDStudioAgentSafety;
+ if(!engine||!taskPlan||taskPlan.error)return;
+ const impact=engine.impactAnalysis(taskPlan.graph,taskPlan.paths,files);
+ byId('agentReviewImpactNote').textContent=impact.affectedCount+
+  ' zusätzlich abhängige Datei(en) erkannt'+(impact.unresolved?' · '+impact.unresolved+' offene Verknüpfungen':'')+
+  (impact.incomplete?' · Analyse begrenzt':'')+'. Nur eine statische Abschätzung.';
+ for(const item of impact.affected.slice(0,15))
+  appendLine(list,item.path,'Verwendet vermutlich '+item.via+' (Ebene '+item.depth+').');
+ if(impact.affected.length>15)appendLine(list,'Weitere Abhängigkeiten',
+  (impact.affected.length-15)+' zusätzliche Dateien.');
+ if(!impact.affected.length)appendLine(list,'Keine weiteren Verknüpfungen erkannt',
+  'Dynamische Verbindungen können trotzdem existieren.');
+}
 function runReview(){
  const engine=window.SDStudioAgentReview;
  if(!engine)return;
@@ -59,9 +82,12 @@ function runReview(){
   diagnose:window.SDKIDiagnose&&window.SDKIDiagnose.inspect
  });
  render(report);
+ showCapabilities();
  taskPlan=null;
  byId('agentReviewHandoff').disabled=true;
  byId('agentReviewTargets').replaceChildren();
+ byId('agentReviewImpact').replaceChildren();
+ byId('agentReviewImpactNote').textContent='Erstelle einen Aufgabenplan für die Auswirkungsprüfung.';
  byId('agentReviewTaskSteps').replaceChildren();
  byId('agentReviewTaskStatus').textContent='Beschreibe eine Aufgabe, um passende Dateien und konkrete Prüfschritte vorzuschlagen.';
 }
@@ -74,7 +100,9 @@ function makeTaskPlan(){
  taskPlan=engine.makePlan(goal,files,report,typeof S!=='undefined'?S.aktiv:null);
  const suggestions=byId('agentReviewTargets'),steps=byId('agentReviewTaskSteps');
  suggestions.replaceChildren();steps.replaceChildren();
+ byId('agentReviewImpact').replaceChildren();
  if(taskPlan.error){
+  byId('agentReviewImpactNote').textContent='Kein Aufgabenplan vorhanden.';
   byId('agentReviewTaskStatus').textContent=taskPlan.error;
   byId('agentReviewHandoff').disabled=true;
   return;
@@ -84,6 +112,7 @@ function makeTaskPlan(){
  for(const path of taskPlan.paths)appendLine(suggestions,path,'Vorgeschlagener Kontext – keine automatische Datenfreigabe.');
  if(!taskPlan.paths.length)appendLine(suggestions,'Keine geeigneten Textdateien','Dateien im Editor auswählen oder Projekt öffnen.');
  for(const step of taskPlan.steps)appendLine(steps,step.role,step.description);
+ showImpact(files);
  byId('agentReviewHandoff').disabled=false;
 }
 function handoffTask(){
@@ -127,7 +156,7 @@ function setup(){
  byId('agentReviewAgain').addEventListener('click',runReview);
  byId('agentReviewPlan').addEventListener('click',makeTaskPlan);
  byId('agentReviewHandoff').addEventListener('click',handoffTask);
- byId('agentReviewGoal').addEventListener('input',()=>{taskPlan=null;byId('agentReviewHandoff').disabled=true;byId('agentReviewTaskStatus').textContent='Aufgabe geändert – Plan neu erstellen.';});
+ byId('agentReviewGoal').addEventListener('input',()=>{taskPlan=null;byId('agentReviewHandoff').disabled=true;byId('agentReviewTaskStatus').textContent='Aufgabe geändert – Plan neu erstellen.';byId('agentReviewImpact').replaceChildren();byId('agentReviewImpactNote').textContent='Aufgabe geändert – Auswirkungsprüfung erneut starten.';});
  byId('agentReviewCopy').addEventListener('click',copyPrompt);
  overlay.addEventListener('click',event=>{if(event.target===overlay)closeReview();});
  document.addEventListener('keydown',event=>{
