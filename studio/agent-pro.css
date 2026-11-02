@@ -1,0 +1,39 @@
+/* SD Agent Pro – responsive, keyboard-friendly task board */
+#agentProOverlay[hidden]{display:none!important}
+#agentProOverlay{position:fixed;inset:0;z-index:110010;background:rgba(5,7,20,.86);
+ display:grid;place-items:center;padding:14px;color:#ece6ff}
+.agentProDialog{width:min(880px,100%);max-height:min(94vh,950px);overflow:auto;
+ background:#211a38;border:1px solid #735b98;border-radius:16px;
+ box-shadow:0 18px 70px #000b;padding:20px;font:14px/1.55 system-ui,sans-serif}
+.agentProHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.agentProHead h2{margin:0;font-size:22px}
+.agentProHead p{margin:4px 0 10px}
+.agentProDialog button{background:#3b2d61;color:#fff;border:1px solid #8e78ba;
+ border-radius:9px;padding:8px 12px;cursor:pointer}
+.agentProDialog button:hover,.agentProDialog button:focus-visible{background:#54417c}
+.agentProDialog button:disabled{opacity:.5;cursor:not-allowed}
+.agentProDialog button:focus-visible,.agentProInput:focus-visible{outline:2px solid #c3a5ff;outline-offset:2px}
+.agentProSmall{font-size:12px;color:#c9bee5;margin:7px 0;overflow-wrap:anywhere}
+.agentProLabel{display:block;font-weight:650;margin:10px 0 6px}
+.agentProInput{display:block;width:100%;box-sizing:border-box;min-height:86px;resize:vertical;
+ background:#120e23;color:#fff;border:1px solid #866aaf;border-radius:9px;
+ padding:10px;font:inherit}
+.agentProActions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.agentProMessage{min-height:1.5em;color:#bdf2d2;font-size:13px}
+.agentProMessage[data-error="true"]{color:#ffb4b4}
+.agentProCount{font-size:15px;border-bottom:1px solid #594777;padding-bottom:8px}
+.agentProTask{padding:14px;margin:12px 0;border:1px solid #62517e;border-radius:12px;background:#19132c}
+.agentProTaskHeader{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.agentProGoalText{overflow-wrap:anywhere;min-width:0}
+.agentProState{font-size:12px;background:#33294f;border:1px solid #8873aa;
+ padding:3px 8px;border-radius:12px;white-space:nowrap}
+.agentProState[data-state="approval"]{border-color:#f4c875}
+.agentProState[data-state="done"]{border-color:#83d6b5}
+.agentProConfirm{display:flex;align-items:flex-start;gap:6px;font-size:13px;margin:9px 0}
+.agentProConfirm input{margin-top:4px}
+.agentProEmpty{color:#c9bee5}
+@media(max-width:700px){
+ #agentProOverlay{padding:7px}.agentProDialog{padding:13px;max-height:96vh}
+ .agentProHead h2{font-size:19px}.agentProHead{flex-wrap:wrap}
+ .agentProTaskHeader{flex-wrap:wrap}
+}
