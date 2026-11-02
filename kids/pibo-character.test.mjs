@@ -20,6 +20,7 @@ assert.equal(model.eyeGlints.length,2,'Both eyes receive layered highlights');
 pupils[0].colored.position.x=-.26;
 model.update(1,.2);
 assert(Math.abs(model.eyeGlints[0].major.position.x-(-.26-.035))<1e-9,'Eye highlight follows gaze');
+model.update(1,0);
 assert.equal(model.tongue.visible,false,'Tongue is initially hidden');
 model.update(2,.41);assert.equal(model.tongue.visible,true);
 model.update(2,.02);assert.equal(model.tongue.visible,false);
