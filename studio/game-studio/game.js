@@ -376,14 +376,15 @@ canvas.addEventListener('pointercancel',e=>{if(pointer&&pointer.id===e.pointerId
 canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.distance=clamp(camera.distance+e.deltaY*.02,6,48);}},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let before=0;function tick(now){
-const dt=before?Math.min((now-before)/1000,.05):0;before=now;
+const elapsed=before?Math.max(0,Math.min((now-before)/1000,.5)):0;
+const dt=Math.min(elapsed,.05);before=now;
 if(!doc.hidden){
 const previousX=player.x,previousZ=player.z;
 if(playing){
 Core.move(player,keys,dt,scene.objects,camera.azimuth);
 const total=scene.objects.filter(o=>o.type==='crystal').length;
 if(total&&!round.finished){
-round.seconds+=dt;
+round.seconds+=elapsed;
 const found=Core.collectNearby(player,scene.objects,collected);
 if(found.length){
 for(const crystalId of found)collected.add(crystalId);
