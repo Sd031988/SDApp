@@ -36,7 +36,7 @@ if(!asset)return;
 const bounds=asset.bounds;
 const factor=o.scale*1.5/Math.max(.1,bounds.radius);
 const center=bounds.center;
-const minY=center[1]-bounds.radius;
+const minY=bounds.min[1];
 const matrix=mm(translate(o.x,base,o.z),mm(scale(factor,factor,factor),translate(-center[0],-minY,-center[2])));
 const tint=color(o.color);
 for(const part of asset.parts){
