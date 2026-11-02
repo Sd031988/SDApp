@@ -7,13 +7,13 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-nature7">
-<script defer src="./scene-core.js?v=20261102-nature7"></script>
-<script defer src="./game.js?v=20261102-nature7"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-creator8">
+<script defer src="./scene-core.js?v=20261102-creator8"></script>
+<script defer src="./game.js?v=20261102-creator8"></script>
 </head>
 <body>
 <header class="topbar">
-<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.7</span></div>
+<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.8</span></div>
 <div class="topactions"><span class="scene-title" id="sceneName">Meine erste 3D-Welt</span><button id="saveScene" class="action primary" type="button">↓ <span>Szene speichern</span></button></div>
 </header>
 <main class="layout">
@@ -73,11 +73,31 @@
 <p class="lighting-caption">Licht und Himmel ändern sich sofort. Gespeichert wird die gewählte Tageszeit.</p>
 </section>
 <section class="avatar-tools" aria-label="Spielfigur gestalten">
-<div class="landscape-head"><small>CHARAKTER</small><strong>Deine Spielfigur</strong><p>Wähle ein Outfit. Die Figur kann laufen und springen.</p></div>
+<div class="landscape-head"><small>CHARAKTER</small><strong>Deine Spielfigur</strong><p>Gestalte Outfit, Gesicht, Haare und Körper. Die Figur kann laufen und springen.</p></div>
 <div class="avatar-picker" role="group" aria-label="Outfit der Spielfigur">
 <button type="button" data-avatar="explorer" aria-pressed="true" data-edit-only><span class="avatar-dot explorer"></span>Explorer</button>
 <button type="button" data-avatar="sport" aria-pressed="false" data-edit-only><span class="avatar-dot sport"></span>Sport</button>
 <button type="button" data-avatar="night" aria-pressed="false" data-edit-only><span class="avatar-dot night"></span>Night</button>
+
+</div>
+<div class="appearance-editor" aria-label="Figuren-Editor">
+<label for="appearanceSkin">Hautfarbe
+<select id="appearanceSkin" data-appearance="skin" data-edit-only>
+<option value="warm">Warm</option><option value="golden">Gold</option><option value="brown">Braun</option><option value="deep">Dunkel</option>
+</select></label>
+<label for="appearanceHair">Haare & Kopfbedeckung
+<select id="appearanceHair" data-appearance="hair" data-edit-only>
+<option value="cap">Kappe</option><option value="short">Kurzhaar</option><option value="curly">Locken</option>
+</select></label>
+<label for="appearanceBody">Körperform
+<select id="appearanceBody" data-appearance="body" data-edit-only>
+<option value="standard">Standard</option><option value="compact">Kompakt</option><option value="tall">Groß</option>
+</select></label>
+<label for="appearanceFace">Gesichtsausdruck
+<select id="appearanceFace" data-appearance="face" data-edit-only>
+<option value="friendly">Freundlich</option><option value="happy">Fröhlich</option><option value="focused">Konzentriert</option>
+</select></label>
+<p>Änderungen sind sofort in der 3D-Welt sichtbar und werden in der Szenendatei gespeichert.</p>
 </div>
 </section>
 <div class="list-header"><strong>Szenenhierarchie</strong><span class="number" id="objectCount">6</span></div>
@@ -130,7 +150,7 @@
 <div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
 <p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
 </section>
-<div class="side-bottom">SD GAME-STUDIO <span>v0.7 · ALPHA</span></div>
+<div class="side-bottom">SD GAME-STUDIO <span>v0.8 · ALPHA</span></div>
 </aside>
 </main>
 </body></html>
