@@ -37,7 +37,7 @@ const bounds=asset.bounds;
 const factor=o.scale*1.5/Math.max(.1,bounds.radius);
 const center=bounds.center;
 const minY=bounds.min[1];
-const matrix=mm(translate(o.x,base,o.z),mm(scale(factor,factor,factor),translate(-center[0],-minY,-center[2])));
+const matrix=mm(translate(o.x,base,o.z),mm(rotateY(o.rotationY||0),mm(scale(factor,factor,factor),translate(-center[0],-minY,-center[2]))));
 const tint=color(o.color);
 for(const part of asset.parts){
 const hex='#'+part.color.map((c,i)=>Math.round(Math.max(0,Math.min(1,c*.8+tint[i]*.2))*255).toString(16).padStart(2,'0')).join('');
@@ -248,7 +248,7 @@ draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
 function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
-function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=(o.type==='model'?(scene.assets?.find(a=>a.id===o.assetId)?.name||'3D-Modell'):names[o.type])+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
+function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=(o.type==='model'?(scene.assets?.find(a=>a.id===o.assetId)?.name||'3D-Modell'):names[o.type])+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;$('propRotationWrap').hidden=o.type!=='model';if(o.type==='model')$('propRotation').value=Math.round((o.rotationY||0)*180/Math.PI);}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
 function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
@@ -337,7 +337,17 @@ $('deleteObject').addEventListener('click',()=>{if(selected!=null){Core.remove(s
 $('duplicateObject').addEventListener('click',duplicateSelected);
 $('undoAction').addEventListener('click',()=>travel('undo'));
 $('redoAction').addEventListener('click',()=>travel('redo'));
-for(const name of ['X','Z','Scale','Color'])$('prop'+name).addEventListener('change',e=>{if(selected==null)return;const key=name.toLowerCase(),value=key==='color'?e.target.value:Number(e.target.value);try{Core.update(scene,selected,{[key]:value});changed('Objekt aktualisiert.');}catch(err){say(err.message);select(selected);}});
+for(const name of ['X','Z','Scale','Color'])$('prop'+name).addEventListener('change',e=>{if(selected==null)return;const key=name.toLowerCase(),value=key==='color'?e.target.value:Number(e.target.value);try{Project.update(scene,selected,{[key]:value});changed('Objekt aktualisiert.');}catch(err){say(err.message);select(selected);}});
+$('propRotation').addEventListener('change',event=>{
+if(selected==null)return;
+const obj=scene.objects.find(o=>o.id===selected);
+if(obj?.type!=='model')return;
+try{
+const angle=Number(event.target.value);
+Project.update(scene,selected,{rotationY:angle*Math.PI/180});
+changed('3D-Modell gedreht.');
+}catch(err){say(err.message);select(selected);}
+});
 $('cameraReset').addEventListener('click',()=>{Object.assign(camera,{azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0});say('Kamera zurückgesetzt.');});
 const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump'};
 function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();keys[k]=down;}}
