@@ -31,7 +31,7 @@ function review(files,original){
   // Credentials are always checked across the entire chosen file, even if pre-existing.
   if(/(?:^|\/)(?:\.env(?:\..*)?|credentials?(?:\..+)?|secrets?(?:\..+)?|id_rsa|id_ed25519|[^/]*private[-_]?key[^/]*)$/i.test(path))
    add(path,1,'critical','secret-path','Mögliche Zugangsdaten-Datei','Datei nicht als KI-Code übernehmen oder veröffentlichen.');
-  const secret=/(?:-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|(?:sk-proj-|sk_live_|github_pat_|ghp_)[a-z0-9_-]{12,}|AIza[a-zA-Z0-9_-]{25,})/;
+  const secret=/(?:-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|(?:sk-proj-|sk_live_|github_pat_|ghp_)[a-z0-9_-]{12,}|AIza[a-zA-Z0-9_-]{25,})/i;
   for(let i=0;i<lines.length&&findings.length<MAX_FINDINGS;i++)
    if(secret.test(lines[i]))add(path,i+1,'critical','secret-value','Möglicher echter Zugangsschlüssel','Geheimnis entfernen und gegebenenfalls widerrufen. Der Wert wird hier nicht angezeigt.');
   const span=changedLines(Object.prototype.hasOwnProperty.call(previous,path)?previous[path]:undefined,code);
