@@ -6,6 +6,23 @@ on:
       - "mein-sd-hub/**"
       - "tests/mein-sd-hub*.cjs"
       - "tests/hub-homepage*.cjs"
+      - "tests/play-separation*.cjs"
+      - "play/**"
+      - "kids/index.html"
+      - "kids/games/index.html"
+      - "kids/blockworld/index.html"
+      - "index.html"
+      - ".github/workflows/mein-sd-hub-quality.yml"
+  pull_request:
+    paths:
+      - "mein-sd-hub/**"
+      - "tests/mein-sd-hub*.cjs"
+      - "tests/hub-homepage*.cjs"
+      - "tests/play-separation*.cjs"
+      - "play/**"
+      - "kids/index.html"
+      - "kids/games/index.html"
+      - "kids/blockworld/index.html"
       - "index.html"
       - ".github/workflows/mein-sd-hub-quality.yml"
   workflow_dispatch:
@@ -24,7 +41,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate course, routes, links and state
-        run: node --test tests/mein-sd-hub.test.cjs tests/hub-homepage.test.cjs
+        run: node --test tests/mein-sd-hub.test.cjs tests/hub-homepage.test.cjs tests/play-separation.test.cjs
       - name: Install Playwright and Chromium
         run: |
           npm install --no-save playwright@1.56.1
@@ -33,3 +50,4 @@ jobs:
         run: |
           node tests/mein-sd-hub.browser.cjs
           node tests/hub-homepage.browser.cjs
+          node tests/play-separation.browser.cjs
