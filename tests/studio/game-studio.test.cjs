@@ -285,3 +285,33 @@ assert.equal(added.length,4);
 assert.equal(nearLimit.objects.length,core.LIMIT);
 assert.throws(()=>core.plantGroup(nearLimit,'garden',0,0),/Maximal/);
 });
+
+test('Figuren-Editor: Haut, Haare, Körper und Mimik werden validiert, gespeichert und rückgängig',()=>{
+const scene=core.fresh(),history=core.createHistory(scene);
+assert.deepEqual(scene.appearance,{skin:'warm',hair:'cap',body:'standard',face:'friendly'});
+for(const [part,value] of [['skin','deep'],['hair','curly'],['body','compact'],['face','happy']]){
+core.setAppearance(scene,part,value);
+assert.equal(scene.appearance[part],value);
+}
+const saved=core.parse(core.serialize(scene));
+assert.deepEqual(saved.appearance,scene.appearance);
+assert.equal(history.record(scene),true);
+assert.deepEqual(history.undo().appearance,core.DEFAULT_APPEARANCE);
+assert.deepEqual(history.redo().appearance,scene.appearance);
+assert.throws(()=>core.setAppearance(scene,'skin','<script>'),/Figurengestaltung/);
+assert.throws(()=>core.setAppearance(scene,'constructor','warm'),/Figurengestaltung/);
+assert.throws(()=>core.setAppearance(scene,'face',null),/Figurengestaltung/);
+assert.throws(()=>core.validate({...scene,appearance:{...scene.appearance,hair:'invalid'}}),/Figurengestaltung/);
+assert.throws(()=>core.validate({...scene,appearance:null}),/Figurengestaltung/);
+assert.equal(scene.appearance.hair,'curly','Ungültige Änderungen dürfen die Figur nicht verändern');
+const unsafe={...scene,appearance:{...scene.appearance,extraneous:'ignored'}};
+assert.equal('extraneous' in core.validate(unsafe).appearance,false);
+});
+test('Alte Game-Studio-Szenen ohne Figuren-Editor behalten ihre Spielfigur',()=>{
+const old=core.fresh();delete old.appearance;
+const parsed=core.parse(JSON.stringify(old));
+assert.deepEqual(parsed.appearance,core.DEFAULT_APPEARANCE);
+assert.equal(parsed.avatar,'explorer');
+assert.equal(parsed.objects.length,6);
+assert.deepEqual(core.parse(core.serialize(parsed)),parsed);
+});

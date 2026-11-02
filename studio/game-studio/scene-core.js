@@ -11,11 +11,18 @@ const NATURE_GROUPS=Object.freeze(['grove','garden']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
 const LIGHTS=Object.freeze(['dawn','day','sunset','night']);
 const AVATARS=Object.freeze(['explorer','sport','night']);
+const APPEARANCE=Object.freeze({
+skin:Object.freeze(['warm','golden','brown','deep']),
+hair:Object.freeze(['cap','short','curly']),
+body:Object.freeze(['standard','compact','tall']),
+face:Object.freeze(['friendly','happy','focused'])
+});
+const DEFAULT_APPEARANCE=Object.freeze({skin:'warm',hair:'cap',body:'standard',face:'friendly'});
 const GRID=17,STEP=40/(GRID-1),MAX_HEIGHT=3,TOOLS=Object.freeze(['raise','lower','smooth']);
 const PALETTE=Object.freeze(['#d7a35c','#5ebbb0','#8fa4e9','#d8797d','#bca3e5','#dbcc97']);
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const numeric=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
-function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',lighting:'day',avatar:'explorer',objects:[
+function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',lighting:'day',avatar:'explorer',appearance:{...DEFAULT_APPEARANCE},objects:[
 {id:1,type:'tree',x:-6,z:-5,scale:1.2,color:'#5ebbb0'},
 {id:2,type:'tree',x:6,z:-5,scale:1.05,color:'#5ebbb0'},
 {id:3,type:'box',x:-3,z:2,scale:1.2,color:'#d7a35c'},
@@ -31,11 +38,15 @@ const lighting=data.lighting===undefined?'day':data.lighting;
 if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');
 const avatar=data.avatar===undefined?'explorer':data.avatar;
 if(!AVATARS.includes(avatar))throw Error('Unbekannte Spielfigur.');
+const appearance=data.appearance===undefined?DEFAULT_APPEARANCE:data.appearance;
+if(!appearance||typeof appearance!=='object'||Array.isArray(appearance)||
+Object.keys(DEFAULT_APPEARANCE).some(key=>!APPEARANCE[key].includes(appearance[key])))
+throw Error('Ungültige Figurengestaltung.');
 const terrain=data.terrain===undefined?Array(GRID*GRID).fill(0):data.terrain;
 if(!Array.isArray(terrain)||terrain.length!==GRID*GRID||!terrain.every(h=>numeric(h,0,MAX_HEIGHT)))throw Error('Ungültiges Höhenprofil des Geländes.');
 const seen=new Set();
 for(const obj of data.objects){if(!validObject(obj)||seen.has(obj.id))throw Error('Ungültiges Objekt oder doppelte ID.');seen.add(obj.id);}
-return{version:VERSION,name:data.name,ground,lighting,avatar,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
+return{version:VERSION,name:data.name,ground,lighting,avatar,appearance:Object.fromEntries(Object.keys(DEFAULT_APPEARANCE).map(key=>[key,appearance[key]])),objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
 function parse(source){
 if(typeof source!=='string'||source.length>60000)throw Error('Szenendatei zu groß.');
 let data;try{data=JSON.parse(source)}catch(_){throw Error('Die Datei enthält kein gültiges JSON.');}
@@ -75,6 +86,11 @@ function remove(scene,id){const before=scene.objects.length;scene.objects=scene.
 function setGround(scene,ground){if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');scene.ground=ground;return scene;}
 function setLighting(scene,lighting){if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');scene.lighting=lighting;return scene;}
 function setAvatar(scene,avatar){if(!AVATARS.includes(avatar))throw Error('Unbekannte Spielfigur.');scene.avatar=avatar;return scene;}
+function setAppearance(scene,part,value){
+if(!Object.hasOwn(APPEARANCE,part)||!APPEARANCE[part].includes(value))throw Error('Ungültige Figurengestaltung.');
+scene.appearance={...(scene.appearance||DEFAULT_APPEARANCE),[part]:value};
+return scene;
+}
 function duplicate(scene,id){
 const original=scene.objects.find(o=>o.id===id);
 if(!original)throw Error('Objekt nicht gefunden.');
@@ -151,5 +167,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,NATURE_GROUPS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,plantGroup,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,NATURE_GROUPS,GROUNDS,LIGHTS,AVATARS,APPEARANCE,DEFAULT_APPEARANCE,TOOLS,PALETTE,fresh,validate,parse,serialize,add,plantGroup,update,remove,setGround,setLighting,setAvatar,setAppearance,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
 });

@@ -53,6 +53,12 @@
 .avatar-picker button:hover:not(:disabled){background:#2a464e}
 .avatar-dot{display:block;width:23px;height:27px;border-radius:9px 9px 5px 5px;border:2px solid #ffffff29;box-shadow:inset 0 4px 0 #ffffff25}
 .avatar-dot.explorer{background:#377d90}.avatar-dot.sport{background:#dc6d4e}.avatar-dot.night{background:#6854a3}
+.appearance-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px;padding-top:13px;border-top:1px solid var(--stroke)}
+.appearance-editor label{min-width:0;display:grid;gap:5px;color:#bdcfd3;font-size:11px;font-weight:650}
+.appearance-editor select{width:100%;min-width:0;background:#111f29;color:#e3f0f0;border:1px solid #3b565e;border-radius:8px;padding:10px 7px;font-size:12px;min-height:42px}
+.appearance-editor select:disabled{opacity:.5}
+.appearance-editor p{grid-column:1/-1;margin:1px 0 0;color:#829ba4;font-size:11px;line-height:1.5}
+@media(min-width:751px) and (max-width:1070px){.appearance-editor{grid-template-columns:1fr}}
 .character-state{position:absolute;right:14px;bottom:56px;pointer-events:none;padding:6px 10px;background:#101e28bb;border:1px solid #50777d80;color:#a9e9d7;border-radius:6px;font-size:10px;font-weight:850;letter-spacing:.12em}
 @media(max-width:750px){.character-state{top:43px;bottom:auto;right:12px;font-size:9px}}
 .list-header{border-top:1px solid var(--stroke);padding:19px 19px 10px;display:flex;justify-content:space-between;align-items:center}.list-header strong{font-size:11px;text-transform:uppercase;color:#a8bdc2;letter-spacing:.06em}.number{background:#2c4650;border-radius:12px;padding:1px 8px;color:var(--mint);font-size:11px}.scene-list{padding:4px 12px;display:grid;gap:3px}.scene-item{background:transparent;border:1px solid transparent;text-align:left;padding:9px 11px;border-radius:5px;color:#99adb6}.scene-item:hover,.scene-item.chosen{background:#223f41;color:#b2f1d7;border-color:#2e6b5d}.sidefooter{margin-top:auto;border-top:1px solid var(--stroke);padding:17px 18px;color:var(--muted);font-size:11px}.online-dot,.view-dot{display:inline-block;background:#68d9a8;width:7px;height:7px;border-radius:50%;margin-right:7px}
