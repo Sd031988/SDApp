@@ -40,7 +40,14 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>window.__notExecutedByStaticTests),undefined);
   assert.equal(await page.evaluate(()=>JSON.stringify(S.p?.dateien||{})),original);
   await page.locator('#kiRepairStage').click();
-  assert.match(await page.locator('#kiDiffNew').innerText(),/noopener noreferrer/);
+  const stagedDiagnostics=await page.evaluate(()=>({
+    status:document.querySelector('#kiRepairStatus')?.textContent,
+    testStatus:document.querySelector('#kiTestStatus')?.textContent,
+    diffVisible:!document.querySelector('#kiDiff')?.hidden,
+    diffText:document.querySelector('#kiDiffNew')?.textContent?.slice(0,300),
+    files:[...document.querySelectorAll('#kiFiles input:checked')].map(e=>e.dataset.path)
+  }));
+  assert.match(await page.locator('#kiDiffNew').innerText(),/noopener noreferrer/,JSON.stringify(stagedDiagnostics));
   assert.equal(await page.evaluate(()=>window.__notExecutedByStaticTests),undefined);
   assert.equal(await page.evaluate(()=>JSON.stringify(S.p?.dateien||{})),original);
   await page.locator('#kiDiffClose').click();
