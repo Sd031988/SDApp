@@ -33,7 +33,14 @@ const assert=require('node:assert/strict');
   ].join('\n'));
   await page.locator('#kiAnalyse').click();
   await page.locator('#kiRepairPrepare').click();
-  assert.equal(await page.locator('#kiTestRun').isEnabled(),true);
+  const initialDiagnostics=await page.evaluate(()=>({
+    review:document.querySelector('#kiReviewSummary')?.textContent,
+    repair:document.querySelector('#kiRepairStatus')?.textContent,
+    proposals:document.querySelectorAll('.kiRepairAfter').length,
+    status:document.querySelector('#kiStatus')?.textContent,
+    selected:[...document.querySelectorAll('#kiFiles input:checked')].map(e=>e.dataset.path)
+  }));
+  assert.equal(await page.locator('#kiTestRun').isEnabled(),true,JSON.stringify(initialDiagnostics));
   await page.locator('#kiTestRun').click();
   assert.match(await page.locator('#kiTestStatus').innerText(),/1 behoben, 0 neu/);
   assert.equal(await page.locator('#kiRepairStage').isEnabled(),true);
