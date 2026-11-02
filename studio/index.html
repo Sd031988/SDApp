@@ -7,7 +7,7 @@
 <meta name="description" content="Professioneller Code-Editor im Browser: Webseiten mit Live-Vorschau, Python, C++, Java, C#, Rust und Go ausführen, Vorlagen, Suche, Versionen, ZIP – ohne Installation.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-chatgpt-transfer-1">
-<link rel="stylesheet" href="./agent-review.css?v=20261102-ecc-review-1">
+<link rel="stylesheet" href="./agent-review.css?v=20261102-agent-v2-1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#221b3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -402,6 +402,20 @@ button,input,select,textarea{font:inherit;color:inherit}
    <div><h2 id="agentReviewTitle">🧠 Projekt-Review</h2><p>Planen · Entwickeln · Testen · Sicherheit · Freigabe</p></div>
    <button id="agentReviewClose" type="button" aria-label="Review schließen">✕ Schließen</button>
   </div>
+  <section class="agentReviewWorkbench" aria-label="Aufgabenplanung">
+   <label for="agentReviewGoal"><strong>Was soll unser Agent an deinem Projekt verbessern?</strong></label>
+   <textarea id="agentReviewGoal" rows="3" maxlength="1200" placeholder="Zum Beispiel: Repariere den Login und behalte alle anderen Funktionen."></textarea>
+   <div class="agentReviewActions">
+    <button id="agentReviewPlan" type="button">🧭 Plan und passende Dateien finden</button>
+    <button id="agentReviewHandoff" type="button" disabled>✨ Zur KI-Werkstatt übergeben</button>
+   </div>
+   <p id="agentReviewTaskStatus" class="agentReviewSmall" role="status" aria-live="polite"></p>
+   <div class="agentReviewCols">
+    <div><h3>Vorgeschlagene Dateien</h3><ul id="agentReviewTargets"></ul></div>
+    <div><h3>Aufgabenschritte</h3><ol id="agentReviewTaskSteps"></ol></div>
+   </div>
+   <p class="agentReviewSmall">Dateiempfehlungen sind lokal. Bei der Übergabe werden weder Code noch Dateien automatisch an die KI geschickt. Dafür ist eine separate, ausdrückliche Freigabe erforderlich.</p>
+  </section>
   <p id="agentReviewSummary" class="agentReviewSummary" role="status" aria-live="polite"></p>
   <p id="agentReviewNote" class="agentReviewSmall"></p>
   <div class="agentReviewCols">
@@ -420,12 +434,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./studio-diagnose.js?v=20261101-autodiagnose-1"></script>
 <script src="./studio-qualitaet.js?v=20261101-quality-1"></script>
 <script src="./agent-review.js?v=20261102-ecc-review-1"></script>
+<script src="./agent-task.js?v=20261102-agent-v2-1"></script>
 <script src="./studio-visual-text.js?v=20261101-visual-1"></script>
 <script src="./studio-modules.js?v=20261101-module-1"></script>
 <script src="studio.js?v=20261101-module-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261101-change-request-1"></script>
 <script src="./ki-werkstatt-ui.js?v=20261101-chatgpt-transfer-1"></script>
-<script src="./agent-review-ui.js?v=20261102-ecc-review-1"></script>
+<script src="./agent-review-ui.js?v=20261102-agent-v2-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){

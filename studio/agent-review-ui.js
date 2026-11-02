@@ -8,7 +8,7 @@ function element(tag,klass,content){
  if(content!==undefined)e.textContent=content;
  return e;
 }
-let report=null;
+let report=null,taskPlan=null;
 function currentFiles(){
  if(window.SDKICodingUI&&typeof window.SDKICodingUI.currentFiles==='function')
   return window.SDKICodingUI.currentFiles();
@@ -59,22 +59,59 @@ function runReview(){
   diagnose:window.SDKIDiagnose&&window.SDKIDiagnose.inspect
  });
  render(report);
+ taskPlan=null;
+ byId('agentReviewHandoff').disabled=true;
+ byId('agentReviewTargets').replaceChildren();
+ byId('agentReviewTaskSteps').replaceChildren();
+ byId('agentReviewTaskStatus').textContent='Beschreibe eine Aufgabe, um passende Dateien und konkrete Prüfschritte vorzuschlagen.';
+}
+function makeTaskPlan(){
+ if(!report)return;
+ const goal=byId('agentReviewGoal').value.trim();
+ const engine=window.SDStudioTaskAgent;
+ if(!engine){byId('agentReviewTaskStatus').textContent='Aufgabenanalyse konnte nicht geladen werden.';return;}
+ const files=currentFiles();
+ taskPlan=engine.makePlan(goal,files,report,typeof S!=='undefined'?S.aktiv:null);
+ const suggestions=byId('agentReviewTargets'),steps=byId('agentReviewTaskSteps');
+ suggestions.replaceChildren();steps.replaceChildren();
+ if(taskPlan.error){
+  byId('agentReviewTaskStatus').textContent=taskPlan.error;
+  byId('agentReviewHandoff').disabled=true;
+  return;
+ }
+ byId('agentReviewTaskStatus').textContent='Lokaler Vorschlag: '+taskPlan.graph.edges.length+
+  ' erkannte Dateiverknüpfungen, '+taskPlan.paths.length+' relevante Dateien. Keine Tests ausgeführt.';
+ for(const path of taskPlan.paths)appendLine(suggestions,path,'Vorgeschlagener Kontext – keine automatische Datenfreigabe.');
+ if(!taskPlan.paths.length)appendLine(suggestions,'Keine geeigneten Textdateien','Dateien im Editor auswählen oder Projekt öffnen.');
+ for(const step of taskPlan.steps)appendLine(steps,step.role,step.description);
+ byId('agentReviewHandoff').disabled=false;
+}
+function handoffTask(){
+ if(!taskPlan||!taskPlan.goal)return;
+ const bridge=window.SDKICodingUI;
+ if(!bridge||typeof bridge.openChangeDialogWithGoal!=='function'){
+  byId('agentReviewTaskStatus').textContent='KI-Werkstatt ist nicht verfügbar.';
+  return;
+ }
+ const result=bridge.openChangeDialogWithGoal(taskPlan.goal,taskPlan.paths);
+ if(result)closeReview();
 }
 function openReview(){
  const overlay=byId('agentReviewOverlay');
  overlay.hidden=false;
+ byId('agentReviewGoal').value='';
  runReview();
  byId('agentReviewClose').focus();
 }
 function closeReview(){byId('agentReviewOverlay').hidden=true;}
 async function copyPrompt(){
  if(!report)return;
- const prompt=report.prompt;
+ const prompt=taskPlan&&taskPlan.goal?taskPlan.prompt:report.prompt;
  const note=byId('agentReviewCopyStatus');
  try{
   if(!navigator.clipboard||!navigator.clipboard.writeText)throw Error('Clipboard not available');
   await navigator.clipboard.writeText(prompt);
-  note.textContent='Review-Anfrage kopiert. Nur zusammengefasste Metadaten; kein Quellcode.';
+  note.textContent='Anfrage kopiert. Kein Quelltext und keine Dateinamen übertragen (nur dein Auftrag und Metadaten).';
   byId('agentReviewManualCopy').hidden=true;
  }catch(_){
   const field=byId('agentReviewManualCopy');
@@ -88,6 +125,9 @@ function setup(){
  byId('agentReviewBtn').addEventListener('click',openReview);
  byId('agentReviewClose').addEventListener('click',closeReview);
  byId('agentReviewAgain').addEventListener('click',runReview);
+ byId('agentReviewPlan').addEventListener('click',makeTaskPlan);
+ byId('agentReviewHandoff').addEventListener('click',handoffTask);
+ byId('agentReviewGoal').addEventListener('input',()=>{taskPlan=null;byId('agentReviewHandoff').disabled=true;byId('agentReviewTaskStatus').textContent='Aufgabe geändert – Plan neu erstellen.';});
  byId('agentReviewCopy').addEventListener('click',copyPrompt);
  overlay.addEventListener('click',event=>{if(event.target===overlay)closeReview();});
  document.addEventListener('keydown',event=>{
