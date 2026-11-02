@@ -55,4 +55,6 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Studio im Browser testen
-        run: node tests/studio/browser.test.cjs
+        run: |
+          node tests/studio/browser.test.cjs
+          node tests/studio/test-loop-browser.test.cjs
