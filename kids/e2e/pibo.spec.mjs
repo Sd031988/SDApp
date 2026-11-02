@@ -181,3 +181,26 @@ test('Pibo 3D shower and towel can be dragged onto the actual cat on desktop and
   await expect(page.locator('#say')).toContainText('Alles trocken');
   expect(errors).toEqual([]);
 });
+
+
+test('Pibo garden ground tap starts real 3D locomotion and room change resets it',async({page,isMobile})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.setViewportSize({width:isMobile?390:1280,height:844});
+ await page.goto('/kids/',{waitUntil:'domcontentloaded'});
+ await expect(page.locator('#stage canvas')).toBeVisible({timeout:30000});
+ await page.locator('[data-room="garden"]').click();
+ await page.locator('#stage').scrollIntoViewIfNeeded();
+ const b=await page.locator('#stage canvas').boundingBox();
+ const x=b.x+b.width*.82,y=b.y+b.height*.82;
+ if(isMobile){
+  const session=await page.context().newCDPSession(page);
+  await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
+  await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await session.detach();
+ }else await page.mouse.click(x,y);
+ await expect(page.locator('#say')).toContainText('Pibo läuft');
+ await page.waitForTimeout(700);
+ await page.locator('[data-room="living"]').click();
+ await expect(page.locator('#roomTitle')).toContainText('Wohnzimmer');
+ expect(errors).toEqual([]);
+});
