@@ -6,6 +6,7 @@ const projectCore=require('../../studio/game-studio/scene-core.js');
 const files=new Map([
 ['/studio/game-studio/index.html','text/html'],
 ['/studio/game-studio/game.js','application/javascript'],
+['/studio/game-studio/workspace-layout.js','application/javascript'],
 ['/studio/game-studio/glb-core.js','application/javascript'],
 ['/studio/game-studio/project-assets.js','application/javascript'],
 ['/studio/game-studio/glb-preview.js','application/javascript'],
@@ -32,6 +33,38 @@ assert.match(await page.title(),/SD Game-Studio/);
 assert.equal(await page.locator('#objectCount').innerText(),'6');
 const dims=await page.locator('#stage').evaluate(el=>[el.width,el.height]);
 assert(dims[0]>0&&dims[1]>0);
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'standard');
+const shots=path.join(root,'game-studio-workspace-artifacts');
+fs.mkdirSync(shots,{recursive:true});
+await page.screenshot({path:path.join(shots,'desktop-editor.png'),fullPage:false});
+const originalView=await page.locator('#stage').boundingBox();
+assert(originalView.width>500,'Desktop-Vorschau sollte bereits ausreichend Platz bieten');
+// Panel buttons must enlarge the real WebGL viewport, not merely hide decoration.
+await page.locator('#toggleAssetPanel').click();
+assert.equal(await page.locator('#editorAssets').isVisible(),false);
+assert.equal(await page.locator('#editorInspector').isVisible(),true);
+const panelView=await page.locator('#stage').boundingBox();
+assert(panelView.width>originalView.width+100,'Versteckte Werkzeugspalte muss Bühnenbreite freigeben');
+await page.locator('#toggleInspectorPanel').click();
+assert.equal(await page.locator('#editorInspector').isVisible(),false);
+const wideView=await page.locator('#stage').boundingBox();
+assert(wideView.width>panelView.width+100);
+await page.locator('#toggleAssetPanel').click();
+await page.locator('#toggleInspectorPanel').click();
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'standard');
+await page.locator('#focusViewport').click();
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'focus');
+assert.equal(await page.locator('#editorAssets').isVisible(),false);
+assert.equal(await page.locator('#editorInspector').isVisible(),false);
+assert.equal(await page.locator('.topbar').isVisible(),false);
+await page.screenshot({path:path.join(shots,'desktop-focus.png'),fullPage:false});
+const focusView=await page.locator('#stage').boundingBox();
+assert(focusView.width>originalView.width+300,'Fokusansicht muss den echten Viewport verbreitern');
+assert(focusView.height>=originalView.height,'Fokusansicht muss mindestens genauso hoch sein');
+await page.keyboard.press('Escape');
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'standard');
+assert.equal(await page.locator('.topbar').isVisible(),true);
+assert.equal(await page.locator('#objectCount').innerText(),'6');
 // Professional GLB preview: local geometry only, independent of editable scene data.
 const glbFixture=makeGLB();
 await page.locator('#glbFile').setInputFiles({name:'studio-test.glb',mimeType:'model/gltf-binary',buffer:glbFixture});
@@ -258,6 +291,14 @@ await page.locator('#sceneFile').setInputFiles({name:'nature.json',mimeType:'app
 await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='20');
 assert.equal(await page.locator('#undoAction').isDisabled(),true);
 await page.setViewportSize({width:390,height:844});
+await page.locator('#focusViewport').click();
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'focus');
+await page.screenshot({path:path.join(shots,'mobile-focus.png'),fullPage:false});
+const mobileStage=await page.locator('#stage').boundingBox();
+assert(mobileStage.height>700&&mobileStage.width>=380,'Mobil muss Fokusansicht fast den ganzen Bildschirm nutzen');
+await page.locator('#focusViewport').click();
+assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'standard');
+assert.equal(await page.locator('#editorAssets').isVisible(),true);
 assert.equal(await page.locator('#stage').isVisible(),true);
 assert.equal(await page.locator('[data-add="tree"]').isVisible(),true);
 assert.equal(await page.locator('[data-ground="snow"]').isVisible(),true);
