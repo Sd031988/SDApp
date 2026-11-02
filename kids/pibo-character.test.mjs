@@ -4,7 +4,11 @@ class Mesh{
  constructor(geom,material){this.geometry=geom;this.material=material;this.position={set(x,y,z){Object.assign(this,{x,y,z})},y:0};this.rotation={x:0,y:0,z:0};this.scale={set(){}};this.children=[];this.visible=true}
  add(child){this.children.push(child)}
 }
-const THREE={Mesh,ConeGeometry:class{},TorusGeometry:class{}};
+class Vector3{set(x,y,z){Object.assign(this,{x,y,z});return this}}
+class Quaternion{setFromUnitVectors(){return this}}
+class Matrix4{compose(){return this}}
+class InstancedMesh extends Mesh{constructor(g,m,count){super(g,m);this.count=count;this.instanceMatrix={needsUpdate:false};this.matrices=[]}setMatrixAt(i){this.matrices.push(i)}}
+const THREE={Mesh,InstancedMesh,Vector3,Quaternion,Matrix4,MeshStandardMaterial:class{},DoubleSide:2,ConeGeometry:class{},TorusGeometry:class{}};
 const cat=new Mesh(),head=new Mesh();
 const ell=(parent,material,x,y,z)=>{const node=new Mesh(null,material);node.position.set(x,y,z);parent.add(node);return node};
 const paws=[new Mesh(),new Mesh()];
@@ -17,6 +21,11 @@ assert(head.children.length>6,'Pibo head has whisker freckles and ear tufts');
 assert.equal(model.toeMeshes.length,6,'Three 3D toes on each animated forepaw');
 assert(paws.every(p=>p.children.length===4),'Toes and underside pad parented to each moving paw');
 assert.equal(model.eyeGlints.length,2,'Both eyes receive layered highlights');
+assert.equal(model.furShells.length,2,'Separate head and body fur shells');
+assert.deepEqual(model.furShells.map(shell=>shell.count),[220,300],'520 original fur tufts in two draw calls');
+assert(model.furShells.every(shell=>shell.instanceMatrix.needsUpdate&&shell.matrices.length===shell.count));
+assert(model.furShells.every(shell=>shell.raycast.toString().includes('=>{}')),'Decorative fur does not intercept taps');
+assert(head.children.includes(model.furShells[0])&&cat.children.includes(model.furShells[1]),'Fur follows animated parents');
 pupils[0].colored.position.x=-.26;
 model.update(1,.2);
 assert(Math.abs(model.eyeGlints[0].major.position.x-(-.26-.035))<1e-9,'Eye highlight follows gaze');
@@ -27,4 +36,4 @@ model.update(2,.02);assert.equal(model.tongue.visible,false);
 const original=model.pendant.rotation.z;
 model.update(3,.2,true);
 assert.equal(model.pendant.rotation.z,original,'Reduced-motion setting stops ornament motion');
-console.log('PASS: original Pibo toe meshes, gaze-linked eye reflections and reactive mouth');
+console.log('PASS: original Pibo fur shells, toes, gaze-linked eye reflections and reactive mouth');
