@@ -30,3 +30,30 @@ Lokal: `node --test tests/studio/agent-review.test.cjs`
 Die vorhandenen Studio-CI-Workflows enthalten zusätzlich JavaScript-Syntax,
 Unit-Tests und einen Playwright-Browsersmoke. Die neue Funktion wird dort ebenfalls
 geprüft.
+
+
+## Ausbau V2 – Vergleich mit weiteren Coding-Agenten (November 2026)
+
+Die folgenden Konzepte sind eigenständig umgesetzt, nicht als fremder Agent eingebettet:
+
+| Referenz | Beobachtete Stärke | Umsetzung in SD Studio |
+| --- | --- | --- |
+| [Aider](https://github.com/Aider-AI/aider) | Codebasis-Karte und Git-orientierte Bearbeitung | Lokale Abhängigkeitskarte für HTML, CSS und statische JS-Imports |
+| [Cline](https://github.com/cline/cline) | Plan/Act und überprüfbare Änderungen | Gesonderte Aufgabenplanung mit Freigabe-Übergabe |
+| [Roo Code](https://github.com/RooCodeInc/Roo-Code) | Spezialisierte Arbeitsmodi | Sechs transparente Phasen mit Prüfaufgaben |
+| [OpenCode](https://opencode.ai/docs/agents/) | Granulare Berechtigungen | Kein automatisches Teilen von Dateien; gesonderte Zustimmung |
+| [OpenHands](https://github.com/OpenHands/software-agent-sdk) | Isolierte Agent-Workspaces | Für eine spätere serverseitige Ausführung vorgesehen, noch nicht implementiert |
+
+**V2-Funktionen:**
+1. Aufgabe beschreiben → Dateien anhand Dateinamen, lokalem Textinhalt und Verknüpfungen priorisieren.
+2. Den sechsphasigen Umsetzungs- und Prüfplan ansehen.
+3. Optional „Zur KI-Werkstatt übergeben“ – nur Ziel und lokal vorgeschlagene Pfade
+   wandern in die *Oberfläche* der KI-Werkstatt. Dateien werden erst nach erneuter,
+   ausdrücklicher Zustimmung in den kopierten Prompt übernommen.
+4. Unterschiede, Projektkopien und bestehende Sicherheitskontrollen bleiben erhalten.
+
+**Keine falschen Versprechen:** Das ist ein lokaler, regelbasierter Assistent, kein
+LLM mit autonomer Werkzeugausführung. Es gibt noch keine Sandbox, selbständige
+Codeänderungen, echten Testlauf oder automatisches Deploying in diesem Agent.
+Dateipfade und Dateiinhalte werden nicht vom Agenten automatisch an KI-Anbieter
+gesendet. Vor dem Kopieren in ChatGPT/Gemini die Quellen und Geheimnisse prüfen.
