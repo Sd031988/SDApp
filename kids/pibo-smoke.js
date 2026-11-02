@@ -1,6 +1,6 @@
 // Headless smoke test for Pibo's browser script. Run via node kids/pibo-smoke-test.mjs.
 // Mocks WebGL, so this verifies event wiring and scene logic, NOT actual rendering or audio quality.
-export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',motionSource='',voiceSource='',characterSource='',interactionSource='',gardenSource='',roamSource=''){
+export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',motionSource='',voiceSource='',characterSource='',interactionSource='',gardenSource='',roamSource='',furSource=''){
  const vec=(x=0,y=0,z=0)=>({x,y,z,set(a=0,b=0,c=0){this.x=a;this.y=b;this.z=c;return this},setScalar(a){this.x=a;this.y=a;this.z=a;return this}});
  let wardrobeButtons=[];
  function element(id){return {id,style:{},dataset:{},hidden:false,attrs:{},children:[],clientWidth:800,clientHeight:440,textContent:'',handlers:{},
@@ -8,10 +8,10 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
    getBoundingClientRect(){return {left:0,top:0,width:800,height:440}},querySelectorAll(q){return q==='[data-outfit]'?wardrobeButtons:[]},
    set innerHTML(s){if(id==='wardrobe')wardrobeButtons=[...s.matchAll(/data-outfit="(\d+)"/g)].map(m=>{const b=element('outfit'+m[1]);b.dataset.outfit=m[1];return b})},get innerHTML(){return ''}}}
  class Obj{
-   constructor(...args){this.children=[];this.position=vec();this.rotation=vec();this.scale=vec(1,1,1);this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.shadowMap={};this.userData={};this.geometry={dispose(){}};this.material={color:{setHex(){}},dispose(){}};this.style={};this.visible=true;this.domElement=element('canvas');this.domElement.toDataURL=()=>'data:image/png;base64,abc';this.clock=0}
+   constructor(...args){this.children=[];this.position=vec();this.rotation=vec();this.scale=vec(1,1,1);this.color={setHex(){}};this.shadow={mapSize:{set(){}},camera:{}};this.shadowMap={};this.instanceMatrix={needsUpdate:false};this.userData={};this.geometry={dispose(){}};this.material={color:{setHex(){}},dispose(){}};this.style={};this.visible=true;this.domElement=element('canvas');this.domElement.toDataURL=()=>'data:image/png;base64,abc';this.clock=0}
    add(o){this.children.push(o)}remove(o){this.children=this.children.filter(x=>x!==o)}
    traverse(f){f(this);for(const c of this.children)c.traverse(f)}
-   set(...a){this.position.set(...a);return this}setHex(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}getWorldPosition(v){v.x=this.position.x;v.y=this.position.y;v.z=this.position.z;return v}project(){this.x/=5;this.y/=5;return this}intersectObjects(){return [{point:{x:0,y:1.8,z:.8}}]}intersectObject(){return [{point:{x:0,y:1,z:1}}]}getElapsedTime(){return this.clock+=.2}dispose(){}
+   set(...a){this.position.set(...a);this.x=a[0];this.y=a[1];this.z=a[2];return this}setHex(){}setFromUnitVectors(){return this}compose(){return this}setMatrixAt(){}lookAt(){}updateProjectionMatrix(){}setPixelRatio(){}setSize(){}render(){}setFromCamera(){}getWorldPosition(v){v.x=this.position.x;v.y=this.position.y;v.z=this.position.z;return v}project(){this.x/=5;this.y/=5;return this}intersectObjects(){return [{point:{x:0,y:1.8,z:.8}}]}intersectObject(){return [{point:{x:0,y:1,z:1}}]}getElapsedTime(){return this.clock+=.2}dispose(){}
  }
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,element(id));return elements.get(id)};
  const tags=[...html.matchAll(/<button\b([^>]*)>/g)].map(x=>x[1]),groups={act:[],room:[],food:[]};
@@ -26,7 +26,7 @@ export function runPiboSmoke(html,careSource,rewardsSource='',faceSource='',moti
  const win={addEventListener(){},MediaRecorder:null},navigator={};const ResizeObserver=class{observe(){}};
  const js=html.split('<script type="module">')[1].split('</script>')[0].replace(/^\s*import[^\n]*\n/gm,'');
  if(!js)throw Error('No game script found');
- const launch=new Function('THREE','PiboAudio','PiboCare','window','document','localStorage','performance','navigator','requestAnimationFrame','ResizeObserver','devicePixelRatio','setTimeout','clearTimeout',rewardsSource.replace(/^export /gm,'')+'\n'+faceSource.replace(/^export /gm,'')+'\n'+motionSource.replace(/^export /gm,'')+'\n'+voiceSource.replace(/^export /gm,'')+'\n'+characterSource.replace(/^export /gm,'')+'\n'+interactionSource.replace(/^export /gm,'')+'\n'+gardenSource.replace(/^export /gm,'')+'\n'+roamSource.replace(/^export /gm,'')+'\n'+js);
+ const launch=new Function('THREE','PiboAudio','PiboCare','window','document','localStorage','performance','navigator','requestAnimationFrame','ResizeObserver','devicePixelRatio','setTimeout','clearTimeout',rewardsSource.replace(/^export /gm,'')+'\n'+faceSource.replace(/^export /gm,'')+'\n'+motionSource.replace(/^export /gm,'')+'\n'+voiceSource.replace(/^export /gm,'')+'\n'+furSource.replace(/^export /gm,'')+'\n'+characterSource.replace(/^\s*import[^\n]*\n/gm,'').replace(/^export /gm,'')+'\n'+interactionSource.replace(/^export /gm,'')+'\n'+gardenSource.replace(/^export /gm,'')+'\n'+roamSource.replace(/^export /gm,'')+'\n'+js);
  launch(THREE,PiboAudio,PiboCare,win,document,localStorage,performance,navigator,requestAnimationFrame,ResizeObserver,1,setTimeout,clearTimeout);
  const click=(key,val)=>{const b=groups[key]?.find(x=>x.dataset[key]===val)||get(val===undefined?key:val);if(!b?.handlers?.click)throw Error('Missing click '+key+':'+val);b.click()};
  const frame=(n=1)=>{for(let i=0;i<n;i++){now+=150;const cb=frames.shift();if(!cb)throw Error('No animation frame');cb()}};

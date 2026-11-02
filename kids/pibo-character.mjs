@@ -1,5 +1,6 @@
 /* Pibo-exclusive 3D character details. All meshes generated from original shapes.
    Do not imitate protected characters, models, art, clothing, or trademarks. */
+import {furSamples} from './pibo-fur.mjs';
 export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
  const cream=mat(0xfff1da),peach=mat(0xe49a63),rose=mat(0xed708b),mint=mat(0x50bfae,.43);
  // Layered cheek tufts give the orange Pibo a distinct friendly silhouette.
@@ -46,6 +47,33 @@ export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
   const minor=ell(head,smallShine,eye.x+.046,.04,.801,.019,.025,.011);
   eyeGlints.push({eye,major,minor});
  }
+ // Mobile-friendly original fur shell: two instanced meshes rather than hundreds of draw calls.
+ // Fur stays attached to the existing head/body animations; no change to saved games.
+ // Front face, chest and touch hit-zones stay clear so children can still pet and feed Pibo.
+ const furShells=[];
+ for(const [parent,count,radii,frontLimit,size,color] of [
+  [head,220,[.76,.7,.66],.14,.041,0xffcb81],
+  [cat,300,[.72,.85,.63],.26,.055,0xf5b965]
+ ]){
+  const samples=furSamples({count,radii,frontLimit});
+  const material=new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide});
+  const shell=new THREE.InstancedMesh(new THREE.ConeGeometry(1,1,3),material,samples.length);
+  const up=new THREE.Vector3(0,1,0),position=new THREE.Vector3(),normal=new THREE.Vector3();
+  const orientation=new THREE.Quaternion(),scale=new THREE.Vector3(),matrix=new THREE.Matrix4();
+  for(let i=0;i<samples.length;i++){
+   const sample=samples[i];normal.set(...sample.normal);
+   orientation.setFromUnitVectors(up,normal);
+   position.set(sample.position[0]+normal.x*size*.15,sample.position[1]+normal.y*size*.15,sample.position[2]+normal.z*size*.15);
+   const width=size*(.105+sample.tint*.006);
+   scale.set(width,size*sample.length,width);
+   matrix.compose(position,orientation,scale);
+   shell.setMatrixAt(i,matrix);
+  }
+  shell.instanceMatrix.needsUpdate=true;
+  shell.castShadow=false; shell.receiveShadow=false; shell.frustumCulled=false;
+  shell.raycast=()=>{}; // Decorative fur must not steal existing touch/raycast hits.
+  parent.add(shell);furShells.push(shell);
+ }
  return {
   update(seconds,opening=0,reducedMotion=false){
    const talk=Math.max(0,Number(opening)||0);
@@ -59,6 +87,6 @@ export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
    if(!reducedMotion)pendant.rotation.z=.075*Math.sin(seconds*2.1);
    pawMark.rotation.z=pendant.rotation.z;
   },
-  pendant,tongue,toeMeshes,eyeGlints
+  pendant,tongue,toeMeshes,eyeGlints,furShells
  };
 }
