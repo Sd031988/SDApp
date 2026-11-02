@@ -156,3 +156,12 @@ konkrete offene Aufgabenliste, **keine** Fertigstellungsbestätigung.
 - **Referenz:** Offizielle Herstellerseite und Herstellerinformation vom 04.06.2026 zum frei begehbaren Garten. Pibo bleibt im Vergleich auf 21 teilweise erfüllten und 5 fehlenden von 26 Kriterien; keine professionelle Qualitätsparität.
 - **Offen:** GitHub-Push-CI, Pages, Chromium Desktop/Mobil, echtes WebGL, FPS auf Mobilhardware, professionelle Rig-/IK-Fußkontakte und zusammenhängende Welterkundung. Der GitHub-Connector meldete für den letzten Hauptbranch-Commit keine kombinierten Statuschecks; dies bestätigt keine erfolgreichen Workflows.
 - **Nächster Schritt:** Echten WebGL-Desktop-/Mobiltest des Gartenlaufs und CI-Status abnehmen, danach originale Pfoten-IK und weichere Kameraführung entwickeln.
+
+## Qualitätsdurchlauf 02.11.2026 – weichere Gartenkamera
+
+- **Implementiert:** Bildratenunabhängige, zeitbasierte Folgekamera mit synchronisiertem Blickziel und leichter Vorausschau in Laufrichtung. Bei „Bewegung reduzieren“ folgt sie ohne Nachlauf; Zimmerwechsel setzt Kamerafokus zurück.
+- **Getestet:** Bestehende Garten-Unit-Assertions einschließlich acht schwieriger Hindernisziele und neue 30/60-FPS-Kamera-Tests, Pausen, Reduced Motion und ungültige Eingaben im V8-Assert-Harness. Modul und HTML-Inline-Modul syntaktisch geprüft. **Kein vollständiger Node-/Chromium-/WebGL-/Hardwaretest**.
+- **Bestandsschutz:** Keine Änderung an Spielstandschema, Pflege, Räumen, Minispielen oder anderen SD-Hub-Projekten. Nur originaler Pibo-Code.
+- **Vergleich:** Offizielle Herstellerseite, Google Play (App-Update 27.10.2026) und Garten-Ankündigung vom 04.06.2026. Pibo besitzt weiterhin keine gleichwertige verbundene Welt oder professionelles Rigg.
+- **Benchmark:** 26 Kriterien: 21 teilweise, 5 fehlen. `freie_erkundung` bleibt `teilweise`.
+- **Offen:** GitHub-Push-CI/Pages, Desktop-/Mobil-Chromium, echtes WebGL, FPS auf Mobilhardware, Pfoten-IK und verbundene Hauswelt. Nächster Schritt: Browser-Abnahme und bessere Pfoten-Bodenkontakte.
