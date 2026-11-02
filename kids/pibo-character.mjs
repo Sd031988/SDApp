@@ -1,6 +1,6 @@
 /* Pibo-exclusive 3D character details. All meshes generated from original shapes.
    Do not imitate protected characters, models, art, clothing, or trademarks. */
-export function decoratePibo({THREE,cat,head,ell,mat}){
+export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
  const cream=mat(0xfff1da),peach=mat(0xe49a63),rose=mat(0xed708b),mint=mat(0x50bfae,.43);
  // Layered cheek tufts give the orange Pibo a distinct friendly silhouette.
  for(const sign of [-1,1]){
@@ -27,14 +27,38 @@ export function decoratePibo({THREE,cat,head,ell,mat}){
  const pawMark=ell(cat,mint,0,1.47,.616,.058,.051,.015);
  const tongue=ell(head,rose,0,-.5,.764,.095,.047,.025);
  tongue.visible=false;
+ // Separate rounded toes are parented to each moving forepaw, not the torso.
+ // Their transforms therefore follow feeding, touch reactions and garden steps.
+ const toeMeshes=[];
+ for(const paw of paws){
+  for(const dx of [-.49,0,.49]){
+   toeMeshes.push(ell(paw,cream,dx,-.22,.8,.32,.34,.22));
+  }
+  // A small underside pad becomes visible when a paw is lifted.
+  ell(paw,rose,0,-.85,.32,.42,.10,.32);
+ }
+ // Layered wet-looking catchlights track the *existing* animated iris gaze.
+ // All geometry is original; no downloaded character textures or meshes.
+ const eyeGlints=[];
+ const eyeShine=mat(0xffffff,.12),smallShine=mat(0xd9fff4,.18);
+ for(const eye of pupils){
+  const major=ell(head,eyeShine,eye.x-.035,.185,.803,.032,.052,.012);
+  const minor=ell(head,smallShine,eye.x+.046,.04,.801,.019,.025,.011);
+  eyeGlints.push({eye,major,minor});
+ }
  return {
   update(seconds,opening=0,reducedMotion=false){
    const talk=Math.max(0,Number(opening)||0);
    tongue.visible=talk>.15;
    tongue.position.y=-.49-Math.min(.085,talk*.13);
+   for(const {eye,major,minor} of eyeGlints){
+    const offset=Number.isFinite(eye.colored?.position?.x)?eye.colored.position.x-eye.x:0;
+    major.position.x=eye.x-.035+offset;
+    minor.position.x=eye.x+.046+offset;
+   }
    if(!reducedMotion)pendant.rotation.z=.075*Math.sin(seconds*2.1);
    pawMark.rotation.z=pendant.rotation.z;
   },
-  pendant,tongue
+  pendant,tongue,toeMeshes,eyeGlints
  };
 }
