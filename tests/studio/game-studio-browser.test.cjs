@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'../..');
 const files=new Map([
 ['/studio/game-studio/index.html','text/html'],
 ['/studio/game-studio/game.js','application/javascript'],
+['/studio/game-studio/game-audio.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/style.css','text/css'],
 ['/icon.svg','image/svg+xml']]);
@@ -186,6 +187,20 @@ await page.waitForFunction(()=>document.getElementById('objectCount').textConten
 await page.locator('#modePlay').click();
 await page.waitForFunction(()=>document.getElementById('goalCount').textContent==='1 / 2 Kristalle');
 assert.equal(await page.locator('#goalHud').isVisible(),true);
+await page.waitForTimeout(400);
+assert(Number.parseFloat(await page.locator('#goalTime').innerText())>=.2);
+await page.locator('#soundToggle').click();
+assert.equal(await page.locator('#soundToggle').getAttribute('aria-pressed'),'true');
+await page.keyboard.down('Shift');
+await page.keyboard.down('w');
+await page.waitForFunction(()=>document.body.dataset.characterState==='run',{timeout:6000});
+assert.equal(await page.locator('#characterState').innerText(),'SPRINTEN');
+await page.keyboard.up('w');
+await page.keyboard.up('Shift');
+await page.locator('#restartRound').click();
+await page.waitForFunction(()=>document.getElementById('goalCount').textContent==='1 / 2 Kristalle');
+await page.locator('#soundToggle').click();
+assert.equal(await page.locator('#soundToggle').getAttribute('aria-pressed'),'false');
 await page.locator('#modeEdit').click();
 assert.equal(await page.locator('#goalHud').isVisible(),false);
 await page.locator('#modePlay').click();
@@ -214,6 +229,8 @@ assert.equal(await page.locator('[data-nature-group="grove"]').isVisible(),true)
 assert.equal(await page.locator('[data-nature-group="garden"]').isVisible(),true);
 await page.locator('#modePlay').click();
 assert.equal(await page.locator('[data-control="jump"]').isVisible(),true);
+assert.equal(await page.locator('[data-control="run"]').isVisible(),true);
+assert.equal(await page.locator('#soundToggle').isVisible(),true);
 await page.waitForFunction(()=>document.body.dataset.characterState==='idle',{timeout:6000});
 await page.keyboard.down('w');
 await page.waitForFunction(()=>document.body.dataset.characterState==='walk',{timeout:6000});
