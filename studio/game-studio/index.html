@@ -7,13 +7,13 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-editor2">
-<script defer src="./scene-core.js?v=20261102-editor2"></script>
-<script defer src="./game.js?v=20261102-editor2"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-landscape3">
+<script defer src="./scene-core.js?v=20261102-landscape3"></script>
+<script defer src="./game.js?v=20261102-landscape3"></script>
 </head>
 <body>
 <header class="topbar">
-<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.1</span></div>
+<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.3</span></div>
 <div class="topactions"><span class="scene-title" id="sceneName">Meine erste 3D-Welt</span><button id="saveScene" class="action primary" type="button">↓ <span>Szene speichern</span></button></div>
 </header>
 <main class="layout">
@@ -25,6 +25,18 @@
 <button type="button" data-add="tree" data-edit-only><span class="object-icon icon-tree">♠</span><span>Baum</span><span class="add-symbol">＋</span></button>
 <button type="button" data-add="column" data-edit-only><span class="object-icon icon-column">▥</span><span>Säule</span><span class="add-symbol">＋</span></button>
 </div>
+<section class="landscape-tools" aria-label="Landschaft gestalten">
+<div class="landscape-head"><small>LANDSCHAFT</small><strong>Gelände & Natur</strong><p>Wähle den Boden und ergänze die Landschaft.</p></div>
+<div class="ground-picker" role="group" aria-label="Bodenmaterial">
+<button type="button" data-ground="meadow" aria-pressed="true" data-edit-only><span class="swatch meadow"></span>Wiese</button>
+<button type="button" data-ground="sand" aria-pressed="false" data-edit-only><span class="swatch sand"></span>Wüste</button>
+<button type="button" data-ground="snow" aria-pressed="false" data-edit-only><span class="swatch snow"></span>Schnee</button>
+</div>
+<div class="nature-objects">
+<button type="button" data-add="rock" data-edit-only><span aria-hidden="true">◆</span> Felsen hinzufügen</button>
+<button type="button" data-add="hill" data-edit-only><span aria-hidden="true">◢</span> Hügel hinzufügen</button>
+</div>
+</section>
 <div class="list-header"><strong>Szenenhierarchie</strong><span class="number" id="objectCount">6</span></div>
 <div id="sceneList" class="scene-list" aria-label="Objekte in der Szene"></div>
 <div class="sidefooter"><span class="online-dot"></span> Lokale 3D-Engine · WebGL</div>
@@ -75,7 +87,7 @@
 <div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
 <p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
 </section>
-<div class="side-bottom">SD GAME-STUDIO <span>v0.1 · PROTOTYP</span></div>
+<div class="side-bottom">SD GAME-STUDIO <span>v0.3 · ALPHA</span></div>
 </aside>
 </main>
 </body></html>
