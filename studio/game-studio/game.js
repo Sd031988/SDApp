@@ -289,6 +289,8 @@ const stats=profiler.snapshot(),original=benchOriginal;
 benchOriginal=null;
 scene=original.scene;
 selected=original.selected;
+Object.assign(camera,original.camera);
+Object.assign(player,original.player);
 lockBenchmark(false);
 list();syncDirty();
 $('benchmarkToggle').textContent='Testwelt starten';
@@ -301,7 +303,7 @@ if(playing)mode(false);
 let sample;
 try{sample=Perf.createBenchmark(Core,$('benchmarkKind').value)}
 catch(err){say(err.message);return;}
-benchOriginal={scene,selected,name:sample.name};
+benchOriginal={scene,selected,name:sample.name,camera:{...camera},player:{...player}};
 scene=sample;selected=null;
 profiler.reset();
 profileOn=true;
