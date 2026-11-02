@@ -29,6 +29,16 @@ const assert = require('node:assert/strict');
     assert.match(await page.title(), /Code-Studio/);
     // Regression: new AI buttons must never push ▶ Ausführen outside of the screen.
     await page.locator('#app').waitFor({state:'visible',timeout:15000});
+    // ECC-inspired review stays read-only and is accessible as a real dialog.
+    await page.locator('#agentReviewBtn').click();
+    assert.equal(await page.locator('#agentReviewOverlay').isVisible(),true);
+    assert.match(await page.locator('#agentReviewSummary').innerText(),/Dateien/);
+    assert.match(await page.locator('#agentReviewNote').innerText(),/keine Tests gestartet/);
+    await page.locator('#agentReviewAgain').click();
+    assert.equal(await page.locator('#agentReviewCopy').isEnabled(),true);
+    await page.locator('#agentReviewClose').click();
+    assert.equal(await page.locator('#agentReviewOverlay').isVisible(),false);
+
     for (const width of [1600,1280,1080,1024,900,801,800,600,390,320]) {
       await page.setViewportSize({width,height:800});
       const metrics=await page.evaluate(()=>{
