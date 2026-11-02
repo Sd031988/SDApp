@@ -16,9 +16,9 @@ function eligible(path,value){
 function resolve(owner,reference){
  if(typeof reference!=='string')return null;
  let ref=reference.trim().replace(/&amp;/gi,'&').split(/[?#]/)[0];
- if(!ref||SKIP.test(ref)||/[\x00-\x1f<>{}*"'\\x60]/.test(ref))return null;
+ if(!ref||SKIP.test(ref)||/[\x00-\x1f<>{}*"'\x60]/.test(ref))return null;
  try{ref=decodeURIComponent(ref);}catch(_){return null;}
- if(!ref||SKIP.test(ref)||/[\x00-\x1f<>{}*"'\\x60]/.test(ref)||/^[a-z][a-z0-9+.-]*:/i.test(ref))return null;
+ if(!ref||SKIP.test(ref)||/[\x00-\x1f<>{}*"'\x60]/.test(ref)||/^[a-z][a-z0-9+.-]*:/i.test(ref))return null;
  const parts=ref.startsWith('/')?[]:owner.split('/').slice(0,-1);
  for(const part of ref.replace(/^\/+/,'').split('/')){
   if(!part||part==='.')continue;
