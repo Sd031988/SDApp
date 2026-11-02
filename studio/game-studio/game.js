@@ -4,7 +4,7 @@
 const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
 const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
-let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene);
+let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
 const player={x:0,y:0,z:5,vy:0};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
 const keys={forward:false,back:false,left:false,right:false,jump:false};
@@ -40,6 +40,20 @@ const p=[Math.cos(a),-1,Math.sin(a)],q=[Math.cos(b),-1,Math.sin(b)];
 const s=[r*Math.cos(a),1,r*Math.sin(a)],t=[r*Math.cos(b),1,r*Math.sin(b)];
 list.push([p,s,q]);if(!cone){list.push([s,t,q]);list.push([[0,1,0],s,t]);}list.push([[0,-1,0],q,p]);}
 return triangles(list);}
+function buildTerrain(){
+const t=scene.terrain,vertices=[],size=Core.GRID,step=Core.STEP;
+const node=(col,row)=>[-20+col*step,t[row*size+col],-20+row*step];
+function face(a,b,c){
+const normal=norm(cross(b.map((v,i)=>v-a[i]),c.map((v,i)=>v-a[i])));
+for(const v of [a,b,c])vertices.push(...v,...normal);
+}
+for(let row=0;row<size-1;row++)for(let col=0;col<size-1;col++){
+const a=node(col,row),b=node(col+1,row),c=node(col,row+1),d=node(col+1,row+1);
+face(a,c,b);face(b,c,d);
+}
+if(terrainMesh)gl.deleteBuffer(terrainMesh.buffer);
+terrainMesh=mesh(vertices);terrainSource=t;
+}
 function gridlines(){const a=[];for(let p=-20;p<=20;p++){a.push(-20,.012,p,0,1,0,20,.012,p,0,1,0,p,.012,-20,0,1,0,p,.012,20,0,1,0);}return mesh(a);}
 function compile(type,source){const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error('3D-Shaderfehler: '+gl.getShaderInfoLog(shader));return shader;}
 function setup(){
@@ -58,27 +72,28 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontex
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
 function draw(shape,tint,m,mode){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
 function part(shape,tint,x,y,z,a,b,c){draw(shape,tint,mm(translate(x,y,z),scale(a,b,c)));}
-function object(o){const s=o.scale,x=o.x,z=o.z;
-if(o.type==='box')part('box',o.color,x,s,z,s,s,s);
-if(o.type==='sphere')part('sphere',o.color,x,s,z,s,s,s);
-if(o.type==='column')part('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
-if(o.type==='rock')part('sphere',o.color,x,.75*s,z,1.05*s,.74*s,1.2*s);
-if(o.type==='hill')part('sphere',o.color,x,.1*s,z,2.3*s,.9*s,2.3*s);
-if(o.type==='tree'){part('column','#735d4b',x,1.1*s,z,.27*s,1.1*s,.27*s);part('cone',o.color,x,2.8*s,z,1.28*s,1.45*s,1.28*s);part('cone','#408d75',x,3.7*s,z,.88*s,1.1*s,.88*s);}
-if(!playing&&o.id===selected)part('box','#f8d481',x,.05,z,1.08*s,.05,1.08*s);
+function object(o){const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z),drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
+if(o.type==='box')drawPart('box',o.color,x,s,z,s,s,s);
+if(o.type==='sphere')drawPart('sphere',o.color,x,s,z,s,s,s);
+if(o.type==='column')drawPart('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
+if(o.type==='rock')drawPart('sphere',o.color,x,.75*s,z,1.05*s,.74*s,1.2*s);
+if(o.type==='hill')drawPart('sphere',o.color,x,.1*s,z,2.3*s,.9*s,2.3*s);
+if(o.type==='tree'){drawPart('column','#735d4b',x,1.1*s,z,.27*s,1.1*s,.27*s);drawPart('cone',o.color,x,2.8*s,z,1.28*s,1.45*s,1.28*s);drawPart('cone','#408d75',x,3.7*s,z,.88*s,1.1*s,.88*s);}
+if(!playing&&o.id===selected)drawPart('box','#f8d481',x,.05,z,1.08*s,.05,1.08*s);
 }
-function character(){part('column','#416b8e',player.x,player.y+.63,player.z,.37,.6,.37);part('sphere','#e8c6a2',player.x,player.y+1.52,player.z,.43,.43,.43);part('sphere','#27394d',player.x-.14,player.y+1.59,player.z+.37,.05,.06,.05);part('sphere','#27394d',player.x+.14,player.y+1.59,player.z+.37,.05,.06,.05);}
+function character(){const y=player.y+Core.terrainHeight(scene.terrain,player.x,player.z);part('column','#416b8e',player.x,y+.63,player.z,.37,.6,.37);part('sphere','#e8c6a2',player.x,y+1.52,player.z,.43,.43,.43);part('sphere','#27394d',player.x-.14,y+1.59,player.z+.37,.05,.06,.05);part('sphere','#27394d',player.x+.14,y+1.59,player.z+.37,.05,.06,.05);}
 function dimensions(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);return{w,h};}
-function matrices(){const{w,h}=dimensions(),tx=playing?player.x:camera.targetX,tz=playing?player.z:camera.targetZ,d=playing?10:camera.distance,e=playing?.5:camera.elev;const eye=[tx+d*Math.sin(camera.azimuth)*Math.cos(e),d*Math.sin(e)+(playing?2:0),tz+d*Math.cos(camera.azimuth)*Math.cos(e)];return{view:look(eye,[tx,playing?1.1+player.y:0,tz]),proj:perspective(.838,w/h,.1,120)};}
+function matrices(){const{w,h}=dimensions(),tx=playing?player.x:camera.targetX,tz=playing?player.z:camera.targetZ,d=playing?10:camera.distance,e=playing?.5:camera.elev;const eye=[tx+d*Math.sin(camera.azimuth)*Math.cos(e),d*Math.sin(e)+(playing?2:0)+(playing?Core.terrainHeight(scene.terrain,player.x,player.z):0),tz+d*Math.cos(camera.azimuth)*Math.cos(e)];const target=[tx,playing?1.1+player.y+Core.terrainHeight(scene.terrain,player.x,player.z):0,tz];return{view:look(eye,target),proj:perspective(.838,w/h,.1,120),eye,target};}
 const terrains={meadow:{sky:[.065,.12,.18],soil:'#365e54',grid:'#517d72'},sand:{sky:[.17,.14,.12],soil:'#a48b65',grid:'#c5a879'},snow:{sky:[.12,.17,.22],soil:'#bacbd3',grid:'#d5e3e6'}};
-function render(){const m=matrices(),terrain=terrains[scene.ground]||terrains.meadow;gl.clearColor(...terrain.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));part('box',terrain.soil,0,-.26,0,20,.25,20);draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();}
+function render(){const m=matrices(),terrain=terrains[scene.ground]||terrains.meadow;gl.clearColor(...terrain.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(u.view,false,new Float32Array(m.view));gl.uniformMatrix4fv(u.proj,false,new Float32Array(m.proj));part('box',terrain.soil,0,-.26,0,20,.25,20);if(terrainSource!==scene.terrain)buildTerrain();draw(terrainMesh,terrain.soil,id());draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();}
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
-function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:1)*o.scale,o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
+function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
 function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
-function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();}
+function selectBrush(tool){brush=tool;document.querySelectorAll('[data-brush]').forEach(b=>{const active=b.dataset.brush===tool;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});canvas.classList.toggle('sculpting',tool!=='orbit');$('editHint').textContent=tool==='orbit'?'Maus oder Finger ziehen: Kamera drehen · Mausrad: Zoom · Objekt antippen: auswählen':'Pinsel aktiv: Finger oder Maus über das Gelände ziehen · Mit „Kamera“ wieder drehen';}
+function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();selectBrush(brush);}
 function syncDirty(){dirty=Core.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
 function refreshHistory(){$('undoAction').disabled=playing||!history.canUndo;$('redoAction').disabled=playing||!history.canRedo;}
 function changed(msg){history.record(scene);syncDirty();say(msg);list();}
@@ -93,11 +108,12 @@ if(playing||selected==null)return;
 try{const copy=Core.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
 catch(err){say(err.message);}
 }
-function mode(play){playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
+function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
 function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
 function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
 function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
+document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
 document.querySelectorAll('[data-ground]').forEach(b=>b.addEventListener('click',()=>{
 if(playing)return;
 try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[scene.ground]+'.');}
@@ -125,11 +141,54 @@ return false;
 }
 window.addEventListener('keydown',e=>{if(!shortcut(e))key(e,true);});window.addEventListener('keyup',e=>key(e,false));window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
 document.querySelectorAll('[data-control]').forEach(b=>{const k=b.dataset.control;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys[k]=true;});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{e.preventDefault();keys[k]=false;});});
+function groundPoint(clientX,clientY){
+const rect=canvas.getBoundingClientRect(),m=matrices();
+const forward=norm(m.target.map((v,i)=>v-m.eye[i])),right=norm(cross(forward,[0,1,0])),up=norm(cross(right,forward));
+const nx=(clientX-rect.left)/rect.width*2-1,ny=1-(clientY-rect.top)/rect.height*2;
+const tan=Math.tan(.838/2),aspect=rect.width/rect.height;
+const direction=norm(forward.map((v,i)=>v+right[i]*nx*tan*aspect+up[i]*ny*tan));
+if(direction[1]>=-.002)return null;
+let distance=-m.eye[1]/direction[1];
+if(distance<=0)return null;
+for(let i=0;i<5;i++){
+const x=m.eye[0]+distance*direction[0],z=m.eye[2]+distance*direction[2];
+const surface=Core.terrainHeight(scene.terrain,x,z);
+distance=(surface-m.eye[1])/direction[1];
+}
+const x=m.eye[0]+distance*direction[0],z=m.eye[2]+distance*direction[2];
+return Math.abs(x)<=20&&Math.abs(z)<=20?{x,z}:null;
+}
+function paint(clientX,clientY){
+const point=groundPoint(clientX,clientY);
+if(!point||!pointer)return;
+const radius=Number($('brushRadius').value);
+if(Core.sculpt(scene,brush,point.x,point.z,radius,.35)){
+pointer.sculpted=true;syncDirty();say('Gelände wird geformt …');
+}
+}
+function endPointer(cancelled,e){
+if(!pointer)return;
+if(pointer.sculpted)changed('Gelände bearbeitet.');
+else if(!cancelled&&!pointer.moved&&brush==='orbit'&&!playing)pick(e.clientX,e.clientY);
+pointer=null;
+}
 let pointer=null;
-canvas.addEventListener('pointerdown',e=>{if(playing)return;pointer={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId||playing)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>2)pointer.moved=true;camera.azimuth=(camera.azimuth-dx*.007)%(2*Math.PI);camera.elev=clamp(camera.elev+dy*.006,.12,1.26);pointer.x=e.clientX;pointer.y=e.clientY;});
-canvas.addEventListener('pointerup',e=>{if(pointer&&pointer.id===e.pointerId&&!pointer.moved&&!playing)pick(e.clientX,e.clientY);pointer=null;});
-canvas.addEventListener('pointercancel',()=>pointer=null);canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.distance=clamp(camera.distance+e.deltaY*.02,6,48);}},{passive:false});
+canvas.addEventListener('pointerdown',e=>{
+if(playing||!e.isPrimary)return;
+pointer={id:e.pointerId,x:e.clientX,y:e.clientY,moved:brush!=='orbit',sculpted:false};
+canvas.setPointerCapture(e.pointerId);
+if(brush!=='orbit')paint(e.clientX,e.clientY);
+});
+canvas.addEventListener('pointermove',e=>{
+if(!pointer||pointer.id!==e.pointerId||playing)return;
+const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
+if(brush!=='orbit'){if(Math.abs(dx)+Math.abs(dy)>2)paint(e.clientX,e.clientY);}
+else{if(Math.abs(dx)+Math.abs(dy)>2)pointer.moved=true;camera.azimuth=(camera.azimuth-dx*.007)%(2*Math.PI);camera.elev=clamp(camera.elev+dy*.006,.12,1.26);}
+pointer.x=e.clientX;pointer.y=e.clientY;
+});
+canvas.addEventListener('pointerup',e=>{if(pointer&&pointer.id===e.pointerId)endPointer(false,e);});
+canvas.addEventListener('pointercancel',e=>{if(pointer&&pointer.id===e.pointerId)endPointer(true,e);});
+canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.distance=clamp(camera.distance+e.deltaY*.02,6,48);}},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let before=0;function tick(now){const dt=before?Math.min((now-before)/1000,.05):0;before=now;if(playing)Core.move(player,keys,dt,scene.objects,camera.azimuth);if(!doc.hidden)render();requestAnimationFrame(tick);}
 try{setup();list();mode(false);doc.body.dataset.ready='true';requestAnimationFrame(tick);}catch(err){doc.body.dataset.ready='error';say(err.message);$('stageError').hidden=false;$('stageError').textContent=err.message;}
