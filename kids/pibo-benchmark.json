@@ -198,16 +198,26 @@
       "reference": "Eigener Garten mit Teich, Pflanzen, Windrad und Schmetterlingen",
       "acceptance": "Verbundenes begehbares Areal, freie Wegwahl, interaktive Objekte ohne abrupte Raumwechsel",
       "evidence": [
-        "kids/pibo-garden.mjs"
-      ]
+        "kids/pibo-garden.mjs",
+        "kids/pibo-roam.mjs",
+        "kids/pibo-roam.test.mjs",
+        "kids/e2e/pibo.spec.mjs"
+      ],
+      "implementation": "Originaler Garten mit antippbaren Schmetterlingen; ab 02.11.2026 zusätzlich Tap-to-Walk mit Schrittanimation, geglätteter Drehung, Folgekamera und begrenzten Kollisionszonen. Kein zusammenhängendes frei begehbares Haus, keine vollständige Navmesh-Wegfindung."
     },
     {
       "id": "freie_erkundung",
       "area": "Räume",
-      "status": "fehlt",
+      "status": "teilweise",
       "reference": "Direktes Gehen durch verbundene frei begehbare 3D-Räume und Weltzonen",
       "acceptance": "Eigener Navigation-Mesh/Wegefindung, Kollisionsprüfung und flüssige Kameraführung",
-      "evidence": []
+      "evidence": [
+        "kids/pibo-roam.mjs",
+        "kids/pibo-roam.test.mjs",
+        "kids/index.html",
+        "kids/e2e/pibo.spec.mjs"
+      ],
+      "implementation": "Nur im Garten: Boden per Raycast antippen, Pibo läuft mit originaler Schrittpose, begrenzter Geschwindigkeit und Folgekamera zum Ziel. Hindernisse werden lokal tangential umsteuert; keine Navmesh-Pfadplanung und keine freie Bewegung durch verbundene Innenräume. Desktop/Mobil-Chromium-Test neu hinzugefügt, Ergebnis des aktuellen Pushs noch offen."
     },
     {
       "id": "haustiere",
@@ -276,35 +286,35 @@
     }
   ],
   "last_iteration": {
-    "date": "2026-11-01",
-    "focus": "Interaktives 3D-Bad: Dusche und Handtuch an Pibos tatsächlichem Körper per Finger/Maus ziehen",
+    "date": "2026-11-02",
+    "focus": "Eigene begehbare 3D-Gartenfläche: per Maus/Touch den Boden antippen, Pibo geht selbständig mit Fußbewegung, sanfter Ausrichtung und Folgekamera.",
     "reference_checked": [
       "official",
       "google_play",
-      "bathroom_2026",
-      "backyard_2026"
+      "backyard_2026",
+      "bathroom_2026"
     ],
     "implementation_files": [
-      "kids/pibo-care.js",
-      "kids/index.html"
-    ],
-    "test_files": [
-      "kids/pibo-care.test.mjs",
-      "kids/e2e/pibo.spec.mjs",
+      "kids/pibo-roam.mjs",
+      "kids/index.html",
       "kids/pibo-smoke.js"
     ],
+    "test_files": [
+      "kids/pibo-roam.test.mjs",
+      "kids/e2e/pibo.spec.mjs",
+      "kids/pibo-smoke-test.mjs"
+    ],
     "verified": [
-      "PiboCare-Syntaxprüfung",
-      "Inline-JavaScript-Syntaxprüfung",
-      "PiboCare-Unit-/Regressionstests mit Three.js-Testdoubles erfolgreich",
-      "Pibo-Headless-Smoke: 18 Abläufe, 436 simulierte Frames, PASS (kein echtes WebGL)",
-      "Benchmark: 26 Kriterien, 20 teilweise, 6 fehlen; alle 15 Nachweisdateien auf main gefunden"
+      "Vorheriger Main-Stand f6b40ee: GitHub Pibo smoke, Chromium Kids browser checks und Pages-Deployment jeweils success (Actions API, 02.11.2026).",
+      "Neues PiboRoam-Modul im V8-Sandboxlauf: Ziel, 200 Frames, Baum-Hindernis und Reset ohne Ausnahme geprüft.",
+      "Inline-ESM-Body von kids/index.html in V8 syntaktisch kompiliert.",
+      "Regression in CI identifiziert: Headless-Smoke lud neues Modul nicht; Smoke-Bootstrap entsprechend repariert."
     ],
     "unverified": [
-      "Echte WebGL-Playwright-Läufe auf Desktop/Mobil-Chromium im aktuellen Durchlauf nicht lokal ausgeführt",
-      "GitHub-Actions-Status für Push-Workflows über verfügbaren Connector nicht abrufbar",
-      "Physische Android-/iOS-Touchtests und GPU-FPS-Messungen fehlen"
+      "Neue PiboRoam-Node-Unit- und Browser-Tests sowie WebGL-Garteninteraktion erst nach Abschluss des aktuellen GitHub-Actions-Pushs als bestanden bewerten.",
+      "Physische iOS/Android-Hardware, FPS/GPUs und vollständige Navigation um alle Gartenobjekte nicht geprüft.",
+      "Keine professionelle Modell-/Rig-/Audioqualität oder freie Navigation zwischen Zimmern nachgewiesen."
     ],
-    "next": "GitHub-Browserworkflow auswerten und eventuelle Touch-Raycaster-/Projektionsfehler reparieren; danach eigene hochwertig modellierte Badwerkzeuge und Flüssigkeits-Partikel."
+    "next": "Neueste Smoke-/Chromium-/Pages-Workflows für Garten-Tap-to-Walk auswerten, eventuelle Touch-Raycaster-Probleme reparieren; anschließend Wegfindung um Hindernisse und hochwertiges originales Rig-/Bewegungsblending."
   }
 }
