@@ -7,6 +7,7 @@
 <meta name="description" content="Professioneller Code-Editor im Browser: Webseiten mit Live-Vorschau, Python, C++, Java, C#, Rust und Go ausführen, Vorlagen, Suche, Versionen, ZIP – ohne Installation.">
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./ki-werkstatt.css?v=20261101-chatgpt-transfer-1">
+<link rel="stylesheet" href="./agent-review.css?v=20261102-ecc-review-1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#221b3d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -175,6 +176,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     <button id="kiChangeBtn" title="Wünsche eine Änderung an deinem geöffneten Projekt und übernimm den korrigierten Code" type="button">✏️ Ändern</button>
     <button id="kiServicesBtn" title="Google KI, Google AI Studio und ChatGPT öffnen oder dort anmelden" type="button">🤖 KI-Dienste</button>
     <button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button>
+    <button id="agentReviewBtn" type="button" title="Mehrstufiger Projekt-Review: Plan, Tests, Sicherheit und Freigabe – nur lesend">🧠 Projekt-Review</button>
     <button id="designBtn" title="Im Design-Studio gestalten – ohne Code">🎨 <span class="lang">Design</span></button>
     <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
     <span class="luecke"></span>
@@ -394,13 +396,36 @@ button,input,select,textarea{font:inherit;color:inherit}
     <p class="kiHint">Wähle vor der Übernahme genau die zu ändernden Dateien. Direktes Übernehmen erstellt eine Sicherung unter 🕘 Versionen; als Projektkopie bleibt das Original unangetastet. Der Code startet erst mit <strong>▶ Ausführen</strong>.</p>
   </div>
 </section>
+<section id="agentReviewOverlay" hidden aria-label="Mehrstufiger Projekt-Review">
+ <div class="agentReviewDialog" role="dialog" aria-modal="true" aria-labelledby="agentReviewTitle">
+  <div class="agentReviewHead">
+   <div><h2 id="agentReviewTitle">🧠 Projekt-Review</h2><p>Planen · Entwickeln · Testen · Sicherheit · Freigabe</p></div>
+   <button id="agentReviewClose" type="button" aria-label="Review schließen">✕ Schließen</button>
+  </div>
+  <p id="agentReviewSummary" class="agentReviewSummary" role="status" aria-live="polite"></p>
+  <p id="agentReviewNote" class="agentReviewSmall"></p>
+  <div class="agentReviewCols">
+   <section><h3>Prüfablauf</h3><ol id="agentReviewStages"></ol><h3>Nächste Schritte</h3><ul id="agentReviewTodo"></ul></section>
+   <section><h3>Statische Befunde</h3><ul id="agentReviewIssues"></ul></section>
+  </div>
+  <div class="agentReviewActions">
+   <button id="agentReviewAgain" type="button">🔄 Erneut analysieren</button>
+   <button id="agentReviewCopy" type="button" disabled>📋 Sichere Review-Anfrage kopieren</button>
+  </div>
+  <p id="agentReviewCopyStatus" class="agentReviewSmall" role="status" aria-live="polite"></p>
+  <textarea id="agentReviewManualCopy" hidden readonly aria-label="Review-Anfrage zum manuellen Kopieren"></textarea>
+  <p class="agentReviewSmall">Inspiriert vom offenen ECC-Workflow. Kein eigenständiger KI-Agent: Statische Prüfung ersetzt keine echten Laufzeit- und Sicherheitstests.</p>
+ </div>
+</section>
 <script src="./studio-diagnose.js?v=20261101-autodiagnose-1"></script>
 <script src="./studio-qualitaet.js?v=20261101-quality-1"></script>
+<script src="./agent-review.js?v=20261102-ecc-review-1"></script>
 <script src="./studio-visual-text.js?v=20261101-visual-1"></script>
 <script src="./studio-modules.js?v=20261101-module-1"></script>
 <script src="studio.js?v=20261101-module-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261101-change-request-1"></script>
 <script src="./ki-werkstatt-ui.js?v=20261101-chatgpt-transfer-1"></script>
+<script src="./agent-review-ui.js?v=20261102-ecc-review-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
 (function(){
