@@ -5,6 +5,7 @@ import argparse,json,os,re,shutil,sys,webbrowser
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
+SOURCE=ROOT if (ROOT/"manifest.json").is_file() else ROOT.parent/"chatgpt-transfer-extension"
 FILES=("manifest.json","background.js","studio-bridge.js")
 FENCE=re.compile(r"^\x60{3}([^\r\n\x60]*)\r?\n(.*?)^\x60{3}\s*$",re.M|re.S)
 HEADER=re.compile(r"^\s{0,3}#{1,6}\s*(?:Datei|File)\s*:\s*(.+?)\s*$",re.I|re.M)
@@ -14,7 +15,8 @@ LANG={"python":"py","py":"py","javascript":"js","js":"js","html":"html",
       "bash":"sh","sh":"sh","markdown":"md","xml":"xml"}
 RESERVED={"CON","PRN","AUX","NUL"}|{"COM%d"%i for i in range(1,10)}|{"LPT%d"%i for i in range(1,10)}
 
-def validate(root=ROOT):
+def validate(root=None):
+    root=root or SOURCE
     for name in FILES:
         if not (root/name).is_file():raise ValueError("Datei fehlt: "+name)
     m=json.loads((root/"manifest.json").read_text(encoding="utf-8-sig"))
@@ -36,7 +38,7 @@ def prepare():
     for name in FILES:
         temp=out/(name+".sd-tmp")
         try:
-            shutil.copyfile(ROOT/name,temp)
+            shutil.copyfile(SOURCE/name,temp)
             temp.replace(out/name)
         finally:
             if temp.exists():temp.unlink()

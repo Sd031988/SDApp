@@ -40,6 +40,11 @@ jobs:
           node --check studio/chatgpt-transfer-zip.js
           node --check studio/chatgpt-transfer-extension/background.js
           node --check studio/chatgpt-transfer-extension/studio-bridge.js
+      - name: Windows-Python-Brücke prüfen
+        run: |
+          python3 -m py_compile studio/chatgpt-windows/sd_bridge_windows.py
+          python3 studio/chatgpt-windows/sd_bridge_windows.py --diagnose
+          python3 -m unittest discover -s tests/studio -p 'test_chatgpt_windows.py' -v
       - name: Projektanalyse und Export prüfen
         run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/ki-repair-assistant.test.cjs tests/studio/ki-test-loop.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs
 

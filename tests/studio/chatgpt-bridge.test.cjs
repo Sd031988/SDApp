@@ -94,3 +94,22 @@ test('extension has no ChatGPT session/cookie or private message access',()=>{
  assert(manifest.content_scripts.every(s=>s.matches.every(m=>/thesdhub\.com\/studio/.test(m))));
  assert(!manifest.content_scripts.some(s=>s.matches.some(m=>/chatgpt|google/.test(m))));
 });
+
+test('Windows package sources are present for the browser-side ZIP download',()=>{
+ const root=path.resolve(__dirname,'../../studio');
+ const items=[
+  ['manifest.json','chatgpt-transfer-extension/manifest.json'],
+  ['background.js','chatgpt-transfer-extension/background.js'],
+  ['studio-bridge.js','chatgpt-transfer-extension/studio-bridge.js'],
+  ['sd_bridge_windows.py','chatgpt-windows/sd_bridge_windows.py'],
+  ['START-WINDOWS.cmd','chatgpt-windows/START-WINDOWS.cmd'],
+  ['README-WINDOWS.txt','chatgpt-windows/README-WINDOWS.txt']
+ ];
+ const zipped=zip.archive(items.map(([name,source])=>({name,text:fs.readFileSync(path.join(root,source),'utf8')})));
+ assert(zipped.length>1000);
+ const html=fs.readFileSync(path.join(root,'chatgpt-bruecke.html'),'utf8');
+ assert.match(html,/id="downloadWindows"/);
+ for(const [name,source] of items){
+  assert(html.includes(source.split('/').pop()));
+ }
+});
