@@ -64,3 +64,4 @@ jobs:
         run: |
           node tests/studio/browser.test.cjs
           node tests/studio/test-loop-browser.test.cjs
+          node tests/studio/devtools-browser.test.cjs
