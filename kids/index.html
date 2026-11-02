@@ -639,9 +639,11 @@ function animate(){
   const walk=roam.update(dt);
   cat.position.x=walk.x;cat.position.z=walk.z;cat.rotation.y=walk.heading;
   if(walk.moving){
-   cat.position.y+=.025*Math.abs(Math.sin(t*12));
-   for(let j=0;j<paws.length;j++)paws[j].position.y=.21+.16*Math.max(0,Math.sin(t*12+j*Math.PI));
-   for(let j=0;j<hindPaws.length;j++)hindPaws[j].position.y=.43+.13*Math.max(0,Math.sin(t*12+(j+1)*Math.PI));
+   // Blend the gait in and out with real path speed; no instant full-speed paw snapping.
+   const gait=Math.min(1,roam.speed/1.2);
+   cat.position.y+=.025*gait*Math.abs(Math.sin(t*12));
+   for(let j=0;j<paws.length;j++)paws[j].position.y=.21+.16*gait*Math.max(0,Math.sin(t*12+j*Math.PI));
+   for(let j=0;j<hindPaws.length;j++)hindPaws[j].position.y=.43+.13*gait*Math.max(0,Math.sin(t*12+(j+1)*Math.PI));
   }
   camera.position.x+=(walk.x-camera.position.x)*.12;
   camera.position.z+=(walk.z+8.8-camera.position.z)*.12;
