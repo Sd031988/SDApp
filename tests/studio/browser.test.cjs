@@ -38,6 +38,8 @@ const assert = require('node:assert/strict');
     await page.locator('#agentReviewPlan').click();
     assert.match(await page.locator('#agentReviewTaskStatus').innerText(),/erkannte Dateiverknüpfungen/);
     assert(await page.locator('#agentReviewTargets li').count()>0);
+    assert(await page.locator('#agentReviewCapabilities li').count()>=5);
+    assert.match(await page.locator('#agentReviewImpactNote').innerText(),/statische Abschätzung/);
     assert.equal(await page.locator('#agentReviewHandoff').isEnabled(),true);
     await page.locator('#agentReviewHandoff').click();
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
