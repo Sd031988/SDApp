@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="SD Game-Studio: Eigene 3D-Welten im Browser gestalten und spielen.">
+<meta name="theme-color" content="#101b24">
+<title>SD Game-Studio · 3D-Werkstatt</title>
+<link rel="icon" href="../../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./style.css?v=20261102-mvp1">
+<script defer src="./scene-core.js?v=20261102-mvp1"></script>
+<script defer src="./game.js?v=20261102-mvp1"></script>
+</head>
+<body>
+<header class="topbar">
+<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.1</span></div>
+<div class="topactions"><span class="scene-title" id="sceneName">Meine erste 3D-Welt</span><button id="saveScene" class="action primary" type="button">↓ <span>Szene speichern</span></button></div>
+</header>
+<main class="layout">
+<aside class="sidebar" aria-label="Objekte und Werkzeuge">
+<div class="panel-header"><small>WERKZEUGE</small><strong>3D-Objekte</strong><p>Füge Formen zur Welt hinzu.</p></div>
+<div class="object-catalog">
+<button type="button" data-add="box" data-edit-only><span class="object-icon icon-box">◼</span><span>Würfel</span><span class="add-symbol">＋</span></button>
+<button type="button" data-add="sphere" data-edit-only><span class="object-icon icon-sphere">●</span><span>Kugel</span><span class="add-symbol">＋</span></button>
+<button type="button" data-add="tree" data-edit-only><span class="object-icon icon-tree">♠</span><span>Baum</span><span class="add-symbol">＋</span></button>
+<button type="button" data-add="column" data-edit-only><span class="object-icon icon-column">▥</span><span>Säule</span><span class="add-symbol">＋</span></button>
+</div>
+<div class="list-header"><strong>Szenenhierarchie</strong><span class="number" id="objectCount">6</span></div>
+<div id="sceneList" class="scene-list" aria-label="Objekte in der Szene"></div>
+<div class="sidefooter"><span class="online-dot"></span> Lokale 3D-Engine · WebGL</div>
+</aside>
+<section class="workspace" aria-label="3D-Bühne">
+<div class="viewport-top">
+<div class="view-label"><span class="view-dot"></span> PERSPEKTIVE <span class="view-sub">/ Echtzeit-Vorschau</span></div>
+<div class="view-modes" role="group" aria-label="Modus">
+<button id="modeEdit" class="mode active" aria-pressed="true" type="button">✦ Bearbeiten</button>
+<button id="modePlay" class="mode" aria-pressed="false" type="button">▶ Spielen</button>
+</div>
+</div>
+<div class="canvas-container">
+<canvas id="stage" aria-label="3D-Welt: Ziehen zum Drehen, klicken zum Auswählen" tabindex="0"></canvas>
+<div class="viewport-badge">3D VIEWPORT <span>·</span> WEBGL</div>
+<div class="compass" aria-hidden="true"><span>N</span><b>✛</b><span>S</span></div>
+<div id="stageError" class="stage-error" hidden></div>
+<div class="overlay-bottom">
+<p id="editHint">Maus oder Finger ziehen: Kamera drehen · Mausrad: Zoom · Objekt antippen: auswählen</p>
+<p id="playHint" hidden>WASD / Pfeiltasten bewegen · Leertaste springen</p>
+</div>
+<div id="touchControls" class="touch-controls" hidden aria-label="Touch-Steuerung für Spielmodus">
+<div class="dpad"><button data-control="forward" type="button" aria-label="Vorwärts">↑</button><div><button data-control="left" type="button" aria-label="Links">←</button><button data-control="back" type="button" aria-label="Rückwärts">↓</button><button data-control="right" type="button" aria-label="Rechts">→</button></div></div>
+<button class="jump" data-control="jump" type="button">SPRUNG ↑</button>
+</div>
+</div>
+<div class="viewport-footer"><span class="mini-indicator">●</span><span id="status" role="status" aria-live="polite">3D-Szene wird vorbereitet …</span><button id="cameraReset" type="button" title="Kamera zurücksetzen">↺ Kamera</button></div>
+</section>
+<aside class="inspector" aria-label="Eigenschaften und Dateien">
+<section class="properties"><div class="panel-header"><small>INSPEKTOR</small><strong>Eigenschaften</strong></div>
+<div id="inspectorEmpty" class="empty-selection"><span>◇</span><p>Wähle ein Objekt in der 3D-Welt oder der Szenenhierarchie aus.</p></div>
+<div id="inspectorFields" hidden>
+<strong id="selectedTitle" class="selection-heading"></strong>
+<label for="propX">Position X <input id="propX" type="number" min="-19" max="19" step="0.5" value="0"></label>
+<label for="propZ">Position Z <input id="propZ" type="number" min="-19" max="19" step="0.5" value="0"></label>
+<label for="propScale">Größe <input id="propScale" type="number" min="0.4" max="3" step="0.1" value="1"></label>
+<label for="propColor">Materialfarbe <select id="propColor">
+<option value="#d7a35c">Sand</option><option value="#5ebbb0">Türkis</option><option value="#8fa4e9">Blau</option><option value="#d8797d">Koralle</option><option value="#bca3e5">Lavendel</option><option value="#dbcc97">Creme</option>
+</select></label>
+<button id="deleteObject" class="danger action" type="button" data-edit-only>Objekt entfernen</button>
+</div></section>
+<section class="file-panel"><div class="panel-header"><small>PROJEKT</small><strong>Szene verwalten</strong></div>
+<div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
+<p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
+</section>
+<div class="side-bottom">SD GAME-STUDIO <span>v0.1 · PROTOTYP</span></div>
+</aside>
+</main>
+</body></html>

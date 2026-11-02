@@ -1,0 +1,64 @@
+'use strict';
+const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../..');
+const files=new Map([
+['/studio/game-studio/index.html','text/html'],
+['/studio/game-studio/game.js','application/javascript'],
+['/studio/game-studio/scene-core.js','application/javascript'],
+['/studio/game-studio/style.css','text/css'],
+['/icon.svg','image/svg+xml']]);
+(async()=>{
+const server=http.createServer((request,response)=>{
+const pathname=new URL(request.url,'http://localhost').pathname,mime=files.get(pathname);
+if(!mime){response.writeHead(404).end();return;}
+response.setHeader('Content-Type',mime);
+fs.createReadStream(path.join(root,pathname)).on('error',()=>{if(!response.headersSent)response.writeHead(404).end();}).pipe(response);
+});
+let browser;
+try{
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader']});
+const page=await browser.newPage({viewport:{width:1320,height:780},acceptDownloads:true}),errors=[];
+page.on('pageerror',error=>errors.push(error.message));
+await page.goto('http://127.0.0.1:'+server.address().port+'/studio/game-studio/index.html',{waitUntil:'load'});
+await page.waitForFunction(()=>['true','error'].includes(document.body.dataset.ready),{timeout:20000});
+assert.equal(await page.locator('body').getAttribute('data-ready'),'true',await page.locator('#status').innerText());
+assert.match(await page.title(),/SD Game-Studio/);
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+const dims=await page.locator('#stage').evaluate(el=>[el.width,el.height]);
+assert(dims[0]>0&&dims[1]>0);
+await page.locator('[data-add="box"]').click();
+assert.equal(await page.locator('#objectCount').innerText(),'7');
+await page.locator('[data-object-id="7"]').click();
+assert.equal(await page.locator('#inspectorFields').isVisible(),true);
+await page.locator('#propX').fill('4');
+await page.locator('#propX').dispatchEvent('change');
+assert.equal(await page.locator('#propX').inputValue(),'4');
+const downloadEvent=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const download=await downloadEvent;
+assert.equal(download.suggestedFilename(),'sd-game-scene.json');
+const payload=fs.readFileSync(await download.path());
+const saved=JSON.parse(payload.toString('utf8'));
+assert.equal(saved.objects.length,7);
+assert.equal(saved.objects.find(o=>o.id===7).x,4);
+await page.locator('#resetScene').click();
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+await page.locator('#sceneFile').setInputFiles({name:'world.json',mimeType:'application/json',buffer:payload});
+await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='7');
+await page.locator('#modePlay').click();
+assert.equal(await page.locator('#playHint').isVisible(),true);
+await page.keyboard.down('w');await page.waitForTimeout(150);await page.keyboard.up('w');
+await page.locator('#modeEdit').click();
+await page.locator('[data-object-id="7"]').click();
+await page.locator('#deleteObject').click();
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+await page.setViewportSize({width:390,height:844});
+assert.equal(await page.locator('#stage').isVisible(),true);
+assert.equal(await page.locator('[data-add="tree"]').isVisible(),true);
+await page.locator('#modePlay').click();
+assert.equal(await page.locator('[data-control="jump"]').isVisible(),true);
+assert.deepEqual(errors,[]);
+console.log('SD Game-Studio: WebGL, 3D-Objekte, Import/Export, Spielmodus und Mobile-Smoke bestanden.');
+}finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}
+})().catch(err=>{console.error(err);process.exitCode=1;});
