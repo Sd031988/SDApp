@@ -276,7 +276,8 @@ function createRepairDraft(){
   list.append(node('p','kiHint','Keine Reparaturhinweise für die ausgewählten Dateien.'));
  $('kiRepairStatus').textContent=repairDraft.proposals.length+' sichere, lokal vorbereitete Korrektur(en); '+
   repairDraft.manual.length+' weitere Hinweise zur manuellen oder KI-gestützten Prüfung. Noch nichts verändert.';
- $('kiRepairStage').disabled=true;
+ // Existing one-click stage still works, but its click now runs verification first.
+ $('kiRepairStage').disabled=!repairDraft.updatedFiles.length;
  $('kiTestRun').disabled=!repairDraft.updatedFiles.length;
  $('kiRepairCopy').disabled=!repairDraft.manual.length;
  if(repairDraft.updatedFiles.length)$('kiTestStatus').textContent='Korrekturen vorhanden: jetzt lokale Vorher/Nachher-Tests ausführen.';
@@ -345,6 +346,8 @@ function stageRepair(){
   return;
  }
  if(!checkSelectedCodeReview())return;
+ // Preserve prior UI: staging first runs the same tests if they were not opened separately.
+ if(!testResult)testRepairDraft();
  // Rerun trusted static checks on current candidate immediately before stage.
  const verified=runRepairChecks(selected,repairDraft);
  if(!testResult?.canStage||!verified?.canStage){
