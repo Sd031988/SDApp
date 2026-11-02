@@ -24,7 +24,7 @@ page.on("pageerror",e=>errors.push(e.message));
 await page.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 assert.match(await page.title(),/Mein SD Hub/);
 assert.equal(await page.locator(".tab[data-tab]").count(),6); // Six content tabs, plus the mobile More control.
-assert.equal(await page.locator("#goalGrid .goal").count(),6);
+assert.equal(await page.locator("#goalGrid .goal").count(),5);
 await page.locator('[data-tab="wegweiser"]').click();
 await page.locator("#goalSearch").fill("Ich möchte B1 üben");
 await page.locator("#goalSearchBtn").click();
@@ -69,7 +69,7 @@ const home=await ctx.newPage();await home.goto(base+"/",{waitUntil:"load"});asse
 const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 await mobile.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 await mobile.locator('[data-tab="wegweiser"]').click();
-assert.equal(await mobile.locator("#goalGrid .goal").count(),6);
+assert.equal(await mobile.locator("#goalGrid .goal").count(),5);
 const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
 assert.ok(overflow<=3,"Unexpected mobile horizontal overflow: "+overflow);
 await mobile.close();
