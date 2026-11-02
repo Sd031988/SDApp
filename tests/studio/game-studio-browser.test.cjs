@@ -187,8 +187,7 @@ await page.waitForFunction(()=>document.getElementById('objectCount').textConten
 await page.locator('#modePlay').click();
 await page.waitForFunction(()=>document.getElementById('goalCount').textContent==='1 / 2 Kristalle');
 assert.equal(await page.locator('#goalHud').isVisible(),true);
-await page.waitForTimeout(400);
-assert(Number.parseFloat(await page.locator('#goalTime').innerText())>=.2);
+await page.waitForFunction(()=>Number.parseFloat(document.getElementById('goalTime').textContent)>=.2,undefined,{timeout:10000});
 await page.locator('#soundToggle').click();
 assert.equal(await page.locator('#soundToggle').getAttribute('aria-pressed'),'true');
 await page.keyboard.down('Shift');
