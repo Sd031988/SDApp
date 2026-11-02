@@ -81,7 +81,7 @@ h1,h2,h3,h4{letter-spacing:-.035em}
 @media(max-width:1199px){.featured{min-height:116px}}
 @media(max-width:920px){
  .hero-in{padding-top:28px;padding-bottom:30px}
- .hub-shell .tabs-shell{background:#173b33;border:0;border-top:1px solid #355b4e;border-radius:0;box-shadow:0 -8px 25px #09251b25;padding:6px 7px calc(7px + env(safe-area-inset-bottom,0px))}
+ .hub-shell .tabs-shell{position:fixed;top:auto;bottom:0;left:0;right:0;background:#173b33;border:0;border-top:1px solid #355b4e;border-radius:0;box-shadow:0 -8px 25px #09251b25;padding:6px 7px calc(7px + env(safe-area-inset-bottom,0px))}
  .hub-shell .tab{color:#d4e1d8}
  .hub-shell .tab.active{color:#17382f;background:#f5f0e5;border-radius:6px}
  .hub-shell .tab em{font-size:10px}
