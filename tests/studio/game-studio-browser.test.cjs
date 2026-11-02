@@ -1,9 +1,12 @@
 'use strict';
 const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
+const {makeGLB}=require('./glb-fixture.cjs');
 const files=new Map([
 ['/studio/game-studio/index.html','text/html'],
 ['/studio/game-studio/game.js','application/javascript'],
+['/studio/game-studio/glb-core.js','application/javascript'],
+['/studio/game-studio/glb-preview.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/style.css','text/css'],
 ['/icon.svg','image/svg+xml']]);
@@ -27,6 +30,26 @@ assert.match(await page.title(),/SD Game-Studio/);
 assert.equal(await page.locator('#objectCount').innerText(),'6');
 const dims=await page.locator('#stage').evaluate(el=>[el.width,el.height]);
 assert(dims[0]>0&&dims[1]>0);
+// Professional GLB preview: local geometry only, independent of editable scene data.
+const glbFixture=makeGLB();
+await page.locator('#glbFile').setInputFiles({name:'studio-test.glb',mimeType:'model/gltf-binary',buffer:glbFixture});
+await page.waitForFunction(()=>document.getElementById('glbPreviewWrap').hidden===false,undefined,{timeout:10000});
+assert.match(await page.locator('#glbInfo').innerText(),/1 Dreiecke?/);
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+assert.equal(await page.locator('#glbClear').isVisible(),true);
+const previewWebgl=await page.locator('#glbPreview').evaluate(el=>({
+available:Boolean(el.getContext('webgl')),canvasWidth:el.width,canvasHeight:el.height
+}));
+assert.equal(previewWebgl.available,true);
+await page.locator('#glbPreview').hover();
+await page.mouse.down();await page.mouse.move(540,380);await page.mouse.up();
+await page.locator('#glbFile').setInputFiles({name:'bad.glb',mimeType:'model/gltf-binary',buffer:Buffer.alloc(44)});
+await page.waitForFunction(()=>document.getElementById('glbInfo').dataset.error==='true');
+assert.equal(await page.locator('#glbPreviewWrap').isVisible(),true,'Fehlerhafte GLB-Datei darf gültige Vorschau nicht entfernen.');
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+await page.locator('#glbClear').click();
+assert.equal(await page.locator('#glbPreviewWrap').isVisible(),false);
+assert.equal(await page.locator('#glbPlaceholder').isVisible(),true);
 await page.locator('[data-add="box"]').click();
 assert.equal(await page.locator('#objectCount').innerText(),'7');
 await page.locator('[data-object-id="7"]').click();
@@ -189,6 +212,7 @@ assert.equal(await page.locator('[data-add="bush"]').isVisible(),true);
 assert.equal(await page.locator('[data-add="flower"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="grove"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="garden"]').isVisible(),true);
+assert.equal(await page.locator('#glbChoose').isVisible(),true);
 await page.locator('#modePlay').click();
 assert.equal(await page.locator('[data-control="jump"]').isVisible(),true);
 await page.waitForFunction(()=>document.body.dataset.characterState==='idle',{timeout:6000});
