@@ -4,6 +4,7 @@ const root=path.resolve(__dirname,'../..');
 const files=new Map([
 ['/studio/game-studio/index.html','text/html'],
 ['/studio/game-studio/game.js','application/javascript'],
+['/studio/game-studio/performance.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/style.css','text/css'],
 ['/icon.svg','image/svg+xml']]);
@@ -176,6 +177,37 @@ assert.equal(await page.locator('#objectCount').innerText(),'6');
 await page.locator('#sceneFile').setInputFiles({name:'nature.json',mimeType:'application/json',buffer:naturePayload});
 await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='20');
 assert.equal(await page.locator('#undoAction').isDisabled(),true);
+// Performance profiling on a separate, temporary scene must preserve imported content.
+await page.locator('#profilerToggle').click();
+assert.equal(await page.locator('#performancePanel').isVisible(),true);
+await page.locator('#benchmarkKind').selectOption('forest');
+await page.locator('#benchmarkToggle').click();
+await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='63');
+assert.equal(await page.locator('#saveScene').isDisabled(),true);
+assert.equal(await page.locator('#loadScene').isDisabled(),true);
+assert.equal(await page.locator('#modePlay').isDisabled(),true);
+await page.waitForFunction(()=>Number(document.getElementById('perfFrames').textContent)>=5,undefined,{timeout:30000});
+const benchmark=await page.evaluate(()=>({
+fps:Number(document.querySelector('#perfFps').textContent),
+p95:Number.parseFloat(document.querySelector('#perfP95').textContent),
+drawCalls:Number(document.querySelector('#perfDraws').textContent),
+objects:Number(document.querySelector('#perfObjects').textContent),
+frames:Number(document.querySelector('#perfFrames').textContent)
+}));
+assert.equal(benchmark.objects,63);
+assert(benchmark.drawCalls>63,'Wald-Benchmark sollte mehr als einen Draw Call je Baum benötigen');
+assert(benchmark.fps>0&&Number.isFinite(benchmark.p95));
+fs.writeFileSync(path.join(root,'game-studio-ci-benchmark.json'),JSON.stringify({source:'Playwright Chromium (Software-GL); not a real-device GPU benchmark',case:'forest',...benchmark},null,2)+'\n');
+await page.locator('#benchmarkToggle').click();
+assert.equal(await page.locator('#objectCount').innerText(),'20');
+assert.equal(await page.locator('#saveScene').isDisabled(),false);
+assert.match(await page.locator('#benchmarkResult').innerText(),/Letzter Test/);
+const afterBenchmarkDownload=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const afterBenchmark=await afterBenchmarkDownload;
+assert.deepEqual(JSON.parse(fs.readFileSync(await afterBenchmark.path(),'utf8')),nature,'Benchmark darf Original-Projekt und Import nicht ändern');
+await page.locator('#profilerToggle').click();
+assert.equal(await page.locator('#performancePanel').isVisible(),false);
 await page.setViewportSize({width:390,height:844});
 assert.equal(await page.locator('#stage').isVisible(),true);
 assert.equal(await page.locator('[data-add="tree"]').isVisible(),true);
@@ -189,6 +221,19 @@ assert.equal(await page.locator('[data-add="bush"]').isVisible(),true);
 assert.equal(await page.locator('[data-add="flower"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="grove"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="garden"]').isVisible(),true);
+await page.locator('#profilerToggle').click();
+assert.equal(await page.locator('#performancePanel').isVisible(),true);
+await page.locator('#benchmarkKind').selectOption('interior');
+await page.locator('#benchmarkToggle').click();
+assert.equal(await page.locator('#objectCount').innerText(),'64');
+await page.locator('#benchmarkToggle').click();
+assert.equal(await page.locator('#objectCount').innerText(),'20');
+await page.locator('#benchmarkKind').selectOption('open');
+await page.locator('#benchmarkToggle').click();
+assert.equal(await page.locator('#objectCount').innerText(),'48');
+await page.locator('#benchmarkToggle').click();
+assert.equal(await page.locator('#objectCount').innerText(),'20');
+await page.locator('#profilerToggle').click();
 await page.locator('#modePlay').click();
 assert.equal(await page.locator('[data-control="jump"]').isVisible(),true);
 await page.waitForFunction(()=>document.body.dataset.characterState==='idle',{timeout:6000});
