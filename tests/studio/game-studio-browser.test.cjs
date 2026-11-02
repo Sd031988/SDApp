@@ -34,6 +34,9 @@ assert.equal(await page.locator('#objectCount').innerText(),'6');
 const dims=await page.locator('#stage').evaluate(el=>[el.width,el.height]);
 assert(dims[0]>0&&dims[1]>0);
 assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'standard');
+const shots=path.join(root,'game-studio-workspace-artifacts');
+fs.mkdirSync(shots,{recursive:true});
+await page.screenshot({path:path.join(shots,'desktop-editor.png'),fullPage:false});
 const originalView=await page.locator('#stage').boundingBox();
 assert(originalView.width>500,'Desktop-Vorschau sollte bereits ausreichend Platz bieten');
 // Panel buttons must enlarge the real WebGL viewport, not merely hide decoration.
@@ -54,6 +57,7 @@ assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'foc
 assert.equal(await page.locator('#editorAssets').isVisible(),false);
 assert.equal(await page.locator('#editorInspector').isVisible(),false);
 assert.equal(await page.locator('.topbar').isVisible(),false);
+await page.screenshot({path:path.join(shots,'desktop-focus.png'),fullPage:false});
 const focusView=await page.locator('#stage').boundingBox();
 assert(focusView.width>originalView.width+300,'Fokusansicht muss den echten Viewport verbreitern');
 assert(focusView.height>=originalView.height,'Fokusansicht muss mindestens genauso hoch sein');
@@ -289,6 +293,7 @@ assert.equal(await page.locator('#undoAction').isDisabled(),true);
 await page.setViewportSize({width:390,height:844});
 await page.locator('#focusViewport').click();
 assert.equal(await page.locator('body').getAttribute('data-workspace-view'),'focus');
+await page.screenshot({path:path.join(shots,'mobile-focus.png'),fullPage:false});
 const mobileStage=await page.locator('#stage').boundingBox();
 assert(mobileStage.height>700&&mobileStage.width>=380,'Mobil muss Fokusansicht fast den ganzen Bildschirm nutzen');
 await page.locator('#focusViewport').click();
