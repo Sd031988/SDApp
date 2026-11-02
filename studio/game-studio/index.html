@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-mvp1">
-<script defer src="./scene-core.js?v=20261102-mvp1"></script>
-<script defer src="./game.js?v=20261102-mvp1"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-editor2">
+<script defer src="./scene-core.js?v=20261102-editor2"></script>
+<script defer src="./game.js?v=20261102-editor2"></script>
 </head>
 <body>
 <header class="topbar">
@@ -55,6 +55,10 @@
 </section>
 <aside class="inspector" aria-label="Eigenschaften und Dateien">
 <section class="properties"><div class="panel-header"><small>INSPEKTOR</small><strong>Eigenschaften</strong></div>
+<div class="edit-actions" role="group" aria-label="Änderungen">
+<button id="undoAction" class="action" type="button" title="Rückgängig (Strg/⌘+Z)" data-edit-only disabled>↶ Rückgängig</button>
+<button id="redoAction" class="action" type="button" title="Wiederholen (Strg/⌘+Umschalt+Z)" data-edit-only disabled>↷ Wiederholen</button>
+</div>
 <div id="inspectorEmpty" class="empty-selection"><span>◇</span><p>Wähle ein Objekt in der 3D-Welt oder der Szenenhierarchie aus.</p></div>
 <div id="inspectorFields" hidden>
 <strong id="selectedTitle" class="selection-heading"></strong>
@@ -64,6 +68,7 @@
 <label for="propColor">Materialfarbe <select id="propColor">
 <option value="#d7a35c">Sand</option><option value="#5ebbb0">Türkis</option><option value="#8fa4e9">Blau</option><option value="#d8797d">Koralle</option><option value="#bca3e5">Lavendel</option><option value="#dbcc97">Creme</option>
 </select></label>
+<button id="duplicateObject" class="action duplicate" type="button" title="Duplizieren (Strg/⌘+D)" data-edit-only disabled>⧉ Objekt duplizieren</button>
 <button id="deleteObject" class="danger action" type="button" data-edit-only>Objekt entfernen</button>
 </div></section>
 <section class="file-panel"><div class="panel-header"><small>PROJEKT</small><strong>Szene verwalten</strong></div>
