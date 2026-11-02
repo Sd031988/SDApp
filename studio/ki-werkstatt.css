@@ -113,3 +113,12 @@
 .kiRepairDiff b{font-size:11px}
 .kiRepairDiff pre{font:11px/1.45 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto;max-height:150px;max-width:100%;padding:8px;margin:0;border-radius:6px;border:1px solid #51466e;background:#100d20;color:#ece9f5}
 @media(max-width:720px){.kiRepairDiff{grid-template-columns:1fr}.kiRepair .kiActions button{flex-basis:100%}}
+
+/* Safe static before/after verification – never runs imported programs. */
+.kiTestReport{display:grid;gap:7px;padding:11px;border:1px solid #6b5d91;border-radius:10px;background:#211d36}
+.kiTestReport h4{margin:0;font-size:13px}
+#kiTestStatus{margin:0;padding:9px;border:1px solid #5d5683;border-radius:8px;overflow-wrap:anywhere;font-size:12px;line-height:1.6}
+#kiTestStatus[data-state="improved"]{border-color:#64aa84;color:#ccf6dc}
+#kiTestStatus[data-state="blocked"]{border-color:#bf8473;color:#ffe2d9}
+#kiTestResults{margin:0;padding-left:22px;display:grid;gap:5px;max-height:190px;overflow:auto;font-size:12px}
+#kiTestResults li{overflow-wrap:anywhere}
