@@ -5,6 +5,8 @@
 if(window.top!==window)return; // Never inject controls into user-designed previews or iframes.
 const script=document.currentScript;
 const category=script?.dataset.sdApp||'';
+// The game universe has its own navigation and must not inherit the work-app shell.
+if(['spiele','pibo','blockworld'].includes(category))return;
 const mode=script?.dataset.sdMode==='compact'?'compact':'standard';
 const items=[
  {id:'deutsch',title:'Deutsch lernen',icon:'📚',url:'/deutsch/',group:'Lernen'},
@@ -22,10 +24,7 @@ const items=[
  {id:'fristen',title:'Fristen',icon:'📅',url:'/fristen/',group:'Alltag'},
  {id:'haushalt',title:'Haushaltsbuch',icon:'💶',url:'/haushalt/',group:'Alltag'},
  {id:'wohnung',title:'Wohnung',icon:'🏠',url:'/wohnung/',group:'Alltag'},
- {id:'vertraege',title:'Verträge',icon:'📑',url:'/vertraege/',group:'Alltag'},
- {id:'spiele',title:'Spiele',icon:'🎮',url:'/kids/games/',group:'Spiele'},
- {id:'pibo',title:'Pibo 3D',icon:'🐱',url:'/kids/',group:'Spiele'},
- {id:'blockworld',title:'BlockWorld',icon:'🧱',url:'/kids/blockworld/',group:'Spiele'}
+ {id:'vertraege',title:'Verträge',icon:'📑',url:'/vertraege/',group:'Alltag'}
 ];
 const others={
  arbeiten:['Arbeiten','💼'],anerkennung:['Anerkennung','🏅'],mappe:['Dokumentenmappe','🗂️'],
@@ -58,7 +57,7 @@ function buildLinks(){
  const close=el('button','sd-ws-close','✕');
  close.type='button';close.setAttribute('aria-label','App-Auswahl schließen');close.addEventListener('click',()=>toggle(false));
  top.append(heading,close);panel.append(top,el('p','sd-ws-panel-sub','Wechsle die Anwendung, ohne deine Arbeit im aktuellen Bereich zu verändern.'));
- for(const group of ['Lernen','Kreativ','Alltag','Spiele']){
+ for(const group of ['Lernen','Kreativ','Alltag']){
   const section=el('div','sd-ws-section');
   section.append(el('span','sd-ws-section-label',group));
   const grid=el('div','sd-ws-app-grid');
