@@ -57,3 +57,16 @@ LLM mit autonomer Werkzeugausführung. Es gibt noch keine Sandbox, selbständige
 Codeänderungen, echten Testlauf oder automatisches Deploying in diesem Agent.
 Dateipfade und Dateiinhalte werden nicht vom Agenten automatisch an KI-Anbieter
 gesendet. Vor dem Kopieren in ChatGPT/Gemini die Quellen und Geheimnisse prüfen.
+
+
+## V3 – Änderungsfolgen & Agent-Freigaben
+
+Inspiriert von [Clines Checkpoints](https://github.com/cline/cline/blob/main/docs/core-workflows/checkpoints.mdx), den [OpenCode-Berechtigungen](https://opencode.ai/docs/de/permissions/) und den [OWASP-Regeln zu KI-Coding-Agenten](https://cheatsheetseries.owasp.org/cheatsheets/Secure_Coding_with_AI_Cheat_Sheet.html).
+
+- Nach der Aufgabenplanung berechnet `agent-safety.js` anhand vorhandener, statischer Datei-Verknüpfungen, welche weiteren Dateien die vorgeschlagenen Dateien verwenden. Auch mehrstufige Abhängigkeiten werden begrenzt verfolgt.
+- Sensible und nicht im Projekt vorhandene Dateipfade sind von der Auswirkungsübersicht ausgeschlossen.
+- Der Dialog zeigt die **tatsächlich vorhandenen** Freigabeschritte der Studio-Oberfläche: lokale Analyse; Einwilligung zur KI-Weitergabe; bestätigte Dateiübernahme; kein autonomes Ausführen und kein automatisches Deployment.
+- Dies ist eine **informative Vorschau, keine neue Tool-Autorisierung oder Sandbox**. Eine spätere Anbindung ausführender Agenten braucht echte Berechtigungsprüfungen an jeder ausführenden Schnittstelle.
+- Statische Verknüpfungen sind keine vollständige Aufrufanalyse. Dynamische Imports, Reflection, Framework-Routing und externe Pakete können fehlen.
+
+Tests: `node --test tests/studio/agent-safety.test.cjs`, GitHub Actions und Browser-Smoke.
