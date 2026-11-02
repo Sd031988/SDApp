@@ -315,10 +315,11 @@
       "GitHub main, letzte Commits, README, Benchmark und Pibo-Smoke-Workflow gelesen; jüngster main-Commit 5b91810e (Studio).",
       "GitHub Commit-Statusabfrage lieferte 0 Statuschecks; PR-gefilterte Actions-Abfrage 0 Runs (kein Nachweis für erfolgreiches CI).",
       "V8-Syntaxcheck der modifizierten Charakterfunktion erfolgreich; Three.js-Mock prüfte 300 Fellinstanzen am Torsozentrum y=.97, unveränderte Kopfposition, Atemskalierung, Begrenzung und unveränderte Raycast-Durchlässigkeit.",
-      "Vorhandene sechs Räume, Pflegefunktionen und localStorage-Schlüssel nicht verändert; neue Regressionen im Charakter-Unit-Test ergänzt."
+      "Vorhandene sechs Räume, Pflegefunktionen und localStorage-Schlüssel nicht verändert; neue Regressionen im Charakter-Unit-Test ergänzt.",
+      "Vollständige pibo-character.test.mjs und pibo-fur.test.mjs im V8-Node-Assert-kompatiblen Harness bestanden; V8-Pibo-Smoke mit WebGL-Mock PASS: 18 Checks, 436 Frames (Räume, Drag-Futter, Bad, Toilette, Schlaf, Minispiele, Speicherstand)."
     ],
     "unverified": [
-      "Vollständiger Node-Unit-/Smoke-Lauf, Desktop-/Mobil-Chromium, echtes WebGL-Rendering, E2E und GPU-/Hardware-FPS in dieser Umgebung nicht ausführbar.",
+      "Echter Node-CI-Lauf und Desktop-/Mobil-Chromium, WebGL-Rendering, E2E sowie GPU-/Hardware-FPS in dieser Umgebung nicht ausführbar; V8-Mock-Tests ersetzen diese nicht.",
       "GitHub Actions und Pages-Deployment nach Push nicht bestätigt; der Connector liefert keine allgemeinen Push-Workflow-Runs.",
       "Kein hochwertiges glTF-/GLB-Rig, Morph-Target-Animationen oder professionelle Fellmaterialien."
     ],
