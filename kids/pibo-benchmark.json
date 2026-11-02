@@ -218,7 +218,7 @@
         "kids/index.html",
         "kids/e2e/pibo.spec.mjs"
       ],
-      "implementation": "Begrenzter eigenständiger Garten mit Boden-Raycast, A*-Raster, Sichtlinienglättung und Hindernisradien. Distanzgetriebene diagonale 3D-Pfotenhub-/Schubbewegung, Kurvenneigung und abklingende Gehpose; keine IK, keine verbundenen Innenräume, keine Hardware-Abnahme."
+      "implementation": "Begrenzter eigenständiger Garten mit Boden-Raycast, A*-Raster, Sichtlinienglättung und Hindernisradien. Distanzgetriebene diagonale 3D-Pfotenhub-/Schubbewegung, Kurvenneigung und abklingende Gehpose; keine IK, keine verbundenen Innenräume, keine Hardware-Abnahme. Zeitbasierte Garten-Folgekamera mit synchronisiertem Blickziel und geringer Laufrichtungs-Vorausschau, Reduced-Motion-Snap (02.11.2026); V8-Unit-Assertions, keine WebGL-/Hardware-Abnahme."
     },
     {
       "id": "haustiere",
@@ -288,13 +288,12 @@
   ],
   "last_iteration": {
     "date": "2026-11-02",
-    "focus": "Garten-Gangzyklus an tatsächlich gelaufene Strecke koppeln; diagonale Pfoten, Kurvenneigung, sanftes Auslaufen und Float-Randkorrektur.",
+    "focus": "Bildratenunabhängige Garten-Folgekamera mit synchronisiertem Blickziel, Vorausschau und Reduced-Motion-Modus.",
     "reference_checked": [
       "official",
       "google_play",
       "backyard_2026",
-      "bathroom_2026",
-      "adventure_2026"
+      "bathroom_2026"
     ],
     "implementation_files": [
       "kids/pibo-roam.mjs",
@@ -305,16 +304,15 @@
       "kids/e2e/pibo.spec.mjs"
     ],
     "verified": [
-      "JavaScript-Module und Inline-Skripte in V8 syntaktisch geprüft.",
-      "Vollständige pibo-roam.test.mjs-Assertions mit V8-Node-assert-Shim bestanden: Hindernisse, 8 schwierige Ziele, diagonale Pfoten, Stand, reduzierte Bewegung, Pause und Reset.",
-      "Zusätzlich 11 Zielpunkte mit Kollisions-/Grenzprüfung auf jedem simulierten Frame erreicht; Float-Überlauf bei Gitterrand korrigiert."
+      "GitHub-main, README und Benchmark vor Änderung geprüft.",
+      "Bestehende Garten-Unit-Assertions und neue Kamera-Tests (30/60 FPS, Pause, Reduced Motion, ungültige Eingaben) in V8 mit Assert-Shim bestanden.",
+      "JavaScript-Modul und HTML-Inline-Modul in V8 syntaktisch geprüft; Spielstandformat unverändert."
     ],
     "unverified": [
-      "Kein Node-CI- oder kompletter Headless-Smoke-Durchlauf in dieser Ausführung; V8-Assertion-Simulation ist kein Ersatz.",
-      "GitHub-Push-Workflows und Pages-Deployment nicht abrufbar: kombinierte Statuschecks für den vorigen Commit leer, PR-gebundene Workflow-Abfrage deckt Push nicht ab.",
-      "Chromium-Desktop/Mobil, echtes WebGL, iOS/Android-Hardware und FPS-Profile nicht geprüft.",
-      "Kein professionelles Skelett-Rig, keine IK-Bodenkontaktlösung und keine frei begehbaren verbundenen Innenräume."
+      "Kein vollständiger Node-/Chromium-Desktop/Mobil-/WebGL-/iOS-/Android-Test in diesem Durchlauf.",
+      "Push-CI/Pages für letzten main-Commit nicht bestätigt; ältere erfolgreiche Smoke-Jobs sind kein Beleg für neuen Code.",
+      "Kein professionelles Skelett-Rig, keine Pfoten-IK und keine zusammenhängende Hauswelt."
     ],
-    "next": "CI-Push-Checks und echten WebGL-Gartenlauf verifizieren; dann IK-Pfotenaufsetzen, Beschleunigungs- und Kamera-Blendings auf realen Geräten."
+    "next": "Echte Chromium-/WebGL-/Touch-Kamera-Abnahme und GitHub-Push-CI/Pages prüfen, anschließend Pfoten-Bodenkontakte mit Standphasen."
   }
 }
