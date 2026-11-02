@@ -40,3 +40,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Externe fachliche Prüfung sowie Pilotprüfung mit Lernenden abgeschlossen.
 
 **Öffentliche Formulierung bis dahin:** „Deutsch-Lern- und Prüfungstraining von der Alphabetisierung bis B1 (im Ausbau)“. **Nicht behaupten:** „Wer alle Aufgaben löst, beherrscht B1“ oder „garantiert die B1-Prüfung“.
+
+## Technische Qualitätssicherung – 02.11.2026
+- Nach der thematischen Sortierung wird die zuletzt geöffnete Übung jetzt über die stabile Aufgaben-ID gespeichert (Cursor-Schema Version 2), statt nur über die wechselnde Listenposition.
+- Alte Positionsangaben aus Version 1 werden beim ersten Laden anhand der ursprünglichen Reihenfolge auf die passende Aufgaben-ID abgebildet.
+- Die Grammatikzuordnung nutzt korrigierte Wortgrenzen in den regulären Ausdrücken; zusätzliche Regressionstests prüfen unter anderem Dativ und Nebensätze.
+- In einer isolierten JavaScript-Funktionsprüfung wurden 176 stabile Aufgaben-IDs und 176 alte Positionen auf korrekte Wiederaufnahme kontrolliert. Dies ist **kein** vollständiger Browser-/GitHub-Actions-Test.
+- Weiterhin offen: Playwright-Prüfung auf Smartphone und Desktop, didaktische Einzelprüfung der Themenzuordnung, Wortschatzabgleich mit offiziellen Referenzen und valide Kompetenzmessung in Lesen, Hören, Schreiben und Sprechen.
