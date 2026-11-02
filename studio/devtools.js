@@ -8,8 +8,55 @@
     return text;
   }
   function json(text, pretty) {
-    const value = JSON.parse(limited(text));
-    return JSON.stringify(value, null, pretty ? 2 : 0);
+    const source = limited(text);
+    // JSON.parse validates the syntax ONLY. Serializing its result would round
+    // large integers, turn extreme exponents into null, and remove duplicate keys.
+    // Tokenizing the original text preserves the exact spelling of every value.
+    JSON.parse(source);
+    const tokenPattern = /"(?:\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4})|[^"\\\u0000-\u001F])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null|[{}\[\],:]|[ \t\r\n]+/gy;
+    const tokens = [];
+    let cursor = 0;
+    while (cursor < source.length) {
+      tokenPattern.lastIndex = cursor;
+      const match = tokenPattern.exec(source);
+      if (!match) throw new SyntaxError('Ungültiger JSON-Text.');
+      cursor = tokenPattern.lastIndex;
+      if (!/^[ \t\r\n]+$/.test(match[0])) tokens.push(match[0]);
+    }
+    if (!pretty) return tokens.join('');
+    const result = [];
+    let outputLength = 0;
+    const append = part => {
+      outputLength += part.length;
+      if (outputLength > 2000000) throw new Error('Formatiertes Ergebnis zu groß (maximal 2 MB).');
+      result.push(part);
+    };
+    const indent = level => '\n' + '  '.repeat(level);
+    let depth = 0;
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (token === '{' || token === '[') {
+        const closing = token === '{' ? '}' : ']';
+        if (tokens[i + 1] === closing) {
+          append(token + closing);
+          i++;
+        } else {
+          append(token);
+          depth++;
+          append(indent(depth));
+        }
+      } else if (token === '}' || token === ']') {
+        depth--;
+        append(indent(depth) + token);
+      } else if (token === ',') {
+        append(',' + indent(depth));
+      } else if (token === ':') {
+        append(': ');
+      } else {
+        append(token);
+      }
+    }
+    return result.join('');
   }
   function encodeBase64(text) {
     const bytes = new TextEncoder().encode(limited(text));
@@ -26,7 +73,7 @@
     }
     const binary = atob(value);
     const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
   }
   function compare(left, right) {
     const a = limited(left).replace(/\r\n?/g, '\n').split('\n');
@@ -63,9 +110,10 @@
   function detect(text) {
     const value = limited(text).trim();
     if (!value) return null;
-    if ((value[0] === '{' || value[0] === '[')) {
-      try { JSON.parse(value); return 'json-pretty'; } catch (_) { /* Keine automatische Auswahl bei fehlerhaftem JSON. */ }
-    }
+    try {
+      JSON.parse(value);
+      return 'json-pretty';
+    } catch (_) { /* Nur syntaktisch gültige JSON-Werte vorschlagen. */ }
     if (/%[0-9a-f]{2}/i.test(value)) return 'url-decode';
     if (value.length >= 16 && value.length % 4 === 0 &&
         /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value) &&
