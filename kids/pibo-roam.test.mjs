@@ -1,17 +1,35 @@
 import assert from 'node:assert/strict';
 import {PiboRoam,walkablePoint} from './pibo-roam.mjs';
+const obstacles=[{x:-3.3,z:-2.7,r:.85},{x:2.7,z:-2.3,r:1.35},{x:1.65,z:-3.2,r:.85},{x:-1.15,z:-3.5,r:.65}];
+function safe(p){
+ assert(p.x>=-3.80001&&p.x<=3.80001&&p.z>=-3.15001&&p.z<=.65001,'Garden boundary');
+ for(const o of obstacles)assert(Math.hypot(p.x-o.x,p.z-o.z)>=o.r+.04,'No obstacle penetration');
+}
 const r=new PiboRoam();
-assert.equal(r.setTarget(Infinity,0),false,'Reject non-finite pointer coordinates');
+assert.equal(r.setTarget(Infinity,0),false);
 assert.equal(r.setTarget(2,-1),true);
-let p=r.update(1);
-assert(Math.hypot(p.x,p.z)<.09,'Tab-resume delta must be clamped');
-for(let i=0;i<200;i++)p=r.update(1/60);
-assert(p.x>1.5&&p.z<-.7,'Cat reaches reachable garden target');
-assert.equal(p.moving,false,'Walk ends at destination');
+let p=r.update(1);assert(Math.hypot(p.x,p.z)<.09,'Clamp resumed tab frame');
+for(let i=0;i<200;i++){p=r.update(1/60);safe(p)}
+assert(p.x>1.5&&p.z<-.7&&!p.moving,'Reach open target');
 r.reset();assert.deepEqual(r.pose(),{x:0,z:0,heading:0,moving:false});
 assert.equal(r.setTarget(-3.3,-2.7),true);
-const target=walkablePoint(-3.3,-2.7);
-assert(Math.hypot(target.x+3.3,target.z+2.7)>=.849,'Tree trunk is excluded');
-for(let i=0;i<600;i++){p=r.update(1/60);assert(p.x>=-3.801&&p.x<=3.801&&p.z>=-3.151&&p.z<=.651,'Stay in meadow');assert(Math.hypot(p.x+3.3,p.z+2.7)>=.82,'No trunk penetration')}
-r.setTarget(99,-99);assert(r.targetX<=3.8&&r.targetZ>=-3.15,'Touch targets stay bounded');
-console.log('PASS: original Pibo garden tap-to-walk, steering, bounds, frame clamping and reset');
+safe(walkablePoint(-3.3,-2.7));
+for(let i=0;i<600;i++){p=r.update(1/60);safe(p)}
+assert.equal(p.moving,false,'Reach projected tree target');
+r.reset();
+assert(r.setTarget(3.5,-2.9),'Plan route behind pond');
+assert(r.path.length>=2,'A detour needs intermediate waypoints');
+let maxFrames=0;
+for(;maxFrames<1000&&r.moving;maxFrames++){p=r.update(1/60);safe(p)}
+assert(!r.moving,'Must finish route around pond, not orbit or stall');
+assert(Math.hypot(p.x-r.targetX,p.z-r.targetZ)<.045,'Arrive at detour destination');
+assert(maxFrames<800,'Reasonable route duration');
+r.reset();
+for(const target of [[-3.8,-3.15],[3.8,-3.15],[-3.5,-2.9],[2.7,-2.3],[1.65,-3.2],[-1.15,-3.5],[3.8,.65],[-3.8,.65]]){
+ assert(r.setTarget(...target),'Every garden tap has a reachable safe projection');
+ for(let i=0;i<1000&&r.moving;i++){p=r.update(1/60);safe(p)}
+ assert(!r.moving,'No stuck route to '+target);
+}
+r.setTarget(99,-99);assert(r.targetX<=3.8&&r.targetZ>=-3.15);
+r.reset();assert.equal(r.speed,0);assert.equal(r.path.length,0);
+console.log('PASS: Pibo garden A* detours, 8 hard targets, obstacle clearance, bounded frames and reset');
