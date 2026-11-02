@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {PiboRoam,walkablePoint,gardenGait} from './pibo-roam.mjs';
+import {PiboRoam,walkablePoint,gardenGait,gardenCamera} from './pibo-roam.mjs';
 const obstacles=[{x:-3.3,z:-2.7,r:.85},{x:2.7,z:-2.3,r:1.35},{x:1.65,z:-3.2,r:.85},{x:-1.15,z:-3.5,r:.65}];
 function safe(p){
  assert(p.x>=-3.80001&&p.x<=3.80001&&p.z>=-3.15001&&p.z<=.65001,'Garden boundary');
@@ -47,3 +47,16 @@ stride.update(0);assert.equal(stride.distance,walked,'Paused frame');
 stride.update(1);assert(stride.distance-walked<=.09,'Clamped resume');
 stride.reset();assert.equal(stride.distance,0);assert.equal(stride.turnRate,0);
 console.log('PASS: Pibo garden A* detours, 8 hard targets, obstacle clearance, bounded frames and distance-driven diagonal gait');
+
+const cameraGoal={x:2,z:-1,heading:Math.PI/2};
+let camera30={x:0,z:0},camera60={x:0,z:0};
+for(let i=0;i<30;i++)camera30=gardenCamera(camera30,cameraGoal,1.75,1/30);
+for(let i=0;i<60;i++)camera60=gardenCamera(camera60,cameraGoal,1.75,1/60);
+assert(Math.abs(camera30.x-camera60.x)<1e-10,'Camera follow independent of 30/60 FPS x');
+assert(Math.abs(camera30.z-camera60.z)<1e-10,'Camera follow independent of 30/60 FPS z');
+assert(camera30.x>0&&camera30.x<2.24,'Camera look-ahead without teleport');
+assert(gardenCamera({x:0,z:0},cameraGoal,1.75,60).x<.65,'Long pause cannot jump camera');
+assert.deepEqual(gardenCamera({x:0,z:0},cameraGoal,1.75,1/60,true),{x:2,z:-1},'Reduced motion disables lag');
+assert.deepEqual(gardenCamera({x:0,z:0},cameraGoal,0,0),{x:0,z:0},'Paused camera stays still');
+assert(Number.isFinite(gardenCamera({x:NaN,z:Infinity},{x:NaN,z:Infinity,heading:NaN},Infinity,NaN).x),'Invalid values clamped');
+console.log('PASS: camera 30/60 FPS, look-ahead, reduced motion and pause');
