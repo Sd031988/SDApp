@@ -71,3 +71,16 @@
 .goal-hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:1px;min-width:180px;max-width:65%;padding:8px 15px;border:1px solid #6abda99c;border-radius:10px;background:#102a32e8;color:#e5fff6;text-align:center;pointer-events:none;z-index:2;box-shadow:0 7px 25px #0005}
 .goal-hud[hidden]{display:none}.goal-hud strong{font-size:15px;font-weight:800}.goal-hud span{color:#afcbc7;font-size:10px}.goal-hud.complete{border-color:#eac878;background:#3b3523ed}.goal-hud.complete strong{color:#ffe5a0}.icon-crystal{color:#9dcfff}
 @media(max-width:750px){.goal-hud{top:39px;max-width:76%;padding:6px 10px}.goal-hud strong{font-size:12px}.goal-hud span{font-size:9px}}
+
+/* Game Studio 0.9: accessible optional sound and collectible timer. */
+.sound-toggle{background:#223642;color:#b9e2d5;border:1px solid #3c645d;border-radius:7px;padding:6px 9px;font-size:11px;font-weight:750;white-space:nowrap}
+.sound-toggle[aria-pressed="true"]{color:#f2fff8;background:#27614f}
+.goal-hud{pointer-events:none;min-width:208px}
+.goal-hud button{pointer-events:auto;margin-top:4px;background:#244e47;color:#e9fff4;border:1px solid #6bbca0;border-radius:7px;font-size:11px;font-weight:700;padding:4px 12px}
+.goal-hud button:hover{background:#337663}
+.goal-times{display:flex;justify-content:center;gap:10px;margin-top:3px;font-variant-numeric:tabular-nums}
+.goal-hud .goal-times span{font-size:11px;color:#e3f7ed}
+.move-extra{display:flex;align-items:end;gap:6px;pointer-events:none}
+.move-extra button{pointer-events:auto}
+.touch-controls button.run{font-size:11px;min-width:65px;padding:0 8px}
+@media(max-width:750px){.sound-toggle{padding:6px;font-size:10px}.goal-hud{min-width:164px;top:39px}.goal-times{gap:6px}.goal-hud .goal-times span{font-size:9px}.touch-controls button.run{min-width:60px}}
