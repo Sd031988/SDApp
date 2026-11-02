@@ -62,7 +62,7 @@ import {bodyPose} from './pibo-motion.mjs';
 import {voiceLoudness,mouthWhileSpeaking,nextTalkingTurn} from './pibo-voice.mjs';
 import {decoratePibo} from './pibo-character.mjs';
 import {buildPiboGarden} from './pibo-garden.mjs';
-import {PiboRoam,gardenGait} from './pibo-roam.mjs';
+import {PiboRoam,gardenGait,gardenCamera} from './pibo-roam.mjs';
 import {mouthTarget,mouthDrop,withinStage,foodReaction,pawReaction} from './pibo-interactions.mjs';
 const $=id=>document.getElementById(id),key='sd-kids-pibo-v1',defaults={food:75,joy:80,energy:70,clean:85};
 let state={...defaults},soundOn=true,mouseActive=false,mouseScore=0,outfitIndex=0,recorder=null,recordingStream=null,recordTimer=null,gameActive=false,gameScore=0,gameUntil=0,roomColor=0,mode='idle',modeUntil=0,audio=null;
@@ -280,9 +280,9 @@ if(room==='garden'){
 }
 
 }
-function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='bedroom'&&lightsOff)setNight(false);if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;roam.reset();cat.position.set(0,0,0);cat.rotation.y=0;camera.position.set(0,2.3,8.8);camera.lookAt(0,1.35,0);furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette',garden:'🌷 Pibos Garten'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽',garden:'Willkommen im Garten! Tippe auf den Boden, damit Pibo dorthin läuft, oder fange Schmetterlinge! 🦋'};$('say').textContent=messages[room];saveExtras()}
+function switchRoom(room){if(!roomPalette[room])return;if(care?.active)care.stop();if(room!=='bedroom'&&lightsOff)setNight(false);if(room!=='living'&&(gameActive||mouseActive))finishMiniGame();currentRoom=room;extras.currentRoom=room;roam.reset();gardenCameraFocus={x:0,z:0};cat.position.set(0,0,0);cat.rotation.y=0;camera.position.set(0,2.3,8.8);camera.lookAt(0,1.35,0);furnish(room);$('foodShelf').hidden=room!=='kitchen';$('roomTitle').textContent={living:'🛋️ Wohnzimmer',kitchen:'🍽️ Küche',bedroom:'🛏️ Schlafzimmer',bathroom:'🛁 Badezimmer',toilet:'🚽 Toilette',garden:'🌷 Pibos Garten'}[room];document.querySelectorAll('[data-room]').forEach(b=>b.setAttribute('aria-current',b.dataset.room===room?'page':'false'));const messages={living:'Willkommen im Wohnzimmer! 🛋️',kitchen:'Pibo hat Hunger! 🐟',bedroom:'Hier kann Pibo schlafen! 💤',bathroom:'Zeit für ein Schaumbad! 🫧',toilet:'Pibo geht aufs Katzenklo! 🚽',garden:'Willkommen im Garten! Tippe auf den Boden, damit Pibo dorthin läuft, oder fange Schmetterlinge! 🦋'};$('say').textContent=messages[room];saveExtras()}
 document.querySelectorAll('[data-room]').forEach(b=>b.addEventListener('click',()=>{switchRoom(b.dataset.room);sound('select')}));
-const roam=new PiboRoam();const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
+const roam=new PiboRoam();let gardenCameraFocus={x:0,z:0};const cat=new THREE.Group();scene.add(cat);const body=ell(cat,fur,0,.97,0,.72,.85,.63);ell(cat,cream,0,.89,.53,.45,.62,.17);
 let care=null;
 function clearInteraction(){care?.stop()}
 function startInteraction(type,options={}){care?.start(type,foodIndex,performance.now(),options);if(type==='feed')showEffect(foods[foodIndex][0],'Pibo frisst '+foods[foodIndex][1],7000);if(type==='wash')showEffect('🛁 🫧','Pibo steigt in die Badewanne',7000);if(type==='sleep')showEffect('🛏️ 💤','Pibo schläft in seinem Bett',9000);if(type==='toilet')showEffect('🚽 💦','Pibo benutzt die Toilette und spült',7500)}
@@ -644,9 +644,10 @@ function animate(){
    for(let j=0;j<paws.length;j++){paws[j].position.y=.21+gait.frontLift[j];paws[j].position.z=.54+gait.frontReach[j]}
    for(let j=0;j<hindPaws.length;j++){hindPaws[j].position.y=.43+gait.hindLift[j];hindPaws[j].position.z=.41+gait.hindReach[j]}
   }
-  camera.position.x+=(walk.x-camera.position.x)*.12;
-  camera.position.z+=(walk.z+8.8-camera.position.z)*.12;
-  camera.lookAt(walk.x,1.35,walk.z);
+  gardenCameraFocus=gardenCamera(gardenCameraFocus,walk,roam.speed,dt,reduced);
+  camera.position.x=gardenCameraFocus.x;
+  camera.position.z=gardenCameraFocus.z+8.8;
+  camera.lookAt(gardenCameraFocus.x,1.35,gardenCameraFocus.z);
  }
  care?.update(t,now);
  const hint=$('bathToolHint');
