@@ -123,3 +123,6 @@ html[data-sd-theme="dark"] .footer{background:#1a3028;color:#cedbd0;border-color
 html[data-sd-theme="dark"] .footer b{color:#f4f7f2}
 html[data-sd-theme="dark"] .app-search-label input{background:#14241f;color:#fff}
 @media(prefers-reduced-motion:reduce){.featured{transition:none}}
+
+/* Document tools now occupy the fourth dashboard shortcut. */
+.featured-docs{border-top:3px solid #b38e56}
