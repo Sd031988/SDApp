@@ -6,6 +6,7 @@ if(!core)return;
 const $=id=>document.getElementById(id);
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
 let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false,changeMode=false;
+let repairDraft=null,repairSource=null;
 function currentFiles(){
  const p=typeof S!=='undefined'&&S.p;
  if(!p)return {};
@@ -45,11 +46,20 @@ function selectMode(mode){
  $('kiClipboard').hidden=true;
  if(changeMode)renderChangeSources();
 }
+function clearRepairDraft(){
+ repairDraft=null;repairSource=null;
+ const list=$('kiRepairProposals'),stage=$('kiRepairStage'),copy=$('kiRepairCopy');
+ if(list)list.replaceChildren();
+ if(stage)stage.disabled=true;
+ if(copy)copy.disabled=true;
+ if($('kiRepairStatus'))$('kiRepairStatus').textContent='Korrekturen werden nur vorgeschlagen und nie automatisch gespeichert.';
+}
 function openDialog(mode){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
  $('kiProject').textContent=S.p?'Aktuelles Projekt: '+S.p.name:'Noch kein Projekt geöffnet.';
  $('kiOverlay').hidden=false;
  parsed=null;stagedSnapshot=null;stagedProject=null;
+ clearRepairDraft();
  $('kiResult').value='';$('kiFiles').replaceChildren();$('kiDiff').hidden=true;$('kiApply').disabled=true;$('kiDirect').disabled=true;
  $('kiReview').hidden=true;$('kiReviewFindings').replaceChildren();
  $('kiInclude').checked=false;$('kiClipboard').hidden=true;
@@ -213,6 +223,105 @@ function renderCodeReview(){
  if(report.truncated)items.append(node('p','kiHint','Weitere Befunde nicht angezeigt. Bitte Code zusätzlich manuell prüfen.'));
  return report;
 }
+
+function createRepairDraft(){
+ clearRepairDraft();
+ if(!parsed||parsed.errors.length||!selectedFiles().length){
+  $('kiRepairStatus').textContent='Bitte zuerst KI-Code-Dateien analysieren und auswählen.';
+  return;
+ }
+ if(stagedProject!==(S.p?S.p.name:null)){
+  $('kiRepairStatus').textContent='Projekt wurde gewechselt. Bitte neu analysieren.';
+  return;
+ }
+ const selected=selectedFiles(), latest=currentFiles();
+ if(selected.some(f=>(latest[f.path]??null)!==(stagedSnapshot?.[f.path]??null))){
+  $('kiRepairStatus').textContent='Projektdateien wurden geändert. Bitte erneut analysieren.';
+  return;
+ }
+ const engine=window.SDKIRepairAssistant, report=renderCodeReview();
+ if(!engine||!report){
+  $('kiRepairStatus').textContent='Reparaturprüfung nicht verfügbar. Bitte Studio neu laden.';
+  return;
+ }
+ repairDraft=engine.createPlan(selected,stagedSnapshot||{},report);
+ if(repairDraft.blocked){
+  $('kiRepairStatus').textContent='Reparatur gesperrt: '+repairDraft.reason;
+  repairDraft=null;return;
+ }
+ repairSource=new Map(selected.map(f=>[f.path,f.content]));
+ const list=$('kiRepairProposals');
+ for(const p of repairDraft.proposals){
+  const item=node('article','kiRepairItem');
+  item.append(node('strong','',p.path+':'+p.line+' · '+p.title));
+  const before=node('pre','kiRepairBefore',p.before);
+  const after=node('pre','kiRepairAfter',p.after);
+  const columns=node('div','kiRepairDiff');
+  const left=node('div','');left.append(node('b','','Bisheriger KI-Vorschlag'),before);
+  const right=node('div','');right.append(node('b','','Vorgeschlagene Korrektur'),after);
+  columns.append(left,right);item.append(columns);
+  list.append(item);
+ }
+ for(const p of repairDraft.manual){
+  const item=node('article','kiRepairItem');
+  item.append(node('strong','',p.path+':'+p.line+' · '+p.title+' (manuell prüfen)'),
+    node('p','',p.advice));
+  list.append(item);
+ }
+ if(!repairDraft.proposals.length&&!repairDraft.manual.length)
+  list.append(node('p','kiHint','Keine Reparaturhinweise für die ausgewählten Dateien.'));
+ $('kiRepairStatus').textContent=repairDraft.proposals.length+' sichere, lokal vorbereitete Korrektur(en); '+
+  repairDraft.manual.length+' weitere Hinweise zur manuellen oder KI-gestützten Prüfung. Noch nichts verändert.';
+ $('kiRepairStage').disabled=!repairDraft.updatedFiles.length;
+ $('kiRepairCopy').disabled=!repairDraft.manual.length;
+}
+function stageRepair(){
+ if(!repairDraft||repairDraft.blocked||!repairDraft.updatedFiles.length)return;
+ if(!parsed||parsed.errors.length||stagedProject!==(S.p?S.p.name:null)){
+  $('kiRepairStatus').textContent='Veralteter Plan. Bitte den Code erneut analysieren.';
+  clearRepairDraft();return;
+ }
+ const selected=selectedFiles(),current=new Map(selected.map(f=>[f.path,f.content]));
+ if(!repairSource||repairSource.size!==current.size||[...current].some(([name,code])=>repairSource.get(name)!==code)){
+  clearRepairDraft();
+  $('kiRepairStatus').textContent='Dateiauswahl oder Code verändert. Bitte neue Reparaturvorschläge erstellen.';
+  return;
+ }
+ const latest=currentFiles();
+ if(selected.some(f=>(latest[f.path]??null)!==(stagedSnapshot?.[f.path]??null))){
+  clearRepairDraft();
+  $('kiRepairStatus').textContent='Projektdateien verändert. Bitte erneut analysieren.';
+  return;
+ }
+ if(!checkSelectedCodeReview())return;
+ const updates=new Map(repairDraft.updatedFiles.map(f=>[f.path,f.content]));
+ const count=updates.size,first=repairDraft.updatedFiles[0].path;
+ const selectedNames=new Set(selected.map(f=>f.path));
+ parsed={...parsed,files:parsed.files.map(f=>updates.has(f.path)?{...f,content:updates.get(f.path)}:f)};
+ repairDraft=null;repairSource=null;
+ renderPlan();
+ $('kiFiles').querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=selectedNames.has(c.dataset.path));
+ updateActions();
+ $('kiRepairStage').disabled=true;
+ $('kiRepairCopy').disabled=true;
+ $('kiRepairStatus').textContent=count+' Datei(en) NUR in der KI-Code-Vorschau korrigiert. Bitte den Unterschied prüfen und die Übernahme später ausdrücklich bestätigen.';
+ diffAnzeigen(first);
+}
+async function copyRepairRequest(){
+ if(!repairDraft||repairDraft.blocked)return;
+ const text=window.SDKIRepairAssistant?.repairPrompt(repairDraft);
+ if(!text)return;
+ try{
+  if(!navigator.clipboard?.writeText)throw Error('Clipboard not available');
+  await navigator.clipboard.writeText(text);
+  $('kiRepairStatus').textContent='Reparaturanfrage kopiert: nur Befunde, Zeilen und Pfade; keine Quelltexte.';
+ }catch(_){
+  const field=$('kiClipboard');
+  field.hidden=false;field.value=text;field.focus();field.select();
+  $('kiRepairStatus').textContent='Reparaturanfrage zum manuellen Kopieren markiert. Keine Quelltexte.';
+ }
+}
+
 function checkSelectedCodeReview(){
  const report=renderCodeReview();
  if(!report||report.blocked||report.skipped){
@@ -272,6 +381,7 @@ function renderPlan(){
  status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
 }
 function analyse(){
+ clearRepairDraft();
  $('kiDiff').hidden=true;
  parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
@@ -413,13 +523,16 @@ function setup(){
  $('kiChatGPT').addEventListener('click',()=>openAI('https://chatgpt.com/'));
  $('kiGemini').addEventListener('click',()=>openAI('https://gemini.google.com/'));
  $('kiAnalyse').addEventListener('click',analyse);
- $('kiFiles').addEventListener('change',updateActions);
+ $('kiFiles').addEventListener('change',()=>{clearRepairDraft();updateActions()});
+ $('kiRepairPrepare').addEventListener('click',createRepairDraft);
+ $('kiRepairStage').addEventListener('click',stageRepair);
+ $('kiRepairCopy').addEventListener('click',copyRepairRequest);
  $('kiFiles').addEventListener('click',e=>{const b=e.target.closest('.kiDiffShow');if(b)diffAnzeigen(b.dataset.path)});
  $('kiDiffClose').addEventListener('click',()=>{$('kiDiff').hidden=true});
  $('kiDirect').addEventListener('click',applyDirect);
  $('kiPaste').addEventListener('click',pasteWholeAnswer);
  $('kiApply').addEventListener('click',apply);
- $('kiResult').addEventListener('input',()=>{parsed=null;stagedSnapshot=null;updateActions();status('Antwort geändert – analysieren oder den vollständigen Text einfügen.')});
+ $('kiResult').addEventListener('input',()=>{clearRepairDraft();parsed=null;stagedSnapshot=null;updateActions();status('Antwort geändert – analysieren oder den vollständigen Text einfügen.')});
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
  if($('handyNav'))$('handyNav').querySelector('[data-a="mehr"]')?.setAttribute('title','Mehr Funktionen, darunter ✨ KI Coding');

@@ -50,6 +50,35 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#kiApply').isEnabled(),false);
     await page.locator('#kiClose').click();
 
+    // Repair suggestions are stage-only: old/new code compared, no implicit project writes.
+    await page.locator('#kiCodeBtn').click();
+    await page.locator('#kiResult').fill([
+      '### Datei: index.html','~~~html',
+      '<a href="/help" target="_blank">Hilfe</a>','~~~'
+    ].join('\n'));
+    await page.locator('#kiAnalyse').click();
+    assert.equal(await page.locator('#kiRepairPrepare').isEnabled(),true);
+    await page.locator('#kiRepairPrepare').click();
+    assert.match(await page.locator('#kiRepairStatus').innerText(),/1 sichere/);
+    assert.equal(await page.locator('#kiRepairStage').isEnabled(),true);
+    assert.match(await page.locator('.kiRepairAfter').innerText(),/noopener noreferrer/);
+    await page.locator('#kiRepairStage').click();
+    assert.match(await page.locator('#kiDiffNew').innerText(),/noopener noreferrer/);
+    assert.equal(await page.locator('#kiDiff').isVisible(),true);
+    // The import remains a separate, explicitly confirmed action.
+    await page.locator('#kiDiffClose').click();
+    await page.locator('#kiClose').click();
+    await page.locator('#kiCodeBtn').click();
+    await page.locator('#kiResult').fill([
+      '### Datei: app.js','~~~javascript','eval(userCode);','~~~'
+    ].join('\n'));
+    await page.locator('#kiAnalyse').click();
+    await page.locator('#kiRepairPrepare').click();
+    assert.equal(await page.locator('#kiRepairStage').isEnabled(),false);
+    assert.equal(await page.locator('#kiRepairCopy').isEnabled(),true);
+    assert.match(await page.locator('#kiRepairProposals').innerText(),/manuell prüfen/);
+    await page.locator('#kiClose').click();
+
     // ECC-inspired review stays read-only and is accessible as a real dialog.
     await page.locator('#agentReviewBtn').click();
     assert.equal(await page.locator('#agentReviewOverlay').isVisible(),true);
