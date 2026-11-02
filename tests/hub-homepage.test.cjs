@@ -1,11 +1,11 @@
 "use strict";
 const test=require("node:test"),assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),vm=require("node:vm");
 const root=path.resolve(__dirname,".."),html=fs.readFileSync(path.join(root,"index.html"),"utf8");
-const topics=["deutsch","arbeit","post","geld","doku","wohnen","ki","kids"];
+const topics=["deutsch","arbeit","post","geld","doku","wohnen","ki"];
 const count=(re)=>(html.match(re)||[]).length;
-test("Original 3D stack retains all eight keyboard-accessible folders",()=>{
+test("Professional 3D stack retains seven keyboard-accessible folders",()=>{
  assert.match(html,/class="szene" id="szene"/);assert.match(html,/class="stapel" id="stapel"/);
- assert.equal(count(/class="lage" role="button" tabindex="0"/g),8);
+ assert.equal(count(/class="lage" role="button" tabindex="0"/g),7);
  for(const topic of topics){assert.match(html,new RegExp('class="lage" role="button" tabindex="0" data-thema="'+topic+'"'));assert.match(html,new RegExp('id="thema-'+topic+'"'));assert.match(html,new RegExp('href="#thema-'+topic+'"'))}
  assert.match(html,/function oeffneThema\(thema\)/);assert.match(html,/e.key === 'Enter' \|\| e.key === ' '/)
 });
@@ -28,10 +28,10 @@ test("Every homepage local link points to a real file or section",()=>{
   assert.ok(fs.existsSync(file),"missing local target "+href);
   n++
  }
- assert.ok(n>=40,"expected many links: "+n)
+ assert.ok(n>=30,"expected working links to professional tools: "+n)
 });
 test("New themes are present in direct search and old overview remains",()=>{
- for(const term of ["b1","alphabetisierung","pibo","blockworld","code","pdf"])assert.ok(html.toLocaleLowerCase("de").includes(term),term);
+ for(const term of ["b1","alphabetisierung","code","pdf"])assert.ok(html.toLocaleLowerCase("de").includes(term),term);
  assert.match(html,/id="mein-sd-hub"/);
  assert.match(html,/querySelectorAll\('\.thema'\)/);
 });
