@@ -285,3 +285,20 @@ assert.equal(added.length,4);
 assert.equal(nearLimit.objects.length,core.LIMIT);
 assert.throws(()=>core.plantGroup(nearLimit,'garden',0,0),/Maximal/);
 });
+
+test('Sammel-Kristalle sind speicherbare, nicht blockierende Spielziele',()=>{
+const scene=core.fresh(),history=core.createHistory(scene);
+const gem=core.add(scene,'crystal',0,5),far=core.add(scene,'crystal',10,10);
+assert.equal(core.collides(0,5,[gem]),false);
+assert.deepEqual(core.collectNearby({x:0,z:5},scene.objects,new Set()),[gem.id]);
+const collected=new Set([gem.id]);
+assert.deepEqual(core.collectNearby({x:0,z:5},scene.objects,collected),[]);
+assert.deepEqual(core.collectNearby({x:10,z:10},scene.objects,collected),[far.id]);
+assert.deepEqual(core.parse(core.serialize(scene)).objects.slice(-2),[gem,far]);
+assert.equal(history.record(scene),true);
+assert.equal(history.undo().objects.some(o=>o.type==='crystal'),false);
+assert.equal(history.redo().objects.filter(o=>o.type==='crystal').length,2);
+assert.throws(()=>core.collectNearby({x:NaN,z:5},scene.objects,collected),/Sammelprüfung/);
+assert.throws(()=>core.collectNearby({x:0,z:5},scene.objects,collected,999),/Sammelprüfung/);
+assert.throws(()=>core.validate({...scene,objects:[{...gem,type:'unknown'}]}),/Ungültiges/);
+});
