@@ -97,3 +97,19 @@
 .kiReviewFinding[data-severity="warning"]{border-color:#b89c5c}
 .kiReviewFinding strong{font-size:12px;overflow-wrap:anywhere;display:block}
 .kiReviewFinding p{font-size:12px;margin:4px 0 0;color:#d6cfeb;line-height:1.5}
+
+/* Local repair proposals – no source execution and no background writes. */
+.kiRepair{display:grid;gap:9px;margin-top:10px;padding:10px;border:1px solid #6b5d91;border-radius:10px;background:#141126}
+.kiRepair h3{font-size:14px;margin:0}
+.kiRepair .kiActions{display:flex;flex-wrap:wrap;gap:8px}
+.kiRepair .kiActions button{flex:1 1 175px;white-space:normal;min-height:36px}
+.kiRepair .kiActions button:disabled{opacity:.48;cursor:not-allowed}
+.kiRepairProposals{display:grid;gap:8px}
+.kiRepairItem{padding:10px;border:1px solid #665b83;border-radius:10px;display:grid;gap:6px;min-width:0}
+.kiRepairItem strong{font-size:12px;overflow-wrap:anywhere}
+.kiRepairItem p{font-size:12px;margin:0;color:#d8cdec}
+.kiRepairDiff{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kiRepairDiff>div{min-width:0;display:grid;gap:4px}
+.kiRepairDiff b{font-size:11px}
+.kiRepairDiff pre{font:11px/1.45 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto;max-height:150px;max-width:100%;padding:8px;margin:0;border-radius:6px;border:1px solid #51466e;background:#100d20;color:#ece9f5}
+@media(max-width:720px){.kiRepairDiff{grid-template-columns:1fr}.kiRepair .kiActions button{flex-basis:100%}}
