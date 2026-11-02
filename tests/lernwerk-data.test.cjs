@@ -42,6 +42,8 @@ test('grammar help matches the topic without treating every article as a grammar
  assert.equal(guideFor(article).title,'Artikel und Nomen');
  assert.equal(guideFor(residence).title,'Hinweis zu dieser Aufgabe');
  assert.equal(guideFor(time).title,'Hinweis zu dieser Aufgabe');
+ assert.equal(guideFor({lv:'a2',q:'Welcher Kasus antwortet auf wem?',note:'Dativ',opts:['Dativ'],correct:0}).title,'Dativ');
+ assert.equal(guideFor({lv:'b1',q:'Welcher Nebensatz beginnt mit dass?',note:'Nebensatz',opts:['dass'],correct:0}).title,'Nebensätze');
  for(const item of lessons){
   const guide=guideFor(item);
   assert.ok(guide.title&&guide.rule&&guide.example,key(item));
