@@ -30,7 +30,7 @@
         "kids/pibo-fur.mjs",
         "kids/pibo-fur.test.mjs"
       ],
-      "implementation": "02.11.2026: Zusätzlich zu Zehen/Ballen und Blickreflexen erzeugt ein eigener deterministischer Fibonacci-Sampler 520 sehr kurze, konische Fellsträhnen auf Kopf und Körper. Zwei Three.js-InstancedMeshes (220/300 Instanzen) folgen den bestehenden Elternobjekten; Gesichts-/Brustbereich bleibt frei und Raycasts ignorieren Deko-Fell. Lokal mit Node-Unit-Tests und V8-Smoke geprüft; keine visuelle WebGL-Abnahme, kein professionelles GLB-Rig oder realistisches Fellshader-System."
+      "implementation": "02.11.2026: Zusätzlich zu Zehen/Ballen und Blickreflexen erzeugt ein eigener deterministischer Fibonacci-Sampler 520 sehr kurze, konische Fellsträhnen auf Kopf und Körper. Zwei Three.js-InstancedMeshes (220/300 Instanzen) folgen den bestehenden Elternobjekten; Gesichts-/Brustbereich bleibt frei und Raycasts ignorieren Deko-Fell. Lokal mit Node-Unit-Tests und V8-Smoke geprüft; keine visuelle WebGL-Abnahme, kein professionelles GLB-Rig oder realistisches Fellshader-System. 02.11.2026 (Folgelauf): Visuellen Platzierungsfehler korrigiert: 300 Torso-Fellinstanzen waren am Ursprung der Katze statt am tatsächlichen Körperzentrum y=0.97 befestigt und erschienen dadurch teilweise unter dem Boden. Shell nun auf Torsohöhe und mit begrenzter Y-Skalierung an die vorhandene Atmung gekoppelt. V8-Geometrie-/Animations-Mock geprüft, kein echtes WebGL-Bild oder Hardware-FPS bestätigt."
     },
     {
       "id": "gesicht",
@@ -296,7 +296,7 @@
   ],
   "last_iteration": {
     "date": "2026-11-02",
-    "focus": "Originales prozedurales 3D-Fell mit nur zwei InstancedMeshes statt glatter Primitive-Oberfläche; bestehende Touch-Zonen und Animationen erhalten.",
+    "focus": "Sichtbarer Fellfehler: 300 Torso-Fellsträhnen auf die echte Körpermitte ausrichten und bei Atmung synchronisieren; alle Räume und Spielstände unverändert.",
     "reference_checked": [
       "official",
       "google_play",
@@ -304,29 +304,24 @@
       "backyard_2026"
     ],
     "implementation_files": [
-      "kids/pibo-fur.mjs",
       "kids/pibo-character.mjs",
-      "kids/pibo-smoke.js",
-      "kids/pibo-smoke-test.mjs",
-      ".github/workflows/pibo-smoke.yml"
+      "kids/index.html"
     ],
     "test_files": [
-      "kids/pibo-fur.test.mjs",
       "kids/pibo-character.test.mjs",
-      "kids/pibo-smoke-test.mjs"
+      "kids/pibo-fur.test.mjs"
     ],
     "verified": [
-      "GitHub main, README, Benchmark und jüngste Commits vor Änderungen geprüft; GitHub-Statuschecks und PR-gefilterte Workflow-Abfrage ergaben keine auswertbaren Runs.",
-      "Node --check pibo-character.mjs bestanden; Node --test der zwei aktualisierten Fur-/Character-Unit-Dateien lokal bestanden (2/2 Testdateien).",
-      "Aktuelle main-Dateien über GitHub gelesen und Pibo-Smoke in V8 mit WebGL-Mock ausgeführt: PASS, 18 Checks, 436 Frames; Raumwechsel, Pflege, Spielstände, Spiele.",
-      "Originale Fur-Positionen und Normalen reproduzierbar, Vorderseite ausgespart, 520 Instanzen an Kopf/Körper befestigt, Raycast für Dekoration deaktiviert.",
-      "GitHub main mit neuen Modulen, Unit-Tests und CI-Smoke-Integration aktualisiert."
+      "GitHub main, letzte Commits, README, Benchmark und Pibo-Smoke-Workflow gelesen; jüngster main-Commit 5b91810e (Studio).",
+      "GitHub Commit-Statusabfrage lieferte 0 Statuschecks; PR-gefilterte Actions-Abfrage 0 Runs (kein Nachweis für erfolgreiches CI).",
+      "V8-Syntaxcheck der modifizierten Charakterfunktion erfolgreich; Three.js-Mock prüfte 300 Fellinstanzen am Torsozentrum y=.97, unveränderte Kopfposition, Atemskalierung, Begrenzung und unveränderte Raycast-Durchlässigkeit.",
+      "Vorhandene sechs Räume, Pflegefunktionen und localStorage-Schlüssel nicht verändert; neue Regressionen im Charakter-Unit-Test ergänzt."
     ],
     "unverified": [
-      "Keine echte Desktop-/Mobil-Chromium-WebGL-Bildprüfung, keine Screenshots oder FPS-Messungen auf Endgeräten.",
-      "GitHub Actions/Pages nach neuestem Push noch nicht als erfolgreich bestätigt; GitHub-Connector liefert nur PR-gefilterte Runs.",
-      "Prozedurale konische Fellsträhnen sind kein hochwertiges eigenständiges GLB-Modell mit Rigg, Morph-Targets und professionellem Fellmaterial."
+      "Vollständiger Node-Unit-/Smoke-Lauf, Desktop-/Mobil-Chromium, echtes WebGL-Rendering, E2E und GPU-/Hardware-FPS in dieser Umgebung nicht ausführbar.",
+      "GitHub Actions und Pages-Deployment nach Push nicht bestätigt; der Connector liefert keine allgemeinen Push-Workflow-Runs.",
+      "Kein hochwertiges glTF-/GLB-Rig, Morph-Target-Animationen oder professionelle Fellmaterialien."
     ],
-    "next": "Echte WebGL-Screenshots und GPU-/FPS-Werte auf Desktop und Smartphone erfassen; Fellwirkung/Instanzgeometrie visuell korrigieren, danach hochwertiges originales rigged GLB mit Gesichts-Morphs und mobilem LOD als optionalen Ersatz mit Primitive-Fallback integrieren."
+    "next": "Im echten Chromium/WebGL die Torso-Fellposition visuell kontrollieren und GPU/FPS messen; danach eigenständiges glTF-Rig und Gesichtsmorphs entwickeln."
   }
 }
