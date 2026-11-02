@@ -8,7 +8,8 @@
     "google_play": "https://play.google.com/store/apps/details?id=com.outfit7.mytalkingtom2",
     "bathroom_2026": "https://www.globenewswire.com/news-release/2026/03/19/3258907/0/en/My-Talking-Tom-Friends-Adds-a-Second-Floor-My-Talking-Tom-2-Expands-Bathroom-Gameplay.html",
     "backyard_2026": "https://www.globenewswire.com/news-release/2026/06/04/3306674/0/en/my-talking-tom-2-reworks-its-backyard-into-a-playable-world.html",
-    "adventure_2026": "https://www.gamespress.com/en-US/My-Talking-Tom-2-Introduces-Spooky-Quest-a-Brand-New-Dungeon-Crawler-A"
+    "adventure_2026": "https://www.globenewswire.com/news-release/2026/07/02/3321290/0/en/my-talking-tom-2-introduces-spooky-quest-a-brand-new-dungeon-crawler-adventure.html",
+    "halloween_2026": "https://www.globenewswire.com/news-release/2026/10/22/3386310/0/en/nine-games-one-spooky-takeover-halloween-hits-talking-tom-friends.html"
   },
   "rating_legend": {
     "teilweise": "Mechanik im Code vorhanden, aber nicht auf professionellem Niveau nachgewiesen.",
@@ -217,7 +218,7 @@
         "kids/index.html",
         "kids/e2e/pibo.spec.mjs"
       ],
-      "implementation": "Nur im Garten: Boden per Raycast antippen, Pibo läuft mit originaler Schrittpose, begrenzter Geschwindigkeit und Folgekamera zum Ziel. Hindernisse werden lokal tangential umsteuert; keine Navmesh-Pfadplanung und keine freie Bewegung durch verbundene Innenräume. Desktop/Mobil-Chromium-Test neu hinzugefügt, Ergebnis des aktuellen Pushs noch offen."
+      "implementation": "Nur im eigenständigen Garten: Boden-Raycast mit Touch/Maus; deterministisches A*-Raster (0,2 m), Sichtlinien-Glättung, Hindernisradien für Baum/Teich/Bank/Windrad und kontrollierte Geschwindigkeitsrampe. Gehpose blendet über die tatsächliche Geschwindigkeit ein. Keine verbundenen begehbaren Innenräume, kein echtes Navmesh, kein professionelles Rig; WebGL/Mobilhardware noch nicht bestätigt."
     },
     {
       "id": "haustiere",
@@ -287,34 +288,35 @@
   ],
   "last_iteration": {
     "date": "2026-11-02",
-    "focus": "Eigene begehbare 3D-Gartenfläche: per Maus/Touch den Boden antippen, Pibo geht selbständig mit Fußbewegung, sanfter Ausrichtung und Folgekamera.",
+    "focus": "Kollisionssichere Garten-Wegefindung statt möglicher Endlosschleifen um Teich/Baum; sanftere Schrittanimation beim Anlaufen.",
     "reference_checked": [
       "official",
       "google_play",
       "backyard_2026",
-      "bathroom_2026"
+      "bathroom_2026",
+      "adventure_2026",
+      "halloween_2026"
     ],
     "implementation_files": [
       "kids/pibo-roam.mjs",
-      "kids/index.html",
-      "kids/pibo-smoke.js"
+      "kids/index.html"
     ],
     "test_files": [
       "kids/pibo-roam.test.mjs",
-      "kids/e2e/pibo.spec.mjs",
-      "kids/pibo-smoke-test.mjs"
+      "kids/pibo-smoke-test.mjs",
+      "kids/e2e/pibo.spec.mjs"
     ],
     "verified": [
-      "Vorheriger Main-Stand f6b40ee: GitHub Pibo smoke, Chromium Kids browser checks und Pages-Deployment jeweils success (Actions API, 02.11.2026).",
-      "Neues PiboRoam-Modul im V8-Sandboxlauf: Ziel, 200 Frames, Baum-Hindernis und Reset ohne Ausnahme geprüft.",
-      "Inline-ESM-Body von kids/index.html in V8 syntaktisch kompiliert.",
-      "Regression in CI identifiziert: Headless-Smoke lud neues Modul nicht; Smoke-Bootstrap entsprechend repariert."
+      "Im V8-Sandboxlauf 11 Gartenziele einschließlich hinter dem Teich, Hindernismittelpunkte und Rand-Ecken in 94 bis 163 Frames (1/60 s) erreicht; auf jedem simulierten Frame Gartenbegrenzung und Hindernisabstand geprüft.",
+      "Umweg hinter dem Teich bestand aus mindestens zwei Wegpunkten; direkte Strecke wurde als blockiert erkannt.",
+      "Pibo-Headless-Smoke mit den neuesten Main-Dateien in V8 erfolgreich: 18 Checks und 436 simulierte Frames; enthält lokale Spielstand-, Pflege- und Raumprüfungen.",
+      "Inline-Skripte von kids/index.html mit V8-Parser syntaktisch geprüft."
     ],
     "unverified": [
-      "Neue PiboRoam-Node-Unit- und Browser-Tests sowie WebGL-Garteninteraktion erst nach Abschluss des aktuellen GitHub-Actions-Pushs als bestanden bewerten.",
-      "Physische iOS/Android-Hardware, FPS/GPUs und vollständige Navigation um alle Gartenobjekte nicht geprüft.",
-      "Keine professionelle Modell-/Rig-/Audioqualität oder freie Navigation zwischen Zimmern nachgewiesen."
+      "Node.js-Tests und neue GitHub-Actions-Workflow-Ergebnisse nach diesem Push noch nicht unabhängig abgerufen; GitHub-Connector liefert keine Push-Workflow-Runs über seine PR-gebundene Abfrage.",
+      "Playwright-Desktop-/Mobil-Chromium, echtes WebGL, tatsächliche Touch-Koordinaten und GitHub Pages nach diesem Commit noch nicht verifiziert.",
+      "Keine iOS-/Android-Hardware-FPS-Messung; keine professionellen glTF-Rig-/Morph-Target-Animationen, hochwertigen Foley-Sounds oder freie Bewegung zwischen Zimmern."
     ],
-    "next": "Neueste Smoke-/Chromium-/Pages-Workflows für Garten-Tap-to-Walk auswerten, eventuelle Touch-Raycaster-Probleme reparieren; anschließend Wegfindung um Hindernisse und hochwertiges originales Rig-/Bewegungsblending."
+    "next": "Neueste Pibo-Smoke-, Kids-Chromium- und Pages-Checks abnehmen; einen echten Desktop-/Mobil-WebGL-E2E-Test für den Teich-Umweg und Kollisionsfreiheit ergänzen, danach Pfoten-Rigg und Kamera-Blendings auf realer Hardware optimieren."
   }
 }
