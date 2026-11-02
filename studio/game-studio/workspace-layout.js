@@ -60,7 +60,7 @@ if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||event.shi
 const el=event.target;
 if(el&&((el.closest&&el.closest('input,textarea,select,[contenteditable="true"]'))||el.isContentEditable))return;
 if(event.key==='Escape'&&controller.read().focus){event.preventDefault();command('exit');}
-if(event.key.toLowerCase()==='f'&&event.key.length===1){event.preventDefault();command('focus');}
+if(event.key.toLowerCase()==='f'&&event.key.length===1&&doc.getElementById('modePlay')?.getAttribute('aria-pressed')!=='true'){event.preventDefault();command('focus');}
 });
 display();
 return controller;
