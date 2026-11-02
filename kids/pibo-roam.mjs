@@ -1,6 +1,6 @@
 // Original Pibo garden locomotion. No borrowed game assets or animation clips.
 // The character stays inside the meadow and steers around large props.
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const clampWalk=(n,a,b)=>Math.max(a,Math.min(b,n));
 const obstacles=[
   {x:-3.3,z:-2.7,r:.85}, // fruit tree
   {x:2.7,z:-2.3,r:1.35}, // pond
@@ -9,12 +9,12 @@ const obstacles=[
 ];
 export function walkablePoint(x,z){
   if(!Number.isFinite(x)||!Number.isFinite(z))return null;
-  let p={x:clamp(x,-3.8,3.8),z:clamp(z,-3.15,.65)};
+  let p={x:clampWalk(x,-3.8,3.8),z:clampWalk(z,-3.15,.65)};
   for(const o of obstacles){
     const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
     if(d<o.r){
       const nx=d>.0001?dx/d:1,nz=d>.0001?dz/d:0;
-      p={x:clamp(o.x+nx*o.r,-3.8,3.8),z:clamp(o.z+nz*o.r,-3.15,.65)};
+      p={x:clampWalk(o.x+nx*o.r,-3.8,3.8),z:clampWalk(o.z+nz*o.r,-3.15,.65)};
     }
   }
   return p;
@@ -30,7 +30,7 @@ export class PiboRoam{
     return true;
   }
   update(deltaSeconds){
-    const dt=clamp(Number.isFinite(deltaSeconds)?deltaSeconds:0,0,.05);
+    const dt=clampWalk(Number.isFinite(deltaSeconds)?deltaSeconds:0,0,.05);
     const dx=this.targetX-this.x,dz=this.targetZ-this.z,dist=Math.hypot(dx,dz);
     if(dist<=.035||dt===0){if(dist<=.035)this.moving=false;return this.pose()}
     const step=Math.min(dist,1.75*dt);
