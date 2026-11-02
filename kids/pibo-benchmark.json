@@ -310,13 +310,16 @@
       "kids/pibo-character.test.mjs",
       "kids/pibo-face.test.mjs",
       "kids/pibo-motion.test.mjs",
-      "kids/pibo-roam.test.mjs"
+      "kids/pibo-roam.test.mjs",
+      "kids/pibo-smoke-test.mjs"
     ],
     "verified": [
       "Aktuelles main, README und Benchmark vor Änderungen gelesen; vorheriger Automatikbericht geprüft.",
       "V8-Ausführung der vorhandenen Pibo-Character-Tests (10 Assertions) nach neuer Zehen-/Augengeometrie erfolgreich.",
       "V8-Ausführung der vorhandenen Face-, Motion- und Roam-Tests erfolgreich (407, 4088, 12520 Assertions).",
-      "HTML-Inline-Modul in V8 syntaktisch geparst; Aufruf übergibt vorhandene animierte Pfoten und Pupillen; kein Spielstandformat geändert."
+      "HTML-Inline-Modul in V8 syntaktisch geparst; Aufruf übergibt vorhandene animierte Pfoten und Pupillen; kein Spielstandformat geändert.",
+      "Pibo-Smoke in V8 mit WebGL-Mock: PASS, 18 Checks und 436 simulierte Frames; keine Aussage über echtes Rendering.",
+      "Alle 18 eindeutigen Benchmark-Nachweisdateien im GitHub-main vorhanden."
     ],
     "unverified": [
       "Kein vollständiger Node-Testlauf, kein echter Desktop-/Mobil-Chromium-/WebGL-/End-to-End-Test in dieser Laufumgebung; kein GPU-/Hardwaretest.",
