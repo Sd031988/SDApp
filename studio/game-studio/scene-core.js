@@ -147,7 +147,7 @@ const len=Math.hypot(dx,dz),magnitude=len||1,ca=Math.cos(azimuth),sa=Math.sin(az
 return{x:(dx*ca+dz*sa)/magnitude,z:(-dx*sa+dz*ca)/magnitude,moving:len>0};
 }
 function move(player,keys,dt,objects,azimuth=0){
-const vector=direction(keys,azimuth),step=5*clamp(dt,0,.05);
+const vector=direction(keys,azimuth),step=(keys?.run?8:5)*clamp(dt,0,.05);
 const vx=vector.x*step,vz=vector.z*step;
 const k=keys||{};
 if(!collides(player.x+vx,player.z,objects))player.x+=vx;
