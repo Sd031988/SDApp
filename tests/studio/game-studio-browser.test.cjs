@@ -2,10 +2,12 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const {makeGLB}=require('./glb-fixture.cjs');
+const projectCore=require('../../studio/game-studio/scene-core.js');
 const files=new Map([
 ['/studio/game-studio/index.html','text/html'],
 ['/studio/game-studio/game.js','application/javascript'],
 ['/studio/game-studio/glb-core.js','application/javascript'],
+['/studio/game-studio/project-assets.js','application/javascript'],
 ['/studio/game-studio/glb-preview.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/style.css','text/css'],
@@ -41,6 +43,49 @@ const previewWebgl=await page.locator('#glbPreview').evaluate(el=>({
 available:Boolean(el.getContext('webgl')),canvasWidth:el.width,canvasHeight:el.height
 }));
 assert.equal(previewWebgl.available,true);
+// GLB becomes a real editable and serializable object in a versioned v2 scene.
+assert.equal(await page.locator('#glbPlace').isVisible(),true);
+await page.locator('#glbPlace').click();
+await page.waitForFunction(()=>document.querySelector('#objectCount').textContent==='7');
+assert.match(await page.locator('[data-object-id="7"]').innerText(),/studio-test.glb/);
+await page.locator('[data-object-id="7"]').click();
+await page.locator('#propX').fill('4');
+await page.locator('#propX').dispatchEvent('change');
+assert.equal(await page.locator('#propX').inputValue(),'4');
+const v2DownloadPromise=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const v2Download=await v2DownloadPromise;
+assert.equal(v2Download.suggestedFilename(),'sd-game-project.json');
+const v2Payload=fs.readFileSync(await v2Download.path());
+const v2Scene=JSON.parse(v2Payload.toString('utf8'));
+assert.equal(v2Scene.version,2);
+assert.equal(v2Scene.assets.length,1);
+assert.equal(v2Scene.objects.length,7);
+assert.equal(v2Scene.objects[6].type,'model');
+assert.equal(v2Scene.objects[6].x,4);
+await page.locator('#duplicateObject').click();
+assert.equal(await page.locator('#objectCount').innerText(),'8');
+assert.equal((await page.locator('[data-object-id="8"]').innerText()).includes('studio-test.glb'),true);
+await page.locator('#undoAction').click();
+assert.equal(await page.locator('#objectCount').innerText(),'7');
+await page.locator('#redoAction').click();
+assert.equal(await page.locator('#objectCount').innerText(),'8');
+// The saved project must restore model geometry and asset references.
+await page.locator('#sceneFile').setInputFiles({name:'model-project.json',mimeType:'application/json',buffer:v2Payload});
+await page.waitForFunction(()=>document.querySelector('#objectCount').textContent==='7');
+assert.equal(await page.locator('#undoAction').isDisabled(),true);
+assert.match(await page.locator('[data-object-id="7"]').innerText(),/studio-test.glb/);
+const modelRoundtripDownload=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const modelRoundtrip=await modelRoundtripDownload;
+assert.deepEqual(JSON.parse(fs.readFileSync(await modelRoundtrip.path(),'utf8')),v2Scene);
+// Reimporting v1 recovers the original scene format and maintains old editor tests.
+await page.locator('#sceneFile').setInputFiles({
+name:'legacy.json',mimeType:'application/json',
+buffer:Buffer.from(projectCore.serialize(projectCore.fresh()))
+});
+await page.waitForFunction(()=>document.querySelector('#objectCount').textContent==='6');
+assert.equal(await page.locator('#undoAction').isDisabled(),true);
 await page.locator('#glbPreview').hover();
 await page.mouse.down();await page.mouse.move(540,380);await page.mouse.up();
 await page.locator('#glbFile').setInputFiles({name:'bad.glb',mimeType:'model/gltf-binary',buffer:Buffer.alloc(44)});

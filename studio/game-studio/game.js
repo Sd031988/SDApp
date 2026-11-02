@@ -1,15 +1,49 @@
 /* SD Game-Studio: local WebGL 3D rendering and isolated scene editing. */
 (function(){
 'use strict';
-const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
-const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const Core=window.SDGameCore,Project=window.SDGameProject,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
+const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume',model:'3D-Modell'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
-let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
+let savedSnapshot=Project.serialize(scene),history=Project.history(scene),brush='orbit',terrainMesh=null,terrainSource=null;
 const player={x:0,y:0,z:5,vy:0};
 const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
 const keys={forward:false,back:false,left:false,right:false,jump:false};
 const say=message=>$('status').textContent=message;
+let modelMeshes=new Map();
+function syncModelBuffers(next){
+const assets=next.version===2?next.assets:[];
+const cache=new Map(),created=[];
+try{
+for(const asset of assets){
+const existing=modelMeshes.get(asset.id);
+if(existing&&existing.base64===asset.base64){cache.set(asset.id,existing);continue;}
+const parsed=window.SDGLB.parse(Project.decode(asset.base64)),parts=[];
+for(const part of parsed.parts){
+const buffer=mesh(part.vertices);created.push(buffer);
+parts.push({mesh:buffer,color:part.color});
+}
+cache.set(asset.id,{base64:asset.base64,bounds:parsed.bounds,parts});
+}
+}catch(error){for(const b of created)gl.deleteBuffer(b.buffer);throw error;}
+for(const old of modelMeshes.values())if(![...cache.values()].includes(old))
+for(const part of old.parts)gl.deleteBuffer(part.mesh.buffer);
+modelMeshes=cache;
+}
+function renderModel(o,base){
+const asset=modelMeshes.get(o.assetId);
+if(!asset)return;
+const bounds=asset.bounds;
+const factor=o.scale*1.5/Math.max(.1,bounds.radius);
+const center=bounds.center;
+const minY=bounds.min[1];
+const matrix=mm(translate(o.x,base,o.z),mm(scale(factor,factor,factor),translate(-center[0],-minY,-center[2])));
+const tint=color(o.color);
+for(const part of asset.parts){
+const hex='#'+part.color.map((c,i)=>Math.round(Math.max(0,Math.min(1,c*.8+tint[i]*.2))*255).toString(16).padStart(2,'0')).join('');
+draw(part.mesh,hex,matrix);
+}
+}
 const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 function mm(a,b){const c=Array(16).fill(0);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)c[i*4+j]+=a[k*4+j]*b[i*4+k];return c;}
 function translate(x,y,z){const m=id();m[12]=x;m[13]=y;m[14]=z;return m;}
@@ -90,6 +124,7 @@ function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
 function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
 function part(shape,tint,x,y,z,a,b,c){draw(shape,tint,mm(translate(x,y,z),scale(a,b,c)));}
 function object(o){
+if(o.type==='model'){renderModel(o,Core.terrainHeight(scene.terrain,o.x,o.z));if(!playing&&o.id===selected)part('box','#f8d481',o.x,Core.terrainHeight(scene.terrain,o.x,o.z)+.05,o.z,o.scale,.05,o.scale);return;}
 const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z);
 const drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
 const foliage=['#408d75','#39836e','#67b39a'];
@@ -213,26 +248,26 @@ draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
 function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
-function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
+function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=(o.type==='model'?(scene.assets?.find(a=>a.id===o.assetId)?.name||'3D-Modell'):names[o.type])+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
 function refreshTerrain(){document.querySelectorAll('[data-ground]').forEach(b=>{const active=b.dataset.ground===scene.ground;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
 function refreshLighting(){document.querySelectorAll('[data-light]').forEach(b=>{const active=b.dataset.light===scene.lighting;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
 function refreshAvatar(){document.querySelectorAll('[data-avatar]').forEach(b=>{const active=b.dataset.avatar===scene.avatar;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});}
 function selectBrush(tool){brush=tool;document.querySelectorAll('[data-brush]').forEach(b=>{const active=b.dataset.brush===tool;b.classList.toggle('chosen',active);b.setAttribute('aria-pressed',String(active));});canvas.classList.toggle('sculpting',tool!=='orbit');$('editHint').textContent=tool==='orbit'?'Maus oder Finger ziehen: Kamera drehen · Mausrad: Zoom · Objekt antippen: auswählen':'Pinsel aktiv: Finger oder Maus über das Gelände ziehen · Mit „Kamera“ wieder drehen';}
-function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();refreshLighting();refreshAvatar();selectBrush(brush);}
-function syncDirty(){dirty=Core.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
+function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=(o.type==='model'?'◆ '+(scene.assets?.find(a=>a.id===o.assetId)?.name||'Modell'):names[o.type])+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();refreshLighting();refreshAvatar();selectBrush(brush);}
+function syncDirty(){dirty=Project.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
 function refreshHistory(){$('undoAction').disabled=playing||!history.canUndo;$('redoAction').disabled=playing||!history.canRedo;}
-function changed(msg){history.record(scene);syncDirty();say(msg);list();}
+function changed(msg){syncModelBuffers(scene);history.record(scene);syncDirty();say(msg);list();}
 function travel(direction){
 if(playing)return;
 const next=history[direction]();if(!next)return;
-scene=next;selected=scene.objects.some(o=>o.id===selected)?selected:null;
+syncModelBuffers(next);scene=next;selected=scene.objects.some(o=>o.id===selected)?selected:null;
 syncDirty();list();say(direction==='undo'?'Änderung rückgängig gemacht.':'Änderung wiederhergestellt.');
 }
 function duplicateSelected(){
 if(playing||selected==null)return;
-try{const copy=Core.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
+try{const copy=Project.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
 catch(err){say(err.message);}
 }
 function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
@@ -245,8 +280,37 @@ selected=objects[objects.length-1].id;
 changed((group==='grove'?'Waldstück':'Blumenwiese')+' angelegt ('+objects.length+' Objekte).');
 }catch(err){say(err.message);}
 }
-function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
-function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
+function save(){const data=Project.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download=scene.version===2?'sd-game-project.json':'sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
+function load(file){
+if(!file)return;
+if(file.size>Project.MAX_CHARS){say('Projektdatei zu groß.');return;}
+file.text().then(text=>{
+const next=Project.parse(text);
+syncModelBuffers(next);
+scene=next;
+history.reset(next);
+savedSnapshot=Project.serialize(next);
+selected=null;
+Object.assign(player,{x:0,y:0,z:5,vy:0});
+syncDirty();list();
+say(next.version===2?'Projekt mit 3D-Assets geladen.':'Alte Szene unverändert geladen.');
+}).catch(e=>say('Import abgebrochen: '+e.message));
+}
+doc.addEventListener('sd-game-model-add',event=>{
+if(playing){say('Zuerst den Bearbeiten-Modus aktivieren.');return;}
+const detail=event.detail;
+if(!detail||!detail.bytes||!detail.name)return;
+const before=Project.validate(scene);
+try{
+const obj=Project.addModel(scene,detail.bytes,detail.name,Math.round(camera.targetX),Math.round(camera.targetZ));
+syncModelBuffers(scene);
+selected=obj.id;
+changed('3D-Modell als Szenenobjekt platziert. Projekt als JSON speichern.');
+}catch(err){
+scene=before;
+say('Modell konnte nicht platziert werden: '+err.message);
+}
+});
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
 document.querySelectorAll('[data-nature-group]').forEach(b=>b.addEventListener('click',()=>addNatureGroup(b.dataset.natureGroup)));
 document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
