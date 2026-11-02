@@ -31,6 +31,7 @@ jobs:
           node --check kids/pibo-character.mjs
           node --check kids/pibo-interactions.mjs
           node --check kids/pibo-garden.mjs
+          node --check kids/pibo-roam.mjs
       - name: Verify local star rewards and daily limits
         run: node kids/pibo-rewards.test.mjs
       - name: Verify facial animations
@@ -44,6 +45,7 @@ jobs:
           node kids/pibo-interactions.test.mjs
           node kids/pibo-care.test.mjs
           node kids/pibo-garden.test.mjs
+          node kids/pibo-roam.test.mjs
           node kids/pibo-benchmark.test.mjs
       - name: Verify BlockWorld sandbox and game logic
         run: |
