@@ -43,6 +43,32 @@ if(key==='color'?!PALETTE.includes(value):!numeric(value,key==='scale'?.4:-WORLD
 }
 Object.assign(obj,values);return obj;}
 function remove(scene,id){const before=scene.objects.length;scene.objects=scene.objects.filter(o=>o.id!==id);return before!==scene.objects.length;}
+function duplicate(scene,id){
+const original=scene.objects.find(o=>o.id===id);
+if(!original)throw Error('Objekt nicht gefunden.');
+const copy=add(scene,original.type,original.x+1.5,original.z+1.5);
+return update(scene,copy.id,{scale:original.scale,color:original.color});
+}
+function createHistory(initial,capacity=40){
+if(!Number.isSafeInteger(capacity)||capacity<2||capacity>100)throw Error('Ungültige Verlaufslänge.');
+let snapshots=[serialize(initial)],index=0;
+return Object.freeze({
+record(next){
+const state=serialize(next);
+if(state===snapshots[index])return false;
+snapshots=snapshots.slice(0,index+1);
+snapshots.push(state);
+if(snapshots.length>capacity)snapshots.shift();
+index=snapshots.length-1;
+return true;
+},
+undo(){if(index===0)return null;return parse(snapshots[--index]);},
+redo(){if(index>=snapshots.length-1)return null;return parse(snapshots[++index]);},
+reset(next){snapshots=[serialize(next)];index=0;},
+get canUndo(){return index>0;},
+get canRedo(){return index<snapshots.length-1;}
+});
+}
 function collides(x,z,objects){
 if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;
 return objects.some(o=>{const r=o.type==='tree'?.42*o.scale:o.type==='sphere'?.85*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
@@ -57,5 +83,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,KINDS,PALETTE,fresh,validate,parse,serialize,add,update,remove,collides,move});
+return Object.freeze({VERSION,LIMIT,WORLD,KINDS,PALETTE,fresh,validate,parse,serialize,add,update,remove,duplicate,createHistory,collides,move});
 });
