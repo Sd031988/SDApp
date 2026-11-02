@@ -2,13 +2,17 @@
 (function(){
 'use strict';
 const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
-const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume',crystal:'Kristall'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
+const collected=new Set();
+const round={seconds:0,finished:false,best:null};
+const audio=window.SDGameAudio?.createController(window.AudioContext||window.webkitAudioContext);
+const formatTime=n=>Math.max(0,Number(n)||0).toFixed(1)+' s';
 const player={x:0,y:0,z:5,vy:0};
 const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
-const keys={forward:false,back:false,left:false,right:false,jump:false};
+const keys={forward:false,back:false,left:false,right:false,jump:false,run:false};
 const say=message=>$('status').textContent=message;
 const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 function mm(a,b){const c=Array(16).fill(0);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)c[i*4+j]+=a[k*4+j]*b[i*4+k];return c;}
@@ -50,6 +54,11 @@ const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10
 const points=raw.map((v,i)=>{const radius=.87+Math.sin((i+1)*5.17)*.11;const p=norm(v);return[p[0]*radius,p[1]*radius,p[2]*radius];});
 return triangles(faces.map(face=>face.map(index=>points[index])));
 }
+function gem(){
+const top=[0,1,0],bottom=[0,-1,0],rim=[[1,0,0],[0,0,1],[-1,0,0],[0,0,-1]],faces=[];
+for(let i=0;i<4;i++){const a=rim[i],b=rim[(i+1)%4];faces.push([top,b,a],[bottom,a,b]);}
+return triangles(faces);
+}
 function buildTerrain(){
 const t=scene.terrain,vertices=[],size=Core.GRID,step=Core.STEP;
 function node(col,row){
@@ -83,7 +92,7 @@ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('3D-Programmfehle
 gl.useProgram(program);
 u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint'),sunColor:gl.getUniformLocation(program,'sunColor'),sunDir:gl.getUniformLocation(program,'sunDir'),ambientColor:gl.getUniformLocation(program,'ambientColor'),fogColor:gl.getUniformLocation(program,'fogColor'),eyePosition:gl.getUniformLocation(program,'eyePosition'),terrainKind:gl.getUniformLocation(program,'terrainKind')};
 gl.enableVertexAttribArray(u.pos);gl.enableVertexAttribArray(u.normal);gl.enable(gl.DEPTH_TEST);
-shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder()};grid=gridlines();
+shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder(),gem:gem()};grid=gridlines();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
@@ -93,6 +102,11 @@ function object(o){
 const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z);
 const drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
 const foliage=['#408d75','#39836e','#67b39a'];
+if(o.type==='crystal'){
+if(playing&&collected.has(o.id))return;
+const hover=1.05*s+Math.sin(pose.clock*2+o.id)*.12;
+draw('gem',o.color,mm(translate(x,base+hover,z),mm(rotateY(pose.clock*1.5),scale(.62*s,.8*s,.62*s))));
+}
 if(o.type==='box')drawPart('box',o.color,x,s,z,s,s,s);
 if(o.type==='sphere')drawPart('sphere',o.color,x,s,z,s,s,s);
 if(o.type==='column')drawPart('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
@@ -180,15 +194,15 @@ function updatePose(dt,wasMoving){
 pose.clock+=dt;
 const motion=playing?Core.direction(keys,camera.azimuth):{moving:false,x:0,z:0};
 const moving=playing&&motion.moving&&wasMoving;
-pose.walk+=(Number(moving)-pose.walk)*Math.min(1,dt*9);
+pose.walk+=((moving?(keys.run?1.3:1):0)-pose.walk)*Math.min(1,dt*9);
 if(moving){
 const heading=Math.atan2(motion.x,motion.z);
 const delta=Math.atan2(Math.sin(heading-pose.heading),Math.cos(heading-pose.heading));
 pose.heading+=delta*Math.min(1,dt*12);
 }
-if(pose.walk>.01)pose.phase+=dt*10;
-pose.state=playing?(player.y>.045?'jump':moving?'walk':'idle'):'preview';
-$('characterState').textContent=({preview:'VORSCHAU',idle:'STEHEN',walk:'LAUFEN',jump:'SPRINGEN'})[pose.state];
+if(pose.walk>.01)pose.phase+=dt*(keys.run?15:10);
+pose.state=playing?(player.y>.045?'jump':moving?(keys.run?'run':'walk'):'idle'):'preview';
+$('characterState').textContent=({preview:'VORSCHAU',idle:'STEHEN',walk:'LAUFEN',run:'SPRINTEN',jump:'SPRINGEN'})[pose.state];
 doc.body.dataset.characterState=pose.state;
 }
 function dimensions(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);return{w,h};}
@@ -212,7 +226,7 @@ draw(terrainMesh,terrain.soil,id(),gl.TRIANGLES,terrain.kind);
 draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
-function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
+function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='crystal'?1.1:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
@@ -223,11 +237,11 @@ function selectBrush(tool){brush=tool;document.querySelectorAll('[data-brush]').
 function list(){const h=$('sceneList');h.replaceChildren();for(const o of scene.objects){const btn=doc.createElement('button');btn.type='button';btn.className='scene-item';btn.dataset.objectId=String(o.id);btn.textContent=names[o.type]+' · '+o.id;btn.addEventListener('click',()=>select(o.id));h.appendChild(btn);}$('objectCount').textContent=String(scene.objects.length);select(selected&&scene.objects.some(x=>x.id===selected)?selected:null);refreshHistory();refreshTerrain();refreshLighting();refreshAvatar();selectBrush(brush);}
 function syncDirty(){dirty=Core.serialize(scene)!==savedSnapshot;$('sceneName').textContent=scene.name+(dirty?' •':'');}
 function refreshHistory(){$('undoAction').disabled=playing||!history.canUndo;$('redoAction').disabled=playing||!history.canRedo;}
-function changed(msg){history.record(scene);syncDirty();say(msg);list();}
+function changed(msg){round.best=null;history.record(scene);syncDirty();say(msg);list();}
 function travel(direction){
 if(playing)return;
 const next=history[direction]();if(!next)return;
-scene=next;selected=scene.objects.some(o=>o.id===selected)?selected:null;
+scene=next;round.best=null;selected=scene.objects.some(o=>o.id===selected)?selected:null;
 syncDirty();list();say(direction==='undo'?'Änderung rückgängig gemacht.':'Änderung wiederhergestellt.');
 }
 function duplicateSelected(){
@@ -235,7 +249,23 @@ if(playing||selected==null)return;
 try{const copy=Core.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
 catch(err){say(err.message);}
 }
-function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
+function refreshGoal(){
+const total=scene.objects.filter(o=>o.type==='crystal').length;
+$('goalHud').hidden=!playing;
+$('goalCount').textContent=total?collected.size+' / '+total+' Kristalle':'Noch keine Kristalle';
+$('goalHint').textContent=total?(round.finished?'Geschafft! Neue Runde starten.':'Sammle alle Kristalle'):'Platziere Kristalle im Bearbeiten-Modus';
+$('goalTime').textContent=formatTime(round.seconds);
+$('goalBest').textContent=round.best==null?'Bestzeit: –':'Bestzeit: '+formatTime(round.best);
+$('goalHud').classList.toggle('complete',playing&&round.finished);
+}
+function resetRound(){
+collected.clear();
+round.seconds=0;round.finished=false;
+Object.assign(player,{x:0,y:0,z:5,vy:0});
+Object.keys(keys).forEach(k=>keys[k]=false);
+refreshGoal();
+}
+function mode(play){if(play){selectBrush('orbit');if(!playing)resetRound();}playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);refreshGoal();if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: Sammle Kristalle mit WASD / Pfeilen oder Touch.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
 function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
 function addNatureGroup(group){
 if(playing)return;
@@ -246,7 +276,7 @@ changed((group==='grove'?'Waldstück':'Blumenwiese')+' angelegt ('+objects.lengt
 }catch(err){say(err.message);}
 }
 function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
-function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
+function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;round.best=null;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
 document.querySelectorAll('[data-nature-group]').forEach(b=>b.addEventListener('click',()=>addNatureGroup(b.dataset.natureGroup)));
 document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
@@ -266,6 +296,15 @@ try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[sc
 catch(err){say(err.message);}
 }));
 $('modeEdit').addEventListener('click',()=>mode(false));$('modePlay').addEventListener('click',()=>mode(true));
+$('restartRound').addEventListener('click',()=>{if(playing){resetRound();say('Neue Runde! Sammle alle Kristalle.');}});
+$('soundToggle').addEventListener('click',()=>{
+const on=audio?.setEnabled(!audio.enabled)||false;
+$('soundToggle').setAttribute('aria-pressed',String(on));
+$('soundToggle').textContent=on?'🔊 Ton an':'🔇 Ton aus';
+if(on)audio.play('toggle');
+else if(!audio)say('Ton wird von diesem Browser nicht unterstützt.');
+});
+window.addEventListener('pagehide',()=>audio?.dispose(),{once:true});
 $('saveScene').addEventListener('click',save);$('loadScene').addEventListener('click',()=>$('sceneFile').click());
 $('sceneFile').addEventListener('change',e=>{load(e.target.files[0]);e.target.value='';});
 $('resetScene').addEventListener('click',()=>{if(dirty&&!window.confirm('Ungespeicherte Änderungen wirklich verwerfen?'))return;scene=Core.fresh();selected=null;changed('Beispielwelt wiederhergestellt (rückgängig möglich).');});
@@ -275,8 +314,8 @@ $('undoAction').addEventListener('click',()=>travel('undo'));
 $('redoAction').addEventListener('click',()=>travel('redo'));
 for(const name of ['X','Z','Scale','Color'])$('prop'+name).addEventListener('change',e=>{if(selected==null)return;const key=name.toLowerCase(),value=key==='color'?e.target.value:Number(e.target.value);try{Core.update(scene,selected,{[key]:value});changed('Objekt aktualisiert.');}catch(err){say(err.message);select(selected);}});
 $('cameraReset').addEventListener('click',()=>{Object.assign(camera,{azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0});say('Kamera zurückgesetzt.');});
-const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump'};
-function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();keys[k]=down;}}
+const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump',ShiftLeft:'run',ShiftRight:'run'};
+function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();if(down&&k==='jump'&&!keys.jump&&player.y<=.001)audio?.play('jump');keys[k]=down;}}
 function shortcut(e){
 if(playing||!(e.ctrlKey||e.metaKey)||e.altKey||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName)||doc.activeElement.isContentEditable)return false;
 const k=e.key.toLowerCase();
@@ -286,7 +325,7 @@ if(k==='d'&&!e.shiftKey){e.preventDefault();duplicateSelected();return true;}
 return false;
 }
 window.addEventListener('keydown',e=>{if(!shortcut(e))key(e,true);});window.addEventListener('keyup',e=>key(e,false));window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
-document.querySelectorAll('[data-control]').forEach(b=>{const k=b.dataset.control;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys[k]=true;});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{e.preventDefault();keys[k]=false;});});
+document.querySelectorAll('[data-control]').forEach(b=>{const k=b.dataset.control;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(k==='jump'&&!keys.jump&&player.y<=.001)audio?.play('jump');keys[k]=true;});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{e.preventDefault();keys[k]=false;});});
 function groundPoint(clientX,clientY){
 const rect=canvas.getBoundingClientRect(),m=matrices();
 const forward=norm(m.target.map((v,i)=>v-m.eye[i])),right=norm(cross(forward,[0,1,0])),up=norm(cross(right,forward));
@@ -337,10 +376,27 @@ canvas.addEventListener('pointercancel',e=>{if(pointer&&pointer.id===e.pointerId
 canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.distance=clamp(camera.distance+e.deltaY*.02,6,48);}},{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let before=0;function tick(now){
-const dt=before?Math.min((now-before)/1000,.05):0;before=now;
+const elapsed=before?Math.max(0,Math.min((now-before)/1000,.5)):0;
+const dt=Math.min(elapsed,.05);before=now;
 if(!doc.hidden){
 const previousX=player.x,previousZ=player.z;
-if(playing)Core.move(player,keys,dt,scene.objects,camera.azimuth);
+if(playing){
+Core.move(player,keys,dt,scene.objects,camera.azimuth);
+const total=scene.objects.filter(o=>o.type==='crystal').length;
+if(total&&!round.finished){
+round.seconds+=elapsed;
+const found=Core.collectNearby(player,scene.objects,collected);
+if(found.length){
+for(const crystalId of found)collected.add(crystalId);
+round.finished=collected.size===total;
+audio?.play(round.finished?'complete':'collect');
+if(round.finished&&(round.best==null||round.seconds<round.best))round.best=round.seconds;
+say(round.finished?'Geschafft! Alle Kristalle eingesammelt.':'Kristall eingesammelt!');
+}
+}
+if($('goalTime').textContent!==formatTime(round.seconds)||round.finished)$('goalTime').textContent=formatTime(round.seconds);
+if($('goalCount').textContent!==(total?collected.size+' / '+total+' Kristalle':'Noch keine Kristalle')|| (round.finished&&!$('goalHud').classList.contains('complete')))refreshGoal();
+}
 updatePose(dt,Math.hypot(player.x-previousX,player.z-previousZ)>.00001);
 render();
 }

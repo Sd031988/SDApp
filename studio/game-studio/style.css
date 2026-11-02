@@ -67,3 +67,20 @@
 .touch-controls{position:absolute;inset:auto 20px 53px;display:flex;justify-content:space-between;align-items:end;pointer-events:none}.touch-controls[hidden]{display:none}.touch-controls button{pointer-events:auto;background:#142d35d9;color:#e8fff8;border:1px solid #78dfbf90;border-radius:11px;height:53px;min-width:56px;font-size:23px;font-weight:800;touch-action:none}.touch-controls button:active{background:#3a7867}.dpad{display:grid;gap:3px;justify-items:center}.dpad>div{display:flex;gap:3px}.touch-controls .jump{font-size:11px;padding:0 20px}
 @media(max-width:1070px){.layout{grid-template-columns:185px minmax(280px,1fr) 215px}.panel-header{padding:18px 13px 12px}.object-catalog{padding:0 8px 18px}.scene-title{display:none}.view-sub{display:none}}
 @media(max-width:750px){body{height:auto}.topbar{height:59px;padding:0 12px}.brand{font-size:16px}.version,.separator{display:none}.back span{display:none}.back{font-size:19px}.layout{height:auto;min-height:0;display:flex;flex-direction:column}.workspace{order:0;height:min(72dvh,670px);min-height:400px}.sidebar{order:1;border-right:0;border-top:1px solid var(--stroke);overflow:visible}.inspector{order:2;border-left:0;border-top:1px solid var(--stroke);overflow:visible}.sidebar .panel-header{padding:19px 16px 9px}.object-catalog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:0 9px 13px}.object-catalog button{padding:9px 5px;display:grid;justify-items:center;gap:5px;font-size:11px}.object-catalog .add-symbol{display:none}.list-header{padding:14px}.scene-list{grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:15px}.sidefooter,.side-bottom{display:none}.inspector .panel-header{padding:17px}.empty-selection{padding:15px 15px 20px}.file-panel .file-actions{grid-template-columns:1fr 1fr}.view-label{font-size:9px}.viewport-top{padding:0 10px}.viewport-badge{top:11px;left:10px}.overlay-bottom{display:none}.touch-controls{left:12px;right:12px;bottom:20px}.touch-controls button{height:48px;min-width:48px}.action.primary{padding:9px 10px}}
+/* Playable collectible objective: visible only while playing. */
+.goal-hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:grid;justify-items:center;gap:1px;min-width:180px;max-width:65%;padding:8px 15px;border:1px solid #6abda99c;border-radius:10px;background:#102a32e8;color:#e5fff6;text-align:center;pointer-events:none;z-index:2;box-shadow:0 7px 25px #0005}
+.goal-hud[hidden]{display:none}.goal-hud strong{font-size:15px;font-weight:800}.goal-hud span{color:#afcbc7;font-size:10px}.goal-hud.complete{border-color:#eac878;background:#3b3523ed}.goal-hud.complete strong{color:#ffe5a0}.icon-crystal{color:#9dcfff}
+@media(max-width:750px){.goal-hud{top:39px;max-width:76%;padding:6px 10px}.goal-hud strong{font-size:12px}.goal-hud span{font-size:9px}}
+
+/* Game Studio 0.9: accessible optional sound and collectible timer. */
+.sound-toggle{background:#223642;color:#b9e2d5;border:1px solid #3c645d;border-radius:7px;padding:6px 9px;font-size:11px;font-weight:750;white-space:nowrap}
+.sound-toggle[aria-pressed="true"]{color:#f2fff8;background:#27614f}
+.goal-hud{pointer-events:none;min-width:208px}
+.goal-hud button{pointer-events:auto;margin-top:4px;background:#244e47;color:#e9fff4;border:1px solid #6bbca0;border-radius:7px;font-size:11px;font-weight:700;padding:4px 12px}
+.goal-hud button:hover{background:#337663}
+.goal-times{display:flex;justify-content:center;gap:10px;margin-top:3px;font-variant-numeric:tabular-nums}
+.goal-hud .goal-times span{font-size:11px;color:#e3f7ed}
+.move-extra{display:flex;align-items:end;gap:6px;pointer-events:none}
+.move-extra button{pointer-events:auto}
+.touch-controls button.run{font-size:11px;min-width:65px;padding:0 8px}
+@media(max-width:750px){.sound-toggle{padding:6px;font-size:10px}.goal-hud{min-width:164px;top:39px}.goal-times{gap:6px}.goal-hud .goal-times span{font-size:9px}.touch-controls button.run{min-width:60px}}

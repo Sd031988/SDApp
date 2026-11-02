@@ -6,7 +6,7 @@ if(root&&root.document)root.SDGameCore=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const VERSION=1,LIMIT=70,WORLD=19;
-const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill','pine','bush','flower']);
+const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill','pine','bush','flower','crystal']);
 const NATURE_GROUPS=Object.freeze(['grove','garden']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
 const LIGHTS=Object.freeze(['dawn','day','sunset','night']);
@@ -135,14 +135,19 @@ get canRedo(){return index<snapshots.length-1;}
 }
 function collides(x,z,objects){
 if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;
-return objects.some(o=>{if(o.type==='flower')return false;const r=o.type==='tree'||o.type==='pine'?.42*o.scale:o.type==='bush'?.35*o.scale:o.type==='hill'?1.65*o.scale:o.type==='sphere'?.85*o.scale:o.type==='rock'?.76*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
+return objects.some(o=>{if(o.type==='flower'||o.type==='crystal')return false;const r=o.type==='tree'||o.type==='pine'?.42*o.scale:o.type==='bush'?.35*o.scale:o.type==='hill'?1.65*o.scale:o.type==='sphere'?.85*o.scale:o.type==='rock'?.76*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
+function collectNearby(player,objects,collected,radius=1.2){
+if(!player||!numeric(player.x,-WORLD,WORLD)||!numeric(player.z,-WORLD,WORLD)||
+!Array.isArray(objects)||!(collected instanceof Set)||!numeric(radius,.2,3))throw Error('Ungültige Sammelprüfung.');
+return objects.filter(o=>o.type==='crystal'&&!collected.has(o.id)&&Math.hypot(player.x-o.x,player.z-o.z)<=radius*o.scale).map(o=>o.id);
+}
 function direction(keys,azimuth=0){
 const k=keys||{},dx=(+!!k.right-+!!k.left),dz=(+!!k.back-+!!k.forward);
 const len=Math.hypot(dx,dz),magnitude=len||1,ca=Math.cos(azimuth),sa=Math.sin(azimuth);
 return{x:(dx*ca+dz*sa)/magnitude,z:(-dx*sa+dz*ca)/magnitude,moving:len>0};
 }
 function move(player,keys,dt,objects,azimuth=0){
-const vector=direction(keys,azimuth),step=5*clamp(dt,0,.05);
+const vector=direction(keys,azimuth),step=(keys?.run?8:5)*clamp(dt,0,.05);
 const vx=vector.x*step,vz=vector.z*step;
 const k=keys||{};
 if(!collides(player.x+vx,player.z,objects))player.x+=vx;
@@ -151,5 +156,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,NATURE_GROUPS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,plantGroup,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,NATURE_GROUPS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,plantGroup,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,collectNearby,direction,move});
 });

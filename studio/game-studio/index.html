@@ -7,13 +7,14 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-nature7">
-<script defer src="./scene-core.js?v=20261102-nature7"></script>
-<script defer src="./game.js?v=20261102-nature7"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-play9">
+<script defer src="./scene-core.js?v=20261102-play9"></script>
+<script defer src="./game-audio.js?v=20261102-play9"></script>
+<script defer src="./game.js?v=20261102-play9"></script>
 </head>
 <body>
 <header class="topbar">
-<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.7</span></div>
+<div class="brandline"><a class="back" href="../index.html" title="Zurück zum Code-Studio">← <span>Code-Studio</span></a><span class="separator"></span><span class="brand">SD <em>Game-Studio</em></span><span class="version">ALPHA 0.9</span></div>
 <div class="topactions"><span class="scene-title" id="sceneName">Meine erste 3D-Welt</span><button id="saveScene" class="action primary" type="button">↓ <span>Szene speichern</span></button></div>
 </header>
 <main class="layout">
@@ -24,6 +25,7 @@
 <button type="button" data-add="sphere" data-edit-only><span class="object-icon icon-sphere">●</span><span>Kugel</span><span class="add-symbol">＋</span></button>
 <button type="button" data-add="tree" data-edit-only><span class="object-icon icon-tree">♠</span><span>Baum</span><span class="add-symbol">＋</span></button>
 <button type="button" data-add="column" data-edit-only><span class="object-icon icon-column">▥</span><span>Säule</span><span class="add-symbol">＋</span></button>
+<button type="button" data-add="crystal" data-edit-only><span class="object-icon icon-crystal">◆</span><span>Kristall (Sammelziel)</span><span class="add-symbol">＋</span></button>
 </div>
 <section class="landscape-tools" aria-label="Landschaft gestalten">
 <div class="landscape-head"><small>LANDSCHAFT</small><strong>Gelände & Natur</strong><p>Wähle den Boden und ergänze die Landschaft.</p></div>
@@ -88,22 +90,26 @@
 <div class="viewport-top">
 <div class="view-label"><span class="view-dot"></span> PERSPEKTIVE <span class="view-sub">/ Echtzeit-Vorschau</span></div>
 <div class="view-modes" role="group" aria-label="Modus">
+<button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false">🔇 Ton aus</button>
 <button id="modeEdit" class="mode active" aria-pressed="true" type="button">✦ Bearbeiten</button>
 <button id="modePlay" class="mode" aria-pressed="false" type="button">▶ Spielen</button>
 </div>
 </div>
 <div class="canvas-container">
 <canvas id="stage" aria-label="3D-Welt: Ziehen zum Drehen, klicken zum Auswählen" tabindex="0"></canvas>
+<div id="goalHud" class="goal-hud" role="status" aria-live="polite" hidden><strong id="goalCount">0 / 0 Kristalle</strong><span id="goalHint">Sammle alle Kristalle</span>
+<span class="goal-times"><span id="goalTime">0.0 s</span><span id="goalBest">Bestzeit: –</span></span>
+<button id="restartRound" type="button">↻ Neustart</button></div>
 <div class="viewport-badge">3D VIEWPORT <span>·</span> WEBGL</div><div class="character-state" id="characterState" aria-label="Bewegung der Spielfigur">VORSCHAU</div>
 <div class="compass" aria-hidden="true"><span>N</span><b>✛</b><span>S</span></div>
 <div id="stageError" class="stage-error" hidden></div>
 <div class="overlay-bottom">
 <p id="editHint">Maus oder Finger ziehen: Kamera drehen · Mausrad: Zoom · Objekt antippen: auswählen</p>
-<p id="playHint" hidden>WASD / Pfeiltasten bewegen · Leertaste springen · Animierte Figur</p>
+<p id="playHint" hidden>WASD / Pfeile bewegen · Umschalt sprinten · Leertaste springen · Kristalle sammeln</p>
 </div>
 <div id="touchControls" class="touch-controls" hidden aria-label="Touch-Steuerung für Spielmodus">
 <div class="dpad"><button data-control="forward" type="button" aria-label="Vorwärts">↑</button><div><button data-control="left" type="button" aria-label="Links">←</button><button data-control="back" type="button" aria-label="Rückwärts">↓</button><button data-control="right" type="button" aria-label="Rechts">→</button></div></div>
-<button class="jump" data-control="jump" type="button">SPRUNG ↑</button>
+<div class="move-extra"><button class="run" data-control="run" type="button">SPRINT</button><button class="jump" data-control="jump" type="button">SPRUNG ↑</button></div>
 </div>
 </div>
 <div class="viewport-footer"><span class="mini-indicator">●</span><span id="status" role="status" aria-live="polite">3D-Szene wird vorbereitet …</span><button id="cameraReset" type="button" title="Kamera zurücksetzen">↺ Kamera</button></div>
@@ -130,7 +136,7 @@
 <div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
 <p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
 </section>
-<div class="side-bottom">SD GAME-STUDIO <span>v0.7 · ALPHA</span></div>
+<div class="side-bottom">SD GAME-STUDIO <span>v0.9 · ALPHA</span></div>
 </aside>
 </main>
 </body></html>
