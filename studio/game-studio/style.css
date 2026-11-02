@@ -85,3 +85,6 @@
 
 /* GLB asset placement in versioned scenes */
 #glbPlace{flex-basis:100%;font-weight:800}#glbPlace[hidden]{display:none}
+
+/* Hide model-only controls for legacy scene primitives. */
+#inspectorFields #propRotationWrap[hidden]{display:none}
