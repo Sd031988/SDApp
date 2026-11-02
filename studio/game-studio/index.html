@@ -7,9 +7,11 @@
 <meta name="theme-color" content="#101b24">
 <title>SD Game-Studio · 3D-Werkstatt</title>
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./style.css?v=20261102-nature7">
-<script defer src="./scene-core.js?v=20261102-nature7"></script>
-<script defer src="./game.js?v=20261102-nature7"></script>
+<link rel="stylesheet" href="./style.css?v=20261102-glb1">
+<script defer src="./scene-core.js?v=20261102-glb1"></script>
+<script defer src="./game.js?v=20261102-glb1"></script>
+<script defer src="./glb-core.js?v=20261102-glb1"></script>
+<script defer src="./glb-preview.js?v=20261102-glb1"></script>
 </head>
 <body>
 <header class="topbar">
@@ -129,6 +131,21 @@
 <section class="file-panel"><div class="panel-header"><small>PROJEKT</small><strong>Szene verwalten</strong></div>
 <div class="file-actions"><button id="loadScene" class="action" type="button">↑ JSON-Szene importieren</button><input id="sceneFile" type="file" accept=".json,application/json" hidden><button id="resetScene" class="action" type="button">↺ Beispielwelt laden</button></div>
 <p class="privacy">🔒 Alles bleibt lokal im Browser. Andere Code-Studio-Projekte werden nicht verändert.</p>
+</section>
+<section class="glb-panel" aria-label="Professionelle 3D-Modellvorschau">
+<div class="panel-header"><small>3D-ASSETS / VORSCHAU</small><strong>GLB-Modellimport</strong><p>Eigene binäre glTF-2.0-Modelle lokal prüfen und drehen.</p></div>
+<div class="glb-actions">
+<button id="glbChoose" class="action" type="button">↑ GLB-Datei wählen</button>
+<input id="glbFile" type="file" accept=".glb,model/gltf-binary" hidden>
+<button id="glbClear" class="action" type="button" hidden>Vorschau schließen</button>
+</div>
+<div id="glbPlaceholder" class="glb-placeholder">Eigene 3D-Assets ansehen – ohne die Szene zu verändern.</div>
+<div id="glbPreviewWrap" class="glb-preview-wrap" hidden>
+<canvas id="glbPreview" aria-label="Drehbare 3D-Modellvorschau; mit Finger oder Maus bewegen"></canvas>
+<span class="glb-help">Ziehen: drehen · Mausrad: Zoom</span>
+</div>
+<p id="glbInfo" class="glb-info" role="status" aria-live="polite">Keine GLB-Datei geladen. Die ursprüngliche Szene bleibt unverändert.</p>
+<p class="privacy glb-warning">Erste Import-Vorschau: Dreiecksgeometrie und Basisfarben. Noch keine Texturen, Skinning, Animationen oder dauerhafte Asset-Speicherung. Maximal 8 MiB.</p>
 </section>
 <div class="side-bottom">SD GAME-STUDIO <span>v0.7 · ALPHA</span></div>
 </aside>
