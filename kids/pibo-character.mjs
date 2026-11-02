@@ -1,7 +1,7 @@
 /* Pibo-exclusive 3D character details. All meshes generated from original shapes.
    Do not imitate protected characters, models, art, clothing, or trademarks. */
 import {furSamples} from './pibo-fur.mjs';
-export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
+export function decoratePibo({THREE,cat,head,body=null,ell,mat,paws=[],pupils=[]}){
  const cream=mat(0xfff1da),peach=mat(0xe49a63),rose=mat(0xed708b),mint=mat(0x50bfae,.43);
  // Layered cheek tufts give the orange Pibo a distinct friendly silhouette.
  for(const sign of [-1,1]){
@@ -51,9 +51,9 @@ export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
  // Fur stays attached to the existing head/body animations; no change to saved games.
  // Front face, chest and touch hit-zones stay clear so children can still pet and feed Pibo.
  const furShells=[];
- for(const [parent,count,radii,frontLimit,size,color] of [
-  [head,220,[.76,.7,.66],.14,.041,0xffcb81],
-  [cat,300,[.72,.85,.63],.26,.055,0xf5b965]
+ for(const [parent,count,radii,frontLimit,size,color,centerY] of [
+  [head,220,[.76,.7,.66],.14,.041,0xffcb81,0],
+  [cat,300,[.72,.85,.63],.26,.055,0xf5b965,.97]
  ]){
   const samples=furSamples({count,radii,frontLimit});
   const material=new THREE.MeshStandardMaterial({color,roughness:1,side:THREE.DoubleSide});
@@ -72,6 +72,9 @@ export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
   shell.instanceMatrix.needsUpdate=true;
   shell.castShadow=false; shell.receiveShadow=false; shell.frustumCulled=false;
   shell.raycast=()=>{}; // Decorative fur must not steal existing touch/raycast hits.
+  // The torso ellipsoid is centered at y=.97, unlike the head at local origin.
+  // Without this offset the 300 body strands render below the cat, partly underground.
+  shell.position.y=centerY;
   parent.add(shell);furShells.push(shell);
  }
  return {
@@ -84,6 +87,9 @@ export function decoratePibo({THREE,cat,head,ell,mat,paws=[],pupils=[]}){
     major.position.x=eye.x-.035+offset;
     minor.position.x=eye.x+.046+offset;
    }
+   // Keep the torso coat attached visually while the existing body breathes.
+   // No new save data or animation state is introduced.
+   if(body&&Number.isFinite(body.scale?.y))furShells[1].scale.y=Math.max(.75,Math.min(1.25,body.scale.y/.85));
    if(!reducedMotion)pendant.rotation.z=.075*Math.sin(seconds*2.1);
    pawMark.rotation.z=pendant.rotation.z;
   },
