@@ -5,7 +5,8 @@
 const $=id=>document.getElementById(id);
 const canvas=$('glbPreview'),picker=$('glbFile');
 if(!canvas||!picker||!window.SDGLB)return;
-const info=$('glbInfo'),placeholder=$('glbPlaceholder'),wrap=$('glbPreviewWrap'),clear=$('glbClear');
+const info=$('glbInfo'),placeholder=$('glbPlaceholder'),wrap=$('glbPreviewWrap'),clear=$('glbClear'),place=$('glbPlace');
+let importBytes=null,importName='';
 let gl=null,program=null,locations=null,buffers=[],model=null,yaw=-.55,pitch=.28,zoom=1,drag=null,request=0;
 function setInfo(message,isError=false){info.textContent=message;info.dataset.error=String(isError);}
 function shader(type,source){
@@ -70,7 +71,7 @@ if(gl.getError()!==gl.NO_ERROR)throw Error('3D-Daten konnten nicht auf die Grafi
 }catch(err){release(staged);throw err;}
 release();
 buffers=staged;model=result;yaw=-.55;pitch=.28;zoom=1;
-wrap.hidden=false;placeholder.hidden=true;clear.hidden=false;
+wrap.hidden=false;placeholder.hidden=true;clear.hidden=false;place.hidden=false;
 const stats=result.stats;
 setInfo(filename+' · '+stats.triangles.toLocaleString('de-DE')+' Dreiecke · '+stats.primitives+' Mesh-Teile · '+(stats.bytes/1024/1024).toFixed(2)+' MiB'+
 (result.warnings.length?' · '+result.warnings.join(' '):''));
@@ -89,11 +90,16 @@ if(requestId!==generation)return;
 const result=window.SDGLB.parse(bytes);
 if(requestId!==generation)return;
 show(result,file.name);
+importBytes=bytes;importName=file.name;
 }catch(err){if(requestId===generation)setInfo('Import nicht übernommen: '+(err?.message||'Unbekannter Fehler'),true);}
 });
 $('glbChoose').addEventListener('click',()=>picker.click());
+place.addEventListener('click',()=>{
+if(!model||!importBytes)return;
+document.dispatchEvent(new CustomEvent('sd-game-model-add',{detail:{bytes:importBytes,name:importName}}));
+});
 clear.addEventListener('click',()=>{
-generation++;release();buffers=[];model=null;
+generation++;release();buffers=[];model=null;importBytes=null;importName='';place.hidden=true;
 wrap.hidden=true;placeholder.hidden=false;clear.hidden=true;
 setInfo('Keine GLB-Datei geladen. Die ursprüngliche Szene bleibt unverändert.');
 });
