@@ -1,0 +1,92 @@
+/* SD Hub / Editorial identity · 2026-11-02
+   Original SD Hub design. Inspired by dashboard information hierarchy in Kombai Gallery;
+   no template assets, third-party CSS or copied components. Preserves existing interactions. */
+:root{
+  --grund:#f4f2ec;--papier:#fffefa;--tinte:#172e29;--leise:#5d6d66;
+  --linie:#d9dfd6;--marke:#173a34;--marke-licht:#2c5c4e;
+  --kopf-text:#d8e4de;--fokus:#efb05d;
+}
+body{background:var(--grund);color:var(--tinte);font-size:16px;line-height:1.55}
+.kopf{background:#15372f;color:#fff;border-bottom:1px solid #28564a}
+.kopf::before{display:none}
+.breite{max-width:1240px}
+.leiste{padding-block:21px;border-bottom:1px solid #ffffff25}
+.marke{font-size:1.23rem;letter-spacing:-.025em}
+.marke img{border-radius:6px;box-shadow:none}
+.sprache{border-radius:7px;background:transparent;border-color:#ffffff35}
+.sd-lang-btn{border-radius:5px;font-size:.78rem}
+.sd-lang-btn.active{color:#17382f;background:#fffefa}
+.held{grid-template-columns:minmax(0,1.07fr) minmax(0,.93fr);gap:38px;padding-block:66px 30px}
+.held h1{max-width:12.5ch;font-size:clamp(3.4rem,6.1vw,6rem);line-height:.99;letter-spacing:-.055em;text-wrap:balance}
+.held p.unter{max-width:52ch;line-height:1.72;color:#d2e2d9;font-size:clamp(1rem,1.5vw,1.13rem);margin-top:23px}
+.suche{max-width:620px;margin-top:23px}
+.suche input{border:1px solid #aec4b9;border-radius:8px;box-shadow:0 7px 0 #081c1822,0 8px 28px #07181325;padding-block:17px}
+.suche input:focus{box-shadow:0 0 0 4px #efb05d66}
+.schnell{gap:7px;margin-top:14px}
+.chip{border-radius:5px;background:transparent;border:1px solid #ffffff4c;padding:8px 12px;font-weight:600;font-size:.86rem;backdrop-filter:none}
+.chip:hover{background:#ffffff17;transform:none}
+.szene{height:420px}
+.szene::before{opacity:.18;filter:blur(26px)}
+.szene::after{opacity:.55}
+.blatt::after{opacity:.22}
+.reiter{gap:4px;margin-top:5px;padding-top:0;border-top:1px solid #ffffff28}
+.reiter a{position:relative;color:#d9e7e0;background:transparent;padding:13px 13px 15px;border-radius:0;font-family:var(--text);font-weight:700;font-size:.87rem;box-shadow:none;transform:none;border-bottom:3px solid transparent}
+.reiter a:hover,.reiter a:focus-visible,.reiter a.an{background:#ffffff12;transform:none;border-bottom-color:#efb05d;color:#fff}
+main#bereiche{padding-block:55px 35px}
+.thema{scroll-margin-top:18px}
+.thema+.thema{margin-top:44px}
+.reiterkopf{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 0 14px;background:none;color:var(--tinte);border-radius:0;border-bottom:3px solid var(--farbe);box-shadow:none;font-size:1.45rem;letter-spacing:-.025em}
+.anzahl{background:#e7eee8;color:#294b42;font-size:.78rem;padding:5px 10px;border-radius:5px}
+.mappe-flaeche{background:transparent;padding:16px 0 0;border:0;border-radius:0;box-shadow:none}
+.kacheln{gap:9px;perspective:none}
+.kachel{min-height:91px;border-radius:8px;border:1px solid var(--linie);background:var(--papier);box-shadow:none;padding:15px;transition:border-color .15s ease,background .15s ease,transform .15s ease}
+.kachel:hover,.kachel:focus-visible{background:#fff;border-color:#648d80;box-shadow:0 5px 16px #0d241b13;transform:translateY(-2px)}
+.kachel:active{transform:none;box-shadow:none}
+.symbol{width:47px;height:47px;border-radius:7px;background:color-mix(in srgb,var(--farbe) 11%,#fff);box-shadow:none;font-size:1.42rem}
+.text b{font-family:var(--text);font-weight:800;font-size:1rem;letter-spacing:-.015em}
+.text small{font-size:.85rem;line-height:1.5}
+.hinweis-badge{border-radius:4px}
+.sd-persoenlich{background:#203e34;border:0;border-left:5px solid #e5ad68;border-radius:8px;box-shadow:none;padding:27px 30px;margin-top:35px}
+.sd-persoenlich::before{display:none}
+.sd-persoenlich .sd-p-kicker{color:#f1ca90}
+.sd-persoenlich h2{color:#fff;letter-spacing:-.035em}
+.sd-persoenlich p{color:#d6e4dc}
+.sd-persoenlich .sd-p-start{background:#f0c17f;color:#1e332d;border-radius:5px;box-shadow:none}
+.sd-persoenlich .sd-p-start:hover{background:#f8d9a6;color:#142822}
+.sd-persoenlich .sd-p-links a{background:#ffffff0d;color:#fff;border-color:#ffffff39;border-radius:5px}
+.sd-persoenlich .sd-p-links a:hover{background:#ffffff22}
+.sd-dashboard-launch{background:#f4e0b9!important;color:#183b32!important;border:1px solid #eac182;border-radius:7px;box-shadow:none;max-width:410px;padding:13px}
+.sd-dashboard-launch-icon{background:#fff8e9;border-radius:5px;color:#244d40}
+.sd-dashboard-launch strong{color:#183b32}
+.sd-dashboard-launch small{color:#47635a}
+.sd-dashboard-launch:hover{transform:none;border-color:#fff5d5;background:#ffedca!important}
+.versprechen{border-top:1px solid var(--linie);padding-top:30px}
+.versprechen svg{border-radius:7px;background:#e2e9e0}
+.mitnehmen{background:#e4e9de;border-radius:8px}
+.mitnehmen a{border-radius:5px;box-shadow:none}
+footer{background:#173a34;border-top:4px solid #e1b477}
+@media(max-width:860px){
+ .held{grid-template-columns:1fr;gap:10px;padding-block:35px 15px}
+ .held h1{font-size:clamp(2.8rem,8vw,4.7rem)}
+ .szene{height:310px}
+ .reiter{margin-top:0}
+}
+@media(max-width:640px){
+ .breite{padding-inline:17px}
+ .leiste{padding-block:14px}
+ .held{padding-top:34px}
+ .held h1{font-size:clamp(2.65rem,12vw,4.1rem);max-width:14ch}
+ .held p.unter{font-size:1rem;margin-top:18px}
+ .szene{height:276px}
+ .reiter{margin-inline:-17px;padding-inline:17px}
+ .reiter a{font-size:.81rem}
+ main#bereiche{padding-top:31px}
+ .thema+.thema{margin-top:34px}
+ .reiterkopf{font-size:1.25rem}
+ .mappe-flaeche{padding-top:12px}
+ .kacheln{gap:8px}
+ .kachel{min-height:74px;padding:12px}
+ .sd-persoenlich{margin-top:22px;padding:21px 17px}
+ .sd-dashboard-launch{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){.kachel,.chip{transition:none}}
