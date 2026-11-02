@@ -134,22 +134,22 @@ return copy;
 }
 function history(initial,capacity=40){
 if(!Number.isSafeInteger(capacity)||capacity<2||capacity>100)throw Error('Ungültige Verlaufslänge.');
-let pool=new Map(),states=[],index=0;
+let pool=[],states=[],index=0;
 function pack(next){
 const data=validate(next);
 if(data.version!==PROJECT_VERSION)return JSON.stringify(data);
-for(const a of data.assets){
-const old=pool.get(a.id);
-if(old&&old.base64!==a.base64)fail('Asset-ID darf nicht für andere Daten wiederverwendet werden.');
-pool.set(a.id,a);
-}
-return JSON.stringify({...data,assets:data.assets.map(({id,name})=>({id,name}))});
+const references=data.assets.map(a=>{
+let token=pool.findIndex(old=>old.id===a.id&&old.name===a.name&&old.base64===a.base64);
+if(token<0){token=pool.length;pool.push(a);}
+return{id:a.id,name:a.name,token};
+});
+return JSON.stringify({...data,assets:references});
 }
 function unpack(raw){
 const data=JSON.parse(raw);
 if(data.version===PROJECT_VERSION)data.assets=data.assets.map(a=>{
-const asset=pool.get(a.id);
-if(!asset||asset.name!==a.name)fail('Asset aus Verlauf fehlt.');
+const asset=pool[a.token];
+if(!asset||asset.id!==a.id||asset.name!==a.name)fail('Asset aus Verlauf fehlt.');
 return asset;
 });
 return validate(data);
@@ -163,7 +163,7 @@ if(states.length>capacity)states.shift();
 index=states.length-1;
 return true;
 }
-function reset(next){pool=new Map();states=[pack(next)];index=0;}
+function reset(next){pool=[];states=[pack(next)];index=0;}
 reset(initial);
 return Object.freeze({
 record,
