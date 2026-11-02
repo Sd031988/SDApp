@@ -176,6 +176,28 @@ assert.equal(await page.locator('#objectCount').innerText(),'6');
 await page.locator('#sceneFile').setInputFiles({name:'nature.json',mimeType:'application/json',buffer:naturePayload});
 await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='20');
 assert.equal(await page.locator('#undoAction').isDisabled(),true);
+// Pickup challenge: collection does not mutate the saved scene, restarting resets progress.
+const crystalScene={version:1,name:'Kristall-Challenge',ground:'meadow',lighting:'day',avatar:'explorer',objects:[
+{id:1,type:'crystal',x:0,z:5,scale:1,color:'#8fa4e9'},
+{id:2,type:'crystal',x:10,z:10,scale:1,color:'#d8797d'}
+],terrain:Array(289).fill(0)};
+await page.locator('#sceneFile').setInputFiles({name:'crystals.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(crystalScene))});
+await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='2');
+await page.locator('#modePlay').click();
+await page.waitForFunction(()=>document.getElementById('goalCount').textContent==='1 / 2 Kristalle');
+assert.equal(await page.locator('#goalHud').isVisible(),true);
+await page.locator('#modeEdit').click();
+assert.equal(await page.locator('#goalHud').isVisible(),false);
+await page.locator('#modePlay').click();
+await page.waitForFunction(()=>document.getElementById('goalCount').textContent==='1 / 2 Kristalle');
+await page.locator('#modeEdit').click();
+const crystalDownloadEvent=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const crystalDownload=await crystalDownloadEvent;
+const crystalPayload=JSON.parse(fs.readFileSync(await crystalDownload.path(),'utf8'));
+assert.deepEqual(crystalPayload.objects,crystalScene.objects,'Einsammeln darf die gespeicherte Szene nicht verändern');
+await page.locator('#sceneFile').setInputFiles({name:'nature.json',mimeType:'application/json',buffer:naturePayload});
+await page.waitForFunction(()=>document.getElementById('objectCount').textContent==='20');
 await page.setViewportSize({width:390,height:844});
 assert.equal(await page.locator('#stage').isVisible(),true);
 assert.equal(await page.locator('[data-add="tree"]').isVisible(),true);
@@ -187,6 +209,7 @@ assert.equal(await page.locator('[data-avatar="sport"]').isVisible(),true);
 assert.equal(await page.locator('[data-add="pine"]').isVisible(),true);
 assert.equal(await page.locator('[data-add="bush"]').isVisible(),true);
 assert.equal(await page.locator('[data-add="flower"]').isVisible(),true);
+assert.equal(await page.locator('[data-add="crystal"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="grove"]').isVisible(),true);
 assert.equal(await page.locator('[data-nature-group="garden"]').isVisible(),true);
 await page.locator('#modePlay').click();
