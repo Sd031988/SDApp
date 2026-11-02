@@ -7,6 +7,9 @@ const $=id=>document.getElementById(id);
 const mk=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
 const node=(tag,cls,text,parent)=>{const e=mk(tag,cls,text);if(parent)parent.append(e);return e};
 const findItem=id=>D.items.find(x=>x.id===id);
+// Preserve legacy game favorites in stored data without advertising games in the professional workspace.
+const workspaceItems=D.items.filter(it=>it.category!=="Spiele");
+const inWorkspace=it=>Boolean(it&&it.category!=="Spiele");
 const findCourse=id=>D.academy.find(x=>x.id===id);
 const findPath=id=>D.paths.find(x=>x.id===id);
 const findProject=id=>D.projects.find(x=>x.id===id);
@@ -46,7 +49,7 @@ function simpleLink(item){const a=itemLink(item,null,"simple-link");a.replaceChi
 function renderApps(){
  const box=$("appDirectory");if(!box)return;
  box.replaceChildren();
- const cats=["Alle",...new Set(D.items.map(it=>it.category))];
+ const cats=["Alle",...new Set(workspaceItems.map(it=>it.category))];
  const filters=$("appFilters");filters.replaceChildren();
  cats.forEach(cat=>{
   const b=node("button","",cat,filters);
@@ -54,7 +57,7 @@ function renderApps(){
   b.addEventListener("click",()=>{appFilter=cat;renderApps()});
  });
  let visible=0;
- for(const it of D.items){
+ for(const it of workspaceItems){
   const term=(it.title+" "+it.description+" "+it.category+" "+it.keywords).toLocaleLowerCase("de");
   const match=(appFilter==="Alle"||it.category===appFilter)&&(!appSearch||term.includes(appSearch));
   if(!match)continue;
@@ -91,9 +94,9 @@ $("greeting").textContent=state.nickname?"Hallo, "+state.nickname+"!":"Willkomme
 if($("nickname")!==document.activeElement)$("nickname").value=state.nickname;
 $("statLessons").textContent=String(state.completedLessons.length);
 $("statSteps").textContent=String(state.completedSteps.length);
-$("statFavs").textContent=String(state.favorites.length);
+$("statFavs").textContent=String(state.favorites.map(findItem).filter(inWorkspace).length);
 clearChildren("favoritesList");clearChildren("recentList");
-const favs=state.favorites.map(findItem).filter(Boolean),recent=state.recent.map(findItem).filter(Boolean);
+const favs=state.favorites.map(findItem).filter(inWorkspace),recent=state.recent.map(findItem).filter(inWorkspace);
 if(!favs.length)node("p","panel-sub","Noch keine Favoriten. Wähle im Wegweiser einen Stern.",$("favoritesList"));
 else favs.forEach(it=>$("favoritesList").append(simpleLink(it)));
 if(!recent.length)node("p","panel-sub","Hier ist es noch leer. Öffne eines deiner Werkzeuge.",$("recentList"));
@@ -111,14 +114,14 @@ if(!storageWorks)flash("Private Browser-Einstellungen können die lokale Speiche
 function downloadText(filename,text,type){const blob=new Blob([text],{type:type||"text/html;charset=utf-8"}),url=URL.createObjectURL(blob),a=mk("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 // Wayfinder: deterministic, private, no network requests.
 let activeGoal="lernen",wayItems=[];
-function renderWayResults(){const target=$("wayResults");target.replaceChildren();const items=wayItems.length?wayItems:D.goals[0].itemIds.map(findItem).filter(Boolean);
+function renderWayResults(){const target=$("wayResults");target.replaceChildren();const items=(wayItems.length?wayItems:D.goals[0].itemIds.map(findItem)).filter(inWorkspace);
 items.forEach(it=>{const card=node("div","tool-card",undefined,target);node("span","icon",it.icon,card);const body=node("div","body",undefined,card);node("b","",it.title,body);node("p","",it.description,body);body.append(itemLink(it,"Öffnen ↗","open"));const star=node("button","star"+(state.favorites.includes(it.id)?" on":""),state.favorites.includes(it.id)?"★":"☆",card);star.type="button";star.setAttribute("aria-label",(state.favorites.includes(it.id)?"Aus Favoriten entfernen: ":"Zu Favoriten hinzufügen: ")+it.title);star.setAttribute("aria-pressed",String(state.favorites.includes(it.id)));star.addEventListener("click",()=>toggleFavorite(it.id))});
 }
 D.goals.forEach(goal=>{const btn=node("button","goal",undefined,$("goalGrid"));btn.type="button";btn.dataset.goal=goal.id;node("span","emoji",goal.emoji,btn);node("b","",goal.title,btn);node("small","",goal.subtitle,btn);
 btn.addEventListener("click",()=>{activeGoal=goal.id;wayItems=goal.itemIds.map(findItem).filter(Boolean);$("goalSearch").value="";$("goalStatus").textContent="Passende Angebote für „"+goal.title+"“";document.querySelectorAll(".goal").forEach(g=>{g.classList.toggle("active",g===btn);g.setAttribute("aria-pressed",String(g===btn))});renderWayResults()})});
 $("goalSearchBtn").addEventListener("click",()=>searchGoal());
 $("goalSearch").addEventListener("keydown",e=>{if(e.key==="Enter")searchGoal()});
-function searchGoal(){const text=$("goalSearch").value.trim();if(!text){$("goalStatus").textContent="Bitte beschreibe kurz dein Ziel.";return}wayItems=D.recommend(text,6);document.querySelectorAll(".goal").forEach(x=>{x.classList.remove("active");x.setAttribute("aria-pressed","false")});if(!wayItems.length){$("goalStatus").textContent="Dazu gibt es noch keine eindeutige Empfehlung. Du kannst die Kategorien oben auswählen.";wayItems=[];return renderWayResults()}$("goalStatus").textContent=wayItems.length+" passende Werkzeuge gefunden (lokale Stichwortsuche).";renderWayResults()}
+function searchGoal(){const text=$("goalSearch").value.trim();if(!text){$("goalStatus").textContent="Bitte beschreibe kurz dein Ziel.";return}wayItems=D.recommend(text,8).filter(inWorkspace).slice(0,6);document.querySelectorAll(".goal").forEach(x=>{x.classList.remove("active");x.setAttribute("aria-pressed","false")});if(!wayItems.length){$("goalStatus").textContent="Dazu gibt es noch keine eindeutige Empfehlung. Du kannst die Kategorien oben auswählen.";wayItems=[];return renderWayResults()}$("goalStatus").textContent=wayItems.length+" passende Werkzeuge gefunden (lokale Stichwortsuche).";renderWayResults()}
 document.querySelector('.goal[data-goal="lernen"]').click();
 // Akademie
 let courseId="german",lessonId="g-1",answered=false;
