@@ -169,3 +169,29 @@ const copy=core.parse(core.serialize(redo));
 copy.terrain[0]=2;
 assert.notEqual(copy.terrain[0],redo.terrain[0]);
 });
+
+test('Tageszeiten: vier erlaubte Lichtstimmungen werden sicher gespeichert',()=>{
+const scene=core.fresh();
+assert.equal(scene.lighting,'day');
+assert.deepEqual(core.LIGHTS,['dawn','day','sunset','night']);
+for(const lighting of core.LIGHTS){
+core.setLighting(scene,lighting);
+assert.equal(core.parse(core.serialize(scene)).lighting,lighting);
+}
+assert.throws(()=>core.setLighting(scene,'laser'),/Tageszeit/);
+assert.throws(()=>core.validate({...scene,lighting:'<script>alert(1)</script>'}),/Tageszeit/);
+assert.throws(()=>core.validate({...scene,lighting:null}),/Tageszeit/);
+});
+test('Alte 3D-Szenen ohne Tageszeit bleiben beim Import kompatibel',()=>{
+const legacy=core.fresh();
+delete legacy.lighting;
+const imported=core.parse(JSON.stringify(legacy));
+assert.equal(imported.lighting,'day');
+assert.equal(imported.terrain.length,289);
+assert.equal(imported.objects.length,6);
+const history=core.createHistory(imported);
+core.setLighting(imported,'night');
+assert.equal(history.record(imported),true);
+assert.equal(history.undo().lighting,'day');
+assert.equal(history.redo().lighting,'night');
+});
