@@ -1,59 +1,147 @@
-// Original Pibo garden locomotion. No borrowed game assets or animation clips.
-// The character stays inside the meadow and steers around large props.
+// Original Pibo garden locomotion: deterministic grid route planning around scene props.
+// No borrowed character assets, animation clips or third-party pathfinding code.
 const clampWalk=(n,a,b)=>Math.max(a,Math.min(b,n));
+const B={xmin:-3.8,xmax:3.8,zmin:-3.15,zmax:.65};
 const obstacles=[
   {x:-3.3,z:-2.7,r:.85}, // fruit tree
   {x:2.7,z:-2.3,r:1.35}, // pond
   {x:1.65,z:-3.2,r:.85}, // bench
   {x:-1.15,z:-3.5,r:.65} // windmill
 ];
+const CLEARANCE=.045;
+const inside=(x,z)=>x>=B.xmin-1e-7&&x<=B.xmax+1e-7&&z>=B.zmin-1e-7&&z<=B.zmax+1e-7
+  &&obstacles.every(o=>Math.hypot(x-o.x,z-o.z)>=o.r+CLEARANCE-1e-7);
+function clearSegment(a,b){
+  if(!inside(a.x,a.z)||!inside(b.x,b.z))return false;
+  const dx=b.x-a.x,dz=b.z-a.z,den=dx*dx+dz*dz;
+  return obstacles.every(o=>{
+    const t=den>1e-12?clampWalk(((o.x-a.x)*dx+(o.z-a.z)*dz)/den,0,1):0;
+    return Math.hypot(a.x+t*dx-o.x,a.z+t*dz-o.z)>=o.r+CLEARANCE-1e-7;
+  });
+}
+const STEP=.2,NX=39,NZ=20;
+const nodes=Array.from({length:NX*NZ},(_,id)=>{
+  const x=B.xmin+(id%NX)*STEP,z=B.zmin+Math.floor(id/NX)*STEP;
+  return {x,z,valid:inside(x,z)};
+});
 export function walkablePoint(x,z){
   if(!Number.isFinite(x)||!Number.isFinite(z))return null;
-  let p={x:clampWalk(x,-3.8,3.8),z:clampWalk(z,-3.15,.65)};
-  for(const o of obstacles){
-    const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz);
-    if(d<o.r){
-      const nx=d>.0001?dx/d:1,nz=d>.0001?dz/d:0;
-      p={x:clampWalk(o.x+nx*o.r,-3.8,3.8),z:clampWalk(o.z+nz*o.r,-3.15,.65)};
+  const original={x:clampWalk(x,B.xmin,B.xmax),z:clampWalk(z,B.zmin,B.zmax)};
+  if(inside(original.x,original.z))return original;
+  let p={...original};
+  for(let iteration=0;iteration<10;iteration++){
+    for(const o of obstacles){
+      const dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz),radius=o.r+CLEARANCE+.02;
+      if(d<radius){
+        const nx=d>1e-9?dx/d:1,nz=d>1e-9?dz/d:0;
+        p={x:clampWalk(o.x+nx*radius,B.xmin,B.xmax),z:clampWalk(o.z+nz*radius,B.zmin,B.zmax)};
+      }
+    }
+    if(inside(p.x,p.z))return p;
+  }
+  // A blocked boundary corner cannot always be fixed by radial projection.
+  let best=null,score=Infinity;
+  for(const n of nodes)if(n.valid){
+    const d=Math.hypot(n.x-original.x,n.z-original.z);
+    if(d<score){score=d;best=n}
+  }
+  return best?{x:best.x,z:best.z}:null;
+}
+function nearestVisible(point){
+  let best=-1,score=Infinity;
+  for(let i=0;i<nodes.length;i++){
+    const n=nodes[i];if(!n.valid)continue;
+    const d=Math.hypot(n.x-point.x,n.z-point.z);
+    if(d<score&&clearSegment(point,n)){best=i;score=d}
+  }
+  return best;
+}
+function route(start,goal){
+  if(clearSegment(start,goal))return [{...goal}];
+  const first=nearestVisible(start),last=nearestVisible(goal);
+  if(first<0||last<0)return null;
+  const cost=new Float64Array(nodes.length).fill(Infinity);
+  const prev=new Int32Array(nodes.length).fill(-1);
+  const closed=new Uint8Array(nodes.length),open=[first];cost[first]=0;
+  const heuristic=i=>Math.hypot(nodes[i].x-nodes[last].x,nodes[i].z-nodes[last].z);
+  while(open.length){
+    let best=0,bestScore=Infinity;
+    for(let j=0;j<open.length;j++){const score=cost[open[j]]+heuristic(open[j]);if(score<bestScore){bestScore=score;best=j}}
+    const id=open.splice(best,1)[0];if(closed[id])continue;
+    if(id===last)break;
+    closed[id]=1;
+    const ix=id%NX,iz=Math.floor(id/NX);
+    for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+      if(!dx&&!dz)continue;
+      const x=ix+dx,z=iz+dz;
+      if(x<0||x>=NX||z<0||z>=NZ)continue;
+      const next=z*NX+x;
+      if(closed[next]||!nodes[next].valid||!clearSegment(nodes[id],nodes[next]))continue;
+      const nextCost=cost[id]+Math.hypot(dx,dz)*STEP;
+      if(nextCost<cost[next]){
+        cost[next]=nextCost;prev[next]=id;
+        if(!open.includes(next))open.push(next);
+      }
     }
   }
-  return p;
+  if(!Number.isFinite(cost[last]))return null;
+  const raw=[];
+  for(let id=last;id!==-1;id=prev[id])raw.push({x:nodes[id].x,z:nodes[id].z});
+  raw.reverse();raw.push({...goal});
+  const smooth=[];let anchor=start;
+  for(let i=0;i<raw.length;){
+    let far=i;
+    for(let j=i+1;j<raw.length;j++)if(clearSegment(anchor,raw[j]))far=j;
+    const waypoint=raw[far];
+    smooth.push(waypoint);anchor=waypoint;i=far+1;
+  }
+  return smooth;
 }
 export class PiboRoam{
   constructor(){this.reset()}
-  reset(){this.x=0;this.z=0;this.targetX=0;this.targetZ=0;this.heading=0;this.moving=false}
+  reset(){this.x=0;this.z=0;this.targetX=0;this.targetZ=0;this.heading=0;this.speed=0;this.moving=false;this.path=[]}
   setTarget(x,z){
-    const p=walkablePoint(x,z);
-    if(!p)return false;
-    this.targetX=p.x;this.targetZ=p.z;
-    this.moving=Math.hypot(this.targetX-this.x,this.targetZ-this.z)>.04;
+    const goal=walkablePoint(x,z);
+    if(!goal)return false;
+    const path=route({x:this.x,z:this.z},goal);
+    if(!path)return false;
+    this.targetX=goal.x;this.targetZ=goal.z;
+    this.path=path;
+    this.moving=Math.hypot(this.targetX-this.x,this.targetZ-this.z)>.035;
+    if(!this.moving)this.path=[];
     return true;
   }
   update(deltaSeconds){
     const dt=clampWalk(Number.isFinite(deltaSeconds)?deltaSeconds:0,0,.05);
-    const dx=this.targetX-this.x,dz=this.targetZ-this.z,dist=Math.hypot(dx,dz);
-    if(dist<=.035||dt===0){if(dist<=.035)this.moving=false;return this.pose()}
-    const step=Math.min(dist,1.75*dt);
-    let nextX=this.x+dx/dist*step,nextZ=this.z+dz/dist*step;
-    // A tangential step avoids moving through the trunk, pond or furniture.
-    for(const o of obstacles){
-      const vx=nextX-o.x,vz=nextZ-o.z;
-      if(Math.hypot(vx,vz)<o.r){
-        const ox=this.x-o.x,oz=this.z-o.z,od=Math.hypot(ox,oz)||1;
-        let tx=-oz/od,tz=ox/od;
-        if(tx*dx+tz*dz<0){tx=-tx;tz=-tz}
-        nextX=this.x+tx*step;nextZ=this.z+tz*step;
-        break;
-      }
+    if(!dt)return this.pose();
+    if(!this.moving){
+      this.speed=Math.max(0,this.speed-4*dt);
+      return this.pose();
     }
-    const safe=walkablePoint(nextX,nextZ);
-    // Clamp movement per frame: browser tab resume cannot teleport the cat.
-    const movedX=safe.x-this.x,movedZ=safe.z-this.z,moved=Math.hypot(movedX,movedZ);
-    if(moved>step&&moved>0){this.x+=movedX/moved*step;this.z+=movedZ/moved*step}
-    else{this.x=safe.x;this.z=safe.z}
-    const desired=Math.atan2(dx,dz),turn=Math.atan2(Math.sin(desired-this.heading),Math.cos(desired-this.heading));
-    this.heading+=turn*Math.min(1,dt*8);
-    this.moving=Math.hypot(this.targetX-this.x,this.targetZ-this.z)>.04;
+    // A planned waypoint path never walks through the tree, pond or furniture.
+    while(this.path.length&&Math.hypot(this.path[0].x-this.x,this.path[0].z-this.z)<.04)this.path.shift();
+    const waypoint=this.path[0];
+    if(!waypoint){this.moving=false;this.speed=0;return this.pose()}
+    const dx=waypoint.x-this.x,dz=waypoint.z-this.z,dist=Math.hypot(dx,dz);
+    const remaining=Math.hypot(this.targetX-this.x,this.targetZ-this.z);
+    this.speed=Math.min(1.75,this.speed+4.5*dt,Math.sqrt(Math.max(0,2*3.5*remaining)));
+    const step=Math.min(dist,this.speed*dt);
+    if(dist>1e-9&&step>0){
+      const next={x:this.x+dx/dist*step,z:this.z+dz/dist*step};
+      if(clearSegment({x:this.x,z:this.z},next)){
+        this.x=next.x;this.z=next.z;
+      }else{
+        // Fail closed rather than passing through a collider on a bad route.
+        this.path=route({x:this.x,z:this.z},{x:this.targetX,z:this.targetZ})||[];
+        this.speed=0;
+      }
+      const desired=Math.atan2(dx,dz);
+      const turn=Math.atan2(Math.sin(desired-this.heading),Math.cos(desired-this.heading));
+      this.heading+=turn*Math.min(1,dt*8);
+    }
+    if(Math.hypot(this.targetX-this.x,this.targetZ-this.z)<=.04){
+      this.x=this.targetX;this.z=this.targetZ;this.moving=false;this.path=[];this.speed=0;
+    }
     return this.pose();
   }
   pose(){return {x:this.x,z:this.z,heading:this.heading,moving:this.moving}}
