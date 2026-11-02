@@ -44,3 +44,48 @@ assert.match(html,/src="\.\/scene-core\.js/);
 assert.match(studio,/href="\.\/game-studio\/index\.html"/);
 assert.doesNotMatch(js,/\b(?:eval|localStorage|indexedDB|XMLHttpRequest|fetch)\s*\(/);
 assert.doesNotMatch(html,/<script[^>]+src="https?:/i);});
+test('Objektduplikate behalten Typ, Größe und Farbe, bekommen aber eine neue ID',()=>{
+const scene=core.fresh(),source=scene.objects[0],copy=core.duplicate(scene,source.id);
+assert.notEqual(copy.id,source.id);
+assert.equal(copy.type,source.type);
+assert.equal(copy.scale,source.scale);
+assert.equal(copy.color,source.color);
+assert.equal(copy.x,source.x+1.5);
+assert.equal(copy.z,source.z+1.5);
+assert.throws(()=>core.duplicate(scene,99999),/nicht gefunden/);
+while(scene.objects.length<core.LIMIT)core.add(scene,'box');
+assert.throws(()=>core.duplicate(scene,source.id),/Maximal/);
+});
+test('Rückgängig/Wiederholen: Snapshots isoliert, Redo-Verzweigung verworfen',()=>{
+const scene=core.fresh(),history=core.createHistory(scene);
+assert.equal(history.canUndo,false);
+assert.equal(history.canRedo,false);
+core.add(scene,'box');assert.equal(history.record(scene),true);
+const first=core.serialize(scene);
+assert.equal(history.record(scene),false);
+core.add(scene,'tree');assert.equal(history.record(scene),true);
+assert.equal(history.canUndo,true);
+const previous=history.undo();
+assert.equal(core.serialize(previous),first);
+assert.equal(history.canRedo,true);
+core.add(previous,'sphere');
+assert.equal(history.record(previous),true);
+assert.equal(history.canRedo,false);
+assert.equal(history.redo(),null);
+assert.equal(history.undo().objects.length,7);
+assert.equal(history.undo().objects.length,6);
+assert.equal(history.undo(),null);
+});
+test('Verlauf ist begrenzt und wird bei einem neuen Import zurückgesetzt',()=>{
+const scene=core.fresh(),history=core.createHistory(scene,3);
+for(let i=0;i<4;i++){core.add(scene,'box');history.record(scene);}
+assert.equal(history.undo().objects.length,9);
+assert.equal(history.undo().objects.length,8);
+assert.equal(history.undo(),null);
+const fresh=core.fresh();
+history.reset(fresh);
+assert.equal(history.canUndo,false);
+assert.equal(history.canRedo,false);
+assert.throws(()=>core.createHistory(fresh,1),/Verlaufslänge/);
+assert.throws(()=>core.createHistory(fresh,101),/Verlaufslänge/);
+});
