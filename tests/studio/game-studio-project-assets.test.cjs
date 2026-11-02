@@ -92,3 +92,55 @@ const snap=project.serialize(scene);
 assert.throws(()=>project.addModel(scene,makeGLB(),'test.glb'),/Maximal/);
 assert.equal(project.serialize(scene),snap);
 });
+
+test('Große 3D-Projekte geben nicht mehr erreichbare GLB-Verlaufsversionen frei',()=>{
+const original=core.fresh(),history=project.history(original,5);
+let scene=original;
+const sources=new Map();
+for(let i=1;i<=35;i++){
+scene=core.fresh();
+const buffer=makeGLB(data=>{data.nodes[0].translation=[i,1,3];});
+sources.set(i,buffer);
+project.addModel(scene,buffer,'asset-'+i+'.glb',0,0);
+assert.equal(history.record(scene),true);
+assert.equal(history.retainedSnapshots,Math.min(5,i+1));
+assert(history.retainedAssetVersions<=5,'Verwaiste GLB-Kopien dürfen sich nicht endlos sammeln.');
+}
+assert.equal(history.retainedSnapshots,5);
+assert.equal(history.retainedAssetVersions,5);
+const old=history.undo();
+assert.equal(old.assets[0].name,'asset-34.glb');
+assert.deepEqual(project.parse(project.serialize(old)),old);
+assert.equal(history.redo().assets[0].name,'asset-35.glb');
+const previous=history.undo();
+assert.equal(previous.assets[0].name,'asset-34.glb');
+const replacement=core.fresh();
+project.addModel(replacement,makeGLB(data=>{data.nodes[0].translation=[100,2,4];}),'branch-model.glb',0,0);
+assert.equal(history.record(replacement),true);
+assert.equal(history.canRedo,false);
+assert.equal(history.retainedAssetVersions,5);
+assert.equal(history.undo().assets[0].name,'asset-34.glb');
+assert.equal(history.redo().assets[0].name,'branch-model.glb');
+history.reset(core.fresh());
+assert.equal(history.retainedAssetVersions,0);
+assert.equal(history.retainedSnapshots,1);
+});
+test('Undo/Redo bewahrt mehrere Modelle und Asset-Referenzen nach Kompaktierung',()=>{
+let scene=core.fresh();const history=project.history(scene,4);
+project.addModel(scene,makeGLB(),'original.glb',1,1);
+const a=project.serialize(scene);
+history.record(scene);
+project.addModel(scene,makeGLB(d=>{d.nodes[0].translation=[11,2,0]}),'second.glb',2,2);
+const b=project.serialize(scene);
+history.record(scene);
+for(let i=0;i<5;i++){
+scene=core.fresh();
+project.addModel(scene,makeGLB(d=>{d.nodes[0].translation=[i+30,1,0]}),'extra-'+i+'.glb',0,0);
+history.record(scene);
+}
+assert(history.retainedAssetVersions<=4);
+const last=history.undo();
+assert.deepEqual(project.parse(project.serialize(last)),last);
+assert.equal(history.redo().assets[0].name,'extra-4.glb');
+assert.notEqual(a,b);
+});

@@ -154,6 +154,30 @@ return asset;
 });
 return validate(data);
 }
+/* Drop GLB copies that no longer belong to any retained undo/redo state.
+ * Reindex snapshot tokens together so every remaining history entry stays valid. */
+function compact(){
+const live=new Set();
+for(const raw of states){
+const item=JSON.parse(raw);
+if(item.version===PROJECT_VERSION)for(const asset of item.assets)live.add(asset.token);
+}
+if(live.size===pool.length)return;
+const remap=new Map(),keep=[];
+for(let i=0;i<pool.length;i++)if(live.has(i)){
+remap.set(i,keep.length);keep.push(pool[i]);
+}
+states=states.map(raw=>{
+const item=JSON.parse(raw);
+if(item.version!==PROJECT_VERSION)return raw;
+for(const asset of item.assets){
+if(!remap.has(asset.token))fail('Asset aus Verlauf fehlt.');
+asset.token=remap.get(asset.token);
+}
+return JSON.stringify(item);
+});
+pool=keep;
+}
 function record(next){
 const state=pack(next);
 if(state===states[index])return false;
@@ -161,6 +185,7 @@ states=states.slice(0,index+1);
 states.push(state);
 if(states.length>capacity)states.shift();
 index=states.length-1;
+compact();
 return true;
 }
 function reset(next){pool=[];states=[pack(next)];index=0;}
@@ -171,7 +196,9 @@ undo(){return index>0?unpack(states[--index]):null;},
 redo(){return index<states.length-1?unpack(states[++index]):null;},
 reset,
 get canUndo(){return index>0;},
-get canRedo(){return index<states.length-1;}
+get canRedo(){return index<states.length-1;},
+get retainedAssetVersions(){return pool.length;},
+get retainedSnapshots(){return states.length;}
 });
 }
 return Object.freeze({PROJECT_VERSION,MAX_ASSETS,MAX_BYTES,MAX_CHARS,validate,parse,serialize,addModel,duplicate,history,decode,encode});
