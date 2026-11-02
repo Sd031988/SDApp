@@ -24,11 +24,15 @@ const assert=require('node:assert/strict');
   await page.locator('#app').waitFor({state:'visible',timeout:20000});
   const original=await page.evaluate(()=>JSON.stringify(S.p?.dateien||{}));
   await page.locator('#kiCodeBtn').click();
-  const marker='window.__notExecutedByStaticTests=true';
+  // Browser runtime is never invoked for user-supplied source: test this separately.
+  await page.evaluate(()=>{
+   window.SDKITestLoop.run([{path:'app.js',content:'window.__notExecutedByStaticTests=true'}],{},
+    window.SDKICodeReview.review,window.SDStudioTaskAgent.projectGraph);
+  });
+  assert.equal(await page.evaluate(()=>window.__notExecutedByStaticTests),undefined);
   await page.locator('#kiResult').fill([
    '### Datei: index.html','~~~html',
    '<a href="/faq" target="_blank">FAQ</a>',
-   '<script>'+marker+';</script>',
    '~~~'
   ].join('\n'));
   await page.locator('#kiAnalyse').click();
