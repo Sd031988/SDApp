@@ -145,3 +145,14 @@ konkrete offene Aufgabenliste, **keine** Fertigstellungsbestätigung.
 - **Quellenvergleich (02.11.2026):** Offizielle Herstellerangaben vom 04.06.2026 beschreiben eine zusammenhängende Gartenwelt mit unterschiedlichen Zonen; vom 02.07.2026 ein mehrstufiges Abenteuer; vom 22.10.2026 eine zusätzliche Tempelwelt. Pibo besitzt weiterhin nur einen begrenzten eigenen Garten, keine vergleichbare offene Welt oder professionelle Skelettanimation. Keine geschützten Fremdassets verwendet.
 - **Benchmark:** Weiterhin **26 Kriterien: 21 teilweise, 5 fehlen**. Der Status `freie_erkundung` bleibt bewusst `teilweise`. Details und Dateinachweise stehen in `pibo-benchmark.json`.
 - **Nächster konkreter Schritt:** Aktuelle GitHub-Actions-Resultate abnehmen; im echten Desktop-/Mobil-Chromium-WebGL die Teich-Umgehung und Touch-Eingaben messen und korrigieren, danach Kamera- und Rigg-Blendings verbessern.
+
+
+## Qualitätsdurchlauf 02.11.2026 – streckengebundene Garten-Ganganimation
+
+- **Umgesetzt:** Pibos Pfoten bewegen sich beim Gartenlauf nun abhängig von der wirklich zurückgelegten Distanz, nicht von der Animationszeit. Vorder- und Hinterpfoten treten diagonal auf und bewegen sich vor und zurück. Körper und Kopf neigen sich leicht gegensinnig in Kurven. Die Schrittintensität klingt nach dem Ankommen ab. Im Stand und nach einer Browserpause gibt es keine künstlichen Schritte.
+- **Kollisionskorrektur:** Rasterkoordinaten an den Gartenrändern werden ausdrücklich begrenzt. Ein im V8-Test erkannter Gleitkommaüberlauf (3,8000000000000007 statt 3,8) wurde korrigiert.
+- **Regressionen:** Die vollständigen Assertions der Garten-Testdatei bestanden im V8-Harness mit Node-assert-kompatibler Prüflogik, einschließlich acht schwieriger Gartenziele, Hindernisabständen, Schrittpaarkoordination, Pause und reduziertem Bewegungsmodus. Zusätzlich wurden elf Zielpunkte in der V8-Simulation erreicht. Modul- und Inline-Syntax wurden geprüft. Kein Node-/WebGL-/Hardwaretest wird damit behauptet.
+- **Unverändert:** Speicherformate, andere Räume, Pflege, Minispiele und andere SD-Hub-Projekte. Originale prozedurale Pibo-Geometrie, keine geschützten Fremdassets.
+- **Referenz:** Offizielle Herstellerseite und Herstellerinformation vom 04.06.2026 zum frei begehbaren Garten. Pibo bleibt im Vergleich auf 21 teilweise erfüllten und 5 fehlenden von 26 Kriterien; keine professionelle Qualitätsparität.
+- **Offen:** GitHub-Push-CI, Pages, Chromium Desktop/Mobil, echtes WebGL, FPS auf Mobilhardware, professionelle Rig-/IK-Fußkontakte und zusammenhängende Welterkundung. Der GitHub-Connector meldete für den letzten Hauptbranch-Commit keine kombinierten Statuschecks; dies bestätigt keine erfolgreichen Workflows.
+- **Nächster Schritt:** Echten WebGL-Desktop-/Mobiltest des Gartenlaufs und CI-Status abnehmen, danach originale Pfoten-IK und weichere Kameraführung entwickeln.
