@@ -28,6 +28,14 @@ const root = path.resolve(__dirname, '../..');
     await page.locator('#execute').click();
     assert.equal(JSON.parse(await page.locator('#output').inputValue()).name, 'Test');
 
+    await page.locator('#source').fill('{"veryLarge":9007199254740993,"huge":1e999}');
+    await page.locator('#execute').click();
+    assert.match(await page.locator('#output').inputValue(), /9007199254740993/);
+    assert.match(await page.locator('#output').inputValue(), /1e999/);
+    await page.locator('#source').fill('42');
+    await page.locator('#autoDetect').click();
+    assert.match(await page.locator('#status').innerText(), /JSON formatieren/);
+
     await page.locator('[data-tool="base64-encode"]').click();
     await page.locator('#source').fill('Äpfel 🍎');
     await page.locator('#execute').click();
@@ -36,6 +44,15 @@ const root = path.resolve(__dirname, '../..');
     await page.locator('#source').fill(encoded);
     await page.locator('#execute').click();
     assert.equal(await page.locator('#output').inputValue(), 'Äpfel 🍎');
+
+    await page.locator('[data-tool="base64-encode"]').click();
+    await page.locator('#source').fill('\uFEFFEin Text');
+    await page.locator('#execute').click();
+    const withBom = await page.locator('#output').inputValue();
+    await page.locator('[data-tool="base64-decode"]').click();
+    await page.locator('#source').fill(withBom);
+    await page.locator('#execute').click();
+    assert.equal(await page.locator('#output').inputValue(), '\uFEFFEin Text');
 
     await page.locator('[data-tool="text-diff"]').click();
     assert.equal(await page.locator('#compareArea').isVisible(), true);
