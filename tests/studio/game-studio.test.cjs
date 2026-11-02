@@ -302,3 +302,15 @@ assert.throws(()=>core.collectNearby({x:NaN,z:5},scene.objects,collected),/Samme
 assert.throws(()=>core.collectNearby({x:0,z:5},scene.objects,collected,999),/Sammelprüfung/);
 assert.throws(()=>core.validate({...scene,objects:[{...gem,type:'unknown'}]}),/Ungültiges/);
 });
+
+test('Sprint erhöht die Bewegungsgeschwindigkeit ohne die Normierung zu verändern',()=>{
+const plain={x:0,z:0,y:0,vy:0},fast={x:0,z:0,y:0,vy:0};
+core.move(plain,{forward:true},.05,[],0);
+core.move(fast,{forward:true,run:true},.05,[],0);
+assert.equal(plain.z,-.25);
+assert.equal(fast.z,-.4);
+assert.equal(fast.x,0);
+const diagonal={x:0,z:0,y:0,vy:0};
+core.move(diagonal,{forward:true,right:true,run:true},.05,[],0);
+assert(Math.abs(Math.hypot(diagonal.x,diagonal.z)-.4)<1e-10);
+});
