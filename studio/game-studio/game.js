@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
-const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
 const player={x:0,y:0,z:5,vy:0};
@@ -43,6 +43,13 @@ const p=[Math.cos(a),-1,Math.sin(a)],q=[Math.cos(b),-1,Math.sin(b)];
 const s=[r*Math.cos(a),1,r*Math.sin(a)],t=[r*Math.cos(b),1,r*Math.sin(b)];
 list.push([p,s,q]);if(!cone){list.push([s,t,q]);list.push([[0,1,0],s,t]);}list.push([[0,-1,0],q,p]);}
 return triangles(list);}
+function boulder(){
+const t=(1+Math.sqrt(5))/2;
+const raw=[[-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]];
+const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+const points=raw.map((v,i)=>{const radius=.87+Math.sin((i+1)*5.17)*.11;const p=norm(v);return[p[0]*radius,p[1]*radius,p[2]*radius];});
+return triangles(faces.map(face=>face.map(index=>points[index])));
+}
 function buildTerrain(){
 const t=scene.terrain,vertices=[],size=Core.GRID,step=Core.STEP;
 function node(col,row){
@@ -76,20 +83,59 @@ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('3D-Programmfehle
 gl.useProgram(program);
 u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint'),sunColor:gl.getUniformLocation(program,'sunColor'),sunDir:gl.getUniformLocation(program,'sunDir'),ambientColor:gl.getUniformLocation(program,'ambientColor'),fogColor:gl.getUniformLocation(program,'fogColor'),eyePosition:gl.getUniformLocation(program,'eyePosition'),terrainKind:gl.getUniformLocation(program,'terrainKind')};
 gl.enableVertexAttribArray(u.pos);gl.enableVertexAttribArray(u.normal);gl.enable(gl.DEPTH_TEST);
-shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true)};grid=gridlines();
+shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder()};grid=gridlines();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
 function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
 function part(shape,tint,x,y,z,a,b,c){draw(shape,tint,mm(translate(x,y,z),scale(a,b,c)));}
-function object(o){const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z),drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
+function object(o){
+const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z);
+const drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
+const foliage=['#408d75','#39836e','#67b39a'];
 if(o.type==='box')drawPart('box',o.color,x,s,z,s,s,s);
 if(o.type==='sphere')drawPart('sphere',o.color,x,s,z,s,s,s);
 if(o.type==='column')drawPart('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
-if(o.type==='rock')drawPart('sphere',o.color,x,.75*s,z,1.05*s,.74*s,1.2*s);
 if(o.type==='hill')drawPart('sphere',o.color,x,.1*s,z,2.3*s,.9*s,2.3*s);
-if(o.type==='tree'){drawPart('column','#735d4b',x,1.1*s,z,.27*s,1.1*s,.27*s);drawPart('cone',o.color,x,2.8*s,z,1.28*s,1.45*s,1.28*s);drawPart('cone','#408d75',x,3.7*s,z,.88*s,1.1*s,.88*s);}
-if(!playing&&o.id===selected)drawPart('box','#f8d481',x,.05,z,1.08*s,.05,1.08*s);
+if(o.type==='rock'){
+const lean=Math.sin(o.id*2.1)*.15;
+drawPart('boulder',o.color,x,.67*s,z,1.05*s,.74*s,1.18*s);
+drawPart('boulder','#8299a7',x+.42*s+lean,.3*s,z-.28*s,.49*s,.33*s,.42*s);
+}
+if(o.type==='tree'){
+drawPart('column','#735d4b',x,1.18*s,z,.25*s,1.18*s,.25*s);
+for(const [dx,dy,dz,r,tint] of [
+[-.66,2.35,0,.92,o.color],[.64,2.48,.02,1.01,foliage[0]],
+[0,3.15,0,1.09,foliage[1]],[-.15,2.65,-.58,.87,foliage[2]],
+[.15,2.75,.65,.79,o.color]
+])drawPart('sphere',tint,x+dx*s,dy*s,z+dz*s,r*s,r*.83*s,r*s);
+}
+if(o.type==='pine'){
+drawPart('column','#765c49',x,1.2*s,z,.22*s,1.2*s,.22*s);
+drawPart('cone',foliage[1],x,2.04*s,z,1.18*s,1.34*s,1.18*s);
+drawPart('cone',o.color,x,2.95*s,z,.93*s,1.26*s,.93*s);
+drawPart('cone',foliage[2],x,3.76*s,z,.65*s,.95*s,.65*s);
+}
+if(o.type==='bush'){
+drawPart('sphere',o.color,x,.52*s,z,.72*s,.58*s,.68*s);
+drawPart('sphere',foliage[0],x-.45*s,.45*s,z-.12*s,.48*s,.44*s,.47*s);
+drawPart('sphere',foliage[2],x+.40*s,.50*s,z+.08*s,.47*s,.48*s,.45*s);
+drawPart('sphere',foliage[1],x,.78*s,z-.1*s,.45*s,.46*s,.44*s);
+}
+if(o.type==='flower'){
+drawPart('column','#408d75',x,.43*s,z,.035*s,.43*s,.035*s);
+drawPart('sphere','#5ebbb0',x-.12*s,.32*s,z,.16*s,.07*s,.11*s);
+drawPart('sphere','#5ebbb0',x+.11*s,.49*s,z,.15*s,.06*s,.10*s);
+for(let i=0;i<5;i++){
+const theta=i*Math.PI*2/5;
+drawPart('sphere',o.color,x+Math.cos(theta)*.15*s,.88*s+Math.sin(theta)*.15*s,z,.16*s,.15*s,.065*s);
+}
+drawPart('sphere','#f1c66c',x,.88*s,z+.07*s,.13*s,.13*s,.10*s);
+}
+if(!playing&&o.id===selected){
+const radius=(o.type==='flower'?.34:o.type==='bush'?.72:1.08)*s;
+drawPart('box','#f8d481',x,.05,z,radius,.05,radius);
+}
 }
 const outfitColors={
 explorer:{shirt:'#377d90',trim:'#f1c66c',pants:'#34475c',hat:'#dbb36b',skin:'#e6ba94'},
@@ -166,7 +212,7 @@ draw(terrainMesh,terrain.soil,id(),gl.TRIANGLES,terrain.kind);
 draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
-function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
+function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
@@ -191,9 +237,18 @@ catch(err){say(err.message);}
 }
 function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
 function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
+function addNatureGroup(group){
+if(playing)return;
+try{
+const objects=Core.plantGroup(scene,group,Math.round(camera.targetX),Math.round(camera.targetZ));
+selected=objects[objects.length-1].id;
+changed((group==='grove'?'Waldstück':'Blumenwiese')+' angelegt ('+objects.length+' Objekte).');
+}catch(err){say(err.message);}
+}
 function save(){const data=Core.serialize(scene),blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='sd-game-scene.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);savedSnapshot=data;syncDirty();say('Szene heruntergeladen. Andere Projekte bleiben unverändert.');}
 function load(file){if(!file)return;if(file.size>60000){say('Datei zu groß.');return;}file.text().then(text=>{const next=Core.parse(text);scene=next;history.reset(next);savedSnapshot=Core.serialize(next);selected=null;Object.assign(player,{x:0,y:0,z:5,vy:0});syncDirty();list();say('Szene geladen.');}).catch(e=>say('Import abgebrochen: '+e.message));}
 document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>add(b.dataset.add)));
+document.querySelectorAll('[data-nature-group]').forEach(b=>b.addEventListener('click',()=>addNatureGroup(b.dataset.natureGroup)));
 document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{if(!playing)selectBrush(b.dataset.brush);}));
 document.querySelectorAll('[data-avatar]').forEach(b=>b.addEventListener('click',()=>{
 if(playing)return;
