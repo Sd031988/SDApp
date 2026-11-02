@@ -5,6 +5,7 @@
 'use strict';
 const MAX_FILES=40,MAX_FINDINGS=75,MAX_PROMPT=9000;
 function repairBlankLink(line){
+ if(typeof line!=='string'||/[\r\n]/.test(line))return null;
  const matches=[...line.matchAll(/<a\b[^>]*>/gi)];
  if(matches.length!==1)return null; // avoid guessing about several links on one line
  const match=matches[0],tag=match[0];
@@ -27,7 +28,6 @@ function repairBlankLink(line){
 }
 function createPlan(selectedFiles,original,report){
  const selected=Array.isArray(selectedFiles)?selectedFiles.slice(0,MAX_FILES):[];
- const old=original&&typeof original==='object'?original:{};
  if(!report||report.blocked||report.skipped||report.truncated)
   return {blocked:true,reason:'Codeprüfung enthält gesperrte oder unvollständige Befunde.',proposals:[],manual:[],updatedFiles:[]};
  const findings=Array.isArray(report.findings)?report.findings.slice(0,MAX_FINDINGS):[];
@@ -56,7 +56,7 @@ function createPlan(selectedFiles,original,report){
  }
  const updatedFiles=selected.filter(f=>edited.has(f.path)&&edited.get(f.path)!==f.content)
   .map(f=>({path:f.path,content:edited.get(f.path),language:f.language}));
- return {blocked:false,reason:'',proposals,manual,updatedFiles,oldFiles:old,proposalCount:proposals.length};
+ return {blocked:false,reason:'',proposals,manual,updatedFiles,proposalCount:proposals.length};
 }
 function repairPrompt(plan){
  if(!plan||plan.blocked||!Array.isArray(plan.manual)||!plan.manual.length)return '';
