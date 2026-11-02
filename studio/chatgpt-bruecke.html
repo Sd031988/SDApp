@@ -30,6 +30,13 @@ small{color:#c5bfd5}
   <small>Die ZIP wird aus drei öffentlichen Dateien direkt in deinem Browser zusammengestellt. Sie enthält keine Kontodaten oder Passwörter.</small>
 </div>
 <div class="card">
+  <h2>Windows 10/11: Python-Assistent für Edge &amp; Chrome</h2>
+  <p>Der Windows-Script-Host-Fehler <code>800A03EA</code> entsteht beim direkten Öffnen von <code>studio-bridge.js</code>. Diese Datei ist für die Browser-Erweiterung bestimmt. Unser Windows-Paket enthält die korrekte Installation und einen Python-Einrichtungsassistenten.</p>
+  <button id="downloadWindows" type="button">⬇ Windows-/Python-Brücke als ZIP herunterladen</button>
+  <p id="windowsStatus" role="status" aria-live="polite"></p>
+  <small>Mit Windows 10/11 und Edge oder Chrome. Python 3.9+ nur für den Assistenten erforderlich; die Erweiterung kann auch ohne Python geladen werden.</small>
+</div>
+<div class="card">
   <h2>2. Erweiterung einmalig in Chrome einrichten</h2>
   <ol>
     <li>ZIP entpacken – du bekommst einen Ordner mit <code>manifest.json</code>, <code>background.js</code> und <code>studio-bridge.js</code>.</li>
@@ -80,6 +87,46 @@ small{color:#c5bfd5}
       status.textContent='✓ ZIP erstellt. Danach entpacken und in Chrome als Erweiterung laden.';
     }catch(error){status.textContent='Download fehlgeschlagen: '+error.message+' – öffne alternativ den Erweiterungsordner auf GitHub.';}
     finally{button.disabled=false;}
+  });
+})();
+</script>
+
+<script>
+(function(){
+  'use strict';
+  const button=document.getElementById('downloadWindows');
+  const status=document.getElementById('windowsStatus');
+  button.addEventListener('click',async()=>{
+    button.disabled=true;
+    status.textContent='Windows-Paket wird vorbereitet ...';
+    try{
+      const paths=[
+        ['manifest.json','./chatgpt-transfer-extension/manifest.json'],
+        ['background.js','./chatgpt-transfer-extension/background.js'],
+        ['studio-bridge.js','./chatgpt-transfer-extension/studio-bridge.js'],
+        ['sd_bridge_windows.py','./chatgpt-windows/sd_bridge_windows.py'],
+        ['START-WINDOWS.cmd','./chatgpt-windows/START-WINDOWS.cmd'],
+        ['README-WINDOWS.txt','./chatgpt-windows/README-WINDOWS.txt']
+      ];
+      const files=[];
+      for(const [name,path] of paths){
+        const response=await fetch(path,{cache:'no-store'});
+        if(!response.ok)throw Error('Datei nicht verfuegbar: '+name);
+        files.push({name,text:await response.text()});
+      }
+      const bytes=SDChatBridgeZip.archive(files);
+      const url=URL.createObjectURL(new Blob([bytes],{type:'application/zip'}));
+      const link=document.createElement('a');
+      link.href=url;
+      link.download='SD-Code-Studio-ChatGPT-Windows-Python.zip';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+      status.textContent='✓ ZIP erstellt. Entpacken und START-WINDOWS.cmd ausfuehren. NICHT studio-bridge.js anklicken.';
+    }catch(error){
+      status.textContent='Download fehlgeschlagen: '+error.message;
+    }finally{button.disabled=false;}
   });
 })();
 </script>
