@@ -48,3 +48,22 @@ test('grammar help matches the topic without treating every article as a grammar
   assert.equal(typeof guide.example,'string',key(item));
  }
 });
+
+test('resuming a lesson uses stable task IDs and migrates legacy indices after thematic sorting',()=>{
+ const section=source.slice(source.indexOf('const topicRules='),source.indexOf('function persistCursor(){'));
+ const create=new Function('lessons','level','cursor','order',`let index=0;const progress={};const save=()=>{};const cursorKey='test';${section};return {current,restoreCursorPosition,id}`);
+ const order=['alpha','a1','a2','b1','praxis'];
+ for(const level of order){
+  const app=create(lessons,level,{},order);
+  const sorted=app.current();
+  const original=lessons.filter(item=>item.lv===level);
+  assert.equal(sorted.length,original.length,level);
+  for(let i=0;i<sorted.length;i++){
+   assert.equal(app.restoreCursorPosition({version:2,taskId:app.id(sorted[i])}),i,level+': stable '+i);
+  }
+  for(let i=0;i<original.length;i++){
+   const restored=app.restoreCursorPosition({index:i});
+   assert.equal(app.id(sorted[restored]),app.id(original[i]),level+': legacy '+i);
+  }
+ }
+});
