@@ -8,6 +8,7 @@ if(root&&root.document)root.SDGameCore=api;
 const VERSION=1,LIMIT=70,WORLD=19;
 const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
+const GRID=17,STEP=40/(GRID-1),MAX_HEIGHT=3,TOOLS=Object.freeze(['raise','lower','smooth']);
 const PALETTE=Object.freeze(['#d7a35c','#5ebbb0','#8fa4e9','#d8797d','#bca3e5','#dbcc97']);
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const numeric=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
@@ -17,15 +18,17 @@ function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meado
 {id:3,type:'box',x:-3,z:2,scale:1.2,color:'#d7a35c'},
 {id:4,type:'sphere',x:3,z:0,scale:1,color:'#8fa4e9'},
 {id:5,type:'column',x:6,z:5,scale:1,color:'#bca3e5'},
-{id:6,type:'box',x:-6,z:6,scale:1.5,color:'#d8797d'}]};}
+{id:6,type:'box',x:-6,z:6,scale:1.5,color:'#d8797d'}],terrain:Array(GRID*GRID).fill(0)};}
 function validObject(obj){return obj&&Object.getPrototypeOf(obj)===Object.prototype&&Number.isSafeInteger(obj.id)&&obj.id>0&&obj.id<=10000000&&KINDS.includes(obj.type)&&numeric(obj.x,-WORLD,WORLD)&&numeric(obj.z,-WORLD,WORLD)&&numeric(obj.scale,.4,3)&&PALETTE.includes(obj.color);}
 function validate(data){
 if(!data||Array.isArray(data)||typeof data!=='object'||data.version!==VERSION||typeof data.name!=='string'||!data.name.trim()||data.name.length>80||!Array.isArray(data.objects)||data.objects.length>LIMIT)throw Error('Ungültige oder zu große Szene.');
 const ground=data.ground===undefined?'meadow':data.ground;
 if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');
+const terrain=data.terrain===undefined?Array(GRID*GRID).fill(0):data.terrain;
+if(!Array.isArray(terrain)||terrain.length!==GRID*GRID||!terrain.every(h=>numeric(h,0,MAX_HEIGHT)))throw Error('Ungültiges Höhenprofil des Geländes.');
 const seen=new Set();
 for(const obj of data.objects){if(!validObject(obj)||seen.has(obj.id))throw Error('Ungültiges Objekt oder doppelte ID.');seen.add(obj.id);}
-return{version:VERSION,name:data.name,ground,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color}))};}
+return{version:VERSION,name:data.name,ground,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
 function parse(source){
 if(typeof source!=='string'||source.length>60000)throw Error('Szenendatei zu groß.');
 let data;try{data=JSON.parse(source)}catch(_){throw Error('Die Datei enthält kein gültiges JSON.');}
@@ -52,6 +55,38 @@ const original=scene.objects.find(o=>o.id===id);
 if(!original)throw Error('Objekt nicht gefunden.');
 const copy=add(scene,original.type,original.x+1.5,original.z+1.5);
 return update(scene,copy.id,{scale:original.scale,color:original.color});
+}
+function terrainHeight(terrain,x,z){
+if(!terrain)return 0;
+const ix=clamp((x+20)/STEP,0,GRID-1),iz=clamp((z+20)/STEP,0,GRID-1);
+const col=Math.min(GRID-2,Math.floor(ix)),row=Math.min(GRID-2,Math.floor(iz));
+const u=ix-col,v=iz-row,n=row*GRID+col;
+return terrain[n]*(1-u)*(1-v)+terrain[n+1]*u*(1-v)+terrain[n+GRID]*(1-u)*v+terrain[n+GRID+1]*u*v;
+}
+function sculpt(scene,tool,x,z,radius=3.5,strength=.35){
+if(!TOOLS.includes(tool)||!numeric(x,-20,20)||!numeric(z,-20,20)||!numeric(radius,2.5,7)||!numeric(strength,.05,1))throw Error('Ungültiger Geländepinsel.');
+const previous=scene.terrain||Array(GRID*GRID).fill(0),next=previous.slice();
+let changed=false;
+for(let row=0;row<GRID;row++)for(let col=0;col<GRID;col++){
+const distance=Math.hypot(-20+col*STEP-x,-20+row*STEP-z);
+if(distance>=radius)continue;
+const p=row*GRID+col,weight=(1-distance/radius)*strength;
+let h=previous[p];
+if(tool==='raise')h+=weight;
+else if(tool==='lower')h-=weight;
+else{
+let total=0,n=0;
+for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){
+const r=row+dz,c=col+dx;
+if(r>=0&&r<GRID&&c>=0&&c<GRID){total+=previous[r*GRID+c];n++;}
+}
+h+=(total/n-h)*weight;
+}
+const value=Math.round(clamp(h,0,MAX_HEIGHT)*100)/100;
+if(value!==previous[p]){next[p]=value;changed=true;}
+}
+if(changed)scene.terrain=next;
+return changed;
 }
 function createHistory(initial,capacity=40){
 if(!Number.isSafeInteger(capacity)||capacity<2||capacity>100)throw Error('Ungültige Verlaufslänge.');
@@ -87,5 +122,5 @@ if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,KINDS,GROUNDS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,duplicate,createHistory,collides,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,duplicate,terrainHeight,sculpt,createHistory,collides,move});
 });
