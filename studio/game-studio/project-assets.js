@@ -64,8 +64,8 @@ ids.add(obj.id);
 if(obj.type==='model'){
 if(!seenAssets.has(obj.assetId)||!finite(obj.x,-Core.WORLD,Core.WORLD)||
 !finite(obj.z,-Core.WORLD,Core.WORLD)||!finite(obj.scale,.4,3)||
-!Core.PALETTE.includes(obj.color))fail('Ungültige Modellinstanz oder fehlendes Asset.');
-objects.push({id:obj.id,type:'model',x:obj.x,z:obj.z,scale:obj.scale,color:obj.color,assetId:obj.assetId});
+!Core.PALETTE.includes(obj.color)||!finite(obj.rotationY??0,-Math.PI,Math.PI))fail('Ungültige Modellinstanz oder fehlendes Asset.');
+objects.push({id:obj.id,type:'model',x:obj.x,z:obj.z,scale:obj.scale,color:obj.color,assetId:obj.assetId,rotationY:obj.rotationY??0});
 }else{
 if(!previous.has(obj.id))fail('Ungültiger Szenenobjekttyp.');
 objects.push(previous.get(obj.id));
@@ -112,12 +112,23 @@ next.assets.push(asset);
 }
 const nextId=Math.max(0,...next.objects.map(o=>o.id))+1;
 if(nextId>10000000)fail('Objekt-ID-Grenze erreicht.');
-const obj={id:nextId,type:'model',x,z,scale:1,color:Core.PALETTE[(nextId-1)%Core.PALETTE.length],assetId:asset.id};
+const obj={id:nextId,type:'model',x,z,scale:1,color:Core.PALETTE[(nextId-1)%Core.PALETTE.length],assetId:asset.id,rotationY:0};
 next.objects.push(obj);
 const normalized=validate(next),text=serialize(normalized);
 if(text.length>MAX_CHARS)fail('Projektdatei wäre zu groß.');
 Object.assign(scene,normalized);
 return obj;
+}
+function update(scene,id,changes){
+const obj=scene.objects.find(o=>o.id===id);
+if(!obj)throw Error('Objekt nicht gefunden.');
+if(obj.type==='model'&&Object.prototype.hasOwnProperty.call(changes,'rotationY')){
+if(Object.keys(changes).length!==1||!finite(changes.rotationY,-Math.PI,Math.PI))
+fail('Ungültiger Modell-Drehwinkel.');
+obj.rotationY=changes.rotationY;
+return obj;
+}
+return Core.update(scene,id,changes);
 }
 function duplicate(scene,id){
 const original=scene.objects.find(o=>o.id===id);
@@ -201,5 +212,5 @@ get retainedAssetVersions(){return pool.length;},
 get retainedSnapshots(){return states.length;}
 });
 }
-return Object.freeze({PROJECT_VERSION,MAX_ASSETS,MAX_BYTES,MAX_CHARS,validate,parse,serialize,addModel,duplicate,history,decode,encode});
+return Object.freeze({PROJECT_VERSION,MAX_ASSETS,MAX_BYTES,MAX_CHARS,validate,parse,serialize,addModel,update,duplicate,history,decode,encode});
 });
