@@ -303,7 +303,7 @@ const mouse=new THREE.Group();scene.add(mouse);mouse.visible=false;ell(mouse,mat
 const eyes=[];for(const x of [-.31,.31]){const lid=ell(head,fur,x,.1,.58,.247,.015,.135);eyes.push(lid)}
 const eyeBrows=[];for(const x of [-.31,.31]){const b=ell(head,stripe,x,.43,.54,.19,.04,.055);eyeBrows.push(b)}
 const cheeks=[];for(const x of [-.49,.49]){cheeks.push(ell(head,pink,x,-.27,.61,.15,.065,.025))}
-const piboDetails=decoratePibo({THREE,cat,head,ell,mat});
+const piboDetails=decoratePibo({THREE,cat,head,ell,mat,paws,pupils});
 care=new PiboCare({THREE,scene,cat,head,mouth,paws,camera,sound,onStatus:(active,label,p)=>{$('careStatus').hidden=!active;$('careLabel').textContent=label;$('careFill').style.width=Math.round(p*100)+'%'}});
 let reactionSide=1;
 let pawTouches=0,lastPawSpeech=0;
