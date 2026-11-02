@@ -2,9 +2,10 @@
 (function(){
 'use strict';
 const Core=window.SDGameCore,doc=document,$=id=>doc.getElementById(id),canvas=$('stage');
-const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Felsen',hill:'Hügel',pine:'Tanne',bush:'Strauch',flower:'Blume',crystal:'Kristall'},groundNames={meadow:'Wiese',sand:'Wüste',snow:'Schnee'},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
+const collected=new Set();
 const player={x:0,y:0,z:5,vy:0};
 const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
@@ -50,6 +51,11 @@ const faces=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10
 const points=raw.map((v,i)=>{const radius=.87+Math.sin((i+1)*5.17)*.11;const p=norm(v);return[p[0]*radius,p[1]*radius,p[2]*radius];});
 return triangles(faces.map(face=>face.map(index=>points[index])));
 }
+function gem(){
+const top=[0,1,0],bottom=[0,-1,0],rim=[[1,0,0],[0,0,1],[-1,0,0],[0,0,-1]],faces=[];
+for(let i=0;i<4;i++){const a=rim[i],b=rim[(i+1)%4];faces.push([top,a,b],[bottom,b,a]);}
+return triangles(faces);
+}
 function buildTerrain(){
 const t=scene.terrain,vertices=[],size=Core.GRID,step=Core.STEP;
 function node(col,row){
@@ -83,7 +89,7 @@ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('3D-Programmfehle
 gl.useProgram(program);
 u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint'),sunColor:gl.getUniformLocation(program,'sunColor'),sunDir:gl.getUniformLocation(program,'sunDir'),ambientColor:gl.getUniformLocation(program,'ambientColor'),fogColor:gl.getUniformLocation(program,'fogColor'),eyePosition:gl.getUniformLocation(program,'eyePosition'),terrainKind:gl.getUniformLocation(program,'terrainKind')};
 gl.enableVertexAttribArray(u.pos);gl.enableVertexAttribArray(u.normal);gl.enable(gl.DEPTH_TEST);
-shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder()};grid=gridlines();
+shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder(),gem:gem()};grid=gridlines();
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
@@ -93,6 +99,11 @@ function object(o){
 const s=o.scale,x=o.x,z=o.z,base=Core.terrainHeight(scene.terrain,x,z);
 const drawPart=(shape,tint,px,y,pz,a,b,c)=>part(shape,tint,px,y+base,pz,a,b,c);
 const foliage=['#408d75','#39836e','#67b39a'];
+if(o.type==='crystal'){
+if(playing&&collected.has(o.id))return;
+const hover=1.05*s+Math.sin(pose.clock*2+o.id)*.12;
+draw('gem',o.color,mm(translate(x,base+hover,z),mm(rotateY(pose.clock*1.5),scale(.62*s,.8*s,.62*s))));
+}
 if(o.type==='box')drawPart('box',o.color,x,s,z,s,s,s);
 if(o.type==='sphere')drawPart('sphere',o.color,x,s,z,s,s,s);
 if(o.type==='column')drawPart('column',o.color,x,s*1.5,z,.75*s,1.5*s,.75*s);
@@ -212,7 +223,7 @@ draw(terrainMesh,terrain.soil,id(),gl.TRIANGLES,terrain.kind);
 draw(grid,terrain.grid,id(),gl.LINES);scene.objects.forEach(object);character();
 }
 function project(x,y,z){const{view,proj}=matrices(),m=mm(proj,view),p=[x,y,z,1],out=[];for(let r=0;r<4;r++)out[r]=m[r]*p[0]+m[r+4]*p[1]+m[r+8]*p[2]+m[r+12]*p[3];if(out[3]<=0)return null;return{x:(out[0]/out[3]+1)*canvas.clientWidth/2,y:(1-out[1]/out[3])*canvas.clientHeight/2};}
-function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
+function pick(cx,cy){const rect=canvas.getBoundingClientRect(),x=cx-rect.left,y=cy-rect.top;let best=null,distance=Infinity;for(const o of scene.objects){const p=project(o.x,(o.type==='tree'?2.7:o.type==='hill'?.65:o.type==='rock'?.75:o.type==='flower'?.88:o.type==='crystal'?1.1:o.type==='bush'?.55:o.type==='pine'?2.55:1)*o.scale+Core.terrainHeight(scene.terrain,o.x,o.z),o.z);if(!p)continue;const d=Math.hypot(x-p.x,y-p.y);if(d<48&&d<distance){best=o.id;distance=d;}}select(best);}
 function select(id){selected=id;const o=scene.objects.find(x=>x.id===selected);$('inspectorEmpty').hidden=!!o;$('inspectorFields').hidden=!o;if(o){$('selectedTitle').textContent=names[o.type]+' #'+o.id;$('propX').value=o.x;$('propZ').value=o.z;$('propScale').value=o.scale;$('propColor').value=o.color;}
 $('duplicateObject').disabled=playing||!o;
 document.querySelectorAll('[data-object-id]').forEach(el=>el.classList.toggle('chosen',+el.dataset.objectId===id));}
@@ -235,7 +246,14 @@ if(playing||selected==null)return;
 try{const copy=Core.duplicate(scene,selected);selected=copy.id;changed('Objekt dupliziert.');}
 catch(err){say(err.message);}
 }
-function mode(play){if(play)selectBrush('orbit');playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: WASD / Pfeile und Leertaste oder Touch-Steuerung.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
+function refreshGoal(){
+const total=scene.objects.filter(o=>o.type==='crystal').length;
+$('goalHud').hidden=!playing;
+$('goalCount').textContent=total?collected.size+' / '+total+' Kristalle':'Noch keine Kristalle';
+$('goalHint').textContent=total?(collected.size===total?'Ziel erreicht!':'Sammle alle Kristalle'):'Im Bearbeiten-Modus Kristalle platzieren';
+$('goalHud').classList.toggle('complete',playing&&total>0&&collected.size===total);
+}
+function mode(play){if(play){selectBrush('orbit');if(!playing){collected.clear();Object.assign(player,{x:0,y:0,z:5,vy:0});}}playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);refreshGoal();if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: Sammle Kristalle mit WASD / Pfeilen oder Touch.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
 function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
 function addNatureGroup(group){
 if(playing)return;
@@ -340,7 +358,15 @@ let before=0;function tick(now){
 const dt=before?Math.min((now-before)/1000,.05):0;before=now;
 if(!doc.hidden){
 const previousX=player.x,previousZ=player.z;
-if(playing)Core.move(player,keys,dt,scene.objects,camera.azimuth);
+if(playing){
+Core.move(player,keys,dt,scene.objects,camera.azimuth);
+const found=Core.collectNearby(player,scene.objects,collected);
+if(found.length){
+for(const crystalId of found)collected.add(crystalId);
+refreshGoal();
+say(collected.size===scene.objects.filter(o=>o.type==='crystal').length?'Alle Kristalle gesammelt!':'Kristall eingesammelt!');
+}
+}
 updatePose(dt,Math.hypot(player.x-previousX,player.z-previousZ)>.00001);
 render();
 }
