@@ -218,7 +218,7 @@
         "kids/index.html",
         "kids/e2e/pibo.spec.mjs"
       ],
-      "implementation": "Nur im eigenständigen Garten: Boden-Raycast mit Touch/Maus; deterministisches A*-Raster (0,2 m), Sichtlinien-Glättung, Hindernisradien für Baum/Teich/Bank/Windrad und kontrollierte Geschwindigkeitsrampe. Gehpose blendet über die tatsächliche Geschwindigkeit ein. Keine verbundenen begehbaren Innenräume, kein echtes Navmesh, kein professionelles Rig; WebGL/Mobilhardware noch nicht bestätigt."
+      "implementation": "Begrenzter eigenständiger Garten mit Boden-Raycast, A*-Raster, Sichtlinienglättung und Hindernisradien. Distanzgetriebene diagonale 3D-Pfotenhub-/Schubbewegung, Kurvenneigung und abklingende Gehpose; keine IK, keine verbundenen Innenräume, keine Hardware-Abnahme."
     },
     {
       "id": "haustiere",
@@ -288,14 +288,13 @@
   ],
   "last_iteration": {
     "date": "2026-11-02",
-    "focus": "Kollisionssichere Garten-Wegefindung statt möglicher Endlosschleifen um Teich/Baum; sanftere Schrittanimation beim Anlaufen.",
+    "focus": "Garten-Gangzyklus an tatsächlich gelaufene Strecke koppeln; diagonale Pfoten, Kurvenneigung, sanftes Auslaufen und Float-Randkorrektur.",
     "reference_checked": [
       "official",
       "google_play",
       "backyard_2026",
       "bathroom_2026",
-      "adventure_2026",
-      "halloween_2026"
+      "adventure_2026"
     ],
     "implementation_files": [
       "kids/pibo-roam.mjs",
@@ -303,20 +302,19 @@
     ],
     "test_files": [
       "kids/pibo-roam.test.mjs",
-      "kids/pibo-smoke-test.mjs",
       "kids/e2e/pibo.spec.mjs"
     ],
     "verified": [
-      "Im V8-Sandboxlauf 11 Gartenziele einschließlich hinter dem Teich, Hindernismittelpunkte und Rand-Ecken in 94 bis 163 Frames (1/60 s) erreicht; auf jedem simulierten Frame Gartenbegrenzung und Hindernisabstand geprüft.",
-      "Umweg hinter dem Teich bestand aus mindestens zwei Wegpunkten; direkte Strecke wurde als blockiert erkannt.",
-      "Pibo-Headless-Smoke mit den neuesten Main-Dateien in V8 erfolgreich: 18 Checks und 436 simulierte Frames; enthält lokale Spielstand-, Pflege- und Raumprüfungen.",
-      "Inline-Skripte von kids/index.html mit V8-Parser syntaktisch geprüft."
+      "JavaScript-Module und Inline-Skripte in V8 syntaktisch geprüft.",
+      "Vollständige pibo-roam.test.mjs-Assertions mit V8-Node-assert-Shim bestanden: Hindernisse, 8 schwierige Ziele, diagonale Pfoten, Stand, reduzierte Bewegung, Pause und Reset.",
+      "Zusätzlich 11 Zielpunkte mit Kollisions-/Grenzprüfung auf jedem simulierten Frame erreicht; Float-Überlauf bei Gitterrand korrigiert."
     ],
     "unverified": [
-      "Node.js-Tests und neue GitHub-Actions-Workflow-Ergebnisse nach diesem Push noch nicht unabhängig abgerufen; GitHub-Connector liefert keine Push-Workflow-Runs über seine PR-gebundene Abfrage.",
-      "Playwright-Desktop-/Mobil-Chromium, echtes WebGL, tatsächliche Touch-Koordinaten und GitHub Pages nach diesem Commit noch nicht verifiziert.",
-      "Keine iOS-/Android-Hardware-FPS-Messung; keine professionellen glTF-Rig-/Morph-Target-Animationen, hochwertigen Foley-Sounds oder freie Bewegung zwischen Zimmern."
+      "Kein Node-CI- oder kompletter Headless-Smoke-Durchlauf in dieser Ausführung; V8-Assertion-Simulation ist kein Ersatz.",
+      "GitHub-Push-Workflows und Pages-Deployment nicht abrufbar: kombinierte Statuschecks für den vorigen Commit leer, PR-gebundene Workflow-Abfrage deckt Push nicht ab.",
+      "Chromium-Desktop/Mobil, echtes WebGL, iOS/Android-Hardware und FPS-Profile nicht geprüft.",
+      "Kein professionelles Skelett-Rig, keine IK-Bodenkontaktlösung und keine frei begehbaren verbundenen Innenräume."
     ],
-    "next": "Neueste Pibo-Smoke-, Kids-Chromium- und Pages-Checks abnehmen; einen echten Desktop-/Mobil-WebGL-E2E-Test für den Teich-Umweg und Kollisionsfreiheit ergänzen, danach Pfoten-Rigg und Kamera-Blendings auf realer Hardware optimieren."
+    "next": "CI-Push-Checks und echten WebGL-Gartenlauf verifizieren; dann IK-Pfotenaufsetzen, Beschleunigungs- und Kamera-Blendings auf realen Geräten."
   }
 }
