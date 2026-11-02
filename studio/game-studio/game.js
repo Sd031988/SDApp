@@ -6,10 +6,13 @@ const names={box:'Würfel',sphere:'Kugel',tree:'Baum',column:'Säule',rock:'Fels
 let scene=Core.fresh(),selected=null,playing=false,dirty=false,gl,program,u,shapes={},grid;
 let savedSnapshot=Core.serialize(scene),history=Core.createHistory(scene),brush='orbit',terrainMesh=null,terrainSource=null;
 const collected=new Set();
+const round={seconds:0,finished:false,best:null};
+const audio=window.SDGameAudio?.createController(window.AudioContext||window.webkitAudioContext);
+const formatTime=n=>Math.max(0,Number(n)||0).toFixed(1)+' s';
 const player={x:0,y:0,z:5,vy:0};
 const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
-const keys={forward:false,back:false,left:false,right:false,jump:false};
+const keys={forward:false,back:false,left:false,right:false,jump:false,run:false};
 const say=message=>$('status').textContent=message;
 const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 function mm(a,b){const c=Array(16).fill(0);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)c[i*4+j]+=a[k*4+j]*b[i*4+k];return c;}
@@ -191,15 +194,15 @@ function updatePose(dt,wasMoving){
 pose.clock+=dt;
 const motion=playing?Core.direction(keys,camera.azimuth):{moving:false,x:0,z:0};
 const moving=playing&&motion.moving&&wasMoving;
-pose.walk+=(Number(moving)-pose.walk)*Math.min(1,dt*9);
+pose.walk+=((moving?(keys.run?1.3:1):0)-pose.walk)*Math.min(1,dt*9);
 if(moving){
 const heading=Math.atan2(motion.x,motion.z);
 const delta=Math.atan2(Math.sin(heading-pose.heading),Math.cos(heading-pose.heading));
 pose.heading+=delta*Math.min(1,dt*12);
 }
-if(pose.walk>.01)pose.phase+=dt*10;
-pose.state=playing?(player.y>.045?'jump':moving?'walk':'idle'):'preview';
-$('characterState').textContent=({preview:'VORSCHAU',idle:'STEHEN',walk:'LAUFEN',jump:'SPRINGEN'})[pose.state];
+if(pose.walk>.01)pose.phase+=dt*(keys.run?15:10);
+pose.state=playing?(player.y>.045?'jump':moving?(keys.run?'run':'walk'):'idle'):'preview';
+$('characterState').textContent=({preview:'VORSCHAU',idle:'STEHEN',walk:'LAUFEN',run:'SPRINTEN',jump:'SPRINGEN'})[pose.state];
 doc.body.dataset.characterState=pose.state;
 }
 function dimensions(){const d=Math.min(window.devicePixelRatio||1,2),w=Math.max(1,Math.round(canvas.clientWidth*d)),h=Math.max(1,Math.round(canvas.clientHeight*d));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);return{w,h};}
@@ -250,10 +253,19 @@ function refreshGoal(){
 const total=scene.objects.filter(o=>o.type==='crystal').length;
 $('goalHud').hidden=!playing;
 $('goalCount').textContent=total?collected.size+' / '+total+' Kristalle':'Noch keine Kristalle';
-$('goalHint').textContent=total?(collected.size===total?'Ziel erreicht!':'Sammle alle Kristalle'):'Im Bearbeiten-Modus Kristalle platzieren';
-$('goalHud').classList.toggle('complete',playing&&total>0&&collected.size===total);
+$('goalHint').textContent=total?(round.finished?'Geschafft! Neue Runde starten.':'Sammle alle Kristalle'):'Platziere Kristalle im Bearbeiten-Modus';
+$('goalTime').textContent=formatTime(round.seconds);
+$('goalBest').textContent=round.best==null?'Bestzeit: –':'Bestzeit: '+formatTime(round.best);
+$('goalHud').classList.toggle('complete',playing&&round.finished);
 }
-function mode(play){if(play){selectBrush('orbit');if(!playing){collected.clear();Object.assign(player,{x:0,y:0,z:5,vy:0});}}playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);refreshGoal();if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: Sammle Kristalle mit WASD / Pfeilen oder Touch.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
+function resetRound(){
+collected.clear();
+round.seconds=0;round.finished=false;
+Object.assign(player,{x:0,y:0,z:5,vy:0});
+Object.keys(keys).forEach(k=>keys[k]=false);
+refreshGoal();
+}
+function mode(play){if(play){selectBrush('orbit');if(!playing)resetRound();}playing=play;$('modeEdit').classList.toggle('active',!play);$('modePlay').classList.toggle('active',play);$('modeEdit').setAttribute('aria-pressed',String(!play));$('modePlay').setAttribute('aria-pressed',String(play));$('editHint').hidden=play;$('playHint').hidden=!play;$('touchControls').hidden=!play;document.querySelectorAll('[data-edit-only]').forEach(el=>el.disabled=play);refreshHistory();select(selected);refreshGoal();if(!play)Object.keys(keys).forEach(k=>keys[k]=false);say(play?'Spielmodus: Sammle Kristalle mit WASD / Pfeilen oder Touch.':'Bearbeiten: Objekt wählen, hinzufügen oder Kamera drehen.');}
 function add(type){if(playing)return;try{const o=Core.add(scene,type,Math.round(camera.targetX),Math.round(camera.targetZ-2));selected=o.id;changed(names[type]+' hinzugefügt.');}catch(err){say(err.message);}}
 function addNatureGroup(group){
 if(playing)return;
@@ -284,6 +296,15 @@ try{Core.setGround(scene,b.dataset.ground);changed('Landschaft: '+groundNames[sc
 catch(err){say(err.message);}
 }));
 $('modeEdit').addEventListener('click',()=>mode(false));$('modePlay').addEventListener('click',()=>mode(true));
+$('restartRound').addEventListener('click',()=>{if(playing){resetRound();say('Neue Runde! Sammle alle Kristalle.');}});
+$('soundToggle').addEventListener('click',()=>{
+const on=audio?.setEnabled(!audio.enabled)||false;
+$('soundToggle').setAttribute('aria-pressed',String(on));
+$('soundToggle').textContent=on?'🔊 Ton an':'🔇 Ton aus';
+if(on)audio.play('toggle');
+else if(!audio)say('Ton wird von diesem Browser nicht unterstützt.');
+});
+window.addEventListener('pagehide',()=>audio?.dispose(),{once:true});
 $('saveScene').addEventListener('click',save);$('loadScene').addEventListener('click',()=>$('sceneFile').click());
 $('sceneFile').addEventListener('change',e=>{load(e.target.files[0]);e.target.value='';});
 $('resetScene').addEventListener('click',()=>{if(dirty&&!window.confirm('Ungespeicherte Änderungen wirklich verwerfen?'))return;scene=Core.fresh();selected=null;changed('Beispielwelt wiederhergestellt (rückgängig möglich).');});
@@ -293,8 +314,8 @@ $('undoAction').addEventListener('click',()=>travel('undo'));
 $('redoAction').addEventListener('click',()=>travel('redo'));
 for(const name of ['X','Z','Scale','Color'])$('prop'+name).addEventListener('change',e=>{if(selected==null)return;const key=name.toLowerCase(),value=key==='color'?e.target.value:Number(e.target.value);try{Core.update(scene,selected,{[key]:value});changed('Objekt aktualisiert.');}catch(err){say(err.message);select(selected);}});
 $('cameraReset').addEventListener('click',()=>{Object.assign(camera,{azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0});say('Kamera zurückgesetzt.');});
-const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump'};
-function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();keys[k]=down;}}
+const bindings={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',Space:'jump',ShiftLeft:'run',ShiftRight:'run'};
+function key(e,down){if(!playing||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName))return;const k=bindings[e.code];if(k){e.preventDefault();if(down&&k==='jump'&&!keys.jump&&player.y<=.001)audio?.play('jump');keys[k]=down;}}
 function shortcut(e){
 if(playing||!(e.ctrlKey||e.metaKey)||e.altKey||e.repeat||/^(INPUT|TEXTAREA|SELECT)$/.test(doc.activeElement.tagName)||doc.activeElement.isContentEditable)return false;
 const k=e.key.toLowerCase();
@@ -304,7 +325,7 @@ if(k==='d'&&!e.shiftKey){e.preventDefault();duplicateSelected();return true;}
 return false;
 }
 window.addEventListener('keydown',e=>{if(!shortcut(e))key(e,true);});window.addEventListener('keyup',e=>key(e,false));window.addEventListener('blur',()=>Object.keys(keys).forEach(k=>keys[k]=false));
-document.querySelectorAll('[data-control]').forEach(b=>{const k=b.dataset.control;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys[k]=true;});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{e.preventDefault();keys[k]=false;});});
+document.querySelectorAll('[data-control]').forEach(b=>{const k=b.dataset.control;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(k==='jump'&&!keys.jump&&player.y<=.001)audio?.play('jump');keys[k]=true;});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,e=>{e.preventDefault();keys[k]=false;});});
 function groundPoint(clientX,clientY){
 const rect=canvas.getBoundingClientRect(),m=matrices();
 const forward=norm(m.target.map((v,i)=>v-m.eye[i])),right=norm(cross(forward,[0,1,0])),up=norm(cross(right,forward));
@@ -360,12 +381,20 @@ if(!doc.hidden){
 const previousX=player.x,previousZ=player.z;
 if(playing){
 Core.move(player,keys,dt,scene.objects,camera.azimuth);
+const total=scene.objects.filter(o=>o.type==='crystal').length;
+if(total&&!round.finished){
+round.seconds+=dt;
 const found=Core.collectNearby(player,scene.objects,collected);
 if(found.length){
 for(const crystalId of found)collected.add(crystalId);
-refreshGoal();
-say(collected.size===scene.objects.filter(o=>o.type==='crystal').length?'Alle Kristalle gesammelt!':'Kristall eingesammelt!');
+round.finished=collected.size===total;
+audio?.play(round.finished?'complete':'collect');
+if(round.finished&&(round.best==null||round.seconds<round.best))round.best=round.seconds;
+say(round.finished?'Geschafft! Alle Kristalle eingesammelt.':'Kristall eingesammelt!');
 }
+}
+if($('goalTime').textContent!==formatTime(round.seconds)||round.finished)$('goalTime').textContent=formatTime(round.seconds);
+if($('goalCount').textContent!==(total?collected.size+' / '+total+' Kristalle':'Noch keine Kristalle')|| (round.finished&&!$('goalHud').classList.contains('complete')))refreshGoal();
 }
 updatePose(dt,Math.hypot(player.x-previousX,player.z-previousZ)>.00001);
 render();
