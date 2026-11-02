@@ -278,5 +278,10 @@ assert.throws(()=>core.plantGroup(scene,'grove',0,0),/Maximal/);
 assert.equal(core.serialize(scene),before,'Fehler dürfen keine Teilgruppe zurücklassen');
 assert.throws(()=>core.plantGroup(scene,'garden',0,0),/Maximal/);
 assert.equal(core.serialize(scene),before);
-while(scene.objects.length<66)core.add(scene,'box'); // bereits 67, keine Änderung
+const nearLimit=core.fresh();
+while(nearLimit.objects.length<66)core.add(nearLimit,'box');
+const added=core.plantGroup(nearLimit,'grove',0,0);
+assert.equal(added.length,4);
+assert.equal(nearLimit.objects.length,core.LIMIT);
+assert.throws(()=>core.plantGroup(nearLimit,'garden',0,0),/Maximal/);
 });
