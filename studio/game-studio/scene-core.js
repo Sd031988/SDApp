@@ -9,11 +9,12 @@ const VERSION=1,LIMIT=70,WORLD=19;
 const KINDS=Object.freeze(['box','sphere','tree','column','rock','hill']);
 const GROUNDS=Object.freeze(['meadow','sand','snow']);
 const LIGHTS=Object.freeze(['dawn','day','sunset','night']);
+const AVATARS=Object.freeze(['explorer','sport','night']);
 const GRID=17,STEP=40/(GRID-1),MAX_HEIGHT=3,TOOLS=Object.freeze(['raise','lower','smooth']);
 const PALETTE=Object.freeze(['#d7a35c','#5ebbb0','#8fa4e9','#d8797d','#bca3e5','#dbcc97']);
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const numeric=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
-function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',lighting:'day',objects:[
+function fresh(){return{version:VERSION,name:'Meine erste 3D-Welt',ground:'meadow',lighting:'day',avatar:'explorer',objects:[
 {id:1,type:'tree',x:-6,z:-5,scale:1.2,color:'#5ebbb0'},
 {id:2,type:'tree',x:6,z:-5,scale:1.05,color:'#5ebbb0'},
 {id:3,type:'box',x:-3,z:2,scale:1.2,color:'#d7a35c'},
@@ -27,11 +28,13 @@ const ground=data.ground===undefined?'meadow':data.ground;
 if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');
 const lighting=data.lighting===undefined?'day':data.lighting;
 if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');
+const avatar=data.avatar===undefined?'explorer':data.avatar;
+if(!AVATARS.includes(avatar))throw Error('Unbekannte Spielfigur.');
 const terrain=data.terrain===undefined?Array(GRID*GRID).fill(0):data.terrain;
 if(!Array.isArray(terrain)||terrain.length!==GRID*GRID||!terrain.every(h=>numeric(h,0,MAX_HEIGHT)))throw Error('Ungültiges Höhenprofil des Geländes.');
 const seen=new Set();
 for(const obj of data.objects){if(!validObject(obj)||seen.has(obj.id))throw Error('Ungültiges Objekt oder doppelte ID.');seen.add(obj.id);}
-return{version:VERSION,name:data.name,ground,lighting,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
+return{version:VERSION,name:data.name,ground,lighting,avatar,objects:data.objects.map(({id,type,x,z,scale,color})=>({id,type,x,z,scale,color})),terrain:terrain.slice()};}
 function parse(source){
 if(typeof source!=='string'||source.length>60000)throw Error('Szenendatei zu groß.');
 let data;try{data=JSON.parse(source)}catch(_){throw Error('Die Datei enthält kein gültiges JSON.');}
@@ -54,6 +57,7 @@ Object.assign(obj,values);return obj;}
 function remove(scene,id){const before=scene.objects.length;scene.objects=scene.objects.filter(o=>o.id!==id);return before!==scene.objects.length;}
 function setGround(scene,ground){if(!GROUNDS.includes(ground))throw Error('Unbekannter Landschaftstyp.');scene.ground=ground;return scene;}
 function setLighting(scene,lighting){if(!LIGHTS.includes(lighting))throw Error('Unbekannte Tageszeit.');scene.lighting=lighting;return scene;}
+function setAvatar(scene,avatar){if(!AVATARS.includes(avatar))throw Error('Unbekannte Spielfigur.');scene.avatar=avatar;return scene;}
 function duplicate(scene,id){
 const original=scene.objects.find(o=>o.id===id);
 if(!original)throw Error('Objekt nicht gefunden.');
@@ -115,16 +119,20 @@ get canRedo(){return index<snapshots.length-1;}
 function collides(x,z,objects){
 if(Math.abs(x)>WORLD||Math.abs(z)>WORLD)return true;
 return objects.some(o=>{const r=o.type==='tree'?.42*o.scale:o.type==='hill'?1.65*o.scale:o.type==='sphere'?.85*o.scale:o.type==='rock'?.76*o.scale:.72*o.scale;const dx=x-o.x,dz=z-o.z;return dx*dx+dz*dz<(r+.38)**2;});}
+function direction(keys,azimuth=0){
+const k=keys||{},dx=(+!!k.right-+!!k.left),dz=(+!!k.back-+!!k.forward);
+const len=Math.hypot(dx,dz),magnitude=len||1,ca=Math.cos(azimuth),sa=Math.sin(azimuth);
+return{x:(dx*ca+dz*sa)/magnitude,z:(-dx*sa+dz*ca)/magnitude,moving:len>0};
+}
 function move(player,keys,dt,objects,azimuth=0){
-const k=keys||{};let dx=(+!!k.right-+!!k.left),dz=(+!!k.back-+!!k.forward);
-const len=Math.hypot(dx,dz)||1;dx/=len;dz/=len;
-const ca=Math.cos(azimuth),sa=Math.sin(azimuth),step=5*clamp(dt,0,.05);
-const vx=(dx*ca+dz*sa)*step,vz=(-dx*sa+dz*ca)*step;
+const vector=direction(keys,azimuth),step=5*clamp(dt,0,.05);
+const vx=vector.x*step,vz=vector.z*step;
+const k=keys||{};
 if(!collides(player.x+vx,player.z,objects))player.x+=vx;
 if(!collides(player.x,player.z+vz,objects))player.z+=vz;
 if(k.jump&&player.y<=.001)player.vy=6;
 player.vy-=15*clamp(dt,0,.05);
 player.y=Math.max(0,player.y+player.vy*clamp(dt,0,.05));
 if(player.y===0)player.vy=0;return player;}
-return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,LIGHTS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,setLighting,duplicate,terrainHeight,sculpt,createHistory,collides,move});
+return Object.freeze({VERSION,LIMIT,WORLD,GRID,STEP,MAX_HEIGHT,KINDS,GROUNDS,LIGHTS,AVATARS,TOOLS,PALETTE,fresh,validate,parse,serialize,add,update,remove,setGround,setLighting,setAvatar,duplicate,terrainHeight,sculpt,createHistory,collides,direction,move});
 });

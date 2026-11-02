@@ -195,3 +195,39 @@ assert.equal(history.record(imported),true);
 assert.equal(history.undo().lighting,'day');
 assert.equal(history.redo().lighting,'night');
 });
+
+test('Figurenoutfits werden geprüft, exportiert und beim Rückgängig berücksichtigt',()=>{
+const scene=core.fresh(),history=core.createHistory(scene);
+assert.equal(scene.avatar,'explorer');
+assert.deepEqual(core.AVATARS,['explorer','sport','night']);
+for(const avatar of core.AVATARS){
+core.setAvatar(scene,avatar);
+assert.equal(core.parse(core.serialize(scene)).avatar,avatar);
+}
+assert.throws(()=>core.setAvatar(scene,'<script>'),/Spielfigur/);
+assert.throws(()=>core.validate({...scene,avatar:null}),/Spielfigur/);
+history.record(scene);
+assert.equal(history.undo().avatar,'explorer');
+assert.equal(history.redo().avatar,'night');
+});
+test('Alte Szenen ohne Spielfigur behalten Standard-Explorer',()=>{
+const legacy=core.fresh();delete legacy.avatar;
+const scene=core.parse(JSON.stringify(legacy));
+assert.equal(scene.avatar,'explorer');
+assert.deepEqual(scene.terrain,legacy.terrain);
+assert.equal(scene.lighting,legacy.lighting);
+});
+test('Bewegungsrichtung: diagonal normalisiert und kamerasynchron',()=>{
+const forward=core.direction({forward:true},0);
+assert.equal(forward.moving,true);
+assert(Math.abs(forward.x)<1e-10);
+assert.equal(forward.z,-1);
+const diagonal=core.direction({forward:true,right:true},Math.PI/3);
+assert(Math.abs(Math.hypot(diagonal.x,diagonal.z)-1)<1e-10);
+const still=core.direction({forward:true,back:true},0);
+assert.equal(still.moving,false);
+assert.equal(still.x,0);
+const player={x:0,y:0,z:0,vy:0};
+core.move(player,{forward:true,right:true},.05,[],Math.PI/3);
+assert(Math.abs(Math.hypot(player.x,player.z)-.25)<1e-8);
+});
