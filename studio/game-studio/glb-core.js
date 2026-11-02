@@ -176,7 +176,7 @@ if(!parts.length||!triangles)fail('Keine darstellbaren Dreiecke gefunden.');
 const center=boundsMin.map((v,i)=>(v+boundsMax[i])/2),
 radius=Math.max(.001,Math.hypot(...boundsMax.map((v,i)=>(v-boundsMin[i])/2)));
 return {parts,stats:Object.freeze({bytes:size,nodes:usedNodes,meshes:meshes.length,primitives:parts.length,triangles}),
-bounds:Object.freeze({center,radius}),warnings:Object.freeze([
+bounds:Object.freeze({center,radius,min:boundsMin,max:boundsMax}),warnings:Object.freeze([
 data.materials?.some(m=>m?.pbrMetallicRoughness?.baseColorTexture||m?.normalTexture||m?.emissiveTexture)?'Texturen werden vorerst nicht dargestellt.':'',
 'Vorschau zeigt vereinfachte Farben und flache Normalen; keine Animationen.'
 ].filter(Boolean))};
