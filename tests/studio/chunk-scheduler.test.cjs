@@ -173,3 +173,22 @@ assert.throws(()=>s.setVisible([bad]),TypeError,bad);
 assert.equal(s.snapshot().desired.length,3,'invalid IDs must not change visibility');
 s.close();
 });
+
+test('explicit retry recovers transient failure without frame-loop retry storms',async()=>{
+let calls=0;
+const s=create({maxConcurrent:1,load:()=>++calls===1?Promise.reject(Error('temporary')):Promise.resolve('recovered')});
+s.setVisible(['cell:-1:0']);await tick();await tick();
+assert.deepEqual(s.snapshot().failed,['cell:-1:0']);
+for(let i=0;i<5;i++)s.setVisible(['cell:-1:0']);
+await tick();assert.equal(calls,1);
+assert.equal(s.retryFailed('cell:-1:0'),true);
+await tick();await tick();
+assert.equal(calls,2);
+assert.equal(s.get('cell:-1:0'),'recovered');
+assert.equal(s.retryFailed('cell:-1:0'),false);
+assert.equal(s.retryFailed('0:0'),false);
+assert.throws(()=>s.retryFailed('__proto__'),TypeError);
+assert.equal(s.snapshot().desired.length,1);
+s.close();
+assert.throws(()=>s.retryFailed('cell:-1:0'),/closed/);
+});
