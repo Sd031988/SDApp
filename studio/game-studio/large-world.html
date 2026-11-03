@@ -6,18 +6,18 @@
 <meta name="theme-color" content="#0c1721">
 <meta name="description" content="SD Game-Studio Große Spielwelt: 640 × 640 Einheiten in 256 geladenen Szenenzellen.">
 <title>SD Game-Studio · Large World Engine</title>
-<link rel="stylesheet" href="./large-world.css?v=20261104-stream1">
-<script defer src="./scene-core.js?v=20261104-stream1"></script>
-<script defer src="./large-world-core.js?v=20261104-stream1"></script>
-<script defer src="./large-world-stream.js?v=20261104-stream1"></script>
-<script defer src="./large-world.js?v=20261104-stream1"></script>
+<link rel="stylesheet" href="./large-world.css?v=20261104-instancing2">
+<script defer src="./scene-core.js?v=20261104-instancing2"></script>
+<script defer src="./large-world-core.js?v=20261104-instancing2"></script>
+<script defer src="./large-world-stream.js?v=20261104-instancing2"></script>
+<script defer src="./large-world.js?v=20261104-instancing2"></script>
 </head>
 <body>
 <header class="topbar"><a href="./index.html" class="back">← LEVEL EDITOR</a><div class="identity"><strong>SD <em>GAME STUDIO</em></strong><small>ENGINE LAB / LARGE WORLD</small></div><span class="lab-tag">WORLD V3 · EXPERIMENTAL</span></header>
 <main class="editor">
 <aside class="tools">
 <div class="panel-title"><small>WORLD OUTLINER / 01</small><h1>Große Spielwelt</h1><p>Ein echtes Zellensystem statt einer kleinen Einzelszene.</p></div>
-<dl class="world-stats"><div><dt>Weltgröße</dt><dd id="worldSize">640 × 640 U</dd></div><div><dt>Szenenzellen gesamt</dt><dd id="worldCells">256</dd></div><div><dt>Objekte gesamt</dt><dd id="worldObjects">2048</dd></div><div><dt>Aktive Zellen</dt><dd id="activeCells">–</dd></div><div><dt>Objekte im aktiven Bereich</dt><dd id="activeObjects">–</dd></div><div><dt>Draw Calls pro Frame</dt><dd id="drawnObjects">–</dd></div><div><dt>Geladene Dateizellen</dt><dd id="loadedFileCells">–</dd></div></dl>
+<dl class="world-stats"><div><dt>Weltgröße</dt><dd id="worldSize">640 × 640 U</dd></div><div><dt>Szenenzellen gesamt</dt><dd id="worldCells">256</dd></div><div><dt>Objekte gesamt</dt><dd id="worldObjects">2048</dd></div><div><dt>Aktive Zellen</dt><dd id="activeCells">–</dd></div><div><dt>Objekte im aktiven Bereich</dt><dd id="activeObjects">–</dd></div><div><dt>Draw Calls pro Frame</dt><dd id="drawnObjects">–</dd></div><div><dt>Geladene Dateizellen</dt><dd id="loadedFileCells">–</dd></div><div><dt>Renderpfad</dt><dd id="rendererMode">–</dd></div></dl>
 <div class="panel-section"><h2>Editor-Werkzeuge</h2><button class="button" id="addTree">＋ Baum an Kameraposition</button><button class="button" id="addRock">＋ Felsen an Kameraposition</button><p>Neue Objekte werden der passenden Zelle zugeordnet. Änderungen bleiben bis zum Export lokal im Browser.</p></div>
 <div class="panel-section stream-section"><h2>Datei-Streaming / v3</h2>
 <p>Lokale Weltzellen bei Bedarf laden und entfernte Zellen aus dem Cache entfernen. Keine Serververbindung.</p>
