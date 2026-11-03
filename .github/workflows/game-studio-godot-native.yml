@@ -1,0 +1,38 @@
+name: SD Game-Studio – Godot Export Native Test
+on:
+  push:
+    paths:
+      - 'studio/game-studio/godot-export-*.js'
+      - 'studio/game-studio/godot-export.html'
+      - 'tests/studio/game-studio-godot-*.cjs'
+      - '.github/workflows/game-studio-godot-native.yml'
+  pull_request:
+    paths:
+      - 'studio/game-studio/godot-export-*.js'
+      - 'studio/game-studio/godot-export.html'
+      - 'tests/studio/game-studio-godot-*.cjs'
+      - '.github/workflows/game-studio-godot-native.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  godot-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download official Godot 4.7.2 Linux binary and verify SHA-256
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          echo 'cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4  /tmp/godot.zip' | sha256sum -c -
+          mkdir -p /tmp/sd-godot
+          unzip -q /tmp/godot.zip -d /tmp/sd-godot
+          chmod +x /tmp/sd-godot/Godot_v4.7.2-stable_linux.x86_64
+      - name: Native Godot editor import and runtime
+        env:
+          GODOT_BIN: /tmp/sd-godot/Godot_v4.7.2-stable_linux.x86_64
+        run: node tests/studio/game-studio-godot-native.cjs
