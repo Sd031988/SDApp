@@ -192,3 +192,29 @@ assert.equal(s.snapshot().desired.length,1);
 s.close();
 assert.throws(()=>s.retryFailed('cell:-1:0'),/closed/);
 });
+
+test('permanently hung cancelled loader stays bounded and close is nonblocking',async()=>{
+const started=[],disposed=[];
+const scheduler=create({maxConcurrent:1,maxResident:2,
+load:(key,signal)=>new Promise(()=>{started.push({key,signal});}),
+dispose:(key,value)=>disposed.push([key,value])});
+scheduler.setVisible(['cell:0:0']);
+await tick();
+assert.equal(started.length,1);
+scheduler.setVisible(['cell:1:0']);
+await tick();
+for(let i=0;i<12;i++)scheduler.setVisible(['cell:1:0']);
+await tick();
+assert.equal(started.length,1,'never oversubscribe a physically hung loader');
+assert.equal(started[0].signal.aborted,true);
+assert.deepEqual(scheduler.snapshot().desired,['cell:1:0']);
+assert.deepEqual(scheduler.snapshot().abortedPending,['cell:0:0']);
+assert.equal(scheduler.snapshot().blockedSlots,1);
+assert.equal(scheduler.snapshot().availableSlots,0);
+scheduler.close();
+assert.equal(scheduler.snapshot().closed,true);
+assert.equal(scheduler.snapshot().availableSlots,0,'closing cannot reclaim a never-settled physical load');
+assert.deepEqual(disposed,[],'no phantom resource may be disposed');
+// Intentionally do not resolve the loader: this test documents fail-closed
+// starvation until the loader cooperates; no timer or retry may bypass the cap.
+});
