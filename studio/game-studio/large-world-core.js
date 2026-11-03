@@ -128,22 +128,6 @@ if(source!==next){source.objects=source.objects.filter(o=>o.id!==id);next.object
 obj.x=x;obj.z=z;
 return obj;
 }
-function migrateV1(legacy){
-/* Deliberately only version 1. v2 GLB assets cannot be represented here safely. */
-if(!legacy||legacy.version!==1)fail('Migration akzeptiert ausschließlich v1-Szenen; v2-Modelle bleiben im alten Editor.');
-const Core=typeof module!=='undefined'&&module.exports?require('./scene-core.js'):null;
-if(!Core)fail('Migration erfordert den sicheren v1-Parser.');
-const src=Core.validate(legacy),world=generate(31,0);
-world.name=src.name;
-world.spawn={x:0,z:5};
-const replacements=new Map([['sphere','box'],['column','box'],['hill','rock'],['flower','bush']]);
-for(const obj of src.objects){
-const o=add(world,replacements.get(obj.type)||obj.type,obj.x,obj.z);
-o.scale=obj.scale;
-o.color=COLORS[0];
-}
-return world;
-}
 function runtime(world,radius=1){
 const cellMap=new Map(world.cells.map(c=>[key(c.cx,c.cz),c]));
 let prev=new Set(),entered=0,exited=0;
@@ -164,5 +148,5 @@ totalObjects:total(world),entered,exited};
 reset(){prev=new Set();entered=0;exited=0;}
 });
 }
-return Object.freeze({VERSION,CHUNK,GRID,HALF,MAX_OBJECTS,MAX_PER_CELL,MAX_FILE,KINDS,GROUNDS,COLORS,cellAt,generate,validate,serialize,parse,total,nearby,add,remove,shift,migrateV1,runtime});
+return Object.freeze({VERSION,CHUNK,GRID,HALF,MAX_OBJECTS,MAX_PER_CELL,MAX_FILE,KINDS,GROUNDS,COLORS,cellAt,generate,validate,serialize,parse,total,nearby,add,remove,shift,runtime});
 });
