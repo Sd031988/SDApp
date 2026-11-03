@@ -40,7 +40,7 @@ pending.set(key,job);
 Promise.resolve().then(()=>load(key,controller.signal)).then(value=>{
 if(closed||controller.signal.aborted||!desired.has(key))cleanup(key,value);
 else{resident.set(key,value);trim();}
-},()=>{failed.add(key);}).finally(()=>{
+},()=>{if(!closed&&!controller.signal.aborted&&desired.has(key))failed.add(key);}).finally(()=>{
 if(pending.get(key)===job)pending.delete(key);
 pump();
 });
