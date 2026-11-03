@@ -48,3 +48,16 @@ const s=create({load:()=>new Promise(r=>{resolve=r;}),dispose:(k,v)=>disposed.pu
 s.setVisible(['0:0']);await tick();s.close();resolve('gpu-resource');await tick();
 assert.deepEqual(disposed,[['0:0','gpu-resource']]);
 });
+
+test('resident resources are accessible only while loaded and visible',async()=>{
+const s=create({load:key=>Promise.resolve({key}),maxResident:1});
+assert.equal(s.get('0:0'),undefined);
+s.setVisible(['0:0']);await tick();await tick();
+assert.deepEqual(s.get('0:0'),{key:'0:0'});
+s.setVisible(['0:1']);
+assert.equal(s.get('0:0'),undefined);
+await tick();await tick();
+assert.deepEqual(s.get('0:1'),{key:'0:1'});
+s.close();
+assert.equal(s.get('0:1'),undefined);
+});
