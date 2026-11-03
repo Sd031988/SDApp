@@ -205,3 +205,12 @@ body.viewport-focus .viewport-tools{top:42px}
 .large-world-launch{display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;padding:9px 11px;background:#214139;border:1px solid #457d6a;color:#dcfff2;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.02em}
 .large-world-launch:hover{background:#30594a;border-color:#89ddb9}
 @media(max-width:750px){.large-world-launch{font-size:10px;padding:8px 7px;letter-spacing:0}}
+
+/* Independent Game-Studio Academy: link only; editor logic untouched. */
+.academy-entry{display:flex;align-items:center;gap:11px;padding:11px;margin:0 12px 14px;text-decoration:none;background:#233b35;border:1px solid #54846b;border-radius:8px;color:#d9fff0;transition:border-color .15s,background .15s}
+.academy-entry:hover,.academy-entry:focus-visible{background:#345546;border-color:#a5e7ba}
+.academy-entry .academy-icon{display:grid;place-items:center;width:30px;height:30px;flex-shrink:0;border-radius:6px;background:#a6ebc8;color:#173c31;font-size:18px}
+.academy-entry span:nth-child(2){flex:1;min-width:0}
+.academy-entry strong{display:block;font-size:12px;line-height:1.35}
+.academy-entry small{display:block;font-size:10px;color:#a8d0bb}
+.academy-entry>span:last-child{font-size:17px}
