@@ -6,7 +6,7 @@
 const World=window.SDLargeWorld,Stream=window.SDWorldStream,doc=document,$=id=>doc.getElementById(id),canvas=$('worldCanvas');
 if(!World||!canvas)return;
 let world=World.generate(31,8),runtime=World.runtime(world,1),fileLoader=null,projectEpoch=0,gl=null,program=null,locations=null;
-let cube=null,cone=null,camera={x:0,z:0,azimuth:.55,elev:.55,distance:37},keys=new Set(),pointer=null;
+let cube=null,cone=null,instancing=null,instanceBuffers=null,cubeBatch=[],coneBatch=[],camera={x:0,z:0,azimuth:.55,elev:.55,distance:37},keys=new Set(),pointer=null;
 let lastFrame=0,lastStats=0,lastDraw=0,hasChanges=false;
 const tintHex=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255];
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
@@ -53,20 +53,36 @@ return mesh(tris);
 function setup(){
 gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
 if(!gl)throw Error('WebGL ist für die Großwelt nicht verfügbar.');
-const vertex=shader(gl.VERTEX_SHADER,'attribute vec3 position;attribute vec3 normal;uniform mat4 proj,view;uniform vec3 translation,scale;varying vec3 lit;void main(){vec3 p=position*scale+translation;lit=normalize(normal/max(scale,.0001));gl_Position=proj*view*vec4(p,1.);}');
-const fragment=shader(gl.FRAGMENT_SHADER,'precision mediump float;uniform vec3 color;varying vec3 lit;void main(){float a=.39+.61*max(dot(normalize(lit),normalize(vec3(.4,.87,.5))),0.);gl_FragColor=vec4(color*a,1.);}');
+const vertex=shader(gl.VERTEX_SHADER,'attribute vec3 position,normal,instancePosition,instanceScale,instanceTint;uniform mat4 proj,view;uniform vec3 translation,scale,color;uniform float useInstancing;varying vec3 lit,tint;void main(){vec3 s=useInstancing>.5?instanceScale:scale;vec3 p=useInstancing>.5?instancePosition:translation;vec3 local=position*s+p;lit=normalize(normal/max(s,.0001));tint=useInstancing>.5?instanceTint:color;gl_Position=proj*view*vec4(local,1.);}');
+const fragment=shader(gl.FRAGMENT_SHADER,'precision mediump float;varying vec3 lit,tint;void main(){float a=.39+.61*max(dot(normalize(lit),normalize(vec3(.4,.87,.5))),0.);gl_FragColor=vec4(tint*a,1.);}');
 program=gl.createProgram();gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
 gl.deleteShader(vertex);gl.deleteShader(fragment);
-if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL-Programm konnte nicht verknüpft werden.');
+if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL-Programm konnte nicht verknüpft werden: '+(gl.getProgramInfoLog(program)||'Unbekannte Ursache'));
 locations={pos:gl.getAttribLocation(program,'position'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),
 view:gl.getUniformLocation(program,'view'),translation:gl.getUniformLocation(program,'translation'),
-scale:gl.getUniformLocation(program,'scale'),color:gl.getUniformLocation(program,'color')};
+scale:gl.getUniformLocation(program,'scale'),color:gl.getUniformLocation(program,'color'),
+useInstancing:gl.getUniformLocation(program,'useInstancing'),
+instancePosition:gl.getAttribLocation(program,'instancePosition'),
+instanceScale:gl.getAttribLocation(program,'instanceScale'),
+instanceTint:gl.getAttribLocation(program,'instanceTint')};
 gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.enableVertexAttribArray(locations.pos);gl.enableVertexAttribArray(locations.normal);
 cube=makeCube();cone=makeCone();
+instancing=gl.getExtension('ANGLE_instanced_arrays');
+if(instancing){
+instanceBuffers=[gl.createBuffer(),gl.createBuffer()];
+if(instanceBuffers.some(b=>!b)){instancing=null;for(const b of instanceBuffers)if(b)gl.deleteBuffer(b);instanceBuffers=null;}
+}
+doc.body.dataset.instancing=instancing?'gpu':'fallback';
+$('rendererMode').textContent=instancing?'GPU / ANGLE':'Standard';
+gl.uniform1f(locations.useInstancing,0);
 doc.body.dataset.ready='true';
 setStatus('Großwelt bereit · 256 Szenenzellen · 2.048 Objekte in 640 × 640 Einheiten.');
 }
 function draw(shape,color,x,y,z,sx,sy,sz){
+if(instancing){
+const batch=shape===cube?cubeBatch:coneBatch;
+batch.push(x,y,z,sx,sy,sz,...tintHex(color));return;
+}
 gl.bindBuffer(gl.ARRAY_BUFFER,shape.buffer);
 gl.vertexAttribPointer(locations.pos,3,gl.FLOAT,false,24,0);
 gl.vertexAttribPointer(locations.normal,3,gl.FLOAT,false,24,12);
@@ -75,6 +91,31 @@ gl.uniform3fv(locations.scale,[sx,sy,sz]);
 gl.uniform3fv(locations.color,tintHex(color));
 gl.drawArrays(gl.TRIANGLES,0,shape.count);
 lastDraw++;
+}
+function flushBatches(){
+if(!instancing)return;
+gl.uniform1f(locations.useInstancing,1);
+for(const [i,shape,group] of [[0,cube,cubeBatch],[1,cone,coneBatch]]){
+if(!group.length)continue;
+gl.bindBuffer(gl.ARRAY_BUFFER,shape.buffer);
+gl.vertexAttribPointer(locations.pos,3,gl.FLOAT,false,24,0);
+gl.vertexAttribPointer(locations.normal,3,gl.FLOAT,false,24,12);
+gl.bindBuffer(gl.ARRAY_BUFFER,instanceBuffers[i]);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(group),gl.DYNAMIC_DRAW);
+for(const [location,offset] of [[locations.instancePosition,0],[locations.instanceScale,12],[locations.instanceTint,24]]){
+gl.enableVertexAttribArray(location);
+gl.vertexAttribPointer(location,3,gl.FLOAT,false,36,offset);
+instancing.vertexAttribDivisorANGLE(location,1);
+}
+instancing.drawArraysInstancedANGLE(gl.TRIANGLES,0,shape.count,group.length/9);
+lastDraw++;
+for(const location of [locations.instancePosition,locations.instanceScale,locations.instanceTint]){
+instancing.vertexAttribDivisorANGLE(location,0);
+gl.disableVertexAttribArray(location);
+}
+}
+gl.uniform1f(locations.useInstancing,0);
+cubeBatch=[];coneBatch=[];
 }
 function drawObject(o,far){
 const {x,z,scale:s,type}=o;
@@ -106,7 +147,7 @@ const eye=[x+distance*Math.sin(azimuth)*Math.cos(elev),distance*Math.sin(elev)+1
 gl.useProgram(program);
 gl.uniformMatrix4fv(locations.view,false,new Float32Array(look(eye,[x,0,z])));
 gl.uniformMatrix4fv(locations.proj,false,new Float32Array(perspective(.9,w/h,.1,210)));
-const selection=fileLoader?fileLoader.update(x,z,1):runtime.query(x,z);lastDraw=0;
+const selection=fileLoader?fileLoader.update(x,z,1):runtime.query(x,z);lastDraw=0;cubeBatch=[];coneBatch=[];
 for(const cell of selection.cells){
 const centerX=-World.HALF+cell.cx*World.CHUNK+World.CHUNK/2,
 centerZ=-World.HALF+cell.cz*World.CHUNK+World.CHUNK/2;
@@ -118,6 +159,7 @@ const d=Math.hypot(object.x-x,object.z-z);
 if(d>95)continue;
 drawObject(object,d>47);
 }
+flushBatches();
 if(now-lastStats>250){updateStats(selection);lastStats=now;}
 }
 function movement(dt){

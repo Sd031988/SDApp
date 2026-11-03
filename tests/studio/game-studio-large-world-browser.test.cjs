@@ -33,6 +33,10 @@ assert.equal(await page.locator('#worldObjects').innerText(),'2.048');
 assert.equal(await page.locator('#activeObjects').innerText(),'72');
 await page.waitForFunction(()=>Number(document.getElementById('drawnObjects').textContent)>0,undefined,{timeout:15000});
 const calls=Number(await page.locator('#drawnObjects').innerText());
+const gpuPath=await page.locator('body').getAttribute('data-instancing');
+assert(['gpu','fallback'].includes(gpuPath),'Renderer muss gewählten GPU-/Fallback-Pfad melden');
+if(gpuPath==='gpu')assert(calls<=2,'GPU-Instancing sollte nur einen Call pro Meshform benötigen');
+assert.match(await page.locator('#rendererMode').innerText(),gpuPath==='gpu'?/GPU/:/Standard/);
 assert(calls>0&&calls<800,'Chunk Culling muss einen Bruchteil der 2.048 Objektinstanzen zeichnen');
 const coords0=await page.locator('#cameraCoordinates').innerText();
 const shots=path.join(root,'game-studio-large-world-artifacts');
@@ -97,6 +101,21 @@ await page.screenshot({path:path.join(shots,'large-world-mobile.png'),fullPage:f
 await page.locator('#fullscreenWorld').click();
 await page.locator('#worldCanvas').evaluate(el=>el.getContext('webgl')!==null).then(value=>assert.equal(value,true));
 assert.deepEqual(errors,[]);
+// Verify safe WebGL1 fallback when the GPU-instancing extension is unavailable.
+const fallback=await browser.newPage({viewport:{width:900,height:650}});
+await fallback.addInitScript(()=>{
+const original=WebGLRenderingContext.prototype.getExtension;
+WebGLRenderingContext.prototype.getExtension=function(name){
+if(name==='ANGLE_instanced_arrays')return null;
+return original.call(this,name);
+};
+});
+await fallback.goto('http://127.0.0.1:'+server.address().port+'/studio/game-studio/large-world.html',{waitUntil:'load'});
+await fallback.waitForFunction(()=>['true','error'].includes(document.body.dataset.ready),undefined,{timeout:20000});
+assert.equal(await fallback.locator('body').getAttribute('data-ready'),'true');
+assert.equal(await fallback.locator('body').getAttribute('data-instancing'),'fallback');
+await fallback.waitForFunction(()=>Number(document.getElementById('drawnObjects').textContent)>10,undefined,{timeout:15000});
+await fallback.close();
 console.log('Large World v3 browser: 256 chunks, 2048 instances, selective rendering, save/import and mobile focus passed.');
 }catch(error){console.error(error);process.exitCode=1;}
 finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}

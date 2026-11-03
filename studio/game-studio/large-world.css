@@ -7,3 +7,6 @@
 body[data-stream-mode="files"] .lab-tag{color:#f4e5b3;border-color:#978859;background:#342f25}
 body[data-stream-mode="files"] #streamNotice{color:#e7d6ac}
 @media(max-width:750px){.stream-section{padding-bottom:20px}}
+
+/* Report actual GPU instancing support, not assumed AAA capacity. */
+#rendererMode{font-size:12px;letter-spacing:0;color:#c6e9de}
