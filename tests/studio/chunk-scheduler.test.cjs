@@ -94,3 +94,22 @@ tasks.find(t=>t.key==='1:1').resolve('ok');await tick();await tick();
 assert.equal(s.get('1:1'),'ok');
 s.close();
 });
+
+test('empty loader results fail closed without caching phantom chunks or spinning',async()=>{
+for(const empty of [undefined,null]){
+let calls=0;
+const s=create({load:()=>{calls++;return Promise.resolve(empty);}});
+s.setVisible(['0:0']);
+await tick();await tick();
+assert.equal(s.get('0:0'),undefined);
+assert.deepEqual(s.snapshot().resident,[]);
+assert.deepEqual(s.snapshot().failed,['0:0']);
+assert.equal(calls,1);
+await tick();
+assert.equal(calls,1,'empty result must not cause infinite retry');
+s.setVisible(['0:0']);
+await tick();await tick();
+assert.equal(calls,2,'explicit visibility update may retry');
+s.close();
+}
+});
