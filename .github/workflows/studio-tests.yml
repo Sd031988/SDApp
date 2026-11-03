@@ -42,6 +42,8 @@ jobs:
           node --check studio/game-studio/scene-core.js
           node --check studio/game-studio/game.js
           node --check studio/game-studio/large-world-core.js
+          node --check studio/game-studio/large-world-stream.js
+          node --check studio/game-studio/tools/pack-world.cjs
           node --check studio/game-studio/large-world.js
           node --check studio/game-studio/workspace-layout.js
           node --check studio/game-studio/glb-core.js
@@ -58,7 +60,7 @@ jobs:
           python3 studio/chatgpt-windows/sd_bridge_windows.py --diagnose
           python3 -m unittest discover -s tests/studio -p 'test_chatgpt_windows.py' -v
       - name: Projektanalyse und Export prüfen
-        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/ki-repair-assistant.test.cjs tests/studio/ki-test-loop.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs tests/studio/devtools.test.cjs tests/studio/image-assets.test.cjs tests/studio/game-studio.test.cjs tests/studio/game-studio-large-world.test.cjs tests/studio/game-studio-workspace.test.cjs tests/studio/glb-core.test.cjs tests/studio/game-studio-project-assets.test.cjs tests/studio/game-studio-academy.test.cjs tests/studio/game-studio-academy-projects.test.cjs
+        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/ki-repair-assistant.test.cjs tests/studio/ki-test-loop.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs tests/studio/devtools.test.cjs tests/studio/image-assets.test.cjs tests/studio/game-studio.test.cjs tests/studio/game-studio-large-world.test.cjs tests/studio/game-studio-stream.test.cjs tests/studio/game-studio-workspace.test.cjs tests/studio/glb-core.test.cjs tests/studio/game-studio-project-assets.test.cjs tests/studio/game-studio-academy.test.cjs tests/studio/game-studio-academy-projects.test.cjs
 
   browser-smoke:
     runs-on: ubuntu-latest
