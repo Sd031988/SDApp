@@ -32,7 +32,7 @@ function einstSetzen(k, v) { const e = einst(); e[k] = v; store.set('sdStudioEin
 function slug(t) { return String(t || '').trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'projekt'; }
 function sicherPfad(p) { p = String(p || '').replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/{2,}/g, '/').trim(); if (!p || p.split('/').some(x => x === '..' || x === '.')) return null; return p; }
 function istBinaer(inhalt) { return typeof inhalt === 'string' && /^data:(?!text\/)[^,]*;base64,/.test(inhalt); }
-function icon(p) { return /\.html?$/i.test(p) ? '🌐' : /\.(css|scss|less)$/i.test(p) ? '🎨' : /\.py$/i.test(p) ? '🐍' : /\.(m?js|jsx)$/i.test(p) ? '🟨' : /\.(ts|tsx)$/i.test(p) ? '🔷' : /\.json$/i.test(p) ? '🧩' : /\.(md|txt)$/i.test(p) ? '📄' : /\.(png|jpe?g|gif|webp|svg|ico|avif)$/i.test(p) ? '🖼' : /\.(c|cc|cpp|h|hpp)$/i.test(p) ? '⚙️' : /\.java$/i.test(p) ? '☕' : /\.cs$/i.test(p) ? '🟪' : /\.rs$/i.test(p) ? '🦀' : /\.go$/i.test(p) ? '🐹' : /\.(mp3|wav|ogg)$/i.test(p) ? '🎵' : '📃'; }
+function icon(p) { return /\.html?$/i.test(p) ? '🌐' : /\.(css|scss|less)$/i.test(p) ? '🎨' : /\.py$/i.test(p) ? '🐍' : /\.(m?js|jsx)$/i.test(p) ? '🟨' : /\.(ts|tsx)$/i.test(p) ? '🔷' : /\.json$/i.test(p) ? '🧩' : /\.(md|txt)$/i.test(p) ? '📄' : /\.(png|jpe?g|gif|webp|svg|ico|avif|jxl)$/i.test(p) ? '🖼' : /\.(c|cc|cpp|h|hpp)$/i.test(p) ? '⚙️' : /\.java$/i.test(p) ? '☕' : /\.cs$/i.test(p) ? '🟪' : /\.rs$/i.test(p) ? '🦀' : /\.go$/i.test(p) ? '🐹' : /\.(mp3|wav|ogg)$/i.test(p) ? '🎵' : '📃'; }
 function modus(p) { const e = (p.split('.').pop() || '').toLowerCase();
   return { html: 'htmlmixed', htm: 'htmlmixed', svg: 'xml', xml: 'xml', vue: 'htmlmixed', css: 'css', scss: 'text/x-scss', less: 'text/x-less', js: 'javascript', mjs: 'javascript', jsx: 'jsx', json: { name: 'javascript', json: true },
     ts: 'text/typescript', tsx: 'text/typescript-jsx', py: 'python', c: 'text/x-csrc', h: 'text/x-csrc', cc: 'text/x-c++src', cpp: 'text/x-c++src', hpp: 'text/x-c++src', cs: 'text/x-csharp', java: 'text/x-java', kt: 'text/x-kotlin',
@@ -353,9 +353,28 @@ function dateiOeffnen(pfad, zeile) {
   if (!S.tabs.includes(pfad)) S.tabs.push(pfad);
   S.aktiv = pfad; $('leer').hidden = true;
   const inhalt = S.p.dateien[pfad];
-  if (istBinaer(inhalt) || /\.(png|jpe?g|gif|webp|ico|avif)$/i.test(pfad)) {
+  if (istBinaer(inhalt) || /\.(png|jpe?g|gif|webp|ico|avif|jxl)$/i.test(pfad)) {
     if (S.cm) S.cm.getWrapperElement().style.display = 'none'; if (S.ta) S.ta.style.display = 'none';
-    const b = $('bildAnsicht'); b.hidden = false; b.innerHTML = '<img alt=""><p></p>'; b.querySelector('img').src = inhalt; b.querySelector('p').textContent = pfad + ' · ' + Math.round(inhalt.length * 0.75 / 1024) + ' KB';
+    const b = $('bildAnsicht'); b.hidden = false; b.innerHTML = '<img alt=""><p></p>';
+    const bild = b.querySelector('img'), hinweis = b.querySelector('p');
+    hinweis.textContent = pfad + ' · ' + Math.round(inhalt.length * 0.75 / 1024) + ' KB';
+    if (/\.jxl$/i.test(pfad)) {
+      // Browser ohne JPEG-XL-Decoding bekommen eine vorhandene Projekt-Alternative.
+      const ersatz = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
+        .map(ext => pfad.replace(/\.jxl$/i, ext))
+        .find(name => istBinaer(S.p.dateien[name]));
+      bild.onerror = () => {
+        bild.onerror = null;
+        if (ersatz) {
+          bild.src = S.p.dateien[ersatz];
+          hinweis.textContent += ' · Ersatzbild: ' + ersatz;
+        } else {
+          bild.hidden = true;
+          hinweis.textContent += ' · JPEG XL konnte hier nicht angezeigt werden; füge JPEG/PNG als Ersatz hinzu.';
+        }
+      };
+    }
+    bild.src = inhalt;
   } else {
     $('bildAnsicht').hidden = true;
     if (S.cm) { S.cm.getWrapperElement().style.display = '';
@@ -509,7 +528,13 @@ async function hochladen(dateien) {
   if (istWebProjekt()) vorschau(true);
 }
 function dateiLesen(f) { return new Promise(ok => { const r = new FileReader(); const text = /^text\/|json|javascript|xml|svg/.test(f.type) || /\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|py|java|cs|c|cc|cpp|h|hpp|rs|go|kt|php|rb|sql|yml|yaml|toml|svg|xml|csv|env|gitignore|vue|svelte)$/i.test(f.name);
-  r.onload = () => ok(r.result); if (text) r.readAsText(f); else r.readAsDataURL(f); }); }
+  r.onload = () => {
+    const value = r.result;
+    // Unbekannte Browser-Dateitypen haben ggf. application/octet-stream statt image/jxl.
+    ok(!text && /\.jxl$/i.test(f.name) && typeof value === 'string'
+      ? value.replace(/^data:[^,]*;base64,/, 'data:image/jxl;base64,') : value);
+  };
+  if (text) r.readAsText(f); else r.readAsDataURL(f); }); }
 
 /* ---------------- ZIP (ohne Bibliothek) ---------------- */
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
@@ -558,7 +583,7 @@ async function zipEinlesen(f, ziel = S.p.dateien) {
     n++; }
   return n;
 }
-function mimeVon(p) { const e = (p.split('.').pop() || '').toLowerCase(); return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', pdf: 'application/pdf' }[e] || 'application/octet-stream'; }
+function mimeVon(p) { const e = (p.split('.').pop() || '').toLowerCase(); return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', jxl: 'image/jxl', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', pdf: 'application/pdf' }[e] || 'application/octet-stream'; }
 function herunterladen(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 async function zipExport() { if (!S.p) return; await speichernJetzt(); herunterladen(zipBauen(S.p.dateien), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
 
@@ -929,7 +954,7 @@ function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung
     }
     return '<script'+a+b+'>/* '+p+' */\n'+d[p].replace(/<\/script/gi,'<\\/script')+'\n//# sourceURL=sd-studio-preview/'+encodeURIComponent(p)+'\n<\/script>';
   });
-  h = h.replace(/(src|href)=["']([^"']+\.(?:png|jpe?g|gif|webp|svg|ico|avif))["']/gi, (m, attr, ref) => { const p = relAufloesen(start, ref); if (!p || d[p] == null) return m; const v = d[p]; return attr + '="' + (istBinaer(v) ? v : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(v)) + '"'; });
+  h = h.replace(/(src|href)=["']([^"']+\.(?:png|jpe?g|gif|webp|svg|ico|avif|jxl))["']/gi, (m, attr, ref) => { const p = relAufloesen(start, ref); if (!p || d[p] == null) return m; const v = d[p]; return attr + '="' + (istBinaer(v) ? v : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(v)) + '"'; });
   const bridge = sichereVorschauBruecke();
   return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
 }
@@ -1176,7 +1201,7 @@ function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['🎓 Teilnahmezertifikat erstellen', '', lernZertifikat], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['🔎 JSON-Syntax prüfen', '', editorDiagnoseAnzeigen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
-  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen],
+  ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen], ['🖼 JPEG XL Bild-Assets', '', () => window.open('./jpeg-xl.html', '_blank', 'noopener')],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['☁ Cloud-Backup als ZIP', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
