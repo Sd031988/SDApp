@@ -93,7 +93,7 @@ const projects=[
 ];
 const storageKey='sd-game-academy-capstones-v1';
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){try{const v=JSON.parse(localStorage.getItem(storageKey)||'{}');return v&&typeof v==='object'&&v.projects&&typeof v.projects==='object'?v:{projects:{}};}catch(_){return{projects:{}};}}
 let state=load(),active=projects.find(x=>x.id===decodeURIComponent(location.hash.slice(1)))?.id||projects[0].id;
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(state));}catch(_){/* Private mode: page remains usable */}}
