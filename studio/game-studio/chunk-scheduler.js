@@ -53,7 +53,7 @@ for(const job of pending.values())job.controller.abort();
 for(const [key,value] of resident)cleanup(key,value);
 resident.clear();
 }
-return Object.freeze({setVisible,close,snapshot:()=>Object.freeze({
+return Object.freeze({setVisible,close,get:(key)=>resident.get(key),snapshot:()=>Object.freeze({
 resident:[...resident.keys()],pending:[...pending.keys()],desired:[...desired],generation,closed
 })});
 }
