@@ -117,3 +117,23 @@ files.delete(manifest.cells[0].file);
 assert.throws(()=>Stream.createLoader(manifest,files),/fehlt/);
 assert.throws(()=>Stream.parseManifest('x'.repeat(Stream.MAX_MANIFEST+1)),/zu groß/);
 });
+
+test('Offline-Packer schreibt echte Dateien und überschreibt niemals vorhandene Projekte',()=>{
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'sd-game-stream-'));
+try{
+const input=path.join(root,'world-v3.json'),output=path.join(root,'chunks');
+const world=World.generate(31,1);
+fs.writeFileSync(input,World.serialize(world));
+const result=Pack.writePackage(input,output);
+assert.equal(result.files,256);
+assert.equal(result.objects,256);
+const manifest=Stream.parseManifest(fs.readFileSync(path.join(output,'manifest.json'),'utf8'));
+assert.equal(manifest.cells.length,256);
+const single=manifest.cells[0];
+assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(output,single.file))).digest('hex'),single.sha256);
+const before=fs.readFileSync(path.join(output,'manifest.json'),'utf8');
+assert.throws(()=>Pack.writePackage(input,output),/EEXIST/,'Bereits existierende Ordner dürfen niemals überschrieben werden.');
+assert.equal(fs.readFileSync(path.join(output,'manifest.json'),'utf8'),before);
+}finally{fs.rmSync(root,{recursive:true,force:true});}
+});
