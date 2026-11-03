@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b24">
+<meta name="description" content="Exportiere eine SD Game-Studio-Spielwelt als offline nutzbares Godot-4-Projekt.">
+<title>Godot-4-Export · SD Game-Studio</title>
+<link rel="icon" href="../../icon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:dark;--bg:#101923;--panel:#192731;--ink:#e6f3f0;--muted:#a5b6ba;--mint:#90e3c6;--border:#344652}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:14px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:inherit}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:3px solid var(--mint);outline-offset:3px}
+header{border-bottom:1px solid var(--border);background:#17232c}header>div{max-width:1040px;margin:auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;gap:15px}.logo{text-decoration:none;font-size:17px;font-weight:800;letter-spacing:-.035em}.logo b{color:var(--mint)}.back{text-decoration:none;border:1px solid var(--border);padding:7px 12px;border-radius:7px;font-size:12px}
+main{max-width:1040px;margin:auto;padding:52px 24px 90px}.eyebrow{font-size:11px;letter-spacing:.17em;font-weight:750;color:var(--mint);margin:0 0 8px}h1{font-size:clamp(30px,5vw,52px);letter-spacing:-.05em;line-height:1.1;margin:0 0 18px}p.lead{max-width:730px;color:#bccbcf;font-size:16px;margin:0 0 36px}
+.grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(240px,.7fr);gap:18px}.card{border:1px solid var(--border);border-radius:13px;background:var(--panel);padding:28px}.card h2{font-size:18px;letter-spacing:-.02em;margin:0 0 8px}.card p{color:var(--muted);margin:0 0 20px}.controls{display:flex;flex-wrap:wrap;gap:9px}.btn{border:1px solid #526a73;color:var(--ink);background:#28404a;padding:12px 17px;font-weight:700;border-radius:8px}.btn:hover{background:#33535d}.btn.primary{background:var(--mint);border-color:var(--mint);color:#12332e}.btn.primary:hover{background:#b1f1db}.btn:disabled{cursor:not-allowed;opacity:.45}
+#status{font-size:12px;color:#b5d7c9;margin:15px 0 0;min-height:26px}#status[data-kind=error]{color:#ffbdad}
+#details{border-top:1px solid var(--border);margin-top:20px;padding-top:15px}#details[hidden]{display:none}#sceneTitle{font-size:16px;font-weight:750;display:block;margin-bottom:10px}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fact{background:#10212b;padding:12px;border-radius:6px}.fact strong{font-size:20px;display:block}.fact span{color:var(--muted);font-size:11px}#sceneVersion{color:var(--muted);font-size:11px;display:block;margin-top:10px}
+ol{padding-left:18px;margin:6px 0;color:#c4d3d5}li{margin:9px 0}.notice{border-top:1px solid var(--border);padding-top:20px;margin-top:24px;color:var(--muted);font-size:12px;line-height:1.8}.notice strong{color:#e8f2f0}.pill{color:var(--mint);font-size:10px;letter-spacing:.1em;font-weight:800}
+@media(max-width:740px){main{padding:36px 14px 55px}header>div{padding:14px}.grid{grid-template-columns:1fr}.card{padding:22px}.btn{flex:1}.facts{gap:5px}.fact{padding:10px}.logo{font-size:15px}}
+</style>
+<script defer src="./scene-core.js"></script>
+<script defer src="./glb-core.js"></script>
+<script defer src="./project-assets.js"></script>
+<script defer src="./godot-export-core.js"></script>
+<script defer src="./godot-export-ui.js"></script>
+</head>
+<body>
+<header><div><a class="logo" href="./index.html">SD <b>GAME STUDIO</b> <span style="font-weight:400;color:#b4c3c9">/ Godot</span></a><a href="./index.html" class="back">← Zum 3D-Editor</a></div></header>
+<main>
+<p class="eyebrow">NATIVE ENGINE BRIDGE · EXPERIMENTELL</p>
+<h1>Von deiner 3D-Welt<br>zu Godot 4.</h1>
+<p class="lead">Exportiere deine im SD Game-Studio entworfene Szene als echtes Godot-Projekt. Alles wird lokal verarbeitet – ohne Anmeldung, Server-Upload oder Änderung deiner ursprünglichen Projekte.</p>
+<div class="grid">
+<section class="card">
+<p class="pill">01 / PROJEKT WÄHLEN</p>
+<h2>SD-Szene importieren</h2>
+<p>Speichere zuerst im SD Game-Studio deine Welt als JSON. Wähle die Datei hier aus oder probiere unsere Beispielwelt.</p>
+<input type="file" id="file" accept=".json,application/json" hidden aria-label="SD-Spieldatei auswählen">
+<div class="controls"><button type="button" class="btn" id="fileButton">↑ JSON-Szene auswählen</button><button type="button" class="btn" id="demo">Beispielwelt verwenden</button></div>
+<div id="details" hidden>
+<strong id="sceneTitle"></strong>
+<div class="facts">
+<div class="fact"><strong id="sceneObjects">0</strong><span>Objekte</span></div>
+<div class="fact"><strong id="sceneModels">0</strong><span>GLB-Assets</span></div>
+<div class="fact"><strong id="sceneTerrain">—</strong><span>Landschaft</span></div>
+</div>
+<small id="sceneVersion"></small>
+</div>
+<div style="border-top:1px solid var(--border);padding-top:18px;margin-top:23px"><p class="pill">02 / GODOT 4 PROJEKT</p><button type="button" class="btn primary" id="download" disabled>↓ Godot-Projekt als ZIP herunterladen</button></div>
+<p id="status" role="status" aria-live="polite">Wähle eine Szene oder starte mit der Beispielwelt.</p>
+</section>
+<aside class="card">
+<p class="pill">03 / AM PC ÖFFNEN</p>
+<h2>So geht es weiter</h2>
+<ol>
+<li>ZIP entpacken.</li>
+<li><a href="https://godotengine.org/download/" target="_blank" rel="noopener noreferrer">Godot 4 installieren</a>.</li>
+<li>In Godot „Importieren“ wählen und die Datei <code>project.godot</code> öffnen.</li>
+<li>Nach dem Asset-Import die Szene starten (F6/F5).</li>
+</ol>
+<p style="margin-top:18px;font-size:12px">Die exportierte Vorlage besitzt Gelände, Kollisionen, einfache Objekte, GLB-Instanzen und eine per WASD/Pfeilen steuerbare Spielfigur mit Sprungfunktion.</p>
+</aside>
+</div>
+<div class="notice">
+<strong>Grenzen:</strong> Unterstützt SD-Szenen der Versionen 1 und 2. Die Großwelt v3, komplexe Charakteranimationen, Texturen-/Materialtreue und Multiplayer sind noch nicht Teil des Exports. GLB-Dateien werden eingebunden, erhalten aber keine automatisch erzeugte Kollision. Für das Spielen und Bearbeiten des Godot-Projekts wird die Desktop-Engine benötigt.
+</div>
+</main>
+</body></html>
