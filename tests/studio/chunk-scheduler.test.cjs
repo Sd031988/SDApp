@@ -143,3 +143,20 @@ await tick();await tick();
 assert.equal(calls,0);
 assert.deepEqual(s.snapshot().resident,[]);
 });
+
+test('aborted nonsettling loader reports blocked capacity without oversubscribing',async()=>{
+const calls=[];
+const s=create({maxConcurrent:1,maxResident:2,load:(key,signal)=>new Promise(resolve=>calls.push({key,signal,resolve}))});
+s.setVisible(['0:0']);await tick();
+s.setVisible(['0:1']);await tick();
+assert.equal(calls.length,1,'do not start a second physical load while the first is hung');
+assert.equal(calls[0].signal.aborted,true);
+assert.equal(s.snapshot().blockedSlots,1);
+assert.equal(s.snapshot().availableSlots,0);
+calls[0].resolve('stale');await tick();await tick();
+assert.equal(s.snapshot().blockedSlots,0);
+assert.equal(calls.length,2,'capacity is restored after cancelled promise settles');
+calls[1].resolve('active');await tick();await tick();
+assert.equal(s.get('0:1'),'active');
+s.close();
+});
