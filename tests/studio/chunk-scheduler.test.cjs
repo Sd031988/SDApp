@@ -75,3 +75,22 @@ tasks[1].resolve('loaded');await tick();await tick();
 assert.equal(s.get('0:0'),'loaded');
 s.close();
 });
+
+test('snapshot exposes failed and aborted in-flight cells without changing scheduling',async()=>{
+const tasks=[];
+const s=create({maxConcurrent:2,load:(key,signal)=>new Promise((resolve,reject)=>tasks.push({key,signal,resolve,reject}))});
+s.setVisible(['0:0','0:1']);await tick();
+s.setVisible(['0:1','1:1']);
+assert.deepEqual(s.snapshot().abortedPending,['0:0']);
+assert.deepEqual(s.snapshot().failed,[]);
+assert.deepEqual(s.snapshot().pending,['0:0','0:1']);
+tasks.find(t=>t.key==='0:0').reject(Error('aborted'));
+tasks.find(t=>t.key==='0:1').reject(Error('missing'));
+await tick();await tick();
+assert.deepEqual(s.snapshot().abortedPending,[]);
+assert.deepEqual(s.snapshot().failed,['0:1']);
+assert.equal(tasks.filter(t=>t.key==='1:1').length,1);
+tasks.find(t=>t.key==='1:1').resolve('ok');await tick();await tick();
+assert.equal(s.get('1:1'),'ok');
+s.close();
+});
