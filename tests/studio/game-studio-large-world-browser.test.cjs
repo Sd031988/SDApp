@@ -8,6 +8,7 @@ const staticFiles=new Map([
 ['/studio/game-studio/large-world.html','text/html'],
 ['/studio/game-studio/large-world.js','application/javascript'],
 ['/studio/game-studio/large-world-stream.js','application/javascript'],
+['/studio/game-studio/large-world-terrain.js','application/javascript'],
 ['/studio/game-studio/large-world-core.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/large-world.css','text/css']
@@ -32,10 +33,11 @@ assert.equal(await page.locator('#worldCells').innerText(),'256');
 assert.equal(await page.locator('#worldObjects').innerText(),'2.048');
 assert.equal(await page.locator('#activeObjects').innerText(),'72');
 await page.waitForFunction(()=>Number(document.getElementById('drawnObjects').textContent)>0,undefined,{timeout:15000});
+assert.equal(await page.locator('#terrainCells').innerText(),'9','GPU-Gelände muss nur aktive Kacheln enthalten');
 const calls=Number(await page.locator('#drawnObjects').innerText());
 const gpuPath=await page.locator('body').getAttribute('data-instancing');
 assert(['gpu','fallback'].includes(gpuPath),'Renderer muss gewählten GPU-/Fallback-Pfad melden');
-if(gpuPath==='gpu')assert(calls<=2,'GPU-Instancing sollte nur einen Call pro Meshform benötigen');
+if(gpuPath==='gpu')assert(calls<=12,'GPU-Instancing sollte höchstens zwei Objekt-Draws und neun Terrain-Kacheln benötigen');
 assert.match(await page.locator('#rendererMode').innerText(),gpuPath==='gpu'?/GPU/:/Standard/);
 assert(calls>0&&calls<800,'Chunk Culling muss einen Bruchteil der 2.048 Objektinstanzen zeichnen');
 const coords0=await page.locator('#cameraCoordinates').innerText();
