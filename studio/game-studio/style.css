@@ -200,3 +200,8 @@ body.viewport-focus .viewport-tools{top:42px}
 .brand-sub{display:none}
 }
 @media(prefers-reduced-motion:reduce){.viewport-workspace-tools button{transition:none}}
+
+/* Link from safe legacy editor into independent large-world v3 runtime. */
+.large-world-launch{display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap;padding:9px 11px;background:#214139;border:1px solid #457d6a;color:#dcfff2;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.02em}
+.large-world-launch:hover{background:#30594a;border-color:#89ddb9}
+@media(max-width:750px){.large-world-launch{font-size:10px;padding:8px 7px;letter-spacing:0}}

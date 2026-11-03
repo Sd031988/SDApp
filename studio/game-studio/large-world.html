@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1721">
+<meta name="description" content="SD Game-Studio Große Spielwelt: 640 × 640 Einheiten in 256 geladenen Szenenzellen.">
+<title>SD Game-Studio · Large World Engine</title>
+<link rel="stylesheet" href="./large-world.css?v=20261103-world1">
+<script defer src="./scene-core.js?v=20261103-world1"></script>
+<script defer src="./large-world-core.js?v=20261103-world1"></script>
+<script defer src="./large-world.js?v=20261103-world1"></script>
+</head>
+<body>
+<header class="topbar"><a href="./index.html" class="back">← LEVEL EDITOR</a><div class="identity"><strong>SD <em>GAME STUDIO</em></strong><small>ENGINE LAB / LARGE WORLD</small></div><span class="lab-tag">WORLD V3 · EXPERIMENTAL</span></header>
+<main class="editor">
+<aside class="tools">
+<div class="panel-title"><small>WORLD OUTLINER / 01</small><h1>Große Spielwelt</h1><p>Ein echtes Zellensystem statt einer kleinen Einzelszene.</p></div>
+<dl class="world-stats"><div><dt>Weltgröße</dt><dd id="worldSize">640 × 640 U</dd></div><div><dt>Szenenzellen gesamt</dt><dd id="worldCells">256</dd></div><div><dt>Objekte gesamt</dt><dd id="worldObjects">2048</dd></div><div><dt>Aktive Zellen</dt><dd id="activeCells">–</dd></div><div><dt>Objekte im aktiven Bereich</dt><dd id="activeObjects">–</dd></div><div><dt>Draw Calls pro Frame</dt><dd id="drawnObjects">–</dd></div></dl>
+<div class="panel-section"><h2>Editor-Werkzeuge</h2><button class="button" id="addTree">＋ Baum an Kameraposition</button><button class="button" id="addRock">＋ Felsen an Kameraposition</button><p>Neue Objekte werden der passenden Zelle zugeordnet. Änderungen bleiben bis zum Export lokal im Browser.</p></div>
+<div class="panel-section"><h2>Projektdateien</h2><button class="button primary" id="saveWorld">↓ Großwelt speichern (v3 JSON)</button><button class="button" id="openWorld">↑ Gespeicherte Großwelt öffnen</button><input id="worldFile" type="file" accept=".json,application/json" hidden><button class="button muted" id="resetWorld">↺ Beispielwelt wiederherstellen</button><p>v1/v2-Szenen bleiben im bisherigen Level-Editor. Keine Änderung fremder Projekte.</p></div>
+</aside>
+<section class="workspace" aria-label="Große 3D-Welt">
+<div class="viewport-bar"><strong><span class="dot">●</span> CHUNKED WORLD / 3D VIEWPORT</strong><span id="cameraCoordinates">X 0 / Z 0</span><button id="fullscreenWorld" class="small-button" type="button">⤢ Fokus</button></div>
+<div id="canvasWrap" class="canvas-wrap"><canvas id="worldCanvas" tabindex="0" aria-label="Große 3D-Spielwelt, Ziehen zum Drehen, WASD zum Bewegen"></canvas><div class="viewport-watermark">REALTIME · WEBGL 1</div><div class="controls-hint">WASD / Pfeile: bewegen · Maus/Finger ziehen: drehen · Mausrad: Zoom</div><div id="worldError" class="error" hidden></div><div class="touch-pad" aria-label="Welt bewegen"><button data-move="forward" aria-label="Vorwärts">↑</button><div><button data-move="left" aria-label="Links">←</button><button data-move="back" aria-label="Zurück">↓</button><button data-move="right" aria-label="Rechts">→</button></div></div></div>
+<div class="status-bar"><span id="worldStatus" role="status" aria-live="polite">Initialisiere Zellenlaufzeit …</span><span>IN-MEMORY CELL CULLING · KEIN DISK-STREAMING</span></div>
+</section>
+</main>
+</body></html>
