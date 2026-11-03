@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101923">
+<meta name="description" content="Vier praxisnahe Abschlussprojekte der SD Game-Studio Academy mit Meilensteinen und Bewertungsraster.">
+<title>Abschlussprojekte · SD Game-Studio Academy</title>
+<link rel="icon" href="../../../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./academy.css?v=1">
+<link rel="stylesheet" href="./projects.css?v=1">
+<script defer src="./projects.js?v=1"></script>
+</head>
+<body>
+<a class="skip-link" href="#projectContent">Zum Abschlussprojekt springen</a>
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="./index.html"><span class="brand-mark">SD<span>.</span></span><span><strong>GAME-STUDIO</strong><small>ACADEMY / PROJEKTWERKSTATT</small></span></a>
+    <nav class="header-actions"><a class="quiet-link" href="./index.html">← Alle Kurse</a><a class="editor-link" href="../index.html">Editor öffnen ↗</a></nav>
+  </div>
+</header>
+<main class="project-main">
+  <section class="projects-hero">
+    <div class="eyebrow"><span class="eyebrow-line"></span> DEIN WEG ZUM ERSTEN PORTFOLIOPROJEKT</div>
+    <h1>Wissen wird zu <em>Praxis.</em></h1>
+    <p>Vier vollständige Projektaufträge. Du entwickelst, testest und dokumentierst reale Ergebnisse mit den Werkzeugen des SD Game-Studios.</p>
+    <div class="hero-meta"><span>4 Projektaufträge</span><span>Mit Meilensteinen</span><span>Selbstbewertung</span><span>Kein Konto nötig</span></div>
+  </section>
+  <section class="project-selection" aria-labelledby="selectHeading">
+    <div class="section-heading"><div><small>DEINE PROJEKTE</small><h2 id="selectHeading">Wähle eine Herausforderung</h2></div><span id="overallProgress" class="overall-progress" aria-live="polite">0 / 4 abgeschlossen</span></div>
+    <div id="projectCards" class="project-cards" aria-label="Abschlussprojekte"></div>
+  </section>
+  <div class="project-workspace">
+    <article class="project-content" id="projectContent" tabindex="-1" aria-live="polite"></article>
+    <aside class="project-aside" aria-label="Deine Projektverwaltung">
+      <div class="aside-kicker">MEIN PROJEKTFORTSCHRITT</div>
+      <div class="project-percent" id="projectPercent">0 %</div>
+      <div class="progress-track" role="progressbar" aria-label="Abgehakte Projektmeilensteine" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="projectProgress"><span id="projectProgressFill"></span></div>
+      <span id="projectMilestoneCount" class="project-count">0 / 6 Meilensteine</span>
+      <div class="aside-actions">
+        <button id="printBrief" class="secondary-button" type="button">Projektauftrag drucken</button>
+        <button id="resetProject" class="reset-button" type="button">Dieses Projekt zurücksetzen</button>
+      </div>
+      <p class="aside-disclaimer">Die Aufgaben werden von dir selbst abgehakt. Die Academy prüft deine 3D-Datei nicht automatisch.</p>
+      <p class="aside-disclaimer">Fortschritt und Notizen bleiben auf diesem Gerät gespeichert. Spielszenen werden nicht verändert.</p>
+    </aside>
+  </div>
+  <div class="postscript"><strong>Du arbeitest an echten Editor-Projekten.</strong><p>Die Projektaufträge nutzen vorhandene Funktionen und unterscheiden ausdrücklich zwischen spielbaren Szenen, technischen Experimenten und Konzepten für spätere große Games. Du kannst jedes Projekt als JSON aus dem jeweiligen Editor exportieren.</p><a href="./index.html">Zurück zu den 16 Lektionen ↗</a></div>
+</main>
+<footer class="footer"><span>SD Game-Studio Academy · Projektwerkstatt</span><a href="../index.html">Zur Engine ↗</a></footer>
+</body>
+</html>
