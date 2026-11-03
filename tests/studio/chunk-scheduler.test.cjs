@@ -160,3 +160,16 @@ calls[1].resolve('active');await tick();await tick();
 assert.equal(s.get('0:1'),'active');
 s.close();
 });
+
+test('v3 world cell IDs support negative coordinates and reject out-of-range keys',async()=>{
+const loaded=[];
+const s=create({maxResident:3,load:key=>{loaded.push(key);return Promise.resolve(key);}});
+s.setVisible(['cell:-1:0','cell:25001:-25001','0:0']);
+await tick();await tick();await tick();
+assert.deepEqual(new Set(loaded),new Set(['cell:-1:0','cell:25001:-25001','0:0']));
+for(const bad of ['cell:25002:0','cell:-25002:0','cell:1.5:0','cell:1:Infinity','cell:01:0','cell:1:-0','cell:1:0/../x','cell:1:0\\n','cell:1:0:1']){
+assert.throws(()=>s.setVisible([bad]),TypeError,bad);
+}
+assert.equal(s.snapshot().desired.length,3,'invalid IDs must not change visibility');
+s.close();
+});
