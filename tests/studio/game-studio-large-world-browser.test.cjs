@@ -28,6 +28,7 @@ await page.waitForFunction(()=>Number(document.getElementById('activeCells').tex
 assert.equal(await page.locator('#worldCells').innerText(),'256');
 assert.equal(await page.locator('#worldObjects').innerText(),'2.048');
 assert.equal(await page.locator('#activeObjects').innerText(),'72');
+await page.waitForFunction(()=>Number(document.getElementById('drawnObjects').textContent)>0,undefined,{timeout:15000});
 const calls=Number(await page.locator('#drawnObjects').innerText());
 assert(calls>0&&calls<800,'Chunk Culling muss einen Bruchteil der 2.048 Objektinstanzen zeichnen');
 const coords0=await page.locator('#cameraCoordinates').innerText();
