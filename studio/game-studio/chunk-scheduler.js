@@ -10,7 +10,7 @@ function create({load,dispose=()=>{},maxConcurrent=2,maxResident=16}={}){
 if(typeof load!=='function'||typeof dispose!=='function')throw TypeError('load and dispose callbacks required');
 if(!Number.isSafeInteger(maxConcurrent)||maxConcurrent<1||maxConcurrent>8||
 !Number.isSafeInteger(maxResident)||maxResident<1||maxResident>256)throw RangeError('Invalid chunk budget');
-const resident=new Map(),pending=new Map();
+const resident=new Map(),pending=new Map(),failed=new Set();
 let desired=new Set(),generation=0,closed=false;
 function cleanup(key,value){try{dispose(key,value);}catch(_){/* cleanup must not stall scheduling */}}
 function trim(){
@@ -25,7 +25,7 @@ if(!Array.isArray(keys)||keys.length>256||keys.some(k=>typeof k!=='string'||!/^[
 const unique=[...new Set(keys)];
 if(unique.length>maxResident)throw RangeError('Visible cells exceed resident budget');
 generation++;
-desired=new Set(unique);
+desired=new Set(unique);failed.clear();
 for(const [key,job] of pending)if(!desired.has(key))job.controller.abort();
 for(const [key,value] of resident)if(!desired.has(key)){resident.delete(key);cleanup(key,value);}
 pump();
@@ -34,13 +34,13 @@ function pump(){
 if(closed)return;
 for(const key of desired){
 if(pending.size>=maxConcurrent)break;
-if(pending.has(key)||resident.has(key))continue;
+if(pending.has(key)||resident.has(key)||failed.has(key))continue;
 const controller=new AbortController(),job={controller};
 pending.set(key,job);
 Promise.resolve().then(()=>load(key,controller.signal)).then(value=>{
 if(closed||controller.signal.aborted||!desired.has(key))cleanup(key,value);
 else{resident.set(key,value);trim();}
-},()=>{}).finally(()=>{
+},()=>{failed.add(key);}).finally(()=>{
 if(pending.get(key)===job)pending.delete(key);
 pump();
 });
