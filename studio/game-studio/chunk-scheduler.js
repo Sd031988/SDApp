@@ -25,7 +25,11 @@ if(!Array.isArray(keys)||keys.length>256||keys.some(k=>typeof k!=='string'||!/^[
 const unique=[...new Set(keys)];
 if(unique.length>maxResident)throw RangeError('Visible cells exceed resident budget');
 generation++;
-desired=new Set(unique);failed.clear();
+// Keep failures suppressed while a cell remains visible. A per-frame
+// visibility refresh must not turn a missing asset into a hot retry loop.
+const nextDesired=new Set(unique);
+for(const key of failed)if(!nextDesired.has(key))failed.delete(key);
+desired=nextDesired;
 for(const [key,job] of pending)if(!desired.has(key))job.controller.abort();
 for(const [key,value] of resident)if(!desired.has(key)){resident.delete(key);cleanup(key,value);}
 pump();
