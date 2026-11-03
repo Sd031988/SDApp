@@ -61,3 +61,17 @@ assert.deepEqual(s.get('0:1'),{key:'0:1'});
 s.close();
 assert.equal(s.get('0:1'),undefined);
 });
+
+test('cancelled load rejection must not poison a later visibility request',async()=>{
+const tasks=[];
+const s=create({maxConcurrent:1,load:(key,signal)=>new Promise((resolve,reject)=>tasks.push({key,signal,resolve,reject}))});
+s.setVisible(['0:0']);await tick();
+s.setVisible([]);assert.equal(tasks[0].signal.aborted,true);
+s.setVisible(['0:0']);
+tasks[0].reject(Error('cancelled'));
+await tick();await tick();
+assert.equal(tasks.length,2,'new visible request must retry after cancelled failure');
+tasks[1].resolve('loaded');await tick();await tick();
+assert.equal(s.get('0:0'),'loaded');
+s.close();
+});
