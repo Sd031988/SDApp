@@ -53,11 +53,11 @@ return mesh(tris);
 function setup(){
 gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
 if(!gl)throw Error('WebGL ist für die Großwelt nicht verfügbar.');
-const vertex=shader(gl.VERTEX_SHADER,'attribute vec3 position,normal,instancePosition,instanceScale,instanceTint;uniform mat4 proj,view;uniform vec3 translation,scale;uniform float useInstancing;varying vec3 lit,tint;void main(){vec3 s=useInstancing>.5?instanceScale:scale;vec3 p=useInstancing>.5?instancePosition:translation;vec3 local=position*s+p;lit=normalize(normal/max(s,.0001));tint=useInstancing>.5?instanceTint:vec3(1.);gl_Position=proj*view*vec4(local,1.);}');
-const fragment=shader(gl.FRAGMENT_SHADER,'precision mediump float;uniform vec3 color;uniform float useInstancing;varying vec3 lit,tint;void main(){float a=.39+.61*max(dot(normalize(lit),normalize(vec3(.4,.87,.5))),0.);vec3 c=useInstancing>.5?tint:color;gl_FragColor=vec4(c*a,1.);}');
+const vertex=shader(gl.VERTEX_SHADER,'attribute vec3 position,normal,instancePosition,instanceScale,instanceTint;uniform mat4 proj,view;uniform vec3 translation,scale,color;uniform float useInstancing;varying vec3 lit,tint;void main(){vec3 s=useInstancing>.5?instanceScale:scale;vec3 p=useInstancing>.5?instancePosition:translation;vec3 local=position*s+p;lit=normalize(normal/max(s,.0001));tint=useInstancing>.5?instanceTint:color;gl_Position=proj*view*vec4(local,1.);}');
+const fragment=shader(gl.FRAGMENT_SHADER,'precision mediump float;varying vec3 lit,tint;void main(){float a=.39+.61*max(dot(normalize(lit),normalize(vec3(.4,.87,.5))),0.);gl_FragColor=vec4(tint*a,1.);}');
 program=gl.createProgram();gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
 gl.deleteShader(vertex);gl.deleteShader(fragment);
-if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL-Programm konnte nicht verknüpft werden.');
+if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL-Programm konnte nicht verknüpft werden: '+(gl.getProgramInfoLog(program)||'Unbekannte Ursache'));
 locations={pos:gl.getAttribLocation(program,'position'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),
 view:gl.getUniformLocation(program,'view'),translation:gl.getUniformLocation(program,'translation'),
 scale:gl.getUniformLocation(program,'scale'),color:gl.getUniformLocation(program,'color'),
