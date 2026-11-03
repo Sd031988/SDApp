@@ -10,7 +10,7 @@ if(root&&root.document)root.SDChunkScheduler=api;
 // numeric keys for existing scheduler consumers until renderer integration.
 function validCellKey(key){
 if(typeof key!=='string')return false;
-const match=/^(?:cell:)?(-?(?:0|[1-9]\\d{0,4})):(-?(?:0|[1-9]\\d{0,4}))$/.exec(key);
+const match=/^(?:cell:)?(-?(?:0|[1-9]\d{0,4})):(-?(?:0|[1-9]\d{0,4}))$/.exec(key);
 if(!match)return false;
 return Math.abs(Number(match[1]))<=25001&&Math.abs(Number(match[2]))<=25001;
 }
