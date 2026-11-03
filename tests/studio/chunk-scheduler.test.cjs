@@ -33,13 +33,17 @@ assert.deepEqual(s.snapshot().desired,[]);
 s.close();
 assert.throws(()=>s.setVisible([]),/closed/);
 });
-test('failed loads do not retry endlessly until a new visibility request',async()=>{
+test('failed loads do not retry on repeated identical visibility updates',async()=>{
 let calls=0;
 const s=create({load:()=>{calls++;return Promise.reject(Error('missing'));}});
 s.setVisible(['0:0']);await tick();await tick();
 assert.equal(calls,1);
+for(let i=0;i<10;i++)s.setVisible(['0:0']);
+await tick();await tick();
+assert.equal(calls,1,'per-frame updates must not trigger repeated failed loads');
+s.setVisible([]);
 s.setVisible(['0:0']);await tick();await tick();
-assert.equal(calls,2);
+assert.equal(calls,2,'removing then re-entering a cell allows a retry');
 s.close();
 });
 test('late completions after close are disposed',async()=>{
@@ -109,7 +113,10 @@ await tick();
 assert.equal(calls,1,'empty result must not cause infinite retry');
 s.setVisible(['0:0']);
 await tick();await tick();
-assert.equal(calls,2,'explicit visibility update may retry');
+assert.equal(calls,1,'identical visibility update must not retry');
+s.setVisible([]);s.setVisible(['0:0']);
+await tick();await tick();
+assert.equal(calls,2,'re-entering the cell may retry');
 s.close();
 }
 });
