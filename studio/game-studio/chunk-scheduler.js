@@ -6,6 +6,14 @@ if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(root&&root.document)root.SDChunkScheduler=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
+// Accept v3 world-cells IDs, including negative coordinates. Keep legacy
+// numeric keys for existing scheduler consumers until renderer integration.
+function validCellKey(key){
+if(typeof key!=='string')return false;
+const match=/^(?:cell:)?(-?(?:0|[1-9]\\d{0,4})):(-?(?:0|[1-9]\\d{0,4}))$/.exec(key);
+if(!match)return false;
+return Math.abs(Number(match[1]))<=25001&&Math.abs(Number(match[2]))<=25001;
+}
 function create({load,dispose=()=>{},maxConcurrent=2,maxResident=16}={}){
 if(typeof load!=='function'||typeof dispose!=='function')throw TypeError('load and dispose callbacks required');
 if(!Number.isSafeInteger(maxConcurrent)||maxConcurrent<1||maxConcurrent>8||
@@ -21,7 +29,7 @@ if(!desired.has(key)){resident.delete(key);cleanup(key,value);}
 }
 function setVisible(keys){
 if(closed)throw Error('Scheduler closed');
-if(!Array.isArray(keys)||keys.length>256||keys.some(k=>typeof k!=='string'||!/^[0-9]{1,2}:[0-9]{1,2}$/.test(k)))throw TypeError('Invalid chunk IDs');
+if(!Array.isArray(keys)||keys.length>256||keys.some(k=>!validCellKey(k)))throw TypeError('Invalid chunk IDs');
 const unique=[...new Set(keys)];
 if(unique.length>maxResident)throw RangeError('Visible cells exceed resident budget');
 generation++;
