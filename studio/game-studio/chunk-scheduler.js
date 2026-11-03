@@ -69,7 +69,11 @@ resident.clear();
 return Object.freeze({setVisible,close,get:(key)=>resident.get(key),snapshot:()=>Object.freeze({
 resident:[...resident.keys()],pending:[...pending.keys()],desired:[...desired],
 failed:[...failed],abortedPending:[...pending].filter(([,job])=>job.controller.signal.aborted).map(([key])=>key),
-generation,closed
+generation,closed,
+// Physical slots occupied by cancelled promises that have not settled.
+// These cannot safely be reclaimed without loader cooperation.
+blockedSlots:[...pending.values()].filter(job=>job.controller.signal.aborted).length,
+availableSlots:Math.max(0,maxConcurrent-pending.size)
 })});
 }
 return Object.freeze({create});
