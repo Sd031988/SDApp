@@ -120,3 +120,26 @@ assert.equal(calls,2,'re-entering the cell may retry');
 s.close();
 }
 });
+
+
+test('same-turn cancellation never invokes stale loader or disposes a nonexistent resource',async()=>{
+const loaded=[],disposed=[];
+const s=create({load:key=>{loaded.push(key);return Promise.resolve({key});},dispose:(key,value)=>disposed.push([key,value])});
+s.setVisible(['0:0']);
+s.setVisible(['0:1']);
+await tick();await tick();
+assert.deepEqual(loaded,['0:1']);
+assert.deepEqual(disposed,[]);
+assert.deepEqual(s.get('0:1'),{key:'0:1'});
+s.close();
+assert.deepEqual(disposed,[['0:1',{key:'0:1'}]]);
+});
+
+test('closing before queued load starts does not invoke loader',async()=>{
+let calls=0;
+const s=create({load:()=>{calls++;return Promise.resolve('resource');}});
+s.setVisible(['0:0']);s.close();
+await tick();await tick();
+assert.equal(calls,0);
+assert.deepEqual(s.snapshot().resident,[]);
+});
