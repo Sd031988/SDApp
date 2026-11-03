@@ -47,3 +47,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Die Grammatikzuordnung nutzt korrigierte Wortgrenzen in den regulären Ausdrücken; zusätzliche Regressionstests prüfen unter anderem Dativ und Nebensätze.
 - In einer isolierten JavaScript-Funktionsprüfung wurden 176 stabile Aufgaben-IDs und 176 alte Positionen auf korrekte Wiederaufnahme kontrolliert. Dies ist **kein** vollständiger Browser-/GitHub-Actions-Test.
 - Weiterhin offen: Playwright-Prüfung auf Smartphone und Desktop, didaktische Einzelprüfung der Themenzuordnung, Wortschatzabgleich mit offiziellen Referenzen und valide Kompetenzmessung in Lesen, Hören, Schreiben und Sprechen.
+
+## Qualitätskorrektur – 03.11.2026
+- Fehler festgestellt: Die generische Lernhilfe zeigte vor der Antwort bereits `item.note` und die richtige Option an. Dadurch war die Lernkontrolle bei Aufgaben ohne spezielle Grammatikregel nicht aussagekräftig.
+- Korrigiert: Vor der Antwort erscheinen bei diesen Aufgaben nur neutrale Lernstrategien. Die fachliche Lösungserklärung bleibt im Feedback nach dem Prüfen verfügbar.
+- Regressionstest ergänzt: Für alle 176 Aufgaben wird kontrolliert, dass generische Vorabhinweise weder den Lösungstext noch die korrekte Option verraten.
+- JavaScript-Syntax der geänderten Dateien isoliert geprüft; vollständige Node-/Playwright-Ausführung und didaktische Validierung stehen noch aus.
+- Rest-Risiko: Spezifische Themenregeln können vereinzelt inhaltliche Hinweise geben; Multiple-Choice-Abschlüsse allein sind kein Nachweis der B1-Kompetenz.
