@@ -38,6 +38,7 @@ jobs:
           node --check studio/studio-visual-text.js
           node --check studio/studio-modules.js
           node --check studio/devtools.js
+          node --check studio/image-assets.js
           node --check studio/game-studio/scene-core.js
           node --check studio/game-studio/game.js
           node --check studio/game-studio/large-world-core.js
@@ -55,7 +56,7 @@ jobs:
           python3 studio/chatgpt-windows/sd_bridge_windows.py --diagnose
           python3 -m unittest discover -s tests/studio -p 'test_chatgpt_windows.py' -v
       - name: Projektanalyse und Export prüfen
-        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/ki-repair-assistant.test.cjs tests/studio/ki-test-loop.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs tests/studio/devtools.test.cjs tests/studio/game-studio.test.cjs tests/studio/game-studio-large-world.test.cjs tests/studio/game-studio-workspace.test.cjs tests/studio/glb-core.test.cjs tests/studio/game-studio-project-assets.test.cjs
+        run: node --test tests/studio/studio.test.cjs tests/studio/ki-werkstatt.test.cjs tests/studio/ki-code-review.test.cjs tests/studio/ki-repair-assistant.test.cjs tests/studio/ki-test-loop.test.cjs tests/studio/studio-diagnose.test.cjs tests/studio/qualitaet.test.cjs tests/studio/agent-review.test.cjs tests/studio/agent-task.test.cjs tests/studio/agent-safety.test.cjs tests/studio/visual-modules.test.cjs tests/studio/chatgpt-bridge.test.cjs tests/studio/devtools.test.cjs tests/studio/image-assets.test.cjs tests/studio/game-studio.test.cjs tests/studio/game-studio-large-world.test.cjs tests/studio/game-studio-workspace.test.cjs tests/studio/glb-core.test.cjs tests/studio/game-studio-project-assets.test.cjs
 
   browser-smoke:
     runs-on: ubuntu-latest
@@ -73,6 +74,7 @@ jobs:
           node tests/studio/browser.test.cjs
           node tests/studio/test-loop-browser.test.cjs
           node tests/studio/devtools-browser.test.cjs
+          node tests/studio/image-assets-browser.test.cjs
           node tests/studio/game-studio-browser.test.cjs
           node tests/studio/game-studio-large-world-browser.test.cjs
 
