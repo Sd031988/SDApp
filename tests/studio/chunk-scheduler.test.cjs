@@ -218,3 +218,22 @@ assert.deepEqual(disposed,[],'no phantom resource may be disposed');
 // Intentionally do not resolve the loader: this test documents fail-closed
 // starvation until the loader cooperates; no timer or retry may bypass the cap.
 });
+
+
+test('reselected cell ignores stale cancelled completion and loads a fresh resource',async()=>{
+const loads=[],disposed=[];
+const s=create({maxConcurrent:1,load:(key,signal)=>new Promise(resolve=>loads.push({key,signal,resolve})),dispose:(key,value)=>disposed.push([key,value])});
+s.setVisible(['cell:-2:3']);await tick();
+s.setVisible([]);
+s.setVisible(['cell:-2:3']);
+assert.equal(loads[0].signal.aborted,true);
+loads[0].resolve('obsolete-resource');
+await tick();await tick();
+assert.deepEqual(disposed,[['cell:-2:3','obsolete-resource']]);
+assert.equal(loads.length,2,'reselection starts a new physical load only after stale completion');
+assert.equal(s.get('cell:-2:3'),undefined);
+loads[1].resolve('fresh-resource');await tick();await tick();
+assert.equal(s.get('cell:-2:3'),'fresh-resource');
+s.close();
+assert.deepEqual(disposed,[['cell:-2:3','obsolete-resource'],['cell:-2:3','fresh-resource']]);
+});
