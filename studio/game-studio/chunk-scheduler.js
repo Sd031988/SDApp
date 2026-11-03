@@ -67,6 +67,15 @@ pump();
 });
 }
 }
+// Explicit recovery for transient failures; never retry on frame refresh.
+// A failed cell can only be retried while it is still desired.
+function retryFailed(key){
+if(closed)throw Error('Scheduler closed');
+if(!validCellKey(key))throw TypeError('Invalid chunk ID');
+if(!desired.has(key)||!failed.delete(key))return false;
+pump();
+return true;
+}
 function close(){
 if(closed)return;
 closed=true;desired.clear();generation++;
@@ -74,7 +83,7 @@ for(const job of pending.values())job.controller.abort();
 for(const [key,value] of resident)cleanup(key,value);
 resident.clear();
 }
-return Object.freeze({setVisible,close,get:(key)=>resident.get(key),snapshot:()=>Object.freeze({
+return Object.freeze({setVisible,retryFailed,close,get:(key)=>resident.get(key),snapshot:()=>Object.freeze({
 resident:[...resident.keys()],pending:[...pending.keys()],desired:[...desired],
 failed:[...failed],abortedPending:[...pending].filter(([,job])=>job.controller.signal.aborted).map(([key])=>key),
 generation,closed,
