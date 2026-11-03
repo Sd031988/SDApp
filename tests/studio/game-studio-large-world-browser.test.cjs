@@ -2,9 +2,12 @@
 const assert=require('node:assert/strict'),{chromium}=require('playwright'),http=require('node:http'),
 fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
+const Core=require('../../studio/game-studio/large-world-core.js');
+const Pack=require('../../studio/game-studio/tools/pack-world.cjs');
 const staticFiles=new Map([
 ['/studio/game-studio/large-world.html','text/html'],
 ['/studio/game-studio/large-world.js','application/javascript'],
+['/studio/game-studio/large-world-stream.js','application/javascript'],
 ['/studio/game-studio/large-world-core.js','application/javascript'],
 ['/studio/game-studio/scene-core.js','application/javascript'],
 ['/studio/game-studio/large-world.css','text/css']
@@ -58,6 +61,30 @@ await page.locator('#worldFile').setInputFiles({name:'bad-world.json',mimeType:'
 buffer:Buffer.from(JSON.stringify({version:2,name:'old project'}))});
 await page.waitForFunction(()=>document.querySelector('#worldStatus').textContent.includes('Import abgelehnt'));
 assert.equal(await page.locator('#worldObjects').innerText(),beforeBad);
+// Read genuine local File blobs only on demand; no networking or full-world residency.
+const fileWorld=Core.generate(31,8);
+fileWorld.cells=fileWorld.cells.filter(c=>c.cx>=7&&c.cx<=9&&c.cz>=7&&c.cz<=9);
+const pack=Pack.buildPackage(fileWorld);
+const selected=[{name:'manifest.json',mimeType:'application/json',buffer:Buffer.from(pack.manifest)}];
+for(const [name,buffer] of pack.files)selected.push({name,mimeType:'application/json',buffer});
+await page.locator('#chunkFiles').setInputFiles(selected);
+await page.waitForFunction(()=>document.body.dataset.streamMode==='files');
+await page.waitForFunction(()=>document.querySelector('#loadedFileCells').textContent==='9 / 9',undefined,{timeout:15000});
+assert.equal(await page.locator('#worldObjects').innerText(),'72');
+assert.equal(await page.locator('#activeObjects').innerText(),'72');
+assert.equal(await page.locator('#activeCells').innerText(),'9');
+assert.equal(await page.locator('#saveWorld').isDisabled(),true,'Dateistreaming bleibt schreibgeschützt');
+assert.equal(await page.locator('#addTree').isDisabled(),true);
+await page.locator('#chunkFiles').setInputFiles([
+{name:'manifest.json',mimeType:'application/json',buffer:Buffer.from('{"format":"malicious"}')}
+]);
+await page.waitForFunction(()=>document.querySelector('#worldStatus').textContent.includes('Datei-Streaming abgelehnt'));
+assert.equal(await page.locator('body').getAttribute('data-stream-mode'),'files','Fehlerhafte Datei darf aktive Welt nicht überschreiben');
+assert.equal(await page.locator('#worldObjects').innerText(),'72');
+await page.locator('#resetWorld').click();
+assert.equal(await page.locator('body').getAttribute('data-stream-mode'),'demo');
+assert.equal(await page.locator('#saveWorld').isDisabled(),false);
+assert.equal(await page.locator('#worldObjects').innerText(),'2.048');
 await page.locator('#fullscreenWorld').click();
 assert.equal(await page.locator('.tools').isVisible(),false);
 await page.locator('#fullscreenWorld').click();
