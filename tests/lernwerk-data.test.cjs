@@ -40,14 +40,18 @@ test('grammar help matches the topic without treating every article as a grammar
  const time=lessons.find(t=>t.lv==='a1'&&t.q==='Was bedeutet halb neun?');
  assert.ok(article&&residence&&time,'Representative A1 questions are available');
  assert.equal(guideFor(article).title,'Artikel und Nomen');
- assert.equal(guideFor(residence).title,'Hinweis zu dieser Aufgabe');
- assert.equal(guideFor(time).title,'Hinweis zu dieser Aufgabe');
+ assert.equal(guideFor(residence).title,'Lernstrategie zur Aufgabe');
+ assert.equal(guideFor(time).title,'Lernstrategie zur Aufgabe');
  assert.equal(guideFor({lv:'a2',q:'Welcher Kasus antwortet auf wem?',note:'Dativ',opts:['Dativ'],correct:0}).title,'Dativ');
  assert.equal(guideFor({lv:'b1',q:'Welcher Nebensatz beginnt mit dass?',note:'Nebensatz',opts:['dass'],correct:0}).title,'Nebensätze');
  for(const item of lessons){
   const guide=guideFor(item);
   assert.ok(guide.title&&guide.rule&&guide.example,key(item));
   assert.equal(typeof guide.example,'string',key(item));
+  if(guide.title==='Lernstrategie zur Aufgabe'){
+   assert.ok(!guide.rule.includes(item.note),key(item)+': note must not leak before answering');
+   assert.ok(!guide.example.includes(item.opts[item.correct]),key(item)+': solution must not leak before answering');
+  }
  }
 });
 
