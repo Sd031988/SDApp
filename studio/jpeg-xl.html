@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#141923">
+<title>JPEG XL Bild-Assets · SD Code-Studio</title>
+<style>
+:root{color-scheme:dark;font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;background:#10141d;color:#edf2fa}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1060px;margin:0 auto;padding:clamp(18px,4vw,42px)}
+a{color:#a7caff;text-decoration:none}a:hover{text-decoration:underline}
+nav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:30px;color:#aebdd4}
+.brand{font-size:14px;font-weight:800;color:#edf2fa;letter-spacing:.04em}
+h1{font-size:clamp(27px,4vw,41px);line-height:1.13;letter-spacing:-.035em;margin:0 0 14px}
+h2{font-size:18px;margin:0 0 10px}.intro{max-width:740px;color:#b8c7db;margin:0 0 28px}
+.cols{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1fr);gap:22px}
+.panel{border:1px solid #334052;border-radius:14px;background:#19212e;padding:22px;min-width:0}
+label{display:block;font-weight:650;margin:14px 0 5px}
+input,textarea{width:100%;border-radius:8px;border:1px solid #45566d;background:#111923;color:#edf2fa;padding:10px;font:inherit}
+input[type=file]{font-size:13px}.small{font-size:13px;color:#b8c7db}
+button{background:#68b1fa;border:0;color:#07182a;border-radius:8px;font:700 15px system-ui;padding:11px 16px;cursor:pointer;margin-top:12px}
+button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #ffca80;outline-offset:2px}
+.preview{min-height:230px;border:1px dashed #4b617c;border-radius:10px;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#222f40 0 25%,#1a2635 0 50%) 0 0/24px 24px;overflow:hidden}
+.preview picture,.preview img{display:block;max-width:100%;max-height:420px;object-fit:contain}
+#htmlCode{min-height:210px;font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical;white-space:pre}
+.note{background:#142b33;border-left:3px solid #49b6bc;padding:12px 15px;border-radius:6px;margin-top:18px;font-size:13px;color:#d0e4e9}
+#status{min-height:1.6em;font-size:13px;color:#d9ddaa}
+@media(max-width:780px){.cols{grid-template-columns:1fr}.wrap{padding:18px}.panel{padding:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><span class="brand">SD CODE-STUDIO · BILD-ASSETS</span><a href="./index.html">← Zum Code-Studio</a></nav>
+<header><h1>JPEG XL für deine Webprojekte</h1>
+<p class="intro">Bilder lokal auswählen, eine kompatible HTML-Einbindung erstellen und den Code in dein Projekt übernehmen. Keine Datei wird hochgeladen oder automatisch verändert.</p></header>
+<main class="cols">
+<section class="panel" aria-labelledby="titel-eingabe">
+<h2 id="titel-eingabe">1 · Bilddateien auswählen</h2>
+<label for="jxlFile">JPEG XL (.jxl) – hochwertige Variante</label>
+<input id="jxlFile" type="file" accept=".jxl,image/jxl">
+<label for="modernFile">WebP oder AVIF (optional)</label>
+<input id="modernFile" type="file" accept=".webp,.avif,image/webp,image/avif">
+<label for="fallbackFile">JPEG oder PNG – kompatibles Ersatzbild</label>
+<input id="fallbackFile" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+<p class="small">Wichtig: Die drei Dateien müssen bereits existieren und denselben Bildinhalt zeigen. Dieses Werkzeug konvertiert keine Bilder.</p>
+<label for="folder">Ordner im Projekt</label>
+<input id="folder" type="text" value="assets" spellcheck="false" maxlength="160" placeholder="assets/bilder">
+<label for="altText">Bildbeschreibung (Alternativtext)</label>
+<input id="altText" type="text" maxlength="300" placeholder="Zum Beispiel: Berglandschaft im Sonnenlicht">
+<p id="fileStats" class="small" aria-live="polite">Noch keine Bilddateien ausgewählt.</p>
+<div class="note">Für Spiele können JPEG-XL-Dateien als Quellmaterial dienen. Als direkt ladbare GPU-Textur ist JPEG XL kein Ersatz für GPU-komprimierte Formate wie KTX2/Basis Universal.</div>
+</section>
+<section class="panel" aria-labelledby="titel-ausgabe">
+<h2 id="titel-ausgabe">2 · Vorschau und HTML</h2>
+<div class="preview" id="preview"><span class="small">Vorschau erscheint nach der Dateiauswahl.</span></div>
+<p class="small">Der Browser verwendet JPEG XL, wenn er es unterstützt; ansonsten wird das Ersatzformat angezeigt.</p>
+<label for="htmlCode">HTML für dein Projekt</label>
+<textarea id="htmlCode" readonly spellcheck="false" aria-label="Erzeugter HTML-Code"></textarea>
+<button id="copyBtn" type="button" disabled>HTML kopieren</button>
+<p id="status" role="status" aria-live="polite">JPEG XL und JPEG/PNG auswählen, um zu beginnen.</p>
+<div class="note">Lade die gewählten Bilddateien zusätzlich über „Dateien hochladen“ ins SD Code-Studio und verwende denselben Ordnerpfad. Eine Veröffentlichung sollte weiterhin JPEG/PNG als Ersatzformat enthalten.</div>
+</section>
+</main>
+</div>
+<script src="./image-assets.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id),api=window.SDImageAssets;
+const inputs=['jxlFile','modernFile','fallbackFile','folder','altText'];
+const urls=[];
+function cleanPreview(){while(urls.length)URL.revokeObjectURL(urls.pop());$('preview').replaceChildren();}
+function localUrl(file,type){const url=URL.createObjectURL(new Blob([file],{type}));urls.push(url);return url;}
+function prettySize(file){return file?(file.name+' · '+(file.size/1024).toFixed(1)+' KiB'):'nicht ausgewählt';}
+function update(){
+const jxl=$('jxlFile').files[0],modern=$('modernFile').files[0],fallback=$('fallbackFile').files[0],out=$('htmlCode');
+$('fileStats').textContent='JXL: '+prettySize(jxl)+' | Zusatz: '+prettySize(modern)+' | Ersatz: '+prettySize(fallback);
+out.value='';$('copyBtn').disabled=true;cleanPreview();
+if(!jxl||!fallback){$('status').textContent='JPEG XL und JPEG/PNG auswählen, um fortzufahren.';return;}
+try{
+const chosen={jxl:jxl.name,modern:modern?.name||null,fallback:fallback.name,folder:$('folder').value,alt:$('altText').value};
+out.value=api.picture(chosen);
+const picture=document.createElement('picture');
+const source=document.createElement('source');
+source.type='image/jxl';source.srcset=localUrl(jxl,'image/jxl');picture.appendChild(source);
+if(modern){
+const item=api.fileName(modern.name,['webp','avif']),s=document.createElement('source');
+s.type=api.MIME[item.ext];s.srcset=localUrl(modern,s.type);picture.appendChild(s);
+}
+const image=document.createElement('img');image.alt=chosen.alt;image.src=localUrl(fallback,api.MIME[api.fileName(fallback.name,['jpg','jpeg','png']).ext]);
+image.onerror=()=>{$('status').textContent='Bildvorschau nicht verfügbar. Prüfe, ob die ausgewählten Dateien gültige Bilddaten enthalten.';};
+picture.appendChild(image);$('preview').appendChild(picture);
+$('status').textContent='HTML erstellt. Bilddateien und HTML müssen zusammen in dein Projekt.';
+$('copyBtn').disabled=false;
+}catch(err){$('status').textContent=err.message;out.value='';$('copyBtn').disabled=true;}
+}
+inputs.forEach(id=>$(id).addEventListener(id==='folder'||id==='altText'?'input':'change',update));
+$('copyBtn').addEventListener('click',async()=>{
+try{await navigator.clipboard.writeText($('htmlCode').value);$('status').textContent='HTML in die Zwischenablage kopiert.';}
+catch(_){$('htmlCode').focus();$('htmlCode').select();$('status').textContent='Text ist markiert – bitte manuell kopieren.';}
+});
+addEventListener('pagehide',cleanPreview);
+})();
+</script>
+</body>
+</html>
