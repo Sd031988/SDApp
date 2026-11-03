@@ -5,7 +5,7 @@
 'use strict';
 const BASIS = new URL(self.registration.scope).pathname;   // /studio/vorschau/
 const TYPEN = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', svg: 'image/svg+xml',
-  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', txt: 'text/plain', md: 'text/plain',
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', jxl: 'image/jxl', txt: 'text/plain', md: 'text/plain',
   xml: 'application/xml', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', webm: 'video/webm', wasm: 'application/wasm', csv: 'text/csv' };
 // kleine Brücke: Konsole und Fehler der Vorschau ans Studio melden
 const BRUECKE = '<script>(function(){var P=parent!==window?parent:null;if(!P)return;function s(t,a){try{P.postMessage({sdVorschau:1,typ:t,text:Array.prototype.map.call(a,function(x){try{return typeof x==="object"?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}}' +
@@ -54,7 +54,7 @@ self.addEventListener('fetch', e => {
     }
     const typ = TYPEN[(pfad.split('.').pop() || '').toLowerCase()] || 'text/plain';
     let inhalt = d[pfad];
-    if (typeof inhalt === 'string' && inhalt.startsWith('data:') && !/^text\/(html|css|javascript)/.test(typ)) { const b = dataUrlZuBlob(inhalt); if (b) return new Response(b, { headers: { 'Content-Type': b.type || typ, 'Cache-Control': 'no-store' } }); }
+    if (typeof inhalt === 'string' && inhalt.startsWith('data:') && !/^text\/(html|css|javascript)/.test(typ)) { const b = dataUrlZuBlob(inhalt); if (b) return new Response(b, { headers: { 'Content-Type': typ === 'image/jxl' ? typ : (b.type || typ), 'Cache-Control': 'no-store' } }); }
     if (typ === 'text/html') inhalt = /<head[^>]*>/i.test(inhalt) ? inhalt.replace(/<head[^>]*>/i, m => m + BRUECKE) : BRUECKE + inhalt;
     return antwort(inhalt, typ);
   })());
