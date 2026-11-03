@@ -1,0 +1,31 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const base=path.resolve(__dirname,'../../studio/game-studio');
+const academy=path.join(base,'academy');
+test('Academy is integrated but isolated from the game engine',()=>{
+ const editor=fs.readFileSync(path.join(base,'index.html'),'utf8');
+ const html=fs.readFileSync(path.join(academy,'index.html'),'utf8');
+ const css=fs.readFileSync(path.join(academy,'academy.css'),'utf8');
+ const js=fs.readFileSync(path.join(academy,'academy.js'),'utf8');
+ assert.match(editor,/href="\.\/academy\/index\.html"/);
+ assert.match(html,/src="\.\/academy\.js\?v=1"/);
+ assert.match(html,/href="\.\/academy\.css\?v=1"/);
+ assert.match(html,/id="lessonBody"/);
+ assert.match(css,/@media\(max-width:760px\)/);
+ assert.match(js,/sd-game-academy-progress-v1/);
+ assert.doesNotMatch(js,/\b(?:fetch|XMLHttpRequest|eval|indexedDB)\s*\(/);
+ assert.doesNotMatch(js,/\b(?:SDGameCore|SDGameProject|SDLargeWorld)\b/);
+ assert.doesNotMatch(js,/localStorage\.(?:clear|removeItem)\(\s*['"](?:sd-game-project|sd-game-scene)/);
+});
+test('Academy scripts contain 4 learning tracks and 16 distinct lessons',()=>{
+ const src=fs.readFileSync(path.join(academy,'academy.js'),'utf8');
+ new vm.Script(src,{filename:'academy.js'});
+ const trackIds=[...'start,design,assets,large'.split(',')];
+ for(const id of trackIds)assert.match(src,new RegExp("id:'"+id+"'"));
+ const ids=[...src.matchAll(/\{id:'([a-z-]+)',name:'.*?',minutes:\d+/g)].map(m=>m[1]);
+ assert.equal(ids.length,16);
+ assert.equal(new Set(ids).size,16);
+ assert.equal((src.match(/quiz:\[/g)||[]).length,16);
+ assert.equal((src.match(/tasks:\[/g)||[]).length,16);
+ assert.match(src,/l\.tasks\.every\(\(_,i\)=>taskDone\(l,i\)\)&&correct\(l\)/);
+});
