@@ -3,10 +3,10 @@
  * No external fetching, telemetry, storage or editing of v1/v2 projects. */
 (function(){
 'use strict';
-const World=window.SDLargeWorld,Stream=window.SDWorldStream,doc=document,$=id=>doc.getElementById(id),canvas=$('worldCanvas');
+const World=window.SDLargeWorld,Stream=window.SDWorldStream,Terrain=window.SDWorldTerrain,doc=document,$=id=>doc.getElementById(id),canvas=$('worldCanvas');
 if(!World||!canvas)return;
 let world=World.generate(31,8),runtime=World.runtime(world,1),fileLoader=null,projectEpoch=0,gl=null,program=null,locations=null;
-let cube=null,cone=null,instancing=null,instanceBuffers=null,cubeBatch=[],coneBatch=[],camera={x:0,z:0,azimuth:.55,elev:.55,distance:37},keys=new Set(),pointer=null;
+let cube=null,cone=null,instancing=null,instanceBuffers=null,cubeBatch=[],coneBatch=[],terrainMeshes=new Map(),camera={x:0,z:0,azimuth:.55,elev:.55,distance:37},keys=new Set(),pointer=null;
 let lastFrame=0,lastStats=0,lastDraw=0,hasChanges=false;
 const tintHex=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255];
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
@@ -49,6 +49,39 @@ const tris=[],segments=9,top=[0,1,0];
 for(let i=0;i<segments;i++){const a=i*2*Math.PI/segments,b=(i+1)*2*Math.PI/segments;
 tris.push([[Math.cos(a),-1,Math.sin(a)],[Math.cos(b),-1,Math.sin(b)],top]);}
 return mesh(tris);
+}
+function clearTerrain(){
+if(gl)for(const item of terrainMeshes.values())gl.deleteBuffer(item.mesh.buffer);
+terrainMeshes.clear();
+}
+function prepareTerrain(cells){
+const seed=fileLoader?fileLoader.manifest.seed:world.seed,keep=new Set();
+for(const cell of cells){
+const key=cell.cx+':'+cell.cz;keep.add(key);
+if(terrainMeshes.has(key)&&terrainMeshes.get(key).seed===seed)continue;
+const generated=Terrain.buildCell(cell.cx,cell.cz,seed,12),buffer=gl.createBuffer();
+if(!buffer)throw Error('GPU-Speicher für Gelände erschöpft.');
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,generated.vertices,gl.STATIC_DRAW);
+terrainMeshes.set(key,{seed,mesh:{buffer,count:generated.count}});
+}
+for(const [key,entry] of terrainMeshes)if(!keep.has(key)){
+gl.deleteBuffer(entry.mesh.buffer);terrainMeshes.delete(key);
+}
+}
+function drawTerrain(cell){
+const mesh=terrainMeshes.get(cell.cx+':'+cell.cz)?.mesh;
+if(!mesh)return;
+const tint=cell.ground==='sand'?'#b09a73':cell.ground==='snow'?'#cedce1':'#4f8a72';
+gl.uniform1f(locations.useInstancing,0);
+gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);
+gl.vertexAttribPointer(locations.pos,3,gl.FLOAT,false,24,0);
+gl.vertexAttribPointer(locations.normal,3,gl.FLOAT,false,24,12);
+gl.uniform3fv(locations.translation,[0,0,0]);
+gl.uniform3fv(locations.scale,[1,1,1]);
+gl.uniform3fv(locations.color,tintHex(tint));
+gl.drawArrays(gl.TRIANGLES,0,mesh.count);
+lastDraw++;
 }
 function setup(){
 gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
@@ -118,19 +151,20 @@ gl.uniform1f(locations.useInstancing,0);
 cubeBatch=[];coneBatch=[];
 }
 function drawObject(o,far){
-const {x,z,scale:s,type}=o;
-if(type==='box')draw(cube,o.color,x,s,z,s,s,s);
-else if(type==='rock')draw(cube,o.color,x,.5*s,z,1.3*s,.55*s,1.1*s);
-else if(type==='bush')draw(cube,o.color,x,.45*s,z,.75*s,.55*s,.72*s);
+const {x,z,scale:s,type}=o,base=Terrain.heightAt(x,z,fileLoader?fileLoader.manifest.seed:world.seed);
+if(type==='box')draw(cube,o.color,x,s+base,z,s,s,s);
+else if(type==='rock')draw(cube,o.color,x,.5*s+base,z,1.3*s,.55*s,1.1*s);
+else if(type==='bush')draw(cube,o.color,x,.45*s+base,z,.75*s,.55*s,.72*s);
 else if(type==='pine'||type==='tree'){
-if(!far)draw(cube,'#8e7662',x,1.05*s,z,.23*s,1.05*s,.23*s);
-draw(cone,type==='pine'?'#509e83':o.color,x,far?2*s:2.75*s,z,(far?1:1.1)*s,far?1.5*s:1.65*s,(far?1:1.1)*s);
-if(!far&&type==='tree')draw(cone,'#6ebc9b',x,3.5*s,z,.7*s,1.05*s,.7*s);
+if(!far)draw(cube,'#8e7662',x,1.05*s+base,z,.23*s,1.05*s,.23*s);
+draw(cone,type==='pine'?'#509e83':o.color,x,(far?2*s:2.75*s)+base,z,(far?1:1.1)*s,far?1.5*s:1.65*s,(far?1:1.1)*s);
+if(!far&&type==='tree')draw(cone,'#6ebc9b',x,3.5*s+base,z,.7*s,1.05*s,.7*s);
 }
 }
 function updateStats(view){
 $('worldObjects').textContent=(fileLoader?fileLoader.manifest.totalObjects:World.total(world)).toLocaleString('de-DE');
 $('loadedFileCells').textContent=fileLoader?String(view.loadedCells)+' / '+fileLoader.manifest.cells.length:'–';
+$('terrainCells').textContent=String(terrainMeshes.size);
 $('activeCells').textContent=String(view.activeCells);
 $('activeObjects').textContent=String(view.activeObjects);
 $('drawnObjects').textContent=String(lastDraw);
@@ -148,12 +182,8 @@ gl.useProgram(program);
 gl.uniformMatrix4fv(locations.view,false,new Float32Array(look(eye,[x,0,z])));
 gl.uniformMatrix4fv(locations.proj,false,new Float32Array(perspective(.9,w/h,.1,210)));
 const selection=fileLoader?fileLoader.update(x,z,1):runtime.query(x,z);lastDraw=0;cubeBatch=[];coneBatch=[];
-for(const cell of selection.cells){
-const centerX=-World.HALF+cell.cx*World.CHUNK+World.CHUNK/2,
-centerZ=-World.HALF+cell.cz*World.CHUNK+World.CHUNK/2;
-const ground=cell.ground==='sand'?'#b09a73':cell.ground==='snow'?'#cedce1':'#4f8a72';
-draw(cube,ground,centerX,-.42,centerZ,World.CHUNK/2,.40,World.CHUNK/2);
-}
+prepareTerrain(selection.cells);
+for(const cell of selection.cells)drawTerrain(cell);
 for(const object of selection.objects){
 const d=Math.hypot(object.x-x,object.z-z);
 if(d>95)continue;
@@ -181,6 +211,7 @@ function setStatus(msg){$('worldStatus').textContent=msg;}
 function newWorld(next){
 const valid=World.validate(next);
 projectEpoch++;
+clearTerrain();
 if(fileLoader){fileLoader.dispose();fileLoader=null;}
 world=valid;runtime=World.runtime(world,1);camera.x=valid.spawn.x;camera.z=valid.spawn.z;
 hasChanges=false;keys.clear();$('worldCells').textContent=String(world.cells.length);
@@ -212,6 +243,7 @@ if(state.lastError&&loader===fileLoader)setStatus('Zellendatei abgelehnt: '+stat
 }});
 if(ticket!==projectEpoch){loader.dispose();return;}
 if(fileLoader)fileLoader.dispose();
+clearTerrain();
 fileLoader=loader;world=null;runtime=null;camera.x=manifest.spawn.x;camera.z=manifest.spawn.z;
 hasChanges=false;keys.clear();doc.body.dataset.streamMode='files';
 $('worldCells').textContent=String(manifest.cells.length);
