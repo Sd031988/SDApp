@@ -163,7 +163,7 @@ try{
 const x=clamp(Math.round(camera.x+2),-World.HALF+1,World.HALF-1),
 z=clamp(Math.round(camera.z-2),-World.HALF+1,World.HALF-1);
 const object=World.add(world,type,x,z);
-hasChanges=true;setStatus(type==='tree'?'Baum':'Felsen'+' hinzugefügt · ID '+object.id+'. Export sichert Änderungen.');
+hasChanges=true;setStatus((type==='tree'?'Baum':'Felsen')+' hinzugefügt · ID '+object.id+'. Export sichert Änderungen.');
 updateStats(runtime.query(camera.x,camera.z));
 }catch(err){setStatus('Objekt konnte nicht platziert werden: '+err.message);}
 }
