@@ -41,8 +41,16 @@ if(pending.size>=maxConcurrent)break;
 if(pending.has(key)||resident.has(key)||failed.has(key))continue;
 const controller=new AbortController(),job={controller};
 pending.set(key,job);
-Promise.resolve().then(()=>load(key,controller.signal)).then(value=>{
-if(closed||controller.signal.aborted||!desired.has(key))cleanup(key,value);
+Promise.resolve().then(()=>{
+// Visibility may change before the queued microtask starts. Never invoke
+// a loader for a request already cancelled in the same event-loop turn.
+if(closed||controller.signal.aborted||!desired.has(key))return undefined;
+return load(key,controller.signal);
+}).then(value=>{
+if(closed||controller.signal.aborted||!desired.has(key)){
+// No resource was produced when cancellation happened before load().
+if(value!==undefined&&value!==null)cleanup(key,value);
+}
 else if(value===undefined||value===null){failed.add(key);}
 else{resident.set(key,value);trim();}
 },()=>{if(!closed&&!controller.signal.aborted&&desired.has(key))failed.add(key);}).finally(()=>{
