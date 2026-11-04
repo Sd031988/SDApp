@@ -40,7 +40,7 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <div class="app">
   <aside>
     <div class="kopf"><b>SD <em>WERKSTATT</em></b><small>Objekte für deine Spiele erzeugen – live in 3D</small><a href="./index.html">⚡ SD Engine</a> · <a href="../index.html">← Game-Studio</a></div>
-    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="oberflaeche">🧱 Oberfläche</button><button data-t="fotoHaus">📷 Foto-Haus</button><button data-t="fotoMaterial">📷 Foto-Material</button><button data-t="modelle" style="grid-column:span 2">📦 Meine Modelle</button></div>
+    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="auto">🚗 Auto</button><button data-t="mensch">🧍 Mensch</button><button data-t="oberflaeche">🧱 Oberfläche</button><button data-t="fotoHaus">📷 Foto-Haus</button><button data-t="fotoMaterial">📷 Foto-Material</button><button data-t="modelle" style="grid-column:span 2">📦 Meine Modelle</button></div>
     <div id="regler"></div>
     <pre id="code" title="So benutzt du das Objekt im SD-Skript"></pre>
     <div class="aktionen"><button id="zufall">🎲 Zufällig</button><button id="kopieren">📋 SD-Skript</button><button class="haupt" id="export">⬇ Als .glb exportieren (Blender, Godot, Unity)</button></div>
@@ -52,6 +52,8 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=3"></script>
 <script src="./sd-assets.js?v=1"></script>
+<script src="./sd-fahrzeug.js?v=1"></script>
+<script src="./sd-mensch.js?v=1"></script>
 <script src="./sd-foto.js?v=1"></script>
 <script>window.EXTRA = {};</script>
 <script>
@@ -61,6 +63,10 @@ const SCHEMA = {
   baum: [['art', 'Art', 'wahl', 'laub', ['laub:Laubbaum', 'nadel:Nadelbaum', 'palme:Palme', 'herbst:Herbstbaum', 'busch:Busch']], ['hoehe', 'Höhe (m)', 'zahl', 9, 2, 20, 0.5], ['aeste', 'Äste pro Gabelung', 'zahl', 3, 2, 5, 1], ['tiefe', 'Verzweigungen', 'zahl', 3, 2, 4, 1], ['dichte', 'Blattdichte', 'zahl', 1, 0.5, 2, 0.1], ['blattFarbe', 'Blattfarbe (Tönung)', 'farbe', '#ffffff'], ['seed', 'Variante', 'zahl', 1, 1, 99, 1]],
   gebaeude: [['breite', 'Breite (m)', 'zahl', 12, 6, 30, 0.5], ['tiefe', 'Tiefe (m)', 'zahl', 9, 6, 24, 0.5], ['stockwerke', 'Stockwerke', 'zahl', 3, 1, 10, 1], ['material', 'Fassade', 'wahl', 'ziegel', ['putz:Putz', 'ziegel:Ziegel', 'beton:Beton', 'holz:Holz', 'metall:Metall']], ['farbe', 'Farbe (Tönung)', 'farbe', '#ffffff'], ['dach', 'Dach', 'wahl', 'sattel', ['flach:Flachdach', 'sattel:Satteldach']], ['fensterAbstand', 'Fensterabstand (m)', 'zahl', 2.6, 1.8, 4, 0.1], ['balkone', 'Balkone', 'an', true], ['dachTreppe', 'Treppe aufs Dach (Flachdach)', 'an', false], ['seed', 'Variante', 'zahl', 1, 1, 99, 1]],
   roboter: [['stil', 'Bauart', 'wahl', 'kampf', ['kampf:Kampfroboter', 'schwer:Schwerer Panzer', 'spaeher:Späher']], ['farbe', 'Lack', 'farbe', '#d9dde2'], ['akzent', 'Gelenke', 'farbe', '#2b2f36'], ['augen', 'Leuchtfarbe', 'farbe', '#ff3b30'], ['groesse', 'Größe', 'zahl', 1, 0.7, 1.6, 0.05], ['tempo', 'Vorschau: Laufen', 'zahl', 0, 0, 7, 0.5]],
+  auto: [['typ', 'Fahrzeug', 'wahl', 'limousine', ['limousine:Limousine', 'suv:SUV', 'sport:Sportwagen', 'pickup:Pickup', 'bus:Bus']], ['farbe', 'Lack', 'farbe', '#b8202a'], ['felgen', 'Felgen', 'farbe', '#c8ccd2'], ['scheiben', 'Scheiben', 'farbe', '#1b2833']],
+  mensch: [['groesse', 'Größe (m)', 'zahl', 1.8, 1.5, 2.05, 0.01], ['statur', 'Statur', 'zahl', 1, 0.8, 1.3, 0.05], ['haut', 'Hautfarbe', 'farbe', '#d9a77c'], ['frisur', 'Frisur', 'wahl', 'kurz', ['kurz:Kurz', 'lang:Lang', 'glatze:Glatze', 'kappe:Kappe']], ['haare', 'Haarfarbe', 'farbe', '#3a2a1e'],
+    ['oberteil', 'Oberteil', 'farbe', '#3b5a7a'], ['aermel', 'Ärmel', 'wahl', 'kurz', ['kurz:Kurz', 'lang:Lang']], ['hose', 'Hose', 'farbe', '#2f3540'], ['schuhe', 'Schuhe', 'farbe', '#1c1c1c'], ['weste', 'Schutzweste', 'an', false], ['helm', 'Helm', 'an', false], ['westeFarbe', 'Weste/Helm-Farbe', 'farbe', '#3d4433'],
+    ['anim', 'Vorschau-Animation', 'wahl', 'gehen', ['stehen:Stehen', 'gehen:Gehen', 'rennen:Rennen', 'sterben:Sterben']]],
   oberflaeche: [['art', 'Oberfläche', 'wahl', 'ziegel', ['ziegel:Ziegel', 'putz:Putz', 'beton:Beton', 'holz:Holz', 'metall:Metall', 'dachziegel:Dachziegel', 'rinde:Rinde', 'asphalt:Asphalt', 'platten:Platten', 'gras:Gras']], ['farbe', 'Tönung', 'farbe', '#ffffff']],
 };
 let typ = 'baum'; const werte = {}; for (const t in SCHEMA) { werte[t] = {}; for (const f of SCHEMA[t]) werte[t][f[0]] = f[3]; }
@@ -84,7 +90,7 @@ let aktuell = null, robo = null, zeitAlt = performance.now();
 engine.runRenderLoop(() => { const jetzt = performance.now(), dt = Math.min(0.05, (jetzt - zeitAlt) / 1000); zeitAlt = jetzt; if (robo) { const t = werte.roboter.tempo; robo.animiere(t, dt, false);  } szene.render(); });
 addEventListener('resize', () => engine.resize());
 
-function wegraeumen() { if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
+function wegraeumen() { if (window.SD_MENSCH) { Object.values(SD_MENSCH.gruppen).forEach(g => g.dispose()); SD_MENSCH.skelett.dispose(); window.SD_MENSCH = null; } if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
 function bauen() {
   if (EXTRA[typ]) { if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); EXTRA[typ].bauen(); return; }
   if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); const w = werte[typ]; const t0 = performance.now(); let ziel = 4, radius = 22, info = '';
@@ -94,6 +100,11 @@ function bauen() {
     code('sd.haus({ pos: [0, null, 0], breite: ' + w.breite + ', tiefe: ' + w.tiefe + ', stockwerke: ' + w.stockwerke + ', material: ' + q(w.material) + ', farbe: ' + q(w.farbe) + ', dach: ' + q(w.dach) + ', balkone: ' + w.balkone + ', dachTreppe: ' + w.dachTreppe + ', seed: ' + w.seed + ' });'); }
   else if (typ === 'roboter') { robo = BK.roboter(w); robo.rotation.y = Math.PI * 0.85; aktuell = robo; ziel = 1 * w.groesse; radius = 4.5 * w.groesse; info = 'Roboter · Gelenke: Hüfte, Knie, Schulter, Ellbogen';
     code('sd.gegner({ pos: [0, null, 20], aussehen: \'roboter\', roboter: { stil: ' + q(w.stil) + ', farbe: ' + q(w.farbe) + ', akzent: ' + q(w.akzent) + ', augen: ' + q(w.augen) + ', groesse: ' + w.groesse + ' } });'); }
+  else if (typ === 'mensch') { const m = SDMensch.bauer(BABYLON, szene).mensch(w); m.wurzel.rotation.y = Math.PI * 0.85; aktuell = m.wurzel; window.SD_MENSCH = m; const g = m.gruppen[w.anim] || m.gruppen.gehen; g.start(w.anim !== 'sterben'); ziel = w.groesse * 0.55; radius = 4.2;
+    info = 'Mensch · Skelett mit ' + m.skelett.bones.length + ' Knochen · Animationen: Stehen, Gehen, Rennen, Sterben';
+    code("sd.gegner({ pos: [0, null, 20], aussehen: 'mensch', mensch: " + JSON.stringify(Object.fromEntries(Object.entries(w).filter(([k]) => k !== 'anim'))).replace(/"/g, "'") + " });"); }
+  else if (typ === 'auto') { const a = SDFahrzeug.bauer(BABYLON, szene, BK).auto(w); aktuell = a.wurzel; ziel = a.abm.H * 0.5; radius = a.abm.L * 1.4 + 3; info = a.typ.name + ' · ' + a.abm.L + ' × ' + a.abm.B + ' m · fahrbar mit Havok-Physik';
+    code('sd.auto({ pos: [0, null, 0], drehung: 0, typ: ' + q(w.typ) + ', farbe: ' + q(w.farbe) + ', felgen: ' + q(w.felgen) + ' });   // F = einsteigen'); }
   else { const tn = new BABYLON.TransformNode('muster', szene); const k = BABYLON.MeshBuilder.CreateSphere('kugel', { diameter: 3, segments: 48 }, szene), b = BABYLON.MeshBuilder.CreateBox('wuerfel', { size: 3 }, szene); k.position.set(-2.2, 1.5, 0); b.position.set(2.2, 1.5, 0); b.rotation.y = 0.6;
     for (const m of [k, b]) { m.bakeCurrentTransformIntoVertices(); BK.weltUV(m, 2); m.material = BK.material(w.art, w.farbe); m.parent = tn; } aktuell = tn; ziel = 1.5; radius = 10; info = 'Oberfläche mit Normal-Map (kachelbar)';
     code('sd.box({ pos: [0, 1, 0], groesse: [4, 2, 4], textur: ' + q(w.art) + ', farbe: ' + q(w.farbe) + ' });'); }
