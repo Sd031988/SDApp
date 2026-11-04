@@ -2,7 +2,8 @@
 
 ## Neu (04.11.2026): Online-Werkzeuge kommen automatisch auf den PC
 
-Der PC-Agent (localhost:8765) hat den Knopf **„🧩 Online-Werkzeuge“**. Er öffnet `http://localhost:8766/studio/`.
+Der PC-Agent (localhost:8765): Der Knopf **„💻 Code-Studio“** öffnet `http://localhost:8766/studio/` (dasselbe Studio wie online).
+Das alte eingebaute Studio heißt jetzt **„🖥 Klassisches PC-Studio“** (auch über `http://localhost:8765/?studio=1`).
 Dort liefert der Agent die **aktuellen Dateien von thesdhub.com** aus (`studio/`, `design/`, `agent/zugang-krypto.js`,
 `icon.svg`, `fonts/`) und speichert sie in `~/.ollama_launcher/web-cache` (offline nutzbar, neu geholt alle 10 Minuten).
 
