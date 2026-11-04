@@ -350,7 +350,7 @@ function dsSchliessen(){dsSpeichern(true);location.href="../index.html"}
 
 (async()=>{designStudio();
   const c=(()=>{try{return sessionStorage.getItem("sdAgentZugang")||localStorage.getItem("sdAgentZugang")}catch(e){return null}})();
-  if(c&&await sdSchluesselPruefen(c))SD_FREIGESCHALTET=true;sdKontZeigen()})();
+  if(window.SD_PC||(c&&await sdSchluesselPruefen(c)))SD_FREIGESCHALTET=true;sdKontZeigen()})();
 </script>
 </body>
 </html>

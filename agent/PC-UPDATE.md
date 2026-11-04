@@ -1,3 +1,26 @@
+# SD Lotze PC-Agent und Online-Werkzeuge
+
+## Neu (04.11.2026): Online-Werkzeuge kommen automatisch auf den PC
+
+Der PC-Agent (localhost:8765) hat den Knopf **„🧩 Online-Werkzeuge“**. Er öffnet `http://localhost:8766/studio/`.
+Dort liefert der Agent die **aktuellen Dateien von thesdhub.com** aus (`studio/`, `design/`, `agent/zugang-krypto.js`,
+`icon.svg`, `fonts/`) und speichert sie in `~/.ollama_launcher/web-cache` (offline nutzbar, neu geholt alle 10 Minuten).
+
+**Für Änderungen am Online-Code-Studio heißt das:** Ein Push nach `studio/` oder `design/` erreicht die PC-Nutzer
+**ohne neues PC-Paket**. Das verschlüsselte PC-Paket muss dafür nicht angefasst werden.
+
+Regeln, damit das so bleibt:
+- Port 8766 ist absichtlich ein **eigener Ursprung**: Code von der Webseite kann die Agent-Werkzeuge (`/__tool`) NICHT benutzen.
+  Nur `POST http://localhost:8765/__vom_hub` (Projekt übergeben, nichts ausführen) ist erlaubt. Bitte nicht aufweichen.
+- Im PC läuft dasselbe `studio/index.html`; der Agent setzt `window.SD_PC = {agent: 'http://localhost:8765'}`.
+  `studio.js` nutzt das für: kein 10×-Limit, Übergabe-Adresse. Diese Prüfungen bitte erhalten.
+- Nur relative Pfade innerhalb von `studio/` und `design/` funktionieren am PC; andere Hub-Seiten öffnen online.
+- Der genaue Einfügen-Parser (`anleitungParsen`: Ordnerbaum, Dateinamen wie `app/main.py`, `requirements.txt`)
+  hat Vorrang, wenn er mehr findet als der KI-Parser – bitte beide erhalten (Test: `tests/studio/browser.test.cjs`).
+
+Hinweis: Das echte PC-Paket enthält nur `SD-KI-Agent/SD_KI_Agent.py` (+ Startdateien); das PC-Code-Studio ist darin eingebaut.
+`tools/pc_studio_sync.py` erwartet einzelne Studio-Dateien im ZIP und passt deshalb nicht zum echten Paket.
+
 # SD Lotze: bestehende PC-Agent-Version und Online-Code-Studio synchronisieren
 
 Der bestehende SD-Agent auf `http://localhost:8765` hat **„Nach Updates suchen“** und darin ein **Code-Studio**. Das ist die native PC-Version, nicht die zusätzliche Web-Desktop-Hülle in `agent/pc-online`.
