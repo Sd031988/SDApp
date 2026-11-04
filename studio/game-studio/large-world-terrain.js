@@ -12,8 +12,8 @@ const valid=(v)=>typeof v==='number'&&Number.isFinite(v);
 function heightAt(x,z,seed=31){
 if(!valid(x)||!valid(z)||!Number.isSafeInteger(seed)||seed<1||seed>2147483647)throw Error('Ungültige Terrainkoordinate.');
 const offset=(seed%997)*.013;
-return 2.3*Math.sin(x*.021+offset)*Math.cos(z*.019-offset*.47)
-+.85*Math.sin((x+z)*.063-offset*.81)*Math.cos((x-z)*.041+offset*.29);
+return 5.4*Math.sin(x*.021+offset)*Math.cos(z*.019-offset*.47)
++1.6*Math.sin((x+z)*.063-offset*.81)*Math.cos((x-z)*.041+offset*.29);
 }
 function normalAt(x,z,seed=31){
 const step=.45,dx=(heightAt(x+step,z,seed)-heightAt(x-step,z,seed))/(2*step),
