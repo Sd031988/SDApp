@@ -96,7 +96,7 @@ body.handy .unten{bottom:180px}
 
 <div class="ov" id="menue">
   <div class="karte">
-    <div class="spielwahl" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="sw an" data-spiel="inselsturm">🏝 Inselsturm</button><button class="sw" data-spiel="stadtjagd">🏙 Stadtjagd</button></div>
+    <div class="spielwahl" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="sw an" data-spiel="inselsturm">🏝 Inselsturm</button><button class="sw" data-spiel="stadtjagd">🏙 Stadtjagd</button><button class="sw" data-spiel="eigen">🛠 Eigene Szene</button><a class="btn" href="./editor.html" style="margin-left:auto">✏ Szenen-Editor</a></div>
     <h1 class="titel" id="spielTitel">INSELSTURM</h1>
     <div class="unter" id="spielUnter">SD Engine · Third-Person-Shooter · Battle-Royale-Modus</div>
     <p id="spielText" style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
@@ -140,22 +140,23 @@ body.handy .unten{bottom:180px}
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics_umd.js"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-baukasten.js?v=3"></script>
-<script src="./sd-fahrzeug.js?v=1"></script>
-<script src="./sd-mensch.js?v=1"></script>
-<script src="./sd-stadt.js?v=1"></script>
-<script src="./sd-ki.js?v=1"></script>
-<script src="./sd-wetter.js?v=1"></script>
-<script src="./sd-engine.js?v=5"></script>
+<script src="./sd-baukasten.js?v=4"></script>
+<script src="./sd-fahrzeug.js?v=2"></script>
+<script src="./sd-mensch.js?v=2"></script>
+<script src="./sd-stadt.js?v=2"></script>
+<script src="./sd-ki.js?v=2"></script>
+<script src="./sd-wetter.js?v=2"></script>
+<script src="./sd-engine.js?v=7"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 const HAVOK_WASM = 'https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics.wasm';
 const SPIELE = {
   inselsturm: { titel: 'INSELSTURM', unter: 'SD Engine · Third-Person-Shooter · Battle-Royale-Modus', text: 'Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.' },
+  eigen: { titel: 'EIGENE SZENE', unter: 'Gebaut im SD Szenen-Editor', text: 'Deine eigene Welt aus dem Szenen-Editor. Dort mit der Maus Häuser, Wälder, Städte, Autos und Gegner platzieren und auf „▶ Spielen“ klicken.' },
   stadtjagd: { titel: 'STADTJAGD', unter: 'SD Engine · Open World · Autos · Tag & Nacht · Wetter', text: 'Eine Stadt mit 16 Blöcken, Hochhäusern, Verkehr und Passanten. Steig mit F in Autos, erlebe Abend, Nacht und Regen – und schalte die Gang im Nordosten aus. Tipp: Grafik „Niedrig“ auf schwächeren PCs.' },
 };
-let SPIEL = 'inselsturm'; try { const g = localStorage.getItem('sdEngineSpiel'); if (g && SPIELE[g]) SPIEL = g; } catch (e) { /* egal */ }
+let SPIEL = 'inselsturm'; try { const g = new URLSearchParams(location.search).get('spiel') || localStorage.getItem('sdEngineSpiel'); if (g && SPIELE[g]) SPIEL = g; } catch (e) { /* egal */ }
 let SPEICHER = 'sdEngineSkript.' + SPIEL;
 const handy = matchMedia('(pointer: coarse)').matches; if (handy) document.body.classList.add('handy');
 let laeuft = null, pausiert = false, original = '';
@@ -163,7 +164,7 @@ const lies = k => { try { return localStorage.getItem(k); } catch (e) { return n
 const schreib = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* privat */ } };
 try { const q = lies('sdEngineQualitaet'); if (q) $('qualitaet').value = q; else if (handy) $('qualitaet').value = 'niedrig'; } catch (e) { /* egal */ }
 
-async function skriptHolen() { if (!original) original = await (await fetch('./spiele/' + SPIEL + '.js', { cache: 'no-cache' })).text(); return lies(SPEICHER) || original; }
+async function skriptHolen() { if (!original) original = SPIEL === 'eigen' ? (lies('sdSzeneCode') || "// Noch keine Szene gebaut.\n// Öffne den Szenen-Editor (✏) und klicke dort auf ▶ Spielen.\nsd.himmel({});\nsd.gelaende({ groesse: 300, hoehe: 10 });\nsd.spieler({ pos: [0, null, 0] });") : await (await fetch('./spiele/' + SPIEL + '.js', { cache: 'no-cache' })).text(); return SPIEL === 'eigen' ? (lies('sdSzeneCode') || original) : (lies(SPEICHER) || original); }
 function spielWaehlen(n) { SPIEL = n; SPEICHER = 'sdEngineSkript.' + n; original = ''; schreib('sdEngineSpiel', n); const d = SPIELE[n]; $('spielTitel').textContent = d.titel; $('spielUnter').textContent = d.unter; $('spielText').textContent = d.text; $('edTitel').textContent = '{ } SD-Skript · ' + d.titel.charAt(0) + d.titel.slice(1).toLowerCase();
   document.querySelectorAll('.sw').forEach(b => b.classList.toggle('an', b.dataset.spiel === n)); $('code').value = ''; skriptHolen().then(c => { $('code').value = c; }).catch(() => {}); }
 document.querySelectorAll('.sw').forEach(b => b.onclick = () => spielWaehlen(b.dataset.spiel));

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SD Szenen-Editor – Welten mit der Maus bauen</title>
+<meta name="description" content="SD Szenen-Editor: Häuser, Wälder, Autos, Gegner und ganze Städte mit der Maus platzieren und direkt in der SD Engine spielen.">
+<link rel="icon" href="../../../icon.svg">
+<style>
+:root{--akz:#ffb547;--akz2:#ff6b3d;--bg:#0b0f14;--panel:#111821;--rand:rgba(255,255,255,.1);--txt:#eef2f6;--leise:#93a1af}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.45 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+.app{display:grid;grid-template-columns:300px 1fr;grid-template-rows:48px 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--rand);overflow-x:auto}
+header b{font-size:15px;margin-right:8px;white-space:nowrap}header b em{font-style:normal;background:linear-gradient(90deg,var(--akz),var(--akz2));-webkit-background-clip:text;background-clip:text;color:transparent}
+button,select,input{font:600 13px system-ui;color:var(--txt);background:rgba(255,255,255,.06);border:1px solid var(--rand);border-radius:7px;padding:7px 10px}button{cursor:pointer;white-space:nowrap}button:hover{background:rgba(255,255,255,.12)}
+button.haupt{background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border:0}
+aside{background:var(--panel);border-right:1px solid var(--rand);overflow:auto;padding:10px}
+.palette{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.palette button{padding:8px 4px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}.palette button span{font-size:19px}
+.palette button.an{outline:2px solid var(--akz)}
+h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--leise);margin:14px 0 6px}
+.r{margin:8px 0}.r label{display:flex;justify-content:space-between;font-size:12.5px;color:#cdd6df;margin-bottom:3px}.r label span{color:var(--akz)}.r input[type=range]{width:100%;accent-color:var(--akz);padding:0}.r select,.r input[type=color],.r input[type=text]{width:100%}.r input[type=color]{height:32px;padding:2px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:8px 0}
+.hinweis{font-size:12px;color:var(--leise);line-height:1.5}
+main{position:relative}canvas{width:100%;height:100%;display:block;outline:none}
+#status{position:absolute;left:12px;bottom:10px;background:rgba(0,0,0,.5);padding:5px 10px;border-radius:6px;font-size:12px;color:#cfd8e2}
+#meldung{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(10,14,20,.9);border:1px solid var(--rand);border-radius:8px;padding:8px 14px;font-weight:600}
+dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-radius:12px;width:min(760px,94vw)}dialog pre{max-height:60vh;overflow:auto;background:#0b1017;padding:12px;border-radius:8px;font:12px/1.5 Consolas,monospace;white-space:pre-wrap}
+[hidden]{display:none!important}
+@media (max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:48px 50vh 1fr}main{grid-row:2}aside{grid-row:3}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><b>SD <em>SZENEN-EDITOR</em></b>
+    <button id="neu" title="Neue leere Szene">＋ Neu</button><button id="speichern" title="In diesem Browser speichern">💾 Speichern</button><select id="laden" title="Gespeicherte Szene laden"><option value="">📂 Laden …</option></select>
+    <button id="export" title="Als Datei herunterladen">⬇ Datei</button><label class="btn" style="display:inline-flex"><input type="file" id="import" accept=".json" hidden><button type="button" onclick="this.previousElementSibling.click()">⬆ Datei</button></label>
+    <button id="rueck" title="Rückgängig (Strg+Z)">↶</button><button id="codeZeigen" title="Erzeugten SD-Skript-Code ansehen">{ } Code</button>
+    <span style="flex:1"></span><a href="./werkstatt.html"><button>🛠 Werkstatt</button></a><a href="./index.html"><button>⚡ Engine</button></a><button class="haupt" id="spielen">▶ Spielen</button>
+  </header>
+  <aside>
+    <h3>Hinzufügen – wählen, dann aufs Gelände klicken</h3>
+    <div class="palette" id="palette"></div>
+    <h3 id="eigTitel">🌍 Welt</h3>
+    <div id="eigenschaften"></div>
+    <p class="hinweis">Maus: Objekt anklicken = auswählen · ziehen = verschieben · <b>Q/E</b> drehen · <b>Entf</b> löschen · <b>Strg+D</b> kopieren · <b>Strg+Z</b> rückgängig · rechte Maustaste/Mausrad = Kamera</p>
+  </aside>
+  <main><canvas id="c"></canvas><div id="status">Bereit</div><div id="meldung" hidden></div></main>
+</div>
+<dialog id="codeDlg"><b>So sieht deine Szene als SD-Skript aus</b><pre id="codeText"></pre><div style="display:flex;gap:6px;justify-content:flex-end"><button id="codeKopie">📋 Kopieren</button><button onclick="codeDlg.close()">OK</button></div></dialog>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
+<script src="./sd-baukasten.js?v=4"></script>
+<script src="./sd-assets.js?v=1"></script>
+<script src="./sd-fahrzeug.js?v=2"></script>
+<script src="./sd-mensch.js?v=2"></script>
+<script src="./sd-engine.js?v=7"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector3(x, y, z);
+/* ---------- Objektarten ---------- */
+const ARTEN = {
+  haus: { icon: '🏢', name: 'Haus', felder: [['breite', 'Breite', 'zahl', 10, 5, 30, 0.5], ['tiefe', 'Tiefe', 'zahl', 8, 5, 24, 0.5], ['stockwerke', 'Stockwerke', 'zahl', 2, 1, 12, 1], ['material', 'Fassade', 'wahl', 'putz', ['putz', 'ziegel', 'beton', 'holz', 'metall']], ['farbe', 'Farbe', 'farbe', '#efe4d2'], ['dach', 'Dach', 'wahl', 'flach', ['flach', 'sattel']], ['balkone', 'Balkone', 'an', false], ['dachTreppe', 'Treppe aufs Dach', 'an', false]] },
+  wald: { icon: '🌳', name: 'Wald', felder: [['radius', 'Fläche (m)', 'zahl', 25, 5, 150, 1], ['anzahl', 'Bäume', 'zahl', 30, 1, 400, 1], ['art', 'Art', 'wahl', 'gemischt', ['gemischt', 'laub', 'nadel', 'palme', 'herbst', 'busch']]] },
+  auto: { icon: '🚗', name: 'Auto', felder: [['typ', 'Typ', 'wahl', 'limousine', ['limousine', 'suv', 'sport', 'pickup', 'bus']], ['farbe', 'Lack', 'farbe', '#b8202a']] },
+  gegner: { icon: '🎯', name: 'Gegner', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']], ['staerke', 'Stärke', 'zahl', 0.5, 0, 1, 0.05], ['waffe', 'Waffe', 'wahl', 'gewehr', ['gewehr', 'schrotflinte', 'pistole', 'scharfschuetze']]] },
+  kiste: { icon: '📦', name: 'Kiste', felder: [['inhalt', 'Inhalt', 'wahl', 'munition', ['munition', 'medikit', 'ruestung', 'waffe:gewehr', 'waffe:schrotflinte', 'waffe:scharfschuetze']]] },
+  box: { icon: '🧱', name: 'Block', felder: [['b', 'Breite', 'zahl', 4, 0.5, 40, 0.5], ['h', 'Höhe', 'zahl', 2, 0.3, 30, 0.1], ['t', 'Tiefe', 'zahl', 4, 0.5, 40, 0.5], ['textur', 'Oberfläche', 'wahl', 'beton', ['beton', 'ziegel', 'putz', 'holz', 'metall', 'platten', 'asphalt']], ['farbe', 'Tönung', 'farbe', '#ffffff'], ['masse', 'Gewicht (0 = fest)', 'zahl', 0, 0, 500, 10]] },
+  fels: { icon: '🪨', name: 'Fels', felder: [['groesse', 'Größe', 'zahl', 2, 0.5, 8, 0.1]] },
+  stadt: { icon: '🏙', name: 'Stadt', felder: [['bx', 'Blöcke (Breite)', 'zahl', 3, 1, 6, 1], ['bz', 'Blöcke (Tiefe)', 'zahl', 3, 1, 6, 1], ['block', 'Blockgröße', 'zahl', 54, 36, 80, 2], ['verkehr', 'Autos im Verkehr', 'zahl', 8, 0, 25, 1], ['passanten', 'Passanten', 'zahl', 12, 0, 40, 1]], hinweis: 'Vorschau: graue Klötze = Häuserblöcke. Die echten Häuser, Straßen und Laternen entstehen beim Spielen.' },
+  fotohaus: { icon: '📷', name: 'Foto-Haus', felder: [['name', 'Foto-Haus', 'eigen', '', 'foto-gebaeude']] },
+  modell: { icon: '🧍', name: 'Modell', felder: [['name', 'Modell (.glb)', 'eigen', '', 'modell'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]] },
+  spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
+};
+const WELT = [['groesse', 'Weltgröße (m)', 'zahl', 400, 150, 900, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
+  ['stunde', 'Uhrzeit', 'zahl', 10, 0, 23.5, 0.5], ['tagMinuten', 'Minuten pro Tag (0 = Zeit steht)', 'zahl', 0, 0, 60, 1], ['regen', 'Regen', 'zahl', 0, 0, 1, 0.05], ['wind', 'Wind', 'zahl', 0.3, 0, 1, 0.05], ['gras', 'Gras', 'an', true]];
+const leer = () => ({ welt: Object.fromEntries(WELT.map(f => [f[0], f[3]])), objekte: [{ art: 'spieler', x: 0, z: 0, dreh: 0, p: { aussehen: 'mensch' } }] });
+let szene = leer(), auswahl = -1, platzieren = null, verlauf = [];
+try { const s = JSON.parse(localStorage.getItem('sdSzene.aktuell') || 'null'); if (s && s.welt) szene = s; } catch (e) { /* neu */ }
+
+/* ---------- 3D ---------- */
+const engine = new BABYLON.Engine($('c'), true, { stencil: true }), sz = new BABYLON.Scene(engine); sz.clearColor = new BABYLON.Color4(0.55, 0.7, 0.88, 1);
+const kam = new BABYLON.ArcRotateCamera('k', -Math.PI / 2, 0.9, 160, V(0, 0, 0), sz); kam.attachControl($('c'), true); kam.lowerRadiusLimit = 5; kam.upperRadiusLimit = 900; kam.wheelPrecision = 3; kam.panningSensibility = 40; kam.inputs.attached.pointers.buttons = [1, 2]; kam.maxZ = 4000;
+new BABYLON.HemisphericLight('h', V(0.3, 1, 0.2), sz).intensity = 0.65; const sonne = new BABYLON.DirectionalLight('s', V(-0.5, -1, 0.4).normalize(), sz); sonne.intensity = 2; sonne.position = V(200, 300, -200);
+sz.imageProcessingConfiguration.toneMappingEnabled = true; sz.imageProcessingConfiguration.toneMappingType = 1;
+const BK = SDBaukasten.erstellen(BABYLON, sz), FB = SDFahrzeug.bauer(BABYLON, sz, BK), MB = SDMensch.bauer(BABYLON, sz);
+let gel = null, wasser = null, hoehe = () => 0;
+function flachListe() { const roh = SDEngine.hoehenFunktion(Object.assign({}, szene.welt)), l = [];
+  for (const o of szene.objekte) { if (o.art === 'haus') l.push([o.x, o.z, Math.max(o.p.breite, o.p.tiefe) * 0.75 + 2, roh(o.x, o.z)]); if (o.art === 'fotohaus') l.push([o.x, o.z, 12, roh(o.x, o.z)]);
+    if (o.art === 'stadt') { const W = o.p.bx * o.p.block + (o.p.bx + 1) * 14, D = o.p.bz * o.p.block + (o.p.bz + 1) * 14; l.push([o.x, o.z, Math.max(W, D) * 0.55 + 6, roh(o.x, o.z)]); } }
+  return l.map(f => f.map(v => +v.toFixed(2))); }
+function gelaendeBauen() {
+  if (gel) gel.dispose(); if (wasser) { wasser.dispose(); wasser = null; } const w = szene.welt, flach = flachListe();
+  hoehe = SDEngine.hoehenFunktion({ groesse: w.groesse, hoehe: w.hoehe, seed: w.seed, flach }); const G = w.groesse, N = 120;
+  gel = BABYLON.MeshBuilder.CreateGround('gelaende', { width: G, height: G, subdivisions: N, updatable: true }, sz); const p = gel.getVerticesData('position'); for (let i = 0; i < p.length; i += 3) p[i + 1] = hoehe(p[i], p[i + 2]); gel.setVerticesData('position', p);
+  const n = []; BABYLON.VertexData.ComputeNormals(p, gel.getIndices(), n); gel.setVerticesData('normal', n); BK.weltUV(gel, 4); gel.material = BK.material('gras', '#ffffff'); gel.metadata = { boden: true };
+  if (w.wasserAn) { wasser = BABYLON.MeshBuilder.CreateGround('wasser', { width: G * 2, height: G * 2 }, sz); wasser.position.y = w.wasser; wasser.isPickable = false; wasser.material = BK.material(null, '#2a6a8a', { rau: 0.1 }); wasser.material.alpha = 0.8; }
+  szene.objekte.forEach((o, i) => { if (o.__wurzel) { o.__wurzel.position.y = bodenY(o); } });
+}
+const bodenY = o => (o.art === 'haus' || o.art === 'fotohaus') ? hoehe(o.x, o.z) - 0.15 : hoehe(o.x, o.z);
+
+/* ---------- Vorschau-Objekte (gleiche Generatoren wie in der Engine) ---------- */
+const baumCache = {}; let phMat = null; const platzhalterMat = () => { if (!phMat) { phMat = new BABYLON.StandardMaterial('platzhalter', sz); phMat.diffuseColor = new BABYLON.Color3(0.75, 0.78, 0.82); phMat.alpha = 0.75; } return phMat; };
+function baumVorlage(art, v) { const k = art + v; if (!baumCache[k]) { const b = BK.baum({ art, hoehe: art === 'nadel' ? 13 : art === 'palme' ? 9 : art === 'busch' ? 1.6 : 9, seed: 30 + v }); b.mesh.isVisible = false; b.mesh.position.y = -999; baumCache[k] = b.mesh; } return baumCache[k]; }
+async function vorschau(o, i) {
+  if (o.__wurzel) { o.__wurzel.dispose(false, true); o.__wurzel = null; }
+  const w = new BABYLON.TransformNode('obj' + i, sz), p = o.p; let inhalt = null;
+  try {
+    if (o.art === 'haus') inhalt = BK.gebaeude(Object.assign({ seed: i + 1 }, p)).mesh;
+    else if (o.art === 'auto') inhalt = FB.auto(p).wurzel;
+    else if (o.art === 'gegner') { if (p.aussehen === 'roboter') inhalt = BK.roboter({ seed: i }); else { const m = MB.mensch({ seed: i, oberteil: '#5a2a2a', weste: true }); m.gruppen.stehen.start(true); inhalt = m.wurzel; } }
+    else if (o.art === 'spieler') { const m = MB.mensch({ oberteil: '#2a4a8a', weste: true }); m.gruppen.stehen.start(true); inhalt = m.wurzel; const ring = BABYLON.MeshBuilder.CreateTorus('ring', { diameter: 2.4, thickness: 0.12, tessellation: 32 }, sz); ring.material = BK.material(null, '#2a8aff', { leuchten: '#2a8aff' }); ring.parent = w; ring.position.y = 0.08; }
+    else if (o.art === 'kiste') { inhalt = BABYLON.MeshBuilder.CreateBox('k', { size: 0.7 }, sz); inhalt.position.y = 0.35; inhalt.material = BK.material('holz', '#c2a14a'); }
+    else if (o.art === 'fels') { inhalt = BABYLON.MeshBuilder.CreateIcoSphere('f', { radius: p.groesse * 0.6, subdivisions: 1, flat: true }, sz); inhalt.scaling.y = 0.6; inhalt.material = BK.material('beton', '#8a8680'); }
+    else if (o.art === 'box') { inhalt = BABYLON.MeshBuilder.CreateBox('b', { width: p.b, height: p.h, depth: p.t }, sz); inhalt.bakeCurrentTransformIntoVertices(); BK.weltUV(inhalt, 2); inhalt.position.y = p.h / 2; inhalt.material = BK.material(p.textur, p.farbe); }
+    else if (o.art === 'wald') { inhalt = new BABYLON.TransformNode('wald', sz); const r = SDEngine.zufall(i * 97 + 7), arten = p.art === 'gemischt' ? ['laub', 'nadel', 'laub', 'busch'] : [p.art];
+      for (let k = 0; k < p.anzahl; k++) { const a = r() * 6.28, d = Math.sqrt(r()) * p.radius, x = Math.cos(a) * d, z = Math.sin(a) * d, b = baumVorlage(arten[Math.floor(r() * arten.length)], Math.floor(r() * 2)).createInstance('baum');
+        b.parent = inhalt; b.position = V(x, hoehe(o.x + x, o.z + z) - hoehe(o.x, o.z) - 0.1, z); const s = 0.8 + r() * 0.4; b.scaling = V(s, s, s); }
+      const kreis = BABYLON.MeshBuilder.CreateTorus('rand', { diameter: p.radius * 2, thickness: 0.3, tessellation: 64 }, sz); kreis.parent = inhalt; kreis.position.y = 0.3; kreis.material = BK.material(null, '#3aa04a', { leuchten: '#1a5a2a' }); }
+    else if (o.art === 'stadt') { inhalt = new BABYLON.TransformNode('stadt', sz); const S = 14, W = p.bx * p.block + (p.bx + 1) * S, D = p.bz * p.block + (p.bz + 1) * S, r = SDEngine.zufall(77);
+      const boden = BABYLON.MeshBuilder.CreateBox('asph', { width: W, height: 0.2, depth: D }, sz); boden.parent = inhalt; boden.material = BK.material('asphalt', '#ffffff'); boden.bakeCurrentTransformIntoVertices(); BK.weltUV(boden, 4);
+      for (let a = 0; a < p.bx; a++) for (let c = 0; c < p.bz; c++) { const bx = -W / 2 + S + a * (p.block + S) + p.block / 2, bz = -D / 2 + S + c * (p.block + S) + p.block / 2, h = 6 + r() * 30 * (1 - Math.hypot(bx, bz) / Math.hypot(W, D));
+        const g = BABYLON.MeshBuilder.CreateBox('blk', { width: p.block - 8, height: h, depth: p.block - 8 }, sz); g.parent = inhalt; g.position = V(bx, h / 2, bz); g.material = platzhalterMat(); } }
+    else if (o.art === 'fotohaus') { const a = p.name && await SDAssets.holen(p.name); if (a) { const t = s => a.bilder[s] ? { albedo: new BABYLON.Texture(URL.createObjectURL(a.bilder[s]), sz), normal: a.bilder[s + 'N'] ? new BABYLON.Texture(URL.createObjectURL(a.bilder[s + 'N']), sz) : null } : null;
+        inhalt = BK.fotoGebaeude(a, { vorne: t('vorne'), seite: t('seite'), hinten: t('hinten'), farbe: a.farbe }).mesh; } else { inhalt = BABYLON.MeshBuilder.CreateBox('?', { size: 4 }, sz); inhalt.position.y = 2; inhalt.material = BK.material(null, '#888888'); } }
+    else if (o.art === 'modell') { const a = p.name && await SDAssets.holen(p.name); if (a) { const u = URL.createObjectURL(a.datei), c = await BABYLON.SceneLoader.LoadAssetContainerAsync(u, '', sz, null, '.glb'); c.addAllToScene(); inhalt = c.meshes[0]; inhalt.scaling.scaleInPlace(p.skalierung); c.animationGroups.forEach(g => g.stop()); }
+      else { inhalt = BABYLON.MeshBuilder.CreateBox('?', { size: 1.5 }, sz); inhalt.position.y = 0.75; inhalt.material = BK.material(null, '#888888'); } }
+  } catch (e) { console.error(e); meldung('⨯ ' + e.message); }
+  if (inhalt) inhalt.parent = w; w.position = V(o.x, bodenY(o), o.z); w.rotation.y = (o.dreh || 0) * Math.PI / 180; o.__wurzel = w;
+  w.getChildMeshes().forEach(m => { m.metadata = Object.assign({}, m.metadata, { edIndex: i }); m.isPickable = true; });
+  if (i === auswahl) markieren(true);
+}
+function markieren(an) { const o = szene.objekte[auswahl]; if (o && o.__wurzel) o.__wurzel.getChildMeshes().forEach(m => { m.showBoundingBox = an && m.getTotalVertices() > 0 && m.isVisible; }); }
+function allesNeu() { szene.objekte.forEach(o => { if (o.__wurzel) { o.__wurzel.dispose(false, true); o.__wurzel = null; } }); gelaendeBauen(); szene.objekte.forEach((o, i) => vorschau(o, i)); eigenschaften(); status(); }
+
+/* ---------- Bearbeiten ---------- */
+const sauber = () => JSON.parse(JSON.stringify(szene, (k, v) => (k.startsWith('__') ? undefined : v)));
+function merken() { verlauf.push(JSON.stringify(sauber())); if (verlauf.length > 40) verlauf.shift(); try { localStorage.setItem('sdSzene.aktuell', JSON.stringify(sauber())); } catch (e) { /* voll */ } }
+let gelTimer = null; const gelaendeSpaeter = () => { clearTimeout(gelTimer); gelTimer = setTimeout(() => { gelaendeBauen(); }, 350); };
+function hinzufuegen(art, x, z) { const def = ARTEN[art]; if (def.einmal) { const alt = szene.objekte.findIndex(o => o.art === art); if (alt >= 0) { szene.objekte[alt].x = x; szene.objekte[alt].z = z; vorschau(szene.objekte[alt], alt); waehlen(alt); merken(); return; } }
+  const o = { art, x: +x.toFixed(2), z: +z.toFixed(2), dreh: 0, p: Object.fromEntries(def.felder.map(f => [f[0], f[3]])) }; szene.objekte.push(o); const i = szene.objekte.length - 1; vorschau(o, i); waehlen(i); merken(); if (/haus|stadt|fotohaus/.test(art)) gelaendeSpaeter(); }
+function waehlen(i) { markieren(false); auswahl = i; markieren(true); eigenschaften(); status(); }
+function loeschen() { if (auswahl < 0) return; const o = szene.objekte[auswahl]; if (o.art === 'spieler') { meldung('Der Spieler-Start bleibt – verschieb ihn einfach'); return; } if (o.__wurzel) o.__wurzel.dispose(false, true); szene.objekte.splice(auswahl, 1); auswahl = -1; merken(); allesNeu(); }
+function kopieren() { if (auswahl < 0) return; const o = szene.objekte[auswahl]; if (ARTEN[o.art].einmal) return; const k = JSON.parse(JSON.stringify({ art: o.art, x: o.x + 6, z: o.z + 6, dreh: o.dreh, p: o.p })); szene.objekte.push(k); vorschau(k, szene.objekte.length - 1); waehlen(szene.objekte.length - 1); merken(); }
+function drehen(gr) { if (auswahl < 0) return; const o = szene.objekte[auswahl]; o.dreh = ((o.dreh || 0) + gr + 360) % 360; o.__wurzel.rotation.y = o.dreh * Math.PI / 180; merken(); eigenschaften(); }
+
+/* ---------- Maus ---------- */
+let zieht = false;
+const bodenPunkt = () => { const t = sz.pick(sz.pointerX, sz.pointerY, m => m === gel); return t && t.hit ? t.pickedPoint : null; };
+sz.onPointerObservable.add(pi => {
+  const e = pi.event; if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN && e.button === 0) {
+    if (platzieren) { const p = bodenPunkt(); if (p) hinzufuegen(platzieren, p.x, p.z); if (!e.shiftKey) { platzieren = null; paletteZeigen(); } status(); return; }
+    const t = sz.pick(sz.pointerX, sz.pointerY, m => m.metadata && m.metadata.edIndex != null); if (t && t.hit) { waehlen(t.pickedMesh.metadata.edIndex); zieht = true; kam.detachControl(); } else { waehlen(-1); }
+  } else if (pi.type === BABYLON.PointerEventTypes.POINTERMOVE && zieht && auswahl >= 0) { const p = bodenPunkt(); if (p) { const o = szene.objekte[auswahl]; o.x = +p.x.toFixed(2); o.z = +p.z.toFixed(2); o.__wurzel.position = V(o.x, bodenY(o), o.z); status(); } }
+  else if (pi.type === BABYLON.PointerEventTypes.POINTERUP && zieht) { zieht = false; kam.attachControl($('c'), true); merken(); const o = szene.objekte[auswahl]; if (o && /haus|stadt|fotohaus/.test(o.art)) gelaendeSpaeter(); else if (o && o.art === 'wald') vorschau(o, auswahl); eigenschaften(); }
+});
+addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'Delete' || e.key === 'Backspace') loeschen(); else if (e.key === 'q' || e.key === 'Q') drehen(-15); else if (e.key === 'e' || e.key === 'E') drehen(15);
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); kopieren(); } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); rueckgaengig(); } else if (e.key === 'Escape') { platzieren = null; paletteZeigen(); waehlen(-1); } });
+function rueckgaengig() { if (verlauf.length < 2) return; verlauf.pop(); const s = JSON.parse(verlauf[verlauf.length - 1]); szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = s; auswahl = -1; try { localStorage.setItem('sdSzene.aktuell', JSON.stringify(s)); } catch (e) { /* egal */ } allesNeu(); }
+
+/* ---------- Oberfläche ---------- */
+function paletteZeigen() { const p = $('palette'); p.innerHTML = ''; for (const [k, a] of Object.entries(ARTEN)) { const b = document.createElement('button'); b.innerHTML = '<span>' + a.icon + '</span>' + a.name; b.classList.toggle('an', platzieren === k); b.onclick = () => { platzieren = platzieren === k ? null : k; paletteZeigen(); status(); }; p.append(b); } }
+function feld(box, [k, name, art, , a, b, schritt], wert, setzen) {
+  const d = document.createElement('div'); d.className = art === 'an' ? 'chk' : 'r';
+  if (art === 'zahl') { d.innerHTML = '<label>' + name + '<span>' + wert + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = wert; i.oninput = () => { d.querySelector('span').textContent = i.value; setzen(+i.value, false); }; i.onchange = () => setzen(+i.value, true); }
+  else if (art === 'farbe') { d.innerHTML = '<label>' + name + '</label><input type="color">'; const i = d.querySelector('input'); i.value = wert; i.onchange = () => setzen(i.value, true); }
+  else if (art === 'wahl') { d.innerHTML = '<label>' + name + '</label><select></select>'; const s = d.querySelector('select'); a.forEach(v => s.add(new Option(v, v, false, v === wert))); s.onchange = () => setzen(s.value, true); }
+  else if (art === 'eigen') { d.innerHTML = '<label>' + name + '</label><select><option value="">– wählen –</option></select>'; const s = d.querySelector('select'); SDAssets.alle().then(l => { l.filter(x => x.typ === a).forEach(x => s.add(new Option(x.name, x.name, false, x.name === wert))); if (s.options.length < 2) s.options[0].text = '– in der Werkstatt anlegen –'; }); s.onchange = () => setzen(s.value, true); }
+  else { d.innerHTML = '<input type="checkbox"> ' + name; const c = d.querySelector('input'); c.checked = !!wert; c.onchange = () => setzen(c.checked, true); }
+  box.append(d);
+}
+function eigenschaften() {
+  const box = $('eigenschaften'); box.innerHTML = '';
+  if (auswahl < 0) { $('eigTitel').textContent = '🌍 Welt'; for (const f of WELT) feld(box, f, szene.welt[f[0]], (v, fertig) => { szene.welt[f[0]] = v; if (fertig) { merken(); if (['groesse', 'hoehe', 'seed', 'wasserAn', 'wasser'].includes(f[0])) allesNeu(); } }); return; }
+  const o = szene.objekte[auswahl], def = ARTEN[o.art]; $('eigTitel').textContent = def.icon + ' ' + def.name + ' (Nr. ' + (auswahl + 1) + ')';
+  if (def.hinweis) { const h = document.createElement('p'); h.className = 'hinweis'; h.textContent = def.hinweis; box.append(h); }
+  for (const f of def.felder) feld(box, f, o.p[f[0]], (v, fertig) => { o.p[f[0]] = v; if (fertig) { merken(); vorschau(o, auswahl); if (/haus|stadt/.test(o.art)) gelaendeSpaeter(); } });
+  feld(box, ['dreh', 'Drehung (°)', 'zahl', 0, 0, 345, 15], o.dreh || 0, (v, fertig) => { o.dreh = v; o.__wurzel.rotation.y = v * Math.PI / 180; if (fertig) merken(); });
+  const z = document.createElement('div'); z.style.cssText = 'display:flex;gap:6px;margin-top:8px'; z.innerHTML = '<button>⧉ Kopieren</button><button>🗑 Löschen</button>'; z.children[0].onclick = kopieren; z.children[1].onclick = loeschen; box.append(z);
+}
+function status() { $('status').textContent = (platzieren ? '➕ ' + ARTEN[platzieren].name + ': aufs Gelände klicken (Shift = mehrere) · ' : '') + szene.objekte.length + ' Objekte' + (auswahl >= 0 ? ' · ausgewählt: ' + ARTEN[szene.objekte[auswahl].art].name + ' bei ' + szene.objekte[auswahl].x.toFixed(0) + ', ' + szene.objekte[auswahl].z.toFixed(0) : ''); }
+let mt = null; function meldung(t) { const m = $('meldung'); m.textContent = t; m.hidden = false; clearTimeout(mt); mt = setTimeout(() => { m.hidden = true; }, 2600); }
+
+/* ---------- SD-Skript erzeugen ---------- */
+function code() {
+  const w = szene.welt, o = szene.objekte, f = v => JSON.stringify(v).replace(/"/g, "'"), z = [];
+  z.push('// Erstellt mit dem SD Szenen-Editor – du kannst hier alles weiter ändern', "sd.himmel({ zeit: 'tag' });",
+    'sd.gelaende({ groesse: ' + w.groesse + ', aufloesung: ' + Math.round(w.groesse / 3.5) + ', hoehe: ' + w.hoehe + ', seed: ' + w.seed + (w.wasserAn ? ', wasser: ' + w.wasser : '') + ', flach: ' + JSON.stringify(flachListe()) + ' });');
+  if (w.wasserAn) z.push('sd.wasserWellen();'); z.push('sd.tageszeit({ stunde: ' + w.stunde + ', minutenProTag: ' + w.tagMinuten + ' });', 'sd.wetter({ wind: ' + w.wind + (w.regen > 0 ? ', regen: ' + w.regen : '') + ' });'); if (w.gras) z.push('sd.gras();');
+  o.forEach((x, i) => { const p = x.p, pos = '[' + x.x + ', null, ' + x.z + ']';
+    if (x.art === 'haus') z.push('sd.haus({ pos: ' + pos + ', drehung: ' + x.dreh + ', breite: ' + p.breite + ', tiefe: ' + p.tiefe + ', stockwerke: ' + p.stockwerke + ", material: '" + p.material + "', farbe: '" + p.farbe + "', dach: '" + p.dach + "', balkone: " + p.balkone + ', dachTreppe: ' + p.dachTreppe + ', seed: ' + (i + 1) + ' });');
+    else if (x.art === 'wald') z.push('sd.baeume({ mitte: [' + x.x + ', ' + x.z + '], bereich: ' + Math.round(p.radius * 0.8) + ', anzahl: ' + p.anzahl + ", art: '" + p.art + "', seed: " + (i + 3) + ' });');
+    else if (x.art === 'auto') z.push('sd.auto({ pos: ' + pos + ', drehung: ' + x.dreh + ", typ: '" + p.typ + "', farbe: '" + p.farbe + "' });");
+    else if (x.art === 'gegner') z.push('sd.gegner({ pos: ' + pos + ', staerke: ' + p.staerke + ", waffe: '" + p.waffe + "', aussehen: '" + p.aussehen + "'" + (p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a2a2a', weste: true, westeFarbe: '#5a2a2a' }" : '') + ' });');
+    else if (x.art === 'kiste') z.push('sd.kiste({ pos: ' + pos + ", inhalt: '" + p.inhalt + "' });");
+    else if (x.art === 'fels') z.push('sd.fels({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') - 0.3, ' + x.z + '], groesse: ' + p.groesse + ', seed: ' + (i + 1) + ' });');
+    else if (x.art === 'box') z.push('sd.box({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') + ' + (p.h / 2 + (p.masse ? 0.2 : 0)) + ', ' + x.z + '], groesse: [' + p.b + ', ' + p.h + ', ' + p.t + "], textur: '" + p.textur + "', farbe: '" + p.farbe + "', masse: " + p.masse + ', drehung: [0, ' + x.dreh + ', 0] });');
+    else if (x.art === 'stadt') { z.push('sd.stadt({ mitte: [' + x.x + ', ' + x.z + '], bloecke: [' + p.bx + ', ' + p.bz + '], block: ' + p.block + ', strasse: 14, seed: ' + (i + 7) + ' });'); if (p.verkehr) z.push('sd.verkehr({ anzahl: ' + p.verkehr + ' });'); if (p.passanten) z.push('sd.passanten({ anzahl: ' + p.passanten + ' });'); }
+    else if (x.art === 'fotohaus' && p.name) z.push("sd.fotoHaus('" + p.name + "', { pos: " + pos + ', drehung: ' + x.dreh + ' });');
+    else if (x.art === 'modell' && p.name) z.push("{ const m = await sd.modell('" + p.name + "', { pos: [" + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + '), ' + x.z + '], skalierung: ' + p.skalierung + ' }); m.wurzel.rotation.y = ' + (x.dreh * Math.PI / 180).toFixed(3) + '; }');
+  });
+  const sp = o.find(x => x.art === 'spieler') || { x: 0, z: 0, p: { aussehen: 'mensch' } };
+  z.push('sd.spieler({ pos: [' + sp.x + ', null, ' + sp.z + "], waffen: ['pistole', 'gewehr'], aussehen: '" + sp.p.aussehen + "'" + (sp.p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a4a8a', weste: true }" : '') + ' });');
+  if (!o.some(x => x.art === 'gegner')) z.push("sd.nachricht('Freies Spiel – erkunde deine Welt. F = Auto, Esc = Pause', 5);");
+  return z.join('\n');
+}
+$('codeZeigen').onclick = () => { $('codeText').textContent = code(); codeDlg.showModal(); };
+$('codeKopie').onclick = () => navigator.clipboard.writeText(code()).then(() => meldung('📋 Code kopiert'));
+$('spielen').onclick = () => { const c = code(); try { localStorage.setItem('sdSzeneCode', c); localStorage.setItem('sdEngineSkript.eigen', c); localStorage.setItem('sdEngineSpiel', 'eigen'); localStorage.setItem('sdSzene.aktuell', JSON.stringify(sauber())); } catch (e) { meldung('⨯ Speicher voll'); return; } window.open('./index.html?spiel=eigen', '_blank'); };
+$('neu').onclick = () => { if (!confirm('Neue leere Szene? (Ungespeichertes geht verloren)')) return; szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = leer(); auswahl = -1; merken(); allesNeu(); };
+function ladenListe() { const s = $('laden'); s.length = 1; Object.keys(localStorage).filter(k => k.startsWith('sdSzene.gespeichert.')).forEach(k => s.add(new Option(k.slice(20), k))); }
+$('speichern').onclick = () => { const n = prompt('Name der Szene:', szene.name || 'meine-welt'); if (!n) return; szene.name = n; try { localStorage.setItem('sdSzene.gespeichert.' + n, JSON.stringify(sauber())); meldung('💾 „' + n + '“ gespeichert'); } catch (e) { meldung('⨯ Speicher voll'); } ladenListe(); };
+$('laden').onchange = e => { const k = e.target.value; if (!k) return; try { const s = JSON.parse(localStorage.getItem(k)); szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = s; auswahl = -1; merken(); allesNeu(); meldung('📂 geladen'); } catch (er) { meldung('⨯ ' + er.message); } e.target.value = ''; };
+$('export').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(sauber(), null, 1)], { type: 'application/json' })); a.download = (szene.name || 'sd-szene') + '.json'; a.click(); };
+$('import').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const s = JSON.parse(await f.text()); if (!s.welt || !Array.isArray(s.objekte)) throw new Error('Keine SD-Szene'); szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = s; auswahl = -1; merken(); allesNeu(); } catch (er) { meldung('⨯ ' + er.message); } };
+$('rueck').onclick = rueckgaengig;
+engine.runRenderLoop(() => sz.render()); addEventListener('resize', () => engine.resize());
+paletteZeigen(); ladenListe(); allesNeu(); merken();
+window.SD_EDITOR = { get szene() { return szene; }, hinzufuegen, waehlen, code, allesNeu, drehen };
+</script>
+</body>
+</html>

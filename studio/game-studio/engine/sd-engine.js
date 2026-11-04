@@ -20,6 +20,15 @@
       const a = p[X] + Y, b = p[X + 1] + Y; const l1 = g(p[a], x, y) + u * (g(p[b], x - 1, y) - g(p[a], x, y)); const l2 = g(p[a + 1], x, y - 1) + u * (g(p[b + 1], x - 1, y - 1) - g(p[a + 1], x, y - 1)); return (l1 + v * (l2 - l1)) * 0.7; };
   }
 
+  /** Höhe des Geländes – dieselbe Formel für Engine und Szenen-Editor */
+  function hoehenFunktion(o) {
+    o = o || {}; const G = o.groesse || 600, H = o.hoehe ?? 28, ns = rauschen(o.seed || 7), flach = o.flach || [];
+    const roh = (x, z) => { let h = 0, a = 1, f = 1 / 160; for (let i = 0; i < 5; i++) { h += ns(x * f, z * f) * a; a *= 0.48; f *= 2.05; } return h * H; };
+    const hoeheBei = (x, z) => { let h = roh(x, z); for (const fl of flach) { const d = Math.hypot(x - fl[0], z - fl[1]), r = fl[2], hz = fl[3] ?? 1; if (d < r * 1.6) { const t = klemme((d - r) / (r * 0.6), 0, 1), s = t * t * (3 - 2 * t); h = hz * (1 - s) + h * s; } }
+      const rand = Math.max(Math.abs(x), Math.abs(z)) / (G / 2); if (rand > 0.85) h += Math.pow((rand - 0.85) / 0.15, 2) * H * 1.2; return h; };
+    return hoeheBei;
+  }
+
   /* ---------- Töne (selbst erzeugt, keine Dateien) ---------- */
   let AC = null;
   function audioKontext() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return null; } return AC; }
@@ -156,9 +165,7 @@
     let gel = null;
     function gelaende(o) {
       o = o || {}; const G = o.groesse || 600, N = o.aufloesung || 180, H = o.hoehe ?? 28, ns = rauschen(o.seed || 7), flach = o.flach || [];
-      const roh = (x, z) => { let h = 0, a = 1, f = 1 / 160; for (let i = 0; i < 5; i++) { h += ns(x * f, z * f) * a; a *= 0.48; f *= 2.05; } return h * H; };
-      const hoeheBei = (x, z) => { let h = roh(x, z); for (const fl of flach) { const d = Math.hypot(x - fl[0], z - fl[1]), r = fl[2], hz = fl[3] ?? 1; if (d < r * 1.6) { const t = klemme((d - r) / (r * 0.6), 0, 1), s = t * t * (3 - 2 * t); h = hz * (1 - s) + h * s; } }
-        const rand = Math.max(Math.abs(x), Math.abs(z)) / (G / 2); if (rand > 0.85) h += Math.pow((rand - 0.85) / 0.15, 2) * H * 1.2; return h; };
+      const hoeheBei = hoehenFunktion(o);
       const m = BAB.MeshBuilder.CreateGround('gelaende', { width: G, height: G, subdivisions: N, updatable: true }, szene);
       const p = m.getVerticesData('position'), farben = []; for (let i = 0; i < p.length; i += 3) p[i + 1] = hoeheBei(p[i], p[i + 2]);
       m.setVerticesData('position', p); const n = []; BAB.VertexData.ComputeNormals(p, m.getIndices(), n); m.setVerticesData('normal', n);
@@ -632,5 +639,5 @@
     return steuerung;
   }
 
-  window.SDEngine = { starten, WAFFEN, version: '1.0' };
+  window.SDEngine = { starten, WAFFEN, hoehenFunktion, zufall, version: '1.1' };
 })();
