@@ -71,6 +71,7 @@ body.handy .unten{bottom:180px}
 <body>
 <canvas id="welt" tabindex="1"></canvas>
 
+<!--SD-HUD-START-->
 <div class="hud" id="hud" hidden>
   <canvas id="karte" width="300" height="300"></canvas><div class="pill" id="zone">–</div>
   <div class="oben"><div class="pill">👥 <b id="uebrig">0</b> übrig</div><div class="pill">☠ <b id="kills">0</b></div></div>
@@ -93,6 +94,7 @@ body.handy .unten{bottom:180px}
   <div class="tk" id="tWaffe" style="right:28px;top:90px">⇄</div>
   <div class="tk" id="tMenue" style="left:50%;top:10px;width:46px;height:46px;transform:translateX(-50%)">❚❚</div>
 </div>
+<!--SD-HUD-ENDE-->
 
 <div class="ov" id="menue">
   <div class="karte">
@@ -104,6 +106,7 @@ body.handy .unten{bottom:180px}
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
       <button id="mpAuf" title="Mit Freunden spielen (bis 8 Spieler)">👥 Mehrspieler</button>
+      <button id="pubAuf" title="Dein Spiel als eigene Webseite online stellen">🌐 Veröffentlichen</button>
       <button id="editorAuf">{ } Skript bearbeiten</button>
       <a class="btn" href="./werkstatt.html">🛠 Werkstatt</a>
       <a class="btn" href="../index.html">← Game-Studio</a>
@@ -124,6 +127,14 @@ body.handy .unten{bottom:180px}
   <p id="mpText" class="ehrlich" style="min-height:1.5em"></p>
   <p class="ehrlich">Kein Chat, keine Namen (ihr heißt Spieler 1–8), nichts wird gespeichert. Der Server schläft, wenn niemand spielt – das erste Verbinden kann bis zu einer Minute dauern. Tab = Punkte.</p>
   <div class="knoepfe" style="justify-content:flex-end"><button id="mpZu">Zurück</button></div></div></div>
+<div class="ov" id="pub" hidden><div class="karte" style="width:min(520px,100%)"><h2 style="margin:0 0 6px">🌐 Spiel veröffentlichen</h2>
+  <p style="margin:0 0 10px;color:#cfd8e2;line-height:1.55">Dein aktuelles Spiel (<b id="pubSpiel"></b>) bekommt eine eigene Adresse, die jeder öffnen kann – mit deinen Änderungen im Skript, deinen Modellen und Foto-Häusern.</p>
+  <div style="display:grid;gap:8px"><label>Titel<br><input id="pubTitel" maxlength="60" style="width:100%"></label><label>Beschreibung<br><input id="pubText" maxlength="200" style="width:100%"></label>
+  <label>Adresse<br><input id="pubName" maxlength="40" style="width:100%"></label><small id="pubUrl" style="color:var(--leise)"></small>
+  <label id="pubSchl" hidden>Zugangsschlüssel vom KI-Agenten<br><input id="pubCode" autocomplete="off" spellcheck="false" style="width:100%" placeholder="SDL-…"></label>
+  <label class="chk" style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="pubRecht"> Ich habe die Rechte an allen Inhalten. Keine Betrugs-, Hass- oder Gewaltverherrlichung, keine echten Marken oder Personen.</label></div>
+  <div class="knoepfe" style="justify-content:flex-end"><button id="pubZu">Zurück</button><button class="los" id="pubLos">Veröffentlichen</button></div>
+  <div id="pubErg" class="ehrlich" style="font-size:13px"></div></div></div>
 <div class="ov" id="pause" hidden><div class="karte" style="width:min(420px,100%);text-align:center"><h2 style="margin:0 0 14px">❚❚ Pause</h2><div class="knoepfe" style="justify-content:center"><button class="los" id="weiter">Weiter</button><button id="neu">↻ Neu starten</button><button id="editorAuf2">{ } Skript</button><button id="zumMenue">Menü</button></div></div></div>
 <div class="ov" id="ende" hidden><div class="karte" style="width:min(460px,100%);text-align:center"><h1 class="titel" id="endeTitel" style="font-size:44px">SIEG</h1><p id="endeText" style="color:#cfd8e2"></p><div class="knoepfe" style="justify-content:center"><button class="los" id="nochmal">↻ Nochmal</button><button id="zumMenue2">Menü</button></div></div></div>
 <div class="ov" id="laden" hidden><div style="text-align:center"><div class="titel" style="font-size:30px">Lade Welt …</div><p id="ladenText" style="color:var(--leise)">Grafik-Engine und Physik werden geladen</p></div></div>
@@ -156,6 +167,7 @@ body.handy .unten{bottom:180px}
 <script src="./sd-wetter.js?v=2"></script>
 <script src="./sd-netz.js?v=1"></script>
 <script src="./sd-spiel.js?v=1"></script>
+<script src="./sd-veroeffentlichen.js?v=1"></script>
 <script src="./sd-engine.js?v=7"></script>
 <script>
 'use strict';
@@ -221,6 +233,22 @@ $('mpAuf').onclick = () => { $('mp').hidden = false; $('mpSpiel').textContent = 
 $('mpZu').onclick = () => { $('mp').hidden = true; };
 $('mpNeu').onclick = async () => { if (SPIEL === 'eigen') return; $('mpText').textContent = '⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL })); };
 $('mpRein').onclick = async () => { const c = $('mpCode').value.trim().toUpperCase(); if (c.length !== 5) { $('mpText').textContent = 'Bitte den 5-stelligen Code eingeben'; return; } $('mpText').textContent = '⏳ Trete bei …'; mpStarten(await netzRufen('/hub/spiel/beitreten', { code: c })); };
+const gemerkterSchluessel = () => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } };
+$('pubAuf').onclick = () => { const d = SPIELE[SPIEL]; $('pub').hidden = false; $('pubSpiel').textContent = d.titel; $('pubTitel').value = d.titel.charAt(0) + d.titel.slice(1).toLowerCase(); $('pubText').value = d.text.slice(0, 200);
+  $('pubName').value = ('mein-' + SPIEL).slice(0, 40); $('pubSchl').hidden = !!gemerkterSchluessel(); $('pubErg').textContent = ''; const z = () => { $('pubUrl').textContent = 'https://sd031988.github.io/sd-seiten/' + ($('pubName').value.trim().toLowerCase() || '…') + '/'; }; $('pubName').oninput = z; z(); };
+$('pubZu').onclick = () => { $('pub').hidden = true; };
+$('pubLos').onclick = async () => {
+  const schl = gemerkterSchluessel() || $('pubCode').value.trim(), name = $('pubName').value.trim().toLowerCase();
+  if (!schl) { $('pubErg').innerHTML = '🔑 Veröffentlichen geht nur mit <b>Zugangsschlüssel vom KI-Agenten</b> (Schutz vor Missbrauch).'; $('pubSchl').hidden = false; return; }
+  if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(name)) { $('pubErg').textContent = 'Adresse: 3–40 Zeichen, nur a–z, 0–9 und Bindestrich.'; return; }
+  if (!$('pubRecht').checked) { $('pubErg').textContent = 'Bitte die Regeln bestätigen (Häkchen).'; return; }
+  $('pubLos').disabled = true; $('pubErg').textContent = '⏳ Spiel wird zusammengepackt und veröffentlicht … (der Server wacht evtl. erst auf)';
+  const code = $('code').value || await skriptHolen();
+  const j = await SDVeroeffentlichen.veroeffentlichen({ titel: $('pubTitel').value.trim() || 'Mein Spiel', text: $('pubText').value.trim(), code }, schl, name); $('pubLos').disabled = false;
+  if (!j.ok) { $('pubErg').innerHTML = '⨯ ' + (j.error || 'Fehler').replace(/</g, '&lt;') + (j.gruende ? '<ul>' + j.gruende.map(g => '<li>' + String(g).replace(/</g, '&lt;') + '</li>').join('') + '</ul>' : ''); return; }
+  try { sessionStorage.setItem('sdAgentZugang', schl); } catch (e) { /* egal */ }
+  $('pubErg').innerHTML = '✅ ' + (j.neu ? 'Veröffentlicht!' : 'Aktualisiert!') + ' <a target="_blank" rel="noopener" style="color:#ffb547" href="' + j.url + '">' + j.url + '</a><br>' + (j.hinweis || '') + (j.fehlend && j.fehlend.length ? '<br>⚠ Nicht gefunden (fehlt im Spiel): ' + j.fehlend.join(', ') : '');
+};
 $('spielen').onclick = () => { letzteNetz = null; if (!handy && !/[?&]test/.test(location.search)) $('welt').requestPointerLock && $('welt').requestPointerLock(); spielStarten(); };
 $('nochmal').onclick = $('neu').onclick = () => spielStarten(letzteNetz);
 $('weiter').onclick = () => { pausiert = false; $('pause').hidden = true; if (!handy) $('welt').requestPointerLock(); };
@@ -235,6 +263,7 @@ $('edDatei').onclick = () => { const a = document.createElement('a'); a.href = U
 $('code').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText('  ', s, t.selectionEnd, 'end'); } if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); $('edStart').click(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && $('ende').hidden && $('editor').hidden && (handy || /[?&]test/.test(location.search))) { pausiert = !pausiert; $('pause').hidden = !pausiert; } });
 
+/*SD-TOUCH-START*/
 // Touch-Steuerung (Handy/Tablet)
 (() => {
   const st = $('stick'), knopf = st.querySelector('i'); let sid = null, lid = null, lx = 0, ly = 0;
@@ -256,6 +285,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && 
   let wi = 0; halte('tWaffe', () => { if (!laeuft) return; const n = laeuft.sd.spielerDaten.waffen.length; wi = (laeuft.sd.spielerDaten.aktiv + 1) % n; taste('Digit' + (wi + 1))(); });
   halte('tMenue', () => { if (!laeuft) return; pausiert = true; $('pause').hidden = false; });
 })();
+/*SD-TOUCH-ENDE*/
 spielWaehlen(SPIEL);
 </script>
 </body>

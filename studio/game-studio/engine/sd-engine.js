@@ -83,6 +83,7 @@
     schatten.usePercentageCloserFiltering = true; schatten.filteringQuality = qualitaet === 'hoch' ? BAB.ShadowGenerator.QUALITY_HIGH : BAB.ShadowGenerator.QUALITY_MEDIUM; schatten.bias = 0.004; schatten.normalBias = 0.02;
     const BK = window.SDBaukasten ? window.SDBaukasten.erstellen(BAB, szene) : null;
     const EIGENE = {}; if (window.SDAssets) { try { (await window.SDAssets.alle()).forEach(a => { EIGENE[a.name] = a; }); } catch (e) { /* kein Speicher (privates Fenster) */ } }
+    (window.SD_EIGENE_EXTRA || []).forEach(a => { EIGENE[a.name] = a; });   // veröffentlichte Spiele bringen ihre Dateien mit
     const blobUrls = []; const urlVon = b => { const u = URL.createObjectURL(b); blobUrls.push(u); return u; };
     const texVon = (blob, srgb) => { const t = new BAB.Texture(urlVon(blob), szene, false, false); return t; };
     function eigene(name, typ) { const a = EIGENE[window.SDAssets ? window.SDAssets.name(name) : name]; if (!a) throw new Error('„' + name + '“ ist nicht in „Meine Modelle“ gespeichert (Werkstatt → 📦 Meine Modelle).'); if (typ && a.typ !== typ) throw new Error('„' + name + '“ ist kein ' + typ); return a; }
