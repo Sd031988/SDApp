@@ -32,6 +32,8 @@ const relative='/studio/game-studio/demos/vanguard-eclipse/index.html';
    assert.equal(await page.locator('[data-action]').count(),10);
    await page.locator('#startGame').click();
    await page.waitForFunction(()=>document.getElementById('startScreen').hidden===true);
+   await page.waitForTimeout(400);
+   await page.screenshot({path:path.join(shots,mobile?'vanguard-eclipse-mobile-intro-world.png':'vanguard-eclipse-desktop-intro-world.png'),fullPage:false});
    if(mobile){
     const b=page.locator('[data-action="pulse"]');assert.equal(await b.isVisible(),true);
     await b.dispatchEvent('pointerdown',{pointerId:20});
