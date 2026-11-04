@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {decodeVerifiedTexture as decode} from '../world-v3-texture-decode.mjs';
+const base = {bytes:new Uint8Array([1,2,3]),mime:'image/png',verified:true,expectedWidth:2,expectedHeight:3};
+test('decodes verified local bytes and returns closable bitmap',async()=>{let closed=0; const bitmap=await decode({...base,createBitmap:async()=>({width:2,height:3,close(){closed++}})});bitmap.close();assert.equal(closed,1)});
+test('rejects unverified data before decoder',async()=>{let called=false;await assert.rejects(decode({...base,verified:false,createBitmap:async()=>{called=true}}));assert.equal(called,false)});
+test('rejects JXL without native decoder',async()=>assert.rejects(decode({...base,mime:'image/jxl'})));
+test('closes decoded bitmap when dimensions differ',async()=>{let closed=0;await assert.rejects(decode({...base,createBitmap:async()=>({width:1,height:3,close(){closed++}})}));assert.equal(closed,1)});
+test('respects typed-array offsets and copies bytes',async()=>{const original=new Uint8Array([99,1,2,3,88]);await decode({...base,bytes:original.subarray(1,4),createBitmap:async(blob)=>{assert.deepEqual([...new Uint8Array(await blob.arrayBuffer())],[1,2,3]);return {width:2,height:3,close(){}}}})});
+test('rejects pre-aborted operations',async()=>{const c=new AbortController();c.abort();await assert.rejects(decode({...base,signal:c.signal,createBitmap:async()=>{throw Error('must not call')}}),{name:'AbortError'})});
+test('rejects decompression dimensions over budget',async()=>assert.rejects(decode({...base,expectedWidth:16384,expectedHeight:16384})));
