@@ -291,7 +291,7 @@ let skyProgram,skyBuffer,skyU={},lastPV=null,running=false;
 const fxCanvas=$('fx'),fxCtx=fxCanvas.getContext('2d'),sparks=[],waves=[];
 let shake=0,lastDamage=0,audioEnabled=false,audioCtx=null;
 const visual={x:0,z:0,y:0};
-const keys=new Set(),touch=new Set(),camera={azimuth:.67,elevation:.28,distance:11.6},ptr={active:false,x:0,y:0};
+const keys=new Set(),touch=new Set(),queued=new Set(),camera={azimuth:.67,elevation:.28,distance:11.6},ptr={active:false,x:0,y:0};
 let interactQueued=false,started=false;
 const I=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 function mult(a,b){const r=Array(16).fill(0);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)r[i*4+j]+=a[k*4+j]*b[i*4+k];return r;}
@@ -444,7 +444,7 @@ function extraction(){
 function outpost(player){
  // Modular expedition research outpost; draw only details near the player.
  const structures=[{x:-15,z:-14,a:0},{x:15,z:-13,a:.45},{x:-17,z:17,a:-.35}];
- for(const c of structures){if(M.distance(c,player)>(mobileMode?45:84))continue;
+ for(const c of structures){if(M.distance(c,player)>(mobileMode?37:84)||(mobileMode&&c.x<0))continue;
   const y=height(c.x,c.z);
   const root=mult(move(c.x,y,c.z),rotY(c.a));
   const P=(shape,color,x,y,z,sx,sy,sz)=>local(root,shape,color,x,y,z,sx,sy,sz);
@@ -578,10 +578,10 @@ function render(){
  gl.uniform3fv(loc.eye,eye);gl.uniform1f(loc.tick,time);draws=0;
  selection=runtime.query(p.x,p.z);
  drawTerrain(selection.cells);
- for(const obj of selection.objects)if(Math.hypot(obj.x-p.x,obj.z-p.z)<(mobileMode?56:78))worldObject(obj);
+ for(const obj of selection.objects)if(Math.hypot(obj.x-p.x,obj.z-p.z)<(mobileMode?46:78)&&(!mobileMode||M.distance(obj,p)<24||obj.id%3===0))worldObject(obj);
  outpost(p);
  extraction();
- for(const b of state.beacons)if(M.distance(b,p)<105)relay(b);
+ for(const b of state.beacons)if(M.distance(b,p)<(mobileMode?58:105))relay(b);
  for(const e of state.enemies)if(e.hp>0&&M.distance(e,p)<95)drone(e);
  operative();
  drawFx();
@@ -662,11 +662,11 @@ function updateHud(){const p=state.hero,obj=M.nearbyObjective(state);$('hpBar').
  else if(state.time>noticeUntil)$('message').textContent='MISSION / '+obj.label.toUpperCase();
  if(state.phase!=='playing'&&$('gameOver').hidden){$('gameOver').hidden=false;$('endTitle').textContent=state.phase==='won'?'MISSION ABGESCHLOSSEN':'MISSION GESCHEITERT';$('endText').textContent=state.phase==='won'?'Alle drei Relais aktiviert. '+state.kills+' Drohnen ausgeschaltet. Dieser Vertical Slice ist abgeschlossen.':'Deine Lebenspunkte sind auf null gesunken. Passe Angriff und Bewegung an und versuche es erneut.';}
  drawRadar();}
-function getInput(){const on=(...a)=>a.some(k=>keys.has(k)||touch.has(k));return{forward:on('w','arrowup','forward'),back:on('s','arrowdown','back'),left:on('a','arrowleft','left'),right:on('d','arrowright','right'),sprint:on('shift','sprint'),jump:on(' ','jump'),attack:on('j','attack'),pulse:on('q','pulse'),dash:on('f','dash'),interact:interactQueued,cameraAzimuth:camera.azimuth};}
-function reset(){state=M.makeState();interactQueued=false;keys.clear();touch.clear();doc.querySelectorAll('[data-action]').forEach(b=>b.classList.remove('pressed'));$('gameOver').hidden=true;camera.azimuth=.67;camera.elevation=.28;runtime.reset();noticeUntil=0;visual.x=0;visual.z=0;visual.y=0;sparks.length=0;waves.length=0;shake=0;updateHud();canvas.focus({preventScroll:true});}
+function getInput(){const on=(...a)=>a.some(k=>keys.has(k)||touch.has(k)||queued.has(k));return{forward:on('w','arrowup','forward'),back:on('s','arrowdown','back'),left:on('a','arrowleft','left'),right:on('d','arrowright','right'),sprint:on('shift','sprint'),jump:on(' ','jump'),attack:on('j','attack'),pulse:on('q','pulse'),dash:on('f','dash'),interact:interactQueued,cameraAzimuth:camera.azimuth};}
+function reset(){state=M.makeState();interactQueued=false;keys.clear();touch.clear();queued.clear();doc.querySelectorAll('[data-action]').forEach(b=>b.classList.remove('pressed'));$('gameOver').hidden=true;camera.azimuth=.67;camera.elevation=.28;runtime.reset();noticeUntil=0;visual.x=0;visual.z=0;visual.y=0;sparks.length=0;waves.length=0;shake=0;updateHud();canvas.focus({preventScroll:true});}
 function bind(){
  const mapped=new Set(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift','j','q','f','e','r']);
- doc.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!mapped.has(k)||e.altKey||e.metaKey||e.ctrlKey)return;if(e.target instanceof HTMLElement&&/input|textarea|select/i.test(e.target.tagName))return;e.preventDefault();if(k==='r'&&!e.repeat){reset();return;}if(k==='e'&&!e.repeat)interactQueued=true;else keys.add(k);});
+ doc.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(!mapped.has(k)||e.altKey||e.metaKey||e.ctrlKey)return;if(e.target instanceof HTMLElement&&/input|textarea|select/i.test(e.target.tagName))return;e.preventDefault();if(k==='r'&&!e.repeat){reset();return;}if(k==='e'&&!e.repeat)interactQueued=true;else {keys.add(k);if(!e.repeat&&['q','f','j',' '].includes(k))queued.add(k);}});
  doc.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
  window.addEventListener('blur',()=>{keys.clear();touch.clear();});
  doc.addEventListener('visibilitychange',()=>{if(doc.hidden){keys.clear();touch.clear();previousTime=0;}});
@@ -677,18 +677,18 @@ function bind(){
  for(const b of doc.querySelectorAll('[data-action]')){
    const action=b.dataset.action;
    const release=e=>{e.preventDefault();touch.delete(action);b.classList.remove('pressed');try{b.releasePointerCapture(e.pointerId);}catch(_){}};
-   b.addEventListener('pointerdown',e=>{e.preventDefault();touch.add(action);b.classList.add('pressed');if(action==='interact')interactQueued=true;try{b.setPointerCapture(e.pointerId);}catch(_){}});
+   b.addEventListener('pointerdown',e=>{e.preventDefault();touch.add(action);if(['pulse','dash','attack','jump'].includes(action))queued.add(action);b.classList.add('pressed');if(action==='interact')interactQueued=true;try{b.setPointerCapture(e.pointerId);}catch(_){}});
    b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',()=>{touch.delete(action);b.classList.remove('pressed');});
  }
  $('restart').addEventListener('click',reset);$('replay').addEventListener('click',reset);
- $('startGame').addEventListener('click',()=>{$('startScreen').hidden=true;running=true;canvas.focus({preventScroll:true});tone(470,.25,'triangle');});
+ $('startGame').addEventListener('click',()=>{$('startScreen').hidden=true;running=true;queued.clear();canvas.focus({preventScroll:true});tone(470,.25,'triangle');});
  $('audioToggle').addEventListener('click',()=>{audioEnabled=!audioEnabled;const b=$('audioToggle');b.textContent=audioEnabled?'♪ TON AN':'♪ TON AUS';b.setAttribute('aria-pressed',String(audioEnabled));if(audioEnabled)tone(660,.22);});
 }
 function tick(now){if(canvasLost)return;const dt=previousTime?Math.min(.05,(now-previousTime)/1000):0;previousTime=now;
  if(!doc.hidden){
   time+=dt;
   if(running){const input=getInput();const nearby=runtime.query(state.hero.x,state.hero.z);
-   M.step(state,input,dt,height,nearby.objects);interactQueued=false;
+   M.step(state,input,dt,height,nearby.objects);interactQueued=false;queued.clear();
    if(state.events.length)onEvents();
   }
   updateParticles(dt);
