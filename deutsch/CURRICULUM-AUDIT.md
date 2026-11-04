@@ -54,3 +54,9 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Regressionstest ergänzt: Für alle 176 Aufgaben wird kontrolliert, dass generische Vorabhinweise weder den Lösungstext noch die korrekte Option verraten.
 - JavaScript-Syntax der geänderten Dateien isoliert geprüft; vollständige Node-/Playwright-Ausführung und didaktische Validierung stehen noch aus.
 - Rest-Risiko: Spezifische Themenregeln können vereinzelt inhaltliche Hinweise geben; Multiple-Choice-Abschlüsse allein sind kein Nachweis der B1-Kompetenz.
+
+## Freies Schreiben – 04.11.2026
+- Die vereinheitlichte Lernwerkstatt bietet nun pro Lernstufe (Alphabetisierung, A1, A2, B1, Praxis) eine eigene offene Schreibaufgabe. Für B1 wird eine formelle Problembeschwerde mit konkreter Bitte geübt.
+- Textentwürfe werden pro Lernstufe ausschließlich lokal im Browser unter `sdHubWritingDraftsV1` gespeichert. Ein Wortzähler und aufklappbare Selbstprüfkriterien unterstützen die Bearbeitung; es gibt bewusst keine automatische B1-Benotung oder falsche Prüfungszusage.
+- JavaScript-Syntax des geänderten Skripts über `new Function` geprüft; Wortzählungs-RegEx nach der Erstimplementierung korrigiert.
+- Verbleibende Risiken: Noch kein vollständiger Playwright-Test für Eingabe, Speichern, Wiederherstellen und mobile Darstellung; lokale Daten können beim Löschen des Browsers verloren gehen. Für belastbare Schreibbewertungen sind fachlich überprüfte Rubriken und menschliches oder validiertes Feedback erforderlich. Die übrigen Fertigkeiten bleiben unabhängig zu prüfen.
