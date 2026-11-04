@@ -88,12 +88,12 @@ jobs:
           node tests/studio/devtools-browser.test.cjs
           node tests/studio/image-assets-browser.test.cjs
           node tests/studio/game-studio-browser.test.cjs
+          node tests/studio/frontier-graphics-browser.test.cjs
           node tests/studio/game-studio-large-world-browser.test.cjs
           node tests/studio/game-studio-academy-browser.test.cjs
           node tests/studio/game-studio-academy-projects-browser.test.cjs
           node tests/studio/game-studio-godot-export-browser.test.cjs
           node tests/studio/vanguard-last-zone-browser.test.cjs
-          node tests/studio/frontier-graphics-browser.test.cjs
           node tests/studio/game-studio-vanguard-eclipse-browser.test.cjs
           node studio/game-studio/demos/vanguard/browser-smoke.cjs
 
