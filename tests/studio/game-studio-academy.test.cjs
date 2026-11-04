@@ -24,7 +24,7 @@ test('Academy scripts contain 5 learning tracks and 20 distinct lessons',()=>{
  for(const id of trackIds)assert.match(src,new RegExp("id:'"+id+"'"));
  const ids=[...src.matchAll(/\{id:'([a-z-]+)',name:'.*?',minutes:\d+/g)].map(m=>m[1]);
  assert.equal(ids.length,20);
- assert.equal(new Set(ids).size,16);
+ assert.equal(new Set(ids).size,20);
  assert.equal((src.match(/quiz:\[/g)||[]).length,20);
  assert.equal((src.match(/tasks:\[/g)||[]).length,20);
  assert.match(src,/l\.tasks\.every\(\(_,i\)=>taskDone\(l,i\)\)&&correct\(l\)/);
