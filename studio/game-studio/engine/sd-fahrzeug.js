@@ -60,7 +60,8 @@
       // Karosserie-Teile nach Material zusammenfassen (wenige Zeichenaufrufe)
       const gruppen = new Map(); teile.forEach(t => { t.computeWorldMatrix(true); const k = t.material.uniqueId; if (!gruppen.has(k)) gruppen.set(k, []); gruppen.get(k).push(t); });
       const karosse = []; for (const g of gruppen.values()) { g.forEach(t => { t.parent = null; }); const m = g.length > 1 ? BAB.Mesh.MergeMeshes(g, true, true) : g[0]; m.parent = wurzel; m.name = 'karosse'; karosse.push(m); }
-      return { wurzel, karosse, raeder, typ: T, abm: { L, B, H } };
+      const lackMesh = karosse.find(m => m.material === lack); if (lackMesh) lackMesh.markVerticesDataAsUpdatable(BAB.VertexBuffer.PositionKind, true);
+      return { wurzel, karosse, raeder, typ: T, abm: { L, B, H }, lackMesh };
     }
     return { auto, TYPEN };
   }
@@ -85,7 +86,7 @@
       g.karosse.concat(...g.raeder.map(r => r.meshes)).forEach(m => { ctx.schatten.addShadowCaster(m); m.receiveShadows = true; m.metadata = { fahrzeug: id }; m.isPickable = true; });
       const agg = new BAB.PhysicsAggregate(chassis, BAB.PhysicsShapeType.BOX, { mass: T.masse, friction: 0.4, restitution: 0.05 }, szene);
       agg.shape.filterMembershipMask = MASKE; const bx = T.B, by = T.H, bz = T.L * 0.98; agg.body.setMassProperties({ mass: T.masse, centerOfMass: V(0, -hc / 2 - 0.1, 0), inertia: V((by * by + bz * bz) / 12, (bx * bx + bz * bz) / 12, (bx * bx + by * by) / 12), inertiaOrientation: BAB.Quaternion.Identity() }); agg.body.setAngularDamping(0.6); agg.body.setLinearDamping(0.05);
-      const k = T.masse * 9.81 / (4 * 0.11), a = { id, g, T, chassis, body: agg.body, lenkung: 0, rpm: 0, mount: MOUNT, yc, feder: k, daempfer: 2 * Math.sqrt(k * T.masse / 4) * 0.55, eingabe: { gas: 0, lenk: 0, bremse: 0, hand: false }, kopfueber: 0, kmh: 0, ki: !!o.ki };
+      const k = T.masse * 9.81 / (4 * 0.11), a = { id, g, T, chassis, body: agg.body, lenkung: 0, rpm: 0, mount: MOUNT, yc, feder: k, daempfer: 2 * Math.sqrt(k * T.masse / 4) * 0.55, eingabe: { gas: 0, lenk: 0, bremse: 0, hand: false }, kopfueber: 0, kmh: 0, ki: !!o.ki, zustand: 100, vAlt: null, wrack: false };
       g.raeder.forEach(r => { r.einfed = 0; r.drehWinkel = 0; r.kontakt = false; });
       autos.push(a); return a;
     }
@@ -117,7 +118,49 @@
       // Räder darstellen
       for (const r of a.g.raeder) { r.lenk.position.y = T.rad + klemme(r.einfed - 0.11, -0.15, 0.2); if (r.vorn) r.lenk.rotation.y = a.lenkung; r.dreh.rotation.x = r.drehWinkel; }
       a.kopfueber = oben.y < 0.35 ? a.kopfueber + dt : 0; a.kontakte = kontakte;
+      // Aufprall erkennen: plötzliche Geschwindigkeitsänderung (waagerecht)
+      if (a.vAlt) { const dv = V(v.x - a.vAlt.x, 0, v.z - a.vAlt.z), st = dv.length(); if (st > 4.5) { const richtung = dv.normalize().scale(-1); schaden(a, (st - 4.5) * 7, schwer.add(richtung.scale(T.L * 0.45)).add(V(0, T.H * 0.15, 0)), 'Unfall'); } }
+      a.vAlt = v.clone();
     }
+    /* ---------- 💥 Schaden: Beulen, Rauch, Feuer, Explosion ---------- */
+    const punktTex = (() => { const t = new BAB.DynamicTexture('rauchTex', 64, szene, false), c = t.getContext(), g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update(); t.hasAlpha = true; return t; })();
+    function schaden(a, menge, weltPunkt, quelle) {
+      if (a.wrack || !(menge > 0)) return; a.zustand = Math.max(0, a.zustand - menge);
+      if (weltPunkt && a.g.lackMesh && menge > 2) beule(a, weltPunkt, Math.min(0.28, 0.03 + menge * 0.01));
+      if (menge > 6 && fahrend === a) ctx.ton('schaden', 0.6);
+      effekte(a); if (a.zustand <= 0) explodieren(a, quelle);
+    }
+    function beule(a, p, tiefe) {
+      const m = a.g.lackMesh, inv = m.computeWorldMatrix(true).clone().invert(), lok = BAB.Vector3.TransformCoordinates(p, inv), pos = m.getVerticesData(BAB.VertexBuffer.PositionKind), mitte = V(0, a.T.H * 0.45, 0), R = 0.95;
+      for (let i = 0; i < pos.length; i += 3) { const dx = pos[i] - lok.x, dy = pos[i + 1] - lok.y, dz = pos[i + 2] - lok.z, d = Math.sqrt(dx * dx + dy * dy + dz * dz); if (d > R) continue;
+        const f = (1 - d / R) * tiefe, rx = mitte.x - pos[i], ry = mitte.y - pos[i + 1], rz = mitte.z - pos[i + 2], l = Math.hypot(rx, ry, rz) || 1; pos[i] += rx / l * f; pos[i + 1] += ry / l * f * 0.5; pos[i + 2] += rz / l * f; }
+      m.updateVerticesData(BAB.VertexBuffer.PositionKind, pos); const n = []; BAB.VertexData.ComputeNormals(pos, m.getIndices(), n); m.setVerticesData(BAB.VertexBuffer.NormalKind, n);
+    }
+    function partikel(quelle, farbe1, farbe2, rate, groesse, auftrieb, add) {
+      const ps = new BAB.ParticleSystem('rauch', 300, szene); ps.particleTexture = punktTex; ps.emitter = quelle; ps.minEmitBox = V(-0.3, 0, -0.2); ps.maxEmitBox = V(0.3, 0.1, 0.2);
+      ps.color1 = farbe1; ps.color2 = farbe2; ps.colorDead = new BAB.Color4(0.1, 0.1, 0.1, 0); ps.minSize = groesse * 0.5; ps.maxSize = groesse; ps.minLifeTime = 0.6; ps.maxLifeTime = 1.6; ps.emitRate = rate;
+      ps.direction1 = V(-0.4, auftrieb, -0.4); ps.direction2 = V(0.4, auftrieb * 1.5, 0.4); ps.gravity = V(0, auftrieb * 0.6, 0); ps.minEmitPower = 0.5; ps.maxEmitPower = 1.2; ps.blendMode = add ? BAB.ParticleSystem.BLENDMODE_ADD : BAB.ParticleSystem.BLENDMODE_STANDARD; ps.start(); return ps;
+    }
+    function effekte(a) {
+      if (!a.rauchQuelle) { a.rauchQuelle = BAB.MeshBuilder.CreateBox('rauchQuelle', { size: 0.1 }, szene); a.rauchQuelle.isVisible = false; a.rauchQuelle.isPickable = false; a.rauchQuelle.parent = a.g.wurzel; a.rauchQuelle.position = V(0, a.T.H * 0.62, a.T.L * 0.36); }
+      if (a.zustand < 55 && !a.rauch) a.rauch = partikel(a.rauchQuelle, new BAB.Color4(0.75, 0.75, 0.75, 0.5), new BAB.Color4(0.5, 0.5, 0.5, 0.4), 30, 1.2, 1.5, false);
+      if (a.rauch) { const dunkel = a.zustand < 30; a.rauch.color1 = dunkel ? new BAB.Color4(0.15, 0.15, 0.15, 0.7) : new BAB.Color4(0.75, 0.75, 0.75, 0.5); a.rauch.emitRate = 30 + (55 - a.zustand) * 3; }
+      if (a.zustand < 22 && !a.feuer) a.feuer = partikel(a.rauchQuelle, new BAB.Color4(1, 0.6, 0.1, 1), new BAB.Color4(1, 0.25, 0.05, 1), 80, 0.8, 2.2, true);
+    }
+    function explodieren(a, quelle) {
+      a.wrack = true; const p = a.chassis.getAbsolutePosition().clone(); ctx.ton('schrot', 1, p); ctx.ton('tot', 0.8, p);
+      const knall = partikel(a.rauchQuelle, new BAB.Color4(1, 0.8, 0.3, 1), new BAB.Color4(1, 0.3, 0.05, 1), 0, 3.5, 4, true); knall.manualEmitCount = 260; knall.minEmitPower = 4; knall.maxEmitPower = 11; knall.targetStopDuration = 0.5; knall.disposeOnStop = true;
+      const licht = new BAB.PointLight('explosion', p.add(V(0, 1.5, 0)), szene); licht.diffuse = new BAB.Color3(1, 0.6, 0.25); licht.intensity = 30; licht.range = 30; let t = 0; const ob = szene.onBeforeRenderObservable.add(() => { t += 1 / 60; licht.intensity = Math.max(0, 30 - t * 40); if (t > 1) { szene.onBeforeRenderObservable.remove(ob); licht.dispose(); } });
+      const verbrannt = ctx.BK.material(null, '#151413', { rau: 0.9 }); a.g.karosse.forEach(m => { if (m.material && m.material.name.indexOf('glas') < 0) m.material = verbrannt; });
+      a.body.applyImpulse(V((Math.random() - 0.5) * 2, 9, (Math.random() - 0.5) * 2).scale(a.T.masse * 0.6), p.add(V(0.4, 0, 0.6)));
+      if (fahrend === a) { aussteigen(true); ctx.schaden(ctx.spieler, 65, quelle || 'Explosion'); }
+      else if (ctx.spieler) { const d = BAB.Vector3.Distance(ctx.spielerPos(), p); if (d < 8) ctx.schaden(ctx.spieler, (8 - d) * 9, 'Explosion'); }
+      for (const b of ctx.bots) { if (b.tot) continue; const d = BAB.Vector3.Distance(b.cc.getPosition(), p); if (d < 8) ctx.schaden(b, (8 - d) * 18, 'Explosion'); }
+      for (const o of autos) if (o !== a && !o.wrack && BAB.Vector3.Distance(o.chassis.getAbsolutePosition(), p) < 7) schaden(o, 35, null, quelle);
+      setTimeout(() => { if (a.feuer) { a.feuer.stop(); } }, 14000);
+    }
+    ctx.fahrzeugTreffer = (id, menge, punkt) => { const a = autos.find(x => x.id === id); if (a) { schaden(a, menge, punkt, 'Spieler'); return true; } return false; };
+
     function aufrichten(a) { const p = a.chassis.getAbsolutePosition(), yaw = Math.atan2(BAB.Vector3.TransformNormal(V(0, 0, 1), a.chassis.getWorldMatrix()).x, BAB.Vector3.TransformNormal(V(0, 0, 1), a.chassis.getWorldMatrix()).z);
       a.body.disablePreStep = false; a.chassis.position = V(p.x, ctx.hoehe(p.x, p.z) + 2, p.z); a.chassis.rotationQuaternion = BAB.Quaternion.RotationAxis(V(0, 1, 0), yaw); a.body.setLinearVelocity(V(0, 0, 0)); a.body.setAngularVelocity(V(0, 0, 0)); setTimeout(() => { a.body.disablePreStep = true; }, 100); }
 
@@ -129,20 +172,21 @@
       const AC = ctx.audio && ctx.audio(); if (AC) { const o1 = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain(); o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = 0;
         o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination); o1.start(); o2.start(); motor = { o1, o2, f, g, AC }; ctx.aufraeumen.push(() => { try { o1.stop(); o2.stop(); } catch (e) { /* schon aus */ } }); } tacho && (tacho.hidden = false); ctx.ton('aufheben'); ctx.nachricht('🚗 ' + a.T.name + ' · W/S Gas/Bremse · A/D lenken · Leertaste Handbremse · F aussteigen', 4);
     }
-    function aussteigen() {
+    function aussteigen(sofort) {
       const a = fahrend, sp = ctx.spieler; if (!a || !sp) return; const mw = a.chassis.getWorldMatrix(), seite = BAB.Vector3.TransformCoordinates(V(-(a.T.B / 2 + 1.1), 0, 0.5), mw);
       if (motor) { try { motor.o1.stop(); motor.o2.stop(); } catch (e) { /* egal */ } motor = null; }
       sp.cc.setPosition(V(seite.x, Math.max(seite.y, ctx.hoehe(seite.x, seite.z)) + 1.2, seite.z)); sp.cc.setVelocity(V(0, 0, 0)); sp.k.setEnabled(true); sp.gier = kamGier; fahrend = null; ctx.uebernahme = null; tacho && (tacho.hidden = true); a.eingabe = { gas: 0, lenk: 0, bremse: 1, hand: true };
     }
-    ctx.tastenHandler.F = ctx.tastenHandler.F || []; ctx.tastenHandler.F.push(() => { if (ctx.vorbei) return; if (fahrend) { if (Math.abs(fahrend.kmh) < 25) aussteigen(); else ctx.nachricht('Zu schnell zum Aussteigen – erst bremsen'); return; } const a = naechstes(3.8); if (a) einsteigen(a); });
+    ctx.tastenHandler.F = ctx.tastenHandler.F || []; ctx.tastenHandler.F.push(() => { if (ctx.vorbei) return; if (fahrend) { if (Math.abs(fahrend.kmh) < 25 || fahrend.wrack) aussteigen(); else ctx.nachricht('Zu schnell zum Aussteigen – erst bremsen'); return; } const a = naechstes(3.8); if (a) einsteigen(a); });
     (ctx.tastenHandler.R = ctx.tastenHandler.R || []).push(() => { if (fahrend && fahrend.kopfueber > 0.5) aufrichten(fahrend); });
-    function naechstes(max) { const sp = ctx.spieler; if (!sp) return null; const p = sp.cc.getPosition(); let best = null, d = max; for (const a of autos) { if (a.ki) continue; const dd = BAB.Vector3.Distance(p, a.chassis.getAbsolutePosition()); if (dd < d) { d = dd; best = a; } } return best; }
+    function naechstes(max) { const sp = ctx.spieler; if (!sp) return null; const p = sp.cc.getPosition(); let best = null, d = max; for (const a of autos) { if (a.ki || a.wrack) continue; const dd = BAB.Vector3.Distance(p, a.chassis.getAbsolutePosition()); if (dd < d) { d = dd; best = a; } } return best; }
     function fahrenUpdate(dt) {
       const a = fahrend, t = ctx.tasten, tc = ctx.touch, sp = ctx.spieler; const vor = (t.W || t.ArrowUp ? 1 : 0) + Math.max(0, tc.bewegen[1]), zur = (t.S || t.ArrowDown ? 1 : 0) + Math.max(0, -tc.bewegen[1]);
       const vl = a.kmh / 3.6; a.eingabe.lenk = klemme((t.D || t.ArrowRight ? 1 : 0) - (t.A || t.ArrowLeft ? 1 : 0) + tc.bewegen[0], -1, 1); a.eingabe.hand = !!t.Space;
       if (vor) { a.eingabe.gas = vl < -1 ? 0 : 1; a.eingabe.bremse = vl < -1 ? 1 : 0; } else if (zur) { a.eingabe.gas = vl > 1 ? 0 : -1; a.eingabe.bremse = vl > 1 ? 1 : 0; } else { a.eingabe.gas = 0; a.eingabe.bremse = 0; }
       const p = a.chassis.getAbsolutePosition(); sp.cc.setPosition(V(p.x, p.y + 30, p.z)); sp.tempo = Math.abs(vl);   // Spielfigur aus dem Weg (sie würde das Auto sonst blockieren)
-      if (tacho) tacho.textContent = Math.abs(Math.round(a.kmh)) + ' km/h';
+      if (a.wrack) { a.eingabe.gas = 0; a.eingabe.bremse = 1; }
+      if (tacho) tacho.textContent = (a.wrack ? '🔥 Wrack – F aussteigen' : Math.abs(Math.round(a.kmh)) + ' km/h') + (a.zustand < 100 && !a.wrack ? ' · 🔧 ' + Math.round(a.zustand) + '%' : '');
       if (motor) { const drehzahl = 38 + (Math.abs(a.kmh) % 45) * 2.4 + Math.abs(a.eingabe.gas) * 18, tt = motor.AC.currentTime; motor.o1.frequency.setTargetAtTime(drehzahl, tt, 0.05); motor.o2.frequency.setTargetAtTime(drehzahl * 0.5, tt, 0.05); motor.g.gain.setTargetAtTime(0.035 + Math.abs(a.eingabe.gas) * 0.04, tt, 0.08); motor.f.frequency.setTargetAtTime(400 + Math.abs(a.eingabe.gas) * 900, tt, 0.1); }
       ctx.hinweisText = a.kopfueber > 0.5 ? 'R: Auto aufrichten' : null;
     }
@@ -158,6 +202,6 @@
       for (const a of autos) physik(a, dt);
       if (!fahrend && ctx.spieler && !ctx.vorbei) { const a = naechstes(3.8); ctx.hinweisText = a ? 'F: Einsteigen (' + a.T.name + ')' : null; }
     }
-    return { api: { auto, autos, AUTO_TYPEN: TYPEN, get fahrzeug() { return fahrend; }, einsteigen, aussteigen }, update };
+    return { api: { autoSchaden: (a, m) => schaden(a, m, a.chassis.getAbsolutePosition().add(V(0, 0.5, a.T.L * 0.45)), 'Skript'), auto, autos, AUTO_TYPEN: TYPEN, get fahrzeug() { return fahrend; }, einsteigen, aussteigen }, update };
   });
 })();

@@ -41,7 +41,22 @@
       return glatt.slice(1).map(([i, j]) => { const [x, zz] = mitte(i, j); return V(x, 0, zz); });
     }
     /** Richtung, in die ein Bot laufen soll, um "ziel" zu erreichen – um Häuser und Bäume herum */
+    /** Höhenwechsel über Außentreppen: Ziel auf einem Dach -> erst zum Treppenfuß, dann hinauf (und umgekehrt) */
+    function treppenZiel(b, pos, ziel) {
+      const tr = ctx.treppen || []; if (!tr.length) return null; const dy = ziel.y - pos.y, nah = (p, r) => Math.hypot(p.x - pos.x, p.z - pos.z) < r;
+      const aufDach = t => pos.y > t.dachY - 1.3, amBoden = t => pos.y < t.unten.y + 1.4;
+      if (b.aufTreppe && b.treppe) { const t = b.treppe; if (!aufDach(t)) return { punkt: nah(t.rampe, 1.0) ? t.oben : t.rampe, gerade: true }; if (!nah(t.oben, 1.4) && dy > -1) return { punkt: t.oben, gerade: true }; b.aufTreppe = false; b.treppe = null; return null; }
+      if (dy > 2.2) { const t = tr.find(t => Math.hypot(ziel.x - t.mitte.x, ziel.z - t.mitte.z) < t.radius && Math.abs(ziel.y - t.dachY) < 2.5); if (!t) return null;
+        if (aufDach(t)) return nah(t.oben, 1.4) ? null : { punkt: t.oben, gerade: true };
+        if (amBoden(t) && !nah(t.unten, 0.7) && !b.aufTreppe) return { punkt: t.unten, gerade: nah(t.unten, 5) };   // genau zum Treppenfuß
+        b.aufTreppe = true; b.treppe = t; return { punkt: nah(t.rampe, 1.0) ? t.oben : t.rampe, gerade: true }; }   // genau entlang der Treppe
+      if (dy < -2.2) { const t = tr.find(t => Math.hypot(pos.x - t.mitte.x, pos.z - t.mitte.z) < t.radius + 2 && Math.abs(pos.y - t.dachY) < 2.5); if (!t) return null;
+        if (aufDach(t) && !nah(t.rampe, 1.0)) return { punkt: nah(t.oben, 1.2) ? t.rampe : t.oben, gerade: true };
+        return { punkt: t.unten, gerade: true }; }
+      b.aufTreppe = false; return null;
+    }
     function richtung(b, pos, ziel) {
+      const tz = treppenZiel(b, pos, ziel); if (tz) { if (tz.gerade) { const d = V(tz.punkt.x - pos.x, 0, tz.punkt.z - pos.z); return d.length() > 0.01 ? d.normalize() : d; } ziel = tz.punkt; }
       const neu = !b.pfad || !b.pfadZiel || BAB.Vector3.Distance(b.pfadZiel, ziel) > 4 || ctx.zeit - (b.pfadZeit || 0) > 3;
       if (neu) { b.pfad = pfad(pos, ziel) || [ziel.clone()]; b.pfadZiel = ziel.clone(); b.pfadZeit = ctx.zeit + Math.random() * 0.5; }
       while (b.pfad.length > 1 && Math.hypot(b.pfad[0].x - pos.x, b.pfad[0].z - pos.z) < 1.4) b.pfad.shift();

@@ -215,6 +215,7 @@
         const welt = g.mesh.getWorldMatrix();
         for (const k of g.kollision) { const lokal = BAB.Matrix.Compose(V(1, 1, 1), BAB.Quaternion.RotationAxis(V(1, 0, 0), k.rx || 0), V(k.p[0], k.p[1], k.p[2])); const m = lokal.multiply(welt); const sc = new BAB.Vector3(), q = new BAB.Quaternion(), p = new BAB.Vector3(); m.decompose(sc, q, p);
           const n = new BAB.TransformNode('hausPhysik', szene); n.position = p; n.rotationQuaternion = q; const body = new BAB.PhysicsBody(n, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = new BAB.PhysicsShapeBox(V(0, 0, 0), BAB.Quaternion.Identity(), V(k.g[0], k.g[1], k.g[2]), szene); }
+        if (g.treppe && ctx) { const tw = p => BAB.Vector3.TransformCoordinates(V(p[0], p[1], p[2]), welt); ctx.treppen.push({ unten: tw(g.treppe.unten), rampe: tw(g.treppe.rampe), oben: tw(g.treppe.oben), mitte: V(x, y0 + g.hoehe, z), radius: Math.hypot(o.breite || 10, o.tiefe || 8) / 2 + 1, dachY: y0 + g.hoehe + 0.25 }); }
         g.mesh.name = 'haus'; if (ctx && ctx.sperren) ctx.sperren.push({ x, z, w: dreh % Math.PI ? (o.tiefe || 8) : (o.breite || 10), d: dreh % Math.PI ? (o.breite || 10) : (o.tiefe || 8), dreh }); return g.mesh;
       }
       const x = o.pos[0], z = o.pos[2], y0 = o.pos[1] ?? hoehe(x, z), B_ = o.breite || 10, T = o.tiefe || 8, HS = 3.2, st = o.stockwerke || 1, H = HS * st, d = 0.3, f = o.farbe || '#c8b8a0', dreh = (o.drehung || 0) * Math.PI / 180;
@@ -427,6 +428,7 @@
         if (t && t.hit) { const m = t.pickedMesh, md_ = m.metadata || {}, bot = bots.find(b => b.id === md_.figur);
           if (bot && !bot.tot) { const k = md_.kopf; schaden(bot, w.def.schaden * (k ? 2.2 : 1), 'Spieler'); getroffen = true; kopf = kopf || k; funken(t.pickedPoint, null, '#ff5040', 10); }
           else { const n = t.getNormal(true) || V(0, 1, 0); funken(t.pickedPoint, n, null, 12); if (m.physicsBody && m.physicsBody.getMotionType && m.physicsBody.getMotionType() === BAB.PhysicsMotionType.DYNAMIC) m.physicsBody.applyImpulse(dir.scale(w.def.schaden * 0.6), t.pickedPoint);
+            if (md_.fahrzeug && ctx && ctx.fahrzeugTreffer) ctx.fahrzeugTreffer(md_.fahrzeug, w.def.schaden * 0.45, t.pickedPoint);
             if (md_.leben != null) { md_.leben -= w.def.schaden; if (md_.leben <= 0) zerstoeren(m); } } }
       }
       if (getroffen) { ton(kopf ? 'kopf' : 'treffer'); if (hud.treffer) { hud.treffer.classList.toggle('kopf', kopf); hud.treffer.style.opacity = 1; } }
@@ -478,6 +480,7 @@
         if (b.wechsel <= 0) { b.seitwaerts *= -1; b.wechsel = 1 + Math.random() * 2; }
         const quer = V(r.z, 0, -r.x).scale(b.seitwaerts); const ideal = b.waffe.kugeln > 1 ? 9 : 25;
         wunsch = quer.scale(0.7).add(r.scale(dist > ideal + 5 ? 1 : dist < ideal - 6 ? -0.8 : 0)); tempo = 3.2;
+        if (ctx && ctx.ki && (sp.y - pos.y > 2.2 || b.aufTreppe) && (ctx.treppen || []).length) { wunsch = ctx.ki.richtung(b, pos, sp); tempo = 4; }   // Ziel oben: über die Treppe hinterher
         b.reaktion = Math.max(0, (b.reaktion || 0) - dt);
         if (b.reaktion <= 0 && zeit - b.letzterSchuss > Math.max(0.45, b.waffe.kadenz * 1.5) + (1 - b.staerke) * 0.5 + Math.random() * 0.3 && dist < (b.waffe.kugeln > 1 ? 30 : 110)) {
           b.letzterSchuss = zeit; const bewegtSich = spieler.tempo > 2 ? 0.15 : 0; const chance = klemme(0.32 + b.staerke * 0.2 - dist / 130 - bewegtSich, 0.05, 0.5);
@@ -612,7 +615,7 @@
       vektor: V, farbe,
     };
     /* ---------- Module (Fahrzeuge, Stadt, Menschen, KI, Wetter …) ---------- */
-    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, sperren: [], baumPunkte: [],
+    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
       get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null, aufraeumen: [] };
     (window.SDModule || []).forEach(m => { try { const r = m(ctx) || {}; Object.defineProperties(sd, Object.getOwnPropertyDescriptors(r.api || {})); if (r.update) modulUpdates.push(r.update); } catch (e) { console.error('Modul-Fehler', e); } });
     const aufraeumen = () => {
@@ -620,7 +623,7 @@
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); document.removeEventListener('mousemove', mm); document.removeEventListener('mousedown', md); document.removeEventListener('mouseup', mu); document.removeEventListener('pointerlockchange', pl); document.removeEventListener('contextmenu', cm); window.removeEventListener('resize', groesse);
       try { document.exitPointerLock && document.exitPointerLock(); } catch (e) { /* egal */ } blobUrls.forEach(u => URL.revokeObjectURL(u)); engine.stopRenderLoop(); szene.dispose(); engine.dispose();
     };
-    const steuerung = { sd, aufraeumen, touch, tasten, maus, botsAnhalten: an => { botsAus = !!an; }, schritte: (n, dt) => { festeSchritte = true; const pe = szene.getPhysicsEngine(); if (pe && !pe.__orig) { pe.__orig = pe._step.bind(pe); pe._step = () => {}; } for (let i = 0; i < n; i++) { logik(dt || 1 / 30); if (pe) pe.__orig(dt || 1 / 30); } }, echtzeit: () => { festeSchritte = false; const pe = szene.getPhysicsEngine(); if (pe && pe.__orig) { pe._step = pe.__orig; delete pe.__orig; } }, info: () => ({ fps: engine.getFps(), bots: bots.length, lebend: bots.filter(b => !b.tot).length, spieler: spieler && { leben: spieler.leben, pos: spieler.cc.getPosition().asArray().map(v => +v.toFixed(2)), kills: spieler.kills, waffen: spieler.waffen.map(w => w.id + ':' + w.mag + '/' + w.reserve) }, kisten: kisten.length, objekte: szene.meshes.length, zeichnungen: engine._drawCalls ? engine._drawCalls.current : null, vorbei, zeit }) };
+    const steuerung = { sd, get ctx() { return ctx; }, aufraeumen, touch, tasten, maus, botsAnhalten: an => { botsAus = !!an; }, schritte: (n, dt) => { festeSchritte = true; const pe = szene.getPhysicsEngine(); if (pe && !pe.__orig) { pe.__orig = pe._step.bind(pe); pe._step = () => {}; } for (let i = 0; i < n; i++) { logik(dt || 1 / 30); if (pe) pe.__orig(dt || 1 / 30); } }, echtzeit: () => { festeSchritte = false; const pe = szene.getPhysicsEngine(); if (pe && pe.__orig) { pe._step = pe.__orig; delete pe.__orig; } }, info: () => ({ fps: engine.getFps(), bots: bots.length, lebend: bots.filter(b => !b.tot).length, spieler: spieler && { leben: spieler.leben, pos: spieler.cc.getPosition().asArray().map(v => +v.toFixed(2)), kills: spieler.kills, waffen: spieler.waffen.map(w => w.id + ':' + w.mag + '/' + w.reserve) }, kisten: kisten.length, objekte: szene.meshes.length, zeichnungen: engine._drawCalls ? engine._drawCalls.current : null, vorbei, zeit }) };
     try {
       const fn = new Function('sd', '"use strict";return (async()=>{\n' + code + '\n})();');
       await fn(sd);

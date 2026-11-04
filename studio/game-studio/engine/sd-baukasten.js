@@ -210,14 +210,22 @@
         if (r() < 0.7) kiste(B * 0.25, ob + hr * 0.7, T * 0.15, 0.6, 1.6, 0.6, material('ziegel', '#a05a44'), 1.5);   // Schornstein
       } else {
         kiste(0, ob + 0.1, 0, B + 0.15, 0.3, T + 0.15, sockel, 3, true);
-        for (const [px, pz, w, t] of [[0, -T / 2, B + 0.15, 0.25], [0, T / 2, B + 0.15, 0.25], [-B / 2, 0, 0.25, T], [B / 2, 0, 0.25, T]]) kiste(px, ob + 0.65, pz, w, 0.8, t, wand, 2, true);
+        const zOben = T / 2 - 1.3, luecke = o.dachTreppe ? [zOben - 0.1, zOben + 1.3] : null;   // Lücke in der Brüstung für die Treppe
+        const bruestung = [[0, -T / 2, B + 0.15, 0.25], [0, T / 2, B + 0.15, 0.25], [-B / 2, 0, 0.25, T]];
+        if (luecke) { const a0 = -T / 2, a1 = luecke[0], b0 = luecke[1], b1 = T / 2; bruestung.push([B / 2, (a0 + a1) / 2, 0.25, a1 - a0], [B / 2, (b0 + b1) / 2, 0.25, Math.max(0.05, b1 - b0)]); } else bruestung.push([B / 2, 0, 0.25, T]);
+        for (const [px, pz, w, t] of bruestung) kiste(px, ob + 0.65, pz, w, 0.8, t, wand, 2, true);
         const n = 1 + Math.floor(r() * 3); for (let i = 0; i < n; i++) { const ax = (r() - 0.5) * (B - 3), az = (r() - 0.5) * (T - 3); kiste(ax, ob + 0.75, az, 1.2, 0.9, 0.9, dunkel, 1, true); kiste(ax, ob + 1.22, az, 0.9, 0.04, 0.6, material(null, '#2a2d31', { rau: 0.3, metall: 0.8 }), 1); }
       }
-      if (o.dachTreppe && o.dach !== 'sattel') { const hoch = ob + 0.25, lang = T * 1.25, w = Math.atan2(hoch, lang), L = Math.hypot(hoch, lang), sx = B / 2 + 1.1;
-        koll.push({ p: [sx, hoch / 2, 0], g: [1.6, 0.25, L], rx: w });
-        const stufen = Math.ceil(hoch / 0.25); for (let i = 0; i < stufen; i++) { const t = (i + 0.5) / stufen; kiste(sx, t * hoch - 0.08, -lang / 2 + t * lang, 1.6, 0.18, lang / stufen + 0.05, sockel, 2); }
-        for (const sx2 of [sx - 0.85, sx + 0.85]) kiste(sx2, hoch / 2 + 0.6, 0, 0.05, 0.05, L, dunkel, 1, false, w); }
-      const mesh = zusammen(teile, 'gebaeude'); return { mesh, kollision: koll, hoehe: ob };
+      let treppe = null;
+      if (o.dachTreppe && o.dach !== 'sattel') {   // Außentreppe an der rechten Seite, oben ein Absatz aufs Dach
+        const hoch = ob + 0.25, zOben = T / 2 - 1.3, lauf = Math.max(T * 1.25, hoch * 1.55), zUnten = zOben - lauf, w = Math.atan2(hoch, lauf), L = Math.hypot(hoch, lauf), sx = B / 2 + 1.1, zm = (zOben + zUnten) / 2;
+        koll.push({ p: [sx, hoch / 2 - 0.1, zm], g: [1.6, 0.25, L], rx: -w });
+        const stufen = Math.ceil(hoch / 0.22); for (let i = 0; i < stufen; i++) { const t = (i + 0.5) / stufen; kiste(sx, t * hoch - 0.08, zUnten + t * lauf, 1.6, 0.18, lauf / stufen + 0.05, sockel, 2); }
+        kiste(B / 2 + 0.95, hoch - 0.12, zOben + 0.6, 2.0, 0.24, 1.3, sockel, 2, true);                    // Absatz zwischen Treppe und Dach
+        for (const sx2 of [sx + 0.85]) kiste(sx2, hoch / 2 + 0.75, zm, 0.05, 0.05, L, dunkel, 1, false, -w);
+        treppe = { unten: [sx, 0, zUnten - 1.0], rampe: [sx, hoch, zOben + 0.5], oben: [B / 2 - 1.4, hoch, zOben + 0.6] };
+      }
+      const mesh = zusammen(teile, 'gebaeude'); return { mesh, kollision: koll, hoehe: ob, treppe, flaeche: { breite: B, tiefe: T } };
     }
 
     /* =============== 🤖 ROBOTER =============== */
