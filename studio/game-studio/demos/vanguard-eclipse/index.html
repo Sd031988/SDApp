@@ -287,7 +287,7 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const world=World.generate(31,6),runtime=World.runtime(world,1),mobileMode=window.matchMedia('(pointer:coarse)').matches||window.innerWidth<700;
 let state=M.makeState(),selection=runtime.query(0,0),gl,program,loc,meshes={},terrainCache=new Map();
 let canvasLost=false,previousTime=0,time=0,draws=0,frames=0,fps=0,lastStats=0,lastHud=0,noticeUntil=0;
-let skyProgram,skyBuffer,skyU={},lastPV=null,running=false;
+let skyProgram,skyBuffer,skyU={},lastPV=null,running=false,renderScale=1;
 const fxCanvas=$('fx'),fxCtx=fxCanvas.getContext('2d'),sparks=[],waves=[];
 let shake=0,lastDamage=0,audioEnabled=false,audioCtx=null;
 const visual={x:0,z:0,y:0};
@@ -319,12 +319,12 @@ function setup(){
  gl=canvas.getContext('webgl',{alpha:false,depth:true,antialias:true,powerPreference:'high-performance'});
  if(!gl)throw Error('WebGL ist nicht verfügbar. Aktiviere Hardwaregrafik oder nutze einen kompatiblen Browser.');
  const vs=`attribute vec3 position;attribute vec3 normal;uniform mat4 model,view,projection;varying vec3 wPos;varying vec3 wNormal;void main(){vec4 p=model*vec4(position,1.0);wPos=p.xyz;vec3 a=model[0].xyz,b=model[1].xyz,c=model[2].xyz;wNormal=normalize(a*normal.x/max(dot(a,a),0.0001)+b*normal.y/max(dot(b,b),0.0001)+c*normal.z/max(dot(c,c),0.0001));gl_Position=projection*view*p;}`;
- const fs=`precision highp float;uniform vec3 tint,eye;uniform float terrain,glow,tick;varying vec3 wPos,wNormal;
+ const fs=`precision highp float;uniform vec3 tint,eye;uniform float terrain,glow,tick,quality;varying vec3 wPos,wNormal;
  float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
  void main(){vec3 n=normalize(wNormal);vec3 base=tint;
  if(terrain>0.5){float height=clamp((wPos.y+5.0)/14.0,0.0,1.0);float slope=1.0-clamp(n.y,0.0,1.0);
- float detail=noise(wPos.xz*1.9)*0.12+noise(wPos.xz*.11)*.15;
+ float detail=quality>.5?(noise(wPos.xz*1.9)*.12+noise(wPos.xz*.11)*.15):(sin(wPos.x*.18)*cos(wPos.z*.23)*.085);
  base=mix(vec3(.075,.19,.19),vec3(.22,.35,.32),height);base+=detail-.1;
  base=mix(base,vec3(.25,.28,.31)+detail*.2,smoothstep(.15,.65,slope)*.8);
  float snow=smoothstep(5.5,10.0,wPos.y+noise(wPos.xz*.15)*3.0);base=mix(base,vec3(.59,.66,.65),snow*.56);
@@ -341,7 +341,7 @@ function setup(){
  }`;
  program=gl.createProgram();const a=shader(gl.VERTEX_SHADER,vs),b=shader(gl.FRAGMENT_SHADER,fs);gl.attachShader(program,a);gl.attachShader(program,b);gl.linkProgram(program);gl.deleteShader(a);gl.deleteShader(b);
  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('WebGL-Linker: '+gl.getProgramInfoLog(program));
- gl.useProgram(program);loc={position:gl.getAttribLocation(program,'position'),normal:gl.getAttribLocation(program,'normal'),model:gl.getUniformLocation(program,'model'),view:gl.getUniformLocation(program,'view'),projection:gl.getUniformLocation(program,'projection'),tint:gl.getUniformLocation(program,'tint'),eye:gl.getUniformLocation(program,'eye'),terrain:gl.getUniformLocation(program,'terrain'),glow:gl.getUniformLocation(program,'glow'),tick:gl.getUniformLocation(program,'tick')};
+ gl.useProgram(program);loc={position:gl.getAttribLocation(program,'position'),normal:gl.getAttribLocation(program,'normal'),model:gl.getUniformLocation(program,'model'),view:gl.getUniformLocation(program,'view'),projection:gl.getUniformLocation(program,'projection'),tint:gl.getUniformLocation(program,'tint'),eye:gl.getUniformLocation(program,'eye'),terrain:gl.getUniformLocation(program,'terrain'),glow:gl.getUniformLocation(program,'glow'),tick:gl.getUniformLocation(program,'tick'),quality:gl.getUniformLocation(program,'quality')};
  gl.enableVertexAttribArray(loc.position);gl.enableVertexAttribArray(loc.normal);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
  meshes={cube:cube(),sphere:sphere(),cylinder:cylinder(),cone:cylinder(true)};
  setupSky();
@@ -432,13 +432,14 @@ function extraction(){
  const b=height(0,0),complete=state.beacons.every(x=>x.active);
  part('cylinder','#172b34',0,b+.06,0,4.15,.13,4.15);
  part('cylinder',complete?'#79dfb0':'#467c88',0,b+.24,0,3.94,.075,3.94);
- part('cylinder','#0c202b',0,b+.30,0,3.51,.07,3.51);
+ part('cylinder','#335560',0,b+.24,0,3.51,.07,3.51);
+ for(const side of [-1,1])part('cube','#82cec3',side*2.10,b+.31,0,.10,.018,1.18);
  for(let i=0;i<12;i++){const a=i*Math.PI/6,c=Math.cos(a),s=Math.sin(a);
    part('cube',complete?'#95ffe1':'#7dbfbd',c*3.55,b+.36,s*3.55,.29,.045,.31);
  }
  for(let i=0;i<4;i++){const a=i*Math.PI/2+.7854,x=Math.cos(a)*5.1,z=Math.sin(a)*5.1,y=height(x,z);
-  part('cube','#1d3946',x,y+1.25,z,.48,1.25,.48);
-  part('cube','#a2f6dc',x,y+2.46,z,.53,.11,.53);
+  part('cube','#1d3946',x,y+.23,z,.43,.23,.43);
+  part('cube','#a2f6dc',x,y+.48,z,.47,.065,.47);
  }
 }
 function outpost(player){
@@ -561,7 +562,7 @@ function drone(e){
  if(e.hp<100){local(root,'cube','#d55d73',0,.92,0,.52,.04,.065);local(root,'cube','#8bffdd',-.52+e.hp/200,.92,.065,e.hp/200,.045,.065);}
 }
 function render(){
- const pixelRatio=Math.min(window.devicePixelRatio||1,mobileMode?1.15:1.55),w=Math.max(1,Math.floor(canvas.clientWidth*pixelRatio)),h=Math.max(1,Math.floor(canvas.clientHeight*pixelRatio));
+ const pixelRatio=Math.max(.62,Math.min(window.devicePixelRatio||1,mobileMode?1.15:1.55)*renderScale),w=Math.max(1,Math.floor(canvas.clientWidth*pixelRatio)),h=Math.max(1,Math.floor(canvas.clientHeight*pixelRatio));
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}gl.viewport(0,0,w,h);
  const p=state.hero;
  visual.x+=(p.x-visual.x)*Math.min(1,.10);visual.z+=(p.z-visual.z)*Math.min(1,.10);visual.y+=(p.y-visual.y)*Math.min(1,.12);
@@ -575,7 +576,7 @@ function render(){
  lastPV=mult(projection,view);
  gl.uniformMatrix4fv(loc.view,false,new Float32Array(view));
  gl.uniformMatrix4fv(loc.projection,false,new Float32Array(projection));
- gl.uniform3fv(loc.eye,eye);gl.uniform1f(loc.tick,time);draws=0;
+ gl.uniform3fv(loc.eye,eye);gl.uniform1f(loc.tick,time);gl.uniform1f(loc.quality,renderScale>.78?1:0);draws=0;
  selection=runtime.query(p.x,p.z);
  drawTerrain(selection.cells);
  for(const obj of selection.objects)if(Math.hypot(obj.x-p.x,obj.z-p.z)<(mobileMode?46:78)&&(!mobileMode||M.distance(obj,p)<24||obj.id%3===0))worldObject(obj);
@@ -692,7 +693,7 @@ function tick(now){if(canvasLost)return;const dt=previousTime?Math.min(.05,(now-
    if(state.events.length)onEvents();
   }
   updateParticles(dt);
-  render();frames++;if(now-lastStats>700){fps=Math.round(frames*1000/Math.max(1,now-lastStats));frames=0;lastStats=now;}if(now-lastHud>120||state.events.length||state.phase!=='playing'){updateHud();lastHud=now;}
+  render();frames++;if(now-lastStats>700){fps=Math.round(frames*1000/Math.max(1,now-lastStats));frames=0;lastStats=now;if(running){if(fps<23)renderScale=Math.max(.55,renderScale-.12);else if(fps>50)renderScale=Math.min(1,renderScale+.05);}}if(now-lastHud>120||state.events.length||state.phase!=='playing'){updateHud();lastHud=now;}
  }
  requestAnimationFrame(tick);
 }
