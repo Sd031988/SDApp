@@ -50,6 +50,7 @@ button.los{background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a100
 .feld{background:rgba(255,255,255,.04);border:1px solid var(--rand);border-radius:10px;padding:12px;font-size:13px;line-height:1.6;color:#cfd8e2}.feld b{color:#fff}
 kbd{display:inline-block;min-width:20px;padding:0 5px;border:1px solid var(--rand);border-bottom-width:2px;border-radius:4px;font:600 11px/18px monospace;text-align:center;color:#fff;background:rgba(255,255,255,.06)}
 select{font:14px system-ui;background:#18212d;color:var(--txt);border:1px solid var(--rand);border-radius:8px;padding:9px}
+.sw.an{background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border-color:transparent}
 .ehrlich{font-size:12px;color:var(--leise);margin-top:14px;line-height:1.55}
 /* Skript-Editor */
 #editor{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);z-index:6;background:#0e141c;border-left:1px solid var(--rand);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
@@ -95,9 +96,10 @@ body.handy .unten{bottom:180px}
 
 <div class="ov" id="menue">
   <div class="karte">
-    <h1 class="titel">INSELSTURM</h1>
-    <div class="unter">SD Engine · Third-Person-Shooter · Battle-Royale-Modus</div>
-    <p style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
+    <div class="spielwahl" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="sw an" data-spiel="inselsturm">🏝 Inselsturm</button><button class="sw" data-spiel="stadtjagd">🏙 Stadtjagd</button></div>
+    <h1 class="titel" id="spielTitel">INSELSTURM</h1>
+    <div class="unter" id="spielUnter">SD Engine · Third-Person-Shooter · Battle-Royale-Modus</div>
+    <p id="spielText" style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
     <div class="knoepfe">
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
@@ -119,7 +121,7 @@ body.handy .unten{bottom:180px}
 <div class="ov" id="laden" hidden><div style="text-align:center"><div class="titel" style="font-size:30px">Lade Welt …</div><p id="ladenText" style="color:var(--leise)">Grafik-Engine und Physik werden geladen</p></div></div>
 
 <aside id="editor" hidden>
-  <header><b>{ } SD-Skript · Inselsturm</b><button id="edStart" style="background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border:0">▶ Neu starten</button><button id="edApi">📖 API</button><button id="edOriginal" title="Original-Skript wiederherstellen">↺ Original</button><button id="edDatei" title="Skript als Datei speichern">⬇</button><button id="edZu">✕</button></header>
+  <header><b id="edTitel">{ } SD-Skript · Inselsturm</b><button id="edStart" style="background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border:0">▶ Neu starten</button><button id="edApi">📖 API</button><button id="edOriginal" title="Original-Skript wiederherstellen">↺ Original</button><button id="edDatei" title="Skript als Datei speichern">⬇</button><button id="edZu">✕</button></header>
   <div id="fehler" hidden></div>
   <textarea id="code" spellcheck="false" aria-label="Spiel-Skript"></textarea>
   <div id="api" hidden>
@@ -142,19 +144,29 @@ body.handy .unten{bottom:180px}
 <script src="./sd-fahrzeug.js?v=1"></script>
 <script src="./sd-mensch.js?v=1"></script>
 <script src="./sd-stadt.js?v=1"></script>
+<script src="./sd-ki.js?v=1"></script>
+<script src="./sd-wetter.js?v=1"></script>
 <script src="./sd-engine.js?v=5"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 const HAVOK_WASM = 'https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics.wasm';
-const SPEICHER = 'sdEngineSkript.inselsturm';
+const SPIELE = {
+  inselsturm: { titel: 'INSELSTURM', unter: 'SD Engine · Third-Person-Shooter · Battle-Royale-Modus', text: 'Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.' },
+  stadtjagd: { titel: 'STADTJAGD', unter: 'SD Engine · Open World · Autos · Tag & Nacht · Wetter', text: 'Eine Stadt mit 16 Blöcken, Hochhäusern, Verkehr und Passanten. Steig mit F in Autos, erlebe Abend, Nacht und Regen – und schalte die Gang im Nordosten aus. Tipp: Grafik „Niedrig“ auf schwächeren PCs.' },
+};
+let SPIEL = 'inselsturm'; try { const g = localStorage.getItem('sdEngineSpiel'); if (g && SPIELE[g]) SPIEL = g; } catch (e) { /* egal */ }
+let SPEICHER = 'sdEngineSkript.' + SPIEL;
 const handy = matchMedia('(pointer: coarse)').matches; if (handy) document.body.classList.add('handy');
 let laeuft = null, pausiert = false, original = '';
 const lies = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const schreib = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* privat */ } };
 try { const q = lies('sdEngineQualitaet'); if (q) $('qualitaet').value = q; else if (handy) $('qualitaet').value = 'niedrig'; } catch (e) { /* egal */ }
 
-async function skriptHolen() { if (!original) original = await (await fetch('./spiele/inselsturm.js', { cache: 'no-cache' })).text(); return lies(SPEICHER) || original; }
+async function skriptHolen() { if (!original) original = await (await fetch('./spiele/' + SPIEL + '.js', { cache: 'no-cache' })).text(); return lies(SPEICHER) || original; }
+function spielWaehlen(n) { SPIEL = n; SPEICHER = 'sdEngineSkript.' + n; original = ''; schreib('sdEngineSpiel', n); const d = SPIELE[n]; $('spielTitel').textContent = d.titel; $('spielUnter').textContent = d.unter; $('spielText').textContent = d.text; $('edTitel').textContent = '{ } SD-Skript · ' + d.titel.charAt(0) + d.titel.slice(1).toLowerCase();
+  document.querySelectorAll('.sw').forEach(b => b.classList.toggle('an', b.dataset.spiel === n)); $('code').value = ''; skriptHolen().then(c => { $('code').value = c; }).catch(() => {}); }
+document.querySelectorAll('.sw').forEach(b => b.onclick = () => spielWaehlen(b.dataset.spiel));
 function zeigeFehler(e) {
   const m = /<anonymous>:(\d+):(\d+)/.exec(String(e && e.stack || '')); const zeile = m ? (+m[1] - 3) : null;
   $('fehler').hidden = false; $('fehler').textContent = '⨯ ' + (e && e.message || e) + (zeile > 0 ? '\n   in Zeile ' + zeile : '');
@@ -187,7 +199,7 @@ $('edZu').onclick = () => { $('editor').hidden = true; if (laeuft && $('ende').h
 $('edStart').onclick = () => { schreib(SPEICHER, $('code').value); $('editor').hidden = true; spielStarten(); };
 $('edApi').onclick = () => { $('api').hidden = !$('api').hidden; };
 $('edOriginal').onclick = async () => { if (!confirm('Deine Änderungen verwerfen und das Original-Skript laden?')) return; await skriptHolen(); $('code').value = original; try { localStorage.removeItem(SPEICHER); } catch (e) { /* egal */ } };
-$('edDatei').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('code').value], { type: 'text/javascript' })); a.download = 'inselsturm.sd.js'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+$('edDatei').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('code').value], { type: 'text/javascript' })); a.download = SPIEL + '.sd.js'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 $('code').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText('  ', s, t.selectionEnd, 'end'); } if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); $('edStart').click(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && $('ende').hidden && $('editor').hidden && (handy || /[?&]test/.test(location.search))) { pausiert = !pausiert; $('pause').hidden = !pausiert; } });
 
@@ -212,7 +224,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && 
   let wi = 0; halte('tWaffe', () => { if (!laeuft) return; const n = laeuft.sd.spielerDaten.waffen.length; wi = (laeuft.sd.spielerDaten.aktiv + 1) % n; taste('Digit' + (wi + 1))(); });
   halte('tMenue', () => { if (!laeuft) return; pausiert = true; $('pause').hidden = false; });
 })();
-skriptHolen().then(c => { $('code').value = c; }).catch(() => { /* offline */ });
+spielWaehlen(SPIEL);
 </script>
 </body>
 </html>

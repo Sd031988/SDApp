@@ -22,10 +22,16 @@
 
   /* ---------- Töne (selbst erzeugt, keine Dateien) ---------- */
   let AC = null;
-  function ton(art, lautstaerke) {
-    try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return; }
-    const t = AC.currentTime, L = klemme(lautstaerke == null ? 1 : lautstaerke, 0, 1); if (L < 0.02) return;
-    const g = AC.createGain(); g.connect(AC.destination);
+  function audioKontext() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return null; } return AC; }
+  /** Hörer = Kamera (für 3D-Ton). WebAudio ist rechtshändig, Babylon linkshändig -> z spiegeln */
+  function hoererSetzen(p, f) { if (!AC) return; const l = AC.listener; if (l.positionX) { l.positionX.value = p.x; l.positionY.value = p.y; l.positionZ.value = -p.z; l.forwardX.value = f.x; l.forwardY.value = f.y; l.forwardZ.value = -f.z; l.upX.value = 0; l.upY.value = 1; l.upZ.value = 0; } else { l.setPosition(p.x, p.y, -p.z); l.setOrientation(f.x, f.y, -f.z, 0, 1, 0); } }
+  function ton(art, lautstaerke, pos) {
+    if (!audioKontext()) return;
+    const t = AC.currentTime, L = klemme(lautstaerke == null ? 1 : lautstaerke, 0, 1) * (pos ? 1.4 : 1); if (L < 0.02) return;
+    const g = AC.createGain();
+    if (pos && AC.createPanner) { const pn = AC.createPanner(); pn.panningModel = 'HRTF'; pn.distanceModel = 'inverse'; pn.refDistance = 8; pn.maxDistance = 500; pn.rolloffFactor = 0.6;
+      if (pn.positionX) { pn.positionX.value = pos.x; pn.positionY.value = pos.y; pn.positionZ.value = -pos.z; } else pn.setPosition(pos.x, pos.y, -pos.z); g.connect(pn); pn.connect(AC.destination); }
+    else g.connect(AC.destination);
     if (art === 'schuss' || art === 'schrot' || art === 'pistole') {
       const dauer = art === 'schrot' ? 0.45 : art === 'pistole' ? 0.18 : 0.25, n = AC.createBufferSource(), buf = AC.createBuffer(1, AC.sampleRate * dauer, AC.sampleRate), d = buf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, art === 'schrot' ? 2 : 3.5);
@@ -115,7 +121,7 @@
         const typ = { box: BAB.PhysicsShapeType.BOX, kugel: BAB.PhysicsShapeType.SPHERE, zylinder: BAB.PhysicsShapeType.CYLINDER, fels: BAB.PhysicsShapeType.CONVEX_HULL }[art] || BAB.PhysicsShapeType.BOX;
         mesh.__physik = new BAB.PhysicsAggregate(mesh, typ, { mass: o.masse || 0, friction: o.reibung == null ? 0.8 : o.reibung, restitution: o.sprung || 0.05 }, szene);
       }
-      if (!o.statisch && !o.masse) mesh.freezeWorldMatrix();
+      if (!o.statisch && !o.masse) { mesh.freezeWorldMatrix(); if (ctx && o.physik !== false) { const bb = mesh.getBoundingInfo().boundingBox; const ex = bb.maximumWorld.subtract(bb.minimumWorld); if (ex.x > 0.7 && ex.z > 0.7 && ex.y > 0.6) ctx.sperren.push({ x: (bb.maximumWorld.x + bb.minimumWorld.x) / 2, z: (bb.maximumWorld.z + bb.minimumWorld.z) / 2, w: ex.x, d: ex.z }); } }
       mesh.metadata = Object.assign({}, mesh.metadata, o.daten || {}, { leben: o.leben });
       objekte.push(mesh); return mesh;
     }
@@ -164,7 +170,7 @@
       m.material = mat; m.receiveShadows = true; m.useVertexColors = true; m.hasVertexAlpha = false;
       new BAB.PhysicsAggregate(m, BAB.PhysicsShapeType.MESH, { mass: 0, friction: 0.9 }, szene); m.freezeWorldMatrix(); m.metadata = { boden: true };
       if (o.wasser != null) { const w = BAB.MeshBuilder.CreateGround('wasser', { width: G * 3, height: G * 3 }, szene); w.position.y = o.wasser; w.material = material('#2f6f8f', 0.08, 0.1, { alpha: 0.78 }); w.isPickable = false; }
-      gel = { groesse: G, hoeheBei, mesh: m }; return gel;
+      gel = { groesse: G, hoeheBei, mesh: m }; if (ctx) { ctx.wasserHoehe = o.wasser; } return gel;
     }
     const hoehe = (x, z) => (gel ? gel.hoeheBei(x, z) : 0);
 
@@ -193,6 +199,7 @@
         if (o.minHoehe != null && y < o.minHoehe) continue; if (o.maxHoehe != null && y > o.maxHoehe) continue;
         const art = arten[Math.floor(r() * arten.length)], v = vorlagen(art, o)[Math.floor(r() * 3)];
         const b = v.mesh.createInstance('baum'); const s = 0.8 + r() * 0.45; b.position = V(x, y - 0.15, z); b.scaling = V(s, s, s); b.rotation.y = r() * 6.3; b.isPickable = true; b.freezeWorldMatrix();
+        if (v.form && ctx) ctx.baumPunkte.push([x, z]);
         if (v.form) { const knoten = new BAB.TransformNode('baumPhysik', szene); knoten.position = b.position.clone(); knoten.scaling = V(s, s, s); const body = new BAB.PhysicsBody(knoten, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = v.form; }
         n++;
       }
@@ -457,12 +464,16 @@
       const sp = spieler && spieler.leben > 0 ? spielerPos() : null; const dist = sp ? BAB.Vector3.Distance(pos, sp) : 1e9;
       b.alarm = Math.max(0, b.alarm - dt); b.wechsel -= dt;
       const sichtweite = 70 + b.staerke * 40;
-      if (sp && dist < sichtweite && (b.sieht > 0 || Math.random() < dt * 6)) { const frei = sichtfrei(pos.add(V(0, 0.75, 0)), sp.add(V(0, 0.5, 0)), b.id); if (frei && b.sieht <= 0) b.reaktion = 0.9 + (1 - b.staerke) * 0.9 + Math.random() * 0.5; b.sieht = frei ? 1.5 : Math.max(0, b.sieht - dt); if (frei) b.zuletzt = sp.clone(); }
+      if (sp && dist < sichtweite && (b.sieht > 0 || Math.random() < dt * 6)) { const frei = sichtfrei(pos.add(V(0, 0.75, 0)), sp.add(V(0, 0.5, 0)), b.id); if (frei && b.sieht <= 0) { b.reaktion = 0.9 + (1 - b.staerke) * 0.9 + Math.random() * 0.5; ctx && ctx.ki && ctx.ki.alarm(b, sp); } b.sieht = frei ? 1.5 : Math.max(0, b.sieht - dt); if (frei) b.zuletzt = sp.clone(); }
       else b.sieht = Math.max(0, b.sieht - dt);
       // in der Zone bleiben
       let zielPunkt = null;
       if (zone && Math.hypot(pos.x - zone.mitte[0], pos.z - zone.mitte[1]) > zone.radius * 0.85) zielPunkt = V(zone.mitte[0], 0, zone.mitte[1]);
-      if (b.sieht > 0 && sp) {
+      if (ctx && ctx.ki && sp && b.leben < 45 && !b.deckungFertig && (b.sieht > 0 || b.deckung)) {   // verletzt: Deckung suchen
+        if (!b.deckung && !b.deckungGesucht) { b.deckungGesucht = true; b.deckung = ctx.ki.deckungSuchen(b, pos, sp); if (!b.deckung) b.deckungFertig = true; }
+        if (b.deckung) { const d = Math.hypot(b.deckung.x - pos.x, b.deckung.z - pos.z); if (d > 1.2) { wunsch = ctx.ki.richtung(b, pos, b.deckung); tempo = 5.5; b.richtung = Math.atan2(wunsch.x, wunsch.z); }
+          else { b.inDeckung = (b.inDeckung || 0) + dt; const zu = sp.subtract(pos); b.richtung = Math.atan2(zu.x, zu.z); if (b.inDeckung > 3.5) { b.leben = Math.min(100, b.leben + 20); b.deckungFertig = true; b.deckung = null; } } }
+      } else if (b.sieht > 0 && sp) {
         const zu = sp.subtract(pos); zu.y = 0; const r = zu.normalize(); b.richtung = Math.atan2(r.x, r.z);
         if (b.wechsel <= 0) { b.seitwaerts *= -1; b.wechsel = 1 + Math.random() * 2; }
         const quer = V(r.z, 0, -r.x).scale(b.seitwaerts); const ideal = b.waffe.kugeln > 1 ? 9 : 25;
@@ -474,8 +485,10 @@
           spur(muendung, ziel); ton(b.waffe.ton, klemme(1 - dist / 140, 0, 0.7), muendung); ctx && ctx.beiSchuss.forEach(f => f(muendung, b.id));
           if (treffer) schaden(spieler, b.waffe.schaden * (b.waffe.kugeln > 1 ? klemme(3 - dist / 8, 0.4, 3) : 0.45), b.name);
         }
-      } else if (b.zuletzt && b.alarm > 0) { const zu = b.zuletzt.subtract(pos); zu.y = 0; if (zu.length() > 2) { wunsch = zu.normalize(); tempo = 4; b.richtung = Math.atan2(wunsch.x, wunsch.z); } }
-      else if (zielPunkt) { const zu = zielPunkt.subtract(pos); zu.y = 0; wunsch = zu.normalize(); tempo = 4.5; b.richtung = Math.atan2(wunsch.x, wunsch.z); }
+      } else if (b.zuletzt && b.alarm > 0) { let ziel = b.zuletzt; const zu = ziel.subtract(pos); zu.y = 0;
+        if (b.flanke && zu.length() > 22) { const n = zu.normalize(); ziel = b.zuletzt.add(V(n.z, 0, -n.x).scale(b.flanke * 14)); }   // von der Seite kommen
+        if (zu.length() > 2) { wunsch = ctx && ctx.ki ? ctx.ki.richtung(b, pos, ziel) : zu.normalize(); tempo = 4; b.richtung = Math.atan2(wunsch.x, wunsch.z); } }
+      else if (zielPunkt) { const zu = zielPunkt.subtract(pos); zu.y = 0; wunsch = ctx && ctx.ki ? ctx.ki.richtung(b, pos, zielPunkt) : zu.normalize(); tempo = 4.5; b.richtung = Math.atan2(wunsch.x, wunsch.z); }
       else { b.warte -= dt; if (b.warte <= 0) { b.richtung += (Math.random() - 0.5) * 2.5; b.warte = 2 + Math.random() * 4; b.geht = Math.random() < 0.7; } if (b.geht) { wunsch = V(Math.sin(b.richtung), 0, Math.cos(b.richtung)); tempo = 2; } }
       if (b.alarm > 0 && b.sieht <= 0 && sp && !b.zuletzt) b.zuletzt = sp.clone();
       const v0 = wunsch.scale(tempo); bewege(b.cc, v0, false, dt, b.zustand);
@@ -581,6 +594,7 @@
         if (hud.fadenkreuz) hud.fadenkreuz.style.setProperty('--s', (8 + ((w && (maus.rechts ? w.def.zielStreuung : w.def.streuung)) || 0) * 500 + spieler.rueckstoss * 300) + 'px');
         hud.zielfernrohr && (hud.zielfernrohr.hidden = !(maus.rechts && w && w.def.zoom));
       }
+      hoererSetzen(kamera.position, kamera.getForwardRay(1).direction);
       fpsZeit += dt; if (fpsZeit > 0.5) { fpsZeit = 0; setzeText('fps', engine.getFps().toFixed(0) + ' FPS'); karte(); }
     }
     engine.runRenderLoop(() => szene.render());
@@ -598,8 +612,8 @@
       vektor: V, farbe,
     };
     /* ---------- Module (Fahrzeuge, Stadt, Menschen, KI, Wetter …) ---------- */
-    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos,
-      get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null };
+    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, sperren: [], baumPunkte: [],
+      get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null, aufraeumen: [] };
     (window.SDModule || []).forEach(m => { try { const r = m(ctx) || {}; Object.defineProperties(sd, Object.getOwnPropertyDescriptors(r.api || {})); if (r.update) modulUpdates.push(r.update); } catch (e) { console.error('Modul-Fehler', e); } });
     const aufraeumen = () => {
       (ctx.aufraeumen || []).forEach(f => { try { f(); } catch (e) { /* egal */ } });

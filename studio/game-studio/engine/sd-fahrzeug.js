@@ -122,13 +122,16 @@
       a.body.disablePreStep = false; a.chassis.position = V(p.x, ctx.hoehe(p.x, p.z) + 2, p.z); a.chassis.rotationQuaternion = BAB.Quaternion.RotationAxis(V(0, 1, 0), yaw); a.body.setLinearVelocity(V(0, 0, 0)); a.body.setAngularVelocity(V(0, 0, 0)); setTimeout(() => { a.body.disablePreStep = true; }, 100); }
 
     /* ---------- Einsteigen / Aussteigen ---------- */
-    let kamGier = 0, kamOffset = 0, kamNick = 0.25;
+    let kamGier = 0, kamOffset = 0, kamNick = 0.25; let motor = null;
     function einsteigen(a) {
       const sp = ctx.spieler; if (!sp) return; fahrend = a; sp.k.setEnabled(false); kamGier = Math.atan2(BAB.Vector3.TransformNormal(V(0, 0, 1), a.chassis.getWorldMatrix()).x, BAB.Vector3.TransformNormal(V(0, 0, 1), a.chassis.getWorldMatrix()).z);
-      ctx.uebernahme = { fahrzeugId: a.id, auto: a, update: fahrenUpdate, kamera: fahrKamera, pos: () => a.chassis.getAbsolutePosition() }; tacho && (tacho.hidden = false); ctx.ton('aufheben'); ctx.nachricht('🚗 ' + a.T.name + ' · W/S Gas/Bremse · A/D lenken · Leertaste Handbremse · F aussteigen', 4);
+      ctx.uebernahme = { fahrzeugId: a.id, auto: a, update: fahrenUpdate, kamera: fahrKamera, pos: () => a.chassis.getAbsolutePosition() };
+      const AC = ctx.audio && ctx.audio(); if (AC) { const o1 = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain(); o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = 0;
+        o1.connect(f); o2.connect(f); f.connect(g); g.connect(AC.destination); o1.start(); o2.start(); motor = { o1, o2, f, g, AC }; ctx.aufraeumen.push(() => { try { o1.stop(); o2.stop(); } catch (e) { /* schon aus */ } }); } tacho && (tacho.hidden = false); ctx.ton('aufheben'); ctx.nachricht('🚗 ' + a.T.name + ' · W/S Gas/Bremse · A/D lenken · Leertaste Handbremse · F aussteigen', 4);
     }
     function aussteigen() {
       const a = fahrend, sp = ctx.spieler; if (!a || !sp) return; const mw = a.chassis.getWorldMatrix(), seite = BAB.Vector3.TransformCoordinates(V(-(a.T.B / 2 + 1.1), 0, 0.5), mw);
+      if (motor) { try { motor.o1.stop(); motor.o2.stop(); } catch (e) { /* egal */ } motor = null; }
       sp.cc.setPosition(V(seite.x, Math.max(seite.y, ctx.hoehe(seite.x, seite.z)) + 1.2, seite.z)); sp.cc.setVelocity(V(0, 0, 0)); sp.k.setEnabled(true); sp.gier = kamGier; fahrend = null; ctx.uebernahme = null; tacho && (tacho.hidden = true); a.eingabe = { gas: 0, lenk: 0, bremse: 1, hand: true };
     }
     ctx.tastenHandler.F = ctx.tastenHandler.F || []; ctx.tastenHandler.F.push(() => { if (ctx.vorbei) return; if (fahrend) { if (Math.abs(fahrend.kmh) < 25) aussteigen(); else ctx.nachricht('Zu schnell zum Aussteigen – erst bremsen'); return; } const a = naechstes(3.8); if (a) einsteigen(a); });
@@ -140,6 +143,7 @@
       if (vor) { a.eingabe.gas = vl < -1 ? 0 : 1; a.eingabe.bremse = vl < -1 ? 1 : 0; } else if (zur) { a.eingabe.gas = vl > 1 ? 0 : -1; a.eingabe.bremse = vl > 1 ? 1 : 0; } else { a.eingabe.gas = 0; a.eingabe.bremse = 0; }
       const p = a.chassis.getAbsolutePosition(); sp.cc.setPosition(V(p.x, p.y + 30, p.z)); sp.tempo = Math.abs(vl);   // Spielfigur aus dem Weg (sie würde das Auto sonst blockieren)
       if (tacho) tacho.textContent = Math.abs(Math.round(a.kmh)) + ' km/h';
+      if (motor) { const drehzahl = 38 + (Math.abs(a.kmh) % 45) * 2.4 + Math.abs(a.eingabe.gas) * 18, tt = motor.AC.currentTime; motor.o1.frequency.setTargetAtTime(drehzahl, tt, 0.05); motor.o2.frequency.setTargetAtTime(drehzahl * 0.5, tt, 0.05); motor.g.gain.setTargetAtTime(0.035 + Math.abs(a.eingabe.gas) * 0.04, tt, 0.08); motor.f.frequency.setTargetAtTime(400 + Math.abs(a.eingabe.gas) * 900, tt, 0.1); }
       ctx.hinweisText = a.kopfueber > 0.5 ? 'R: Auto aufrichten' : null;
     }
     function fahrKamera(dt) {

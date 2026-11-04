@@ -256,6 +256,7 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
   EXTRA.modelle = {
     async zeigen(box) {
       hinweis(box, 'Lade <b>.glb-Dateien</b> hoch: Figuren von <b>Mixamo</b> (mit Animationen), Scans aus <b>Polycam / Luma / Scaniverse</b>, Modelle aus <b>Blender</b> oder der SD Werkstatt. Alles bleibt <b>auf diesem Gerät</b> gespeichert.');
+      hinweis(box, '🧰 <b>Mixamo-Figuren:</b> <a href="./blender/sd_mixamo_zu_glb.py" download style="color:#ffd79a">Blender-Helfer herunterladen</a>. Figur (FBX „With Skin“) und Animationen (FBX „Without Skin“) in einen Ordner legen, dann einmal ausführen:<br><code style="font-size:11px">blender --background --python sd_mixamo_zu_glb.py -- &lt;ordner&gt; figur.glb</code><br>Die fertige .glb hier importieren.');
       dateiKnopf(box, '📥 .glb-Datei importieren', '.glb,model/gltf-binary', async f => {
         if (!/\.glb$/i.test(f.name)) { meldung('Bitte eine .glb-Datei wählen (.gltf mit Zusatzdateien geht nicht)'); return; }
         if (f.size > 150 * 1024 * 1024) { meldung('Datei ist größer als 150 MB – bitte verkleinern'); return; }
