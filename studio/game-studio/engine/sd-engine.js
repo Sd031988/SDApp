@@ -66,6 +66,7 @@
     const SCH = { niedrig: [1024, 2], mittel: [2048, 3], hoch: [4096, 4] }[qualitaet] || [2048, 3];
     const schatten = new BAB.CascadedShadowGenerator(SCH[0], sonne); schatten.numCascades = SCH[1]; schatten.lambda = 0.85; schatten.shadowMaxZ = 260; schatten.stabilizeCascades = true;
     schatten.usePercentageCloserFiltering = true; schatten.filteringQuality = qualitaet === 'hoch' ? BAB.ShadowGenerator.QUALITY_HIGH : BAB.ShadowGenerator.QUALITY_MEDIUM; schatten.bias = 0.004; schatten.normalBias = 0.02;
+    const BK = window.SDBaukasten ? window.SDBaukasten.erstellen(BAB, szene) : null;
     szene.fogMode = BAB.Scene.FOGMODE_EXP2; szene.fogDensity = 0.0022; szene.fogColor = new BAB.Color3(0.68, 0.76, 0.86);
     szene.imageProcessingConfiguration.toneMappingEnabled = true; szene.imageProcessingConfiguration.toneMappingType = BAB.ImageProcessingConfiguration.TONEMAPPING_ACES; szene.imageProcessingConfiguration.exposure = 0.95;
     if (qualitaet !== 'niedrig') {
@@ -100,7 +101,8 @@
       o = o || {};
       if (o.pos) mesh.position = V(o.pos[0], o.pos[1], o.pos[2]);
       if (o.drehung) mesh.rotation = V((o.drehung[0] || 0) * Math.PI / 180, (o.drehung[1] || 0) * Math.PI / 180, (o.drehung[2] || 0) * Math.PI / 180);
-      mesh.material = material(o.farbe || '#9a9a9a', o.rauheit, o.metall, o.leuchten || o.alpha != null ? { leuchten: o.leuchten, alpha: o.alpha } : null);
+      if (o.textur && BK) { mesh.material = BK.material(o.textur, o.farbe || '#ffffff', { rau: o.rauheit, metall: o.metall, leuchten: o.leuchten }); mesh.computeWorldMatrix(true); BK.weltUV(mesh, o.kachel || 2); }
+      else mesh.material = material(o.farbe || '#9a9a9a', o.rauheit, o.metall, o.leuchten || o.alpha != null ? { leuchten: o.leuchten, alpha: o.alpha } : null);
       if (o.schatten !== false) { schatten.addShadowCaster(mesh); mesh.receiveShadows = true; }
       const art = mesh.__art;
       if (o.physik !== false) {
@@ -161,27 +163,47 @@
     const hoehe = (x, z) => (gel ? gel.hoeheBei(x, z) : 0);
 
     /* ---------- Bäume (Instanzen: tausende möglich) ---------- */
-    let baumVorlage = null, stammForm = null;
-    function baeume(o) {
-      o = o || {}; const r = zufall(o.seed || 3), anzahl = o.anzahl || 200, ber = o.bereich || 250, frei = o.frei || [];
-      if (!baumVorlage) {
-        const st = BAB.MeshBuilder.CreateCylinder('stamm', { height: 4, diameterTop: 0.35, diameterBottom: 0.55, tessellation: 8 }, szene); st.position.y = 2; st.material = material('#5a3f2a', 0.9);
-        const k1 = BAB.MeshBuilder.CreateCylinder('krone1', { height: 4.5, diameterTop: 0, diameterBottom: 4.2, tessellation: 9 }, szene); k1.position.y = 5; k1.material = material('#2f5a2a', 0.85);
-        const k2 = BAB.MeshBuilder.CreateCylinder('krone2', { height: 3.5, diameterTop: 0, diameterBottom: 3, tessellation: 9 }, szene); k2.position.y = 7; k2.material = k1.material;
-        baumVorlage = BAB.Mesh.MergeMeshes([st, k1, k2], true, true, undefined, false, true); baumVorlage.isVisible = false; baumVorlage.isPickable = false; schatten.addShadowCaster(baumVorlage);
-        stammForm = new BAB.PhysicsShapeCylinder(V(0, 0, 0), V(0, 4, 0), 0.35, szene);
+    const baumVorlagen = {};
+    function vorlagen(art, o) {
+      const key = art + '|' + (o.blattFarbe || '') + '|' + (o.hoehe || ''); if (baumVorlagen[key]) return baumVorlagen[key];
+      const liste = [];
+      for (let v = 0; v < 3; v++) {
+        let mesh, stamm, H;
+        if (BK) { const b = BK.baum({ art, hoehe: (o.hoehe || (art === 'nadel' ? 13 : art === 'palme' ? 9 : art === 'busch' ? 1.6 : 9)) * (0.85 + v * 0.15), seed: (o.seed || 3) * 10 + v, blattFarbe: o.blattFarbe, dichte: o.dichte || 1, aeste: o.aeste || 3, tiefe: o.tiefe || 3 }); mesh = b.mesh; stamm = b.stammRadius; H = b.hoehe; }
+        else { const st = BAB.MeshBuilder.CreateCylinder('stamm', { height: 4, diameterTop: 0.35, diameterBottom: 0.55, tessellation: 8 }, szene); st.position.y = 2; st.material = material('#5a3f2a', 0.9);
+          const k1 = BAB.MeshBuilder.CreateCylinder('krone', { height: 6, diameterTop: 0, diameterBottom: 4.2, tessellation: 9 }, szene); k1.position.y = 6; k1.material = material('#2f5a2a', 0.85); mesh = BAB.Mesh.MergeMeshes([st, k1], true, true, undefined, false, true); stamm = 0.3; H = 9; }
+        mesh.isVisible = false; mesh.isPickable = false; mesh.position.y = -1000; schatten.addShadowCaster(mesh); mesh.receiveShadows = true;
+        liste.push({ mesh, form: stamm > 0.05 ? new BAB.PhysicsShapeCylinder(V(0, 0, 0), V(0, Math.min(H * 0.5, 5), 0), stamm, szene) : null });
       }
+      return (baumVorlagen[key] = liste);
+    }
+    /** baeume({ anzahl, bereich, seed, art:'laub'|'nadel'|'palme'|'busch'|'herbst'|'gemischt', frei:[[x,z,r]], minHoehe, maxHoehe }) */
+    function baeume(o) {
+      o = o || {}; const r = zufall(o.seed || 3), anzahl = o.anzahl || 200, ber = o.bereich || 250, frei = o.frei || [], mitte = o.mitte || [0, 0];
+      const arten = o.art === 'gemischt' || !o.art ? ['laub', 'nadel', 'laub', 'nadel', 'busch'] : [o.art];
       let n = 0, versuche = 0;
       while (n < anzahl && versuche++ < anzahl * 20) {
-        const x = (r() * 2 - 1) * ber, z = (r() * 2 - 1) * ber; if (frei.some(f => Math.hypot(x - f[0], z - f[1]) < f[2])) continue; const y = hoehe(x, z); if (o.minHoehe != null && y < o.minHoehe) continue;
-        const b = baumVorlage.createInstance('baum'); const s = 0.8 + r() * 0.7; b.position = V(x, y - 0.1, z); b.scaling = V(s, s, s); b.rotation.y = r() * 6.3; b.receiveShadows = true; b.freezeWorldMatrix();
-        const knoten = new BAB.TransformNode('baumPhysik', szene); knoten.position = b.position.clone(); const body = new BAB.PhysicsBody(knoten, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = stammForm; n++;
+        const x = mitte[0] + (r() * 2 - 1) * ber, z = mitte[1] + (r() * 2 - 1) * ber; if (frei.some(f => Math.hypot(x - f[0], z - f[1]) < f[2])) continue; const y = hoehe(x, z);
+        if (o.minHoehe != null && y < o.minHoehe) continue; if (o.maxHoehe != null && y > o.maxHoehe) continue;
+        const art = arten[Math.floor(r() * arten.length)], v = vorlagen(art, o)[Math.floor(r() * 3)];
+        const b = v.mesh.createInstance('baum'); const s = 0.8 + r() * 0.45; b.position = V(x, y - 0.15, z); b.scaling = V(s, s, s); b.rotation.y = r() * 6.3; b.isPickable = true; b.freezeWorldMatrix();
+        if (v.form) { const knoten = new BAB.TransformNode('baumPhysik', szene); knoten.position = b.position.clone(); knoten.scaling = V(s, s, s); const body = new BAB.PhysicsBody(knoten, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = v.form; }
+        n++;
       }
       return n;
     }
 
     /* ---------- Häuser (begehbar, mit Tür, Fenstern, optional Dach-Aufgang) ---------- */
     function haus(o) {
+      if (BK) {
+        const x = o.pos[0], z = o.pos[2], y0 = (o.pos[1] ?? hoehe(x, z)) - 0.15, dreh = (o.drehung || 0) * Math.PI / 180;
+        const g = BK.gebaeude({ breite: o.breite, tiefe: o.tiefe, stockwerke: o.stockwerke, material: o.material || 'putz', farbe: o.farbe, dach: o.dach || 'flach', balkone: o.balkone, dachTreppe: o.dachTreppe, seed: o.seed || Math.round(Math.abs(x * 7 + z * 13)) });
+        g.mesh.position = V(x, y0, z); g.mesh.rotation.y = dreh; g.mesh.computeWorldMatrix(true); schatten.addShadowCaster(g.mesh); g.mesh.receiveShadows = true; g.mesh.freezeWorldMatrix();
+        const welt = g.mesh.getWorldMatrix();
+        for (const k of g.kollision) { const lokal = BAB.Matrix.Compose(V(1, 1, 1), BAB.Quaternion.RotationAxis(V(1, 0, 0), k.rx || 0), V(k.p[0], k.p[1], k.p[2])); const m = lokal.multiply(welt); const sc = new BAB.Vector3(), q = new BAB.Quaternion(), p = new BAB.Vector3(); m.decompose(sc, q, p);
+          const n = new BAB.TransformNode('hausPhysik', szene); n.position = p; n.rotationQuaternion = q; const body = new BAB.PhysicsBody(n, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = new BAB.PhysicsShapeBox(V(0, 0, 0), BAB.Quaternion.Identity(), V(k.g[0], k.g[1], k.g[2]), szene); }
+        g.mesh.name = 'haus'; return g.mesh;
+      }
       const x = o.pos[0], z = o.pos[2], y0 = o.pos[1] ?? hoehe(x, z), B_ = o.breite || 10, T = o.tiefe || 8, HS = 3.2, st = o.stockwerke || 1, H = HS * st, d = 0.3, f = o.farbe || '#c8b8a0', dreh = (o.drehung || 0) * Math.PI / 180;
       const wurzel = new BAB.TransformNode('haus', szene); wurzel.position = V(x, y0, z); wurzel.rotation.y = dreh;
       const sammel = [];
@@ -220,6 +242,8 @@
 
     /* ---------- Figuren (Spieler und Bots) ---------- */
     function figur(o) {
+      if (BK && o.aussehen === 'roboter') { const k = BK.roboter(Object.assign({ seed: Math.floor(Math.random() * 1e6) }, o.roboter || {}));
+        k.getChildMeshes().forEach(m => { schatten.addShadowCaster(m); m.receiveShadows = true; m.metadata = { figur: o.besitzer, kopf: !!m.__kopf }; }); return k; }
       const k = new BAB.TransformNode('figur', szene), teile = {};
       const tl = (name, mesh, f, px, py, pz, parent) => { mesh.parent = parent || k; mesh.position = V(px, py, pz); mesh.material = material(f, 0.75, name === 'waffe' ? 0.7 : 0); schatten.addShadowCaster(mesh); mesh.receiveShadows = true; mesh.metadata = { figur: o.besitzer, kopf: name === 'kopf' || name === 'helm' }; teile[name] = mesh; return mesh; };
       const uniform = o.farbe || '#4a5a3a', haut = o.haut || '#d7a77e';
@@ -297,7 +321,7 @@
     function spielerErstellen(o) {
       o = o || {}; const start = V(o.pos[0], o.pos[1] ?? hoehe(o.pos[0], o.pos[2]) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(start, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
-      const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940' });
+      const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: o.roboter });
       k.getChildMeshes().forEach(m => { m.isPickable = false; });
       spieler = { cc, k, leben: o.leben || 100, maxLeben: o.leben || 100, ruestung: o.ruestung || 0, gier: o.blick || 0, nick: 0.1, zustand: { luft: 0 }, waffen: [], aktiv: 0, letzterSchuss: 0, laden: 0, kills: 0, schaden: 0, rueckstoss: 0, tempo: 0, abstand: 4.2 };
       (o.waffen || ['pistole']).forEach(w => waffeGeben(w)); waffeWechseln(0); return spieler;
@@ -345,7 +369,8 @@
       const p = V(o.pos[0], (o.pos[1] ?? hoehe(o.pos[0], o.pos[2])) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(p, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
       const farbenSatz = ['#6b3a3a', '#5a4a2e', '#3a4f6b', '#4a3a5f', '#5f5f3a'];
-      const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b' });
+      const stile = ['kampf', 'kampf', 'spaeher', 'schwer'], lacke = ['#d9dde2', '#c9b48a', '#9aa7b4', '#6b7a5a', '#b04a3a'];
+      const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b', aussehen: o.aussehen, roboter: Object.assign({ stil: stile[bots.length % 4], farbe: lacke[bots.length % 5], augen: '#ff3b30' }, o.roboter || {}) });
       const b = { id, cc, k, name: o.name || ('Bot ' + (bots.length + 1)), leben: o.leben || 100, staerke: st, waffe: WAFFEN[o.waffe || (bots.length % 3 === 0 ? 'schrotflinte' : 'gewehr')], ziel: null, warte: 0, letzterSchuss: 0, sieht: 0, alarm: 0, zustand: { luft: 0 }, richtung: Math.random() * 6.28, heimat: p.clone(), seitwaerts: Math.random() < 0.5 ? 1 : -1, wechsel: 0 };
       bots.push(b); return b;
     }

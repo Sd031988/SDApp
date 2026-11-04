@@ -5,6 +5,8 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 
 - `index.html` – Spielseite mit Menü, HUD, Minikarte, Pause, Touch-Steuerung und **Skript-Editor**
 - `sd-engine.js` – die Engine und die deutsche SD-API (`sd.gelaende`, `sd.haus`, `sd.gegner`, …)
+- `sd-baukasten.js` – Generatoren: Oberflächen (Farbe + Normal-Map, kachelbar), Bäume (Laub, Nadel, Palme, Herbst, Busch, mit Detailstufen), Gebäude (Fenster, Tür, Balkone, Flach-/Satteldach, Dachtreppe, Kollision), Roboter (3 Bauarten, Gelenke, Laufanimation)
+- `werkstatt.html` – SD Werkstatt: Objekte mit Reglern erzeugen, live ansehen, als .glb exportieren (Blender, Godot, Unity), SD-Skript-Zeile kopieren
 - `spiele/inselsturm.js` – Beispielspiel „Inselsturm“ (Third-Person-Shooter, Battle-Royale-Modus), komplett als SD-Skript
 
 ## Was in Etappe 1 drin ist
@@ -20,7 +22,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 
 ## Ehrliche Grenzen (noch nicht vorhanden)
 
-- Figuren sind aus Grundformen gebaut. Eigene Modelle (.glb mit Animationen, z. B. von Mixamo) lassen sich mit `sd.modell()` laden, sind im Beispiel aber nicht eingebaut.
+- Roboter, Bäume und Gebäude sind prozedural erzeugt und kommen nicht an Modelle von 3D-Künstlern heran. Eigene Modelle (.glb mit Animationen, z. B. von Mixamo) lassen sich mit `sd.modell()` laden, sind im Beispiel aber nicht eingebaut.
 - Gegner haben keine Wegfindung (Navmesh) und kein Deckungsverhalten.
 - Es gibt noch keine Fahrzeuge, keinen Mehrspieler-Modus und keinen visuellen Szenen-Editor für die Engine.
 - Ein Spiel in der Größe von GTA oder PUBG entsteht damit nicht per Knopfdruck. Die Engine ist das Fundament für die nächsten Etappen.

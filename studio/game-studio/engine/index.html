@@ -97,11 +97,12 @@ body.handy .unten{bottom:180px}
   <div class="karte">
     <h1 class="titel">INSELSTURM</h1>
     <div class="unter">SD Engine · Third-Person-Shooter · Battle-Royale-Modus</div>
-    <p style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald und Militärlager. 14 Gegner, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
+    <p style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
     <div class="knoepfe">
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
       <button id="editorAuf">{ } Skript bearbeiten</button>
+      <a class="btn" href="./werkstatt.html">🛠 Werkstatt</a>
       <a class="btn" href="../index.html">← Game-Studio</a>
     </div>
     <div class="raster">
@@ -109,7 +110,7 @@ body.handy .unten{bottom:180px}
       <div class="feld"><b>Was die Engine kann</b><br>PBR-Grafik mit Himmel, Nebel, Kaskaden-Schatten, Bloom · Havok-Physik (umschießbare Fässer, Spielfigur mit Kollision) · Gegner-KI mit Sichtprüfung · Waffen mit Streuung, Rückstoß, Kopftreffer · Zone · Minikarte</div>
       <div class="feld"><b>Selbst Spiele bauen</b><br>Alles hier ist ein <b>SD-Skript</b> (JavaScript + deutsche SD-API). Klick „Skript bearbeiten“, ändere z. B. <code>GEGNER</code> oder <code>zeit: 'abend'</code> und starte neu. Eigene 3D-Modelle (.glb) lädst du mit <code>sd.modell()</code>.</div>
     </div>
-    <p class="ehrlich">Ehrlich gesagt: Das ist ein solides Fundament, kein GTA. Figuren sind noch aus Grundformen gebaut (eigene Modelle mit Animationen gehen über <code>sd.modell</code>), Gegner nutzen noch keine Wegfindung, Fahrzeuge und Mehrspieler folgen in späteren Etappen. Grafik: Babylon.js · Physik: Havok (beide kostenlos, beim ersten Start aus dem Internet geladen).</p>
+    <p class="ehrlich">Ehrlich gesagt: Das ist ein solides Fundament, kein GTA. Roboter, Bäume und Häuser kommen aus den Generatoren der Werkstatt, nicht von Künstlern modelliert (eigene Modelle gehen über <code>sd.modell</code>), Gegner nutzen noch keine Wegfindung, Fahrzeuge und Mehrspieler folgen in späteren Etappen. Grafik: Babylon.js · Physik: Havok (beide kostenlos, beim ersten Start aus dem Internet geladen).</p>
   </div>
 </div>
 
@@ -135,7 +136,8 @@ body.handy .unten{bottom:180px}
 <script src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics_umd.js"></script>
-<script src="./sd-engine.js?v=1"></script>
+<script src="./sd-baukasten.js?v=2"></script>
+<script src="./sd-engine.js?v=3"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);

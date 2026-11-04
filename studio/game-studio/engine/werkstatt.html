@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SD Werkstatt – Bäume, Gebäude und Roboter bauen</title>
+<meta name="description" content="SD Werkstatt: Bäume, Gebäude, Roboter und Oberflächen mit Reglern erzeugen, in 3D ansehen und als .glb exportieren.">
+<link rel="icon" href="../../../icon.svg">
+<style>
+:root{--akz:#ffb547;--akz2:#ff6b3d;--bg:#0b0f14;--panel:#111821;--rand:rgba(255,255,255,.1);--txt:#eef2f6;--leise:#93a1af}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:330px 1fr;height:100vh}
+aside{background:var(--panel);border-right:1px solid var(--rand);display:flex;flex-direction:column;min-height:0}
+.kopf{padding:14px 16px;border-bottom:1px solid var(--rand)}.kopf b{font-size:17px;letter-spacing:.02em}.kopf b em{font-style:normal;background:linear-gradient(90deg,var(--akz),var(--akz2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.kopf small{display:block;color:var(--leise);margin-top:2px}.kopf a{color:var(--leise);font-size:12px;text-decoration:none}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:10px 12px}
+.tabs button{padding:9px 4px;font-size:12.5px}.tabs button.an{background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border-color:transparent}
+#regler{flex:1;overflow:auto;padding:4px 16px 12px}
+.r{margin:10px 0}.r label{display:flex;justify-content:space-between;font-size:12.5px;color:#cdd6df;margin-bottom:4px}.r label span{color:var(--akz);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--akz)}select,input[type=color]{width:100%;background:#18212d;color:var(--txt);border:1px solid var(--rand);border-radius:7px;padding:7px;font:14px system-ui}input[type=color]{height:36px;padding:2px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;margin:10px 0}
+.aktionen{padding:12px;border-top:1px solid var(--rand);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+button,.btn{font:600 13px system-ui;color:var(--txt);background:rgba(255,255,255,.06);border:1px solid var(--rand);border-radius:8px;padding:9px 10px;cursor:pointer;text-decoration:none;text-align:center}
+button:hover{background:rgba(255,255,255,.12)}button.haupt{grid-column:1/-1;background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border:0}
+main{position:relative;min-width:0}canvas{width:100%;height:100%;display:block;outline:none}
+.info{position:absolute;left:14px;bottom:12px;font-size:12px;color:var(--leise);background:rgba(0,0,0,.4);padding:5px 9px;border-radius:6px}
+#meldung{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(10,14,20,.85);border:1px solid var(--rand);border-radius:8px;padding:8px 14px;font-weight:600}
+pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);border-radius:8px;padding:9px;font:12px/1.5 Consolas,monospace;color:#cfe0f0;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:auto}
+[hidden]{display:none!important}
+@media (max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:46vh 1fr;height:auto;min-height:100vh}main{grid-row:1;height:46vh}aside{grid-row:2;border-right:0;border-top:1px solid var(--rand)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="kopf"><b>SD <em>WERKSTATT</em></b><small>Objekte für deine Spiele erzeugen – live in 3D</small><a href="./index.html">⚡ SD Engine</a> · <a href="../index.html">← Game-Studio</a></div>
+    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="oberflaeche">🧱 Oberfläche</button></div>
+    <div id="regler"></div>
+    <pre id="code" title="So benutzt du das Objekt im SD-Skript"></pre>
+    <div class="aktionen"><button id="zufall">🎲 Zufällig</button><button id="kopieren">📋 SD-Skript</button><button class="haupt" id="export">⬇ Als .glb exportieren (Blender, Godot, Unity)</button></div>
+  </aside>
+  <main><canvas id="c"></canvas><div class="info" id="info">Ziehen = drehen · Mausrad = zoomen</div><div id="meldung" hidden></div></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs-serializers@9.31.3/babylonjs.serializers.min.js"></script>
+<script src="./sd-baukasten.js?v=2"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const SCHEMA = {
+  baum: [['art', 'Art', 'wahl', 'laub', ['laub:Laubbaum', 'nadel:Nadelbaum', 'palme:Palme', 'herbst:Herbstbaum', 'busch:Busch']], ['hoehe', 'Höhe (m)', 'zahl', 9, 2, 20, 0.5], ['aeste', 'Äste pro Gabelung', 'zahl', 3, 2, 5, 1], ['tiefe', 'Verzweigungen', 'zahl', 3, 2, 4, 1], ['dichte', 'Blattdichte', 'zahl', 1, 0.5, 2, 0.1], ['blattFarbe', 'Blattfarbe (Tönung)', 'farbe', '#ffffff'], ['seed', 'Variante', 'zahl', 1, 1, 99, 1]],
+  gebaeude: [['breite', 'Breite (m)', 'zahl', 12, 6, 30, 0.5], ['tiefe', 'Tiefe (m)', 'zahl', 9, 6, 24, 0.5], ['stockwerke', 'Stockwerke', 'zahl', 3, 1, 10, 1], ['material', 'Fassade', 'wahl', 'ziegel', ['putz:Putz', 'ziegel:Ziegel', 'beton:Beton', 'holz:Holz', 'metall:Metall']], ['farbe', 'Farbe (Tönung)', 'farbe', '#ffffff'], ['dach', 'Dach', 'wahl', 'sattel', ['flach:Flachdach', 'sattel:Satteldach']], ['fensterAbstand', 'Fensterabstand (m)', 'zahl', 2.6, 1.8, 4, 0.1], ['balkone', 'Balkone', 'an', true], ['dachTreppe', 'Treppe aufs Dach (Flachdach)', 'an', false], ['seed', 'Variante', 'zahl', 1, 1, 99, 1]],
+  roboter: [['stil', 'Bauart', 'wahl', 'kampf', ['kampf:Kampfroboter', 'schwer:Schwerer Panzer', 'spaeher:Späher']], ['farbe', 'Lack', 'farbe', '#d9dde2'], ['akzent', 'Gelenke', 'farbe', '#2b2f36'], ['augen', 'Leuchtfarbe', 'farbe', '#ff3b30'], ['groesse', 'Größe', 'zahl', 1, 0.7, 1.6, 0.05], ['tempo', 'Vorschau: Laufen', 'zahl', 0, 0, 7, 0.5]],
+  oberflaeche: [['art', 'Oberfläche', 'wahl', 'ziegel', ['ziegel:Ziegel', 'putz:Putz', 'beton:Beton', 'holz:Holz', 'metall:Metall', 'dachziegel:Dachziegel', 'rinde:Rinde', 'asphalt:Asphalt', 'platten:Platten', 'gras:Gras']], ['farbe', 'Tönung', 'farbe', '#ffffff']],
+};
+let typ = 'baum'; const werte = {}; for (const t in SCHEMA) { werte[t] = {}; for (const f of SCHEMA[t]) werte[t][f[0]] = f[3]; }
+try { Object.assign(werte, JSON.parse(localStorage.getItem('sdWerkstatt') || '{}')); } catch (e) { /* egal */ }
+
+const engine = new BABYLON.Engine($('c'), true, { preserveDrawingBuffer: true, stencil: true });
+const szene = new BABYLON.Scene(engine); szene.clearColor = new BABYLON.Color4(0.07, 0.09, 0.12, 1);
+const kam = new BABYLON.ArcRotateCamera('kam', -Math.PI / 2.6, 1.2, 22, new BABYLON.Vector3(0, 4, 0), szene); kam.attachControl($('c'), true); kam.lowerRadiusLimit = 2; kam.upperRadiusLimit = 120; kam.wheelPrecision = 12; kam.minZ = 0.05;
+const hemi = new BABYLON.HemisphericLight('h', new BABYLON.Vector3(0.3, 1, 0.2), szene); hemi.intensity = 0.5;
+const sonne = new BABYLON.DirectionalLight('s', new BABYLON.Vector3(-0.5, -1, 0.4).normalize(), szene); sonne.intensity = 2.2; sonne.position = new BABYLON.Vector3(30, 60, -30);
+const schatten = new BABYLON.ShadowGenerator(2048, sonne); schatten.useBlurExponentialShadowMap = true; schatten.blurKernel = 16; schatten.darkness = 0.25;
+// Himmel (Farbverlauf) als Umgebungslicht für Spiegelungen
+const kuppel = BABYLON.MeshBuilder.CreateSphere('himmel', { diameter: 800, segments: 16, sideOrientation: BABYLON.Mesh.BACKSIDE }, szene); { const p = kuppel.getVerticesData('position'), c = [], o = BABYLON.Color3.FromHexString('#3a73c4'), h = BABYLON.Color3.FromHexString('#cfe0ee'), u = BABYLON.Color3.FromHexString('#2a3038');
+  for (let i = 0; i < p.length; i += 3) { const y = p[i + 1] / 400, f = y >= 0 ? BABYLON.Color3.Lerp(h, o, Math.pow(y, 0.55)) : BABYLON.Color3.Lerp(h, u, Math.min(1, -y * 3)); c.push(f.r, f.g, f.b, 1); } kuppel.setVerticesData('color', c);
+  const m = new BABYLON.StandardMaterial('hm', szene); m.disableLighting = true; m.emissiveColor = BABYLON.Color3.White(); m.diffuseColor = BABYLON.Color3.Black(); m.specularColor = BABYLON.Color3.Black(); kuppel.material = m; kuppel.infiniteDistance = true; kuppel.isPickable = false; }
+const probe = new BABYLON.ReflectionProbe('p', 128, szene); probe.renderList.push(kuppel); probe.refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE; szene.environmentTexture = probe.cubeTexture;
+szene.imageProcessingConfiguration.toneMappingEnabled = true; szene.imageProcessingConfiguration.toneMappingType = BABYLON.ImageProcessingConfiguration.TONEMAPPING_ACES; szene.imageProcessingConfiguration.exposure = 0.95;
+const BK = SDBaukasten.erstellen(BABYLON, szene);
+const boden = BABYLON.MeshBuilder.CreateGround('boden', { width: 80, height: 80 }, szene); boden.material = BK.material('gras', '#ffffff'); BK.weltUV(boden, 4); boden.receiveShadows = true; boden.isPickable = false;
+let aktuell = null, robo = null, zeitAlt = performance.now();
+engine.runRenderLoop(() => { const jetzt = performance.now(), dt = Math.min(0.05, (jetzt - zeitAlt) / 1000); zeitAlt = jetzt; if (robo) { const t = werte.roboter.tempo; robo.animiere(t, dt, false);  } szene.render(); });
+addEventListener('resize', () => engine.resize());
+
+function wegraeumen() { if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
+function bauen() {
+  wegraeumen(); const w = werte[typ]; const t0 = performance.now(); let ziel = 4, radius = 22, info = '';
+  if (typ === 'baum') { const b = BK.baum(w); aktuell = b.mesh; b.mesh.getLODLevels().forEach(l => {}); b.mesh.removeLODLevel && b.fern && (b.mesh.removeLODLevel(b.fern), b.fern.dispose()); ziel = w.hoehe * 0.55; radius = w.hoehe * 2.2 + 4; info = 'Baum';
+    code('sd.baeume({ art: ' + q(w.art) + ', anzahl: 150, bereich: 200, hoehe: ' + w.hoehe + ', aeste: ' + w.aeste + ', tiefe: ' + w.tiefe + ', dichte: ' + w.dichte + (w.blattFarbe !== '#ffffff' ? ', blattFarbe: ' + q(w.blattFarbe) : '') + ', seed: ' + w.seed + ' });'); }
+  else if (typ === 'gebaeude') { const g = BK.gebaeude(w); aktuell = g.mesh; ziel = g.hoehe * 0.45; radius = Math.max(w.breite, g.hoehe) * 1.9 + 6; info = 'Gebäude · ' + g.kollision.length + ' Kollisionskörper';
+    code('sd.haus({ pos: [0, null, 0], breite: ' + w.breite + ', tiefe: ' + w.tiefe + ', stockwerke: ' + w.stockwerke + ', material: ' + q(w.material) + ', farbe: ' + q(w.farbe) + ', dach: ' + q(w.dach) + ', balkone: ' + w.balkone + ', dachTreppe: ' + w.dachTreppe + ', seed: ' + w.seed + ' });'); }
+  else if (typ === 'roboter') { robo = BK.roboter(w); robo.rotation.y = Math.PI * 0.85; aktuell = robo; ziel = 1 * w.groesse; radius = 4.5 * w.groesse; info = 'Roboter · Gelenke: Hüfte, Knie, Schulter, Ellbogen';
+    code('sd.gegner({ pos: [0, null, 20], aussehen: \'roboter\', roboter: { stil: ' + q(w.stil) + ', farbe: ' + q(w.farbe) + ', akzent: ' + q(w.akzent) + ', augen: ' + q(w.augen) + ', groesse: ' + w.groesse + ' } });'); }
+  else { const tn = new BABYLON.TransformNode('muster', szene); const k = BABYLON.MeshBuilder.CreateSphere('kugel', { diameter: 3, segments: 48 }, szene), b = BABYLON.MeshBuilder.CreateBox('wuerfel', { size: 3 }, szene); k.position.set(-2.2, 1.5, 0); b.position.set(2.2, 1.5, 0); b.rotation.y = 0.6;
+    for (const m of [k, b]) { m.bakeCurrentTransformIntoVertices(); BK.weltUV(m, 2); m.material = BK.material(w.art, w.farbe); m.parent = tn; } aktuell = tn; ziel = 1.5; radius = 10; info = 'Oberfläche mit Normal-Map (kachelbar)';
+    code('sd.box({ pos: [0, 1, 0], groesse: [4, 2, 4], textur: ' + q(w.art) + ', farbe: ' + q(w.farbe) + ' });'); }
+  const ms = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []).filter(m => m.getTotalVertices); ms.forEach(m => { schatten.addShadowCaster(m); m.receiveShadows = true; });
+  const dreiecke = ms.reduce((s, m) => s + (m.getTotalIndices ? m.getTotalIndices() / 3 : 0), 0);
+  kam.setTarget(new BABYLON.Vector3(0, ziel, 0)); kam.radius = radius; $('info').textContent = info + ' · ' + Math.round(dreiecke).toLocaleString('de-DE') + ' Dreiecke · ' + Math.round(performance.now() - t0) + ' ms · Ziehen = drehen';
+  try { localStorage.setItem('sdWerkstatt', JSON.stringify(werte)); } catch (e) { /* egal */ }
+}
+const q = v => "'" + String(v).replace(/'/g, '') + "'"; let letzterCode = '';
+function code(t) { letzterCode = t; $('code').textContent = t; }
+function meldung(t) { const m = $('meldung'); m.textContent = t; m.hidden = false; clearTimeout(meldung.t); meldung.t = setTimeout(() => { m.hidden = true; }, 2600); }
+let bauTimer = null; const spaeter = () => { clearTimeout(bauTimer); bauTimer = setTimeout(bauen, 120); };
+function reglerZeigen() {
+  const box = $('regler'); box.innerHTML = '';
+  for (const [k, name, art, , a, b, schritt] of SCHEMA[typ]) {
+    const w = werte[typ][k]; const d = document.createElement('div'); d.className = art === 'an' ? 'chk' : 'r';
+    if (art === 'zahl') { d.innerHTML = '<label>' + name + '<span>' + w + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = w; i.oninput = () => { werte[typ][k] = +i.value; d.querySelector('span').textContent = i.value; k === 'tempo' ? null : spaeter(); }; }
+    else if (art === 'farbe') { d.innerHTML = '<label>' + name + '</label><input type="color">'; const i = d.querySelector('input'); i.value = w; i.oninput = () => { werte[typ][k] = i.value; spaeter(); }; }
+    else if (art === 'wahl') { d.innerHTML = '<label>' + name + '</label><select></select>'; const s = d.querySelector('select'); for (const o of a) { const [v, t] = o.split(':'); s.add(new Option(t, v, false, v === w)); } s.onchange = () => { werte[typ][k] = s.value; spaeter(); }; }
+    else { d.innerHTML = '<input type="checkbox"> ' + name; const c = d.querySelector('input'); c.checked = !!w; c.onchange = () => { werte[typ][k] = c.checked; spaeter(); }; }
+    box.appendChild(d);
+  }
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('an', x === b)); typ = b.dataset.t; reglerZeigen(); bauen(); });
+$('zufall').onclick = () => { for (const [k, , art, , a, b, schritt] of SCHEMA[typ]) { if (k === 'tempo') continue; if (art === 'zahl') werte[typ][k] = +(Math.round((a + Math.random() * (b - a)) / schritt) * schritt).toFixed(2); else if (art === 'wahl') werte[typ][k] = a[Math.floor(Math.random() * a.length)].split(':')[0]; else if (art === 'an') werte[typ][k] = Math.random() < 0.5; else if (art === 'farbe' && k !== 'blattFarbe') werte[typ][k] = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'); } reglerZeigen(); bauen(); };
+$('kopieren').onclick = () => { navigator.clipboard.writeText(letzterCode).then(() => meldung('📋 SD-Skript kopiert – im Engine-Editor einfügen'), () => meldung('Kopieren nicht erlaubt – Text unten markieren')); };
+$('export').onclick = async () => {
+  if (!aktuell || !BABYLON.GLTF2Export) { meldung('Export nicht verfügbar'); return; }
+  const teile = new Set([aktuell].concat(aktuell.getChildren ? aktuell.getChildren(undefined, false) : []));
+  meldung('⏳ Exportiere …');
+  try { const name = 'sd-' + typ + '-' + Date.now().toString(36); const g = await BABYLON.GLTF2Export.GLBAsync(szene, name, { shouldExportNode: n => teile.has(n) });
+    window.SD_LETZTER_EXPORT = Object.keys(g.files).map(k => [k, g.files[k].size || 0]); g.downloadFiles(); meldung('✅ ' + name + '.glb gespeichert'); }
+  catch (e) { console.error(e); meldung('⨯ Export fehlgeschlagen: ' + e.message); }
+};
+reglerZeigen(); bauen();
+window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs button[data-t="' + t + '"]').click(), get aktuell() { return aktuell; } };
+</script>
+</body>
+</html>
