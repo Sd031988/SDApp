@@ -577,6 +577,7 @@
       if (zone) { const [zx, zy] = P(zone.mitte[0], zone.mitte[1]); x.strokeStyle = 'rgba(90,150,255,.9)'; x.lineWidth = 2; x.beginPath(); x.arc(zx, zy, zone.radius * mass, 0, 7); x.stroke(); }
       x.fillStyle = '#ffcf4a'; kisten.forEach(k => { if (k.m.isDisposed()) return; const [kx, ky] = P(k.m.position.x, k.m.position.z); x.fillRect(kx - 2, ky - 2, 4, 4); });
       bots.forEach(b => { if (b.tot || !(b.sieht > 0 || b.alarm > 0)) return; const bp = b.cc.getPosition(); const [bx, by] = P(bp.x, bp.z); x.fillStyle = '#ff4a4a'; x.beginPath(); x.arc(bx, by, 3.5, 0, 7); x.fill(); });
+      ((ctx && ctx.kartenMarker) || []).forEach(m => { let [mx, my] = P(m.x, m.z); const d = Math.hypot(mx, my), R = W / 2 - 9; if (d > R) { mx *= R / d; my *= R / d; } x.fillStyle = m.farbe || '#ffd23a'; x.beginPath(); x.moveTo(mx, my - 7); x.lineTo(mx + 6, my); x.lineTo(mx, my + 7); x.lineTo(mx - 6, my); x.fill(); });
       x.restore(); x.fillStyle = '#fff'; x.beginPath(); x.moveTo(W / 2, H / 2 - 7); x.lineTo(W / 2 - 5, H / 2 + 5); x.lineTo(W / 2 + 5, H / 2 + 5); x.fill();
     }
 

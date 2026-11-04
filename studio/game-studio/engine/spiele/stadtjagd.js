@@ -46,9 +46,31 @@ for (let i = 0; i < 3; i++) sd.kiste({ pos: [netz.knoten[i * 6][0] + 9, null, ne
 const s0 = netz.bloecke[0];
 sd.spieler({ pos: [s0.x - s0.groesse / 2 + 1.5, null, s0.z - s0.groesse / 2 + 1.5], leben: 100, waffen: ['pistole'],
   aussehen: 'mensch', mensch: { oberteil: '#2a4a8a', hose: '#22262c', weste: true, westeFarbe: '#3d4433' } });
-sd.nachricht('Die Gang hat sich im Nordosten verschanzt. Hol dir Waffen aus den Kisten, nimm ein Auto (F) – und räum auf.', 7);
+const startX = s0.x - s0.groesse / 2 + 1.5, startZ = s0.z - s0.groesse / 2 + 1.5;
 
-// 7) Wetter: nach 2 Minuten zieht Regen auf, später klart es wieder auf
+// 7) Kampagne: Geld, Laden, Missionen, Spielstand (wird automatisch gespeichert)
+const stand = sd.spielstand('stadtjagd', { startgeld: 100, wiederbeleben: [startX, startZ], kopfgeld: 40 });
+sd.geben('granate', stand.neu ? 2 : 0);
+sd.laden({ pos: [startX + 10, null, startZ - 4.5], name: 'Kiosk am Park', drehung: 180 });
+const b1 = netz.bloecke[5], b2 = netz.bloecke[10], k = netz.knoten;
+sd.mission({ id: 'paket', titel: 'Das Paket', text: 'Ein Kontakt braucht deine Hilfe', start: [startX + 4, startZ + 6],
+  schritte: [
+    { art: 'gehe', pos: [b1.x - b1.groesse / 2 - 2, b1.z], text: 'Geh zum Treffpunkt im Westen' },
+    { art: 'sammle', pos: [b1.x + b1.groesse / 2 + 2, b1.z + 10], text: 'Hol das Paket', geld: 20 },
+    { art: 'gehe', pos: [startX + 4, startZ + 6], text: 'Bring das Paket zurück' },
+  ], belohnung: { geld: 150, gegenstaende: ['medikit'] } });
+sd.mission({ id: 'lieferung', titel: 'Eilige Lieferung', text: 'Schnapp dir ein Auto!', zeitlimit: 75,
+  schritte: [
+    { art: 'fahre', pos: [k[k.length - 3][0], k[k.length - 3][1]], text: 'Fahr mit einem Auto zum Zielpunkt' },
+    { art: 'warte', sekunden: 5, text: 'Warte auf den Abholer' },
+    { art: 'fahre', pos: [b2.x - b2.groesse / 2 - 6, b2.z], text: 'Fahr zum Lager' },
+  ], belohnung: { geld: 250, gegenstaende: ['granate', 'granate'] } });
+sd.mission({ id: 'gang', titel: 'Stadt befreien', text: 'Jetzt ist die Gang dran',
+  schritte: [{ art: 'besiege', erzeugen: () => sd.bots, text: 'Schalte die Gang im Nordosten aus' }],
+  belohnung: { geld: 500 } });
+sd.nachricht('Willkommen in der Stadt! Missionen: J · Kiosk: E · Autos: F · Granate: G', 7);
+
+// 8) Wetter: nach 2 Minuten zieht Regen auf, später klart es wieder auf
 let regen = false;
 sd.jedenFrame((dt, zeit) => {
   if (!regen && zeit > 120) { regen = true; sd.wetter({ regen: 0.7, wind: 0.8 }); sd.meldung('🌧 Es fängt an zu regnen'); }
