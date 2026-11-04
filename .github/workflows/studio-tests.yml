@@ -90,6 +90,7 @@ jobs:
           node tests/studio/game-studio-academy-browser.test.cjs
           node tests/studio/game-studio-academy-projects-browser.test.cjs
           node tests/studio/game-studio-godot-export-browser.test.cjs
+          node tests/studio/game-studio-vanguard-eclipse-browser.test.cjs
           node studio/game-studio/demos/vanguard/browser-smoke.cjs
 
       - name: Level-Editor Bildschirmprüfung
