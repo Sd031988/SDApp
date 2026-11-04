@@ -103,6 +103,7 @@ body.handy .unten{bottom:180px}
     <div class="knoepfe">
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
+      <button id="mpAuf" title="Mit Freunden spielen (bis 8 Spieler)">👥 Mehrspieler</button>
       <button id="editorAuf">{ } Skript bearbeiten</button>
       <a class="btn" href="./werkstatt.html">🛠 Werkstatt</a>
       <a class="btn" href="../index.html">← Game-Studio</a>
@@ -116,6 +117,13 @@ body.handy .unten{bottom:180px}
   </div>
 </div>
 
+<div class="ov" id="mp" hidden><div class="karte" style="width:min(500px,100%)"><h2 style="margin:0 0 6px">👥 Mehrspieler</h2>
+  <p style="margin:0 0 12px;color:#cfd8e2;line-height:1.55">Bis zu 8 Spieler in einem Raum. Einer erstellt den Raum und gibt den <b>5-stelligen Code</b> weiter, die anderen treten bei. Gespielt wird <b id="mpSpiel">Inselsturm</b> gegeneinander (ohne Computer-Gegner).</p>
+  <div class="knoepfe"><button class="los" id="mpNeu">Raum erstellen</button></div>
+  <div style="display:flex;gap:8px;margin-top:6px"><input id="mpCode" maxlength="5" placeholder="CODE" style="flex:1;font:700 20px monospace;letter-spacing:.25em;text-transform:uppercase;background:#18212d;color:#fff;border:1px solid var(--rand);border-radius:8px;padding:8px 12px"><button id="mpRein">Beitreten</button></div>
+  <p id="mpText" class="ehrlich" style="min-height:1.5em"></p>
+  <p class="ehrlich">Kein Chat, keine Namen (ihr heißt Spieler 1–8), nichts wird gespeichert. Der Server schläft, wenn niemand spielt – das erste Verbinden kann bis zu einer Minute dauern. Tab = Punkte.</p>
+  <div class="knoepfe" style="justify-content:flex-end"><button id="mpZu">Zurück</button></div></div></div>
 <div class="ov" id="pause" hidden><div class="karte" style="width:min(420px,100%);text-align:center"><h2 style="margin:0 0 14px">❚❚ Pause</h2><div class="knoepfe" style="justify-content:center"><button class="los" id="weiter">Weiter</button><button id="neu">↻ Neu starten</button><button id="editorAuf2">{ } Skript</button><button id="zumMenue">Menü</button></div></div></div>
 <div class="ov" id="ende" hidden><div class="karte" style="width:min(460px,100%);text-align:center"><h1 class="titel" id="endeTitel" style="font-size:44px">SIEG</h1><p id="endeText" style="color:#cfd8e2"></p><div class="knoepfe" style="justify-content:center"><button class="los" id="nochmal">↻ Nochmal</button><button id="zumMenue2">Menü</button></div></div></div>
 <div class="ov" id="laden" hidden><div style="text-align:center"><div class="titel" style="font-size:30px">Lade Welt …</div><p id="ladenText" style="color:var(--leise)">Grafik-Engine und Physik werden geladen</p></div></div>
@@ -146,6 +154,7 @@ body.handy .unten{bottom:180px}
 <script src="./sd-stadt.js?v=2"></script>
 <script src="./sd-ki.js?v=2"></script>
 <script src="./sd-wetter.js?v=2"></script>
+<script src="./sd-netz.js?v=1"></script>
 <script src="./sd-engine.js?v=7"></script>
 <script>
 'use strict';
@@ -175,25 +184,46 @@ function zeigeFehler(e) {
 }
 const hudEl = {}; ['leben', 'lebenBalken', 'schutzBalken', 'munition', 'waffe', 'kills', 'uebrig', 'zone', 'fps', 'nachricht', 'feed', 'karte', 'fadenkreuz', 'treffer', 'blut', 'hinweis', 'zoneWarnung', 'zielfernrohr'].forEach(k => hudEl[k] = $(k));
 
-async function spielStarten() {
+async function spielStarten(extra) {
+  extra = extra && extra.netz ? extra : null;
   if (laeuft) { laeuft.aufraeumen(); laeuft = null; }
   $('fehler').hidden = true; ['menue', 'pause', 'ende'].forEach(i => $(i).hidden = true); $('laden').hidden = false;
-  const code = $('code').value || await skriptHolen(); if (!$('code').value) $('code').value = code;
+  const code = (extra && extra.code) || $('code').value || await skriptHolen(); if (!$('code').value) $('code').value = code;
   if (!window.BABYLON || !window.HavokPhysics) { $('ladenText').textContent = '⨯ Grafik-Engine nicht geladen – bitte Internetverbindung prüfen und Seite neu laden.'; return; }
   const q = $('qualitaet').value; schreib('sdEngineQualitaet', q);
   try {
-    laeuft = await SDEngine.starten($('welt'), code, { qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
-      pause: () => pausiert, beiFehler: e => { zeigeFehler(e); $('editor').hidden = false; },
+    laeuft = await SDEngine.starten($('welt'), code, { netz: extra && extra.netz, qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
+      pause: () => pausiert && !extra, beiFehler: e => { zeigeFehler(e); $('editor').hidden = false; },
       beiSperre: an => { if (!an && laeuft && $('ende').hidden && !handy && !/[?&]test/.test(location.search) && $('editor').hidden) { pausiert = true; $('pause').hidden = false; } if (an) { pausiert = false; $('pause').hidden = true; } },
       beiEnde: r => { $('ende').hidden = false; $('endeTitel').textContent = r.sieg ? '🏆 SIEG' : 'AUSGESCHIEDEN'; $('endeText').textContent = r.text + ' · ' + r.kills + ' Gegner ausgeschaltet · ' + Math.floor(r.zeit / 60) + ':' + String(r.zeit % 60).padStart(2, '0') + ' min'; } });
     window.SD_SPIEL = laeuft; $('hud').hidden = false; pausiert = false; $('welt').focus();
   } catch (e) { zeigeFehler(e); $('editor').hidden = false; }
   $('laden').hidden = true;
 }
-$('spielen').onclick = () => { if (!handy && !/[?&]test/.test(location.search)) $('welt').requestPointerLock && $('welt').requestPointerLock(); spielStarten(); };
-$('nochmal').onclick = $('neu').onclick = () => spielStarten();
+let letzteNetz = null;
+const NETZ = lies('sdNetzServer') || 'https://sd-maschinen-kenner.onrender.com';
+async function netzRufen(pfad, daten) {
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 90000), w = setTimeout(() => { $('mpText').textContent = '⏳ Der Server wacht gerade auf (bis zu einer Minute) …'; }, 5000);
+  try { const r = await fetch(NETZ + pfad, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(daten), signal: ctrl.signal }); const j = await r.json().catch(() => ({ error: 'Antwort unlesbar (' + r.status + ')' })); return j; }
+  catch (e) { return { error: e.name === 'AbortError' ? 'Server antwortet nicht – bitte gleich nochmal.' : 'Server nicht erreichbar – bist du online?' }; } finally { clearTimeout(t); clearTimeout(w); }
+}
+async function mpStarten(j) {
+  if (!j.ok) { $('mpText').textContent = '⨯ ' + (j.error || 'Fehler'); return; }
+  if (j.spiel !== SPIEL && SPIELE[j.spiel]) spielWaehlen(j.spiel);
+  const c = await (await fetch('./spiele/' + j.spiel + '.js', { cache: 'no-cache' })).text();   // alle spielen dieselbe Welt (Original-Skript)
+  letzteNetz = { netz: { server: NETZ, token: j.token, code: j.code, id: j.id }, code: c }; $('mp').hidden = true;
+  if (!handy && !/[?&]test/.test(location.search)) $('welt').requestPointerLock && $('welt').requestPointerLock();
+  await spielStarten(letzteNetz); meldungRaum(j.code);
+}
+function meldungRaum(code) { if (laeuft) laeuft.sd.nachricht('👥 Raum-Code: ' + code + ' – an Freunde weitergeben', 8); }
+$('mpAuf').onclick = () => { $('mp').hidden = false; $('mpSpiel').textContent = SPIELE[SPIEL].titel.charAt(0) + SPIELE[SPIEL].titel.slice(1).toLowerCase(); $('mpText').textContent = SPIEL === 'eigen' ? 'Eigene Szenen gehen im Mehrspieler noch nicht – bitte Inselsturm oder Stadtjagd wählen.' : ''; };
+$('mpZu').onclick = () => { $('mp').hidden = true; };
+$('mpNeu').onclick = async () => { if (SPIEL === 'eigen') return; $('mpText').textContent = '⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL })); };
+$('mpRein').onclick = async () => { const c = $('mpCode').value.trim().toUpperCase(); if (c.length !== 5) { $('mpText').textContent = 'Bitte den 5-stelligen Code eingeben'; return; } $('mpText').textContent = '⏳ Trete bei …'; mpStarten(await netzRufen('/hub/spiel/beitreten', { code: c })); };
+$('spielen').onclick = () => { letzteNetz = null; if (!handy && !/[?&]test/.test(location.search)) $('welt').requestPointerLock && $('welt').requestPointerLock(); spielStarten(); };
+$('nochmal').onclick = $('neu').onclick = () => spielStarten(letzteNetz);
 $('weiter').onclick = () => { pausiert = false; $('pause').hidden = true; if (!handy) $('welt').requestPointerLock(); };
-$('zumMenue').onclick = $('zumMenue2').onclick = () => { if (laeuft) { laeuft.aufraeumen(); laeuft = null; } $('hud').hidden = true; ['pause', 'ende'].forEach(i => $(i).hidden = true); $('menue').hidden = false; };
+$('zumMenue').onclick = $('zumMenue2').onclick = () => { letzteNetz = null; if (laeuft) { laeuft.aufraeumen(); laeuft = null; } $('hud').hidden = true; ['pause', 'ende'].forEach(i => $(i).hidden = true); $('menue').hidden = false; };
 const editorAuf = async () => { if (!$('code').value) $('code').value = await skriptHolen(); $('editor').hidden = false; pausiert = true; document.exitPointerLock && document.exitPointerLock(); };
 $('editorAuf').onclick = $('editorAuf2').onclick = editorAuf;
 $('edZu').onclick = () => { $('editor').hidden = true; if (laeuft && $('ende').hidden) { $('pause').hidden = false; } };

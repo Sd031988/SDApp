@@ -16,6 +16,9 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - `sd-ki.js` – Navigationsraster + A*-Wegfindung, Deckung suchen, Gruppen-Alarm, Flankieren
 - `sd-wetter.js` – Tag/Nacht-Wechsel, echte Laternen- und Scheinwerferlichter in der Nacht, Regen (Partikel, nasse Oberflächen, Geräusch), Wasser mit Wellen, Wind in Blättern und Gras (Shader), Gras rund um den Spieler; 3D-Ton (HRTF) in der Engine
 - `blender/sd_mixamo_zu_glb.py` – Blender-Helfer: Mixamo-Figur + Animationen (FBX) → eine .glb (getestet mit Blender 5.2)
+- `sd-netz.js` – Mehrspieler (bis 8 Spieler, Raum-Code, Server: `/hub/spiel/*` im SD-Hub, Repo agents/computer-agent/computer_agent/spiel_api.py): Positionen, Autos, Treffer, Abschüsse, Wiederbeleben, Punktetafel (Tab); keine Namen, kein Chat, nichts gespeichert
+- `editor.html` – SD Szenen-Editor: Welten mit der Maus bauen und direkt spielen (Spiel „Eigene Szene“)
+- Schadensmodell für Autos (Beulen, Rauch, Feuer, Explosion, Wrack) und Gegner, die Außentreppen auf Dächer nehmen
 - `spiele/stadtjagd.js` – Open-World-Demo „Stadtjagd“ (Stadt, Verkehr, Autos, Tag/Nacht, Regen, Gang)
 - `spiele/inselsturm.js` – Beispielspiel „Inselsturm“ (Third-Person-Shooter, Battle-Royale-Modus), komplett als SD-Skript
 
@@ -36,7 +39,8 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - Foto-Häuser sind Kisten mit Fotos auf den Wänden: von außen wie im Foto, aber ohne echte Vorsprünge und nicht begehbar. Echte 3D-Gebäude aus Fotos entstehen mit Fotogrammetrie-Apps (Polycam, Luma, Scaniverse, Meshroom) und werden als .glb importiert.
 - Nur .glb wird importiert (keine .gltf mit Zusatzdateien, kein .fbx). Eigene Dateien liegen nur im Browser dieses Geräts.
 - Gegner haben keine Wegfindung (Navmesh) und kein Deckungsverhalten.
-- Kein Mehrspieler-Modus und kein visueller Szenen-Editor für die Engine. Fahrzeuge haben kein Schadensmodell; Passanten und Verkehr weichen aus, werden aber nicht verletzt.
+- Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler noch nicht. Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
+- Passanten und Verkehr weichen aus, werden aber nicht verletzt.
 - Wegfindung arbeitet auf einem 1,5-m-Raster (ebenerdig); Gegner nutzen keine Treppen oder Dächer.
 - Ein Spiel in der Größe von GTA oder PUBG entsteht damit nicht per Knopfdruck. Die Engine ist das Fundament für die nächsten Etappen.
 - Getestet wurde in Chromium mit Software-Grafik (SwiftShader). Wie flüssig es auf einer echten Grafikkarte läuft, muss am Gerät geprüft werden.

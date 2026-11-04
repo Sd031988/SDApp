@@ -418,7 +418,7 @@
     function schaden(ziel, menge, quelle) {
       if (vorbei) return;
       if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * 0.6); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
-        if (spieler.leben <= 0) { spieler.leben = 0; ende(false, quelle ? 'Ausgeschaltet von ' + quelle : 'Du bist ausgeschieden'); } return; }
+        if (spieler.leben <= 0) { spieler.leben = 0; if (ctx && ctx.beimTod && ctx.beimTod(quelle ? 'Ausgeschaltet von ' + quelle : null)) return; ende(false, quelle ? 'Ausgeschaltet von ' + quelle : 'Du bist ausgeschieden'); } return; }
       ziel.leben -= menge; ziel.alarm = 6; if (ziel.leben <= 0 && !ziel.tot) botTot(ziel);
     }
     function schiessen() {
@@ -434,6 +434,7 @@
         if (i < 3) spur(muendung, ende_);
         if (t && t.hit) { const m = t.pickedMesh, md_ = m.metadata || {}, bot = bots.find(b => b.id === md_.figur);
           if (bot && !bot.tot) { const k = md_.kopf; schaden(bot, w.def.schaden * (k ? 2.2 : 1), 'Spieler'); getroffen = true; kopf = kopf || k; funken(t.pickedPoint, null, '#ff5040', 10); }
+          else if (ctx && ctx.fremdTreffer && ctx.fremdTreffer(md_.figur, w.def.schaden * (md_.kopf ? 2.2 : 1), md_.kopf, t.pickedPoint)) { getroffen = true; kopf = kopf || md_.kopf; funken(t.pickedPoint, null, '#ff5040', 10); }
           else { const n = t.getNormal(true) || V(0, 1, 0); funken(t.pickedPoint, n, null, 12); if (m.physicsBody && m.physicsBody.getMotionType && m.physicsBody.getMotionType() === BAB.PhysicsMotionType.DYNAMIC) m.physicsBody.applyImpulse(dir.scale(w.def.schaden * 0.6), t.pickedPoint);
             if (md_.fahrzeug && ctx && ctx.fahrzeugTreffer) ctx.fahrzeugTreffer(md_.fahrzeug, w.def.schaden * 0.45, t.pickedPoint);
             if (md_.leben != null) { md_.leben -= w.def.schaden; if (md_.leben <= 0) zerstoeren(m); } } }
@@ -445,6 +446,7 @@
 
     /* ---------- Bots (Gegner mit KI) ---------- */
     function gegner(o) {
+      if (ctx && ctx.mehrspieler) return { tot: true, mehrspieler: true };   // Mehrspieler: keine Computer-Gegner
       o = o || {}; const id = 'bot' + bots.length; const st = o.staerke ?? 0.5;
       const p = V(o.pos[0], (o.pos[1] ?? hoehe(o.pos[0], o.pos[2])) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(p, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
@@ -592,7 +594,7 @@
       for (let i = spuren.length - 1; i >= 0; i--) { spuren[i][1] -= dt; if (spuren[i][1] <= 0) { spuren[i][0].dispose(); spuren.splice(i, 1); } }
       blitz.intensity = Math.max(0, blitz.intensity - dt * 40);
       if (zone) { const t = klemme((zeit - zone.warte) / zone.dauer, 0, 1); zone.radius = zone.start + (zone.ende - zone.start) * t; zone.mesh.scaling = V(zone.radius, 1, zone.radius); zone.mesh.position = V(zone.mitte[0], 100, zone.mitte[1]);
-        if (spieler && !vorbei) { const p = spieler.cc.getPosition(); const aussen = Math.hypot(p.x - zone.mitte[0], p.z - zone.mitte[1]) > zone.radius; hud.zoneWarnung && (hud.zoneWarnung.hidden = !aussen); if (aussen) { spieler.leben -= zone.schaden * dt; if (spieler.leben <= 0) { spieler.leben = 0; ende(false, 'Außerhalb der Zone'); } } }
+        if (spieler && !vorbei) { const p = spieler.cc.getPosition(); const aussen = Math.hypot(p.x - zone.mitte[0], p.z - zone.mitte[1]) > zone.radius; hud.zoneWarnung && (hud.zoneWarnung.hidden = !aussen); if (aussen && spieler.leben > 0) { spieler.leben -= zone.schaden * dt; if (spieler.leben <= 0) { spieler.leben = 0; if (!(ctx && ctx.beimTod && ctx.beimTod('Außerhalb der Zone'))) ende(false, 'Außerhalb der Zone'); } } }
         bots.forEach(b => { if (b.tot) return; const p = b.cc.getPosition(); if (Math.hypot(p.x - zone.mitte[0], p.z - zone.mitte[1]) > zone.radius) { b.leben -= zone.schaden * dt; if (b.leben <= 0) botTot(b); } });
         const rest = Math.max(0, Math.ceil(zone.warte + zone.dauer - zeit)); setzeText('zone', t < 1 ? (zeit < zone.warte ? '◯ Zone in ' + Math.ceil(zone.warte - zeit) + ' s' : '◯ schrumpft · ' + rest + ' s') : '◯ Letzte Zone'); }
       skripte.forEach(s => { try { s.update && s.update.call(s.ziel, s.ziel, dt); } catch (e) { opt.beiFehler && opt.beiFehler(e); s.update = null; } });

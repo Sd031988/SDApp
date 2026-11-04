@@ -86,7 +86,7 @@
       g.karosse.concat(...g.raeder.map(r => r.meshes)).forEach(m => { ctx.schatten.addShadowCaster(m); m.receiveShadows = true; m.metadata = { fahrzeug: id }; m.isPickable = true; });
       const agg = new BAB.PhysicsAggregate(chassis, BAB.PhysicsShapeType.BOX, { mass: T.masse, friction: 0.4, restitution: 0.05 }, szene);
       agg.shape.filterMembershipMask = MASKE; const bx = T.B, by = T.H, bz = T.L * 0.98; agg.body.setMassProperties({ mass: T.masse, centerOfMass: V(0, -hc / 2 - 0.1, 0), inertia: V((by * by + bz * bz) / 12, (bx * bx + bz * bz) / 12, (bx * bx + by * by) / 12), inertiaOrientation: BAB.Quaternion.Identity() }); agg.body.setAngularDamping(0.6); agg.body.setLinearDamping(0.05);
-      const k = T.masse * 9.81 / (4 * 0.11), a = { id, g, T, chassis, body: agg.body, lenkung: 0, rpm: 0, mount: MOUNT, yc, feder: k, daempfer: 2 * Math.sqrt(k * T.masse / 4) * 0.55, eingabe: { gas: 0, lenk: 0, bremse: 0, hand: false }, kopfueber: 0, kmh: 0, ki: !!o.ki, zustand: 100, vAlt: null, wrack: false };
+      const k = T.masse * 9.81 / (4 * 0.11), a = { id, g, T, chassis, body: agg.body, lenkung: 0, rpm: 0, mount: MOUNT, yc, feder: k, daempfer: 2 * Math.sqrt(k * T.masse / 4) * 0.55, eingabe: { gas: 0, lenk: 0, bremse: 0, hand: false }, kopfueber: 0, kmh: 0, ki: !!o.ki, typName: o.typ || 'limousine', farbe: o.farbe || '#b8202a', zustand: 100, vAlt: null, wrack: false };
       g.raeder.forEach(r => { r.einfed = 0; r.drehWinkel = 0; r.kontakt = false; });
       autos.push(a); return a;
     }
