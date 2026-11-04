@@ -85,7 +85,7 @@
     /** PBR-Material mit Oberfläche, eingefärbt */
     function material(art, farbe, extra) {
       extra = extra || {}; const key = art + '|' + farbe + '|' + JSON.stringify(extra); if (matCache[key]) return matCache[key];
-      const m = new BAB.PBRMaterial('bk_' + art, szene), o = OBERFLAECHEN[art];
+      const m = new BAB.PBRMaterial('bk_' + art, szene), o = OBERFLAECHEN[art] || (texCache[art] && texCache[art].d);
       if (o) { const t = oberflaeche(art); m.albedoTexture = t.albedo; m.bumpTexture = t.normal; m.bumpTexture.level = 1; m.roughness = extra.rau ?? o.rau; m.metallic = extra.metall ?? (o.metall || 0); }
       else { m.roughness = extra.rau ?? 0.6; m.metallic = extra.metall ?? 0; }
       m.albedoColor = farbe ? F(farbe) : new BAB.Color3(1, 1, 1);
@@ -278,7 +278,31 @@
       k.teile = teile; k.waffe = waffe; k.hoehe = 1.95 * s; return k;
     }
 
-    return { material, oberflaeche, weltUV, baum, gebaeude, roboter, OBERFLAECHEN: Object.keys(OBERFLAECHEN) };
+    /* =============== 📷 EIGENE OBERFLÄCHEN AUS FOTOS =============== */
+    /** Foto-Material anmelden: danach material('foto:name') und textur: 'foto:name' benutzbar */
+    function eigeneOberflaeche(art, albedo, normal, o) {
+      o = o || {}; for (const t of [albedo, normal]) if (t) { t.wrapU = t.wrapV = BAB.Texture.WRAP_ADDRESSMODE; t.anisotropicFilteringLevel = 8; }
+      texCache[art] = { albedo, normal, d: { groesse: o.groesse || 2, rau: o.rau ?? 0.85, metall: o.metall || 0, staerke: 1 } };
+      Object.keys(matCache).forEach(k => { if (k.startsWith(art + '|')) { matCache[k].dispose(); delete matCache[k]; } });
+    }
+    const kachelGroesse = art => ((OBERFLAECHEN[art] || (texCache[art] && texCache[art].d) || {}).groesse) || 2;
+    function fotoFlaechenMaterial(t, name) { const m = new BAB.PBRMaterial('fotoWand_' + name, szene); m.albedoTexture = t.albedo; if (t.normal) { m.bumpTexture = t.normal; m.bumpTexture.level = 0.8; } m.roughness = 0.88; m.metallic = 0; return m; }
+    /**
+     * Gebäude aus Fotos: def = { breite, tiefe, hoehe, dachFarbe }, tex = { vorne:{albedo,normal}, seite?, hinten?, farbe }
+     * Die Fotos liegen genau auf den Außenwänden. Gibt { mesh, kollision, hoehe } zurück.
+     */
+    function fotoGebaeude(def, tex) {
+      const B = def.breite || 10, T = def.tiefe || 8, H = def.hoehe || 8, teile = [], d = 0.25;
+      const kern = BAB.MeshBuilder.CreateBox('kern', { width: B - 0.02, height: H, depth: T - 0.02 }, szene); kern.position.y = H / 2; backen(kern); weltUV(kern, 3); kern.material = material('putz', tex.farbe || '#bbbbbb'); teile.push(kern);
+      const seiteMat = tex.seite ? fotoFlaechenMaterial(tex.seite, 'seite') : null, vorneMat = fotoFlaechenMaterial(tex.vorne, 'vorne'), hintenMat = tex.hinten ? fotoFlaechenMaterial(tex.hinten, 'hinten') : (tex.seite ? null : vorneMat);
+      const flaeche = (w, mat, px, pz, dreh) => { if (!mat) return; const p = BAB.MeshBuilder.CreatePlane('fotoWand', { width: w, height: H }, szene); p.position = V(px, H / 2, pz); p.rotation.y = dreh; backen(p); p.material = mat; teile.push(p); };
+      flaeche(B, vorneMat, 0, -T / 2 - 0.01, 0); flaeche(B, hintenMat, 0, T / 2 + 0.01, Math.PI); flaeche(T, seiteMat, -B / 2 - 0.01, 0, Math.PI / 2); flaeche(T, seiteMat, B / 2 + 0.01, 0, -Math.PI / 2);
+      const dach = BAB.MeshBuilder.CreateBox('dach', { width: B + 0.2, height: 0.25, depth: T + 0.2 }, szene); dach.position.y = H + 0.12; backen(dach); weltUV(dach, 3); dach.material = material('beton', def.dachFarbe || '#8a8580'); teile.push(dach);
+      const sockel = BAB.MeshBuilder.CreateBox('sockel', { width: B + 0.3, height: 0.4, depth: T + 0.3 }, szene); sockel.position.y = -0.1; backen(sockel); weltUV(sockel, 3); sockel.material = material('beton', '#7d7872'); teile.push(sockel);
+      return { mesh: zusammen(teile, 'fotoGebaeude'), kollision: [{ p: [0, H / 2, 0], g: [B, H, T], rx: 0 }, { p: [0, H + 0.12, 0], g: [B + 0.2, 0.25, T + 0.2], rx: 0 }], hoehe: H + 0.25 };
+    }
+
+    return { material, oberflaeche, weltUV, baum, gebaeude, roboter, eigeneOberflaeche, fotoGebaeude, kachelGroesse, OBERFLAECHEN: Object.keys(OBERFLAECHEN) };
   }
 
   window.SDBaukasten = { erstellen, zufall, version: '1.0' };

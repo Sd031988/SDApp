@@ -4,6 +4,12 @@
 //  drücke „▶ Neu starten“ – z. B. mehr Gegner, andere Tageszeit.
 // ═══════════════════════════════════════════════════════════════
 
+// ── Eigene Sachen aus der Werkstatt (📦 Meine Modelle) einbauen – Beispiele, einfach // entfernen:
+// await sd.figurLaden('soldat.glb');            // z. B. Mixamo-Figur mit Animationen
+// const GEGNER_MODELL = 'soldat.glb';           // dann unten bei sd.gegner: modell: GEGNER_MODELL
+// sd.fotoHaus('rathaus', { pos: [30, null, 10], drehung: 90 });   // Haus aus deinem Foto
+// sd.box({ pos: [0, 2, 0], groesse: [6, 1, 6], textur: 'foto:pflaster' });   // dein Foto-Material
+
 const SEED = 2026;                 // gleiche Zahl = gleiche Insel
 const GEGNER = 14;                 // Anzahl Bots
 const r = sd.zufall(SEED);

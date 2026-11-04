@@ -129,6 +129,7 @@ body.handy .unten{bottom:180px}
     <b>3D-Modelle</b> · <code>const m = await sd.modell('url.glb', {pos, skalierung}); m.spiele('Run')</code><br>
     <b>Spiel</b> · <code>sd.spieler({pos, leben, ruestung, waffen:['pistole','gewehr','schrotflinte','scharfschuetze']})</code> · <code>sd.gegner({pos, staerke:0..1, leben, waffe, name})</code> · <code>sd.kiste({pos, inhalt:'munition'|'medikit'|'ruestung'|'waffe:gewehr'})</code> · <code>sd.zone({mitte:[x,z], radius, endRadius, warte, dauer, schaden})</code><br>
     <b>Logik</b> · <code>sd.jedenFrame((dt, zeit) =&gt; {…})</code> · <code>sd.beiTaste('F', () =&gt; {…})</code> · <code>sd.skript(objekt, {start(o){}, update(o, dt){}})</code> · <code>sd.nachricht(text, sek)</code> · <code>sd.meldung(text)</code> · <code>sd.ton('treffer')</code> · <code>sd.sieg(text)</code> · <code>sd.niederlage(text)</code> · <code>sd.zufall(seed)</code><br>
+    <b>Eigenes (Werkstatt → 📦 Meine Modelle)</b> · <code>sd.fotoHaus('name', {pos, drehung})</code> · <code>textur: 'foto:name'</code> · <code>await sd.modell('datei.glb', {pos})</code> · <code>await sd.figurLaden('figur.glb')</code> dann <code>sd.gegner({pos, modell: 'figur.glb'})</code> oder <code>sd.spieler({…, modell: 'figur.glb'})</code><br>
     <b>Profi</b> · <code>sd.BABYLON</code>, <code>sd.szene</code>, <code>sd.kamera</code> – voller Zugriff auf Babylon.js
   </div>
 </aside>
@@ -136,8 +137,9 @@ body.handy .unten{bottom:180px}
 <script src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics_umd.js"></script>
-<script src="./sd-baukasten.js?v=2"></script>
-<script src="./sd-engine.js?v=3"></script>
+<script src="./sd-assets.js?v=1"></script>
+<script src="./sd-baukasten.js?v=3"></script>
+<script src="./sd-engine.js?v=4"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);

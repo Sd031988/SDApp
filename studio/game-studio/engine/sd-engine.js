@@ -67,6 +67,12 @@
     const schatten = new BAB.CascadedShadowGenerator(SCH[0], sonne); schatten.numCascades = SCH[1]; schatten.lambda = 0.85; schatten.shadowMaxZ = 260; schatten.stabilizeCascades = true;
     schatten.usePercentageCloserFiltering = true; schatten.filteringQuality = qualitaet === 'hoch' ? BAB.ShadowGenerator.QUALITY_HIGH : BAB.ShadowGenerator.QUALITY_MEDIUM; schatten.bias = 0.004; schatten.normalBias = 0.02;
     const BK = window.SDBaukasten ? window.SDBaukasten.erstellen(BAB, szene) : null;
+    const EIGENE = {}; if (window.SDAssets) { try { (await window.SDAssets.alle()).forEach(a => { EIGENE[a.name] = a; }); } catch (e) { /* kein Speicher (privates Fenster) */ } }
+    const blobUrls = []; const urlVon = b => { const u = URL.createObjectURL(b); blobUrls.push(u); return u; };
+    const texVon = (blob, srgb) => { const t = new BAB.Texture(urlVon(blob), szene, false, false); return t; };
+    function eigene(name, typ) { const a = EIGENE[window.SDAssets ? window.SDAssets.name(name) : name]; if (!a) throw new Error('„' + name + '“ ist nicht in „Meine Modelle“ gespeichert (Werkstatt → 📦 Meine Modelle).'); if (typ && a.typ !== typ) throw new Error('„' + name + '“ ist kein ' + typ); return a; }
+    const fotoGeladen = {};
+    function fotoMaterial(art) { const n = art.slice(5); if (fotoGeladen[n]) return; const a = eigene(n, 'foto-material'); BK.eigeneOberflaeche(art, texVon(a.bild), a.normal ? texVon(a.normal) : null, { groesse: a.groesse, rau: a.rau }); fotoGeladen[n] = true; }
     szene.fogMode = BAB.Scene.FOGMODE_EXP2; szene.fogDensity = 0.0022; szene.fogColor = new BAB.Color3(0.68, 0.76, 0.86);
     szene.imageProcessingConfiguration.toneMappingEnabled = true; szene.imageProcessingConfiguration.toneMappingType = BAB.ImageProcessingConfiguration.TONEMAPPING_ACES; szene.imageProcessingConfiguration.exposure = 0.95;
     if (qualitaet !== 'niedrig') {
@@ -101,7 +107,7 @@
       o = o || {};
       if (o.pos) mesh.position = V(o.pos[0], o.pos[1], o.pos[2]);
       if (o.drehung) mesh.rotation = V((o.drehung[0] || 0) * Math.PI / 180, (o.drehung[1] || 0) * Math.PI / 180, (o.drehung[2] || 0) * Math.PI / 180);
-      if (o.textur && BK) { mesh.material = BK.material(o.textur, o.farbe || '#ffffff', { rau: o.rauheit, metall: o.metall, leuchten: o.leuchten }); mesh.computeWorldMatrix(true); BK.weltUV(mesh, o.kachel || 2); }
+      if (o.textur && BK) { if (String(o.textur).startsWith('foto:')) fotoMaterial(o.textur); mesh.material = BK.material(o.textur, o.farbe || '#ffffff', { rau: o.rauheit, metall: o.metall, leuchten: o.leuchten }); mesh.computeWorldMatrix(true); BK.weltUV(mesh, o.kachel || BK.kachelGroesse(o.textur)); }
       else mesh.material = material(o.farbe || '#9a9a9a', o.rauheit, o.metall, o.leuchten || o.alpha != null ? { leuchten: o.leuchten, alpha: o.alpha } : null);
       if (o.schatten !== false) { schatten.addShadowCaster(mesh); mesh.receiveShadows = true; }
       const art = mesh.__art;
@@ -231,17 +237,65 @@
       return ganz;
     }
 
+    /* ---------- Foto-Haus aus der Werkstatt ---------- */
+    function fotoHaus(name, o) {
+      o = o || {}; const a = eigene(name, 'foto-gebaeude'), pos = o.pos || [0, null, 0], x = pos[0], z = pos[2], y0 = (pos[1] ?? hoehe(x, z)) - 0.15;
+      const t = s => (a.bilder[s] ? { albedo: texVon(a.bilder[s]), normal: a.bilder[s + 'N'] ? texVon(a.bilder[s + 'N']) : null } : null);
+      const g = BK.fotoGebaeude({ breite: a.breite, tiefe: a.tiefe, hoehe: a.hoehe, dachFarbe: a.dachFarbe }, { vorne: t('vorne'), seite: t('seite'), hinten: t('hinten'), farbe: a.farbe });
+      g.mesh.position = V(x, y0, z); g.mesh.rotation.y = (o.drehung || 0) * Math.PI / 180; g.mesh.computeWorldMatrix(true); schatten.addShadowCaster(g.mesh); g.mesh.receiveShadows = true; g.mesh.freezeWorldMatrix();
+      const welt = g.mesh.getWorldMatrix();
+      for (const k of g.kollision) { const m = BAB.Matrix.Translation(k.p[0], k.p[1], k.p[2]).multiply(welt); const sc = new BAB.Vector3(), q = new BAB.Quaternion(), p = new BAB.Vector3(); m.decompose(sc, q, p);
+        const n = new BAB.TransformNode('fotoPhysik', szene); n.position = p; n.rotationQuaternion = q; const body = new BAB.PhysicsBody(n, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = new BAB.PhysicsShapeBox(V(0, 0, 0), BAB.Quaternion.Identity(), V(k.g[0], k.g[1], k.g[2]), szene); }
+      return g.mesh;
+    }
+
     /* ---------- 3D-Modelle (.glb / .gltf, z. B. aus Blender oder Mixamo) ---------- */
+    function quelle(url) { const n = window.SDAssets ? window.SDAssets.name(url) : url; if (EIGENE[n] && EIGENE[n].typ === 'modell') return [urlVon(EIGENE[n].datei), '.glb']; return [url, /\.gltf$/i.test(url) ? '.gltf' : '.glb']; }
     async function modell(url, o) {
-      o = o || {}; const erg = await BAB.SceneLoader.ImportMeshAsync('', '', url, szene); const wurzel = erg.meshes[0];
+      o = o || {}; const [u, endung] = quelle(url); const erg = await BAB.SceneLoader.ImportMeshAsync('', '', u, szene, null, endung); const wurzel = erg.meshes[0];
       if (o.pos) wurzel.position = V(o.pos[0], o.pos[1], o.pos[2]); if (o.skalierung) wurzel.scaling = V(o.skalierung, o.skalierung, o.skalierung);
       erg.meshes.forEach(m => { schatten.addShadowCaster(m); m.receiveShadows = true; });
       const anim = {}; erg.animationGroups.forEach(a => { a.stop(); anim[a.name] = a; });
       return { wurzel, meshes: erg.meshes, animationen: anim, spiele: (name, schleife = true) => { Object.values(anim).forEach(a => a.stop()); anim[name] && anim[name].start(schleife); } };
     }
 
+    /* ---------- Eigene Figuren aus .glb (z. B. Mixamo) mit Animationen ---------- */
+    const figurVorlagen = {};
+    async function figurLaden(url) { const [u, endung] = quelle(url); const c = await BAB.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, endung); figurVorlagen[url] = c; return { animationen: c.animationGroups.map(a => a.name) }; }
+    const ANIM = { stehen: /idle|stand|breath|survey|ruhe/i, gehen: /walk|geh/i, rennen: /run|sprint|renn|jog/i, springen: /jump|spring/i, sterben: /death|die|dying|dead|sterb|tot/i, schiessen: /shoot|fire|aim|schie/i };
+    let figurZaehler = 0;
+    function glbFigur(o) {
+      const c = figurVorlagen[o.modell]; if (!c) throw new Error('Figur „' + o.modell + '“ zuerst laden: await sd.figurLaden(\'' + o.modell + '\')');
+      const inst = c.instantiateModelsToScene(n => n + '_f' + figurZaehler, false, { doNotInstantiate: true }); figurZaehler++;
+      const k = new BAB.TransformNode('figurGlb', szene), innen = new BAB.TransformNode('modell', szene); innen.parent = k; inst.rootNodes.forEach(n => { n.parent = innen; });
+      innen.computeWorldMatrix(true); const { min, max } = innen.getHierarchyBoundingVectors(true); const H = Math.max(0.1, max.y - min.y), s = (o.hoehe || 1.8) / H;
+      innen.scaling = V(s, s, s); innen.position = V(-(min.x + max.x) / 2 * s, -min.y * s, -(min.z + max.z) / 2 * s); innen.rotation.y = (o.drehung || 0) * Math.PI / 180;
+      const meshes = k.getChildMeshes(); meshes.forEach(m => { m.isPickable = false; m.alwaysSelectAsActiveMesh = true; schatten.addShadowCaster(m); m.receiveShadows = true; });
+      // Trefferzonen (unsichtbar): Körper + Kopf – genauer als das verformte Modell
+      const hb = (name, mesh, y, kopf) => { mesh.parent = k; mesh.position.y = y; mesh.isVisible = false; mesh.metadata = { figur: o.besitzer, kopf, trefferzone: true }; return mesh; };
+      const hoehe = o.hoehe || 1.8; hb('rumpfZone', BAB.MeshBuilder.CreateBox('zone', { width: 0.55, height: hoehe * 0.78, depth: 0.4 }, szene), hoehe * 0.39, false); hb('kopfZone', BAB.MeshBuilder.CreateSphere('zone', { diameter: 0.32, segments: 6 }, szene), hoehe - 0.17, true);
+      // Animationen zuordnen
+      const gruppen = {}; inst.animationGroups.forEach(a => { a.stop(); for (const [rolle, re] of Object.entries(ANIM)) if (!gruppen[rolle] && re.test(a.name)) gruppen[rolle] = a; });
+      if (!gruppen.stehen && inst.animationGroups.length && !gruppen.gehen) gruppen.stehen = inst.animationGroups[0];
+      if (!gruppen.gehen && gruppen.rennen) gruppen.gehen = gruppen.rennen; if (!gruppen.rennen && gruppen.gehen) gruppen.rennen = gruppen.gehen;
+      const schleifen = [...new Set(['stehen', 'gehen', 'rennen'].map(r => gruppen[r]).filter(Boolean))], gewicht = new Map(schleifen.map(g => [g, 0]));
+      schleifen.forEach(g => { g.start(true); g.setWeightForAllAnimatables(0); }); let aktiv = gruppen.stehen || schleifen[0];
+      // Waffe an die rechte Hand
+      const hand = k.getDescendants(false, n => /right.?hand|hand.?r\b|r.?hand|hand_r|handr/i.test(n.name))[0];
+      const waffe = BAB.MeshBuilder.CreateBox('waffe', { width: 0.07, height: 0.12, depth: 0.7 }, szene); waffe.material = material('#1c1d20', 0.4, 0.7); schatten.addShadowCaster(waffe); waffe.metadata = { figur: o.besitzer }; waffe.isPickable = false;
+      if (hand) { k.computeWorldMatrix(true); hand.computeWorldMatrix(true); waffe.position = hand.getAbsolutePosition().add(V(0, 0, 0.25)); waffe.setParent(hand); } else { waffe.parent = k; waffe.position = V(0.22, hoehe * 0.72, 0.4); }
+      let tot = false;
+      k.animiere = (tempo, dt, inLuft) => { if (tot || !schleifen.length) return;
+        aktiv = tempo > 5.2 ? (gruppen.rennen || aktiv) : tempo > 0.6 ? (gruppen.gehen || aktiv) : (gruppen.stehen || gruppen.gehen);
+        for (const g of schleifen) { const z = g === aktiv ? 1 : 0, w = gewicht.get(g) + (z - gewicht.get(g)) * Math.min(1, dt * 8); gewicht.set(g, w); g.setWeightForAllAnimatables(w); }
+        if (aktiv && aktiv !== gruppen.stehen) aktiv.speedRatio = klemme(tempo / (aktiv === gruppen.rennen ? 6.5 : 3), 0.6, 1.8); };
+      k.sterben = () => { tot = true; if (!gruppen.sterben) return false; schleifen.forEach(g => g.stop()); gruppen.sterben.start(false); return true; };
+      k.teile = {}; k.waffe = waffe; k.glb = true; k.animationen = inst.animationGroups.map(a => a.name); return k;
+    }
+
     /* ---------- Figuren (Spieler und Bots) ---------- */
     function figur(o) {
+      if (o.modell) return glbFigur(o);
       if (BK && o.aussehen === 'roboter') { const k = BK.roboter(Object.assign({ seed: Math.floor(Math.random() * 1e6) }, o.roboter || {}));
         k.getChildMeshes().forEach(m => { schatten.addShadowCaster(m); m.receiveShadows = true; m.metadata = { figur: o.besitzer, kopf: !!m.__kopf }; }); return k; }
       const k = new BAB.TransformNode('figur', szene), teile = {};
@@ -281,7 +335,7 @@
     const blitz = new BAB.PointLight('muendung', V(0, -100, 0), szene); blitz.intensity = 0; blitz.range = 8; blitz.diffuse = new BAB.Color3(1, 0.8, 0.5);
 
     /* ---------- Treffer per Strahl ---------- */
-    const kannTreffen = (m) => m.isPickable && m.isEnabled() && m.isVisible !== false && !(m.metadata && m.metadata.keinTreffer);
+    const kannTreffen = (m) => m.isPickable && m.isEnabled() && (m.isVisible !== false || (m.metadata && m.metadata.trefferzone)) && !(m.metadata && m.metadata.keinTreffer);
     function strahl(von, richtung, laenge, ignoriere) {
       const r = new BAB.Ray(von, richtung, laenge); return szene.pickWithRay(r, m => kannTreffen(m) && !(ignoriere && m.metadata && m.metadata.figur === ignoriere));
     }
@@ -321,7 +375,7 @@
     function spielerErstellen(o) {
       o = o || {}; const start = V(o.pos[0], o.pos[1] ?? hoehe(o.pos[0], o.pos[2]) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(start, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
-      const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: o.roboter });
+      const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: o.roboter, modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung });
       k.getChildMeshes().forEach(m => { m.isPickable = false; });
       spieler = { cc, k, leben: o.leben || 100, maxLeben: o.leben || 100, ruestung: o.ruestung || 0, gier: o.blick || 0, nick: 0.1, zustand: { luft: 0 }, waffen: [], aktiv: 0, letzterSchuss: 0, laden: 0, kills: 0, schaden: 0, rueckstoss: 0, tempo: 0, abstand: 4.2 };
       (o.waffen || ['pistole']).forEach(w => waffeGeben(w)); waffeWechseln(0); return spieler;
@@ -332,7 +386,7 @@
       if (spieler.waffen.length >= 3) { const alt = spieler.waffen[spieler.aktiv]; spieler.waffen[spieler.aktiv] = { id: name, def, mag: def.magazin, reserve: def.reserve }; if (!still) nachricht(def.name + ' statt ' + alt.def.name); waffeWechseln(spieler.aktiv); return true; }
       spieler.waffen.push({ id: name, def, mag: def.magazin, reserve: def.reserve }); if (!still) nachricht('🔫 ' + def.name + ' aufgehoben (Taste ' + spieler.waffen.length + ')'); return true;
     }
-    function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; }
+    function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; if (!spieler.k.glb) { spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; } }
     ['1', '2', '3'].forEach((t, i) => (tastenHandler[t] = tastenHandler[t] || []).push(() => waffeWechseln(i)));
     (tastenHandler.R = tastenHandler.R || []).push(() => nachladen());
     function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; ton('nachladen'); }
@@ -370,13 +424,15 @@
       const cc = new BAB.PhysicsCharacterController(p, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
       const farbenSatz = ['#6b3a3a', '#5a4a2e', '#3a4f6b', '#4a3a5f', '#5f5f3a'];
       const stile = ['kampf', 'kampf', 'spaeher', 'schwer'], lacke = ['#d9dde2', '#c9b48a', '#9aa7b4', '#6b7a5a', '#b04a3a'];
-      const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b', aussehen: o.aussehen, roboter: Object.assign({ stil: stile[bots.length % 4], farbe: lacke[bots.length % 5], augen: '#ff3b30' }, o.roboter || {}) });
+      const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b', modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung, aussehen: o.aussehen, roboter: Object.assign({ stil: stile[bots.length % 4], farbe: lacke[bots.length % 5], augen: '#ff3b30' }, o.roboter || {}) });
       const b = { id, cc, k, name: o.name || ('Bot ' + (bots.length + 1)), leben: o.leben || 100, staerke: st, waffe: WAFFEN[o.waffe || (bots.length % 3 === 0 ? 'schrotflinte' : 'gewehr')], ziel: null, warte: 0, letzterSchuss: 0, sieht: 0, alarm: 0, zustand: { luft: 0 }, richtung: Math.random() * 6.28, heimat: p.clone(), seitwaerts: Math.random() < 0.5 ? 1 : -1, wechsel: 0 };
       bots.push(b); return b;
     }
     function botTot(b) {
       b.tot = true; spieler && spieler.kills++; ton('tot', 0.5); meldung('☠ ' + b.name + ' ausgeschaltet');
       const pos = b.cc.getPosition(); b.cc.dispose && b.cc.dispose();
+      b.k.getChildMeshes().forEach(m => { m.isPickable = false; });
+      if (b.k.sterben && b.k.sterben()) { if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true }); if (bots.every(x => x.tot)) ende(true, 'Alle Gegner ausgeschaltet'); return; }
       // umfallen mit Physik
       const huelle = BAB.MeshBuilder.CreateBox('leiche', { width: 0.6, height: 1.8, depth: 0.4 }, szene); huelle.isVisible = false; huelle.isPickable = false; huelle.position = pos.clone(); huelle.rotation.y = b.k.rotation.y;
       b.k.position = V(0, -0.9, 0); b.k.rotation.y = 0; b.k.parent = huelle; b.k.getChildMeshes().forEach(m => { m.isPickable = false; });
@@ -468,7 +524,7 @@
       const np = spieler.cc.getPosition(); spieler.tempo = Math.hypot(np.x - vorher.x, np.z - vorher.z) / Math.max(dt, 1e-4);
       spieler.k.position = np.add(V(0, -0.9, 0)); const blick = (maus.rechts || maus.links || dir.length() > 0.1) ? spieler.gier : spieler.k.rotation.y;
       spieler.k.rotation.y += winkel(spieler.k.rotation.y, blick) * Math.min(1, dt * 14); spieler.k.animiere(spieler.tempo, dt, !amBoden && spieler.zustand.luft > 0.2);
-      spieler.k.teile.arm1.rotation.x = -1.35 - spieler.nick * 0.8; spieler.k.teile['arm-1'].rotation.x = -1.3 - spieler.nick * 0.8; spieler.k.waffe.rotation.x = spieler.nick * 0.9;
+      if (spieler.k.teile.arm1) { spieler.k.teile.arm1.rotation.x = -1.35 - spieler.nick * 0.8; spieler.k.teile['arm-1'].rotation.x = -1.3 - spieler.nick * 0.8; spieler.k.waffe.rotation.x = spieler.nick * 0.9; }
       // nahe am Kopf: Figur durchsichtig, damit man durch die Kamera sieht
       spieler.k.getChildMeshes().forEach(m => { m.visibility = spieler.abstand < 1 ? 0.15 : 1; });
       const w = spieler.waffen[spieler.aktiv];
@@ -520,7 +576,7 @@
     /* ---------- Die SD-API für Spiel-Skripte ---------- */
     const sd = {
       BABYLON: BAB, szene, engine, kamera, sonne,
-      himmel, gelaende, hoehe, box, kugel, zylinder, fels, baeume, haus, modell, kiste,
+      himmel, gelaende, hoehe, box, kugel, zylinder, fels, baeume, haus, modell, kiste, fotoHaus, figurLaden, eigeneDateien: () => Object.values(EIGENE).map(a => ({ name: a.name, typ: a.typ })),
       spieler: spielerErstellen, gegner, zone: zoneErstellen, waffe: waffeGeben, WAFFEN,
       jedenFrame: f => frameFns.push(f), beiTaste: (t, f) => (tastenHandler[t] = tastenHandler[t] || []).push(f),
       skript: (ziel, s) => { const e = { ziel, update: s.update }; try { s.start && s.start.call(ziel, ziel); } catch (er) { opt.beiFehler && opt.beiFehler(er); } skripte.push(e); return e; },
@@ -530,7 +586,7 @@
     };
     const aufraeumen = () => {
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); document.removeEventListener('mousemove', mm); document.removeEventListener('mousedown', md); document.removeEventListener('mouseup', mu); document.removeEventListener('pointerlockchange', pl); document.removeEventListener('contextmenu', cm); window.removeEventListener('resize', groesse);
-      try { document.exitPointerLock && document.exitPointerLock(); } catch (e) { /* egal */ } engine.stopRenderLoop(); szene.dispose(); engine.dispose();
+      try { document.exitPointerLock && document.exitPointerLock(); } catch (e) { /* egal */ } blobUrls.forEach(u => URL.revokeObjectURL(u)); engine.stopRenderLoop(); szene.dispose(); engine.dispose();
     };
     const steuerung = { sd, aufraeumen, touch, tasten, maus, botsAnhalten: an => { botsAus = !!an; }, schritte: (n, dt) => { festeSchritte = true; for (let i = 0; i < n; i++) logik(dt || 1 / 30); }, echtzeit: () => { festeSchritte = false; }, info: () => ({ fps: engine.getFps(), bots: bots.length, lebend: bots.filter(b => !b.tot).length, spieler: spieler && { leben: spieler.leben, pos: spieler.cc.getPosition().asArray().map(v => +v.toFixed(2)), kills: spieler.kills, waffen: spieler.waffen.map(w => w.id + ':' + w.mag + '/' + w.reserve) }, kisten: kisten.length, objekte: szene.meshes.length, zeichnungen: engine._drawCalls ? engine._drawCalls.current : null, vorbei, zeit }) };
     try {

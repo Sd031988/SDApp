@@ -27,6 +27,12 @@ main{position:relative;min-width:0}canvas{width:100%;height:100%;display:block;o
 #meldung{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(10,14,20,.85);border:1px solid var(--rand);border-radius:8px;padding:8px 14px;font-weight:600}
 pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);border-radius:8px;padding:9px;font:12px/1.5 Consolas,monospace;color:#cfe0f0;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:auto}
 [hidden]{display:none!important}
+.hinweis{font-size:12.5px;color:var(--leise);line-height:1.5;margin:6px 0 10px}.hinweis b{color:#e6edf3}
+.ecken{width:100%;border-radius:8px;border:1px solid var(--rand);touch-action:none;cursor:crosshair;display:block;background:#000}
+.datei{display:block;width:100%;padding:16px;border:1.5px dashed rgba(255,181,71,.5);border-radius:10px;text-align:center;cursor:pointer;color:#ffd79a;font-weight:600;margin:8px 0}.datei input{display:none}
+.liste{display:flex;flex-direction:column;gap:6px;margin:8px 0}.eintrag{background:rgba(255,255,255,.04);border:1px solid var(--rand);border-radius:8px;padding:8px;font-size:13px}.eintrag .z{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}.eintrag button{padding:5px 8px;font-size:12px}
+.feld{width:100%;background:#18212d;color:var(--txt);border:1px solid var(--rand);border-radius:7px;padding:8px;font:14px system-ui}
+.zeile2{display:flex;gap:6px}.zeile2>*{flex:1}
 @media (max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:46vh 1fr;height:auto;min-height:100vh}main{grid-row:1;height:46vh}aside{grid-row:2;border-right:0;border-top:1px solid var(--rand)}}
 </style>
 </head>
@@ -34,7 +40,7 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <div class="app">
   <aside>
     <div class="kopf"><b>SD <em>WERKSTATT</em></b><small>Objekte für deine Spiele erzeugen – live in 3D</small><a href="./index.html">⚡ SD Engine</a> · <a href="../index.html">← Game-Studio</a></div>
-    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="oberflaeche">🧱 Oberfläche</button></div>
+    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="oberflaeche">🧱 Oberfläche</button><button data-t="fotoHaus">📷 Foto-Haus</button><button data-t="fotoMaterial">📷 Foto-Material</button><button data-t="modelle" style="grid-column:span 2">📦 Meine Modelle</button></div>
     <div id="regler"></div>
     <pre id="code" title="So benutzt du das Objekt im SD-Skript"></pre>
     <div class="aktionen"><button id="zufall">🎲 Zufällig</button><button id="kopieren">📋 SD-Skript</button><button class="haupt" id="export">⬇ Als .glb exportieren (Blender, Godot, Unity)</button></div>
@@ -43,7 +49,11 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 </div>
 <script src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-serializers@9.31.3/babylonjs.serializers.min.js"></script>
-<script src="./sd-baukasten.js?v=2"></script>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
+<script src="./sd-baukasten.js?v=3"></script>
+<script src="./sd-assets.js?v=1"></script>
+<script src="./sd-foto.js?v=1"></script>
+<script>window.EXTRA = {};</script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -76,7 +86,8 @@ addEventListener('resize', () => engine.resize());
 
 function wegraeumen() { if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
 function bauen() {
-  wegraeumen(); const w = werte[typ]; const t0 = performance.now(); let ziel = 4, radius = 22, info = '';
+  if (EXTRA[typ]) { if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); EXTRA[typ].bauen(); return; }
+  if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); const w = werte[typ]; const t0 = performance.now(); let ziel = 4, radius = 22, info = '';
   if (typ === 'baum') { const b = BK.baum(w); aktuell = b.mesh; b.mesh.getLODLevels().forEach(l => {}); b.mesh.removeLODLevel && b.fern && (b.mesh.removeLODLevel(b.fern), b.fern.dispose()); ziel = w.hoehe * 0.55; radius = w.hoehe * 2.2 + 4; info = 'Baum';
     code('sd.baeume({ art: ' + q(w.art) + ', anzahl: 150, bereich: 200, hoehe: ' + w.hoehe + ', aeste: ' + w.aeste + ', tiefe: ' + w.tiefe + ', dichte: ' + w.dichte + (w.blattFarbe !== '#ffffff' ? ', blattFarbe: ' + q(w.blattFarbe) : '') + ', seed: ' + w.seed + ' });'); }
   else if (typ === 'gebaeude') { const g = BK.gebaeude(w); aktuell = g.mesh; ziel = g.hoehe * 0.45; radius = Math.max(w.breite, g.hoehe) * 1.9 + 6; info = 'Gebäude · ' + g.kollision.length + ' Kollisionskörper';
@@ -97,6 +108,7 @@ function meldung(t) { const m = $('meldung'); m.textContent = t; m.hidden = fals
 let bauTimer = null; const spaeter = () => { clearTimeout(bauTimer); bauTimer = setTimeout(bauen, 120); };
 function reglerZeigen() {
   const box = $('regler'); box.innerHTML = '';
+  if (EXTRA[typ]) { EXTRA[typ].zeigen(box); return; }
   for (const [k, name, art, , a, b, schritt] of SCHEMA[typ]) {
     const w = werte[typ][k]; const d = document.createElement('div'); d.className = art === 'an' ? 'chk' : 'r';
     if (art === 'zahl') { d.innerHTML = '<label>' + name + '<span>' + w + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = w; i.oninput = () => { werte[typ][k] = +i.value; d.querySelector('span').textContent = i.value; k === 'tempo' ? null : spaeter(); }; }
@@ -107,7 +119,7 @@ function reglerZeigen() {
   }
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('an', x === b)); typ = b.dataset.t; reglerZeigen(); bauen(); });
-$('zufall').onclick = () => { for (const [k, , art, , a, b, schritt] of SCHEMA[typ]) { if (k === 'tempo') continue; if (art === 'zahl') werte[typ][k] = +(Math.round((a + Math.random() * (b - a)) / schritt) * schritt).toFixed(2); else if (art === 'wahl') werte[typ][k] = a[Math.floor(Math.random() * a.length)].split(':')[0]; else if (art === 'an') werte[typ][k] = Math.random() < 0.5; else if (art === 'farbe' && k !== 'blattFarbe') werte[typ][k] = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'); } reglerZeigen(); bauen(); };
+$('zufall').onclick = () => { if (EXTRA[typ]) { meldung('Bei Fotos und eigenen Modellen gibt es keinen Zufall'); return; } for (const [k, , art, , a, b, schritt] of SCHEMA[typ]) { if (k === 'tempo') continue; if (art === 'zahl') werte[typ][k] = +(Math.round((a + Math.random() * (b - a)) / schritt) * schritt).toFixed(2); else if (art === 'wahl') werte[typ][k] = a[Math.floor(Math.random() * a.length)].split(':')[0]; else if (art === 'an') werte[typ][k] = Math.random() < 0.5; else if (art === 'farbe' && k !== 'blattFarbe') werte[typ][k] = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'); } reglerZeigen(); bauen(); };
 $('kopieren').onclick = () => { navigator.clipboard.writeText(letzterCode).then(() => meldung('📋 SD-Skript kopiert – im Engine-Editor einfügen'), () => meldung('Kopieren nicht erlaubt – Text unten markieren')); };
 $('export').onclick = async () => {
   if (!aktuell || !BABYLON.GLTF2Export) { meldung('Export nicht verfügbar'); return; }
@@ -120,5 +132,140 @@ $('export').onclick = async () => {
 reglerZeigen(); bauen();
 window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs button[data-t="' + t + '"]').click(), get aktuell() { return aktuell; } };
 </script>
+<script>
+'use strict';
+/* ===== 📷 Foto-Haus, 📷 Foto-Material, 📦 Meine Modelle ===== */
+(() => {
+  const el = (tag, attr, kinder) => { const e = document.createElement(tag); Object.assign(e, attr || {}); (kinder || []).forEach(k => e.append(k)); return e; };
+  const regler = (box, name, wert, a, b, schritt, fn, einheit) => { const d = el('div', { className: 'r' }); d.innerHTML = '<label>' + name + '<span>' + wert + (einheit || '') + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = wert; i.oninput = () => { d.querySelector('span').textContent = i.value + (einheit || ''); fn(+i.value); }; box.append(d); return i; };
+  const hinweis = (box, html) => { const p = el('p', { className: 'hinweis' }); p.innerHTML = html; box.append(p); return p; };
+  const dateiKnopf = (box, text, accept, fn) => { const l = el('label', { className: 'datei' }); l.innerHTML = text + '<input type="file">'; const i = l.querySelector('input'); i.accept = accept; i.onchange = () => { if (i.files[0]) fn(i.files[0]); i.value = ''; }; box.append(l); return l; };
+  const texAusLeinwand = (c, name) => { const t = new BABYLON.DynamicTexture(name, c, szene, true); t.update(false); return t; };
+  let alteTex = [];
+  EXTRA.aufraeumen = () => { alteTex.forEach(t => t.dispose()); alteTex = []; if (EXTRA._container) { EXTRA._container.dispose(); EXTRA._container = null; } };
+  const passeKamera = (mesh) => { const { min, max } = mesh.getHierarchyBoundingVectors(true); const g = max.subtract(min), r = Math.max(g.x, g.y, g.z); kam.setTarget(new BABYLON.Vector3((min.x + max.x) / 2, (min.y + max.y) / 2, (min.z + max.z) / 2)); kam.radius = Math.max(2.5, r * 1.8); };
+  const schattenFuer = m => [m].concat(m.getChildMeshes ? m.getChildMeshes() : []).forEach(x => { if (x.getTotalVertices && x.getTotalVertices()) { schatten.addShadowCaster(x); x.receiveShadows = true; } });
+
+  /* ---------- 📷 Foto-Haus ---------- */
+  const FH = { seite: 'vorne', bilder: {}, breite: 12, tiefe: 9, hoehe: 8, hoeheAuto: true, plastik: 1.2, dachFarbe: '#8a8580', name: 'mein-haus' };
+  const SEITEN = { vorne: 'Vorderseite', seite: 'Seiten (links + rechts)', hinten: 'Rückseite' };
+  function entzerre(s) { const b = FH.bilder[s]; if (!b) return; b.entzerrt = SDFoto.entzerren(b.orig, b.ecken); b.normal = SDFoto.normalKarte(b.entzerrt, FH.plastik, false); if (s === 'vorne') FH.farbe = SDFoto.mittelFarbe(b.entzerrt); }
+  function eckenEditor(box) {
+    const b = FH.bilder[FH.seite]; if (!b) return; const c = el('canvas', { className: 'ecken' }); box.append(c); hinweis(box, 'Ziehe die <b>4 Punkte</b> auf die Ecken der Hauswand. Schräge Fotos werden gerade gerechnet.');
+    const W = 600, f = W / b.orig.width; c.width = W; c.height = Math.round(b.orig.height * f); const x = c.getContext('2d'); let zieh = -1;
+    const malen = () => { x.drawImage(b.orig, 0, 0, c.width, c.height); x.strokeStyle = '#ffb547'; x.lineWidth = 3; x.beginPath(); b.ecken.forEach(([px, py], i) => i ? x.lineTo(px * f, py * f) : x.moveTo(px * f, py * f)); x.closePath(); x.stroke();
+      b.ecken.forEach(([px, py], i) => { x.fillStyle = i === zieh ? '#fff' : '#ffb547'; x.beginPath(); x.arc(px * f, py * f, 11, 0, 7); x.fill(); x.fillStyle = '#1a1005'; x.font = 'bold 11px system-ui'; x.fillText(['↖', '↗', '↘', '↙'][i], px * f - 6, py * f + 4); }); };
+    const pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * c.width / f, (e.clientY - r.top) / r.height * c.height / f]; };
+    c.onpointerdown = e => { const p = pos(e); let best = 0, d = 1e9; b.ecken.forEach((q, i) => { const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < d) { d = dd; best = i; } }); zieh = best; c.setPointerCapture(e.pointerId); malen(); };
+    c.onpointermove = e => { if (zieh < 0) return; const p = pos(e); b.ecken[zieh] = [Math.max(0, Math.min(b.orig.width, p[0])), Math.max(0, Math.min(b.orig.height, p[1]))]; malen(); };
+    c.onpointerup = () => { if (zieh < 0) return; zieh = -1; malen(); entzerre(FH.seite); bauen(); };
+    malen();
+  }
+  EXTRA.fotoHaus = {
+    zeigen(box) {
+      hinweis(box, 'Fotografiere eine Hauswand <b>möglichst gerade von vorne</b>. Das Foto wird auf das Gebäude gelegt – von außen sieht es dann aus wie im Foto. Optional: Fotos für Seiten und Rückseite.');
+      const sel = el('select'); for (const [k, t] of Object.entries(SEITEN)) sel.add(new Option(t + (FH.bilder[k] ? ' ✓' : ''), k, false, k === FH.seite)); sel.onchange = () => { FH.seite = sel.value; reglerZeigen(); }; box.append(el('div', { className: 'r' }, [el('label', { textContent: 'Welche Seite?' }), sel]));
+      dateiKnopf(box, '📷 Foto für „' + SEITEN[FH.seite] + '“ wählen', 'image/*', async f => { const orig = await SDFoto.laden(f, 2048), w = orig.width, h = orig.height; FH.bilder[FH.seite] = { orig, ecken: [[w * 0.04, h * 0.04], [w * 0.96, h * 0.04], [w * 0.96, h * 0.96], [w * 0.04, h * 0.96]] }; entzerre(FH.seite); reglerZeigen(); bauen(); });
+      if (FH.bilder[FH.seite]) { eckenEditor(box); box.append(el('div', { className: 'zeile2' }, [el('button', { textContent: '↺ Ecken zurück', onclick: () => { const b = FH.bilder[FH.seite], w = b.orig.width, h = b.orig.height; b.ecken = [[0, 0], [w, 0], [w, h], [0, h]]; entzerre(FH.seite); reglerZeigen(); bauen(); } }), el('button', { textContent: '✕ Foto entfernen', onclick: () => { delete FH.bilder[FH.seite]; reglerZeigen(); bauen(); } })])); }
+      regler(box, 'Breite (m)', FH.breite, 3, 60, 0.5, v => { FH.breite = v; spaeter(); }, ' m');
+      regler(box, 'Tiefe (m)', FH.tiefe, 3, 40, 0.5, v => { FH.tiefe = v; spaeter(); }, ' m');
+      const ch = el('label', { className: 'chk' }); ch.innerHTML = '<input type="checkbox"> Höhe automatisch aus dem Foto'; const cb = ch.querySelector('input'); cb.checked = FH.hoeheAuto; cb.onchange = () => { FH.hoeheAuto = cb.checked; reglerZeigen(); bauen(); }; box.append(ch);
+      if (!FH.hoeheAuto) regler(box, 'Höhe (m)', FH.hoehe, 2.5, 80, 0.5, v => { FH.hoehe = v; spaeter(); }, ' m');
+      regler(box, 'Plastizität (Normal-Map)', FH.plastik, 0, 4, 0.1, v => { FH.plastik = v; Object.keys(FH.bilder).forEach(entzerre); spaeter(); });
+      const dc = el('input', { type: 'color', value: FH.dachFarbe }); dc.oninput = () => { FH.dachFarbe = dc.value; spaeter(); }; box.append(el('div', { className: 'r' }, [el('label', { textContent: 'Dachfarbe' }), dc]));
+      speichernFeld(box, FH, async () => { if (!FH.bilder.vorne) throw new Error('Erst ein Foto der Vorderseite wählen'); const bilder = {};
+        for (const s of Object.keys(FH.bilder)) { bilder[s] = await SDFoto.zuBlob(FH.bilder[s].entzerrt, 'image/jpeg', 0.9); bilder[s + 'N'] = await SDFoto.zuBlob(FH.bilder[s].normal, 'image/jpeg', 0.92); }
+        return { typ: 'foto-gebaeude', bilder, breite: FH.breite, tiefe: FH.tiefe, hoehe: aktuelleHoehe(), dachFarbe: FH.dachFarbe, farbe: FH.farbe }; });
+    },
+    bauen() {
+      if (!FH.bilder.vorne) { code('// Erst ein Foto der Vorderseite wählen'); $('info').textContent = 'Noch kein Foto gewählt'; return; }
+      const tex = {}; for (const s of Object.keys(FH.bilder)) { const a = texAusLeinwand(FH.bilder[s].entzerrt, 'fh_' + s), n = texAusLeinwand(FH.bilder[s].normal, 'fhN_' + s); alteTex.push(a, n); tex[s] = { albedo: a, normal: n }; }
+      tex.farbe = FH.farbe; const g = BK.fotoGebaeude({ breite: FH.breite, tiefe: FH.tiefe, hoehe: aktuelleHoehe(), dachFarbe: FH.dachFarbe }, tex); aktuell = g.mesh; schattenFuer(g.mesh); passeKamera(g.mesh);
+      $('info').textContent = 'Foto-Haus · ' + FH.breite + ' × ' + FH.tiefe + ' × ' + aktuelleHoehe().toFixed(1) + ' m · Fotos: ' + Object.keys(FH.bilder).map(s => SEITEN[s]).join(', ');
+      code("sd.fotoHaus('" + SDAssets.name(FH.name) + "', { pos: [0, null, 0], drehung: 0 });   // vorher 💾 speichern");
+    },
+  };
+  const aktuelleHoehe = () => FH.hoeheAuto && FH.bilder.vorne ? +(FH.breite / FH.bilder.vorne.entzerrt.seitenVerhaeltnis).toFixed(1) : FH.hoehe;
+
+  /* ---------- 📷 Foto-Material ---------- */
+  const FM = { orig: null, nahtlos: true, groesse: 2, plastik: 2, rau: 0.85, name: 'mein-material' };
+  EXTRA.fotoMaterial = {
+    zeigen(box) {
+      hinweis(box, 'Fotografiere eine Fläche <b>gerade von vorne</b> und gleichmäßig beleuchtet (Mauer, Pflaster, Holz, Rinde, Stoff …). Daraus wird ein <b>nahtloses Material</b> mit Normal-Map.');
+      dateiKnopf(box, FM.orig ? '📷 Anderes Foto wählen' : '📷 Foto wählen', 'image/*', async f => { FM.orig = await SDFoto.laden(f, 2048); FM.tile = null; reglerZeigen(); bauen(); });
+      if (FM.orig) {
+        const ch = el('label', { className: 'chk' }); ch.innerHTML = '<input type="checkbox"> Nahtlos machen (Ränder überblenden)'; const cb = ch.querySelector('input'); cb.checked = FM.nahtlos; cb.onchange = () => { FM.nahtlos = cb.checked; FM.tile = null; bauen(); }; box.append(ch);
+        regler(box, 'Größe einer Kachel (m)', FM.groesse, 0.25, 12, 0.25, v => { FM.groesse = v; spaeter(); }, ' m');
+        regler(box, 'Plastizität', FM.plastik, 0, 5, 0.1, v => { FM.plastik = v; FM.normal = null; spaeter(); });
+        regler(box, 'Rauheit (0 = glänzend)', FM.rau, 0.05, 1, 0.05, v => { FM.rau = v; spaeter(); });
+        speichernFeld(box, FM, async () => ({ typ: 'foto-material', bild: await SDFoto.zuBlob(FM.tile, 'image/jpeg', 0.9), normal: await SDFoto.zuBlob(FM.normal, 'image/jpeg', 0.92), groesse: FM.groesse, rau: FM.rau }));
+      }
+    },
+    bauen() {
+      if (!FM.orig) { code('// Erst ein Foto wählen'); $('info').textContent = 'Noch kein Foto gewählt'; return; }
+      if (!FM.tile) { FM.tile = FM.nahtlos ? SDFoto.nahtlos(FM.orig, 1024) : (() => { const c = document.createElement('canvas'), s = Math.min(FM.orig.width, FM.orig.height); c.width = c.height = 1024; c.getContext('2d').drawImage(FM.orig, (FM.orig.width - s) / 2, (FM.orig.height - s) / 2, s, s, 0, 0, 1024, 1024); return c; })(); FM.normal = null; }
+      if (!FM.normal) FM.normal = SDFoto.normalKarte(FM.tile, FM.plastik, true);
+      const a = texAusLeinwand(FM.tile, 'fm'), n = texAusLeinwand(FM.normal, 'fmN'); alteTex.push(a, n); BK.eigeneOberflaeche('foto:vorschau', a, n, { groesse: FM.groesse, rau: FM.rau });
+      const tn = new BABYLON.TransformNode('fotoMuster', szene), mat = BK.material('foto:vorschau', '#ffffff');
+      const k = BABYLON.MeshBuilder.CreateSphere('kugel', { diameter: 3, segments: 48 }, szene), w = BABYLON.MeshBuilder.CreateBox('wuerfel', { size: 3 }, szene), f = BABYLON.MeshBuilder.CreateBox('flaeche', { width: 9, height: 0.1, depth: 6 }, szene);
+      k.position.set(-2.2, 1.6, 0); w.position.set(2.2, 1.6, 0); w.rotation.y = 0.6; f.position.set(0, 0.06, 0.5);
+      for (const m of [k, w, f]) { m.bakeCurrentTransformIntoVertices(); BK.weltUV(m, FM.groesse); m.material = mat; m.parent = tn; } aktuell = tn; schattenFuer(tn); kam.setTarget(new BABYLON.Vector3(0, 1.4, 0)); kam.radius = 11;
+      $('info').textContent = 'Foto-Material · Kachel ' + FM.groesse + ' m · die Fläche zeigt, ob die Wiederholung sichtbar ist';
+      code("sd.box({ pos: [0, 1, 0], groesse: [4, 2, 4], textur: 'foto:" + SDAssets.name(FM.name) + "' });   // vorher 💾 speichern");
+    },
+  };
+
+  /* ---------- Speichern ---------- */
+  function speichernFeld(box, zustand, daten) {
+    const n = el('input', { className: 'feld', value: zustand.name, placeholder: 'Name, z. B. rathaus' }); n.oninput = () => { zustand.name = n.value; if (aktuell) EXTRA[typ].bauen && code($('code').textContent.replace(/'[^']*'/, "'" + SDAssets.name(n.value) + "'")); };
+    const k = el('button', { className: 'haupt', textContent: '💾 In „Meine Modelle“ speichern', style: 'width:100%;margin-top:6px;background:linear-gradient(90deg,var(--akz),var(--akz2));color:#1a1005;border:0' });
+    k.onclick = async () => { const nm = SDAssets.name(zustand.name); if (!nm) { meldung('Bitte einen Namen eingeben'); return; }
+      try { const alt = await SDAssets.holen(nm); if (alt && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return; const d = await daten(); await SDAssets.speichern(Object.assign({ name: nm }, d)); meldung('💾 Gespeichert als „' + nm + '“ – im Spiel mit dem Code unten nutzbar'); }
+      catch (e) { meldung('⨯ ' + e.message); } };
+    box.append(el('div', { className: 'r' }, [el('label', { textContent: 'Name' }), n]), k);
+  }
+
+  /* ---------- 📦 Meine Modelle ---------- */
+  const TYPEN = { modell: '🧍 3D-Modell', 'foto-gebaeude': '📷 Foto-Haus', 'foto-material': '📷 Foto-Material' };
+  let auswahl = null;
+  async function modellAnsehen(a) {
+    EXTRA.aufraeumen(); wegraeumen(); auswahl = a.name;
+    if (a.typ === 'modell') { const u = URL.createObjectURL(a.datei); try { const c = await BABYLON.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, '.glb'); c.addAllToScene(); EXTRA._container = c; const wurzel = c.meshes[0]; aktuell = wurzel; schattenFuer(wurzel); passeKamera(wurzel);
+        c.animationGroups.forEach(g => g.stop()); if (c.animationGroups[0]) c.animationGroups[0].start(true);
+        const { min, max } = wurzel.getHierarchyBoundingVectors(true); $('info').textContent = a.name + ' · ' + (max.y - min.y).toFixed(2) + ' m hoch · ' + c.animationGroups.length + ' Animationen · ' + (c.skeletons.length ? 'mit Skelett' : 'ohne Skelett');
+        const figur = c.skeletons.length && c.animationGroups.length; code(figur ? "await sd.figurLaden('" + a.name + "');\nsd.gegner({ pos: [0, null, 20], modell: '" + a.name + "' });   // oder sd.spieler({ …, modell: '" + a.name + "' })" : "await sd.modell('" + a.name + "', { pos: [0, sd.hoehe(0, 0), 0] });");
+        EXTRA._anims = c.animationGroups; } finally { setTimeout(() => URL.revokeObjectURL(u), 4000); } }
+    else if (a.typ === 'foto-gebaeude') { const tex = {}; for (const s of ['vorne', 'seite', 'hinten']) if (a.bilder[s]) { const t = new BABYLON.Texture(URL.createObjectURL(a.bilder[s]), szene), n = a.bilder[s + 'N'] ? new BABYLON.Texture(URL.createObjectURL(a.bilder[s + 'N']), szene) : null; alteTex.push(t); n && alteTex.push(n); tex[s] = { albedo: t, normal: n }; }
+      tex.farbe = a.farbe; const g = BK.fotoGebaeude(a, tex); aktuell = g.mesh; schattenFuer(g.mesh); passeKamera(g.mesh); $('info').textContent = a.name + ' · Foto-Haus ' + a.breite + ' × ' + a.tiefe + ' × ' + a.hoehe + ' m'; code("sd.fotoHaus('" + a.name + "', { pos: [0, null, 0], drehung: 0 });"); EXTRA._anims = []; }
+    else { const t = new BABYLON.Texture(URL.createObjectURL(a.bild), szene), n = a.normal ? new BABYLON.Texture(URL.createObjectURL(a.normal), szene) : null; alteTex.push(t); n && alteTex.push(n); BK.eigeneOberflaeche('foto:vorschau', t, n, { groesse: a.groesse, rau: a.rau });
+      const k = BABYLON.MeshBuilder.CreateSphere('kugel', { diameter: 3, segments: 48 }, szene); k.position.y = 1.6; k.bakeCurrentTransformIntoVertices(); BK.weltUV(k, a.groesse); k.material = BK.material('foto:vorschau', '#ffffff'); aktuell = k; schattenFuer(k); kam.setTarget(new BABYLON.Vector3(0, 1.6, 0)); kam.radius = 7;
+      $('info').textContent = a.name + ' · Foto-Material · Kachel ' + a.groesse + ' m'; code("sd.box({ pos: [0, 1, 0], groesse: [4, 2, 4], textur: 'foto:" + a.name + "' });"); EXTRA._anims = []; }
+    reglerZeigen();
+  }
+  EXTRA.modelle = {
+    async zeigen(box) {
+      hinweis(box, 'Lade <b>.glb-Dateien</b> hoch: Figuren von <b>Mixamo</b> (mit Animationen), Scans aus <b>Polycam / Luma / Scaniverse</b>, Modelle aus <b>Blender</b> oder der SD Werkstatt. Alles bleibt <b>auf diesem Gerät</b> gespeichert.');
+      dateiKnopf(box, '📥 .glb-Datei importieren', '.glb,model/gltf-binary', async f => {
+        if (!/\.glb$/i.test(f.name)) { meldung('Bitte eine .glb-Datei wählen (.gltf mit Zusatzdateien geht nicht)'); return; }
+        if (f.size > 150 * 1024 * 1024) { meldung('Datei ist größer als 150 MB – bitte verkleinern'); return; }
+        const nm = SDAssets.name(f.name); if (await SDAssets.holen(nm) && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return;
+        const u = URL.createObjectURL(f); let info = {}; try { const c = await BABYLON.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, '.glb'); info = { animationen: c.animationGroups.map(g => g.name), skelett: c.skeletons.length > 0 }; c.dispose(); }
+        catch (e) { URL.revokeObjectURL(u); meldung('⨯ Datei konnte nicht gelesen werden: ' + e.message); return; } URL.revokeObjectURL(u);
+        await SDAssets.speichern({ name: nm, typ: 'modell', datei: f, groesse: f.size, ...info }); meldung('📥 „' + nm + '“ gespeichert'); reglerZeigen(); modellAnsehen(await SDAssets.holen(nm)); });
+      const liste = el('div', { className: 'liste' }); box.append(liste); let alle = [];
+      try { alle = (await SDAssets.alle()).sort((a, b) => b.t - a.t); } catch (e) { hinweis(box, '⨯ Speicher nicht verfügbar (privates Fenster?)'); return; }
+      if (!alle.length) hinweis(liste, 'Noch nichts gespeichert. Importiere eine .glb-Datei oder speichere ein Foto-Haus bzw. Foto-Material.');
+      for (const a of alle) { const e = el('div', { className: 'eintrag' }); e.innerHTML = '<b></b><div class="hinweis" style="margin:2px 0 0"></div><div class="z"></div>'; e.querySelector('b').textContent = a.name;
+        e.querySelector('.hinweis').textContent = (TYPEN[a.typ] || a.typ) + (a.groesse && a.typ === 'modell' ? ' · ' + (a.groesse / 1048576).toFixed(1) + ' MB' : '') + (a.animationen && a.animationen.length ? ' · ' + a.animationen.length + ' Animationen' : '');
+        const z = e.querySelector('.z'); z.append(el('button', { textContent: '👁 Ansehen', onclick: () => modellAnsehen(a) }), el('button', { textContent: '🗑 Löschen', onclick: async () => { if (!confirm('„' + a.name + '“ von diesem Gerät löschen?')) return; await SDAssets.loeschen(a.name); if (auswahl === a.name) { EXTRA.aufraeumen(); wegraeumen(); } reglerZeigen(); } }));
+        if (auswahl === a.name && EXTRA._anims && EXTRA._anims.length) { const az = el('div', { className: 'z' }); EXTRA._anims.forEach(g => az.append(el('button', { textContent: '▶ ' + g.name, onclick: () => { EXTRA._anims.forEach(x => x.stop()); g.start(true); } }))); e.append(az); }
+        liste.append(e); }
+      const p = await SDAssets.platz(); if (p) hinweis(box, 'Belegt: ' + (p.belegt / 1048576).toFixed(1) + ' MB · frei: ' + (p.frei / 1073741824).toFixed(1) + ' GB');
+    },
+    bauen() { if (!auswahl) { code('// Ein Modell auswählen oder importieren'); $('info').textContent = 'Meine Modelle'; } },
+  };
+})();
+</script>
+
 </body>
 </html>
