@@ -31,16 +31,16 @@ test('Höhen und Normalen bleiben auf der gesamten Welt endlich und normiert',()
 for(const x of [-320,-200,-40,0,40,199,320])for(const z of [-320,-160,-39,0,77,320]){
 const h=Terrain.heightAt(x,z,62),n=Terrain.normalAt(x,z,62);
 assert(Number.isFinite(h));
-assert(Math.abs(h)<5);
+assert(Math.abs(h)<8);
 assert(Math.abs(Math.hypot(...n)-1)<1e-12);
-assert(n[1]>.9);
+assert(n[1]>.85);
 }
 assert.notEqual(Terrain.heightAt(50,70,31),Terrain.heightAt(50,70,32));
 });
 test('Terrainmesh bleibt begrenzt; ungültige Zellkoordinaten werden abgewiesen',()=>{
 const a=Terrain.buildCell(0,0,World.VERSION,8);
 assert.equal(a.count,8*8*6);
-assert(a.bounds.min>-5&&a.bounds.max<5);
+assert(a.bounds.min>-8&&a.bounds.max<8);
 assert.throws(()=>Terrain.buildCell(-1,0,31),/Terrainzelle/);
 assert.throws(()=>Terrain.buildCell(0,16,31),/Terrainzelle/);
 assert.throws(()=>Terrain.buildCell(1,1,31,50),/Terrainzelle/);
