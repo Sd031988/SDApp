@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {estimateTextureAllocation,inspectPngDimensions} from '../world-v3-texture-budget.mjs';
+test('exact allocation and mip levels',()=>{assert.deepEqual(estimateTextureAllocation({width:4,height:2,mipmaps:true}),{width:4,height:2,channels:4,mipmaps:true,pixels:8,levels:3,estimatedBytes:44});});
+test('reject excessive dimensions, pixels, bytes',()=>{for(const o of [{width:16385,height:1},{width:16384,height:16384},{width:8192,height:8192,mipmaps:true}])assert.throws(()=>estimateTextureAllocation(o),RangeError);});
+test('reject malformed arguments',()=>{for(const o of [{width:0,height:1},{width:NaN,height:1},{width:1.2,height:2},{width:1,height:1,channels:5},{width:1,height:1,mipmaps:'yes'}])assert.throws(()=>estimateTextureAllocation(o));});
+const png=()=>{const b=new Uint8Array(33);b.set([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,4,0,0,0,2,0,8,6,0,0,0]);return b;};
+test('parse PNG IHDR and respect typed-array offsets',()=>{const b=png();const wrap=new Uint8Array(50);wrap.set(b,7);assert.deepEqual(inspectPngDimensions(wrap.subarray(7,40)),{width:1024,height:512,bitDepth:8,colorType:6});});
+test('reject truncated or malformed PNG IHDR',()=>{const b=png();for(const changed of [b.subarray(0,30),Uint8Array.from(b, (v,i)=>i===12?0:v),Uint8Array.from(b,(v,i)=>i===24?3:v)])assert.throws(()=>inspectPngDimensions(changed));});
+test('no mutation of source data',()=>{const b=png(),before=b.slice();inspectPngDimensions(b);assert.deepEqual(b,before);});
