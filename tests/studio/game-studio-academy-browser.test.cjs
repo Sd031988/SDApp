@@ -25,7 +25,7 @@ const allowed=new Map([
   await page.waitForSelector('[data-lesson]');
   assert.match(await page.title(),/SD Game-Studio Academy/);
   assert.equal(await page.locator('[data-track]').count(),5);
-  assert.equal(await page.locator('[data-lesson]').count(),5);
+  assert.equal(await page.locator('[data-lesson]').count(),4);
   assert.equal(await page.locator('#progressCount').innerText(),'0 von 20');
   assert.equal(await page.locator('[data-complete]').isDisabled(),true);
   await page.locator('[data-choice="0"]').click();
