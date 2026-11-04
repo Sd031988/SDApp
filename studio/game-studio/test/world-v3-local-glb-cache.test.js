@@ -3,7 +3,8 @@ const assert=require('node:assert/strict');
 const {createHash,webcrypto}=require('node:crypto');
 const {createCache,validRef,checkGLB}=require('../world-v3-local-glb-cache.js');
 function glb(){
-const json=Buffer.from('{"asset":{"version":"2.0"}}   ');
+const raw='{"asset":{"version":"2.0"}}';
+const json=Buffer.from(raw.padEnd(Math.ceil(raw.length/4)*4,' '));
 const data=Buffer.alloc(20+json.length);
 data.write('glTF',0);data.writeUInt32LE(2,4);data.writeUInt32LE(data.length,8);
 data.writeUInt32LE(json.length,12);data.write('JSON',16);json.copy(data,20);
