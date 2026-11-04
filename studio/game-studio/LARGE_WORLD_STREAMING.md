@@ -63,3 +63,7 @@ Zellen werden nach dem Verlassen des Bereichs aus dem Cache entfernt.
 Zellen-Deltas, Frustum-Culling und GPU-Instancing mit dokumentierter
 Performance-Messung. Die aktuelle Fassung beansprucht keine
 AAA-Performance.
+
+## Gelände seit der nächsten Engine-Stufe
+
+Zusätzlich kann die Großwelt pro aktiver Zelle eine fein unterteilte GPU-Geländekachel mit deterministischen, an Zellgrenzen nahtlosen Hügeln aufbauen. Entfernte Kacheln werden auf der Grafikkarte freigegeben. Der Generator verwendet den Welt-Seed; importierte und exportierte v3-Welten bleiben kompatibel. **Wichtig:** Dies ist reine Darstellung, keine gespeicherte Terrain-Höhenkarte, kein Kollisionsmesh und kein Ersatz für physikalisches Terrain-Streaming.
