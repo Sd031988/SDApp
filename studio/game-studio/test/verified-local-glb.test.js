@@ -5,7 +5,7 @@ const {webcrypto}=require('node:crypto');
 globalThis.crypto??=webcrypto;
 const glb=require('../verified-local-glb.js');
 function fixture(){
- const json=Buffer.from('{"asset":{"version":"2.0"}}  ','utf8');
+ const json=Buffer.from('{"asset":{"version":"2.0"}}     ','utf8');
  const buf=new ArrayBuffer(12+8+json.length),view=new DataView(buf);
  view.setUint32(0,0x46546c67,true);view.setUint32(4,2,true);view.setUint32(8,buf.byteLength,true);
  view.setUint32(12,json.length,true);view.setUint32(16,0x4e4f534a,true);
