@@ -258,7 +258,7 @@ function editorLaden() {
     const opt = u => lade(CM_BASE + u + '.min.js').catch(() => {});
     lade(CM_BASE + 'codemirror.min.css', true).then(() => lade(CM_BASE + 'codemirror.min.js'))
       // TOML and other modes depend on defineSimpleMode; load addon before parallel modes.
-      .then(() => lade(CM_BASE + 'addon/mode/simple.min.js'))
+      .then(() => lade(CM_BASE + 'addon/mode/simple.min.js').catch(() => {}))
       .then(() => Promise.all(['mode/clike/clike', 'mode/rust/rust', 'mode/go/go', 'mode/python/python', 'mode/javascript/javascript', 'mode/xml/xml', 'mode/css/css', 'mode/toml/toml', 'mode/shell/shell', 'mode/sql/sql', 'mode/markdown/markdown', 'mode/yaml/yaml',
         'addon/search/searchcursor', 'addon/dialog/dialog', 'addon/edit/matchbrackets', 'addon/edit/closebrackets', 'addon/selection/active-line', 'addon/comment/comment', 'addon/fold/foldcode', 'addon/hint/show-hint', 'addon/edit/matchtags', 'addon/display/placeholder'].map(opt)))
       .then(() => Promise.all(['mode/htmlmixed/htmlmixed', 'mode/jsx/jsx', 'mode/php/php', 'addon/search/search', 'addon/search/jump-to-line', 'addon/edit/closetag', 'addon/fold/foldgutter', 'addon/fold/brace-fold', 'addon/fold/indent-fold', 'addon/fold/xml-fold', 'addon/hint/anyword-hint', 'addon/hint/javascript-hint', 'addon/hint/css-hint', 'addon/hint/xml-hint', 'addon/hint/html-hint'].map(opt)))
@@ -1044,12 +1044,12 @@ function konsoleZeigen() { const box = $('konsoleAus'); if (!box) return; box.in
 function geraet(w) { $('frame').style.width = w; document.querySelectorAll('#geraete button').forEach(b => b.classList.toggle('an', b.dataset.w === w)); }
 
 /* ---------------- Programme über wandbox.org ---------------- */
-const WB = 'https://wandbox.org/api/', WB_STD = { cpp: 'gcc-13.2.0', c: 'gcc-13.2.0-c', csharp: 'mono-6.12.0.199', java: 'openjdk-jdk-22+36', rust: 'rust-1.82.0', go: 'go-1.23.2', python: 'cpython-3.12.7', node: 'nodejs-20.17.0', typescript: 'typescript-5.6.2' };
-const SPR = { cpp: 'C++', c: 'C', csharp: 'C#', java: 'Java', rust: 'Rust', go: 'Go', python: 'Python', node: 'JavaScript (Node.js)', typescript: 'TypeScript' };
+const WB = 'https://wandbox.org/api/', WB_STD = { cpp: 'gcc-13.2.0', c: 'gcc-13.2.0-c', csharp: 'mono-6.12.0.199', java: 'openjdk-jdk-22+36', rust: 'rust-1.82.0', go: 'go-1.23.2', python: 'cpython-3.12.7', node: 'nodejs-20.17.0', typescript: 'typescript-5.6.2', php: 'php-8.3.12', ruby: 'ruby-3.4.9', perl: 'perl-5.42.0', lua: 'lua-5.4.7', swift: 'swift-6.0.1', scala: 'scala-3.5.1', haskell: 'ghc-9.10.1', rlang: 'r-4.4.1', bash: 'bash', sql: 'sqlite-3.46.1', julia: 'julia-1.10.5' };
+const SPR = { cpp: 'C++', c: 'C', csharp: 'C#', java: 'Java', rust: 'Rust', go: 'Go', python: 'Python', node: 'JavaScript (Node.js)', typescript: 'TypeScript', php: 'PHP', ruby: 'Ruby', perl: 'Perl', lua: 'Lua', swift: 'Swift', scala: 'Scala', haskell: 'Haskell', rlang: 'R', bash: 'Bash', sql: 'SQL (SQLite)', julia: 'Julia', kotlin: 'Kotlin' };
 let wbListe = null, wbKette = Promise.resolve();
-function programmSprache(p) { const e = (p || '').split('.').pop().toLowerCase(); return { py: 'python', c: 'c', cc: 'cpp', cpp: 'cpp', cxx: 'cpp', cs: 'csharp', java: 'java', rs: 'rust', go: 'go' }[e] || null; }
+function programmSprache(p) { const e = (p || '').split('.').pop().toLowerCase(); return { py: 'python', c: 'c', cc: 'cpp', cpp: 'cpp', cxx: 'cpp', cs: 'csharp', java: 'java', rs: 'rust', go: 'go', php: 'php', rb: 'ruby', pl: 'perl', lua: 'lua', swift: 'swift', scala: 'scala', hs: 'haskell', r: 'rlang', sh: 'bash', sql: 'sql', jl: 'julia', kt: 'kotlin' }[e] || null; }
 async function wbCompiler(sp) { if (!wbListe) wbListe = fetch(WB + 'list.json').then(r => r.json()).catch(() => []); const l = await wbListe;
-  const regel = { cpp: x => x.language === 'C++' && /^gcc-\d/.test(x.name), c: x => x.language === 'C' && /^gcc-\d/.test(x.name), csharp: x => x.language === 'C#' && /^mono-/.test(x.name), java: x => x.language === 'Java' && /^openjdk-/.test(x.name), rust: x => x.language === 'Rust' && /^rust-\d/.test(x.name), go: x => x.language === 'Go' && /^go-\d/.test(x.name), python: x => x.language === 'Python' && /^cpython-3\.\d+\.\d+$/.test(x.name), node: x => x.language === 'JavaScript' && /^nodejs-\d/.test(x.name), typescript: x => x.language === 'TypeScript' && /^typescript-\d/.test(x.name) }[sp];
+  const regel = { cpp: x => x.language === 'C++' && /^gcc-\d/.test(x.name), c: x => x.language === 'C' && /^gcc-\d/.test(x.name), csharp: x => x.language === 'C#' && /^mono-/.test(x.name), java: x => x.language === 'Java' && /^openjdk-/.test(x.name), rust: x => x.language === 'Rust' && /^rust-\d/.test(x.name), go: x => x.language === 'Go' && /^go-\d/.test(x.name), python: x => x.language === 'Python' && /^cpython-3\.\d+\.\d+$/.test(x.name), node: x => x.language === 'JavaScript' && /^nodejs-\d/.test(x.name), typescript: x => x.language === 'TypeScript' && /^typescript-\d/.test(x.name), php: x => x.language === 'PHP' && /^php-\d/.test(x.name), ruby: x => x.language === 'Ruby' && /^ruby-3\.\d/.test(x.name), perl: x => x.language === 'Perl' && /^perl-\d/.test(x.name), lua: x => x.language === 'Lua' && /^lua-5\.4/.test(x.name), swift: x => x.language === 'Swift' && /^swift-\d/.test(x.name), scala: x => x.language === 'Scala' && /^scala-3/.test(x.name), haskell: x => x.language === 'Haskell' && /^ghc-\d/.test(x.name), rlang: x => x.language === 'R' && /^r-\d/.test(x.name), julia: x => x.language === 'Julia' && /^julia-\d/.test(x.name) }[sp];
   const f = Array.isArray(l) && regel ? l.find(regel) : null; return f ? f.name : WB_STD[sp]; }
 function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0; i < 4; i++) { const r = await fetch(WB + 'compile.json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const tx = await r.text();
     if (/^Error: Too many/i.test(tx) || r.status === 429) { await new Promise(ok => setTimeout(ok, 2500 * (i + 1))); continue; } try { return JSON.parse(tx); } catch (e) { throw new Error('Online-Compiler antwortet nicht richtig: ' + tx.slice(0, 120)); } }
@@ -1062,7 +1062,7 @@ async function programmStarten(spWahl) {
   if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
   const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)) || (sp === 'node' && /\.(m?js|cjs|json)$/.test(x) && !/^package(-lock)?\.json$/.test(x)) || (sp === 'typescript' && /\.ts$/.test(x)));
   let haupt = S.aktiv; const t = d[haupt];
-  const mainRe = { cpp: /\bint\s+main\s*\(/, c: /\bint\s+main\s*\(/, java: /static\s+void\s+main\s*\(/, csharp: /static\s+(async\s+)?\S+\s+Main\s*\(/, rust: /fn\s+main\s*\(/, go: /func\s+main\s*\(/, python: /./, node: /./, typescript: /./ }[sp];
+  const mainRe = { cpp: /\bint\s+main\s*\(/, c: /\bint\s+main\s*\(/, java: /static\s+void\s+main\s*\(/, csharp: /static\s+(async\s+)?\S+\s+Main\s*\(/, rust: /fn\s+main\s*\(/, go: /func\s+main\s*\(/, python: /./, node: /./, typescript: /./ }[sp] || /./;
   if (!mainRe.test(t)) haupt = alle.find(x => mainRe.test(d[x])) || haupt;
   const basis = haupt.includes('/') ? haupt.slice(0, haupt.lastIndexOf('/') + 1) : '';
   const neben = alle.filter(n => n !== haupt && n.startsWith(basis)).map(n => ({ file: n.slice(basis.length), code: d[n] }));
@@ -1751,7 +1751,12 @@ function einfuegenDialog(text) {
       vor.replaceChildren(); const msg=document.createElement('div'); msg.textContent='KI-Dateierkennung wird noch geladen. Bitte die Seite neu laden.';vor.appendChild(msg);
       $('efLos').disabled=true;return;
     }
-    if (parsed && (parsed.files.length || (/(?:```|~~~)/.test(ta.value) && parsed.errors.length))) {
+    // Anleitungen mit Ordnerbaum oder echten Dateinamen (z. B. „app/main.py“, „requirements.txt“) erkennt der genaue Parser besser:
+    // er übernimmt Struktur, Ordner und Namen. Der KI-Parser bleibt für reine KI-Antworten ohne Dateinamen.
+    const genau = anleitungParsen(ta.value), genauNamen = Object.keys(genau.dateien).filter(d => !/^code-\d+\.txt$/.test(d));
+    const kiNamen = new Set(((parsed && parsed.files) || []).map(f => String(f.path || f.name || f.datei || '')));
+    const genauBesser = (genau.baum && genau.baum.length) || genau.ordner.length || genauNamen.some(d => !kiNamen.has(d));
+    if (parsed && !genauBesser && (parsed.files.length || (/(?:```|~~~)/.test(ta.value) && parsed.errors.length))) {
       erg = {ki:parsed}; vor.replaceChildren();
       const h = (message, cls) => {const e=document.createElement('div');e.textContent=message;if(cls)e.className=cls;vor.appendChild(e);};
       h('✨ KI-Code erkannt: '+parsed.files.length+' Datei(en). Nur Code wird importiert.','erkannt');
@@ -1955,6 +1960,9 @@ function nurAufPc(sp, dateien) {
     const mods = new Set(alle.filter(([p]) => p.endsWith('.rs')).map(([p]) => p.split('/').pop().replace(/\.rs$/, '')));
     const f2 = fremd.filter(x => !mods.has(x)); if (f2.length || /\[dependencies\][^\[]*\w+\s*=/.test(cargo)) g.push('Rust-Crates: ' + (f2.join(', ') || 'aus Cargo.toml')); }
   if (sp === 'go') { const t = text(/\.go$/); const fremd = [...new Set([...t.matchAll(/"([\w-]+\.[\w.-]+\/[^"]+)"/g)].map(m => m[1]))]; if (fremd.length) g.push('Go-Module: ' + fremd.slice(0, 4).join(', ')); }
+  if (sp === 'php') { const t = text(/\.php$/); if (/\$_(GET|POST|FILES|SERVER|SESSION|COOKIE|REQUEST)\b|session_start\(|header\s*\(|<(html|body|form|div|h1|p)\b/i.test(t) || alle.some(([p]) => /\.html?$/.test(p))) g.push('einen Webserver (PHP-Webseite mit Formularen/Uploads)'); if (/mysqli|PDO\s*\(/.test(t)) g.push('eine Datenbank (MySQL/PDO)'); }
+  if (sp === 'ruby') { const t = text(/\.rb$/); if (/require\s+['"](sinatra|rails|gosu|ruby2d|tk)['"]/.test(t)) g.push('Ruby-Gems/Webserver (z. B. Sinatra, Rails)'); }
+  if (sp === 'kotlin') g.push('den Kotlin-Compiler (online nicht verfügbar)');
   if (sp === 'node' || sp === 'typescript') { const t = text(/\.(m?js|cjs|ts)$/);
     const fremd = [...new Set([...t.matchAll(/(?:require\(\s*|from\s+|import\s+)['"]([^'"./][^'"]*)['"]/g)].map(m => m[1].replace(/^node:/, '').split('/')[0]))].filter(x => !NODE_EINGEBAUT.has(x));
     if (fremd.length) g.push('npm-Pakete: ' + fremd.join(', ')); if (/\.listen\(|createServer\(/.test(t)) g.push('einen Server (läuft dauerhaft, braucht localhost)'); }
