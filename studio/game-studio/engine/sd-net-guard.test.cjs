@@ -1,0 +1,13 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {validateSnapshot,acceptNewer}=require('./sd-net-guard.js');
+const player=(id='p1')=>({id,p:[10,1,-3],g:0,l:100});
+test('accepts bounded snapshots and freezes a detached copy',()=>{const p=player();const s=validateSnapshot({tick:1,players:[p]});p.p[0]=900;assert.equal(s.players[0].p[0],10);assert.ok(Object.isFrozen(s.players));assert.ok(Object.isFrozen(s.players[0]));});
+test('empty snapshot valid, including current unsequenced protocol',()=>{assert.equal(validateSnapshot({tick:0,players:[]}).players.length,0);assert.equal(validateSnapshot({players:[]}).tick,null);});
+test('rejects malformed records and prototype-bearing input',()=>{for(const x of [null,[],Object.create(null),{tick:0,players:{}}])assert.throws(()=>validateSnapshot(x));});
+test('rejects invalid and duplicate ids',()=>{for(const id of ['__proto__','bad/id','', 'a'.repeat(65)])assert.throws(()=>validateSnapshot({tick:0,players:[player(id)]}));assert.throws(()=>validateSnapshot({tick:0,players:[player(),player()]}));});
+test('rejects out of bounds and non-finite coordinates',()=>{for(const x of [321,NaN,Infinity,'3'])assert.throws(()=>validateSnapshot({tick:0,players:[{...player(),p:[x,1,-3]}]}));});
+test('enforces eight-player cap and configuration budget',()=>{assert.throws(()=>validateSnapshot({tick:0,players:Array.from({length:9},(_,i)=>player('p'+i))}));assert.throws(()=>validateSnapshot({tick:0,players:[player()]},{maxPlayers:0}));});
+test('rejects bad health yaw and tick',()=>{for(const field of [{l:101},{g:Infinity}])assert.throws(()=>validateSnapshot({tick:0,players:[{...player(),...field}]}));assert.throws(()=>validateSnapshot({tick:-1,players:[]}));});
+test('acceptNewer filters stale and duplicate ticks',()=>{const s=validateSnapshot({tick:8,players:[]});assert.equal(acceptNewer(s,7),true);assert.equal(acceptNewer(s,8),false);assert.equal(acceptNewer(s,9),false);assert.throws(()=>acceptNewer(s,NaN));});
