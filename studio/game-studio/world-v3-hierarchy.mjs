@@ -23,16 +23,27 @@ export function validateSceneHierarchy(input, {maxNodes = MAX_NODES} = {}) {
     if (Math.hypot(...r) < 1e-12) throw new RangeError('zero quaternion');
     nodes.set(id, Object.freeze({id, parentId, translation:t, rotation:r, scale:s}));
   }
+  // Iterative depth-first traversal avoids stack overflow for 8,192-node chains.
   const order = [], state = new Map();
-  function visit(id) {
-    if (state.get(id) === 1) throw new RangeError('hierarchy cycle');
-    if (state.get(id) === 2) return;
-    const node = nodes.get(id);
-    if (!node) throw new RangeError('missing parent');
-    state.set(id,1);
-    if (node.parentId !== null) visit(node.parentId);
-    state.set(id,2); order.push(node);
+  for (const id of nodes.keys()) {
+    if (state.get(id) === 2) continue;
+    const stack = [{id, exit:false}];
+    while (stack.length) {
+      const frame = stack.pop();
+      if (frame.exit) {
+        state.set(frame.id, 2);
+        order.push(nodes.get(frame.id));
+        continue;
+      }
+      const status = state.get(frame.id);
+      if (status === 2) continue;
+      if (status === 1) throw new RangeError('hierarchy cycle');
+      const node = nodes.get(frame.id);
+      if (!node) throw new RangeError('missing parent');
+      state.set(frame.id, 1);
+      stack.push({id:frame.id, exit:true});
+      if (node.parentId !== null) stack.push({id:node.parentId, exit:false});
+    }
   }
-  for (const id of nodes.keys()) visit(id);
   return Object.freeze({version:1, nodes:Object.freeze(order), roots:Object.freeze(order.filter(n=>n.parentId===null).map(n=>n.id))});
 }
