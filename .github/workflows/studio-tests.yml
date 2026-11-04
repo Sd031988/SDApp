@@ -41,6 +41,7 @@ jobs:
           node --check studio/image-assets.js
           node --check studio/game-studio/scene-core.js
           node --check studio/game-studio/game.js
+          node --check tests/studio/vanguard-last-zone-browser.test.cjs
           node --check studio/game-studio/demos/vanguard/game.js
           node --check studio/game-studio/demos/vanguard/mission-core.js
           node --check studio/game-studio/demos/vanguard/browser-smoke.cjs
@@ -90,6 +91,7 @@ jobs:
           node tests/studio/game-studio-academy-browser.test.cjs
           node tests/studio/game-studio-academy-projects-browser.test.cjs
           node tests/studio/game-studio-godot-export-browser.test.cjs
+          node tests/studio/vanguard-last-zone-browser.test.cjs
           node tests/studio/game-studio-vanguard-eclipse-browser.test.cjs
           node studio/game-studio/demos/vanguard/browser-smoke.cjs
 
