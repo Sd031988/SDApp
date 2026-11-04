@@ -1,7 +1,7 @@
 /* SD Game-Studio Academy: standalone lessons. No access to scene or asset storage. */
 (() => {
 'use strict';
-const EDITOR='../index.html',WORLD='../large-world.html';
+const EDITOR='../index.html',WORLD='../large-world.html',JXL='../../jpeg-xl.html';
 const tracks=[
 {id:'start',name:'01 · Einstieg',subtitle:'Orientieren & erste Szene',lessons:[
 {id:'welcome',name:'Den Editor verstehen',minutes:8,summary:'Lerne den Aufbau von Werkzeugleiste, 3D-Ansicht und Inspector kennen.',goal:'Du findest die wichtigsten Arbeitsbereiche und weißt, wann du den Bearbeitungsmodus verwendest.',steps:[
@@ -107,6 +107,32 @@ quiz:['Wo änderst du die Position eines ausgewählten Objekts?',['Im Scene Outl
 'Trenne vorhandene Funktionen von zukünftiger Technik: Multiplayer-Networking, Physiksimulation, umfassendes Asset-Streaming und Produktions-Export sind noch nicht als fertige Funktionen vorhanden.',
 'Plane danach die Architektur: Szenenverwaltung, Eingabe, Rendering, Persistenz, Tests, Profiling und später eventuell Server-Synchronisation.'
 ],tasks:['Schreibe eine Spielidee mit einem klaren Kernspielprinzip auf.','Definiere drei messbare Abnahmekriterien für einen Vertical Slice.','Markiere benötigte Funktionen, die im aktuellen SD Game-Studio noch fehlen.'],quiz:['Welche Vorgehensweise minimiert Risiken bei einem großen Spielprojekt?',['Sofort eine riesige Welt ohne Tests bauen','Erst einen spielbaren, testbaren Vertical Slice erstellen','Nicht benötigte Assets immer laden','Multiplayer als vorhanden voraussetzen'],1,'Ein klar begrenzter Vertical Slice prüft Gameplay und technische Grundlagen, bevor der Umfang wächst.']}
+]},
+{id:'jxl',name:'05 · JPEG XL',subtitle:'Bildqualität & Asset-Pipelines',lessons:[
+{id:'jxl-basics',name:'JPEG XL verstehen',minutes:14,mode:'jxl',summary:'Lerne, wofür das Bildformat JXL geeignet ist und wie es sich von anderen Formaten unterscheidet.',goal:'Du kannst das richtige Bildformat für Spielgrafiken begründet auswählen.',steps:[
+'JPEG XL (.jxl, MIME-Typ image/jxl) ist ein Bildformat mit verlustfreier und verlustbehafteter Komprimierung. Es unterstützt Transparenz, hohe Farbtiefen und HDR.',
+'Vergleiche: JPEG ist weit verbreitet, kann aber keine Transparenz speichern; PNG eignet sich für verlustfreie Grafiken; WebP und AVIF sind moderne Webformate.',
+'Bei JPEG-Bildern kann JPEG XL die Original-JPEG-Daten in einer speziellen verlustfreien Umwandlung erhalten. Das bedeutet nicht, dass jedes JXL-Bild automatisch verlustfrei ist.',
+'Plane zwei Fassungen, wenn nötig: eine hochwertige Quelldatei für die Bearbeitung und ein passendes Auslieferungsformat für Web oder Game-Engine.'
+],tasks:['Erkläre den Unterschied zwischen verlustfreier und verlustbehafteter Komprimierung.','Ordne JPEG, PNG und JXL je einen geeigneten Einsatzzweck zu.','Wähle ein eigenes Bild aus und begründe, ob JXL als Archiv- oder Quellformat sinnvoll wäre.'],quiz:['Welche Aussage über JPEG XL stimmt?',['JXL kann nur Fotos ohne Transparenz speichern','JXL unterstützt verlustfreie und verlustbehaftete Komprimierung','JXL ist ein 3D-Modellformat','JXL wird von jeder Game-GPU direkt verarbeitet'],1,'JXL ist ein flexibles Bildformat, aber keine automatisch GPU-fertige Textur.']},
+{id:'jxl-convert',name:'JXL konvertieren & vergleichen',minutes:20,mode:'jxl',summary:'Erzeuge mit libjxl eigene Dateien und prüfe visuelle Qualität sowie Dateigröße.',goal:'Du kannst JXL lokal erzeugen, wieder dekodieren und die Ergebnisse kontrollieren.',steps:[
+'Installiere die offiziellen libjxl-Werkzeuge cjxl und djxl für dein Betriebssystem. Lade sie nur aus vertrauenswürdigen Quellen und bewahre deine Originaldateien auf.',
+'Öffne ein Terminal im Ordner einer eigenen PNG-Datei. Beispiel: cjxl input.png output.jxl. Für mathematisch verlustfreie PNG-Konvertierung: cjxl -d 0 input.png lossless.jxl.',
+'Prüfe die Rückwandlung: djxl output.jxl kontrolle.png. Vergleiche Dateigröße, Bilddetails, Farbdarstellung und Transparenz; überprüfe auch einen verlustfreien Versuch.',
+'Für ein bestehendes JPEG bietet cjxl input.jpg output.jxl standardmäßig eine rekonstruierbare, verlustfreie JPEG-Transkodierung. Teste die Rückgewinnung mit djxl output.jxl rekonstruiert.jpg.'
+],tasks:['Führe eine JXL-Konvertierung mit einer eigenen Testgrafik durch.','Dekodiere die Datei mit djxl und prüfe ihr Aussehen.','Notiere Größen und Qualitätsunterschiede sowie die gewählten Einstellungen.'],quiz:['Welcher Befehl dekodiert eine JPEG-XL-Datei in eine PNG-Datei?',['cjxl bild.png bild.jxl','djxl bild.jxl bild.png','ktx2 bild.jxl bild.png','git clone bild.jxl'],1,'djxl ist das Decoder-Werkzeug der libjxl-Referenzimplementierung.']},
+{id:'jxl-web',name:'Fallbacks im Web einsetzen',minutes:17,mode:'jxl',summary:'Binde JXL in Webgrafiken ein und halte sie auch für Browser ohne JXL-Unterstützung sichtbar.',goal:'Du verwendest JPEG XL mit einem zuverlässigen Ersatzbild und kennst die Grenzen des vorhandenen Werkzeugs.',steps:[
+'Öffne das vorhandene „JPEG XL Bild-Assets“-Werkzeug im SD Code-Studio. Es erstellt HTML-Code für bereits vorhandene Dateien, konvertiert jedoch selbst keine Bilder.',
+'Bereite dieselbe Grafik einmal als .jxl und einmal als .jpg oder .png vor. Optional kannst du auch .webp oder .avif hinzufügen.',
+'Wähle die Dateien im Werkzeug aus und kopiere den erzeugten picture-Code. Der Browser wählt eine unterstützte Quelle; das img-Element bleibt der Fallback.',
+'Teste die Vorschau in mindestens zwei Browsern beziehungsweise Browser-Versionen und kontrolliere, ob Bildabmessung und Alternativtext stimmen. Die Geräteunterstützung kann variieren.'
+],tasks:['Öffne das JPEG-XL-Bildwerkzeug und finde die Dateiauswahl.','Erzeuge für ein eigenes Bild picture-HTML mit JPEG- oder PNG-Fallback.','Überprüfe, dass die Seite auch ohne native JXL-Unterstützung ein Bild anzeigen kann.'],quiz:['Wie bietest du im Web eine Ersatzgrafik an, wenn JXL nicht unterstützt wird?',['Nur eine .jxl-Datei hochladen','Ein picture-Element mit JXL-Quelle und img-Fallback nutzen','JXL als JavaScript umbenennen','Den Fallback vollständig entfernen'],1,'picture mit source type="image/jxl" und einem img-Ersatzbild ermöglicht kompatible Darstellung.']},
+{id:'jxl-gpu',name:'JXL und professionelle Game-Texturen',minutes:19,mode:'jxl',summary:'Unterscheide Quellbilder, Webgrafiken und GPU-komprimierte Laufzeittexturen.',goal:'Du entwirfst eine realistische Asset-Pipeline für größere 3D-Spiele.',steps:[
+'Nutze JXL bei Bedarf für Archivierung, hochwertige Quellbilder oder Webgrafiken. Das aktuelle SD Game-Studio bietet noch keinen eigenen JXL-Decoder für 3D-Materialien.',
+'Für Echtzeit-3D sind GPU-Texturformate wichtig: KTX2 kann mit Basis Universal ETC1S oder UASTC ausgeliefert und passend zur Ziel-GPU transkodiert werden.',
+'Skizziere die Verarbeitung: Originalgrafik → Qualitätsprüfung → JXL als optionale Archiv-/Webfassung → KTX2 oder ein anderes von der Engine unterstütztes Laufzeitformat.',
+'Miss mehrere reale Testassets: Dateigröße auf Datenträger, Ladezeit, Speicherverbrauch, sichtbare Qualität und Unterstützung auf PC und Mobilgerät. Ein kleineres JXL bedeutet nicht automatisch weniger GPU-Speicher.'
+],tasks:['Zeichne eine Asset-Pipeline für eine 3D-Umgebung mit PC- und Mobilziel.','Erkläre, warum JXL keine direkte Alternative zu GPU-Komprimierung ist.','Lege drei messbare Kriterien für einen fairen Formatvergleich fest.'],quiz:['Welches Format ist besonders für GPU-komprimierte 3D-Texturen vorgesehen?',['TXT','JXL als GPU-Bitstream','KTX2 mit Basis Universal','CSV'],2,'KTX2 mit Basis Universal ist ein etablierter Weg, Texturen in geeignete GPU-Formate zu transkodieren.']}
 ]}
 ];
 const flat=tracks.flatMap(t=>t.lessons);
@@ -142,7 +168,7 @@ function renderLessons(){
  }).join('');
 }
 function renderLesson(){
- const l=current(),t=tracks[trackIndex],ans=Object.hasOwn(state.quiz,l.id)?Number(state.quiz[l.id]):-1,done=completed(l.id),mode=l.mode==='world';
+ const l=current(),t=tracks[trackIndex],ans=Object.hasOwn(state.quiz,l.id)?Number(state.quiz[l.id]):-1,done=completed(l.id),mode=l.mode==='world',isJxl=l.mode==='jxl';
  $('lessonPosition').textContent='KURS '+String(trackIndex+1).padStart(2,'0')+' / LEKTION '+String(lessonIndex+1).padStart(2,'0');
  const steps=l.steps.map(s=>'<li>'+esc(s)+'</li>').join('');
  const tasks=l.tasks.map((s,i)=>'<label class="practice-check"><input type="checkbox" data-task="'+i+'" '+(taskDone(l,i)?'checked':'')+'><span>'+esc(s)+'</span></label>').join('');
@@ -152,12 +178,12 @@ function renderLesson(){
  return '<button type="button" class="answer'+mark+'" data-choice="'+i+'" aria-pressed="'+(ans===i)+'">'+String.fromCharCode(65+i)+'. '+esc(option)+'</button>';
  }).join('');
  const feedback=ans===-1?'Wähle eine Antwort, um eine Erklärung zu erhalten.':ans===l.quiz[2]?'✓ Richtig. '+l.quiz[3]:'Noch nicht richtig. Versuche es erneut und prüfe die Arbeitsschritte.';
- $('lessonBody').innerHTML='<div class="lesson-kicker">'+esc(t.name)+' · '+(mode?'GROSSWELT':'LEVEL-EDITOR')+'</div>'+
+ $('lessonBody').innerHTML='<div class="lesson-kicker">'+esc(t.name)+' · '+(mode?'GROSSWELT':isJxl?'BILD-ASSETS':'LEVEL-EDITOR')+'</div>'+
  '<h2>'+esc(l.name)+'</h2><p class="lesson-lead">'+esc(l.summary)+'</p>'+
  '<div class="lesson-info"><span>⏱ '+l.minutes+' Minuten (Richtwert)</span><span>Mit praktischer Aufgabe</span><span>Wissenscheck</span></div>'+
  '<div class="goal"><strong>DEIN LERNZIEL</strong><p>'+esc(l.goal)+'</p></div>'+
  '<h3>So gehst du vor</h3><ol class="steps">'+steps+'</ol>'+
- '<div class="action-callout"><div><strong>Direkt in der Software ausprobieren</strong><p>Die Lernseite bleibt getrennt von deinen Spielprojekten.</p></div><a href="'+(mode?WORLD:EDITOR)+'" target="_blank" rel="noopener"> '+(mode?'Großwelt öffnen':'Level-Editor öffnen')+' ↗</a></div>'+
+ '<div class="action-callout"><div><strong>Direkt in der Software ausprobieren</strong><p>Die Lernseite bleibt getrennt von deinen Spielprojekten.</p></div><a href="'+(mode?WORLD:isJxl?JXL:EDITOR)+'" target="_blank" rel="noopener"> '+(mode?'Großwelt öffnen':isJxl?'JXL-Bildwerkzeug öffnen':'Level-Editor öffnen')+' ↗</a></div>'+
  '<section class="practice" aria-label="Praxisaufgaben"><h3>Deine Praxis-Checkliste</h3><p class="practice-intro">Setze jeden Punkt im Studio um und hake ihn danach selbst ab.</p><div class="practice-list">'+tasks+'</div></section>'+
  '<section class="quiz" aria-label="Wissenscheck"><span class="quiz-label">WISSENSCHECK</span><strong>'+esc(l.quiz[0])+'</strong><div class="answers">'+choices+'</div><div class="quiz-feedback '+(ans!==-1&&ans!==l.quiz[2]?'error':'')+'" role="status">'+esc(feedback)+'</div></section>'+
  '<div class="complete-wrap"><button type="button" class="complete-button" data-complete '+(!allowed(l)||done?'disabled':'')+'>'+(done?'✓ Lektion abgeschlossen':'Lektion abschließen')+'</button><span class="complete-help">'+(done?'Dein Fortschritt ist auf diesem Gerät hinterlegt.':allowed(l)?'Alle Aufgaben erledigt. Du kannst die Lektion abschließen.':'Schließe alle Praxisaufgaben und den Wissenscheck ab.')+'</span>'+(done?'<span class="complete-badge">✓ ERLEDIGT</span>':'')+'</div>';
