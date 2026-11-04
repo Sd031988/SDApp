@@ -42,6 +42,7 @@ jobs:
           node --check studio/game-studio/scene-core.js
           node --check studio/game-studio/game.js
           node --check tests/studio/vanguard-last-zone-browser.test.cjs
+          node --check tests/studio/frontier-graphics-browser.test.cjs
           node --check studio/game-studio/demos/vanguard/game.js
           node --check studio/game-studio/demos/vanguard/mission-core.js
           node --check studio/game-studio/demos/vanguard/browser-smoke.cjs
@@ -87,6 +88,7 @@ jobs:
           node tests/studio/devtools-browser.test.cjs
           node tests/studio/image-assets-browser.test.cjs
           node tests/studio/game-studio-browser.test.cjs
+          node tests/studio/frontier-graphics-browser.test.cjs
           node tests/studio/game-studio-large-world-browser.test.cjs
           node tests/studio/game-studio-academy-browser.test.cjs
           node tests/studio/game-studio-academy-projects-browser.test.cjs

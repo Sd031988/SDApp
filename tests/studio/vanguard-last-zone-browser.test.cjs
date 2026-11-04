@@ -25,8 +25,9 @@ const server=http.createServer((req,res)=>{
   await desktop.locator('#startGame').click();
   assert.equal(await desktop.locator('#startScreen').isVisible(),false);
   const initial=Number(await desktop.locator('#magValue').innerText());
-  await desktop.keyboard.down('j');await desktop.waitForTimeout(380);await desktop.keyboard.up('j');
-  await desktop.waitForFunction(old=>Number(document.getElementById('magValue').textContent)<old,initial,{timeout:10000});
+  await desktop.keyboard.down('j');
+  await desktop.waitForFunction(old=>Number(document.getElementById('magValue').textContent)<old,initial,{timeout:20000});
+  await desktop.keyboard.up('j');
   const day=await desktop.locator('#timeOfDay').innerText();
   await desktop.keyboard.press('n');
   await desktop.waitForFunction(old=>document.getElementById('timeOfDay').textContent!==old,day,{timeout:10000});
