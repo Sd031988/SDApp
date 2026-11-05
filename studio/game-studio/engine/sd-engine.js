@@ -531,20 +531,22 @@
       const farbenSatz = ['#6b3a3a', '#5a4a2e', '#3a4f6b', '#4a3a5f', '#5f5f3a'];
       const stile = ['kampf', 'kampf', 'spaeher', 'schwer'], lacke = ['#d9dde2', '#c9b48a', '#9aa7b4', '#6b7a5a', '#b04a3a'];
       const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b', modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung, aussehen: o.aussehen, roboter: Object.assign({ stil: stile[bots.length % 4], farbe: lacke[bots.length % 5], augen: '#ff3b30' }, o.roboter || {}) });
-      const b = { id, cc, k, name: o.name || ('Bot ' + (bots.length + 1)), leben: o.leben || 100, staerke: st, waffe: WAFFEN[o.waffe || (bots.length % 3 === 0 ? 'schrotflinte' : 'gewehr')], ziel: null, warte: 0, letzterSchuss: 0, sieht: 0, alarm: 0, zustand: { luft: 0 }, richtung: Math.random() * 6.28, heimat: p.clone(), seitwaerts: Math.random() < 0.5 ? 1 : -1, wechsel: 0 };
+      const b = { id, cc, k, name: o.name || ('Bot ' + (bots.length + 1)), leben: o.leben || 100, staerke: st, waffe: WAFFEN[o.waffe || (bots.length % 3 === 0 ? 'schrotflinte' : 'gewehr')], ziel: null, warte: 0, letzterSchuss: 0, sieht: 0, alarm: 0, zustand: { luft: 0 }, richtung: Math.random() * 6.28, heimat: p.clone(), seitwaerts: Math.random() < 0.5 ? 1 : -1, wechsel: 0, nebenfigur: !!o.nebenfigur };
       bots.push(b); return b;
     }
+    /** Figur still entfernen (z. B. Polizei, die aufgibt) – zählt nicht als Abschuss */
+    function botEntfernen(b) { if (b.weg) return; b.weg = true; b.tot = true; try { b.cc.dispose && b.cc.dispose(); } catch (e) { /* schon weg */ } b.k.dispose(false, true); }
     function botTot(b) {
       b.tot = true; spieler && spieler.kills++; ton('tot', 0.5); meldung('☠ ' + b.name + ' ausgeschaltet');
       const pos = b.cc.getPosition(); b.cc.dispose && b.cc.dispose();
       b.k.getChildMeshes().forEach(m => { m.isPickable = false; });
-      if (b.k.sterben && b.k.sterben()) { if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true }); if (bots.every(x => x.tot)) ende(true, 'Alle Gegner ausgeschaltet'); return; }
+      if (b.k.sterben && b.k.sterben()) { if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true }); if (bots.some(x => !x.nebenfigur) && bots.every(x => x.tot || x.nebenfigur)) ende(true, 'Alle Gegner ausgeschaltet'); return; }
       // umfallen mit Physik
       const huelle = BAB.MeshBuilder.CreateBox('leiche', { width: 0.6, height: 1.8, depth: 0.4 }, szene); huelle.isVisible = false; huelle.isPickable = false; huelle.position = pos.clone(); huelle.rotation.y = b.k.rotation.y;
       b.k.position = V(0, -0.9, 0); b.k.rotation.y = 0; b.k.parent = huelle; b.k.getChildMeshes().forEach(m => { m.isPickable = false; });
       const agg = new BAB.PhysicsAggregate(huelle, BAB.PhysicsShapeType.BOX, { mass: 70, friction: 0.9 }, szene); agg.body.applyImpulse(kamera.getForwardRay(1).direction.scale(120).add(V(0, 30, 0)), pos.add(V(0, 0.7, 0)));
       if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true });
-      if (bots.every(x => x.tot)) ende(true, 'Alle Gegner ausgeschaltet');
+      if (bots.some(x => !x.nebenfigur) && bots.every(x => x.tot || x.nebenfigur)) ende(true, 'Alle Gegner ausgeschaltet');
     }
     const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.duckt ? spieler.cc.getPosition().add(V(0, -0.6, 0)) : spieler.cc.getPosition());   // geduckt: hinter niedrigen Mauern unsichtbar für Gegner
     function sichtfrei(von, zu, ignoriere) { const d = zu.subtract(von), l = d.length(); const t = strahl(von, d.normalize(), l, ignoriere); return !t || !t.hit || t.distance > l - 0.7 || !!(ctx && ctx.uebernahme && t.pickedMesh.metadata && t.pickedMesh.metadata.fahrzeug && t.pickedMesh.metadata.fahrzeug === ctx.uebernahme.fahrzeugId); }
@@ -723,7 +725,7 @@
       vektor: V, farbe,
     };
     /* ---------- Module (Fahrzeuge, Stadt, Menschen, KI, Wetter …) ---------- */
-    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, bus, audioKontext: () => audioKontext(), eigene, wackeln, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
+    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, bus, audioKontext: () => audioKontext(), eigene, wackeln, botEntfernen, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
       get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null, aufraeumen: [] };
     (window.SDModule || []).forEach(m => { try { const r = m(ctx) || {}; Object.defineProperties(sd, Object.getOwnPropertyDescriptors(r.api || {})); if (r.update) modulUpdates.push(r.update); } catch (e) { console.error('Modul-Fehler', e); } });
     const aufraeumen = () => {

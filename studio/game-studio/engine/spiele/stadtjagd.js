@@ -37,6 +37,7 @@ for (let i = 0; i < 6; i++) {
 sd.motorrad({ pos: [netz.knoten[0][0] + 4.8, null, netz.knoten[0][1] + 8], farbe: '#d23a1a' });
 sd.flugzeug({ pos: [178, null, -185], drehung: 0 });
 
+sd.fahndung();   // Schüsse in der Stadt rufen die Polizei (★), 25 s versteckt = Sterne weg
 sd.musik('auto');   // ruhige Musik, bei Schüssen Action
 // 5) Die Gang im nordöstlichen Block (Menschen mit Schutzweste und Gewehr)
 const gangBlock = netz.bloecke[netz.bloecke.length - 1];
