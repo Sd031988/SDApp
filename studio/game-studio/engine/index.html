@@ -171,7 +171,7 @@ body.handy .unten{bottom:180px}
 <script src="./sd-klang.js?v=1"></script>
 <script src="./sd-szene.js?v=2"></script>
 <script src="./sd-veroeffentlichen.js?v=3"></script>
-<script src="./sd-engine.js?v=10"></script>
+<script src="./sd-engine.js?v=11"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -269,7 +269,7 @@ $('edApi').onclick = () => { $('api').hidden = !$('api').hidden; };
 $('edOriginal').onclick = async () => { if (!confirm('Deine Änderungen verwerfen und das Original-Skript laden?')) return; await skriptHolen(); $('code').value = original; try { localStorage.removeItem(SPEICHER); } catch (e) { /* egal */ } };
 $('edDatei').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('code').value], { type: 'text/javascript' })); a.download = SPIEL + '.sd.js'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 $('code').addEventListener('keydown', e => { if (e.key === 'Tab') { e.preventDefault(); const t = e.target, s = t.selectionStart; t.setRangeText('  ', s, t.selectionEnd, 'end'); } if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); $('edStart').click(); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && $('ende').hidden && $('editor').hidden && (handy || /[?&]test/.test(location.search))) { pausiert = !pausiert; $('pause').hidden = !pausiert; } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && laeuft && $('ende').hidden && $('editor').hidden && (handy || e.sdController || /[?&]test/.test(location.search))) { pausiert = !pausiert; $('pause').hidden = !pausiert; } });
 
 /*SD-TOUCH-START*/
 // Touch-Steuerung (Handy/Tablet)

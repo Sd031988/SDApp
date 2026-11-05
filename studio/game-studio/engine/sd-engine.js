@@ -445,6 +445,22 @@
     const cm = e => { if (e.target === canvas) e.preventDefault(); };
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); document.addEventListener('mousemove', mm); document.addEventListener('mousedown', md); document.addEventListener('mouseup', mu); document.addEventListener('pointerlockchange', pl); document.addEventListener('contextmenu', cm);
     const touch = { bewegen: [0, 0], schauen: [0, 0] };
+    /* ---------- 🎮 Controller (Xbox/PlayStation, Standard-Belegung) ----------
+       Linker Stick laufen/lenken · Rechter Stick schauen · RT schießen/Gas · LT zielen/Bremse · A springen · B ducken · X nachladen · Y einsteigen
+       LB Granate · RB Waffe wechseln · L3 sprinten · R3 Nahkampf · Steuerkreuz ↑ Medikit, ↓ benutzen, ← Missionen · Start Pause · Select Punkte */
+    const PAD_TASTEN = { 0: 'Space', 1: 'C', 2: 'R', 3: 'F', 4: 'G', 8: 'Tab', 9: 'Escape', 10: 'ShiftLeft', 11: 'V', 12: 'H', 13: 'E', 14: 'J' }, padAlt = {}; let padAktiv = false;
+    const tasteSenden = (code, an) => { const ev = new KeyboardEvent(an ? 'keydown' : 'keyup', { code: code.length === 1 ? 'Key' + code : code, key: code === 'Escape' ? 'Escape' : code, bubbles: true }); ev.sdController = true; document.dispatchEvent(ev); };
+    function controller() {
+      const pads = navigator.getGamepads ? navigator.getGamepads() : []; const g = [...pads].find(x => x && x.connected); if (!g) { if (padAktiv) { padAktiv = false; touch.bewegen = [0, 0]; touch.schauen = [0, 0]; } return; }
+      if (!padAktiv) { padAktiv = true; nachricht('🎮 Controller verbunden', 3); }
+      const tz = v => Math.abs(v) < 0.15 ? 0 : (v - Math.sign(v) * 0.15) / 0.85, ax = g.axes, knopf = i => !!(g.buttons[i] && (g.buttons[i].pressed || g.buttons[i].value > 0.4)), wert = i => (g.buttons[i] ? g.buttons[i].value : 0);
+      const faehrt = ctx && ctx.uebernahme, flug = faehrt && ctx.sd.fahrzeug && ctx.sd.fahrzeug.art === 'flugzeug', rt = wert(7), lt = wert(6);
+      touch.bewegen = [tz(ax[0] || 0), faehrt && !flug ? rt - lt : -tz(ax[1] || 0)]; touch.schauen = [tz(ax[2] || 0) * 1.4, tz(ax[3] || 0) * 1.4];
+      if (flug) { touch.sprint = rt > 0.2; tasten.C = lt > 0.2; }
+      else if (!faehrt) { const feuer = rt > 0.4; if (feuer && !padAlt.feuer) { maus.links = true; maus.klick = true; } if (!feuer && padAlt.feuer) maus.links = false; padAlt.feuer = feuer; maus.rechts = lt > 0.4; }
+      for (const [i, code] of Object.entries(PAD_TASTEN)) { const an = knopf(+i); if (an !== !!padAlt[i]) { padAlt[i] = an; if (!(flug && code === 'C')) tasteSenden(code, an); } }
+      const rb = knopf(5); if (rb && !padAlt.rb && spieler && spieler.waffen.length > 1) waffeWechseln((spieler.aktiv + 1) % spieler.waffen.length); padAlt.rb = rb;
+    }
 
     /* ---------- Spieler ---------- */
     let spieler = null, ctx = null; const bots = [], kisten = [], frameFns = [], skripte = [], modulUpdates = [];
@@ -530,7 +546,7 @@
       if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true });
       if (bots.every(x => x.tot)) ende(true, 'Alle Gegner ausgeschaltet');
     }
-    const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.cc.getPosition());
+    const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.duckt ? spieler.cc.getPosition().add(V(0, -0.6, 0)) : spieler.cc.getPosition());   // geduckt: hinter niedrigen Mauern unsichtbar für Gegner
     function sichtfrei(von, zu, ignoriere) { const d = zu.subtract(von), l = d.length(); const t = strahl(von, d.normalize(), l, ignoriere); return !t || !t.hit || t.distance > l - 0.7 || !!(ctx && ctx.uebernahme && t.pickedMesh.metadata && t.pickedMesh.metadata.fahrzeug && t.pickedMesh.metadata.fahrzeug === ctx.uebernahme.fahrzeugId); }
     function botUpdate(b, dt) {
       if (b.tot) return; if (b.leben <= 0) { botTot(b); return; } const pos = b.cc.getPosition(); let wunsch = V(0, 0, 0), tempo = 0;
@@ -603,7 +619,7 @@
       const empf = opt.empfindlichkeit || 0.0022, z = maus.rechts ? (spieler.waffen[spieler.aktiv]?.def.zoom || 0.55) : 1;
       spieler.gier += (maus.dx * empf + touch.schauen[0] * dt * 2.2) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf + touch.schauen[1] * dt * 1.6) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
       spieler.rueckstoss *= Math.pow(0.001, dt);
-      const kopf = spieler.cc.getPosition().add(V(0, 0.65, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
+      const kopf = spieler.cc.getPosition().add(V(0, 0.65 - (spieler.duckWert || 0) * 0.55, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
       const rechts = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier)); const zoomt = maus.rechts; const abst = zoomt ? 1.8 : 4.2, schulter = zoomt ? 0.55 : 0.75;
       const drehpunkt = kopf.add(rechts.scale(schulter)); let wunsch = drehpunkt.subtract(fv.scale(abst));
       const t = strahl(drehpunkt, wunsch.subtract(drehpunkt).normalize(), abst + 0.3, 'spieler'); let ist = abst; if (t && t.hit) ist = Math.max(0.4, t.distance - 0.3);
@@ -618,6 +634,7 @@
       const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts; const tempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (tasten.ControlLeft || tasten.C ? 0.5 : 1);
       const vorher = spieler.cc.getPosition().clone(); if (touch.springen) { spieler.sprungPuffer = 0.25; touch.springen = false; } spieler.sprungPuffer = Math.max(0, (spieler.sprungPuffer || 0) - dt);
       const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0; if (springt) spieler.sprungPuffer = 0;
+      spieler.duckt = !!(tasten.ControlLeft || tasten.C) && !maus.rechts; spieler.duckWert = (spieler.duckWert || 0) + ((spieler.duckt ? 1 : 0) - (spieler.duckWert || 0)) * Math.min(1, dt * 10);
       const amBoden = bewege(spieler.cc, dir.scale(tempo), springt, dt, spieler.zustand);
       const np = spieler.cc.getPosition(); spieler.tempo = Math.hypot(np.x - vorher.x, np.z - vorher.z) / Math.max(dt, 1e-4);
       if (amBoden) { if (spieler.flugZeit > 0.55) { wackeln(klemme(spieler.flugZeit * 0.35, 0.15, 0.6)); ton('schritt', 0.8); } spieler.flugZeit = 0; spieler.schrittWeg = (spieler.schrittWeg || 0) + spieler.tempo * dt; if (spieler.schrittWeg > (sprint ? 2.1 : 1.5)) { spieler.schrittWeg = 0; ton('schritt', sprint ? 0.32 : 0.22); } }
@@ -683,6 +700,14 @@
     if (opt.dynamischeAufloesung !== false) szene.onAfterRenderObservable.add(() => { const ms = engine.getDeltaTime(); if (!ms || ms > 500) return; dynZeit += ms; fpsSumme += 1000 / ms; fpsN++;
       if (dynZeit > 2000) { const fps = fpsSumme / fpsN, sk = engine.getHardwareScalingLevel(); dynZeit = fpsSumme = fpsN = 0;
         if (fps < 28 && sk < basisSkala * 1.8) engine.setHardwareScalingLevel(Math.min(basisSkala * 1.8, sk * 1.15)); else if (fps > 50 && sk > basisSkala) engine.setHardwareScalingLevel(Math.max(basisSkala, sk / 1.1)); } });
+    szene.onBeforeRenderObservable.add(() => { try { controller(); } catch (e) { /* kein Controller */ } });
+    // Ducken: Hocke über die Knochen (Menschen) – sonst wird die Figur niedriger
+    const X = V(1, 0, 0);
+    szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const d = spieler.duckWert || 0, k = spieler.k;
+      if (k.mensch) { if (d < 0.01) return; const kn = k.mensch.knochen, mix = (b, w) => { if (!b || !b.rotationQuaternion) return; b.rotationQuaternion = BAB.Quaternion.Slerp(b.rotationQuaternion, BAB.Quaternion.RotationAxis(X, w), d); };
+        const sw = Math.sin(zeit * 9) * klemme(spieler.tempo / 3, 0, 1) * 0.25; mix(kn.oberschenkelL, -1.25 + sw); mix(kn.oberschenkelR, -1.25 - sw); mix(kn.unterschenkelL, 1.95); mix(kn.unterschenkelR, 1.95); mix(kn.fussL, -0.7); mix(kn.fussR, -0.7); mix(kn.wirbel, 0.35);
+        if (kn.huefte.position) kn.huefte.position.y *= 1 - 0.42 * d; }
+      else k.scaling.y = 1 - 0.3 * d; });
     engine.runRenderLoop(() => szene.render());
     const groesse = () => engine.resize(); window.addEventListener('resize', groesse);
 
