@@ -261,9 +261,20 @@ if(window.SDBauplanPakete){
  }catch(e){console.warn('Optionaler KI-Roboter übersprungen',e);}
 }
 
-// Spieler: vorhandenes animiertes SD-Mensch-Skelett, kein starres Kistenmodell.
+// Optionaler Profi-GLB-Figurenpfad (Werkstatt → Meine Modelle).
+// Unterstützt Animationen nach Namen: Idle, Walk, Run, Crouch, Prone, Crawl,
+// Slide, Shoot, Death. Ohne solche Datei bleibt die eigene SD-Figur verfügbar.
+let soldatModell = '', gegnerModell = '';
+for (const [name, istSpieler] of [['nordhafen-soldat.glb', true], ['nordhafen-gegner.glb', false]]) {
+  if (!vorhanden.includes(name) || (!istSpieler && sparsam)) continue;
+  try {
+    await sd.figurLaden(name);
+    if (istSpieler) soldatModell = name; else gegnerModell = name;
+  } catch (e) { console.warn('Figuren-Import fehlgeschlagen, Standardmodell aktiv', name, e); }
+}
+// Spieler: animiertes GLB, falls geladen, sonst das skinnte SD-Skelett.
 sd.spieler({pos:[-145,null,-148],leben:135,ruestung:20,waffen:['pistole','gewehr'],
- aussehen:'mensch',mensch:{groesse:1.83,statur:1.06,taktik:true,oberteil:'#485347',
+ aussehen:'mensch',modell:soldatModell||undefined,mensch:{groesse:1.83,statur:1.06,taktik:true,oberteil:'#485347',
  hose:'#303a3a',schuhe:'#222528',weste:true,helm:true,
  westeFarbe:'#414945',frisur:'kurz',aermel:'lang'}});
 // Opt-in: Nur Nordhafen verwendet die erweiterte Taktiksteuerung.
@@ -275,7 +286,7 @@ sd.geben('granate',2);
 const gruppen={hafen:[],dorf:[],radar:[]};
 function feind(gruppe,x,z,staerke,waffe,nummer){
  const b=sd.gegner({pos:[x,null,z],staerke,waffe,leben:100,
-  aussehen:'mensch',name:'Wache '+gruppe.toUpperCase()+'-'+nummer,
+  aussehen:'mensch',modell:gegnerModell||undefined,name:'Wache '+gruppe.toUpperCase()+'-'+nummer,
   mensch:{oberteil:gruppe==='radar'?'#37484a':'#4d5141',
    hose:'#343a3a',weste:true,helm:true,westeFarbe:'#3b4242'}});
  gruppen[gruppe].push(b);return b;
