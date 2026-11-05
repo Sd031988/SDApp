@@ -69,6 +69,9 @@ for (let i = 0; i < GEGNER; i++) {
 sd.zone({ mitte: [20, -10], radius: 300, endRadius: 25, warte: 45, dauer: 240, schaden: 5 });
 
 // 8) Der Spieler startet am Strand mit einer Pistole
+// Motorboot am nächsten Ufer (W/S/A/D, F einsteigen)
+{ let best = null; for (let w = 0; w < 16; w++) for (let d = 8; d < 260; d += 3) { const x = START[0] + Math.cos(w * Math.PI / 8) * d, z = START[1] + Math.sin(w * Math.PI / 8) * d; if (sd.hoehe(x, z) < -4.2) { if (!best || d < best[2]) best = [x, z, d]; break; } }
+  if (best) sd.boot({ pos: [best[0], null, best[1]], farbe: '#e8e8e8' }); }
 sd.spieler({ pos: [START[0], null, START[1]], leben: 100, waffen: ['pistole'],
   aussehen: 'roboter', roboter: { stil: 'kampf', farbe: '#3a6ea5', akzent: '#1d232b', augen: '#4ad8ff' } });
 sd.nachricht('Finde Waffen in den Häusern · bleib in der Zone · schalte alle Gegner aus', 6);

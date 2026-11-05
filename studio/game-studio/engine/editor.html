@@ -51,7 +51,7 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=4"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-fahrzeug.js?v=2"></script>
+<script src="./sd-fahrzeug.js?v=3"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-engine.js?v=7"></script>
 <script>
@@ -61,7 +61,7 @@ const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector
 const ARTEN = {
   haus: { icon: '🏢', name: 'Haus', felder: [['breite', 'Breite', 'zahl', 10, 5, 30, 0.5], ['tiefe', 'Tiefe', 'zahl', 8, 5, 24, 0.5], ['stockwerke', 'Stockwerke', 'zahl', 2, 1, 12, 1], ['material', 'Fassade', 'wahl', 'putz', ['putz', 'ziegel', 'beton', 'holz', 'metall']], ['farbe', 'Farbe', 'farbe', '#efe4d2'], ['dach', 'Dach', 'wahl', 'flach', ['flach', 'sattel']], ['balkone', 'Balkone', 'an', false], ['dachTreppe', 'Treppe aufs Dach', 'an', false]] },
   wald: { icon: '🌳', name: 'Wald', felder: [['radius', 'Fläche (m)', 'zahl', 25, 5, 150, 1], ['anzahl', 'Bäume', 'zahl', 30, 1, 400, 1], ['art', 'Art', 'wahl', 'gemischt', ['gemischt', 'laub', 'nadel', 'palme', 'herbst', 'busch']]] },
-  auto: { icon: '🚗', name: 'Auto', felder: [['typ', 'Typ', 'wahl', 'limousine', ['limousine', 'suv', 'sport', 'pickup', 'bus']], ['farbe', 'Lack', 'farbe', '#b8202a']] },
+  auto: { icon: '🚗', name: 'Fahrzeug', felder: [['typ', 'Typ', 'wahl', 'limousine', ['limousine', 'suv', 'sport', 'pickup', 'bus', 'motorrad', 'boot', 'flugzeug']], ['farbe', 'Lack', 'farbe', '#b8202a']] },
   gegner: { icon: '🎯', name: 'Gegner', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']], ['staerke', 'Stärke', 'zahl', 0.5, 0, 1, 0.05], ['waffe', 'Waffe', 'wahl', 'gewehr', ['gewehr', 'schrotflinte', 'pistole', 'scharfschuetze']], ['mission', 'Erscheint in Mission (0 = von Anfang an)', 'zahl', 0, 0, 9, 1]] },
   ziel: { icon: '🚩', name: 'Missionsziel', felder: [['mission', 'Mission Nr.', 'zahl', 1, 1, 9, 1], ['schritt', 'Schritt Nr.', 'zahl', 1, 1, 20, 1], ['art', 'Aufgabe', 'wahl', 'gehe', ['gehe', 'fahre', 'sammle']], ['text', 'Text', 'text', 'Geh hierher'], ['titel', 'Missionsname (bei Schritt 1)', 'text', 'Neue Mission'], ['belohnung', 'Belohnung 💰 (bei Schritt 1)', 'zahl', 100, 0, 2000, 10], ['zeitlimit', 'Zeitlimit s (0 = keins, bei Schritt 1)', 'zahl', 0, 0, 600, 5]], hinweis: 'Ziele mit gleicher Mission-Nr. bilden eine Mission, der Reihe nach (Schritt 1, 2, 3 …). Gegner mit dieser Mission-Nr. müssen am Ende besiegt werden.' },
   laden: { icon: '🏪', name: 'Laden', felder: [['name', 'Name', 'text', 'Laden']] },

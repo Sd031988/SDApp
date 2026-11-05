@@ -33,6 +33,10 @@ for (let i = 0; i < 6; i++) {
   sd.auto({ pos: [k[0] + (quer ? 14 : 4.8), null, k[1] + (quer ? 4.8 : 14)], drehung: quer ? 90 : 0, typ: typen[i], farbe: lacke[i] });
 }
 
+// Motorrad am Stadtrand und ein Flugzeug auf der Wiese östlich der Stadt (Shift = Gas, S = abheben)
+sd.motorrad({ pos: [netz.knoten[0][0] + 4.8, null, netz.knoten[0][1] + 8], farbe: '#d23a1a' });
+sd.flugzeug({ pos: [178, null, -185], drehung: 0 });
+
 // 5) Die Gang im nordöstlichen Block (Menschen mit Schutzweste und Gewehr)
 const gangBlock = netz.bloecke[netz.bloecke.length - 1];
 for (let i = 0; i < 8; i++) {

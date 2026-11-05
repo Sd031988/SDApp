@@ -19,8 +19,8 @@
     function wiederbeleben() { const sp = ctx.spieler; if (!sp) return; const r = Math.random() * 6.28, d = 8 + Math.random() * 25, x = start.x + Math.cos(r) * d, z = start.z + Math.sin(r) * d;
       sp.cc.setPosition(V(x, ctx.hoehe(x, z) + 1.5, z)); sp.leben = sp.maxLeben; sp.ruestung = 0; tot = false; ctx.nachricht('Zurück im Spiel', 1.5); }
     function figurFuer(f, d) { if (f.k) f.k.dispose(false, true); f.k = ctx.figur({ besitzer: 'netz:' + d.id, aussehen: 'mensch', mensch: { oberteil: d.farbe, hose: '#22262c', weste: true, westeFarbe: '#3d4433', seed: d.id.length } }); f.tot = false; }
-    function autoFuer(f, fz) { if (f.auto && f.autoTyp === fz.typ + fz.farbe) return; if (f.auto) f.auto.dispose(false, true); const g = FB.auto({ typ: fz.typ, farbe: fz.farbe }), T = g.typ, yb = T.rad + 0.39, yt = Math.max(yb + 0.3, T.H * 0.85);
-      const h = new BAB.TransformNode('netzAuto', szene); g.wurzel.parent = h; g.wurzel.position = V(0, -(yb + yt) / 2, 0); g.karosse.concat(...g.raeder.map(r => r.meshes)).forEach(m => { ctx.schatten.addShadowCaster(m); m.isPickable = true; }); h.rotationQuaternion = new BAB.Quaternion(); f.auto = h; f.autoTyp = fz.typ + fz.farbe; }
+    function autoFuer(f, fz) { if (f.auto && f.autoTyp === fz.typ + fz.farbe) return; if (f.auto) f.auto.dispose(false, true); const g = FB.auto({ typ: fz.typ, farbe: fz.farbe }), T = g.typ, art = T.art || 'auto', yb = art === 'auto' ? T.rad + 0.39 : 0, yt = art === 'boot' ? 1.0 : art === 'flugzeug' ? 1.95 : Math.max(yb + 0.3, T.H * 0.85);   // wie im Fahrzeug-Modul
+      const h = new BAB.TransformNode('netzAuto', szene); g.wurzel.parent = h; g.wurzel.position = V(0, -(yb + yt) / 2, 0); g.karosse.concat(...g.raeder.map(r => r.meshes), ...(g.sichtRaeder || []).map(r => r.meshes), g.extraMeshes || []).forEach(m => { ctx.schatten.addShadowCaster(m); m.isPickable = true; }); if (g.fahrer) g.fahrer.setEnabled(true); h.rotationQuaternion = new BAB.Quaternion(); f.auto = h; f.autoTyp = fz.typ + fz.farbe; }
     function empfangen(j) {
       const jetzt = performance.now() / 1000, gesehen = new Set();
       for (const d of j.spieler) { gesehen.add(d.id); let f = fremde.get(d.id);
