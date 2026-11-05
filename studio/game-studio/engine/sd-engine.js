@@ -638,15 +638,15 @@
 
     /* ---------- Kamera (Third-Person über die Schulter) ---------- */
     function kameraUpdate(dt) {
-      const empf = opt.empfindlichkeit || 0.0022, z = maus.rechts ? (spieler.waffen[spieler.aktiv]?.def.zoom || 0.55) : 1;
-      spieler.gier += (maus.dx * empf + touch.schauen[0] * dt * 2.2) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf + touch.schauen[1] * dt * 1.6) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
+      const E = opt.einstellungen || {}, empf = (opt.empfindlichkeit || 0.0022) * (E.maus || 1), pe = E.pad || 1, z = maus.rechts ? (spieler.waffen[spieler.aktiv]?.def.zoom || 0.55) : 1;
+      spieler.gier += (maus.dx * empf + touch.schauen[0] * dt * 2.2 * pe) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf * (E.invertY ? -1 : 1) + touch.schauen[1] * dt * 1.6 * pe) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
       spieler.rueckstoss *= Math.pow(0.001, dt);
       const kopf = spieler.cc.getPosition().add(V(0, 0.65 - (spieler.duckWert || 0) * 0.55, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
       const rechts = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier)); const zoomt = maus.rechts; const abst = zoomt ? 1.8 : 4.2, schulter = zoomt ? 0.55 : 0.75;
       const drehpunkt = kopf.add(rechts.scale(schulter)); let wunsch = drehpunkt.subtract(fv.scale(abst));
       const t = strahl(drehpunkt, wunsch.subtract(drehpunkt).normalize(), abst + 0.3, 'spieler'); let ist = abst; if (t && t.hit) ist = Math.max(0.4, t.distance - 0.3);
       spieler.abstand = ist; kamera.position = drehpunkt.subtract(fv.scale(ist)); kamera.setTarget(kamera.position.add(fv));
-      const zielFov = zoomt ? 1.0 * z : 1.0; kamera.fov += (zielFov - kamera.fov) * Math.min(1, dt * 12);
+      const basisFov = ((opt.einstellungen && opt.einstellungen.sicht) || 57.3) * Math.PI / 180, zielFov = zoomt ? basisFov * z : basisFov; kamera.fov += (zielFov - kamera.fov) * Math.min(1, dt * 12);
     }
     function spielerUpdate(dt) {
       if (spieler.leben <= 0) return;
@@ -691,6 +691,7 @@
     let festeSchritte = false;
     function logik(dt) {
       if (kachelPhysik) kachelPhysik(dt);
+      if (BUS && opt.einstellungen) { const E = opt.einstellungen; BUS.effekte.gain.value = E.effekte ?? 1; BUS.musik.gain.value = E.musik ?? 0.6; }
       zeit += dt;
       const ueb = ctx && ctx.uebernahme;
       if (spieler && !vorbei) { if (ueb) ueb.update(dt); else spielerUpdate(dt); }

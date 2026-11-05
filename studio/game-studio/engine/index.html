@@ -106,6 +106,7 @@ body.handy .unten{bottom:180px}
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
       <button id="mpAuf" title="Mit Freunden spielen (bis 8 Spieler)">👥 Mehrspieler</button>
+      <button id="einstAuf" title="Maus, Ton, Sichtfeld">⚙ Einstellungen</button>
       <button id="pubAuf" title="Dein Spiel als eigene Webseite online stellen">🌐 Veröffentlichen</button>
       <button id="editorAuf">{ } Skript bearbeiten</button>
       <a class="btn" href="./werkstatt.html">🛠 Werkstatt</a>
@@ -120,6 +121,10 @@ body.handy .unten{bottom:180px}
   </div>
 </div>
 
+<div class="ov" id="einst" hidden style="z-index:7"><div class="karte" style="width:min(460px,100%)"><h2 style="margin:0 0 10px">⚙ Einstellungen</h2>
+  <div id="einstFelder" style="display:grid;gap:10px"></div>
+  <p class="ehrlich">Wird in diesem Browser gespeichert und gilt sofort, auch mitten im Spiel.</p>
+  <div class="knoepfe" style="justify-content:flex-end"><button id="einstStd">Standard</button><button class="los" id="einstZu">Fertig</button></div></div></div>
 <div class="ov" id="mp" hidden><div class="karte" style="width:min(500px,100%)"><h2 style="margin:0 0 6px">👥 Mehrspieler</h2>
   <p style="margin:0 0 12px;color:#cfd8e2;line-height:1.55">Bis zu 8 Spieler in einem Raum. Einer erstellt den Raum und gibt den <b>5-stelligen Code</b> weiter, die anderen treten bei. Gespielt wird <b id="mpSpiel">Inselsturm</b> gegeneinander (ohne Computer-Gegner).</p>
   <div class="knoepfe"><button class="los" id="mpNeu">Raum erstellen</button><select id="mpModus"><option value="frei">Jeder gegen jeden</option><option value="team">Team: Rot gegen Blau</option></select></div>
@@ -135,7 +140,7 @@ body.handy .unten{bottom:180px}
   <label class="chk" style="display:flex;gap:8px;align-items:flex-start;font-size:13px"><input type="checkbox" id="pubRecht"> Ich habe die Rechte an allen Inhalten. Keine Betrugs-, Hass- oder Gewaltverherrlichung, keine echten Marken oder Personen.</label></div>
   <div class="knoepfe" style="justify-content:flex-end"><button id="pubZu">Zurück</button><button class="los" id="pubLos">Veröffentlichen</button></div>
   <div id="pubErg" class="ehrlich" style="font-size:13px"></div></div></div>
-<div class="ov" id="pause" hidden><div class="karte" style="width:min(420px,100%);text-align:center"><h2 style="margin:0 0 14px">❚❚ Pause</h2><div class="knoepfe" style="justify-content:center"><button class="los" id="weiter">Weiter</button><button id="neu">↻ Neu starten</button><button id="editorAuf2">{ } Skript</button><button id="zumMenue">Menü</button></div></div></div>
+<div class="ov" id="pause" hidden><div class="karte" style="width:min(420px,100%);text-align:center"><h2 style="margin:0 0 14px">❚❚ Pause</h2><div class="knoepfe" style="justify-content:center"><button class="los" id="weiter">Weiter</button><button id="neu">↻ Neu starten</button><button id="einstPause">⚙ Einstellungen</button><button id="editorAuf2">{ } Skript</button><button id="zumMenue">Menü</button></div></div></div>
 <div class="ov" id="ende" hidden><div class="karte" style="width:min(460px,100%);text-align:center"><h1 class="titel" id="endeTitel" style="font-size:44px">SIEG</h1><p id="endeText" style="color:#cfd8e2"></p><div class="knoepfe" style="justify-content:center"><button class="los" id="nochmal">↻ Nochmal</button><button id="zumMenue2">Menü</button></div></div></div>
 <div class="ov" id="laden" hidden><div style="text-align:center"><div class="titel" style="font-size:30px">Lade Welt …</div><p id="ladenText" style="color:var(--leise)">Grafik-Engine und Physik werden geladen</p></div></div>
 
@@ -159,11 +164,11 @@ body.handy .unten{bottom:180px}
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics_umd.js"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-baukasten.js?v=7"></script>
+<script src="./sd-baukasten.js?v=8"></script>
 <script src="./sd-fahrzeug.js?v=6"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-stadt.js?v=3"></script>
-<script src="./sd-ki.js?v=4"></script>
+<script src="./sd-ki.js?v=5"></script>
 <script src="./sd-wetter.js?v=2"></script>
 <script src="./sd-grafik.js?v=1"></script>
 <script src="./sd-netz.js?v=3"></script>
@@ -173,7 +178,7 @@ body.handy .unten{bottom:180px}
 <script src="./sd-klang.js?v=1"></script>
 <script src="./sd-szene.js?v=3"></script>
 <script src="./sd-veroeffentlichen.js?v=3"></script>
-<script src="./sd-engine.js?v=14"></script>
+<script src="./sd-engine.js?v=15"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -210,7 +215,7 @@ async function spielStarten(extra) {
   if (!window.BABYLON || !window.HavokPhysics) { $('ladenText').textContent = '⨯ Grafik-Engine nicht geladen – bitte Internetverbindung prüfen und Seite neu laden.'; return; }
   const q = $('qualitaet').value; schreib('sdEngineQualitaet', q);
   try {
-    laeuft = await SDEngine.starten($('welt'), code, { netz: extra && extra.netz, qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
+    laeuft = await SDEngine.starten($('welt'), code, { einstellungen: EINST, netz: extra && extra.netz, qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
       pause: () => pausiert && !extra, beiFehler: e => { zeigeFehler(e); $('editor').hidden = false; },
       beiSperre: an => { if (!an && laeuft && $('ende').hidden && !handy && !/[?&]test/.test(location.search) && $('editor').hidden) { pausiert = true; $('pause').hidden = false; } if (an) { pausiert = false; $('pause').hidden = true; } },
       beiEnde: r => { $('ende').hidden = false; $('endeTitel').textContent = r.sieg ? '🏆 SIEG' : 'AUSGESCHIEDEN'; $('endeText').textContent = r.text + ' · ' + r.kills + ' Gegner ausgeschaltet · ' + Math.floor(r.zeit / 60) + ':' + String(r.zeit % 60).padStart(2, '0') + ' min'; } });
@@ -219,6 +224,20 @@ async function spielStarten(extra) {
   $('laden').hidden = true;
 }
 let letzteNetz = null;
+/* ⚙ Einstellungen (live: die Engine liest das Objekt jedes Bild) */
+const EINST_STD = { maus: 1, invertY: false, sicht: 57, musik: 0.6, effekte: 1, pad: 1 };
+const EINST = Object.assign({}, EINST_STD, (() => { try { return JSON.parse(lies('sdEngineEinstellungen') || '{}'); } catch (e) { return {}; } })());
+const EINST_FELDER = [['maus', 'Maus-Empfindlichkeit', 0.2, 3, 0.05], ['pad', 'Controller-/Touch-Empfindlichkeit', 0.3, 3, 0.05], ['sicht', 'Sichtfeld (Grad)', 55, 100, 1], ['musik', 'Musik', 0, 1, 0.05], ['effekte', 'Effekte', 0, 1, 0.05], ['invertY', 'Maus-Y umkehren']];
+function einstZeigen() { const box = $('einstFelder'); box.innerHTML = '';
+  for (const [k, n, a, b, st] of EINST_FELDER) { const l = document.createElement('label');
+    if (a == null) { l.innerHTML = '<input type="checkbox"> ' + n; const i = l.querySelector('input'); i.checked = !!EINST[k]; i.onchange = () => { EINST[k] = i.checked; einstSpeichern(); }; }
+    else { l.innerHTML = n + ' <b></b><br><input type="range" style="width:100%">'; const i = l.querySelector('input'), w = l.querySelector('b'); i.min = a; i.max = b; i.step = st; i.value = EINST[k]; w.textContent = EINST[k]; i.oninput = () => { EINST[k] = +i.value; w.textContent = i.value; einstSpeichern(); }; }
+    box.appendChild(l); } }
+function einstSpeichern() { try { localStorage.setItem('sdEngineEinstellungen', JSON.stringify(EINST)); } catch (e) { /* egal */ } }
+$('einstAuf').onclick = () => { einstZeigen(); $('einst').hidden = false; };
+$('einstZu').onclick = () => { $('einst').hidden = true; };
+$('einstPause').onclick = () => { einstZeigen(); $('einst').hidden = false; };
+$('einstStd').onclick = () => { Object.assign(EINST, EINST_STD); einstSpeichern(); einstZeigen(); };
 const NETZ = lies('sdNetzServer') || 'https://sd-maschinen-kenner.onrender.com';
 async function netzRufen(pfad, daten) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 90000), w = setTimeout(() => { $('mpText').textContent = '⏳ Der Server wacht gerade auf (bis zu einer Minute) …'; }, 5000);

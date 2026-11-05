@@ -44,6 +44,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 | Ragdoll | Menschen fallen beim Tod physikalisch mit Gelenken (ab Qualität „Mittel“) |
 | Häuser | Innentreppen in jedes Stockwerk (abwechselnd rechts/links, mit Geländer und Deckenloch) – mehrstöckige Häuser sind ganz begehbar; flache Rampe vor der Tür; Gegner folgen dir durch die Tür und die Treppen hinauf (Stockwerk für Stockwerk) |
 | Computer-Fahrer | `sd.einsatzwagen({ pos, ziel: () => pos })`: Auto mit Blaulicht fährt über freies Gelände zum Ziel, bremst rechtzeitig, setzt zurück wenn es feststeckt; Polizei nutzt das außerhalb von Städten |
+| Einstellungen | ⚙ im Menü und in der Pause: Maus- und Controller-Empfindlichkeit, Maus-Y umkehren, Sichtfeld, Musik- und Effekt-Lautstärke (gilt sofort, wird im Browser gespeichert) |
 | Physik | Havok: Spielfigur-Controller (Kollision, Steigungen, Springen), umschießbare Objekte, umfallende Gegner |
 | Gameplay | 4 Waffen (Streuung, Rückstoß, Nachladen, Kopftreffer, Zielfernrohr), Beutekisten, Leben und Schutzweste, schrumpfende Zone, Sieg und Niederlage |
 | Gegner-KI | Sichtprüfung per Strahl, Verfolgen, seitliches Ausweichen, Trefferchance je nach Entfernung und Bewegung, gehen in die Zone |
