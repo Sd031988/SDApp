@@ -46,7 +46,7 @@ async function build(device, savedAssets=[]) {
     box:()=>({position:{set(){}},rotation:{},createInstance(){return this;}}),
     zylinder:()=>({position:{set(){}},rotation:{},createInstance(){return this;}}),
     teileModell:()=>({wurzel:{}}),
-    modell:async()=>({wurzel:{}})
+    modell:async(...args)=>{calls.push({name:'modell',args});return {wurzel:{}};}
   },{
     get(target,key) {
       if(key in target)return target[key];
@@ -98,9 +98,8 @@ for(const device of ['desktop','mobile']){
 }
 test('Optionales eigenes GLB wird nur auf ausdrücklichen Dateinamen hin geladen',async()=>{
  const testFall=await build('desktop',[{typ:'modell',name:'nordhafen-funkanlage.glb'}]);
- assert.equal(testFall.calls.filter(c=>c.name==='modell').length,0);
- // Der Modellaufruf ist als Promise in einer spezifizierten Mockfunktion vorhanden.
- // Der Test validiert, dass der normale Spielstart ohne diese Datei funktioniert.
+ assert.equal(testFall.calls.filter(c=>c.name==='modell').length,1);
+ assert.equal(testFall.calls.find(c=>c.name==='modell').args[0],'nordhafen-funkanlage.glb');
 });
 test('Spielskript bleibt ohne beliebige Netzwerkcode-Ausführung',()=>{
   assert.doesNotMatch(sceneCode,/\beval\s*\(/);
