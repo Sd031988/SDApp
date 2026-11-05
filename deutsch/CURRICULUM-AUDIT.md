@@ -60,3 +60,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Textentwürfe werden pro Lernstufe ausschließlich lokal im Browser unter `sdHubWritingDraftsV1` gespeichert. Ein Wortzähler und aufklappbare Selbstprüfkriterien unterstützen die Bearbeitung; es gibt bewusst keine automatische B1-Benotung oder falsche Prüfungszusage.
 - JavaScript-Syntax des geänderten Skripts über `new Function` geprüft; Wortzählungs-RegEx nach der Erstimplementierung korrigiert.
 - Verbleibende Risiken: Noch kein vollständiger Playwright-Test für Eingabe, Speichern, Wiederherstellen und mobile Darstellung; lokale Daten können beim Löschen des Browsers verloren gehen. Für belastbare Schreibbewertungen sind fachlich überprüfte Rubriken und menschliches oder validiertes Feedback erforderlich. Die übrigen Fertigkeiten bleiben unabhängig zu prüfen.
+
+## Schreibentwürfe – 05.11.2026
+- Ist-Zustand geprüft: Freie Schreibaufgaben existieren für Alphabetisierung, A1, A2, B1 und Praxis. Bisher wurde nur nach Klick auf „Entwurf speichern“ gespeichert; ein Wechsel der Lektion löst `render()` aus und ersetzt das Textfeld. Dadurch konnten ungespeicherte Eingaben verloren gehen.
+- Verbesserung: Jede Texteingabe speichert den aktuellen Entwurf der Lernstufe unmittelbar unter dem bestehenden Schlüssel `sdHubWritingDraftsV1` in `localStorage`. Der bisherige Speichern-Knopf bleibt als manuelle Wiederholung erhalten. Wiederherstellung und deaktivierte automatische Großschreibung bleiben unverändert.
+- Regressionstest im bestehenden Node-Testmodul ergänzt (Autosave, Wiederherstellung, manueller Speichern-Knopf, `autocapitalize="off"`).
+- Syntaxprüfung der geänderten JavaScript-Dateien mit `new Function` erfolgreich. Vollständiger Node-/Playwright-Test und mobiler Browsertest sind noch nicht nachgewiesen.
+- Risiken: `localStorage` kann durch Browser-Einstellungen, Speichermangel oder Löschen der Browserdaten ausfallen; der bestehende `save`-Helfer unterdrückt Speicherfehler, daher kann eine Erfolgsmeldung fälschlich erscheinen. Die Daten bleiben geräte- und browsergebunden. Keine automatische fachliche Bewertung, keine B1-Zertifizierung.
