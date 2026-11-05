@@ -40,11 +40,11 @@
     s.neigungZiel = ziel;
     s.neigung += (ziel - s.neigung) * Math.min(1, step * 13);
     return { tempo: speed, ducken, springVerbot: s.liegt || rutschend, form: s.form,
-      rutschend, neigung: s.neigung, sprint };
+      rutschend, rutschRichtung: rutschend ? s.rutschRichtung : null, neigung: s.neigung, sprint };
   }
   function binden(ctx) {
     const BAB = ctx.BAB, s = zustand();
-    let initialisiert = false, shapes = null;
+    let initialisiert = false, shapes = null, letzterController = null;
     let letzteMeldung = -100;
     function aufnehmen() {
       if (initialisiert) return;
@@ -67,7 +67,8 @@
     }
     function kapsel(sp, art) {
       if (!sp || !sp.cc || s.capsule === art) return;
-      const cc = sp.cc, alt = HOEHEN[s.capsule], neu = HOEHEN[art];
+      const cc = sp.cc; letzterController = cc;
+      const alt = HOEHEN[s.capsule], neu = HOEHEN[art];
       if (s.kapselFunktioniert === false) { s.capsule = art; return; }
       if (!pruefePlatz(cc, alt, neu)) {
         if (ctx.zeit - letzteMeldung > 1.4) { ctx.nachricht('Zu wenig Platz zum Aufstehen', 1.4); letzteMeldung = ctx.zeit; }
@@ -150,7 +151,10 @@
     function kamera(sp, camera, dt) {
       if (!s.aktiv || !sp || !camera) return;
       const right = new BAB.Vector3(Math.cos(sp.gier), 0, -Math.sin(sp.gier));
-      camera.position.addInPlace(right.scale((sp.taktikNeigung || 0) * 0.22));
+      const versatz = (sp.taktikNeigung || 0) * 0.22;
+      const richtung = right.scale(Math.sign(versatz));
+      const hit = Math.abs(versatz) > 0.01 && ctx.strahl && ctx.strahl(camera.position, richtung, Math.abs(versatz) + 0.05, 'spieler');
+      if (!hit || !hit.hit) camera.position.addInPlace(right.scale(versatz));
       camera.rotation.z = (sp.taktikNeigung || 0) * -0.075;
       if (sp.taktikSprint) {
         const E = ctx.opt.einstellungen || {}, basis = ((E.sicht || 57.3) * Math.PI / 180);
@@ -167,6 +171,10 @@
       ctx.taktikStreuung = () => s.form === 'liegen' ? 0.65 : s.form === 'ducken' ? 0.8 : 1;
       ctx.taktikRuhig = () => s.form === 'liegen';
       ctx.aufraeumen.push(() => {
+        // Vor dem Freigeben eigener Formen die Originalkapsel wiederherstellen.
+        if (letzterController && shapes && shapes.stehen) {
+          try { letzterController.shape = shapes.stehen; } catch (_) { /* Spiel wird abgebaut */ }
+        }
         for (const shape of s.customShapes) { try { shape.dispose(); } catch (_) { /* Havok bereits weg */ } }
       });
       return { aktiv: true, info: () => ({ form: s.form, neigung: s.neigung }) };
