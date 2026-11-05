@@ -239,7 +239,7 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
   }
 
   /* ---------- 🤖 KI-Bauplan: ChatGPT/Claude schreibt JSON, die Werkstatt baut daraus das Modell ---------- */
-  const KI = { text: localStorage.getItem('sdKiBauplan') || JSON.stringify({ name: 'Windrad', teile: [{ id: 'mast', form: 'zylinder', durchmesser: 0.5, hoehe: 12, pos: [0, 6, 0], farbe: '#e8e8e8', material: 'metall' }, { id: 'kopf', eltern: 'mast', form: 'kiste', groesse: [0.8, 0.8, 1.6], pos: [0, 6.2, 0], farbe: '#d8d8d8', material: 'metall' }, { id: 'nabe', eltern: 'kopf', form: 'kugel', durchmesser: 0.7, pos: [0, 0, 0.9], farbe: '#c83a2a' }, { id: 'f1', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [0, 2.6, 0], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f2', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [2.25, -1.3, 0], dreh: [0, 0, -120], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f3', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [-2.25, -1.3, 0], dreh: [0, 0, 120], farbe: '#f2f2f2', material: 'kunststoff' }], bewegungen: [{ teil: 'nabe', art: 'drehen', achse: 'z', tempo: 60 }] }, null, 1), modell: null };
+  const KI = { gespeichert: '', gespeichertText: '', text: localStorage.getItem('sdKiBauplan') || JSON.stringify({ name: 'Windrad', teile: [{ id: 'mast', form: 'zylinder', durchmesser: 0.5, hoehe: 12, pos: [0, 6, 0], farbe: '#e8e8e8', material: 'metall' }, { id: 'kopf', eltern: 'mast', form: 'kiste', groesse: [0.8, 0.8, 1.6], pos: [0, 6.2, 0], farbe: '#d8d8d8', material: 'metall' }, { id: 'nabe', eltern: 'kopf', form: 'kugel', durchmesser: 0.7, pos: [0, 0, 0.9], farbe: '#c83a2a' }, { id: 'f1', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [0, 2.6, 0], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f2', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [2.25, -1.3, 0], dreh: [0, 0, -120], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f3', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [-2.25, -1.3, 0], dreh: [0, 0, 120], farbe: '#f2f2f2', material: 'kunststoff' }], bewegungen: [{ teil: 'nabe', art: 'drehen', achse: 'z', tempo: 60 }] }, null, 1), modell: null };
   EXTRA.ki = {
     zeigen(box) {
       hinweis(box, '<b>So geht’s:</b> 1) „Anleitung kopieren“ drücken und bei ChatGPT (oder einer anderen KI) einfügen, dahinter schreiben, was gebaut werden soll – z. B. <i>„ein Bagger mit drehbarem Oberteil und beweglichem Arm“</i>. 2) Die Antwort (JSON) hier einfügen. 3) „Bauen“. Gefällt es, „In Meine Modelle speichern“ – dann im Spiel mit <code>sd.teileModell(\'name\')</code> oder im Editor als Modell nutzen.');
@@ -257,7 +257,7 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
         v.append(el('button', { type: 'button', className: 'haupt', textContent: '✨ Vorlage als 3D-Modell bauen', style: 'width:100%', onclick: () => {
           try {
             const d = SDBauplanPakete.erzeugen(auswahl.value, { farbe: lack.value, detail: mobil.checked ? 'sparsam' : 'hoch' });
-            KI.text = JSON.stringify(d, null, 2); ta.value = KI.text; KI.gespeichert = '';
+            KI.text = JSON.stringify(d, null, 2); ta.value = KI.text; KI.gespeichert = ''; KI.gespeichertText = '';
             try { localStorage.setItem('sdKiBauplan', KI.text); } catch (e) { /* Speicher optional */ }
             bauen(); meldung('✓ ' + d.name + ' · ' + d.teile.length + ' Bauteile');
           } catch (e) { meldung('⨯ ' + e.message); }
@@ -272,13 +272,13 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
       const f = el('div', { className: 'hinweis', id: 'kiFehler' }); box.append(f);
       const sp = el('button', { textContent: '💾 In „Meine Modelle“ speichern', style: 'width:100%;margin-top:6px', onclick: async () => { const { daten, fehler } = SDTeile.pruefen(ta.value); if (!daten || !daten.teile.length) { meldung('⨯ ' + (fehler[0] || 'Leer')); return; }
         const nm = SDAssets.name((prompt('Name für das Modell:', daten.name) || daten.name).trim() || daten.name); if (await SDAssets.holen(nm) && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return;
-        await SDAssets.speichern({ name: nm, typ: 'teile', json: JSON.stringify(daten), teile: daten.teile.length, groesse: JSON.stringify(daten).length }); KI.gespeichert = nm; meldung('💾 „' + nm + '“ gespeichert – im Skript: sd.teileModell(\'' + nm + '\', { pos: [0, null, 0] })'); } });
+        await SDAssets.speichern({ name: nm, typ: 'teile', json: JSON.stringify(daten), teile: daten.teile.length, groesse: JSON.stringify(daten).length }); KI.gespeichert = nm; KI.gespeichertText = ta.value; meldung('💾 „' + nm + '“ gespeichert – im Skript: sd.teileModell(\'' + nm + '\', { pos: [0, null, 0] })'); } });
       box.append(sp);
       const spielen = el('button', { type: 'button', textContent: '🎮 Spiel-Code kopieren', style: 'width:100%;margin-top:6px', onclick: async () => {
-        if (!KI.gespeichert) { meldung('Zuerst als „Meine Modelle“ speichern'); return; }
+        if (!KI.gespeichert || KI.gespeichertText !== ta.value) { meldung('Zuerst die aktuelle Version als „Meine Modelle“ speichern'); return; }
         const d = SDTeile.pruefen(ta.value);
         if (!d.daten || !d.daten.teile.length) { meldung('⨯ Ungültiger Bauplan'); return; }
-        const codeZeile = 'sd.teileModell(' + JSON.stringify(KI.gespeichert) + ', { pos: [12, null, 15], kollision: ' + (KI.gespeichert.includes('Kampfroboter') ? 'false' : 'true') + ' });';
+        const codeZeile = 'sd.teileModell(' + JSON.stringify(KI.gespeichert) + ', { pos: [12, null, 15], kollision: ' + (d.daten.bewegungen.length ? 'false' : 'true') + ' });';
         try { await navigator.clipboard.writeText(codeZeile); meldung('📋 Im SD Engine Skript-Editor einfügen'); }
         catch (e) { code(codeZeile); meldung('Code unten markieren und kopieren'); }
       } });
@@ -365,6 +365,10 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
     },
     bauen() { if (!auswahl) { code('// Ein Modell auswählen oder importieren'); $('info').textContent = 'Meine Modelle'; } },
   };
+  // Direktlink aus dem Code-Studio: Werkstatt sofort auf dem KI-Bauplan öffnen.
+  if (new URLSearchParams(location.search).get('tab') === 'ki') {
+    const tab = document.querySelector('.tabs button[data-t="ki"]'); if (tab) tab.click();
+  }
 })();
 </script>
 
