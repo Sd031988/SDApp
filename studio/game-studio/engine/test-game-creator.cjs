@@ -15,7 +15,8 @@ const files = [
   'game-creator-editor-compat.test.cjs',
   'game-creator-transaction.test.cjs',
   'game-quality-gates.test.cjs',
-  'nordhafen-benchmark.test.cjs'
+  'nordhafen-benchmark.test.cjs',
+  'nordhafen-frame-telemetry.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
