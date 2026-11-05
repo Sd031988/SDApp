@@ -7,7 +7,7 @@
  else root.SDGameCreatorEditorCompat=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const map=Object.freeze({building:'box',vegetation:'tree',road:'column'});
+ const map=Object.freeze({building:'box',vegetation:'tree'});
  function preview(handoff,core){
    if(!handoff||handoff.schema!=='sd-scene-handoff/v1'||
       handoff.mode!=='dry-run'||handoff.target!=='new-scene-only'||
