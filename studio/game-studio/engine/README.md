@@ -17,7 +17,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - `sd-wetter.js` – Tag/Nacht-Wechsel, echte Laternen- und Scheinwerferlichter in der Nacht, Regen (Partikel, nasse Oberflächen, Geräusch), Wasser mit Wellen, Wind in Blättern und Gras (Shader), Gras rund um den Spieler; 3D-Ton (HRTF) in der Engine
 - `blender/sd_mixamo_zu_glb.py` – Blender-Helfer: Mixamo-Figur + Animationen (FBX) → eine .glb (getestet mit Blender 5.2)
 - `sd-netz.js` – Mehrspieler (bis 8 Spieler, Raum-Code, Server: `/hub/spiel/*` im SD-Hub, Repo agents/computer-agent/computer_agent/spiel_api.py): Positionen, Autos, Treffer, Abschüsse, Wiederbeleben, Punktetafel (Tab); keine Namen, kein Chat, nichts gespeichert
-- `editor.html` – SD Szenen-Editor: Welten mit der Maus bauen und direkt spielen (Spiel „Eigene Szene“)
+- `editor.html` – SD Szenen-Editor: Welten mit der Maus bauen und direkt spielen (Spiel „Eigene Szene“); **Gelände formen** mit Pinsel (Heben, Senken, Glätten, Ebnen), gespeichert als `formen` in `sd.gelaende`
 - Schadensmodell für Autos (Beulen, Rauch, Feuer, Explosion, Wrack) und Gegner, die Außentreppen auf Dächer nehmen
 - `sd-spiel.js` – Geld, Inventar (Medikits H, Granaten G), Nahkampf (V), Läden (E), Missionen mit Schritten (gehe, fahre, sammle, besiege, warte, eigen), Zeitlimit, Belohnung, Zielstrahl und Kartenmarker, Missionsliste (J), Spielstand im Browser, Krankenhaus statt Spielende
 - `sd-veroeffentlichen.js` – Spiel als eigene Webseite veröffentlichen (über „Online stellen“, nur mit Zugangsschlüssel); eigene Modelle/Foto-Häuser werden mitgepackt

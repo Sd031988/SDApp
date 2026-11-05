@@ -21,9 +21,14 @@
   }
 
   /** Höhe des Geländes – dieselbe Formel für Engine und Szenen-Editor */
+  /* Geformtes Gelände (Szenen-Editor): Raster (n+1)×(n+1) über die ganze Welt, Höhen in 0,25-m-Schritten, als Base64-Text gespeichert */
+  function formenGitter(f) { if (!f) return null; if (f.werte) return f; const n = f.n | 0, roh = atob(f.d || ''), werte = new Float32Array((n + 1) * (n + 1)); for (let i = 0; i < werte.length && i < roh.length; i++) { const b = roh.charCodeAt(i); werte[i] = (b > 127 ? b - 256 : b) * 0.25; } return { n, werte }; }
+  function formenText(g) { let t = ''; for (let i = 0; i < g.werte.length; i++) t += String.fromCharCode(Math.round(klemme(g.werte[i] / 0.25, -127, 127)) & 255); return { n: g.n, d: btoa(t) }; }
   function hoehenFunktion(o) {
-    o = o || {}; const G = o.groesse || 600, H = o.hoehe ?? 28, ns = rauschen(o.seed || 7), flach = o.flach || [];
-    const roh = (x, z) => { let h = 0, a = 1, f = 1 / 160; for (let i = 0; i < 5; i++) { h += ns(x * f, z * f) * a; a *= 0.48; f *= 2.05; } return h * H; };
+    o = o || {}; const G = o.groesse || 600, H = o.hoehe ?? 28, ns = rauschen(o.seed || 7), flach = o.flach || [], fg = formenGitter(o.formen);
+    const form = (x, z) => { const n = fg.n, u = klemme((x / G + 0.5) * n, 0, n - 1e-6), v = klemme((z / G + 0.5) * n, 0, n - 1e-6), i = u | 0, j = v | 0, fu = u - i, fv = v - j, W = fg.werte, k = j * (n + 1) + i;
+      return (W[k] * (1 - fu) + W[k + 1] * fu) * (1 - fv) + (W[k + n + 1] * (1 - fu) + W[k + n + 2] * fu) * fv; };
+    const roh = (x, z) => { let h = 0, a = 1, f = 1 / 160; for (let i = 0; i < 5; i++) { h += ns(x * f, z * f) * a; a *= 0.48; f *= 2.05; } return h * H + (fg ? form(x, z) : 0); };
     const hoeheBei = (x, z) => { let h = roh(x, z); for (const fl of flach) { const d = Math.hypot(x - fl[0], z - fl[1]), r = fl[2], hz = fl[3] ?? 1; if (d < r * 1.6) { const t = klemme((d - r) / (r * 0.6), 0, 1), s = t * t * (3 - 2 * t); h = hz * (1 - s) + h * s; } }
       const rand = Math.max(Math.abs(x), Math.abs(z)) / (G / 2); if (rand > 0.85) h += Math.pow((rand - 0.85) / 0.15, 2) * H * 1.2; return h; };
     return hoeheBei;
@@ -643,5 +648,5 @@
     return steuerung;
   }
 
-  window.SDEngine = { starten, WAFFEN, hoehenFunktion, zufall, version: '1.1' };
+  window.SDEngine = { starten, WAFFEN, hoehenFunktion, formenGitter, formenText, zufall, version: '1.1' };
 })();

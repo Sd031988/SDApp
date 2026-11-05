@@ -40,6 +40,11 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
   <aside>
     <h3>Hinzufügen – wählen, dann aufs Gelände klicken</h3>
     <div class="palette" id="palette"></div>
+    <h3>⛰ Gelände formen – wählen, dann mit gedrückter Maus malen</h3>
+    <div class="palette" id="formen"></div>
+    <div class="r"><label>Pinselgröße <span id="formRW">12 m</span></label><input type="range" id="formR" min="3" max="60" step="1" value="12"></div>
+    <div class="r"><label>Stärke <span id="formSW">1</span></label><input type="range" id="formS" min="0.2" max="4" step="0.1" value="1"></div>
+    <button id="formNull" style="width:100%">↺ Geformtes Gelände zurücksetzen</button>
     <h3 id="eigTitel">🌍 Welt</h3>
     <div id="eigenschaften"></div>
     <p class="hinweis">Maus: Objekt anklicken = auswählen · ziehen = verschieben · <b>Q/E</b> drehen · <b>Entf</b> löschen · <b>Strg+D</b> kopieren · <b>Strg+Z</b> rückgängig · rechte Maustaste/Mausrad = Kamera</p>
@@ -53,7 +58,7 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
 <script src="./sd-assets.js?v=1"></script>
 <script src="./sd-fahrzeug.js?v=3"></script>
 <script src="./sd-mensch.js?v=2"></script>
-<script src="./sd-engine.js?v=7"></script>
+<script src="./sd-engine.js?v=8"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector3(x, y, z);
@@ -86,13 +91,15 @@ new BABYLON.HemisphericLight('h', V(0.3, 1, 0.2), sz).intensity = 0.65; const so
 sz.imageProcessingConfiguration.toneMappingEnabled = true; sz.imageProcessingConfiguration.toneMappingType = 1;
 const BK = SDBaukasten.erstellen(BABYLON, sz), FB = SDFahrzeug.bauer(BABYLON, sz, BK), MB = SDMensch.bauer(BABYLON, sz);
 let gel = null, wasser = null, hoehe = () => 0;
-function flachListe() { const roh = SDEngine.hoehenFunktion(Object.assign({}, szene.welt)), l = [];
+function flachListe() { const roh = SDEngine.hoehenFunktion(Object.assign({}, szene.welt, { formen: fgHolen() })), l = [];
   for (const o of szene.objekte) { if (o.art === 'haus') l.push([o.x, o.z, Math.max(o.p.breite, o.p.tiefe) * 0.75 + 2, roh(o.x, o.z)]); if (o.art === 'fotohaus') l.push([o.x, o.z, 12, roh(o.x, o.z)]);
     if (o.art === 'stadt') { const W = o.p.bx * o.p.block + (o.p.bx + 1) * 14, D = o.p.bz * o.p.block + (o.p.bz + 1) * 14; l.push([o.x, o.z, Math.max(W, D) * 0.55 + 6, roh(o.x, o.z)]); } }
   return l.map(f => f.map(v => +v.toFixed(2))); }
+/* Geformtes Gelände: Raster wird live bemalt, beim Loslassen als Text in szene.welt.formen gespeichert */
+let fg = null; const fgHolen = () => fg || (fg = SDEngine.formenGitter(szene.welt.formen) || { n: 96, werte: new Float32Array(97 * 97) });
 function gelaendeBauen() {
   if (gel) gel.dispose(); if (wasser) { wasser.dispose(); wasser = null; } const w = szene.welt, flach = flachListe();
-  hoehe = SDEngine.hoehenFunktion({ groesse: w.groesse, hoehe: w.hoehe, seed: w.seed, flach }); const G = w.groesse, N = 120;
+  hoehe = SDEngine.hoehenFunktion({ groesse: w.groesse, hoehe: w.hoehe, seed: w.seed, flach, formen: fgHolen() }); const G = w.groesse, N = 120;
   gel = BABYLON.MeshBuilder.CreateGround('gelaende', { width: G, height: G, subdivisions: N, updatable: true }, sz); const p = gel.getVerticesData('position'); for (let i = 0; i < p.length; i += 3) p[i + 1] = hoehe(p[i], p[i + 2]); gel.setVerticesData('position', p);
   const n = []; BABYLON.VertexData.ComputeNormals(p, gel.getIndices(), n); gel.setVerticesData('normal', n); BK.weltUV(gel, 4); gel.material = BK.material('gras', '#ffffff'); gel.metadata = { boden: true };
   if (w.wasserAn) { wasser = BABYLON.MeshBuilder.CreateGround('wasser', { width: G * 2, height: G * 2 }, sz); wasser.position.y = w.wasser; wasser.isPickable = false; wasser.material = BK.material(null, '#2a6a8a', { rau: 0.1 }); wasser.material.alpha = 0.8; }
@@ -136,7 +143,7 @@ async function vorschau(o, i) {
   if (i === auswahl) markieren(true);
 }
 function markieren(an) { const o = szene.objekte[auswahl]; if (o && o.__wurzel) o.__wurzel.getChildMeshes().forEach(m => { m.showBoundingBox = an && m.getTotalVertices() > 0 && m.isVisible; }); }
-function allesNeu() { szene.objekte.forEach(o => { if (o.__wurzel) { o.__wurzel.dispose(false, true); o.__wurzel = null; } }); gelaendeBauen(); szene.objekte.forEach((o, i) => vorschau(o, i)); eigenschaften(); status(); }
+function allesNeu() { fg = null; szene.objekte.forEach(o => { if (o.__wurzel) { o.__wurzel.dispose(false, true); o.__wurzel = null; } }); gelaendeBauen(); szene.objekte.forEach((o, i) => vorschau(o, i)); eigenschaften(); status(); }
 
 /* ---------- Bearbeiten ---------- */
 const sauber = () => JSON.parse(JSON.stringify(szene, (k, v) => (k.startsWith('__') ? undefined : v)));
@@ -149,22 +156,50 @@ function loeschen() { if (auswahl < 0) return; const o = szene.objekte[auswahl];
 function kopieren() { if (auswahl < 0) return; const o = szene.objekte[auswahl]; if (ARTEN[o.art].einmal) return; const k = JSON.parse(JSON.stringify({ art: o.art, x: o.x + 6, z: o.z + 6, dreh: o.dreh, p: o.p })); szene.objekte.push(k); vorschau(k, szene.objekte.length - 1); waehlen(szene.objekte.length - 1); merken(); }
 function drehen(gr) { if (auswahl < 0) return; const o = szene.objekte[auswahl]; o.dreh = ((o.dreh || 0) + gr + 360) % 360; o.__wurzel.rotation.y = o.dreh * Math.PI / 180; merken(); eigenschaften(); }
 
+/* ---------- Gelände-Pinsel ---------- */
+let formWerkzeug = null, formt = false, formPunkt = null, formZiel = 0;
+const FORMEN = { heben: ['⬆', 'Heben'], senken: ['⬇', 'Senken'], glaetten: ['〰', 'Glätten'], ebnen: ['▭', 'Ebnen'] };
+const ring = BABYLON.MeshBuilder.CreateTorus('pinsel', { diameter: 2, thickness: 0.06, tessellation: 48 }, sz); ring.isPickable = false; ring.isVisible = false;
+ring.material = new BABYLON.StandardMaterial('pm', sz); ring.material.emissiveColor = new BABYLON.Color3(1, 0.8, 0.2); ring.material.disableLighting = true;
+function formenZeigen() { const p = $('formen'); p.innerHTML = ''; for (const [k, [i, n]] of Object.entries(FORMEN)) { const b = document.createElement('button'); b.innerHTML = '<span>' + i + '</span>' + n; b.classList.toggle('an', formWerkzeug === k);
+  b.onclick = () => { formWerkzeug = formWerkzeug === k ? null : k; if (formWerkzeug) { platzieren = null; paletteZeigen(); waehlen(-1); } formenZeigen(); status(); }; p.append(b); } ring.isVisible = false; }
+function pinsel(dt) {
+  const g = fgHolen(), n = g.n, W = g.werte, G = szene.welt.groesse, R = +$('formR').value, S = +$('formS').value, p = formPunkt, zelle = G / n;
+  const i0 = Math.max(0, Math.floor((p.x - R) / zelle + n / 2)), i1 = Math.min(n, Math.ceil((p.x + R) / zelle + n / 2)), j0 = Math.max(0, Math.floor((p.z - R) / zelle + n / 2)), j1 = Math.min(n, Math.ceil((p.z + R) / zelle + n / 2));
+  const alt = formWerkzeug === 'glaetten' ? W.slice() : null;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const x = (i / n - 0.5) * G, z = (j / n - 0.5) * G, d = Math.hypot(x - p.x, z - p.z); if (d > R) continue; const f = 0.5 + 0.5 * Math.cos(Math.PI * d / R), k = j * (n + 1) + i;
+    if (formWerkzeug === 'heben') W[k] += S * f * dt * 5; else if (formWerkzeug === 'senken') W[k] -= S * f * dt * 5;
+    else if (formWerkzeug === 'glaetten') { let su = 0, c = 0; for (const [a, b] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) { const ii = i + a, jj = j + b; if (ii >= 0 && jj >= 0 && ii <= n && jj <= n) { su += alt[jj * (n + 1) + ii]; c++; } } W[k] += (su / c - alt[k]) * Math.min(1, f * dt * 4 * S); }
+    else if (formWerkzeug === 'ebnen') W[k] += (formZiel - hoehe(x, z)) * Math.min(1, f * dt * 3 * S);
+    W[k] = Math.max(-31.75, Math.min(31.75, W[k]));
+  }
+  const pos = gel.getVerticesData('position'); for (let i = 0; i < pos.length; i += 3) pos[i + 1] = hoehe(pos[i], pos[i + 2]);
+  const nr = []; BABYLON.VertexData.ComputeNormals(pos, gel.getIndices(), nr); gel.updateVerticesData('position', pos); gel.updateVerticesData('normal', nr); gel.refreshBoundingInfo();
+}
+sz.onBeforeRenderObservable.add(() => { if (formt && formPunkt) pinsel(Math.min(0.05, engine.getDeltaTime() / 1000)); });
+$('formR').oninput = () => { $('formRW').textContent = $('formR').value + ' m'; ring.scaling.setAll(+$('formR').value); }; $('formS').oninput = () => { $('formSW').textContent = $('formS').value; };
+$('formNull').onclick = () => { if (!szene.welt.formen || !confirm('Geformtes Gelände zurücksetzen?')) return; delete szene.welt.formen; merken(); allesNeu(); };
+
 /* ---------- Maus ---------- */
 let zieht = false;
 const bodenPunkt = () => { const t = sz.pick(sz.pointerX, sz.pointerY, m => m === gel); return t && t.hit ? t.pickedPoint : null; };
 sz.onPointerObservable.add(pi => {
   const e = pi.event; if (pi.type === BABYLON.PointerEventTypes.POINTERDOWN && e.button === 0) {
+    if (formWerkzeug && !platzieren) { const p = bodenPunkt(); if (p) { formt = true; formPunkt = p; formZiel = hoehe(p.x, p.z); kam.detachControl(); } return; }
     if (platzieren) { const p = bodenPunkt(); if (p) hinzufuegen(platzieren, p.x, p.z); if (!e.shiftKey) { platzieren = null; paletteZeigen(); } status(); return; }
     const t = sz.pick(sz.pointerX, sz.pointerY, m => m.metadata && m.metadata.edIndex != null); if (t && t.hit) { waehlen(t.pickedMesh.metadata.edIndex); zieht = true; kam.detachControl(); } else { waehlen(-1); }
-  } else if (pi.type === BABYLON.PointerEventTypes.POINTERMOVE && zieht && auswahl >= 0) { const p = bodenPunkt(); if (p) { const o = szene.objekte[auswahl]; o.x = +p.x.toFixed(2); o.z = +p.z.toFixed(2); o.__wurzel.position = V(o.x, bodenY(o), o.z); status(); } }
+  } else if (pi.type === BABYLON.PointerEventTypes.POINTERMOVE && formWerkzeug) { const p = bodenPunkt(); ring.isVisible = !!p; if (p) { ring.position.set(p.x, p.y + 0.3, p.z); ring.scaling.setAll(+$('formR').value); if (formt) formPunkt = p; } }
+  else if (pi.type === BABYLON.PointerEventTypes.POINTERUP && formt) { formt = false; kam.attachControl($('c'), true); szene.welt.formen = SDEngine.formenText(fgHolen()); merken(); gelaendeBauen(); }
+  else if (pi.type === BABYLON.PointerEventTypes.POINTERMOVE && zieht && auswahl >= 0) { const p = bodenPunkt(); if (p) { const o = szene.objekte[auswahl]; o.x = +p.x.toFixed(2); o.z = +p.z.toFixed(2); o.__wurzel.position = V(o.x, bodenY(o), o.z); status(); } }
   else if (pi.type === BABYLON.PointerEventTypes.POINTERUP && zieht) { zieht = false; kam.attachControl($('c'), true); merken(); const o = szene.objekte[auswahl]; if (o && /haus|stadt|fotohaus/.test(o.art)) gelaendeSpaeter(); else if (o && o.art === 'wald') vorschau(o, auswahl); eigenschaften(); }
 });
 addEventListener('keydown', e => { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === 'Delete' || e.key === 'Backspace') loeschen(); else if (e.key === 'q' || e.key === 'Q') drehen(-15); else if (e.key === 'e' || e.key === 'E') drehen(15);
-  else if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); kopieren(); } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); rueckgaengig(); } else if (e.key === 'Escape') { platzieren = null; paletteZeigen(); waehlen(-1); } });
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); kopieren(); } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); rueckgaengig(); } else if (e.key === 'Escape') { formWerkzeug = null; formenZeigen(); platzieren = null; paletteZeigen(); waehlen(-1); } });
 function rueckgaengig() { if (verlauf.length < 2) return; verlauf.pop(); const s = JSON.parse(verlauf[verlauf.length - 1]); szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = s; auswahl = -1; try { localStorage.setItem('sdSzene.aktuell', JSON.stringify(s)); } catch (e) { /* egal */ } allesNeu(); }
 
 /* ---------- Oberfläche ---------- */
-function paletteZeigen() { const p = $('palette'); p.innerHTML = ''; for (const [k, a] of Object.entries(ARTEN)) { const b = document.createElement('button'); b.innerHTML = '<span>' + a.icon + '</span>' + a.name; b.classList.toggle('an', platzieren === k); b.onclick = () => { platzieren = platzieren === k ? null : k; paletteZeigen(); status(); }; p.append(b); } }
+function paletteZeigen() { const p = $('palette'); p.innerHTML = ''; for (const [k, a] of Object.entries(ARTEN)) { const b = document.createElement('button'); b.innerHTML = '<span>' + a.icon + '</span>' + a.name; b.classList.toggle('an', platzieren === k); b.onclick = () => { platzieren = platzieren === k ? null : k; if (platzieren && formWerkzeug) { formWerkzeug = null; formenZeigen(); } paletteZeigen(); status(); }; p.append(b); } }
 function feld(box, [k, name, art, , a, b, schritt], wert, setzen) {
   const d = document.createElement('div'); d.className = art === 'an' ? 'chk' : 'r';
   if (art === 'zahl') { d.innerHTML = '<label>' + name + '<span>' + wert + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = wert; i.oninput = () => { d.querySelector('span').textContent = i.value; setzen(+i.value, false); }; i.onchange = () => setzen(+i.value, true); }
@@ -184,14 +219,14 @@ function eigenschaften() {
   feld(box, ['dreh', 'Drehung (°)', 'zahl', 0, 0, 345, 15], o.dreh || 0, (v, fertig) => { o.dreh = v; o.__wurzel.rotation.y = v * Math.PI / 180; if (fertig) merken(); });
   const z = document.createElement('div'); z.style.cssText = 'display:flex;gap:6px;margin-top:8px'; z.innerHTML = '<button>⧉ Kopieren</button><button>🗑 Löschen</button>'; z.children[0].onclick = kopieren; z.children[1].onclick = loeschen; box.append(z);
 }
-function status() { $('status').textContent = (platzieren ? '➕ ' + ARTEN[platzieren].name + ': aufs Gelände klicken (Shift = mehrere) · ' : '') + szene.objekte.length + ' Objekte' + (auswahl >= 0 ? ' · ausgewählt: ' + ARTEN[szene.objekte[auswahl].art].name + ' bei ' + szene.objekte[auswahl].x.toFixed(0) + ', ' + szene.objekte[auswahl].z.toFixed(0) : ''); }
+function status() { $('status').textContent = (formWerkzeug ? '⛰ ' + FORMEN[formWerkzeug][1] + ': mit gedrückter linker Maustaste übers Gelände malen · Esc = fertig · ' : '') + (platzieren ? '➕ ' + ARTEN[platzieren].name + ': aufs Gelände klicken (Shift = mehrere) · ' : '') + szene.objekte.length + ' Objekte' + (auswahl >= 0 ? ' · ausgewählt: ' + ARTEN[szene.objekte[auswahl].art].name + ' bei ' + szene.objekte[auswahl].x.toFixed(0) + ', ' + szene.objekte[auswahl].z.toFixed(0) : ''); }
 let mt = null; function meldung(t) { const m = $('meldung'); m.textContent = t; m.hidden = false; clearTimeout(mt); mt = setTimeout(() => { m.hidden = true; }, 2600); }
 
 /* ---------- SD-Skript erzeugen ---------- */
 function code() {
   const w = szene.welt, o = szene.objekte, f = v => JSON.stringify(v).replace(/"/g, "'"), z = [];
   z.push('// Erstellt mit dem SD Szenen-Editor – du kannst hier alles weiter ändern', "sd.himmel({ zeit: 'tag' });",
-    'sd.gelaende({ groesse: ' + w.groesse + ', aufloesung: ' + Math.round(w.groesse / 3.5) + ', hoehe: ' + w.hoehe + ', seed: ' + w.seed + (w.wasserAn ? ', wasser: ' + w.wasser : '') + ', flach: ' + JSON.stringify(flachListe()) + ' });');
+    'sd.gelaende({ groesse: ' + w.groesse + ', aufloesung: ' + Math.round(w.groesse / 3.5) + ', hoehe: ' + w.hoehe + ', seed: ' + w.seed + (w.wasserAn ? ', wasser: ' + w.wasser : '') + ', flach: ' + JSON.stringify(flachListe()) + (w.formen ? ', formen: ' + JSON.stringify(w.formen).replace(/"/g, "'") : '') + ' });');
   if (w.wasserAn) z.push('sd.wasserWellen();'); z.push('sd.tageszeit({ stunde: ' + w.stunde + ', minutenProTag: ' + w.tagMinuten + ' });', 'sd.wetter({ wind: ' + w.wind + (w.regen > 0 ? ', regen: ' + w.regen : '') + ' });'); if (w.gras) z.push('sd.gras();');
   o.forEach((x, i) => { const p = x.p, pos = '[' + x.x + ', null, ' + x.z + ']';
     if (x.art === 'haus') z.push('sd.haus({ pos: ' + pos + ', drehung: ' + x.dreh + ', breite: ' + p.breite + ', tiefe: ' + p.tiefe + ', stockwerke: ' + p.stockwerke + ", material: '" + p.material + "', farbe: '" + p.farbe + "', dach: '" + p.dach + "', balkone: " + p.balkone + ', dachTreppe: ' + p.dachTreppe + ', seed: ' + (i + 1) + ' });');
@@ -230,7 +265,7 @@ $('export').onclick = () => { const a = document.createElement('a'); a.href = UR
 $('import').onchange = async e => { const f = e.target.files[0]; if (!f) return; try { const s = JSON.parse(await f.text()); if (!s.welt || !Array.isArray(s.objekte)) throw new Error('Keine SD-Szene'); szene.objekte.forEach(o => o.__wurzel && o.__wurzel.dispose(false, true)); szene = s; auswahl = -1; merken(); allesNeu(); } catch (er) { meldung('⨯ ' + er.message); } };
 $('rueck').onclick = rueckgaengig;
 engine.runRenderLoop(() => sz.render()); addEventListener('resize', () => engine.resize());
-paletteZeigen(); ladenListe(); allesNeu(); merken();
+paletteZeigen(); formenZeigen(); ladenListe(); allesNeu(); merken();
 window.SD_EDITOR = { get szene() { return szene; }, hinzufuegen, waehlen, code, allesNeu, drehen };
 </script>
 </body>
