@@ -42,15 +42,28 @@
     }
     /** Richtung, in die ein Bot laufen soll, um "ziel" zu erreichen – um Häuser und Bäume herum */
     /** Höhenwechsel über Außentreppen: Ziel auf einem Dach -> erst zum Treppenfuß, dann hinauf (und umgekehrt) */
+    // liegt ein Punkt im Haus (gedrehtes Rechteck)?
+    function imHausRechteck(h, p) { const dx = p.x - h.x, dz = p.z - h.z, c = Math.cos(h.dreh), s = Math.sin(h.dreh), lx = dx * c - dz * s, lz = dx * s + dz * c; return Math.abs(lx) < h.halb[0] && Math.abs(lz) < h.halb[1]; }
+    /** durch die Haustür: draußen -> Tür außen -> Tür innen -> Ziel (und umgekehrt) */
+    function durchTuer(b, pos, h, rein) { const nah = (p, r) => Math.hypot(p.x - pos.x, p.z - pos.z) < r;
+      if (rein) { const drin = imHausRechteck(h, pos);
+        if (!drin) { b.tuerDrin = null; if (b.tuerSchritt !== h && !nah(h.tuerAussen, 1.1)) return { punkt: h.tuerAussen, gerade: nah(h.tuerAussen, 4) }; b.tuerSchritt = h; return { punkt: h.tuerInnen, gerade: true }; }
+        if (b.tuerDrin !== h) { if (!nah(h.tuerInnen, 1.0)) return { punkt: h.tuerInnen, gerade: true }; b.tuerDrin = h; } return null; }
+      b.tuerSchritt = null; b.tuerDrin = null; if (imHausRechteck(h, pos)) return { punkt: nah(h.tuerInnen, 1.0) ? h.tuerAussen : h.tuerInnen, gerade: true }; return null; }
     function treppenZiel(b, pos, ziel) {
-      const tr = ctx.treppen || []; if (!tr.length) return null; const dy = ziel.y - pos.y, nah = (p, r) => Math.hypot(p.x - pos.x, p.z - pos.z) < r;
-      const aufDach = t => pos.y > t.dachY - 1.3, amBoden = t => pos.y < t.unten.y + 1.4;
-      if (b.aufTreppe && b.treppe) { const t = b.treppe; if (!aufDach(t)) return { punkt: nah(t.rampe, 1.0) ? t.oben : t.rampe, gerade: true }; if (!nah(t.oben, 1.4) && dy > -1) return { punkt: t.oben, gerade: true }; b.aufTreppe = false; b.treppe = null; return null; }
-      if (dy > 2.2) { const t = tr.find(t => Math.hypot(ziel.x - t.mitte.x, ziel.z - t.mitte.z) < t.radius && Math.abs(ziel.y - t.dachY) < 2.5); if (!t) return null;
+      const tr = ctx.treppen || [];
+      const zuAus = (ctx.haeuser || []).find(h => imHausRechteck(h, pos) && !imHausRechteck(h, ziel) && pos.y < h.mitte.y + 2.6);   // im Erdgeschoss, Ziel draußen -> raus durch die Tür
+      if (zuAus && !b.aufTreppe) return durchTuer(b, pos, zuAus, false);
+      if (!tr.length) return null; const dy = ziel.y - pos.y, nah = (p, r) => Math.hypot(p.x - pos.x, p.z - pos.z) < r;
+      const aufDach = t => pos.y > t.dachY + (t.innen ? 0.75 : -1.3), amBoden = t => pos.y < t.unten.y + 1.4;
+      if (b.aufTreppe && b.treppe) { const t = b.treppe; if (!aufDach(t)) return { punkt: nah(t.rampe, 1.0) && pos.y > t.rampe.y + 0.8 ? t.oben : t.rampe, gerade: true }; if (!nah(t.oben, 1.4) && dy > -1) return { punkt: t.oben, gerade: true }; b.aufTreppe = false; b.treppe = null; return null; }
+      if (dy > 2.2) { const imHaus = t => Math.hypot(ziel.x - t.mitte.x, ziel.z - t.mitte.z) < t.radius;   // passende Treppe: im Haus des Ziels und startet auf meiner Etage (mehrere Stockwerke nacheinander)
+        const t = tr.find(t => imHaus(t) && Math.abs(ziel.y - t.dachY) < 2.5 && Math.abs(pos.y - t.unten.y - 0.9) < 1.6) || tr.find(t => imHaus(t) && t.dachY > pos.y + 0.5 && t.dachY < ziel.y + 1 && Math.abs(pos.y - t.unten.y - 0.9) < 1.6) || tr.find(t => !t.innen && imHaus(t) && Math.abs(ziel.y - t.dachY) < 2.5); if (!t) return null;
         if (aufDach(t)) return nah(t.oben, 1.4) ? null : { punkt: t.oben, gerade: true };
-        if (amBoden(t) && !nah(t.unten, 0.7) && !b.aufTreppe) return { punkt: t.unten, gerade: nah(t.unten, 5) };   // genau zum Treppenfuß
-        b.aufTreppe = true; b.treppe = t; return { punkt: nah(t.rampe, 1.0) ? t.oben : t.rampe, gerade: true }; }   // genau entlang der Treppe
-      if (dy < -2.2) { const t = tr.find(t => Math.hypot(pos.x - t.mitte.x, pos.z - t.mitte.z) < t.radius + 2 && Math.abs(pos.y - t.dachY) < 2.5); if (!t) return null;
+        if (t.innen && amBoden(t) && !b.aufTreppe && t.haus && Math.abs(pos.y - t.haus.mitte.y) < 2.6) { const d = durchTuer(b, pos, t.haus, true); if (d) return d; }
+        if (amBoden(t) && !nah(t.unten, 0.7) && !b.aufTreppe) return { punkt: t.unten, gerade: nah(t.unten, 5) || !!t.innen };   // genau zum Treppenfuß
+        b.aufTreppe = true; b.treppe = t; return { punkt: nah(t.rampe, 1.0) && pos.y > t.rampe.y + 0.8 ? t.oben : t.rampe, gerade: true }; }   // genau entlang der Treppe
+      if (dy < -2.2) { const t = tr.find(t => Math.hypot(pos.x - t.mitte.x, pos.z - t.mitte.z) < t.radius + 2 && Math.abs(pos.y - 0.9 - t.dachY) < 1.4) || tr.find(t => Math.hypot(pos.x - t.mitte.x, pos.z - t.mitte.z) < t.radius + 2 && Math.abs(pos.y - t.dachY) < 2.5); if (!t) return null;
         if (aufDach(t) && !nah(t.rampe, 1.0)) return { punkt: nah(t.oben, 1.2) ? t.rampe : t.oben, gerade: true };
         return { punkt: t.unten, gerade: true }; }
       b.aufTreppe = false; return null;

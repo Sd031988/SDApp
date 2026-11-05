@@ -182,13 +182,13 @@
       const tuer = 1.7, th = 2.5;
       // Innentreppen: je Stockwerk eine gerade Treppe, abwechselnd rechts/links an der Seitenwand, darüber ein Loch in der Decke
       const ix0 = B / 2 - d / 2, iz0 = T / 2 - d / 2, TL = Math.min(T - d - 2.4, HS * 1.6), TB = 1.25, mitTreppe = o.innenTreppe !== false && st > 1 && TL >= 3.4 && B >= 6;
-      const tz0 = iz0 - 0.1 - TL, tz1 = iz0 - 0.1, txFuer = sx => sx * (ix0 - TB / 2);
+      const tz0 = iz0 - 0.1 - TL, tz1 = iz0 - 0.1, txFuer = sx => sx * (ix0 - TB / 2), innenTreppen = [];
       for (let s = 0; s < st; s++) {
         const yb = 0.45 + s * HS, ym = yb + HS / 2;
         // Wände (vorne unten mit echter Türöffnung)
         if (s === 0) { const sw = (B - tuer) / 2; kiste(-(tuer / 2 + sw / 2), ym, -T / 2, sw, HS, d, wand, 2, true); kiste(tuer / 2 + sw / 2, ym, -T / 2, sw, HS, d, wand, 2, true); kiste(0, yb + th + (HS - th) / 2, -T / 2, tuer, HS - th, d, wand, 2, true);
           for (const sx of [-1, 1]) kiste(sx * (tuer / 2 + 0.06), yb + th / 2, -T / 2 - 0.08, 0.12, th, 0.12, rahmen, 1); kiste(0, yb + th + 0.06, -T / 2 - 0.08, tuer + 0.24, 0.12, 0.12, rahmen, 1);
-          kiste(0, 0.5, -T / 2 - 0.9, tuer + 1.2, 0.2, 1.2, sockel, 2, true); }                      // Stufe vor der Tür
+          { const w = Math.atan2(0.5, 1.8), L = Math.hypot(0.5, 1.8); kiste(0, 0.3, -T / 2 - 1.05, tuer + 1.2, 0.2, L, sockel, 2, true, -w); } }   // flache Rampe vor der Tür (begehbar)
         else kiste(0, ym, -T / 2, B, HS, d, wand, 2, true);
         kiste(0, ym, T / 2, B, HS, d, wand, 2, true); kiste(-B / 2, ym, 0, d, HS, T, wand, 2, true); kiste(B / 2, ym, 0, d, HS, T, wand, 2, true);
         const boden = material('platten', '#c9c2b8');
@@ -197,6 +197,7 @@
         else kiste(0, yb - 0.05, 0, B - d, 0.25, T - d, boden, 2, true);              // Boden innen
         if (mitTreppe && s < st - 1) { const sx = s % 2 === 0 ? 1 : -1, tx = txFuer(sx), w = Math.atan2(HS, TL), L = Math.hypot(HS, TL), stufen = Math.ceil(HS / 0.2), treppenMat = material('holz', '#7a5a3a');
           koll.push({ p: [tx, yb + HS / 2 - 0.05, (tz0 + tz1) / 2], g: [TB, 0.2, L], rx: -w });
+          innenTreppen.push({ unten: [tx, yb, tz0 - 0.9], rampe: [tx, yb + HS, tz1 - 0.35], oben: [tx - sx * 1.7, yb + HS, tz1 - 0.6], boden: yb + HS + 0.07 });
           for (let i = 0; i < stufen; i++) { const t = (i + 0.5) / stufen; kiste(tx, yb + t * HS - 0.09, tz0 + t * TL, TB, 0.18, TL / stufen + 0.04, treppenMat, 1); }
           kiste(tx - sx * TB / 2, yb + HS / 2 + 0.5, (tz0 + tz1) / 2, 0.05, 0.05, L, dunkel, 1, false, -w); }   // Geländer
         kiste(0, yb + HS - 0.02, 0, B + 0.12, 0.16, T + 0.12, sockel, 2);                                  // Gesims zwischen den Stockwerken
@@ -247,7 +248,7 @@
         for (const sx2 of [sx + 0.85]) kiste(sx2, hoch / 2 + 0.75, zm, 0.05, 0.05, L, dunkel, 1, false, -w);
         treppe = { unten: [sx, 0, zUnten - 1.0], rampe: [sx, hoch, zOben + 0.5], oben: [B / 2 - 1.4, hoch, zOben + 0.6] };
       }
-      const mesh = zusammen(teile, 'gebaeude'); return { mesh, kollision: koll, hoehe: ob, treppe, flaeche: { breite: B, tiefe: T } };
+      const mesh = zusammen(teile, 'gebaeude'); return { mesh, kollision: koll, hoehe: ob, treppe, innenTreppen, tuer: { aussen: [0, 0.45, -T / 2 - 1.8], innen: [0, 0.45, -T / 2 + 1.3] }, flaeche: { breite: B, tiefe: T } };
     }
 
     /* =============== 🤖 ROBOTER =============== */

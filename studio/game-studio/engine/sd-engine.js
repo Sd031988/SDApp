@@ -283,6 +283,7 @@
         const welt = g.mesh.getWorldMatrix();
         for (const k of g.kollision) { const lokal = BAB.Matrix.Compose(V(1, 1, 1), BAB.Quaternion.RotationAxis(V(1, 0, 0), k.rx || 0), V(k.p[0], k.p[1], k.p[2])); const m = lokal.multiply(welt); const sc = new BAB.Vector3(), q = new BAB.Quaternion(), p = new BAB.Vector3(); m.decompose(sc, q, p);
           const n = new BAB.TransformNode('hausPhysik', szene); n.position = p; n.rotationQuaternion = q; const body = new BAB.PhysicsBody(n, BAB.PhysicsMotionType.STATIC, false, szene); body.shape = new BAB.PhysicsShapeBox(V(0, 0, 0), BAB.Quaternion.Identity(), V(k.g[0], k.g[1], k.g[2]), szene); }
+        if (g.innenTreppen && ctx) { const tw = p => BAB.Vector3.TransformCoordinates(V(p[0], p[1], p[2]), welt); const haus = { tuerAussen: tw(g.tuer.aussen), tuerInnen: tw(g.tuer.innen), mitte: V(x, y0, z), radius: Math.hypot(o.breite || 10, o.tiefe || 8) / 2, halb: [(o.breite || 10) / 2, (o.tiefe || 8) / 2], dreh, x, z }; (ctx.haeuser = ctx.haeuser || []).push(haus); for (const t of g.innenTreppen) ctx.treppen.push({ innen: true, haus, unten: tw(t.unten), rampe: tw(t.rampe), oben: tw(t.oben), mitte: V(x, y0, z), radius: Math.hypot(o.breite || 10, o.tiefe || 8) / 2 + 1, dachY: y0 + t.boden }); }
         if (g.treppe && ctx) { const tw = p => BAB.Vector3.TransformCoordinates(V(p[0], p[1], p[2]), welt); ctx.treppen.push({ unten: tw(g.treppe.unten), rampe: tw(g.treppe.rampe), oben: tw(g.treppe.oben), mitte: V(x, y0 + g.hoehe, z), radius: Math.hypot(o.breite || 10, o.tiefe || 8) / 2 + 1, dachY: y0 + g.hoehe + 0.25 }); }
         g.mesh.name = 'haus'; if (ctx && ctx.sperren) ctx.sperren.push({ x, z, w: dreh % Math.PI ? (o.tiefe || 8) : (o.breite || 10), d: dreh % Math.PI ? (o.breite || 10) : (o.tiefe || 8), dreh }); return g.mesh;
       }
@@ -598,7 +599,7 @@
         }
       } else if (b.zuletzt && b.alarm > 0) { let ziel = b.zuletzt; const zu = ziel.subtract(pos); zu.y = 0;
         if (b.flanke && zu.length() > 22) { const n = zu.normalize(); ziel = b.zuletzt.add(V(n.z, 0, -n.x).scale(b.flanke * 14)); }   // von der Seite kommen
-        if (zu.length() > 2) { wunsch = ctx && ctx.ki ? ctx.ki.richtung(b, pos, ziel) : zu.normalize(); tempo = 4; b.richtung = Math.atan2(wunsch.x, wunsch.z); } }
+        if (zu.length() > 2 || (Math.abs(ziel.y - pos.y) > 2.2 && ctx && ctx.ki)) { wunsch = ctx && ctx.ki ? ctx.ki.richtung(b, pos, ziel) : zu.normalize(); tempo = 4; b.richtung = Math.atan2(wunsch.x, wunsch.z); } }
       else if (zielPunkt) { const zu = zielPunkt.subtract(pos); zu.y = 0; wunsch = ctx && ctx.ki ? ctx.ki.richtung(b, pos, zielPunkt) : zu.normalize(); tempo = 4.5; b.richtung = Math.atan2(wunsch.x, wunsch.z); }
       else { b.warte -= dt; if (b.warte <= 0) { b.richtung += (Math.random() - 0.5) * 2.5; b.warte = 2 + Math.random() * 4; b.geht = Math.random() < 0.7; } if (b.geht) { wunsch = V(Math.sin(b.richtung), 0, Math.cos(b.richtung)); tempo = 2; } }
       if (b.alarm > 0 && b.sieht <= 0 && sp && !b.zuletzt) b.zuletzt = sp.clone();
