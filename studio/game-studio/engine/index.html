@@ -168,6 +168,7 @@ body.handy .unten{bottom:180px}
 <script src="./sd-netz.js?v=2"></script>
 <script src="./sd-spiel.js?v=2"></script>
 <script src="./sd-klang.js?v=1"></script>
+<script src="./sd-szene.js?v=1"></script>
 <script src="./sd-veroeffentlichen.js?v=2"></script>
 <script src="./sd-engine.js?v=9"></script>
 <script>
@@ -224,15 +225,20 @@ async function netzRufen(pfad, daten) {
 async function mpStarten(j) {
   if (!j.ok) { $('mpText').textContent = '⨯ ' + (j.error || 'Fehler'); return; }
   if (j.spiel !== SPIEL && SPIELE[j.spiel]) spielWaehlen(j.spiel);
-  const c = await (await fetch('./spiele/' + j.spiel + '.js', { cache: 'no-cache' })).text();   // alle spielen dieselbe Welt (Original-Skript)
+  // alle spielen dieselbe Welt: Original-Skript – oder bei „Eigene Szene“ die Szene des Gastgebers (nur Daten, hier noch einmal geprüft und in Code übersetzt)
+  let c; if (j.spiel === 'eigen') { if (!j.szene) { $('mpText').textContent = '⨯ Der Raum hat keine Szene'; return; } c = SDSzene.code(SDSzene.pruefen(j.szene, { ohneEigene: true })); }
+  else c = await (await fetch('./spiele/' + j.spiel + '.js', { cache: 'no-cache' })).text();
   letzteNetz = { netz: { server: NETZ, token: j.token, code: j.code, id: j.id }, code: c }; $('mp').hidden = true;
   if (!handy && !/[?&]test/.test(location.search)) $('welt').requestPointerLock && $('welt').requestPointerLock();
   await spielStarten(letzteNetz); meldungRaum(j.code);
 }
 function meldungRaum(code) { if (laeuft) laeuft.sd.nachricht('👥 Raum-Code: ' + code + ' – an Freunde weitergeben', 8); }
-$('mpAuf').onclick = () => { $('mp').hidden = false; $('mpSpiel').textContent = SPIELE[SPIEL].titel.charAt(0) + SPIELE[SPIEL].titel.slice(1).toLowerCase(); $('mpText').textContent = SPIEL === 'eigen' ? 'Eigene Szenen gehen im Mehrspieler noch nicht – bitte Inselsturm oder Stadtjagd wählen.' : ''; };
+$('mpAuf').onclick = () => { $('mp').hidden = false; $('mpSpiel').textContent = SPIELE[SPIEL].titel.charAt(0) + SPIELE[SPIEL].titel.slice(1).toLowerCase(); $('mpText').textContent = SPIEL === 'eigen' ? 'Beim Erstellen wird deine aktuelle Szene aus dem Szenen-Editor an alle geschickt (eigene Modelle und Foto-Häuser bleiben weg, die haben die anderen nicht).' : ''; };
 $('mpZu').onclick = () => { $('mp').hidden = true; };
-$('mpNeu').onclick = async () => { if (SPIEL === 'eigen') return; $('mpText').textContent = '⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL })); };
+$('mpNeu').onclick = async () => { let szene = null;
+  if (SPIEL === 'eigen') { try { szene = JSON.parse(lies('sdSzene.aktuell') || 'null'); } catch (e) { szene = null; } if (!szene || !szene.welt) { $('mpText').textContent = 'Erst im Szenen-Editor (✏) eine Szene bauen.'; return; }
+    const vorher = (szene.objekte || []).length; szene = SDSzene.pruefen(szene, { ohneEigene: true }); const weg = vorher - szene.objekte.length; if (weg > 0) $('mpText').textContent = 'ℹ ' + weg + ' Objekt(e) bleiben im Mehrspieler weg (eigene Modelle, Foto-Häuser oder ungültige Einträge).'; }
+  $('mpText').textContent += ' ⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL, szene: szene || undefined })); };
 $('mpRein').onclick = async () => { const c = $('mpCode').value.trim().toUpperCase(); if (c.length !== 5) { $('mpText').textContent = 'Bitte den 5-stelligen Code eingeben'; return; } $('mpText').textContent = '⏳ Trete bei …'; mpStarten(await netzRufen('/hub/spiel/beitreten', { code: c })); };
 const gemerkterSchluessel = () => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } };
 $('pubAuf').onclick = () => { const d = SPIELE[SPIEL]; $('pub').hidden = false; $('pubSpiel').textContent = d.titel; $('pubTitel').value = d.titel.charAt(0) + d.titel.slice(1).toLowerCase(); $('pubText').value = d.text.slice(0, 200);

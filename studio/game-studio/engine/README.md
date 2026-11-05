@@ -17,6 +17,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - `sd-wetter.js` – Tag/Nacht-Wechsel, echte Laternen- und Scheinwerferlichter in der Nacht, Regen (Partikel, nasse Oberflächen, Geräusch), Wasser mit Wellen, Wind in Blättern und Gras (Shader), Gras rund um den Spieler; 3D-Ton (HRTF) in der Engine
 - `blender/sd_mixamo_zu_glb.py` – Blender-Helfer: Mixamo-Figur + Animationen (FBX) → eine .glb (getestet mit Blender 5.2)
 - `sd-netz.js` – Mehrspieler (bis 8 Spieler, Raum-Code, Server: `/hub/spiel/*` im SD-Hub, Repo agents/computer-agent/computer_agent/spiel_api.py): Positionen, Autos, Treffer, Abschüsse, Wiederbeleben, Punktetafel (Tab); keine Namen, kein Chat, nichts gespeichert
+- `sd-szene.js` – gemeinsamer Teil von Editor und Engine: Objektarten, Prüfung (`SDSzene.pruefen`) und Code-Erzeugung (`SDSzene.code`)
 - `editor.html` – SD Szenen-Editor: Welten mit der Maus bauen und direkt spielen (Spiel „Eigene Szene“); **Gelände formen** mit Pinsel (Heben, Senken, Glätten, Ebnen), gespeichert als `formen` in `sd.gelaende`
 - Schadensmodell für Autos (Beulen, Rauch, Feuer, Explosion, Wrack) und Gegner, die Außentreppen auf Dächer nehmen
 - `sd-spiel.js` – Geld, Inventar (Medikits H, Granaten G), Nahkampf (V), Läden (E), Missionen mit Schritten (gehe, fahre, sammle, besiege, warte, eigen), Zeitlimit, Belohnung, Zielstrahl und Kartenmarker, Missionsliste (J), Spielstand im Browser, Krankenhaus statt Spielende
@@ -42,7 +43,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - Foto-Häuser sind Kisten mit Fotos auf den Wänden: von außen wie im Foto, aber ohne echte Vorsprünge und nicht begehbar. Echte 3D-Gebäude aus Fotos entstehen mit Fotogrammetrie-Apps (Polycam, Luma, Scaniverse, Meshroom) und werden als .glb importiert.
 - Nur .glb wird importiert (keine .gltf mit Zusatzdateien, kein .fbx). Eigene Dateien liegen nur im Browser dieses Geräts.
 - Gegner haben keine Wegfindung (Navmesh) und kein Deckungsverhalten.
-- Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler noch nicht. Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
+- Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler: Der Gastgeber schickt seine Szene als reine Daten mit, jeder Browser prüft sie und baut daraus den Code (eigene Modelle und Foto-Häuser bleiben dabei weg). Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
 - Passanten und Verkehr weichen aus, werden aber nicht verletzt.
 - Wegfindung arbeitet auf einem 1,5-m-Raster (ebenerdig); Gegner nutzen keine Treppen oder Dächer.
 - Ein Spiel in der Größe von GTA oder PUBG entsteht damit nicht per Knopfdruck. Die Engine ist das Fundament für die nächsten Etappen.
