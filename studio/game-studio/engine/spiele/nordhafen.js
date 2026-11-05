@@ -263,7 +263,7 @@ if(window.SDBauplanPakete){
 
 // Spieler: vorhandenes animiertes SD-Mensch-Skelett, kein starres Kistenmodell.
 sd.spieler({pos:[-145,null,-148],leben:135,ruestung:20,waffen:['pistole','gewehr'],
- aussehen:'mensch',mensch:{groesse:1.83,statur:1.06,oberteil:'#485347',
+ aussehen:'mensch',mensch:{groesse:1.83,statur:1.06,taktik:true,oberteil:'#485347',
  hose:'#303a3a',schuhe:'#222528',weste:true,helm:true,
  westeFarbe:'#414945',frisur:'kurz',aermel:'lang'}});
 // Opt-in: Nur Nordhafen verwendet die erweiterte Taktiksteuerung.
