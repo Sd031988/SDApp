@@ -6,6 +6,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - `index.html` – Spielseite mit Menü, HUD, Minikarte, Pause, Touch-Steuerung und **Skript-Editor**
 - `sd-engine.js` – die Engine und die deutsche SD-API (`sd.gelaende`, `sd.haus`, `sd.gegner`, …)
 - `sd-baukasten.js` – Generatoren: Oberflächen (Farbe + Normal-Map, kachelbar), Bäume (Laub, Nadel, Palme, Herbst, Busch, mit Detailstufen), Gebäude (Fenster, Tür, Balkone, Flach-/Satteldach, Dachtreppe, Kollision), Roboter (3 Bauarten, Gelenke, Laufanimation)
+- `sd-teile.js` – **KI-Bauplan**: Modelle aus einer JSON-Bauteilliste (kiste, zylinder, kugel, kegel, torus, rad, platte, keil; Eltern-Teile = Gelenke; Bewegungen drehen/pendeln/schieben). Eine KI wie ChatGPT schreibt nur Daten, kein Programm – alles wird geprüft. Werkstatt → 🤖 KI-Bauplan (Anleitung kopieren, JSON einfügen, bauen, speichern), Spiel: `sd.teileModell('name' oder daten, { pos })`, Editor: 🤖 KI-Modell
 - `werkstatt.html` – SD Werkstatt: Objekte mit Reglern erzeugen, live ansehen, als .glb exportieren (Blender, Godot, Unity), SD-Skript-Zeile kopieren
 - `sd-assets.js` – eigener Speicher im Browser (IndexedDB) für importierte Modelle, Foto-Häuser und Foto-Materialien; nichts wird hochgeladen
 - `sd-foto.js` – Foto entzerren (4 Ecken, Homographie), nahtlos machen, Normal-Map aus Helligkeit

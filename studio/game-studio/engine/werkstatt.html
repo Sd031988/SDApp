@@ -40,7 +40,7 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <div class="app">
   <aside>
     <div class="kopf"><b>SD <em>WERKSTATT</em></b><small>Objekte für deine Spiele erzeugen – live in 3D</small><a href="./index.html">⚡ SD Engine</a> · <a href="./editor.html">✏ Szenen-Editor</a> · <a href="../index.html">← Game-Studio</a></div>
-    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="auto">🚗 Auto</button><button data-t="mensch">🧍 Mensch</button><button data-t="oberflaeche">🧱 Oberfläche</button><button data-t="fotoHaus">📷 Foto-Haus</button><button data-t="fotoMaterial">📷 Foto-Material</button><button data-t="modelle" style="grid-column:span 2">📦 Meine Modelle</button></div>
+    <div class="tabs"><button data-t="baum" class="an">🌳 Baum</button><button data-t="gebaeude">🏢 Gebäude</button><button data-t="roboter">🤖 Roboter</button><button data-t="auto">🚗 Auto</button><button data-t="mensch">🧍 Mensch</button><button data-t="oberflaeche">🧱 Oberfläche</button><button data-t="fotoHaus">📷 Foto-Haus</button><button data-t="fotoMaterial">📷 Foto-Material</button><button data-t="ki">🤖 KI-Bauplan</button><button data-t="modelle">📦 Meine Modelle</button></div>
     <div id="regler"></div>
     <pre id="code" title="So benutzt du das Objekt im SD-Skript"></pre>
     <div class="aktionen"><button id="zufall">🎲 Zufällig</button><button id="kopieren">📋 SD-Skript</button><button class="haupt" id="export">⬇ Als .glb exportieren (Blender, Godot, Unity)</button></div>
@@ -51,7 +51,8 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-serializers@9.31.3/babylonjs.serializers.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=7"></script>
-<script src="./sd-assets.js?v=1"></script>
+<script src="./sd-assets.js?v=2"></script>
+<script src="./sd-teile.js?v=1"></script>
 <script src="./sd-fahrzeug.js?v=7"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-foto.js?v=1"></script>
@@ -87,10 +88,10 @@ szene.imageProcessingConfiguration.toneMappingEnabled = true; szene.imageProcess
 const BK = SDBaukasten.erstellen(BABYLON, szene);
 const boden = BABYLON.MeshBuilder.CreateGround('boden', { width: 80, height: 80 }, szene); boden.material = BK.material('gras', '#ffffff'); BK.weltUV(boden, 4); boden.receiveShadows = true; boden.isPickable = false;
 let aktuell = null, robo = null, zeitAlt = performance.now();
-engine.runRenderLoop(() => { const jetzt = performance.now(), dt = Math.min(0.05, (jetzt - zeitAlt) / 1000); zeitAlt = jetzt; if (robo) { const t = werte.roboter.tempo; robo.animiere(t, dt, false);  } szene.render(); });
+engine.runRenderLoop(() => { const jetzt = performance.now(), dt = Math.min(0.05, (jetzt - zeitAlt) / 1000); zeitAlt = jetzt; if (window.SD_KI_UPDATE) window.SD_KI_UPDATE(dt); if (robo) { const t = werte.roboter.tempo; robo.animiere(t, dt, false);  } szene.render(); });
 addEventListener('resize', () => engine.resize());
 
-function wegraeumen() { if (window.SD_MENSCH) { Object.values(SD_MENSCH.gruppen).forEach(g => g.dispose()); SD_MENSCH.skelett.dispose(); window.SD_MENSCH = null; } if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
+function wegraeumen() { window.SD_KI_UPDATE = null; if (window.SD_MENSCH) { Object.values(SD_MENSCH.gruppen).forEach(g => g.dispose()); SD_MENSCH.skelett.dispose(); window.SD_MENSCH = null; } if (!aktuell) return; const m = [aktuell].concat(aktuell.getChildMeshes ? aktuell.getChildMeshes() : []); m.forEach(x => { if (x.getLODLevels) x.getLODLevels().forEach(l => l.mesh && l.mesh.dispose()); }); aktuell.dispose(false, false); aktuell = null; robo = null; }
 function bauen() {
   if (EXTRA[typ]) { if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); EXTRA[typ].bauen(); return; }
   if (EXTRA.aufraeumen) EXTRA.aufraeumen(); wegraeumen(); const w = werte[typ]; const t0 = performance.now(); let ziel = 4, radius = 22, info = '';
@@ -236,8 +237,28 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
     box.append(el('div', { className: 'r' }, [el('label', { textContent: 'Name' }), n]), k);
   }
 
+  /* ---------- 🤖 KI-Bauplan: ChatGPT/Claude schreibt JSON, die Werkstatt baut daraus das Modell ---------- */
+  const KI = { text: localStorage.getItem('sdKiBauplan') || JSON.stringify({ name: 'Windrad', teile: [{ id: 'mast', form: 'zylinder', durchmesser: 0.5, hoehe: 12, pos: [0, 6, 0], farbe: '#e8e8e8', material: 'metall' }, { id: 'kopf', eltern: 'mast', form: 'kiste', groesse: [0.8, 0.8, 1.6], pos: [0, 6.2, 0], farbe: '#d8d8d8', material: 'metall' }, { id: 'nabe', eltern: 'kopf', form: 'kugel', durchmesser: 0.7, pos: [0, 0, 0.9], farbe: '#c83a2a' }, { id: 'f1', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [0, 2.6, 0], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f2', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [2.25, -1.3, 0], dreh: [0, 0, -120], farbe: '#f2f2f2', material: 'kunststoff' }, { id: 'f3', eltern: 'nabe', form: 'kiste', groesse: [0.35, 5, 0.08], pos: [-2.25, -1.3, 0], dreh: [0, 0, 120], farbe: '#f2f2f2', material: 'kunststoff' }], bewegungen: [{ teil: 'nabe', art: 'drehen', achse: 'z', tempo: 60 }] }, null, 1), modell: null };
+  EXTRA.ki = {
+    zeigen(box) {
+      hinweis(box, '<b>So geht’s:</b> 1) „Anleitung kopieren“ drücken und bei ChatGPT (oder einer anderen KI) einfügen, dahinter schreiben, was gebaut werden soll – z. B. <i>„ein Bagger mit drehbarem Oberteil und beweglichem Arm“</i>. 2) Die Antwort (JSON) hier einfügen. 3) „Bauen“. Gefällt es, „In Meine Modelle speichern“ – dann im Spiel mit <code>sd.teileModell(\'name\')</code> oder im Editor als Modell nutzen.');
+      const kn = el('div', { className: 'z', style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' });
+      kn.append(el('button', { textContent: '📋 Anleitung für ChatGPT kopieren', onclick: () => navigator.clipboard.writeText(SDTeile.ANLEITUNG).then(() => meldung('📋 Anleitung kopiert – bei ChatGPT einfügen und dahinter schreiben, was gebaut werden soll'), () => { KI.text = SDTeile.ANLEITUNG; reglerZeigen(); meldung('Kopieren nicht erlaubt – Text steht jetzt im Feld'); }) }),
+        el('button', { textContent: '🔨 Bauen', className: 'haupt', onclick: () => { KI.text = ta.value; try { localStorage.setItem('sdKiBauplan', KI.text); } catch (e) { /* egal */ } bauen(); } }));
+      box.append(kn); const ta = el('textarea', { value: KI.text, spellcheck: false, style: 'width:100%;height:240px;font:12px/1.4 Consolas,monospace;background:#0b1017;color:#dfe7ef;border:1px solid #2a3442;border-radius:8px;padding:8px' }); box.append(ta);
+      const f = el('div', { className: 'hinweis', id: 'kiFehler' }); box.append(f);
+      const sp = el('button', { textContent: '💾 In „Meine Modelle“ speichern', style: 'width:100%;margin-top:6px', onclick: async () => { const { daten, fehler } = SDTeile.pruefen(ta.value); if (!daten || !daten.teile.length) { meldung('⨯ ' + (fehler[0] || 'Leer')); return; }
+        const nm = SDAssets.name((prompt('Name für das Modell:', daten.name) || daten.name).trim() || daten.name); if (await SDAssets.holen(nm) && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return;
+        await SDAssets.speichern({ name: nm, typ: 'teile', json: JSON.stringify(daten), teile: daten.teile.length, groesse: JSON.stringify(daten).length }); meldung('💾 „' + nm + '“ gespeichert – im Skript: sd.teileModell(\'' + nm + '\', { pos: [0, null, 0] })'); } });
+      box.append(sp);
+    },
+    bauen() { window.SD_KI_UPDATE = null; const r = SDTeile.bauen(BABYLON, szene, BK, KI.text), f = document.getElementById('kiFehler');
+      if (f) f.textContent = r.fehler.length ? '⚠ ' + r.fehler.slice(0, 6).join(' · ') + (r.fehler.length > 6 ? ' …' : '') : (r.daten ? '✓ ' + r.daten.teile.length + ' Teile, ' + r.daten.bewegungen.length + ' Bewegungen' : '');
+      if (!r.wurzel) { $('info').textContent = 'KI-Bauplan: Fehler'; return; } aktuell = r.wurzel; schattenFuer(r.wurzel); passeKamera(r.wurzel); window.SD_KI_UPDATE = r.update; $('info').textContent = r.daten.name + ' · ' + r.daten.teile.length + ' Teile';
+      code("sd.teileModell(" + JSON.stringify(r.daten).replace(/"/g, "'").slice(0, 2000) + (JSON.stringify(r.daten).length > 2000 ? "… (zu lang – lieber speichern und mit Namen laden)" : '') + ", { pos: [0, null, 0] });"); },
+  };
   /* ---------- 📦 Meine Modelle ---------- */
-  const TYPEN = { modell: '🧍 3D-Modell', 'foto-gebaeude': '📷 Foto-Haus', 'foto-material': '📷 Foto-Material', ton: '🔊 Ton / Musik' };
+  const TYPEN = { modell: '🧍 3D-Modell', 'foto-gebaeude': '📷 Foto-Haus', 'foto-material': '📷 Foto-Material', ton: '🔊 Ton / Musik', teile: '🤖 KI-Bauplan' };
   let hoerer = null;
   /* ZIP entpacken ohne Zusatz-Bibliothek (Browser-eigenes DecompressionStream) */
   async function zipLesen(datei) {
@@ -264,6 +285,7 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
   let auswahl = null;
   async function modellAnsehen(a) {
     EXTRA.aufraeumen(); wegraeumen(); auswahl = a.name; if (hoerer) { hoerer.pause(); URL.revokeObjectURL(hoerer.src); hoerer = null; }
+    if (a.typ === 'teile') { const r = SDTeile.bauen(BABYLON, szene, BK, a.json); if (r.wurzel) { aktuell = r.wurzel; schattenFuer(r.wurzel); passeKamera(r.wurzel); window.SD_KI_UPDATE = r.update; } $('info').textContent = a.name + ' · KI-Bauplan · ' + a.teile + ' Teile'; code("sd.teileModell('" + a.name + "', { pos: [0, null, 0] });"); EXTRA._anims = []; reglerZeigen(); return; }
     if (a.typ === 'ton') { hoerer = new Audio(URL.createObjectURL(a.datei)); hoerer.play().catch(() => {}); $('info').textContent = a.name + ' · Tondatei · ' + (a.dauer ? a.dauer.toFixed(1) + ' s' : '');
       code("sd.musik('" + a.name + "', { lautstaerke: 0.5 });   // als Hintergrundmusik (läuft in Schleife)\n// oder als Geräusch an einer Stelle:\nsd.klang('" + a.name + "', { pos: [0, 1, 0], lautstaerke: 1 });"); EXTRA._anims = []; reglerZeigen(); return; }
     if (a.typ === 'modell') { const u = URL.createObjectURL(a.datei); try { const c = await BABYLON.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, '.glb'); c.addAllToScene(); EXTRA._container = c; const wurzel = c.meshes[0]; aktuell = wurzel; schattenFuer(wurzel); passeKamera(wurzel);

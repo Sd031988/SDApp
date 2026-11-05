@@ -18,6 +18,7 @@ const ARTEN = {
   fotohaus: { icon: '📷', name: 'Foto-Haus', felder: [['name', 'Foto-Haus', 'eigen', '', 'foto-gebaeude']] },
   modell: { icon: '🧍', name: 'Modell', felder: [['name', 'Modell (.glb)', 'eigen', '', 'modell'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]] },
   person: { icon: '💬', name: 'Person', felder: [['name', 'Name', 'text', 'Tony'], ['text', 'Was sie sagt (Zeilen mit | trennen)', 'langtext', 'Hallo! | Schön, dich zu sehen.'], ['oberteil', 'Kleidung', 'farbe', '#6a5a3a']], hinweis: 'Mit E ansprechen. Mehrere Sätze mit | trennen.' },
+  kimodell: { icon: '🤖', name: 'KI-Modell', felder: [['name', 'KI-Bauplan (Werkstatt)', 'eigen', '', 'teile'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]], hinweis: 'Baupläne entstehen in der Werkstatt unter 🤖 KI-Bauplan (z. B. mit ChatGPT).' },
   spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
 };
 const WELT = [['modus', 'Spielart', 'wahl', 'frei', ['frei', 'battleroyale']], ['brGegner', 'Battle Royale: Gegner', 'zahl', 20, 0, 40, 1], ['brBeute', 'Battle Royale: Beutekisten', 'zahl', 45, 0, 150, 5], ['brAbsprung', 'Battle Royale: Start mit Flugzeug und Fallschirm', 'an', true], ['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m) – ab 1000 m große Welt aus Kacheln', 'zahl', 400, 150, 2400, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
@@ -69,6 +70,7 @@ function code(roh, formenGitter) {
     else if (x.art === 'auto') z.push('sd.auto({ pos: ' + pos + ', drehung: ' + x.dreh + ", typ: '" + p.typ + "', farbe: '" + p.farbe + "' });");
     else if (x.art === 'gegner' && !(p.mission > 0)) z.push('sd.gegner({ pos: ' + pos + ', staerke: ' + p.staerke + ", waffe: '" + p.waffe + "', aussehen: '" + p.aussehen + "'" + (p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a2a2a', weste: true, westeFarbe: '#5a2a2a' }" : '') + ' });');
     else if (x.art === 'person') z.push('sd.person({ pos: ' + pos + ', drehung: ' + x.dreh + ', name: ' + txt(p.name) + ', text: [' + String(p.text).split('|').map(t => t.trim()).filter(Boolean).map(txt).join(', ') + "], mensch: { oberteil: '" + p.oberteil + "' } });");
+    else if (x.art === 'kimodell' && p.name) z.push("sd.teileModell('" + p.name + "', { pos: " + pos + ', drehung: ' + x.dreh + ', skalierung: ' + p.skalierung + ' });');
     else if (x.art === 'kiste') z.push('sd.kiste({ pos: ' + pos + ", inhalt: '" + p.inhalt + "' });");
     else if (x.art === 'fels') z.push('sd.fels({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') - 0.3, ' + x.z + '], groesse: ' + p.groesse + ', seed: ' + (i + 1) + ' });');
     else if (x.art === 'box') z.push('sd.box({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') + ' + (p.h / 2 + (p.masse ? 0.2 : 0)) + ', ' + x.z + '], groesse: [' + p.b + ', ' + p.h + ', ' + p.t + "], textur: '" + p.textur + "', farbe: '" + p.farbe + "', masse: " + p.masse + ', drehung: [0, ' + x.dreh + ', 0] });');

@@ -794,6 +794,13 @@
     const sd = {
       BABYLON: BAB, szene, engine, kamera, sonne,
       himmel, gelaende, hoehe, box, kugel, zylinder, fels, baeume, haus, modell, kiste, fotoHaus, figurLaden, eigeneDateien: () => Object.values(EIGENE).map(a => ({ name: a.name, typ: a.typ })),
+      /** Modell aus einem KI-Bauplan (JSON-Daten oder Name aus „Meine Modelle“) mit Bewegungen und einfacher Kollision */
+      teileModell: (daten, o) => { o = o || {}; if (!window.SDTeile) throw new Error('sd-teile.js fehlt'); if (typeof daten === 'string' && !/^\s*[{[]/.test(daten)) daten = eigene(daten, 'teile').json;
+        const r = window.SDTeile.bauen(BAB, szene, BK, daten); if (!r.wurzel) throw new Error('KI-Bauplan: ' + r.fehler.join(', ')); const p = o.pos || [0, null, 0], x = p[0], z = p[2], y = p[1] ?? hoehe(x, z);
+        r.wurzel.position = V(x, y, z); r.wurzel.rotation.y = (o.drehung || 0) * Math.PI / 180; if (o.skalierung) r.wurzel.scaling.setAll(o.skalierung);
+        r.wurzel.getChildMeshes().forEach(m => { schatten.addShadowCaster(m); m.receiveShadows = true; });
+        if (o.kollision !== false) { r.wurzel.computeWorldMatrix(true); r.wurzel.getChildMeshes().forEach(m => m.computeWorldMatrix(true)); const { min, max } = r.wurzel.getHierarchyBoundingVectors(true), g = max.subtract(min); const n = new BAB.TransformNode('teilePhysik', szene); n.position = min.add(g.scale(0.5)); const b = new BAB.PhysicsBody(n, BAB.PhysicsMotionType.STATIC, false, szene); b.shape = new BAB.PhysicsShapeBox(V(0, 0, 0), BAB.Quaternion.Identity(), g, szene); }
+        if (r.daten.bewegungen.length) frameFns.push(dt => r.update(dt)); return r; },
       spieler: spielerErstellen, gegner, zone: zoneErstellen, waffe: waffeGeben, WAFFEN,
       jedenFrame: f => frameFns.push(f), beiTaste: (t, f) => (tastenHandler[t] = tastenHandler[t] || []).push(f),
       skript: (ziel, s) => { const e = { ziel, update: s.update }; try { s.start && s.start.call(ziel, ziel); } catch (er) { opt.beiFehler && opt.beiFehler(er); } skripte.push(e); return e; },

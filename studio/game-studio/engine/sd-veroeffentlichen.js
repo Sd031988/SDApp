@@ -9,7 +9,7 @@
   const sicher = n => String(n).toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').slice(0, 40);
 
   /** Welche eigenen Dateien braucht das Skript? */
-  function eigeneNamen(code) { const n = new Set(); for (const re of [/fotoHaus\(\s*'([^']+)'/g, /modell\(\s*'([^']+)'/g, /figurLaden\(\s*'([^']+)'/g, /'foto:([^']+)'/g, /modell:\s*'([^']+)'/g, /musik\(\s*'([^']+)'/g, /klang\(\s*'([^']+)'/g]) for (const m of code.matchAll(re)) n.add(m[1]); for (const k of ['ruhig', 'spannung', 'action', 'auto', 'schuss', 'pistole', 'schrot', 'explosion', 'treffer', 'kopf', 'aufheben', 'muenze', 'nachladen', 'schaden', 'tot', 'schritt', 'klick', 'tuer', 'alarm', 'sieg']) n.delete(k); return [...n]; }
+  function eigeneNamen(code) { const n = new Set(); for (const re of [/fotoHaus\(\s*'([^']+)'/g, /modell\(\s*'([^']+)'/g, /figurLaden\(\s*'([^']+)'/g, /'foto:([^']+)'/g, /modell:\s*'([^']+)'/g, /musik\(\s*'([^']+)'/g, /klang\(\s*'([^']+)'/g, /teileModell\(\s*'([^']+)'/g]) for (const m of code.matchAll(re)) n.add(m[1]); for (const k of ['ruhig', 'spannung', 'action', 'auto', 'schuss', 'pistole', 'schrot', 'explosion', 'treffer', 'kopf', 'aufheben', 'muenze', 'nachladen', 'schaden', 'tot', 'schritt', 'klick', 'tuer', 'alarm', 'sieg']) n.delete(k); return [...n]; }
 
   async function dateien(o) {
     const quelle = await (await fetch('./index.html', { cache: 'no-cache' })).text();
@@ -22,6 +22,7 @@
       const e = { name: a.name, typ: a.typ, dateien: [] }; for (const [k, v] of Object.entries(a)) if (!(v instanceof Blob) && k !== 'bilder' && typeof v !== 'object') e[k] = v;
       const ablegen = async (feld, blob, endung) => { const pfad = 'eigene/' + sicher(a.name) + '-' + feld.replace('.', '-') + '.' + endung; out[pfad] = await alsDataUrl(blob); e.dateien.push([feld, pfad]); };
       if (a.typ === 'modell') await ablegen('datei', a.datei, 'glb');
+      if (a.typ === 'teile') e.json = a.json;
       if (a.typ === 'ton') await ablegen('datei', a.datei, (a.endung || 'mp3').replace(/[^a-z0-9]/g, ''));
       if (a.typ === 'foto-material') { await ablegen('bild', a.bild, 'jpg'); if (a.normal) await ablegen('normal', a.normal, 'jpg'); }
       if (a.typ === 'foto-gebaeude') for (const [k, b] of Object.entries(a.bilder || {})) await ablegen('bilder.' + k, b, 'jpg');
