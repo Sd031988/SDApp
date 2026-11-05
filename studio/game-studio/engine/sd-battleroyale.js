@@ -58,13 +58,13 @@
   function battleRoyale(o) {
     o = Object.assign({ gegner: 18, beute: 45, absprung: true, aussehen: 'mensch', seed: Math.floor(Math.random() * 1e6) }, o || {}); const r = ctx.zufall(o.seed), sd = ctx.sd;
     // Beute: zuerst in Häusern (Erdgeschoss hinter der Tür), dann verstreut
-    const sorten = ['munition', 'munition', 'munition', 'medikit', 'medikit', 'waffe:gewehr', 'waffe:gewehr', 'waffe:schrotflinte', 'waffe:scharfschuetze', 'helm:1', 'helm:1', 'helm:2', 'helm:3', 'weste:1', 'weste:1', 'weste:2', 'weste:3', 'rucksack:1', 'rucksack:2', 'rucksack:3', 'aufsatz:visier', 'aufsatz:daempfer', 'aufsatz:magazin'];
+    const sorten = ['munition', 'munition', 'munition', 'munition', 'medikit', 'verband', 'verband', 'energie', 'waffe:gewehr', 'waffe:ak', 'waffe:bullpup', 'waffe:mp', 'waffe:vektor', 'waffe:schrotflinte', 'waffe:autoschrot', 'waffe:dmr', 'waffe:scharfschuetze', 'waffe:mg', 'waffe:revolver', 'waffe:armbrust', 'helm:1', 'helm:1', 'helm:2', 'helm:3', 'weste:1', 'weste:1', 'weste:2', 'weste:3', 'rucksack:1', 'rucksack:2', 'rucksack:3', 'aufsatz:visier', 'aufsatz:daempfer', 'aufsatz:magazin'];
     let n = 0; for (const h of (ctx.haeuser || [])) { if (n >= o.beute) break; const p = h.tuerInnen, q = h.mitte; const x = p.x + (q.x - p.x) * 0.6, z = p.z + (q.z - p.z) * 0.6; sd.kiste({ pos: [x, p.y + 0.15, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     while (n < o.beute) { const [x, z] = zufallsLand(r); sd.kiste({ pos: [x, null, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     // Zone um einen Punkt an Land
     const mitte = zufallsLand(r), Z0 = Object.assign({ mitte, radius: G() * 0.72, endRadius: Math.max(20, G() * 0.04), warte: o.absprung ? 70 : 40, dauer: Math.round(G() * 0.45), schaden: 5 }, o.zone || {}), Z = sd.zone(Z0); abwurfZone = Z; naechsterAbwurf = (o.absprung ? 140 : 90) + (ctx.zeit || 0); abwurfAn = o.abwurf !== false;
     // Gegner überall an Land verteilt
-    const neueBots = []; if (!ctx.mehrspieler) for (let i = 0; i < o.gegner; i++) { const [x, z] = zufallsLand(r); neueBots.push(sd.gegner({ pos: [x, null, z], staerke: 0.25 + r() * 0.55, aussehen: o.aussehen, waffe: ['gewehr', 'pistole', 'schrotflinte', 'gewehr'][i % 4], name: 'Gegner ' + (i + 1) })); }
+    const neueBots = []; if (!ctx.mehrspieler) for (let i = 0; i < o.gegner; i++) { const [x, z] = zufallsLand(r); neueBots.push(sd.gegner({ pos: [x, null, z], staerke: 0.25 + r() * 0.55, aussehen: o.aussehen, waffe: ['gewehr', 'ak', 'mp', 'schrotflinte', 'dmr', 'bullpup', 'vektor', 'gewehr'][i % 8], name: 'Gegner ' + (i + 1) })); }
     if (!ctx.spieler) { const [x, z] = zufallsLand(r); sd.spieler({ pos: [x, null, z], waffen: ['pistole'], aussehen: o.aussehen }); }
     if (o.absprung) { absprung(o.flug || {}); botsAbspringen(neueBots.filter(b => b && b.cc), r); } else ctx.nachricht('Bleib in der Zone und überlebe als Letzter!', 5);
     sd.musik && sd.musik('spannung');

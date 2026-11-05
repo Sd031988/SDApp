@@ -333,7 +333,50 @@
       return { mesh: zusammen(teile, 'fotoGebaeude'), kollision: [{ p: [0, H / 2, 0], g: [B, H, T], rx: 0 }, { p: [0, H + 0.12, 0], g: [B + 0.2, 0.25, T + 0.2], rx: 0 }], hoehe: H + 0.25 };
     }
 
-    return { material, oberflaeche, weltUV, baum, gebaeude, roboter, eigeneOberflaeche, fotoGebaeude, kachelGroesse, OBERFLAECHEN: Object.keys(OBERFLAECHEN) };
+    /* =============== 🔫 WAFFEN-MODELLE =============== */
+    /** Muster für Skins: 'glatt' | 'tarn' | 'wueste' | 'digital' | 'streifen' | 'karbon' – als kachelbare Textur */
+    const musterCache = {};
+    function muster(art, f1, f2) { const key = art + f1 + f2; if (musterCache[key]) return musterCache[key]; const n = 128, cv = document.createElement('canvas'); cv.width = cv.height = n; const x = cv.getContext('2d'), r = zufall(art.length * 97 + 3);
+      x.fillStyle = f1; x.fillRect(0, 0, n, n); x.fillStyle = f2;
+      if (art === 'tarn' || art === 'wueste') for (let i = 0; i < 26; i++) { x.beginPath(); const cx = r() * n, cy = r() * n; for (let k = 0; k < 7; k++) { const w = k / 7 * Math.PI * 2, rr = 6 + r() * 14; x.lineTo(cx + Math.cos(w) * rr, cy + Math.sin(w) * rr); } x.fill(); for (const [dx, dy] of [[n, 0], [-n, 0], [0, n], [0, -n]]) { x.save(); x.translate(dx, dy); x.restore(); } }
+      if (art === 'digital') for (let i = 0; i < 160; i++) { const s2 = 6 + Math.floor(r() * 2) * 6; x.fillRect(Math.floor(r() * n / 6) * 6, Math.floor(r() * n / 6) * 6, s2, s2); }
+      if (art === 'streifen') for (let i = -n; i < n * 2; i += 24) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + 10, 0); x.lineTo(i + 10 - n, n); x.lineTo(i - n, n); x.fill(); }
+      if (art === 'karbon') for (let yy = 0; yy < n; yy += 8) for (let xx = 0; xx < n; xx += 8) { if (((xx + yy) / 8) % 2) x.fillRect(xx, yy, 8, 4); else x.fillRect(xx, yy + 4, 8, 4); }
+      const t = new BAB.DynamicTexture('muster', cv, szene, true); t.update(); t.wrapU = t.wrapV = 1; return (musterCache[key] = t); }
+    function skinMaterial(skin) { skin = skin || {}; const key = 'skin|' + JSON.stringify(skin); if (matCache[key]) return matCache[key];
+      const m = new BAB.PBRMaterial('waffenSkin', szene), art = skin.muster || 'glatt'; m.albedoColor = new BAB.Color3(1, 1, 1);
+      if (art === 'glatt') m.albedoColor = F(skin.farbe || '#2a2c30'); else m.albedoTexture = muster(art, skin.farbe || '#4a5a30', skin.akzent || '#2a3020');
+      m.metallic = skin.metall ?? (art === 'glatt' ? 0.55 : 0.25); m.roughness = skin.rau ?? (art === 'karbon' ? 0.3 : 0.45); if (skin.leuchten) { m.emissiveColor = F(skin.leuchten); m.emissiveIntensity = 0.6; } return (matCache[key] = m); }
+    /**
+     * waffe({ art:'pistole'|'mp'|'sturm'|'dmr'|'sniper'|'schrot'|'mg'|'armbrust', laenge, skin:{ muster, farbe, akzent, metall } })
+     * Lauf zeigt nach +z, Griff bei z = 0. Gibt ein Mesh zurück (Teile je Material zusammengefasst).
+     */
+    function waffe(o) {
+      o = Object.assign({ art: 'sturm', laenge: 0.8 }, o || {}); const teile = [], haupt = skinMaterial(o.skin), dunkel = material('metall', '#1a1b1e', { rau: 0.4, metall: 0.8 }), holz = material('holz', '#6a4a2a'), glas = material(null, '#1a2a3a', { glas: true }), L = o.laenge;
+      const k = (w, h, d, x, y, z, m) => { const b = BAB.MeshBuilder.CreateBox('wt', { width: w, height: h, depth: d }, szene); b.position = V(x, y, z); backen(b); weltUV(b, 0.25); b.material = m || haupt; teile.push(b); return b; };
+      const rohr = (dm, l, x, y, z, m) => { const c = BAB.MeshBuilder.CreateCylinder('wr', { diameter: dm, height: l, tessellation: 10 }, szene); c.rotation.x = Math.PI / 2; c.position = V(x, y, z + l / 2); backen(c); c.material = m || dunkel; teile.push(c); return c; };
+      const zielfernrohr = (z, l) => { rohr(0.045, l, 0, 0.085, z, dunkel); rohr(0.055, 0.03, 0, 0.085, z - 0.005, dunkel); rohr(0.055, 0.03, 0, 0.085, z + l - 0.025, dunkel); const g = BAB.MeshBuilder.CreateDisc('wl', { radius: 0.022, tessellation: 12 }, szene); g.position = V(0, 0.085, z + l + 0.001); backen(g); g.material = glas; teile.push(g); k(0.02, 0.03, 0.02, 0, 0.055, z + l * 0.3, dunkel); k(0.02, 0.03, 0.02, 0, 0.055, z + l * 0.7, dunkel); };
+      const griff = (z) => { const g = k(0.045, 0.11, 0.06, 0, -0.07, z, dunkel); g.rotation && 0; };
+      if (o.art === 'pistole') { k(0.04, 0.05, 0.2, 0, 0.02, 0.07); k(0.038, 0.12, 0.05, 0, -0.05, -0.0, dunkel); k(0.034, 0.03, 0.06, 0, -0.012, 0.05, dunkel); rohr(0.016, 0.02, 0, 0.03, 0.17); }
+      else if (o.art === 'armbrust') { k(0.05, 0.06, L * 0.75, 0, 0, L * 0.3, holz); k(0.6, 0.02, 0.03, 0, 0.02, L * 0.62); k(0.04, 0.1, 0.06, 0, -0.07, 0.05, dunkel); k(0.012, 0.012, L * 0.6, 0, 0.04, L * 0.35, dunkel); }
+      else {
+        const lang = o.art === 'sniper' || o.art === 'dmr', kurz = o.art === 'mp', koerperL = kurz ? 0.28 : o.art === 'schrot' ? 0.32 : 0.36, laufL = Math.max(0.12, L - koerperL - 0.18);
+        k(0.055, 0.085, koerperL, 0, 0.01, koerperL / 2);                                              // Gehäuse
+        k(0.05, 0.05, kurz ? 0.12 : 0.24, 0, 0.0, -(kurz ? 0.06 : 0.13), o.art === 'sniper' || o.art === 'schrot' ? holz : haupt);   // Schaft
+        if (!kurz) k(0.045, 0.09, 0.05, 0, -0.03, -0.24, o.art === 'sniper' || o.art === 'schrot' ? holz : haupt);
+        griff(0.02);
+        if (o.art === 'schrot') { rohr(0.03, laufL + 0.1, 0, 0.03, koerperL - 0.02); rohr(0.026, laufL * 0.85, 0, -0.01, koerperL - 0.02, dunkel); k(0.05, 0.05, 0.14, 0, -0.012, koerperL + laufL * 0.35, holz); }
+        else { k(0.05, 0.06, laufL * 0.55, 0, 0.012, koerperL + laufL * 0.27, haupt); rohr(0.022, laufL, 0, 0.02, koerperL); rohr(0.03, 0.05, 0, 0.02, koerperL + laufL - 0.03); }
+        if (o.art === 'sturm') { const m = k(0.035, 0.13, 0.06, 0, -0.08, koerperL * 0.62, dunkel); m.rotation && 0; k(0.02, 0.03, 0.1, 0, 0.068, koerperL * 0.5, dunkel); }
+        if (o.art === 'mp') { k(0.03, 0.16, 0.04, 0, -0.1, koerperL * 0.55, dunkel); }
+        if (o.art === 'mg') { k(0.09, 0.1, 0.12, 0, -0.08, koerperL * 0.55, dunkel); k(0.012, 0.18, 0.012, 0.04, -0.1, koerperL + laufL * 0.8, dunkel); k(0.012, 0.18, 0.012, -0.04, -0.1, koerperL + laufL * 0.8, dunkel); }
+        if (o.art === 'dmr' || o.art === 'sturm' && o.visier) zielfernrohr(koerperL * 0.15, 0.22);
+        if (o.art === 'sniper') { zielfernrohr(koerperL * 0.05, 0.32); k(0.012, 0.012, 0.05, 0.04, 0.04, koerperL * 0.55, dunkel); k(0.03, 0.06, 0.04, 0, -0.06, koerperL * 0.7, dunkel); }
+        if (o.art === 'dmr') k(0.03, 0.11, 0.05, 0, -0.075, koerperL * 0.62, dunkel);
+      }
+      return zusammen(teile, 'waffe');
+    }
+    return { material, waffe, skinMaterial, oberflaeche, weltUV, baum, gebaeude, roboter, eigeneOberflaeche, fotoGebaeude, kachelGroesse, OBERFLAECHEN: Object.keys(OBERFLAECHEN) };
   }
 
   window.SDBaukasten = { erstellen, zufall, version: '1.0' };

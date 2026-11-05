@@ -76,11 +76,25 @@
 
   /* ---------- Waffen ---------- */
   const WAFFEN = {
-    pistole: { name: 'Pistole', schaden: 28, kadenz: 0.2, magazin: 12, reserve: 48, streuung: 0.018, zielStreuung: 0.006, nachladen: 1.3, auto: false, kugeln: 1, rueckstoss: 0.012, ton: 'pistole', laenge: 0.35 },
-    gewehr: { name: 'Sturmgewehr', schaden: 21, kadenz: 0.1, magazin: 30, reserve: 90, streuung: 0.014, zielStreuung: 0.004, nachladen: 2.0, auto: true, kugeln: 1, rueckstoss: 0.009, ton: 'schuss', laenge: 0.8 },
-    schrotflinte: { name: 'Schrotflinte', schaden: 11, kadenz: 0.85, magazin: 6, reserve: 24, streuung: 0.065, zielStreuung: 0.045, nachladen: 2.6, auto: false, kugeln: 9, rueckstoss: 0.04, ton: 'schrot', laenge: 0.9 },
-    scharfschuetze: { name: 'Scharfschützengewehr', schaden: 85, kadenz: 1.3, magazin: 5, reserve: 15, streuung: 0.03, zielStreuung: 0.0005, nachladen: 2.8, auto: false, kugeln: 1, rueckstoss: 0.05, ton: 'schuss', laenge: 1.1, zoom: 0.25 },
+    pistole: { name: 'Pistole', schaden: 28, kadenz: 0.2, magazin: 12, reserve: 48, streuung: 0.018, zielStreuung: 0.006, nachladen: 1.3, auto: false, kugeln: 1, rueckstoss: 0.012, ton: 'pistole', laenge: 0.35, modell: 'pistole' },
+    gewehr: { modell: 'sturm', name: 'Sturmgewehr M-4', schaden: 21, kadenz: 0.1, magazin: 30, reserve: 90, streuung: 0.014, zielStreuung: 0.004, nachladen: 2.0, auto: true, kugeln: 1, rueckstoss: 0.009, ton: 'schuss', laenge: 0.8 },
+    schrotflinte: { modell: 'schrot', name: 'Pumpflinte S-6', schaden: 11, kadenz: 0.85, magazin: 6, reserve: 24, streuung: 0.065, zielStreuung: 0.045, nachladen: 2.6, auto: false, kugeln: 9, rueckstoss: 0.04, ton: 'schrot', laenge: 0.9 },
+    scharfschuetze: { modell: 'sniper', name: 'Repetiergewehr K-98', schaden: 85, kadenz: 1.3, magazin: 5, reserve: 15, streuung: 0.03, zielStreuung: 0.0005, nachladen: 2.8, auto: false, kugeln: 1, rueckstoss: 0.05, ton: 'schuss', laenge: 1.1, zoom: 0.25 },
   };
+
+  // Weitere Waffen (eigene Namen, Klassen wie in großen Battle-Royale-Spielen)
+  Object.assign(WAFFEN, {
+    revolver: { modell: 'pistole', name: 'Revolver R-6', schaden: 55, kadenz: 0.55, magazin: 6, reserve: 24, streuung: 0.02, zielStreuung: 0.004, nachladen: 2.2, auto: false, kugeln: 1, rueckstoss: 0.03, ton: 'pistole', laenge: 0.32 },
+    mp: { modell: 'mp', name: 'Maschinenpistole MP-9', schaden: 16, kadenz: 0.07, magazin: 30, reserve: 120, streuung: 0.022, zielStreuung: 0.01, nachladen: 1.8, auto: true, kugeln: 1, rueckstoss: 0.006, ton: 'pistole', laenge: 0.55 },
+    vektor: { modell: 'mp', name: 'Maschinenpistole V-45', schaden: 15, kadenz: 0.055, magazin: 25, reserve: 100, streuung: 0.02, zielStreuung: 0.009, nachladen: 1.7, auto: true, kugeln: 1, rueckstoss: 0.005, ton: 'pistole', laenge: 0.5 },
+    ak: { modell: 'sturm', name: 'Sturmgewehr K-47', schaden: 27, kadenz: 0.11, magazin: 30, reserve: 90, streuung: 0.018, zielStreuung: 0.005, nachladen: 2.3, auto: true, kugeln: 1, rueckstoss: 0.014, ton: 'schuss', laenge: 0.85 },
+    bullpup: { modell: 'sturm', name: 'Bullpup AU-9', schaden: 22, kadenz: 0.085, magazin: 30, reserve: 90, streuung: 0.012, zielStreuung: 0.003, nachladen: 2.5, auto: true, kugeln: 1, rueckstoss: 0.008, ton: 'schuss', laenge: 0.7 },
+    dmr: { modell: 'dmr', name: 'Präzisionsgewehr SK-14', schaden: 46, kadenz: 0.3, magazin: 10, reserve: 40, streuung: 0.02, zielStreuung: 0.0012, nachladen: 2.6, auto: false, kugeln: 1, rueckstoss: 0.025, ton: 'schuss', laenge: 0.95, zoom: 0.4 },
+    magnum: { modell: 'sniper', name: 'Magnum-Gewehr AM-3', schaden: 120, kadenz: 1.8, magazin: 5, reserve: 10, streuung: 0.035, zielStreuung: 0.0004, nachladen: 3.5, auto: false, kugeln: 1, rueckstoss: 0.06, ton: 'schuss', laenge: 1.2, zoom: 0.18 },
+    autoschrot: { modell: 'schrot', name: 'Automatikflinte S-12', schaden: 9, kadenz: 0.3, magazin: 5, reserve: 25, streuung: 0.07, zielStreuung: 0.05, nachladen: 3.0, auto: false, kugeln: 9, rueckstoss: 0.03, ton: 'schrot', laenge: 0.85 },
+    mg: { modell: 'mg', name: 'Maschinengewehr M-249', schaden: 22, kadenz: 0.075, magazin: 75, reserve: 150, streuung: 0.022, zielStreuung: 0.008, nachladen: 5.0, auto: true, kugeln: 1, rueckstoss: 0.012, ton: 'schuss', laenge: 1.0 },
+    armbrust: { modell: 'armbrust', name: 'Armbrust', schaden: 90, kadenz: 1.5, magazin: 1, reserve: 12, streuung: 0.01, zielStreuung: 0.001, nachladen: 3.0, auto: false, kugeln: 1, rueckstoss: 0.02, ton: 'klick', laenge: 0.8, leise: true },
+  });
 
   /* =================================================================== */
   async function starten(canvas, code, opt) {
@@ -488,7 +502,6 @@
       o = o || {}; const start = V(o.pos[0], o.pos[1] ?? hoehe(o.pos[0], o.pos[2]) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(start, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
       const kos = opt.kosmetik || {}; const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: Object.assign({}, o.roboter, kos.roboter), mensch: Object.assign({}, o.mensch, kos.mensch), modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung });
-      if (kos.waffenFarbe && k.waffe) { const mat = new BAB.PBRMaterial('waffenSkin', szene); mat.albedoColor = BAB.Color3.FromHexString(kos.waffenFarbe); mat.metallic = 0.6; mat.roughness = 0.35; [k.waffe].concat(k.waffe.getChildMeshes ? k.waffe.getChildMeshes() : []).forEach(m => { if (m.material) m.material = mat; }); }
       k.getChildMeshes().forEach(m => { m.isPickable = false; });
       spieler = { cc, k, leben: o.leben || 100, maxLeben: o.leben || 100, ruestung: o.ruestung || 0, gier: o.blick || 0, nick: 0.1, zustand: { luft: 0 }, waffen: [], aktiv: 0, letzterSchuss: 0, laden: 0, kills: 0, schaden: 0, rueckstoss: 0, tempo: 0, abstand: 4.2 };
       (o.waffen || ['pistole']).forEach(w => waffeGeben(w)); waffeWechseln(0); return spieler;
@@ -499,7 +512,12 @@
       if (spieler.waffen.length >= 3) { const alt = spieler.waffen[spieler.aktiv]; spieler.waffen[spieler.aktiv] = { id: name, def, mag: def.magazin, reserve: def.reserve }; if (!still) nachricht(def.name + ' statt ' + alt.def.name); waffeWechseln(spieler.aktiv); return true; }
       spieler.waffen.push({ id: name, def, mag: def.magazin, reserve: def.reserve }); if (!still) nachricht('🔫 ' + def.name + ' aufgehoben (Taste ' + spieler.waffen.length + ')'); return true;
     }
-    function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; if (!spieler.k.glb) { spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; } }
+    /** echtes Waffenmodell (mit Skin) an die Figur hängen; der alte Kasten bleibt unsichtbar als Halter */
+    function waffenModell(k, id, def) { if (!k || !k.waffe || !BK || !BK.waffe) return false; const h = k.waffe; if (h.__modell) { h.__modell.dispose(); h.__modell = null; }
+      const kos = opt.kosmetik || {}, skins = kos.waffenSkins || {}, skin = (k === (spieler && spieler.k)) ? (skins[id] || skins.alle) : null;
+      const m = BK.waffe({ art: def.modell || 'sturm', laenge: def.laenge, skin: skin || undefined }); if (!m) return false; m.parent = h; h.isVisible = false; const tiefe = h.getBoundingInfo().boundingBox.extendSize.z * 2 / (h.scaling.z || 1);
+      m.scaling = V(1 / (h.scaling.x || 1), 1 / (h.scaling.y || 1), 1 / (h.scaling.z || 1)); m.position = V(0, 0, -tiefe / 2 + 0.06); m.isPickable = false; m.metadata = h.metadata; schatten.addShadowCaster(m); h.__modell = m; return true; }
+    function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; if (!waffenModell(spieler.k, w.id, w.def) && !spieler.k.glb) { { spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; } } }
     ['1', '2', '3'].forEach((t, i) => (tastenHandler[t] = tastenHandler[t] || []).push(() => waffeWechseln(i)));
     (tastenHandler.R = tastenHandler.R || []).push(() => nachladen());
     (tastenHandler.K = tastenHandler.K || []).push(() => { const E = opt.einstellungen; if (!E) return; E.ansicht = E.ansicht === 'fpp' ? 'tpp' : 'fpp'; nachricht(E.ansicht === 'fpp' ? '👁 Ich-Perspektive' : '🧍 Third-Person', 1.5); opt.beiEinstellung && opt.beiEinstellung(); });
@@ -544,7 +562,7 @@
       const stile = ['kampf', 'kampf', 'spaeher', 'schwer'], lacke = ['#d9dde2', '#c9b48a', '#9aa7b4', '#6b7a5a', '#b04a3a'];
       const k = figur({ besitzer: id, farbe: o.farbe || farbenSatz[bots.length % 5], helm: '#40332b', modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung, aussehen: o.aussehen, roboter: Object.assign({ stil: stile[bots.length % 4], farbe: lacke[bots.length % 5], augen: '#ff3b30' }, o.roboter || {}) });
       const b = { id, cc, k, name: o.name || ('Bot ' + (bots.length + 1)), leben: o.leben || 100, staerke: st, waffe: WAFFEN[o.waffe || (bots.length % 3 === 0 ? 'schrotflinte' : 'gewehr')], ziel: null, warte: 0, letzterSchuss: 0, sieht: 0, alarm: 0, zustand: { luft: 0 }, richtung: Math.random() * 6.28, heimat: p.clone(), seitwaerts: Math.random() < 0.5 ? 1 : -1, wechsel: 0, nebenfigur: !!o.nebenfigur };
-      bots.push(b); return b;
+      waffenModell(k, Object.keys(WAFFEN).find(n => WAFFEN[n] === b.waffe), b.waffe); bots.push(b); return b;
     }
     /** Figur still entfernen (z. B. Polizei, die aufgibt) – zählt nicht als Abschuss */
     function botEntfernen(b) { if (b.weg) return; b.weg = true; b.tot = true; try { b.cc.dispose && b.cc.dispose(); } catch (e) { /* schon weg */ } b.k.dispose(false, true); }
@@ -622,7 +640,8 @@
     /* ---------- Kisten (Beute) ---------- */
     const INHALT = { munition: ['#c2a14a', '📦 Munition'], medikit: ['#d84a4a', '✚ Medikit +40'], ruestung: ['#4a7ad8', '🛡 Schutzweste +50'], 'waffe:gewehr': ['#8a6a3a', '🔫 Sturmgewehr'], 'waffe:schrotflinte': ['#8a6a3a', '🔫 Schrotflinte'], 'waffe:scharfschuetze': ['#8a6a3a', '🎯 Scharfschützengewehr'],
       'helm:1': ['#6a7a5a', '⛑ Helm Stufe 1'], 'helm:2': ['#5a6a7a', '⛑ Helm Stufe 2'], 'helm:3': ['#3a3a4a', '⛑ Helm Stufe 3'], 'weste:1': ['#4a7ad8', '🦺 Weste Stufe 1'], 'weste:2': ['#3a5ab8', '🦺 Weste Stufe 2'], 'weste:3': ['#2a3a88', '🦺 Weste Stufe 3'],
-      'rucksack:1': ['#8a7a4a', '🎒 Rucksack Stufe 1'], 'rucksack:2': ['#7a6a3a', '🎒 Rucksack Stufe 2'], 'rucksack:3': ['#5a4a2a', '🎒 Rucksack Stufe 3'], 'aufsatz:visier': ['#2a8a8a', '🔭 Zielfernrohr'], 'aufsatz:daempfer': ['#2a2a2a', '🔇 Schalldämpfer'], 'aufsatz:magazin': ['#8a4a2a', '🧰 Großes Magazin'], abwurf: ['#d83a2a', '📦 Versorgungsabwurf'] };
+      'rucksack:1': ['#8a7a4a', '🎒 Rucksack Stufe 1'], 'rucksack:2': ['#7a6a3a', '🎒 Rucksack Stufe 2'], 'rucksack:3': ['#5a4a2a', '🎒 Rucksack Stufe 3'], 'aufsatz:visier': ['#2a8a8a', '🔭 Zielfernrohr'], 'aufsatz:daempfer': ['#2a2a2a', '🔇 Schalldämpfer'], 'aufsatz:magazin': ['#8a4a2a', '🧰 Großes Magazin'], abwurf: ['#d83a2a', '📦 Versorgungsabwurf'], verband: ['#e8e0d0', '🩹 Verband'], energie: ['#e8c020', '🥤 Energydrink'] };
+    Object.keys(WAFFEN).forEach(n => { INHALT['waffe:' + n] = INHALT['waffe:' + n] || ['#8a6a3a', '🔫 ' + WAFFEN[n].name]; });
     /* Ausrüstung: Helm/Weste/Rucksack in Stufen, Aufsätze je Waffe */
     let ausruestungEl = null;
     function ausruestungZeigen() { if (!spieler) return; if (!ausruestungEl && hud.munition && hud.munition.parentNode) { ausruestungEl = document.createElement('div'); ausruestungEl.style.cssText = 'font:600 13px system-ui;opacity:.9;margin-top:4px;text-shadow:0 1px 3px #000'; hud.munition.parentNode.appendChild(ausruestungEl); }
@@ -636,7 +655,7 @@
       const k = { m, inhalt: inh }; kisten.push(k); return k;
     }
     function kisteOeffnen(k) {
-      if (k.inhalt === 'abwurf') { ['helm:3', 'weste:3', 'waffe:scharfschuetze', 'munition', 'medikit'].forEach(x => inhaltAnwenden(x)); nachricht('📦 Versorgungsabwurf: Helm 3, Weste 3, Scharfschützengewehr, Munition, Medikit', 4); }
+      if (k.inhalt === 'abwurf') { ['helm:3', 'weste:3', Math.random() < 0.5 ? 'waffe:magnum' : 'waffe:mg', 'munition', 'medikit'].forEach(x => inhaltAnwenden(x)); nachricht('📦 Versorgungsabwurf: Helm 3, Weste 3, Spezialwaffe, Munition, Medikit', 4); }
       else if (inhaltAnwenden(k.inhalt) === false) return;
       ton('aufheben'); kisten.splice(kisten.indexOf(k), 1); if (k.m.physicsBody) k.m.physicsBody.dispose(); k.m.dispose();
     }
@@ -646,6 +665,8 @@
         spieler[feld] = n; if (art === 'weste') spieler.ruestung = Math.max(spieler.ruestung, 40 + n * 20); nachricht(INHALT[i][1] + (art === 'helm' ? ' – ' + [0, 8, 15, 22][n] + ' % weniger Schaden' : art === 'weste' ? ' – Schutz ' + (40 + n * 20) : ' – mehr Munition pro Kiste')); }
       else if (i.startsWith('aufsatz:')) { if (!aufsatzAnbringen(i.slice(8))) return false; }
       else if (i === 'medikit') { if (spieler.leben >= spieler.maxLeben) { nachricht('Leben ist schon voll'); return false; } spieler.leben = Math.min(spieler.maxLeben, spieler.leben + 40); nachricht('✚ +40 Leben'); }
+      else if (i === 'verband') { if (spieler.leben >= 75) { nachricht('🩹 Verband hilft nur bis 75 Leben'); return false; } spieler.leben = Math.min(75, spieler.leben + 15); nachricht('🩹 +15 Leben'); }
+      else if (i === 'energie') { spieler.boost = Math.min(100, (spieler.boost || 0) + 40); nachricht('🥤 Boost: heilt langsam und macht etwas schneller'); }
       else if (i === 'ruestung') { spieler.ruestung = Math.min(100, spieler.ruestung + 50); nachricht('🛡 +50 Schutz'); }
       else if (i.startsWith('waffe:')) waffeGeben(i.slice(6));
       return true;
@@ -679,7 +700,8 @@
       const vor = (tasten.W || tasten.ArrowUp ? 1 : 0) - (tasten.S || tasten.ArrowDown ? 1 : 0) + touch.bewegen[1], seit = (tasten.D || tasten.ArrowRight ? 1 : 0) - (tasten.A || tasten.ArrowLeft ? 1 : 0) + touch.bewegen[0];
       const fw = V(Math.sin(spieler.gier), 0, Math.cos(spieler.gier)), rw = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier));
       let dir = fw.scale(vor).add(rw.scale(seit)); if (dir.length() > 1) dir.normalize();
-      const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts; const tempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (tasten.ControlLeft || tasten.C ? 0.5 : 1);
+      const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts; const tempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (tasten.ControlLeft || tasten.C ? 0.5 : 1) * (spieler.boost > 0 ? 1.08 : 1);
+      if (spieler.boost > 0) { spieler.boost = Math.max(0, spieler.boost - dt * 1.3); if (spieler.leben > 0) spieler.leben = Math.min(spieler.maxLeben, spieler.leben + dt * 0.9); }
       const vorher = spieler.cc.getPosition().clone(); if (touch.springen) { spieler.sprungPuffer = 0.25; touch.springen = false; } spieler.sprungPuffer = Math.max(0, (spieler.sprungPuffer || 0) - dt);
       const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0; if (springt) spieler.sprungPuffer = 0;
       if (spieler.wurf > 0) spieler.wurf = Math.max(0, spieler.wurf - dt);
