@@ -3,12 +3,12 @@
 'use strict';
 function create({scene,Babylon,resolveCell,onError}={}){
  if(!scene||!Babylon||!Babylon.SceneLoader||typeof Babylon.SceneLoader.ImportMeshAsync!=='function'||typeof resolveCell!=='function')throw new TypeError('scene, Babylon.SceneLoader and resolveCell required');
- const active=new Map(),pending=new Set();
+ const active=new Map(),pending=new Set(),disposed=new WeakSet();
  function cleanup(result){
   if(!result)return;
   const nodes=[...(result.meshes||[]),...(result.transformNodes||[])],set=new Set(nodes);
-  for(const node of nodes){if(node&&typeof node.dispose==='function'&&(!node.parent||!set.has(node.parent)))node.dispose(false,false);}
-  for(const resource of [...(result.skeletons||[]),...(result.animationGroups||[]),...(result.particleSystems||[])]){if(resource&&typeof resource.dispose==='function')resource.dispose();}
+  for(const node of nodes){if(node&&typeof node.dispose==='function'&&!disposed.has(node)&&(!node.parent||!set.has(node.parent))){node.dispose(false,false);disposed.add(node);}}
+  for(const resource of [...(result.skeletons||[]),...(result.animationGroups||[]),...(result.particleSystems||[])]){if(resource&&typeof resource.dispose==='function'&&!disposed.has(resource)){resource.dispose();disposed.add(resource);}}
  }
  function validateURL(url){
   // Never pass query strings, fragments, encoded traversal or non-GLB assets to SceneLoader.
