@@ -1,0 +1,551 @@
+{
+  "name": "nordhafen",
+  "welt": {
+    "modus": "frei",
+    "groesse": 820,
+    "hoehe": 18,
+    "seed": 86,
+    "wasserAn": true,
+    "wasser": -5,
+    "stunde": 17,
+    "tagMinuten": 32,
+    "regen": 0,
+    "wind": 0.35,
+    "gras": true,
+    "musik": "auto",
+    "kampagne": false,
+    "startgeld": 150
+  },
+  "objekte": [
+    {
+      "art": "spieler",
+      "x": -145,
+      "z": -148,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch"
+      }
+    },
+    {
+      "art": "haus",
+      "x": -126,
+      "z": -56,
+      "dreh": 0,
+      "p": {
+        "breite": 10,
+        "tiefe": 8,
+        "stockwerke": 2,
+        "material": "putz",
+        "farbe": "#aeb0aa",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": -90,
+      "z": -48,
+      "dreh": 90,
+      "p": {
+        "breite": 14,
+        "tiefe": 10,
+        "stockwerke": 1,
+        "material": "beton",
+        "farbe": "#a7a4a0",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": -47,
+      "z": -54,
+      "dreh": 20,
+      "p": {
+        "breite": 12,
+        "tiefe": 9,
+        "stockwerke": 2,
+        "material": "ziegel",
+        "farbe": "#a79a8c",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": -126,
+      "z": 75,
+      "dreh": 90,
+      "p": {
+        "breite": 11,
+        "tiefe": 9,
+        "stockwerke": 1,
+        "material": "beton",
+        "farbe": "#adada5",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": -85,
+      "z": 83,
+      "dreh": 0,
+      "p": {
+        "breite": 14,
+        "tiefe": 10,
+        "stockwerke": 2,
+        "material": "putz",
+        "farbe": "#9c9991",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": -40,
+      "z": 94,
+      "dreh": 0,
+      "p": {
+        "breite": 11,
+        "tiefe": 9,
+        "stockwerke": 1,
+        "material": "metall",
+        "farbe": "#878a86",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 92,
+      "z": -86,
+      "dreh": 35,
+      "p": {
+        "breite": 10,
+        "tiefe": 9,
+        "stockwerke": 2,
+        "material": "putz",
+        "farbe": "#d6c7b2",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 124,
+      "z": -41,
+      "dreh": 30,
+      "p": {
+        "breite": 12,
+        "tiefe": 10,
+        "stockwerke": 2,
+        "material": "ziegel",
+        "farbe": "#bea58e",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 160,
+      "z": -76,
+      "dreh": 22,
+      "p": {
+        "breite": 11,
+        "tiefe": 8,
+        "stockwerke": 1,
+        "material": "holz",
+        "farbe": "#a9977c",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 135,
+      "z": -118,
+      "dreh": 5,
+      "p": {
+        "breite": 13,
+        "tiefe": 10,
+        "stockwerke": 2,
+        "material": "putz",
+        "farbe": "#b8b9a9",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 51,
+      "z": 142,
+      "dreh": 0,
+      "p": {
+        "breite": 13,
+        "tiefe": 12,
+        "stockwerke": 2,
+        "material": "beton",
+        "farbe": "#999c9b",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "haus",
+      "x": 95,
+      "z": 171,
+      "dreh": 30,
+      "p": {
+        "breite": 12,
+        "tiefe": 10,
+        "stockwerke": 2,
+        "material": "metall",
+        "farbe": "#79858a",
+        "dach": "flach",
+        "balkone": false,
+        "dachTreppe": true
+      }
+    },
+    {
+      "art": "wald",
+      "x": -250,
+      "z": -80,
+      "dreh": 0,
+      "p": {
+        "radius": 110,
+        "anzahl": 125,
+        "art": "gemischt"
+      }
+    },
+    {
+      "art": "wald",
+      "x": -190,
+      "z": 130,
+      "dreh": 0,
+      "p": {
+        "radius": 105,
+        "anzahl": 145,
+        "art": "gemischt"
+      }
+    },
+    {
+      "art": "wald",
+      "x": 200,
+      "z": 160,
+      "dreh": 0,
+      "p": {
+        "radius": 120,
+        "anzahl": 150,
+        "art": "gemischt"
+      }
+    },
+    {
+      "art": "wald",
+      "x": 218,
+      "z": -188,
+      "dreh": 0,
+      "p": {
+        "radius": 105,
+        "anzahl": 140,
+        "art": "gemischt"
+      }
+    },
+    {
+      "art": "auto",
+      "x": -132,
+      "z": -120,
+      "dreh": 0,
+      "p": {
+        "typ": "suv",
+        "farbe": "#536855"
+      }
+    },
+    {
+      "art": "auto",
+      "x": 140,
+      "z": -128,
+      "dreh": 45,
+      "p": {
+        "typ": "pickup",
+        "farbe": "#917453"
+      }
+    },
+    {
+      "art": "auto",
+      "x": 86,
+      "z": 110,
+      "dreh": 30,
+      "p": {
+        "typ": "suv",
+        "farbe": "#424c54"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": -84,
+      "z": 9,
+      "dreh": 0,
+      "p": {
+        "inhalt": "waffe:gewehr"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": -103,
+      "z": -74,
+      "dreh": 0,
+      "p": {
+        "inhalt": "munition"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": -58,
+      "z": 100,
+      "dreh": 0,
+      "p": {
+        "inhalt": "medikit"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": 141,
+      "z": -36,
+      "dreh": 0,
+      "p": {
+        "inhalt": "ruestung"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": 48,
+      "z": 129,
+      "dreh": 0,
+      "p": {
+        "inhalt": "waffe:scharfschuetze"
+      }
+    },
+    {
+      "art": "kiste",
+      "x": -110,
+      "z": -142,
+      "dreh": 0,
+      "p": {
+        "inhalt": "medikit"
+      }
+    },
+    {
+      "art": "gegner",
+      "x": -68,
+      "z": -35,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.4,
+        "waffe": "gewehr",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": 18,
+      "z": 10,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.5,
+        "waffe": "gewehr",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": -98,
+      "z": 120,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.35,
+        "waffe": "schrotflinte",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": 60,
+      "z": 108,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.55,
+        "waffe": "gewehr",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": 108,
+      "z": 147,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.66,
+        "waffe": "scharfschuetze",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": 155,
+      "z": 10,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.52,
+        "waffe": "gewehr",
+        "mission": 0
+      }
+    },
+    {
+      "art": "gegner",
+      "x": -12,
+      "z": 91,
+      "dreh": 0,
+      "p": {
+        "aussehen": "mensch",
+        "staerke": 0.35,
+        "waffe": "pistole",
+        "mission": 0
+      }
+    },
+    {
+      "art": "box",
+      "x": -72,
+      "z": 16,
+      "dreh": 0,
+      "p": {
+        "b": 12,
+        "h": 2.4,
+        "t": 4,
+        "textur": "beton",
+        "farbe": "#989a94",
+        "masse": 0
+      }
+    },
+    {
+      "art": "box",
+      "x": 52,
+      "z": 105,
+      "dreh": 0,
+      "p": {
+        "b": 15,
+        "h": 2.4,
+        "t": 4,
+        "textur": "beton",
+        "farbe": "#989a94",
+        "masse": 0
+      }
+    },
+    {
+      "art": "box",
+      "x": 134,
+      "z": -100,
+      "dreh": 0,
+      "p": {
+        "b": 12,
+        "h": 2.4,
+        "t": 4,
+        "textur": "beton",
+        "farbe": "#989a94",
+        "masse": 0
+      }
+    },
+    {
+      "art": "ziel",
+      "x": -94,
+      "z": 42,
+      "dreh": 0,
+      "p": {
+        "mission": 1,
+        "schritt": 1,
+        "art": "gehe",
+        "text": "Betritt den Hafen",
+        "titel": "Hafen sichern",
+        "belohnung": 100,
+        "zeitlimit": 0
+      }
+    },
+    {
+      "art": "ziel",
+      "x": -56,
+      "z": 80,
+      "dreh": 0,
+      "p": {
+        "mission": 2,
+        "schritt": 1,
+        "art": "sammle",
+        "text": "Sichere die Funkeinheit",
+        "titel": "Funkeinheit bergen",
+        "belohnung": 100,
+        "zeitlimit": 0
+      }
+    },
+    {
+      "art": "ziel",
+      "x": 112,
+      "z": -88,
+      "dreh": 0,
+      "p": {
+        "mission": 3,
+        "schritt": 1,
+        "art": "fahre",
+        "text": "Fahre zum Dorf",
+        "titel": "Fahrt zum Dorf",
+        "belohnung": 100,
+        "zeitlimit": 0
+      }
+    },
+    {
+      "art": "ziel",
+      "x": 76,
+      "z": 158,
+      "dreh": 0,
+      "p": {
+        "mission": 4,
+        "schritt": 1,
+        "art": "sammle",
+        "text": "Sichere die Radardaten",
+        "titel": "Radar abschalten",
+        "belohnung": 100,
+        "zeitlimit": 0
+      }
+    },
+    {
+      "art": "ziel",
+      "x": -150,
+      "z": 176,
+      "dreh": 0,
+      "p": {
+        "mission": 5,
+        "schritt": 1,
+        "art": "gehe",
+        "text": "Erreiche den Evakuierungspunkt",
+        "titel": "Evakuierung",
+        "belohnung": 100,
+        "zeitlimit": 0
+      }
+    }
+  ]
+}
