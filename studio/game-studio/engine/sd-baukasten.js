@@ -199,6 +199,18 @@
         for (let i = 0; i < nz_; i++) { const z = -T / 2 + (i + 0.5) * (T / nz_); fenster(-B / 2, z, -1, 0); fenster(B / 2, z, 1, 0); }
         if (o.balkone && s > 0) { const bw = Math.min(3.2, B * 0.35); kiste(0, yb - 0.05, -T / 2 - 0.75, bw, 0.18, 1.3, sockel, 2, true); for (const sx of [-1, 1]) kiste(sx * bw / 2, yb + 0.55, -T / 2 - 0.75, 0.05, 1.0, 1.3, dunkel, 1); kiste(0, yb + 1.05, -T / 2 - 1.38, bw, 0.06, 0.06, dunkel, 1); for (let i = 0; i <= 8; i++) kiste(-bw / 2 + i * bw / 8, yb + 0.55, -T / 2 - 1.38, 0.03, 1, 0.03, dunkel, 1); }
       }
+      // Einrichtung im Erdgeschoss (Tisch, Stühle, Regal, Sofa, Theke, Deckenlampe) – vorne an der Tür bleibt frei
+      if (o.einrichtung !== false && B >= 6 && T >= 6) {
+        const yb = 0.45 + 0.08, holz = material('holz', '#8a6a4a'), stoff = material(null, ['#7a3a3a', '#3a5a7a', '#5a6a3a', '#6a5a7a'][Math.floor(r() * 4)], { rau: 0.9 }), weiss = material(null, '#e8e4dc', { rau: 0.6 }), ix = B / 2 - d / 2 - 0.05, iz = T / 2 - d / 2 - 0.05;
+        const tx = (r() - 0.5) * (B - 4), tz = 0.6 + (r() - 0.5) * (T - 5) * 0.5;
+        kiste(tx, yb + 0.74, tz, 1.4, 0.06, 0.8, holz, 1, true); for (const [lx, lz] of [[-0.62, -0.32], [0.62, -0.32], [-0.62, 0.32], [0.62, 0.32]]) kiste(tx + lx, yb + 0.37, tz + lz, 0.06, 0.74, 0.06, holz, 1);
+        for (const sz of [-1, 1]) { kiste(tx, yb + 0.45, tz + sz * 0.75, 0.45, 0.06, 0.45, holz, 1, true); kiste(tx, yb + 0.72, tz + sz * 0.96, 0.45, 0.5, 0.05, holz, 1); for (const lx of [-0.2, 0.2]) for (const lz of [-0.2, 0.2]) kiste(tx + lx, yb + 0.22, tz + sz * 0.75 + lz, 0.04, 0.45, 0.04, holz, 1); }
+        const rb = Math.min(3, B - 2); kiste((r() - 0.5) * (B - rb - 1), yb + 1.0, iz - 0.2, rb, 2.0, 0.35, holz, 1, true);   // Regal an der Rückwand
+        for (let i = 0; i < 3; i++) kiste((r() - 0.5) * (rb - 0.5), yb + 0.55 + i * 0.6, iz - 0.42, 0.25 + r() * 0.4, 0.25, 0.08, stoff, 1);
+        const sx = r() < 0.5 ? -1 : 1, sl = Math.min(2.2, T - 3); kiste(sx * (ix - 0.45), yb + 0.22, 0.8, 0.85, 0.45, sl, stoff, 1, true); kiste(sx * (ix - 0.1), yb + 0.6, 0.8, 0.2, 0.75, sl, stoff, 1, true);   // Sofa an der Seitenwand
+        if (r() < 0.5) kiste(-sx * (ix - 0.4), yb + 0.55, 0.6, 0.7, 1.1, Math.min(2.4, T - 3.5), material(null, '#5a5248', { rau: 0.5 }), 1, true);   // Theke
+        kiste(0, 0.45 + HS - 0.25, 0, 0.6, 0.06, 0.6, material(null, '#fff4d8', { leuchten: '#fff1cc', leuchtStaerke: 1.6 }), 1);   // Deckenlampe
+      }
       const ob = 0.45 + H;
       if (o.dach === 'sattel') {
         const hr = Math.min(T * 0.45, 3.2), ue = 0.45, bx = B / 2 + ue, tz = T / 2 + ue;

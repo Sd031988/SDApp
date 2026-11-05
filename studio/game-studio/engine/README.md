@@ -40,6 +40,8 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 | Polizei | `sd.fahndung()`: Fahndungslevel 1–5 Sterne (Schüsse in der Stadt, Abschüsse, Angriffe auf Polizei), Polizisten rücken aus der Umgebung an, 25 s unentdeckt = Sterne weg; in der Stadtjagd aktiv |
 | Story | `sd.dialog([...])` mit Auswahl-Antworten, `sd.person({ name, text })` (mit E ansprechen, auch im Editor als 💬 Person), `sd.zwischensequenz([...])` Kamerafahrten mit Kinobalken und Untertiteln |
 | Animationen | Hocke beim Ducken, Arm beim Nachladen und beim Granatwurf (Menschen) |
+| Stadt | 🚦 Ampeln an Kreuzungen (Autos halten bei Rot), Unfälle (Autos bleiben stehen, hupen, Passanten fliehen, ab 45 km/h ★), Hupen wenn man im Weg steht, Streifenwagen mit Blaulicht ab 2 ★ (fahren über die Straßen heran, Polizisten steigen aus), eingerichtete Erdgeschosse (Tisch, Stühle, Regal, Sofa, Theke, Lampe) |
+| Ragdoll | Menschen fallen beim Tod physikalisch mit Gelenken (ab Qualität „Mittel“) |
 | Physik | Havok: Spielfigur-Controller (Kollision, Steigungen, Springen), umschießbare Objekte, umfallende Gegner |
 | Gameplay | 4 Waffen (Streuung, Rückstoß, Nachladen, Kopftreffer, Zielfernrohr), Beutekisten, Leben und Schutzweste, schrumpfende Zone, Sieg und Niederlage |
 | Gegner-KI | Sichtprüfung per Strahl, Verfolgen, seitliches Ausweichen, Trefferchance je nach Entfernung und Bewegung, gehen in die Zone |
@@ -52,7 +54,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - Importiert werden .glb und .zip mit .gltf + Texturen (z. B. Sketchfab-/Poly-Haven-Downloads; werden beim Import zu .glb umgewandelt), kein .fbx. Eigene Dateien liegen nur im Browser dieses Geräts. Die Quelle/Lizenz wird beim Import abgefragt und im veröffentlichten Spiel angezeigt.
 - Mehrspieler-Modi: „Jeder gegen jeden“ oder „Team: Rot gegen Blau“ (Server teilt die Teams gleichmäßig auf und lässt keinen Eigenbeschuss durch).
 - Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler: Der Gastgeber schickt seine Szene als reine Daten mit, jeder Browser prüft sie und baut daraus den Code (eigene Modelle und Foto-Häuser bleiben dabei weg). Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
-- Passanten und Verkehr weichen aus, werden aber nicht verletzt.
+- Passanten und Verkehr weichen aus, werden aber nicht verletzt. Obere Stockwerke haben keine Innentreppe.
 - Wegfindung arbeitet auf einem 1,5-m-Raster; Gegner nehmen Außentreppen, aber keine Innentreppen.
 - Flugzeug und Boot nutzen vereinfachte Physik (kein echter Strömungs- oder Wellenrechner).
 - Ein Spiel in der Größe von GTA oder PUBG entsteht damit nicht per Knopfdruck. Die Engine ist das Fundament für die nächsten Etappen.

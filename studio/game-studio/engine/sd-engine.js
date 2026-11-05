@@ -65,6 +65,7 @@
     else if (art === 'schritt') knall(0.06, 2, 700, 'lowpass', 0.25);
     else if (art === 'klick') ton1(2400, 1800, 0.03, 'square', 0.08);
     else if (art === 'tuer') { knall(0.35, 1.5, 400, 'lowpass', 0.5); ton1(180, 90, 0.3, 'triangle', 0.15); }
+    else if (art === 'hupe') { ton1(415, 410, 0.4, 'square', 0.07); ton1(520, 515, 0.4, 'square', 0.06); }
     else if (art === 'alarm') { for (let k = 0; k < 4; k++) ton1(880, 660, 0.22, 'sawtooth', 0.08, k * 0.25); }
     else if (art === 'sieg') { [523, 659, 784, 1047].forEach((f, k) => ton1(f, f, 0.5, 'triangle', 0.14, k * 0.12)); }
     else if (art === 'treffer') { ton1(1400, 900, 0.06, 'square', 0.1); knall(0.04, 2, 3000, 'bandpass', 0.2); }
@@ -511,7 +512,7 @@
         const t = strahl(kamera.position.add(dir.scale(spieler.abstand * 0.9)), dir, 600, 'spieler'); const ende_ = t && t.hit ? t.pickedPoint : kamera.position.add(dir.scale(400));
         if (i < 3) spur(muendung, ende_);
         if (t && t.hit) { const m = t.pickedMesh, md_ = m.metadata || {}, bot = bots.find(b => b.id === md_.figur);
-          if (bot && !bot.tot) { const k = md_.kopf; schaden(bot, w.def.schaden * (k ? 2.2 : 1), 'Spieler'); getroffen = true; kopf = kopf || k; funken(t.pickedPoint, null, '#ff5040', 10); }
+          if (bot && !bot.tot) { const k = md_.kopf; bot.trefferRichtung = dir; schaden(bot, w.def.schaden * (k ? 2.2 : 1), 'Spieler'); getroffen = true; kopf = kopf || k; funken(t.pickedPoint, null, '#ff5040', 10); }
           else if (ctx && ctx.fremdTreffer && ctx.fremdTreffer(md_.figur, w.def.schaden * (md_.kopf ? 2.2 : 1), md_.kopf, t.pickedPoint)) { getroffen = true; kopf = kopf || md_.kopf; funken(t.pickedPoint, null, '#ff5040', 10); }
           else { const n = t.getNormal(true) || V(0, 1, 0); funken(t.pickedPoint, n, null, 12); if (m.physicsBody && m.physicsBody.getMotionType && m.physicsBody.getMotionType() === BAB.PhysicsMotionType.DYNAMIC) m.physicsBody.applyImpulse(dir.scale(w.def.schaden * 0.6), t.pickedPoint);
             if (md_.fahrzeug && ctx && ctx.fahrzeugTreffer) ctx.fahrzeugTreffer(md_.fahrzeug, w.def.schaden * 0.45, t.pickedPoint);
@@ -536,10 +537,28 @@
     }
     /** Figur still entfernen (z. B. Polizei, die aufgibt) – zählt nicht als Abschuss */
     function botEntfernen(b) { if (b.weg) return; b.weg = true; b.tot = true; try { b.cc.dispose && b.cc.dispose(); } catch (e) { /* schon weg */ } b.k.dispose(false, true); }
+    /** Ragdoll: Menschen fallen beim Tod physikalisch (Gelenke mit Grenzen), danach erstarrt die Pose */
+    function ragdoll(k, richtung) {
+      if (!BAB.Ragdoll || qualitaet === 'niedrig') return false;
+      try { const m = k.mensch, s = (k.mensch.hoehe || 1.8) / 1.8, X = V(1, 0, 0), Z = V(0, 0, 1), J = BAB.PhysicsConstraintType;
+        Object.values(m.gruppen).forEach(g => g.stop());
+        const cfg = [{ bones: ['huefte'], size: 0.28 * s, boxOffset: 0.0 },
+          { bones: ['brust'], width: 0.38 * s, height: 0.36 * s, depth: 0.22 * s, min: -0.6, max: 0.6, boxOffset: 0.12 * s, boneOffsetAxis: V(0, -1, 0), rotationAxis: X, joint: J.HINGE },
+          { bones: ['kopf'], size: 0.22 * s, min: -0.8, max: 0.8, boxOffset: 0.08 * s, boneOffsetAxis: V(0, -1, 0), rotationAxis: X, joint: J.HINGE },
+          { bones: ['oberarmL', 'oberarmR'], depth: 0.1 * s, height: 0.28 * s, width: 0.1 * s, min: -1.5, max: 1.5, boxOffset: 0.14 * s, boneOffsetAxis: V(0, 1, 0), rotationAxis: X, joint: J.BALL_AND_SOCKET },
+          { bones: ['unterarmL', 'unterarmR'], depth: 0.09 * s, height: 0.26 * s, width: 0.09 * s, min: -1.6, max: 0, boxOffset: 0.13 * s, boneOffsetAxis: V(0, 1, 0), rotationAxis: X, joint: J.HINGE },
+          { bones: ['oberschenkelL', 'oberschenkelR'], depth: 0.14 * s, height: 0.42 * s, width: 0.14 * s, min: -1.4, max: 0.4, boxOffset: 0.21 * s, boneOffsetAxis: V(0, 1, 0), rotationAxis: X, joint: J.BALL_AND_SOCKET },
+          { bones: ['unterschenkelL', 'unterschenkelR'], depth: 0.12 * s, height: 0.42 * s, width: 0.12 * s, min: 0, max: 2.2, boxOffset: 0.21 * s, boneOffsetAxis: V(0, 1, 0), rotationAxis: X, joint: J.HINGE }];
+        const rd = new BAB.Ragdoll(m.skelett, m.mesh, cfg); rd.ragdoll();
+        const r0 = rd.getAggregate(1); if (r0 && r0.body) r0.body.applyImpulse((richtung || kamera.getForwardRay(1).direction).scale(60).add(V(0, 10, 0)), r0.transformNode.getAbsolutePosition());
+        setTimeout(() => { try { rd.pauseSync = true; rd.dispose(); } catch (e) { /* schon weg */ } }, 7000); return true;
+      } catch (e) { console.warn('Ragdoll nicht möglich', e.message); return false; }
+    }
     function botTot(b) {
       b.tot = true; spieler && spieler.kills++; ton('tot', 0.5); meldung('☠ ' + b.name + ' ausgeschaltet');
       const pos = b.cc.getPosition(); b.cc.dispose && b.cc.dispose();
       b.k.getChildMeshes().forEach(m => { m.isPickable = false; });
+      if (b.k.mensch && ragdoll(b.k, b.trefferRichtung)) { if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true }); if (bots.some(x => !x.nebenfigur) && bots.every(x => x.tot || x.nebenfigur)) ende(true, 'Alle Gegner ausgeschaltet'); return; }
       if (b.k.sterben && b.k.sterben()) { if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true }); if (bots.some(x => !x.nebenfigur) && bots.every(x => x.tot || x.nebenfigur)) ende(true, 'Alle Gegner ausgeschaltet'); return; }
       // umfallen mit Physik
       const huelle = BAB.MeshBuilder.CreateBox('leiche', { width: 0.6, height: 1.8, depth: 0.4 }, szene); huelle.isVisible = false; huelle.isPickable = false; huelle.position = pos.clone(); huelle.rotation.y = b.k.rotation.y;

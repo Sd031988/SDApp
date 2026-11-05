@@ -5,7 +5,14 @@
     const { BAB, V, klemme, szene } = ctx; if (!ctx.BK) return {};
     const BK = ctx.BK; ctx.sperren = ctx.sperren || []; ctx.stadtNetze = ctx.stadtNetze || [];
     const verkehr = [], passanten = [];
-    let lampenMat = null, alarm = { pos: null, zeit: -99 };
+    let lampenMat = null, alarm = { pos: null, zeit: -99 }, netzZaehler = 0;
+    /* 🚦 Ampel-Phasen (für alle Kreuzungen gleich): 9 s grün, 2 s gelb, 1 s alle rot – erst Ost-West, dann Nord-Süd */
+    const ampelKnoten = new Set(), ampelLampe = {}; let ampelZeit = 0;
+    function ampelMats() { if (ampelLampe.xrot) return; const F = { rot: '#ff2a1a', gelb: '#ffb000', gruen: '#2aff6a' };
+      for (const a of ['x', 'z']) for (const [f, c] of Object.entries(F)) { const m = new BAB.StandardMaterial('ampel' + a + f, szene); m.disableLighting = true; m.diffuseColor = BAB.Color3.Black(); m.emissiveColor = BAB.Color3.FromHexString(c).scale(0.12); m.__farbe = BAB.Color3.FromHexString(c);
+        const sph = BAB.MeshBuilder.CreateSphere('ampelLampe', { diameter: 0.2, segments: 6 }, szene); sph.material = m; sph.isPickable = false; sph.position.y = -500; ampelLampe[a + f] = sph; } }
+    function ampelZustand(achse) { const t = ampelZeit % 24, x = t < 9 ? 'gruen' : t < 11 ? 'gelb' : t < 12 ? 'rot' : 'rot', z = t < 12 ? 'rot' : t < 21 ? 'gruen' : t < 23 ? 'gelb' : 'rot'; return achse === 'x' ? x : z; }
+    function ampelnZeigen() { if (!ampelLampe.xrot) return; for (const a of ['x', 'z']) { const z = ampelZustand(a); for (const f of ['rot', 'gelb', 'gruen']) { const m = ampelLampe[a + f].material; m.emissiveColor = m.__farbe.scale(f === z ? 1.6 : 0.1); } } }
     ctx.beiSchuss.push(pos => { alarm = { pos: pos.clone(), zeit: ctx.zeit }; });
 
     /**
@@ -66,10 +73,20 @@
           const lx = b.x + cx * (b.groesse / 2 - 0.6), lz = b.z + cz * (b.groesse / 2 - 0.6), inst = vorlage.createInstance('laterne'); inst.position = V(lx, y0 + 0.2, lz); inst.rotation.y = Math.atan2(-cx, -cz) + Math.PI; inst.freezeWorldMatrix();
           ctx.laternen.push(V(lx - cx * 1.2, y0 + 6, lz - cz * 1.2)); koerper(0.25, 6, 0.25, lx, y0 + 3, lz); }
       }
+      // 🚦 Ampeln an Kreuzungen (mindestens 3 Straßen): an jeder Ecke ein Mast mit je einem Signal für beide Fahrtrichtungen
+      if (o.ampeln !== false) {
+        ampelMats(); const masten = [], gehaeuse = [];
+        for (let i = 0; i < knoten.length; i++) { if (nachbarn[i].length < 3) continue; const [kx, kz] = knoten[i]; ampelKnoten.add(netzZaehler + ':' + i);
+          for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const px = kx + cx * (S / 2 + 0.7), pz = kz + cz * (S / 2 + 0.7);
+            kiste(masten, 0.14, 3.6, 0.14, px, y0 + 1.8, pz); koerper(0.2, 3.6, 0.2, px, y0 + 1.8, pz);
+            for (const achse of ['x', 'z']) { const ox = achse === 'x' ? 0 : -cx * 0.35, oz = achse === 'z' ? 0 : -cz * 0.35, hx = px + ox, hz = pz + oz; kiste(gehaeuse, achse === 'x' ? 0.25 : 0.32, 0.95, achse === 'x' ? 0.32 : 0.25, hx, y0 + 3.3, hz);
+              ['rot', 'gelb', 'gruen'].forEach((f, k) => { const inst = ampelLampe[achse + f].createInstance('ampelLicht'); inst.position = V(hx + (achse === 'x' ? -cx * 0.14 : 0), y0 + 3.62 - k * 0.3, hz + (achse === 'z' ? -cz * 0.14 : 0)); inst.freezeWorldMatrix(); }); } } }
+        if (masten.length) { const m = BAB.Mesh.MergeMeshes(masten.concat(gehaeuse), true, true); m.material = BK.material('metall', '#2a2d31'); m.freezeWorldMatrix(); ctx.schatten.addShadowCaster(m); }
+      }
       // Alles nach Material zusammenfassen
       const mats = { asphalt: BK.material('asphalt', '#ffffff'), gehweg: BK.material('platten', '#d8d4cc'), linie: BK.material(null, '#f2f2ee', { rau: 0.6 }), rasen: BK.material('gras', '#ffffff') };
       for (const [k, liste] of Object.entries(teile)) { if (!liste.length) continue; liste.forEach(m => BK.weltUV(m, BK.kachelGroesse(k === 'gehweg' ? 'platten' : k === 'rasen' ? 'gras' : 'asphalt'))); const m = BAB.Mesh.MergeMeshes(liste, true, true); m.material = mats[k]; m.receiveShadows = true; m.isPickable = true; m.freezeWorldMatrix(); m.metadata = { boden: true }; }
-      const netz = { knoten, nachbarn, strasse: S, y: y0, bloecke, x0, z0, W, D, mitte: o.mitte }; ctx.stadtNetze.push(netz); ctx.stadtBereiche = (ctx.stadtBereiche || []).concat([[o.mitte[0], o.mitte[1], W / 2 + 4, D / 2 + 4]]);
+      const netz = { knoten, nachbarn, strasse: S, y: y0, bloecke, x0, z0, W, D, mitte: o.mitte, nr: netzZaehler++ }; ctx.stadtNetze.push(netz); ctx.stadtBereiche = (ctx.stadtBereiche || []).concat([[o.mitte[0], o.mitte[1], W / 2 + 4, D / 2 + 4]]);
       return netz;
     }
 
@@ -79,20 +96,33 @@
       o = Object.assign({ anzahl: 10, seed: 3, tempo: 11 }, o || {}); const netz = ctx.stadtNetze[ctx.stadtNetze.length - 1]; if (!netz || !FB) throw new Error('sd.verkehr braucht vorher sd.stadt(...)');
       const r = ctx.zufall(o.seed), typen = ['limousine', 'limousine', 'suv', 'sport', 'pickup', 'bus'], farben = ['#b8202a', '#2a4a8a', '#e8e8e8', '#1c1c1c', '#c8b020', '#3a6a4a', '#8a8f96', '#6a2a8a'];
       for (let i = 0; i < o.anzahl; i++) {
-        const typ = typen[Math.floor(r() * typen.length)], g = FB.auto({ typ, farbe: farben[Math.floor(r() * farben.length)], seed: i }), T = g.typ;
+        const typ = typen[Math.floor(r() * typen.length)]; neuesAuto(netz, typ, farben[Math.floor(r() * farben.length)], Math.floor(r() * netz.knoten.length), r, o.tempo, i);
+      }
+      return verkehr.length;
+    }
+    function neuesAuto(netz, typ, farbe, start, r, tempo, i) {
+      {
+        const g = FB.auto({ typ, farbe, seed: i }), T = g.typ;
         const huelle = BAB.MeshBuilder.CreateBox('verkehrHuelle', { width: T.B, height: T.H * 0.8, depth: T.L }, szene); huelle.isVisible = false; huelle.isPickable = false; g.wurzel.parent = huelle; g.wurzel.position.y = -T.H * 0.4;
         g.karosse.concat(...g.raeder.map(x => x.meshes)).forEach(m => { ctx.schatten.addShadowCaster(m); m.receiveShadows = true; m.metadata = { fahrzeug: 'verkehr' + i }; });
         const agg = new BAB.PhysicsAggregate(huelle, BAB.PhysicsShapeType.BOX, { mass: 0 }, szene); agg.body.setMotionType(BAB.PhysicsMotionType.ANIMATED); agg.body.disablePreStep = false;
-        const a = Math.floor(r() * netz.knoten.length), b = netz.nachbarn[a][Math.floor(r() * netz.nachbarn[a].length)];
-        const v = { g, T, huelle, von: a, nach: b, t: r(), tempo: 0, ziel: o.tempo * (T.bus ? 0.75 : 0.9 + r() * 0.25), gier: 0, wartet: 0, netz, kurve: null };
-        verkehr.push(v);
+        const a = start, b = netz.nachbarn[a][Math.floor(r() * netz.nachbarn[a].length)];
+        const v = { g, T, huelle, agg, von: a, nach: b, t: r(), tempo: 0, ziel: tempo * (T.bus ? 0.75 : 0.9 + r() * 0.25), gier: 0, wartet: 0, netz, kurve: null };
+        verkehr.push(v); return v;
       }
-      return verkehr.length;
+    }
+    /** Streifenwagen u. ä.: fährt über das Straßennetz zu ziel() und hält dort (beiAnkunft) */
+    function sonderwagen(o) {
+      const netz = ctx.stadtNetze[ctx.stadtNetze.length - 1]; if (!netz || !FB) return null; const zp = o.ziel && o.ziel();
+      let start = 0, best = -1; netz.knoten.forEach((k, i) => { const d = zp ? Math.hypot(k[0] - zp.x, k[1] - zp.z) : 0, guete = d > 70 && d < 160 ? 1000 - d : -d; if (guete > best) { best = guete; start = i; } });
+      const v = neuesAuto(netz, o.typ || 'limousine', o.farbe || '#e8eaee', start, Math.random, o.tempo || 17, 900 + verkehr.length); v.jagd = o.ziel; v.beiAnkunft = o.beiAnkunft; v.ziel = o.tempo || 17; v.t = 0;
+      if (o.blaulicht !== false) { v.blau = [-1, 1].map(sx => { const b = BAB.MeshBuilder.CreateBox('blaulicht', { width: 0.32, height: 0.14, depth: 0.22 }, szene), m = new BAB.StandardMaterial('blau', szene); m.disableLighting = true; m.emissiveColor = new BAB.Color3(0.1, 0.2, 2); b.material = m; b.parent = v.huelle; b.position = V(sx * 0.25, v.T.H * 0.42 + 0.12, -0.1); b.isPickable = false; return b; }); }
+      v.entfernen = () => { const i = verkehr.indexOf(v); if (i >= 0) verkehr.splice(i, 1); v.agg.dispose(); v.huelle.dispose(false, true); }; return v;
     }
     const spur = (netz, a, b, t) => { const A = netz.knoten[a], B_ = netz.knoten[b], dx = B_[0] - A[0], dz = B_[1] - A[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, rand = netz.strasse / 2 + 2, off = netz.strasse * 0.19;
       const s = rand + t * (L - 2 * rand); return { x: A[0] + ux * s + uz * off, z: A[1] + uz * s - ux * off, ux, uz, L: L - 2 * rand }; };   // rechte Fahrspur
     function verkehrUpdate(dt) {
-      const spPos = ctx.spieler ? ctx.spielerPos() : null;
+      const spPos = ctx.spieler ? ctx.spielerPos() : null, fahr = ctx.uebernahme && ctx.uebernahme.auto, fp = fahr ? fahr.chassis.getAbsolutePosition() : null; ampelZeit += dt; ampelnZeigen();
       for (const v of verkehr) {
         const netz = v.netz;
         if (v.kurve) { // Abbiegen: Bézier-Kurve über die Kreuzung
@@ -102,18 +132,29 @@
         } else {
           const s = spur(netz, v.von, v.nach, v.t); v.t += (v.tempo * dt) / Math.max(1, s.L); v.pos = [s.x, s.z]; v.richtung = Math.atan2(s.ux, s.uz);
           if (v.t >= 1) { // an der Kreuzung neue Richtung wählen (nicht umdrehen, außer Sackgasse)
-            const opt = netz.nachbarn[v.nach].filter(n => n !== v.von), weiter = opt.length ? opt[Math.floor(Math.random() * opt.length)] : v.von;
+            const opt = netz.nachbarn[v.nach].filter(n => n !== v.von); let weiter = opt.length ? opt[Math.floor(Math.random() * opt.length)] : v.von;
+            if (v.jagd) { const zp = v.jagd(); if (zp) { const kand = netz.nachbarn[v.nach]; weiter = kand.reduce((a, b) => Math.hypot(netz.knoten[b][0] - zp.x, netz.knoten[b][1] - zp.z) < Math.hypot(netz.knoten[a][0] - zp.x, netz.knoten[a][1] - zp.z) ? b : a, kand[0]); } }
             const e = spur(netz, v.von, v.nach, 1), a2 = spur(netz, v.nach, weiter, 0), mitte = netz.knoten[v.nach];
             const p1 = Math.abs(e.ux * a2.ux + e.uz * a2.uz) > 0.9 ? [(e.x + a2.x) / 2, (e.z + a2.z) / 2] : [e.x + e.ux * Math.abs((mitte[0] - e.x) * e.ux + (mitte[1] - e.z) * e.uz), e.z + e.uz * Math.abs((mitte[0] - e.x) * e.ux + (mitte[1] - e.z) * e.uz)];
             v.kurve = { p0: [e.x, e.z], p1, p2: [a2.x, a2.z], t: 0, L: Math.hypot(a2.x - e.x, a2.z - e.z) * 1.15 + 1, von: v.nach, nach: weiter };
           }
         }
         // Abstand halten: vor anderen Autos, dem Spieler und Passanten bremsen
-        let frei = 1; const fx = Math.sin(v.richtung), fz = Math.cos(v.richtung);
+        let frei = 1;
+        if (!v.kurve && !v.jagd && ampelKnoten.has(netz.nr + ':' + v.nach)) { const s = spur(netz, v.von, v.nach, v.t), rest = (1 - v.t) * s.L, z = ampelZustand(Math.abs(s.ux) > 0.5 ? 'x' : 'z');
+          if (rest > 0.8 && (z === 'rot' || (z === 'gelb' && rest > 7))) frei = Math.min(frei, (rest - 0.8) / 14); }
+        if (v.unfall > 0) { v.unfall -= dt; frei = 0; }
+        if (v.halt) frei = 0; const fx = Math.sin(v.richtung), fz = Math.cos(v.richtung);
         const pruefe = (px, pz, abst) => { const dx = px - v.pos[0], dz = pz - v.pos[1], vor = dx * fx + dz * fz, seit = Math.abs(dx * fz - dz * fx); if (vor > 0 && vor < abst && seit < 2.2) frei = Math.min(frei, (vor - v.T.L * 0.6) / abst); };
         for (const w of verkehr) if (w !== v && w.pos) pruefe(w.pos[0], w.pos[1], 9 + v.T.L);
-        if (spPos) pruefe(spPos.x, spPos.z, 12); for (const p of passanten) if (p.pos) pruefe(p.pos.x, p.pos.z, 8);
+        const vorSpieler = frei; if (spPos) pruefe(spPos.x, spPos.z, 12); for (const p of passanten) if (p.pos) pruefe(p.pos.x, p.pos.z, 8);
+        // Hupen, wenn der Spieler lange im Weg steht; Unfall, wenn das Spielerauto hineinfährt
+        if (frei < vorSpieler - 0.3 && v.tempo < 1) { v.blockiert = (v.blockiert || 0) + dt; if (v.blockiert > 2.5) { v.blockiert = -4; ctx.ton('hupe', 0.6, v.huelle.position); } } else if (v.blockiert > 0) v.blockiert = 0;
+        if (fahr && !v.jagd) { const d = Math.hypot(fp.x - v.pos[0], fp.z - v.pos[1]); if (d < (v.T.L + fahr.T.L) * 0.42 && Math.abs(fahr.kmh) > 12 && !(v.unfall > 0)) { v.unfall = 5; ctx.ton('hupe', 0.8, v.huelle.position); alarm = { pos: v.huelle.position.clone(), zeit: ctx.zeit };
+          if (Math.abs(fahr.kmh) > 45 && ctx.meldeVerbrechen) ctx.meldeVerbrechen(1, 'Unfall'); } }
         const zielTempo = v.ziel * klemme(frei, 0, 1) * (v.kurve ? 0.55 : 1); v.tempo += (zielTempo - v.tempo) * Math.min(1, dt * (zielTempo < v.tempo ? 4 : 1.2));
+        if (v.jagd) { const zp = v.jagd(); if (zp) { const d = Math.hypot(zp.x - v.pos[0], zp.z - v.pos[1]); if (!v.halt && d < 24) { v.halt = true; v.beiAnkunft && v.beiAnkunft(v); } else if (v.halt && d > 60) v.halt = false; }
+          if (v.blau) { const an = Math.floor(ctx.zeit * 5) % 2; v.blau[0].material.emissiveColor.set(an ? 0.1 : 0.1, an ? 0.2 : 0.3, an ? 2.5 : 0.2); v.blau[1].material.emissiveColor.set(an ? 2.2 : 0.2, an ? 0.15 : 0.1, an ? 0.15 : 0.1); } }
         v.gier += ctx.winkel(v.gier, v.richtung) * Math.min(1, dt * 10);
         v.huelle.position = V(v.pos[0], netz.y + v.T.H * 0.4 + 0.05, v.pos[1]); v.huelle.rotationQuaternion = BAB.Quaternion.RotationAxis(V(0, 1, 0), v.gier);
         for (const rad of v.g.raeder) { rad.dreh.rotation.x += v.tempo / v.T.rad * dt; if (rad.vorn) rad.lenk.rotation.y = v.kurve ? klemme(ctx.winkel(v.gier, v.richtung) * 3, -0.5, 0.5) : 0; }
@@ -151,6 +192,6 @@
       }
     }
     function update(dt) { if (verkehr.length) verkehrUpdate(dt); if (passanten.length) passantenUpdate(dt); }
-    return { api: { stadt, verkehr: verkehrStarten, passanten: passantenStarten, get verkehrsAutos() { return verkehr; }, get passantenListe() { return passanten; } }, update };
+    return { api: { stadt, sonderwagen, verkehr: verkehrStarten, passanten: passantenStarten, get verkehrsAutos() { return verkehr; }, get passantenListe() { return passanten; } }, update };
   });
 })();

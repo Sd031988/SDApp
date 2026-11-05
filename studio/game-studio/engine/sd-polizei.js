@@ -5,20 +5,21 @@
 'use strict';
 (window.SDModule = window.SDModule || []).push(function (ctx) {
   const { BAB, V, klemme } = ctx;
-  const F = { an: false, sterne: 0, unsichtbar: 0, polizei: [], nachschub: 0, sirene: 0, kills: 0 };
+  const F = { an: false, sterne: 0, unsichtbar: 0, polizei: [], wagen: [], wagenZeit: 0, nachschub: 0, sirene: 0, kills: 0 };
+  ctx.meldeVerbrechen = (stufe, was) => { if (F.an && F.sterne < stufe) { setzen(stufe); if (was) ctx.meldung('🚨 ' + was); } };
   let anzeige = null;
   function hud() { if (anzeige) return; anzeige = document.createElement('div'); anzeige.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);font:700 22px system-ui;letter-spacing:3px;text-shadow:0 1px 4px #000;pointer-events:none;color:#fff;transition:opacity .3s';
     (document.getElementById('hud') || document.body).appendChild(anzeige); ctx.aufraeumen.push(() => anzeige && anzeige.remove()); }
   function zeigen() { if (!anzeige) return; anzeige.textContent = F.sterne ? '★'.repeat(F.sterne) + '☆'.repeat(5 - F.sterne) : ''; anzeige.style.opacity = F.unsichtbar > 3 ? (Math.floor(ctx.zeit * 3) % 2 ? 0.35 : 1) : 1; anzeige.style.color = F.sterne >= 4 ? '#ff6b5a' : '#ffd36b'; }
   function setzen(n) { const alt = F.sterne; F.sterne = klemme(Math.round(n), 0, 5); F.unsichtbar = 0; if (F.sterne > alt) { ctx.nachricht(F.sterne === 1 ? '🚨 Die Polizei sucht dich!' : '🚨 Fahndungsstufe ' + F.sterne, 3); ctx.ton('alarm', 0.5); F.nachschub = 0; } if (F.sterne === 0 && alt > 0) aufgeben(); zeigen(); }
-  function aufgeben() { for (const b of F.polizei) if (!b.tot) ctx.botEntfernen(b); F.polizei = []; ctx.nachricht('✅ Die Polizei hat die Suche aufgegeben', 3); }
+  function aufgeben() { for (const b of F.polizei) if (!b.tot) ctx.botEntfernen(b); F.polizei = []; F.wagen.forEach(w => w.entfernen()); F.wagen = []; ctx.nachricht('✅ Die Polizei hat die Suche aufgegeben', 3); }
   const inStadt = p => (ctx.stadtBereiche || []).some(([x, z, w, d]) => Math.abs(p.x - x) < w && Math.abs(p.z - z) < d);
   // Verbrechen erkennen
   ctx.beiSchuss.push((pos, wer) => { if (!F.an || wer !== 'spieler' || !pos) return; if (F.sterne === 0 && inStadt(pos)) setzen(1); if (F.sterne > 0) F.unsichtbar = Math.min(F.unsichtbar, 8); });
   function spawnPunkt(sp) { const netze = ctx.stadtNetze || []; let kand = [];
     for (const n of netze) for (const k of n.knoten) { const d = Math.hypot(k[0] - sp.x, k[1] - sp.z); if (d > 60 && d < 120) kand.push(k); }
     if (kand.length) return kand[Math.floor(Math.random() * kand.length)]; const w = Math.random() * 6.28; return [sp.x + Math.cos(w) * 85, sp.z + Math.sin(w) * 85]; }
-  function polizistErzeugen(sp) { const [x, z] = spawnPunkt(sp);
+  function polizistErzeugen(sp, bei) { const [x, z] = bei || spawnPunkt(sp);
     const b = ctx.sd.gegner({ pos: [x, null, z], name: 'Polizist', nebenfigur: true, aussehen: 'mensch', staerke: 0.35 + F.sterne * 0.1, waffe: F.sterne >= 3 ? 'gewehr' : 'pistole', leben: 80 + F.sterne * 10, mensch: { oberteil: '#1f3a7a', hose: '#151c2c', aermel: 'lang', frisur: 'kappe', weste: F.sterne >= 3 } });
     if (!b || b.mehrspieler) return; b.alarm = 30; b.polizei = true; F.polizei.push(b); }
   const sp0 = () => (ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : ctx.spieler && ctx.spieler.cc.getPosition());
@@ -37,8 +38,12 @@
       F.unsichtbar = gesehen ? 0 : F.unsichtbar + dt; if (F.unsichtbar > 25) { setzen(0); return; }
       // Nachschub: je Stern zwei Polizisten (höchstens 8 gleichzeitig)
       F.nachschub -= dt; const lebend = F.polizei.filter(b => !b.tot).length; if (F.nachschub <= 0 && F.unsichtbar < 5 && lebend < Math.min(8, F.sterne * 2)) { polizistErzeugen(sp); F.nachschub = 4; }
+      // Streifenwagen ab 2 Sternen: fahren über die Straßen heran, an der Ankunft steigen zwei Polizisten aus
+      F.wagenZeit -= dt; if (F.sterne >= 2 && ctx.sd.sonderwagen && (ctx.stadtNetze || []).length && F.wagenZeit <= 0 && F.wagen.length < Math.min(3, F.sterne - 1)) { F.wagenZeit = 12;
+        const w = ctx.sd.sonderwagen({ farbe: '#eef0f3', ziel: sp0, beiAnkunft: v => { if (v.ausgestiegen) return; v.ausgestiegen = true; const p = v.huelle.position; for (const s2 of [-1, 1]) { const q = [p.x + Math.cos(v.gier) * 2.4 * s2, p.z - Math.sin(v.gier) * 2.4 * s2]; if (F.polizei.filter(b => !b.tot).length < 10) polizistErzeugen(sp0(), q); } } });
+        if (w) { F.wagen.push(w); ctx.ton('alarm', 0.35, w.huelle.position); } }
       // Sirene in der Nähe
-      F.sirene -= dt; if (F.sirene <= 0 && lebend) { F.sirene = 6; const n = F.polizei.find(b => !b.tot); if (n) ctx.ton('alarm', 0.25, n.cc.getPosition()); }
+      F.sirene -= dt; if (F.sirene <= 0 && (lebend || F.wagen.length)) { F.sirene = 6; const n = F.wagen[0] ? F.wagen[0].huelle.position : (F.polizei.find(b => !b.tot) || { cc: null }).cc?.getPosition(); if (n) ctx.ton('alarm', 0.25, n); }
       zeigen();
     },
   };
