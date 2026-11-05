@@ -7,7 +7,14 @@ const {create} = require('./sd-world-babylon-cells.js');
 
 function percentile(sorted, fraction) {
   if (!sorted.length) return null;
+  if (!Number.isFinite(fraction) || fraction <= 0 || fraction > 1)
+    throw new RangeError('percentile fraction must be in (0, 1]');
   return sorted[Math.ceil(fraction * sorted.length) - 1];
+}
+function summary(samples) {
+  const sorted = [...samples].sort((a, b) => a - b);
+  return {p50: percentile(sorted, 0.5), p95: percentile(sorted, 0.95),
+    min: sorted[0] ?? null, max: sorted[sorted.length - 1] ?? null};
 }
 async function run({iterations = 1000, warmup = 100, cells = 16} = {}) {
   for (const [key, value] of Object.entries({iterations, warmup, cells})) {
@@ -21,28 +28,32 @@ async function run({iterations = 1000, warmup = 100, cells = 16} = {}) {
       skeletons: [], animationGroups: []};
   }}};
   const adapter = create({scene: {}, Babylon, resolveCell: id => ({url: './cells/' + id + '.glb'})});
-  const samples = [];
+  const samples = {total: [], load: [], evict: []};
   async function cycle(measure) {
     const start = performance.now();
     const resources = [];
     for (let i = 0; i < cells; i++) resources.push([String(i), await adapter.load(String(i))]);
+    const loaded = performance.now();
     for (const [id, resource] of resources) await adapter.dispose(resource, id);
-    const elapsed = performance.now() - start;
+    const evicted = performance.now();
     assert.equal(adapter.activeCount(), 0, 'active cell leak');
     assert.equal(adapter.pendingCount(), 0, 'pending cell leak');
-    if (measure) samples.push(elapsed);
+    if (measure) {
+      samples.load.push(loaded - start);
+      samples.evict.push(evicted - loaded);
+      samples.total.push(evicted - start);
+    }
   }
   for (let i = 0; i < warmup; i++) await cycle(false);
   for (let i = 0; i < iterations; i++) await cycle(true);
   assert.equal(counts.imports, (iterations + warmup) * cells);
   assert.equal(counts.disposals, counts.imports);
-  samples.sort((a, b) => a - b);
+  const total = summary(samples.total);
   return {
     benchmark: 'mock-babylon-cell-lifecycle-cpu',
     disclaimer: 'Mock SceneLoader; no GLB decode, GPU, browser or mobile measurement',
     iterations, warmup, cells, unit: 'ms per load+evict cycle',
-    p50: percentile(samples, 0.5), p95: percentile(samples, 0.95),
-    min: samples[0], max: samples[samples.length - 1],
+    ...total, phases: {load: summary(samples.load), evict: summary(samples.evict)},
     imports: counts.imports, disposals: counts.disposals
   };
 }
@@ -50,4 +61,4 @@ if (require.main === module) {
   run().then(result => console.log(JSON.stringify(result, null, 2)))
     .catch(error => {console.error(error); process.exitCode = 1;});
 }
-module.exports = {run, percentile};
+module.exports = {run, percentile, summary};
