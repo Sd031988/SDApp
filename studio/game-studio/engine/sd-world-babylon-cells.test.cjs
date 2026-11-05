@@ -32,3 +32,28 @@ test('aborted late cell import preserves shared Babylon material',async()=>{
  assert.deepEqual(calls,['mesh']);
  assert.equal(adapter.activeCount(),0);
 });
+
+
+test('failed cell eviction retains ownership for a retry',async()=>{
+ let attempts=0;
+ const mesh={dispose(){if(++attempts===1)throw new Error('GPU release failed');}};
+ const result={meshes:[mesh],transformNodes:[],skeletons:[],animationGroups:[]};
+ const adapter=create({scene:{},Babylon:{SceneLoader:{async ImportMeshAsync(){return result;}}},resolveCell:()=>({url:'./cells/retry.glb'})});
+ const resource=await adapter.load('retry');
+ await assert.rejects(adapter.dispose(resource,'retry'),/GPU release failed/);
+ assert.equal(adapter.activeCount(),1);
+ await assert.rejects(adapter.load('retry'),/duplicate/);
+ await adapter.dispose(resource,'retry');
+ assert.equal(attempts,2);
+ assert.equal(adapter.activeCount(),0);
+});
+test('throwing disposal error observer cannot hide original failure',async()=>{
+ const mesh={dispose(){throw new Error('dispose root cause');}};
+ const result={meshes:[mesh],transformNodes:[],skeletons:[],animationGroups:[]};
+ let notified=0;
+ const adapter=create({scene:{},Babylon:{SceneLoader:{async ImportMeshAsync(){return result;}}},resolveCell:()=>({url:'./cells/retry.glb'}),onError(){notified++;throw new Error('observer failed');}});
+ const resource=await adapter.load('retry');
+ await assert.rejects(adapter.dispose(resource,'retry'),/dispose root cause/);
+ assert.equal(notified,1);
+ assert.equal(adapter.activeCount(),1);
+});
