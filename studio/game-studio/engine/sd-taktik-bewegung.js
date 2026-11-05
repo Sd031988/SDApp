@@ -136,6 +136,12 @@
       i.spieler.taktikSchulter = s.schulter;
       i.spieler.taktikSprint = r.sprint;
       i.spieler.taktikRutsch = r.rutschend;
+      if (i.spieler.k) {
+        i.spieler.k.taktikForm = r.form;
+        i.spieler.k.taktikRutsch = r.rutschend;
+        const clips = i.spieler.k.mensch && i.spieler.k.mensch.gruppen;
+        i.spieler.k.taktikClip = !!(clips && (clips.ducken || clips.kriechen));
+      }
       return r;
     }
     function nach(sp, dt) {
