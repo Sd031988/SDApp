@@ -8,7 +8,7 @@ const root=path.resolve(__dirname,'../..');
 const engineRoot=path.join(root,'studio/game-studio/engine');
 const routeBase='/studio/game-studio/engine/';
 const mini=`sd.himmel({zeit:'tag'});
-sd.gelaende({groesse:150,hoehe:0,auflosung:36,seed:4,flach:[[0,0,55,0]]});
+sd.gelaende({groesse:150,hoehe:0,aufloesung:36,seed:4,flach:[[0,0,55,0]]});
 sd.spieler({pos:[0,null,0],waffen:['pistole'],aussehen:'mensch',
 mensch:{taktik:true,oberteil:'#344c55',weste:true}});
 if(!sd.taktik) throw new Error('Taktik-Modul nicht geladen');
@@ -67,7 +67,7 @@ async function go(page,url){
   await page.waitForFunction(()=>!SD_SPIEL.ctx.spieler.taktikRutsch,{timeout:3000});
   await page.keyboard.press('b');
   assert.equal(await page.evaluate(()=>SD_SPIEL.ctx.spieler.taktikSchulter),-1);
-  await page.locator('#welt').click({button:'right',force:true});
+  await page.mouse.move(640,400);await page.mouse.down({button:'right'});
   await page.keyboard.down('q');await page.waitForTimeout(230);
   const lean=await page.evaluate(()=>SD_SPIEL.ctx.spieler.taktikNeigung);
   assert.ok(lean < -0.3, 'Beim Zielen muss sich die Figur nach links lehnen.');
