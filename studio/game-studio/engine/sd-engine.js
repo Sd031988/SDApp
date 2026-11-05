@@ -355,7 +355,7 @@
     /* ---------- Eigene Figuren aus .glb (z. B. Mixamo) mit Animationen ---------- */
     const figurVorlagen = {};
     async function figurLaden(url) { const [u, endung] = quelle(url); const c = await BAB.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, endung); figurVorlagen[url] = c; return { animationen: c.animationGroups.map(a => a.name) }; }
-    const ANIM = { stehen: /idle|stand|breath|survey|ruhe/i, gehen: /walk|geh/i, rennen: /run|sprint|renn|jog/i, springen: /jump|spring/i, sterben: /death|die|dying|dead|sterb|tot/i, schiessen: /shoot|fire|aim|schie/i };
+    const ANIM = { stehen: /idle|stand|breath|survey|ruhe/i, gehen: /walk|geh/i, rennen: /run|sprint|renn|jog/i, springen: /jump|spring/i, sterben: /death|die|dying|dead|sterb|tot/i, schiessen: /shoot|fire|aim|schie/i, ducken: /crouch|duck|hock/i, liegen: /prone|lie|liegen/i, kriechen: /crawl|kriech/i, rutschen: /slide|rutsch/i };
     let figurZaehler = 0;
     function glbFigur(o) {
       const c = figurVorlagen[o.modell]; if (!c) throw new Error('Figur „' + o.modell + '“ zuerst laden: await sd.figurLaden(\'' + o.modell + '\')');
@@ -375,7 +375,7 @@
       const hb = (name, mesh, y, kopf) => { mesh.parent = k; mesh.position.y = y; mesh.isVisible = false; mesh.metadata = { figur: o.besitzer, kopf, trefferzone: true }; return mesh; };
       const hoehe = o.hoehe || 1.8; hb('rumpfZone', BAB.MeshBuilder.CreateBox('zone', { width: 0.55, height: hoehe * 0.78, depth: 0.4 }, szene), hoehe * 0.39, false); hb('kopfZone', BAB.MeshBuilder.CreateSphere('zone', { diameter: 0.32, segments: 6 }, szene), hoehe - 0.17, true);
       if (!gruppen.gehen && gruppen.rennen) gruppen.gehen = gruppen.rennen; if (!gruppen.rennen && gruppen.gehen) gruppen.rennen = gruppen.gehen;
-      const schleifen = [...new Set(['stehen', 'gehen', 'rennen'].map(r => gruppen[r]).filter(Boolean))], gewicht = new Map(schleifen.map(g => [g, 0]));
+      const schleifen = [...new Set(['stehen', 'gehen', 'rennen', 'ducken', 'liegen', 'kriechen', 'rutschen'].map(r => gruppen[r]).filter(Boolean))], gewicht = new Map(schleifen.map(g => [g, 0]));
       schleifen.forEach(g => { g.start(true); g.setWeightForAllAnimatables(0); }); let aktiv = gruppen.stehen || schleifen[0];
       const waffe = BAB.MeshBuilder.CreateBox('waffe', { width: 0.07, height: 0.12, depth: 0.7 }, szene); waffe.material = material('#1c1d20', 0.4, 0.7); schatten.addShadowCaster(waffe); waffe.metadata = { figur: o.besitzer }; waffe.isPickable = false;
       if (o.ohneWaffe) waffe.setEnabled(false);
@@ -384,7 +384,10 @@
       else { waffe.parent = k; waffe.position = V(0.22, hoehe * 0.72, 0.4); }
       let tot = false;
       k.animiere = (tempo, dt, inLuft) => { if (tot || !schleifen.length) return;
-        aktiv = tempo > 5.2 ? (gruppen.rennen || aktiv) : tempo > 0.6 ? (gruppen.gehen || aktiv) : (gruppen.stehen || gruppen.gehen);
+        aktiv = k.taktikRutsch && gruppen.rutschen ? gruppen.rutschen
+          : k.taktikForm === 'liegen' ? ((tempo > 0.28 && gruppen.kriechen) || gruppen.liegen || gruppen.stehen || aktiv)
+          : k.taktikForm === 'ducken' && gruppen.ducken ? gruppen.ducken
+          : tempo > 5.2 ? (gruppen.rennen || aktiv) : tempo > 0.6 ? (gruppen.gehen || aktiv) : (gruppen.stehen || gruppen.gehen);
         for (const g of schleifen) { const z = g === aktiv ? 1 : 0, w = gewicht.get(g) + (z - gewicht.get(g)) * Math.min(1, dt * 8); gewicht.set(g, w); g.setWeightForAllAnimatables(w); }
         if (aktiv && aktiv !== gruppen.stehen) aktiv.speedRatio = klemme(tempo / (aktiv === gruppen.rennen ? 6.5 : 3), 0.6, 1.8); };
       k.sterben = () => { tot = true; if (!gruppen.sterben) return false; schleifen.forEach(g => g.stop()); gruppen.sterben.start(false); return true; };
@@ -784,7 +787,7 @@
     szene.onBeforeRenderObservable.add(() => { try { controller(); } catch (e) { /* kein Controller */ } });
     // Ducken: Hocke über die Knochen (Menschen) – sonst wird die Figur niedriger
     const X = V(1, 0, 0);
-    szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const d = spieler.duckWert || 0, k = spieler.k;
+    szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const k = spieler.k, d = (k.taktikClip ? 0 : (spieler.duckWert || 0));
       if (k.mensch) { const kn = k.mensch.knochen, achse = (b, ax, w, st) => { if (b && b.rotationQuaternion && st > 0.001) b.rotationQuaternion = b.rotationQuaternion.multiply(BAB.Quaternion.RotationAxis(ax, w * st)); };
         // Nachladen: linker Arm holt ein neues Magazin (runter zur Hüfte und zurück)
         if (spieler.laden > 0 && spieler.ladeDauer) { const u = 1 - spieler.laden / spieler.ladeDauer, st = Math.sin(Math.min(1, u) * Math.PI); achse(kn.oberarmL, X, 0.9, st); achse(kn.unterarmL, X, 0.8, st); achse(kn.kopf, X, 0.25, st); }
