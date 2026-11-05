@@ -1,0 +1,34 @@
+name: SD Game-Creator – gezielte Regressionstests
+on:
+  pull_request:
+    paths:
+      - 'studio/game-studio/engine/game-creator-*'
+      - 'studio/game-studio/engine/test-game-creator.cjs'
+      - '.github/workflows/game-creator-tests.yml'
+  push:
+    branches:
+      - 'feature/game-studio-creator-ci-20261105'
+    paths:
+      - 'studio/game-studio/engine/game-creator-*'
+      - 'studio/game-studio/engine/test-game-creator.cjs'
+      - '.github/workflows/game-creator-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  creator-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Game-Creator JavaScript syntax
+        run: |
+          node --check studio/game-studio/engine/game-creator-blueprint.js
+          node --check studio/game-studio/engine/game-creator-handoff.js
+          node --check studio/game-studio/engine/game-creator-editor-compat.js
+          node --check studio/game-studio/engine/test-game-creator.cjs
+      - name: Run all four Game-Creator test files
+        run: node studio/game-studio/engine/test-game-creator.cjs
