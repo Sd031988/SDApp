@@ -99,7 +99,7 @@ body.handy .unten{bottom:180px}
 
 <div class="ov" id="menue">
   <div class="karte">
-    <div class="spielwahl" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="sw an" data-spiel="inselsturm">🏝 Inselsturm</button><button class="sw" data-spiel="stadtjagd">🏙 Stadtjagd</button><button class="sw" data-spiel="battleroyale">🪂 Luftlandung</button><button class="sw" data-spiel="bauplanarena">🤖 Bauplan-Arena</button><button class="sw" data-spiel="eigen">🛠 Eigene Szene</button><a class="btn" href="./editor.html" style="margin-left:auto">✏ Szenen-Editor</a></div>
+    <div class="spielwahl" style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap"><button class="sw an" data-spiel="inselsturm">🏝 Inselsturm</button><button class="sw" data-spiel="stadtjagd">🏙 Stadtjagd</button><button class="sw" data-spiel="battleroyale">🪂 Luftlandung</button><button class="sw" data-spiel="bauplanarena">🤖 Bauplan-Arena</button><button class="sw" data-spiel="nordhafen">⚓ Nordhafen</button><button class="sw" data-spiel="eigen">🛠 Eigene Szene</button><a class="btn" href="./editor.html" style="margin-left:auto">✏ Szenen-Editor</a></div>
     <h1 class="titel" id="spielTitel">INSELSTURM</h1>
     <div class="unter" id="spielUnter">SD Engine · Third-Person-Shooter · Battle-Royale-Modus</div>
     <p id="spielText" style="margin:0;line-height:1.6;color:#cfd8e2">Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.</p>
@@ -110,7 +110,7 @@ body.handy .unten{bottom:180px}
       <button id="lobbyAuf" title="Kisten öffnen, Kleidung und Fallschirm wählen">🎁 Kisten &amp; Garderobe</button>
       <button id="einstAuf" title="Maus, Ton, Sichtfeld">⚙ Einstellungen</button>
       <button id="pubAuf" title="Dein Spiel als eigene Webseite online stellen">🌐 Veröffentlichen</button>
-      <button id="editorAuf">{ } Skript bearbeiten</button>
+      <button id="editorAuf">{ } Skript bearbeiten</button><button id="nordEditor" type="button" hidden title="Nordhafen-Grundkarte mit der Maus im Szenen-Editor bearbeiten">✏ Nordhafen-Karte bearbeiten</button>
       <a class="btn" href="./werkstatt.html?tab=ki">🤖 KI-Bauplan</a><a class="btn" href="./werkstatt.html">🛠 Werkstatt</a>
       <a class="btn" href="../index.html">← Game-Studio</a>
     </div>
@@ -192,6 +192,7 @@ body.handy .unten{bottom:180px}
 const $ = id => document.getElementById(id);
 const HAVOK_WASM = 'https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics.wasm';
 const SPIELE = {
+  nordhafen: { titel: 'NORDHAFEN – SCHATTENOPERATION', unter: 'SD Engine · Taktischer 3D-Shooter · 4 Missionen', text: 'Erkunde eine eigene Küstenwelt mit Industriehafen, Dorf, Radarstation und Wald. Gegner-KI, Waffen, fahrbare Fahrzeuge, PBR-Materialien, Regen und vier Missionsabschnitte. Eigene .glb-Modelle sind über die Werkstatt optional nutzbar. Grafik-Prototyp, kein AAA-Finalspiel.' },
   bauplanarena: { titel: 'BAUPLAN-ARENA', unter: 'SD Engine · 3D-Asset-Testfeld · Shooter', text: 'Neue optionale Spielwelt: Kampfroboter, Geländewagen und Aussichtsposten aus dem KI-Bauplan. Mit Gegnern, fahrbarem SUV und begehbaren Häusern. Die Modelle sind PBR-Prototypen, keine fotorealistischen Scans.' },
   battleroyale: { titel: 'LUFTLANDUNG', unter: 'SD Engine · Battle Royale wie PUBG', text: 'Spring aus dem Flugzeug, gleite mit dem Fallschirm, such Waffen und Schutzwesten in den Häusern, bleib in der Zone – 20 Gegner, nur einer gewinnt. Gebaut mit einer Zeile: sd.battleRoyale().' },
   inselsturm: { titel: 'INSELSTURM', unter: 'SD Engine · Third-Person-Shooter · Battle-Royale-Modus', text: 'Eine 640 × 640 m große Insel mit Dörfern, Wald, Palmenstrand und Militärlager. 14 Kampfroboter, eine schrumpfende Zone und Waffen in den Häusern. Der Letzte gewinnt.' },
@@ -207,9 +208,32 @@ const schreib = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* p
 try { const q = lies('sdEngineQualitaet'); if (q) $('qualitaet').value = q; else if (handy) $('qualitaet').value = 'niedrig'; } catch (e) { /* egal */ }
 
 async function skriptHolen() { if (!original) original = SPIEL === 'eigen' ? (lies('sdSzeneCode') || "// Noch keine Szene gebaut.\n// Öffne den Szenen-Editor (✏) und klicke dort auf ▶ Spielen.\nsd.himmel({});\nsd.gelaende({ groesse: 300, hoehe: 10 });\nsd.spieler({ pos: [0, null, 0] });") : await (await fetch('./spiele/' + SPIEL + '.js', { cache: 'no-cache' })).text(); return SPIEL === 'eigen' ? (lies('sdSzeneCode') || original) : (lies(SPEICHER) || original); }
-function spielWaehlen(n) { SPIEL = n; SPEICHER = 'sdEngineSkript.' + n; original = ''; schreib('sdEngineSpiel', n); const d = SPIELE[n]; $('spielTitel').textContent = d.titel; $('spielUnter').textContent = d.unter; $('spielText').textContent = d.text; $('edTitel').textContent = '{ } SD-Skript · ' + d.titel.charAt(0) + d.titel.slice(1).toLowerCase();
+function spielWaehlen(n) { SPIEL = n; $('nordEditor').hidden = n !== 'nordhafen'; SPEICHER = 'sdEngineSkript.' + n; original = ''; schreib('sdEngineSpiel', n); const d = SPIELE[n]; $('spielTitel').textContent = d.titel; $('spielUnter').textContent = d.unter; $('spielText').textContent = d.text; $('edTitel').textContent = '{ } SD-Skript · ' + d.titel.charAt(0) + d.titel.slice(1).toLowerCase();
   document.querySelectorAll('.sw').forEach(b => b.classList.toggle('an', b.dataset.spiel === n)); $('code').value = ''; skriptHolen().then(c => { $('code').value = c; }).catch(() => {}); }
 document.querySelectorAll('.sw').forEach(b => b.onclick = () => spielWaehlen(b.dataset.spiel));
+// Sicherer Übergang in den Maus-Editor: aktuelle Karte bleibt bis zur
+// ausdrücklichen Zustimmung unberührt; vorhandene Szene wird vorher gesichert.
+$('nordEditor').onclick = async () => {
+  if (SPIEL !== 'nordhafen') return;
+  const alt = lies('sdSzene.aktuell');
+  if (!confirm('Nordhafen-Grundkarte im Szenen-Editor öffnen? Die aktuelle Szene wird vorher unter Gespeicherte Szenen gesichert.')) return;
+  try {
+    const response = await fetch('./szenen/nordhafen.json', { cache: 'no-cache' });
+    if (!response.ok) throw new Error('Karten-Datei fehlt (' + response.status + ')');
+    const roh = await response.json();
+    const sauber = window.SDSzene.pruefen(roh);
+    if (!sauber.objekte.length || sauber.name !== 'nordhafen') throw new Error('Ungültige Karten-Vorlage');
+    if (alt) {
+      // Editor bietet Backups unter "📂 Laden" an (der Prefix ist bewusst gleich).
+      const sicherung = 'sdSzene.gespeichert.Sicherung-' + new Date().toISOString().replace(/[:.]/g, '-');
+      localStorage.setItem(sicherung, alt);
+    }
+    localStorage.setItem('sdSzene.aktuell', JSON.stringify(sauber));
+    window.location.href = './editor.html';
+  } catch (e) {
+    alert('Die Karte konnte nicht geöffnet werden: ' + (e.message || e) + '. Deine bisherige Szene bleibt gespeichert, falls das Laden fehlgeschlagen ist.');
+  }
+};
 function zeigeFehler(e) {
   const m = /<anonymous>:(\d+):(\d+)/.exec(String(e && e.stack || '')); const zeile = m ? (+m[1] - 3) : null;
   $('fehler').hidden = false; $('fehler').textContent = '⨯ ' + (e && e.message || e) + (zeile > 0 ? '\n   in Zeile ' + zeile : '');
