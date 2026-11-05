@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#081a1a">
+<title>SD Luftlandung – Grafik-Prototyp</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif;color:#fff;background:#061514}*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}canvas{display:block;width:100%;height:100%;touch-action:none}
+#game{position:fixed;inset:0;outline:none}#ui{position:fixed;inset:0;pointer-events:none;text-shadow:0 2px 8px #092522;z-index:4}
+#top{position:absolute;top:18px;left:18px;right:18px;display:flex;gap:12px;justify-content:space-between;align-items:start}
+.panel{background:linear-gradient(135deg,rgba(4,17,22,.82),rgba(12,29,31,.5));backdrop-filter:blur(14px);border:1px solid #ffffff25;border-radius:15px;padding:12px 16px;box-shadow:0 14px 40px #021b2177}
+small{letter-spacing:.16em;font-size:10px;font-weight:800;color:#a7ebd1}strong{font-size:18px;letter-spacing:.08em}p{margin:5px 0 0;color:#d7e7e3;font-size:12px;line-height:1.5}
+#stats{text-align:right;font-variant-numeric:tabular-nums}#stats strong{font-size:24px}#stats .emph{color:#f2c878}
+#crosshair{position:absolute;left:50%;top:48%;width:20px;height:20px;transform:translate(-50%,-50%);opacity:.8}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 5px #0b3028}#crosshair:before{width:2px;height:20px;left:9px}#crosshair:after{height:2px;width:20px;top:9px}
+#bottom{position:absolute;left:18px;bottom:18px;display:flex;gap:8px;align-items:end;max-width:calc(100% - 36px)}
+#meter{width:min(275px,55vw)}#health{height:11px;margin-top:8px;border:1px solid #ffffff55;border-radius:8px;overflow:hidden;background:#0009}#health>i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#36cf80,#b3f4ab);transition:width .3s}
+#hint{position:absolute;bottom:25px;right:20px;max-width:310px;text-align:right;font-size:11px;color:#d4e5e5}
+#intro{pointer-events:auto;position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(90deg,rgba(2,11,12,.94),rgba(4,19,21,.65) 65%,rgba(2,11,12,.76))}
+#intro .content{width:min(520px,100%);padding:34px 32px;border:1px solid #ffffff2c;background:#051415df;border-radius:22px;box-shadow:0 28px 70px #0009}
+#intro h1{font-size:clamp(42px,8vw,70px);line-height:.93;letter-spacing:-.055em;margin:14px 0 16px}#intro h1 em{font-style:normal;color:#f0b966}#intro p{font-size:15px;line-height:1.7}
+#intro button{margin-top:24px;border:none;color:#19231c;background:#f3c273;padding:15px 22px;border-radius:8px;font:800 15px system-ui;cursor:pointer}
+#intro button:focus-visible,.touch:focus-visible{outline:3px solid #fff;outline-offset:2px}
+#status{margin-top:12px;color:#f3b3a5;font-size:13px;min-height:18px}#touch{display:none;position:absolute;bottom:18px;right:18px;gap:10px;pointer-events:auto;align-items:end}
+.touch{background:#092729b0;color:#fff;backdrop-filter:blur(8px);border:1px solid #ffffff55;border-radius:50%;height:58px;width:58px;font-size:14px;font-weight:800;touch-action:none}
+#pad{display:grid;grid-template-columns:repeat(3,45px);grid-template-rows:repeat(3,45px);align-items:stretch;gap:2px}
+#pad .touch{height:45px;width:45px;border-radius:9px}#pad button[data-dir='up']{grid-column:2;grid-row:1}#pad button[data-dir='left']{grid-column:1;grid-row:2}#pad button[data-dir='right']{grid-column:3;grid-row:2}#pad button[data-dir='down']{grid-column:2;grid-row:3}
+@media(pointer:coarse),(max-width:800px){#touch{display:flex}#hint{display:none}#top{top:10px;left:10px;right:10px}#top .panel{padding:8px 11px}#stats strong{font-size:18px}#top p{font-size:10px}#bottom{bottom:166px;left:10px}#touch{bottom:12px;right:10px}#crosshair{top:43%}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/babylonjs@9.31.3/babylon.min.js"></script>
+<script defer src="./game.js"></script>
+</head>
+<body>
+<canvas id="game" aria-label="Spielbare 3D-Insel. Bewege dich mit WASD und ziele mit der Maus." tabindex="0"></canvas>
+<div id="ui" aria-live="off">
+  <div id="top"><div class="panel"><small>SD ENGINE / VISUAL LAB 01</small><div><strong>LUFTLANDUNG</strong></div><p>Inselkampf · Grafische Testszene · Alpha</p></div><div class="panel" id="stats"><small>MISSIONSZIEL</small><div><strong><span id="score">0</span><span class="emph"> / 5</span></strong></div><p><span id="fps">–</span> FPS · <span id="enemies">5</span> Ziele</p></div></div>
+  <div id="crosshair" aria-hidden="true"></div>
+  <div id="bottom"><div id="meter" class="panel"><small>ENERGIE</small><div id="health"><i id="healthFill"></i></div><p id="message">Erkunde die Insel und treffe fünf Drohnen.</p></div></div>
+  <div id="hint" class="panel">WASD bewegen · Maus ziehen: Kamera · Linksklick: Schießen · Shift: Sprinten</div>
+  <div id="touch"><div id="pad"><button class="touch" data-dir="up" aria-label="Vorwärts">↑</button><button class="touch" data-dir="left" aria-label="Links">←</button><button class="touch" data-dir="right" aria-label="Rechts">→</button><button class="touch" data-dir="down" aria-label="Rückwärts">↓</button></div><button class="touch" id="fire" aria-label="Schießen">FEUER</button></div>
+</div>
+<div id="intro"><div class="content"><small>SD GAME-STUDIO · GRAFIK-EXPERIMENT</small><h1>Eine Insel.<br><em>Dein Einsatz.</em></h1><p>Eine neue <b>spielbare 3D-Testszene</b> mit Tropengelände, Gras, Palmen, Flugzeug, Fallschirmen, Kameraführung und Gegnern. Die Modelle sind noch prozedural – <b>kein fotorealistisches AAA-Spiel.</b></p><button id="start">▶ Grafik-Prototyp starten</button><div id="status" role="status"></div></div></div>
+</body>
+</html>
