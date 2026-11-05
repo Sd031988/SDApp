@@ -42,9 +42,9 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - Roboter, Bäume und Gebäude sind prozedural erzeugt und kommen nicht an Modelle von 3D-Künstlern heran. Eigene Modelle (.glb mit Animationen, z. B. von Mixamo) lassen sich mit `sd.modell()` laden, sind im Beispiel aber nicht eingebaut.
 - Foto-Häuser sind Kisten mit Fotos auf den Wänden: von außen wie im Foto, aber ohne echte Vorsprünge und nicht begehbar. Echte 3D-Gebäude aus Fotos entstehen mit Fotogrammetrie-Apps (Polycam, Luma, Scaniverse, Meshroom) und werden als .glb importiert.
 - Nur .glb wird importiert (keine .gltf mit Zusatzdateien, kein .fbx). Eigene Dateien liegen nur im Browser dieses Geräts.
-- Gegner haben keine Wegfindung (Navmesh) und kein Deckungsverhalten.
 - Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler: Der Gastgeber schickt seine Szene als reine Daten mit, jeder Browser prüft sie und baut daraus den Code (eigene Modelle und Foto-Häuser bleiben dabei weg). Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
 - Passanten und Verkehr weichen aus, werden aber nicht verletzt.
-- Wegfindung arbeitet auf einem 1,5-m-Raster (ebenerdig); Gegner nutzen keine Treppen oder Dächer.
+- Wegfindung arbeitet auf einem 1,5-m-Raster; Gegner nehmen Außentreppen, aber keine Innentreppen.
+- Flugzeug und Boot nutzen vereinfachte Physik (kein echter Strömungs- oder Wellenrechner).
 - Ein Spiel in der Größe von GTA oder PUBG entsteht damit nicht per Knopfdruck. Die Engine ist das Fundament für die nächsten Etappen.
 - Getestet wurde in Chromium mit Software-Grafik (SwiftShader). Wie flüssig es auf einer echten Grafikkarte läuft, muss am Gerät geprüft werden.
