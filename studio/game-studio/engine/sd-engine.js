@@ -707,6 +707,7 @@
       // begrenzen. Standardspiel bleibt ohne Profil bitgenau unverändert.
       const profil = ctx && ctx.taktikVor && ctx.taktikVor({ dt, spieler, tasten, touch, maus, vor, seit, sprint, ducken: crouchInput, tempo: basisTempo });
       const tempo = profil ? profil.tempo : basisTempo;
+      if (profil && profil.rutschRichtung) { const [sv, ss] = profil.rutschRichtung; dir = fw.scale(sv).add(rw.scale(ss)); if (dir.length() > 1) dir.normalize(); }
       if (spieler.boost > 0) { spieler.boost = Math.max(0, spieler.boost - dt * 1.3); if (spieler.leben > 0) spieler.leben = Math.min(spieler.maxLeben, spieler.leben + dt * 0.9); }
       const vorher = spieler.cc.getPosition().clone(); if (touch.springen) { spieler.sprungPuffer = 0.25; touch.springen = false; } spieler.sprungPuffer = Math.max(0, (spieler.sprungPuffer || 0) - dt);
       const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0 && !(profil && profil.springVerbot); if (springt) spieler.sprungPuffer = 0;
