@@ -86,3 +86,19 @@ test('recursive parent cleanup marks descendants before retry after a later fail
  assert.deepEqual(calls,['parent','child','later','later']);
  assert.equal(adapter.activeCount(),0);
 });
+
+test('detached descendants are not disposed twice after a later cleanup failure',async()=>{
+ const calls=[];let first=true;
+ const child={dispose(){calls.push('child');if(calls.filter(x=>x==='child').length>1)throw new Error('double dispose');}};
+ const parent={dispose(){calls.push('parent');child.dispose();child.parent=null;}};
+ child.parent=parent;
+ const skeleton={dispose(){calls.push('skeleton');if(first){first=false;throw new Error('transient');}}};
+ const result={meshes:[parent,child],transformNodes:[],skeletons:[skeleton],animationGroups:[]};
+ const adapter=create({scene:{},Babylon:{SceneLoader:{async ImportMeshAsync(){return result;}}},resolveCell:()=>({url:'./cells/detach.glb'})});
+ const loaded=await adapter.load('detach');
+ await assert.rejects(adapter.dispose(loaded,'detach'),/transient/);
+ assert.equal(adapter.activeCount(),1);
+ await adapter.dispose(loaded,'detach');
+ assert.deepEqual(calls,['parent','child','skeleton','skeleton']);
+ assert.equal(adapter.activeCount(),0);
+});
