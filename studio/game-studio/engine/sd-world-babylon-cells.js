@@ -7,7 +7,7 @@ function create({scene,Babylon,resolveCell,onError}={}){
  function cleanup(result){
   if(!result)return;
   const nodes=[...(result.meshes||[]),...(result.transformNodes||[])],set=new Set(nodes);
-  for(const node of nodes){if(node&&typeof node.dispose==='function'&&(!node.parent||!set.has(node.parent)))node.dispose(false,true);}
+  for(const node of nodes){if(node&&typeof node.dispose==='function'&&(!node.parent||!set.has(node.parent)))node.dispose(false,false);}
   for(const resource of [...(result.skeletons||[]),...(result.animationGroups||[]),...(result.particleSystems||[])]){if(resource&&typeof resource.dispose==='function')resource.dispose();}
  }
  function validateURL(url){
