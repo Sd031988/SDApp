@@ -25,13 +25,18 @@ function create(options){
     while(i<queue.length&&!closed){
      const id=queue[i++],controller=new AbortController(),task={controller};pending.set(id,task);
      try{
-      const value=await options.load(id,controller.signal);
+      let value;
+      try{value=await options.load(id,controller.signal);}
+      catch(error){
+       if(!controller.signal.aborted&&!closed&&typeof options.onError==='function'){
+        try{options.onError(error,id);}catch(_ignored){/* observer cannot strand cleanup */}
+       }
+       continue;
+      }
+      // Disposal is a resource-lifecycle failure, not a load failure.
+      // Propagate it so callers can detect a potentially leaked GPU resource.
       if(closed||controller.signal.aborted||!desired.has(id))await dispose(value,id);
       else loaded.set(id,value);
-     }catch(error){
-      if(!controller.signal.aborted&&!closed&&typeof options.onError==='function'){
-       try{options.onError(error,id);}catch(_ignored){/* never break resource cleanup */}
-      }
      }finally{if(pending.get(id)===task)pending.delete(id);}
     }
    });
