@@ -13,7 +13,7 @@
         const sph = BAB.MeshBuilder.CreateSphere('ampelLampe', { diameter: 0.2, segments: 6 }, szene); sph.material = m; sph.isPickable = false; sph.position.y = -500; ampelLampe[a + f] = sph; } }
     function ampelZustand(achse) { const t = ampelZeit % 24, x = t < 9 ? 'gruen' : t < 11 ? 'gelb' : t < 12 ? 'rot' : 'rot', z = t < 12 ? 'rot' : t < 21 ? 'gruen' : t < 23 ? 'gelb' : 'rot'; return achse === 'x' ? x : z; }
     function ampelnZeigen() { if (!ampelLampe.xrot) return; for (const a of ['x', 'z']) { const z = ampelZustand(a); for (const f of ['rot', 'gelb', 'gruen']) { const m = ampelLampe[a + f].material; m.emissiveColor = m.__farbe.scale(f === z ? 1.6 : 0.1); } } }
-    ctx.beiSchuss.push(pos => { alarm = { pos: pos.clone(), zeit: ctx.zeit }; });
+    ctx.beiSchuss.push((pos, wer, leise) => { if (leise) return; alarm = { pos: pos.clone(), zeit: ctx.zeit }; });
 
     /**
      * sd.stadt({ mitte:[x,z], bloecke:[nx,nz], block: 56, strasse: 14, seed, zentrumHoch: true, parks: 0.15, fotoHaeuser:['name', …], laternen: true })

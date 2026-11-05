@@ -499,7 +499,7 @@
     function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; spieler.ladeDauer = w.def.nachladen; ton('nachladen'); }
     function schaden(ziel, menge, quelle) {
       if (vorbei) return;
-      if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * 0.6); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); wackeln(klemme(rest / 35, 0.1, 0.6)); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
+      if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; menge *= 1 - [0, 0.08, 0.15, 0.22][spieler.helm || 0]; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * (spieler.westeStufe ? 0.4 + spieler.westeStufe * 0.1 : 0.6)); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); wackeln(klemme(rest / 35, 0.1, 0.6)); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
         if (spieler.leben <= 0) { spieler.leben = 0; if (ctx && ctx.beimTod && ctx.beimTod(quelle ? 'Ausgeschaltet von ' + quelle : null)) return; ende(false, quelle ? 'Ausgeschaltet von ' + quelle : 'Du bist ausgeschieden'); } return; }
       ziel.leben -= menge; ziel.alarm = 6; ziel.zucken = 0.22; if (ziel.leben <= 0 && !ziel.tot) botTot(ziel);
     }
@@ -522,7 +522,7 @@
             if (md_.leben != null) { md_.leben -= w.def.schaden; if (md_.leben <= 0) zerstoeren(m); } } }
       }
       if (getroffen) { ton(kopf ? 'kopf' : 'treffer'); if (hud.treffer) { hud.treffer.classList.toggle('kopf', kopf); hud.treffer.style.opacity = 1; } }
-      ton(w.def.ton, 0.8); ctx && ctx.beiSchuss.forEach(f => f(muendung, 'spieler')); blitz.position = muendung; blitz.intensity = 3; wackeln(w.def.rueckstoss * 3.5); spieler.rueckstoss += w.def.rueckstoss; spieler.nick -= w.def.rueckstoss * 0.6;
+      ton(w.def.ton, w.def.leise ? 0.25 : 0.8); ctx && ctx.beiSchuss.forEach(f => f(muendung, 'spieler', w.def.leise)); blitz.position = muendung; blitz.intensity = w.def.leise ? 0.4 : 3; wackeln(w.def.rueckstoss * 3.5); spieler.rueckstoss += w.def.rueckstoss; spieler.nick -= w.def.rueckstoss * 0.6;
     }
     function zerstoeren(m) { funken(m.getAbsolutePosition(), V(0, 1, 0), '#ffaa44', 40); ton('schrot', 0.6); if (m.physicsBody) m.physicsBody.dispose(); m.dispose(); }
 
@@ -573,7 +573,7 @@
     const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.duckt ? spieler.cc.getPosition().add(V(0, -0.6, 0)) : spieler.cc.getPosition());   // geduckt: hinter niedrigen Mauern unsichtbar für Gegner
     function sichtfrei(von, zu, ignoriere) { const d = zu.subtract(von), l = d.length(); const t = strahl(von, d.normalize(), l, ignoriere); return !t || !t.hit || t.distance > l - 0.7 || !!(ctx && ctx.uebernahme && t.pickedMesh.metadata && t.pickedMesh.metadata.fahrzeug && t.pickedMesh.metadata.fahrzeug === ctx.uebernahme.fahrzeugId); }
     function botUpdate(b, dt) {
-      if (b.tot) return; if (b.leben <= 0) { botTot(b); return; } const pos = b.cc.getPosition(); let wunsch = V(0, 0, 0), tempo = 0;
+      if (b.tot || b.inLuft) return; if (b.leben <= 0) { botTot(b); return; } const pos = b.cc.getPosition(); let wunsch = V(0, 0, 0), tempo = 0;
       const sp = spieler && spieler.leben > 0 ? spielerPos() : null; const dist = sp ? BAB.Vector3.Distance(pos, sp) : 1e9;
       b.alarm = Math.max(0, b.alarm - dt); b.wechsel -= dt;
       const sichtweite = 70 + b.staerke * 40;
@@ -612,7 +612,15 @@
     }
 
     /* ---------- Kisten (Beute) ---------- */
-    const INHALT = { munition: ['#c2a14a', '📦 Munition'], medikit: ['#d84a4a', '✚ Medikit +40'], ruestung: ['#4a7ad8', '🛡 Schutzweste +50'], 'waffe:gewehr': ['#8a6a3a', '🔫 Sturmgewehr'], 'waffe:schrotflinte': ['#8a6a3a', '🔫 Schrotflinte'], 'waffe:scharfschuetze': ['#8a6a3a', '🎯 Scharfschützengewehr'] };
+    const INHALT = { munition: ['#c2a14a', '📦 Munition'], medikit: ['#d84a4a', '✚ Medikit +40'], ruestung: ['#4a7ad8', '🛡 Schutzweste +50'], 'waffe:gewehr': ['#8a6a3a', '🔫 Sturmgewehr'], 'waffe:schrotflinte': ['#8a6a3a', '🔫 Schrotflinte'], 'waffe:scharfschuetze': ['#8a6a3a', '🎯 Scharfschützengewehr'],
+      'helm:1': ['#6a7a5a', '⛑ Helm Stufe 1'], 'helm:2': ['#5a6a7a', '⛑ Helm Stufe 2'], 'helm:3': ['#3a3a4a', '⛑ Helm Stufe 3'], 'weste:1': ['#4a7ad8', '🦺 Weste Stufe 1'], 'weste:2': ['#3a5ab8', '🦺 Weste Stufe 2'], 'weste:3': ['#2a3a88', '🦺 Weste Stufe 3'],
+      'rucksack:1': ['#8a7a4a', '🎒 Rucksack Stufe 1'], 'rucksack:2': ['#7a6a3a', '🎒 Rucksack Stufe 2'], 'rucksack:3': ['#5a4a2a', '🎒 Rucksack Stufe 3'], 'aufsatz:visier': ['#2a8a8a', '🔭 Zielfernrohr'], 'aufsatz:daempfer': ['#2a2a2a', '🔇 Schalldämpfer'], 'aufsatz:magazin': ['#8a4a2a', '🧰 Großes Magazin'] };
+    /* Ausrüstung: Helm/Weste/Rucksack in Stufen, Aufsätze je Waffe */
+    let ausruestungEl = null;
+    function ausruestungZeigen() { if (!spieler) return; if (!ausruestungEl && hud.munition && hud.munition.parentNode) { ausruestungEl = document.createElement('div'); ausruestungEl.style.cssText = 'font:600 13px system-ui;opacity:.9;margin-top:4px;text-shadow:0 1px 3px #000'; hud.munition.parentNode.appendChild(ausruestungEl); }
+      if (!ausruestungEl) return; const w = spieler.waffen[spieler.aktiv], a = (w && w.aufsatz) || {}; const t = [spieler.helm ? '⛑' + spieler.helm : '', spieler.westeStufe ? '🦺' + spieler.westeStufe : '', spieler.rucksack ? '🎒' + spieler.rucksack : '', a.visier ? '🔭' : '', a.daempfer ? '🔇' : '', a.magazin ? '🧰' : ''].filter(Boolean).join(' '); if (ausruestungEl.textContent !== t) ausruestungEl.textContent = t; }
+    function aufsatzAnbringen(art) { const w = spieler.waffen[spieler.aktiv]; if (!w) { nachricht('Erst eine Waffe nehmen'); return false; } w.aufsatz = w.aufsatz || {}; if (w.aufsatz[art]) { nachricht('Diese Waffe hat das schon'); return false; } w.aufsatz[art] = true;
+      const d = Object.assign({}, w.def); if (art === 'visier') { d.zoom = Math.min(d.zoom || 0.55, 0.32); d.zielStreuung *= 0.6; } if (art === 'daempfer') d.leise = true; if (art === 'magazin') d.magazin = Math.round(d.magazin * 1.5); w.def = d; nachricht(INHALT['aufsatz:' + art][1] + ' an ' + d.name); return true; }
     function kiste(o) {
       const x = o.pos[0], z = o.pos[2], y = o.pos[1] ?? hoehe(x, z), s = o.klein ? 0.45 : 0.7, inh = o.inhalt || 'munition';
       const m = BAB.MeshBuilder.CreateBox('kiste', { size: s }, szene); m.position = V(x, y + s / 2, z); m.material = material((INHALT[inh] || INHALT.munition)[0], 0.6, 0.1, { leuchten: '#111111' }); schatten.addShadowCaster(m); m.receiveShadows = true;
@@ -620,7 +628,10 @@
       const k = { m, inhalt: inh }; kisten.push(k); return k;
     }
     function kisteOeffnen(k) {
-      const i = k.inhalt; if (i === 'munition') { spieler.waffen.forEach(w => { w.reserve += w.def.magazin * 2; }); nachricht('📦 Munition für alle Waffen'); }
+      const i = k.inhalt; if (i === 'munition') { const n = 2 + (spieler.rucksack || 0); spieler.waffen.forEach(w => { w.reserve += w.def.magazin * n; }); nachricht('📦 Munition für alle Waffen (' + n + ' Magazine)'); }
+      else if (/^(helm|weste|rucksack):/.test(i)) { const [art, st] = i.split(':'), n = +st, feld = art === 'helm' ? 'helm' : art === 'weste' ? 'westeStufe' : 'rucksack'; if ((spieler[feld] || 0) >= n) { nachricht('Du hast schon ' + (art === 'helm' ? 'einen Helm' : art === 'weste' ? 'eine Weste' : 'einen Rucksack') + ' dieser Stufe'); return; }
+        spieler[feld] = n; if (art === 'weste') spieler.ruestung = Math.max(spieler.ruestung, 40 + n * 20); nachricht(INHALT[i][1] + (art === 'helm' ? ' – ' + [0, 8, 15, 22][n] + ' % weniger Schaden' : art === 'weste' ? ' – Schutz ' + (40 + n * 20) : ' – mehr Munition pro Kiste')); }
+      else if (i.startsWith('aufsatz:')) { if (!aufsatzAnbringen(i.slice(8))) return; }
       else if (i === 'medikit') { if (spieler.leben >= spieler.maxLeben) { nachricht('Leben ist schon voll'); return; } spieler.leben = Math.min(spieler.maxLeben, spieler.leben + 40); nachricht('✚ +40 Leben'); }
       else if (i === 'ruestung') { spieler.ruestung = Math.min(100, spieler.ruestung + 50); nachricht('🛡 +50 Schutz'); }
       else if (i.startsWith('waffe:')) waffeGeben(i.slice(6));
@@ -692,7 +703,7 @@
     szene.onBeforeRenderObservable.add(() => { const dt = Math.min(engine.getDeltaTime() / 1000, 0.05); if (!dt || festeSchritte) return; if (opt.pause && opt.pause()) return; logik(dt); });
     let festeSchritte = false;
     function logik(dt) {
-      if (kachelPhysik) kachelPhysik(dt);
+      if (kachelPhysik) kachelPhysik(dt); ausruestungZeigen();
       if (BUS && opt.einstellungen) { const E = opt.einstellungen; BUS.effekte.gain.value = E.effekte ?? 1; BUS.musik.gain.value = E.musik ?? 0.6; }
       zeit += dt;
       const ueb = ctx && ctx.uebernahme;

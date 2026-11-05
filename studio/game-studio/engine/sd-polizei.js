@@ -15,7 +15,7 @@
   function aufgeben() { for (const b of F.polizei) if (!b.tot) ctx.botEntfernen(b); F.polizei = []; F.wagen.forEach(w => w.entfernen()); F.wagen = []; ctx.nachricht('✅ Die Polizei hat die Suche aufgegeben', 3); }
   const inStadt = p => (ctx.stadtBereiche || []).some(([x, z, w, d]) => Math.abs(p.x - x) < w && Math.abs(p.z - z) < d);
   // Verbrechen erkennen
-  ctx.beiSchuss.push((pos, wer) => { if (!F.an || wer !== 'spieler' || !pos) return; if (F.sterne === 0 && inStadt(pos)) setzen(1); if (F.sterne > 0) F.unsichtbar = Math.min(F.unsichtbar, 8); });
+  ctx.beiSchuss.push((pos, wer, leise) => { if (!F.an || wer !== 'spieler' || !pos || leise) return; /* mit Schalldämpfer unbemerkt */ if (F.sterne === 0 && inStadt(pos)) setzen(1); if (F.sterne > 0) F.unsichtbar = Math.min(F.unsichtbar, 8); });
   function spawnPunkt(sp) { const netze = ctx.stadtNetze || []; let kand = [];
     for (const n of netze) for (const k of n.knoten) { const d = Math.hypot(k[0] - sp.x, k[1] - sp.z); if (d > 60 && d < 120) kand.push(k); }
     if (kand.length) return kand[Math.floor(Math.random() * kand.length)]; const w = Math.random() * 6.28; return [sp.x + Math.cos(w) * 85, sp.z + Math.sin(w) * 85]; }

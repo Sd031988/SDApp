@@ -58,17 +58,33 @@
   function battleRoyale(o) {
     o = Object.assign({ gegner: 18, beute: 45, absprung: true, aussehen: 'mensch', seed: Math.floor(Math.random() * 1e6) }, o || {}); const r = ctx.zufall(o.seed), sd = ctx.sd;
     // Beute: zuerst in Häusern (Erdgeschoss hinter der Tür), dann verstreut
-    const sorten = ['munition', 'munition', 'medikit', 'ruestung', 'waffe:gewehr', 'waffe:schrotflinte', 'waffe:gewehr', 'waffe:scharfschuetze'];
+    const sorten = ['munition', 'munition', 'munition', 'medikit', 'medikit', 'waffe:gewehr', 'waffe:gewehr', 'waffe:schrotflinte', 'waffe:scharfschuetze', 'helm:1', 'helm:1', 'helm:2', 'helm:3', 'weste:1', 'weste:1', 'weste:2', 'weste:3', 'rucksack:1', 'rucksack:2', 'rucksack:3', 'aufsatz:visier', 'aufsatz:daempfer', 'aufsatz:magazin'];
     let n = 0; for (const h of (ctx.haeuser || [])) { if (n >= o.beute) break; const p = h.tuerInnen, q = h.mitte; const x = p.x + (q.x - p.x) * 0.6, z = p.z + (q.z - p.z) * 0.6; sd.kiste({ pos: [x, p.y + 0.15, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     while (n < o.beute) { const [x, z] = zufallsLand(r); sd.kiste({ pos: [x, null, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     // Zone um einen Punkt an Land
     const mitte = zufallsLand(r), Z = Object.assign({ mitte, radius: G() * 0.72, endRadius: Math.max(20, G() * 0.04), warte: o.absprung ? 70 : 40, dauer: Math.round(G() * 0.45), schaden: 5 }, o.zone || {}); sd.zone(Z);
     // Gegner überall an Land verteilt
-    if (!ctx.mehrspieler) for (let i = 0; i < o.gegner; i++) { const [x, z] = zufallsLand(r); sd.gegner({ pos: [x, null, z], staerke: 0.25 + r() * 0.55, aussehen: o.aussehen, waffe: ['gewehr', 'pistole', 'schrotflinte', 'gewehr'][i % 4], name: 'Gegner ' + (i + 1) }); }
+    const neueBots = []; if (!ctx.mehrspieler) for (let i = 0; i < o.gegner; i++) { const [x, z] = zufallsLand(r); neueBots.push(sd.gegner({ pos: [x, null, z], staerke: 0.25 + r() * 0.55, aussehen: o.aussehen, waffe: ['gewehr', 'pistole', 'schrotflinte', 'gewehr'][i % 4], name: 'Gegner ' + (i + 1) })); }
     if (!ctx.spieler) { const [x, z] = zufallsLand(r); sd.spieler({ pos: [x, null, z], waffen: ['pistole'], aussehen: o.aussehen }); }
-    if (o.absprung) absprung(o.flug || {}); else ctx.nachricht('Bleib in der Zone und überlebe als Letzter!', 5);
+    if (o.absprung) { absprung(o.flug || {}); botsAbspringen(neueBots.filter(b => b && b.cc), r); } else ctx.nachricht('Bleib in der Zone und überlebe als Letzter!', 5);
     sd.musik && sd.musik('spannung');
     return { zone: Z };
   }
-  return { api: { battleRoyale, absprung, get imFlug() { return flug ? flug.phase : null; } } };
+  /* Gegner springen auch aus dem Flugzeug: jeder dort, wo die Flugbahn seinem Landeplatz am nächsten ist */
+  const springer = []; let botSchirm = null;
+  let pfad = null;
+  function botsAbspringen(liste, r) { if (!flug) return; const f = flug; pfad = { von: f.von, dir: f.dir, tempo: f.tempo, H: f.H, t: 0, L: f.L };
+    if (!botSchirm) { botSchirm = f.schirm.clone('botSchirm'); botSchirm.setEnabled(true); botSchirm.isVisible = false; botSchirm.position.y = -900; }
+    for (const b of liste) { const ziel = b.cc.getPosition().clone(), rel = V(ziel.x - f.von[0], 0, ziel.z - f.von[1]), t = klemme(BAB.Vector3.Dot(rel, f.dir), 0, f.L);
+      b.inLuft = true; b.k.setEnabled(false); springer.push({ b, ziel, abT: t - 20 - r() * 40, phase: 'flugzeug', pos: null, v: V(0, 0, 0), schirm: null }); } }
+  function springerUpdate(dt) {
+    if (!springer.length || !pfad) return; pfad.t += dt * pfad.tempo; const flugzeugPos = V(pfad.von[0], pfad.H, pfad.von[1]).add(pfad.dir.scale(Math.min(pfad.t, pfad.L)));
+    for (let i = springer.length - 1; i >= 0; i--) { const s = springer[i], b = s.b; if (b.tot) { springer.splice(i, 1); if (s.schirm) s.schirm.dispose(); continue; }
+      if (s.phase === 'flugzeug') { if (pfad.t < s.abT && pfad.t < pfad.L) { b.cc.setPosition(flugzeugPos.add(V(0, -6, 0))); continue; } s.phase = 'fall'; s.pos = flugzeugPos.add(V(0, -4, 0)); b.k.setEnabled(true); }
+      const zu = V(s.ziel.x - s.pos.x, 0, s.ziel.z - s.pos.z), d = zu.length(), ueber = s.pos.y - ctx.hoehe(s.pos.x, s.pos.z);
+      if (s.phase === 'fall') { const h = d > 1 ? zu.scale(Math.min(18, d) / d) : V(0, 0, 0); s.v.x += (h.x - s.v.x) * dt; s.v.z += (h.z - s.v.z) * dt; s.v.y = Math.max(s.v.y - 9.81 * dt, -48); if (ueber < 120) { s.phase = 'schirm'; s.schirm = botSchirm.createInstance('botSchirmI'); } }
+      else { const h = d > 1 ? zu.scale(Math.min(8, d) / d) : V(0, 0, 0); s.v.x += (h.x - s.v.x) * dt * 1.5; s.v.z += (h.z - s.v.z) * dt * 1.5; s.v.y += (-5 - s.v.y) * dt * 2.5; }
+      s.pos.addInPlace(s.v.scale(dt)); b.k.position = s.pos.add(V(0, -0.9, 0)); if (d > 1) b.k.rotation.y = Math.atan2(zu.x, zu.z); if (s.schirm) s.schirm.position = s.pos.add(V(0, 3.6, 0)); b.cc.setPosition(s.pos.clone());
+      if (ueber < 1.2) { b.cc.setPosition(V(s.pos.x, ctx.hoehe(s.pos.x, s.pos.z) + 1.2, s.pos.z)); b.cc.setVelocity(V(0, 0, 0)); b.inLuft = false; if (s.schirm) s.schirm.dispose(); springer.splice(i, 1); } } }
+  return { api: { battleRoyale, absprung, get imFlug() { return flug ? flug.phase : null; }, get springerInDerLuft() { return springer.length; } }, update: springerUpdate };
 });
