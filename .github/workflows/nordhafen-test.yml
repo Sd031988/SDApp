@@ -1,0 +1,24 @@
+name: Nordhafen Spiel-Skript und Szenen-Test
+on:
+  pull_request:
+    paths:
+      - 'studio/game-studio/engine/spiele/nordhafen.js'
+      - 'studio/game-studio/engine/szenen/nordhafen.json'
+      - 'studio/game-studio/engine/nordhafen.test.cjs'
+      - 'studio/game-studio/engine/sd-bauplan-pakete.js'
+      - 'studio/game-studio/engine/sd-szene.js'
+      - '.github/workflows/nordhafen-test.yml'
+  workflow_dispatch:
+jobs:
+  nordhafen-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Nordhafen Editor-Map und Spielskript testen
+        run: node --test studio/game-studio/engine/nordhafen.test.cjs
