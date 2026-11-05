@@ -463,7 +463,7 @@
       for (const [a, std] of Object.entries(AKTIONEN)) { const t = b[a] || std; if (t === k) v.push(std); if (std === k) belegt = true; }
       return v.length ? v : belegt ? [] : [k]; }
     const kd = e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) { tasten[k] = true; (tastenHandler[k] || []).forEach(f => f()); } const k = roh; if (['Space', 'Tab'].includes(k) && gesperrt) e.preventDefault(); };
-    const ku = e => { const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) tasten[k] = false; };
+    const ku = e => { const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) { tasten[k] = false; if (ctx && ctx.taktikTasteLos) ctx.taktikTasteLos(k); } };
     const mm = e => { if (gesperrt) { maus.dx += e.movementX || 0; maus.dy += e.movementY || 0; } };
     const md = e => { if (e.target !== canvas) return; if (!gesperrt && !opt.keinPointerLock) { canvas.requestPointerLock && canvas.requestPointerLock(); } if (e.button === 0) { maus.links = true; maus.klick = true; } if (e.button === 2) maus.rechts = true; };
     const mu = e => { if (e.button === 0) maus.links = false; if (e.button === 2) maus.rechts = false; };
