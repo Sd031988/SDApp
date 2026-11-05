@@ -71,3 +71,18 @@ test('partial eviction retry does not dispose already released meshes twice',asy
  assert.deepEqual(calls,['first','second','second']);
  assert.equal(adapter.activeCount(),0);
 });
+
+test('recursive parent cleanup marks descendants before retry after a later failure',async()=>{
+ const calls=[];let fail=true;
+ const parent={dispose(recurse){assert.equal(recurse,false);calls.push('parent');child.dispose();}};
+ const child={parent,dispose(){calls.push('child');if(calls.filter(x=>x==='child').length>1)throw new Error('double child disposal');}};
+ const later={dispose(){calls.push('later');if(fail){fail=false;throw new Error('transient skeleton error');}}};
+ const result={meshes:[parent,child],transformNodes:[],skeletons:[later],animationGroups:[]};
+ const adapter=create({scene:{},Babylon:{SceneLoader:{async ImportMeshAsync(){return result;}}},resolveCell:()=>({url:'./cells/tree.glb'})});
+ const resource=await adapter.load('tree');
+ await assert.rejects(adapter.dispose(resource,'tree'),/transient skeleton error/);
+ assert.equal(adapter.activeCount(),1);
+ await adapter.dispose(resource,'tree');
+ assert.deepEqual(calls,['parent','child','later','later']);
+ assert.equal(adapter.activeCount(),0);
+});
