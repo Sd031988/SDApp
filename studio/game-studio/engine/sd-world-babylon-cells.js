@@ -7,18 +7,22 @@ function create({scene,Babylon,resolveCell,onError}={}){
  function cleanup(result){
   if(!result)return;
   const nodes=[...(result.meshes||[]),...(result.transformNodes||[])],set=new Set(nodes);
-  for(const node of nodes){if(node&&typeof node.dispose==='function'&&!disposed.has(node)&&(!node.parent||!set.has(node.parent))){node.dispose(false,false);disposed.add(node);
-    // Babylon node.dispose(false, false) recursively disposes children.
-    // Remember descendants so a later retry after another resource fails
-    // cannot invoke dispose() a second time on an already freed child.
+  for(const node of nodes){if(node&&typeof node.dispose==='function'&&!disposed.has(node)&&(!node.parent||!set.has(node.parent))){
+    // Snapshot descendants BEFORE Babylon dispose: it can detach children
+    // and clear their parent pointers during recursive cleanup.
+    const descendants=[];
     for(const child of nodes){
      if(child===node||!child)continue;
      const seen=new Set();let parent=child.parent;
      while(parent&&!seen.has(parent)){
-      if(parent===node){disposed.add(child);break;}
+      if(parent===node){descendants.push(child);break;}
       seen.add(parent);parent=parent.parent;
      }
-    }}}
+    }
+    node.dispose(false,false);
+    disposed.add(node);
+    for(const child of descendants)disposed.add(child);
+   }}
   for(const resource of [...(result.skeletons||[]),...(result.animationGroups||[]),...(result.particleSystems||[])]){if(resource&&typeof resource.dispose==='function'&&!disposed.has(resource)){resource.dispose();disposed.add(resource);}}
  }
  function validateURL(url){
