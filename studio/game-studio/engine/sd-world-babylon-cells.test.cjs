@@ -9,3 +9,26 @@ test('rejects unsafe or non-GLB paths without importing',async()=>{for(const url
 test('duplicate loaded cell is rejected before import or disposal',async()=>{const f=fixture();const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/a.glb'})});const r=await a.load('0:0');await assert.rejects(a.load('0:0'),/duplicate/);assert.equal(a.activeCount(),1);assert.equal(f.calls.length,1);assert.deepEqual(f.disposed,[]);await a.dispose(r,'0:0');assert.deepEqual(f.disposed,['mesh']);});
 test('concurrent duplicate cell request does not import twice',async()=>{const f=fixture();let finish;f.Babylon.SceneLoader.ImportMeshAsync=()=>new Promise(resolve=>{finish=resolve;f.calls.push('import');});const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/a.glb'})});const first=a.load('0:0');assert.equal(a.pendingCount(),1);await assert.rejects(a.load('0:0'),/duplicate/);assert.equal(f.calls.length,1);finish(f.result);const r=await first;assert.equal(a.pendingCount(),0);await a.dispose(r,'0:0');assert.equal(a.activeCount(),0);});
 test('stale dispose cannot release currently owned cell',async()=>{const f=fixture();const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/a.glb'})});const r=await a.load('0:0');await a.dispose({meshes:[]},'0:0');assert.equal(a.activeCount(),1);assert.deepEqual(f.disposed,[]);await a.dispose(r,'0:0');assert.deepEqual(f.disposed,['mesh']);});
+
+test('cell eviction never force-disposes a shared Babylon material',async()=>{
+ const calls=[];
+ const sharedMaterial={dispose(){calls.push('shared-material-disposed');}};
+ const mesh={material:sharedMaterial,dispose(doNotRecurse,disposeMaterialAndTextures){calls.push(['mesh',doNotRecurse,disposeMaterialAndTextures]);if(disposeMaterialAndTextures)sharedMaterial.dispose();}};
+ const result={meshes:[mesh],transformNodes:[],skeletons:[],animationGroups:[]};
+ const scene={},Babylon={SceneLoader:{async ImportMeshAsync(){return result;}}};
+ const adapter=create({scene,Babylon,resolveCell:()=>({url:'./cells/shared.glb'})});
+ const loaded=await adapter.load('cell-a');
+ await adapter.dispose(loaded,'cell-a');
+ assert.deepEqual(calls,[['mesh',false,false]]);
+ assert.equal(adapter.activeCount(),0);
+});
+test('aborted late cell import preserves shared Babylon material',async()=>{
+ const calls=[],controller=new AbortController();
+ const sharedMaterial={dispose(){calls.push('shared-material-disposed');}};
+ const result={meshes:[{dispose(_recurse,force){calls.push('mesh');if(force)sharedMaterial.dispose();}}],transformNodes:[],skeletons:[],animationGroups:[]};
+ const scene={},Babylon={SceneLoader:{async ImportMeshAsync(){controller.abort();return result;}}};
+ const adapter=create({scene,Babylon,resolveCell:()=>({url:'./cells/shared.glb'})});
+ await assert.rejects(adapter.load('cell-a',controller.signal),/aborted/);
+ assert.deepEqual(calls,['mesh']);
+ assert.equal(adapter.activeCount(),0);
+});
