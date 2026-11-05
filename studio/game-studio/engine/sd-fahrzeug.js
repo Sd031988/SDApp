@@ -191,11 +191,20 @@
       const z = a.kiZiel(); const e = a.eingabe; if (!z) { e.gas = 0; e.bremse = 1; return; }
       const p = a.chassis.getAbsolutePosition(), mw = a.chassis.computeWorldMatrix(true), vorn = BAB.Vector3.TransformNormal(V(0, 0, 1), mw), dx = z.x - p.x, dz = z.z - p.z, d = Math.hypot(dx, dz);
       const w = Math.atan2(dx, dz) - Math.atan2(vorn.x, vorn.z), wn = Math.atan2(Math.sin(w), Math.cos(w));
-      if (a.kiRueck > 0) { a.kiRueck -= dt; e.gas = -0.7; e.lenk = -Math.sign(wn); e.bremse = 0; return; }
+      if (a.kiRueck > 0) { a.kiRueck -= dt; e.gas = -0.7; e.lenk = a.kiSeite ? a.kiSeite : -Math.sign(wn); e.bremse = 0; if (a.kiRueck <= 0) a.kiUmfahren = 2.5; return; }
+      if (a.kiUmfahren > 0) { a.kiUmfahren -= dt; e.gas = 0.6; e.bremse = 0; e.lenk = a.kiSeite ? -a.kiSeite : Math.sign(wn); return; }   // nach dem Zurücksetzen seitlich vorbei
       if (d < (a.kiHalt || 18)) { e.gas = 0; e.bremse = 1; e.lenk = 0; if (!a.kiAngekommen) { a.kiAngekommen = true; a.beiAnkunft && a.beiAnkunft(a); } return; }
       if (d > (a.kiHalt || 18) * 3) a.kiAngekommen = false;
       const vms = Math.abs(a.kmh) / 3.6; if (d < (a.kiHalt || 18) + vms * vms / 10 + 2) { e.gas = 0; e.bremse = 1; e.lenk = klemme(wn * 1.6, -1, 1); if (vms < 1.5 && d < (a.kiHalt || 18) * 1.6 && !a.kiAngekommen) { a.kiAngekommen = true; a.beiAnkunft && a.beiAnkunft(a); } return; }   // rechtzeitig bremsen
-      e.lenk = klemme(wn * 1.6, -1, 1); e.bremse = 0; e.gas = Math.abs(wn) > 1.2 && Math.abs(a.kmh) > 30 ? 0.2 : klemme(d / 40, 0.45, 1) * (Math.abs(wn) > 0.8 ? 0.6 : 1);
+      // Hindernisse (Bäume, Häuser, Felsen): drei Fühler-Strahlen nach vorn, links und rechts – ausweichen
+      let ausweichen = 0; a.kiFuehler = (a.kiFuehler || 0) - dt;
+      if (a.kiFuehler <= 0) { a.kiFuehler = 0.15; const rechts = BAB.Vector3.TransformNormal(V(1, 0, 0), mw), start = p.add(V(0, 0.4, 0)).add(vorn.scale(a.T.L / 2 + 0.3)), weit = 8 + Math.abs(a.kmh) / 3.6 * 1.8; a.kiAus = 0; a.kiVorn = null;
+        [[-0.45, 1], [0, 0], [0.45, -1]].forEach(([q, seite]) => { const dir = vorn.add(rechts.scale(q)).normalize(); dir.y = 0; const t = ctx.strahl(start, dir.normalize(), weit); const m = t && t.hit && t.pickedMesh;
+          if (m && !(m.metadata && (m.metadata.boden || m.metadata.fahrzeug === a.id))) { const nah = 1 - t.distance / weit; a.kiAus += (seite || (a.kiSeite || (a.kiSeite = wn >= 0 ? -1 : 1))) * nah * (q ? 1 : 1.6); if (!q) a.kiVorn = t.distance; } }); if (!a.kiAus && !(a.kiUmfahren > 0) && !(a.kiRueck > 0)) a.kiSeite = 0; }
+      ausweichen = a.kiAus || 0; const vorF = a.kiVorn; a.kiVorn = a.kiFuehler > 0.14 ? vorF : a.kiVorn;
+      e.lenk = klemme(wn * (ausweichen ? 0.6 : 1.6) - ausweichen * 2.6, -1, 1); e.bremse = 0;
+      if (vorF != null && a.kiAus) { const vms2 = Math.abs(a.kmh) / 3.6; if (vorF < vms2 * vms2 / 12 + 3) { e.gas = 0; e.bremse = 1; a.kiSteck = (a.kiSteck || 0) + dt; if (a.kiSteck > 1.5) { a.kiSteck = 0; a.kiRueck = 1.6; } return; } } e.gas = Math.abs(wn) > 1.2 && Math.abs(a.kmh) > 30 ? 0.2 : klemme(d / 40, 0.45, 1) * (Math.abs(wn) > 0.8 ? 0.6 : 1);
+      if (a.kiAus) { e.gas *= 0.35; if (Math.abs(a.kmh) > 25) { e.gas = 0; e.bremse = 0.6; } }   // vor Hindernissen langsamer
       a.kiSteck = Math.abs(a.kmh) < 3 ? (a.kiSteck || 0) + dt : 0; if (a.kiSteck > 2.5) { a.kiSteck = 0; a.kiRueck = 1.6; }
     }
     function entfernen(a) { const i = autos.indexOf(a); if (i >= 0) autos.splice(i, 1); if (fahrend === a) aussteigen(); try { a.body.dispose(); } catch (e) { /* weg */ } a.chassis.dispose(false, true); }
