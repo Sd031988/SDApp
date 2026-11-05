@@ -6,9 +6,9 @@ const {performance} = require('node:perf_hooks');
 const {create} = require('./sd-world-babylon-cells.js');
 
 function percentile(sorted, fraction) {
-  if (!sorted.length) return null;
   if (!Number.isFinite(fraction) || fraction <= 0 || fraction > 1)
     throw new RangeError('percentile fraction must be in (0, 1]');
+  if (!sorted.length) return null;
   return sorted[Math.ceil(fraction * sorted.length) - 1];
 }
 function summary(samples) {
