@@ -3,28 +3,38 @@
 'use strict';
 function create({scene,Babylon,resolveCell,onError}={}){
  if(!scene||!Babylon||!Babylon.SceneLoader||typeof Babylon.SceneLoader.ImportMeshAsync!=='function'||typeof resolveCell!=='function')throw new TypeError('scene, Babylon.SceneLoader and resolveCell required');
- const active=new Map();
+ const active=new Map(),pending=new Set();
  function cleanup(result){
   if(!result)return;
   const nodes=[...(result.meshes||[]),...(result.transformNodes||[])],set=new Set(nodes);
   for(const node of nodes){if(node&&typeof node.dispose==='function'&&(!node.parent||!set.has(node.parent)))node.dispose(false,true);}
   for(const resource of [...(result.skeletons||[]),...(result.animationGroups||[]),...(result.particleSystems||[])]){if(resource&&typeof resource.dispose==='function')resource.dispose();}
  }
+ function validateURL(url){
+  // Never pass query strings, fragments, encoded traversal or non-GLB assets to SceneLoader.
+  if(typeof url!=='string'||url.includes('\\')||/[?#%\u0000-\u001f\u007f]/.test(url)||!url.startsWith('./')||!url.toLowerCase().endsWith('.glb'))return false;
+  const parts=url.slice(2).split('/');
+  return parts.every(part=>part.length>0&&part!=='.'&&part!=='..'&&!part.includes(':'));
+ }
  async function load(id,signal){
   if(signal?.aborted)throw new Error('cell load aborted');
+  if(active.has(id)||pending.has(id))throw new Error('duplicate cell '+id);
   const spec=resolveCell(id);
-  if(!spec||typeof spec.url!=='string'||!/^\.?\.?\//.test(spec.url)||spec.url.includes('\\')||spec.url.split(/[?#]/)[0].split('/').includes('..'))throw new TypeError('invalid local cell asset URL');
-  const url=spec.url,slash=url.lastIndexOf('/');
-  const result=await Babylon.SceneLoader.ImportMeshAsync('',url.slice(0,slash+1),url.slice(slash+1),scene);
-  if(signal?.aborted){cleanup(result);throw new Error('cell load aborted');}
-  if(active.has(id)){cleanup(result);throw new Error('duplicate cell '+id);}
-  active.set(id,result);return result;
+  if(!spec||!validateURL(spec.url))throw new TypeError('invalid local cell asset URL');
+  pending.add(id);
+  try{
+   const url=spec.url,slash=url.lastIndexOf('/');
+   const result=await Babylon.SceneLoader.ImportMeshAsync('',url.slice(0,slash+1),url.slice(slash+1),scene);
+   if(signal?.aborted){cleanup(result);throw new Error('cell load aborted');}
+   active.set(id,result);return result;
+  }finally{pending.delete(id);}
  }
  async function dispose(resource,id){
-  if(active.get(id)===resource)active.delete(id);
+  if(active.get(id)!==resource)return; // stale disposals must never release a newer cell
+  active.delete(id);
   try{cleanup(resource);}catch(error){if(typeof onError==='function')onError(error,id);throw error;}
  }
- return Object.freeze({load,dispose,activeCount:()=>active.size});
+ return Object.freeze({load,dispose,activeCount:()=>active.size,pendingCount:()=>pending.size});
 }
 return Object.freeze({create});
 });
