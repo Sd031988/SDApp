@@ -492,7 +492,7 @@
     function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; if (!spieler.k.glb) { spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; } }
     ['1', '2', '3'].forEach((t, i) => (tastenHandler[t] = tastenHandler[t] || []).push(() => waffeWechseln(i)));
     (tastenHandler.R = tastenHandler.R || []).push(() => nachladen());
-    function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; ton('nachladen'); }
+    function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; spieler.ladeDauer = w.def.nachladen; ton('nachladen'); }
     function schaden(ziel, menge, quelle) {
       if (vorbei) return;
       if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * 0.6); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); wackeln(klemme(rest / 35, 0.1, 0.6)); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
@@ -636,6 +636,7 @@
       const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts; const tempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (tasten.ControlLeft || tasten.C ? 0.5 : 1);
       const vorher = spieler.cc.getPosition().clone(); if (touch.springen) { spieler.sprungPuffer = 0.25; touch.springen = false; } spieler.sprungPuffer = Math.max(0, (spieler.sprungPuffer || 0) - dt);
       const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0; if (springt) spieler.sprungPuffer = 0;
+      if (spieler.wurf > 0) spieler.wurf = Math.max(0, spieler.wurf - dt);
       spieler.duckt = !!(tasten.ControlLeft || tasten.C) && !maus.rechts; spieler.duckWert = (spieler.duckWert || 0) + ((spieler.duckt ? 1 : 0) - (spieler.duckWert || 0)) * Math.min(1, dt * 10);
       const amBoden = bewege(spieler.cc, dir.scale(tempo), springt, dt, spieler.zustand);
       const np = spieler.cc.getPosition(); spieler.tempo = Math.hypot(np.x - vorher.x, np.z - vorher.z) / Math.max(dt, 1e-4);
@@ -706,7 +707,12 @@
     // Ducken: Hocke über die Knochen (Menschen) – sonst wird die Figur niedriger
     const X = V(1, 0, 0);
     szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const d = spieler.duckWert || 0, k = spieler.k;
-      if (k.mensch) { if (d < 0.01) return; const kn = k.mensch.knochen, mix = (b, w) => { if (!b || !b.rotationQuaternion) return; b.rotationQuaternion = BAB.Quaternion.Slerp(b.rotationQuaternion, BAB.Quaternion.RotationAxis(X, w), d); };
+      if (k.mensch) { const kn = k.mensch.knochen, achse = (b, ax, w, st) => { if (b && b.rotationQuaternion && st > 0.001) b.rotationQuaternion = b.rotationQuaternion.multiply(BAB.Quaternion.RotationAxis(ax, w * st)); };
+        // Nachladen: linker Arm holt ein neues Magazin (runter zur Hüfte und zurück)
+        if (spieler.laden > 0 && spieler.ladeDauer) { const u = 1 - spieler.laden / spieler.ladeDauer, st = Math.sin(Math.min(1, u) * Math.PI); achse(kn.oberarmL, X, 0.9, st); achse(kn.unterarmL, X, 0.8, st); achse(kn.kopf, X, 0.25, st); }
+        // Granate werfen: rechter Arm holt aus und schwingt nach vorn
+        if (spieler.wurf > 0) { const u = 1 - spieler.wurf / 0.5, st = u < 0.45 ? u / 0.45 : 1 - (u - 0.45) / 0.55, w = u < 0.45 ? -2.2 : -2.2 + (u - 0.45) / 0.55 * 3.2; achse(kn.oberarmR, X, w, Math.max(st, 0.3)); }
+        if (d < 0.01) return; const mix = (b, w) => { if (!b || !b.rotationQuaternion) return; b.rotationQuaternion = BAB.Quaternion.Slerp(b.rotationQuaternion, BAB.Quaternion.RotationAxis(X, w), d); };
         const sw = Math.sin(zeit * 9) * klemme(spieler.tempo / 3, 0, 1) * 0.25; mix(kn.oberschenkelL, -1.25 + sw); mix(kn.oberschenkelR, -1.25 - sw); mix(kn.unterschenkelL, 1.95); mix(kn.unterschenkelR, 1.95); mix(kn.fussL, -0.7); mix(kn.fussR, -0.7); mix(kn.wirbel, 0.35);
         if (kn.huefte.position) kn.huefte.position.y *= 1 - 0.42 * d; }
       else k.scaling.y = 1 - 0.3 * d; });

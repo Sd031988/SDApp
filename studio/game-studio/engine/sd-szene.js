@@ -17,6 +17,7 @@ const ARTEN = {
   stadt: { icon: '🏙', name: 'Stadt', felder: [['bx', 'Blöcke (Breite)', 'zahl', 3, 1, 6, 1], ['bz', 'Blöcke (Tiefe)', 'zahl', 3, 1, 6, 1], ['block', 'Blockgröße', 'zahl', 54, 36, 80, 2], ['verkehr', 'Autos im Verkehr', 'zahl', 8, 0, 25, 1], ['passanten', 'Passanten', 'zahl', 12, 0, 40, 1]], hinweis: 'Vorschau: graue Klötze = Häuserblöcke. Die echten Häuser, Straßen und Laternen entstehen beim Spielen.' },
   fotohaus: { icon: '📷', name: 'Foto-Haus', felder: [['name', 'Foto-Haus', 'eigen', '', 'foto-gebaeude']] },
   modell: { icon: '🧍', name: 'Modell', felder: [['name', 'Modell (.glb)', 'eigen', '', 'modell'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]] },
+  person: { icon: '💬', name: 'Person', felder: [['name', 'Name', 'text', 'Tony'], ['text', 'Was sie sagt (Zeilen mit | trennen)', 'langtext', 'Hallo! | Schön, dich zu sehen.'], ['oberteil', 'Kleidung', 'farbe', '#6a5a3a']], hinweis: 'Mit E ansprechen. Mehrere Sätze mit | trennen.' },
   spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
 };
 const WELT = [['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m) – ab 1000 m große Welt aus Kacheln', 'zahl', 400, 150, 2400, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
@@ -30,6 +31,7 @@ function wert(f, v) {   // f = [schluessel, name, art, standard, min/optionen, m
   if (art === 'wahl') return f[4].includes(v) ? v : std;
   if (art === 'an') return v === true || v === false ? v : !!std;
   if (art === 'farbe') return typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : std;
+  if (art === 'langtext') return typeof v === 'string' ? v.replace(/['"\\<>`$\r\n\u2028\u2029]/g, '').slice(0, 400) : std;
   if (art === 'text') return typeof v === 'string' ? v.replace(/['"\\<>`$\r\n\u2028\u2029]/g, '').slice(0, 80) : std;
   if (art === 'eigen') return typeof v === 'string' && /^[\w .()-]{1,80}$/.test(v) ? v : '';
   return std;
@@ -56,6 +58,7 @@ function flachListe(szene, formenGitter) { const roh = SDEngine.hoehenFunktion(O
     if (o.art === 'stadt') { const W = o.p.bx * o.p.block + (o.p.bx + 1) * 14, D = o.p.bz * o.p.block + (o.p.bz + 1) * 14; l.push([o.x, o.z, Math.max(W, D) * 0.55 + 6, roh(o.x, o.z)]); } }
   return l.map(f => f.map(v => +v.toFixed(2))); }
 function code(roh, formenGitter) {
+  const txt = t => "'" + String(t || '').replace(/['\\<>`$]/g, '') + "'";
   const szene = pruefen(roh), w = szene.welt, o = szene.objekte, f = v => JSON.stringify(v).replace(/"/g, "'"), z = [];
   z.push('// Erstellt mit dem SD Szenen-Editor – du kannst hier alles weiter ändern', "sd.himmel({ zeit: 'tag' });",
     'sd.gelaende({ groesse: ' + w.groesse + ', aufloesung: ' + Math.round(w.groesse / 3.5) + ', hoehe: ' + w.hoehe + ', seed: ' + w.seed + (w.wasserAn ? ', wasser: ' + w.wasser : '') + ', flach: ' + JSON.stringify(flachListe(szene, formenGitter)) + (w.formen ? ', formen: ' + JSON.stringify(w.formen).replace(/"/g, "'") : '') + ' });');
@@ -65,6 +68,7 @@ function code(roh, formenGitter) {
     else if (x.art === 'wald') z.push('sd.baeume({ mitte: [' + x.x + ', ' + x.z + '], bereich: ' + Math.round(p.radius * 0.8) + ', anzahl: ' + p.anzahl + ", art: '" + p.art + "', seed: " + (i + 3) + ' });');
     else if (x.art === 'auto') z.push('sd.auto({ pos: ' + pos + ', drehung: ' + x.dreh + ", typ: '" + p.typ + "', farbe: '" + p.farbe + "' });");
     else if (x.art === 'gegner' && !(p.mission > 0)) z.push('sd.gegner({ pos: ' + pos + ', staerke: ' + p.staerke + ", waffe: '" + p.waffe + "', aussehen: '" + p.aussehen + "'" + (p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a2a2a', weste: true, westeFarbe: '#5a2a2a' }" : '') + ' });');
+    else if (x.art === 'person') z.push('sd.person({ pos: ' + pos + ', drehung: ' + x.dreh + ', name: ' + txt(p.name) + ', text: [' + String(p.text).split('|').map(t => t.trim()).filter(Boolean).map(txt).join(', ') + "], mensch: { oberteil: '" + p.oberteil + "' } });");
     else if (x.art === 'kiste') z.push('sd.kiste({ pos: ' + pos + ", inhalt: '" + p.inhalt + "' });");
     else if (x.art === 'fels') z.push('sd.fels({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') - 0.3, ' + x.z + '], groesse: ' + p.groesse + ', seed: ' + (i + 1) + ' });');
     else if (x.art === 'box') z.push('sd.box({ pos: [' + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + ') + ' + (p.h / 2 + (p.masse ? 0.2 : 0)) + ', ' + x.z + '], groesse: [' + p.b + ', ' + p.h + ', ' + p.t + "], textur: '" + p.textur + "', farbe: '" + p.farbe + "', masse: " + p.masse + ', drehung: [0, ' + x.dreh + ', 0] });');
@@ -73,7 +77,6 @@ function code(roh, formenGitter) {
     else if (x.art === 'modell' && p.name) z.push("{ const m = await sd.modell('" + p.name + "', { pos: [" + x.x + ', sd.hoehe(' + x.x + ', ' + x.z + '), ' + x.z + '], skalierung: ' + p.skalierung + ' }); m.wurzel.rotation.y = ' + (x.dreh * Math.PI / 180).toFixed(3) + '; }');
   });
   const sp = o.find(x => x.art === 'spieler') || { x: 0, z: 0, p: { aussehen: 'mensch' } };
-  const txt = t => "'" + String(t || '').replace(/['\\<>`$]/g, '') + "'";
   const gegnerCode = x => 'sd.gegner({ pos: [' + x.x + ', null, ' + x.z + '], staerke: ' + x.p.staerke + ", waffe: '" + x.p.waffe + "', aussehen: '" + x.p.aussehen + "'" + (x.p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a2a2a', weste: true, westeFarbe: '#5a2a2a' }" : '') + ' })';
   if (w.kampagne) z.push("const stand = sd.spielstand('szene-" + String(szene.name || 'eigen').replace(/[^a-z0-9-]/gi, '') + "', { startgeld: " + w.startgeld + ', wiederbeleben: [' + sp.x + ', ' + sp.z + '] });');
   o.filter(x => x.art === 'laden').forEach(x => z.push('sd.laden({ pos: [' + x.x + ', null, ' + x.z + '], drehung: ' + x.dreh + ', name: ' + txt(x.p.name) + ' });'));

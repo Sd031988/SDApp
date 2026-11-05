@@ -43,7 +43,7 @@
       if (ctx.sd.autos) for (const a of ctx.sd.autos) { const d = BAB.Vector3.Distance(a.chassis.getAbsolutePosition(), p); if (d < radius && ctx.fahrzeugTreffer) ctx.fahrzeugTreffer(a.id, wirkung(d), p); }
       for (const m of szene.meshes) { if (!m.physicsBody || m.physicsBody.getMotionType() !== BAB.PhysicsMotionType.DYNAMIC || m.isDisposed()) continue; const d = BAB.Vector3.Distance(m.getAbsolutePosition(), p); if (d < radius && d > 0.01) m.physicsBody.applyImpulse(m.getAbsolutePosition().subtract(p).normalize().scale(wirkung(d) * 8), m.getAbsolutePosition()); }
     }
-    (ctx.tastenHandler.G = ctx.tastenHandler.G || []).push(() => { const sp = ctx.spieler; if (!sp || sp.leben <= 0 || ctx.uebernahme || ctx.vorbei) return; if (zustand.inventar.granate <= 0) { ctx.nachricht('Keine Granaten – im Laden kaufen'); return; }
+    (ctx.tastenHandler.G = ctx.tastenHandler.G || []).push(() => { const sp = ctx.spieler; if (!sp || sp.leben <= 0 || ctx.uebernahme || ctx.vorbei) return; if (zustand.inventar.granate <= 0) { ctx.nachricht('Keine Granaten – im Laden kaufen'); return; } sp.wurf = 0.5;
       zustand.inventar.granate--; anzeigen(); const dir = kamera.getForwardRay(1).direction, start = sp.cc.getPosition().add(V(0, 0.7, 0)).add(dir.scale(0.8));
       const g = BAB.MeshBuilder.CreateSphere('granate', { diameter: 0.16, segments: 8 }, szene); g.position = start; g.material = ctx.BK.material('metall', '#3d4433'); ctx.schatten.addShadowCaster(g);
       const agg = new BAB.PhysicsAggregate(g, BAB.PhysicsShapeType.SPHERE, { mass: 0.4, restitution: 0.35, friction: 0.8 }, szene); agg.body.applyImpulse(dir.add(V(0, 0.3, 0)).normalize().scale(4.4), start);

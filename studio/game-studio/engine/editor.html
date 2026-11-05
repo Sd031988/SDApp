@@ -59,7 +59,7 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
 <script src="./sd-fahrzeug.js?v=5"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-engine.js?v=10"></script>
-<script src="./sd-szene.js?v=2"></script>
+<script src="./sd-szene.js?v=3"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector3(x, y, z);
@@ -185,7 +185,7 @@ function feld(box, [k, name, art, , a, b, schritt], wert, setzen) {
   if (art === 'zahl') { d.innerHTML = '<label>' + name + '<span>' + wert + '</span></label><input type="range">'; const i = d.querySelector('input'); i.min = a; i.max = b; i.step = schritt; i.value = wert; i.oninput = () => { d.querySelector('span').textContent = i.value; setzen(+i.value, false); }; i.onchange = () => setzen(+i.value, true); }
   else if (art === 'farbe') { d.innerHTML = '<label>' + name + '</label><input type="color">'; const i = d.querySelector('input'); i.value = wert; i.onchange = () => setzen(i.value, true); }
   else if (art === 'wahl') { d.innerHTML = '<label>' + name + '</label><select></select>'; const s = d.querySelector('select'); a.forEach(v => s.add(new Option(v, v, false, v === wert))); s.onchange = () => setzen(s.value, true); }
-  else if (art === 'text') { d.innerHTML = '<label>' + name + '</label><input type="text">'; const i = d.querySelector('input'); i.value = wert || ''; i.maxLength = 80; i.onchange = () => setzen(i.value.replace(/[<>`$\\]/g, ''), true); }
+  else if (art === 'text' || art === 'langtext') { d.innerHTML = '<label>' + name + '</label><input type="text">'; const i = d.querySelector('input'); i.value = wert || ''; i.maxLength = art === 'langtext' ? 400 : 80; i.onchange = () => setzen(i.value.replace(/[<>`$\\]/g, ''), true); }
   else if (art === 'eigen') { d.innerHTML = '<label>' + name + '</label><select><option value="">– wählen –</option></select>'; const s = d.querySelector('select'); SDAssets.alle().then(l => { l.filter(x => x.typ === a).forEach(x => s.add(new Option(x.name, x.name, false, x.name === wert))); if (s.options.length < 2) s.options[0].text = '– in der Werkstatt anlegen –'; }); s.onchange = () => setzen(s.value, true); }
   else { d.innerHTML = '<input type="checkbox"> ' + name; const c = d.querySelector('input'); c.checked = !!wert; c.onchange = () => setzen(c.checked, true); }
   box.append(d);

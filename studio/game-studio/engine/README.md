@@ -38,6 +38,8 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 | Steuerung | Tastatur/Maus, Touch und **Controller** (Xbox/PlayStation, Standard-Belegung: Sticks laufen/schauen, RT schießen/Gas, LT zielen/Bremse, A springen, B ducken, X nachladen, Y einsteigen, LB Granate, RB Waffe, Start Pause) |
 | Deckung | Ducken (C/Strg/B): echte Hocke bei Menschen; hinter niedrigen Mauern sehen Gegner dich nicht |
 | Polizei | `sd.fahndung()`: Fahndungslevel 1–5 Sterne (Schüsse in der Stadt, Abschüsse, Angriffe auf Polizei), Polizisten rücken aus der Umgebung an, 25 s unentdeckt = Sterne weg; in der Stadtjagd aktiv |
+| Story | `sd.dialog([...])` mit Auswahl-Antworten, `sd.person({ name, text })` (mit E ansprechen, auch im Editor als 💬 Person), `sd.zwischensequenz([...])` Kamerafahrten mit Kinobalken und Untertiteln |
+| Animationen | Hocke beim Ducken, Arm beim Nachladen und beim Granatwurf (Menschen) |
 | Physik | Havok: Spielfigur-Controller (Kollision, Steigungen, Springen), umschießbare Objekte, umfallende Gegner |
 | Gameplay | 4 Waffen (Streuung, Rückstoß, Nachladen, Kopftreffer, Zielfernrohr), Beutekisten, Leben und Schutzweste, schrumpfende Zone, Sieg und Niederlage |
 | Gegner-KI | Sichtprüfung per Strahl, Verfolgen, seitliches Ausweichen, Trefferchance je nach Entfernung und Bewegung, gehen in die Zone |
