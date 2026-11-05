@@ -66,6 +66,7 @@ async function go(page,url){
   await page.waitForTimeout(900);
   await page.waitForFunction(()=>!SD_SPIEL.ctx.spieler.taktikRutsch,{timeout:3000});
   await page.keyboard.press('b');
+  await page.waitForFunction(()=>SD_SPIEL.ctx.spieler.taktikSchulter===-1,undefined,{timeout:3000});
   assert.equal(await page.evaluate(()=>SD_SPIEL.ctx.spieler.taktikSchulter),-1);
   await page.mouse.move(640,400);await page.mouse.down({button:'right'});
   await page.keyboard.down('q');await page.waitForTimeout(230);
