@@ -1,0 +1,9 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {create}=require('./sd-world-babylon-cells.js');
+function fixture(){const disposed=[],calls=[];const mesh={dispose(){disposed.push('mesh');}};const result={meshes:[mesh],transformNodes:[],skeletons:[],animationGroups:[]};const Babylon={SceneLoader:{async ImportMeshAsync(...args){calls.push(args);return result;}}};const scene={};return {disposed,calls,result,Babylon,scene};}
+test('imports local GLB and releases scene resources',async()=>{const f=fixture();const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/0.glb'})});const r=await a.load('0:0');assert.equal(f.calls[0][1],'./cells/');assert.equal(f.calls[0][2],'0.glb');assert.equal(a.activeCount(),1);await a.dispose(r,'0:0');assert.deepEqual(f.disposed,['mesh']);assert.equal(a.activeCount(),0);});
+test('aborted late import disposes resources',async()=>{const f=fixture();const signal=new AbortController();f.Babylon.SceneLoader.ImportMeshAsync=async()=>{signal.abort();return f.result;};const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/0.glb'})});await assert.rejects(a.load('0:0',signal.signal),/aborted/);assert.deepEqual(f.disposed,['mesh']);assert.equal(a.activeCount(),0);});
+test('rejects external and traversal paths',async()=>{for(const url of ['https://evil.test/a.glb','../bad.glb','./a/../bad.glb','\\bad.glb']){const f=fixture();const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url})});await assert.rejects(a.load('0:0'),/invalid/);assert.equal(f.calls.length,0);}});
+test('duplicate cell import is disposed',async()=>{const f=fixture();const a=create({scene:f.scene,Babylon:f.Babylon,resolveCell:()=>({url:'./cells/a.glb'})});await a.load('0:0');await assert.rejects(a.load('0:0'),/duplicate/);assert.equal(a.activeCount(),1);assert.deepEqual(f.disposed,['mesh']);});
