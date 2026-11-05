@@ -20,7 +20,7 @@ const ARTEN = {
   person: { icon: '💬', name: 'Person', felder: [['name', 'Name', 'text', 'Tony'], ['text', 'Was sie sagt (Zeilen mit | trennen)', 'langtext', 'Hallo! | Schön, dich zu sehen.'], ['oberteil', 'Kleidung', 'farbe', '#6a5a3a']], hinweis: 'Mit E ansprechen. Mehrere Sätze mit | trennen.' },
   spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
 };
-const WELT = [['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m) – ab 1000 m große Welt aus Kacheln', 'zahl', 400, 150, 2400, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
+const WELT = [['modus', 'Spielart', 'wahl', 'frei', ['frei', 'battleroyale']], ['brGegner', 'Battle Royale: Gegner', 'zahl', 20, 0, 40, 1], ['brBeute', 'Battle Royale: Beutekisten', 'zahl', 45, 0, 150, 5], ['brAbsprung', 'Battle Royale: Start mit Flugzeug und Fallschirm', 'an', true], ['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m) – ab 1000 m große Welt aus Kacheln', 'zahl', 400, 150, 2400, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
   ['stunde', 'Uhrzeit', 'zahl', 10, 0, 23.5, 0.5], ['tagMinuten', 'Minuten pro Tag (0 = Zeit steht)', 'zahl', 0, 0, 60, 1], ['regen', 'Regen', 'zahl', 0, 0, 1, 0.05], ['wind', 'Wind', 'zahl', 0.3, 0, 1, 0.05], ['gras', 'Gras', 'an', true], ['kampagne', 'Geld & Spielstand (Krankenhaus statt Spielende)', 'an', false], ['startgeld', 'Startgeld 💰', 'zahl', 100, 0, 5000, 50]];
 const leer = () => ({ welt: Object.fromEntries(WELT.map(f => [f[0], f[3]])), objekte: [{ art: 'spieler', x: 0, z: 0, dreh: 0, p: { aussehen: 'mensch' } }] });
 
@@ -85,8 +85,9 @@ function code(roh, formenGitter) {
     const schritte = ziele.map(x => "{ art: '" + x.p.art + "', pos: [" + x.x + ', ' + x.z + '], text: ' + txt(x.p.text) + ' }');
     if (feinde.length) schritte.push("{ art: 'besiege', text: 'Besiege alle Gegner', erzeugen: () => [" + feinde.map(gegnerCode).join(', ') + '] }');
     z.push("sd.mission({ id: 'm" + nr + "', titel: " + txt(erster.titel) + (erster.zeitlimit ? ', zeitlimit: ' + erster.zeitlimit : '') + ', belohnung: { geld: ' + (erster.belohnung || 0) + ' }, schritte: [\n  ' + schritte.join(',\n  ') + '\n] });'); }
-  z.push('sd.spieler({ pos: [' + sp.x + ', null, ' + sp.z + "], waffen: ['pistole', 'gewehr'], aussehen: '" + sp.p.aussehen + "'" + (sp.p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a4a8a', weste: true }" : '') + ' });');
-  if (!o.some(x => x.art === 'gegner')) z.push("sd.nachricht('Freies Spiel – erkunde deine Welt. F = Auto, Esc = Pause', 5);");
+  z.push('sd.spieler({ pos: [' + sp.x + ', null, ' + sp.z + "], waffen: " + (w.modus === 'battleroyale' ? "['pistole']" : "['pistole', 'gewehr']") + ", aussehen: '" + sp.p.aussehen + "'" + (sp.p.aussehen === 'mensch' ? ", mensch: { oberteil: '#2a4a8a', weste: true }" : '') + ' });');
+  if (w.modus === 'battleroyale') z.push('sd.battleRoyale({ gegner: ' + w.brGegner + ', beute: ' + w.brBeute + ', absprung: ' + w.brAbsprung + ", aussehen: '" + sp.p.aussehen + "' });   // wie PUBG: Zone, Beute, Gegner" + (w.brAbsprung ? ', Absprung' : ''));
+  else if (!o.some(x => x.art === 'gegner')) z.push("sd.nachricht('Freies Spiel – erkunde deine Welt. F = Auto, Esc = Pause', 5);");
   return z.join('\n');
 }
 
