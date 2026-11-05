@@ -53,11 +53,11 @@
       const mat = new BAB.PBRMaterial('menschMat' + id, szene); mat.albedoColor = new BAB.Color3(1, 1, 1); mat.roughness = 0.75; mat.metallic = 0; mesh.material = mat; mesh.useVertexColors = true;
       // Waffen-Knoten an der rechten Hand
       const hand = new BAB.TransformNode('handR_waffe', szene); hand.attachToBone(kn.handR, mesh);
-      return { wurzel, mesh, skelett: skel, knochen: kn, gruppen: animationen(skel, kn, s, id), hand };
+      return { wurzel, mesh, skelett: skel, knochen: kn, gruppen: animationen(skel, kn, s, id, !!o.taktik), hand };
     }
 
     /* ---------- Animationen (Schlüsselbilder auf den Knochen) ---------- */
-    function animationen(skel, kn, s, id) {
+    function animationen(skel, kn, s, id, taktisch) {
       const FPS = 30, Q = (x, y, z) => BAB.Quaternion.FromEulerAngles(x, y, z);
       // Grundhaltung mit Gewehr im Anschlag (rechts = +x)
       const halt = { oberarmR: [-1.15, 0, 0.15], unterarmR: [-0.9, 0, 0], oberarmL: [-1.25, 0, 0.55], unterarmL: [-0.35, 0, 0], handR: [0, 0, 0], handL: [0, 0, 0] };
@@ -76,8 +76,52 @@
       const sterben = clip('Sterben', 1.1, false, t => { const e = Math.min(1, t * 1.25), f = e * e * (3 - 2 * e);
         return { huefte: [f * 1.45, 0, f * 0.1], wirbel: [-f * 0.2, 0, 0], kopf: [-f * 0.3, 0.3 * f, 0], oberarmR: [-1.15 * (1 - f) - f * 0.4, 0, 0.15 + f * 1.1], unterarmR: [-0.9 * (1 - f), 0, 0], oberarmL: [-1.25 * (1 - f) - f * 0.6, 0, 0.55 * (1 - f) - f * 0.8], unterarmL: [-0.35, 0, 0],
           oberschenkelR: [-f * 0.6, 0, 0.1 * f], oberschenkelL: [-f * 0.2, 0, -0.15 * f], unterschenkelR: [f * 1.1, 0, 0], unterschenkelL: [f * 0.4, 0, 0], hoehe: 0.98 - f * 0.8 }; });
-      [stehen, gehen, rennen, sterben].forEach(g => g.stop());
-      return { stehen, gehen, rennen, sterben };
+      // Nur auf Wunsch: zusätzliche Skelett-Clips für taktische Spielfiguren.
+      // Gegner und bestehende Spiele tragen dadurch keine weitere Animationslast.
+      let extra = {};
+      if (taktisch) {
+        const ducken = clip('Ducken', 1.15, true, t => mitHalt({
+          huefte: [0, 0, 0], wirbel: [0.18, 0, 0], brust: [-0.07, 0, 0],
+          oberschenkelL: [-1.15, 0, 0.07], oberschenkelR: [-1.15, 0, -0.07],
+          unterschenkelL: [1.9, 0, 0], unterschenkelR: [1.9, 0, 0],
+          fussL: [-0.65, 0, 0], fussR: [-0.65, 0, 0],
+          hoehe: 0.72 + Math.sin(t * Math.PI * 2) * 0.008
+        }));
+        const liegen = clip('Liegen', 2.4, true, t => mitHalt({
+          wirbel: [0.08, 0, 0], brust: [-0.06, 0, 0], kopf: [-0.08, 0, 0],
+          oberarmL: [-1.25, 0, 0.18], oberarmR: [-1.25, 0, -0.18],
+          unterarmL: [-0.6, 0, 0], unterarmR: [-0.6, 0, 0],
+          oberschenkelL: [0.07, 0, 0.04], oberschenkelR: [0.07, 0, -0.04],
+          unterschenkelL: [0.22, 0, 0], unterschenkelR: [0.22, 0, 0],
+          hoehe: 0.94 + Math.sin(t * Math.PI * 2) * 0.009
+        }));
+        const kriechen = clip('Kriechen', 1.12, true, t => {
+          const w = Math.sin(t * Math.PI * 2);
+          return mitHalt({
+            wirbel: [0.1 + w * 0.025, w * 0.03, 0], brust: [0, -w * 0.025, 0],
+            kopf: [-0.07, -w * 0.04, 0],
+            oberarmL: [-1.05 - w * 0.28, 0, 0.18],
+            oberarmR: [-1.05 + w * 0.28, 0, -0.18],
+            unterarmL: [-0.55 + w * 0.18, 0, 0],
+            unterarmR: [-0.55 - w * 0.18, 0, 0],
+            oberschenkelL: [0.1 - w * 0.22, 0, 0.05],
+            oberschenkelR: [0.1 + w * 0.22, 0, -0.05],
+            unterschenkelL: [0.3 + Math.max(0, w) * 0.35, 0, 0],
+            unterschenkelR: [0.3 + Math.max(0, -w) * 0.35, 0, 0],
+            hoehe: 0.93 + Math.abs(w) * 0.012
+          });
+        });
+        const rutschen = clip('Rutschen', 0.72, true, t => mitHalt({
+          wirbel: [-0.42, 0, 0], brust: [-0.16, 0, 0],
+          oberarmL: [-0.8, 0, 0.4], oberarmR: [-0.7, 0, -0.4],
+          oberschenkelL: [-0.7, 0, 0.1], oberschenkelR: [-0.9, 0, -0.1],
+          unterschenkelL: [1.35, 0, 0], unterschenkelR: [1.55, 0, 0],
+          hoehe: 0.76 + Math.sin(t * Math.PI * 2) * 0.009
+        }));
+        extra = { ducken, liegen, kriechen, rutschen };
+      }
+      [stehen, gehen, rennen, sterben, ...Object.values(extra)].forEach(g => g.stop());
+      return { stehen, gehen, rennen, sterben, ...extra };
     }
     return { mensch, STANDARD };
   }
