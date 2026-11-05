@@ -218,6 +218,14 @@ for(let i=0;i<(sparsam?17:36);i++){
   sd.fels({pos:[x,sd.hoehe(x,z)-.25,z],groesse:.8+r()*2.9,seed:i+8});
 }
 
+// Taktik-Übungsfeld: unter der niedrigen Deckung kann man nur kriechen,
+// wenn der Browser die öffentliche Havok-Kapselgrößenänderung unterstützt.
+for (const [x,z] of [[-162,-129],[-154,-129]]) {
+  const y=sd.hoehe(x,z);
+  sd.box({pos:[x,y+1.13,z],groesse:[4.8,.22,5.2],textur:'beton',farbe:'#737774'});
+  for(const dx of [-2.25,2.25])for(const dz of [-2.42,2.42])
+    sd.box({pos:[x+dx,y+.53,z+dz],groesse:[.17,1.06,.17],textur:'metall',farbe:'#596464'});
+}
 // Beute: alle Gegenstände nutzbar im vorhandenen Interaktionssystem.
 const kisten=[
  [-140,-80,'waffe:gewehr'],[-99,-12,'munition'],[-57,67,'medikit'],
@@ -253,11 +261,24 @@ if(window.SDBauplanPakete){
  }catch(e){console.warn('Optionaler KI-Roboter übersprungen',e);}
 }
 
-// Spieler: vorhandenes animiertes SD-Mensch-Skelett, kein starres Kistenmodell.
+// Optionaler Profi-GLB-Figurenpfad (Werkstatt → Meine Modelle).
+// Unterstützt Animationen nach Namen: Idle, Walk, Run, Crouch, Prone, Crawl,
+// Slide, Shoot, Death. Ohne solche Datei bleibt die eigene SD-Figur verfügbar.
+let soldatModell = '', gegnerModell = '';
+for (const [name, istSpieler] of [['nordhafen-soldat.glb', true], ['nordhafen-gegner.glb', false]]) {
+  if (!vorhanden.includes(name) || (!istSpieler && sparsam)) continue;
+  try {
+    await sd.figurLaden(name);
+    if (istSpieler) soldatModell = name; else gegnerModell = name;
+  } catch (e) { console.warn('Figuren-Import fehlgeschlagen, Standardmodell aktiv', name, e); }
+}
+// Spieler: animiertes GLB, falls geladen, sonst das skinnte SD-Skelett.
 sd.spieler({pos:[-145,null,-148],leben:135,ruestung:20,waffen:['pistole','gewehr'],
- aussehen:'mensch',mensch:{groesse:1.83,statur:1.06,oberteil:'#485347',
+ aussehen:'mensch',modell:soldatModell||undefined,mensch:{groesse:1.83,statur:1.06,taktik:true,oberteil:'#485347',
  hose:'#303a3a',schuhe:'#222528',weste:true,helm:true,
  westeFarbe:'#414945',frisur:'kurz',aermel:'lang'}});
+// Opt-in: Nur Nordhafen verwendet die erweiterte Taktiksteuerung.
+if (typeof sd.taktik === 'function') sd.taktik();
 sd.geben('medikit',2);
 sd.geben('granate',2);
 
@@ -265,7 +286,7 @@ sd.geben('granate',2);
 const gruppen={hafen:[],dorf:[],radar:[]};
 function feind(gruppe,x,z,staerke,waffe,nummer){
  const b=sd.gegner({pos:[x,null,z],staerke,waffe,leben:100,
-  aussehen:'mensch',name:'Wache '+gruppe.toUpperCase()+'-'+nummer,
+  aussehen:'mensch',modell:gegnerModell||undefined,name:'Wache '+gruppe.toUpperCase()+'-'+nummer,
   mensch:{oberteil:gruppe==='radar'?'#37484a':'#4d5141',
    hose:'#343a3a',weste:true,helm:true,westeFarbe:'#3b4242'}});
  gruppen[gruppe].push(b);return b;
@@ -316,4 +337,4 @@ sd.jedenFrame((dt,zeit)=>{
   letzterHinweis=zeit;sd.nachricht('J = Missionskarte · F = Einsteigen · C = Ducken · H = Medikit',4);
  }
 });
-sd.nachricht('NORDHAFEN: W/A/S/D bewegen · Maus zielen · F Fahrzeug · J Missionen',9);
+sd.nachricht('NORDHAFEN PRO: Shift sprinten · Z hinlegen/kriechen · X rutschen · Q/T lehnen · B Schulter · J Missionen',11);

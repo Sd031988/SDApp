@@ -355,7 +355,7 @@
     /* ---------- Eigene Figuren aus .glb (z. B. Mixamo) mit Animationen ---------- */
     const figurVorlagen = {};
     async function figurLaden(url) { const [u, endung] = quelle(url); const c = await BAB.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, endung); figurVorlagen[url] = c; return { animationen: c.animationGroups.map(a => a.name) }; }
-    const ANIM = { stehen: /idle|stand|breath|survey|ruhe/i, gehen: /walk|geh/i, rennen: /run|sprint|renn|jog/i, springen: /jump|spring/i, sterben: /death|die|dying|dead|sterb|tot/i, schiessen: /shoot|fire|aim|schie/i };
+    const ANIM = { stehen: /idle|stand|breath|survey|ruhe/i, gehen: /walk|geh/i, rennen: /run|sprint|renn|jog/i, springen: /jump|spring/i, sterben: /death|die|dying|dead|sterb|tot/i, schiessen: /shoot|fire|aim|schie/i, ducken: /crouch|duck|hock/i, liegen: /prone|lie|liegen/i, kriechen: /crawl|kriech/i, rutschen: /slide|rutsch/i };
     let figurZaehler = 0;
     function glbFigur(o) {
       const c = figurVorlagen[o.modell]; if (!c) throw new Error('Figur „' + o.modell + '“ zuerst laden: await sd.figurLaden(\'' + o.modell + '\')');
@@ -375,7 +375,7 @@
       const hb = (name, mesh, y, kopf) => { mesh.parent = k; mesh.position.y = y; mesh.isVisible = false; mesh.metadata = { figur: o.besitzer, kopf, trefferzone: true }; return mesh; };
       const hoehe = o.hoehe || 1.8; hb('rumpfZone', BAB.MeshBuilder.CreateBox('zone', { width: 0.55, height: hoehe * 0.78, depth: 0.4 }, szene), hoehe * 0.39, false); hb('kopfZone', BAB.MeshBuilder.CreateSphere('zone', { diameter: 0.32, segments: 6 }, szene), hoehe - 0.17, true);
       if (!gruppen.gehen && gruppen.rennen) gruppen.gehen = gruppen.rennen; if (!gruppen.rennen && gruppen.gehen) gruppen.rennen = gruppen.gehen;
-      const schleifen = [...new Set(['stehen', 'gehen', 'rennen'].map(r => gruppen[r]).filter(Boolean))], gewicht = new Map(schleifen.map(g => [g, 0]));
+      const schleifen = [...new Set(['stehen', 'gehen', 'rennen', 'ducken', 'liegen', 'kriechen', 'rutschen'].map(r => gruppen[r]).filter(Boolean))], gewicht = new Map(schleifen.map(g => [g, 0]));
       schleifen.forEach(g => { g.start(true); g.setWeightForAllAnimatables(0); }); let aktiv = gruppen.stehen || schleifen[0];
       const waffe = BAB.MeshBuilder.CreateBox('waffe', { width: 0.07, height: 0.12, depth: 0.7 }, szene); waffe.material = material('#1c1d20', 0.4, 0.7); schatten.addShadowCaster(waffe); waffe.metadata = { figur: o.besitzer }; waffe.isPickable = false;
       if (o.ohneWaffe) waffe.setEnabled(false);
@@ -384,7 +384,10 @@
       else { waffe.parent = k; waffe.position = V(0.22, hoehe * 0.72, 0.4); }
       let tot = false;
       k.animiere = (tempo, dt, inLuft) => { if (tot || !schleifen.length) return;
-        aktiv = tempo > 5.2 ? (gruppen.rennen || aktiv) : tempo > 0.6 ? (gruppen.gehen || aktiv) : (gruppen.stehen || gruppen.gehen);
+        aktiv = k.taktikRutsch && gruppen.rutschen ? gruppen.rutschen
+          : k.taktikForm === 'liegen' ? ((tempo > 0.28 && gruppen.kriechen) || gruppen.liegen || gruppen.stehen || aktiv)
+          : k.taktikForm === 'ducken' && gruppen.ducken ? gruppen.ducken
+          : tempo > 5.2 ? (gruppen.rennen || aktiv) : tempo > 0.6 ? (gruppen.gehen || aktiv) : (gruppen.stehen || gruppen.gehen);
         for (const g of schleifen) { const z = g === aktiv ? 1 : 0, w = gewicht.get(g) + (z - gewicht.get(g)) * Math.min(1, dt * 8); gewicht.set(g, w); g.setWeightForAllAnimatables(w); }
         if (aktiv && aktiv !== gruppen.stehen) aktiv.speedRatio = klemme(tempo / (aktiv === gruppen.rennen ? 6.5 : 3), 0.6, 1.8); };
       k.sterben = () => { tot = true; if (!gruppen.sterben) return false; schleifen.forEach(g => g.stop()); gruppen.sterben.start(false); return true; };
@@ -455,12 +458,12 @@
     const tastenNamen = e => (e.code || '').replace(/^Key/, '').replace(/^Digit/, '');
     const tastenHandler = { Space: [() => { if (spieler) spieler.sprungPuffer = 0.25; }] };
     /* Tastenbelegung: Aktion -> Taste (Einstellungen). Gedrückt wird die Taste, ausgelöst wird der Standard-Code der Aktion */
-    const AKTIONEN = { vor: 'W', zurueck: 'S', links: 'A', rechts: 'D', springen: 'Space', sprinten: 'ShiftLeft', ducken: 'C', nachladen: 'R', benutzen: 'E', fahrzeug: 'F', granate: 'G', nahkampf: 'V', medikit: 'H', missionen: 'J', ansicht: 'K', karte: 'M', waffe1: '1', waffe2: '2', waffe3: '3' };
+    const AKTIONEN = { vor: 'W', zurueck: 'S', links: 'A', rechts: 'D', springen: 'Space', sprinten: 'ShiftLeft', ducken: 'C', hinlegen: 'Z', rutschen: 'X', lehnenLinks: 'Q', lehnenRechts: 'T', schulterwechsel: 'B', nachladen: 'R', benutzen: 'E', fahrzeug: 'F', granate: 'G', nahkampf: 'V', medikit: 'H', missionen: 'J', ansicht: 'K', karte: 'M', waffe1: '1', waffe2: '2', waffe3: '3' };
     function virtuell(k) { const b = (opt.einstellungen && opt.einstellungen.tasten) || {}; const v = []; let belegt = false;
       for (const [a, std] of Object.entries(AKTIONEN)) { const t = b[a] || std; if (t === k) v.push(std); if (std === k) belegt = true; }
       return v.length ? v : belegt ? [] : [k]; }
     const kd = e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) { tasten[k] = true; (tastenHandler[k] || []).forEach(f => f()); } const k = roh; if (['Space', 'Tab'].includes(k) && gesperrt) e.preventDefault(); };
-    const ku = e => { const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) tasten[k] = false; };
+    const ku = e => { const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) { tasten[k] = false; if (ctx && ctx.taktikTasteLos) ctx.taktikTasteLos(k); } };
     const mm = e => { if (gesperrt) { maus.dx += e.movementX || 0; maus.dy += e.movementY || 0; } };
     const md = e => { if (e.target !== canvas) return; if (!gesperrt && !opt.keinPointerLock) { canvas.requestPointerLock && canvas.requestPointerLock(); } if (e.button === 0) { maus.links = true; maus.klick = true; } if (e.button === 2) maus.rechts = true; };
     const mu = e => { if (e.button === 0) maus.links = false; if (e.button === 2) maus.rechts = false; };
@@ -532,7 +535,7 @@
     function schiessen() {
       const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0) return; if (zeit - spieler.letzterSchuss < w.def.kadenz) return;
       if (w.mag <= 0) { nachladen(); return; } w.mag--; spieler.letzterSchuss = zeit;
-      const ziel = maus.rechts; const st = (ziel ? w.def.zielStreuung : w.def.streuung) * (spieler.tempo > 2 ? 1.6 : 1) * (spieler.zustand.luft > 0.15 ? 2 : 1);
+      const ziel = maus.rechts; const st = (ziel ? w.def.zielStreuung : w.def.streuung) * (spieler.tempo > 2 ? 1.6 : 1) * (spieler.zustand.luft > 0.15 ? 2 : 1) * (ctx && ctx.taktikStreuung ? ctx.taktikStreuung() : 1);
       const vorn = kamera.getForwardRay(1).direction; const rechts = BAB.Vector3.Cross(V(0, 1, 0), vorn).normalize(), oben = BAB.Vector3.Cross(vorn, rechts);
       const muendung = spieler.k.waffe.getAbsolutePosition().add(vorn.scale(w.def.laenge * 0.5));
       let getroffen = false, kopf = false;
@@ -596,7 +599,7 @@
       if (Math.random() < 0.6) kiste({ pos: [pos.x + 0.8, null, pos.z], inhalt: Math.random() < 0.5 ? 'munition' : 'medikit', klein: true });
       if (bots.some(x => !x.nebenfigur) && bots.every(x => x.tot || x.nebenfigur)) ende(true, 'Alle Gegner ausgeschaltet');
     }
-    const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.duckt ? spieler.cc.getPosition().add(V(0, -0.6, 0)) : spieler.cc.getPosition());   // geduckt: hinter niedrigen Mauern unsichtbar für Gegner
+    const spielerPos = () => (ctx && ctx.uebernahme && ctx.uebernahme.pos ? ctx.uebernahme.pos() : spieler.taktikSichtOffset != null ? spieler.cc.getPosition().add(V(0, spieler.taktikSichtOffset, 0)) : spieler.duckt ? spieler.cc.getPosition().add(V(0, -0.6, 0)) : spieler.cc.getPosition());   // geduckt: hinter niedrigen Mauern unsichtbar für Gegner
     function sichtfrei(von, zu, ignoriere) { const d = zu.subtract(von), l = d.length(); const t = strahl(von, d.normalize(), l, ignoriere); return !t || !t.hit || t.distance > l - 0.7 || !!(ctx && ctx.uebernahme && t.pickedMesh.metadata && t.pickedMesh.metadata.fahrzeug && t.pickedMesh.metadata.fahrzeug === ctx.uebernahme.fahrzeugId); }
     function botUpdate(b, dt) {
       if (b.tot || b.inLuft) return; if (b.leben <= 0) { botTot(b); return; } const pos = b.cc.getPosition(); let wunsch = V(0, 0, 0), tempo = 0;
@@ -688,9 +691,9 @@
       const E = opt.einstellungen || {}, empf = (opt.empfindlichkeit || 0.0022) * (E.maus || 1), pe = E.pad || 1, z = maus.rechts ? (spieler.waffen[spieler.aktiv]?.def.zoom || 0.55) : 1;
       const zf = maus.rechts ? (E.ziel ?? 0.8) : 1; spieler.gier += (maus.dx * empf * zf + touch.schauen[0] * dt * 2.2 * pe) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf * zf * (E.invertY ? -1 : 1) + touch.schauen[1] * dt * 1.6 * pe) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
       spieler.rueckstoss *= Math.pow(0.001, dt);
-      const kopf = spieler.cc.getPosition().add(V(0, 0.65 - (spieler.duckWert || 0) * 0.55, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
+      const kopf = spieler.cc.getPosition().add(V(0, spieler.taktikKopfOffset != null ? spieler.taktikKopfOffset : 0.65 - (spieler.duckWert || 0) * 0.55, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
       const rechts = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier)); const zoomt = maus.rechts, ich = E.ansicht === 'fpp'; const abst = ich ? 0.05 : zoomt ? 1.8 : 4.2, schulter = ich ? 0 : zoomt ? 0.55 : 0.75;
-      const drehpunkt = kopf.add(rechts.scale(schulter)); let wunsch = drehpunkt.subtract(fv.scale(abst));
+      const drehpunkt = kopf.add(rechts.scale(schulter * (spieler.taktikSchulter || 1))); let wunsch = drehpunkt.subtract(fv.scale(abst));
       const t = strahl(drehpunkt, wunsch.subtract(drehpunkt).normalize(), abst + 0.3, 'spieler'); let ist = abst; if (t && t.hit) ist = Math.max(0.4, t.distance - 0.3);
       spieler.abstand = ist; kamera.position = drehpunkt.subtract(fv.scale(ist)); kamera.setTarget(kamera.position.add(fv));
       const basisFov = ((opt.einstellungen && opt.einstellungen.sicht) || 57.3) * Math.PI / 180, zielFov = zoomt ? basisFov * z : basisFov; kamera.fov += (zielFov - kamera.fov) * Math.min(1, dt * 12);
@@ -700,18 +703,25 @@
       const vor = (tasten.W || tasten.ArrowUp ? 1 : 0) - (tasten.S || tasten.ArrowDown ? 1 : 0) + touch.bewegen[1], seit = (tasten.D || tasten.ArrowRight ? 1 : 0) - (tasten.A || tasten.ArrowLeft ? 1 : 0) + touch.bewegen[0];
       const fw = V(Math.sin(spieler.gier), 0, Math.cos(spieler.gier)), rw = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier));
       let dir = fw.scale(vor).add(rw.scale(seit)); if (dir.length() > 1) dir.normalize();
-      const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts; const tempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (tasten.ControlLeft || tasten.C ? 0.5 : 1) * (spieler.boost > 0 ? 1.08 : 1);
+      const sprint = (tasten.ShiftLeft || tasten.ShiftRight || touch.sprint) && vor > 0 && !maus.rechts;
+      const crouchInput = !!(tasten.ControlLeft || tasten.C);
+      const basisTempo = (maus.rechts ? 2.6 : sprint ? 7.5 : 4.6) * (crouchInput ? 0.5 : 1) * (spieler.boost > 0 ? 1.08 : 1);
+      // Optionale Bewegungsprofile können die Laufgeschwindigkeit/Haltung
+      // begrenzen. Standardspiel bleibt ohne Profil bitgenau unverändert.
+      const profil = ctx && ctx.taktikVor && ctx.taktikVor({ dt, spieler, tasten, touch, maus, vor, seit, sprint, ducken: crouchInput, tempo: basisTempo });
+      const tempo = profil ? profil.tempo : basisTempo;
+      if (profil && profil.rutschRichtung) { const [sv, ss] = profil.rutschRichtung; dir = fw.scale(sv).add(rw.scale(ss)); if (dir.length() > 1) dir.normalize(); }
       if (spieler.boost > 0) { spieler.boost = Math.max(0, spieler.boost - dt * 1.3); if (spieler.leben > 0) spieler.leben = Math.min(spieler.maxLeben, spieler.leben + dt * 0.9); }
       const vorher = spieler.cc.getPosition().clone(); if (touch.springen) { spieler.sprungPuffer = 0.25; touch.springen = false; } spieler.sprungPuffer = Math.max(0, (spieler.sprungPuffer || 0) - dt);
-      const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0; if (springt) spieler.sprungPuffer = 0;
+      const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0 && !(profil && profil.springVerbot); if (springt) spieler.sprungPuffer = 0;
       if (spieler.wurf > 0) spieler.wurf = Math.max(0, spieler.wurf - dt);
-      spieler.duckt = !!(tasten.ControlLeft || tasten.C) && !maus.rechts; spieler.duckWert = (spieler.duckWert || 0) + ((spieler.duckt ? 1 : 0) - (spieler.duckWert || 0)) * Math.min(1, dt * 10);
+      spieler.duckt = profil ? !!profil.ducken : !!(tasten.ControlLeft || tasten.C) && !maus.rechts; spieler.duckWert = (spieler.duckWert || 0) + ((spieler.duckt ? 1 : 0) - (spieler.duckWert || 0)) * Math.min(1, dt * 10);
       const amBoden = bewege(spieler.cc, dir.scale(tempo), springt, dt, spieler.zustand);
       const np = spieler.cc.getPosition(); spieler.tempo = Math.hypot(np.x - vorher.x, np.z - vorher.z) / Math.max(dt, 1e-4);
-      if (amBoden) { if (spieler.flugZeit > 0.55) { wackeln(klemme(spieler.flugZeit * 0.35, 0.15, 0.6)); ton('schritt', 0.8); } spieler.flugZeit = 0; spieler.schrittWeg = (spieler.schrittWeg || 0) + spieler.tempo * dt; if (spieler.schrittWeg > (sprint ? 2.1 : 1.5)) { spieler.schrittWeg = 0; ton('schritt', sprint ? 0.32 : 0.22); } }
+      if (amBoden) { if (spieler.flugZeit > 0.55) { wackeln(klemme(spieler.flugZeit * 0.35, 0.15, 0.6)); ton('schritt', 0.8); } spieler.flugZeit = 0; spieler.schrittWeg = (spieler.schrittWeg || 0) + spieler.tempo * dt; if (spieler.schrittWeg > (sprint ? 2.1 : 1.5)) { spieler.schrittWeg = 0; if (!(ctx && ctx.taktikRuhig && ctx.taktikRuhig())) ton('schritt', sprint ? 0.32 : 0.22); } }
       else spieler.flugZeit = (spieler.flugZeit || 0) + dt;
-      spieler.k.position = np.add(V(0, -0.9, 0)); const blick = (maus.rechts || maus.links || dir.length() > 0.1) ? spieler.gier : spieler.k.rotation.y;
-      spieler.k.rotation.y += winkel(spieler.k.rotation.y, blick) * Math.min(1, dt * 14); spieler.k.animiere(spieler.tempo, dt, !amBoden && spieler.zustand.luft > 0.2);
+      spieler.k.position = np.add(V(0, -(spieler.taktikHalbhoehe || 0.9), 0)); const blick = (maus.rechts || maus.links || dir.length() > 0.1) ? spieler.gier : spieler.k.rotation.y;
+      spieler.k.rotation.y += winkel(spieler.k.rotation.y, blick) * Math.min(1, dt * 14); spieler.k.animiere(spieler.tempo, dt, !amBoden && spieler.zustand.luft > 0.2); if (ctx && ctx.taktikNach) ctx.taktikNach(spieler, dt);
       if (spieler.k.teile.arm1) { spieler.k.teile.arm1.rotation.x = -1.35 - spieler.nick * 0.8; spieler.k.teile['arm-1'].rotation.x = -1.3 - spieler.nick * 0.8; spieler.k.waffe.rotation.x = spieler.nick * 0.9; }
       // nahe am Kopf: Figur durchsichtig, damit man durch die Kamera sieht
       const ichSicht = opt.einstellungen && opt.einstellungen.ansicht === 'fpp'; spieler.k.getChildMeshes().forEach(m => { m.visibility = ichSicht ? 0 : spieler.abstand < 1 ? 0.15 : 1; });
@@ -745,7 +755,7 @@
       zeit += dt;
       const ueb = ctx && ctx.uebernahme;
       if (spieler && !vorbei) { if (ueb) ueb.update(dt); else spielerUpdate(dt); }
-      if (spieler) { if (ueb && ueb.kamera) ueb.kamera(dt); else kameraUpdate(dt); }
+      if (spieler) { if (ueb && ueb.kamera) ueb.kamera(dt); else kameraUpdate(dt); if (!ueb && ctx && ctx.taktikKamera) ctx.taktikKamera(spieler, kamera, dt); }
       if (wackel > 0.003) { const w = wackel * wackel * 0.16, t = zeit * 47; kamera.position.addInPlace(V(Math.sin(t) * w, Math.sin(t * 1.31 + 1) * w, Math.cos(t * 0.87) * w)); wackel *= Math.pow(0.015, dt); } else wackel = 0;
       if (!vorbei && !botsAus) bots.forEach(b => botUpdate(b, dt));
       for (const b of bots) { if (b.tot || !b.k) continue; if (b.zucken > 0) { b.zucken = Math.max(0, b.zucken - dt); b.k.rotation.x = -Math.sin(b.zucken / 0.22 * Math.PI) * 0.22; } else if (b.k.rotation.x) b.k.rotation.x = 0;   // zuckt bei Treffern zurück
@@ -777,7 +787,7 @@
     szene.onBeforeRenderObservable.add(() => { try { controller(); } catch (e) { /* kein Controller */ } });
     // Ducken: Hocke über die Knochen (Menschen) – sonst wird die Figur niedriger
     const X = V(1, 0, 0);
-    szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const d = spieler.duckWert || 0, k = spieler.k;
+    szene.onAfterAnimationsObservable.add(() => { if (!spieler || !spieler.k) return; const k = spieler.k, d = (k.taktikClip ? 0 : (spieler.duckWert || 0));
       if (k.mensch) { const kn = k.mensch.knochen, achse = (b, ax, w, st) => { if (b && b.rotationQuaternion && st > 0.001) b.rotationQuaternion = b.rotationQuaternion.multiply(BAB.Quaternion.RotationAxis(ax, w * st)); };
         // Nachladen: linker Arm holt ein neues Magazin (runter zur Hüfte und zurück)
         if (spieler.laden > 0 && spieler.ladeDauer) { const u = 1 - spieler.laden / spieler.ladeDauer, st = Math.sin(Math.min(1, u) * Math.PI); achse(kn.oberarmL, X, 0.9, st); achse(kn.unterarmL, X, 0.8, st); achse(kn.kopf, X, 0.25, st); }

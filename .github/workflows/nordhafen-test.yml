@@ -5,6 +5,12 @@ on:
       - 'studio/game-studio/engine/spiele/nordhafen.js'
       - 'studio/game-studio/engine/szenen/nordhafen.json'
       - 'studio/game-studio/engine/nordhafen.test.cjs'
+      - 'studio/game-studio/engine/sd-taktik-bewegung.js'
+      - 'studio/game-studio/engine/sd-taktik-bewegung.test.cjs'
+      - 'studio/game-studio/engine/sd-engine.js'
+      - 'studio/game-studio/engine/index.html'
+      - 'studio/game-studio/engine/sd-mensch.js'
+      - 'tests/studio/nordhafen-taktik-browser.test.cjs'
       - 'studio/game-studio/engine/sd-bauplan-pakete.js'
       - 'studio/game-studio/engine/sd-szene.js'
       - '.github/workflows/nordhafen-test.yml'
@@ -21,4 +27,29 @@ jobs:
         with:
           node-version: '22'
       - name: Nordhafen Editor-Map und Spielskript testen
-        run: node --test studio/game-studio/engine/nordhafen.test.cjs
+        run: node --test studio/game-studio/engine/nordhafen.test.cjs studio/game-studio/engine/sd-taktik-bewegung.test.cjs
+
+  nordhafen-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Chromium mit Software-WebGL installieren
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Babylon / Havok Nordhafen Steuerung im Browser testen
+        run: node tests/studio/nordhafen-taktik-browser.test.cjs
+      - name: Desktop- und Mobil-Screenshots archivieren
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordhafen-taktik-browser-screenshots
+          path: game-studio-workspace-artifacts/nordhafen-taktik-*.png
+          if-no-files-found: ignore
+          retention-days: 14
