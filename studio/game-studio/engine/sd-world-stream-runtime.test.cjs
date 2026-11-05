@@ -1,0 +1,9 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),{create}=require('./sd-world-stream-runtime.js');
+const p=desired=>({desired,acquire:desired,release:[]});
+test('load, retain and dispose',async()=>{const disposed=[];const r=create({load:async id=>id,dispose:async v=>disposed.push(v)});assert.deepEqual((await r.reconcile(p(['0:0','1:0']))).loaded,['0:0','1:0']);assert.deepEqual((await r.reconcile(p(['1:0']))).loaded,['1:0']);await r.close();assert.deepEqual(disposed,['0:0','1:0']);});
+test('no duplicate load',async()=>{let n=0;const r=create({load:async()=>++n,dispose:async()=>{}});await r.reconcile(p(['0:0']));await r.reconcile(p(['0:0']));assert.equal(n,1);await r.close();});
+test('reject invalid input',async()=>{assert.throws(()=>create({load(){}}));assert.throws(()=>create({load(){},dispose(){},maxConcurrent:0}));const r=create({load:async()=>1,dispose:async()=>{}});await assert.rejects(r.reconcile(p(['__proto__'])),TypeError);await assert.rejects(r.reconcile(p(['0:0','0:0'])),TypeError);await r.close();});
+test('close blocks new work',async()=>{const disposed=[];const r=create({load:async id=>id,dispose:async v=>disposed.push(v)});await r.reconcile(p(['0:0']));await r.close();await r.close();assert.deepEqual(disposed,['0:0']);await assert.rejects(r.reconcile(p([])),/closed/);});
+test('failed load clears pending',async()=>{const errors=[];const r=create({load:async()=>{throw Error('offline')},dispose:async()=>{},onError:e=>errors.push(e.message)});assert.deepEqual((await r.reconcile(p(['0:0']))).pending,[]);assert.deepEqual(errors,['offline']);await r.close();});
+test('concurrency cap',async()=>{let active=0,peak=0;const r=create({maxConcurrent:2,load:async id=>{active++;peak=Math.max(peak,active);await new Promise(resolve=>setTimeout(resolve,5));active--;return id},dispose:async()=>{}});await r.reconcile(p(['0:0','1:0','2:0','3:0']));assert.equal(peak,2);await r.close();});
