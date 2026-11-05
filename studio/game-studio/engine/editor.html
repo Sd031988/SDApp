@@ -56,9 +56,9 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=4"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-fahrzeug.js?v=3"></script>
+<script src="./sd-fahrzeug.js?v=4"></script>
 <script src="./sd-mensch.js?v=2"></script>
-<script src="./sd-engine.js?v=8"></script>
+<script src="./sd-engine.js?v=9"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector3(x, y, z);
@@ -78,7 +78,7 @@ const ARTEN = {
   modell: { icon: '🧍', name: 'Modell', felder: [['name', 'Modell (.glb)', 'eigen', '', 'modell'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]] },
   spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
 };
-const WELT = [['groesse', 'Weltgröße (m)', 'zahl', 400, 150, 900, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
+const WELT = [['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m)', 'zahl', 400, 150, 900, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
   ['stunde', 'Uhrzeit', 'zahl', 10, 0, 23.5, 0.5], ['tagMinuten', 'Minuten pro Tag (0 = Zeit steht)', 'zahl', 0, 0, 60, 1], ['regen', 'Regen', 'zahl', 0, 0, 1, 0.05], ['wind', 'Wind', 'zahl', 0.3, 0, 1, 0.05], ['gras', 'Gras', 'an', true], ['kampagne', 'Geld & Spielstand (Krankenhaus statt Spielende)', 'an', false], ['startgeld', 'Startgeld 💰', 'zahl', 100, 0, 5000, 50]];
 const leer = () => ({ welt: Object.fromEntries(WELT.map(f => [f[0], f[3]])), objekte: [{ art: 'spieler', x: 0, z: 0, dreh: 0, p: { aussehen: 'mensch' } }] });
 let szene = leer(), auswahl = -1, platzieren = null, verlauf = [];
@@ -227,7 +227,7 @@ function code() {
   const w = szene.welt, o = szene.objekte, f = v => JSON.stringify(v).replace(/"/g, "'"), z = [];
   z.push('// Erstellt mit dem SD Szenen-Editor – du kannst hier alles weiter ändern', "sd.himmel({ zeit: 'tag' });",
     'sd.gelaende({ groesse: ' + w.groesse + ', aufloesung: ' + Math.round(w.groesse / 3.5) + ', hoehe: ' + w.hoehe + ', seed: ' + w.seed + (w.wasserAn ? ', wasser: ' + w.wasser : '') + ', flach: ' + JSON.stringify(flachListe()) + (w.formen ? ', formen: ' + JSON.stringify(w.formen).replace(/"/g, "'") : '') + ' });');
-  if (w.wasserAn) z.push('sd.wasserWellen();'); z.push('sd.tageszeit({ stunde: ' + w.stunde + ', minutenProTag: ' + w.tagMinuten + ' });', 'sd.wetter({ wind: ' + w.wind + (w.regen > 0 ? ', regen: ' + w.regen : '') + ' });'); if (w.gras) z.push('sd.gras();');
+  if (w.wasserAn) z.push('sd.wasserWellen();'); z.push('sd.tageszeit({ stunde: ' + w.stunde + ', minutenProTag: ' + w.tagMinuten + ' });', 'sd.wetter({ wind: ' + w.wind + (w.regen > 0 ? ', regen: ' + w.regen : '') + ' });'); if (w.gras) z.push('sd.gras();'); if (w.musik && w.musik !== 'aus') z.push("sd.musik('" + w.musik + "');   // 'auto' = ruhig, bei Kampf Action");
   o.forEach((x, i) => { const p = x.p, pos = '[' + x.x + ', null, ' + x.z + ']';
     if (x.art === 'haus') z.push('sd.haus({ pos: ' + pos + ', drehung: ' + x.dreh + ', breite: ' + p.breite + ', tiefe: ' + p.tiefe + ', stockwerke: ' + p.stockwerke + ", material: '" + p.material + "', farbe: '" + p.farbe + "', dach: '" + p.dach + "', balkone: " + p.balkone + ', dachTreppe: ' + p.dachTreppe + ', seed: ' + (i + 1) + ' });');
     else if (x.art === 'wald') z.push('sd.baeume({ mitte: [' + x.x + ', ' + x.z + '], bereich: ' + Math.round(p.radius * 0.8) + ', anzahl: ' + p.anzahl + ", art: '" + p.art + "', seed: " + (i + 3) + ' });');

@@ -20,6 +20,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 - `editor.html` – SD Szenen-Editor: Welten mit der Maus bauen und direkt spielen (Spiel „Eigene Szene“); **Gelände formen** mit Pinsel (Heben, Senken, Glätten, Ebnen), gespeichert als `formen` in `sd.gelaende`
 - Schadensmodell für Autos (Beulen, Rauch, Feuer, Explosion, Wrack) und Gegner, die Außentreppen auf Dächer nehmen
 - `sd-spiel.js` – Geld, Inventar (Medikits H, Granaten G), Nahkampf (V), Läden (E), Missionen mit Schritten (gehe, fahre, sammle, besiege, warte, eigen), Zeitlimit, Belohnung, Zielstrahl und Kartenmarker, Missionsliste (J), Spielstand im Browser, Krankenhaus statt Spielende
+- `sd-klang.js` – Musik live erzeugt (`sd.musik('ruhig' | 'spannung' | 'action' | 'auto')`, „auto“ wechselt bei Schüssen zu Action), eigene Ton- und Musikdateien (.mp3/.ogg/.wav/.m4a über 📦 Meine Modelle) mit `sd.musik('datei')` und `sd.klang('datei', { pos })` (3D-Ton); Mischpult mit Kompressor und Hall, neue Töne (Explosion, Münze, Tür, Alarm, Sieg …)
 - `sd-veroeffentlichen.js` – Spiel als eigene Webseite veröffentlichen (über „Online stellen“, nur mit Zugangsschlüssel); eigene Modelle/Foto-Häuser werden mitgepackt
 - `spiele/stadtjagd.js` – Open-World-Demo „Stadtjagd“ (Stadt, Verkehr, Autos, Tag/Nacht, Regen, Gang)
 - `spiele/inselsturm.js` – Beispielspiel „Inselsturm“ (Third-Person-Shooter, Battle-Royale-Modus), komplett als SD-Skript

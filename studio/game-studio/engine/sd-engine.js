@@ -39,23 +39,38 @@
   function audioKontext() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { return null; } return AC; }
   /** Hörer = Kamera (für 3D-Ton). WebAudio ist rechtshändig, Babylon linkshändig -> z spiegeln */
   function hoererSetzen(p, f) { if (!AC) return; const l = AC.listener; if (l.positionX) { l.positionX.value = p.x; l.positionY.value = p.y; l.positionZ.value = -p.z; l.forwardX.value = f.x; l.forwardY.value = f.y; l.forwardZ.value = -f.z; l.upX.value = 0; l.upY.value = 1; l.upZ.value = 0; } else { l.setPosition(p.x, p.y, -p.z); l.setOrientation(f.x, f.y, -f.z, 0, 1, 0); } }
+  /* Mischpult: Effekte und Musik laufen über einen Kompressor (kein Übersteuern), Schüsse/Explosionen bekommen Hall */
+  let BUS = null;
+  function bus() { if (BUS || !audioKontext()) return BUS; const komp = AC.createDynamicsCompressor(); komp.threshold.value = -14; komp.ratio.value = 4; komp.connect(AC.destination);
+    const effekte = AC.createGain(), musik = AC.createGain(), hall = AC.createConvolver(), hallG = AC.createGain(); effekte.connect(komp); musik.connect(komp); hall.connect(hallG); hallG.connect(komp); hallG.gain.value = 0.32;
+    const n = AC.sampleRate * 1.8, ir = AC.createBuffer(2, n, AC.sampleRate); for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2) * (i < 200 ? i / 200 : 1); } hall.buffer = ir;
+    BUS = { komp, effekte, musik, hall }; return BUS; }
+  const rauschPuffer = {}; function rauschen1(dauer, kurve) { const k = dauer + ':' + kurve; if (!rauschPuffer[k]) { const b = AC.createBuffer(1, Math.max(1, AC.sampleRate * dauer | 0), AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, kurve); rauschPuffer[k] = b; } return rauschPuffer[k]; }
   function ton(art, lautstaerke, pos) {
-    if (!audioKontext()) return;
+    if (!bus()) return;
     const t = AC.currentTime, L = klemme(lautstaerke == null ? 1 : lautstaerke, 0, 1) * (pos ? 1.4 : 1); if (L < 0.02) return;
-    const g = AC.createGain();
+    const g = AC.createGain(); let ziel = BUS.effekte;
     if (pos && AC.createPanner) { const pn = AC.createPanner(); pn.panningModel = 'HRTF'; pn.distanceModel = 'inverse'; pn.refDistance = 8; pn.maxDistance = 500; pn.rolloffFactor = 0.6;
-      if (pn.positionX) { pn.positionX.value = pos.x; pn.positionY.value = pos.y; pn.positionZ.value = -pos.z; } else pn.setPosition(pos.x, pos.y, -pos.z); g.connect(pn); pn.connect(AC.destination); }
-    else g.connect(AC.destination);
-    if (art === 'schuss' || art === 'schrot' || art === 'pistole') {
-      const dauer = art === 'schrot' ? 0.45 : art === 'pistole' ? 0.18 : 0.25, n = AC.createBufferSource(), buf = AC.createBuffer(1, AC.sampleRate * dauer, AC.sampleRate), d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, art === 'schrot' ? 2 : 3.5);
-      n.buffer = buf; const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = art === 'pistole' ? 2600 : 1700; n.connect(f); f.connect(g);
-      g.gain.setValueAtTime(0.55 * L, t); n.start(t);
-    } else {
-      const o = AC.createOscillator(); o.connect(g); const def = { treffer: [1400, 0.05, 'square', 0.12], kopf: [2200, 0.08, 'square', 0.14], aufheben: [660, 0.15, 'triangle', 0.2], nachladen: [320, 0.07, 'square', 0.08], schaden: [140, 0.2, 'sawtooth', 0.2], tot: [90, 0.6, 'sawtooth', 0.25] }[art] || [440, 0.1, 'sine', 0.1];
-      o.type = def[2]; o.frequency.setValueAtTime(def[0], t); if (art === 'aufheben') o.frequency.linearRampToValueAtTime(990, t + def[1]);
-      g.gain.setValueAtTime(def[3] * L, t); g.gain.exponentialRampToValueAtTime(0.0001, t + def[1]); o.start(t); o.stop(t + def[1] + 0.02);
-    }
+      if (pn.positionX) { pn.positionX.value = pos.x; pn.positionY.value = pos.y; pn.positionZ.value = -pos.z; } else pn.setPosition(pos.x, pos.y, -pos.z); pn.connect(BUS.effekte); ziel = pn; }
+    g.connect(ziel);
+    const knall = (dauer, kurve, fq, typ, gain, an) => { const n = AC.createBufferSource(); n.buffer = rauschen1(dauer, kurve); const f = AC.createBiquadFilter(); f.type = typ || 'lowpass'; f.frequency.value = fq; n.connect(f); const gg = AC.createGain(); gg.gain.value = gain; f.connect(gg); gg.connect(g); n.start(t + (an || 0)); return gg; };
+    const ton1 = (f0, f1, dauer, typ, gain, an) => { const o = AC.createOscillator(), gg = AC.createGain(), t0 = t + (an || 0); o.type = typ; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dauer); gg.gain.setValueAtTime(gain, t0); gg.gain.exponentialRampToValueAtTime(0.0001, t0 + dauer); o.connect(gg); gg.connect(g); o.start(t0); o.stop(t0 + dauer + 0.02); };
+    const halle = (st) => { const hs = AC.createGain(); hs.gain.value = st; g.connect(hs); hs.connect(BUS.hall); };
+    g.gain.value = L;
+    if (art === 'schuss' || art === 'schrot' || art === 'pistole') {   // Knall (hell) + Druck (tief) + Hall
+      const hart = art === 'schrot' ? 0.45 : art === 'pistole' ? 0.18 : 0.25;
+      knall(hart, art === 'schrot' ? 2 : 3.5, art === 'pistole' ? 2600 : 1700, 'lowpass', 0.5); knall(0.03, 1, 5000, 'highpass', 0.35); ton1(art === 'schrot' ? 110 : 150, 40, 0.16, 'sine', 0.55); halle(art === 'pistole' ? 0.35 : 0.5);
+    } else if (art === 'explosion') { knall(1.6, 2.2, 900, 'lowpass', 0.5); knall(0.5, 4, 3000, 'lowpass', 0.22); ton1(70, 25, 0.9, 'sine', 0.5); halle(0.6); }
+    else if (art === 'muenze') { ton1(1320, 1320, 0.09, 'square', 0.1); ton1(1760, 1760, 0.25, 'square', 0.1, 0.08); }
+    else if (art === 'schritt') knall(0.06, 2, 700, 'lowpass', 0.25);
+    else if (art === 'klick') ton1(2400, 1800, 0.03, 'square', 0.08);
+    else if (art === 'tuer') { knall(0.35, 1.5, 400, 'lowpass', 0.5); ton1(180, 90, 0.3, 'triangle', 0.15); }
+    else if (art === 'alarm') { for (let k = 0; k < 4; k++) ton1(880, 660, 0.22, 'sawtooth', 0.08, k * 0.25); }
+    else if (art === 'sieg') { [523, 659, 784, 1047].forEach((f, k) => ton1(f, f, 0.5, 'triangle', 0.14, k * 0.12)); }
+    else if (art === 'treffer') { ton1(1400, 900, 0.06, 'square', 0.1); knall(0.04, 2, 3000, 'bandpass', 0.2); }
+    else if (art === 'kopf') { ton1(2200, 1600, 0.09, 'square', 0.13); ton1(3300, 3000, 0.05, 'sine', 0.08, 0.03); }
+    else { const def = { aufheben: [660, 990, 0.15, 'triangle', 0.2], nachladen: [320, 260, 0.07, 'square', 0.08], schaden: [140, 90, 0.2, 'sawtooth', 0.2], tot: [90, 40, 0.6, 'sawtooth', 0.25] }[art] || [440, 440, 0.1, 'sine', 0.1];
+      ton1(def[0], def[1], def[2], def[3], def[4]); if (art === 'nachladen') knall(0.05, 2, 2500, 'bandpass', 0.25, 0.12); }
   }
 
   /* ---------- Waffen ---------- */
@@ -631,7 +646,7 @@
       vektor: V, farbe,
     };
     /* ---------- Module (Fahrzeuge, Stadt, Menschen, KI, Wetter …) ---------- */
-    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
+    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, bus, audioKontext: () => audioKontext(), eigene, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
       get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null, aufraeumen: [] };
     (window.SDModule || []).forEach(m => { try { const r = m(ctx) || {}; Object.defineProperties(sd, Object.getOwnPropertyDescriptors(r.api || {})); if (r.update) modulUpdates.push(r.update); } catch (e) { console.error('Modul-Fehler', e); } });
     const aufraeumen = () => {

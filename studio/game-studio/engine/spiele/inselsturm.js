@@ -69,6 +69,7 @@ for (let i = 0; i < GEGNER; i++) {
 sd.zone({ mitte: [20, -10], radius: 300, endRadius: 25, warte: 45, dauer: 240, schaden: 5 });
 
 // 8) Der Spieler startet am Strand mit einer Pistole
+sd.musik('auto');   // ruhige Musik, bei Schüssen Action
 // Motorboot am nächsten Ufer (W/S/A/D, F einsteigen)
 { let best = null; for (let w = 0; w < 16; w++) for (let d = 8; d < 260; d += 3) { const x = START[0] + Math.cos(w * Math.PI / 8) * d, z = START[1] + Math.sin(w * Math.PI / 8) * d; if (sd.hoehe(x, z) < -4.2) { if (!best || d < best[2]) best = [x, z, d]; break; } }
   if (best) sd.boot({ pos: [best[0], null, best[1]], farbe: '#e8e8e8' }); }
