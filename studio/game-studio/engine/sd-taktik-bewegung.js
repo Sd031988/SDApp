@@ -171,6 +171,7 @@
       if (s.aktiv) return { aktiv: true, info: () => ({ form: s.form, neigung: s.neigung }) };
       s.aktiv = true;
       aufnehmen();
+      ctx.taktikTasteLos = key => { if (key === 'Z') s.keyZ = false; if (key === 'X') s.keyX = false; if (key === 'B') s.keyB = false; };
       ctx.taktikVor = vor;
       ctx.taktikNach = nach;
       ctx.taktikKamera = kamera;
