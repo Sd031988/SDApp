@@ -57,3 +57,17 @@ test('throwing disposal error observer cannot hide original failure',async()=>{
  assert.equal(notified,1);
  assert.equal(adapter.activeCount(),1);
 });
+
+test('partial eviction retry does not dispose already released meshes twice',async()=>{
+ const calls=[];let failed=false;
+ const first={dispose(){calls.push('first');if(calls.filter(x=>x==='first').length>1)throw new Error('double dispose');}};
+ const second={dispose(){calls.push('second');if(!failed){failed=true;throw new Error('temporary failure');}}};
+ const result={meshes:[first,second],transformNodes:[],skeletons:[],animationGroups:[]};
+ const adapter=create({scene:{},Babylon:{SceneLoader:{async ImportMeshAsync(){return result;}}},resolveCell:()=>({url:'./cells/partial.glb'})});
+ const resource=await adapter.load('partial');
+ await assert.rejects(adapter.dispose(resource,'partial'),/temporary failure/);
+ assert.equal(adapter.activeCount(),1);
+ await adapter.dispose(resource,'partial');
+ assert.deepEqual(calls,['first','second','second']);
+ assert.equal(adapter.activeCount(),0);
+});
