@@ -180,6 +180,9 @@
       const kiste = (px, py, pz, w, h, t, mat, kachel, fest, rx) => { const m = BAB.MeshBuilder.CreateBox('teil', { width: w, height: h, depth: t }, szene); m.position = V(px, py, pz); if (rx) m.rotation.x = rx; backen(m); weltUV(m, kachel || 2); m.material = mat; teile.push(m); if (fest) koll.push({ p: [px, py, pz], g: [w, h, t], rx: rx || 0 }); return m; };
       kiste(0, 0.15, 0, B + 0.5, 0.6, T + 0.5, sockel, 3, true);                                           // Sockel
       const tuer = 1.7, th = 2.5;
+      // Innentreppen: je Stockwerk eine gerade Treppe, abwechselnd rechts/links an der Seitenwand, darüber ein Loch in der Decke
+      const ix0 = B / 2 - d / 2, iz0 = T / 2 - d / 2, TL = Math.min(T - d - 2.4, HS * 1.6), TB = 1.25, mitTreppe = o.innenTreppe !== false && st > 1 && TL >= 3.4 && B >= 6;
+      const tz0 = iz0 - 0.1 - TL, tz1 = iz0 - 0.1, txFuer = sx => sx * (ix0 - TB / 2);
       for (let s = 0; s < st; s++) {
         const yb = 0.45 + s * HS, ym = yb + HS / 2;
         // Wände (vorne unten mit echter Türöffnung)
@@ -188,7 +191,14 @@
           kiste(0, 0.5, -T / 2 - 0.9, tuer + 1.2, 0.2, 1.2, sockel, 2, true); }                      // Stufe vor der Tür
         else kiste(0, ym, -T / 2, B, HS, d, wand, 2, true);
         kiste(0, ym, T / 2, B, HS, d, wand, 2, true); kiste(-B / 2, ym, 0, d, HS, T, wand, 2, true); kiste(B / 2, ym, 0, d, HS, T, wand, 2, true);
-        kiste(0, yb - 0.05, 0, B - d, 0.25, T - d, material('platten', '#c9c2b8'), 2, true);              // Boden innen
+        const boden = material('platten', '#c9c2b8');
+        if (mitTreppe && s > 0) { const sx = (s - 1) % 2 === 0 ? 1 : -1, rest = B - d - TB;   // Boden mit Treppenloch (Treppe vom Stockwerk darunter kommt hier an)
+          kiste(-sx * TB / 2, yb - 0.05, 0, rest, 0.25, T - d, boden, 2, true); const vl = tz0 - (-iz0); kiste(txFuer(sx), yb - 0.05, -iz0 + vl / 2, TB, 0.25, vl, boden, 2, true); }
+        else kiste(0, yb - 0.05, 0, B - d, 0.25, T - d, boden, 2, true);              // Boden innen
+        if (mitTreppe && s < st - 1) { const sx = s % 2 === 0 ? 1 : -1, tx = txFuer(sx), w = Math.atan2(HS, TL), L = Math.hypot(HS, TL), stufen = Math.ceil(HS / 0.2), treppenMat = material('holz', '#7a5a3a');
+          koll.push({ p: [tx, yb + HS / 2 - 0.05, (tz0 + tz1) / 2], g: [TB, 0.2, L], rx: -w });
+          for (let i = 0; i < stufen; i++) { const t = (i + 0.5) / stufen; kiste(tx, yb + t * HS - 0.09, tz0 + t * TL, TB, 0.18, TL / stufen + 0.04, treppenMat, 1); }
+          kiste(tx - sx * TB / 2, yb + HS / 2 + 0.5, (tz0 + tz1) / 2, 0.05, 0.05, L, dunkel, 1, false, -w); }   // Geländer
         kiste(0, yb + HS - 0.02, 0, B + 0.12, 0.16, T + 0.12, sockel, 2);                                  // Gesims zwischen den Stockwerken
         // Fenster: Rahmen, Glas, Fensterbank (vorne/hinten/seitlich)
         const fenster = (cx, cz, nx, nz) => { const fw = 1.15, fh = 1.35, fy = yb + 1.75, quer = Math.abs(nx) > 0; const w = (a, b, c, x_, y_, z_) => quer ? kiste(cx + x_ * nx, y_, cz + z_, c, b, a, rahmen, 1) : kiste(cx + z_, y_, cz + x_ * nz, a, b, c, rahmen, 1);
@@ -202,13 +212,13 @@
       // Einrichtung im Erdgeschoss (Tisch, Stühle, Regal, Sofa, Theke, Deckenlampe) – vorne an der Tür bleibt frei
       if (o.einrichtung !== false && B >= 6 && T >= 6) {
         const yb = 0.45 + 0.08, holz = material('holz', '#8a6a4a'), stoff = material(null, ['#7a3a3a', '#3a5a7a', '#5a6a3a', '#6a5a7a'][Math.floor(r() * 4)], { rau: 0.9 }), weiss = material(null, '#e8e4dc', { rau: 0.6 }), ix = B / 2 - d / 2 - 0.05, iz = T / 2 - d / 2 - 0.05;
-        const tx = (r() - 0.5) * (B - 4), tz = 0.6 + (r() - 0.5) * (T - 5) * 0.5;
+        const tx = mitTreppe ? -0.3 - r() * Math.max(0, B / 2 - 3.5) : (r() - 0.5) * (B - 4), tz = 0.6 + (r() - 0.5) * (T - 5) * 0.5;
         kiste(tx, yb + 0.74, tz, 1.4, 0.06, 0.8, holz, 1, true); for (const [lx, lz] of [[-0.62, -0.32], [0.62, -0.32], [-0.62, 0.32], [0.62, 0.32]]) kiste(tx + lx, yb + 0.37, tz + lz, 0.06, 0.74, 0.06, holz, 1);
         for (const sz of [-1, 1]) { kiste(tx, yb + 0.45, tz + sz * 0.75, 0.45, 0.06, 0.45, holz, 1, true); kiste(tx, yb + 0.72, tz + sz * 0.96, 0.45, 0.5, 0.05, holz, 1); for (const lx of [-0.2, 0.2]) for (const lz of [-0.2, 0.2]) kiste(tx + lx, yb + 0.22, tz + sz * 0.75 + lz, 0.04, 0.45, 0.04, holz, 1); }
-        const rb = Math.min(3, B - 2); kiste((r() - 0.5) * (B - rb - 1), yb + 1.0, iz - 0.2, rb, 2.0, 0.35, holz, 1, true);   // Regal an der Rückwand
-        for (let i = 0; i < 3; i++) kiste((r() - 0.5) * (rb - 0.5), yb + 0.55 + i * 0.6, iz - 0.42, 0.25 + r() * 0.4, 0.25, 0.08, stoff, 1);
-        const sx = r() < 0.5 ? -1 : 1, sl = Math.min(2.2, T - 3); kiste(sx * (ix - 0.45), yb + 0.22, 0.8, 0.85, 0.45, sl, stoff, 1, true); kiste(sx * (ix - 0.1), yb + 0.6, 0.8, 0.2, 0.75, sl, stoff, 1, true);   // Sofa an der Seitenwand
-        if (r() < 0.5) kiste(-sx * (ix - 0.4), yb + 0.55, 0.6, 0.7, 1.1, Math.min(2.4, T - 3.5), material(null, '#5a5248', { rau: 0.5 }), 1, true);   // Theke
+        const rb = Math.min(3, mitTreppe ? (B - 2) / 2 - 0.5 : B - 2); kiste(mitTreppe ? -(B / 4) : (r() - 0.5) * (B - rb - 1), yb + 1.0, iz - 0.2, rb, 2.0, 0.35, holz, 1, true);   // Regal an der Rückwand
+        for (let i = 0; i < 3; i++) kiste((mitTreppe ? -(B / 4) : 0) + (r() - 0.5) * (rb - 0.5), yb + 0.55 + i * 0.6, iz - 0.42, 0.25 + r() * 0.4, 0.25, 0.08, stoff, 1);
+        const sx = mitTreppe ? -1 : r() < 0.5 ? -1 : 1, sl = Math.min(2.2, T - 3); kiste(sx * (ix - 0.45), yb + 0.22, 0.8, 0.85, 0.45, sl, stoff, 1, true); kiste(sx * (ix - 0.1), yb + 0.6, 0.8, 0.2, 0.75, sl, stoff, 1, true);   // Sofa an der Seitenwand
+        if (!mitTreppe && r() < 0.5) kiste(-sx * (ix - 0.4), yb + 0.55, 0.6, 0.7, 1.1, Math.min(2.4, T - 3.5), material(null, '#5a5248', { rau: 0.5 }), 1, true);   // Theke
         kiste(0, 0.45 + HS - 0.25, 0, 0.6, 0.06, 0.6, material(null, '#fff4d8', { leuchten: '#fff1cc', leuchtStaerke: 1.6 }), 1);   // Deckenlampe
       }
       const ob = 0.45 + H;

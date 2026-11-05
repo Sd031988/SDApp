@@ -39,11 +39,15 @@
       // Nachschub: je Stern zwei Polizisten (höchstens 8 gleichzeitig)
       F.nachschub -= dt; const lebend = F.polizei.filter(b => !b.tot).length; if (F.nachschub <= 0 && F.unsichtbar < 5 && lebend < Math.min(8, F.sterne * 2)) { polizistErzeugen(sp); F.nachschub = 4; }
       // Streifenwagen ab 2 Sternen: fahren über die Straßen heran, an der Ankunft steigen zwei Polizisten aus
-      F.wagenZeit -= dt; if (F.sterne >= 2 && ctx.sd.sonderwagen && (ctx.stadtNetze || []).length && F.wagenZeit <= 0 && F.wagen.length < Math.min(3, F.sterne - 1)) { F.wagenZeit = 12;
-        const w = ctx.sd.sonderwagen({ farbe: '#eef0f3', ziel: sp0, beiAnkunft: v => { if (v.ausgestiegen) return; v.ausgestiegen = true; const p = v.huelle.position; for (const s2 of [-1, 1]) { const q = [p.x + Math.cos(v.gier) * 2.4 * s2, p.z - Math.sin(v.gier) * 2.4 * s2]; if (F.polizei.filter(b => !b.tot).length < 10) polizistErzeugen(sp0(), q); } } });
-        if (w) { F.wagen.push(w); ctx.ton('alarm', 0.35, w.huelle.position); } }
+      F.wagenZeit -= dt; const stadt = ctx.sd.sonderwagen && (ctx.stadtNetze || []).length;
+      if (F.sterne >= 2 && (stadt || ctx.sd.einsatzwagen) && F.wagenZeit <= 0 && F.wagen.length < Math.min(3, F.sterne - 1)) { F.wagenZeit = 12;
+        const aussteigen = v => { if (v.ausgestiegen) return; v.ausgestiegen = true; const p = v.huelle ? v.huelle.position : v.chassis.getAbsolutePosition(), gier = v.huelle ? v.gier : Math.atan2(BAB.Vector3.TransformNormal(V(0, 0, 1), v.chassis.computeWorldMatrix(true)).x, BAB.Vector3.TransformNormal(V(0, 0, 1), v.chassis.computeWorldMatrix(true)).z);
+          for (const s2 of [-1, 1]) { const q = [p.x + Math.cos(gier) * 2.6 * s2, p.z - Math.sin(gier) * 2.6 * s2]; if (F.polizei.filter(b => !b.tot).length < 10) polizistErzeugen(sp0(), q); } };
+        let w; if (stadt) w = ctx.sd.sonderwagen({ farbe: '#eef0f3', ziel: sp0, beiAnkunft: aussteigen });
+        else { const g = Math.random() * 6.28, x = sp.x + Math.cos(g) * 90, z = sp.z + Math.sin(g) * 90; w = ctx.sd.einsatzwagen({ pos: [x, null, z], drehung: Math.atan2(sp.x - x, sp.z - z) * 180 / Math.PI, ziel: sp0, beiAnkunft: aussteigen }); if (w) w.huelle = null; }
+        if (w) { F.wagen.push(w); ctx.ton('alarm', 0.35, w.huelle ? w.huelle.position : w.chassis.getAbsolutePosition()); } }
       // Sirene in der Nähe
-      F.sirene -= dt; if (F.sirene <= 0 && (lebend || F.wagen.length)) { F.sirene = 6; const n = F.wagen[0] ? F.wagen[0].huelle.position : (F.polizei.find(b => !b.tot) || { cc: null }).cc?.getPosition(); if (n) ctx.ton('alarm', 0.25, n); }
+      F.sirene -= dt; if (F.sirene <= 0 && (lebend || F.wagen.length)) { F.sirene = 6; const n = F.wagen[0] ? (F.wagen[0].huelle ? F.wagen[0].huelle.position : F.wagen[0].chassis.getAbsolutePosition()) : (F.polizei.find(b => !b.tot) || { cc: null }).cc?.getPosition(); if (n) ctx.ton('alarm', 0.25, n); }
       zeigen();
     },
   };

@@ -186,6 +186,23 @@
       if (a.vAlt) { const dv = V(v.x - a.vAlt.x, 0, v.z - a.vAlt.z), st = dv.length(); if (st > 4.5) { const richtung = dv.normalize().scale(-1); schaden(a, (st - 4.5) * 7, schwer.add(richtung.scale(T.L * 0.45)).add(V(0, T.H * 0.15, 0)), 'Unfall'); } }
       a.vAlt = v.clone(); if (T.zweirad) zweirad(a, dt, vorn, BAB.Vector3.Cross(oben, vorn).normalize(), v);
     }
+    /* ---------- 🤖 Computer-Fahrer (Gelände): lenkt zum Ziel, bremst vor der Ankunft, setzt zurück wenn er feststeckt ---------- */
+    function kiFahren(a, dt) {
+      const z = a.kiZiel(); const e = a.eingabe; if (!z) { e.gas = 0; e.bremse = 1; return; }
+      const p = a.chassis.getAbsolutePosition(), mw = a.chassis.computeWorldMatrix(true), vorn = BAB.Vector3.TransformNormal(V(0, 0, 1), mw), dx = z.x - p.x, dz = z.z - p.z, d = Math.hypot(dx, dz);
+      const w = Math.atan2(dx, dz) - Math.atan2(vorn.x, vorn.z), wn = Math.atan2(Math.sin(w), Math.cos(w));
+      if (a.kiRueck > 0) { a.kiRueck -= dt; e.gas = -0.7; e.lenk = -Math.sign(wn); e.bremse = 0; return; }
+      if (d < (a.kiHalt || 18)) { e.gas = 0; e.bremse = 1; e.lenk = 0; if (!a.kiAngekommen) { a.kiAngekommen = true; a.beiAnkunft && a.beiAnkunft(a); } return; }
+      if (d > (a.kiHalt || 18) * 3) a.kiAngekommen = false;
+      const vms = Math.abs(a.kmh) / 3.6; if (d < (a.kiHalt || 18) + vms * vms / 10 + 2) { e.gas = 0; e.bremse = 1; e.lenk = klemme(wn * 1.6, -1, 1); if (vms < 1.5 && d < (a.kiHalt || 18) * 1.6 && !a.kiAngekommen) { a.kiAngekommen = true; a.beiAnkunft && a.beiAnkunft(a); } return; }   // rechtzeitig bremsen
+      e.lenk = klemme(wn * 1.6, -1, 1); e.bremse = 0; e.gas = Math.abs(wn) > 1.2 && Math.abs(a.kmh) > 30 ? 0.2 : klemme(d / 40, 0.45, 1) * (Math.abs(wn) > 0.8 ? 0.6 : 1);
+      a.kiSteck = Math.abs(a.kmh) < 3 ? (a.kiSteck || 0) + dt : 0; if (a.kiSteck > 2.5) { a.kiSteck = 0; a.kiRueck = 1.6; }
+    }
+    function entfernen(a) { const i = autos.indexOf(a); if (i >= 0) autos.splice(i, 1); if (fahrend === a) aussteigen(); try { a.body.dispose(); } catch (e) { /* weg */ } a.chassis.dispose(false, true); }
+    /** Fahrzeug mit Blaulicht und Computer-Fahrer, z. B. Polizei auf freiem Gelände */
+    function einsatzwagen(o) { const a = auto(Object.assign({ typ: 'suv', farbe: '#eef0f3' }, o, { ki: true })); a.kiZiel = o.ziel; a.beiAnkunft = o.beiAnkunft; a.kiHalt = o.halt || 18;
+      a.blau = [-1, 1].map(sx => { const b = BAB.MeshBuilder.CreateBox('blaulicht', { width: 0.32, height: 0.14, depth: 0.22 }, szene), m = new BAB.StandardMaterial('blau', szene); m.disableLighting = true; b.material = m; b.parent = a.g.wurzel; b.position = V(sx * 0.25, a.T.H + 0.07, -0.1); b.isPickable = false; return b; });
+      a.entfernen = () => entfernen(a); return a; }
     /* ---------- 🏍 Motorrad: Gleichgewicht und Schräglage ---------- */
     function zweirad(a, dt, vorn, rechts, v) {
       const roll = Math.asin(klemme(BAB.Vector3.Dot(rechts, V(0, 1, 0)), -1, 1)), tempo = Math.abs(BAB.Vector3.Dot(v, vorn)), ziel = -a.lenkung * klemme(tempo / 10, 0, 1) * 1.15;
@@ -315,9 +332,11 @@
       kamera.position = dreh.subtract(dir.scale(ist)); kamera.setTarget(dreh.add(V(0, 0.3, 0))); kamera.fov += (1.0 + Math.min(0.25, Math.abs(a.kmh) / 400) - kamera.fov) * Math.min(1, dt * 4);
     }
     function update(dt) {
+      for (const a of autos) if (a.kiZiel && !a.wrack && a !== fahrend) kiFahren(a, dt);
+      for (const a of autos) if (a.blau) { const an = Math.floor(ctx.zeit * 5) % 2; a.blau[0].material.emissiveColor.set(0.1, an ? 0.2 : 0.3, an ? 2.5 : 0.2); a.blau[1].material.emissiveColor.set(an ? 0.2 : 2.2, 0.12, 0.12); }
       for (const a of autos) { if (a.wrack && a.art !== 'auto') continue; if (a.art === 'boot') bootPhysik(a, dt); else if (a.art === 'flugzeug') flugPhysik(a, dt); else physik(a, dt); }
       if (!fahrend && ctx.spieler && !ctx.vorbei) { const a = naechstes(3.8); ctx.hinweisText = a ? 'F: Einsteigen (' + a.T.name + ')' : null; }
     }
-    return { api: { motorrad: o => auto(Object.assign({}, o, { typ: 'motorrad' })), boot: o => auto(Object.assign({}, o, { typ: 'boot' })), flugzeug: o => auto(Object.assign({}, o, { typ: 'flugzeug' })), autoSchaden: (a, m) => schaden(a, m, a.chassis.getAbsolutePosition().add(V(0, 0.5, a.T.L * 0.45)), 'Skript'), auto, autos, AUTO_TYPEN: TYPEN, get fahrzeug() { return fahrend; }, einsteigen, aussteigen }, update };
+    return { api: { einsatzwagen, fahrzeugEntfernen: entfernen, motorrad: o => auto(Object.assign({}, o, { typ: 'motorrad' })), boot: o => auto(Object.assign({}, o, { typ: 'boot' })), flugzeug: o => auto(Object.assign({}, o, { typ: 'flugzeug' })), autoSchaden: (a, m) => schaden(a, m, a.chassis.getAbsolutePosition().add(V(0, 0.5, a.T.L * 0.45)), 'Skript'), auto, autos, AUTO_TYPEN: TYPEN, get fahrzeug() { return fahrend; }, einsteigen, aussteigen }, update };
   });
 })();
