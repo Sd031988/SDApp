@@ -52,7 +52,7 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=4"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-fahrzeug.js?v=4"></script>
+<script src="./sd-fahrzeug.js?v=5"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-foto.js?v=1"></script>
 <script>window.EXTRA = {};</script>
@@ -239,6 +239,28 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
   /* ---------- 📦 Meine Modelle ---------- */
   const TYPEN = { modell: '🧍 3D-Modell', 'foto-gebaeude': '📷 Foto-Haus', 'foto-material': '📷 Foto-Material', ton: '🔊 Ton / Musik' };
   let hoerer = null;
+  /* ZIP entpacken ohne Zusatz-Bibliothek (Browser-eigenes DecompressionStream) */
+  async function zipLesen(datei) {
+    const buf = new Uint8Array(await datei.arrayBuffer()), dv = new DataView(buf.buffer), dateien = new Map(); let e = buf.length - 22;
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--; if (e < 0) throw new Error('Keine gültige ZIP-Datei');
+    let p = dv.getUint32(e + 16, true); const anzahl = dv.getUint16(e + 10, true), dec = new TextDecoder();
+    for (let i = 0; i < anzahl; i++) { if (dv.getUint32(p, true) !== 0x02014b50) break; const art = dv.getUint16(p + 10, true), gross = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), kl = dv.getUint16(p + 32, true), lok = dv.getUint32(p + 42, true), name = dec.decode(buf.subarray(p + 46, p + 46 + nl)); p += 46 + nl + xl + kl;
+      if (name.endsWith('/')) continue; const ln = dv.getUint16(lok + 26, true), lx = dv.getUint16(lok + 28, true), start = lok + 30 + ln + lx, roh = buf.subarray(start, start + gross);
+      let blob; if (art === 0) blob = new Blob([roh]); else if (art === 8) blob = await new Response(new Blob([roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob(); else throw new Error('ZIP-Packart ' + art + ' wird nicht unterstützt');
+      dateien.set(name.replace(/\\/g, '/'), blob); }
+    return dateien;
+  }
+  /** .gltf + Zusatzdateien (z. B. Download von Sketchfab oder Poly Haven als ZIP) → eine .glb */
+  async function zipZuGlb(datei) {
+    const d = await zipLesen(datei), glb = [...d.keys()].find(n => /\.glb$/i.test(n)); if (glb) return d.get(glb);
+    const gltf = [...d.keys()].find(n => /\.gltf$/i.test(n)); if (!gltf) throw new Error('In der ZIP ist keine .gltf- oder .glb-Datei');
+    const ordner = gltf.includes('/') ? gltf.slice(0, gltf.lastIndexOf('/') + 1) : '', FS = BABYLON.FilesInputStore.FilesToLoad, keys = [];
+    for (const [n, b] of d) { if (!n.startsWith(ordner)) continue; const rel = n.slice(ordner.length), base = rel.split('/').pop(); for (const k of new Set([rel, encodeURI(rel), base].map(x => x.toLowerCase()))) { if (!FS[k]) { FS[k] = new File([b], base); keys.push(k); } } }
+    const tmp = new BABYLON.Scene(szene.getEngine());
+    try { await BABYLON.SceneLoader.AppendAsync('file:', gltf.slice(ordner.length).toLowerCase(), tmp); await tmp.whenReadyAsync(); tmp.animationGroups.forEach(g => g.stop());
+      const g = await BABYLON.GLTF2Export.GLBAsync(tmp, 'modell'); const k = Object.keys(g.files).find(x => /\.glb$/i.test(x)); return g.files[k]; }
+    finally { keys.forEach(k => delete FS[k]); tmp.dispose(); }
+  }
   let auswahl = null;
   async function modellAnsehen(a) {
     EXTRA.aufraeumen(); wegraeumen(); auswahl = a.name; if (hoerer) { hoerer.pause(); URL.revokeObjectURL(hoerer.src); hoerer = null; }
@@ -259,14 +281,17 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
   EXTRA.modelle = {
     async zeigen(box) {
       hinweis(box, 'Lade <b>.glb-Dateien</b> hoch: Figuren von <b>Mixamo</b> (mit Animationen), Scans aus <b>Polycam / Luma / Scaniverse</b>, Modelle aus <b>Blender</b> oder der SD Werkstatt. Alles bleibt <b>auf diesem Gerät</b> gespeichert.');
+      hinweis(box, '📚 <b>Gute kostenlose Modelle:</b> <a href="https://sketchfab.com/search?features=downloadable&type=models" target="_blank" rel="noopener" style="color:#ffd79a">Sketchfab</a> (Filter „Downloadable“, Lizenz beachten: CC0 frei, CC-BY mit Namensnennung; als „glTF“ laden = ZIP) · <a href="https://polyhaven.com/models" target="_blank" rel="noopener" style="color:#ffd79a">Poly Haven</a> (CC0, realistisch) · <a href="https://quaternius.com" target="_blank" rel="noopener" style="color:#ffd79a">Quaternius</a> (CC0, Figuren mit Animationen, Fahrzeuge) · <a href="https://kenney.nl/assets" target="_blank" rel="noopener" style="color:#ffd79a">Kenney</a> (CC0). Die ZIP-Datei einfach hier importieren.');
       hinweis(box, '🧰 <b>Mixamo-Figuren:</b> <a href="./blender/sd_mixamo_zu_glb.py" download style="color:#ffd79a">Blender-Helfer herunterladen</a>. Figur (FBX „With Skin“) und Animationen (FBX „Without Skin“) in einen Ordner legen, dann einmal ausführen:<br><code style="font-size:11px">blender --background --python sd_mixamo_zu_glb.py -- &lt;ordner&gt; figur.glb</code><br>Die fertige .glb hier importieren.');
-      dateiKnopf(box, '📥 .glb-Datei importieren', '.glb,model/gltf-binary', async f => {
-        if (!/\.glb$/i.test(f.name)) { meldung('Bitte eine .glb-Datei wählen (.gltf mit Zusatzdateien geht nicht)'); return; }
+      dateiKnopf(box, '📥 Modell importieren (.glb oder .zip mit .gltf)', '.glb,.zip,model/gltf-binary,application/zip', async f => {
+        if (/\.zip$/i.test(f.name)) { meldung('⏳ ZIP wird entpackt und umgewandelt …'); try { const g = await zipZuGlb(f); f = new File([g], f.name.replace(/\.zip$/i, '.glb')); } catch (e) { console.error(e); meldung('⨯ ' + e.message); return; } }
+        if (!/\.glb$/i.test(f.name)) { meldung('Bitte eine .glb- oder .zip-Datei wählen'); return; }
         if (f.size > 150 * 1024 * 1024) { meldung('Datei ist größer als 150 MB – bitte verkleinern'); return; }
         const nm = SDAssets.name(f.name); if (await SDAssets.holen(nm) && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return;
         const u = URL.createObjectURL(f); let info = {}; try { const c = await BABYLON.SceneLoader.LoadAssetContainerAsync(u, '', szene, null, '.glb'); info = { animationen: c.animationGroups.map(g => g.name), skelett: c.skeletons.length > 0 }; c.dispose(); }
         catch (e) { URL.revokeObjectURL(u); meldung('⨯ Datei konnte nicht gelesen werden: ' + e.message); return; } URL.revokeObjectURL(u);
-        await SDAssets.speichern({ name: nm, typ: 'modell', datei: f, groesse: f.size, ...info }); meldung('📥 „' + nm + '“ gespeichert'); reglerZeigen(); modellAnsehen(await SDAssets.holen(nm)); });
+        const quelle = (prompt('Woher stammt das Modell? (Urheber, Lizenz, Link – bei CC-BY Pflicht, erscheint im veröffentlichten Spiel)', '') || '').slice(0, 200);
+        await SDAssets.speichern({ name: nm, typ: 'modell', datei: f, groesse: f.size, quelle, ...info }); meldung('📥 „' + nm + '“ gespeichert'); reglerZeigen(); modellAnsehen(await SDAssets.holen(nm)); });
       dateiKnopf(box, '🔊 Ton oder Musik importieren (.mp3, .ogg, .wav, .m4a)', 'audio/*,.mp3,.ogg,.wav,.m4a', async f => {
         const endung = (f.name.match(/\.(mp3|ogg|wav|m4a)$/i) || [])[1]; if (!endung) { meldung('Bitte .mp3, .ogg, .wav oder .m4a wählen'); return; }
         if (f.size > 25 * 1024 * 1024) { meldung('Datei ist größer als 25 MB – bitte kürzen oder als .mp3 speichern'); return; }
@@ -278,7 +303,7 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
       try { alle = (await SDAssets.alle()).sort((a, b) => b.t - a.t); } catch (e) { hinweis(box, '⨯ Speicher nicht verfügbar (privates Fenster?)'); return; }
       if (!alle.length) hinweis(liste, 'Noch nichts gespeichert. Importiere eine .glb-Datei oder speichere ein Foto-Haus bzw. Foto-Material.');
       for (const a of alle) { const e = el('div', { className: 'eintrag' }); e.innerHTML = '<b></b><div class="hinweis" style="margin:2px 0 0"></div><div class="z"></div>'; e.querySelector('b').textContent = a.name;
-        e.querySelector('.hinweis').textContent = (TYPEN[a.typ] || a.typ) + (a.groesse && (a.typ === 'modell' || a.typ === 'ton') ? ' · ' + (a.groesse / 1048576).toFixed(1) + ' MB' : '') + (a.animationen && a.animationen.length ? ' · ' + a.animationen.length + ' Animationen' : '');
+        e.querySelector('.hinweis').textContent = (TYPEN[a.typ] || a.typ) + (a.groesse && (a.typ === 'modell' || a.typ === 'ton') ? ' · ' + (a.groesse / 1048576).toFixed(1) + ' MB' : '') + (a.animationen && a.animationen.length ? ' · ' + a.animationen.length + ' Animationen' : '') + (a.quelle ? ' · Quelle: ' + a.quelle : '');
         const z = e.querySelector('.z'); z.append(el('button', { textContent: '👁 Ansehen', onclick: () => modellAnsehen(a) }), el('button', { textContent: '🗑 Löschen', onclick: async () => { if (!confirm('„' + a.name + '“ von diesem Gerät löschen?')) return; await SDAssets.loeschen(a.name); if (auswahl === a.name) { EXTRA.aufraeumen(); wegraeumen(); } reglerZeigen(); } }));
         if (auswahl === a.name && EXTRA._anims && EXTRA._anims.length) { const az = el('div', { className: 'z' }); EXTRA._anims.forEach(g => az.append(el('button', { textContent: '▶ ' + g.name, onclick: () => { EXTRA._anims.forEach(x => x.stop()); g.start(true); } }))); e.append(az); }
         liste.append(e); }

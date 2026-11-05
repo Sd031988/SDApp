@@ -261,7 +261,7 @@
       if (a.zustand < 22 && !a.feuer) a.feuer = partikel(a.rauchQuelle, new BAB.Color4(1, 0.6, 0.1, 1), new BAB.Color4(1, 0.25, 0.05, 1), 80, 0.8, 2.2, true);
     }
     function explodieren(a, quelle) {
-      a.wrack = true; const p = a.chassis.getAbsolutePosition().clone(); ctx.ton('explosion', 1, p);
+      a.wrack = true; const p = a.chassis.getAbsolutePosition().clone(); ctx.ton('explosion', 1, p); ctx.wackeln && ctx.wackeln(1.1, p);
       const knall = partikel(a.rauchQuelle, new BAB.Color4(1, 0.8, 0.3, 1), new BAB.Color4(1, 0.3, 0.05, 1), 0, 3.5, 4, true); knall.manualEmitCount = 260; knall.minEmitPower = 4; knall.maxEmitPower = 11; knall.targetStopDuration = 0.5; knall.disposeOnStop = true;
       const licht = new BAB.PointLight('explosion', p.add(V(0, 1.5, 0)), szene); licht.diffuse = new BAB.Color3(1, 0.6, 0.25); licht.intensity = 30; licht.range = 30; let t = 0; const ob = szene.onBeforeRenderObservable.add(() => { t += 1 / 60; licht.intensity = Math.max(0, 30 - t * 40); if (t > 1) { szene.onBeforeRenderObservable.remove(ob); licht.dispose(); } });
       const verbrannt = ctx.BK.material(null, '#151413', { rau: 0.9 }); a.g.karosse.forEach(m => { if (m.material && m.material.name.indexOf('glas') < 0) m.material = verbrannt; });

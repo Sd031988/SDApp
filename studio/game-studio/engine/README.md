@@ -33,6 +33,8 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 |---|---|
 | Grafik | PBR-Materialien, Himmel mit Farbverlauf, Umgebungslicht, Kaskaden-Schatten, ACES-Tonemapping, Bloom, FXAA, SSAO (Qualität „Hoch“) |
 | Welt | Gelände 640 × 640 m mit Rauschen, Wasser, flache Dorfflächen, Wald als Instanzen, Felsen, begehbare Häuser (Tür, Fenster, Dachaufgang) |
+| Große Welten | ab 1000 m (bis 2400 m im Editor): Gelände aus 160-m-Kacheln mit 3 Detailstufen, Physik nur in der Nähe von Spieler, Gegnern und beweglichen Objekten |
+| Spielgefühl | Kamerawackeln (Schüsse, Treffer, Explosionen, Landungen), Gegner zucken bei Treffern, Schrittgeräusche (auch 3D bei Gegnern), dynamische Auflösung bei niedriger Bildrate |
 | Physik | Havok: Spielfigur-Controller (Kollision, Steigungen, Springen), umschießbare Objekte, umfallende Gegner |
 | Gameplay | 4 Waffen (Streuung, Rückstoß, Nachladen, Kopftreffer, Zielfernrohr), Beutekisten, Leben und Schutzweste, schrumpfende Zone, Sieg und Niederlage |
 | Gegner-KI | Sichtprüfung per Strahl, Verfolgen, seitliches Ausweichen, Trefferchance je nach Entfernung und Bewegung, gehen in die Zone |
@@ -42,7 +44,7 @@ Beide sind kostenlos (Apache-2.0 / MIT) und werden über cdn.jsdelivr.net mit fe
 
 - Roboter, Bäume und Gebäude sind prozedural erzeugt und kommen nicht an Modelle von 3D-Künstlern heran. Eigene Modelle (.glb mit Animationen, z. B. von Mixamo) lassen sich mit `sd.modell()` laden, sind im Beispiel aber nicht eingebaut.
 - Foto-Häuser sind Kisten mit Fotos auf den Wänden: von außen wie im Foto, aber ohne echte Vorsprünge und nicht begehbar. Echte 3D-Gebäude aus Fotos entstehen mit Fotogrammetrie-Apps (Polycam, Luma, Scaniverse, Meshroom) und werden als .glb importiert.
-- Nur .glb wird importiert (keine .gltf mit Zusatzdateien, kein .fbx). Eigene Dateien liegen nur im Browser dieses Geräts.
+- Importiert werden .glb und .zip mit .gltf + Texturen (z. B. Sketchfab-/Poly-Haven-Downloads; werden beim Import zu .glb umgewandelt), kein .fbx. Eigene Dateien liegen nur im Browser dieses Geräts. Die Quelle/Lizenz wird beim Import abgefragt und im veröffentlichten Spiel angezeigt.
 - Mehrspieler: über HTTP etwa 8 Aktualisierungen pro Sekunde (spürbare Verzögerung), Treffer entscheidet der Schütze, ohne Computer-Gegner; Verkehr und Passanten laufen bei jedem Spieler unabhängig. Eigene Szenen gehen im Mehrspieler: Der Gastgeber schickt seine Szene als reine Daten mit, jeder Browser prüft sie und baut daraus den Code (eigene Modelle und Foto-Häuser bleiben dabei weg). Der Server (Render) schläft ohne Nutzung und braucht beim ersten Verbinden bis zu einer Minute.
 - Passanten und Verkehr weichen aus, werden aber nicht verletzt.
 - Wegfindung arbeitet auf einem 1,5-m-Raster; Gegner nehmen Außentreppen, aber keine Innentreppen.

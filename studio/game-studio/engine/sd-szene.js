@@ -19,7 +19,7 @@ const ARTEN = {
   modell: { icon: '🧍', name: 'Modell', felder: [['name', 'Modell (.glb)', 'eigen', '', 'modell'], ['skalierung', 'Größe', 'zahl', 1, 0.05, 20, 0.05]] },
   spieler: { icon: '🙋', name: 'Spieler-Start', felder: [['aussehen', 'Aussehen', 'wahl', 'mensch', ['mensch', 'roboter']]], einmal: true },
 };
-const WELT = [['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m)', 'zahl', 400, 150, 900, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
+const WELT = [['musik', 'Musik', 'wahl', 'auto', ['aus', 'auto', 'ruhig', 'spannung', 'action']], ['groesse', 'Weltgröße (m) – ab 1000 m große Welt aus Kacheln', 'zahl', 400, 150, 2400, 10], ['hoehe', 'Hügel', 'zahl', 16, 0, 50, 1], ['seed', 'Gelände-Variante', 'zahl', 5, 1, 999, 1], ['wasserAn', 'Wasser', 'an', false], ['wasser', 'Wasserhöhe', 'zahl', -2, -20, 10, 0.5],
   ['stunde', 'Uhrzeit', 'zahl', 10, 0, 23.5, 0.5], ['tagMinuten', 'Minuten pro Tag (0 = Zeit steht)', 'zahl', 0, 0, 60, 1], ['regen', 'Regen', 'zahl', 0, 0, 1, 0.05], ['wind', 'Wind', 'zahl', 0.3, 0, 1, 0.05], ['gras', 'Gras', 'an', true], ['kampagne', 'Geld & Spielstand (Krankenhaus statt Spielende)', 'an', false], ['startgeld', 'Startgeld 💰', 'zahl', 100, 0, 5000, 50]];
 const leer = () => ({ welt: Object.fromEntries(WELT.map(f => [f[0], f[3]])), objekte: [{ art: 'spieler', x: 0, z: 0, dreh: 0, p: { aussehen: 'mensch' } }] });
 

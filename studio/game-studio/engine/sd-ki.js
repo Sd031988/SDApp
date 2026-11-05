@@ -3,10 +3,10 @@
 (function () {
   (window.SDModule = window.SDModule || []).push(function (ctx) {
     const { BAB, V } = ctx; ctx.sperren = ctx.sperren || []; ctx.baumPunkte = ctx.baumPunkte || [];
-    const Z = 1.5;                   // Zellgröße in Metern
+    let Z = 1.5;                     // Zellgröße in Metern (große Welten: 3 m)
     let gitter = null, N = 0, ursprung = 0, gebautMit = -1;
     function bauen() {
-      const G = (ctx.gelaendeGroesse && ctx.gelaendeGroesse()) || 640; N = Math.ceil(G / Z); ursprung = -G / 2; gitter = new Uint8Array(N * N);
+      const G = (ctx.gelaendeGroesse && ctx.gelaendeGroesse()) || 640; Z = G > 1000 ? 3 : 1.5; N = Math.ceil(G / Z); ursprung = -G / 2; gitter = new Uint8Array(N * N);
       const wasser = ctx.wasserHoehe != null ? ctx.wasserHoehe : -1e9;
       for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const x = ursprung + (i + 0.5) * Z, z = ursprung + (j + 0.5) * Z, h = ctx.hoehe(x, z), hx = ctx.hoehe(x + Z, z), hz = ctx.hoehe(x, z + Z);
         if (h < wasser + 0.3 || Math.abs(hx - h) / Z > 0.9 || Math.abs(hz - h) / Z > 0.9) gitter[j * N + i] = 1; }

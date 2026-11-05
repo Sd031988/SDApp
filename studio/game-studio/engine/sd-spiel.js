@@ -36,7 +36,7 @@
       const ps = new BAB.ParticleSystem('explosion', 300, szene); ps.particleTexture = punktTex; ps.emitter = p.clone(); ps.color1 = new BAB.Color4(1, 0.8, 0.3, 1); ps.color2 = new BAB.Color4(1, 0.35, 0.05, 1); ps.colorDead = new BAB.Color4(0.2, 0.2, 0.2, 0);
       ps.minSize = 0.6; ps.maxSize = 2.4; ps.minLifeTime = 0.25; ps.maxLifeTime = 0.9; ps.manualEmitCount = 220; ps.minEmitPower = 3; ps.maxEmitPower = 12; ps.direction1 = V(-1, 0.3, -1); ps.direction2 = V(1, 1.5, 1); ps.blendMode = BAB.ParticleSystem.BLENDMODE_ADD; ps.targetStopDuration = 0.4; ps.disposeOnStop = true; ps.start();
       const l = new BAB.PointLight('blitz', p.add(V(0, 1, 0)), szene); l.diffuse = new BAB.Color3(1, 0.6, 0.25); l.intensity = 25; l.range = radius * 4; setTimeout(() => l.dispose(), 250);
-      ctx.ton('explosion', 1, p); ctx.beiSchuss.forEach(f => f(p, quelle));
+      ctx.ton('explosion', 1, p); ctx.wackeln && ctx.wackeln(1.1, p); ctx.beiSchuss.forEach(f => f(p, quelle));
       const wirkung = d => Math.max(0, 1 - d / radius) * staerke;
       for (const b of ctx.bots) { if (b.tot) continue; const d = BAB.Vector3.Distance(b.cc.getPosition(), p); if (d < radius) ctx.schaden(b, wirkung(d) * 1.6, quelle); }
       if (ctx.spieler && ctx.spieler.leben > 0) { const d = BAB.Vector3.Distance(ctx.spielerPos(), p); if (d < radius) ctx.schaden(ctx.spieler, wirkung(d), 'eigene Granate'); }

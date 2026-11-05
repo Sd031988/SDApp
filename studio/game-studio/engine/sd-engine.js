@@ -187,6 +187,7 @@
     function gelaende(o) {
       o = o || {}; const G = o.groesse || 600, N = o.aufloesung || 180, H = o.hoehe ?? 28, ns = rauschen(o.seed || 7), flach = o.flach || [];
       const hoeheBei = hoehenFunktion(o);
+      if (G > 900 || o.kacheln) return grosseWelt(o, G, H, ns, hoeheBei);
       const m = BAB.MeshBuilder.CreateGround('gelaende', { width: G, height: G, subdivisions: N, updatable: true }, szene);
       const p = m.getVerticesData('position'), farben = []; for (let i = 0; i < p.length; i += 3) p[i + 1] = hoeheBei(p[i], p[i + 2]);
       m.setVerticesData('position', p); const n = []; BAB.VertexData.ComputeNormals(p, m.getIndices(), n); m.setVerticesData('normal', n);
@@ -200,6 +201,44 @@
       if (o.wasser != null) { const w = BAB.MeshBuilder.CreateGround('wasser', { width: G * 3, height: G * 3 }, szene); w.position.y = o.wasser; w.material = material('#2f6f8f', 0.08, 0.1, { alpha: 0.78 }); w.isPickable = false; }
       gel = { groesse: G, hoeheBei, mesh: m }; if (ctx) { ctx.wasserHoehe = o.wasser; } return gel;
     }
+    /* ---------- Große Welten: Gelände aus Kacheln (160 m), 3 Detailstufen mit Schürzen gegen Lücken, Physik nur in der Nähe ---------- */
+    function grosseWelt(o, G, H, ns, hoeheBei) {
+      const K = 160, nK = Math.ceil(G / K), start = -nK * K / 2, gras = farbe(o.farbe || '#5d7f3a'), gras2 = farbe('#7d8f45'), fels2 = farbe('#7b746a'), sand = farbe('#c9b98a'), W = o.wasser ?? -100;
+      const mat = new BAB.PBRMaterial('gelaendeMat', szene); mat.albedoTexture = detailTextur(); mat.albedoTexture.uScale = mat.albedoTexture.vScale = 1 / 6; mat.metallic = 0; mat.roughness = 0.95; mat.environmentIntensity = 0.5;
+      const STUFEN = qualitaet === 'niedrig' ? [32, 12, 4] : [64, 20, 6];
+      function kachelMesh(x0, z0, n, name, mitFarbe) {   // eigenes Gitter + Schürze rundherum (2 Zellen tief nach unten)
+        const pos = [], ind = [], nor = [], col = [], uv = [], d = K / n, idx = (i, j) => j * (n + 1) + i;
+        for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const x = x0 + i * d, z = z0 + j * d; pos.push(x, hoeheBei(x, z), z); uv.push(x, z); }
+        for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) ind.push(idx(i, j), idx(i, j + 1), idx(i + 1, j), idx(i + 1, j), idx(i, j + 1), idx(i + 1, j + 1));
+        BAB.VertexData.ComputeNormals(pos, ind, nor);
+        const rand = []; for (let i = 0; i < n; i++) rand.push([idx(i, 0), idx(i + 1, 0)]); for (let j = 0; j < n; j++) rand.push([idx(n, j), idx(n, j + 1)]); for (let i = n; i > 0; i--) rand.push([idx(i, n), idx(i - 1, n)]); for (let j = n; j > 0; j--) rand.push([idx(0, j), idx(0, j - 1)]);
+        const basis = pos.length / 3;
+        rand.forEach(([a, b2], k) => { for (const v of [a, b2]) { pos.push(pos[v * 3], pos[v * 3 + 1] - d * 2, pos[v * 3 + 2]); nor.push(nor[v * 3], nor[v * 3 + 1], nor[v * 3 + 2]); uv.push(uv[v * 2], uv[v * 2 + 1]); } const u = basis + k * 2; ind.push(a, u, b2, b2, u, u + 1); });
+        const anzahl = pos.length / 3; for (let v = 0; v < anzahl; v++) { const vv = v < basis ? v : null, x = pos[v * 3], h = pos[v * 3 + 1], z = pos[v * 3 + 2], steil = 1 - nor[v * 3 + 1], w = ns(x / 25, z / 25) * 0.5 + 0.5;
+          let c = BAB.Color3.Lerp(gras, gras2, w); if (h < W + 1.5 && vv != null) c = sand; if (steil > 0.22) c = BAB.Color3.Lerp(c, fels2, klemme((steil - 0.22) * 5, 0, 1)); col.push(c.r, c.g, c.b, 1); }
+        const vd = new BAB.VertexData(); vd.positions = pos; vd.indices = ind; vd.normals = nor; vd.uvs = uv; if (mitFarbe) vd.colors = col;
+        const m = new BAB.Mesh(name, szene); vd.applyToMesh(m); m.material = mat; m.useVertexColors = mitFarbe; m.isPickable = name === 'gelaende'; m.freezeWorldMatrix(); m.metadata = { boden: true }; return m;
+      }
+      const kacheln = [];
+      for (let kj = 0; kj < nK; kj++) for (let ki = 0; ki < nK; ki++) {
+        const x0 = start + ki * K, z0 = start + kj * K, hoch = kachelMesh(x0, z0, STUFEN[0], 'gelaende', true), mittel = kachelMesh(x0, z0, STUFEN[1], 'gelaendeL1', true), fern = kachelMesh(x0, z0, STUFEN[2], 'gelaendeL2', true);
+        hoch.receiveShadows = true; mittel.receiveShadows = true; hoch.addLODLevel(260, mittel); hoch.addLODLevel(700, fern);
+        kacheln.push({ x: x0 + K / 2, z: z0 + K / 2, mesh: hoch, phys: null });
+      }
+      // Physik nur für Kacheln in der Nähe von Spieler, Fahrzeugen und Gegnern (spart viel Rechenzeit)
+      let pruefZeit = 0;
+      const pe = szene.getPhysicsEngine();
+      function physikNachfuehren(dt, sofort) { pruefZeit += dt; if (!sofort && pruefZeit < 0.12) return; pruefZeit = 0;
+        const punkte = [kamera.position]; if (spieler && spieler.cc) punkte.push(spieler.cc.getPosition()); for (const b of bots) if (b.cc && !b.tot) punkte.push(b.cc.getPosition());
+        for (const bd of (pe && pe.getBodies ? pe.getBodies() : [])) if (bd.transformNode && bd.getMotionType && bd.getMotionType() === BAB.PhysicsMotionType.DYNAMIC) punkte.push(bd.transformNode.position);   // Autos, Kisten, Granaten …
+        for (const k of kacheln) { let nah = false; for (const p of punkte) if (Math.abs(p.x - k.x) < K * 1.25 && Math.abs(p.z - k.z) < K * 1.25) { nah = true; break; }
+          if (nah && !k.phys) k.phys = new BAB.PhysicsAggregate(k.mesh, BAB.PhysicsShapeType.MESH, { mass: 0, friction: 0.9 }, szene);
+          else if (!nah && k.phys) { const weit = punkte.every(p => Math.abs(p.x - k.x) > K * 1.7 || Math.abs(p.z - k.z) > K * 1.7); if (weit) { k.phys.dispose(); k.phys = null; } } } }
+      if (o.wasser != null) { const w = BAB.MeshBuilder.CreateGround('wasser', { width: G * 2.2, height: G * 2.2, subdivisions: 2 }, szene); w.position.y = o.wasser; w.material = material('#2f6f8f', 0.08, 0.1, { alpha: 0.78 }); w.isPickable = false; }
+      gel = { groesse: G, hoeheBei, mesh: kacheln[0].mesh, kacheln, physikNachfuehren }; if (ctx) { ctx.wasserHoehe = o.wasser; }
+      kachelPhysik = physikNachfuehren; physikNachfuehren(0, true); return gel;
+    }
+    let kachelPhysik = null;
     const hoehe = (x, z) => (gel ? gel.hoeheBei(x, z) : 0);
 
     /* ---------- Bäume (Instanzen: tausende möglich) ---------- */
@@ -409,7 +448,9 @@
 
     /* ---------- Spieler ---------- */
     let spieler = null, ctx = null; const bots = [], kisten = [], frameFns = [], skripte = [], modulUpdates = [];
-    let zone = null, vorbei = false, zeit = 0, botsAus = false;
+    let zone = null, vorbei = false, zeit = 0, botsAus = false, wackel = 0;
+    /** Kamerawackeln (Schüsse, Treffer, Explosionen, Landungen) – klingt schnell ab */
+    function wackeln(st, pos) { if (pos) st *= klemme(1 - BAB.Vector3.Distance(pos, kamera.position) / 60, 0, 1); wackel = Math.min(1.2, wackel + st); }
     const DOWN = V(0, -1, 0);
     function bewege(cc, wunsch, sprung, dt, zustand) {
       const sup = cc.checkSupport(dt, DOWN), amBoden = sup.supportedState === BAB.CharacterSupportedState.SUPPORTED; let v = cc.getVelocity();
@@ -438,9 +479,9 @@
     function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; ton('nachladen'); }
     function schaden(ziel, menge, quelle) {
       if (vorbei) return;
-      if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * 0.6); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
+      if (ziel === spieler) { if (ctx && ctx.uebernahme) menge *= 0.5; let rest = menge; if (spieler.ruestung > 0) { const a = Math.min(spieler.ruestung, menge * 0.6); spieler.ruestung -= a; rest -= a; } spieler.leben -= rest; ton('schaden', 0.7); wackeln(klemme(rest / 35, 0.1, 0.6)); hud.blut && (hud.blut.style.opacity = klemme(rest / 25, 0.25, 0.8));
         if (spieler.leben <= 0) { spieler.leben = 0; if (ctx && ctx.beimTod && ctx.beimTod(quelle ? 'Ausgeschaltet von ' + quelle : null)) return; ende(false, quelle ? 'Ausgeschaltet von ' + quelle : 'Du bist ausgeschieden'); } return; }
-      ziel.leben -= menge; ziel.alarm = 6; if (ziel.leben <= 0 && !ziel.tot) botTot(ziel);
+      ziel.leben -= menge; ziel.alarm = 6; ziel.zucken = 0.22; if (ziel.leben <= 0 && !ziel.tot) botTot(ziel);
     }
     function schiessen() {
       const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0) return; if (zeit - spieler.letzterSchuss < w.def.kadenz) return;
@@ -461,7 +502,7 @@
             if (md_.leben != null) { md_.leben -= w.def.schaden; if (md_.leben <= 0) zerstoeren(m); } } }
       }
       if (getroffen) { ton(kopf ? 'kopf' : 'treffer'); if (hud.treffer) { hud.treffer.classList.toggle('kopf', kopf); hud.treffer.style.opacity = 1; } }
-      ton(w.def.ton, 0.8); ctx && ctx.beiSchuss.forEach(f => f(muendung, 'spieler')); blitz.position = muendung; blitz.intensity = 3; spieler.rueckstoss += w.def.rueckstoss; spieler.nick -= w.def.rueckstoss * 0.6;
+      ton(w.def.ton, 0.8); ctx && ctx.beiSchuss.forEach(f => f(muendung, 'spieler')); blitz.position = muendung; blitz.intensity = 3; wackeln(w.def.rueckstoss * 3.5); spieler.rueckstoss += w.def.rueckstoss; spieler.nick -= w.def.rueckstoss * 0.6;
     }
     function zerstoeren(m) { funken(m.getAbsolutePosition(), V(0, 1, 0), '#ffaa44', 40); ton('schrot', 0.6); if (m.physicsBody) m.physicsBody.dispose(); m.dispose(); }
 
@@ -579,6 +620,8 @@
       const springt = (tasten.Space || spieler.sprungPuffer > 0) && spieler.zustand.luft === 0; if (springt) spieler.sprungPuffer = 0;
       const amBoden = bewege(spieler.cc, dir.scale(tempo), springt, dt, spieler.zustand);
       const np = spieler.cc.getPosition(); spieler.tempo = Math.hypot(np.x - vorher.x, np.z - vorher.z) / Math.max(dt, 1e-4);
+      if (amBoden) { if (spieler.flugZeit > 0.55) { wackeln(klemme(spieler.flugZeit * 0.35, 0.15, 0.6)); ton('schritt', 0.8); } spieler.flugZeit = 0; spieler.schrittWeg = (spieler.schrittWeg || 0) + spieler.tempo * dt; if (spieler.schrittWeg > (sprint ? 2.1 : 1.5)) { spieler.schrittWeg = 0; ton('schritt', sprint ? 0.32 : 0.22); } }
+      else spieler.flugZeit = (spieler.flugZeit || 0) + dt;
       spieler.k.position = np.add(V(0, -0.9, 0)); const blick = (maus.rechts || maus.links || dir.length() > 0.1) ? spieler.gier : spieler.k.rotation.y;
       spieler.k.rotation.y += winkel(spieler.k.rotation.y, blick) * Math.min(1, dt * 14); spieler.k.animiere(spieler.tempo, dt, !amBoden && spieler.zustand.luft > 0.2);
       if (spieler.k.teile.arm1) { spieler.k.teile.arm1.rotation.x = -1.35 - spieler.nick * 0.8; spieler.k.teile['arm-1'].rotation.x = -1.3 - spieler.nick * 0.8; spieler.k.waffe.rotation.x = spieler.nick * 0.9; }
@@ -607,11 +650,15 @@
     szene.onBeforeRenderObservable.add(() => { const dt = Math.min(engine.getDeltaTime() / 1000, 0.05); if (!dt || festeSchritte) return; if (opt.pause && opt.pause()) return; logik(dt); });
     let festeSchritte = false;
     function logik(dt) {
+      if (kachelPhysik) kachelPhysik(dt);
       zeit += dt;
       const ueb = ctx && ctx.uebernahme;
       if (spieler && !vorbei) { if (ueb) ueb.update(dt); else spielerUpdate(dt); }
       if (spieler) { if (ueb && ueb.kamera) ueb.kamera(dt); else kameraUpdate(dt); }
+      if (wackel > 0.003) { const w = wackel * wackel * 0.16, t = zeit * 47; kamera.position.addInPlace(V(Math.sin(t) * w, Math.sin(t * 1.31 + 1) * w, Math.cos(t * 0.87) * w)); wackel *= Math.pow(0.015, dt); } else wackel = 0;
       if (!vorbei && !botsAus) bots.forEach(b => botUpdate(b, dt));
+      for (const b of bots) { if (b.tot || !b.k) continue; if (b.zucken > 0) { b.zucken = Math.max(0, b.zucken - dt); b.k.rotation.x = -Math.sin(b.zucken / 0.22 * Math.PI) * 0.22; } else if (b.k.rotation.x) b.k.rotation.x = 0;   // zuckt bei Treffern zurück
+        const bp = b.cc.getPosition(); if (b.letzterOrt) { b.schrittWeg = (b.schrittWeg || 0) + Math.hypot(bp.x - b.letzterOrt.x, bp.z - b.letzterOrt.z); if (b.schrittWeg > 1.6) { b.schrittWeg = 0; if (BAB.Vector3.DistanceSquared(bp, kamera.position) < 900) ton('schritt', 0.35, bp); } } b.letzterOrt = bp.clone(); }
       modulUpdates.forEach(f => { try { f(dt, zeit); } catch (e) { console.error(e); opt.beiFehler && opt.beiFehler(e); modulUpdates.splice(modulUpdates.indexOf(f), 1); } });
       for (let i = spuren.length - 1; i >= 0; i--) { spuren[i][1] -= dt; if (spuren[i][1] <= 0) { spuren[i][0].dispose(); spuren.splice(i, 1); } }
       blitz.intensity = Math.max(0, blitz.intensity - dt * 40);
@@ -631,6 +678,11 @@
       hoererSetzen(kamera.position, kamera.getForwardRay(1).direction);
       fpsZeit += dt; if (fpsZeit > 0.5) { fpsZeit = 0; setzeText('fps', engine.getFps().toFixed(0) + ' FPS'); karte(); }
     }
+    // Dynamische Auflösung: fällt die Bildrate länger unter ~28 FPS, wird intern gröber gerechnet (bis 1,8×), bei Luft wieder feiner
+    const basisSkala = engine.getHardwareScalingLevel(); let dynZeit = 0, fpsSumme = 0, fpsN = 0;
+    if (opt.dynamischeAufloesung !== false) szene.onAfterRenderObservable.add(() => { const ms = engine.getDeltaTime(); if (!ms || ms > 500) return; dynZeit += ms; fpsSumme += 1000 / ms; fpsN++;
+      if (dynZeit > 2000) { const fps = fpsSumme / fpsN, sk = engine.getHardwareScalingLevel(); dynZeit = fpsSumme = fpsN = 0;
+        if (fps < 28 && sk < basisSkala * 1.8) engine.setHardwareScalingLevel(Math.min(basisSkala * 1.8, sk * 1.15)); else if (fps > 50 && sk > basisSkala) engine.setHardwareScalingLevel(Math.max(basisSkala, sk / 1.1)); } });
     engine.runRenderLoop(() => szene.render());
     const groesse = () => engine.resize(); window.addEventListener('resize', groesse);
 
@@ -646,7 +698,7 @@
       vektor: V, farbe,
     };
     /* ---------- Module (Fahrzeuge, Stadt, Menschen, KI, Wetter …) ---------- */
-    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, bus, audioKontext: () => audioKontext(), eigene, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
+    ctx = { BAB, V, klemme, winkel, zufall, rauschen, szene, engine, kamera, sonne, hell, schatten, BK, material, hoehe, strahl, ton, bus, audioKontext: () => audioKontext(), eigene, wackeln, tasten, maus, touch, hud, setzeText, nachricht, meldung, opt, sd, schaden, figur, haus, kiste, tastenHandler, bewege, SCHWERKRAFT, spielerPos, gelaendeGroesse: () => (gel ? gel.groesse : 640), audio: audioKontext, treppen: [], sperren: [], baumPunkte: [],
       get spieler() { return spieler; }, bots, kisten, get zeit() { return zeit; }, get vorbei() { return vorbei; }, uebernahme: null, beiSchuss: [], botZiel: null, navi: null, aufraeumen: [] };
     (window.SDModule || []).forEach(m => { try { const r = m(ctx) || {}; Object.defineProperties(sd, Object.getOwnPropertyDescriptors(r.api || {})); if (r.update) modulUpdates.push(r.update); } catch (e) { console.error('Modul-Fehler', e); } });
     const aufraeumen = () => {
