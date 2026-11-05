@@ -99,9 +99,11 @@
     const kamera = new BAB.UniversalCamera('kamera', V(0, 10, -10), szene); kamera.minZ = 0.1; kamera.maxZ = 3000; kamera.fov = 1.0; kamera.inputs.clear();
     const hell = new BAB.HemisphericLight('himmelLicht', V(0.2, 1, 0.1), szene); hell.intensity = 0.55; hell.groundColor = new BAB.Color3(0.35, 0.33, 0.3);
     const sonne = new BAB.DirectionalLight('sonne', V(-0.45, -1, 0.35).normalize(), szene); sonne.intensity = 2.6; sonne.position = V(200, 400, -150);
-    const SCH = { niedrig: [1024, 2], mittel: [2048, 3], hoch: [4096, 4] }[qualitaet] || [2048, 3];
-    const schatten = new BAB.CascadedShadowGenerator(SCH[0], sonne); schatten.numCascades = SCH[1]; schatten.lambda = 0.85; schatten.shadowMaxZ = 260; schatten.stabilizeCascades = true;
+    const SCH = { niedrig: [1024, 2], mittel: [2048, 2], hoch: [4096, 3] }[qualitaet] || [2048, 2];
+    const schatten = new BAB.CascadedShadowGenerator(SCH[0], sonne); schatten.numCascades = SCH[1]; schatten.lambda = 0.85; schatten.shadowMaxZ = { niedrig: 90, mittel: 160, hoch: 260 }[qualitaet] || 160; schatten.stabilizeCascades = true;
     schatten.usePercentageCloserFiltering = true; schatten.filteringQuality = qualitaet === 'hoch' ? BAB.ShadowGenerator.QUALITY_HIGH : BAB.ShadowGenerator.QUALITY_MEDIUM; schatten.bias = 0.004; schatten.normalBias = 0.02;
+    // Kleinteile (Felgen, Speichen, Lämpchen …) werfen keine Schatten – spart viele Zeichenaufrufe, sieht man kaum
+    { const add = schatten.addShadowCaster.bind(schatten); schatten.addShadowCaster = (m, mitKindern) => { try { if (!mitKindern && m.getBoundingInfo && m.getTotalVertices && m.getTotalVertices() > 0) { const bi = m.getBoundingInfo(), g = bi.maximum.subtract(bi.minimum), sk = m.scaling ? Math.max(Math.abs(m.scaling.x), Math.abs(m.scaling.y), Math.abs(m.scaling.z)) : 1; if (g.length() * sk < 0.55) return schatten; } } catch (e) { /* egal */ } return add(m, mitKindern); }; }
     const BK = window.SDBaukasten ? window.SDBaukasten.erstellen(BAB, szene) : null;
     const EIGENE = {}; if (window.SDAssets) { try { (await window.SDAssets.alle()).forEach(a => { EIGENE[a.name] = a; }); } catch (e) { /* kein Speicher (privates Fenster) */ } }
     (window.SD_EIGENE_EXTRA || []).forEach(a => { EIGENE[a.name] = a; });   // veröffentlichte Spiele bringen ihre Dateien mit
