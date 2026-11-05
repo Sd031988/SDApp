@@ -5,6 +5,10 @@ on:
       - 'studio/game-studio/engine/spiele/nordhafen.js'
       - 'studio/game-studio/engine/szenen/nordhafen.json'
       - 'studio/game-studio/engine/nordhafen.test.cjs'
+      - 'studio/game-studio/engine/sd-taktik-bewegung.js'
+      - 'studio/game-studio/engine/sd-taktik-bewegung.test.cjs'
+      - 'studio/game-studio/engine/sd-engine.js'
+      - 'studio/game-studio/engine/index.html'
       - 'studio/game-studio/engine/sd-bauplan-pakete.js'
       - 'studio/game-studio/engine/sd-szene.js'
       - '.github/workflows/nordhafen-test.yml'
@@ -21,4 +25,4 @@ jobs:
         with:
           node-version: '22'
       - name: Nordhafen Editor-Map und Spielskript testen
-        run: node --test studio/game-studio/engine/nordhafen.test.cjs
+        run: node --test studio/game-studio/engine/nordhafen.test.cjs studio/game-studio/engine/sd-taktik-bewegung.test.cjs
