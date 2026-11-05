@@ -21,6 +21,10 @@ async function run({iterations = 1000, warmup = 100, cells = 16} = {}) {
     if (!Number.isSafeInteger(value) || value < (key === 'warmup' ? 0 : 1))
       throw new RangeError(key + ' must be a nonnegative safe integer (positive except warmup)');
   }
+  // Bound allocations and async operations before creating a scene or measuring.
+  // This is a synthetic microbenchmark, not an unlimited load generator.
+  if (iterations > 100000 || (iterations + warmup) * cells > 1000000)
+    throw new RangeError('benchmark exceeds sample or cell-operation budget');
   const counts = {imports: 0, disposals: 0};
   const Babylon = {SceneLoader: {async ImportMeshAsync() {
     counts.imports++;
