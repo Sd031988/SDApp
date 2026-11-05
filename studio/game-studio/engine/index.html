@@ -122,7 +122,7 @@ body.handy .unten{bottom:180px}
 
 <div class="ov" id="mp" hidden><div class="karte" style="width:min(500px,100%)"><h2 style="margin:0 0 6px">👥 Mehrspieler</h2>
   <p style="margin:0 0 12px;color:#cfd8e2;line-height:1.55">Bis zu 8 Spieler in einem Raum. Einer erstellt den Raum und gibt den <b>5-stelligen Code</b> weiter, die anderen treten bei. Gespielt wird <b id="mpSpiel">Inselsturm</b> gegeneinander (ohne Computer-Gegner).</p>
-  <div class="knoepfe"><button class="los" id="mpNeu">Raum erstellen</button></div>
+  <div class="knoepfe"><button class="los" id="mpNeu">Raum erstellen</button><select id="mpModus"><option value="frei">Jeder gegen jeden</option><option value="team">Team: Rot gegen Blau</option></select></div>
   <div style="display:flex;gap:8px;margin-top:6px"><input id="mpCode" maxlength="5" placeholder="CODE" style="flex:1;font:700 20px monospace;letter-spacing:.25em;text-transform:uppercase;background:#18212d;color:#fff;border:1px solid var(--rand);border-radius:8px;padding:8px 12px"><button id="mpRein">Beitreten</button></div>
   <p id="mpText" class="ehrlich" style="min-height:1.5em"></p>
   <p class="ehrlich">Kein Chat, keine Namen (ihr heißt Spieler 1–8), nichts wird gespeichert. Der Server schläft, wenn niemand spielt – das erste Verbinden kann bis zu einer Minute dauern. Tab = Punkte.</p>
@@ -166,13 +166,13 @@ body.handy .unten{bottom:180px}
 <script src="./sd-ki.js?v=3"></script>
 <script src="./sd-wetter.js?v=2"></script>
 <script src="./sd-grafik.js?v=1"></script>
-<script src="./sd-netz.js?v=2"></script>
+<script src="./sd-netz.js?v=3"></script>
 <script src="./sd-spiel.js?v=3"></script>
 <script src="./sd-polizei.js?v=1"></script>
 <script src="./sd-klang.js?v=1"></script>
 <script src="./sd-szene.js?v=2"></script>
 <script src="./sd-veroeffentlichen.js?v=3"></script>
-<script src="./sd-engine.js?v=11"></script>
+<script src="./sd-engine.js?v=12"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -240,7 +240,7 @@ $('mpZu').onclick = () => { $('mp').hidden = true; };
 $('mpNeu').onclick = async () => { let szene = null;
   if (SPIEL === 'eigen') { try { szene = JSON.parse(lies('sdSzene.aktuell') || 'null'); } catch (e) { szene = null; } if (!szene || !szene.welt) { $('mpText').textContent = 'Erst im Szenen-Editor (✏) eine Szene bauen.'; return; }
     const vorher = (szene.objekte || []).length; szene = SDSzene.pruefen(szene, { ohneEigene: true }); const weg = vorher - szene.objekte.length; if (weg > 0) $('mpText').textContent = 'ℹ ' + weg + ' Objekt(e) bleiben im Mehrspieler weg (eigene Modelle, Foto-Häuser oder ungültige Einträge).'; }
-  $('mpText').textContent += ' ⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL, szene: szene || undefined })); };
+  $('mpText').textContent += ' ⏳ Raum wird erstellt …'; mpStarten(await netzRufen('/hub/spiel/erstellen', { spiel: SPIEL, szene: szene || undefined, modus: $('mpModus').value })); };
 $('mpRein').onclick = async () => { const c = $('mpCode').value.trim().toUpperCase(); if (c.length !== 5) { $('mpText').textContent = 'Bitte den 5-stelligen Code eingeben'; return; } $('mpText').textContent = '⏳ Trete bei …'; mpStarten(await netzRufen('/hub/spiel/beitreten', { code: c })); };
 const gemerkterSchluessel = () => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } };
 $('pubAuf').onclick = () => { const d = SPIELE[SPIEL]; $('pub').hidden = false; $('pubSpiel').textContent = d.titel; $('pubTitel').value = d.titel.charAt(0) + d.titel.slice(1).toLowerCase(); $('pubText').value = d.text.slice(0, 200);
