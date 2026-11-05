@@ -14,7 +14,7 @@
   async function dateien(o) {
     const quelle = await (await fetch('./index.html', { cache: 'no-cache' })).text();
     const css = (quelle.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1], hud = quelle.split('<!--SD-HUD-START-->')[1].split('<!--SD-HUD-ENDE-->')[0], touch = quelle.split('/*SD-TOUCH-START*/')[1].split('/*SD-TOUCH-ENDE*/')[0];
-    const libs = [...quelle.matchAll(/<script src="(https:\/\/cdn\.jsdelivr\.net\/npm\/[^"]+)"><\/script>/g)].map(m => m[1]), module = [...quelle.matchAll(/<script src="\.\/(sd-[\w-]+\.js(?:\?v=\d+)?)"><\/script>/g)].map(m => BASIS + m[1]).filter(u => !/veroeffentlichen/.test(u));
+    const libs = [...quelle.matchAll(/<script src="(https:\/\/cdn\.jsdelivr\.net\/npm\/[^"]+)"><\/script>/g)].map(m => m[1]), module = [...quelle.matchAll(/<script src="\.\/(sd-[\w-]+\.js(?:\?v=\d+)?)"><\/script>/g)].map(m => BASIS + m[1]).filter(u => !/veroeffentlichen|lobby/.test(u));
     const havok = (quelle.match(/const HAVOK_WASM = '([^']+)'/) || [, 'https://cdn.jsdelivr.net/npm/@babylonjs/havok@1.3.14/lib/umd/HavokPhysics.wasm'])[1];
     const out = { 'spiel.sd.js': o.code }, liste = []; let fehlend = [];
     for (const name of eigeneNamen(o.code)) {

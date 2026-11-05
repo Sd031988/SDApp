@@ -17,7 +17,7 @@
     const H = o.hoehe || 300, tempo = o.tempo || 55, dir = V(nach[0] - von[0], 0, nach[1] - von[1]), L = dir.length(); dir.normalize();
     const FB = window.SDFahrzeug && window.SDFahrzeug.bauer(BAB, szene, ctx.BK); let flieger = null;
     if (FB) { const g = FB.auto({ typ: 'flugzeug', farbe: '#8a9098' }); flieger = new BAB.TransformNode('absprungFlieger', szene); g.wurzel.parent = flieger; g.wurzel.scaling.setAll(2.6); g.wurzel.position.y = -2; flieger.rotation.y = Math.atan2(dir.x, dir.z); }
-    const schirm = BAB.MeshBuilder.CreateSphere('fallschirm', { diameter: 5.5, slice: 0.45, segments: 16, sideOrientation: BAB.Mesh.DOUBLESIDE }, szene); const sm = new BAB.StandardMaterial('schirmMat', szene); sm.diffuseColor = BAB.Color3.FromHexString(o.schirmFarbe || '#d8402a'); sm.backFaceCulling = false; sm.twoSidedLighting = true; sm.emissiveColor = sm.diffuseColor.scale(0.45); schirm.material = sm; schirm.isPickable = false; schirm.setEnabled(false); schirm.scaling.y = 0.55;
+    const schirm = BAB.MeshBuilder.CreateSphere('fallschirm', { diameter: 5.5, slice: 0.45, segments: 16, sideOrientation: BAB.Mesh.DOUBLESIDE }, szene); const sm = new BAB.StandardMaterial('schirmMat', szene); sm.diffuseColor = BAB.Color3.FromHexString(o.schirmFarbe || (ctx.opt.kosmetik && ctx.opt.kosmetik.schirmFarbe) || '#d8402a'); sm.backFaceCulling = false; sm.twoSidedLighting = true; sm.emissiveColor = sm.diffuseColor.scale(0.45); schirm.material = sm; schirm.isPickable = false; schirm.setEnabled(false); schirm.scaling.y = 0.55;
     ctx.schatten.addShadowCaster(schirm);
     flug = { phase: 'flugzeug', t: 0, von, dir, L, H, tempo, flieger, schirm, pos: V(von[0], H, von[1]), v: V(0, 0, 0), gier: Math.atan2(dir.x, dir.z) };
     const tasteSprung = () => { if (!flug) return; if (flug.phase === 'flugzeug') { flug.phase = 'fall'; flug.v = dir.scale(tempo * 0.5); sp.k.setEnabled(true); ctx.ton('klick', 0.8); ctx.nachricht('🪂 Freier Fall – W/A/S/D steuern · Leertaste = Fallschirm öffnen', 4); }
@@ -62,7 +62,7 @@
     let n = 0; for (const h of (ctx.haeuser || [])) { if (n >= o.beute) break; const p = h.tuerInnen, q = h.mitte; const x = p.x + (q.x - p.x) * 0.6, z = p.z + (q.z - p.z) * 0.6; sd.kiste({ pos: [x, p.y + 0.15, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     while (n < o.beute) { const [x, z] = zufallsLand(r); sd.kiste({ pos: [x, null, z], inhalt: sorten[Math.floor(r() * sorten.length)] }); n++; }
     // Zone um einen Punkt an Land
-    const mitte = zufallsLand(r), Z = Object.assign({ mitte, radius: G() * 0.72, endRadius: Math.max(20, G() * 0.04), warte: o.absprung ? 70 : 40, dauer: Math.round(G() * 0.45), schaden: 5 }, o.zone || {}); sd.zone(Z);
+    const mitte = zufallsLand(r), Z0 = Object.assign({ mitte, radius: G() * 0.72, endRadius: Math.max(20, G() * 0.04), warte: o.absprung ? 70 : 40, dauer: Math.round(G() * 0.45), schaden: 5 }, o.zone || {}), Z = sd.zone(Z0); abwurfZone = Z; naechsterAbwurf = (o.absprung ? 140 : 90) + (ctx.zeit || 0); abwurfAn = o.abwurf !== false;
     // Gegner überall an Land verteilt
     const neueBots = []; if (!ctx.mehrspieler) for (let i = 0; i < o.gegner; i++) { const [x, z] = zufallsLand(r); neueBots.push(sd.gegner({ pos: [x, null, z], staerke: 0.25 + r() * 0.55, aussehen: o.aussehen, waffe: ['gewehr', 'pistole', 'schrotflinte', 'gewehr'][i % 4], name: 'Gegner ' + (i + 1) })); }
     if (!ctx.spieler) { const [x, z] = zufallsLand(r); sd.spieler({ pos: [x, null, z], waffen: ['pistole'], aussehen: o.aussehen }); }
@@ -86,5 +86,17 @@
       else { const h = d > 1 ? zu.scale(Math.min(8, d) / d) : V(0, 0, 0); s.v.x += (h.x - s.v.x) * dt * 1.5; s.v.z += (h.z - s.v.z) * dt * 1.5; s.v.y += (-5 - s.v.y) * dt * 2.5; }
       s.pos.addInPlace(s.v.scale(dt)); b.k.position = s.pos.add(V(0, -0.9, 0)); if (d > 1) b.k.rotation.y = Math.atan2(zu.x, zu.z); if (s.schirm) s.schirm.position = s.pos.add(V(0, 3.6, 0)); b.cc.setPosition(s.pos.clone());
       if (ueber < 1.2) { b.cc.setPosition(V(s.pos.x, ctx.hoehe(s.pos.x, s.pos.z) + 1.2, s.pos.z)); b.cc.setVelocity(V(0, 0, 0)); b.inLuft = false; if (s.schirm) s.schirm.dispose(); springer.splice(i, 1); } } }
-  return { api: { battleRoyale, absprung, get imFlug() { return flug ? flug.phase : null; }, get springerInDerLuft() { return springer.length; } }, update: springerUpdate };
+  /* 📦 Versorgungsabwurf: ein Flugzeug wirft alle ~2 Minuten eine Kiste mit bester Beute über der Zone ab (roter Rauch, Kartenmarker) */
+  let abwurfZone = null, naechsterAbwurf = 1e9, abwurfAn = false; const abwuerfe = [];
+  function abwurf() { const z = abwurfZone; if (!z) return; const w = Math.random() * 6.28, d = Math.random() * z.radius * 0.7, x = z.mitte[0] + Math.cos(w) * d, zz = z.mitte[1] + Math.sin(w) * d; if (!land(x, zz)) return;
+    const k = BAB.MeshBuilder.CreateBox('abwurfKiste', { width: 1.2, height: 0.9, depth: 1.2 }, szene), m = new BAB.StandardMaterial('abwurfMat', szene); m.diffuseColor = BAB.Color3.FromHexString('#c83a2a'); k.material = m; k.position = V(x, 250, zz); ctx.schatten.addShadowCaster(k);
+    const sch = BAB.MeshBuilder.CreateSphere('abwurfSchirm', { diameter: 4, slice: 0.45, segments: 12, sideOrientation: BAB.Mesh.DOUBLESIDE }, szene), sm = new BAB.StandardMaterial('abwurfSchirmMat', szene); sm.diffuseColor = BAB.Color3.FromHexString('#2a6ad8'); sm.emissiveColor = sm.diffuseColor.scale(0.4); sm.backFaceCulling = false; sch.material = sm; sch.scaling.y = 0.55; sch.parent = k; sch.position.y = 3.4;
+    const marker = { x, z: zz, farbe: '#ff3a2a' }; ctx.kartenMarker = ctx.kartenMarker || []; ctx.kartenMarker.push(marker); abwuerfe.push({ k, sch, marker, x, z: zz }); ctx.nachricht('📦 Versorgungsabwurf! Roter Punkt auf der Karte', 5); ctx.ton('alarm', 0.4); }
+  function abwurfUpdate(dt) { if (abwurfAn && ctx.zeit > naechsterAbwurf && !flug) { naechsterAbwurf = ctx.zeit + 110 + Math.random() * 40; abwurf(); }
+    for (let i = abwuerfe.length - 1; i >= 0; i--) { const a = abwuerfe[i], boden = ctx.hoehe(a.x, a.z); a.k.position.y -= dt * 6; a.k.rotation.y += dt * 0.3;
+      if (a.k.position.y <= boden + 0.45) { a.k.dispose(false, true); abwuerfe.splice(i, 1); ctx.sd.kiste({ pos: [a.x, boden, a.z], inhalt: 'abwurf' });
+        const ps = new BAB.ParticleSystem('rauch', 300, szene); ps.particleTexture = new BAB.Texture('data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><circle cx="16" cy="16" r="15" fill="white"/></svg>'), szene); ps.emitter = V(a.x, boden + 0.6, a.z);
+        ps.color1 = new BAB.Color4(0.9, 0.15, 0.1, 0.55); ps.color2 = new BAB.Color4(0.7, 0.1, 0.08, 0.4); ps.colorDead = new BAB.Color4(0.5, 0.1, 0.1, 0); ps.minSize = 1; ps.maxSize = 2.6; ps.minLifeTime = 4; ps.maxLifeTime = 7; ps.emitRate = 25; ps.direction1 = V(-0.4, 3, -0.4); ps.direction2 = V(0.4, 5, 0.4); ps.minEmitPower = 0.6; ps.maxEmitPower = 1.2; ps.gravity = V(0.3, 0.4, 0); ps.start();
+        setTimeout(() => { ps.stop(); setTimeout(() => ps.dispose(), 8000); }, 90000); const mk = a.marker; setTimeout(() => { ctx.kartenMarker = (ctx.kartenMarker || []).filter(q => q !== mk); }, 90000); } } }
+  return { api: { battleRoyale, absprung, versorgungsabwurf: abwurf, get imFlug() { return flug ? flug.phase : null; }, get springerInDerLuft() { return springer.length; } }, update: dt => { springerUpdate(dt); abwurfUpdate(dt); } };
 });

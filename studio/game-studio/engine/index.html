@@ -31,6 +31,7 @@ canvas#welt{position:fixed;inset:0;width:100%;height:100%;display:block;outline:
 .oben{position:absolute;top:14px;right:16px;display:flex;gap:8px}.pill{background:var(--glas);border:1px solid var(--rand);border-radius:6px;padding:6px 10px;font:600 13px system-ui;backdrop-filter:blur(6px)}
 .pill b{color:var(--akz)}
 #karte{position:absolute;top:14px;left:14px;width:150px;height:150px}
+#karte.gross{width:min(80vh,90vw)!important;height:min(80vh,90vw)!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%);z-index:4;opacity:.95}
 #zone{position:absolute;top:172px;left:14px;width:150px;text-align:center;font-size:12px}
 #fps{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font:11px monospace;color:var(--leise)}
 #nachricht{position:absolute;top:22%;left:50%;transform:translateX(-50%);background:var(--glas);border:1px solid var(--rand);padding:10px 18px;border-radius:8px;font:600 15px system-ui;max-width:86vw;text-align:center}
@@ -106,6 +107,7 @@ body.handy .unten{bottom:180px}
       <button class="los" id="spielen">▶ Spielen</button>
       <select id="qualitaet" title="Grafik-Qualität"><option value="niedrig">Grafik: Niedrig (schwache PCs, Handy)</option><option value="mittel" selected>Grafik: Mittel</option><option value="hoch">Grafik: Hoch (starke Grafikkarte)</option></select>
       <button id="mpAuf" title="Mit Freunden spielen (bis 8 Spieler)">👥 Mehrspieler</button>
+      <button id="lobbyAuf" title="Kisten öffnen, Kleidung und Fallschirm wählen">🎁 Kisten &amp; Garderobe</button>
       <button id="einstAuf" title="Maus, Ton, Sichtfeld">⚙ Einstellungen</button>
       <button id="pubAuf" title="Dein Spiel als eigene Webseite online stellen">🌐 Veröffentlichen</button>
       <button id="editorAuf">{ } Skript bearbeiten</button>
@@ -121,7 +123,9 @@ body.handy .unten{bottom:180px}
   </div>
 </div>
 
-<div class="ov" id="einst" hidden style="z-index:7"><div class="karte" style="width:min(460px,100%)"><h2 style="margin:0 0 10px">⚙ Einstellungen</h2>
+<div class="ov" id="lobby" hidden style="z-index:7"><div class="karte" style="width:min(620px,100%)"><h2 style="margin:0 0 6px">🎁 Kisten &amp; Garderobe <small id="lobbyLeiste" style="font-size:14px;color:#ffb547;margin-left:8px"></small></h2>
+  <div id="lobbyInhalt"></div><div class="knoepfe" style="justify-content:flex-end"><button class="los" id="lobbyZu">Fertig</button></div></div></div>
+<div class="ov" id="einst" hidden style="z-index:7"><div class="karte" style="width:min(560px,100%)"><h2 style="margin:0 0 10px">⚙ Einstellungen</h2>
   <div id="einstFelder" style="display:grid;gap:10px"></div>
   <p class="ehrlich">Wird in diesem Browser gespeichert und gilt sofort, auch mitten im Spiel.</p>
   <div class="knoepfe" style="justify-content:flex-end"><button id="einstStd">Standard</button><button class="los" id="einstZu">Fertig</button></div></div></div>
@@ -175,11 +179,12 @@ body.handy .unten{bottom:180px}
 <script src="./sd-spiel.js?v=3"></script>
 <script src="./sd-polizei.js?v=4"></script>
 <script src="./sd-story.js?v=1"></script>
-<script src="./sd-battleroyale.js?v=2"></script>
+<script src="./sd-battleroyale.js?v=3"></script>
 <script src="./sd-klang.js?v=1"></script>
 <script src="./sd-szene.js?v=4"></script>
-<script src="./sd-veroeffentlichen.js?v=3"></script>
-<script src="./sd-engine.js?v=17"></script>
+<script src="./sd-veroeffentlichen.js?v=4"></script>
+<script src="./sd-lobby.js?v=1"></script>
+<script src="./sd-engine.js?v=19"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -217,29 +222,52 @@ async function spielStarten(extra) {
   if (!window.BABYLON || !window.HavokPhysics) { $('ladenText').textContent = '⨯ Grafik-Engine nicht geladen – bitte Internetverbindung prüfen und Seite neu laden.'; return; }
   const q = $('qualitaet').value; schreib('sdEngineQualitaet', q);
   try {
-    laeuft = await SDEngine.starten($('welt'), code, { einstellungen: EINST, netz: extra && extra.netz, qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
+    laeuft = await SDEngine.starten($('welt'), code, { einstellungen: EINST, beiEinstellung: einstSpeichern, kosmetik: window.SDLobby ? SDLobby.kosmetik() : {}, netz: extra && extra.netz, qualitaet: q, havokWasm: HAVOK_WASM, hud: hudEl, keinPointerLock: handy || /[?&]test/.test(location.search), screenshot: /[?&]test/.test(location.search),
       pause: () => pausiert && !extra, beiFehler: e => { zeigeFehler(e); $('editor').hidden = false; },
       beiSperre: an => { if (!an && laeuft && $('ende').hidden && !handy && !/[?&]test/.test(location.search) && $('editor').hidden) { pausiert = true; $('pause').hidden = false; } if (an) { pausiert = false; $('pause').hidden = true; } },
-      beiEnde: r => { $('ende').hidden = false; $('endeTitel').textContent = r.sieg ? '🏆 SIEG' : 'AUSGESCHIEDEN'; $('endeText').textContent = r.text + ' · ' + r.kills + ' Gegner ausgeschaltet · ' + Math.floor(r.zeit / 60) + ':' + String(r.zeit % 60).padStart(2, '0') + ' min'; } });
+      beiEnde: r => { $('ende').hidden = false; let platz = 1, alle = 1; try { const b = laeuft.ctx.bots.filter(x => !x.nebenfigur); alle = b.length + 1; platz = r.sieg ? 1 : b.filter(x => !x.tot).length + 1; } catch (e) { /* egal */ }
+        const lohn = window.SDLobby ? SDLobby.rundeVorbei({ kills: r.kills, sieg: r.sieg, zeit: r.zeit, platz }) : null;
+        $('endeTitel').textContent = r.sieg ? '🏆 SIEGER – Mahlzeit!' : (alle > 2 ? '#' + platz + ' von ' + alle : 'AUSGESCHIEDEN'); $('endeText').textContent = r.text + ' · ' + r.kills + ' Gegner ausgeschaltet · ' + Math.floor(r.zeit / 60) + ':' + String(r.zeit % 60).padStart(2, '0') + ' min' + (lohn ? ' · 💠 +' + lohn.bp + ' BP' + (lohn.level ? ' · ⭐ Level ' + lohn.level + '!' : '') : ''); } });
     window.SD_SPIEL = laeuft; $('hud').hidden = false; pausiert = false; $('welt').focus();
   } catch (e) { zeigeFehler(e); $('editor').hidden = false; }
   $('laden').hidden = true;
 }
 let letzteNetz = null;
 /* ⚙ Einstellungen (live: die Engine liest das Objekt jedes Bild) */
-const EINST_STD = { maus: 1, invertY: false, sicht: 57, musik: 0.6, effekte: 1, pad: 1 };
-const EINST = Object.assign({}, EINST_STD, (() => { try { return JSON.parse(lies('sdEngineEinstellungen') || '{}'); } catch (e) { return {}; } })());
-const EINST_FELDER = [['maus', 'Maus-Empfindlichkeit', 0.2, 3, 0.05], ['pad', 'Controller-/Touch-Empfindlichkeit', 0.3, 3, 0.05], ['sicht', 'Sichtfeld (Grad)', 55, 100, 1], ['musik', 'Musik', 0, 1, 0.05], ['effekte', 'Effekte', 0, 1, 0.05], ['invertY', 'Maus-Y umkehren']];
+const EINST_STD = { maus: 1, ziel: 0.8, pad: 1, invertY: false, ansicht: 'tpp', sicht: 57, sichtweite: 1, schatten: true, fpsZeigen: true, gesamt: 1, musik: 0.6, effekte: 1, kreuzFarbe: '#ffffff', kreuzGroesse: 10, kreuzPunkt: true, tasten: {} };
+const EINST = Object.assign({}, EINST_STD, (() => { try { return JSON.parse(lies('sdEngineEinstellungen') || '{}'); } catch (e) { return {}; } })()); EINST.tasten = Object.assign({}, EINST.tasten);
+const AKTION_NAMEN = { vor: ['Vorwärts', 'W'], zurueck: ['Rückwärts', 'S'], links: ['Links', 'A'], rechts: ['Rechts', 'D'], springen: ['Springen', 'Space'], sprinten: ['Sprinten', 'ShiftLeft'], ducken: ['Ducken', 'C'], nachladen: ['Nachladen', 'R'], benutzen: ['Benutzen / Kiste', 'E'], fahrzeug: ['Einsteigen / Abspringen', 'F'], granate: ['Granate', 'G'], nahkampf: ['Nahkampf', 'V'], medikit: ['Medikit', 'H'], missionen: ['Missionen', 'J'], ansicht: ['Ansicht 1./3. Person', 'K'], karte: ['Große Karte', 'M'], waffe1: ['Waffe 1', '1'], waffe2: ['Waffe 2', '2'], waffe3: ['Waffe 3', '3'] };
+const EINST_TABS = {
+  '🖥 Grafik': [['sicht', 'Sichtfeld (Grad)', 55, 100, 1], ['sichtweite', 'Sichtweite', 0.4, 1.6, 0.05], ['schatten', 'Schatten'], ['fpsZeigen', 'FPS anzeigen']],
+  '🎮 Steuerung': [['maus', 'Maus-Empfindlichkeit', 0.2, 3, 0.05], ['ziel', 'Empfindlichkeit beim Zielen', 0.2, 2, 0.05], ['pad', 'Controller-/Touch-Empfindlichkeit', 0.3, 3, 0.05], ['invertY', 'Maus-Y umkehren'], ['ansicht', 'Ansicht', ['tpp', '3. Person (TPP)'], ['fpp', '1. Person (FPP)']]],
+  '⌨ Tasten': 'tasten',
+  '🔊 Ton': [['gesamt', 'Gesamt', 0, 1, 0.05], ['musik', 'Musik', 0, 1, 0.05], ['effekte', 'Effekte', 0, 1, 0.05]],
+  '✚ Fadenkreuz': [['kreuzFarbe', 'Farbe', 'farbe'], ['kreuzGroesse', 'Abstand', 3, 24, 1], ['kreuzPunkt', 'Punkt in der Mitte']],
+};
+let einstTab = '🖥 Grafik', wartetAufTaste = null;
+function kreuzAnwenden() { const k = $('fadenkreuz'); if (!k) return; k.style.setProperty('--s', EINST.kreuzGroesse + 'px'); k.querySelectorAll('i,b').forEach(e => { e.style.background = EINST.kreuzFarbe; }); const b = k.querySelector('b'); if (b) b.style.display = EINST.kreuzPunkt ? '' : 'none'; }
+const tasteText = c => c === 'Space' ? 'Leertaste' : c === 'ShiftLeft' ? 'Shift links' : c === 'ControlLeft' ? 'Strg links' : c;
 function einstZeigen() { const box = $('einstFelder'); box.innerHTML = '';
-  for (const [k, n, a, b, st] of EINST_FELDER) { const l = document.createElement('label');
+  const tabs = document.createElement('div'); tabs.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap'; for (const t of Object.keys(EINST_TABS)) { const b = document.createElement('button'); b.textContent = t; if (t === einstTab) b.className = 'los'; b.onclick = () => { einstTab = t; einstZeigen(); }; tabs.appendChild(b); } box.appendChild(tabs);
+  const def = EINST_TABS[einstTab];
+  if (def === 'tasten') { const g = document.createElement('div'); g.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:5px 10px;max-height:46vh;overflow:auto';
+    for (const [a, [n, std]] of Object.entries(AKTION_NAMEN)) { const l = document.createElement('span'); l.textContent = n; const b = document.createElement('button'); b.textContent = wartetAufTaste === a ? '… Taste drücken' : tasteText(EINST.tasten[a] || std); b.onclick = () => { wartetAufTaste = a; einstZeigen(); }; g.append(l, b); }
+    box.appendChild(g); const h = document.createElement('p'); h.className = 'ehrlich'; h.textContent = 'Klick auf eine Taste, dann die neue Taste drücken (Esc = abbrechen). Controller-Belegung bleibt fest.'; box.appendChild(h); return; }
+  for (const [k, n, a, b, st] of def) { const l = document.createElement('label');
     if (a == null) { l.innerHTML = '<input type="checkbox"> ' + n; const i = l.querySelector('input'); i.checked = !!EINST[k]; i.onchange = () => { EINST[k] = i.checked; einstSpeichern(); }; }
+    else if (a === 'farbe') { l.innerHTML = n + '<br><input type="color">'; const i = l.querySelector('input'); i.value = EINST[k]; i.oninput = () => { EINST[k] = i.value; einstSpeichern(); }; }
+    else if (Array.isArray(a)) { l.innerHTML = n + '<br><select style="width:100%"></select>'; const sel = l.querySelector('select'); for (const [v, t] of [a, b]) sel.add(new Option(t, v, false, EINST[k] === v)); sel.onchange = () => { EINST[k] = sel.value; einstSpeichern(); }; }
     else { l.innerHTML = n + ' <b></b><br><input type="range" style="width:100%">'; const i = l.querySelector('input'), w = l.querySelector('b'); i.min = a; i.max = b; i.step = st; i.value = EINST[k]; w.textContent = EINST[k]; i.oninput = () => { EINST[k] = +i.value; w.textContent = i.value; einstSpeichern(); }; }
     box.appendChild(l); } }
-function einstSpeichern() { try { localStorage.setItem('sdEngineEinstellungen', JSON.stringify(EINST)); } catch (e) { /* egal */ } }
+document.addEventListener('keydown', e => { if (!wartetAufTaste) return; e.preventDefault(); e.stopImmediatePropagation(); if (e.code !== 'Escape') { const k = e.code.replace(/^Key/, '').replace(/^Digit/, ''); for (const [a] of Object.entries(EINST.tasten)) if (EINST.tasten[a] === k) delete EINST.tasten[a]; EINST.tasten[wartetAufTaste] = k; einstSpeichern(); } wartetAufTaste = null; einstZeigen(); }, true);
+function einstSpeichern() { kreuzAnwenden(); try { localStorage.setItem('sdEngineEinstellungen', JSON.stringify(EINST)); } catch (e) { /* egal */ } }
+kreuzAnwenden();
+$('lobbyAuf').onclick = () => { SDLobby.dialog(); SDLobby.anzeigen(); $('lobby').hidden = false; };
+$('lobbyZu').onclick = () => { $('lobby').hidden = true; };
 $('einstAuf').onclick = () => { einstZeigen(); $('einst').hidden = false; };
 $('einstZu').onclick = () => { $('einst').hidden = true; };
 $('einstPause').onclick = () => { einstZeigen(); $('einst').hidden = false; };
-$('einstStd').onclick = () => { Object.assign(EINST, EINST_STD); einstSpeichern(); einstZeigen(); };
+$('einstStd').onclick = () => { Object.assign(EINST, EINST_STD, { tasten: {} }); einstSpeichern(); einstZeigen(); };
 const NETZ = lies('sdNetzServer') || 'https://sd-maschinen-kenner.onrender.com';
 async function netzRufen(pfad, daten) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 90000), w = setTimeout(() => { $('mpText').textContent = '⏳ Der Server wacht gerade auf (bis zu einer Minute) …'; }, 5000);

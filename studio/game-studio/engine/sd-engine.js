@@ -440,8 +440,13 @@
     const tasten = {}; let maus = { dx: 0, dy: 0, links: false, rechts: false }, gesperrt = false;
     const tastenNamen = e => (e.code || '').replace(/^Key/, '').replace(/^Digit/, '');
     const tastenHandler = { Space: [() => { if (spieler) spieler.sprungPuffer = 0.25; }] };
-    const kd = e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; const k = tastenNamen(e); tasten[k] = true; (tastenHandler[k] || []).forEach(f => f()); if (['Space', 'Tab'].includes(k) && gesperrt) e.preventDefault(); };
-    const ku = e => { tasten[tastenNamen(e)] = false; };
+    /* Tastenbelegung: Aktion -> Taste (Einstellungen). Gedrückt wird die Taste, ausgelöst wird der Standard-Code der Aktion */
+    const AKTIONEN = { vor: 'W', zurueck: 'S', links: 'A', rechts: 'D', springen: 'Space', sprinten: 'ShiftLeft', ducken: 'C', nachladen: 'R', benutzen: 'E', fahrzeug: 'F', granate: 'G', nahkampf: 'V', medikit: 'H', missionen: 'J', ansicht: 'K', karte: 'M', waffe1: '1', waffe2: '2', waffe3: '3' };
+    function virtuell(k) { const b = (opt.einstellungen && opt.einstellungen.tasten) || {}; const v = []; let belegt = false;
+      for (const [a, std] of Object.entries(AKTIONEN)) { const t = b[a] || std; if (t === k) v.push(std); if (std === k) belegt = true; }
+      return v.length ? v : belegt ? [] : [k]; }
+    const kd = e => { if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return; const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) { tasten[k] = true; (tastenHandler[k] || []).forEach(f => f()); } const k = roh; if (['Space', 'Tab'].includes(k) && gesperrt) e.preventDefault(); };
+    const ku = e => { const roh = tastenNamen(e); for (const k of (e.sdController ? [roh] : virtuell(roh))) tasten[k] = false; };
     const mm = e => { if (gesperrt) { maus.dx += e.movementX || 0; maus.dy += e.movementY || 0; } };
     const md = e => { if (e.target !== canvas) return; if (!gesperrt && !opt.keinPointerLock) { canvas.requestPointerLock && canvas.requestPointerLock(); } if (e.button === 0) { maus.links = true; maus.klick = true; } if (e.button === 2) maus.rechts = true; };
     const mu = e => { if (e.button === 0) maus.links = false; if (e.button === 2) maus.rechts = false; };
@@ -482,7 +487,8 @@
     function spielerErstellen(o) {
       o = o || {}; const start = V(o.pos[0], o.pos[1] ?? hoehe(o.pos[0], o.pos[2]) + 1.2, o.pos[2]);
       const cc = new BAB.PhysicsCharacterController(start, { capsuleHeight: 1.8, capsuleRadius: 0.38 }, szene); cc.maxSlopeCosine = Math.cos(50 * Math.PI / 180);
-      const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: o.roboter, modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung });
+      const kos = opt.kosmetik || {}; const k = figur({ besitzer: 'spieler', farbe: o.farbe || '#3f5a6b', weste: '#2c2f33', helm: '#2b3940', aussehen: o.aussehen, roboter: Object.assign({}, o.roboter, kos.roboter), mensch: Object.assign({}, o.mensch, kos.mensch), modell: o.modell, hoehe: o.hoehe, drehung: o.modellDrehung });
+      if (kos.waffenFarbe && k.waffe) { const mat = new BAB.PBRMaterial('waffenSkin', szene); mat.albedoColor = BAB.Color3.FromHexString(kos.waffenFarbe); mat.metallic = 0.6; mat.roughness = 0.35; [k.waffe].concat(k.waffe.getChildMeshes ? k.waffe.getChildMeshes() : []).forEach(m => { if (m.material) m.material = mat; }); }
       k.getChildMeshes().forEach(m => { m.isPickable = false; });
       spieler = { cc, k, leben: o.leben || 100, maxLeben: o.leben || 100, ruestung: o.ruestung || 0, gier: o.blick || 0, nick: 0.1, zustand: { luft: 0 }, waffen: [], aktiv: 0, letzterSchuss: 0, laden: 0, kills: 0, schaden: 0, rueckstoss: 0, tempo: 0, abstand: 4.2 };
       (o.waffen || ['pistole']).forEach(w => waffeGeben(w)); waffeWechseln(0); return spieler;
@@ -496,6 +502,8 @@
     function waffeWechseln(i) { if (!spieler || !spieler.waffen[i]) return; spieler.aktiv = i; spieler.laden = 0; const w = spieler.waffen[i]; if (!spieler.k.glb) { spieler.k.waffe.scaling.z = w.def.laenge / 0.8; spieler.k.waffe.position.z = 0.1 + w.def.laenge / 2; } }
     ['1', '2', '3'].forEach((t, i) => (tastenHandler[t] = tastenHandler[t] || []).push(() => waffeWechseln(i)));
     (tastenHandler.R = tastenHandler.R || []).push(() => nachladen());
+    (tastenHandler.K = tastenHandler.K || []).push(() => { const E = opt.einstellungen; if (!E) return; E.ansicht = E.ansicht === 'fpp' ? 'tpp' : 'fpp'; nachricht(E.ansicht === 'fpp' ? '👁 Ich-Perspektive' : '🧍 Third-Person', 1.5); opt.beiEinstellung && opt.beiEinstellung(); });
+    (tastenHandler.M = tastenHandler.M || []).push(() => { if (hud.karte) hud.karte.classList.toggle('gross'); });
     function nachladen() { if (!spieler) return; const w = spieler.waffen[spieler.aktiv]; if (!w || spieler.laden > 0 || w.mag >= w.def.magazin || w.reserve <= 0) return; spieler.laden = w.def.nachladen; spieler.ladeDauer = w.def.nachladen; ton('nachladen'); }
     function schaden(ziel, menge, quelle) {
       if (vorbei) return;
@@ -614,7 +622,7 @@
     /* ---------- Kisten (Beute) ---------- */
     const INHALT = { munition: ['#c2a14a', '📦 Munition'], medikit: ['#d84a4a', '✚ Medikit +40'], ruestung: ['#4a7ad8', '🛡 Schutzweste +50'], 'waffe:gewehr': ['#8a6a3a', '🔫 Sturmgewehr'], 'waffe:schrotflinte': ['#8a6a3a', '🔫 Schrotflinte'], 'waffe:scharfschuetze': ['#8a6a3a', '🎯 Scharfschützengewehr'],
       'helm:1': ['#6a7a5a', '⛑ Helm Stufe 1'], 'helm:2': ['#5a6a7a', '⛑ Helm Stufe 2'], 'helm:3': ['#3a3a4a', '⛑ Helm Stufe 3'], 'weste:1': ['#4a7ad8', '🦺 Weste Stufe 1'], 'weste:2': ['#3a5ab8', '🦺 Weste Stufe 2'], 'weste:3': ['#2a3a88', '🦺 Weste Stufe 3'],
-      'rucksack:1': ['#8a7a4a', '🎒 Rucksack Stufe 1'], 'rucksack:2': ['#7a6a3a', '🎒 Rucksack Stufe 2'], 'rucksack:3': ['#5a4a2a', '🎒 Rucksack Stufe 3'], 'aufsatz:visier': ['#2a8a8a', '🔭 Zielfernrohr'], 'aufsatz:daempfer': ['#2a2a2a', '🔇 Schalldämpfer'], 'aufsatz:magazin': ['#8a4a2a', '🧰 Großes Magazin'] };
+      'rucksack:1': ['#8a7a4a', '🎒 Rucksack Stufe 1'], 'rucksack:2': ['#7a6a3a', '🎒 Rucksack Stufe 2'], 'rucksack:3': ['#5a4a2a', '🎒 Rucksack Stufe 3'], 'aufsatz:visier': ['#2a8a8a', '🔭 Zielfernrohr'], 'aufsatz:daempfer': ['#2a2a2a', '🔇 Schalldämpfer'], 'aufsatz:magazin': ['#8a4a2a', '🧰 Großes Magazin'], abwurf: ['#d83a2a', '📦 Versorgungsabwurf'] };
     /* Ausrüstung: Helm/Weste/Rucksack in Stufen, Aufsätze je Waffe */
     let ausruestungEl = null;
     function ausruestungZeigen() { if (!spieler) return; if (!ausruestungEl && hud.munition && hud.munition.parentNode) { ausruestungEl = document.createElement('div'); ausruestungEl.style.cssText = 'font:600 13px system-ui;opacity:.9;margin-top:4px;text-shadow:0 1px 3px #000'; hud.munition.parentNode.appendChild(ausruestungEl); }
@@ -628,14 +636,19 @@
       const k = { m, inhalt: inh }; kisten.push(k); return k;
     }
     function kisteOeffnen(k) {
-      const i = k.inhalt; if (i === 'munition') { const n = 2 + (spieler.rucksack || 0); spieler.waffen.forEach(w => { w.reserve += w.def.magazin * n; }); nachricht('📦 Munition für alle Waffen (' + n + ' Magazine)'); }
-      else if (/^(helm|weste|rucksack):/.test(i)) { const [art, st] = i.split(':'), n = +st, feld = art === 'helm' ? 'helm' : art === 'weste' ? 'westeStufe' : 'rucksack'; if ((spieler[feld] || 0) >= n) { nachricht('Du hast schon ' + (art === 'helm' ? 'einen Helm' : art === 'weste' ? 'eine Weste' : 'einen Rucksack') + ' dieser Stufe'); return; }
+      if (k.inhalt === 'abwurf') { ['helm:3', 'weste:3', 'waffe:scharfschuetze', 'munition', 'medikit'].forEach(x => inhaltAnwenden(x)); nachricht('📦 Versorgungsabwurf: Helm 3, Weste 3, Scharfschützengewehr, Munition, Medikit', 4); }
+      else if (inhaltAnwenden(k.inhalt) === false) return;
+      ton('aufheben'); kisten.splice(kisten.indexOf(k), 1); if (k.m.physicsBody) k.m.physicsBody.dispose(); k.m.dispose();
+    }
+    function inhaltAnwenden(i) {
+      if (i === 'munition') { const n = 2 + (spieler.rucksack || 0); spieler.waffen.forEach(w => { w.reserve += w.def.magazin * n; }); nachricht('📦 Munition für alle Waffen (' + n + ' Magazine)'); }
+      else if (/^(helm|weste|rucksack):/.test(i)) { const [art, st] = i.split(':'), n = +st, feld = art === 'helm' ? 'helm' : art === 'weste' ? 'westeStufe' : 'rucksack'; if ((spieler[feld] || 0) >= n) { nachricht('Du hast schon ' + (art === 'helm' ? 'einen Helm' : art === 'weste' ? 'eine Weste' : 'einen Rucksack') + ' dieser Stufe'); return false; }
         spieler[feld] = n; if (art === 'weste') spieler.ruestung = Math.max(spieler.ruestung, 40 + n * 20); nachricht(INHALT[i][1] + (art === 'helm' ? ' – ' + [0, 8, 15, 22][n] + ' % weniger Schaden' : art === 'weste' ? ' – Schutz ' + (40 + n * 20) : ' – mehr Munition pro Kiste')); }
-      else if (i.startsWith('aufsatz:')) { if (!aufsatzAnbringen(i.slice(8))) return; }
-      else if (i === 'medikit') { if (spieler.leben >= spieler.maxLeben) { nachricht('Leben ist schon voll'); return; } spieler.leben = Math.min(spieler.maxLeben, spieler.leben + 40); nachricht('✚ +40 Leben'); }
+      else if (i.startsWith('aufsatz:')) { if (!aufsatzAnbringen(i.slice(8))) return false; }
+      else if (i === 'medikit') { if (spieler.leben >= spieler.maxLeben) { nachricht('Leben ist schon voll'); return false; } spieler.leben = Math.min(spieler.maxLeben, spieler.leben + 40); nachricht('✚ +40 Leben'); }
       else if (i === 'ruestung') { spieler.ruestung = Math.min(100, spieler.ruestung + 50); nachricht('🛡 +50 Schutz'); }
       else if (i.startsWith('waffe:')) waffeGeben(i.slice(6));
-      ton('aufheben'); kisten.splice(kisten.indexOf(k), 1); if (k.m.physicsBody) k.m.physicsBody.dispose(); k.m.dispose();
+      return true;
     }
     (tastenHandler.E = tastenHandler.E || []).push(() => { if (!spieler || vorbei) return; const p = spieler.cc.getPosition(); const k = kisten.find(k => !k.m.isDisposed() && BAB.Vector3.Distance(k.m.position, p) < 2.6); if (k) kisteOeffnen(k); });
 
@@ -652,10 +665,10 @@
     /* ---------- Kamera (Third-Person über die Schulter) ---------- */
     function kameraUpdate(dt) {
       const E = opt.einstellungen || {}, empf = (opt.empfindlichkeit || 0.0022) * (E.maus || 1), pe = E.pad || 1, z = maus.rechts ? (spieler.waffen[spieler.aktiv]?.def.zoom || 0.55) : 1;
-      spieler.gier += (maus.dx * empf + touch.schauen[0] * dt * 2.2 * pe) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf * (E.invertY ? -1 : 1) + touch.schauen[1] * dt * 1.6 * pe) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
+      const zf = maus.rechts ? (E.ziel ?? 0.8) : 1; spieler.gier += (maus.dx * empf * zf + touch.schauen[0] * dt * 2.2 * pe) * z; spieler.nick = klemme(spieler.nick + (maus.dy * empf * zf * (E.invertY ? -1 : 1) + touch.schauen[1] * dt * 1.6 * pe) * z, -1.2, 1.25); maus.dx = maus.dy = 0;
       spieler.rueckstoss *= Math.pow(0.001, dt);
       const kopf = spieler.cc.getPosition().add(V(0, 0.65 - (spieler.duckWert || 0) * 0.55, 0)); const fv = V(Math.sin(spieler.gier) * Math.cos(spieler.nick), -Math.sin(spieler.nick), Math.cos(spieler.gier) * Math.cos(spieler.nick));
-      const rechts = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier)); const zoomt = maus.rechts; const abst = zoomt ? 1.8 : 4.2, schulter = zoomt ? 0.55 : 0.75;
+      const rechts = V(Math.cos(spieler.gier), 0, -Math.sin(spieler.gier)); const zoomt = maus.rechts, ich = E.ansicht === 'fpp'; const abst = ich ? 0.05 : zoomt ? 1.8 : 4.2, schulter = ich ? 0 : zoomt ? 0.55 : 0.75;
       const drehpunkt = kopf.add(rechts.scale(schulter)); let wunsch = drehpunkt.subtract(fv.scale(abst));
       const t = strahl(drehpunkt, wunsch.subtract(drehpunkt).normalize(), abst + 0.3, 'spieler'); let ist = abst; if (t && t.hit) ist = Math.max(0.4, t.distance - 0.3);
       spieler.abstand = ist; kamera.position = drehpunkt.subtract(fv.scale(ist)); kamera.setTarget(kamera.position.add(fv));
@@ -679,7 +692,7 @@
       spieler.k.rotation.y += winkel(spieler.k.rotation.y, blick) * Math.min(1, dt * 14); spieler.k.animiere(spieler.tempo, dt, !amBoden && spieler.zustand.luft > 0.2);
       if (spieler.k.teile.arm1) { spieler.k.teile.arm1.rotation.x = -1.35 - spieler.nick * 0.8; spieler.k.teile['arm-1'].rotation.x = -1.3 - spieler.nick * 0.8; spieler.k.waffe.rotation.x = spieler.nick * 0.9; }
       // nahe am Kopf: Figur durchsichtig, damit man durch die Kamera sieht
-      spieler.k.getChildMeshes().forEach(m => { m.visibility = spieler.abstand < 1 ? 0.15 : 1; });
+      const ichSicht = opt.einstellungen && opt.einstellungen.ansicht === 'fpp'; spieler.k.getChildMeshes().forEach(m => { m.visibility = ichSicht ? 0 : spieler.abstand < 1 ? 0.15 : 1; });
       const w = spieler.waffen[spieler.aktiv];
       if (spieler.laden > 0) { spieler.laden -= dt; if (spieler.laden <= 0) { const n = Math.min(w.def.magazin - w.mag, w.reserve); w.mag += n; w.reserve -= n; spieler.laden = 0; } }
       if ((maus.links || maus.klick || touch.feuer) && w) { schiessen(); if (!w.def.auto) { maus.links = false; touch.feuer = false; } } maus.klick = false;
@@ -704,7 +717,9 @@
     let festeSchritte = false;
     function logik(dt) {
       if (kachelPhysik) kachelPhysik(dt); ausruestungZeigen();
-      if (BUS && opt.einstellungen) { const E = opt.einstellungen; BUS.effekte.gain.value = E.effekte ?? 1; BUS.musik.gain.value = E.musik ?? 0.6; }
+      if (opt.einstellungen) { const E = opt.einstellungen, g = E.gesamt ?? 1; if (BUS) { BUS.effekte.gain.value = (E.effekte ?? 1) * g; BUS.musik.gain.value = (E.musik ?? 0.6) * g; }
+        const sw = E.sichtweite ?? 1; kamera.maxZ = 3000 * sw; if (szene.fogDensity !== szene.__fogGesetzt) szene.__fogBasis = szene.fogDensity; szene.fogDensity = szene.__fogBasis / sw; szene.__fogGesetzt = szene.fogDensity;
+        sonne.shadowEnabled = E.schatten !== false; if (hud.fps) hud.fps.style.display = E.fpsZeigen === false ? 'none' : ''; }
       zeit += dt;
       const ueb = ctx && ctx.uebernahme;
       if (spieler && !vorbei) { if (ueb) ueb.update(dt); else spielerUpdate(dt); }
