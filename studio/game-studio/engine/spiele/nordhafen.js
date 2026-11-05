@@ -21,6 +21,8 @@ const flach = [
 ];
 
 sd.himmel({ zeit: 'abend', nebel: 0.0017 });
+// Die Engine verwaltet die GPU-Effekte je nach gewählter Grafikstufe.
+if (typeof sd.grafik === 'function') sd.grafik({ wolken: 0.52, strahlen: !sparsam, spiegelungen: !sparsam });
 sd.gelaende({ groesse: 820, aufloesung: sparsam ? 135 : 205, hoehe: 18, wasser: -5, seed: SEED, flach });
 sd.tageszeit({ stunde: 17, minutenProTag: 30 });
 sd.wetter({ wind: 0.30 });
