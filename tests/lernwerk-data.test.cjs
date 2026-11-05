@@ -73,3 +73,10 @@ test('resuming a lesson uses stable task IDs and migrates legacy indices after t
   }
  }
 });
+
+test('writing drafts autosave before lesson navigation and retain explicit save',()=>{
+ assert.match(source,/draft\.addEventListener\('input',\(\)=>\{updateCount\(\);const next=storage\(writingKey\);next\[level\]=draft\.value;save\(writingKey,next\)/);
+ assert.match(source,/draft\.value=typeof drafts\[level\]==='string'\?drafts\[level\]:''/);
+ assert.match(source,/panel\.querySelector\('#sdun-writing-save'\)\.onclick=/);
+ assert.match(source,/autocapitalize="off"/);
+});
