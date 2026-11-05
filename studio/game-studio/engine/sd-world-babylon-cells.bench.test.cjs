@@ -36,4 +36,7 @@ test('invalid benchmark configuration fails before execution', async () => {
   await assert.rejects(run({iterations: 0}), RangeError);
   await assert.rejects(run({cells: -1}), RangeError);
   await assert.rejects(run({warmup: 1.5}), RangeError);
+  await assert.rejects(run({iterations: 100001}), /sample or cell-operation budget/);
+  await assert.rejects(run({iterations: 100000, cells: 11}), /sample or cell-operation budget/);
+  await assert.rejects(run({iterations: 1, warmup: 1000000, cells: 2}), /sample or cell-operation budget/);
 });
