@@ -71,9 +71,17 @@ async function go(page,url){
   // Mousedown explizit auf dem WebGL-Canvas auslösen – ein Overlay darf
   // den Test nicht von der eigentlichen Aim-Eingabe ablenken.
   await page.locator('#welt').dispatchEvent('mousedown',{button:2,buttons:2,bubbles:true});
-  await page.keyboard.down('q');await page.waitForTimeout(230);
+  const startZeit=await page.evaluate(()=>SD_SPIEL.info().zeit);
+  await page.keyboard.down('q');
+  try {
+    await page.waitForFunction(()=>SD_SPIEL.ctx.spieler.taktikNeigung < -0.3,undefined,{timeout:3500});
+  } catch (_) { /* Details unten im Assert zeigen */ }
   const input=await page.evaluate(()=>({lean:SD_SPIEL.ctx.spieler.taktikNeigung,
-    q:!!SD_SPIEL.tasten.Q,right:!!SD_SPIEL.maus.rechts}));
+    q:!!SD_SPIEL.tasten.Q,right:!!SD_SPIEL.maus.rechts,
+    form:SD_SPIEL.ctx.spieler.taktikForm,rutsch:SD_SPIEL.ctx.spieler.taktikRutsch,
+    zeit:SD_SPIEL.info().zeit,fps:SD_SPIEL.info().fps,
+    profil:SD_SPIEL.sd.taktik().info()}));
+  input.startZeit=startZeit;
   assert.equal(input.right,true,'Rechtsklick auf Canvas soll ADS einschalten.');
   assert.equal(input.q,true,'Q muss im Engine-Eingabesystem ankommen.');
   assert.ok(input.lean < -0.3, 'Beim Zielen muss sich die Figur nach links lehnen: '+JSON.stringify(input));
