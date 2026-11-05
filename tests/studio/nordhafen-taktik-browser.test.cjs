@@ -68,11 +68,17 @@ async function go(page,url){
   await page.keyboard.press('b');
   await page.waitForFunction(()=>SD_SPIEL.ctx.spieler.taktikSchulter===-1,undefined,{timeout:3000});
   assert.equal(await page.evaluate(()=>SD_SPIEL.ctx.spieler.taktikSchulter),-1);
-  await page.mouse.move(640,400);await page.mouse.down({button:'right'});
+  // Mousedown explizit auf dem WebGL-Canvas auslösen – ein Overlay darf
+  // den Test nicht von der eigentlichen Aim-Eingabe ablenken.
+  await page.locator('#welt').dispatchEvent('mousedown',{button:2,buttons:2,bubbles:true});
   await page.keyboard.down('q');await page.waitForTimeout(230);
-  const lean=await page.evaluate(()=>SD_SPIEL.ctx.spieler.taktikNeigung);
-  assert.ok(lean < -0.3, 'Beim Zielen muss sich die Figur nach links lehnen.');
-  await page.keyboard.up('q');await page.mouse.up({button:'right'});
+  const input=await page.evaluate(()=>({lean:SD_SPIEL.ctx.spieler.taktikNeigung,
+    q:!!SD_SPIEL.tasten.Q,right:!!SD_SPIEL.maus.rechts}));
+  assert.equal(input.right,true,'Rechtsklick auf Canvas soll ADS einschalten.');
+  assert.equal(input.q,true,'Q muss im Engine-Eingabesystem ankommen.');
+  assert.ok(input.lean < -0.3, 'Beim Zielen muss sich die Figur nach links lehnen: '+JSON.stringify(input));
+  await page.keyboard.up('q');
+  await page.locator('#welt').dispatchEvent('mouseup',{button:2,buttons:0,bubbles:true});
   assert.deepEqual(errors,[]);
   await page.screenshot({path:path.join(shots,'nordhafen-taktik-desktop.png')});
   await page.close();
