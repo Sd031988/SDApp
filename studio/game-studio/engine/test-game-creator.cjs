@@ -12,7 +12,8 @@ const files = [
   'game-creator-blueprint.test.cjs',
   'game-creator-preview.test.cjs',
   'game-creator-handoff.test.cjs',
-  'game-creator-editor-compat.test.cjs'
+  'game-creator-editor-compat.test.cjs',
+  'game-creator-transaction.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
