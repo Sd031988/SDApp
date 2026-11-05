@@ -31,8 +31,12 @@ function create({scene,Babylon,resolveCell,onError}={}){
  }
  async function dispose(resource,id){
   if(active.get(id)!==resource)return; // stale disposals must never release a newer cell
-  active.delete(id);
-  try{cleanup(resource);}catch(error){if(typeof onError==='function')onError(error,id);throw error;}
+  try{cleanup(resource);active.delete(id);}catch(error){
+   // Retain ownership after failed cleanup so the caller can retry eviction.
+   // Reporting is best-effort: an observer must not mask the disposal error.
+   if(typeof onError==='function'){try{onError(error,id);}catch(_observerError){/* preserve original */}}
+   throw error;
+  }
  }
  return Object.freeze({load,dispose,activeCount:()=>active.size,pendingCount:()=>pending.size});
 }
