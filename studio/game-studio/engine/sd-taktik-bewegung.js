@@ -132,6 +132,7 @@
         r.form === 'ducken' ? (echt ? 0.35 : -0.5) : 0;
       i.spieler.taktikForm = r.form;
       i.spieler.taktikNeigung = r.neigung;
+      i.spieler.taktikSchulter = s.schulter;
       i.spieler.taktikSprint = r.sprint;
       i.spieler.taktikRutsch = r.rutschend;
       return r;
