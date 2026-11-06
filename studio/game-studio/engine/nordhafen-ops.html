@@ -6,25 +6,25 @@ html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system
 #hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
 #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-size:28px;text-shadow:0 1px 3px #000}
 #flash{position:fixed;left:54%;top:57%;width:18px;height:18px;border-radius:50%;background:#ffd26b;box-shadow:0 0 35px 16px #ff9b39;opacity:0;pointer-events:none}
-#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
+#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
 button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
 </style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
-<div id="menu"><article><h1>NORDHAFEN OPS</h1><p>Etappe A – Schießstand. Teste die Waffe an fünf Ziel-Dummies in der gestreamten Nordhafen-Stadt.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
+<div id="menu"><article><h1>NORDHAFEN OPS</h1><p>Etappe A – Schießstand. Teste die Waffe an fünf Ziel-Dummies in der gestreamten Nordhafen-Stadt.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script>
 <script>
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat;
-let engine,scene,streamer,city,player,targets=[],weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0;
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls;
+let engine,scene,streamer,city,player,targets=[],weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,markerNodes=[];
 function status(t){$('status').textContent=t;}
 function clear(){
  engine?.stopRenderLoop();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
- engine=scene=streamer=city=player=null;targets=[];weapon=combat.initial();
+ engine=scene=streamer=city=player=null;targets=[];weapon=combat.initial();markerNodes.forEach(m=>m.remove());markerNodes=[];
 }
 function shoot(){
  if(!scene||!player?.ready)return;
@@ -32,8 +32,8 @@ function shoot(){
  const result=combat.fire(weapon);weapon=result.state;
  if(result.event!=='fired'){status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
  flashUntil=now+65;
- const camera=scene.activeCamera,ray=scene.createPickingRay(canvas.clientWidth/2,canvas.clientHeight/2,BABYLON.Matrix.Identity(),camera);
- const picked=scene.pickWithRay(ray,m=>m.metadata?.target===true);
+ const ray=controls.centerRay(scene,canvas,BABYLON);
+ const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){const feedback=combat.hit(weapon,25);weapon=feedback.state;target.health=Math.max(0,target.health-feedback.damage);
@@ -53,20 +53,31 @@ async function start(){
   const fixture=window.SDNordhafenBenchmark.create('medium',1337);
   city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:false});
   streamer=window.SDNordhafenCellStreamer.create({scene,fixture,buildCell:(chunk,opts)=>city.buildCell(chunk,opts),loadRadius:160,unloadRadius:200,budget:2,lodBudget:2});
-  player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,motion:window.SDNordhafenPlayerMotion,fixture,cityGeometry:window.SDNordhafenProceduralCity});
+  let previousVelocity={vx:0,vz:0};
+  const originalMotion=window.SDNordhafenPlayerMotion;
+  const motion={...originalMotion,step(input,state,dt,options){const next=originalMotion.step(input,state,dt,options);previousVelocity=controls.velocity(previousVelocity,next,dt,aiming);return {...next,vx:previousVelocity.vx,vz:previousVelocity.vz};}};
+  player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,motion,fixture,cityGeometry:window.SDNordhafenProceduralCity});
   if(!await player.start())throw Error(player.status);
+  const startPosition=player.position||new BABYLON.Vector3(32,.9,32);
+  const forward=new BABYLON.Vector3(-Math.cos(camera.alpha),0,-Math.sin(camera.alpha));
+  const right=new BABYLON.Vector3(Math.cos(camera.alpha+Math.PI/2),0,-Math.sin(camera.alpha+Math.PI/2));
+  const placements=controls.targetPositions(startPosition,forward,right);
   for(let i=0;i<5;i++){
    const mesh=BABYLON.MeshBuilder.CreateCapsule('target-'+i,{height:1.8,radius:.35},scene);
-   mesh.position.set(28+(i-2)*3,.9,15-i*4);mesh.metadata={target:true};mesh.isPickable=true;
+   mesh.position.set(placements[i].x,.9,placements[i].z);mesh.metadata={target:true};mesh.isPickable=true;
    const mat=new BABYLON.StandardMaterial('target-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.85,.34,.2);mesh.material=mat;
    targets.push({mesh,health:50});
+   const marker=document.createElement('div');marker.className='marker';marker.textContent='◆ '+(i+1);document.body.append(marker);markerNodes.push(marker);
   }
   const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}};
   canvas.addEventListener('keydown',onKey,{signal:controller.signal});
-  canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();},{signal:controller.signal});
+  canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();if(e.button===2)aiming=true;},{signal:controller.signal});
+  canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
+  canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
   engine.runRenderLoop(()=>{
    const dt=Math.min(.05,engine.getDeltaTime()/1000);weapon=combat.tick(weapon,dt);
-   const pos=player.update(dt);if(pos){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   const pos=player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
    scene.render();
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
