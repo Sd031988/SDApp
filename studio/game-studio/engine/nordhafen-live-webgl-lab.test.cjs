@@ -53,3 +53,13 @@ test('step 6: GLB opt-in uses shared async Babylon loader and streamer fallback'
  assert.match(html,/GLB-Ladefehler – Box-Fallback/);
  assert.match(html,/cdn\.babylonjs\.com\/loaders\/babylonjs\.loaders\.min\.js/);
 });
+
+test('step 7: PBR opt-in is used in Lab and fifth comparison mode is selected',()=>{
+ assert.match(html,/id="pbr"/);
+ assert.match(html,/nordhafen-pbr-quality\.js/);
+ assert.match(html,/SDNordhafenPBR\.create/);
+ assert.match(html,/pbr\.start\(\)/);
+ assert.match(html,/pbr\.updateShadows/);
+ assert.match(html,/pbr\.dispose\(\)/);
+ assert.match(html,/Streaming \+ LOD \+ Thin Instances \+ PBR/);
+});
