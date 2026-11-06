@@ -170,18 +170,22 @@ async function start(){
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
     if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,enemyRules.TYPES[enemy.state.type].damage);damageThisFrame=true;$('damageOverlay').style.borderWidth='18px';status('Unter Beschuss! Leben: '+health);}}
    }
-   if(mode==='mission')mission=missionRules.step(mission,{dt,position:pos,locations:sites,holding:holdingE,damage:damageThisFrame,health});
-   if(mode==='mission'&&mission.activated!==null){
-    mastMeshes[mission.activated].material.emissiveColor=new BABYLON.Color3(.12,.8,.22);
-    const updated=missionRules.alertNearby(enemies.map(e=>e.state),sites.towers[mission.activated]);
-    enemies.forEach((e,i)=>{e.state=updated[i];});
-    sound?.play('mast',Number($('volume').value));status('Funkmast '+(mission.activated+1)+' aktiviert – Gegner alarmiert!');
+   if(mode==='mission'){
+    const previous=mission,active=previous.towers.indexOf(false),tower=sites.towers[active],data=sites.data;
+    const atTower=previous.phase==='towers'&&tower&&Math.hypot(pos.x-tower.x,pos.z-tower.z)<=missionRules.ACTIVATE_RADIUS;
+    const atData=previous.phase==='data'&&Math.hypot(pos.x-data.x,pos.z-data.z)<=campaign.DATA_RADIUS;
+    mission=campaign.step(previous,{dt,skipRange,rangeDone:targets.length===0,atTower,holding:holdingE,damage:damageThisFrame,health,atData,onTopFloor:pos.y>=data.y-.9,atExtraction:Math.hypot(pos.x-sites.extraction.x,pos.z-sites.extraction.z)<=campaign.EXTRACT_RADIUS});
+    if(previous.phase==='towers'&&mission.towers.filter(Boolean).length>previous.towers.filter(Boolean).length){
+     mastMeshes[active].material.emissiveColor=new BABYLON.Color3(.12,.8,.22);
+     const alerted=missionRules.alertNearby(enemies.map(e=>e.state),tower);enemies.forEach((e,i)=>e.state=alerted[i]);
+     sound?.play('mast',Number($('volume').value));status(mission.radio);
+    }
+    if(previous.phase!==mission.phase){status(mission.radio);if(mission.phase==='extract')sound?.play('alarm',Number($('volume').value));}
+    dataMesh.setEnabled(mission.phase==='data');extractMesh.setEnabled(mission.phase==='extract');
+    const progress=mission.phase==='towers'?mission.towerProgress/campaign.HOLD:mission.phase==='data'?mission.dataProgress/campaign.HOLD:mission.phase==='extract'?mission.extractProgress/campaign.EXTRACT:0;
+    const showProgress=progress>0&&mission.status==='playing';
+    if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100);if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=Math.ceil((mission.phase==='extract'?campaign.EXTRACT:campaign.HOLD)*(1-progress))+'s';}}
    }
-   const count=mission.completed.filter(Boolean).length;
-   if(mode==='mission'&&count===3)extractMesh.setEnabled(true);
-   const progress=count<3?mission.progress/missionRules.ACTIVATE_SECONDS:mission.extractProgress/missionRules.EXTRACT_SECONDS;
-   const showProgress=mode==='mission'&&(count===3?mission.extractProgress>0:mission.progress>0);
-   if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100)+'|'+Math.ceil(Math.max(0,(count===3?missionRules.EXTRACT_SECONDS:missionRules.ACTIVATE_SECONDS)*(1-progress)));if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=progressText.split('|')[2]+'s';}}
    if(mode==='royale'&&pos){const circle=modes.zone(royaleElapsed);health=Math.max(0,health-modes.zoneDamage(pos,circle,dt));}
    if(mode==='city'&&pos){/* Free-roam prototype: wanted and mission progression remain modular, not fully wired. */}
    if(mode==='mission'&&mission.status!=='playing'){
