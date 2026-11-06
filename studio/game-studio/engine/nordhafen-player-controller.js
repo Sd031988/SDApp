@@ -28,17 +28,19 @@
     ground=BABYLON.MeshBuilder.CreateGround('player-physics-ground',
       {width:fixture.grid*64,height:fixture.grid*64},scene);
     ground.position.set(fixture.grid*32,0,fixture.grid*32);
-    ground.isVisible=false;
+    ground.visibility=0;
+    ground.isPickable=true;
     groundBody=new BABYLON.PhysicsAggregate(ground,BABYLON.PhysicsShapeType.BOX,
       {mass:0,friction:1},scene);
     player=BABYLON.MeshBuilder.CreateCapsule('nordhafen-player',{height:1.8,radius:.35},scene);
-    player.position.set(32,1.1,32);
+    player.position.set(32,.9,32);
     aggregate=new BABYLON.PhysicsAggregate(player,BABYLON.PhysicsShapeType.CAPSULE,
       {mass:1,friction:.7,restitution:0},scene);
+    aggregate.body.setMassProperties({inertia:BABYLON.Vector3.Zero()});
     canvas.addEventListener('keydown',keyDown);
     canvas.addEventListener('keyup',keyUp);
     canvas.tabIndex=0;canvas.focus();
-    ready=true;status='Spieler aktiv – WASD, Shift, Leertaste, Strg';
+    ready=true;status='Spieler aktiv – WASD, Shift, Leertaste, Strg; Ducken: Kollisionsform nicht umgesetzt';
     return true;
    }catch(e){status='Physik nicht verfügbar: '+e.message;return false;}
   }
@@ -65,15 +67,23 @@
     colliders.set(id,items);
    }
   }
+  function groundedByRaycast(){
+   const pos=player.position;
+   // From the capsule's lower tip, allow 0.1 m inside plus 0.15 m below it.
+   const ray=new BABYLON.Ray(new BABYLON.Vector3(pos.x,pos.y-.9+.1,pos.z),
+     new BABYLON.Vector3(0,-1,0),.15);
+   const hit=scene.pickWithRay(ray,mesh=>mesh!==player&&mesh.isPickable!==false);
+   return !!(hit&&hit.hit&&hit.pickedMesh!==player&&hit.distance<=.15);
+  }
   function update(dt){
    if(!ready||disposed)return null;
    const p=player.position;
    const state={x:p.x,y:p.y,z:p.z,vy:aggregate.body.getLinearVelocity().y,
-    yaw:camera.alpha+Math.PI/2,grounded:p.y<=1.08};
+    yaw:camera.alpha+Math.PI/2,grounded:groundedByRaycast()};
    const next=motion.step({forward:Number(pressed.has('KeyW'))-Number(pressed.has('KeyS')),
     right:Number(pressed.has('KeyD'))-Number(pressed.has('KeyA')),
     sprint:pressed.has('ShiftLeft'),crouch:pressed.has('ControlLeft'),
-    jump:pressed.has('Space')},state,dt);
+    jump:pressed.has('Space')},state,dt,{gravity:0});
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
    player.scaling.y=next.height/1.8;
    camera.target.copyFrom(player.position);
