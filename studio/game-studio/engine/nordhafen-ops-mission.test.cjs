@@ -45,3 +45,14 @@ test('leaving extraction or taking damage resets countdown',()=>{
  s=mission.step(s,{dt:7,position:sites.extraction,locations:sites});
  s=mission.step(s,{dt:.1,position:{x:0,z:0},locations:sites});assert.equal(s.extractProgress,0);
 });
+
+test('extraction sits within ten meters of harbor water at z=512',()=>{
+ assert.ok(Math.abs(512-sites.extraction.z)<10);
+});
+test('mast clearance removes building collision within 4m including footprint',()=>{
+ const tower=sites.towers[0];
+ const near={name:'city-instance-test',position:{x:tower.x+3,z:tower.z},scaling:{x:4,z:4}};
+ const far={name:'city-instance-far',position:{x:tower.x+12,z:tower.z},scaling:{x:4,z:4}};
+ assert.equal(mission.buildingClearance(near,tower,4),false);
+ assert.deepEqual(mission.clearMastArea([near,far],sites.towers,4),[far]);
+});
