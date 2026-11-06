@@ -139,3 +139,13 @@ test('dispose aborts pending loads and frees late result once',async()=>{
  d.resolve({meshes:[{dispose(){freed++;}}],materials:[]});await tick();
  assert.equal(freed,1);assert.equal(stream.report().loadedCells,0);
 });
+
+test('streamer reports maximum measured build slice from cooperative builder',async()=>{
+ const {stream}=harness({buildCell:(chunk,{recordBuildSlice})=>{
+  recordBuildSlice(3.5);recordBuildSlice(2.25);
+  return Promise.resolve({meshes:[],materials:[]});
+ }});
+ stream.update(32,32);await tick();
+ assert.equal(stream.report().maxBuildSliceMs,3.5);
+ stream.dispose();
+});
