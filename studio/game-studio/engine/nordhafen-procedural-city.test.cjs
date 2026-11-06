@@ -100,3 +100,37 @@ test('city never clones external lab sources; fresh sources have no thin instanc
  assert.ok(cell.meshes.every(m=>m.thinInstanceCount>0));
  cell.meshes.forEach(m=>m.dispose());h.result.dispose();
 });
+
+test('full, simplified and placeholder retain all buildings while reducing trees and texture cost',()=>{
+ const h=mock('medium'),chunk=h.f.chunks[0];
+ const expected=chunk.objects.filter(o=>o.type==='building').length;
+ const treeCount=chunk.objects.filter(o=>o.type==='vegetation').length;
+ const counts=[];
+ for(const level of ['full','simplified','placeholder']){
+  const cell=h.result.buildCell(chunk,{level});
+  const buildings=cell.meshes.filter(m=>m.material&&h.result.sources.some(s=>s.material===m.material));
+  // Materials differ at simplified LOD, so identify buildings by cell name.
+  const buildingMeshes=cell.meshes.filter(m=>m.name?.startsWith('city-cell-'));
+  const trees=cell.meshes.filter(m=>m.name?.startsWith('city-cell-trees-'));
+  const count=buildingMeshes.reduce((n,m)=>n+m.thinInstanceCount,0);
+  counts.push(count);
+  assert.equal(count,expected);
+  if(level==='full'){
+   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),treeCount);
+   assert.ok(buildingMeshes.every(m=>m.material.baseTexture===h.result.facadeTexture));
+  }else{
+   assert.ok(buildingMeshes.every(m=>!m.material.baseTexture));
+   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),level==='simplified'?Math.ceil(treeCount/2):0);
+  }
+  cell.meshes.forEach(m=>m.dispose());
+ }
+ assert.deepEqual(counts,[expected,expected,expected]);
+ h.result.dispose();
+});
+test('city fog meets load radius and lower sky horizon color',()=>{
+ const h=mock();
+ assert.equal(h.scene.fogStart,60);
+ assert.ok(h.scene.fogEnd<=160);
+ assert.deepEqual([h.scene.fogColor.r,h.scene.fogColor.g,h.scene.fogColor.b],[.62,.73,.8]);
+ h.result.dispose();
+});
