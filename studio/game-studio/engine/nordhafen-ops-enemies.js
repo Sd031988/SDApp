@@ -5,8 +5,9 @@
  function spawn(id,x,z){return {id,x,z,homeX:x,homeZ:z,health:MAX_HEALTH,state:'patrol',time:0,shotCooldown:1+id*.13,patrolPhase:id*.8};}
  function damage(enemy,amount){const health=Math.max(0,enemy.health-Math.max(0,amount));return {...enemy,health,state:health===0?'dead':enemy.state};}
  function hurt(health,amount){return Math.max(0,health-Math.max(0,amount));}
- function step(enemy,player,dt,{visible=false,random=.5,patrolAxis='x'}={}){
+ function step(enemy,player,dt,{visible=false,random=.5,patrolAxis='x',elapsed=Infinity}={}){
   if(enemy.health<=0)return {enemy:{...enemy,state:'dead'},shoot:false};
+  if(elapsed<10)visible=false;
   const deltaX=player.x-enemy.x,deltaZ=player.z-enemy.z,distance=Math.hypot(deltaX,deltaZ);
   let state=enemy.state;
   if(visible&&distance<35)state=distance<14?'shoot':'chase';
