@@ -54,7 +54,7 @@ async function start(){
   new BABYLON.HemisphericLight('ambient',new BABYLON.Vector3(0,1,0),scene);
   const fixture=window.SDNordhafenBenchmark.create('medium',1337);
   city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:false});
-  streamer=window.SDNordhafenCellStreamer.create({scene,fixture,buildCell:(chunk,opts)=>city.buildCell(chunk,opts),loadRadius:160,unloadRadius:200,budget:2,lodBudget:2});
+  streamer=window.SDNordhafenCellStreamer.create({scene,fixture,buildCell:(chunk,opts)=>{const cell=city.buildCell(chunk,opts);if(sites&&cell&&Array.isArray(cell.meshes)){const kept=missionRules.clearMastArea(cell.meshes.filter(m=>m.name.startsWith('city-instance-')),sites.towers);const ids=new Set(kept);cell.meshes=cell.meshes.filter(m=>!m.name.startsWith('city-instance-')||ids.has(m));}return cell;},loadRadius:160,unloadRadius:200,budget:2,lodBudget:2});
   let previousVelocity={vx:0,vz:0};
   const originalMotion=window.SDNordhafenPlayerMotion;
   const motion={...originalMotion,step(input,state,dt,options){const next=originalMotion.step(input,state,dt,options);previousVelocity=controls.velocity(previousVelocity,next,dt,aiming);return {...next,vx:previousVelocity.vx,vz:previousVelocity.vz};}};
