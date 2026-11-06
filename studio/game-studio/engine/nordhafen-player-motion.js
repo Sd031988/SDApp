@@ -30,5 +30,16 @@
   if(!Number.isFinite(alpha))throw new TypeError('camera alpha must be finite');
   return Math.atan2(-Math.cos(alpha),-Math.sin(alpha));
  }
- return Object.freeze({step,yawFromCameraAlpha});
+ // Third-person orbit: look at head height; beta up to 1.75 lets the player look
+ // up at buildings. The camera never goes below minCameraY: near the ground the
+ // orbit radius shrinks instead (camera height = targetY + radius*cos(beta)).
+ function thirdPersonCamera({playerY,beta,desiredRadius=7.5,headOffset=.8,minBeta=.35,maxBeta=1.75,minCameraY=.4,minRadius=1.5}={}){
+  if(![playerY,beta,desiredRadius].every(Number.isFinite))throw new TypeError('finite camera inputs required');
+  const b=Math.max(minBeta,Math.min(maxBeta,beta));
+  const targetY=playerY+headOffset,c=Math.cos(b);
+  let radius=desiredRadius;
+  if(c<0)radius=Math.max(minRadius,Math.min(desiredRadius,(targetY-minCameraY)/-c));
+  return Object.freeze({beta:b,radius,targetY,cameraY:targetY+radius*c});
+ }
+ return Object.freeze({step,yawFromCameraAlpha,thirdPersonCamera});
 });

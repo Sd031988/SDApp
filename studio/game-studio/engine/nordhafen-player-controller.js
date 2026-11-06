@@ -42,8 +42,8 @@
     player.material=playerMaterial;
     player.isVisible=true;
     camera.fov=.8;
-    camera.lowerRadiusLimit=6;camera.upperRadiusLimit=8;
-    camera.lowerBetaLimit=.35;camera.upperBetaLimit=1.3;
+    camera.lowerRadiusLimit=1.5;camera.upperRadiusLimit=8;
+    camera.lowerBetaLimit=.35;camera.upperBetaLimit=1.75;
     camera.radius=7.5;camera.beta=1.15;
     camera.setTarget(player.position.clone());
     aggregate=new BABYLON.PhysicsAggregate(player,BABYLON.PhysicsShapeType.CAPSULE,
@@ -99,8 +99,9 @@
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
    player.scaling.y=pressed.has('ControlLeft')?next.height/1.8:1;
    camera.target.copyFrom(player.position);
-   camera.radius=Math.max(6,Math.min(8,camera.radius));
-   camera.beta=Math.max(.35,Math.min(1.3,camera.beta));
+   const view=(motion.thirdPersonCamera||(o=>({beta:Math.max(.35,Math.min(1.3,o.beta)),radius:7.5,targetY:o.playerY})))(
+    {playerY:player.position.y,beta:camera.beta});
+   camera.target.y=view.targetY;camera.beta=view.beta;camera.radius=view.radius;
    return player.position;
   }
   function dispose(){

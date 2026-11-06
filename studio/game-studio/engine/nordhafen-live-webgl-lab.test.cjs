@@ -194,15 +194,15 @@ test('step 9h: distant placeholders are instances of shared source meshes',()=>{
 });
 
 
-test('step 10: third-person camera stays 6–8 m away with FOV <= 0.9',()=>{
+test('step 10: third-person camera 7.5 m by default, may shorten near ground to look up, FOV <= 0.9',()=>{
  const controller=require('./nordhafen-player-controller.js');
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');
  assert.equal(typeof controller.create,'function');
  assert.match(source,/camera\.radius=7\.5/);
  assert.match(source,/camera\.fov=\.8/);
- assert.match(source,/camera\.lowerRadiusLimit=6;camera\.upperRadiusLimit=8/);
+ assert.match(source,/camera\.lowerRadiusLimit=1\.5;camera\.upperRadiusLimit=8/);
  assert.match(source,/camera\.beta=1\.15/);
- assert.match(source,/camera\.lowerBetaLimit=\.35;camera\.upperBetaLimit=1\.3/);
+ assert.match(source,/camera\.lowerBetaLimit=\.35;camera\.upperBetaLimit=1\.75/);
 });
 test('step 10: player is visible with its own material and starts in the center',()=>{
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');

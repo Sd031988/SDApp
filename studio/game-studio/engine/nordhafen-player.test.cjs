@@ -122,3 +122,15 @@ test('controller uses the same camera-to-yaw mapping as the motion helper',()=>{
  const f=new Function('camera','return '+m[1]);
  for(const a of [-2,-0.5,0,1,2.5])assert.ok(Math.abs(f({alpha:a})-yawFromCameraAlpha(a))<1e-12);
 });
+
+test('third-person camera can look up without going below the ground',()=>{
+ const {thirdPersonCamera}=require('./nordhafen-player-motion.js');
+ const down=thirdPersonCamera({playerY:.9,beta:1.0});
+ assert.equal(down.radius,7.5);assert.ok(down.cameraY>down.targetY);
+ const up=thirdPersonCamera({playerY:.9,beta:1.75});
+ assert.ok(up.beta>Math.PI/2,'camera may go below head height to look up');
+ assert.ok(up.cameraY>=.4-1e-9,'camera stays above ground');
+ assert.ok(up.radius<7.5&&up.radius>=1.5);
+ assert.equal(thirdPersonCamera({playerY:.9,beta:3}).beta,1.75);
+ assert.equal(thirdPersonCamera({playerY:.9,beta:0}).beta,.35);
+});
