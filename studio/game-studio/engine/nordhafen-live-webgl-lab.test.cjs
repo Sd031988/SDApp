@@ -153,7 +153,7 @@ test('active city disposes legacy floor so only city ground remains',()=>{
  assert.deepEqual([...floors],['city-roads-grass']);
 });
 test('each frame streams around current camera target and simplified city retains buildings',()=>{
- assert.match(html,/streamer.update\(camera.target.x,camera.target.z\)/);
+ assert.match(html,/streamer.update\(camera.position.x,camera.position.z\)/);
  assert.match(html,/obj.type==='building'\|\|\(level==='simplified'&&obj.type==='vegetation'&&i%2===0\)/);
 });
 
@@ -176,7 +176,19 @@ test('step 9f: default city preset selects visible instances, thin=1 warns expli
 
 test('step 9g: active LOD placeholder boxes have material and are visible',()=>{
  const code=html.slice(html.indexOf('     async function placeholderSliced('),html.indexOf('     const route=',html.indexOf('     async function placeholderSliced(')));
- assert.match(code,/mesh\.material=placeholderMaterial;mesh\.isVisible=true/);
- assert.match(code,/materials\.push\(placeholderMaterial\)/);
+ assert.match(code,/source.createInstance\('lod-placeholder-building-/);
+ assert.match(code,/mesh\.isVisible=true/);
  assert.doesNotMatch(code,/mesh\.isVisible=false/);
+});
+
+test('step 9h: LOD and streaming use camera position, not camera target',()=>{
+ assert.match(html,/streamer.update\(camera.position.x,camera.position.z\)/);
+ assert.doesNotMatch(html,/streamer.update\(camera.target.x,camera.target.z\)/);
+ assert.match(html,/near:45,far:100,hysteresis:8/);
+});
+test('step 9h: distant placeholders are instances of shared source meshes',()=>{
+ const code=html.slice(html.indexOf('     const placeholderSources='),html.indexOf('     const route='));
+ assert.match(code,/source.createInstance\('lod-placeholder-building-/);
+ assert.match(code,/source.material=material/);
+ assert.doesNotMatch(code,/MeshBuilder.CreateBox\('lod-placeholder-'\+obj.id/);
 });
