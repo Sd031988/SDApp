@@ -99,7 +99,7 @@ async function start(){
     const diff=aimPoint.subtract(origin),distance=diff.length();
     const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
     const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
-    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis});enemy.state=out.enemy;
+    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis,elapsed});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
     if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);status('Unter Beschuss! Leben: '+health);}}
    }
