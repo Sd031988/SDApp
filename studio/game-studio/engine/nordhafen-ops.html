@@ -59,7 +59,7 @@ async function start(){
   new BABYLON.HemisphericLight('ambient',new BABYLON.Vector3(0,1,0),scene);
   const fixture=window.SDNordhafenBenchmark.create('medium',1337);
   const previewSites=missionRules.locations({x:fixture.grid*32,z:fixture.grid*32},fixture.grid*fixture.chunkSize);
-  interiorSites=interiors.selectBuildings(fixture,previewSites.towers);
+  interiorSites=interiors.selectSites(fixture,previewSites.towers,20);
   const interiorIds=new Set(interiorSites.map(s=>s.id));
   const controllerFixture={...fixture,chunks:fixture.chunks.map(chunk=>({...chunk,objects:chunk.objects.filter(obj=>!interiorIds.has(obj.id))}))};
   city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:false});
@@ -136,7 +136,7 @@ async function start(){
   }
   function updateInteriors(pos){
    interiorSites.forEach((site,i)=>{
-    if(interiors.near(pos,site))loadInterior(i);
+    if(interiors.near(pos,site,60))loadInterior(i);
     else if(interiorLoaded.has(i)){for(const item of interiorLoaded.get(i)){item.body?.dispose();item.mesh.dispose();}interiorLoaded.delete(i);}
    });
   }
