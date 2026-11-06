@@ -32,3 +32,10 @@ No asset is bundled or redistributed in this PR.
 - Bezug: vom Nutzer heruntergeladen und am 06.11.2026 übergeben; unverändert aus `glTF/Rogue.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
 - Inhalt geprüft: 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Run`, `Roll`, `Death`, `Punch`.
 - Hinweis: Modellraum-Höhe ca. 3,8 Einheiten → beim Einbau auf 1,8 m normalisieren.
+
+## Weitere Figuren (Quaternius „RPG Characters“) – Gegner/Passanten
+
+- Dateien: `assets/nordhafen-char-warrior.glb`, `-ranger.glb`, `-wizard.glb`, `-cleric.glb`, `-monk.glb` (je 1,7–2,1 MB)
+- Quelle/Lizenz: wie Rogue – Quaternius RPG Characters Pack, **CC0 1.0** laut `License.txt` im vom Nutzer übergebenen Original-Paket.
+- Unverändert aus `glTF/<Name>.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
+- Jede Datei: 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Run`, `Death`, `RecieveHit`, `Punch`; Modellraum-Höhe ≈ 3,8 → beim Einbau auf ca. 1,8 m normalisieren.
