@@ -63,3 +63,16 @@ test('step 7: PBR opt-in is used in Lab and fifth comparison mode is selected',(
  assert.match(html,/pbr\.dispose\(\)/);
  assert.match(html,/Streaming \+ LOD \+ Thin Instances \+ PBR/);
 });
+
+test('step 8: player and pure motion are loaded and executed in Lab',()=>{
+ for(const name of ['nordhafen-player-motion.js','nordhafen-player-controller.js'])
+  assert.ok(html.includes('<script src="./'+name+'"></script>'),name);
+ assert.match(html,/id="player"/);
+ assert.match(html,/cdn\.babylonjs\.com\/havok\/HavokPhysics_umd\.js/);
+ assert.match(html,/SDNordhafenPlayerController\.create/);
+ assert.match(html,/motion:window\.SDNordhafenPlayerMotion/);
+ assert.match(html,/player\.update\(engine\.getDeltaTime\(\)\/1000\)/);
+ assert.match(html,/streamer\.update\(pos\.x,pos\.z\)/);
+ assert.match(html,/player\.syncColliders\(streamer\)/);
+ assert.match(html,/player\.dispose\(\)/);
+});
