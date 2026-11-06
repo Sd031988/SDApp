@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nordhafen Ops – Etappe C: Mission</title>
+<title>Nordhafen Ops – Mission / Freie Stadt / Royale (Prototyp)</title>
 <style>
 html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system-ui}canvas{width:100%;height:100%;display:block;touch-action:none}
 #hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
@@ -9,18 +9,18 @@ html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system
 #missionProgress{position:fixed;left:50%;top:64%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;display:none;place-items:center;background:conic-gradient(#ffbc35 var(--progress,0%),#102235c9 0);font-weight:bold;text-shadow:0 1px 4px #000;pointer-events:none;z-index:6}#objectiveMarker{position:fixed;z-index:7;color:#ffe86c;background:#112436d9;border:1px solid #ffe86c;border-radius:8px;padding:6px 10px;font-weight:700;pointer-events:none;display:none}#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
 button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
 </style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="damageOverlay"></div><div id="missionProgress"></div><div id="objectiveMarker"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
-<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Mission: Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), danach erreiche die Hafen-Extraktion und überlebe zehn Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, E Funkmast aktivieren, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Mission starten</button> <button id="restart" style="display:none">Neustart</button></article></div>
+<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Mission: Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), danach erreiche die Hafen-Extraktion und überlebe zehn Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, E Funkmast aktivieren, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><label for="mode">Modus</label> <select id="mode"><option value="mission">Mission</option><option value="city">Freie Stadt (Prototyp)</option><option value="royale">Nordhafen Royale (Prototyp)</option></select> <label for="difficulty">Schwierigkeit</label> <select id="difficulty"><option value="easy">Leicht</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select><label for="volume">Lautstärke</label><input id="volume" type="range" min="0" max="100" value="60"><p>Bestzeiten/Siege: noch nicht gespeichert. Fahrzeug und Touch-Steuerung sind noch nicht spielbar.</p><button id="play">Starten</button> <button id="restart" style="display:none">Neustart</button></article></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script>
 <script>
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission,interiors=window.SDNordhafenOpsInteriors;
-let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,paused=false,holdingE=false,mission=missionRules.initial(),sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],interiorSites=[],interiorLoaded=new Map(),frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='';
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission,interiors=window.SDNordhafenOpsInteriors,modes=window.SDNordhafenOpsModes;
+let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,paused=false,holdingE=false,mission=missionRules.initial(),sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],interiorSites=[],interiorLoaded=new Map(),frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='',mode='mission',wanted={level:0,quiet:0},royaleElapsed=0,royalePlayers=[],cityMissions=modes.missions(),loot=modes.loot(20261107,50);
 function status(t){$('status').textContent=t;}
 function clear(){
  engine?.stopRenderLoop();for(const items of interiorLoaded.values())for(const item of items){item.body?.dispose();item.mesh.dispose();}interiorLoaded.clear();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
@@ -45,6 +45,7 @@ function shoot(){
  }else status('Schuss abgegeben');
 }
 async function start(){
+ mode=$('mode').value;wanted={level:0,quiet:0};royaleElapsed=0;royalePlayers=Array.from({length:24},(_,id)=>({id,alive:true}));cityMissions=modes.missions();
  $('play').disabled=true;$('menu').style.display='none';
  try{
   clear();$('restart').style.display='none';engine=new BABYLON.Engine(canvas,true);scene=new BABYLON.Scene(engine);
@@ -162,19 +163,21 @@ async function start(){
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
     if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);damageThisFrame=true;$('damageOverlay').style.borderWidth='18px';status('Unter Beschuss! Leben: '+health);}}
    }
-   mission=missionRules.step(mission,{dt,position:pos,locations:sites,holding:holdingE,damage:damageThisFrame,health});
-   if(mission.activated!==null){
+   if(mode==='mission')mission=missionRules.step(mission,{dt,position:pos,locations:sites,holding:holdingE,damage:damageThisFrame,health});
+   if(mode==='mission'&&mission.activated!==null){
     mastMeshes[mission.activated].material.emissiveColor=new BABYLON.Color3(.12,.8,.22);
     const updated=missionRules.alertNearby(enemies.map(e=>e.state),sites.towers[mission.activated]);
     enemies.forEach((e,i)=>{e.state=updated[i];});
     status('Funkmast '+(mission.activated+1)+' aktiviert – Gegner alarmiert!');
    }
    const count=mission.completed.filter(Boolean).length;
-   if(count===3)extractMesh.setEnabled(true);
+   if(mode==='mission'&&count===3)extractMesh.setEnabled(true);
    const progress=count<3?mission.progress/missionRules.ACTIVATE_SECONDS:mission.extractProgress/missionRules.EXTRACT_SECONDS;
-   const showProgress=count===3?mission.extractProgress>0:mission.progress>0;
+   const showProgress=mode==='mission'&&(count===3?mission.extractProgress>0:mission.progress>0);
    if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100)+'|'+Math.ceil(Math.max(0,(count===3?missionRules.EXTRACT_SECONDS:missionRules.ACTIVATE_SECONDS)*(1-progress)));if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=progressText.split('|')[2]+'s';}}
-   if(mission.status!=='playing'){
+   if(mode==='royale'&&pos){const circle=modes.zone(royaleElapsed);health=Math.max(0,health-modes.zoneDamage(pos,circle,dt));}
+   if(mode==='city'&&pos){/* Free-roam prototype: wanted and mission progression remain modular, not fully wired. */}
+   if(mode==='mission'&&mission.status!=='playing'){
     ended=true;$('restart').style.display='none';$('menuTitle').textContent=mission.status==='won'?'MISSION ERFOLGREICH':'NIEDERLAGE';
     $('menuText').textContent=mission.status==='won'?'Extraktion gelungen! Zeit: '+Math.floor(elapsed)+' s · Treffer: '+weapon.hits+' · Gegner besiegt: '+defeated:'Du wurdest ausgeschaltet. Starte einen neuen Versuch.';
     $('play').textContent='Neustart';$('menu').style.display='grid';
@@ -182,7 +185,7 @@ async function start(){
    }
    if(tick-lastMarkers>=100){lastMarkers=tick;
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
-   if(sites){const index=mission.completed.indexOf(false),point=index<0?sites.extraction:sites.towers[index],label=index<0?'EXTRAKTION':'FUNKMAST '+(index+1);
+   if(sites&&mode==='mission'){const index=mission.completed.indexOf(false),point=index<0?sites.extraction:sites.towers[index],label=index<0?'EXTRAKTION':'FUNKMAST '+(index+1);
     const dx=point.x-(pos?.x??startPosition.x),dz=point.z-(pos?.z??startPosition.z),distance=Math.hypot(dx,dz);
     const screen=BABYLON.Vector3.Project(new BABYLON.Vector3(point.x,3,point.z),BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));
     const marker=$('objectiveMarker');marker.style.display='block';marker.textContent=label+' · '+Math.round(distance)+' m';
@@ -193,7 +196,7 @@ async function start(){
    if(!damageThisFrame)$('damageOverlay').style.borderWidth='0';
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · MISSION\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
     if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
    }
   });
