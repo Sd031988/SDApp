@@ -13,8 +13,9 @@
   if(visible&&distance<35)state=distance<14?'shoot':'chase';
   else if(state==='shoot'||state==='chase')state=distance<45?'search':'patrol';
   else if(state==='search'&&enemy.time>3)state='patrol';
+  else if(state==='alert'&&enemy.time>12)state='search';
   let x=enemy.x,z=enemy.z;
-  const speed=state==='chase'?2.6:state==='patrol'?.65:0;
+  const speed=state==='chase'||state==='alert'?2.6:state==='patrol'?.65:0;
   if(speed>0){
    const patrolDirection=Math.sin(enemy.time*.55+enemy.patrolPhase)>=0?1:-1;
    const dx=state==='patrol'?(patrolAxis==='x'?patrolDirection:0):deltaX/(distance||1);
