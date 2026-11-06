@@ -103,3 +103,43 @@ test('step 9: city is PBR opt-in and new procedural module is integrated',()=>{
  assert.match(html,/Draw Calls \(aktuell\)/);
  assert.match(html,/camera\.target\.set\(x,12,z\)/);
 });
+
+const vm=require('node:vm');
+function simulatePreset(search){
+ const controls=Object.fromEntries(['level','pbr','thin','lod','streaming','player','glb']
+  .map(id=>[id,{value:id==='level'?'small':'',checked:false}]));
+ const beginCalls=[];
+ const context={URLSearchParams,controls,search,beginCalls,$:id=>controls[id]};
+ const snippet=html.slice(html.indexOf(' function applyPreset(search){'),html.indexOf(' function stopGPU()'));
+ assert.ok(snippet.includes('function applyPreset'));
+ vm.runInNewContext(snippet+"\nresult=applyPreset(search);if(result.autoStart)beginCalls.push('begin');",context);
+ return {controls,beginCalls,result:context.result};
+}
+test('URL without preset preserves defaults and never auto-starts',()=>{
+ const x=simulatePreset('');
+ assert.equal(x.result.name,'keins');
+ assert.equal(x.result.autoStart,false);
+ assert.deepEqual(x.beginCalls,[]);
+ assert.equal(x.controls.level.value,'small');
+ for(const id of ['pbr','thin','lod','streaming','player','glb'])assert.equal(x.controls[id].checked,false);
+ assert.match(html,/if\(preset\.autoStart\)begin\(\)/);
+});
+test('preset=city sets exactly medium/PBR/thin/LOD/streaming and auto-starts',()=>{
+ const x=simulatePreset('?preset=city');
+ assert.equal(x.result.name,'city');
+ assert.deepEqual(x.beginCalls,['begin']);
+ assert.equal(x.controls.level.value,'medium');
+ for(const id of ['pbr','thin','lod','streaming'])assert.equal(x.controls[id].checked,true,id);
+ for(const id of ['player','glb'])assert.equal(x.controls[id].checked,false,id);
+ assert.match(html,/Preset: '\+preset\.name/);
+});
+test('unknown preset changes no controls, does not start and gives status notice',()=>{
+ const x=simulatePreset('?preset=unexpected');
+ assert.equal(x.result.name,'keins');
+ assert.equal(x.result.autoStart,false);
+ assert.deepEqual(x.beginCalls,[]);
+ assert.match(x.result.notice,/Unbekanntes Preset: unexpected/);
+ assert.equal(x.controls.level.value,'small');
+ for(const id of ['pbr','thin','lod','streaming','player','glb'])assert.equal(x.controls[id].checked,false,id);
+ assert.match(html,/if\(preset\.notice\)status\.textContent=preset\.notice/);
+});
