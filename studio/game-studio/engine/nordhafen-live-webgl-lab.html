@@ -64,7 +64,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
-    (cells?' | geladene Cells: '+cells.loadedCells+' | wartend: '+cells.pendingCells+
+    (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
       ' | Ladezeit p50: '+fmt(cells.loadMsP50)+' | p95: '+fmt(cells.loadMsP95):'')+
     '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
     ' | Qualitätsurteil: NICHT ERHOBEN';
