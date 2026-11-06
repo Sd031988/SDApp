@@ -196,22 +196,22 @@ async function start(){
    }
    if(tick-lastMarkers>=100){lastMarkers=tick;
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
-   if(sites&&mode==='mission'){const index=mission.completed.indexOf(false),point=index<0?sites.extraction:sites.towers[index],label=index<0?'EXTRAKTION':'FUNKMAST '+(index+1);
+   if(sites&&mode==='mission'){const point=campaign.target(mission,sites),label=campaign.objective(mission);if(!point){$('objectiveMarker').style.display='none';}else{
     const dx=point.x-(pos?.x??startPosition.x),dz=point.z-(pos?.z??startPosition.z),distance=Math.hypot(dx,dz);
     const screen=BABYLON.Vector3.Project(new BABYLON.Vector3(point.x,3,point.z),BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));
     const marker=$('objectiveMarker');marker.style.display='block';marker.textContent=label+' · '+Math.round(distance)+' m';
-    marker.style.left=Math.max(16,Math.min(innerWidth-165,screen.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(16,Math.min(innerHeight-55,screen.y/engine.getRenderHeight()*innerHeight))+'px';
+    marker.style.left=Math.max(16,Math.min(innerWidth-165,screen.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(16,Math.min(innerHeight-55,screen.y/engine.getRenderHeight()*innerHeight))+'px';}
    }
    }
    scene.render();
    if(!damageThisFrame)$('damageOverlay').style.borderWidth='0';
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')+'\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length+'\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')+'\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+campaign.objective(mission)+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length+'\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
     if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
    }
   });
-  status('Mission aktiv – drei Funkmasten aktivieren, dann Hafen-Extraktion.');
+  status('Mission: Schießstand abschließen oder mit T überspringen.');
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
  finally{$('play').disabled=false;}
 }
