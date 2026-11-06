@@ -39,7 +39,12 @@ test('Havok gravity=0 preserves vertical velocity except for grounded jump',()=>
 test('Havok controller locks capsule inertia and grounds via downward raycast, not height',async()=>{
  const previous=globalThis.HavokPhysics;
  globalThis.HavokPhysics=async()=>({});
- let inertia,ray,rayPredicate,rayHit=false,lastVelocity=null;
+ let inertia,ray,rayPredicate,rayHit=false,lastVelocity=null,modelShouldFail=false,modelDisposed=0;
+ const weights={},started=new Set(),stopped=new Set();
+ const groups=['Idle','Walk','Run','Death','Roll','Attack','Punch','Jump','Hit','Block','Cast','Emote'].map(name=>({
+  name,start(){started.add(name);stopped.delete(name);},stop(){stopped.add(name);started.delete(name);},
+  setWeightForAllAnimatables(w){weights[name]=w;},dispose(){modelDisposed++;}
+ }));
  const docListeners={};const doc={pointerLockElement:null,addEventListener(k,f){docListeners[k]=f;},removeEventListener(k){delete docListeners[k];},exitPointerLock(){this.pointerLockElement=null;}};
  class Vector3{
   constructor(x,y,z){Object.assign(this,{x,y,z});}
@@ -60,6 +65,8 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   scaling:{y:1,set(x,y,z){Object.assign(this,{x,y,z});}},rotation:{y:0},visibility:1,isPickable:true,dispose(){}
  });
  const BABYLON={Vector3,
+ TransformNode:class{constructor(){this.scaling={y:1,set(x,y,z){Object.assign(this,{x,y,z});}};this.position={x:0,y:0,z:0};this.rotation={y:0};}dispose(){modelDisposed++;}},
+ SceneLoader:{async ImportMeshAsync(){if(modelShouldFail)throw new Error('Testdatei fehlt');return {meshes:[{parent:null,getTotalVertices(){return 3;},getBoundingInfo(){return {boundingBox:{minimumWorld:{y:0},maximumWorld:{y:3.8}}};},dispose(){modelDisposed++;}}],animationGroups:groups};}},
  StandardMaterial:class{constructor(name,scene){this.name=name;this.scene=scene;this.diffuseColor=null;this.emissiveColor=null;}dispose(){}},
  Color3:class{constructor(r,g,b){Object.assign(this,{r,g,b});}},
  Ray:class{constructor(origin,direction,length){
@@ -77,6 +84,14 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  try{
   assert.equal(await ctrl.start(),true);
   assert.ok(ctrlMesh.material,'player mesh receives a material');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(ctrl.characterStatus,'Modell geladen');
+  assert.equal(ctrl.animation,'idle');
+  assert.equal(ctrlMesh.visibility,0);
+  assert.ok(weights.Idle>weights.Walk);
+  assert.deepEqual([...started].sort(),['Idle','Run','Walk'],'only three locomotion groups are running');
+  assert.equal(stopped.size,groups.length-3,'all non-locomotion groups are stopped, not disposed');
+  assert.equal(modelDisposed,0,'all animation groups remain available before cleanup');
   assert.ok(ctrlMesh.position.y-.9>=0,'capsule bottom starts at or above ground');
   assert.equal(ctrlMesh.scaling.y,1,'standing capsule uses unit vertical scale');
   listeners.click();
@@ -92,6 +107,13 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   ctrl.update(.02);
   listeners.keydown({code:'KeyW',preventDefault(){}});
   ctrl.update(.02);
+  assert.equal(ctrl.animation,'walk');
+  assert.ok(weights.Walk>0);
+  listeners.keydown({code:'ShiftLeft',preventDefault(){}});
+  ctrl.update(.02);
+  assert.equal(ctrl.animation,'run');
+  assert.ok(weights.Run>0);
+  listeners.keyup({code:'ShiftLeft'});
   assert.ok(Number.isFinite(ctrlMesh.rotation.y),'mesh faces movement direction');
   listeners.keyup({code:'KeyW'});
   listeners.keydown({code:'ControlLeft',preventDefault(){}});
@@ -111,6 +133,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   assert.equal(lastVelocity.y,5.5,'ground contact from raycast allows jump');
   assert.equal(rayPredicate({isPickable:true}),true);
   ctrl.dispose();
+  assert.ok(modelDisposed>=groups.length+2,'dispose releases model and all animation groups');
  }finally{globalThis.HavokPhysics=previous;}
 });
 

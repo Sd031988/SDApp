@@ -23,3 +23,12 @@ No asset is bundled or redistributed in this PR.
 - The previously listed Babylon-hosted BoomBox.glb runtime URL returned HTTP 404 in the user's iPhone Safari test.
 - No replacement HTTP 200 URL has been verified. The Nordhafen lab therefore makes **no GLB request** and displays a visible disabled status.
 - Existing source/licensing notes are historical provenance, not evidence that a runtime asset is available.
+
+## Spielfigur: Rogue (Quaternius „RPG Characters“)
+
+- Datei: `assets/nordhafen-player-rogue.glb` (1,65 MB)
+- Quelle: Quaternius – RPG Characters Pack, https://quaternius.com/packs/rpgcharacters.html
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** – laut `License.txt` im Original-Paket, https://creativecommons.org/publicdomain/zero/1.0/
+- Bezug: vom Nutzer heruntergeladen und am 06.11.2026 übergeben; unverändert aus `glTF/Rogue.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
+- Inhalt geprüft: 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Run`, `Roll`, `Death`, `Punch`.
+- Hinweis: Modellraum-Höhe ca. 3,8 Einheiten → beim Einbau auf 1,8 m normalisieren.
