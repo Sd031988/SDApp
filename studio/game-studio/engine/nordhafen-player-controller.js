@@ -34,7 +34,9 @@
       {mass:0,friction:1},scene);
     player=BABYLON.MeshBuilder.CreateCapsule('nordhafen-player',{height:1.8,radius:.35},scene);
     // Start in the central street grid, away from the world boundary.
-    player.position.set(fixture.grid*32,.9,fixture.grid*32);
+    const groundHeight=0,standingHalfHeight=.9;
+    player.position.set(fixture.grid*32,groundHeight+standingHalfHeight,fixture.grid*32);
+    player.scaling.y=1;
     const playerMaterial=new BABYLON.StandardMaterial('nordhafen-player-material',scene);
     playerMaterial.diffuseColor=new BABYLON.Color3(.95,.22,.12);
     player.material=playerMaterial;
@@ -95,7 +97,7 @@
     sprint:pressed.has('ShiftLeft'),crouch:pressed.has('ControlLeft'),
     jump:pressed.has('Space')},state,dt,{gravity:0});
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
-   player.scaling.y=next.height/1.8;
+   player.scaling.y=pressed.has('ControlLeft')?next.height/1.8:1;
    camera.target.copyFrom(player.position);
    camera.radius=Math.max(6,Math.min(8,camera.radius));
    camera.beta=Math.max(.35,Math.min(1.3,camera.beta));
@@ -111,7 +113,7 @@
    if(ground)ground.dispose();
    status='Spieler freigegeben';
   }
-  return {start,update,syncColliders,dispose,get status(){return status;},get ready(){return ready;}};
+  return {start,update,syncColliders,dispose,get status(){return status;},get ready(){return ready;},get playerY(){return player?player.position.y:null;},get grounded(){return ready?groundedByRaycast():false;}};
  }
  return Object.freeze({create});
 });
