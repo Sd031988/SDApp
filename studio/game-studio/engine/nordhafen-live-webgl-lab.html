@@ -132,30 +132,12 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
      const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
-     const glbEnabled=$('glb').checked&&$('streaming').checked;
+     // No remote GLB request until a replacement URL has a verified HTTP 200 response.
+     const glbEnabled=false;
      const thinEnabled=($('thin').checked&&$('lod').checked||glbEnabled)&&$('streaming').checked;
      let glbBuilding=null,glbPromise=null;
      const generation=glbGeneration;
-     glbStatus=glbEnabled?'GLB wird geladen':'GLB aus';
-     function loadGLB(){
-       if(!glbPromise)glbPromise=BABYLON.SceneLoader.ImportMeshAsync('',
-         'https://assets.babylonjs.com/meshes/','BoomBox.glb',scene).then(result=>{
-           if(generation!==glbGeneration||!scene){
-             for(const mesh of result.meshes)mesh.dispose();
-             throw new Error('GLB-Ladevorgang abgebrochen');
-           }
-           glbBuilding=result.meshes.find(mesh=>mesh.getTotalVertices&&mesh.getTotalVertices()>0);
-           if(!glbBuilding)throw new Error('GLB enthält kein Geometrie-Mesh');
-           for(const mesh of result.meshes)mesh.isVisible=false;
-           window.SDNordhafenThinInstances.normalizeSource(glbBuilding,BABYLON);
-           glbStatus='BoomBox als Platzhalter, kein echtes Gebäudemodell';
-           return glbBuilding;
-         }).catch(error=>{
-           glbStatus='GLB-Ladefehler – Box-Fallback: '+error.message;
-           return null;
-         });
-       return glbPromise;
-     }
+     glbStatus=$('glb').checked?'GLB deaktiviert: keine verifizierte HTTP-200-Asset-URL':'GLB aus';
      let thinStatus=thinEnabled?'Thin Instances angefordert':($('thin').checked?'Thin Instances benötigen Streaming + LOD':'Thin Instances aus');
      building.material=mat1;tree.material=mat2;
      if($('pbr').checked&&$('streaming').checked&&$('lod').checked&&$('thin').checked){
@@ -217,12 +199,6 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          });
          return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
        } : buildCell;
-       const syncCellBuilder=cellBuilder;
-       if(glbEnabled)cellBuilder=async (chunk,{signal}={})=>{
-         await loadGLB();
-         if(signal&&signal.aborted)return {meshes:[],materials:[]};
-         return syncCellBuilder(chunk);
-       };
        streamer=window.SDNordhafenCellStreamer.create({
          scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
