@@ -76,8 +76,16 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  try{
   assert.equal(await ctrl.start(),true);
   assert.ok(ctrlMesh.material,'player mesh receives a material');
+  assert.ok(ctrlMesh.position.y-.9>=0,'capsule bottom starts at or above ground');
+  assert.equal(ctrlMesh.scaling.y,1,'standing capsule uses unit vertical scale');
   assert.deepEqual(inertia,Vector3.Zero());
   ctrl.update(.02);
+  listeners.keydown({code:'ControlLeft',preventDefault(){}});
+  ctrl.update(.02);
+  assert.ok(ctrlMesh.scaling.y<1,'crouching reduces capsule height');
+  listeners.keyup({code:'ControlLeft'});
+  ctrl.update(.02);
+  assert.equal(ctrlMesh.scaling.y,1,'standing again restores full capsule height');
   assert.equal(ray.length,.1+.15,'ray covers 10 cm capsule inset plus 15 cm below');
   assert.equal(ray.direction.y,-1);
   assert.equal(lastVelocity.y,-2,'no extra gravitational acceleration');
