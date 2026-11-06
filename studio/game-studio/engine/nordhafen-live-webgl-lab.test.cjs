@@ -110,7 +110,7 @@ function simulatePreset(search){
   .map(id=>[id,{value:id==='level'?'small':'',checked:false}]));
  const beginCalls=[];
  const context={URLSearchParams,controls,search,beginCalls,$:id=>controls[id]};
- const snippet=html.slice(html.indexOf(' function applyPreset(search){'),html.indexOf(' function stopGPU()'));
+ const snippet=html.slice(html.indexOf(' function applyPreset(search){'),html.indexOf(' const preset=applyPreset(window.location.search);'));
  assert.ok(snippet.includes('function applyPreset'));
  vm.runInNewContext(snippet+"\nresult=applyPreset(search);if(result.autoStart)beginCalls.push('begin');",context);
  return {controls,beginCalls,result:context.result};
