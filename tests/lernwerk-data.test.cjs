@@ -80,3 +80,17 @@ test('writing drafts autosave before lesson navigation and retain explicit save'
  assert.match(source,/panel\.querySelector\('#sdun-writing-save'\)\.onclick=/);
  assert.match(source,/autocapitalize="off"/);
 });
+
+test('draft persistence reports failures and verifies browser storage',()=>{
+ const fn=source.match(/function save\(k,v\)\{.*?\}\}/)?.[0];
+ assert.ok(fn,'save helper exists');
+ const success=new Function('localStorage',fn+'return save')({data:{},setItem(k,v){this.data[k]=v},getItem(k){return this.data[k]}});
+ assert.equal(success('draft',{a1:'Hallo'}),true);
+ const denied=new Function('localStorage',fn+'return save')({setItem(){throw Error('quota')},getItem(){return null}});
+ assert.equal(denied('draft',{a1:'Hallo'}),false);
+ const silent=new Function('localStorage',fn+'return save')({setItem(){},getItem(){return null}});
+ assert.equal(silent('draft',{a1:'Hallo'}),false);
+ assert.match(source,/status\.textContent=save\(writingKey,next\)\?/);
+ assert.equal((source.match(/status\.textContent=save\(writingKey,next\)\?/g)||[]).length,2);
+ assert.match(source,/Speichern fehlgeschlagen!/);
+});
