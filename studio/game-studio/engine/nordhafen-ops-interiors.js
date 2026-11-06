@@ -1,0 +1,10 @@
+/* Nordhafen Ops E: procedural interior blueprint and camera collision helpers. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.SDNordhafenOpsInteriors=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ 'use strict';
+ function selectBuildings(fixture,towers){const objects=fixture.chunks.flatMap(chunk=>chunk.objects.filter(o=>o.type==='building').map(o=>({id:o.id,x:chunk.x*64+o.x,z:chunk.z*64+o.z})));return towers.map(t=>objects.filter(o=>Math.hypot(o.x-t.x,o.z-t.z)>=8).sort((a,b)=>Math.hypot(a.x-t.x,a.z-t.z)-Math.hypot(b.x-t.x,b.z-t.z))[0]);}
+ function blueprint(center){const levels=3,floorHeight=3,run=7,rise=floorHeight,slope=Math.atan2(rise,run)*180/Math.PI;return {center,levels,floorHeight,run,rise,slope,roofY:levels*floorHeight,stairs:Array.from({length:levels},(_,i)=>({fromY:i*floorHeight,toY:(i+1)*floorHeight,run,rise}))};}
+ function climb(stairs){let y=0;for(const stair of stairs){if(stair.rise/stair.run>Math.tan(35*Math.PI/180))return {reached:false,y};y=stair.toY;}return {reached:true,y};}
+ function cameraRadius(desired,hitDistance,margin=.25){return hitDistance===null?desired:Math.max(.8,Math.min(desired,hitDistance-margin));}
+ function near(player,center,radius=55){return Math.hypot(player.x-center.x,player.z-center.z)<=radius;}
+ return Object.freeze({selectBuildings,blueprint,climb,cameraRadius,near});
+});
