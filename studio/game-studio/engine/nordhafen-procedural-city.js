@@ -24,6 +24,7 @@
    if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
    return matrices;
   }
+ function uvScale(width,h){return {uScale:width/8,vScale:h/30};}
  function create({scene,BABYLON,fixture,seed=1337,loadRadius=160,useThinInstances=false}={}){
   if(!scene||!BABYLON||!fixture)throw new TypeError('city scene required');
   if(!Number.isFinite(loadRadius)||loadRadius<=60)throw new TypeError('invalid city load radius');
@@ -44,7 +45,6 @@
    }
    texture.update();return texture;
   });
-  function uvScale(width,h){return {uScale:width/8,vScale:h/30};}
   const facadeMaterials=colors.map((color,i)=>[0,1,2,3].map(w=>[0,1,2].map(k=>{
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+w+'-'+k,scene);
    m.baseColor=color;m.baseTexture=facadeTextures[k];m.metallic=.04;m.roughness=.86;
