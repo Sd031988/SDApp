@@ -12,7 +12,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
 <span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
@@ -29,6 +29,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./gpu-timing-session.js"></script>
 <script src="./nordhafen-lab-gpu-wiring.js"></script>
 <script src="./nordhafen-cell-streamer.js"></script>
+<script src="./nordhafen-cell-lod.js"></script>
 <script>
 'use strict';
 (function(){
@@ -46,7 +47,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    if(engine){engine.stopRenderLoop();}
    if(scene){scene.dispose();scene=null;}
    if(engine){engine.dispose();engine=null;}
-   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;
  }
  function show(){
    if(!bridge)return;
@@ -106,8 +107,23 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        return {meshes,materials};
      }
      if($('streaming').checked){
+       const cellBuilder=$('lod').checked ? chunk=>{
+         const lod=window.SDNordhafenCellLOD.create({
+           buildLevel:level=>{
+             if(level==='placeholder'){
+               const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+chunk.id,{size:1},scene);
+               mesh.position.set((chunk.x+.5)*64,2,(chunk.z+.5)*64);
+               mesh.scaling.set(64,4,64);
+               return {meshes:[mesh],materials:[]};
+             }
+             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((_,i)=>i%4===0)};
+             return buildCell(source);
+           }
+         });
+         return {meshes:[],materials:[],updateLOD:d=>lod.update(d),dispose:()=>lod.dispose()};
+       } : buildCell;
        streamer=window.SDNordhafenCellStreamer.create({
-         scene,fixture,buildCell,loadRadius:46,unloadRadius:104,budget:2
+         scene,fixture,buildCell:cellBuilder,loadRadius:46,unloadRadius:104,budget:2
        });
        const route=fixture.chunks.slice().sort((a,b)=>a.z-b.z||(a.z%2?a.x-b.x:b.x-a.x));
        routeIndex=0;
@@ -137,7 +153,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
      engine.runRenderLoop(()=>{if(scene)scene.render();});
      timer=setInterval(show,1000);show();
-     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;
      status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene.';
    }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
  }
