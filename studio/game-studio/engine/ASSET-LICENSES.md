@@ -47,3 +47,12 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Aufbau je Auto: Karosserie + `BackWheels` + `FrontLeftWheel` + `FrontRightWheel` als eigene Knoten (Vorderräder einzeln lenkbar). Maße ca. 1,8 m × 1,2–1,3 m × 3,7–4,2 m (Meter-Maßstab).
+
+## Panzer (Quaternius „Tanks“)
+
+- Dateien: `assets/nordhafen-tank.glb`, `-tank2.glb`, `-tank3.glb`, `-tank4.glb` (266–506 KB)
+- Quelle: Quaternius – Tanks Pack, https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Aufbau: `Tank_body`, `Tank_Turret`, `Tank_Gun`, `TrackMesh.L`, `TrackMesh.R` als eigene Knoten (Turm/Rohr drehbar).
+- Größe im Modell ca. 15–18 × 5–7,5 × 10 Einheiten → beim Einbau auf ca. 8–9 m Länge skalieren (Faktor ≈ 0,5).
