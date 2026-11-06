@@ -44,14 +44,12 @@ test('u: missing runs display pending rather than invalid comparison',()=>{
  assert.match(html,/id="thin"/);
 });
 
-test('step 6: GLB opt-in uses shared async Babylon loader and streamer fallback',()=>{
+test('GLB unavailable: broken URL is never requested without HTTP 200 proof',()=>{
  assert.match(html,/id="glb"/);
- assert.match(html,/BABYLON\.SceneLoader\.ImportMeshAsync/);
- assert.match(html,/https:\/\/assets\.babylonjs\.com\/meshes\//);
- assert.match(html,/if\(glbEnabled\)cellBuilder=async/);
- assert.match(html,/buildCell:cellBuilder,loadRadius:160/);
- assert.match(html,/GLB-Ladefehler – Box-Fallback/);
- assert.match(html,/cdn\.babylonjs\.com\/loaders\/babylonjs\.loaders\.min\.js/);
+ assert.match(html,/const glbEnabled=false/);
+ assert.match(html,/GLB deaktiviert: keine verifizierte HTTP-200-Asset-URL/);
+ assert.doesNotMatch(html,/BoomBox\.glb/);
+ assert.doesNotMatch(html,/SceneLoader\.ImportMeshAsync/);
 });
 
 test('step 7: PBR opt-in is used in Lab and fifth comparison mode is selected',()=>{
@@ -77,7 +75,7 @@ test('step 8: player and pure motion are loaded and executed in Lab',()=>{
  assert.match(html,/player\.dispose\(\)/);
 });
 
-test('BoomBox source is normalized before use and explicitly marked as placeholder',()=>{
- assert.match(html,/SDNordhafenThinInstances\.normalizeSource\(glbBuilding,BABYLON\)/);
- assert.match(html,/BoomBox als Platzhalter, kein echtes Gebäudemodell/);
+test('GLB normalization module remains registered for a future verified asset',()=>{
+ assert.match(html,/nordhafen-thin-instances\.js/);
+ assert.doesNotMatch(html,/BoomBox\.glb/);
 });
