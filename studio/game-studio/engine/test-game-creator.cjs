@@ -32,7 +32,10 @@ const files = [
   'nordhafen-lab-gpu-wiring.test.cjs',
   'nordhafen-cell-streamer.test.cjs',
   'nordhafen-cell-lod.test.cjs',
-  'nordhafen-draw-memory.test.cjs'
+  'nordhafen-draw-memory.test.cjs',
+  'nordhafen-comparison-audit.test.cjs',
+  'nordhafen-route-identity.test.cjs',
+  'nordhafen-frame-window-audit.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
