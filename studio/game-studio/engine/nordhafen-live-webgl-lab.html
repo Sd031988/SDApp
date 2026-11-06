@@ -94,7 +94,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
-    '\nPBR-Qualität: '+(pbr?pbr.status:'aus')+
+    '\nPBR-Qualität: '+(pbr?pbr.status:($('pbr').checked?'benötigt Streaming + LOD + Thin Instances':'aus'))+
     '\nGLB-Assets: '+glbStatus+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
     (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
@@ -127,13 +127,6 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
      const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
-     if($('pbr').checked){
-       const ground=BABYLON.MeshBuilder.CreateGround('pbr-ground',{width:span,height:span},scene);
-       ground.position.set(span/2,-.1,span/2);
-       const sun=new BABYLON.DirectionalLight('pbr-sun',new BABYLON.Vector3(-.4,-1,-.2),scene);
-       pbr=window.SDNordhafenPBR.create({scene,engine,BABYLON,building,ground,light:sun,loadRadius:160});
-       pbr.start();
-     }
      const glbEnabled=$('glb').checked&&$('streaming').checked;
      const thinEnabled=($('thin').checked&&$('lod').checked||glbEnabled)&&$('streaming').checked;
      let glbBuilding=null,glbPromise=null;
@@ -159,6 +152,13 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      let thinStatus=thinEnabled?'Thin Instances angefordert':($('thin').checked?'Thin Instances benötigen Streaming + LOD':'Thin Instances aus');
      building.material=mat1;tree.material=mat2;
+     if($('pbr').checked&&$('streaming').checked&&$('lod').checked&&$('thin').checked){
+       const ground=BABYLON.MeshBuilder.CreateGround('pbr-ground',{width:span,height:span},scene);
+       ground.position.set(span/2,-.1,span/2);
+       const sun=new BABYLON.DirectionalLight('pbr-sun',new BABYLON.Vector3(-.4,-1,-.2),scene);
+       pbr=window.SDNordhafenPBR.create({scene,engine,BABYLON,building,ground,light:sun,loadRadius:160});
+       pbr.start();
+     }
      building.isVisible=false;tree.isVisible=false;
      function buildCell(chunk){
        if(thinEnabled){
