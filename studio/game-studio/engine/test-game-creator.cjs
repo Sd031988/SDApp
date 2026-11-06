@@ -40,7 +40,8 @@ const files = [
   'nordhafen-pbr-quality.test.cjs',
   'nordhafen-player.test.cjs',
   'nordhafen-build-slices.test.cjs',
-  'nordhafen-procedural-city.test.cjs'
+  'nordhafen-procedural-city.test.cjs',
+  'nordhafen-pbr-off-contract.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
