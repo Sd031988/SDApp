@@ -54,12 +54,13 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    const params=new URLSearchParams(search);
    const requested=params.get('preset');
    const freeze=params.get('freeze')==='1';
-   if(requested===null)return {name:'keins',autoStart:false,notice:'',freeze};
-   if(requested!=='city')return {name:'keins',autoStart:false,notice:'Unbekanntes Preset: '+requested+' (ignoriert).',freeze};
+   const cityThin=params.get('thin')!=='0';
+   if(requested===null)return {name:'keins',autoStart:false,notice:'',freeze,cityThin};
+   if(requested!=='city')return {name:'keins',autoStart:false,notice:'Unbekanntes Preset: '+requested+' (ignoriert).',freeze,cityThin};
    $('level').value='medium';
    for(const id of ['pbr','thin','lod','streaming'])$(id).checked=true;
    for(const id of ['player','glb'])$(id).checked=false;
-   return {name:'city',autoStart:true,notice:'',freeze};
+   return {name:'city',autoStart:true,notice:'',freeze,cityThin};
  }
  const preset=applyPreset(window.location.search);
  if(preset.notice)status.textContent=preset.notice;
@@ -169,7 +170,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      building.isVisible=false;tree.isVisible=false;
      if(pbr&&pbr.enabled){
        scene.getMeshByName('pbr-ground')?.dispose();
-       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160});
+       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:preset.cityThin});
      }
      function buildCell(chunk){
        if(thinEnabled){
