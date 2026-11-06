@@ -312,7 +312,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      if($('player').checked){
        player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,
-         motion:window.SDNordhafenPlayerMotion,fixture});
+         motion:window.SDNordhafenPlayerMotion,fixture,cityGeometry:window.SDNordhafenProceduralCity});
        player.start().then(ok=>{if(!ok&&player)status.textContent=player.status;});
        runFailure='Spielersteuerung: kein fester Kamerarouten-Vergleich';
      }
