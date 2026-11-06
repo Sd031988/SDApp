@@ -11,7 +11,7 @@ test('opt-in WebGL lab is standalone and only creates scene on click',()=>{
 test('lab consumes real Babylon end-frame telemetry and marks GPU unknown',()=>{
  assert.match(html,/SDNordhafenBabylonSessionBridge\.create/);
  assert.match(html,/performance\.now\(\)/);
- assert.match(html,/GPU gemessen: NEIN/);
+ assert.match(html,/GPU gemessen: '\+\(g && g\.measured \? 'JA' : 'NEIN/);
  assert.doesNotMatch(html,/supplyMeasuredMetrics\(/);
 });
 test('lab cleans up renderer, listeners, and timers',()=>{
