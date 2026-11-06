@@ -172,7 +172,7 @@
    for(const texture of textures)texture.dispose();
    scene.fogMode=BABYLON.Scene.FOGMODE_NONE;
   }
-  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];}get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
+  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
  }
  return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
 });
