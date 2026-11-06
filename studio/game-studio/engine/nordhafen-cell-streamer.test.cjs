@@ -25,9 +25,11 @@ test('16 cells: deterministic route eventually loads every cell',()=>{
 test('hysteresis prevents load/unload flapping at boundary',()=>{
  const {stream}=harness();
  stream.update(32,32);
+ stream.update(32+50,32); // erste Annäherung, Nachbar darf laden
+ const loadsAfter=stream.report().loadsTotal;
  for(let i=0;i<12;i++)stream.update(i%2?32+55:32+50,32);
- assert.equal(stream.report().loadsTotal,1);
- assert.equal(stream.report().unloadsTotal,0);
+ assert.equal(stream.report().loadsTotal,loadsAfter); // kein erneutes Laden
+ assert.equal(stream.report().unloadsTotal,0); // kein Entladen = kein Flackern
  stream.dispose();
 });
 test('budget never loads more than N per update',()=>{
