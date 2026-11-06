@@ -65,6 +65,13 @@
      if(typeof cell.needsLODUpdate==='function'&&!cell.needsLODUpdate(d))continue;
      const before=cell.lodLevel&&cell.lodLevel();
      const after=cell.updateLOD(d);
+     if(after&&typeof after.then==='function'){
+       lodChanges++;
+       after.then(level=>{
+         if(loaded.has(chunk.id)&&level!==null&&before!==level)lodSwitchesTotal++;
+       }).catch(()=>{lodFailures++;});
+       continue;
+     }
      if(!loaded.has(chunk.id))continue; // eviction during transition
      if(before===after)continue;
      lodChanges++;lodSwitchesTotal++;
