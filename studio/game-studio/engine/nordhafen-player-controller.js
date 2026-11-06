@@ -71,9 +71,9 @@
    const pos=player.position;
    // From the capsule's lower tip, allow 0.1 m inside plus 0.15 m below it.
    const ray=new BABYLON.Ray(new BABYLON.Vector3(pos.x,pos.y-.9+.1,pos.z),
-     new BABYLON.Vector3(0,-1,0),.15);
+     new BABYLON.Vector3(0,-1,0),.25);
    const hit=scene.pickWithRay(ray,mesh=>mesh!==player&&mesh.isPickable!==false);
-   return !!(hit&&hit.hit&&hit.pickedMesh!==player&&hit.distance<=.15);
+   return !!(hit&&hit.hit&&hit.pickedMesh!==player&&hit.distance<=.25);
   }
   function update(dt){
    if(!ready||disposed)return null;
