@@ -6,10 +6,10 @@
  else root.SDNordhafenComparisonAudit=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const MODES=Object.freeze(['Ohne Streaming','Streaming','Streaming + LOD','Streaming + LOD + Thin Instances']);
+ const MODES=Object.freeze(['Ohne Streaming','Streaming','Streaming + LOD','Streaming + LOD + Thin Instances','Streaming + LOD + Thin Instances + PBR']);
  const METRICS=Object.freeze(['drawCallsP50','drawCallsP95','drawCallsMax','heapP50','heapMax']);
  function audit(runs){
-  if(!Array.isArray(runs)||runs.length!==MODES.length)throw new TypeError('four benchmark runs required');
+  if(!Array.isArray(runs)||runs.length!==MODES.length)throw new TypeError('five benchmark runs required');
   const failures=[];
   const modes=new Set();
   let profile=null,route=null;
