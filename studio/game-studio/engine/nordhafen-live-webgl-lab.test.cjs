@@ -192,3 +192,28 @@ test('step 9h: distant placeholders are instances of shared source meshes',()=>{
  assert.match(code,/source.material=material/);
  assert.doesNotMatch(code,/MeshBuilder.CreateBox\('lod-placeholder-'\+obj.id/);
 });
+
+
+test('step 10: third-person camera stays 6–8 m away with FOV <= 0.9',()=>{
+ const controller=require('./nordhafen-player-controller.js');
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');
+ assert.equal(typeof controller.create,'function');
+ assert.match(source,/camera\.radius=7\.5/);
+ assert.match(source,/camera\.fov=\.8/);
+ assert.match(source,/camera\.lowerRadiusLimit=6;camera\.upperRadiusLimit=8/);
+ assert.match(source,/camera\.beta=1\.15/);
+ assert.match(source,/camera\.lowerBetaLimit=\.35;camera\.upperBetaLimit=1\.3/);
+});
+test('step 10: player is visible with its own material and starts in the center',()=>{
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');
+ assert.match(source,/player\.position\.set\(fixture\.grid\*32,\.9,fixture\.grid\*32\)/);
+ assert.match(source,/player\.material=playerMaterial/);
+ assert.match(source,/player\.isVisible=true/);
+ assert.match(source,/playerMaterial\.diffuseColor=new BABYLON\.Color3/);
+});
+test('step 10: grassy outskirts extend three times the city footprint',()=>{
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-procedural-city.js'),'utf8');
+ assert.match(source,/city-outskirts-grass/);
+ assert.match(source,/width:span\*3,height:span\*3/);
+ assert.match(source,/outskirts\.position\.set\(span\/2,-\.19,span\/2\)/);
+});
