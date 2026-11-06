@@ -66,6 +66,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
     (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
+      ' | LOD-Wechsel: '+cells.lodSwitchesTotal+' | LOD-Fehler: '+cells.lodFailures+
       ' | Ladezeit p50: '+fmt(cells.loadMsP50)+' | p95: '+fmt(cells.loadMsP95):'')+
     '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
     ' | Qualitätsurteil: NICHT ERHOBEN';
@@ -108,7 +109,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      if($('streaming').checked){
        const cellBuilder=$('lod').checked ? chunk=>{
-         const lod=window.SDNordhafenCellLOD.create({near:35,far:70,hysteresis:8,
+         const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder'){
                const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+chunk.id,{size:1},scene);
@@ -120,10 +121,10 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
              return buildCell(source);
            }
          });
-         return {meshes:[],materials:[],updateLOD:d=>lod.update(d),dispose:()=>lod.dispose()};
+         return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
        } : buildCell;
        streamer=window.SDNordhafenCellStreamer.create({
-         scene,fixture,buildCell:cellBuilder,loadRadius:46,unloadRadius:104,budget:2
+         scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
        const route=fixture.chunks.slice().sort((a,b)=>a.z-b.z||(a.z%2?a.x-b.x:b.x-a.x));
        routeIndex=0;
