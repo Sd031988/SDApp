@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nordhafen Ops – Etappe A: Schießstand</title>
+<style>
+html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system-ui}canvas{width:100%;height:100%;display:block;touch-action:none}
+#hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
+#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-size:28px;text-shadow:0 1px 3px #000}
+#flash{position:fixed;left:54%;top:57%;width:18px;height:18px;border-radius:50%;background:#ffd26b;box-shadow:0 0 35px 16px #ff9b39;opacity:0;pointer-events:none}
+#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
+button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
+</style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
+<div id="menu"><article><h1>NORDHAFEN OPS</h1><p>Etappe A – Schießstand. Teste die Waffe an fünf Ziel-Dummies in der gestreamten Nordhafen-Stadt.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+<script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
+<script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat;
+let engine,scene,streamer,city,player,targets=[],weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0;
+function status(t){$('status').textContent=t;}
+function clear(){
+ engine?.stopRenderLoop();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
+ engine=scene=streamer=city=player=null;targets=[];weapon=combat.initial();
+}
+function shoot(){
+ if(!scene||!player?.ready)return;
+ const now=performance.now();if(now-lastShot<130)return;lastShot=now;
+ const result=combat.fire(weapon);weapon=result.state;
+ if(result.event!=='fired'){status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
+ flashUntil=now+65;
+ const camera=scene.activeCamera,ray=scene.createPickingRay(canvas.clientWidth/2,canvas.clientHeight/2,BABYLON.Matrix.Identity(),camera);
+ const picked=scene.pickWithRay(ray,m=>m.metadata?.target===true);
+ if(picked?.hit&&picked.distance<=120){
+  const target=targets.find(t=>t.mesh===picked.pickedMesh);
+  if(target){const feedback=combat.hit(weapon,25);weapon=feedback.state;target.health=Math.max(0,target.health-feedback.damage);
+   hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
+   if(target.health===0){target.mesh.dispose();targets=targets.filter(t=>t!==target);}
+  }
+ }else status('Schuss abgegeben');
+}
+async function start(){
+ $('play').disabled=true;$('menu').style.display='none';
+ try{
+  clear();engine=new BABYLON.Engine(canvas,true);scene=new BABYLON.Scene(engine);
+  scene.clearColor=new BABYLON.Color4(.5,.68,.82,1);
+  const camera=new BABYLON.ArcRotateCamera('ops-camera',-1.2,1.25,7.5,new BABYLON.Vector3(32,1,32),scene);
+  camera.lowerRadiusLimit=4;camera.upperRadiusLimit=10;scene.activeCamera=camera;
+  new BABYLON.HemisphericLight('ambient',new BABYLON.Vector3(0,1,0),scene);
+  const fixture=window.SDNordhafenBenchmark.create('medium',1337);
+  city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:false});
+  streamer=window.SDNordhafenCellStreamer.create({scene,fixture,buildCell:(chunk,opts)=>city.buildCell(chunk,opts),loadRadius:160,unloadRadius:200,budget:2,lodBudget:2});
+  player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,motion:window.SDNordhafenPlayerMotion,fixture,cityGeometry:window.SDNordhafenProceduralCity});
+  if(!await player.start())throw Error(player.status);
+  for(let i=0;i<5;i++){
+   const mesh=BABYLON.MeshBuilder.CreateCapsule('target-'+i,{height:1.8,radius:.35},scene);
+   mesh.position.set(28+(i-2)*3,.9,15-i*4);mesh.metadata={target:true};mesh.isPickable=true;
+   const mat=new BABYLON.StandardMaterial('target-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.85,.34,.2);mesh.material=mat;
+   targets.push({mesh,health:50});
+  }
+  const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}};
+  canvas.addEventListener('keydown',onKey,{signal:controller.signal});
+  canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();},{signal:controller.signal});
+  engine.runRenderLoop(()=>{
+   const dt=Math.min(.05,engine.getDeltaTime()/1000);weapon=combat.tick(weapon,dt);
+   const pos=player.update(dt);if(pos){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   scene.render();
+   const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
+   $('cross').style.color=now<hitUntil?'#f66':'white';
+   $('hud').textContent='NORDHAFEN OPS · ETAPPE A\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nZiele: '+targets.length+' / 5\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
+  });
+  status('Schießstand aktiv – fünf Ziele. Maus ins Bild klicken.');
+ }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
+ finally{$('play').disabled=false;}
+}
+let controller=new AbortController();
+$('play').addEventListener('click',()=>{controller.abort();controller=new AbortController();start();});
+window.addEventListener('resize',()=>engine?.resize());
+window.addEventListener('pagehide',()=>{controller.abort();clear();});
+})();
+</script></body></html>
