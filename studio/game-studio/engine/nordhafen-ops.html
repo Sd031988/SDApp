@@ -34,6 +34,8 @@ function shoot(){
  const result=weaponRules.fire(weapon);weapon=result.state;
  if(result.event!=='fired'){if(result.event!=='cooldown')status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
  flashUntil=now+65;
+ const shotOrigin=player.position||player.update(0);if(shotOrigin)for(const enemy of enemies)enemy.state=enemyRules.hear(enemy.state,shotOrigin);
+ if(mode==='city')wanted=modes.wanted(wanted,{shot:true});
  const ray=controls.centerRay(scene,canvas,BABYLON);
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
