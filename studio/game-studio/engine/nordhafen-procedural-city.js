@@ -18,6 +18,10 @@
   for(const obj of chunk.objects)if(obj.type==='building')groups[variant(seed,obj)].push(obj);
   return groups;
  }
+  function checkedMatrices(matrices,count){
+   if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
+   return matrices;
+  }
  function create({scene,BABYLON,fixture,seed=1337,building,tree}={}){
   if(!scene||!BABYLON||!fixture||!building||!tree)throw new TypeError('city scene required');
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
@@ -82,10 +86,6 @@
   const waterMat=new BABYLON.PBRMetallicRoughnessMaterial('city-water-material',scene);
   waterMat.baseColor=new BABYLON.Color3(.11,.32,.43);waterMat.metallic=.25;waterMat.roughness=.3;
   water.material=waterMat;owned.push(water);materials.push(waterMat);
-  function checkedMatrices(matrices,count){
-   if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
-   return matrices;
-  }
   function buildCell(chunk,{signal}={}){
    if(disposed||signal?.aborted)throw new Error('city disposed or aborted');
    const meshes=[],groups=buildingGroups(chunk,seed);
