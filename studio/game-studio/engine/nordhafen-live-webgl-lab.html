@@ -12,8 +12,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<button id="start">Messung starten</button><button id="stop" disabled>Stoppen / Freigeben</button>
-<span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
+<button id="start">CPU-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
 <small>Vereinfachte Gebäude-/Vegetations-Proxies, keine vollständige Nordhafen-Spielwelt. FPS = Babylon-Endframe-Takt, keine GPU-Rechenzeit. Keine automatischen Qualitätsurteile ohne unabhängig gemessene Draw Calls, Speicher und Ladezeit.</small></footer>
@@ -24,13 +24,20 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./nordhafen-benchmark-session.js"></script>
 <script src="./nordhafen-babylon-frame-probe.js"></script>
 <script src="./nordhafen-babylon-session-bridge.js"></script>
+<script src="./webgl2-gpu-timer.js"></script>
+<script src="./gpu-timing-statistics.js"></script>
+<script src="./gpu-timing-session.js"></script>
+<script src="./nordhafen-lab-gpu-wiring.js"></script>
 <script>
 'use strict';
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null;
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null;
+ const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
+ function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
+   stopGPU();gpuStatus.textContent='GPU-Messung gestoppt.';
    if(timer!==null){clearInterval(timer);timer=null;}
    if(bridge){bridge.stop();bridge=null;}
    if(engine){engine.stopRenderLoop();}
@@ -41,12 +48,17 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
  function show(){
    if(!bridge)return;
    const r=bridge.report(),f=r.frame;
+   const g=gpu?gpu.report():null;
+   const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
    out.textContent='Quelle: '+r.source+'\nProfil: '+r.fixture.level+
     ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
     '\nRender-Timestamps vorhanden: '+f.measured+
     '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
-    '\nP95 Framezeit: '+(f.frameP95Ms===null?'noch keine':f.frameP95Ms+' ms')+
-    '\nGPU gemessen: NEIN | Qualitätsurteil: NICHT ERHOBEN';
+    '\nCPU-Frame p50: '+fmt(f.frameP50Ms)+
+    '\nCPU-Frame p95: '+fmt(f.frameP95Ms)+
+    '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
+    '\nGPU Samples: '+(g?g.sampleCount:0)+
+    '\nGPU gemessen: NEIN (bis mindestens 30 gültige Hardware-Samples) | Qualitätsurteil: NICHT ERHOBEN';
  }
  function begin(){
    cleanup();
@@ -80,13 +92,31 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        isVisible:()=>document.visibilityState==='visible'
      });
      bridge.start();
+     gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
      engine.runRenderLoop(()=>{if(scene)scene.render();});
      timer=setInterval(show,1000);show();
      start.disabled=true;stop.disabled=false;$('level').disabled=true;
      status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene.';
    }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
  }
+ function beginGPU(){
+   if(!scene||!engine||gpu)return;
+   try{
+     const gl=engine._gl;
+     gpu=window.SDNordhafenLabGPUWiring.create({scene,gl,
+       timerAPI:window.SDWebGL2GPUTimer,
+       sessionAPI:window.SDGPUTimingSession,
+       statisticsAPI:window.SDGPUTimingStatistics});
+     if(!gpu.start()){
+       gpuStatus.textContent='GPU-Messung nicht verfügbar';gpu.stop();gpu=null;return;
+     }
+     gpuStart.disabled=true;gpuStop.disabled=false;
+     gpuStatus.textContent='GPU-Messung aktiv (Hardware-Abfragen ausstehend).';
+   }catch(e){if(gpu){gpu.stop();gpu=null;}gpuStatus.textContent='GPU-Messung nicht verfügbar: '+e.message;}
+ }
  start.addEventListener('click',begin);
+ gpuStart.addEventListener('click',beginGPU);
+ gpuStop.addEventListener('click',()=>{if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=!scene;gpuStop.disabled=true;gpuStatus.textContent='GPU-Messung gestoppt.';});
  stop.addEventListener('click',()=>{cleanup();status.textContent='Gestoppt, Ressourcen freigegeben.';});
  window.addEventListener('resize',()=>{if(engine)engine.resize();});
  window.addEventListener('pagehide',cleanup);
