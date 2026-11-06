@@ -22,8 +22,8 @@ function mock(level='small'){
  class DynamicTexture{
   constructor(name){this.name=name;this.disposed=0;textures.push(this);}
   getContext(){return {fillRect(){},set fillStyle(v){}};}
-  update(){}
-  clone(name){const t=new DynamicTexture(name);return t;}
+  update(){this.updated=(this.updated||0)+1;}
+  clone(){throw Error('DynamicTexture.clone forbidden');}
   dispose(){this.disposed++;}
  }
  class Material{
@@ -47,7 +47,7 @@ function mock(level='small'){
 }
 test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
- assert.equal(h.textures.filter(t=>t.name==='nordhafen-facade').length,1);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
  for(const chunk of h.f.chunks.slice(0,4))h.result.buildCell(chunk);
  assert.equal(h.textures.filter(t=>t.name==='nordhafen-facade').length,1);
  h.result.dispose();
@@ -94,7 +94,7 @@ test('city never clones external lab sources; fresh sources have no thin instanc
  assert.equal(h.external.buildingClones,0);
  assert.equal(h.external.treeClones,0);
  const sources=[...h.result.sources,...h.meshes.filter(m=>m.name==='city-tree-trunk-source'||m.name==='city-tree-crown-source')];
- assert.equal(sources.length,5);
+ assert.equal(sources.length,11);
  for(const source of sources)assert.equal(source.thinInstanceCount||0,0);
  const cell=h.result.buildCell(chunk);
  assert.equal(h.external.buildingClones,0);
@@ -177,11 +177,11 @@ test('standard city create uses createInstance with materials on all visible cel
  assert.match(require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-procedural-city.js'),'utf8'),/useThinInstances=false/);
  h.result.dispose();
 });
-test('nine facade materials have vScale increasing by height class',()=>{
+test('nine facade materials share three independently rendered height-class textures',()=>{
  const h=mock();
  const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-height-'));
  assert.equal(facade.length,9);
- for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*3,v*3+3).map(m=>m.baseTexture.vScale),[1,2,3]);
+ for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*3,v*3+3).map(m=>m.baseTexture.name),['nordhafen-facade-height-0','nordhafen-facade-height-1','nordhafen-facade-height-2']);
  h.result.dispose();
 });
 test('seeded footprints vary in width and depth and repeat deterministically',()=>{
@@ -191,4 +191,25 @@ test('seeded footprints vary in width and depth and repeat deterministically',()
  assert.ok(new Set(a.map(s=>s.width+'x'+s.depth)).size>1);
  assert.ok(a.every(s=>s.width>=4&&s.width<=10&&s.depth>=4&&s.depth<=8));
  h.result.dispose();
+});
+
+test('three independent facade textures are updated and nine source meshes have matching distinct materials',()=>{
+ const h=mock();
+ const facade=h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-'));
+ assert.equal(facade.length,3);
+ assert.ok(facade.every(t=>t.updated===1));
+ assert.equal(h.result.sources.length,9);
+ assert.equal(new Set(h.result.sources.map(s=>s.material)).size,9);
+ for(let i=0;i<9;i++)assert.equal(h.result.sources[i].material.baseTexture,facade[i%3]);
+ h.result.dispose();
+});
+test('instances never assign material and inherit from height-class source',()=>{
+ const h=mock('medium');
+ const chunk=h.f.chunks[0];
+ const cell=h.result.buildCell(chunk,{level:'full'});
+ assert.ok(cell.meshes.every(m=>m.material));
+ cell.meshes.forEach(m=>m.dispose());h.result.dispose();
+ const fs=require('node:fs'),path=require('node:path');
+ const source=fs.readFileSync(path.join(__dirname,'nordhafen-procedural-city.js'),'utf8');
+ assert.doesNotMatch(source,/\b(?:mesh|trunk|crown)\.material\s*=\s*[^;]+;\s*(?:mesh|trunk|crown)\.position/);
 });
