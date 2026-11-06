@@ -138,8 +138,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
            }
            glbBuilding=result.meshes.find(mesh=>mesh.getTotalVertices&&mesh.getTotalVertices()>0);
            if(!glbBuilding)throw new Error('GLB enthält kein Geometrie-Mesh');
+           window.SDNordhafenThinInstances.normalizeSource(glbBuilding,BABYLON);
            for(const mesh of result.meshes)mesh.isVisible=false;
-           glbStatus='GLB geladen (Khronos BoomBox als Gebäude-Proxy)';
+           glbStatus='BoomBox als Platzhalter, kein echtes Gebäudemodell';
            return glbBuilding;
          }).catch(error=>{
            glbStatus='GLB-Ladefehler – Box-Fallback: '+error.message;
