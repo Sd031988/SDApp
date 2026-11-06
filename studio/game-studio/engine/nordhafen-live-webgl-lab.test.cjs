@@ -35,3 +35,11 @@ test('lab loads and executes all three audit modules before comparison display',
  assert.match(html,/if\(!verdict\.valid\)runFailure/);
  assert.match(html,/if\(!verdict\.comparable\)compare/);
 });
+
+test('u: missing runs display pending rather than invalid comparison',()=>{
+ assert.match(html,/const pending=modes\.filter\(m=>!comparison\[m\]\)/);
+ assert.match(html,/ausstehend/);
+ assert.match(html,/if\(pending\.length\)/);
+ assert.match(html,/SDNordhafenThinInstances\.create/);
+ assert.match(html,/id="thin"/);
+});
