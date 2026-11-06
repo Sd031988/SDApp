@@ -40,6 +40,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  const previous=globalThis.HavokPhysics;
  globalThis.HavokPhysics=async()=>({});
  let inertia,ray,rayPredicate,rayHit=false,lastVelocity=null;
+ const docListeners={};const doc={pointerLockElement:null,addEventListener(k,f){docListeners[k]=f;},removeEventListener(k){delete docListeners[k];},exitPointerLock(){this.pointerLockElement=null;}};
  class Vector3{
   constructor(x,y,z){Object.assign(this,{x,y,z});}
   static Zero(){return new Vector3(0,0,0);}
@@ -56,7 +57,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  let ctrlMesh;
  const makeMesh=()=>({
   position:{x:0,y:0,z:0,set(x,y,z){Object.assign(this,{x,y,z});},clone(){return new Vector3(this.x,this.y,this.z);}},
-  scaling:{y:1,set(){}},visibility:1,isPickable:true,dispose(){}
+  scaling:{y:1,set(x,y,z){Object.assign(this,{x,y,z});}},rotation:{y:0},visibility:1,isPickable:true,dispose(){}
  });
  const BABYLON={Vector3,
  StandardMaterial:class{constructor(name,scene){this.name=name;this.scene=scene;this.diffuseColor=null;this.emissiveColor=null;}dispose(){}},
@@ -70,16 +71,29 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   rayPredicate=predicate;return {hit:rayHit,distance:.1,pickedMesh:{isPickable:true}};
  }};
  const listeners={};
- const canvas={addEventListener(type,cb){listeners[type]=cb;},removeEventListener(){},focus(){},tabIndex:0};
- const camera={alpha:0,target:{copyFrom(){}},setTarget(){}};
+ const canvas={ownerDocument:doc,requestPointerLock(){doc.pointerLockElement=canvas;},addEventListener(type,cb){listeners[type]=cb;},removeEventListener(){},focus(){},tabIndex:0};
+ const camera={alpha:0,beta:1.15,target:{copyFrom(){}},setTarget(){}};
  const ctrl=create({scene,camera,canvas,BABYLON,motion:{step},fixture:{grid:1,chunks:[]}});
  try{
   assert.equal(await ctrl.start(),true);
   assert.ok(ctrlMesh.material,'player mesh receives a material');
   assert.ok(ctrlMesh.position.y-.9>=0,'capsule bottom starts at or above ground');
   assert.equal(ctrlMesh.scaling.y,1,'standing capsule uses unit vertical scale');
+  listeners.click();
+  assert.equal(doc.pointerLockElement,canvas,'click captures pointer');
+  const oldAlpha=camera.alpha;
+  docListeners.mousemove({movementX:40,movementY:-20});
+  assert.notEqual(camera.alpha,oldAlpha,'locked pointer rotates camera');
+  doc.exitPointerLock();docListeners.pointerlockchange();
+  const unlockedAlpha=camera.alpha;
+  docListeners.mousemove({movementX:40,movementY:0});
+  assert.equal(camera.alpha,unlockedAlpha,'unlocked pointer does not rotate camera');
   assert.deepEqual(inertia,Vector3.Zero());
   ctrl.update(.02);
+  listeners.keydown({code:'KeyW',preventDefault(){}});
+  ctrl.update(.02);
+  assert.ok(Number.isFinite(ctrlMesh.rotation.y),'mesh faces movement direction');
+  listeners.keyup({code:'KeyW'});
   listeners.keydown({code:'ControlLeft',preventDefault(){}});
   ctrl.update(.02);
   assert.ok(ctrlMesh.scaling.y<1,'crouching reduces capsule height');
