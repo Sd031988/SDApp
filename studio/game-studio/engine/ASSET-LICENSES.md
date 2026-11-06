@@ -10,3 +10,11 @@
 - Hosting note: the Babylon-hosted file has not been byte-for-byte verified against the upstream Khronos release; validate before production use.
 
 No asset is bundled or redistributed in this PR.
+
+## Babylon.js studio.env (IBL environment)
+- Runtime URL: https://assets.babylonjs.com/environments/studio.env
+- Source project: https://github.com/BabylonJS/Assets/tree/master/environments
+- License: Creative Commons Attribution 4.0 International (CC-BY-4.0), per Babylon.js Asset Libraries guidance for Studio IBL.
+- Source/licensing discussion: https://forum.babylonjs.com/t/sandbox-studio-environment-texture-file/36190
+- Usage: opt-in PBR lighting in the Nordhafen benchmark lab; no local redistribution.
+- Attribution: Babylon.js Assets contributors / Studio Softbox environment. Verify precise author attribution before production redistribution.
