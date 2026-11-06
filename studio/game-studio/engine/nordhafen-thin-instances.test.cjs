@@ -39,3 +39,30 @@ test('t: absent thin-instance API uses createInstance fallback',()=>{
  assert.equal(r.meshCount,3);assert.equal(f.buffers.length,0);r.dispose();
  assert.deepEqual(f.made.map(m=>m.disposeCount),[1,1,1]);
 });
+
+test('v: refresh thin-instance bounding info once per mesh after matrix upload',()=>{
+ const f=fixture(),calls=[];
+ for(const source of Object.values(f.sourceByType)){
+  const original=source.clone;
+  source.clone=function(name){
+   const mesh=original.call(this,name);
+   const setBuffer=mesh.thinInstanceSetBuffer;
+   mesh.thinInstanceSetBuffer=function(...args){
+    calls.push([name,'buffer']);
+    return setBuffer.apply(this,args);
+   };
+   mesh.thinInstanceRefreshBoundingInfo=function(force){
+    calls.push([name,'refresh',force]);
+   };
+   return mesh;
+  };
+ }
+ const r=create({...f});
+ assert.equal(r.meshCount,2);
+ for(const mesh of f.made){
+  assert.deepEqual(calls.filter(entry=>entry[0]===mesh.name),[
+   [mesh.name,'buffer'],[mesh.name,'refresh',false]
+  ]);
+ }
+ r.dispose();
+});
