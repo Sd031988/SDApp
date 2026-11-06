@@ -5,15 +5,16 @@
  else root.SDNordhafenCellStreamer=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- function create({scene,fixture,buildCell,loadRadius=48,unloadRadius=96,budget=2,now}={}){
+ function create({scene,fixture,buildCell,loadRadius=48,unloadRadius=96,budget=2,lodBudget=2,now}={}){
   if(!scene||!fixture||!Array.isArray(fixture.chunks)||typeof buildCell!=='function')
    throw new TypeError('scene, fixture and buildCell required');
   if(!Number.isFinite(loadRadius)||loadRadius<0||!Number.isFinite(unloadRadius)||
      unloadRadius<=loadRadius)throw new TypeError('unloadRadius must exceed loadRadius');
   if(!Number.isInteger(budget)||budget<1)throw new TypeError('positive integer budget required');
+  if(!Number.isInteger(lodBudget)||lodBudget<1)throw new TypeError('positive integer LOD budget required');
   const clock=now||(()=>performance.now());
   const loaded=new Map(),samples=[],released=new WeakSet(),failures=new Map();
-  let disposed=false,loadsTotal=0,unloadsTotal=0;
+  let disposed=false,loadsTotal=0,unloadsTotal=0,lodFailures=0,lodSwitchesTotal=0;
   const chunks=fixture.chunks,side=fixture.chunkSize;
   function release(resource){
    if(resource&&typeof resource.dispose==='function'&&!released.has(resource)){
@@ -36,8 +37,24 @@
    if(!Number.isFinite(cameraX)||!Number.isFinite(cameraZ))throw new TypeError('finite camera coordinates required');
    for(const chunk of chunks){
     if(loaded.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)unload(chunk.id);
-    else if(loaded.has(chunk.id)&&typeof loaded.get(chunk.id).updateLOD==='function')
-     loaded.get(chunk.id).updateLOD(distance(chunk,cameraX,cameraZ));
+   }
+   const lodCandidates=chunks.filter(c=>loaded.has(c.id)&&
+    typeof loaded.get(c.id).updateLOD==='function'&&distance(c,cameraX,cameraZ)<=unloadRadius)
+    .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
+   let lodChanges=0;
+   for(const chunk of lodCandidates){
+    if(lodChanges>=lodBudget)break;
+    const cell=loaded.get(chunk.id);
+    if(!cell)continue;
+    const d=distance(chunk,cameraX,cameraZ);
+    try{
+     if(typeof cell.needsLODUpdate==='function'&&!cell.needsLODUpdate(d))continue;
+     const before=cell.lodLevel&&cell.lodLevel();
+     const after=cell.updateLOD(d);
+     if(!loaded.has(chunk.id))continue; // eviction during transition
+     if(typeof cell.needsLODUpdate==='function'&&before===after)continue;
+     lodChanges++;lodSwitchesTotal++;
+    }catch(e){lodFailures++;} // keep old level and process other cells
    }
    const candidates=chunks.filter(c=>!loaded.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
     .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
@@ -50,7 +67,10 @@
      if(!cell||!Array.isArray(cell.meshes)||!Array.isArray(cell.materials))
       throw new TypeError('buildCell must return {meshes,materials}');
      const elapsed=clock()-start;
-     if(typeof cell.updateLOD==='function')cell.updateLOD(distance(chunk,cameraX,cameraZ));
+     if(typeof cell.updateLOD==='function'){
+      const after=cell.updateLOD(distance(chunk,cameraX,cameraZ));
+      if(after!==null)lodSwitchesTotal++;
+     }
      loaded.set(chunk.id,cell);failures.delete(chunk.id);loadsTotal++;newLoads++;
      if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
     }catch(e){
@@ -58,6 +78,7 @@
      failures.set(chunk.id,{count,retryAt:clock()+Math.min(30000,1000*Math.pow(2,Math.min(count-1,5)))});
      // A failed cell must not affect any other loaded cell.
      if(cell&&Array.isArray(cell.meshes)&&Array.isArray(cell.materials)){
+      if(typeof cell.dispose==='function')cell.dispose();
       for(const mesh of cell.meshes)release(mesh);
       for(const material of cell.materials)release(material);
      }
@@ -73,7 +94,7 @@
     return Number((sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo)).toFixed(4));
    }
    return Object.freeze({loadedCells:loaded.size,unloadedCells:chunks.length-loaded.size,failedCells:failures.size,
-    loadsTotal,unloadsTotal,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
+    loadsTotal,unloadsTotal,lodFailures,lodSwitchesTotal,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
   }
   function dispose(){
    if(disposed)return;
