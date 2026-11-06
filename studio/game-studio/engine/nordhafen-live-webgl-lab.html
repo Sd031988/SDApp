@@ -121,8 +121,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
      const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
-     const thinEnabled=$('thin').checked;
-     let thinStatus=thinEnabled?'Thin Instances angefordert':'Thin Instances aus';
+     const thinEnabled=$('thin').checked&&$('streaming').checked&&$('lod').checked;
+     let thinStatus=thinEnabled?'Thin Instances angefordert':($('thin').checked?'Thin Instances benötigen Streaming + LOD':'Thin Instances aus');
      building.material=mat1;tree.material=mat2;
      building.isVisible=false;tree.isVisible=false;
      function buildCell(chunk){
@@ -179,11 +179,6 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
 
-     }else if(thinEnabled){
-       const owned=[];
-       for(const chunk of fixture.chunks)owned.push(buildCell(chunk));
-       const priorCleanup=window.__unusedNordhafenCleanup;
-       // The opt-in baseline owns its cells through the scene lifetime; Babylon disposes them on scene.dispose().
      }else{
        for(const chunk of fixture.chunks)for(const obj of chunk.objects){
          const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
