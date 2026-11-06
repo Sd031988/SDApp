@@ -11,11 +11,11 @@ test('same seed and fixture produce deterministic building heights and variants'
  }
 });
 function mock(level='small'){
- const textures=[],meshes=[],materials=[];
+ const textures=[],meshes=[],materials=[],external={buildingClones:0,treeClones:0};
  const mesh=()=>({isVisible:true,material:null,dispose(){this.disposed=(this.disposed||0)+1;},
   clone(){const m=mesh();meshes.push(m);return m;},
-  thinInstanceSetBuffer(kind,data){this.thinInstanceCount=data.length/16;},thinInstanceRefreshBoundingInfo(){},
-  getVerticesData(){return [0,1,0,0,-1,0];},setVerticesData(kind,data){this.colors=data;},
+  thinInstanceSetBuffer(kind,data){if(data&&this.thinInstanceCount)throw new Error('inherited thin instances');this.thinInstanceCount=data?data.length/16:0;},thinInstanceRefreshBoundingInfo(){},
+  getVerticesData(){return [0,1,0,0,-1,0,1,1,0,1,-1,0];},setVerticesData(kind,data){this.colors=data;},
   position:{set(){}}
  });
  class DynamicTexture{
@@ -33,13 +33,15 @@ function mock(level='small'){
  const BABYLON={DynamicTexture,Vector3,Color3,StandardMaterial:Material,
   PBRMetallicRoughnessMaterial:Material,VertexBuffer:{PositionKind:'position',ColorKind:'color'},
   Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
-  MeshBuilder:{CreateBox:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
+  MeshBuilder:{CreateBox:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
   Quaternion:{Identity:()=>({})},
   Matrix:{Compose:()=>({copyToArray(){}})}};
  const scene={fogMode:0};
  const f=fixture(level,1337);
- const result=city.create({scene,BABYLON,fixture:f,seed:1337,building:mesh(),tree:mesh()});
- return {result,textures,meshes,materials,scene,f};
+ const building={clone(){external.buildingClones++;throw Error('external building clone');}};
+ const tree={clone(){external.treeClones++;throw Error('external tree clone');}};
+ const result=city.create({scene,BABYLON,fixture:f,seed:1337,building,tree});
+ return {result,textures,meshes,materials,scene,f,external};
 }
 test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
@@ -83,4 +85,18 @@ test('medium city thin buffers contain all eight buildings per chunk',()=>{
   groups.forEach((g,i)=>assert.equal(cell.meshes[i].thinInstanceCount,g.length));
  }
  h.result.dispose();
+});
+
+test('city never clones external lab sources; fresh sources have no thin instances',()=>{
+ const h=mock(),chunk=h.f.chunks[0];
+ assert.equal(h.external.buildingClones,0);
+ assert.equal(h.external.treeClones,0);
+ const sources=[...h.result.sources,h.meshes.find(m=>m.name==='city-tree-source')];
+ assert.equal(sources.length,4);
+ for(const source of sources)assert.equal(source.thinInstanceCount||0,0);
+ const cell=h.result.buildCell(chunk);
+ assert.equal(h.external.buildingClones,0);
+ assert.equal(h.external.treeClones,0);
+ assert.ok(cell.meshes.every(m=>m.thinInstanceCount>0));
+ cell.meshes.forEach(m=>m.dispose());h.result.dispose();
 });
