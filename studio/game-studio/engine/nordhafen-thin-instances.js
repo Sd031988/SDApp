@@ -16,6 +16,11 @@
   const supported=thin&&[...groups.keys()].every(type=>typeof sourceByType[type]?.clone==='function'&&
    typeof sourceByType[type]?.thinInstanceSetBuffer==='function');
   let disposed=false;
+  function own(mesh){
+   const original=mesh.dispose.bind(mesh);let released=false;
+   mesh.dispose=function(){if(released)return;released=true;original();};
+   meshes.push(mesh);
+  }
   try{
    for(const [type,objects] of groups){
     const source=sourceByType[type];
@@ -23,7 +28,7 @@
     if(supported){
      const mesh=source.clone('thin-'+chunk.id+'-'+type);
      if(!mesh)throw new Error('thin clone failed');
-     meshes.push(mesh);
+     own(mesh);
      mesh.isVisible=true;
      const matrices=new Float32Array(objects.length*16);
      objects.forEach((obj,i)=>{
@@ -36,7 +41,7 @@
     }else{
      for(const obj of objects){
       const mesh=source.createInstance(obj.id);
-      meshes.push(mesh);
+      own(mesh);
       const h=type==='building'?6:3;
       mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
       mesh.scaling.set(type==='building'?4:1,h,type==='building'?4:1);
@@ -53,7 +58,7 @@
    // Babylon mesh.dispose() releases its thin-instance GPU matrix buffer as well.
    for(const mesh of meshes)mesh.dispose();
   }
-  return {meshes:[],materials,dispose,mode:supported?'thin':'fallback',
+  return {meshes,materials,dispose,mode:supported?'thin':'fallback',
    meshCount:meshes.length,instanceCount:chunk.objects.length};
  }
  return Object.freeze({create});
