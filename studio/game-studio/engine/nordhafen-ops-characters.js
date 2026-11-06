@@ -2,7 +2,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.SDNordhafenOpsCharacters=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const ROLES=Object.freeze(['rogue','warrior','ranger','wizard','cleric','monk']);
-const ASSETS=Object.freeze(ROLES.map(role=>'./assets/nordhafen-char-'+role+'.glb'));
+const ASSETS=Object.freeze(ROLES.map(role=>role==='rogue'?'./assets/nordhafen-player-rogue.glb':'./assets/nordhafen-char-'+role+'.glb'));
 function registry(load){const containers=new Map(),instances=new Set();
  async function acquire(role){if(!ROLES.includes(role))throw Error('unknown character role');if(!containers.has(role))containers.set(role,Promise.resolve().then(()=>load(ASSETS[ROLES.indexOf(role)])));return containers.get(role);}
  async function spawn(role,options){const container=await acquire(role);const entry=container.instantiateModelsToScene(undefined,false,options||{});instances.add(entry);return entry;}
