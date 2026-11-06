@@ -92,3 +92,13 @@ test('device regression: sliced builders wired into streaming and LOD',()=>{
  assert.match(html,/budgetMs:4/);
  assert.match(html,/buildCellSliced\(source,opts\)/);
 });
+
+test('step 9: city is PBR opt-in and new procedural module is integrated',()=>{
+ assert.match(html,/nordhafen-procedural-city\.js/);
+ assert.match(html,/if\(pbr&&pbr\.enabled\)/);
+ assert.match(html,/SDNordhafenProceduralCity\.create/);
+ assert.match(html,/city\.buildCell\(chunk/);
+ assert.match(html,/city\.dispose\(\)/);
+ assert.match(html,/Draw Calls \(aktuell\)/);
+ assert.match(html,/camera\.target\.set\(x,12,z\)/);
+});
