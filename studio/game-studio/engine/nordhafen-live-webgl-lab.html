@@ -187,18 +187,19 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
                chunk:{...chunk,objects:group.objects},
                sourceByType:{building,vegetation:tree},BABYLON
              });
-             meshes.push(...partial.meshes);
+             for(const mesh of partial.meshes){mesh.isVisible=false;meshes.push(mesh);}
            }else{
              for(const obj of group.objects){
                const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
                const h=obj.type==='building'?6:3;
                mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
                mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
-               meshes.push(mesh);
+               mesh.isVisible=false;meshes.push(mesh);
              }
            }
          },{budgetMs:4,signal,recordSlice:recordBuildSlice,
            nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
+         for(const mesh of meshes)mesh.isVisible=true;
          return {meshes,materials};
        }catch(error){
          for(const mesh of meshes)mesh.dispose();
@@ -213,7 +214,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
              const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
              mesh.position.set(chunk.x*fixture.chunkSize+obj.x,3,chunk.z*fixture.chunkSize+obj.z);
              mesh.scaling.set(4,6,4);
-             meshes.push(mesh);
+             mesh.isVisible=false;meshes.push(mesh);
            },{budgetMs:4,signal:opts.signal,recordSlice:opts.recordBuildSlice,
              nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
          return {meshes,materials};
