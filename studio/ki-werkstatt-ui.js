@@ -185,6 +185,40 @@ async function copyPrompt(){
   status('Kopieren blockiert. Text ist markiert: bitte manuell kopieren.',true);
  }
 }
+function startDirectAgent(){
+ if(!changeMode||!promptText()||!agentRequest)return;
+ const expected=agentRequest,goal=$('kiGoal').value;
+ let endpoint;
+ try{endpoint=new URL($('kiAgentAddress').value);
+  if(endpoint.origin!=='https://sd-maschinen-kenner.onrender.com'&&
+   !(endpoint.protocol==='http:'&&['localhost','127.0.0.1'].includes(endpoint.hostname)))throw Error();
+ }catch(_){status('Bitte die SD-Agent-Adresse oder eine lokale Agent-Adresse angeben.',true);return;}
+ const session=crypto.randomUUID();
+ endpoint.pathname='/coding';endpoint.search=new URLSearchParams({origin:location.origin,session});endpoint.hash='';
+ const popup=window.open(endpoint.href,'sd-coding-'+session,'popup,width=780,height=820');
+ if(!popup){status('Bitte das Agent-Fenster im Browser zulassen.',true);return;}
+ const request={consent:true,goal,files:Object.entries(expected.files).map(([path,content])=>({path,content})),newPaths:[]};
+ let sent=false;
+ const stop=()=>{window.removeEventListener('message',receive);clearTimeout(timer);};
+ const receive=event=>{
+  if(event.source!==popup||event.origin!==endpoint.origin||event.data?.session!==session)return;
+  if(event.data.type==='SD_CODING_READY'&&!sent){sent=true;popup.postMessage({type:'SD_CODING_REQUEST',session,request},endpoint.origin);}
+  if(event.data.type==='SD_CODING_RESULT'&&sent){
+   stop();
+   if(agentRequest!==expected||S.p!==expected.project||$('kiGoal').value!==goal){
+    status('Der Studio-Auftrag wurde inzwischen geändert. Bitte den aktuellen Auftrag erneut starten.',true);return;
+   }
+   const output=event.data.result?.studioOutput;
+   if(typeof output!=='string'||output.length>400000){status('Ungültige Agent-Antwort.',true);return;}
+   if(!output.trim()){status('Der Agent hat keine Dateiänderungen vorgeschlagen.');return;}
+   $('kiResult').value=output;analyse();
+   if(!parsed?.errors.length)status('Agent-Vorschlag eingelesen. Dateivergleich und Prüfbericht im Agent-Fenster prüfen, dann bewusst übernehmen.');
+  }
+ };
+ window.addEventListener('message',receive);
+ const timer=setTimeout(()=>{stop();status('Agent-Verbindung beendet. Bei Bedarf den Auftrag erneut starten.',true);},15*60*1000);
+ status('Agent-Fenster geöffnet. Dort anmelden, Anbieter wählen und Auftrag starten.');
+}
 function exportAgentRequest(){
  if(!changeMode||!promptText()||!agentRequest)return;
  const request={consent:true,goal:$('kiGoal').value,files:Object.entries(agentRequest.files).map(([path,content])=>({path,content})),newPaths:[]};
@@ -630,6 +664,11 @@ function setup(){
  exportButton.type='button';exportButton.id='kiAgentRequestExport';
  exportButton.addEventListener('click',exportAgentRequest);
  $('kiPromptPreview').after(exportButton);
+ const address=node('input');address.id='kiAgentAddress';address.type='url';address.value='https://sd-maschinen-kenner.onrender.com';
+ const addressLabel=node('label','kiLabel','Agent-Adresse (online oder lokal)');addressLabel.append(address);
+ const directAgent=node('button','','🤖 Auftrag direkt im Agenten bearbeiten');directAgent.type='button';directAgent.id='kiAgentDirect';
+ directAgent.addEventListener('click',startDirectAgent);
+ exportButton.after(addressLabel,directAgent);
  $('kiClose').addEventListener('click',closeDialog);
  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden){e.preventDefault();closeDialog()}});
