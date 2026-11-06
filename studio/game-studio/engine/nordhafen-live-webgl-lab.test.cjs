@@ -53,3 +53,8 @@ test('step 6: GLB opt-in uses shared async Babylon loader and streamer fallback'
  assert.match(html,/GLB-Ladefehler – Box-Fallback/);
  assert.match(html,/cdn\.babylonjs\.com\/loaders\/babylonjs\.loaders\.min\.js/);
 });
+
+test('BoomBox source is normalized before use and explicitly marked as placeholder',()=>{
+ assert.match(html,/SDNordhafenThinInstances\.normalizeSource\(glbBuilding,BABYLON\)/);
+ assert.match(html,/BoomBox als Platzhalter, kein echtes Gebäudemodell/);
+});
