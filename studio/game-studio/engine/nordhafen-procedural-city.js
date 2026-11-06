@@ -30,31 +30,33 @@
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
   let disposed=false;
   const colors=[new BABYLON.Color3(.55,.63,.7),new BABYLON.Color3(.65,.57,.48),new BABYLON.Color3(.48,.57,.61)];
-  // Render each height class into its own uploaded texture; never clone DynamicTexture.
-  const facadeTextures=[1,2,3].map((rowsFactor,k)=>{
-   const texture=new BABYLON.DynamicTexture('nordhafen-facade-height-'+k,{width:128,height:256*rowsFactor},scene,false);
+  // UV atlas is baked per footprint width and height class. Instances cannot
+  // override source material UVs; render windows in upright axis-aligned rows.
+  const facadeTextures=[0,1,2,3].map(w=>[0,1,2].map(k=>{
+   const width=128*(w+2),height=256*(k+1);
+   const texture=new BABYLON.DynamicTexture('nordhafen-facade-width-'+w+'-height-'+k,{width,height},scene,false);
    textures.push(texture);
    const ctx=texture.getContext();
-   ctx.fillStyle='#667887';ctx.fillRect(0,0,128,256*rowsFactor);
-   for(let row=0;row<10*rowsFactor;row++)for(let col=0;col<4;col++){
+   ctx.fillStyle='#667887';ctx.fillRect(0,0,width,height);
+   for(let row=0;row<10*(k+1);row++)for(let col=0;col<4*(w+2);col++){
     ctx.fillStyle=(row+col)%4===0?'#e6c987':'#233e52';
     ctx.fillRect(col*32+7,row*25+5,18,15);
     ctx.fillStyle='#c5d4d8';ctx.fillRect(col*32+7,row*25+5,18,2);
    }
    texture.update();return texture;
-  });
-  const facadeMaterials=colors.map((color,i)=>facadeTextures.map((texture,k)=>{
-   const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+k,scene);
+  }));
+  const facadeMaterials=colors.map((color,i)=>facadeTextures.map((widths,w)=>widths.map((texture,k)=>{
+   const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+w+'-'+k,scene);
    m.baseColor=color;m.baseTexture=texture;m.metallic=.04;m.roughness=.86;
    materials.push(m);return m;
-  }));
+  })));
   const simpleMaterials=colors.map((color,i)=>{
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-simple-'+i,scene);
    m.baseColor=color;m.metallic=0;m.roughness=1;materials.push(m);return m;
   });
-  for(let i=0;i<3;i++)for(let k=0;k<3;k++){
-   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i+'-'+k,{size:1},scene);
-   source.material=facadeMaterials[i][k];source.isVisible=false;sources.push(source);owned.push(source);
+  for(let i=0;i<3;i++)for(let w=0;w<4;w++)for(let k=0;k<3;k++){
+   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i+'-'+w+'-'+k,{size:1},scene);
+   source.material=facadeMaterials[i][w][k];source.isVisible=false;sources.push(source);owned.push(source);
   }
   const simpleSources=colors.map((_,i)=>{
    const source=BABYLON.MeshBuilder.CreateBox('city-simple-source-'+i,{size:1},scene);
@@ -120,7 +122,7 @@
      if(!useThinInstances){
       for(const obj of groups[v]){
        const h=height(seed,obj);
-       const source=level==='full'?sources[v*3+heightClass(seed,obj)]:simpleSources[v];
+       const source=level==='full'?sources[v*12+((footprint(seed,obj).width-4)/2)*3+heightClass(seed,obj)]:simpleSources[v];
        const mesh=source.createInstance('city-instance-'+chunk.id+'-'+obj.id);
        mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
        const size=footprint(seed,obj);
@@ -128,8 +130,8 @@
       }
       continue;
      }
-     const mesh=(level==='full'?sources[v*3]:simpleSources[v]).clone('city-cell-'+chunk.id+'-'+v);
-     mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v][0]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
+     const mesh=(level==='full'?sources[v*12]:simpleSources[v]).clone('city-cell-'+chunk.id+'-'+v);
+     mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v][0][0]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
      const matrix=new Float32Array(groups[v].length*16);
      groups[v].forEach((obj,i)=>{
       const h=height(seed,obj);
@@ -172,7 +174,7 @@
    for(const texture of textures)texture.dispose();
    scene.fogMode=BABYLON.Scene.FOGMODE_NONE;
   }
-  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
+  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0][0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
  }
  return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
 });
