@@ -52,7 +52,7 @@
      const before=cell.lodLevel&&cell.lodLevel();
      const after=cell.updateLOD(d);
      if(!loaded.has(chunk.id))continue; // eviction during transition
-     if(typeof cell.needsLODUpdate==='function'&&before===after)continue;
+     if(before===after)continue;
      lodChanges++;lodSwitchesTotal++;
     }catch(e){lodFailures++;} // keep old level and process other cells
    }
