@@ -200,9 +200,9 @@ test('step 10: third-person camera 7.5 m by default, may shorten near ground to 
  assert.equal(typeof controller.create,'function');
  assert.match(source,/camera\.radius=7\.5/);
  assert.match(source,/camera\.fov=\.8/);
- assert.match(source,/camera\.lowerRadiusLimit=1\.5;camera\.upperRadiusLimit=8/);
+ assert.match(source,/camera\.lowerRadiusLimit=1\.2;camera\.upperRadiusLimit=8/);
  assert.match(source,/camera\.beta=1\.15/);
- assert.match(source,/camera\.lowerBetaLimit=\.35;camera\.upperBetaLimit=1\.75/);
+ assert.match(source,/camera\.lowerBetaLimit=\.35;camera\.upperBetaLimit=2\.7/);
 });
 test('step 10: player is visible with its own material and starts in the center',()=>{
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');

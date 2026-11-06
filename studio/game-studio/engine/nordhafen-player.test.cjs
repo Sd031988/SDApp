@@ -127,10 +127,11 @@ test('third-person camera can look up without going below the ground',()=>{
  const {thirdPersonCamera}=require('./nordhafen-player-motion.js');
  const down=thirdPersonCamera({playerY:.9,beta:1.0});
  assert.equal(down.radius,7.5);assert.ok(down.cameraY>down.targetY);
- const up=thirdPersonCamera({playerY:.9,beta:1.75});
+ const up=thirdPersonCamera({playerY:.9,beta:2.7});
  assert.ok(up.beta>Math.PI/2,'camera may go below head height to look up');
  assert.ok(up.cameraY>=.4-1e-9,'camera stays above ground');
- assert.ok(up.radius<7.5&&up.radius>=1.5);
- assert.equal(thirdPersonCamera({playerY:.9,beta:3}).beta,1.75);
+ assert.ok(up.radius<7.5&&up.radius>=1.2);
+ assert.equal(thirdPersonCamera({playerY:.9,beta:3}).beta,2.7);
+ assert.ok(Math.PI-2.7<1.2,'can look up at least ~65 degrees above the horizon');
  assert.equal(thirdPersonCamera({playerY:.9,beta:0}).beta,.35);
 });

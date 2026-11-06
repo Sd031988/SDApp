@@ -41,9 +41,9 @@
     playerMaterial.diffuseColor=new BABYLON.Color3(.95,.22,.12);
     player.material=playerMaterial;
     player.isVisible=true;
-    camera.fov=.8;
-    camera.lowerRadiusLimit=1.5;camera.upperRadiusLimit=8;
-    camera.lowerBetaLimit=.35;camera.upperBetaLimit=1.75;
+    camera.fov=.8;camera.minZ=.1;
+    camera.lowerRadiusLimit=1.2;camera.upperRadiusLimit=8;
+    camera.lowerBetaLimit=.35;camera.upperBetaLimit=2.7;
     camera.radius=7.5;camera.beta=1.15;
     camera.setTarget(player.position.clone());
     aggregate=new BABYLON.PhysicsAggregate(player,BABYLON.PhysicsShapeType.CAPSULE,
@@ -102,6 +102,8 @@
    const view=(motion.thirdPersonCamera||(o=>({beta:Math.max(.35,Math.min(1.3,o.beta)),radius:7.5,targetY:o.playerY})))(
     {playerY:player.position.y,beta:camera.beta});
    camera.target.y=view.targetY;camera.beta=view.beta;camera.radius=view.radius;
+   // Close camera (looking up): fade the player so it does not block the view.
+   player.visibility=Math.max(.2,Math.min(1,(view.radius-1.2)/2.3));
    return player.position;
   }
   function dispose(){
