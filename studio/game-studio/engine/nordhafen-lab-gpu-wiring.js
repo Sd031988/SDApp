@@ -46,7 +46,7 @@
    }catch(e){error=e.message;unavailable=true;stop();return false;}
   }
   function report(){
-   if(!session)return {active:false,unavailable,error,sampleCount:0,gpuP50Ms:null,gpuP95Ms:null};
+   if(!session)return {active:false,unavailable,error,sampleCount:0,minimumSamples:30,rejectedCount:0,measured:false,gpuP50Ms:null,gpuP95Ms:null};
    const r=session.report();
    return {...r,active,unavailable:false,error};
   }
