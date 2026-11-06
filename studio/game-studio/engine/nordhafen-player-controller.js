@@ -50,7 +50,12 @@
     for(const mesh of importedRoots)mesh.parent=rootNode;
     rootNode.scaling.set(scale,scale,scale);
     rootNode.position.y=-.9-minY*scale;
-    for(const group of groups){group.start?.(true);group.setWeightForAllAnimatables?.(0);}
+    // Only locomotion groups should advance; preserve other groups for future actions.
+    for(const group of groups){
+     if(Object.values(named).includes(group)){
+      group.start?.(true);group.setWeightForAllAnimatables?.(0);
+     }else group.stop?.();
+    }
     named.idle.setWeightForAllAnimatables?.(1);
     character={root:rootNode,meshes,groups,named,floorY:minY,weights:{idle:1,walk:0,run:0}};
     characterState='Modell geladen';player.visibility=0;
