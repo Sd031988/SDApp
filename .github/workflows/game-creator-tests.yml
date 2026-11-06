@@ -3,6 +3,11 @@ on:
   pull_request:
     paths:
       - 'studio/game-studio/engine/game-creator-*'
+      - 'studio/game-studio/engine/game-quality-gates*'
+      - 'studio/game-studio/engine/nordhafen-*'
+      - 'studio/game-studio/engine/babylon-distance-culling*'
+      - 'studio/game-studio/engine/webgl*'
+      - 'studio/game-studio/engine/gpu-timing-*'
       - 'studio/game-studio/engine/test-game-creator.cjs'
       - '.github/workflows/game-creator-tests.yml'
   push:
@@ -10,6 +15,11 @@ on:
       - 'feature/game-studio-creator-ci-20261105'
     paths:
       - 'studio/game-studio/engine/game-creator-*'
+      - 'studio/game-studio/engine/game-quality-gates*'
+      - 'studio/game-studio/engine/nordhafen-*'
+      - 'studio/game-studio/engine/babylon-distance-culling*'
+      - 'studio/game-studio/engine/webgl*'
+      - 'studio/game-studio/engine/gpu-timing-*'
       - 'studio/game-studio/engine/test-game-creator.cjs'
       - '.github/workflows/game-creator-tests.yml'
   workflow_dispatch:
