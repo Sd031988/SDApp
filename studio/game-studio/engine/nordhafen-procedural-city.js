@@ -22,7 +22,7 @@
    if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
    return matrices;
   }
- function create({scene,BABYLON,fixture,seed=1337,loadRadius=160}={}){
+ function create({scene,BABYLON,fixture,seed=1337,loadRadius=160,useThinInstances=true}={}){
   if(!scene||!BABYLON||!fixture)throw new TypeError('city scene required');
   if(!Number.isFinite(loadRadius)||loadRadius<=60)throw new TypeError('invalid city load radius');
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
@@ -54,12 +54,13 @@
   const treeSource=BABYLON.MeshBuilder.CreateCylinder('city-tree-source',{height:1,diameter:.5},scene);
   treeSource.isVisible=false;owned.push(treeSource);
   // Gradient sky via vertex colors, no external shader or CDN.
+  const skyHorizon=[.62,.73,.8];
   const sky=BABYLON.MeshBuilder.CreateBox('city-gradient-sky',{size:span*6},scene);
   const positions=sky.getVerticesData(BABYLON.VertexBuffer.PositionKind);
   const colorsArray=[];
   for(let i=0;i<positions.length;i+=3){
    const t=Math.max(0,Math.min(1,(positions[i+1]/(span*3)+1)/2));
-   colorsArray.push(.62-.43*t,.73-.36*t,.8-.17*t,1);
+   colorsArray.push(skyHorizon[0]-.43*t,skyHorizon[1]-.36*t,skyHorizon[2]-.17*t,1);
   }
   sky.setVerticesData(BABYLON.VertexBuffer.ColorKind,colorsArray);
   const skyMat=new BABYLON.StandardMaterial('city-sky-gradient',scene);
@@ -68,9 +69,9 @@
   skyMat.useVertexColors=true;sky.material=skyMat;sky.isPickable=false;
   sky.infiniteDistance=true;sky.isVisible=true;owned.push(sky);materials.push(skyMat);
   scene.fogMode=BABYLON.Scene.FOGMODE_LINEAR;
-  scene.fogStart=60;scene.fogEnd=loadRadius;
+  scene.fogStart=100;scene.fogEnd=loadRadius;
   // Lower skybox edge (t=0) is the horizon color in the vertex gradient.
-  scene.fogColor=new BABYLON.Color3(.62,.73,.8);
+  scene.fogColor=new BABYLON.Color3(...skyHorizon);
   const groundTexture=new BABYLON.DynamicTexture('city-ground-map',{width:512,height:512},scene,false);
   textures.push(groundTexture);
   const g=groundTexture.getContext();
@@ -101,6 +102,17 @@
    try{
     for(let v=0;v<3;v++){
      if(!groups[v].length)continue;
+     if(!useThinInstances){
+      const material=level==='full'?facadeMaterials[v]:simpleMaterials[v];
+      for(const obj of groups[v]){
+       const h=height(seed,obj);
+       const mesh=sources[v].createInstance('city-instance-'+chunk.id+'-'+obj.id);
+       mesh.material=material;
+       mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
+       mesh.scaling.set(4,h,4);mesh.isVisible=true;meshes.push(mesh);
+      }
+      continue;
+     }
      const mesh=sources[v].clone('city-cell-'+chunk.id+'-'+v);
      mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
      const matrix=new Float32Array(groups[v].length*16);
@@ -110,12 +122,18 @@
        new BABYLON.Vector3(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z))
        .copyToArray(matrix,i*16);
      });
-     mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,groups[v].length),16,true);
+     mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,groups[v].length),16,false);
      mesh.thinInstanceRefreshBoundingInfo?.(true);
      mesh.isVisible=true;meshes.push(mesh);
     }
     const trees=level==='placeholder'?[]:chunk.objects.filter(o=>o.type==='vegetation').filter((_,i)=>level==='full'||i%2===0);
-    if(trees.length){
+    if(trees.length&&!useThinInstances){
+     for(const obj of trees){
+      const mesh=treeSource.createInstance('city-tree-instance-'+chunk.id+'-'+obj.id);
+      mesh.position.set(chunk.x*fixture.chunkSize+obj.x,1.5,chunk.z*fixture.chunkSize+obj.z);
+      mesh.scaling.set(1,3,1);mesh.isVisible=true;meshes.push(mesh);
+     }
+    }else if(trees.length){
      const mesh=treeSource.clone('city-cell-trees-'+chunk.id);
      mesh.isVisible=false;
      const matrix=new Float32Array(trees.length*16);
@@ -124,7 +142,7 @@
        new BABYLON.Vector3(chunk.x*fixture.chunkSize+obj.x,1.5,chunk.z*fixture.chunkSize+obj.z))
        .copyToArray(matrix,i*16);
      });
-     mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,trees.length),16,true);
+     mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,trees.length),16,false);
      mesh.thinInstanceRefreshBoundingInfo?.(true);
      mesh.isVisible=true;meshes.push(mesh);
     }
