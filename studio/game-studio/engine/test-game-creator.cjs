@@ -23,7 +23,8 @@ const files = [
   'nordhafen-benchmark-session.test.cjs',
   'nordhafen-babylon-session-bridge.test.cjs',
   'nordhafen-live-webgl-lab.test.cjs',
-  'webgl-capability-audit.test.cjs'
+  'webgl-capability-audit.test.cjs',
+  'webgl2-gpu-timer.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
