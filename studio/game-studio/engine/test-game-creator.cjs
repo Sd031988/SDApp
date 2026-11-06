@@ -20,7 +20,8 @@ const files = [
   'nordhafen-raf-probe.test.cjs',
   'nordhafen-babylon-frame-probe.test.cjs',
   'babylon-distance-culling.test.cjs',
-  'nordhafen-benchmark-session.test.cjs'
+  'nordhafen-benchmark-session.test.cjs',
+  'nordhafen-babylon-session-bridge.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
