@@ -105,3 +105,11 @@ No asset is bundled or redistributed in this PR.
 - Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Maßstab ca. 6× zu groß (Pistole 1,8 m, Schrotflinte 5,2 m) → Waffen Faktor ≈ 0,15–0,2, Beute als Bodenobjekt ≈ 0,2–0,3.
 - Hinweis: Das Paket enthält kein Sturmgewehr; Gewehr-Rolle vorerst mit shotgun-2/shotgun-1 besetzen oder Waffe ohne sichtbares Modell.
+
+## Feuerwaffen (Quaternius „Guns“)
+
+- Dateien: `assets/nordhafen-weapon-*.glb` (10 Teile, zusammen ca. 0,65 MB): assaultrifle-1, assaultrifle2-1, sniperrifle-1, submachinegun-1, bullpup-1, pistol-1, shotgun-1 sowie Aufsätze scope-1, silencer-1, grip.
+- Quelle: Quaternius – Guns Pack (55 Teile im Original), https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Maßstab ca. 3–7× zu groß (Sturmgewehr 3,1 m, Scharfschützengewehr 7,3 m) → in der Hand auf reale Länge skalieren (Gewehr ≈ 0,9 m, Scharfschütze ≈ 1,2 m, MP ≈ 0,6 m).
