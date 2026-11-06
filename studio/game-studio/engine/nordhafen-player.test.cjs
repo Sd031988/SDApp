@@ -73,7 +73,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   assert.equal(await ctrl.start(),true);
   assert.deepEqual(inertia,Vector3.Zero());
   ctrl.update(.02);
-  assert.equal(ray.length,.15);
+  assert.equal(ray.length,.1+.15,'ray covers 10 cm capsule inset plus 15 cm below');
   assert.equal(ray.direction.y,-1);
   assert.equal(lastVelocity.y,-2,'no extra gravitational acceleration');
   listeners.keydown({code:'Space',preventDefault(){}});
