@@ -50,7 +50,7 @@ test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
  assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
  for(const chunk of h.f.chunks.slice(0,4))h.result.buildCell(chunk);
- assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,12);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
  h.result.dispose();
 });
 test('thin instance meshes per cell bounded by building variants plus tree type',()=>{
