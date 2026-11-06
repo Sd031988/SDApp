@@ -254,7 +254,8 @@ function renderCodeReview(){
  const panel=$('kiReview'),items=$('kiReviewFindings'),headline=$('kiReviewSummary');
  if(!panel||!items||!headline)return null;
  items.replaceChildren();
- if(!parsed||parsed.errors.length||!selectedFiles().length){panel.hidden=true;return null;}
+ // Keep findings visible even when proposal validation has blocked import.
+ if(!parsed||!selectedFiles().length){panel.hidden=true;return null;}
  panel.hidden=false;
  const engine=window.SDKICodeReview;
  if(!engine||typeof engine.review!=='function'){
