@@ -34,20 +34,27 @@
   function update(distance){
    if(disposed)throw new Error('LOD cell disposed');
    if(!Number.isFinite(distance)||distance<0)throw new TypeError('invalid distance');
-   if(changing)throw new Error('LOD update already in progress');
+   if(changing)return level;
    const next=desired(distance);
    if(next===level)return level;
    changing=true;
    try{
     const replacement=buildLevel(next);
-    if(!replacement||!Array.isArray(replacement.meshes)||!Array.isArray(replacement.materials))
-     throw new TypeError('LOD builder must return meshes and materials arrays');
-    if(disposed){free(replacement);return null;}
-    const previous=active;
-    active=replacement;level=next;
-    free(previous);
-    return level;
-   }finally{changing=false;}
+    function commit(cell){
+     if(!cell||!Array.isArray(cell.meshes)||!Array.isArray(cell.materials))
+      throw new TypeError('LOD builder must return meshes and materials arrays');
+     if(disposed){free(cell);return null;}
+     const previous=active;
+     active=cell;level=next;
+     free(previous);
+     return level;
+    }
+    if(replacement&&typeof replacement.then==='function')
+     return Promise.resolve(replacement).then(commit).finally(()=>{changing=false;});
+    const result=commit(replacement);
+    changing=false;
+    return result;
+   }catch(e){changing=false;throw e;}
   }
   function dispose(){
    if(disposed)return;
