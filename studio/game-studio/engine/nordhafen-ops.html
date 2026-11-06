@@ -104,14 +104,15 @@ async function start(){
    if(interiorLoaded.has(index))return;
    const site=interiorSites[index],plan=interiors.blueprint(site),items=[];
    const make=(name,width,height,depth,x,y,z,hex,angle=0)=>{
-    const mesh=BABYLON.MeshBuilder.CreateBox(name,{width,height,depth},scene);mesh.position.set(x,y,z);mesh.rotation.z=angle;
+    const mesh=BABYLON.MeshBuilder.CreateBox(name,{width,height,depth},scene);mesh.position.set(x,y,z);mesh.rotation.x=angle;
     const material=new BABYLON.StandardMaterial(name+'-material',scene);material.diffuseColor=BABYLON.Color3.FromHexString(hex);mesh.material=material;
     const body=new BABYLON.PhysicsAggregate(mesh,BABYLON.PhysicsShapeType.BOX,{mass:0,friction:1},scene);items.push({mesh,body});return mesh;
    };
    const x=site.x,z=site.z;
    for(let level=0;level<3;level++){
     const y=level*3;
-    make('interior-floor-'+index+'-'+level,14,.25,14,x,y-.12,z,'#747c83');
+    make('interior-floor-left-'+index+'-'+level,5,.25,14,x-4.5,y-.12,z,'#747c83');
+    make('interior-floor-right-'+index+'-'+level,5,.25,14,x+4.5,y-.12,z,'#747c83');
     // Door opening at ground level, windows on upper levels.
     make('interior-back-'+index+'-'+level,14,2.8,.3,x,y+1.5,z+7,'#777f89');
     make('interior-left-'+index+'-'+level,.3,2.8,14,x-7,y+1.5,z,'#777f89');
@@ -119,11 +120,12 @@ async function start(){
     for(const side of [-1,1])make('interior-front-'+index+'-'+level+'-'+side,4,2.8,.3,x+side*5,y+1.5,z-7,'#777f89');
     make('interior-lintel-'+index+'-'+level,6,.5,.3,x,y+2.65,z-7,'#777f89');
     const direction=level%2===0?1:-1;
-    const ramp=make('interior-ramp-'+index+'-'+level,3,.25,Math.hypot(plan.run,plan.rise),x+direction*3.8,y+1.5,z, '#d5bd8c',-Math.atan2(plan.rise,plan.run)*direction);
+    const ramp=make('interior-ramp-'+index+'-'+level,3,.25,Math.hypot(plan.run,plan.rise),x,y+1.5,z, '#d5bd8c',-Math.atan2(plan.rise,plan.run)*direction);
     ramp.metadata={interiorRamp:true};
     const light=new BABYLON.PointLight('interior-light-'+index+'-'+level,new BABYLON.Vector3(x,y+2.4,z),scene);light.intensity=.4;items.push({mesh:light});
    }
-   make('interior-roof-'+index,14,.25,14,x,9,z,'#707b87');
+   make('interior-roof-left-'+index,5,.25,14,x-4.5,9,z,'#707b87');
+   make('interior-roof-right-'+index,5,.25,14,x+4.5,9,z,'#707b87');
    interiorLoaded.set(index,items);
   }
   function updateInteriors(pos){
