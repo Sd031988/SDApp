@@ -50,6 +50,7 @@ const files = [
   'nordhafen-ops-modes.test.cjs',
   'nordhafen-ops-characters.test.cjs',
   'nordhafen-ops-menu.test.cjs',
+  'nordhafen-ops-page-syntax.test.cjs',
   'nordhafen-ops-weapons.test.cjs',
   'nordhafen-ops-campaign.test.cjs',
   'nordhafen-ops-audio.test.cjs',
