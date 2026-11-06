@@ -25,3 +25,13 @@ test('lab uses bounded deterministic fixture and explicit provenance',()=>{
  assert.doesNotMatch(html,/option value="large"/);
  assert.match(html,/keine vollständige Nordhafen-Spielwelt/);
 });
+
+test('lab loads and executes all three audit modules before comparison display',()=>{
+ for(const name of ['nordhafen-comparison-audit.js','nordhafen-route-identity.js','nordhafen-frame-window-audit.js'])
+  assert.ok(html.includes('<script src="./'+name+'"></script>'),name);
+ for(const call of ['SDNordhafenComparisonAudit.audit(runs)','SDNordhafenRouteIdentity.identify({','SDNordhafenFrameWindowAudit.audit(runSamples'])
+  assert.ok(html.includes(call),call);
+ assert.match(html,/Lauf ungültig:/);
+ assert.match(html,/if\(!verdict\.valid\)runFailure/);
+ assert.match(html,/if\(!verdict\.comparable\)compare/);
+});
