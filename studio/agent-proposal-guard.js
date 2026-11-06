@@ -5,7 +5,7 @@
 (function(root){
 'use strict';
 const LIMITS=Object.freeze({selectedFiles:12,proposalFiles:40,fileChars:30000,contextChars:100000,proposalFileChars:70000,proposalChars:320000,pathChars:240});
-const SECRET_PATH=/(?:^|\/)(?:\.env(?:\.[^/]*)?|\.git(?:\/|$)|\.ssh(?:\/|$)|credentials?(?:\.[^/]*)?|secrets?(?:\.[^/]*)?|private[-_]?keys?(?:\.[^/]*)?|id_rsa|id_ed25519)(?:$|\/)/i;
+const SECRET_PATH=/(?:^|\/)(?:\.env(?:\.[^/]*)?|\.git|\.ssh|credentials?(?:\.[^/]*)?|secrets?(?:\.[^/]*)?|private[-_]?keys?(?:\.[^/]*)?|id_rsa|id_ed25519)(?:$|\/)/i;
 const BINARY_EXT=/\.(?:png|jpe?g|gif|webp|avif|ico|pdf|zip|gz|7z|rar|mp3|wav|ogg|mp4|mov|glb|gltf|woff2?|ttf|otf|eot|wasm|exe|dll|so|dylib|p12|pfx|pem|key|keystore)$/i;
 const SECRET_VALUE=/(?:-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bAKIA[0-9A-Z]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{30,}\b|\bsk-[A-Za-z0-9_-]{24,}\b|\bAIza[0-9A-Za-z_-]{30,}\b|\b(?:password|passwd|client_secret|api_key|access_token)\s*[:=]\s*["'][^"'\s]{8,}["'])/i;
 function asText(value){return typeof value==='string'?value:'';}
