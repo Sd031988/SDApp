@@ -5,11 +5,18 @@
  else root.SDNordhafenPlayerController=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(root){
  'use strict';
- function create({scene,camera,canvas,BABYLON,motion,fixture}={}){
+ function create({scene,camera,canvas,BABYLON,motion,fixture,cityGeometry}={}){
   if(!scene||!camera||!canvas||!BABYLON||!motion||!fixture)throw new TypeError('player dependencies required');
   let disposed=false,ready=false,player=null,aggregate=null,ground=null,groundBody=null;
   const colliders=new Map(),pressed=new Set();
-  let status='Physik wird geladen',last=0;
+  let status='Physik wird geladen',facing=null;
+  const pointerDocument=canvas.ownerDocument||(typeof document!=='undefined'?document:null);
+  function pointerClick(){if(ready&&canvas.requestPointerLock)canvas.requestPointerLock();}
+  function pointerMove(e){if(!ready||!pointerDocument||pointerDocument.pointerLockElement!==canvas)return;
+   camera.alpha-=(e.movementX||0)*.0025;
+   camera.beta=Math.max(camera.lowerBetaLimit??.35,Math.min(camera.upperBetaLimit??2.7,camera.beta-(e.movementY||0)*.0025));
+  }
+  function pointerChange(){if(ready)status='Spieler aktiv – WASD, Shift, Leertaste, Strg; Maus: '+(pointerDocument&&pointerDocument.pointerLockElement===canvas?'gefangen (Esc zum Freigeben)':'frei')+'; Ducken: Kollisionsform nicht umgesetzt';}
   function keyDown(e){if(['KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ControlLeft'].includes(e.code)){pressed.add(e.code);e.preventDefault();}}
   function keyUp(e){pressed.delete(e.code);}
   function releaseColliders(){
@@ -51,8 +58,10 @@
     aggregate.body.setMassProperties({inertia:BABYLON.Vector3.Zero()});
     canvas.addEventListener('keydown',keyDown);
     canvas.addEventListener('keyup',keyUp);
+    canvas.addEventListener('click',pointerClick);
+    if(pointerDocument){pointerDocument.addEventListener('mousemove',pointerMove);pointerDocument.addEventListener('pointerlockchange',pointerChange);}
     canvas.tabIndex=0;canvas.focus();
-    ready=true;status='Spieler aktiv – WASD, Shift, Leertaste, Strg; Ducken: Kollisionsform nicht umgesetzt';
+    ready=true;pointerChange();
     return true;
    }catch(e){status='Physik nicht verfügbar: '+e.message;return false;}
   }
@@ -71,8 +80,10 @@
     for(const obj of chunk.objects){
      if(obj.type!=='building')continue;
      const mesh=BABYLON.MeshBuilder.CreateBox('player-collider-'+obj.id,{size:1},scene);
-     mesh.position.set(chunk.x*64+obj.x,3,chunk.z*64+obj.z);
-     mesh.scaling.set(4,6,4);mesh.isVisible=false;
+     const dimensions=cityGeometry&&cityGeometry.footprint&&cityGeometry.height?
+      {...cityGeometry.footprint(1337,obj),height:cityGeometry.height(1337,obj)}:{width:4,depth:4,height:6};
+     mesh.position.set(chunk.x*fixture.chunkSize+obj.x,dimensions.height/2,chunk.z*fixture.chunkSize+obj.z);
+     mesh.scaling.set(dimensions.width,dimensions.height,dimensions.depth);mesh.isVisible=false;mesh.isPickable=false;
      const body=new BABYLON.PhysicsAggregate(mesh,BABYLON.PhysicsShapeType.BOX,{mass:0},scene);
      items.push({mesh,body});
     }
@@ -98,6 +109,12 @@
     jump:pressed.has('Space')},state,dt,{gravity:0});
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
    player.scaling.y=pressed.has('ControlLeft')?next.height/1.8:1;
+   if(Math.hypot(next.vx,next.vz)>.05){
+    const desired=Math.atan2(next.vx,next.vz);
+    if(facing===null)facing=desired;
+    else{const delta=Math.atan2(Math.sin(desired-facing),Math.cos(desired-facing));facing+=delta*Math.min(1,dt*12);}
+    player.rotation.y=facing;
+   }
    camera.target.copyFrom(player.position);
    const view=(motion.thirdPersonCamera||(o=>({beta:Math.max(.35,Math.min(1.3,o.beta)),radius:7.5,targetY:o.playerY})))(
     {playerY:player.position.y,beta:camera.beta});
@@ -109,6 +126,9 @@
   function dispose(){
    if(disposed)return;disposed=true;ready=false;
    canvas.removeEventListener('keydown',keyDown);canvas.removeEventListener('keyup',keyUp);
+   canvas.removeEventListener('click',pointerClick);
+   if(pointerDocument){pointerDocument.removeEventListener('mousemove',pointerMove);pointerDocument.removeEventListener('pointerlockchange',pointerChange);
+    if(pointerDocument.pointerLockElement===canvas&&pointerDocument.exitPointerLock)pointerDocument.exitPointerLock();}
    releaseColliders();
    if(aggregate)aggregate.dispose();
    if(groundBody)groundBody.dispose();
