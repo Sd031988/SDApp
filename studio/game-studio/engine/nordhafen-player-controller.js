@@ -9,7 +9,7 @@
   if(!scene||!camera||!canvas||!BABYLON||!motion||!fixture)throw new TypeError('player dependencies required');
   let disposed=false,ready=false,player=null,aggregate=null,ground=null,groundBody=null;
   const colliders=new Map(),pressed=new Set();
-  let status='Physik wird geladen',facing=null;
+  let status='Physik wird geladen',facing=null,character=null,characterState='lädt',animation='idle',modelGeneration=0;
   const pointerDocument=canvas.ownerDocument||(typeof document!=='undefined'?document:null);
   function pointerClick(){if(ready&&canvas.requestPointerLock)canvas.requestPointerLock();}
   function pointerMove(e){if(!ready||!pointerDocument||pointerDocument.pointerLockElement!==canvas)return;
@@ -22,6 +22,38 @@
   function releaseColliders(){
    for(const group of colliders.values())for(const item of group){item.body.dispose();item.mesh.dispose();}
    colliders.clear();
+  }
+  function releaseCharacter(){
+   if(!character)return;
+   for(const group of character.groups){group.stop?.();group.dispose?.();}
+   for(const mesh of character.meshes)mesh.dispose?.();
+   character.root.dispose?.();character=null;
+  }
+  async function loadCharacter(){
+   const generation=++modelGeneration;
+   try{
+    if(!BABYLON.SceneLoader?.ImportMeshAsync||!BABYLON.TransformNode)throw new Error('GLB-Loader nicht verfügbar');
+    const loaded=await BABYLON.SceneLoader.ImportMeshAsync('', './assets/', 'nordhafen-player-rogue.glb', scene);
+    const meshes=loaded.meshes||[],groups=loaded.animationGroups||[];
+    if(disposed||generation!==modelGeneration){for(const g of groups)g.dispose?.();for(const m of meshes)m.dispose?.();return;}
+    const named=Object.fromEntries(['idle','walk','run'].map(name=>[name,groups.find(g=>g.name.toLowerCase()===name)]));
+    if(!meshes.length||Object.values(named).some(g=>!g))throw new Error('Modell oder Idle/Walk/Run-Animation fehlt');
+    const rootNode=new BABYLON.TransformNode('nordhafen-character-root',scene);
+    const bounds=meshes.filter(m=>m.getBoundingInfo&&m.getTotalVertices?.()>0).map(m=>m.getBoundingInfo().boundingBox);
+    if(!bounds.length)throw new Error('Modell-Bounding-Box fehlt');
+    const minY=Math.min(...bounds.map(b=>b.minimumWorld.y)),maxY=Math.max(...bounds.map(b=>b.maximumWorld.y));
+    if(!(maxY>minY))throw new Error('Ungültige Modellhöhe');
+    const scale=1.8/(maxY-minY);
+    // Keep imported skeleton hierarchy intact: parent only root-level nodes.
+    const importedRoots=meshes.filter(m=>!m.parent);
+    for(const mesh of importedRoots)mesh.parent=rootNode;
+    rootNode.scaling.set(scale,scale,scale);
+    rootNode.position.y=-.9-minY*scale;
+    for(const group of groups){group.start?.(true);group.setWeightForAllAnimatables?.(0);}
+    named.idle.setWeightForAllAnimatables?.(1);
+    character={root:rootNode,meshes,groups,named,floorY:minY,weights:{idle:1,walk:0,run:0}};
+    characterState='Modell geladen';player.visibility=0;
+   }catch(e){characterState='Figur-Modell nicht geladen: '+e.message;player.visibility=1;}
   }
   async function start(){
    if(disposed)throw new Error('player disposed');
@@ -62,6 +94,7 @@
     if(pointerDocument){pointerDocument.addEventListener('mousemove',pointerMove);pointerDocument.addEventListener('pointerlockchange',pointerChange);}
     canvas.tabIndex=0;canvas.focus();
     ready=true;pointerChange();
+    void loadCharacter();
     return true;
    }catch(e){status='Physik nicht verfügbar: '+e.message;return false;}
   }
@@ -109,22 +142,33 @@
     jump:pressed.has('Space')},state,dt,{gravity:0});
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
    player.scaling.y=pressed.has('ControlLeft')?next.height/1.8:1;
+   animation=Math.hypot(next.vx,next.vz)<.05?'idle':pressed.has('ShiftLeft')&&!pressed.has('ControlLeft')?'run':'walk';
    if(Math.hypot(next.vx,next.vz)>.05){
     const desired=Math.atan2(next.vx,next.vz);
     if(facing===null)facing=desired;
     else{const delta=Math.atan2(Math.sin(desired-facing),Math.cos(desired-facing));facing+=delta*Math.min(1,dt*12);}
     player.rotation.y=facing;
    }
+   if(character){
+    character.root.position.x=player.position.x;character.root.position.z=player.position.z;
+    character.root.position.y=player.position.y-.9-character.root.scaling.y*character.floorY;
+    character.root.rotation.y=player.rotation.y;
+    const blend=Math.min(1,Math.max(0,dt)*8);
+    for(const name of ['idle','walk','run']){
+     const weight=character.weights[name]+((name===animation?1:0)-character.weights[name])*blend;
+     character.weights[name]=weight;character.named[name].setWeightForAllAnimatables(weight);
+    }
+   }
    camera.target.copyFrom(player.position);
    const view=(motion.thirdPersonCamera||(o=>({beta:Math.max(.35,Math.min(1.3,o.beta)),radius:7.5,targetY:o.playerY})))(
     {playerY:player.position.y,beta:camera.beta});
    camera.target.y=view.targetY;camera.beta=view.beta;camera.radius=view.radius;
    // Close camera (looking up): fade the player so it does not block the view.
-   player.visibility=Math.max(.2,Math.min(1,(view.radius-1.2)/2.3));
+   player.visibility=character?0:Math.max(.2,Math.min(1,(view.radius-1.2)/2.3));
    return player.position;
   }
   function dispose(){
-   if(disposed)return;disposed=true;ready=false;
+   if(disposed)return;disposed=true;ready=false;modelGeneration++;releaseCharacter();
    canvas.removeEventListener('keydown',keyDown);canvas.removeEventListener('keyup',keyUp);
    canvas.removeEventListener('click',pointerClick);
    if(pointerDocument){pointerDocument.removeEventListener('mousemove',pointerMove);pointerDocument.removeEventListener('pointerlockchange',pointerChange);
@@ -136,7 +180,7 @@
    if(ground)ground.dispose();
    status='Spieler freigegeben';
   }
-  return {start,update,syncColliders,dispose,get status(){return status;},get ready(){return ready;},get playerY(){return player?player.position.y:null;},get grounded(){return ready?groundedByRaycast():false;}};
+  return {start,update,syncColliders,dispose,get status(){return status;},get ready(){return ready;},get playerY(){return player?player.position.y:null;},get grounded(){return ready?groundedByRaycast():false;},get characterStatus(){return characterState;},get animation(){return animation;}};
  }
  return Object.freeze({create});
 });
