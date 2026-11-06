@@ -23,7 +23,9 @@
   }
   function freeCell(cell){
    if(!cell)return;
-   freeCell(cell);
+   if(typeof cell.dispose==='function')cell.dispose();
+   for(const mesh of cell.meshes)release(mesh);
+   for(const material of cell.materials)release(material);
   }
   function cancel(id){
    const job=pending.get(id);if(!job)return;
@@ -32,9 +34,7 @@
   function unload(id){
    const cell=loaded.get(id);if(!cell)return;
    // Only resources returned by buildCell are owned; shared materials stay untouched.
-   if(typeof cell.dispose==='function')cell.dispose();
-   for(const mesh of cell.meshes)release(mesh);
-   for(const material of cell.materials)release(material);
+   freeCell(cell);
    loaded.delete(id);unloadsTotal++;
   }
   function distance(chunk,x,z){
