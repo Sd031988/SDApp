@@ -36,7 +36,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={};
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
@@ -56,13 +56,17 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    const r=bridge.report(),f=r.frame;
    const g=gpu?gpu.report():null;
    const cells=streamer?streamer.report():null;
+   const mode=runMode;
    const measurement=drawProbe?drawProbe.read():{drawCalls:null,heapBytes:null};
-   const mode=$('streaming').checked?($('lod').checked?'Streaming + LOD':'Streaming'):'Ohne Streaming';
-   comparison[mode]=measurement;
    const metric=v=>v===null?'nicht verfügbar':String(v);
-   const compare=['Ohne Streaming','Streaming','Streaming + LOD'].map(m=>
-     m+': Draw Calls '+metric(comparison[m]?.drawCalls??null)+
-     ' | JS-Heap '+metric(comparison[m]?.heapBytes??null)+' Bytes').join('\\n');
+   const compare=['Ohne Streaming','Streaming','Streaming + LOD'].map(m=>{
+     const data=comparison[m];
+     if(!data||!data.complete)return m+': Lauf unvollständig';
+     return m+': Draw Calls p50 '+metric(data.drawCallsP50)+
+       ' | p95 '+metric(data.drawCallsP95)+' | max '+metric(data.drawCallsMax)+
+       ' | JS-Heap p50 '+metric(data.heapP50)+' | max '+metric(data.heapMax)+
+       ' Bytes | Samples '+data.samples;
+   }).join('\n');
    const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
    out.textContent='Quelle: '+r.source+'\nProfil: '+r.fixture.level+
     ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
@@ -77,7 +81,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
       ' | LOD-Wechsel: '+cells.lodSwitchesTotal+' | LOD-Fehler: '+cells.lodFailures+
       ' | Ladezeit p50: '+fmt(cells.loadMsP50)+' | p95: '+fmt(cells.loadMsP95):'')+
-    '\nMessvergleich (gleiche Kameraroute, getrennte Läufe):\\n'+compare+
+    '\nMessvergleich (gleiche Kameraroute, getrennte Läufe):\n'+compare+
     '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
     ' | Qualitätsurteil: NICHT ERHOBEN';
  }
@@ -87,6 +91,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      if(!window.BABYLON||!window.SDNordhafenBabylonSessionBridge||!window.SDNordhafenBenchmark)
        throw new Error('Babylon.js oder lokale Benchmark-Skripte nicht geladen.');
      const level=$('level').value;
+     runMode=$('streaming').checked?($('lod').checked?'Streaming + LOD':'Streaming'):'Ohne Streaming';
+     runSamples=[];runComplete=false;
+     comparison[runMode]={complete:false};
      const fixture=window.SDNordhafenBenchmark.create(level,1337);
      engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:false});
      scene=new BABYLON.Scene(engine);
@@ -126,6 +133,10 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        camera.target.set(x,0,z);
        if(streamer)streamer.update(x,z);
        routeIndex++;
+       if(routeIndex===route.length&&!runComplete){
+         runComplete=true;
+         comparison[runMode]=window.SDNordhafenDrawMemory.summarize(runSamples,{complete:true});
+       }
      }
      if($('streaming').checked){
        const cellBuilder=$('lod').checked ? chunk=>{
@@ -163,7 +174,12 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      });
      bridge.start();
      gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
-     engine.runRenderLoop(()=>{if(scene)scene.render();});
+     engine.runRenderLoop(()=>{
+       if(scene){
+         scene.render();
+         if(drawProbe&&!runComplete)runSamples.push(drawProbe.read());
+       }
+     });
      timer=setInterval(show,1000);show();
      start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;
      status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene.';
