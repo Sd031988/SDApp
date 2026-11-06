@@ -185,6 +185,15 @@ async function copyPrompt(){
   status('Kopieren blockiert. Text ist markiert: bitte manuell kopieren.',true);
  }
 }
+function exportAgentRequest(){
+ if(!changeMode||!promptText()||!agentRequest)return;
+ const request={consent:true,goal:$('kiGoal').value,files:Object.entries(agentRequest.files).map(([path,content])=>({path,content})),newPaths:[]};
+ const blob=new Blob([JSON.stringify(request,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='sd-coding-request.json';document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ status('Auftrag gespeichert. Im PC-Agenten mit coding_proposal und ausdrücklich gewähltem Anbieter verarbeiten; die Antwort anschließend hier einfügen.');
+}
 function showPromptPreview(){
  const prompt=promptText();if(!prompt)return;
  $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;
@@ -617,6 +626,10 @@ function setup(){
  $('kiChangeConsent').addEventListener('change',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiGoal').addEventListener('input',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiPromptPreview').addEventListener('click',showPromptPreview);
+ const exportButton=node('button','','📦 Auftrag für PC-Agent speichern');
+ exportButton.type='button';exportButton.id='kiAgentRequestExport';
+ exportButton.addEventListener('click',exportAgentRequest);
+ $('kiPromptPreview').after(exportButton);
  $('kiClose').addEventListener('click',closeDialog);
  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden){e.preventDefault();closeDialog()}});
