@@ -36,7 +36,8 @@ const files = [
   'nordhafen-comparison-audit.test.cjs',
   'nordhafen-route-identity.test.cjs',
   'nordhafen-frame-window-audit.test.cjs',
-  'nordhafen-thin-instances.test.cjs'
+  'nordhafen-thin-instances.test.cjs',
+  'nordhafen-pbr-quality.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
