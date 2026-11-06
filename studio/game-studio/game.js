@@ -10,8 +10,10 @@ const pose={heading:0,walk:0,phase:0,clock:0,state:'idle'};
 const camera={azimuth:.55,elev:.48,distance:21,targetX:0,targetZ:0};
 const keys={forward:false,back:false,left:false,right:false,jump:false};
 const say=message=>$('status').textContent=message;
-let modelMeshes=new Map();
+let modelMeshes=new Map(),gpuLost=false;
 function syncModelBuffers(next){
+// CPU scene data stays editable while WebGL is unavailable; upload on restore.
+if(gpuLost)return;
 const assets=next.version===2?next.assets:[];
 const cache=new Map(),created=[];
 try{
@@ -106,9 +108,8 @@ terrainMesh=mesh(vertices);terrainSource=t;
 }
 function gridlines(){const a=[];for(let p=-20;p<=20;p++){a.push(-20,.012,p,0,1,0,20,.012,p,0,1,0,p,.012,-20,0,1,0,p,.012,20,0,1,0);}return mesh(a);}
 function compile(type,source){const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error('3D-Shaderfehler: '+gl.getShaderInfoLog(shader));return shader;}
-function setup(){
-gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
-if(!gl)throw Error('WebGL nicht verfügbar. Bitte einen Browser mit aktivierter 3D-Grafik verwenden.');
+function initGPU(){
+// Recreate every shader, buffer and location; GPU handles never survive context loss.
 // Simple physically-inspired directional light, hemispheric fill, distance haze and procedural terrain tint.
 const vertex='attribute vec3 pos;attribute vec3 normal;uniform mat4 proj,view,model;varying vec3 worldPos;varying vec3 worldNormal;void main(){vec4 world=model*vec4(pos,1.);worldPos=world.xyz;vec3 a=model[0].xyz,b=model[1].xyz,c=model[2].xyz;worldNormal=normalize(a*normal.x/max(dot(a,a),.0001)+b*normal.y/max(dot(b,b),.0001)+c*normal.z/max(dot(c,c),.0001));gl_Position=proj*view*world;}';
 const fragment='precision mediump float;uniform vec3 tint,sunColor,sunDir,ambientColor,fogColor,eyePosition;uniform float terrainKind;varying vec3 worldPos,worldNormal;void main(){vec3 n=normalize(worldNormal);vec3 base=tint;if(terrainKind>.5){float slope=1.-clamp(n.y,0.,1.);float h=clamp(worldPos.y/3.,0.,1.);float variation=sin(worldPos.x*1.37)*sin(worldPos.z*1.11)*.035;if(terrainKind<1.5){base=mix(vec3(.23,.43,.29),vec3(.43,.49,.32),h*.6);base=mix(base,vec3(.39,.36,.31),smoothstep(.13,.7,slope)*.55);}else if(terrainKind<2.5){base=mix(vec3(.69,.56,.37),vec3(.83,.73,.54),h);base=mix(base,vec3(.61,.47,.35),smoothstep(.15,.75,slope)*.35);}else{base=mix(vec3(.74,.83,.88),vec3(.92,.96,1.),h);base=mix(base,vec3(.54,.66,.72),smoothstep(.13,.7,slope)*.4);}base=clamp(base+variation,0.,1.);}float lambert=max(dot(n,sunDir),0.);vec3 light=ambientColor*(.72+.28*clamp(n.y,0.,1.))+sunColor*lambert;vec3 viewDir=normalize(eyePosition-worldPos);float gloss=pow(max(dot(reflect(-sunDir,n),viewDir),0.),24.);vec3 shaded=base*light+sunColor*gloss*(terrainKind>.5?.025:.08);float distanceToEye=length(eyePosition-worldPos);float haze=clamp(1.-exp(-distanceToEye*distanceToEye/6500.),0.,.38);gl_FragColor=vec4(mix(shaded,fogColor,haze),1.);}';
@@ -118,7 +119,37 @@ gl.useProgram(program);
 u={pos:gl.getAttribLocation(program,'pos'),normal:gl.getAttribLocation(program,'normal'),proj:gl.getUniformLocation(program,'proj'),view:gl.getUniformLocation(program,'view'),model:gl.getUniformLocation(program,'model'),tint:gl.getUniformLocation(program,'tint'),sunColor:gl.getUniformLocation(program,'sunColor'),sunDir:gl.getUniformLocation(program,'sunDir'),ambientColor:gl.getUniformLocation(program,'ambientColor'),fogColor:gl.getUniformLocation(program,'fogColor'),eyePosition:gl.getUniformLocation(program,'eyePosition'),terrainKind:gl.getUniformLocation(program,'terrainKind')};
 gl.enableVertexAttribArray(u.pos);gl.enableVertexAttribArray(u.normal);gl.enable(gl.DEPTH_TEST);
 shapes={box:cuboid(),sphere:globe(),column:cylinder(false),cone:cylinder(true),boulder:boulder()};grid=gridlines();
-canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();say('3D-Kontext verloren. Bitte Seite neu laden.');});
+}
+function setup(){
+gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true});
+if(!gl)throw Error('WebGL nicht verfügbar. Bitte einen Browser mit aktivierter 3D-Grafik verwenden.');
+initGPU();
+doc.body.dataset.gameWebgl='ready';
+canvas.addEventListener('webglcontextlost',event=>{
+event.preventDefault();
+gpuLost=true;
+// Keep scene, asset bytes, selection and undo/redo; discard only stale GPU handles.
+program=null;u=null;shapes={};grid=null;terrainMesh=null;terrainSource=null;modelMeshes=new Map();
+doc.body.dataset.gameWebgl='lost';
+say('3D-Kontext verloren. Warte auf Wiederherstellung.');
+});
+canvas.addEventListener('webglcontextrestored',()=>{
+try{
+initGPU();
+gpuLost=false;
+syncModelBuffers(scene);
+before=0;
+doc.body.dataset.gameWebgl='ready';
+$('stageError').hidden=true;
+say('3D-Grafik wiederhergestellt. Szene und Verlauf bleiben erhalten.');
+}catch(error){
+gpuLost=true;
+doc.body.dataset.gameWebgl='error';
+$('stageError').hidden=false;
+$('stageError').textContent='3D-Grafik konnte nicht wiederhergestellt werden: '+error.message;
+say($('stageError').textContent);
+}
+});
 }
 function color(hex){return[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
 function draw(shape,tint,m,mode,material=0){const mesh=typeof shape==='string'?shapes[shape]:shape;gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);gl.vertexAttribPointer(u.pos,3,gl.FLOAT,false,24,0);gl.vertexAttribPointer(u.normal,3,gl.FLOAT,false,24,12);gl.uniformMatrix4fv(u.model,false,new Float32Array(m));gl.uniform3fv(u.tint,color(tint));gl.uniform1f(u.terrainKind,material);gl.drawArrays(mode||gl.TRIANGLES,0,mesh.count);}
@@ -412,7 +443,7 @@ canvas.addEventListener('wheel',e=>{if(!playing){e.preventDefault();camera.dista
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let before=0;function tick(now){
 const dt=before?Math.min((now-before)/1000,.05):0;before=now;
-if(!doc.hidden){
+if(!doc.hidden&&!gpuLost){
 const previousX=player.x,previousZ=player.z;
 if(playing)Core.move(player,keys,dt,scene.objects,camera.azimuth);
 updatePose(dt,Math.hypot(player.x-previousX,player.z-previousZ)>.00001);
