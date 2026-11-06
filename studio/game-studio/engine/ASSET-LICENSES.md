@@ -88,3 +88,11 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Maße: Wandelement 4 m breit × 4,4 m hoch; Boden 2 × 2 m; Treppe ca. 3,8 × 1,45 m hoch × 3,1 m.
+
+## Möbel (Quaternius „Furniture“)
+
+- Dateien: `assets/nordhafen-furn-*.glb` (25 Teile, zusammen ca. 0,5 MB): Betten, Sofas, Stuhl, Hocker, Tische, Regal, Kommode, Nachttisch, Küche (Kühlschrank, Herd, Spüle, Schrank), Bad (Toilette, Waschbecken, Dusche), Teppich, Zimmerpflanze, Decken- und Stehlampe, Mülleimer, Tür, großes Fenster.
+- Quelle: Quaternius – Furniture Pack (123 Teile im Original), https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Maßstab ca. 2× zu groß (Bett 3,9 m lang, Tür 4,2 m hoch) → beim Einbau mit Faktor ≈ 0,5 skalieren.
