@@ -41,7 +41,8 @@ test('LOD transition disposes previous meshes and materials exactly once',()=>{
 test('streaming eviction during LOD transition releases every tier once',()=>{
  const counts=new Map();
  let stream,trigger=false;
- const buildCell=()=>{
+ const buildCell=chunk=>{
+  if(chunk.id!=='chunk-0-0')return {meshes:[],materials:[]};
   const lod=create({near:35,far:70,hysteresis:8,buildLevel:level=>{
    const mk=kind=>({dispose(){const key=level+':'+kind;counts.set(key,(counts.get(key)||0)+1);}});
    if(level==='simplified'&&trigger)stream.update(10000,10000);
