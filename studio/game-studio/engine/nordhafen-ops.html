@@ -38,7 +38,7 @@ function shoot(){
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
   const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
-  if(enemy){weapon=weaponRules.hit(weapon);enemy.state=enemyRules.damage(enemy.state,weaponRules.active(weapon).damage);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/50;return;}
+  if(enemy){weapon=weaponRules.hit(weapon);enemy.state=enemyRules.damage(enemy.state,weaponRules.active(weapon).damage);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/enemyRules.TYPES[enemy.state.type].health;return;}
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){weapon=weaponRules.hit(weapon);target.health=Math.max(0,target.health-weaponRules.active(weapon).damage);
    hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
@@ -82,14 +82,15 @@ async function start(){
   }
   sites=missionRules.locations(startPosition,fixture.grid*fixture.chunkSize);
   const enemySpawns=sites.towers.flatMap((mast,i)=>[{x:mast.x+(i===2?-16:0),z:mast.z+(i===2?0:-16),patrolAxis:i===2?'z':'x'},{x:mast.x+(i===2?16:0),z:mast.z+(i===2?0:16),patrolAxis:i===2?'z':'x'}]);
-  for(let i=0;i<6;i++){
+  for(let i=0;i<18;i++){const angle=i*Math.PI*2/18,radius=105+(i%4)*29;enemySpawns.push({x:Math.max(15,Math.min(495,startPosition.x+Math.cos(angle)*radius)),z:Math.max(15,Math.min(495,startPosition.z+Math.sin(angle)*radius)),patrolAxis:i%2?'z':'x'});}
+  for(let i=0;i<enemySpawns.length;i++){
    const {x,z,patrolAxis}=enemySpawns[i];
    const mesh=BABYLON.MeshBuilder.CreateCapsule('enemy-'+i,{height:1.8,radius:.38},scene);
    mesh.position.set(x,.9,z);mesh.metadata={enemy:i};mesh.isPickable=true;
-   const palette=controls.appearance('enemy');const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(palette.body);mesh.material=mat;
+   const palette=controls.appearance('enemy'),type=['guard','scout','heavy'][i%3],profile=enemyRules.TYPES[type];const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(profile.color);mesh.material=mat;
    const visor=BABYLON.MeshBuilder.CreateBox('enemy-visor-'+i,{width:.6,height:.18,depth:.16},scene);visor.parent=mesh;visor.position.set(0,.46,-.32);visor.isPickable=false;const vm=new BABYLON.StandardMaterial('enemy-visor-mat-'+i,scene);vm.emissiveColor=BABYLON.Color3.FromHexString(palette.visor);visor.material=vm;
    const bar=BABYLON.MeshBuilder.CreatePlane('enemy-health-'+i,{width:1,height:.12},scene);bar.parent=mesh;bar.position.set(0,1.2,0);bar.billboardMode=BABYLON.Mesh.BILLBOARDMODE_ALL;bar.isPickable=false;const bm=new BABYLON.StandardMaterial('enemy-health-mat-'+i,scene);bm.emissiveColor=BABYLON.Color3.FromHexString(palette.healthBar);bm.disableLighting=true;bar.material=bm;
-   enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z)});
+   enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z,type)});
   }
   for(let i=0;i<3;i++){
    const point=sites.towers[i],mast=BABYLON.MeshBuilder.CreateCylinder('radio-mast-'+i,{height:12,diameterTop:.3,diameterBottom:.9,tessellation:8},scene);
@@ -164,7 +165,7 @@ async function start(){
     const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
     const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis,elapsed});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
-    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);damageThisFrame=true;$('damageOverlay').style.borderWidth='18px';status('Unter Beschuss! Leben: '+health);}}
+    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,enemyRules.TYPES[enemy.state.type].damage);damageThisFrame=true;$('damageOverlay').style.borderWidth='18px';status('Unter Beschuss! Leben: '+health);}}
    }
    if(mode==='mission')mission=missionRules.step(mission,{dt,position:pos,locations:sites,holding:holdingE,damage:damageThisFrame,health});
    if(mode==='mission'&&mission.activated!==null){
@@ -199,7 +200,7 @@ async function start(){
    if(!damageThisFrame)$('damageOverlay').style.borderWidth='0';
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
     if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
    }
   });
