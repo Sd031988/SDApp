@@ -30,24 +30,24 @@
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
   let disposed=false;
   const colors=[new BABYLON.Color3(.55,.63,.7),new BABYLON.Color3(.65,.57,.48),new BABYLON.Color3(.48,.57,.61)];
-  // UV atlas is baked per footprint width and height class. Instances cannot
-  // override source material UVs; render windows in upright axis-aligned rows.
-  const facadeTextures=[0,1,2,3].map(w=>[0,1,2].map(k=>{
-   const width=128*(w+2),height=256*(k+1);
-   const texture=new BABYLON.DynamicTexture('nordhafen-facade-width-'+w+'-height-'+k,{width,height},scene,false);
+  // Three uploaded height-class textures, each a 4-column/10-row tile.
+  // Source-specific UV transforms are baked into geometry, not shared textures:
+  // texture.uScale/vScale on a shared texture would affect all materials.
+  const facadeTextures=[0,1,2].map(k=>{
+   const texture=new BABYLON.DynamicTexture('nordhafen-facade-height-'+k,{width:128,height:256},scene,false);
    textures.push(texture);
-   const ctx=texture.getContext();
-   ctx.fillStyle='#667887';ctx.fillRect(0,0,width,height);
-   for(let row=0;row<10*(k+1);row++)for(let col=0;col<4*(w+2);col++){
+   const ctx=texture.getContext();ctx.fillStyle='#667887';ctx.fillRect(0,0,128,256);
+   for(let row=0;row<10;row++)for(let col=0;col<4;col++){
     ctx.fillStyle=(row+col)%4===0?'#e6c987':'#233e52';
     ctx.fillRect(col*32+7,row*25+5,18,15);
     ctx.fillStyle='#c5d4d8';ctx.fillRect(col*32+7,row*25+5,18,2);
    }
    texture.update();return texture;
-  }));
-  const facadeMaterials=colors.map((color,i)=>facadeTextures.map((widths,w)=>widths.map((texture,k)=>{
+  });
+  function uvScale(width,h){return {uScale:width/8,vScale:h/30};}
+  const facadeMaterials=colors.map((color,i)=>[0,1,2,3].map(w=>[0,1,2].map(k=>{
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+w+'-'+k,scene);
-   m.baseColor=color;m.baseTexture=texture;m.metallic=.04;m.roughness=.86;
+   m.baseColor=color;m.baseTexture=facadeTextures[k];m.metallic=.04;m.roughness=.86;
    materials.push(m);return m;
   })));
   const simpleMaterials=colors.map((color,i)=>{
@@ -55,7 +55,10 @@
    m.baseColor=color;m.metallic=0;m.roughness=1;materials.push(m);return m;
   });
   for(let i=0;i<3;i++)for(let w=0;w<4;w++)for(let k=0;k<3;k++){
-   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i+'-'+w+'-'+k,{size:1},scene);
+   const width=4+w*2,h=9+k*9;
+   const uv=uvScale(width,h);
+   const faceUV=Array.from({length:6},()=>new BABYLON.Vector4(0,0,uv.uScale,uv.vScale));
+   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i+'-'+w+'-'+k,{size:1,faceUV},scene);
    source.material=facadeMaterials[i][w][k];source.isVisible=false;sources.push(source);owned.push(source);
   }
   const simpleSources=colors.map((_,i)=>{
@@ -174,7 +177,7 @@
    for(const texture of textures)texture.dispose();
    scene.fogMode=BABYLON.Scene.FOGMODE_NONE;
   }
-  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0][0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
+  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
  }
  return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
 });
