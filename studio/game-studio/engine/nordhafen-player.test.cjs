@@ -40,7 +40,11 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  const previous=globalThis.HavokPhysics;
  globalThis.HavokPhysics=async()=>({});
  let inertia,ray,rayPredicate,rayHit=false,lastVelocity=null,modelShouldFail=false,modelDisposed=0;
- const weights={},groups=['Idle','Walk','Run'].map(name=>({name,start(){},stop(){},setWeightForAllAnimatables(w){weights[name]=w;},dispose(){modelDisposed++;}}));
+ const weights={},started=new Set(),stopped=new Set();
+ const groups=['Idle','Walk','Run','Death','Roll','Attack','Punch','Jump','Hit','Block','Cast','Emote'].map(name=>({
+  name,start(){started.add(name);stopped.delete(name);},stop(){stopped.add(name);started.delete(name);},
+  setWeightForAllAnimatables(w){weights[name]=w;},dispose(){modelDisposed++;}
+ }));
  const docListeners={};const doc={pointerLockElement:null,addEventListener(k,f){docListeners[k]=f;},removeEventListener(k){delete docListeners[k];},exitPointerLock(){this.pointerLockElement=null;}};
  class Vector3{
   constructor(x,y,z){Object.assign(this,{x,y,z});}
@@ -85,6 +89,9 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   assert.equal(ctrl.animation,'idle');
   assert.equal(ctrlMesh.visibility,0);
   assert.ok(weights.Idle>weights.Walk);
+  assert.deepEqual([...started].sort(),['Idle','Run','Walk'],'only three locomotion groups are running');
+  assert.equal(stopped.size,groups.length-3,'all non-locomotion groups are stopped, not disposed');
+  assert.equal(modelDisposed,0,'all animation groups remain available before cleanup');
   assert.ok(ctrlMesh.position.y-.9>=0,'capsule bottom starts at or above ground');
   assert.equal(ctrlMesh.scaling.y,1,'standing capsule uses unit vertical scale');
   listeners.click();
@@ -126,7 +133,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   assert.equal(lastVelocity.y,5.5,'ground contact from raycast allows jump');
   assert.equal(rayPredicate({isPickable:true}),true);
   ctrl.dispose();
-  assert.ok(modelDisposed>=4,'dispose releases model and animation groups');
+  assert.ok(modelDisposed>=groups.length+2,'dispose releases model and all animation groups');
  }finally{globalThis.HavokPhysics=previous;}
 });
 
