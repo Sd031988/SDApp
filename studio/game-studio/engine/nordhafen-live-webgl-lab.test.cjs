@@ -184,7 +184,7 @@ test('step 9g: active LOD placeholder boxes have material and are visible',()=>{
 test('step 9h: LOD and streaming use camera position, not camera target',()=>{
  assert.match(html,/streamer.update\(camera.position.x,camera.position.z\)/);
  assert.doesNotMatch(html,/streamer.update\(camera.target.x,camera.target.z\)/);
- assert.match(html,/near:45,far:100,hysteresis:8/);
+ assert.match(html,/near:90,far:150,hysteresis:8/);
 });
 test('step 9h: distant placeholders are instances of shared source meshes',()=>{
  const code=html.slice(html.indexOf('     const placeholderSources='),html.indexOf('     const route='));
