@@ -55,7 +55,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  }
  let ctrlMesh;
  const makeMesh=()=>({
-  position:{x:0,y:0,z:0,set(x,y,z){Object.assign(this,{x,y,z});}},
+  position:{x:0,y:0,z:0,set(x,y,z){Object.assign(this,{x,y,z});},clone(){return new Vector3(this.x,this.y,this.z);}},
   scaling:{y:1,set(){}},visibility:1,isPickable:true,dispose(){}
  });
  const BABYLON={Vector3,
