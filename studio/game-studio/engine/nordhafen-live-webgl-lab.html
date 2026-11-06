@@ -185,7 +185,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 
      }
      if($('streaming').checked){
-       const cellBuilder=$('lod').checked ? chunk=>{
+       let cellBuilder=$('lod').checked ? chunk=>{
          const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder'){
@@ -200,13 +200,14 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          });
          return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
        } : buildCell;
-       const asyncCellBuilder=glbEnabled ? async (chunk,{signal}={})=>{
+       const syncCellBuilder=cellBuilder;
+       if(glbEnabled)cellBuilder=async (chunk,{signal}={})=>{
          await loadGLB();
          if(signal&&signal.aborted)return {meshes:[],materials:[]};
-         return cellBuilder(chunk);
-       } : cellBuilder;
+         return syncCellBuilder(chunk);
+       };
        streamer=window.SDNordhafenCellStreamer.create({
-         scene,fixture,buildCell:asyncCellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
+         scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
 
      }else{
