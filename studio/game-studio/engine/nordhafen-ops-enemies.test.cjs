@@ -36,3 +36,19 @@ test('street patrols move along assigned axis',()=>{
  const z=ai.step(e,{x:100,z:100},.1,{patrolAxis:'z'}).enemy;
  assert.equal(x.z,0);assert.equal(z.x,0);
 });
+
+test('guard scout heavy differ in health, speed and damage',()=>{
+ const es=['guard','scout','heavy'].map((type,id)=>ai.spawn(id,0,0,type));
+ assert.deepEqual(es.map(e=>e.health),[50,32,120]);
+ assert.ok(ai.TYPES.scout.speed>ai.TYPES.guard.speed);
+ assert.ok(ai.TYPES.heavy.damage>ai.TYPES.guard.damage);
+});
+test('shot wakes nearby living guards but not distant or dead ones',()=>{
+ assert.equal(ai.hear(ai.spawn(0,10,0),{x:0,z:0}).state,'alert');
+ assert.equal(ai.hear(ai.spawn(1,90,0),{x:0,z:0}).state,'patrol');
+ assert.equal(ai.hear(ai.damage(ai.spawn(2,1,0),50),{x:0,z:0}).state,'dead');
+});
+test('distant AI is not updated or allowed to shoot',()=>{
+ const e=ai.spawn(3,0,0,'scout'),result=ai.step(e,{x:150,z:0},1,{visible:true,elapsed:20});
+ assert.deepEqual(result.enemy,e);assert.equal(result.shoot,false);
+});
