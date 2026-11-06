@@ -65,3 +65,29 @@ test('dispose frees resources and is idempotent; update rejects after dispose',(
 test('invalid hysteresis is rejected',()=>{
  assert.throws(()=>create({scene:{},fixture,buildCell:()=>({meshes:[],materials:[]}),loadRadius:40,unloadRadius:40}),TypeError);
 });
+
+test('persistent build failure is retried at most once during ten rapid updates',()=>{
+ let time=0,attempts=0;
+ const {stream}=harness({now:()=>time,buildCell:()=>{attempts++;throw Error('unavailable');}});
+ for(let i=0;i<10;i++)stream.update(32,32);
+ assert.equal(attempts,1);
+ assert.equal(stream.report().failedCells,1);
+ stream.dispose();
+});
+test('failed cell retries exactly once after backoff expires',()=>{
+ let time=0,attempts=0;
+ const {stream}=harness({now:()=>time,buildCell:()=>{attempts++;throw Error('unavailable');}});
+ stream.update(32,32);
+ time=999;stream.update(32,32);assert.equal(attempts,1);
+ time=1000;stream.update(32,32);assert.equal(attempts,2);
+ stream.update(32,32);assert.equal(attempts,2);
+ stream.dispose();
+});
+test('report exposes unloadedCells and failedCells but no pendingCells',()=>{
+ const {stream}=harness();
+ const r=stream.report();
+ assert.equal(r.unloadedCells,16);
+ assert.equal(r.failedCells,0);
+ assert.equal(Object.hasOwn(r,'pendingCells'),false);
+ stream.dispose();
+});
