@@ -12,7 +12,7 @@
      unloadRadius<=loadRadius)throw new TypeError('unloadRadius must exceed loadRadius');
   if(!Number.isInteger(budget)||budget<1)throw new TypeError('positive integer budget required');
   const clock=now||(()=>performance.now());
-  const loaded=new Map(),samples=[],released=new WeakSet();
+  const loaded=new Map(),samples=[],released=new WeakSet(),failures=new Map();
   let disposed=false,loadsTotal=0,unloadsTotal=0;
   const chunks=fixture.chunks,side=fixture.chunkSize;
   function release(resource){
@@ -39,7 +39,7 @@
    const candidates=chunks.filter(c=>!loaded.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
     .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
    let newLoads=0;
-   for(const chunk of candidates.slice(0,budget)){
+   for(const chunk of candidates.filter(c=>!failures.has(c.id)||clock()>=failures.get(c.id).retryAt).slice(0,budget)){
     const start=clock();
     let cell;
     try{
@@ -47,9 +47,11 @@
      if(!cell||!Array.isArray(cell.meshes)||!Array.isArray(cell.materials))
       throw new TypeError('buildCell must return {meshes,materials}');
      const elapsed=clock()-start;
-     loaded.set(chunk.id,cell);loadsTotal++;newLoads++;
+     loaded.set(chunk.id,cell);failures.delete(chunk.id);loadsTotal++;newLoads++;
      if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
     }catch(e){
+     const count=(failures.get(chunk.id)?.count||0)+1;
+     failures.set(chunk.id,{count,retryAt:clock()+Math.min(30000,1000*Math.pow(2,Math.min(count-1,5)))});
      // A failed cell must not affect any other loaded cell.
      if(cell&&Array.isArray(cell.meshes)&&Array.isArray(cell.materials)){
       for(const mesh of cell.meshes)release(mesh);
@@ -66,13 +68,13 @@
     const i=(sorted.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);
     return Number((sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo)).toFixed(4));
    }
-   return Object.freeze({loadedCells:loaded.size,pendingCells:chunks.length-loaded.size,
+   return Object.freeze({loadedCells:loaded.size,unloadedCells:chunks.length-loaded.size,failedCells:failures.size,
     loadsTotal,unloadsTotal,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
   }
   function dispose(){
    if(disposed)return;
    for(const id of [...loaded.keys()])unload(id);
-   disposed=true;
+   failures.clear();disposed=true;
   }
   return Object.freeze({update,report,dispose});
  }
