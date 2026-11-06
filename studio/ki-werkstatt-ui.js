@@ -7,6 +7,7 @@ const $=id=>document.getElementById(id);
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
 let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false,changeMode=false;
 let repairDraft=null,repairSource=null,testResult=null;
+let agentRequest=null;
 function currentFiles(){
  const p=typeof S!=='undefined'&&S.p;
  if(!p)return {};
@@ -62,7 +63,7 @@ function openDialog(mode){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
  $('kiProject').textContent=S.p?'Aktuelles Projekt: '+S.p.name:'Noch kein Projekt geöffnet.';
  $('kiOverlay').hidden=false;
- parsed=null;stagedSnapshot=null;stagedProject=null;
+ parsed=null;stagedSnapshot=null;stagedProject=null;agentRequest=null;
  clearRepairDraft();
  $('kiResult').value='';$('kiFiles').replaceChildren();$('kiDiff').hidden=true;$('kiApply').disabled=true;$('kiDirect').disabled=true;
  $('kiReview').hidden=true;$('kiReviewFindings').replaceChildren();
@@ -166,7 +167,9 @@ function promptText(){
   if(!prepared.ok){status(prepared.error,true);return ''}
   const scopedFiles=Object.fromEntries(prepared.request.files.map(file=>[file.path,file.content]));
   try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:scopedFiles},
-   prepared.request.files.map(file=>file.path));}
+   prepared.request.files.map(file=>file.path));
+   if(prompt)agentRequest={project:S.p,files:{...scopedFiles}};
+  }
   catch(e){status(e.message||String(e),true);return ''}
  }else{
   prompt=core.buildPrompt($('kiGoal').value,S.p,S.aktiv,selectedSource());
@@ -454,6 +457,17 @@ function validateProposalPreview(){
  const guard=window.SDStudioAgentProposal;
  if(!guard){parsed.errors.push('Sichere Prüfung der KI-Dateien fehlt. Bitte Studio neu laden.');return;}
  const originals=stagedSnapshot||{};
+ if(agentRequest){
+  if(S.p!==agentRequest.project){parsed.errors.push('Projekt seit der KI-Anfrage gewechselt. Erstelle eine neue Anfrage.');return;}
+  for(const file of parsed.files){
+   const existed=Object.prototype.hasOwnProperty.call(originals,file.path);
+   const approved=Object.prototype.hasOwnProperty.call(agentRequest.files,file.path);
+   if(existed&&!approved){parsed.errors.push('Nicht für diese KI-Anfrage freigegebene Datei: '+file.path);return;}
+   if(approved&&originals[file.path]!==agentRequest.files[file.path]){
+    parsed.errors.push('Datei seit der KI-Anfrage verändert: '+file.path+'. Erstelle eine neue Anfrage mit dem aktuellen Stand.');return;
+   }
+  }
+ }
  const changes=parsed.files.map(file=>{
   const exists=Object.prototype.hasOwnProperty.call(originals,file.path);
   return {path:file.path,operation:exists?'replace':'create',content:file.content,
