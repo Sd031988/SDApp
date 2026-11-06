@@ -31,8 +31,9 @@ function mock(level='small'){
   dispose(){this.disposed++;}
  }
  class Vector3{constructor(x,y,z){Object.assign(this,{x,y,z});}}
+ class Vector4{constructor(x,y,z,w){Object.assign(this,{x,y,z,w});}}
  class Color3{constructor(r,g,b){Object.assign(this,{r,g,b});}}
- const BABYLON={DynamicTexture,Vector3,Color3,StandardMaterial:Material,
+ const BABYLON={DynamicTexture,Vector3,Vector4,Color3,StandardMaterial:Material,
   PBRMetallicRoughnessMaterial:Material,VertexBuffer:{PositionKind:'position',ColorKind:'color'},
   Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
   MeshBuilder:{CreateBox:(name,options)=>{const m=mesh();m.name=name;if(name==='city-gradient-sky'){const y=options.size/2;m.getVerticesData=()=>[0,y,0,0,-y,0,1,y,0,1,-y,0];}meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateSphere:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
@@ -47,9 +48,9 @@ function mock(level='small'){
 }
 test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
- assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-')).length,12);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,12);
  for(const chunk of h.f.chunks.slice(0,4))h.result.buildCell(chunk);
- assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-')).length,12);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,12);
  h.result.dispose();
 });
 test('thin instance meshes per cell bounded by building variants plus tree type',()=>{
@@ -119,7 +120,7 @@ test('full, simplified and placeholder retain all buildings while reducing trees
   assert.equal(count,expected);
   if(level==='full'){
    assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),treeCount*2);
-   assert.ok(buildingMeshes.every(m=>m.material.baseTexture?.name.startsWith('nordhafen-facade-width-')));
+   assert.ok(buildingMeshes.every(m=>m.material.baseTexture?.name.startsWith('nordhafen-facade-height-')));
   }else{
    assert.ok(buildingMeshes.every(m=>!m.material.baseTexture));
    assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),level==='simplified'?Math.ceil(treeCount/2)*2:0);
@@ -143,6 +144,7 @@ test('thin=0 uses createInstance for all city buildings and trees, never uploads
  const scene={fogMode:0},BABYLON={
   DynamicTexture:class{getContext(){return {fillRect(){},set fillStyle(v){}};}update(){}clone(){return new this.constructor();}dispose(){}},
   Vector3:class{constructor(x,y,z){Object.assign(this,{x,y,z});}},
+  Vector4:class{constructor(x,y,z,w){Object.assign(this,{x,y,z,w});}},
   Color3:class{constructor(r,g,b){Object.assign(this,{r,g,b});}},
   StandardMaterial:class{dispose(){}},
   PBRMetallicRoughnessMaterial:class{dispose(){}},
@@ -179,9 +181,9 @@ test('standard city create uses createInstance with materials on all visible cel
 });
 test('nine facade materials share three independently rendered height-class textures',()=>{
  const h=mock();
- const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-width-'));
+ const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-height-'));
  assert.equal(facade.length,36);
- for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*12,v*12+3).map(m=>m.baseTexture.name),['nordhafen-facade-width-0-height-0','nordhafen-facade-width-0-height-1','nordhafen-facade-width-0-height-2']);
+ for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*12,v*12+3).map(m=>m.baseTexture.name),['nordhafen-facade-height-0','nordhafen-facade-height-1','nordhafen-facade-height-2']);
  h.result.dispose();
 });
 test('seeded footprints vary in width and depth and repeat deterministically',()=>{
@@ -195,12 +197,12 @@ test('seeded footprints vary in width and depth and repeat deterministically',()
 
 test('three independent facade textures are updated and nine source meshes have matching distinct materials',()=>{
  const h=mock();
- const facade=h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-'));
- assert.equal(facade.length,12);
+ const facade=h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-'));
+ assert.equal(facade.length,3);
  assert.ok(facade.every(t=>t.updated===1));
  assert.equal(h.result.sources.length,36);
  assert.equal(new Set(h.result.sources.map(s=>s.material)).size,36);
- for(let i=0;i<36;i++)assert.equal(h.result.sources[i].material.baseTexture,facade[i%12]);
+ for(let i=0;i<36;i++)assert.equal(h.result.sources[i].material.baseTexture,facade[i%3]);
  h.result.dispose();
 });
 test('instances never assign material and inherit from height-class source',()=>{
@@ -212,4 +214,10 @@ test('instances never assign material and inherit from height-class source',()=>
  const fs=require('node:fs'),path=require('node:path');
  const source=fs.readFileSync(path.join(__dirname,'nordhafen-procedural-city.js'),'utf8');
  assert.doesNotMatch(source,/\b(?:mesh|trunk|crown)\.material\s*=\s*[^;]+;\s*(?:mesh|trunk|crown)\.position/);
+});
+
+test('step 9h correction: facade UV formulas use 8m width and 30m height baselines',()=>{
+ assert.deepEqual(city.uvScale(8,30),{uScale:1,vScale:1});
+ assert.deepEqual(city.uvScale(4,15),{uScale:.5,vScale:.5});
+ assert.deepEqual(city.uvScale(10,36),{uScale:1.25,vScale:1.2});
 });
