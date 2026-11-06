@@ -13,7 +13,7 @@ test('same seed and fixture produce deterministic building heights and variants'
 function mock(level='small'){
  const textures=[],meshes=[],materials=[],external={buildingClones:0,treeClones:0};
  const mesh=()=>({isVisible:true,material:null,dispose(){this.disposed=(this.disposed||0)+1;},
-  clone(){const m=mesh();meshes.push(m);return m;},
+  clone(name){const m=mesh();m.name=name;m.material=this.material;meshes.push(m);return m;},
   thinInstanceSetBuffer(kind,data){if(data&&this.thinInstanceCount)throw new Error('inherited thin instances');this.thinInstanceCount=data?data.length/16:0;},thinInstanceRefreshBoundingInfo(){},
   getVerticesData(){return [0,1,0,0,-1,0,1,1,0,1,-1,0];},setVerticesData(kind,data){this.colors=data;},
   position:{set(){}}
