@@ -6,10 +6,10 @@ const fixture=require('./nordhafen-benchmark.js').create('small',1337);
 function harness(options={}){
  const counts=new Map();
  let time=0;
- const buildCell=options.buildCell||c=>{
+ const buildCell=options.buildCell||(c=>{
   const mk=id=>({dispose(){counts.set(id,(counts.get(id)||0)+1);}});
   return {meshes:[mk(c.id+':mesh')],materials:[mk(c.id+':material')]};
- };
+ });
  const stream=create({scene:{},fixture,buildCell,loadRadius:45,unloadRadius:95,
   now:()=>++time,...options});
  return {stream,counts};
