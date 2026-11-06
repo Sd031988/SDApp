@@ -6,7 +6,7 @@
  function locations(origin,worldSize=512){
   const size=Math.max(320,worldSize),margin=12;
   const clamp=v=>Math.min(size-margin,Math.max(margin,v));
-  const towers=[{x:clamp(origin.x+96),z:clamp(origin.z+32)},{x:clamp(origin.x+96),z:clamp(origin.z+160)},{x:clamp(origin.x+224),z:clamp(origin.z+160)}];
+  const towers=[{x:clamp(origin.x+128),z:clamp(origin.z+64)},{x:clamp(origin.x+128),z:clamp(origin.z+192)},{x:clamp(origin.x+192),z:clamp(origin.z+192)}];
   const extraction={x:clamp(size-margin),z:clamp(origin.z+192)};
   return {towers,extraction};
  }
