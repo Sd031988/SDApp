@@ -19,3 +19,16 @@ test('interiors are near-only streamed',()=>{
  assert.equal(interiors.near({x:10,z:10},{x:12,z:12}),true);
  assert.equal(interiors.near({x:10,z:10},{x:110,z:110}),false);
 });
+
+test('three masts receive three different building IDs even when one building is closest to multiple masts',()=>{
+ const fixture={chunks:[{x:0,z:0,objects:[
+  {id:'shared',type:'building',x:10,z:10},
+  {id:'second',type:'building',x:30,z:10},
+  {id:'third',type:'building',x:50,z:10}
+ ]}]};
+ const towers=[{x:10,z:10},{x:11,z:10},{x:12,z:10}];
+ const selected=interiors.selectBuildings(fixture,towers);
+ assert.equal(selected.length,3);
+ assert.equal(new Set(selected.map(building=>building.id)).size,3);
+ assert.deepEqual(selected.map(building=>building.id),['shared','second','third']);
+});
