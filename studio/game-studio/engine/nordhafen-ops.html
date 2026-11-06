@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nordhafen Ops – Etappe A: Schießstand</title>
+<title>Nordhafen Ops – Etappe B: Gegner</title>
 <style>
 html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system-ui}canvas{width:100%;height:100%;display:block;touch-action:none}
 #hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
@@ -9,25 +9,25 @@ html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system
 #cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
 button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
 </style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
-<div id="menu"><article><h1>NORDHAFEN OPS</h1><p>Etappe A – Schießstand. Teste die Waffe an fünf Ziel-Dummies in der gestreamten Nordhafen-Stadt.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
+<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Etappe B – Schießstand mit sechs Gegnern. Überlebe und schalte Gegner aus. Missionen folgen in Etappe C.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script>
 <script>
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls;
-let engine,scene,streamer,city,player,targets=[],weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,markerNodes=[];
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies;
+let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,markerNodes=[];
 function status(t){$('status').textContent=t;}
 function clear(){
  engine?.stopRenderLoop();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
- engine=scene=streamer=city=player=null;targets=[];weapon=combat.initial();markerNodes.forEach(m=>m.remove());markerNodes=[];
+ engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=combat.initial();markerNodes.forEach(m=>m.remove());markerNodes=[];
 }
 function shoot(){
- if(!scene||!player?.ready)return;
+ if(!scene||!player?.ready||ended)return;
  const now=performance.now();if(now-lastShot<130)return;lastShot=now;
  const result=combat.fire(weapon);weapon=result.state;
  if(result.event!=='fired'){status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
@@ -35,6 +35,8 @@ function shoot(){
  const ray=controls.centerRay(scene,canvas,BABYLON);
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
+  const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
+  if(enemy){enemy.state=enemyRules.damage(enemy.state,25);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){enemy.mesh.dispose();enemy.mesh=null;}return;}
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){const feedback=combat.hit(weapon,25);weapon=feedback.state;target.health=Math.max(0,target.health-feedback.damage);
    hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
@@ -69,21 +71,41 @@ async function start(){
    targets.push({mesh,health:50});
    const marker=document.createElement('div');marker.className='marker';marker.textContent='◆ '+(i+1);document.body.append(marker);markerNodes.push(marker);
   }
+  for(let i=0;i<6;i++){
+   const x=startPosition.x+forward.x*(19+(i%3)*7)+right.x*((i%2?1:-1)*7);
+   const z=startPosition.z+forward.z*(19+(i%3)*7)+right.z*((i%2?1:-1)*7);
+   const mesh=BABYLON.MeshBuilder.CreateCapsule('enemy-'+i,{height:1.8,radius:.38},scene);
+   mesh.position.set(x,.9,z);mesh.metadata={enemy:i};mesh.isPickable=true;
+   const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.77,.12,.15);mesh.material=mat;
+   enemies.push({mesh,state:enemyRules.spawn(i,x,z)});
+  }
   const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}};
   canvas.addEventListener('keydown',onKey,{signal:controller.signal});
   canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();if(e.button===2)aiming=true;},{signal:controller.signal});
   canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
   engine.runRenderLoop(()=>{
-   const dt=Math.min(.05,engine.getDeltaTime()/1000);weapon=combat.tick(weapon,dt);
-   const pos=player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   const dt=Math.min(.05,engine.getDeltaTime()/1000);if(!ended){elapsed+=dt;weapon=combat.tick(weapon,dt);}
+   const pos=ended?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   if(pos){for(const enemy of enemies){if(!enemy.mesh||enemy.state.health<=0)continue;
+    const origin=enemy.mesh.position.add(new BABYLON.Vector3(0,.5,0));
+    const aimPoint=new BABYLON.Vector3(pos.x,pos.y+.4,pos.z);
+    const diff=aimPoint.subtract(origin),distance=diff.length();
+    const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
+    const visible=distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
+    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random()});enemy.state=out.enemy;
+    enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
+    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);status('Unter Beschuss! Leben: '+health);}}
+   }
+   if(health<=0){ended=true;$('menuTitle').textContent='NIEDERLAGE';$('menuText').textContent='Du wurdest ausgeschaltet. Starte einen neuen Versuch.';$('play').textContent='Neustart';$('menu').style.display='grid';}
+   }
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
    scene.render();
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   $('hud').textContent='NORDHAFEN OPS · ETAPPE A\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nZiele: '+targets.length+' / 5\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
+   $('hud').textContent='NORDHAFEN OPS · ETAPPE B\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nZiele: '+targets.length+' / 5\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
   });
-  status('Schießstand aktiv – fünf Ziele. Maus ins Bild klicken.');
+  status('Etappe B aktiv – sechs Gegner und fünf Ziele. Maus ins Bild klicken.');
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
  finally{$('play').disabled=false;}
 }
