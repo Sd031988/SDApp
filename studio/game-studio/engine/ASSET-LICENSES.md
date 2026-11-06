@@ -39,3 +39,11 @@ No asset is bundled or redistributed in this PR.
 - Quelle/Lizenz: wie Rogue – Quaternius RPG Characters Pack, **CC0 1.0** laut `License.txt` im vom Nutzer übergebenen Original-Paket.
 - Unverändert aus `glTF/<Name>.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
 - Jede Datei: 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Run`, `Death`, `RecieveHit`, `Punch`; Modellraum-Höhe ≈ 3,8 → beim Einbau auf ca. 1,8 m normalisieren.
+
+## Fahrzeuge (Quaternius „Cars“)
+
+- Dateien: `assets/nordhafen-car-cop.glb`, `-taxi.glb`, `-suv.glb`, `-sportscar.glb`, `-sportscar2.glb`, `-normalcar1.glb`, `-normalcar2.glb` (je 165–182 KB)
+- Quelle: Quaternius – Cars Pack, https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Aufbau je Auto: Karosserie + `BackWheels` + `FrontLeftWheel` + `FrontRightWheel` als eigene Knoten (Vorderräder einzeln lenkbar). Maße ca. 1,8 m × 1,2–1,3 m × 3,7–4,2 m (Meter-Maßstab).
