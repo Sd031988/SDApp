@@ -13,6 +13,8 @@
  }
  function height(seed,obj){return 9+(hash(seed,obj)%8)*3;}
  function variant(seed,obj){return hash(seed,obj)%3;}
+ function footprint(seed,obj){const h=hash(seed,obj);return {width:4+(h%4)*2,depth:4+((h>>>5)%3)*2};}
+ function heightClass(seed,obj){return Math.min(2,Math.floor((height(seed,obj)-9)/9));}
  function buildingGroups(chunk,seed){
   const groups=[[],[],[]];
   for(const obj of chunk.objects)if(obj.type==='building')groups[variant(seed,obj)].push(obj);
@@ -22,7 +24,7 @@
    if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
    return matrices;
   }
- function create({scene,BABYLON,fixture,seed=1337,loadRadius=160,useThinInstances=true}={}){
+ function create({scene,BABYLON,fixture,seed=1337,loadRadius=160,useThinInstances=false}={}){
   if(!scene||!BABYLON||!fixture)throw new TypeError('city scene required');
   if(!Number.isFinite(loadRadius)||loadRadius<=60)throw new TypeError('invalid city load radius');
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
@@ -38,21 +40,30 @@
    ctx.fillStyle='#c5d4d8';ctx.fillRect(col*32+7,row*25+5,18,2);
   }
   facade.update();
-  const facadeMaterials=colors.map((color,i)=>{
-   const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i,scene);
-   m.baseColor=color;m.baseTexture=facade;m.metallic=.04;m.roughness=.86;
+  // Nine independent UV scales: 3 facade colors x 3 building height classes.
+  const facadeMaterials=colors.map((color,i)=>[0,1,2].map(k=>{
+   const texture=facade.clone('nordhafen-facade-height-'+k+'-color-'+i);
+   texture.vScale=[1,2,3][k];textures.push(texture);
+   const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+k,scene);
+   m.baseColor=color;m.baseTexture=texture;m.metallic=.04;m.roughness=.86;
    materials.push(m);return m;
-  });
+  }));
   const simpleMaterials=colors.map((color,i)=>{
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-simple-'+i,scene);
    m.baseColor=color;m.metallic=0;m.roughness=1;materials.push(m);return m;
   });
   for(let i=0;i<3;i++){
    const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i,{size:1},scene);
-   source.material=facadeMaterials[i];source.isVisible=false;sources.push(source);owned.push(source);
+   source.material=facadeMaterials[i][0];source.isVisible=false;sources.push(source);owned.push(source);
   }
-  const treeSource=BABYLON.MeshBuilder.CreateCylinder('city-tree-source',{height:1,diameter:.5},scene);
-  treeSource.isVisible=false;owned.push(treeSource);
+  const trunkMat=new BABYLON.PBRMetallicRoughnessMaterial('city-tree-trunk-brown',scene);
+  trunkMat.baseColor=new BABYLON.Color3(.36,.22,.12);trunkMat.metallic=0;trunkMat.roughness=1;materials.push(trunkMat);
+  const crownMat=new BABYLON.PBRMetallicRoughnessMaterial('city-tree-crown-green',scene);
+  crownMat.baseColor=new BABYLON.Color3(.18,.48,.22);crownMat.metallic=0;crownMat.roughness=1;materials.push(crownMat);
+  const trunkSource=BABYLON.MeshBuilder.CreateCylinder('city-tree-trunk-source',{height:1,diameter:.25},scene);
+  trunkSource.material=trunkMat;trunkSource.isVisible=false;owned.push(trunkSource);
+  const crownSource=BABYLON.MeshBuilder.CreateSphere('city-tree-crown-source',{diameter:1},scene);
+  crownSource.material=crownMat;crownSource.isVisible=false;owned.push(crownSource);
   // Gradient sky via vertex colors, no external shader or CDN.
   const skyHorizon=[.62,.73,.8];
   const sky=BABYLON.MeshBuilder.CreateBox('city-gradient-sky',{size:span*6},scene);
@@ -103,22 +114,23 @@
     for(let v=0;v<3;v++){
      if(!groups[v].length)continue;
      if(!useThinInstances){
-      const material=level==='full'?facadeMaterials[v]:simpleMaterials[v];
+      const material=level==='full'?null:simpleMaterials[v];
       for(const obj of groups[v]){
        const h=height(seed,obj);
        const mesh=sources[v].createInstance('city-instance-'+chunk.id+'-'+obj.id);
-       mesh.material=material;
+       mesh.material=material||facadeMaterials[v][heightClass(seed,obj)];
        mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
-       mesh.scaling.set(4,h,4);mesh.isVisible=true;meshes.push(mesh);
+       const size=footprint(seed,obj);
+       mesh.scaling.set(size.width,h,size.depth);mesh.isVisible=true;meshes.push(mesh);
       }
       continue;
      }
      const mesh=sources[v].clone('city-cell-'+chunk.id+'-'+v);
-     mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
+     mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v][0]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
      const matrix=new Float32Array(groups[v].length*16);
      groups[v].forEach((obj,i)=>{
       const h=height(seed,obj);
-      BABYLON.Matrix.Compose(new BABYLON.Vector3(4,h,4),BABYLON.Quaternion.Identity(),
+      BABYLON.Matrix.Compose(new BABYLON.Vector3(footprint(seed,obj).width,h,footprint(seed,obj).depth),BABYLON.Quaternion.Identity(),
        new BABYLON.Vector3(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z))
        .copyToArray(matrix,i*16);
      });
@@ -129,22 +141,22 @@
     const trees=level==='placeholder'?[]:chunk.objects.filter(o=>o.type==='vegetation').filter((_,i)=>level==='full'||i%2===0);
     if(trees.length&&!useThinInstances){
      for(const obj of trees){
-      const mesh=treeSource.createInstance('city-tree-instance-'+chunk.id+'-'+obj.id);
-      mesh.position.set(chunk.x*fixture.chunkSize+obj.x,1.5,chunk.z*fixture.chunkSize+obj.z);
-      mesh.scaling.set(1,3,1);mesh.isVisible=true;meshes.push(mesh);
+      const x=chunk.x*fixture.chunkSize+obj.x,z=chunk.z*fixture.chunkSize+obj.z;
+      const trunk=trunkSource.createInstance('city-tree-trunk-'+chunk.id+'-'+obj.id);
+      trunk.position.set(x,1.2,z);trunk.scaling.set(.65,2.4,.65);trunk.material=trunkMat;trunk.isVisible=true;meshes.push(trunk);
+      const crown=crownSource.createInstance('city-tree-crown-'+chunk.id+'-'+obj.id);
+      crown.position.set(x,3.4,z);crown.scaling.set(2.8,2.8,2.8);crown.material=crownMat;crown.isVisible=true;meshes.push(crown);
      }
     }else if(trees.length){
-     const mesh=treeSource.clone('city-cell-trees-'+chunk.id);
-     mesh.isVisible=false;
-     const matrix=new Float32Array(trees.length*16);
-     trees.forEach((obj,i)=>{
-      BABYLON.Matrix.Compose(new BABYLON.Vector3(1,3,1),BABYLON.Quaternion.Identity(),
-       new BABYLON.Vector3(chunk.x*fixture.chunkSize+obj.x,1.5,chunk.z*fixture.chunkSize+obj.z))
-       .copyToArray(matrix,i*16);
-     });
-     mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,trees.length),16,false);
-     mesh.thinInstanceRefreshBoundingInfo?.(true);
-     mesh.isVisible=true;meshes.push(mesh);
+     for(const [source,part,scale,y] of [[trunkSource,'trunk',new BABYLON.Vector3(.65,2.4,.65),1.2],[crownSource,'crown',new BABYLON.Vector3(2.8,2.8,2.8),3.4]]){
+      const mesh=source.clone('city-cell-trees-'+part+'-'+chunk.id);
+      mesh.isVisible=false;mesh.material=source.material;
+      const matrix=new Float32Array(trees.length*16);
+      trees.forEach((obj,i)=>BABYLON.Matrix.Compose(scale,BABYLON.Quaternion.Identity(),
+       new BABYLON.Vector3(chunk.x*fixture.chunkSize+obj.x,y,chunk.z*fixture.chunkSize+obj.z)).copyToArray(matrix,i*16));
+      mesh.thinInstanceSetBuffer('matrix',checkedMatrices(matrix,trees.length),16,false);
+      mesh.thinInstanceRefreshBoundingInfo?.(true);mesh.isVisible=true;meshes.push(mesh);
+     }
     }
     return {meshes,materials:[]};
    }catch(e){for(const m of meshes)m.dispose();throw e;}
@@ -159,5 +171,5 @@
   }
   return {buildCell,dispose,get facadeTexture(){return facade;},get sources(){return sources;}};
  }
- return Object.freeze({create,height,variant,buildingGroups,checkedMatrices});
+ return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
 });
