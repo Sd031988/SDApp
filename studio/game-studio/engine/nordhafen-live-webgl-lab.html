@@ -118,7 +118,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
     '\nSpieler: '+(player?player.status:'aus')+
-     '\nSpieler y: '+(player&&player.playerY!==null?player.playerY.toFixed(2):'–')+' m | am Boden: '+(player&&player.ready?(player.grounded?'ja':'nein'):'–')+
+     '\nFigur: '+(player?player.characterStatus:'aus')+' | Animation: '+(player?player.animation:'–')+
+    '\nSpieler y: '+(player&&player.playerY!==null?player.playerY.toFixed(2):'–')+' m | am Boden: '+(player&&player.ready?(player.grounded?'ja':'nein'):'–')+
     '\nPBR-Qualität: '+(pbr?pbr.status:($('pbr').checked?'benötigt Streaming + LOD + Thin Instances':'aus'))+
     '\nGLB-Assets: '+glbStatus+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
