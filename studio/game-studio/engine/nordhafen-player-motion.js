@@ -5,9 +5,11 @@
  else root.SDNordhafenPlayerMotion=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- function step(input={},state={},dt=1/60){
+ function step(input={},state={},dt=1/60,options={}){
   if(!Number.isFinite(dt)||dt<0)throw new TypeError('dt must be finite and nonnegative');
   const seconds=Math.min(dt,.05);
+  const gravity=options.gravity===undefined?9.81:options.gravity;
+  if(!Number.isFinite(gravity)||gravity<0)throw new TypeError('gravity must be nonnegative and finite');
   const forward=Number(input.forward)||0,right=Number(input.right)||0;
   const length=Math.hypot(forward,right),norm=length>1?1/length:1;
   const crouched=!!input.crouch;
@@ -17,7 +19,7 @@
   const vx=(Math.sin(yaw)*f+Math.cos(yaw)*r)*speed;
   const vz=(Math.cos(yaw)*f-Math.sin(yaw)*r)*speed;
   const grounded=!!state.grounded;
-  const vy=grounded&&input.jump&&!crouched?5.5:(Number.isFinite(state.vy)?state.vy:0)-9.81*seconds;
+  const vy=grounded&&input.jump&&!crouched?5.5:(Number.isFinite(state.vy)?state.vy:0)-gravity*seconds;
   return Object.freeze({vx,vz,vy,x:(state.x||0)+vx*seconds,z:(state.z||0)+vz*seconds,
    y:(state.y||0)+vy*seconds,height:crouched?1.15:1.8,crouched,
    grounded:grounded&&!input.jump,dt:seconds});
