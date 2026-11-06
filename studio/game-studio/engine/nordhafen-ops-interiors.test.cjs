@@ -1,0 +1,21 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),interiors=require('./nordhafen-ops-interiors.js');
+test('three selected building sites are distinct and close to three towers',()=>{
+ const fixture={chunks:[{x:1,z:1,objects:[{id:'a',type:'building',x:10,z:10},{id:'b',type:'building',x:42,z:10}]},{x:3,z:3,objects:[{id:'c',type:'building',x:10,z:10}]}]};
+ const towers=[{x:80,z:80},{x:115,z:80},{x:202,z:202}];
+ const selected=interiors.selectBuildings(fixture,towers);
+ assert.deepEqual(selected.map(s=>s.id),['a','b','c']);
+});
+test('three ramp flights respect 35 degree limit and simulated climb reaches roof',()=>{
+ const plan=interiors.blueprint({x:100,z:100});
+ assert.equal(plan.levels,3);assert.ok(plan.slope<=35);
+ const result=interiors.climb(plan.stairs);assert.equal(result.reached,true);assert.equal(result.y,plan.roofY);
+});
+test('camera wall hit shortens orbit, empty view keeps desired radius',()=>{
+ assert.equal(interiors.cameraRadius(7.5,null),7.5);
+ assert.ok(interiors.cameraRadius(7.5,2)<2);
+});
+test('interiors are near-only streamed',()=>{
+ assert.equal(interiors.near({x:10,z:10},{x:12,z:12}),true);
+ assert.equal(interiors.near({x:10,z:10},{x:110,z:110}),false);
+});
