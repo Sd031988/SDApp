@@ -43,3 +43,13 @@ test('u: missing runs display pending rather than invalid comparison',()=>{
  assert.match(html,/SDNordhafenThinInstances\.create/);
  assert.match(html,/id="thin"/);
 });
+
+test('step 6: GLB opt-in uses shared async Babylon loader and streamer fallback',()=>{
+ assert.match(html,/id="glb"/);
+ assert.match(html,/BABYLON\.SceneLoader\.ImportMeshAsync/);
+ assert.match(html,/https:\/\/assets\.babylonjs\.com\/meshes\//);
+ assert.match(html,/const asyncCellBuilder=glbEnabled/);
+ assert.match(html,/buildCell:asyncCellBuilder/);
+ assert.match(html,/GLB-Ladefehler – Box-Fallback/);
+ assert.match(html,/cdn\.babylonjs\.com\/loaders\/babylonjs\.loaders\.min\.js/);
+});
