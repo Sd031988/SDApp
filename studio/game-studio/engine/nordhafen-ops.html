@@ -86,12 +86,14 @@ async function start(){
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
   engine.runRenderLoop(()=>{
    const dt=Math.min(.05,engine.getDeltaTime()/1000);if(!ended){elapsed+=dt;weapon=combat.tick(weapon,dt);}
-   const pos=ended?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+   const pos=ended?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;
+    if(aiming){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
+    streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
    if(pos){for(const enemy of enemies){if(!enemy.mesh||enemy.state.health<=0)continue;
     const origin=enemy.mesh.position.add(new BABYLON.Vector3(0,.5,0));
     const aimPoint=new BABYLON.Vector3(pos.x,pos.y+.4,pos.z);
     const diff=aimPoint.subtract(origin),distance=diff.length();
-    const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
+    const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
     const visible=distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
     const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random()});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
