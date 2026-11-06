@@ -43,3 +43,19 @@ test('enemy uniform and dummy rings have distinct material palettes',()=>{
  assert.notEqual(enemy.body,dummy.rings[0]);assert.ok(dummy.rings.includes('#ffffff'));
  assert.ok(enemy.healthBar);assert.ok(enemy.visor);
 });
+
+test('equal held input at 30 and 120 FPS travels within five percent',()=>{
+ function simulate(fps){let v={vx:0,vz:0},distance=0;for(let i=0;i<fps*5;i++){v=c.velocity(v,{vx:4,vz:0},1/fps,false);distance+=c.fixedDistance(v.vx,1/fps);}return distance;}
+ const a=simulate(30),b=simulate(120);assert.ok(Math.abs(a-b)/b<.05,`30fps=${a},120fps=${b}`);
+});
+test('crosshair ray coordinates match render viewport center',()=>{
+ assert.deepEqual(c.crosshairCoordinates(1920,1080),{x:960,y:540});
+ const canvas={getBoundingClientRect:()=>({width:640,height:360})};
+ const scene={activeCamera:{},getEngine:()=>({getRenderWidth:()=>1920,getRenderHeight:()=>1080}),createPickingRay:(x,y)=>({x,y})};
+ assert.deepEqual(c.centerRay(scene,canvas,{Matrix:{Identity:()=>null}}),{x:960,y:540});
+});
+test('p95 frame duration uses only five second window',()=>{
+ const samples=[{at:1000,ms:80},{at:6000,ms:10},{at:7000,ms:20},{at:8000,ms:30}];
+ const window=c.frameWindow(samples,8000).map(s=>s.ms);
+ assert.deepEqual(window,[10,20,30]);assert.equal(c.frameP95(window),30);
+});
