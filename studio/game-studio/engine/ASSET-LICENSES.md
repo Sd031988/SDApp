@@ -113,3 +113,11 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Maßstab ca. 3–7× zu groß (Sturmgewehr 3,1 m, Scharfschützengewehr 7,3 m) → in der Hand auf reale Länge skalieren (Gewehr ≈ 0,9 m, Scharfschütze ≈ 1,2 m, MP ≈ 0,6 m).
+
+## Gebäude-Außenmodelle (Quaternius „Buildings“)
+
+- Dateien: `assets/nordhafen-building-*.glb` (9 Modelle, zusammen ca. 6 MB): building1-large/-small, building2-large/-small, building3-big/-small, building4, house1, house2.
+- Quelle: Quaternius – Buildings Pack, https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Unverändert in GLB umgewandelt.
+- Modellgröße nur ca. 3–8 × 3–6 × 2–4,5 Einheiten → für die Stadt deutlich hochskalieren (Faktor ≈ 3–5, Grundfläche an die Grundstücke der Stadt anpassen). Größte Dateien: building1-large (1,6 MB), house1 (1,2 MB) – nur bei Bedarf laden.
