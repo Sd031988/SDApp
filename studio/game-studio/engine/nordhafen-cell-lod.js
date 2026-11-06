@@ -26,6 +26,11 @@
    if(level==='simplified')return distance<near-hysteresis?'full':distance>far+hysteresis?'placeholder':'simplified';
    return distance<near-hysteresis?'full':distance<far-hysteresis?'simplified':'placeholder';
   }
+  function needsUpdate(distance){
+   if(disposed)return false;
+   if(!Number.isFinite(distance)||distance<0)throw new TypeError('invalid distance');
+   return desired(distance)!==level;
+  }
   function update(distance){
    if(disposed)throw new Error('LOD cell disposed');
    if(!Number.isFinite(distance)||distance<0)throw new TypeError('invalid distance');
@@ -49,7 +54,7 @@
    disposed=true;
    const old=active;active=null;level=null;free(old);
   }
-  return Object.freeze({update,dispose,get level(){return level;},get disposed(){return disposed;}});
+  return Object.freeze({update,needsUpdate,dispose,get level(){return level;},get disposed(){return disposed;}});
  }
  return Object.freeze({create,levels:Object.freeze(levels)});
 });
