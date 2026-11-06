@@ -48,3 +48,22 @@ test('pending GPU queries do not become measured samples',()=>{
  const h=harness();h.api.start();h.before.fire();h.after.fire();
  assert.equal(h.api.report().sampleCount,0);h.api.stop();
 });
+
+test('lab has no hard-coded GPU measured NO status',()=>{
+ assert.doesNotMatch(html,/GPU gemessen: NEIN/);
+ assert.match(html,/g && g\.measured/);
+ assert.match(html,/GPU verworfen:/);
+});
+test('report without a session explicitly has no measurements or rejects',()=>{
+ const h=harness();
+ const r=h.api.report();
+ assert.equal(r.measured,false);
+ assert.equal(r.rejectedCount,0);
+ assert.equal(r.sampleCount,0);
+ assert.equal(r.minimumSamples,30);
+});
+test('lab labels cadence as frame interval rather than CPU time',()=>{
+ assert.doesNotMatch(html,/CPU-Frame/);
+ assert.match(html,/Frame-Intervall p50/);
+ assert.match(html,/Frame-Intervall p95/);
+});
