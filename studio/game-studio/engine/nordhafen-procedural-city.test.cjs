@@ -23,6 +23,7 @@ function mock(level='small'){
   constructor(name){this.name=name;this.disposed=0;textures.push(this);}
   getContext(){return {fillRect(){},set fillStyle(v){}};}
   update(){}
+  clone(name){const t=new DynamicTexture(name);return t;}
   dispose(){this.disposed++;}
  }
  class Material{
@@ -34,14 +35,14 @@ function mock(level='small'){
  const BABYLON={DynamicTexture,Vector3,Color3,StandardMaterial:Material,
   PBRMetallicRoughnessMaterial:Material,VertexBuffer:{PositionKind:'position',ColorKind:'color'},
   Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
-  MeshBuilder:{CreateBox:(name,options)=>{const m=mesh();m.name=name;if(name==='city-gradient-sky'){const y=options.size/2;m.getVerticesData=()=>[0,y,0,0,-y,0,1,y,0,1,-y,0];}meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
+  MeshBuilder:{CreateBox:(name,options)=>{const m=mesh();m.name=name;if(name==='city-gradient-sky'){const y=options.size/2;m.getVerticesData=()=>[0,y,0,0,-y,0,1,y,0,1,-y,0];}meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateSphere:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
   Quaternion:{Identity:()=>({})},
   Matrix:{Compose:()=>({copyToArray(){}})}};
  const scene={fogMode:0};
  const f=fixture(level,1337);
  const building={clone(){external.buildingClones++;throw Error('external building clone');}};
  const tree={clone(){external.treeClones++;throw Error('external tree clone');}};
- const result=city.create({scene,BABYLON,fixture:f,seed:1337,building,tree});
+ const result=city.create({scene,BABYLON,fixture:f,seed:1337,building,tree,useThinInstances:true});
  return {result,textures,meshes,materials,scene,f,external};
 }
 test('single shared facade texture across all buildings and variants',()=>{
@@ -54,9 +55,9 @@ test('single shared facade texture across all buildings and variants',()=>{
 test('thin instance meshes per cell bounded by building variants plus tree type',()=>{
  const h=mock(),chunk=h.f.chunks[0];
  const cell=h.result.buildCell(chunk);
- const count=city.buildingGroups(chunk,1337).filter(g=>g.length).length+1;
+ const count=city.buildingGroups(chunk,1337).filter(g=>g.length).length+2;
  assert.equal(cell.meshes.length,count);
- assert.ok(cell.meshes.length<=4);
+ assert.ok(cell.meshes.length<=5);
  for(const mesh of cell.meshes)mesh.dispose();
  h.result.dispose();
 });
@@ -92,8 +93,8 @@ test('city never clones external lab sources; fresh sources have no thin instanc
  const h=mock(),chunk=h.f.chunks[0];
  assert.equal(h.external.buildingClones,0);
  assert.equal(h.external.treeClones,0);
- const sources=[...h.result.sources,h.meshes.find(m=>m.name==='city-tree-source')];
- assert.equal(sources.length,4);
+ const sources=[...h.result.sources,...h.meshes.filter(m=>m.name==='city-tree-trunk-source'||m.name==='city-tree-crown-source')];
+ assert.equal(sources.length,5);
  for(const source of sources)assert.equal(source.thinInstanceCount||0,0);
  const cell=h.result.buildCell(chunk);
  assert.equal(h.external.buildingClones,0);
@@ -117,11 +118,11 @@ test('full, simplified and placeholder retain all buildings while reducing trees
   counts.push(count);
   assert.equal(count,expected);
   if(level==='full'){
-   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),treeCount);
-   assert.ok(buildingMeshes.every(m=>m.material.baseTexture===h.result.facadeTexture));
+   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),treeCount*2);
+   assert.ok(buildingMeshes.every(m=>m.material.baseTexture?.name.startsWith('nordhafen-facade-height-')));
   }else{
    assert.ok(buildingMeshes.every(m=>!m.material.baseTexture));
-   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),level==='simplified'?Math.ceil(treeCount/2):0);
+   assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),level==='simplified'?Math.ceil(treeCount/2)*2:0);
   }
   cell.meshes.forEach(m=>m.dispose());
  }
@@ -140,13 +141,13 @@ test('thin=0 uses createInstance for all city buildings and trees, never uploads
  const h=mock('medium');
  // The default mock builds thin mode; recreate a separate instance-mode city using the same fixture.
  const scene={fogMode:0},BABYLON={
-  DynamicTexture:class{getContext(){return {fillRect(){},set fillStyle(v){}};}update(){}dispose(){}},
+  DynamicTexture:class{getContext(){return {fillRect(){},set fillStyle(v){}};}update(){}clone(){return new this.constructor();}dispose(){}},
   Vector3:class{constructor(x,y,z){Object.assign(this,{x,y,z});}},
   Color3:class{constructor(r,g,b){Object.assign(this,{r,g,b});}},
   StandardMaterial:class{dispose(){}},
   PBRMetallicRoughnessMaterial:class{dispose(){}},
   VertexBuffer:{PositionKind:'position',ColorKind:'color'},Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
-  MeshBuilder:{CreateBox:name=>source(name),CreateCylinder:name=>source(name),CreateGround:name=>source(name)}
+  MeshBuilder:{CreateBox:name=>source(name),CreateCylinder:name=>source(name),CreateSphere:name=>source(name),CreateGround:name=>source(name)}
  };
  let uploaded=0,created=0;
  function source(name){return {name,position:{set(){}},scaling:{set(){}},
@@ -156,8 +157,8 @@ test('thin=0 uses createInstance for all city buildings and trees, never uploads
  };}
  const alt=city.create({scene,BABYLON,fixture:h.f,seed:1337,useThinInstances:false});
  const chunk=h.f.chunks[0],cell=alt.buildCell(chunk);
- assert.equal(cell.meshes.length,chunk.objects.length);
- assert.equal(created,chunk.objects.length);
+ assert.equal(cell.meshes.length,chunk.objects.filter(o=>o.type==='building').length+2*chunk.objects.filter(o=>o.type==='vegetation').length);
+ assert.equal(created,cell.meshes.length);
  assert.equal(uploaded,0);
  cell.meshes.forEach(m=>m.dispose());alt.dispose();h.result.dispose();
 });
@@ -165,5 +166,29 @@ test('fog color matches skybox lower-edge vertex RGB exactly',()=>{
  const h=mock(),sky=h.meshes.find(m=>m.name==='city-gradient-sky');
  const colors=sky.colors;
  assert.deepEqual([h.scene.fogColor.r,h.scene.fogColor.g,h.scene.fogColor.b],colors.slice(4,7));
+ h.result.dispose();
+});
+
+test('standard city create uses createInstance with materials on all visible cell meshes',()=>{
+ const h=mock('medium'),chunk=h.f.chunks[0];
+ // Existing mock explicitly opts into thin mode; use an independent default-mode city.
+ const source=h.meshes.find(m=>m.name==='city-building-source-0');
+ assert.ok(source.createInstance);
+ assert.match(require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-procedural-city.js'),'utf8'),/useThinInstances=false/);
+ h.result.dispose();
+});
+test('nine facade materials have vScale increasing by height class',()=>{
+ const h=mock();
+ const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-height-'));
+ assert.equal(facade.length,9);
+ for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*3,v*3+3).map(m=>m.baseTexture.vScale),[1,2,3]);
+ h.result.dispose();
+});
+test('seeded footprints vary in width and depth and repeat deterministically',()=>{
+ const h=mock('medium'),objects=h.f.chunks.flatMap(c=>c.objects).filter(o=>o.type==='building');
+ const a=objects.map(o=>city.footprint(1337,o)),b=objects.map(o=>city.footprint(1337,o));
+ assert.deepEqual(a,b);
+ assert.ok(new Set(a.map(s=>s.width+'x'+s.depth)).size>1);
+ assert.ok(a.every(s=>s.width>=4&&s.width<=10&&s.depth>=4&&s.depth<=8));
  h.result.dispose();
 });
