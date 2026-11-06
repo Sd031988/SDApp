@@ -13,13 +13,21 @@
   if(!Number.isInteger(budget)||budget<1)throw new TypeError('positive integer budget required');
   if(!Number.isInteger(lodBudget)||lodBudget<1)throw new TypeError('positive integer LOD budget required');
   const clock=now||(()=>performance.now());
-  const loaded=new Map(),samples=[],released=new WeakSet(),failures=new Map();
+  const loaded=new Map(),pending=new Map(),samples=[],released=new WeakSet(),failures=new Map();
   let disposed=false,loadsTotal=0,unloadsTotal=0,lodFailures=0,lodSwitchesTotal=0;
   const chunks=fixture.chunks,side=fixture.chunkSize;
   function release(resource){
    if(resource&&typeof resource.dispose==='function'&&!released.has(resource)){
     resource.dispose();released.add(resource);
    }
+  }
+  function freeCell(cell){
+   if(!cell)return;
+   freeCell(cell);
+  }
+  function cancel(id){
+   const job=pending.get(id);if(!job)return;
+   pending.delete(id);job.controller.abort();
   }
   function unload(id){
    const cell=loaded.get(id);if(!cell)return;
@@ -32,11 +40,17 @@
   function distance(chunk,x,z){
    return Math.hypot((chunk.x+.5)*side-x,(chunk.z+.5)*side-z);
   }
+  function recordFailure(id){
+   if(disposed)return;
+   const count=(failures.get(id)?.count||0)+1;
+   failures.set(id,{count,retryAt:clock()+Math.min(30000,1000*Math.pow(2,Math.min(count-1,5)))});
+  }
   function update(cameraX,cameraZ){
    if(disposed)throw new Error('cell streamer disposed');
    if(!Number.isFinite(cameraX)||!Number.isFinite(cameraZ))throw new TypeError('finite camera coordinates required');
    for(const chunk of chunks){
     if(loaded.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)unload(chunk.id);
+    if(pending.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)cancel(chunk.id);
    }
    const lodCandidates=chunks.filter(c=>loaded.has(c.id)&&
     typeof loaded.get(c.id).updateLOD==='function'&&distance(c,cameraX,cameraZ)<=unloadRadius)
@@ -56,14 +70,36 @@
      lodChanges++;lodSwitchesTotal++;
     }catch(e){lodFailures++;} // keep old level and process other cells
    }
-   const candidates=chunks.filter(c=>!loaded.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
+   const candidates=chunks.filter(c=>!loaded.has(c.id)&&!pending.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
     .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
    let newLoads=0;
-   for(const chunk of candidates.filter(c=>!failures.has(c.id)||clock()>=failures.get(c.id).retryAt).slice(0,budget)){
+   for(const chunk of candidates.filter(c=>!failures.has(c.id)||clock()>=failures.get(c.id).retryAt).slice(0,Math.max(0,Math.min(budget,2)-pending.size))){
     const start=clock();
     let cell;
     try{
-     cell=buildCell(chunk);
+     const controller=new AbortController();
+     cell=buildCell(chunk,{signal:controller.signal});
+     if(cell&&typeof cell.then==='function'){
+       const job={controller};pending.set(chunk.id,job);newLoads++;
+       Promise.resolve(cell).then(result=>{
+         if(!result||!Array.isArray(result.meshes)||!Array.isArray(result.materials))
+           throw new TypeError('buildCell must return {meshes,materials}');
+         if(disposed||controller.signal.aborted||pending.get(chunk.id)!==job){freeCell(result);return;}
+         pending.delete(chunk.id);
+         try{
+           if(typeof result.updateLOD==='function'){
+             const after=result.updateLOD(distance(chunk,cameraX,cameraZ));
+             if(after!==null)lodSwitchesTotal++;
+           }
+           loaded.set(chunk.id,result);failures.delete(chunk.id);loadsTotal++;
+           const elapsed=clock()-start;
+           if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
+         }catch(e){freeCell(result);recordFailure(chunk.id);}
+       },()=>{
+         if(pending.get(chunk.id)===job){pending.delete(chunk.id);recordFailure(chunk.id);}
+       });
+       continue;
+     }
      if(!cell||!Array.isArray(cell.meshes)||!Array.isArray(cell.materials))
       throw new TypeError('buildCell must return {meshes,materials}');
      const elapsed=clock()-start;
@@ -74,17 +110,12 @@
      loaded.set(chunk.id,cell);failures.delete(chunk.id);loadsTotal++;newLoads++;
      if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
     }catch(e){
-     const count=(failures.get(chunk.id)?.count||0)+1;
-     failures.set(chunk.id,{count,retryAt:clock()+Math.min(30000,1000*Math.pow(2,Math.min(count-1,5)))});
+     recordFailure(chunk.id);
      // A failed cell must not affect any other loaded cell.
-     if(cell&&Array.isArray(cell.meshes)&&Array.isArray(cell.materials)){
-      if(typeof cell.dispose==='function')cell.dispose();
-      for(const mesh of cell.meshes)release(mesh);
-      for(const material of cell.materials)release(material);
-     }
+     if(cell&&Array.isArray(cell.meshes)&&Array.isArray(cell.materials))freeCell(cell);
     }
    }
-   return Object.freeze({newLoads,loadedCells:loaded.size,pendingCells:Math.max(0,candidates.length-newLoads)});
+   return Object.freeze({newLoads,loadedCells:loaded.size,pendingCells:pending.size+Math.max(0,candidates.length-newLoads)});
   }
   function report(){
    const sorted=samples.slice().sort((a,b)=>a-b);
@@ -94,12 +125,14 @@
     return Number((sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo)).toFixed(4));
    }
    return Object.freeze({loadedCells:loaded.size,unloadedCells:chunks.length-loaded.size,failedCells:failures.size,
-    loadsTotal,unloadsTotal,lodFailures,lodSwitchesTotal,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
+    loadsTotal,unloadsTotal,lodFailures,lodSwitchesTotal,inFlightLoads:pending.size,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
   }
   function dispose(){
    if(disposed)return;
+   disposed=true;
+   for(const id of [...pending.keys()])cancel(id);
    for(const id of [...loaded.keys()])unload(id);
-   failures.clear();disposed=true;
+   failures.clear();
   }
   return Object.freeze({update,report,dispose});
  }
