@@ -31,6 +31,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./gpu-timing-session.js"></script>
 <script src="./nordhafen-lab-gpu-wiring.js"></script>
 <script src="./nordhafen-cell-streamer.js"></script>
+<script src="./nordhafen-build-slices.js"></script>
 <script src="./nordhafen-cell-lod.js"></script>
 <script src="./nordhafen-draw-memory.js"></script>
 <script src="./nordhafen-comparison-audit.js"></script>
@@ -168,6 +169,59 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        }
        return {meshes,materials};
      }
+     async function buildCellSliced(chunk,{signal,recordBuildSlice}={}){
+       const meshes=[],materials=[];
+       const types=new Map();
+       for(const obj of chunk.objects){
+         if(!types.has(obj.type))types.set(obj.type,[]);
+         types.get(obj.type).push(obj);
+       }
+       const work=[];
+       for(const [type,objects] of types){
+         for(let i=0;i<objects.length;i+=4)work.push({type,objects:objects.slice(i,i+4)});
+       }
+       try{
+         await window.SDNordhafenBuildSlices.run(work,group=>{
+           if(thinEnabled){
+             const partial=window.SDNordhafenThinInstances.create({
+               chunk:{...chunk,objects:group.objects},
+               sourceByType:{building,vegetation:tree},BABYLON
+             });
+             meshes.push(...partial.meshes);
+           }else{
+             for(const obj of group.objects){
+               const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+               const h=obj.type==='building'?6:3;
+               mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+               mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+               meshes.push(mesh);
+             }
+           }
+         },{budgetMs:4,signal,recordSlice:recordBuildSlice,
+           nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
+         return {meshes,materials};
+       }catch(error){
+         for(const mesh of meshes)mesh.dispose();
+         throw error;
+       }
+     }
+     async function placeholderSliced(chunk,opts={}){
+       const meshes=[],materials=[];
+       try{
+         await window.SDNordhafenBuildSlices.run(
+           chunk.objects.filter(obj=>obj.type==='building'),obj=>{
+             const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
+             mesh.position.set(chunk.x*fixture.chunkSize+obj.x,3,chunk.z*fixture.chunkSize+obj.z);
+             mesh.scaling.set(4,6,4);
+             meshes.push(mesh);
+           },{budgetMs:4,signal:opts.signal,recordSlice:opts.recordBuildSlice,
+             nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
+         return {meshes,materials};
+       }catch(error){
+         for(const mesh of meshes)mesh.dispose();
+         throw error;
+       }
+     }
      const route=fixture.chunks.slice().sort((a,b)=>a.z-b.z||(a.z%2?a.x-b.x:b.x-a.x));
      routeIndex=0;
      runProfile=level;
@@ -184,26 +238,16 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 
      }
      if($('streaming').checked){
-       let cellBuilder=$('lod').checked ? chunk=>{
+       let cellBuilder=$('lod').checked ? async (chunk,opts={})=>{
          const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
-             if(level==='placeholder'){
-               const meshes=[];
-               for(const obj of chunk.objects){
-                 if(obj.type!=='building')continue;
-                 const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
-                 mesh.position.set(chunk.x*fixture.chunkSize+obj.x,3,chunk.z*fixture.chunkSize+obj.z);
-                 mesh.scaling.set(4,6,4);
-                 meshes.push(mesh);
-               }
-               return {meshes,materials:[]};
-             }
+             if(level==='placeholder')return placeholderSliced(chunk,opts);
              const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((_,i)=>i%4===0)};
-             return buildCell(source);
+             return buildCellSliced(source,opts);
            }
          });
          return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
-       } : buildCell;
+       } : (chunk,opts)=>buildCellSliced(chunk,opts);
        streamer=window.SDNordhafenCellStreamer.create({
          scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
