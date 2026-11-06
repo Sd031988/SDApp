@@ -71,7 +71,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  }};
  const listeners={};
  const canvas={addEventListener(type,cb){listeners[type]=cb;},removeEventListener(){},focus(){},tabIndex:0};
- const camera={alpha:0,target:{copyFrom(){}}};
+ const camera={alpha:0,target:{copyFrom(){}},setTarget(){}};
  const ctrl=create({scene,camera,canvas,BABYLON,motion:{step},fixture:{grid:1,chunks:[]}});
  try{
   assert.equal(await ctrl.start(),true);
