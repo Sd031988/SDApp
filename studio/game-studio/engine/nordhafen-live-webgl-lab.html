@@ -12,12 +12,13 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<label><input id="thin" type="checkbox"> Thin Instances</label><label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<label><input id="glb" type="checkbox"> GLB-Assets</label><label><input id="thin" type="checkbox"> Thin Instances</label><label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
 <span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
 <small>Vereinfachte Gebäude-/Vegetations-Proxies, keine vollständige Nordhafen-Spielwelt. FPS = Babylon-Endframe-Takt, keine GPU-Rechenzeit. Keine automatischen Qualitätsurteile ohne unabhängig gemessene Draw Calls, Speicher und Ladezeit.</small></footer>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="./nordhafen-benchmark.js"></script>
 <script src="./nordhafen-frame-telemetry.js"></script>
 <script src="./game-quality-gates.js"></script>
@@ -40,10 +41,11 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null;
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
+   glbGeneration++;
    if(routeTimer!==null){clearInterval(routeTimer);routeTimer=null;}
    if(streamer){streamer.dispose();streamer=null;}
    if(drawProbe){drawProbe.dispose();drawProbe=null;}
@@ -53,7 +55,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    if(engine){engine.stopRenderLoop();}
    if(scene){scene.dispose();scene=null;}
    if(engine){engine.dispose();engine=null;}
-   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;$('thin').disabled=false;
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;$('thin').disabled=false;$('glb').disabled=false;
  }
  function show(){
    if(!bridge)return;
@@ -90,6 +92,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
+    '\nGLB-Assets: '+glbStatus+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
     (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
       ' | LOD-Wechsel: '+cells.lodSwitchesTotal+' | LOD-Fehler: '+cells.lodFailures+
@@ -121,13 +124,35 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
      const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
-     const thinEnabled=$('thin').checked&&$('streaming').checked&&$('lod').checked;
+     const glbEnabled=$('glb').checked&&$('streaming').checked;
+     const thinEnabled=($('thin').checked||glbEnabled)&&$('streaming').checked&&$('lod').checked;
+     let glbBuilding=null,glbPromise=null;
+     const generation=glbGeneration;
+     glbStatus=glbEnabled?'GLB wird geladen':'GLB aus';
+     function loadGLB(){
+       if(!glbPromise)glbPromise=BABYLON.SceneLoader.ImportMeshAsync('',
+         'https://assets.babylonjs.com/meshes/','BoomBox.glb',scene).then(result=>{
+           if(generation!==glbGeneration||!scene){
+             for(const mesh of result.meshes)mesh.dispose();
+             throw new Error('GLB-Ladevorgang abgebrochen');
+           }
+           glbBuilding=result.meshes.find(mesh=>mesh.getTotalVertices&&mesh.getTotalVertices()>0);
+           if(!glbBuilding)throw new Error('GLB enthält kein Geometrie-Mesh');
+           for(const mesh of result.meshes)mesh.isVisible=false;
+           glbStatus='GLB geladen (Khronos BoomBox als Gebäude-Proxy)';
+           return glbBuilding;
+         }).catch(error=>{
+           glbStatus='GLB-Ladefehler – Box-Fallback: '+error.message;
+           return null;
+         });
+       return glbPromise;
+     }
      let thinStatus=thinEnabled?'Thin Instances angefordert':($('thin').checked?'Thin Instances benötigen Streaming + LOD':'Thin Instances aus');
      building.material=mat1;tree.material=mat2;
      building.isVisible=false;tree.isVisible=false;
      function buildCell(chunk){
        if(thinEnabled){
-         const cell=window.SDNordhafenThinInstances.create({chunk,sourceByType:{building,vegetation:tree},BABYLON});
+         const cell=window.SDNordhafenThinInstances.create({chunk,sourceByType:{building:glbBuilding||building,vegetation:tree},BABYLON});
          thinStatus=cell.mode==='thin'?'Thin Instances aktiv':'Thin Instances nicht verfügbar – createInstance-Fallback';
          return cell;
        }
@@ -175,8 +200,13 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          });
          return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
        } : buildCell;
+       const asyncCellBuilder=glbEnabled ? async (chunk,{signal}={})=>{
+         await loadGLB();
+         if(signal&&signal.aborted)return {meshes:[],materials:[]};
+         return cellBuilder(chunk);
+       } : cellBuilder;
        streamer=window.SDNordhafenCellStreamer.create({
-         scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
+         scene,fixture,buildCell:asyncCellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
        });
 
      }else{
@@ -214,8 +244,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        }
      });
      timer=setInterval(show,1000);show();
-     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;$('thin').disabled=true;
-     status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene. '+thinStatus;
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;$('thin').disabled=true;$('glb').disabled=true;
+     status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene. '+thinStatus+' | '+glbStatus;
    }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
  }
  function beginGPU(){
