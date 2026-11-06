@@ -149,7 +149,7 @@ test('active city disposes legacy floor so only city ground remains',()=>{
  const floors=new Set(['pbr-ground']);
  vm.runInNewContext(begin,{pbr:{enabled:true},scene:{getMeshByName:name=>({dispose:()=>floors.delete(name)})},
   window:{SDNordhafenProceduralCity:{create:()=>{floors.add('city-roads-grass');return {};}}},
-  BABYLON:{},fixture:{},building:{},tree:{}});
+  BABYLON:{},fixture:{},building:{},tree:{},preset:{cityThin:true}});
  assert.deepEqual([...floors],['city-roads-grass']);
 });
 test('each frame streams around current camera target and simplified city retains buildings',()=>{
