@@ -23,6 +23,7 @@
   function unload(id){
    const cell=loaded.get(id);if(!cell)return;
    // Only resources returned by buildCell are owned; shared materials stay untouched.
+   if(typeof cell.dispose==='function')cell.dispose();
    for(const mesh of cell.meshes)release(mesh);
    for(const material of cell.materials)release(material);
    loaded.delete(id);unloadsTotal++;
@@ -35,6 +36,8 @@
    if(!Number.isFinite(cameraX)||!Number.isFinite(cameraZ))throw new TypeError('finite camera coordinates required');
    for(const chunk of chunks){
     if(loaded.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)unload(chunk.id);
+    else if(loaded.has(chunk.id)&&typeof loaded.get(chunk.id).updateLOD==='function')
+     loaded.get(chunk.id).updateLOD(distance(chunk,cameraX,cameraZ));
    }
    const candidates=chunks.filter(c=>!loaded.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
     .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
@@ -47,6 +50,7 @@
      if(!cell||!Array.isArray(cell.meshes)||!Array.isArray(cell.materials))
       throw new TypeError('buildCell must return {meshes,materials}');
      const elapsed=clock()-start;
+     if(typeof cell.updateLOD==='function')cell.updateLOD(distance(chunk,cameraX,cameraZ));
      loaded.set(chunk.id,cell);failures.delete(chunk.id);loadsTotal++;newLoads++;
      if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
     }catch(e){
