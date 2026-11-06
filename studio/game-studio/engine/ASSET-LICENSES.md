@@ -80,3 +80,11 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Unverändert aus `glTF/<Name>.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
 - Je Tier 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Gallop`, `Attack`, `Death`, `Eating`, `Idle_HitReact1`.
+
+## Moderner Baukasten (Quaternius, Sci-Fi-Modular-Kit) – bevorzugt für Stadt-Innenräume
+
+- Dateien: `assets/nordhafen-modern-*.glb` (24 Teile, zusammen ca. 1,5 MB): Wände (wall-1, wall-2, wall-empty), Fensterwände (window-wall-sidea, longwindow-wall-sidea, threewindows-wall-sidea), Türwände (doorsingle-/doordouble-wall-sidea), Türen (door-single, door-double), Böden (floortile-basic, -side, -corner), Dach (rooftile-empty, rooftile-vents), staircase, column-slim, Requisiten (props-crate, props-cratelong, props-containerfull, props-computer, props-shelf, props-chest), pipes.
+- Quelle: Quaternius (Modular-Kit, 91 Teile im Original), https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Maße: Wandelement 4 m breit × 4,4 m hoch; Boden 2 × 2 m; Treppe ca. 3,8 × 1,45 m hoch × 3,1 m.
