@@ -10,12 +10,12 @@ test('same seed and fixture produce deterministic building heights and variants'
   assert.equal(city.variant(1337,x),city.variant(1337,y));
  }
 });
-function mock(){
+function mock(level='small'){
  const textures=[],meshes=[],materials=[];
  const mesh=()=>({isVisible:true,material:null,dispose(){this.disposed=(this.disposed||0)+1;},
   clone(){const m=mesh();meshes.push(m);return m;},
-  thinInstanceSetBuffer(){},thinInstanceRefreshBoundingInfo(){},
-  getVerticesData(){return [0,1,0,0,-1,0];},setVerticesData(){},
+  thinInstanceSetBuffer(kind,data){this.thinInstanceCount=data.length/16;},thinInstanceRefreshBoundingInfo(){},
+  getVerticesData(){return [0,1,0,0,-1,0];},setVerticesData(kind,data){this.colors=data;},
   position:{set(){}}
  });
  class DynamicTexture{
@@ -33,11 +33,11 @@ function mock(){
  const BABYLON={DynamicTexture,Vector3,Color3,StandardMaterial:Material,
   PBRMetallicRoughnessMaterial:Material,VertexBuffer:{PositionKind:'position',ColorKind:'color'},
   Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
-  MeshBuilder:{CreateSphere:mesh,CreateGround:mesh},
+  MeshBuilder:{CreateBox:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
   Quaternion:{Identity:()=>({})},
   Matrix:{Compose:()=>({copyToArray(){}})}};
  const scene={fogMode:0};
- const f=fixture('small',1337);
+ const f=fixture(level,1337);
  const result=city.create({scene,BABYLON,fixture:f,seed:1337,building:mesh(),tree:mesh()});
  return {result,textures,meshes,materials,scene,f};
 }
@@ -63,4 +63,24 @@ test('dispose releases shared textures exactly once',()=>{
  assert.ok(h.textures.length>=2);
  for(const texture of h.textures)assert.equal(texture.disposed,1);
  for(const material of h.materials)assert.equal(material.disposed,1);
+});
+
+test('box sky has colors at every vertex and ignores fog',()=>{
+ const h=mock(),sky=h.meshes.find(m=>m.name==='city-gradient-sky');
+ assert.equal(sky.infiniteDistance,true);
+ assert.equal(sky.applyFog,false);
+ assert.equal(sky.material.fogEnabled,false);
+ assert.equal(sky.colors.length,sky.getVerticesData().length/3*4);
+ assert.ok(sky.colors.every(v=>Number.isFinite(v)&&v>0));
+ h.result.dispose();
+});
+test('medium city thin buffers contain all eight buildings per chunk',()=>{
+ const h=mock('medium');
+ for(const chunk of h.f.chunks){
+  const cell=h.result.buildCell(chunk);
+  const groups=city.buildingGroups(chunk,1337).filter(g=>g.length);
+  assert.equal(cell.meshes.slice(0,groups.length).reduce((n,m)=>n+m.thinInstanceCount,0),8);
+  groups.forEach((g,i)=>assert.equal(cell.meshes[i].thinInstanceCount,g.length));
+ }
+ h.result.dispose();
 });

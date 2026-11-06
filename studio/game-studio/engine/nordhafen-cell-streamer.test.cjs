@@ -149,3 +149,23 @@ test('streamer reports maximum measured build slice from cooperative builder',as
  assert.equal(stream.report().maxBuildSliceMs,3.5);
  stream.dispose();
 });
+
+test('stationary target causes zero further LOD switches after async initial build',async()=>{
+ const lodAPI=require('./nordhafen-cell-lod.js');
+ const {stream}=harness({loadRadius:160,unloadRadius:200,buildCell:async()=>{
+  const lod=lodAPI.create({near:45,far:100,hysteresis:8,buildLevel:async()=>({meshes:[],materials:[]})});
+  return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
+ }});
+ for(let i=0;i<30;i++){stream.update(96,96);await tick();}
+ const initial=stream.report();assert.ok(initial.loadedCells>0);
+ for(let i=0;i<100;i++){stream.update(96,96);await tick();}
+ assert.equal(stream.report().lodSwitchesTotal,initial.lodSwitchesTotal);
+ assert.equal(stream.report().lodFailures,0);stream.dispose();
+});
+test('pending load initializes LOD using latest target rather than captured old target',async()=>{
+ const d=deferred();let distance;
+ const {stream}=harness({buildCell:()=>d.promise});
+ stream.update(32,32);stream.update(42,32);
+ d.resolve({meshes:[],materials:[],updateLOD:x=>{distance=x;return 'full';}});
+ await tick();assert.equal(distance,10);stream.dispose();
+});

@@ -165,6 +165,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      building.isVisible=false;tree.isVisible=false;
      if(pbr&&pbr.enabled){
+       scene.getMeshByName('pbr-ground')?.dispose();
        city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,building,tree});
      }
      function buildCell(chunk){
@@ -261,7 +262,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        camera.target.set(x,12,z);
        camera.radius=75;
        camera.beta=1.2;
-       if(streamer)streamer.update(x,z);
+       // Streaming follows the look target, including manual camera panning.
        routeIndex++;
 
      }
@@ -270,7 +271,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder')return placeholderSliced(chunk,opts);
-             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((_,i)=>i%4===0)};
+             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((obj,i)=>city?obj.type==='building'||i%4===0:i%4===0)};
              return buildCellSliced(source,opts);
            }
          });
@@ -308,6 +309,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
            const pos=player.update(engine.getDeltaTime()/1000);
            if(pos&&streamer){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
          }
+         if(streamer&&!(player&&player.ready))streamer.update(camera.target.x,camera.target.z);
          scene.render();
          if(pbr&&pbr.enabled)pbr.updateShadows(camera.target,scene.meshes);
          if(drawProbe&&!runComplete){

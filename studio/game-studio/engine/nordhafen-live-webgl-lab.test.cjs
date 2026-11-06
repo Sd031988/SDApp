@@ -143,3 +143,16 @@ test('unknown preset changes no controls, does not start and gives status notice
  for(const id of ['pbr','thin','lod','streaming','player','glb'])assert.equal(x.controls[id].checked,false,id);
  assert.match(html,/if\(preset\.notice\)status\.textContent=preset\.notice/);
 });
+
+test('active city disposes legacy floor so only city ground remains',()=>{
+ const begin=html.slice(html.indexOf('     if(pbr&&pbr.enabled){'),html.indexOf('     function buildCell('));
+ const floors=new Set(['pbr-ground']);
+ vm.runInNewContext(begin,{pbr:{enabled:true},scene:{getMeshByName:name=>({dispose:()=>floors.delete(name)})},
+  window:{SDNordhafenProceduralCity:{create:()=>{floors.add('city-roads-grass');return {};}}},
+  BABYLON:{},fixture:{},building:{},tree:{}});
+ assert.deepEqual([...floors],['city-roads-grass']);
+});
+test('each frame streams around current camera target and simplified city retains buildings',()=>{
+ assert.match(html,/streamer.update\(camera.target.x,camera.target.z\)/);
+ assert.match(html,/city\?obj.type==='building'\|\|i%4===0/);
+});

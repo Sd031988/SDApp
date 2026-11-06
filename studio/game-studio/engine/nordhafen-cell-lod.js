@@ -27,7 +27,7 @@
    return distance<near-hysteresis?'full':distance<far-hysteresis?'simplified':'placeholder';
   }
   function needsUpdate(distance){
-   if(disposed)return false;
+   if(disposed||changing)return false;
    if(!Number.isFinite(distance)||distance<0)throw new TypeError('invalid distance');
    return desired(distance)!==level;
   }

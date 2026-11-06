@@ -16,6 +16,8 @@
   const loaded=new Map(),pending=new Map(),samples=[],released=new WeakSet(),failures=new Map();
   let disposed=false,loadsTotal=0,unloadsTotal=0,lodFailures=0,lodSwitchesTotal=0,maxBuildSliceMs=0;
   const chunks=fixture.chunks,side=fixture.chunkSize;
+  let centerX=0,centerZ=0;
+  const lodPending=new Set();
   function release(resource){
    if(resource&&typeof resource.dispose==='function'&&!released.has(resource)){
     resource.dispose();released.add(resource);
@@ -48,6 +50,7 @@
   function update(cameraX,cameraZ){
    if(disposed)throw new Error('cell streamer disposed');
    if(!Number.isFinite(cameraX)||!Number.isFinite(cameraZ))throw new TypeError('finite camera coordinates required');
+   centerX=cameraX;centerZ=cameraZ;
    for(const chunk of chunks){
     if(loaded.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)unload(chunk.id);
     if(pending.has(chunk.id)&&distance(chunk,cameraX,cameraZ)>unloadRadius)cancel(chunk.id);
@@ -59,17 +62,17 @@
    for(const chunk of lodCandidates){
     if(lodChanges>=lodBudget)break;
     const cell=loaded.get(chunk.id);
-    if(!cell)continue;
+    if(!cell||lodPending.has(cell))continue;
     const d=distance(chunk,cameraX,cameraZ);
     try{
      if(typeof cell.needsLODUpdate==='function'&&!cell.needsLODUpdate(d))continue;
      const before=cell.lodLevel&&cell.lodLevel();
      const after=cell.updateLOD(d);
      if(after&&typeof after.then==='function'){
-       lodChanges++;
+       lodChanges++;lodPending.add(cell);
        after.then(level=>{
          if(loaded.has(chunk.id)&&level!==null&&before!==level)lodSwitchesTotal++;
-       }).catch(()=>{lodFailures++;});
+       }).catch(()=>{lodFailures++;}).finally(()=>lodPending.delete(cell));
        continue;
      }
      if(!loaded.has(chunk.id))continue; // eviction during transition
@@ -95,7 +98,7 @@
            throw new TypeError('buildCell must return {meshes,materials}');
          if(disposed||controller.signal.aborted||pending.get(chunk.id)!==job){freeCell(result);return;}
          if(typeof result.updateLOD==='function'){
-           const after=await result.updateLOD(distance(chunk,cameraX,cameraZ));
+           const after=await result.updateLOD(distance(chunk,centerX,centerZ));
            if(after!==null)lodSwitchesTotal++;
          }
          if(disposed||controller.signal.aborted||pending.get(chunk.id)!==job){freeCell(result);return;}

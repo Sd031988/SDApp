@@ -43,7 +43,7 @@
    source.material=facadeMaterials[i];source.isVisible=false;sources.push(source);owned.push(source);
   }
   // Gradient sky via vertex colors, no external shader or CDN.
-  const sky=BABYLON.MeshBuilder.CreateSphere('city-gradient-sky',{diameter:span*6,segments:12},scene);
+  const sky=BABYLON.MeshBuilder.CreateBox('city-gradient-sky',{size:span*6},scene);
   const positions=sky.getVerticesData(BABYLON.VertexBuffer.PositionKind);
   const colorsArray=[];
   for(let i=0;i<positions.length;i+=3){
@@ -52,6 +52,7 @@
   }
   sky.setVerticesData(BABYLON.VertexBuffer.ColorKind,colorsArray);
   const skyMat=new BABYLON.StandardMaterial('city-sky-gradient',scene);
+  skyMat.fogEnabled=false;sky.applyFog=false;
   skyMat.disableLighting=true;skyMat.backFaceCulling=false;skyMat.emissiveColor=new BABYLON.Color3(1,1,1);
   skyMat.useVertexColors=true;sky.material=skyMat;sky.isPickable=false;
   sky.infiniteDistance=true;owned.push(sky);materials.push(skyMat);

@@ -35,7 +35,7 @@ test('LOD without needsLODUpdate consumes budget only when level changes',()=>{
 test('lab uses same deterministic camera route for streaming and baseline and shows unavailable',()=>{
  const html=fs.readFileSync(path.join(__dirname,'nordhafen-live-webgl-lab.html'),'utf8');
  assert.match(html,/function moveRoute\(\)/);
- assert.match(html,/if\(streamer\)streamer\.update\(x,z\)/);
+ assert.match(html,/streamer\.update\(camera\.target\.x,camera\.target\.z\)/);
  assert.match(html,/routeTimer=setInterval\(moveRoute,500\)/);
  assert.match(html,/Ohne Streaming/);
  assert.match(html,/Streaming \+ LOD/);
