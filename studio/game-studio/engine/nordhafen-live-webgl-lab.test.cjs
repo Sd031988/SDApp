@@ -82,7 +82,7 @@ test('GLB normalization module remains registered for a future verified asset',(
 
 test('device regression: LOD placeholders are real per-building boxes, not flat cell discs',()=>{
  assert.match(html,/chunk\.objects\.filter\(obj=>obj\.type==='building'\)/);
- assert.match(html,/mesh\.scaling\.set\(4,h,4\)/);
+ assert.match(html,/mesh\.scaling\.set\(size.width,h,size.depth\)/);
  assert.match(html,/SDNordhafenProceduralCity\.height\(1337,obj\)/);
  assert.doesNotMatch(html,/mesh\.scaling\.set\(64,4,64\)/);
 });
