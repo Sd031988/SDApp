@@ -49,6 +49,18 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
  let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,city=null,player=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
+ // Apply a known test preset only; unknown values never change any controls.
+ function applyPreset(search){
+   const requested=new URLSearchParams(search).get('preset');
+   if(requested===null)return {name:'keins',autoStart:false,notice:''};
+   if(requested!=='city')return {name:'keins',autoStart:false,notice:'Unbekanntes Preset: '+requested+' (ignoriert).'};
+   $('level').value='medium';
+   for(const id of ['pbr','thin','lod','streaming'])$(id).checked=true;
+   for(const id of ['player','glb'])$(id).checked=false;
+   return {name:'city',autoStart:true,notice:''};
+ }
+ const preset=applyPreset(window.location.search);
+ if(preset.notice)status.textContent=preset.notice;
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
    glbGeneration++;
@@ -92,7 +104,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    } catch(e) { compare='Lauf ungültig: '+e.message; }
    if(runFailure)compare='Lauf ungültig: '+runFailure;
    const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
-   out.textContent='Quelle: '+r.source+'\nProfil: '+r.fixture.level+
+   out.textContent='Preset: '+preset.name+'\nQuelle: '+r.source+'\nProfil: '+r.fixture.level+
     ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
     '\nRender-Timestamps vorhanden: '+f.measured+
     '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
@@ -339,5 +351,6 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
  stop.addEventListener('click',()=>{cleanup();status.textContent='Gestoppt, Ressourcen freigegeben.';});
  window.addEventListener('resize',()=>{if(engine)engine.resize();});
  window.addEventListener('pagehide',cleanup);
+ if(preset.autoStart)begin();
 })();
 </script></body></html>
