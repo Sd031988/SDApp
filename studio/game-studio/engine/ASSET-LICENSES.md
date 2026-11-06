@@ -72,3 +72,11 @@ No asset is bundled or redistributed in this PR.
 - Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Raster 2 m (Wand 2 × 2 m, Boden 2 × 2 m, Treppe ca. 2 m lang / 0,9 m hoch, Tür 2,3 × 3 m).
 - Hinweis aus `How-To-Use.txt`: Bei 90°-Ecken die neue Wand zusätzlich um 180° drehen, sonst überlappen die Kanten.
+
+## Tiere (Quaternius „Animals“)
+
+- Dateien: `assets/nordhafen-animal-husky.glb`, `-shibainu.glb`, `-wolf.glb`, `-horse.glb`, `-deer.glb` (je 1,7–2,2 MB); Auswahl aus 12 Tieren im Original.
+- Quelle: Quaternius – Animals Pack, https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Unverändert aus `glTF/<Name>.gltf` mit gltf-pipeline in GLB umgewandelt (eingebettete Texturen).
+- Je Tier 1 Skelett, Animationen u. a. `Idle`, `Walk`, `Gallop`, `Attack`, `Death`, `Eating`, `Idle_HitReact1`.
