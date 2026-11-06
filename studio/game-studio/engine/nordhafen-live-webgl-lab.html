@@ -54,7 +54,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    const params=new URLSearchParams(search);
    const requested=params.get('preset');
    const freeze=params.get('freeze')==='1';
-   const cityThin=params.get('thin')!=='0';
+   const cityThin=params.get('thin')==='1';
    if(requested===null)return {name:'keins',autoStart:false,notice:'',freeze,cityThin};
    if(requested!=='city')return {name:'keins',autoStart:false,notice:'Unbekanntes Preset: '+requested+' (ignoriert).',freeze,cityThin};
    $('level').value='medium';
@@ -171,6 +171,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      if(pbr&&pbr.enabled){
        scene.getMeshByName('pbr-ground')?.dispose();
        city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:preset.cityThin});
+       thinStatus=preset.cityThin?'Thin Instances: experimentell, rendert derzeit nicht':'Stadt: createInstance aktiv (iPhone geprüft)';
      }
      function buildCell(chunk){
        if(thinEnabled){
