@@ -32,3 +32,14 @@ test('three masts receive three different building IDs even when one building is
  assert.equal(new Set(selected.map(building=>building.id)).size,3);
  assert.deepEqual(selected.map(building=>building.id),['shared','second','third']);
 });
+
+test('twenty available buildings produce twenty unique streamed interior sites',()=>{
+ const fixture={chunkSize:64,chunks:Array.from({length:5},(_,chunk)=>({x:chunk,z:0,objects:Array.from({length:5},(_,i)=>({id:'b-'+chunk+'-'+i,type:'building',x:4+i*9,z:12}))}))};
+ const sites=interiors.selectSites(fixture,[{x:0,z:0},{x:128,z:0},{x:256,z:0}],20);
+ assert.equal(sites.length,20);assert.equal(new Set(sites.map(s=>s.id)).size,20);
+ assert.ok(sites.every(s=>Number.isFinite(s.x)&&Number.isFinite(s.z)));
+});
+test('when fewer than twenty buildings exist, selection does not invent geometry',()=>{
+ const fixture={chunkSize:64,chunks:[{x:0,z:0,objects:[{id:'only',type:'building',x:10,z:10}]}]};
+ assert.equal(interiors.selectSites(fixture,[{x:10,z:10}],20).length,1);
+});
