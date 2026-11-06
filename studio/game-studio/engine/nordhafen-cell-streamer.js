@@ -14,7 +14,7 @@
   if(!Number.isInteger(lodBudget)||lodBudget<1)throw new TypeError('positive integer LOD budget required');
   const clock=now||(()=>performance.now());
   const loaded=new Map(),pending=new Map(),samples=[],released=new WeakSet(),failures=new Map();
-  let disposed=false,loadsTotal=0,unloadsTotal=0,lodFailures=0,lodSwitchesTotal=0;
+  let disposed=false,loadsTotal=0,unloadsTotal=0,lodFailures=0,lodSwitchesTotal=0,maxBuildSliceMs=0;
   const chunks=fixture.chunks,side=fixture.chunkSize;
   function release(resource){
    if(resource&&typeof resource.dispose==='function'&&!released.has(resource)){
@@ -78,7 +78,9 @@
     let cell;
     try{
      const controller=new AbortController();
-     cell=buildCell(chunk,{signal:controller.signal});
+     cell=buildCell(chunk,{signal:controller.signal,recordBuildSlice:duration=>{
+       if(Number.isFinite(duration)&&duration>=0)maxBuildSliceMs=Math.max(maxBuildSliceMs,duration);
+     }});
      if(cell&&typeof cell.then==='function'){
        const job={controller};pending.set(chunk.id,job);newLoads++;
        Promise.resolve(cell).then(result=>{
@@ -125,7 +127,7 @@
     return Number((sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo)).toFixed(4));
    }
    return Object.freeze({loadedCells:loaded.size,unloadedCells:chunks.length-loaded.size,failedCells:failures.size,
-    loadsTotal,unloadsTotal,lodFailures,lodSwitchesTotal,inFlightLoads:pending.size,loadMsP50:percentile(.5),loadMsP95:percentile(.95)});
+    loadsTotal,unloadsTotal,lodFailures,lodSwitchesTotal,inFlightLoads:pending.size,loadMsP50:percentile(.5),loadMsP95:percentile(.95),maxBuildSliceMs});
   }
   function dispose(){
    if(disposed)return;
