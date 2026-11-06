@@ -66,3 +66,32 @@ test('v: refresh thin-instance bounding info once per mesh after matrix upload',
  }
  r.dispose();
 });
+
+test('BoomBox normalization yields 1x1x1 bounds and base y=0',()=>{
+ const {normalizeSource}=require('./nordhafen-thin-instances.js');
+ const mesh={
+  bounds:{min:{x:-.01,y:.02,z:-.03},max:{x:.01,y:.04,z:.01}},
+  getHierarchyBoundingVectors(){return this.bounds;},
+  setParent(parent){assert.equal(parent,null);},
+  bakeCurrentTransformIntoVertices(){},
+  bakeTransformIntoVertices(transform){
+   const {scale,offset}=transform;
+   const prev=this.bounds;
+   this.bounds={min:{},max:{}};
+   for(const axis of ['x','y','z']){
+    this.bounds.min[axis]=prev.min[axis]*scale[axis]+offset[axis];
+    this.bounds.max[axis]=prev.max[axis]*scale[axis]+offset[axis];
+   }
+  },
+  refreshBoundingInfo(){}
+ };
+ const Matrix={
+  Scaling(x,y,z){return {scale:{x,y,z},multiply(other){return {...this,offset:other.offset};}};},
+  Translation(x,y,z){return {offset:{x,y,z}};}
+ };
+ normalizeSource(mesh,{Matrix});
+ const box=mesh.getHierarchyBoundingVectors();
+ for(const axis of ['x','y','z'])
+  assert.ok(Math.abs(box.max[axis]-box.min[axis]-1)<1e-10,axis);
+ assert.ok(Math.abs(box.min.y)<1e-10);
+});

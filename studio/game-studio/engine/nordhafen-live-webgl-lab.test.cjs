@@ -76,3 +76,8 @@ test('step 8: player and pure motion are loaded and executed in Lab',()=>{
  assert.match(html,/player\.syncColliders\(streamer\)/);
  assert.match(html,/player\.dispose\(\)/);
 });
+
+test('BoomBox source is normalized before use and explicitly marked as placeholder',()=>{
+ assert.match(html,/SDNordhafenThinInstances\.normalizeSource\(glbBuilding,BABYLON\)/);
+ assert.match(html,/BoomBox als Platzhalter, kein echtes Gebäudemodell/);
+});
