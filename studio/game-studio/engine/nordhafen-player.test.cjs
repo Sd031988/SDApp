@@ -65,7 +65,8 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  const scene={enablePhysics(){},pickWithRay(r,predicate){
   rayPredicate=predicate;return {hit:rayHit,distance:.1,pickedMesh:{isPickable:true}};
  }};
- const canvas={addEventListener(){},removeEventListener(){},focus(){},tabIndex:0};
+ const listeners={};
+ const canvas={addEventListener(type,cb){listeners[type]=cb;},removeEventListener(){},focus(){},tabIndex:0};
  const camera={alpha:0,target:{copyFrom(){}}};
  const ctrl=create({scene,camera,canvas,BABYLON,motion:{step},fixture:{grid:1,chunks:[]}});
  try{
@@ -75,9 +76,12 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   assert.equal(ray.length,.15);
   assert.equal(ray.direction.y,-1);
   assert.equal(lastVelocity.y,-2,'no extra gravitational acceleration');
+  listeners.keydown({code:'Space',preventDefault(){}});
+  ctrl.update(.02);
+  assert.equal(lastVelocity.y,-2,'airborne raycast must not allow jump');
   rayHit=true;
   ctrl.update(.02);
-  assert.equal(lastVelocity.y,-2);
+  assert.equal(lastVelocity.y,5.5,'ground contact from raycast allows jump');
   assert.equal(rayPredicate({isPickable:true}),true);
   ctrl.dispose();
  }finally{globalThis.HavokPhysics=previous;}
