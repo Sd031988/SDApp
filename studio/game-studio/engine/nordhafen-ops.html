@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nordhafen Ops – Mission / Freie Stadt / Royale (Prototyp)</title>
+<style>
+html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system-ui}canvas{width:100%;height:100%;display:block;touch-action:none}
+#hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
+#cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-size:28px;text-shadow:0 1px 3px #000}
+#damageOverlay{position:fixed;inset:0;border:0 solid #f24a4a;pointer-events:none;z-index:3;transition:border-width .12s}#flash{position:fixed;left:54%;top:57%;width:18px;height:18px;border-radius:50%;background:#ffd26b;box-shadow:0 0 35px 16px #ff9b39;opacity:0;pointer-events:none}
+#missionProgress{position:fixed;left:50%;top:64%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;display:none;place-items:center;background:conic-gradient(#ffbc35 var(--progress,0%),#102235c9 0);font-weight:bold;text-shadow:0 1px 4px #000;pointer-events:none;z-index:6}#objectiveMarker{position:fixed;z-index:7;color:#ffe86c;background:#112436d9;border:1px solid #ffe86c;border-radius:8px;padding:6px 10px;font-weight:700;pointer-events:none;display:none}#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
+button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
+</style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="damageOverlay"></div><div id="missionProgress"></div><div id="objectiveMarker"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
+<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Mission: Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), hole das Datenpaket aus der obersten Etage und halte die Hafen-Extraktion 20 Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, E Funkmast aktivieren, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><label for="mode">Modus</label> <select id="mode"><option value="mission">Mission</option><option value="city">Freie Stadt (Prototyp)</option><option value="royale">Nordhafen Royale (Prototyp)</option></select> <label for="difficulty">Schwierigkeit</label> <select id="difficulty"><option value="easy">Leicht</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select><label for="volume">Lautstärke</label><input id="volume" type="range" min="0" max="100" value="60"><p id="records">Bestzeiten und Siege werden lokal gespeichert, soweit der Browser es erlaubt.</p><p id="tutorial">Tutorial: Schießstand am Start (T überspringen); Funkmasten und Datenpaket mit E aktivieren. Fahrzeug und Touch-Steuerung sind noch nicht spielbar.</p><button id="play">Starten</button> <button id="restart" style="display:none">Neustart</button></article></div>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+<script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
+<script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script><script src="./nordhafen-ops-menu.js"></script><script src="./nordhafen-ops-weapons.js"></script><script src="./nordhafen-ops-audio.js"></script><script src="./nordhafen-ops-campaign.js"></script>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission,interiors=window.SDNordhafenOpsInteriors,modes=window.SDNordhafenOpsModes,menuRules=window.SDNordhafenOpsMenu,weaponRules=window.SDNordhafenOpsWeapons,audioRules=window.SDNordhafenOpsAudio,campaign=window.SDNordhafenOpsCampaign;
+let sound=null,engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=weaponRules.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,paused=false,holdingE=false,mission=campaign.initial(),skipRange=false,dataMesh=null,sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],interiorSites=[],interiorLoaded=new Map(),frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='',mode='mission',wanted={level:0,quiet:0},royaleElapsed=0,royalePlayers=[],cityMissions=modes.missions(),loot=modes.loot(20261107,50);
+function status(t){$('status').textContent=t;}
+function showRecords(){const r=menuRules.read(localStorage);$('records').textContent='Bestzeit Mission: '+(r.bestMissionSeconds===null?'—':Math.round(r.bestMissionSeconds)+' s')+' · Siege: Mission '+r.wins.mission+', Stadt '+r.wins.city+', Royale '+r.wins.royale;}
+showRecords();
+function clear(){
+ sound?.dispose();sound=null;engine?.stopRenderLoop();for(const items of interiorLoaded.values())for(const item of items){item.body?.dispose();item.mesh.dispose();}interiorLoaded.clear();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
+ engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=weaponRules.initial();paused=false;holdingE=false;mission=campaign.initial();skipRange=false;dataMesh=null;sites=null;mastMeshes=[];extractMesh=null;interiorSites=[];damageThisFrame=false;defeated=0;frameSamples=[];lastUi=0;lastMarkers=0;lastHud='';lastProgress='';lastMarker='';$('missionProgress').style.display='none';$('objectiveMarker').style.display='none';markerNodes.forEach(m=>m.remove());markerNodes=[];
+}
+function shoot(){
+ if(!scene||!player?.ready||ended||paused)return;
+ const now=performance.now();lastShot=now;
+ const result=weaponRules.fire(weapon);weapon=result.state;
+ if(result.event!=='fired'){if(result.event!=='cooldown')status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
+ sound?.play(weaponRules.active(weapon).id,Number($('volume').value));flashUntil=now+65;
+ const shotOrigin=player.position||player.update(0);if(shotOrigin)for(const enemy of enemies)enemy.state=enemyRules.hear(enemy.state,shotOrigin);
+ if(mode==='city')wanted=modes.wanted(wanted,{shot:true});
+ const ray=controls.centerRay(scene,canvas,BABYLON);
+ const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
+ if(picked?.hit&&picked.distance<=120){
+  const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
+  if(enemy){sound?.play('hit',Number($('volume').value));weapon=weaponRules.hit(weapon);enemy.state=enemyRules.damage(enemy.state,weaponRules.active(weapon).damage);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/enemyRules.TYPES[enemy.state.type].health;return;}
+  const target=targets.find(t=>t.mesh===picked.pickedMesh);
+  if(target){sound?.play('hit',Number($('volume').value));weapon=weaponRules.hit(weapon);target.health=Math.max(0,target.health-weaponRules.active(weapon).damage);
+   hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
+   if(target.health===0){target.mesh.dispose();targets=targets.filter(t=>t!==target);}
+  }
+ }else status('Schuss abgegeben');
+}
+async function start(){
+ const selected=menuRules.settings({mode:$('mode').value,difficulty:$('difficulty').value,volume:$('volume').value});mode=selected.mode;wanted={level:0,quiet:0};royaleElapsed=0;royalePlayers=Array.from({length:24},(_,id)=>({id,alive:true}));cityMissions=modes.missions();
+ $('play').disabled=true;$('menu').style.display='none';
+ try{
+  clear();sound=audioRules.create(()=>new (window.AudioContext||window.webkitAudioContext)());$('restart').style.display='none';engine=new BABYLON.Engine(canvas,true);scene=new BABYLON.Scene(engine);
+  scene.clearColor=new BABYLON.Color4(.5,.68,.82,1);
+  const camera=new BABYLON.ArcRotateCamera('ops-camera',-1.2,1.25,7.5,new BABYLON.Vector3(32,1,32),scene);
+  camera.lowerRadiusLimit=4;camera.upperRadiusLimit=10;scene.activeCamera=camera;
+  new BABYLON.HemisphericLight('ambient',new BABYLON.Vector3(0,1,0),scene);
+  const fixture=window.SDNordhafenBenchmark.create('medium',1337);
+  const previewSites=missionRules.locations({x:fixture.grid*32,z:fixture.grid*32},fixture.grid*fixture.chunkSize);
+  interiorSites=interiors.selectSites(fixture,previewSites.towers,20);
+  const interiorIds=new Set(interiorSites.map(s=>s.id));
+  const controllerFixture={...fixture,chunks:fixture.chunks.map(chunk=>({...chunk,objects:chunk.objects.filter(obj=>!interiorIds.has(obj.id))}))};
+  city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:false});
+  streamer=window.SDNordhafenCellStreamer.create({scene,fixture,buildCell:(chunk,opts)=>{const cell=city.buildCell(chunk,opts);if(sites&&cell&&Array.isArray(cell.meshes)){const kept=missionRules.clearMastArea(cell.meshes.filter(m=>m.name.startsWith('city-instance-')&&!interiorSites.some(site=>m.name.endsWith('-'+site.id))),sites.towers);const ids=new Set(kept);cell.meshes=cell.meshes.filter(m=>{if(!m.name.startsWith('city-instance-')||ids.has(m)&&!interiorSites.some(site=>m.name.endsWith('-'+site.id)))return true;m.dispose();return false;});}return cell;},loadRadius:160,unloadRadius:200,budget:2,lodBudget:2});
+  let previousVelocity={vx:0,vz:0};
+  const originalMotion=window.SDNordhafenPlayerMotion;
+  const motion={...originalMotion,step(input,state,dt,options){const next=originalMotion.step(input,state,dt,options);previousVelocity=controls.velocity(previousVelocity,next,dt,aiming);return {...next,vx:previousVelocity.vx,vz:previousVelocity.vz};}};
+  player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,motion,fixture:controllerFixture,cityGeometry:window.SDNordhafenProceduralCity});
+  if(!await player.start())throw Error(player.status);
+  const startPosition=player.update(0)||new BABYLON.Vector3(32,.9,32);
+  const forward=new BABYLON.Vector3(-Math.cos(camera.alpha),0,-Math.sin(camera.alpha));
+  const right=new BABYLON.Vector3(-forward.z,0,forward.x);
+  const placements=controls.targetPositions(startPosition,forward,right);
+  for(let i=0;i<5;i++){
+   const mesh=BABYLON.MeshBuilder.CreateCylinder('target-'+i,{height:.16,diameter:1.5,tessellation:48},scene);
+   mesh.rotation.x=Math.PI/2;
+   mesh.position.set(placements[i].x,1.5,placements[i].z);mesh.metadata={target:true};mesh.isPickable=true;
+   const mat=new BABYLON.StandardMaterial('target-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(controls.appearance('dummy').rings[0]);mesh.material=mat;
+   for(let ring=0;ring<3;ring++){const disc=BABYLON.MeshBuilder.CreateCylinder('target-ring-'+i+'-'+ring,{height:.17,diameter:1.15-ring*.34,tessellation:48},scene);disc.rotation.x=Math.PI/2;disc.position.copyFrom(mesh.position);disc.position.z+=.09+ring*.008;disc.isPickable=false;const dm=new BABYLON.StandardMaterial('ring-mat-'+i+'-'+ring,scene);dm.diffuseColor=BABYLON.Color3.FromHexString(controls.appearance('dummy').rings[ring+1]);disc.material=dm;disc.parent=mesh;disc.position.set(0,0,.1+ring*.008);}
+   targets.push({mesh,health:50});
+   const marker=document.createElement('div');marker.className='marker';marker.textContent='◆ '+(i+1);document.body.append(marker);markerNodes.push(marker);
+  }
+  sites=missionRules.locations(startPosition,fixture.grid*fixture.chunkSize);
+  const enemySpawns=sites.towers.flatMap((mast,i)=>[{x:mast.x+(i===2?-16:0),z:mast.z+(i===2?0:-16),patrolAxis:i===2?'z':'x'},{x:mast.x+(i===2?16:0),z:mast.z+(i===2?0:16),patrolAxis:i===2?'z':'x'}]);
+  for(let i=0;i<18;i++){const angle=i*Math.PI*2/18,radius=105+(i%4)*29;enemySpawns.push({x:Math.max(15,Math.min(495,startPosition.x+Math.cos(angle)*radius)),z:Math.max(15,Math.min(495,startPosition.z+Math.sin(angle)*radius)),patrolAxis:i%2?'z':'x'});}
+  for(let i=0;i<enemySpawns.length;i++){
+   const {x,z,patrolAxis}=enemySpawns[i];
+   const mesh=BABYLON.MeshBuilder.CreateCapsule('enemy-'+i,{height:1.8,radius:.38},scene);
+   mesh.position.set(x,.9,z);mesh.metadata={enemy:i};mesh.isPickable=true;
+   const palette=controls.appearance('enemy'),type=['guard','scout','heavy'][i%3],profile=enemyRules.TYPES[type];const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(profile.color);mesh.material=mat;
+   const visor=BABYLON.MeshBuilder.CreateBox('enemy-visor-'+i,{width:.6,height:.18,depth:.16},scene);visor.parent=mesh;visor.position.set(0,.46,-.32);visor.isPickable=false;const vm=new BABYLON.StandardMaterial('enemy-visor-mat-'+i,scene);vm.emissiveColor=BABYLON.Color3.FromHexString(palette.visor);visor.material=vm;
+   const bar=BABYLON.MeshBuilder.CreatePlane('enemy-health-'+i,{width:1,height:.12},scene);bar.parent=mesh;bar.position.set(0,1.2,0);bar.billboardMode=BABYLON.Mesh.BILLBOARDMODE_ALL;bar.isPickable=false;const bm=new BABYLON.StandardMaterial('enemy-health-mat-'+i,scene);bm.emissiveColor=BABYLON.Color3.FromHexString(palette.healthBar);bm.disableLighting=true;bar.material=bm;
+   enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z,type)});
+  }
+  for(let i=0;i<3;i++){
+   const point=sites.towers[i],mast=BABYLON.MeshBuilder.CreateCylinder('radio-mast-'+i,{height:12,diameterTop:.3,diameterBottom:.9,tessellation:8},scene);
+   mast.position.set(point.x,6,point.z);mast.isPickable=false;
+   const mat=new BABYLON.StandardMaterial('radio-mast-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.18,.58,.82);mat.emissiveColor=new BABYLON.Color3(.04,.14,.23);mast.material=mat;
+   const beacon=BABYLON.MeshBuilder.CreateSphere('mast-beacon-'+i,{diameter:1.6},scene);beacon.parent=mast;beacon.position.set(0,6.2,0);beacon.isPickable=false;
+   const light=new BABYLON.StandardMaterial('mast-beacon-mat-'+i,scene);light.emissiveColor=new BABYLON.Color3(1,.6,.06);beacon.material=light;
+   mastMeshes.push(mast);
+  }
+  extractMesh=BABYLON.MeshBuilder.CreateTorus('harbor-extraction',{diameter:missionRules.EXTRACT_RADIUS*2,thickness:.3,tessellation:72},scene);
+  extractMesh.position.set(sites.extraction.x,.2,sites.extraction.z);extractMesh.isPickable=false;
+  const extractionMaterial=new BABYLON.StandardMaterial('harbor-extraction-material',scene);extractionMaterial.emissiveColor=new BABYLON.Color3(.12,.9,.38);extractMesh.material=extractionMaterial;extractMesh.setEnabled(false);
+  const dataSite=interiorSites[0];sites.data={x:dataSite.x,y:9,z:dataSite.z};dataMesh=BABYLON.MeshBuilder.CreateBox('mission-data-package',{size:.65},scene);dataMesh.position.set(dataSite.x,9.6,dataSite.z);dataMesh.isPickable=false;const dataMat=new BABYLON.StandardMaterial('mission-data-mat',scene);dataMat.emissiveColor=new BABYLON.Color3(.95,.75,.14);dataMesh.material=dataMat;dataMesh.setEnabled(false);
+
+  function loadInterior(index){
+   if(interiorLoaded.has(index))return;
+   const site=interiorSites[index],plan=interiors.blueprint(site),items=[];
+   const make=(name,width,height,depth,x,y,z,hex,angle=0)=>{
+    const mesh=BABYLON.MeshBuilder.CreateBox(name,{width,height,depth},scene);mesh.position.set(x,y,z);mesh.rotation.x=angle;
+    const material=new BABYLON.StandardMaterial(name+'-material',scene);material.diffuseColor=BABYLON.Color3.FromHexString(hex);mesh.material=material;
+    const body=new BABYLON.PhysicsAggregate(mesh,BABYLON.PhysicsShapeType.BOX,{mass:0,friction:1},scene);items.push({mesh,body});return mesh;
+   };
+   const x=site.x,z=site.z;
+   for(let level=0;level<3;level++){
+    const y=level*3;
+    make('interior-floor-left-'+index+'-'+level,5,.25,14,x-4.5,y-.12,z,'#747c83');
+    make('interior-floor-right-'+index+'-'+level,5,.25,14,x+4.5,y-.12,z,'#747c83');
+    // Door opening at ground level, windows on upper levels.
+    make('interior-back-'+index+'-'+level,14,2.8,.3,x,y+1.5,z+7,'#777f89');
+    make('interior-left-'+index+'-'+level,.3,2.8,14,x-7,y+1.5,z,'#777f89');
+    make('interior-right-'+index+'-'+level,.3,2.8,14,x+7,y+1.5,z,'#777f89');
+    for(const side of [-1,1])make('interior-front-'+index+'-'+level+'-'+side,4,2.8,.3,x+side*5,y+1.5,z-7,'#777f89');
+    make('interior-lintel-'+index+'-'+level,6,.5,.3,x,y+2.65,z-7,'#777f89');
+    const direction=level%2===0?1:-1;
+    const ramp=make('interior-ramp-'+index+'-'+level,3,.25,Math.hypot(plan.run,plan.rise),x,y+1.5,z, '#d5bd8c',-Math.atan2(plan.rise,plan.run)*direction);
+    ramp.metadata={interiorRamp:true};
+    const light=new BABYLON.PointLight('interior-light-'+index+'-'+level,new BABYLON.Vector3(x,y+2.4,z),scene);light.intensity=.4;items.push({mesh:light});
+   }
+   make('interior-roof-left-'+index,5,.25,14,x-4.5,9,z,'#707b87');
+   make('interior-roof-right-'+index,5,.25,14,x+4.5,9,z,'#707b87');
+   interiorLoaded.set(index,items);
+  }
+  function updateInteriors(pos){
+   interiorSites.forEach((site,i)=>{
+    if(interiors.near(pos,site,60))loadInterior(i);
+    else if(interiorLoaded.has(i)){for(const item of interiorLoaded.get(i)){item.body?.dispose();item.mesh.dispose();}interiorLoaded.delete(i);}
+   });
+  }
+  const onKey=e=>{if(e.code==='Escape'){if(e.repeat||ended)return;paused=!paused;$('menuTitle').textContent='PAUSE';$('menuText').textContent='Spiel pausiert. Fortsetzen oder Neustart.';$('play').textContent='Fortsetzen';$('restart').style.display=paused?'inline-block':'none';$('menu').style.display=paused?'grid':'none';return;}if(e.code==='KeyT'&&mission.phase==='range')skipRange=true;if(e.code==='KeyR'){weapon=weaponRules.reload(weapon);status(weaponRules.active(weapon).reload?'Nachladen …':'Nachladen nicht nötig');}if(/^Digit[1-5]$/.test(e.code)){weapon=weaponRules.select(weapon,Number(e.code.slice(-1))-1);status('Waffe: '+weaponRules.active(weapon).id);}if(e.code==='KeyE')holdingE=true;};
+  const onKeyUp=e=>{if(e.code==='KeyE')holdingE=false;};
+  window.addEventListener('keydown',onKey,{signal:controller.signal});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();weapon=weaponRules.select(weapon,(weapon.selected+(e.deltaY>0?1:4))%5);status('Waffe: '+weaponRules.active(weapon).id);},{passive:false,signal:controller.signal});
+  window.addEventListener('keyup',onKeyUp,{signal:controller.signal});
+  canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();if(e.button===2)aiming=true;},{signal:controller.signal});
+  canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
+  canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
+  engine.runRenderLoop(()=>{
+   const rawMs=engine.getDeltaTime(),dt=Math.min(.05,Math.max(0,rawMs/1000)),tick=performance.now();
+   frameSamples.push({at:tick,ms:rawMs});if(frameSamples.length>400)frameSamples.shift();frameSamples=controls.frameWindow(frameSamples,tick);
+   if(paused||ended)return;if(!ended&&!paused){elapsed+=dt;weapon=weaponRules.tick(weapon,dt);}
+   damageThisFrame=false;
+   const pos=ended||paused?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;
+    if(aiming){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
+    streamer.update(pos.x,pos.z);player.syncColliders(streamer);updateInteriors(pos);
+    const desired=camera.radius,from=camera.target,to=camera.position,direction=to.subtract(from),length=direction.length();
+    const obstruction=scene.pickWithRay(new BABYLON.Ray(from,direction.normalize(),length),m=>m.name.startsWith('interior-')&&m.isPickable!==false);
+    if(obstruction?.hit)camera.radius=interiors.cameraRadius(desired,obstruction.distance);}
+   if(pos&&!paused){for(const enemy of enemies){if(!enemy.mesh||enemy.state.health<=0||!enemyRules.awake(enemy.state,pos,80))continue;
+    const origin=enemy.mesh.position.add(new BABYLON.Vector3(0,.5,0));
+    const aimPoint=new BABYLON.Vector3(pos.x,pos.y+.4,pos.z);
+    const diff=aimPoint.subtract(origin),distance=diff.length();
+    const obstacle=distance<enemyRules.TYPES[enemy.state.type].detect?scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false):null;
+    const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
+    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis,elapsed});enemy.state=out.enemy;
+    enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
+    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,enemyRules.TYPES[enemy.state.type].damage);damageThisFrame=true;$('damageOverlay').style.borderWidth='18px';status('Unter Beschuss! Leben: '+health);}}
+   }
+   if(mode==='mission'){
+    const previous=mission,active=previous.towers.indexOf(false),tower=sites.towers[active],data=sites.data;
+    const atTower=previous.phase==='towers'&&tower&&Math.hypot(pos.x-tower.x,pos.z-tower.z)<=missionRules.ACTIVATE_RADIUS;
+    const atData=previous.phase==='data'&&Math.hypot(pos.x-data.x,pos.z-data.z)<=campaign.DATA_RADIUS;
+    mission=campaign.step(previous,{dt,skipRange,rangeDone:targets.length===0,atTower,holding:holdingE,damage:damageThisFrame,health,atData,onTopFloor:pos.y>=data.y-.9,atExtraction:Math.hypot(pos.x-sites.extraction.x,pos.z-sites.extraction.z)<=campaign.EXTRACT_RADIUS});
+    if(previous.phase==='towers'&&mission.towers.filter(Boolean).length>previous.towers.filter(Boolean).length){
+     mastMeshes[active].material.emissiveColor=new BABYLON.Color3(.12,.8,.22);
+     const alerted=missionRules.alertNearby(enemies.map(e=>e.state),tower);enemies.forEach((e,i)=>e.state=alerted[i]);
+     sound?.play('mast',Number($('volume').value));status(mission.radio);
+    }
+    if(previous.phase!==mission.phase){status(mission.radio);if(mission.phase==='extract')sound?.play('alarm',Number($('volume').value));}
+    dataMesh.setEnabled(mission.phase==='data');extractMesh.setEnabled(mission.phase==='extract');
+    const progress=mission.phase==='towers'?mission.towerProgress/campaign.HOLD:mission.phase==='data'?mission.dataProgress/campaign.HOLD:mission.phase==='extract'?mission.extractProgress/campaign.EXTRACT:0;
+    const showProgress=progress>0&&mission.status==='playing';
+    if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100);if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=Math.ceil((mission.phase==='extract'?campaign.EXTRACT:campaign.HOLD)*(1-progress))+'s';}}
+   }
+   if(mode==='royale'&&pos){const circle=modes.zone(royaleElapsed);health=Math.max(0,health-modes.zoneDamage(pos,circle,dt));}
+   if(mode==='city'&&pos){/* Free-roam prototype: wanted and mission progression remain modular, not fully wired. */}
+   if(mode==='mission'&&mission.status!=='playing'){
+    ended=true;sound?.play(mission.status==='won'?'win':'lose',Number($('volume').value));if(mission.status==='won'){const records=menuRules.finish(menuRules.read(localStorage),mode,elapsed,true);menuRules.write(localStorage,records);showRecords();}$('restart').style.display='none';$('menuTitle').textContent=mission.status==='won'?'MISSION ERFOLGREICH':'NIEDERLAGE';
+    $('menuText').textContent=mission.status==='won'?'Extraktion gelungen! Zeit: '+Math.floor(elapsed)+' s · Treffer: '+weapon.hits+' · Gegner besiegt: '+defeated:'Du wurdest ausgeschaltet. Starte einen neuen Versuch.';
+    $('play').textContent='Neustart';$('menu').style.display='grid';
+   }
+   }
+   if(tick-lastMarkers>=100){lastMarkers=tick;
+   for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
+   if(sites&&mode==='mission'){const point=campaign.target(mission,sites),label=campaign.objective(mission);if(!point){$('objectiveMarker').style.display='none';}else{
+    const dx=point.x-(pos?.x??startPosition.x),dz=point.z-(pos?.z??startPosition.z),distance=Math.hypot(dx,dz);
+    const screen=BABYLON.Vector3.Project(new BABYLON.Vector3(point.x,3,point.z),BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));
+    const marker=$('objectiveMarker');marker.style.display='block';marker.textContent=label+' · '+Math.round(distance)+' m';
+    marker.style.left=Math.max(16,Math.min(innerWidth-165,screen.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(16,Math.min(innerHeight-55,screen.y/engine.getRenderHeight()*innerHeight))+'px';}
+   }
+   }
+   scene.render();
+   if(!damageThisFrame)$('damageOverlay').style.borderWidth='0';
+   const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
+   $('cross').style.color=now<hitUntil?'#f66':'white';
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')+'\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+campaign.objective(mission)+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length+'\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+    if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
+   }
+  });
+  status('Mission: Schießstand abschließen oder mit T überspringen.');
+ }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
+ finally{$('play').disabled=false;}
+}
+let controller=new AbortController();
+$('play').addEventListener('click',()=>{if(paused&&!ended){paused=false;$('menu').style.display='none';return;}controller.abort();controller=new AbortController();start();});
+$('restart').addEventListener('click',()=>{controller.abort();controller=new AbortController();start();});
+window.addEventListener('resize',()=>engine?.resize());
+window.addEventListener('pagehide',()=>{controller.abort();clear();});
+})();
+</script></body></html>

@@ -40,7 +40,22 @@ const files = [
   'nordhafen-pbr-quality.test.cjs',
   'nordhafen-player.test.cjs',
   'nordhafen-build-slices.test.cjs',
-  'nordhafen-procedural-city.test.cjs'
+  'nordhafen-procedural-city.test.cjs',
+  'nordhafen-ops-combat.test.cjs',
+  'nordhafen-ops-controls.test.cjs',
+  'nordhafen-ops-enemies.test.cjs',
+  'nordhafen-ops-mission.test.cjs',
+  'nordhafen-ops-lifecycle.test.cjs',
+  'nordhafen-ops-interiors.test.cjs',
+  'nordhafen-ops-modes.test.cjs',
+  'nordhafen-ops-characters.test.cjs',
+  'nordhafen-ops-menu.test.cjs',
+  'nordhafen-ops-page-syntax.test.cjs',
+  'nordhafen-ops-weapons.test.cjs',
+  'nordhafen-ops-campaign.test.cjs',
+  'nordhafen-ops-audio.test.cjs',
+  'nordhafen-ops-city.test.cjs',
+  'nordhafen-ops-royale.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
