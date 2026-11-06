@@ -13,12 +13,15 @@
   while(index<items.length){
    if(signal?.aborted)throw new Error('cell build aborted');
    const started=now();
+   let previousCost=0;
    do{
     if(signal?.aborted)throw new Error('cell build aborted');
+    const before=now();
     build(items[index],index);
     index++;
-    // A single synchronous build() must itself fit budget; JS cannot preempt it.
-   }while(index<items.length&&now()-started<budgetMs);
+    previousCost=Math.max(0,now()-before);
+    // Avoid predictable overshoot; individual synchronous calls cannot be preempted.
+   }while(index<items.length&&now()-started+previousCost<budgetMs-1e-6);
    const elapsed=now()-started;
    recordSlice(elapsed);
    if(index<items.length)await nextFrame();
