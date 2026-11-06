@@ -84,7 +84,7 @@ function parse(text,activeFile,existingFiles){
  const errors=[],warnings=[],files=[],used=new Set(),existing=existingFiles||{};
  const input=String(text||'').replace(/\r\n?/g,'\n');
  if(input.length>MAX_TOTAL){errors.push('KI-Antwort zu groß (maximal 320 KB).');return {files,errors,warnings,skipped:0}}
- const fence=/^[ \t]*(\x60{3,}|~{3,})[ \t]*([^\n]*)\n([\s\S]*?)^[ \t]*(?:\x60{3,}|~{3,})[ \t]*(?=\n|$)/gm;
+ const fence=/^[ \t]*(\x60{3,}|~{3,})[ \t]*([^\n]*)\n([\s\S]*?)^[ \t]*\1[ \t]*(?=\n|$)/gm;
  let match,lastEnd=0,blockCount=0,skipped=0;
  while((match=fence.exec(input))){
   blockCount++;
