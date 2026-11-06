@@ -206,7 +206,8 @@ test('step 10: third-person camera stays 6–8 m away with FOV <= 0.9',()=>{
 });
 test('step 10: player is visible with its own material and starts in the center',()=>{
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');
- assert.match(source,/player\.position\.set\(fixture\.grid\*32,\.9,fixture\.grid\*32\)/);
+ assert.match(source,/player\.position\.set\(fixture\.grid\*32,groundHeight\+standingHalfHeight,fixture\.grid\*32\)/);
+ assert.match(source,/const groundHeight=0,standingHalfHeight=\.9;/);
  assert.match(source,/player\.material=playerMaterial/);
  assert.match(source,/player\.isVisible=true/);
  assert.match(source,/playerMaterial\.diffuseColor=new BABYLON\.Color3/);
