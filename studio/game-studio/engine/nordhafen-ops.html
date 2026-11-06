@@ -20,11 +20,11 @@ button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bott
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission;
-let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,holdingE=false,mission=missionRules.initial(),sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[];
+let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,holdingE=false,mission=missionRules.initial(),sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='';
 function status(t){$('status').textContent=t;}
 function clear(){
  engine?.stopRenderLoop();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
- engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=combat.initial();holdingE=false;mission=missionRules.initial();sites=null;mastMeshes=[];extractMesh=null;damageThisFrame=false;defeated=0;$('missionProgress').style.display='none';$('objectiveMarker').style.display='none';markerNodes.forEach(m=>m.remove());markerNodes=[];
+ engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=combat.initial();holdingE=false;mission=missionRules.initial();sites=null;mastMeshes=[];extractMesh=null;damageThisFrame=false;defeated=0;frameSamples=[];lastUi=0;lastMarkers=0;lastHud='';lastProgress='';lastMarker='';$('missionProgress').style.display='none';$('objectiveMarker').style.display='none';markerNodes.forEach(m=>m.remove());markerNodes=[];
 }
 function shoot(){
  if(!scene||!player?.ready||ended)return;
@@ -103,7 +103,8 @@ async function start(){
   canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
   engine.runRenderLoop(()=>{
-   const dt=Math.min(.05,engine.getDeltaTime()/1000);if(!ended){elapsed+=dt;weapon=combat.tick(weapon,dt);}
+   const rawMs=engine.getDeltaTime(),dt=Math.min(.05,Math.max(0,rawMs/1000)),tick=performance.now();
+   frameSamples.push({at:tick,ms:rawMs});if(frameSamples.length>400)frameSamples.shift();frameSamples=controls.frameWindow(frameSamples,tick);if(!ended){elapsed+=dt;weapon=combat.tick(weapon,dt);}
    damageThisFrame=false;
    const pos=ended?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;
     if(aiming){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
@@ -129,13 +130,14 @@ async function start(){
    if(count===3)extractMesh.setEnabled(true);
    const progress=count<3?mission.progress/missionRules.ACTIVATE_SECONDS:mission.extractProgress/missionRules.EXTRACT_SECONDS;
    const showProgress=count===3?mission.extractProgress>0:mission.progress>0;
-   $('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=Math.ceil(Math.max(0,(count===3?missionRules.EXTRACT_SECONDS:missionRules.ACTIVATE_SECONDS)*(1-progress)))+'s';
+   if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100)+'|'+Math.ceil(Math.max(0,(count===3?missionRules.EXTRACT_SECONDS:missionRules.ACTIVATE_SECONDS)*(1-progress)));if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=progressText.split('|')[2]+'s';}}
    if(mission.status!=='playing'){
     ended=true;$('menuTitle').textContent=mission.status==='won'?'MISSION ERFOLGREICH':'NIEDERLAGE';
     $('menuText').textContent=mission.status==='won'?'Extraktion gelungen! Zeit: '+Math.floor(elapsed)+' s · Treffer: '+weapon.hits+' · Gegner besiegt: '+defeated:'Du wurdest ausgeschaltet. Starte einen neuen Versuch.';
     $('play').textContent='Neustart';$('menu').style.display='grid';
    }
    }
+   if(tick-lastMarkers>=100){lastMarkers=tick;
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
    if(sites){const index=mission.completed.indexOf(false),point=index<0?sites.extraction:sites.towers[index],label=index<0?'EXTRAKTION':'FUNKMAST '+(index+1);
     const dx=point.x-(pos?.x??startPosition.x),dz=point.z-(pos?.z??startPosition.z),distance=Math.hypot(dx,dz);
@@ -143,10 +145,13 @@ async function start(){
     const marker=$('objectiveMarker');marker.style.display='block';marker.textContent=label+' · '+Math.round(distance)+' m';
     marker.style.left=Math.max(16,Math.min(innerWidth-165,screen.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(16,Math.min(innerHeight-55,screen.y/engine.getRenderHeight()*innerHeight))+'px';
    }
+   }
    scene.render();
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   $('hud').textContent='NORDHAFEN OPS · ETAPPE C\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · ETAPPE C\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+    if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
+   }
   });
   status('Etappe C aktiv – drei Funkmasten aktivieren, dann Hafen-Extraktion.');
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
