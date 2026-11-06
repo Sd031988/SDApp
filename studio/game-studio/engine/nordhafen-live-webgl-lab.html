@@ -12,7 +12,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
 <span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
@@ -28,27 +28,31 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./gpu-timing-statistics.js"></script>
 <script src="./gpu-timing-session.js"></script>
 <script src="./nordhafen-lab-gpu-wiring.js"></script>
+<script src="./nordhafen-cell-streamer.js"></script>
 <script>
 'use strict';
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null,gpu=null;
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,routeTimer=null,routeIndex=0;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
+   if(routeTimer!==null){clearInterval(routeTimer);routeTimer=null;}
+   if(streamer){streamer.dispose();streamer=null;}
    stopGPU();gpuStatus.textContent='GPU-Messung gestoppt.';
    if(timer!==null){clearInterval(timer);timer=null;}
    if(bridge){bridge.stop();bridge=null;}
    if(engine){engine.stopRenderLoop();}
    if(scene){scene.dispose();scene=null;}
    if(engine){engine.dispose();engine=null;}
-   start.disabled=false;stop.disabled=true;$('level').disabled=false;
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;
  }
  function show(){
    if(!bridge)return;
    const r=bridge.report(),f=r.frame;
    const g=gpu?gpu.report():null;
+   const cells=streamer?streamer.report():null;
    const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
    out.textContent='Quelle: '+r.source+'\nProfil: '+r.fixture.level+
     ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
@@ -59,6 +63,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
+    '\nCell-Streaming: '+(cells?'AN':'AUS')+
+    (cells?' | geladene Cells: '+cells.loadedCells+' | wartend: '+cells.pendingCells+
+      ' | Ladezeit p50: '+fmt(cells.loadMsP50)+' | p95: '+fmt(cells.loadMsP95):'')+
     '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
     ' | Qualitätsurteil: NICHT ERHOBEN';
  }
@@ -83,11 +90,44 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
      building.material=mat1;tree.material=mat2;
      building.isVisible=false;tree.isVisible=false;
-     for(const chunk of fixture.chunks)for(const obj of chunk.objects){
-       const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
-       const h=obj.type==='building'?6:3;
-       mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
-       mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+     function buildCell(chunk){
+       const meshes=[],materials=[];
+       const cellBuilding=mat1.clone('building-'+chunk.id);
+       const cellTree=mat2.clone('vegetation-'+chunk.id);
+       materials.push(cellBuilding,cellTree);
+       for(const obj of chunk.objects){
+         const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+         const h=obj.type==='building'?6:3;
+         mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+         mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+         mesh.material=obj.type==='building'?cellBuilding:cellTree;
+         meshes.push(mesh);
+       }
+       return {meshes,materials};
+     }
+     if($('streaming').checked){
+       streamer=window.SDNordhafenCellStreamer.create({
+         scene,fixture,buildCell,loadRadius:46,unloadRadius:104,budget:2
+       });
+       const route=fixture.chunks.slice().sort((a,b)=>a.z-b.z||(a.z%2?a.x-b.x:b.x-a.x));
+       routeIndex=0;
+       function moveRoute(){
+         if(!streamer)return;
+         const chunk=route[routeIndex%route.length];
+         const x=(chunk.x+.5)*fixture.chunkSize,z=(chunk.z+.5)*fixture.chunkSize;
+         camera.target.set(x,0,z);
+         streamer.update(x,z);
+         routeIndex++;
+       }
+       moveRoute();
+       routeTimer=setInterval(moveRoute,500);
+     }else{
+       for(const chunk of fixture.chunks)for(const obj of chunk.objects){
+         const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+         const h=obj.type==='building'?6:3;
+         mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+         mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+       }
      }
      bridge=window.SDNordhafenBabylonSessionBridge.create({
        engine,level,seed:1337,now:()=>performance.now(),
@@ -97,7 +137,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
      engine.runRenderLoop(()=>{if(scene)scene.render();});
      timer=setInterval(show,1000);show();
-     start.disabled=true;stop.disabled=false;$('level').disabled=true;
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;
      status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene.';
    }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
  }
