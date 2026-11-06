@@ -36,7 +36,7 @@ function shoot(){
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
   const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
-  if(enemy){enemy.state=enemyRules.damage(enemy.state,25);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){enemy.mesh.dispose();enemy.mesh=null;}return;}
+  if(enemy){enemy.state=enemyRules.damage(enemy.state,25);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/50;return;}
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){const feedback=combat.hit(weapon,25);weapon=feedback.state;target.health=Math.max(0,target.health-feedback.damage);
    hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
@@ -65,19 +65,23 @@ async function start(){
   const right=new BABYLON.Vector3(-forward.z,0,forward.x);
   const placements=controls.targetPositions(startPosition,forward,right);
   for(let i=0;i<5;i++){
-   const mesh=BABYLON.MeshBuilder.CreateCapsule('target-'+i,{height:1.8,radius:.35},scene);
-   mesh.position.set(placements[i].x,.9,placements[i].z);mesh.metadata={target:true};mesh.isPickable=true;
-   const mat=new BABYLON.StandardMaterial('target-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.85,.34,.2);mesh.material=mat;
+   const mesh=BABYLON.MeshBuilder.CreateCylinder('target-'+i,{height:.16,diameter:1.5,tessellation:48},scene);
+   mesh.rotation.x=Math.PI/2;
+   mesh.position.set(placements[i].x,1.5,placements[i].z);mesh.metadata={target:true};mesh.isPickable=true;
+   const mat=new BABYLON.StandardMaterial('target-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(controls.appearance('dummy').rings[0]);mesh.material=mat;
+   for(let ring=0;ring<3;ring++){const disc=BABYLON.MeshBuilder.CreateCylinder('target-ring-'+i+'-'+ring,{height:.17,diameter:1.15-ring*.34,tessellation:48},scene);disc.rotation.x=Math.PI/2;disc.position.copyFrom(mesh.position);disc.position.z+=.09+ring*.008;disc.isPickable=false;const dm=new BABYLON.StandardMaterial('ring-mat-'+i+'-'+ring,scene);dm.diffuseColor=BABYLON.Color3.FromHexString(controls.appearance('dummy').rings[ring+1]);disc.material=dm;disc.parent=mesh;disc.position.set(0,0,.1+ring*.008);}
    targets.push({mesh,health:50});
    const marker=document.createElement('div');marker.className='marker';marker.textContent='◆ '+(i+1);document.body.append(marker);markerNodes.push(marker);
   }
+  const enemySpawns=controls.enemyPositions(startPosition,fixture.chunkSize||64);
   for(let i=0;i<6;i++){
-   const x=startPosition.x+forward.x*(19+(i%3)*7)+right.x*((i%2?1:-1)*7);
-   const z=startPosition.z+forward.z*(19+(i%3)*7)+right.z*((i%2?1:-1)*7);
+   const {x,z,patrolAxis}=enemySpawns[i];
    const mesh=BABYLON.MeshBuilder.CreateCapsule('enemy-'+i,{height:1.8,radius:.38},scene);
    mesh.position.set(x,.9,z);mesh.metadata={enemy:i};mesh.isPickable=true;
-   const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.77,.12,.15);mesh.material=mat;
-   enemies.push({mesh,state:enemyRules.spawn(i,x,z)});
+   const palette=controls.appearance('enemy');const mat=new BABYLON.StandardMaterial('enemy-mat-'+i,scene);mat.diffuseColor=BABYLON.Color3.FromHexString(palette.body);mesh.material=mat;
+   const visor=BABYLON.MeshBuilder.CreateBox('enemy-visor-'+i,{width:.6,height:.18,depth:.16},scene);visor.parent=mesh;visor.position.set(0,.46,-.32);visor.isPickable=false;const vm=new BABYLON.StandardMaterial('enemy-visor-mat-'+i,scene);vm.emissiveColor=BABYLON.Color3.FromHexString(palette.visor);visor.material=vm;
+   const bar=BABYLON.MeshBuilder.CreatePlane('enemy-health-'+i,{width:1,height:.12},scene);bar.parent=mesh;bar.position.set(0,1.2,0);bar.billboardMode=BABYLON.Mesh.BILLBOARDMODE_ALL;bar.isPickable=false;const bm=new BABYLON.StandardMaterial('enemy-health-mat-'+i,scene);bm.emissiveColor=BABYLON.Color3.FromHexString(palette.healthBar);bm.disableLighting=true;bar.material=bm;
+   enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z)});
   }
   const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}};
   canvas.addEventListener('keydown',onKey,{signal:controller.signal});
@@ -94,8 +98,8 @@ async function start(){
     const aimPoint=new BABYLON.Vector3(pos.x,pos.y+.4,pos.z);
     const diff=aimPoint.subtract(origin),distance=diff.length();
     const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
-    const visible=distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
-    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random()});enemy.state=out.enemy;
+    const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
+    const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
     if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);status('Unter Beschuss! Leben: '+health);}}
    }
