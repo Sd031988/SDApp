@@ -12,7 +12,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<button id="start">CPU-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
 <span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
@@ -54,11 +54,13 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
     '\nRender-Timestamps vorhanden: '+f.measured+
     '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
-    '\nCPU-Frame p50: '+fmt(f.frameP50Ms)+
-    '\nCPU-Frame p95: '+fmt(f.frameP95Ms)+
+    '\nFrame-Intervall p50: '+fmt(f.frameP50Ms)+
+    '\nFrame-Intervall p95: '+fmt(f.frameP95Ms)+
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
-    '\nGPU gemessen: NEIN (bis mindestens 30 gültige Hardware-Samples) | Qualitätsurteil: NICHT ERHOBEN';
+    '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
+    '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
+    ' | Qualitätsurteil: NICHT ERHOBEN';
  }
  function begin(){
    cleanup();
