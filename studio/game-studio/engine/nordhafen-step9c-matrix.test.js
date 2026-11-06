@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('node:assert/strict');
+const city=require('./nordhafen-procedural-city.js');
+const matrix=new Float32Array(32);
+assert.equal(city.checkedMatrices(matrix,2),matrix);
+assert.throws(()=>city.checkedMatrices(matrix,3),/invalid thin instance matrices/);
+matrix[5]=NaN;
+assert.throws(()=>city.checkedMatrices(matrix,2),/invalid thin instance matrices/);
+matrix[5]=Infinity;
+assert.throws(()=>city.checkedMatrices(matrix,2),/invalid thin instance matrices/);
+console.log('Nordhafen 9c matrix validation: PASS');

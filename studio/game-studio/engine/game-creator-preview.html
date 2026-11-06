@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SD Game-Creator – sichere Bauplan-Vorschau</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;background:#101820;color:#e9eef4}body{margin:0 auto;padding:24px;max-width:1050px}h1{font-size:1.6rem}textarea{width:100%;box-sizing:border-box;min-height:95px;padding:12px;background:#1b2835;color:#fff;border:1px solid #516070;border-radius:8px}button{margin:10px 10px 10px 0;padding:10px 16px;background:#e9a64c;border:0;border-radius:6px;color:#171717;font-weight:700;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}canvas{width:100%;max-width:720px;aspect-ratio:1;background:#172b34;border:1px solid #526170;border-radius:8px}#status{min-height:24px}small{color:#b6c5d4}pre{overflow:auto;max-height:250px;background:#1b2835;padding:12px}
+</style></head><body>
+<h1>SD Game-Creator – Bauplan-Vorschau</h1>
+<p>Experimenteller, isolierter Planer. Diese Vorschau verändert <strong>keine</strong> bestehenden Szenen, Projekte oder Spielstände.</p>
+<label for="beschreibung">Beschreibe deine Spielwelt</label>
+<textarea id="beschreibung" maxlength="2000">Baue eine Stadt mit Straßen, Wald, Autos und Gegnern.</textarea>
+<div><button id="planen" type="button">Bauplan erstellen</button><button id="exportieren" type="button" disabled>JSON exportieren</button></div>
+<p id="status" role="status" aria-live="polite">Noch kein Bauplan erstellt.</p>
+<canvas id="vorschau" width="720" height="720" aria-label="Schematische zweidimensionale Bauplan-Vorschau"></canvas>
+<p><small>Die Punkte sind ausschließlich schematische Platzhalter, keine 3D-Modelle. Vor einem späteren Import müssen GLB-Assets, Positionen, Lizenzen und Kollisionen geprüft werden.</small></p>
+<pre id="details" aria-label="Bauplandaten"></pre>
+<script src="./game-creator-blueprint.js"></script>
+<script>
+(function () {
+  'use strict';
+  const input = document.getElementById('beschreibung');
+  const canvas = document.getElementById('vorschau');
+  const ctx = canvas.getContext('2d');
+  const status = document.getElementById('status');
+  const details = document.getElementById('details');
+  const exportButton = document.getElementById('exportieren');
+  let current = null;
+  const colors = { terrain:'#345c42',building:'#d2a26c',road:'#778694',vegetation:'#4db579',vehicle:'#f4c64b',character:'#6cc6f5',enemy:'#e46c6c' };
+  function draw(plan) {
+    ctx.fillStyle = '#18362d'; ctx.fillRect(0,0,720,720);
+    ctx.strokeStyle = '#527063'; ctx.lineWidth = 1;
+    for (let i=0;i<=8;i++) { const n=i*90;ctx.beginPath();ctx.moveTo(n,0);ctx.lineTo(n,720);ctx.moveTo(0,n);ctx.lineTo(720,n);ctx.stroke(); }
+    // Deterministic schematic layout; never mistaken for actual placement.
+    plan.objects.slice(1).forEach((obj,i) => {
+      const x=24+((i*97+31)%672), y=24+((i*173+53)%672);
+      ctx.fillStyle=colors[obj.type]||'#fff';ctx.fillRect(x-5,y-5,10,10);
+    });
+  }
+  document.getElementById('planen').addEventListener('click', function () {
+    try {
+      const next=SDGameCreatorBlueprint.compile(input.value);
+      if (!SDGameCreatorBlueprint.validate(next)) throw new Error('Bauplanvalidierung fehlgeschlagen');
+      current=next; draw(next);
+      details.textContent=JSON.stringify({world:next.world,assetRequests:next.assetRequests,objectCount:next.objects.length},null,2);
+      status.textContent=next.objects.length+' geplante Platzhalter – keine Assets geladen.';
+      exportButton.disabled=false;
+    } catch (err) {
+      current=null; exportButton.disabled=true; details.textContent='';
+      ctx.clearRect(0,0,720,720);status.textContent='Fehler: '+err.message;
+    }
+  });
+  exportButton.addEventListener('click',function () {
+    if (!current || !SDGameCreatorBlueprint.validate(current)) return;
+    const url=URL.createObjectURL(new Blob([JSON.stringify(current,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='sd-game-blueprint.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+})();
+</script></body></html>

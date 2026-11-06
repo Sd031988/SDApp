@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+/* Explicit game-creator regression suite entrypoint.
+ * Run from repository root: node studio/game-studio/engine/test-game-creator.cjs
+ * Node 22+; no npm install, network, browser or persistent writes.
+ */
+'use strict';
+const { spawnSync } = require('node:child_process');
+const path = require('node:path');
+const fs = require('node:fs');
+const root = __dirname;
+const files = [
+  'game-creator-blueprint.test.cjs',
+  'game-creator-preview.test.cjs',
+  'game-creator-handoff.test.cjs',
+  'game-creator-editor-compat.test.cjs',
+  'game-creator-transaction.test.cjs',
+  'game-quality-gates.test.cjs',
+  'nordhafen-benchmark.test.cjs',
+  'nordhafen-frame-telemetry.test.cjs',
+  'nordhafen-raf-probe.test.cjs',
+  'nordhafen-babylon-frame-probe.test.cjs',
+  'babylon-distance-culling.test.cjs',
+  'nordhafen-benchmark-session.test.cjs',
+  'nordhafen-babylon-session-bridge.test.cjs',
+  'nordhafen-live-webgl-lab.test.cjs',
+  'webgl-capability-audit.test.cjs',
+  'webgl2-gpu-timer.test.cjs',
+  'gpu-timing-statistics.test.cjs',
+  'gpu-timing-session.test.cjs',
+  'webgl2-gpu-query-boundary.test.cjs',
+  'webgl2-gpu-query-repeatability.test.cjs',
+  'nordhafen-lab-gpu-wiring.test.cjs',
+  'nordhafen-cell-streamer.test.cjs',
+  'nordhafen-cell-lod.test.cjs',
+  'nordhafen-draw-memory.test.cjs',
+  'nordhafen-comparison-audit.test.cjs',
+  'nordhafen-route-identity.test.cjs',
+  'nordhafen-frame-window-audit.test.cjs',
+  'nordhafen-thin-instances.test.cjs',
+  'nordhafen-pbr-quality.test.cjs',
+  'nordhafen-player.test.cjs',
+  'nordhafen-build-slices.test.cjs',
+  'nordhafen-procedural-city.test.cjs'
+];
+for (const file of files) {
+  if (!fs.statSync(path.join(root, file)).isFile())
+    throw new Error('Missing required creator test: ' + file);
+}
+const result = spawnSync(process.execPath, ['--test', ...files.map(file => path.join(root, file))], {
+  cwd: root,
+  stdio: 'inherit',
+  shell: false,
+  timeout: 120000
+});
+if (result.error) throw result.error;
+process.exitCode = result.status === null ? 1 : result.status;

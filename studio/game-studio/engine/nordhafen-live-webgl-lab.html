@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SD Engine – Nordhafen WebGL Messlabor (isoliert)</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101923;color:#f2f6fa}
+body{margin:0;display:grid;grid-template-rows:auto 1fr auto;height:100dvh}
+header,footer{padding:12px 16px;background:#172536}
+h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
+#viewport{width:100%;height:100%;min-height:220px;display:block;touch-action:none}
+#controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#metrics{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace}
+</style></head><body>
+<header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
+<div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
+<label><input id="player" type="checkbox"> Spieler (Havok)</label><label><input id="pbr" type="checkbox"> PBR-Qualität</label><label><input id="glb" type="checkbox"> GLB-Assets</label><label><input id="thin" type="checkbox"> Thin Instances</label><label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
+<canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
+<footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
+<small>Vereinfachte Gebäude-/Vegetations-Proxies, keine vollständige Nordhafen-Spielwelt. FPS = Babylon-Endframe-Takt, keine GPU-Rechenzeit. Keine automatischen Qualitätsurteile ohne unabhängig gemessene Draw Calls, Speicher und Ladezeit.</small></footer>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+<script src="./nordhafen-benchmark.js"></script>
+<script src="./nordhafen-frame-telemetry.js"></script>
+<script src="./game-quality-gates.js"></script>
+<script src="./nordhafen-benchmark-session.js"></script>
+<script src="./nordhafen-babylon-frame-probe.js"></script>
+<script src="./nordhafen-babylon-session-bridge.js"></script>
+<script src="./webgl2-gpu-timer.js"></script>
+<script src="./gpu-timing-statistics.js"></script>
+<script src="./gpu-timing-session.js"></script>
+<script src="./nordhafen-lab-gpu-wiring.js"></script>
+<script src="./nordhafen-cell-streamer.js"></script>
+<script src="./nordhafen-build-slices.js"></script>
+<script src="./nordhafen-cell-lod.js"></script>
+<script src="./nordhafen-draw-memory.js"></script>
+<script src="./nordhafen-comparison-audit.js"></script>
+<script src="./nordhafen-route-identity.js"></script>
+<script src="./nordhafen-frame-window-audit.js"></script>
+<script src="./nordhafen-thin-instances.js"></script>
+<script src="./nordhafen-pbr-quality.js"></script>
+<script src="./nordhafen-procedural-city.js"></script>
+<script src="./nordhafen-player-motion.js"></script>
+<script src="./nordhafen-player-controller.js"></script>
+<script>
+'use strict';
+(function(){
+ const $=id=>document.getElementById(id);
+ const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,city=null,player=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
+ const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
+ // Apply a known test preset only; unknown values never change any controls.
+ function applyPreset(search){
+   const params=new URLSearchParams(search);
+   const requested=params.get('preset');
+   const freeze=params.get('freeze')==='1';
+   const cityThin=params.get('thin')==='1';
+   if(requested===null)return {name:'keins',autoStart:false,notice:'',freeze,cityThin};
+   if(requested!=='city')return {name:'keins',autoStart:false,notice:'Unbekanntes Preset: '+requested+' (ignoriert).',freeze,cityThin};
+   $('level').value='medium';
+   for(const id of ['pbr','thin','lod','streaming'])$(id).checked=true;
+   for(const id of ['player','glb'])$(id).checked=false;
+   return {name:'city',autoStart:true,notice:'',freeze,cityThin};
+ }
+ const preset=applyPreset(window.location.search);
+ if(preset.notice)status.textContent=preset.notice;
+ function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
+ function cleanup(){
+   glbGeneration++;
+   if(city){city.dispose();city=null;}
+   if(pbr){pbr.dispose();pbr=null;}
+   if(player){player.dispose();player=null;}
+   if(routeTimer!==null){clearInterval(routeTimer);routeTimer=null;}
+   if(streamer){streamer.dispose();streamer=null;}
+   if(drawProbe){drawProbe.dispose();drawProbe=null;}
+   stopGPU();gpuStatus.textContent='GPU-Messung gestoppt.';
+   if(timer!==null){clearInterval(timer);timer=null;}
+   if(bridge){bridge.stop();bridge=null;}
+   if(engine){engine.stopRenderLoop();}
+   if(scene){scene.dispose();scene=null;}
+   if(engine){engine.dispose();engine=null;}
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;$('thin').disabled=false;$('glb').disabled=false;$('pbr').disabled=false;$('player').disabled=false;
+ }
+ function show(){
+   if(!bridge)return;
+   const r=bridge.report(),f=r.frame;
+   const g=gpu?gpu.report():null;
+   const cells=streamer?streamer.report():null;
+   const mode=runMode;
+   const measurement=drawProbe?drawProbe.read():{drawCalls:null,heapBytes:null};
+   const metric=v=>v===null?'nicht verfügbar':String(v);
+   let compare;
+   try {
+     const modes=window.SDNordhafenComparisonAudit.MODES;
+     const pending=modes.filter(m=>!comparison[m]);
+     const runs=modes.map(m=>({mode:m,
+       profile:comparison[m]&&comparison[m].profile,
+       routeId:comparison[m]&&comparison[m].routeId,
+       summary:comparison[m]&&comparison[m].summary}));
+     const verdict=pending.length?null:window.SDNordhafenComparisonAudit.audit(runs);
+     if(pending.length)compare=modes.map(m=>m+': '+(comparison[m]?'erfasst':'ausstehend')).join('\n');
+     else if(!verdict.comparable)compare='Lauf ungültig: '+verdict.failures.join('; ');
+     else compare=runs.map(({mode:m,summary:data})=>m+': Draw Calls p50 '+metric(data.drawCallsP50)+
+       ' | p95 '+metric(data.drawCallsP95)+' | max '+metric(data.drawCallsMax)+
+       ' | JS-Heap p50 '+metric(data.heapP50)+' | max '+metric(data.heapMax)+
+       ' Bytes | Samples '+data.samples).join('\n');
+   } catch(e) { compare='Lauf ungültig: '+e.message; }
+   if(runFailure)compare='Lauf ungültig: '+runFailure;
+   const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
+   out.textContent='Preset: '+preset.name+'\nQuelle: '+r.source+'\nProfil: '+r.fixture.level+
+    ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
+    '\nRender-Timestamps vorhanden: '+f.measured+
+    '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
+    '\nFrame-Intervall p50: '+fmt(f.frameP50Ms)+
+    '\nFrame-Intervall p95: '+fmt(f.frameP95Ms)+
+    '\nDraw Calls (aktuell): '+metric(measurement.drawCalls)+
+    '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
+    '\nGPU Samples: '+(g?g.sampleCount:0)+
+    '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
+    '\nSpieler: '+(player?player.status:'aus')+
+     '\nSpieler y: '+(player&&player.playerY!==null?player.playerY.toFixed(2):'–')+' m | am Boden: '+(player&&player.ready?(player.grounded?'ja':'nein'):'–')+
+    '\nPBR-Qualität: '+(pbr?pbr.status:($('pbr').checked?'benötigt Streaming + LOD + Thin Instances':'aus'))+
+    '\nGLB-Assets: '+glbStatus+
+    '\nCell-Streaming: '+(cells?'AN':'AUS')+
+    (cells?' | geladene Cells: '+cells.loadedCells+' | nicht geladen: '+cells.unloadedCells+' | fehlgeschlagen: '+cells.failedCells+
+      ' | LOD-Wechsel: '+cells.lodSwitchesTotal+' | LOD-Fehler: '+cells.lodFailures+
+      ' | Ladezeit p50: '+fmt(cells.loadMsP50)+' | p95: '+fmt(cells.loadMsP95):'')+
+    '\nMessvergleich (gleiche Kameraroute, getrennte Läufe):\n'+compare+
+    '\nGPU verworfen: '+(g ? g.rejectedCount : 0)+
+    ' | Qualitätsurteil: NICHT ERHOBEN';
+ }
+ function begin(){
+   cleanup();
+   try{
+     if(!window.BABYLON||!window.SDNordhafenBabylonSessionBridge||!window.SDNordhafenBenchmark)
+       throw new Error('Babylon.js oder lokale Benchmark-Skripte nicht geladen.');
+     const level=$('level').value;
+     runMode=$('streaming').checked?($('lod').checked?($('thin').checked?($('pbr').checked?'Streaming + LOD + Thin Instances + PBR':'Streaming + LOD + Thin Instances'):'Streaming + LOD'):'Streaming'):'Ohne Streaming';
+     runSamples=[];runComplete=false;runFailure=null;
+     comparison[runMode]=null;
+     const fixture=window.SDNordhafenBenchmark.create(level,1337);
+     engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:false});
+     scene=new BABYLON.Scene(engine);
+     drawProbe=window.SDNordhafenDrawMemory.create({scene});
+     scene.clearColor=new BABYLON.Color4(.04,.08,.12,1);
+     const span=fixture.grid*64;
+     const camera=new BABYLON.ArcRotateCamera('lab-camera',-Math.PI/2.8,1.2,75,
+       new BABYLON.Vector3(32,12,32),scene);
+     if(preset.freeze){camera.setPosition(new BABYLON.Vector3(100,30,60));camera.setTarget(new BABYLON.Vector3(160,8,140));}
+     else camera.attachControl(canvas,true);
+     new BABYLON.HemisphericLight('lab-light',new BABYLON.Vector3(0,1,0),scene);
+     const building=BABYLON.MeshBuilder.CreateBox('building-source',{size:1},scene);
+     const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
+     const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
+     const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
+     // No remote GLB request until a replacement URL has a verified HTTP 200 response.
+     const glbEnabled=false;
+     const thinEnabled=($('thin').checked&&$('lod').checked||glbEnabled)&&$('streaming').checked;
+     let glbBuilding=null,glbPromise=null;
+     const generation=glbGeneration;
+     glbStatus=$('glb').checked?'GLB deaktiviert: keine verifizierte HTTP-200-Asset-URL':'GLB aus';
+     let thinStatus=thinEnabled?'Thin Instances angefordert':($('thin').checked?'Thin Instances benötigen Streaming + LOD':'Thin Instances aus');
+     building.material=mat1;tree.material=mat2;
+     if($('pbr').checked&&$('streaming').checked&&$('lod').checked&&$('thin').checked){
+       const ground=BABYLON.MeshBuilder.CreateGround('pbr-ground',{width:span,height:span},scene);
+       ground.position.set(span/2,-.1,span/2);
+       const sun=new BABYLON.DirectionalLight('pbr-sun',new BABYLON.Vector3(-.4,-1,-.2),scene);
+       pbr=window.SDNordhafenPBR.create({scene,engine,BABYLON,building,ground,light:sun,loadRadius:160});
+       pbr.start();
+     }
+     building.isVisible=false;tree.isVisible=false;
+     if(pbr&&pbr.enabled){
+       scene.getMeshByName('pbr-ground')?.dispose();
+       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160,useThinInstances:preset.cityThin});
+       thinStatus=preset.cityThin?'Thin Instances: experimentell, rendert derzeit nicht':'Stadt: createInstance aktiv (iPhone geprüft)';
+     }
+     function buildCell(chunk){
+       if(thinEnabled){
+         const cell=window.SDNordhafenThinInstances.create({chunk,sourceByType:{building:glbBuilding||building,vegetation:tree},BABYLON});
+         thinStatus=cell.mode==='thin'?'Thin Instances aktiv':'Thin Instances nicht verfügbar – createInstance-Fallback';
+         return cell;
+       }
+       const meshes=[],materials=[];
+       const cellBuilding=mat1.clone('building-'+chunk.id);
+       const cellTree=mat2.clone('vegetation-'+chunk.id);
+       materials.push(cellBuilding,cellTree);
+       for(const obj of chunk.objects){
+         const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+         const h=obj.type==='building'?6:3;
+         mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+         mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+         mesh.material=obj.type==='building'?cellBuilding:cellTree;
+         meshes.push(mesh);
+       }
+       return {meshes,materials};
+     }
+     async function buildCellSliced(chunk,{signal,recordBuildSlice,level='full'}={}){
+       if(city){
+         const started=performance.now();
+         const result=city.buildCell(chunk,{signal,level});
+         if(recordBuildSlice)recordBuildSlice(performance.now()-started);
+         return result;
+       }
+       const meshes=[],materials=[];
+       const types=new Map();
+       for(const obj of chunk.objects){
+         if(!types.has(obj.type))types.set(obj.type,[]);
+         types.get(obj.type).push(obj);
+       }
+       const work=[];
+       for(const [type,objects] of types){
+         for(let i=0;i<objects.length;i+=4)work.push({type,objects:objects.slice(i,i+4)});
+       }
+       try{
+         await window.SDNordhafenBuildSlices.run(work,group=>{
+           if(thinEnabled){
+             const partial=window.SDNordhafenThinInstances.create({
+               chunk:{...chunk,objects:group.objects},
+               sourceByType:{building,vegetation:tree},BABYLON
+             });
+             for(const mesh of partial.meshes){mesh.isVisible=false;meshes.push(mesh);}
+           }else{
+             for(const obj of group.objects){
+               const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+               const h=obj.type==='building'?6:3;
+               mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+               mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+               mesh.isVisible=false;meshes.push(mesh);
+             }
+           }
+         },{budgetMs:4,signal,recordSlice:recordBuildSlice,
+           nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
+         for(const mesh of meshes)mesh.isVisible=true;
+         return {meshes,materials};
+       }catch(error){
+         for(const mesh of meshes)mesh.dispose();
+         throw error;
+       }
+     }
+     // One shared source per scene, reused by all distant LOD cells.
+     const placeholderSources=[];
+     const placeholderMaterials=[];
+     function getPlaceholderSource(index){
+       if(!placeholderSources[index]){
+         const source=BABYLON.MeshBuilder.CreateBox('lod-placeholder-source-'+index,{size:1},scene);
+         const material=new BABYLON.StandardMaterial('lod-placeholder-material-'+index,scene);
+         material.diffuseColor=new BABYLON.Color3(.54,.6,.65);
+         source.material=material;source.isVisible=false;
+         placeholderSources[index]=source;placeholderMaterials[index]=material;
+       }
+       return placeholderSources[index];
+     }
+     async function placeholderSliced(chunk,opts={}){
+       const meshes=[],materials=[];
+       try{
+         await window.SDNordhafenBuildSlices.run(
+           chunk.objects.filter(obj=>obj.type==='building'),obj=>{
+             const source=getPlaceholderSource(window.SDNordhafenProceduralCity.variant(1337,obj));
+             const mesh=source.createInstance('lod-placeholder-building-'+obj.id);
+             const h=city?window.SDNordhafenProceduralCity.height(1337,obj):6;
+             mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
+             const size=window.SDNordhafenProceduralCity.footprint(1337,obj);
+             mesh.scaling.set(size.width,h,size.depth);
+             mesh.isVisible=true;meshes.push(mesh);
+           },{budgetMs:4,signal:opts.signal,recordSlice:opts.recordBuildSlice,
+             nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
+         return {meshes,materials};
+       }catch(error){
+         for(const mesh of meshes)mesh.dispose();
+         throw error;
+       }
+     }
+     const route=fixture.chunks.slice().sort((a,b)=>a.z-b.z||(a.z%2?a.x-b.x:b.x-a.x));
+     routeIndex=0;
+     runProfile=level;
+     runRouteLength=route.length;
+     runRouteId=window.SDNordhafenRouteIdentity.identify({profile:level,seed:1337,
+       chunkSize:fixture.chunkSize,route});
+     function moveRoute(){
+       if(player&&player.ready)return;
+       const chunk=route[routeIndex%route.length];
+       const x=(chunk.x+.5)*fixture.chunkSize,z=(chunk.z+.5)*fixture.chunkSize;
+       camera.target.set(x,12,z);
+       camera.radius=75;
+       camera.beta=1.2;
+       // Streaming follows the look target, including manual camera panning.
+       routeIndex++;
+
+     }
+     if($('streaming').checked){
+       let cellBuilder=$('lod').checked ? async (chunk,opts={})=>{
+         const lod=window.SDNordhafenCellLOD.create({near:90,far:150,hysteresis:8,
+           buildLevel:level=>{
+             if(level==='placeholder')return placeholderSliced(chunk,opts);
+             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((obj,i)=>obj.type==='building'||(level==='simplified'&&obj.type==='vegetation'&&i%2===0))};
+             return buildCellSliced(source,{...opts,level});
+           }
+         });
+         return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
+       } : (chunk,opts)=>buildCellSliced(chunk,opts);
+       streamer=window.SDNordhafenCellStreamer.create({
+         scene,fixture,buildCell:cellBuilder,loadRadius:160,unloadRadius:200,budget:2,lodBudget:2
+       });
+
+     }else{
+       for(const chunk of fixture.chunks)for(const obj of chunk.objects){
+         const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+         const h=obj.type==='building'?6:3;
+         mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+         mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+       }
+     }
+     if($('player').checked){
+       player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,
+         motion:window.SDNordhafenPlayerMotion,fixture,cityGeometry:window.SDNordhafenProceduralCity});
+       player.start().then(ok=>{if(!ok&&player)status.textContent=player.status;});
+       runFailure='Spielersteuerung: kein fester Kamerarouten-Vergleich';
+     }
+     if(!preset.freeze){moveRoute();routeTimer=setInterval(moveRoute,500);}
+     else {runFailure='freeze=1: stationäre Diagnose, kein vollständiger Kamerarouten-Vergleich';}
+     bridge=window.SDNordhafenBabylonSessionBridge.create({
+       engine,level,seed:1337,now:()=>performance.now(),
+       isVisible:()=>document.visibilityState==='visible'
+     });
+     bridge.start();
+     gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
+     engine.runRenderLoop(()=>{
+       if(scene){
+         if(player&&player.ready){
+           const pos=player.update(engine.getDeltaTime()/1000);
+           if(pos&&streamer){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+         }
+         if(streamer&&!(player&&player.ready))streamer.update(camera.position.x,camera.position.z);
+         scene.render();
+         if(pbr&&pbr.enabled)pbr.updateShadows(camera.target,scene.meshes);
+         if(drawProbe&&!runComplete){
+           const measurement=drawProbe.read();
+           runSamples.push({timestampMs:performance.now(),routeStep:Math.max(0,routeIndex-1),
+             drawCalls:measurement.drawCalls,heapBytes:measurement.heapBytes});
+           if(routeIndex===runRouteLength){
+             runComplete=true;
+             const verdict=window.SDNordhafenFrameWindowAudit.audit(runSamples,
+               {expectedRouteSteps:runRouteLength});
+             if(!verdict.valid)runFailure=verdict.errors.join('; ');
+             else comparison[runMode]={profile:runProfile,routeId:runRouteId,
+               summary:window.SDNordhafenDrawMemory.summarize(runSamples,{complete:true})};
+           }
+         }
+       }
+     });
+     timer=setInterval(show,1000);show();
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;$('thin').disabled=true;$('glb').disabled=true;$('pbr').disabled=true;$('player').disabled=true;
+     status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene. '+thinStatus+' | '+glbStatus;
+   }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
+ }
+ function beginGPU(){
+   if(!scene||!engine||gpu)return;
+   try{
+     const gl=engine._gl;
+     gpu=window.SDNordhafenLabGPUWiring.create({scene,gl,
+       timerAPI:window.SDWebGL2GPUTimer,
+       sessionAPI:window.SDGPUTimingSession,
+       statisticsAPI:window.SDGPUTimingStatistics});
+     if(!gpu.start()){
+       gpuStatus.textContent='GPU-Messung nicht verfügbar';gpu.stop();gpu=null;return;
+     }
+     gpuStart.disabled=true;gpuStop.disabled=false;
+     gpuStatus.textContent='GPU-Messung aktiv (Hardware-Abfragen ausstehend).';
+   }catch(e){if(gpu){gpu.stop();gpu=null;}gpuStatus.textContent='GPU-Messung nicht verfügbar: '+e.message;}
+ }
+ start.addEventListener('click',begin);
+ gpuStart.addEventListener('click',beginGPU);
+ gpuStop.addEventListener('click',()=>{if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=!scene;gpuStop.disabled=true;gpuStatus.textContent='GPU-Messung gestoppt.';});
+ stop.addEventListener('click',()=>{cleanup();status.textContent='Gestoppt, Ressourcen freigegeben.';});
+ window.addEventListener('resize',()=>{if(engine)engine.resize();});
+ // Keep the render buffer in sync with the canvas' laid-out size (status text and
+ // controls change height after start); otherwise the image is stretched.
+ try{new ResizeObserver(()=>{if(engine)engine.resize();}).observe(canvas);}catch(e){}
+ window.addEventListener('pagehide',cleanup);
+ if(preset.autoStart)begin();
+})();
+</script></body></html>
