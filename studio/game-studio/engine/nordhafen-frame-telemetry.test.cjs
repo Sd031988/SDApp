@@ -6,6 +6,7 @@ test('does not invent performance metrics without frames',()=>{
  assert.equal(t.report().measured,false);
  t.sample(0);t.sample(16);
  assert.equal(t.report().measured,false);
+ assert.equal(t.report().frameP50Ms,null);
 });
 test('computes FPS and P95 from supplied render timestamps',()=>{
  const t=create();
@@ -15,6 +16,8 @@ test('computes FPS and P95 from supplied render timestamps',()=>{
  assert.equal(r.sampleCount,5);
  assert.equal(r.fps,52.08);
  assert.equal(r.frameP95Ms,32);
+ assert.equal(r.frameP50Ms,16);
+ assert.ok(r.frameP95Ms===null||r.frameP50Ms!==null,'p95 implies p50');
 });
 test('bounded rolling buffer and reset work without persistence',()=>{
  const t=create({maxSamples:2});
