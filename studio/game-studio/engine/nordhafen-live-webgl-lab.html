@@ -236,18 +236,31 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          throw error;
        }
      }
+     // One shared source per scene, reused by all distant LOD cells.
+     const placeholderSources=[];
+     const placeholderMaterials=[];
+     function getPlaceholderSource(index){
+       if(!placeholderSources[index]){
+         const source=BABYLON.MeshBuilder.CreateBox('lod-placeholder-source-'+index,{size:1},scene);
+         const material=new BABYLON.StandardMaterial('lod-placeholder-material-'+index,scene);
+         material.diffuseColor=new BABYLON.Color3(.54,.6,.65);
+         source.material=material;source.isVisible=false;
+         placeholderSources[index]=source;placeholderMaterials[index]=material;
+       }
+       return placeholderSources[index];
+     }
      async function placeholderSliced(chunk,opts={}){
        const meshes=[],materials=[];
-       const placeholderMaterial=new BABYLON.StandardMaterial('lod-placeholder-material-'+chunk.id,scene);
-       placeholderMaterial.diffuseColor=new BABYLON.Color3(.54,.6,.65);materials.push(placeholderMaterial);
        try{
          await window.SDNordhafenBuildSlices.run(
            chunk.objects.filter(obj=>obj.type==='building'),obj=>{
-             const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
+             const source=getPlaceholderSource(window.SDNordhafenProceduralCity.variant(1337,obj));
+             const mesh=source.createInstance('lod-placeholder-building-'+obj.id);
              const h=city?window.SDNordhafenProceduralCity.height(1337,obj):6;
              mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
-             mesh.scaling.set(4,h,4);
-             mesh.material=placeholderMaterial;mesh.isVisible=true;meshes.push(mesh);
+             const size=window.SDNordhafenProceduralCity.footprint(1337,obj);
+             mesh.scaling.set(size.width,h,size.depth);
+             mesh.isVisible=true;meshes.push(mesh);
            },{budgetMs:4,signal:opts.signal,recordSlice:opts.recordBuildSlice,
              nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
          return {meshes,materials};
@@ -316,7 +329,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
            const pos=player.update(engine.getDeltaTime()/1000);
            if(pos&&streamer){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
          }
-         if(streamer&&!(player&&player.ready))streamer.update(camera.target.x,camera.target.z);
+         if(streamer&&!(player&&player.ready))streamer.update(camera.position.x,camera.position.z);
          scene.render();
          if(pbr&&pbr.enabled)pbr.updateShadows(camera.target,scene.meshes);
          if(drawProbe&&!runComplete){
