@@ -167,3 +167,9 @@ test('step 9e: URL thin=0 selects city createInstance fallback without disabling
  assert.equal(a.controls.thin.checked,true);
  assert.match(html,/useThinInstances:preset\.cityThin/);
 });
+
+test('step 9f: default city preset selects visible instances, thin=1 warns explicitly',()=>{
+ const d=simulatePreset('?preset=city&freeze=1');
+ assert.equal(d.result.cityThin,false);
+ assert.match(html,/Thin Instances: experimentell, rendert derzeit nicht/);
+});
