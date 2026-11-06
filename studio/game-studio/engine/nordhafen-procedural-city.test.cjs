@@ -110,7 +110,7 @@ test('full, simplified and placeholder retain all buildings while reducing trees
   const cell=h.result.buildCell(chunk,{level});
   const buildings=cell.meshes.filter(m=>m.material&&h.result.sources.some(s=>s.material===m.material));
   // Materials differ at simplified LOD, so identify buildings by cell name.
-  const buildingMeshes=cell.meshes.filter(m=>m.name?.startsWith('city-cell-'));
+  const buildingMeshes=cell.meshes.filter(m=>m.name?.startsWith('city-cell-')&&!m.name.startsWith('city-cell-trees-'));
   const trees=cell.meshes.filter(m=>m.name?.startsWith('city-cell-trees-'));
   const count=buildingMeshes.reduce((n,m)=>n+m.thinInstanceCount,0);
   counts.push(count);
