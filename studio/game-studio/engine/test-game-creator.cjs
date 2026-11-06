@@ -52,7 +52,8 @@ const files = [
   'nordhafen-ops-menu.test.cjs',
   'nordhafen-ops-weapons.test.cjs',
   'nordhafen-ops-campaign.test.cjs',
-  'nordhafen-ops-audio.test.cjs'
+  'nordhafen-ops-audio.test.cjs',
+  'nordhafen-ops-city.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
