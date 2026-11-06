@@ -41,3 +41,38 @@ test('lab uses same deterministic camera route for streaming and baseline and sh
  assert.match(html,/Streaming \+ LOD/);
  assert.match(html,/nicht verfügbar/);
 });
+
+test('lab does not emit literal backslash-n in comparison display',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'nordhafen-live-webgl-lab.html'),'utf8');
+ assert.equal(html.includes(String.raw`\\n`),false);
+});
+test('summarize computes p50 p95 max and ignores null observations',()=>{
+ const {summarize}=require('./nordhafen-draw-memory.js');
+ const data=[{drawCalls:1,heapBytes:10},{drawCalls:null,heapBytes:null},
+  {drawCalls:3,heapBytes:30},{drawCalls:5,heapBytes:50},
+  {drawCalls:7,heapBytes:70},{drawCalls:9,heapBytes:90}];
+ const s=summarize(data,{complete:true});
+ assert.equal(s.drawCallsP50,5);
+ assert.equal(s.drawCallsP95,8.6);
+ assert.equal(s.drawCallsMax,9);
+ assert.equal(s.heapP50,50);
+ assert.equal(s.heapMax,90);
+ assert.equal(s.samples,5);
+ assert.equal(s.complete,true);
+});
+test('summarize without valid values returns null metrics, never zero',()=>{
+ const {summarize}=require('./nordhafen-draw-memory.js');
+ const s=summarize([{drawCalls:null,heapBytes:null},{drawCalls:NaN,heapBytes:undefined}],{complete:true});
+ for(const key of ['drawCallsP50','drawCallsP95','drawCallsMax','heapP50','heapMax'])
+  assert.equal(s[key],null,key);
+ assert.equal(s.samples,0);
+});
+test('incomplete route never produces a completed comparison',()=>{
+ const {summarize}=require('./nordhafen-draw-memory.js');
+ const s=summarize([{drawCalls:7,heapBytes:200}],{complete:false});
+ assert.equal(s.complete,false);
+ const html=fs.readFileSync(path.join(__dirname,'nordhafen-live-webgl-lab.html'),'utf8');
+ assert.match(html,/routeIndex===route\.length&&!runComplete/);
+ assert.match(html,/Lauf unvollständig/);
+ assert.match(html,/comparison\[runMode\]=window\.SDNordhafenDrawMemory\.summarize\(runSamples,\{complete:true\}\)/);
+});
