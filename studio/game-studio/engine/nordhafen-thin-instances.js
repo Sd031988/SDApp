@@ -38,6 +38,8 @@
       BABYLON.Matrix.Compose(scale,BABYLON.Quaternion.Identity(),pos).copyToArray(matrices,i*16);
      });
      mesh.thinInstanceSetBuffer('matrix',matrices,16,true);
+     if(typeof mesh.thinInstanceRefreshBoundingInfo==='function')
+      mesh.thinInstanceRefreshBoundingInfo(false);
     }else{
      for(const obj of objects){
       const mesh=source.createInstance(obj.id);
