@@ -373,6 +373,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
  gpuStop.addEventListener('click',()=>{if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=!scene;gpuStop.disabled=true;gpuStatus.textContent='GPU-Messung gestoppt.';});
  stop.addEventListener('click',()=>{cleanup();status.textContent='Gestoppt, Ressourcen freigegeben.';});
  window.addEventListener('resize',()=>{if(engine)engine.resize();});
+ // Keep the render buffer in sync with the canvas' laid-out size (status text and
+ // controls change height after start); otherwise the image is stretched.
+ try{new ResizeObserver(()=>{if(engine)engine.resize();}).observe(canvas);}catch(e){}
  window.addEventListener('pagehide',cleanup);
  if(preset.autoStart)begin();
 })();
