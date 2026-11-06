@@ -105,6 +105,7 @@ async function start(){
   extractMesh=BABYLON.MeshBuilder.CreateTorus('harbor-extraction',{diameter:missionRules.EXTRACT_RADIUS*2,thickness:.3,tessellation:72},scene);
   extractMesh.position.set(sites.extraction.x,.2,sites.extraction.z);extractMesh.isPickable=false;
   const extractionMaterial=new BABYLON.StandardMaterial('harbor-extraction-material',scene);extractionMaterial.emissiveColor=new BABYLON.Color3(.12,.9,.38);extractMesh.material=extractionMaterial;extractMesh.setEnabled(false);
+  const dataSite=interiorSites[0];sites.data={x:dataSite.x,y:9,z:dataSite.z};dataMesh=BABYLON.MeshBuilder.CreateBox('mission-data-package',{size:.65},scene);dataMesh.position.set(dataSite.x,9.6,dataSite.z);dataMesh.isPickable=false;const dataMat=new BABYLON.StandardMaterial('mission-data-mat',scene);dataMat.emissiveColor=new BABYLON.Color3(.95,.75,.14);dataMesh.material=dataMat;dataMesh.setEnabled(false);
 
   function loadInterior(index){
    if(interiorLoaded.has(index))return;
