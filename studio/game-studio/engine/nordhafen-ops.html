@@ -1,30 +1,30 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nordhafen Ops – Etappe B: Gegner</title>
+<title>Nordhafen Ops – Etappe C: Mission</title>
 <style>
 html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system-ui}canvas{width:100%;height:100%;display:block;touch-action:none}
 #hud{position:fixed;top:14px;left:14px;background:#102235dc;padding:12px;border-radius:8px;pointer-events:none;white-space:pre-line}
 #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-size:28px;text-shadow:0 1px 3px #000}
 #flash{position:fixed;left:54%;top:57%;width:18px;height:18px;border-radius:50%;background:#ffd26b;box-shadow:0 0 35px 16px #ff9b39;opacity:0;pointer-events:none}
-#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
+#missionProgress{position:fixed;left:50%;top:64%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;display:none;place-items:center;background:conic-gradient(#ffbc35 var(--progress,0%),#102235c9 0);font-weight:bold;text-shadow:0 1px 4px #000;pointer-events:none;z-index:6}#objectiveMarker{position:fixed;z-index:7;color:#ffe86c;background:#112436d9;border:1px solid #ffe86c;border-radius:8px;padding:6px 10px;font-weight:700;pointer-events:none;display:none}#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
 button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
-</style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
-<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Etappe B – Schießstand mit sechs Gegnern. Überlebe und schalte Gegner aus. Missionen folgen in Etappe C.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
+</style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="missionProgress"></div><div id="objectiveMarker"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
+<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Etappe C – Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), danach erreiche die Hafen-Extraktion und überlebe zehn Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, E Funkmast aktivieren, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><button id="play">Schießstand starten</button></article></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script>
 <script>
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies;
-let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,markerNodes=[];
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission;
+let engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=combat.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,holdingE=false,mission=missionRules.initial(),sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[];
 function status(t){$('status').textContent=t;}
 function clear(){
  engine?.stopRenderLoop();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
- engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=combat.initial();markerNodes.forEach(m=>m.remove());markerNodes=[];
+ engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=combat.initial();holdingE=false;mission=missionRules.initial();sites=null;mastMeshes=[];extractMesh=null;damageThisFrame=false;defeated=0;$('missionProgress').style.display='none';$('objectiveMarker').style.display='none';markerNodes.forEach(m=>m.remove());markerNodes=[];
 }
 function shoot(){
  if(!scene||!player?.ready||ended)return;
@@ -36,7 +36,7 @@ function shoot(){
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
   const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
-  if(enemy){enemy.state=enemyRules.damage(enemy.state,25);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/50;return;}
+  if(enemy){enemy.state=enemyRules.damage(enemy.state,25);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/50;return;}
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){const feedback=combat.hit(weapon,25);weapon=feedback.state;target.health=Math.max(0,target.health-feedback.damage);
    hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
@@ -83,13 +83,28 @@ async function start(){
    const bar=BABYLON.MeshBuilder.CreatePlane('enemy-health-'+i,{width:1,height:.12},scene);bar.parent=mesh;bar.position.set(0,1.2,0);bar.billboardMode=BABYLON.Mesh.BILLBOARDMODE_ALL;bar.isPickable=false;const bm=new BABYLON.StandardMaterial('enemy-health-mat-'+i,scene);bm.emissiveColor=BABYLON.Color3.FromHexString(palette.healthBar);bm.disableLighting=true;bar.material=bm;
    enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z)});
   }
-  const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}};
+  sites=missionRules.locations(startPosition,fixture.grid*fixture.chunkSize);
+  for(let i=0;i<3;i++){
+   const point=sites.towers[i],mast=BABYLON.MeshBuilder.CreateCylinder('radio-mast-'+i,{height:12,diameterTop:.3,diameterBottom:.9,tessellation:8},scene);
+   mast.position.set(point.x,6,point.z);mast.isPickable=false;
+   const mat=new BABYLON.StandardMaterial('radio-mast-mat-'+i,scene);mat.diffuseColor=new BABYLON.Color3(.18,.58,.82);mat.emissiveColor=new BABYLON.Color3(.04,.14,.23);mast.material=mat;
+   const beacon=BABYLON.MeshBuilder.CreateSphere('mast-beacon-'+i,{diameter:1.6},scene);beacon.parent=mast;beacon.position.set(0,6.2,0);beacon.isPickable=false;
+   const light=new BABYLON.StandardMaterial('mast-beacon-mat-'+i,scene);light.emissiveColor=new BABYLON.Color3(1,.6,.06);beacon.material=light;
+   mastMeshes.push(mast);
+  }
+  extractMesh=BABYLON.MeshBuilder.CreateTorus('harbor-extraction',{diameter:missionRules.EXTRACT_RADIUS*2,thickness:.3,tessellation:72},scene);
+  extractMesh.position.set(sites.extraction.x,.2,sites.extraction.z);extractMesh.isPickable=false;
+  const extractionMaterial=new BABYLON.StandardMaterial('harbor-extraction-material',scene);extractionMaterial.emissiveColor=new BABYLON.Color3(.12,.9,.38);extractMesh.material=extractionMaterial;extractMesh.setEnabled(false);
+  const onKey=e=>{if(e.code==='KeyR'){weapon=combat.reload(weapon);status(weapon.reload?'Nachladen …':'Nachladen nicht nötig');}if(e.code==='KeyE')holdingE=true;};
+  const onKeyUp=e=>{if(e.code==='KeyE')holdingE=false;};
   canvas.addEventListener('keydown',onKey,{signal:controller.signal});
+  canvas.addEventListener('keyup',onKeyUp,{signal:controller.signal});
   canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();if(e.button===2)aiming=true;},{signal:controller.signal});
   canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
   engine.runRenderLoop(()=>{
    const dt=Math.min(.05,engine.getDeltaTime()/1000);if(!ended){elapsed+=dt;weapon=combat.tick(weapon,dt);}
+   damageThisFrame=false;
    const pos=ended?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;
     if(aiming){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
     streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
@@ -101,17 +116,40 @@ async function start(){
     const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
     const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis,elapsed});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
-    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);status('Unter Beschuss! Leben: '+health);}}
+    if(out.shoot){const hitChance=Math.max(.12,.65-distance*.018);if(Math.random()<hitChance-Math.abs(out.spread)*.5){health=enemyRules.hurt(health,8);damageThisFrame=true;status('Unter Beschuss! Leben: '+health);}}
    }
-   if(health<=0){ended=true;$('menuTitle').textContent='NIEDERLAGE';$('menuText').textContent='Du wurdest ausgeschaltet. Starte einen neuen Versuch.';$('play').textContent='Neustart';$('menu').style.display='grid';}
+   const previous=mission;
+   mission=missionRules.step(mission,{dt,position:pos,locations:sites,holding:holdingE,damage:damageThisFrame,health});
+   if(mission.activated!==null){
+    mastMeshes[mission.activated].material.emissiveColor=new BABYLON.Color3(.12,.8,.22);
+    const updated=missionRules.alertNearby(enemies.map(e=>e.state),sites.towers[mission.activated]);
+    enemies.forEach((e,i)=>{e.state=updated[i];});
+    status('Funkmast '+(mission.activated+1)+' aktiviert – Gegner alarmiert!');
+   }
+   const count=mission.completed.filter(Boolean).length;
+   if(count===3)extractMesh.setEnabled(true);
+   const progress=count<3?mission.progress/missionRules.ACTIVATE_SECONDS:mission.extractProgress/missionRules.EXTRACT_SECONDS;
+   const showProgress=count===3?mission.extractProgress>0:mission.progress>0;
+   $('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=Math.ceil(Math.max(0,(count===3?missionRules.EXTRACT_SECONDS:missionRules.ACTIVATE_SECONDS)*(1-progress)))+'s';
+   if(mission.status!=='playing'){
+    ended=true;$('menuTitle').textContent=mission.status==='won'?'MISSION ERFOLGREICH':'NIEDERLAGE';
+    $('menuText').textContent=mission.status==='won'?'Extraktion gelungen! Zeit: '+Math.floor(elapsed)+' s · Treffer: '+weapon.hits+' · Gegner besiegt: '+defeated:'Du wurdest ausgeschaltet. Starte einen neuen Versuch.';
+    $('play').textContent='Neustart';$('menu').style.display='grid';
+   }
    }
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
+   if(sites){const index=mission.completed.indexOf(false),point=index<0?sites.extraction:sites.towers[index],label=index<0?'EXTRAKTION':'FUNKMAST '+(index+1);
+    const dx=point.x-(pos?.x??startPosition.x),dz=point.z-(pos?.z??startPosition.z),distance=Math.hypot(dx,dz);
+    const screen=BABYLON.Vector3.Project(new BABYLON.Vector3(point.x,3,point.z),BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));
+    const marker=$('objectiveMarker');marker.style.display='block';marker.textContent=label+' · '+Math.round(distance)+' m';
+    marker.style.left=Math.max(16,Math.min(innerWidth-165,screen.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(16,Math.min(innerHeight-55,screen.y/engine.getRenderHeight()*innerHeight))+'px';
+   }
    scene.render();
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   $('hud').textContent='NORDHAFEN OPS · ETAPPE B\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nZiele: '+targets.length+' / 5\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
+   $('hud').textContent='NORDHAFEN OPS · ETAPPE C\nLeben: '+health+' / 100\nMunition: '+weapon.ammo+' / '+weapon.reserve+(weapon.reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+(mission.completed.every(Boolean)?'Zur Extraktion':'Masten '+mission.completed.filter(Boolean).length+'/3')+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / 6\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+player.characterStatus;
   });
-  status('Etappe B aktiv – sechs Gegner und fünf Ziele. Maus ins Bild klicken.');
+  status('Etappe C aktiv – drei Funkmasten aktivieren, dann Hafen-Extraktion.');
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
  finally{$('play').disabled=false;}
 }
