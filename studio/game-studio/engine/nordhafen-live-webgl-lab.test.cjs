@@ -63,3 +63,8 @@ test('step 7: PBR opt-in is used in Lab and fifth comparison mode is selected',(
  assert.match(html,/pbr\.dispose\(\)/);
  assert.match(html,/Streaming \+ LOD \+ Thin Instances \+ PBR/);
 });
+
+test('BoomBox source is normalized before use and explicitly marked as placeholder',()=>{
+ assert.match(html,/SDNordhafenThinInstances\.normalizeSource\(glbBuilding,BABYLON\)/);
+ assert.match(html,/BoomBox als Platzhalter, kein echtes Gebäudemodell/);
+});

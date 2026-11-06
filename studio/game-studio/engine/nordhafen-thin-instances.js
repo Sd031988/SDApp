@@ -5,6 +5,40 @@
  else root.SDNordhafenThinInstances=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
+ function normalization(bounds){
+  if(!bounds||!bounds.min||!bounds.max)throw new TypeError('bounding vectors required');
+  const axes=['x','y','z'],scale={},offset={};
+  for(const axis of axes){
+   const size=bounds.max[axis]-bounds.min[axis];
+   if(!Number.isFinite(size)||size<=0)throw new RangeError('GLB geometry has zero/invalid '+axis+' extent');
+   scale[axis]=1/size;
+   offset[axis]=-(bounds.min[axis]+bounds.max[axis])/2*scale[axis];
+  }
+  // Center the mesh in X/Z, but put the lowest point on Y=0.
+  offset.y=-bounds.min.y*scale.y;
+  return {scale,offset};
+ }
+ function normalizeSource(mesh,BABYLON){
+  if(!mesh||!BABYLON?.Matrix||typeof mesh.getHierarchyBoundingVectors!=='function'||
+   typeof mesh.bakeTransformIntoVertices!=='function')
+   throw new TypeError('normalizable Babylon mesh required');
+  // Preserve the mesh world transform while detaching it from imported GLB parents.
+  if(typeof mesh.setParent==='function')mesh.setParent(null);
+  if(typeof mesh.bakeCurrentTransformIntoVertices==='function')mesh.bakeCurrentTransformIntoVertices();
+  const bounds=mesh.getHierarchyBoundingVectors();
+  const {scale,offset}=normalization(bounds);
+  const transform=BABYLON.Matrix.Scaling(scale.x,scale.y,scale.z)
+   .multiply(BABYLON.Matrix.Translation(offset.x,offset.y,offset.z));
+  mesh.bakeTransformIntoVertices(transform);
+  if(typeof mesh.refreshBoundingInfo==='function')mesh.refreshBoundingInfo();
+  const normalized=mesh.getHierarchyBoundingVectors();
+  for(const axis of ['x','y','z']){
+   const length=normalized.max[axis]-normalized.min[axis];
+   if(Math.abs(length-1)>1e-4)throw new Error('GLB normalization failed on '+axis);
+  }
+  if(Math.abs(normalized.min.y)>1e-4)throw new Error('GLB base not aligned with y=0');
+  return mesh;
+ }
  function create({chunk,sourceByType,BABYLON,thin=true}={}){
   if(!chunk||!Array.isArray(chunk.objects)||!sourceByType||!BABYLON||!BABYLON.Matrix||!BABYLON.Vector3||!BABYLON.Quaternion)
    throw new TypeError('chunk, sources and Babylon matrix API required');
@@ -63,5 +97,5 @@
   return {meshes,materials,dispose,mode:supported?'thin':'fallback',
    meshCount:meshes.length,instanceCount:chunk.objects.length};
  }
- return Object.freeze({create});
+ return Object.freeze({create,normalization,normalizeSource});
 });
