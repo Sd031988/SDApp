@@ -29,7 +29,7 @@
    function report(){
      if(frames.length<2)return Object.freeze({
        schema:'sd-nordhafen-frame-telemetry/v1',measured:false,sampleCount:frames.length,
-       fps:null,frameP95Ms:null
+       fps:null,frameP50Ms:null,frameP95Ms:null
      });
      const sorted=frames.slice().sort((a,b)=>a-b);
      const total=frames.reduce((a,b)=>a+b,0);
@@ -37,6 +37,7 @@
        schema:'sd-nordhafen-frame-telemetry/v1',measured:true,
        sampleCount:frames.length,
        fps:Number((1000*frames.length/total).toFixed(2)),
+       frameP50Ms:Number(sorted[Math.ceil(sorted.length*.5)-1].toFixed(3)),
        frameP95Ms:Number(sorted[Math.ceil(sorted.length*.95)-1].toFixed(3))
      });
    }
