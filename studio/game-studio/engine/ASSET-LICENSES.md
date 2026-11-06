@@ -96,3 +96,12 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Maßstab ca. 2× zu groß (Bett 3,9 m lang, Tür 4,2 m hoch) → beim Einbau mit Faktor ≈ 0,5 skalieren.
+
+## Waffen und Beute (Quaternius „Survival“)
+
+- Dateien: `assets/nordhafen-loot-*.glb` (21 Teile, zusammen ca. 0,75 MB): Waffen (pistol-1, pistol-2, revolver-1, shotgun-1, shotgun-2, shotgun-sawedoff, flaregun, axe, knife) und Beute (backpack, bandages, firstaidkit, firstaidkit-hard, gascan, radio, battery-big, can-closed, propanetank, compass-closed, phone, waterbottle-1).
+- Quelle: Quaternius – Survival Pack (53 Teile im Original), https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Auswahl unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
+- Maßstab ca. 6× zu groß (Pistole 1,8 m, Schrotflinte 5,2 m) → Waffen Faktor ≈ 0,15–0,2, Beute als Bodenobjekt ≈ 0,2–0,3.
+- Hinweis: Das Paket enthält kein Sturmgewehr; Gewehr-Rolle vorerst mit shotgun-2/shotgun-1 besetzen oder Waffe ohne sichtbares Modell.
