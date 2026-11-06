@@ -156,3 +156,14 @@ test('each frame streams around current camera target and simplified city retain
  assert.match(html,/streamer.update\(camera.target.x,camera.target.z\)/);
  assert.match(html,/obj.type==='building'\|\|\(level==='simplified'&&obj.type==='vegetation'&&i%2===0\)/);
 });
+
+test('step 9e: URL thin=0 selects city createInstance fallback without disabling the lab',()=>{
+ const a=simulatePreset('?preset=city&freeze=1&thin=0');
+ const b=simulatePreset('?preset=city&freeze=1&thin=1');
+ assert.equal(a.result.cityThin,false);
+ assert.equal(b.result.cityThin,true);
+ assert.equal(a.result.freeze,true);
+ assert.equal(a.result.autoStart,true);
+ assert.equal(a.controls.thin.checked,true);
+ assert.match(html,/useThinInstances:preset\.cityThin/);
+});
