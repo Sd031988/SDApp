@@ -91,7 +91,7 @@
    if(!ready||disposed)return null;
    const p=player.position;
    const state={x:p.x,y:p.y,z:p.z,vy:aggregate.body.getLinearVelocity().y,
-    yaw:camera.alpha+Math.PI/2,grounded:groundedByRaycast()};
+    yaw:Math.atan2(-Math.cos(camera.alpha),-Math.sin(camera.alpha)),grounded:groundedByRaycast()};
    const next=motion.step({forward:Number(pressed.has('KeyW'))-Number(pressed.has('KeyS')),
     right:Number(pressed.has('KeyD'))-Number(pressed.has('KeyA')),
     sprint:pressed.has('ShiftLeft'),crouch:pressed.has('ControlLeft'),

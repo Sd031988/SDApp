@@ -24,5 +24,11 @@
    y:(state.y||0)+vy*seconds,height:crouched?1.15:1.8,crouched,
    grounded:grounded&&!input.jump,dt:seconds});
  }
- return Object.freeze({step});
+ // Babylon ArcRotateCamera sits at target+(cos a, sin a)*r in x/z, so "forward"
+ // (away from the camera) is (-cos a, -sin a). step() moves along (sin yaw, cos yaw).
+ function yawFromCameraAlpha(alpha){
+  if(!Number.isFinite(alpha))throw new TypeError('camera alpha must be finite');
+  return Math.atan2(-Math.cos(alpha),-Math.sin(alpha));
+ }
+ return Object.freeze({step,yawFromCameraAlpha});
 });

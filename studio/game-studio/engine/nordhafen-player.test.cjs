@@ -99,3 +99,26 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   ctrl.dispose();
  }finally{globalThis.HavokPhysics=previous;}
 });
+
+test('W moves away from the camera and D moves to camera-right for any camera angle',()=>{
+ const {step,yawFromCameraAlpha}=require('./nordhafen-player-motion.js');
+ for(const alpha of [-Math.PI/2,0,Math.PI/2,Math.PI,0.7]){
+  // Babylon ArcRotateCamera: camera at target + (cos a, sin a) * r in x/z.
+  const away={x:-Math.cos(alpha),z:-Math.sin(alpha)};
+  const right={x:away.z,z:-away.x}; // left-handed: forward +z -> right +x
+  const yaw=yawFromCameraAlpha(alpha);
+  const fwd=step({forward:1},{yaw,grounded:true},.02,{gravity:0});
+  const side=step({right:1},{yaw,grounded:true},.02,{gravity:0});
+  const dot=(v,d)=>(v.vx*d.x+v.vz*d.z)/Math.hypot(v.vx,v.vz);
+  assert.ok(dot(fwd,away)>0.999,'forward at alpha '+alpha);
+  assert.ok(dot(side,right)>0.999,'right at alpha '+alpha);
+ }
+});
+test('controller uses the same camera-to-yaw mapping as the motion helper',()=>{
+ const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-player-controller.js'),'utf8');
+ const {yawFromCameraAlpha}=require('./nordhafen-player-motion.js');
+ const m=src.match(/yaw:(Math\.atan2\([^\n]*?\)\)),grounded/);
+ assert.ok(m,'controller yaw expression found');
+ const f=new Function('camera','return '+m[1]);
+ for(const a of [-2,-0.5,0,1,2.5])assert.ok(Math.abs(f({alpha:a})-yawFromCameraAlpha(a))<1e-12);
+});
