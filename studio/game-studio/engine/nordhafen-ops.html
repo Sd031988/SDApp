@@ -157,11 +157,11 @@ async function start(){
     const desired=camera.radius,from=camera.target,to=camera.position,direction=to.subtract(from),length=direction.length();
     const obstruction=scene.pickWithRay(new BABYLON.Ray(from,direction.normalize(),length),m=>m.name.startsWith('interior-')&&m.isPickable!==false);
     if(obstruction?.hit)camera.radius=interiors.cameraRadius(desired,obstruction.distance);}
-   if(pos&&!paused){for(const enemy of enemies){if(!enemy.mesh||enemy.state.health<=0)continue;
+   if(pos&&!paused){for(const enemy of enemies){if(!enemy.mesh||enemy.state.health<=0||!enemyRules.awake(enemy.state,pos,80))continue;
     const origin=enemy.mesh.position.add(new BABYLON.Vector3(0,.5,0));
     const aimPoint=new BABYLON.Vector3(pos.x,pos.y+.4,pos.z);
     const diff=aimPoint.subtract(origin),distance=diff.length();
-    const obstacle=scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false);
+    const obstacle=distance<enemyRules.TYPES[enemy.state.type].detect?scene.pickWithRay(new BABYLON.Ray(origin,diff.normalize(),distance),m=>m!==enemy.mesh&&m.name!=='nordhafen-player'&&m.name!=='player-physics-ground'&&m.metadata?.enemy===undefined&&m.metadata?.target!==true&&m.isPickable!==false&&m.isVisible!==false):null;
     const visible=controls.graceAllowsDetection(elapsed)&&distance<35&&!(obstacle?.hit&&obstacle.distance<distance-.3);
     const out=enemyRules.step(enemy.state,pos,dt,{visible,random:Math.random(),patrolAxis:enemy.patrolAxis,elapsed});enemy.state=out.enemy;
     enemy.mesh.position.x=out.enemy.x;enemy.mesh.position.z=out.enemy.z;
