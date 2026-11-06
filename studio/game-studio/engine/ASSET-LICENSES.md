@@ -18,3 +18,8 @@ No asset is bundled or redistributed in this PR.
 - Source/licensing discussion: https://forum.babylonjs.com/t/sandbox-studio-environment-texture-file/36190
 - Usage: opt-in PBR lighting in the Nordhafen benchmark lab; no local redistribution.
 - Attribution: Babylon.js Assets contributors / Studio Softbox environment. Verify precise author attribution before production redistribution.
+
+## Device test 2026-11-06: GLB disabled
+- The previously listed Babylon-hosted BoomBox.glb runtime URL returned HTTP 404 in the user's iPhone Safari test.
+- No replacement HTTP 200 URL has been verified. The Nordhafen lab therefore makes **no GLB request** and displays a visible disabled status.
+- Existing source/licensing notes are historical provenance, not evidence that a runtime asset is available.
