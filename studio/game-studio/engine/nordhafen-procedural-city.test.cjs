@@ -49,7 +49,7 @@ test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
  assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
  for(const chunk of h.f.chunks.slice(0,4))h.result.buildCell(chunk);
- assert.equal(h.textures.filter(t=>t.name==='nordhafen-facade').length,1);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
  h.result.dispose();
 });
 test('thin instance meshes per cell bounded by building variants plus tree type',()=>{
@@ -172,7 +172,7 @@ test('fog color matches skybox lower-edge vertex RGB exactly',()=>{
 test('standard city create uses createInstance with materials on all visible cell meshes',()=>{
  const h=mock('medium'),chunk=h.f.chunks[0];
  // Existing mock explicitly opts into thin mode; use an independent default-mode city.
- const source=h.meshes.find(m=>m.name==='city-building-source-0');
+ const source=h.meshes.find(m=>m.name==='city-building-source-0-0');
  assert.ok(source.createInstance);
  assert.match(require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-procedural-city.js'),'utf8'),/useThinInstances=false/);
  h.result.dispose();
