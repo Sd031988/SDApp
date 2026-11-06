@@ -22,8 +22,9 @@
    if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
    return matrices;
   }
- function create({scene,BABYLON,fixture,seed=1337}={}){
+ function create({scene,BABYLON,fixture,seed=1337,loadRadius=160}={}){
   if(!scene||!BABYLON||!fixture)throw new TypeError('city scene required');
+  if(!Number.isFinite(loadRadius)||loadRadius<=60)throw new TypeError('invalid city load radius');
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
   let disposed=false;
   const colors=[new BABYLON.Color3(.55,.63,.7),new BABYLON.Color3(.65,.57,.48),new BABYLON.Color3(.48,.57,.61)];
@@ -41,6 +42,10 @@
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i,scene);
    m.baseColor=color;m.baseTexture=facade;m.metallic=.04;m.roughness=.86;
    materials.push(m);return m;
+  });
+  const simpleMaterials=colors.map((color,i)=>{
+   const m=new BABYLON.PBRMetallicRoughnessMaterial('city-simple-'+i,scene);
+   m.baseColor=color;m.metallic=0;m.roughness=1;materials.push(m);return m;
   });
   for(let i=0;i<3;i++){
    const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i,{size:1},scene);
@@ -63,8 +68,9 @@
   skyMat.useVertexColors=true;sky.material=skyMat;sky.isPickable=false;
   sky.infiniteDistance=true;sky.isVisible=true;owned.push(sky);materials.push(skyMat);
   scene.fogMode=BABYLON.Scene.FOGMODE_LINEAR;
-  scene.fogStart=100;scene.fogEnd=215;
-  scene.fogColor=new BABYLON.Color3(.68,.75,.79);
+  scene.fogStart=60;scene.fogEnd=loadRadius;
+  // Lower skybox edge (t=0) is the horizon color in the vertex gradient.
+  scene.fogColor=new BABYLON.Color3(.62,.73,.8);
   const groundTexture=new BABYLON.DynamicTexture('city-ground-map',{width:512,height:512},scene,false);
   textures.push(groundTexture);
   const g=groundTexture.getContext();
@@ -88,14 +94,15 @@
   const waterMat=new BABYLON.PBRMetallicRoughnessMaterial('city-water-material',scene);
   waterMat.baseColor=new BABYLON.Color3(.11,.32,.43);waterMat.metallic=.25;waterMat.roughness=.3;
   water.material=waterMat;owned.push(water);materials.push(waterMat);
-  function buildCell(chunk,{signal}={}){
+  function buildCell(chunk,{signal,level='full'}={}){
+   if(!['full','simplified','placeholder'].includes(level))throw new TypeError('invalid city LOD');
    if(disposed||signal?.aborted)throw new Error('city disposed or aborted');
    const meshes=[],groups=buildingGroups(chunk,seed);
    try{
     for(let v=0;v<3;v++){
      if(!groups[v].length)continue;
      const mesh=sources[v].clone('city-cell-'+chunk.id+'-'+v);
-     mesh.isVisible=false;mesh.material=facadeMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
+     mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
      const matrix=new Float32Array(groups[v].length*16);
      groups[v].forEach((obj,i)=>{
       const h=height(seed,obj);
@@ -107,7 +114,7 @@
      mesh.thinInstanceRefreshBoundingInfo?.(true);
      mesh.isVisible=true;meshes.push(mesh);
     }
-    const trees=chunk.objects.filter(o=>o.type==='vegetation');
+    const trees=level==='placeholder'?[]:chunk.objects.filter(o=>o.type==='vegetation').filter((_,i)=>level==='full'||i%2===0);
     if(trees.length){
      const mesh=treeSource.clone('city-cell-trees-'+chunk.id);
      mesh.isVisible=false;
