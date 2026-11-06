@@ -31,14 +31,15 @@
   }
   async function loadCharacter(){
    const generation=++modelGeneration;
+   let loaded=null,rootNode=null;
    try{
     if(!BABYLON.SceneLoader?.ImportMeshAsync||!BABYLON.TransformNode)throw new Error('GLB-Loader nicht verfügbar');
-    const loaded=await BABYLON.SceneLoader.ImportMeshAsync('', './assets/', 'nordhafen-player-rogue.glb', scene);
+    loaded=await BABYLON.SceneLoader.ImportMeshAsync('', './assets/', 'nordhafen-player-rogue.glb', scene);
     const meshes=loaded.meshes||[],groups=loaded.animationGroups||[];
     if(disposed||generation!==modelGeneration){for(const g of groups)g.dispose?.();for(const m of meshes)m.dispose?.();return;}
     const named=Object.fromEntries(['idle','walk','run'].map(name=>[name,groups.find(g=>g.name.toLowerCase()===name)]));
     if(!meshes.length||Object.values(named).some(g=>!g))throw new Error('Modell oder Idle/Walk/Run-Animation fehlt');
-    const rootNode=new BABYLON.TransformNode('nordhafen-character-root',scene);
+    rootNode=new BABYLON.TransformNode('nordhafen-character-root',scene);
     const bounds=meshes.filter(m=>m.getBoundingInfo&&m.getTotalVertices?.()>0).map(m=>m.getBoundingInfo().boundingBox);
     if(!bounds.length)throw new Error('Modell-Bounding-Box fehlt');
     const minY=Math.min(...bounds.map(b=>b.minimumWorld.y)),maxY=Math.max(...bounds.map(b=>b.maximumWorld.y));
@@ -53,7 +54,12 @@
     named.idle.setWeightForAllAnimatables?.(1);
     character={root:rootNode,meshes,groups,named,floorY:minY,weights:{idle:1,walk:0,run:0}};
     characterState='Modell geladen';player.visibility=0;
-   }catch(e){characterState='Figur-Modell nicht geladen: '+e.message;player.visibility=1;}
+   }catch(e){
+    if(rootNode)rootNode.dispose?.();
+    for(const g of loaded?.animationGroups||[])g.dispose?.();
+    for(const m of loaded?.meshes||[])m.dispose?.();
+    if(!disposed&&generation===modelGeneration){characterState='Figur-Modell nicht geladen: '+e.message;player.visibility=1;}
+   }
   }
   async function start(){
    if(disposed)throw new Error('player disposed');
