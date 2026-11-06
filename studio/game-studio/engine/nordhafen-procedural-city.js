@@ -179,5 +179,5 @@
   }
   return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];},get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
  }
- return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
+ return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices,uvScale});
 });
