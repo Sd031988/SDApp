@@ -14,6 +14,7 @@ function mock(level='small'){
  const textures=[],meshes=[],materials=[],external={buildingClones:0,treeClones:0};
  const mesh=()=>({isVisible:true,material:null,dispose(){this.disposed=(this.disposed||0)+1;},
   clone(name){const m=mesh();m.name=name;m.material=this.material;meshes.push(m);return m;},
+  createInstance(name){const m=mesh();m.name=name;m.material=this.material;m.scaling={set(){}};meshes.push(m);return m;},
   thinInstanceSetBuffer(kind,data){if(data&&this.thinInstanceCount)throw new Error('inherited thin instances');this.thinInstanceCount=data?data.length/16:0;},thinInstanceRefreshBoundingInfo(){},
   getVerticesData(){return [0,1,0,0,-1,0,1,1,0,1,-1,0];},setVerticesData(kind,data){this.colors=data;},
   position:{set(){}}
@@ -129,8 +130,40 @@ test('full, simplified and placeholder retain all buildings while reducing trees
 });
 test('city fog meets load radius and lower sky horizon color',()=>{
  const h=mock();
- assert.equal(h.scene.fogStart,60);
+ assert.equal(h.scene.fogStart,100);
  assert.ok(h.scene.fogEnd<=160);
  assert.deepEqual([h.scene.fogColor.r,h.scene.fogColor.g,h.scene.fogColor.b],[.62,.73,.8]);
+ h.result.dispose();
+});
+
+test('thin=0 uses createInstance for all city buildings and trees, never uploads thin matrices',()=>{
+ const h=mock('medium');
+ // The default mock builds thin mode; recreate a separate instance-mode city using the same fixture.
+ const scene={fogMode:0},BABYLON={
+  DynamicTexture:class{getContext(){return {fillRect(){},set fillStyle(v){}};}update(){}dispose(){}},
+  Vector3:class{constructor(x,y,z){Object.assign(this,{x,y,z});}},
+  Color3:class{constructor(r,g,b){Object.assign(this,{r,g,b});}},
+  StandardMaterial:class{dispose(){}},
+  PBRMetallicRoughnessMaterial:class{dispose(){}},
+  VertexBuffer:{PositionKind:'position',ColorKind:'color'},Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
+  MeshBuilder:{CreateBox:name=>source(name),CreateCylinder:name=>source(name),CreateGround:name=>source(name)}
+ };
+ let uploaded=0,created=0;
+ function source(name){return {name,position:{set(){}},scaling:{set(){}},
+  getVerticesData:()=>[0,1,0,0,-1,0],setVerticesData(){},dispose(){},
+  createInstance(n){created++;return {name:n,position:{set(){}},scaling:{set(){}},dispose(){}};},
+  thinInstanceSetBuffer(){uploaded++;throw Error('thin buffer in instance mode');}
+ };}
+ const alt=city.create({scene,BABYLON,fixture:h.f,seed:1337,useThinInstances:false});
+ const chunk=h.f.chunks[0],cell=alt.buildCell(chunk);
+ assert.equal(cell.meshes.length,chunk.objects.length);
+ assert.equal(created,chunk.objects.length);
+ assert.equal(uploaded,0);
+ cell.meshes.forEach(m=>m.dispose());alt.dispose();h.result.dispose();
+});
+test('fog color matches skybox lower-edge vertex RGB exactly',()=>{
+ const h=mock(),sky=h.meshes.find(m=>m.name==='city-gradient-sky');
+ const colors=sky.colors;
+ assert.deepEqual([h.scene.fogColor.r,h.scene.fogColor.g,h.scene.fogColor.b],colors.slice(4,7));
  h.result.dispose();
 });
