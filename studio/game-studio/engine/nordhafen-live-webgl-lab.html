@@ -188,10 +188,15 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder'){
-               const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+chunk.id,{size:1},scene);
-               mesh.position.set((chunk.x+.5)*64,2,(chunk.z+.5)*64);
-               mesh.scaling.set(64,4,64);
-               return {meshes:[mesh],materials:[]};
+               const meshes=[];
+               for(const obj of chunk.objects){
+                 if(obj.type!=='building')continue;
+                 const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
+                 mesh.position.set(chunk.x*fixture.chunkSize+obj.x,3,chunk.z*fixture.chunkSize+obj.z);
+                 mesh.scaling.set(4,6,4);
+                 meshes.push(mesh);
+               }
+               return {meshes,materials:[]};
              }
              const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((_,i)=>i%4===0)};
              return buildCell(source);
