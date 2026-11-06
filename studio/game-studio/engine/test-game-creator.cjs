@@ -21,7 +21,8 @@ const files = [
   'nordhafen-babylon-frame-probe.test.cjs',
   'babylon-distance-culling.test.cjs',
   'nordhafen-benchmark-session.test.cjs',
-  'nordhafen-babylon-session-bridge.test.cjs'
+  'nordhafen-babylon-session-bridge.test.cjs',
+  'nordhafen-live-webgl-lab.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
