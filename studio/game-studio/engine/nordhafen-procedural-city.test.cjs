@@ -179,7 +179,7 @@ test('standard city create uses createInstance with materials on all visible cel
 });
 test('nine facade materials share three independently rendered height-class textures',()=>{
  const h=mock();
- const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-height-'));
+ const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-width-'));
  assert.equal(facade.length,36);
  for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*12,v*12+3).map(m=>m.baseTexture.name),['nordhafen-facade-width-0-height-0','nordhafen-facade-width-0-height-1','nordhafen-facade-width-0-height-2']);
  h.result.dispose();
