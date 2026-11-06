@@ -33,7 +33,17 @@
     groundBody=new BABYLON.PhysicsAggregate(ground,BABYLON.PhysicsShapeType.BOX,
       {mass:0,friction:1},scene);
     player=BABYLON.MeshBuilder.CreateCapsule('nordhafen-player',{height:1.8,radius:.35},scene);
-    player.position.set(32,.9,32);
+    // Start in the central street grid, away from the world boundary.
+    player.position.set(fixture.grid*32,.9,fixture.grid*32);
+    const playerMaterial=new BABYLON.StandardMaterial('nordhafen-player-material',scene);
+    playerMaterial.diffuseColor=new BABYLON.Color3(.95,.22,.12);
+    player.material=playerMaterial;
+    player.isVisible=true;
+    camera.fov=.8;
+    camera.lowerRadiusLimit=6;camera.upperRadiusLimit=8;
+    camera.lowerBetaLimit=.35;camera.upperBetaLimit=1.3;
+    camera.radius=7.5;camera.beta=1.15;
+    camera.setTarget(player.position.clone());
     aggregate=new BABYLON.PhysicsAggregate(player,BABYLON.PhysicsShapeType.CAPSULE,
       {mass:1,friction:.7,restitution:0},scene);
     aggregate.body.setMassProperties({inertia:BABYLON.Vector3.Zero()});
@@ -87,6 +97,8 @@
    aggregate.body.setLinearVelocity(new BABYLON.Vector3(next.vx,next.vy,next.vz));
    player.scaling.y=next.height/1.8;
    camera.target.copyFrom(player.position);
+   camera.radius=Math.max(6,Math.min(8,camera.radius));
+   camera.beta=Math.max(.35,Math.min(1.3,camera.beta));
    return player.position;
   }
   function dispose(){
@@ -95,7 +107,7 @@
    releaseColliders();
    if(aggregate)aggregate.dispose();
    if(groundBody)groundBody.dispose();
-   if(player)player.dispose();
+   if(player){const material=player.material;player.dispose();if(material)material.dispose();}
    if(ground)ground.dispose();
    status='Spieler freigegeben';
   }
