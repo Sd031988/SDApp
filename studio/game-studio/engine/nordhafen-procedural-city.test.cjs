@@ -34,7 +34,7 @@ function mock(level='small'){
  const BABYLON={DynamicTexture,Vector3,Color3,StandardMaterial:Material,
   PBRMetallicRoughnessMaterial:Material,VertexBuffer:{PositionKind:'position',ColorKind:'color'},
   Scene:{FOGMODE_LINEAR:1,FOGMODE_NONE:0},
-  MeshBuilder:{CreateBox:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
+  MeshBuilder:{CreateBox:(name,options)=>{const m=mesh();m.name=name;if(name==='city-gradient-sky'){const y=options.size/2;m.getVerticesData=()=>[0,y,0,0,-y,0,1,y,0,1,-y,0];}meshes.push(m);return m;},CreateCylinder:(name)=>{const m=mesh();m.name=name;meshes.push(m);return m;},CreateGround:mesh},
   Quaternion:{Identity:()=>({})},
   Matrix:{Compose:()=>({copyToArray(){}})}};
  const scene={fogMode:0};
