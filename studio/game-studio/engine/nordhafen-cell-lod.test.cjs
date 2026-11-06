@@ -114,3 +114,18 @@ test('ten simultaneous LOD transitions respect nearest-first budget two',()=>{
  assert.equal([...lods.values()].filter(l=>l.level==='placeholder').length,10);
  stream.dispose();
 });
+
+test('async LOD builds preserve previous level until next frame resolves',async()=>{
+ let resolve;
+ const old={meshes:[{dispose(){}}],materials:[]};
+ const newer={meshes:[{dispose(){}}],materials:[]};
+ const lod=create({near:45,far:100,hysteresis:8,
+  buildLevel:level=>level==='full'?old:new Promise(done=>{resolve=done;})});
+ assert.equal(lod.update(10),'full');
+ const pending=lod.update(120);
+ assert.equal(lod.level,'full');
+ resolve(newer);
+ assert.equal(await pending,'placeholder');
+ assert.equal(lod.level,'placeholder');
+ lod.dispose();
+});
