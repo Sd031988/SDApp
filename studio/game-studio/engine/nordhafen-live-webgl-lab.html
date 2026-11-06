@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SD Engine – Nordhafen WebGL Messlabor (isoliert)</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101923;color:#f2f6fa}
+body{margin:0;display:grid;grid-template-rows:auto 1fr auto;height:100dvh}
+header,footer{padding:12px 16px;background:#172536}
+h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
+#viewport{width:100%;height:100%;min-height:220px;display:block;touch-action:none}
+#controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#metrics{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace}
+</style></head><body>
+<header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
+<div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
+<button id="start">Messung starten</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
+<canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
+<footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
+<small>Vereinfachte Gebäude-/Vegetations-Proxies, keine vollständige Nordhafen-Spielwelt. FPS = Babylon-Endframe-Takt, keine GPU-Rechenzeit. Keine automatischen Qualitätsurteile ohne unabhängig gemessene Draw Calls, Speicher und Ladezeit.</small></footer>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="./nordhafen-benchmark.js"></script>
+<script src="./nordhafen-frame-telemetry.js"></script>
+<script src="./game-quality-gates.js"></script>
+<script src="./nordhafen-benchmark-session.js"></script>
+<script src="./nordhafen-babylon-frame-probe.js"></script>
+<script src="./nordhafen-babylon-session-bridge.js"></script>
+<script>
+'use strict';
+(function(){
+ const $=id=>document.getElementById(id);
+ const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
+ let engine=null,scene=null,bridge=null,timer=null;
+ function cleanup(){
+   if(timer!==null){clearInterval(timer);timer=null;}
+   if(bridge){bridge.stop();bridge=null;}
+   if(engine){engine.stopRenderLoop();}
+   if(scene){scene.dispose();scene=null;}
+   if(engine){engine.dispose();engine=null;}
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;
+ }
+ function show(){
+   if(!bridge)return;
+   const r=bridge.report(),f=r.frame;
+   out.textContent='Quelle: '+r.source+'\nProfil: '+r.fixture.level+
+    ' | Chunks: '+r.fixture.chunkCount+' | Proxies: '+r.fixture.objectCount+
+    '\nRender-Timestamps vorhanden: '+f.measured+
+    '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
+    '\nP95 Framezeit: '+(f.frameP95Ms===null?'noch keine':f.frameP95Ms+' ms')+
+    '\nGPU gemessen: NEIN | Qualitätsurteil: NICHT ERHOBEN';
+ }
+ function begin(){
+   cleanup();
+   try{
+     if(!window.BABYLON||!window.SDNordhafenBabylonSessionBridge||!window.SDNordhafenBenchmark)
+       throw new Error('Babylon.js oder lokale Benchmark-Skripte nicht geladen.');
+     const level=$('level').value;
+     const fixture=window.SDNordhafenBenchmark.create(level,1337);
+     engine=new BABYLON.Engine(canvas,true,{preserveDrawingBuffer:false,stencil:false});
+     scene=new BABYLON.Scene(engine);
+     scene.clearColor=new BABYLON.Color4(.04,.08,.12,1);
+     const span=fixture.grid*64;
+     const camera=new BABYLON.ArcRotateCamera('lab-camera',-Math.PI/3,1.1,span*1.4,
+       new BABYLON.Vector3(span/2,0,span/2),scene);
+     camera.attachControl(canvas,true);
+     new BABYLON.HemisphericLight('lab-light',new BABYLON.Vector3(0,1,0),scene);
+     const building=BABYLON.MeshBuilder.CreateBox('building-source',{size:1},scene);
+     const tree=BABYLON.MeshBuilder.CreateCylinder('vegetation-source',{height:1,diameter:.5},scene);
+     const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
+     const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
+     building.material=mat1;tree.material=mat2;
+     building.isVisible=false;tree.isVisible=false;
+     for(const chunk of fixture.chunks)for(const obj of chunk.objects){
+       const mesh=(obj.type==='building'?building:tree).createInstance(obj.id);
+       const h=obj.type==='building'?6:3;
+       mesh.position.set(chunk.x*64+obj.x,h/2,chunk.z*64+obj.z);
+       mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
+     }
+     bridge=window.SDNordhafenBabylonSessionBridge.create({
+       engine,level,seed:1337,now:()=>performance.now(),
+       isVisible:()=>document.visibilityState==='visible'
+     });
+     bridge.start();
+     engine.runRenderLoop(()=>{if(scene)scene.render();});
+     timer=setInterval(show,1000);show();
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;
+     status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene.';
+   }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
+ }
+ start.addEventListener('click',begin);
+ stop.addEventListener('click',()=>{cleanup();status.textContent='Gestoppt, Ressourcen freigegeben.';});
+ window.addEventListener('resize',()=>{if(engine)engine.resize();});
+ window.addEventListener('pagehide',cleanup);
+})();
+</script></body></html>
