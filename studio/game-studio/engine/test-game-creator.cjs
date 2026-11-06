@@ -25,7 +25,8 @@ const files = [
   'nordhafen-live-webgl-lab.test.cjs',
   'webgl-capability-audit.test.cjs',
   'webgl2-gpu-timer.test.cjs',
-  'gpu-timing-statistics.test.cjs'
+  'gpu-timing-statistics.test.cjs',
+  'gpu-timing-session.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
