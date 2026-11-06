@@ -29,3 +29,56 @@ test('without Havok controller reports physics unavailable and does not crash',a
  assert.match(ctrl.status,/Physik nicht verfügbar/);
  ctrl.dispose();ctrl.dispose();
 });
+
+test('Havok gravity=0 preserves vertical velocity except for grounded jump',()=>{
+ const airborne={...base,grounded:false,vy:-3.25};
+ assert.equal(step({},airborne,.05,{gravity:0}).vy,-3.25);
+ assert.equal(step({jump:true},base,.05,{gravity:0}).vy,5.5);
+ assert.ok(step({},airborne,.05).vy<-3.25);
+});
+test('Havok controller locks capsule inertia and grounds via downward raycast, not height',async()=>{
+ const previous=globalThis.HavokPhysics;
+ globalThis.HavokPhysics=async()=>({});
+ let inertia,ray,rayPredicate,rayHit=false,lastVelocity=null;
+ class Vector3{
+  constructor(x,y,z){Object.assign(this,{x,y,z});}
+  static Zero(){return new Vector3(0,0,0);}
+ }
+ class Aggregate{
+  constructor(mesh){this.mesh=mesh;this.body={
+   setMassProperties(v){inertia=v.inertia;},
+   getLinearVelocity(){return {x:0,y:-2,z:0};},
+   setLinearVelocity(v){lastVelocity=v;},
+   dispose(){}
+  };}
+  dispose(){}
+ }
+ const makeMesh=()=>({
+  position:{x:0,y:0,z:0,set(x,y,z){Object.assign(this,{x,y,z});}},
+  scaling:{y:1,set(){}},visibility:1,isPickable:true,dispose(){}
+ });
+ const BABYLON={Vector3,Ray:class{constructor(origin,direction,length){
+  Object.assign(this,{origin,direction,length});ray=this;
+ }},HavokPlugin:class{},PhysicsAggregate:Aggregate,
+ PhysicsShapeType:{BOX:1,CAPSULE:2},
+ MeshBuilder:{CreateGround:makeMesh,CreateCapsule:makeMesh,CreateBox:makeMesh}};
+ const scene={enablePhysics(){},pickWithRay(r,predicate){
+  rayPredicate=predicate;return {hit:rayHit,distance:.1,pickedMesh:{isPickable:true}};
+ }};
+ const canvas={addEventListener(){},removeEventListener(){},focus(){},tabIndex:0};
+ const camera={alpha:0,target:{copyFrom(){}}};
+ const ctrl=create({scene,camera,canvas,BABYLON,motion:{step},fixture:{grid:1,chunks:[]}});
+ try{
+  assert.equal(await ctrl.start(),true);
+  assert.deepEqual(inertia,Vector3.Zero());
+  ctrl.update(.02);
+  assert.equal(ray.length,.15);
+  assert.equal(ray.direction.y,-1);
+  assert.equal(lastVelocity.y,-2,'no extra gravitational acceleration');
+  rayHit=true;
+  ctrl.update(.02);
+  assert.equal(lastVelocity.y,-2);
+  assert.equal(rayPredicate({isPickable:true}),true);
+  ctrl.dispose();
+ }finally{globalThis.HavokPhysics=previous;}
+});
