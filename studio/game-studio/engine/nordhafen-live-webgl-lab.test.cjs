@@ -173,3 +173,10 @@ test('step 9f: default city preset selects visible instances, thin=1 warns expli
  assert.equal(d.result.cityThin,false);
  assert.match(html,/Thin Instances: experimentell, rendert derzeit nicht/);
 });
+
+test('step 9g: active LOD placeholder boxes have material and are visible',()=>{
+ const code=html.slice(html.indexOf('     async function placeholderSliced('),html.indexOf('     const route=',html.indexOf('     async function placeholderSliced(')));
+ assert.match(code,/mesh\.material=placeholderMaterial;mesh\.isVisible=true/);
+ assert.match(code,/materials\.push\(placeholderMaterial\)/);
+ assert.doesNotMatch(code,/mesh\.isVisible=false/);
+});
