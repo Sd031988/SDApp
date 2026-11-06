@@ -56,3 +56,10 @@ No asset is bundled or redistributed in this PR.
 - Unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt.
 - Aufbau: `Tank_body`, `Tank_Turret`, `Tank_Gun`, `TrackMesh.L`, `TrackMesh.R` als eigene Knoten (Turm/Rohr drehbar).
 - Größe im Modell ca. 15–18 × 5–7,5 × 10 Einheiten → beim Einbau auf ca. 8–9 m Länge skalieren (Faktor ≈ 0,5).
+
+## Züge und Gleise (Quaternius „Trains“)
+
+- Dateien: `assets/nordhafen-train-*.glb` (14 Dateien, zusammen ca. 3,1 MB): Güterzug (Lok, Wagen, Container, Kohle), Hochgeschwindigkeitszug (Triebkopf, Wagen), Dampflok (Lok, Tender, Personen-/Güterwagen), Gleis gerade (18 m) und Kurve.
+- Quelle: Quaternius – Trains Pack, https://quaternius.com
+- Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
+- Unverändert aus `OBJ/<Name>.obj` + `.mtl` mit obj2gltf in GLB umgewandelt. Meter-Maßstab (Wagen ca. 8–12 m lang, ca. 2 m breit).
