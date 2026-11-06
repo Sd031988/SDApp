@@ -73,7 +73,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      else compare=runs.map(({mode:m,summary:data})=>m+': Draw Calls p50 '+metric(data.drawCallsP50)+
        ' | p95 '+metric(data.drawCallsP95)+' | max '+metric(data.drawCallsMax)+
        ' | JS-Heap p50 '+metric(data.heapP50)+' | max '+metric(data.heapMax)+
-       ' Bytes | Samples '+data.samples).join('\\n');
+       ' Bytes | Samples '+data.samples).join('\n');
    } catch(e) { compare='Lauf ungültig: '+e.message; }
    if(runFailure)compare='Lauf ungültig: '+runFailure;
    const fmt=x=>typeof x==='number'?x+' ms':'noch keine';
