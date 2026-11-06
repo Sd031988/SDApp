@@ -7,9 +7,11 @@
   const size=Math.max(320,worldSize),margin=12;
   const clamp=v=>Math.min(size-margin,Math.max(margin,v));
   const towers=[{x:clamp(origin.x+128),z:clamp(origin.z+64)},{x:clamp(origin.x+128),z:clamp(origin.z+192)},{x:clamp(origin.x+192),z:clamp(origin.z+192)}];
-  const extraction={x:clamp(size-margin),z:clamp(origin.z+192)};
+  const extraction={x:clamp(origin.x+192),z:size-7};
   return {towers,extraction};
  }
+ function buildingClearance(mesh,point,radius=4){if(!mesh||!mesh.position||!mesh.scaling)return true;const dx=Math.max(0,Math.abs(mesh.position.x-point.x)-Math.abs(mesh.scaling.x)/2);const dz=Math.max(0,Math.abs(mesh.position.z-point.z)-Math.abs(mesh.scaling.z)/2);return Math.hypot(dx,dz)>=radius;}
+ function clearMastArea(meshes,towers,radius=4){return meshes.filter(mesh=>!towers.some(point=>!buildingClearance(mesh,point,radius)));}
  function initial(){return {completed:[false,false,false],progress:0,extractProgress:0,status:'playing',activated:null};}
  function step(state,{dt=0,position,locations:sites,holding=false,damage=false,health=100}){
   if(state.status!=='playing')return state;
@@ -30,5 +32,5 @@
   const ids=new Set(nearest.map(x=>x.i));
   return enemies.map((enemy,i)=>ids.has(i)?{...enemy,state:'alert',time:0}:enemy);
  }
- return Object.freeze({ACTIVATE_SECONDS,EXTRACT_SECONDS,ACTIVATE_RADIUS,EXTRACT_RADIUS,distance,locations,initial,step,alertNearby});
+ return Object.freeze({ACTIVATE_SECONDS,EXTRACT_SECONDS,ACTIVATE_RADIUS,EXTRACT_RADIUS,distance,locations,buildingClearance,clearMastArea,initial,step,alertNearby});
 });
