@@ -67,3 +67,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Regressionstest im bestehenden Node-Testmodul ergänzt (Autosave, Wiederherstellung, manueller Speichern-Knopf, `autocapitalize="off"`).
 - Syntaxprüfung der geänderten JavaScript-Dateien mit `new Function` erfolgreich. Vollständiger Node-/Playwright-Test und mobiler Browsertest sind noch nicht nachgewiesen.
 - Risiken: `localStorage` kann durch Browser-Einstellungen, Speichermangel oder Löschen der Browserdaten ausfallen; der bestehende `save`-Helfer unterdrückt Speicherfehler, daher kann eine Erfolgsmeldung fälschlich erscheinen. Die Daten bleiben geräte- und browsergebunden. Keine automatische fachliche Bewertung, keine B1-Zertifizierung.
+
+## Schreibentwürfe – Speicherfehler erkennen (06.11.2026)
+- Codeprüfung: Der gemeinsame `save(k,v)`-Helfer unterdrückte bisher `localStorage`-Fehler; beide Schreibfunktionen meldeten trotzdem Erfolg.
+- Korrektur: `save` gibt nur dann `true` zurück, wenn `setItem` gelingt und `getItem` unmittelbar den gleichen serialisierten Wert zurückliefert. Sonst wird `false` geliefert. Beide Schreibfunktionen zeigen dann ausdrücklich „Speichern fehlgeschlagen!“ und empfehlen, den Text extern zu sichern.
+- Regressionstest ergänzt: erfolgreicher Schreib-/Lesevorgang, Exception bei `setItem`, stiller Nicht-Speicherfall sowie beide Statusmeldungsstellen.
+- JavaScript-Parsing der Änderungen geprüft; vollständiger Node-Testlauf, Playwright und reale Browser-Speicherfehler wurden in diesem Durchgang nicht ausgeführt.
+- Restrisiken: Browserdaten können später gelöscht werden, Browser-/Geräte-Synchronisation fehlt; auch eine erfolgreiche direkte Rücklesung garantiert keine dauerhafte Datensicherung. Kein fachlich validiertes automatisches Schreibfeedback.
