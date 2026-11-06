@@ -105,6 +105,12 @@
    for(let k=16;k<512;k+=32){g.fillRect(at+6,k,1,10);g.fillRect(k,at+6,10,1);}
   }
   groundTexture.update();
+  // A lower grassy horizon prevents the city from appearing to float at its edges.
+  const outskirts=BABYLON.MeshBuilder.CreateGround('city-outskirts-grass',{width:span*3,height:span*3},scene);
+  outskirts.position.set(span/2,-.19,span/2);
+  const outskirtsMat=new BABYLON.StandardMaterial('city-outskirts-grass-material',scene);
+  outskirtsMat.diffuseColor=new BABYLON.Color3(.18,.31,.16);
+  outskirts.material=outskirtsMat;owned.push(outskirts);materials.push(outskirtsMat);
   const ground=BABYLON.MeshBuilder.CreateGround('city-roads-grass',{width:span,height:span},scene);
   ground.position.set(span/2,-.16,span/2);
   const groundMat=new BABYLON.PBRMetallicRoughnessMaterial('city-roads-material',scene);
