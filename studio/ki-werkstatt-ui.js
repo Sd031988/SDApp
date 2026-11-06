@@ -158,8 +158,15 @@ function promptText(){
  let prompt='';
  if(changeMode){
   if(!$('kiChangeConsent').checked){status('Bitte zuerst ausdrücklich bestätigen, dass du die ausgewählten Code-Dateien in die KI-Anfrage kopieren möchtest.',true);return ''}
+  const guard=window.SDStudioAgentProposal;
+  if(!guard){status('Sichere Dateiprüfung fehlt. Bitte Studio neu laden.',true);return ''}
   const chosen=[...$('kiSources').querySelectorAll('input:checked')].map(el=>el.dataset.path);
-  try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:currentFiles()},chosen);}
+  const prepared=guard.prepareContext({consent:$('kiChangeConsent').checked,goal:$('kiGoal').value,
+   files:currentFiles(),selectedPaths:chosen});
+  if(!prepared.ok){status(prepared.error,true);return ''}
+  const scopedFiles=Object.fromEntries(prepared.request.files.map(file=>[file.path,file.content]));
+  try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:scopedFiles},
+   prepared.request.files.map(file=>file.path));}
   catch(e){status(e.message||String(e),true);return ''}
  }else{
   prompt=core.buildPrompt($('kiGoal').value,S.p,S.aktiv,selectedSource());
@@ -442,12 +449,30 @@ function renderPlan(){
  updateActions();
  status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
 }
+function validateProposalPreview(){
+ if(!parsed||parsed.errors.length)return;
+ const guard=window.SDStudioAgentProposal;
+ if(!guard){parsed.errors.push('Sichere Prüfung der KI-Dateien fehlt. Bitte Studio neu laden.');return;}
+ const originals=stagedSnapshot||{};
+ const changes=parsed.files.map(file=>{
+  const exists=Object.prototype.hasOwnProperty.call(originals,file.path);
+  return {path:file.path,operation:exists?'replace':'create',content:file.content,
+   baseHash:exists?guard.hashText(originals[file.path]):null,reason:'KI-Vorschlag'};
+ });
+ const existing=changes.filter(item=>item.operation==='replace').map(item=>item.path);
+ const created=changes.filter(item=>item.operation==='create').map(item=>item.path);
+ const result=guard.validateProposal({changes},{files:originals,allowedPaths:existing,
+  allowNewFiles:true,newFilePaths:created});
+ if(!result.ok)parsed.errors.push('Sichere Agentenprüfung: '+result.error);
+ else parsed.agentProposal=result;
+}
 function analyse(){
  clearRepairDraft();
  $('kiDiff').hidden=true;
  parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
  stagedSnapshot=currentFiles();
+ validateProposalPreview();
  renderPlan();
 }
 async function pasteWholeAnswer(){
