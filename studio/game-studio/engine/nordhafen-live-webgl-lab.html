@@ -125,7 +125,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const mat1=new BABYLON.StandardMaterial('buildings',scene);mat1.diffuseColor=new BABYLON.Color3(.42,.53,.65);
      const mat2=new BABYLON.StandardMaterial('vegetation',scene);mat2.diffuseColor=new BABYLON.Color3(.24,.5,.29);
      const glbEnabled=$('glb').checked&&$('streaming').checked;
-     const thinEnabled=($('thin').checked||glbEnabled)&&$('streaming').checked&&$('lod').checked;
+     const thinEnabled=($('thin').checked&&$('lod').checked||glbEnabled)&&$('streaming').checked;
      let glbBuilding=null,glbPromise=null;
      const generation=glbGeneration;
      glbStatus=glbEnabled?'GLB wird geladen':'GLB aus';
