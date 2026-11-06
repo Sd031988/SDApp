@@ -47,9 +47,9 @@ function mock(level='small'){
 }
 test('single shared facade texture across all buildings and variants',()=>{
  const h=mock();
- assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-')).length,12);
  for(const chunk of h.f.chunks.slice(0,4))h.result.buildCell(chunk);
- assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-')).length,3);
+ assert.equal(h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-')).length,12);
  h.result.dispose();
 });
 test('thin instance meshes per cell bounded by building variants plus tree type',()=>{
@@ -94,7 +94,7 @@ test('city never clones external lab sources; fresh sources have no thin instanc
  assert.equal(h.external.buildingClones,0);
  assert.equal(h.external.treeClones,0);
  const sources=[...h.result.sources,...h.meshes.filter(m=>m.name==='city-tree-trunk-source'||m.name==='city-tree-crown-source')];
- assert.equal(sources.length,11);
+ assert.equal(sources.length,38);
  for(const source of sources)assert.equal(source.thinInstanceCount||0,0);
  const cell=h.result.buildCell(chunk);
  assert.equal(h.external.buildingClones,0);
@@ -119,7 +119,7 @@ test('full, simplified and placeholder retain all buildings while reducing trees
   assert.equal(count,expected);
   if(level==='full'){
    assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),treeCount*2);
-   assert.ok(buildingMeshes.every(m=>m.material.baseTexture?.name.startsWith('nordhafen-facade-height-')));
+   assert.ok(buildingMeshes.every(m=>m.material.baseTexture?.name.startsWith('nordhafen-facade-width-')));
   }else{
    assert.ok(buildingMeshes.every(m=>!m.material.baseTexture));
    assert.equal(trees.reduce((n,m)=>n+m.thinInstanceCount,0),level==='simplified'?Math.ceil(treeCount/2)*2:0);
@@ -172,7 +172,7 @@ test('fog color matches skybox lower-edge vertex RGB exactly',()=>{
 test('standard city create uses createInstance with materials on all visible cell meshes',()=>{
  const h=mock('medium'),chunk=h.f.chunks[0];
  // Existing mock explicitly opts into thin mode; use an independent default-mode city.
- const source=h.meshes.find(m=>m.name==='city-building-source-0-0');
+ const source=h.meshes.find(m=>m.name==='city-building-source-0-0-0');
  assert.ok(source.createInstance);
  assert.match(require('node:fs').readFileSync(require('node:path').join(__dirname,'nordhafen-procedural-city.js'),'utf8'),/useThinInstances=false/);
  h.result.dispose();
@@ -180,8 +180,8 @@ test('standard city create uses createInstance with materials on all visible cel
 test('nine facade materials share three independently rendered height-class textures',()=>{
  const h=mock();
  const facade=h.materials.filter(m=>m.baseTexture?.name?.startsWith('nordhafen-facade-height-'));
- assert.equal(facade.length,9);
- for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*3,v*3+3).map(m=>m.baseTexture.name),['nordhafen-facade-height-0','nordhafen-facade-height-1','nordhafen-facade-height-2']);
+ assert.equal(facade.length,36);
+ for(let v=0;v<3;v++)assert.deepEqual(facade.slice(v*12,v*12+3).map(m=>m.baseTexture.name),['nordhafen-facade-width-0-height-0','nordhafen-facade-width-0-height-1','nordhafen-facade-width-0-height-2']);
  h.result.dispose();
 });
 test('seeded footprints vary in width and depth and repeat deterministically',()=>{
@@ -195,12 +195,12 @@ test('seeded footprints vary in width and depth and repeat deterministically',()
 
 test('three independent facade textures are updated and nine source meshes have matching distinct materials',()=>{
  const h=mock();
- const facade=h.textures.filter(t=>t.name.startsWith('nordhafen-facade-height-'));
- assert.equal(facade.length,3);
+ const facade=h.textures.filter(t=>t.name.startsWith('nordhafen-facade-width-'));
+ assert.equal(facade.length,12);
  assert.ok(facade.every(t=>t.updated===1));
- assert.equal(h.result.sources.length,9);
- assert.equal(new Set(h.result.sources.map(s=>s.material)).size,9);
- for(let i=0;i<9;i++)assert.equal(h.result.sources[i].material.baseTexture,facade[i%3]);
+ assert.equal(h.result.sources.length,36);
+ assert.equal(new Set(h.result.sources.map(s=>s.material)).size,36);
+ for(let i=0;i<36;i++)assert.equal(h.result.sources[i].material.baseTexture,facade[i%12]);
  h.result.dispose();
 });
 test('instances never assign material and inherit from height-class source',()=>{
