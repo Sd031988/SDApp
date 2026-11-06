@@ -12,13 +12,14 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 </style></head><body>
 <header><h1>Nordhafen – isoliertes Babylon.js WebGL-Messlabor</h1>
 <div id="controls"><label>Lastprofil <select id="level"><option value="small">Klein (256)</option><option value="medium">Mittel (2048)</option></select></label>
-<label><input id="pbr" type="checkbox"> PBR-Qualität</label><label><input id="glb" type="checkbox"> GLB-Assets</label><label><input id="thin" type="checkbox"> Thin Instances</label><label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
+<label><input id="player" type="checkbox"> Spieler (Havok)</label><label><input id="pbr" type="checkbox"> PBR-Qualität</label><label><input id="glb" type="checkbox"> GLB-Assets</label><label><input id="thin" type="checkbox"> Thin Instances</label><label><input id="lod" type="checkbox"> Cell-LOD (nur mit Streaming)</label><label><input id="streaming" type="checkbox"> Cell-Streaming (Opt-in, Neustart der Messung)</label><button id="start">Frame-Intervall-Messung starten</button><button id="gpu-start" disabled>GPU-Messung starten (Opt-in)</button><button id="gpu-stop" disabled>GPU-Messung stoppen</button><button id="stop" disabled>Stoppen / Freigeben</button>
 <span id="gpu-status" role="status">GPU-Messung nicht gestartet.</span><span id="status" role="status">Bereit. Benötigt WebGL und Babylon.js vom CDN.</span></div></header>
 <canvas id="viewport" aria-label="Interaktive 3D-Testszene"></canvas>
 <footer><div id="metrics" aria-live="polite">Keine Messdaten. Keine GPU-Zeitmessung.</div>
 <small>Vereinfachte Gebäude-/Vegetations-Proxies, keine vollständige Nordhafen-Spielwelt. FPS = Babylon-Endframe-Takt, keine GPU-Rechenzeit. Keine automatischen Qualitätsurteile ohne unabhängig gemessene Draw Calls, Speicher und Ladezeit.</small></footer>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script>
 <script src="./nordhafen-frame-telemetry.js"></script>
 <script src="./game-quality-gates.js"></script>
@@ -37,17 +38,20 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./nordhafen-frame-window-audit.js"></script>
 <script src="./nordhafen-thin-instances.js"></script>
 <script src="./nordhafen-pbr-quality.js"></script>
+<script src="./nordhafen-player-motion.js"></script>
+<script src="./nordhafen-player-controller.js"></script>
 <script>
 'use strict';
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,player=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
    glbGeneration++;
    if(pbr){pbr.dispose();pbr=null;}
+   if(player){player.dispose();player=null;}
    if(routeTimer!==null){clearInterval(routeTimer);routeTimer=null;}
    if(streamer){streamer.dispose();streamer=null;}
    if(drawProbe){drawProbe.dispose();drawProbe=null;}
@@ -57,7 +61,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
    if(engine){engine.stopRenderLoop();}
    if(scene){scene.dispose();scene=null;}
    if(engine){engine.dispose();engine=null;}
-   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;$('thin').disabled=false;$('glb').disabled=false;$('pbr').disabled=false;
+   start.disabled=false;stop.disabled=true;$('level').disabled=false;$('streaming').disabled=false;$('lod').disabled=false;$('thin').disabled=false;$('glb').disabled=false;$('pbr').disabled=false;$('player').disabled=false;
  }
  function show(){
    if(!bridge)return;
@@ -94,6 +98,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
+    '\nSpieler: '+(player?player.status:'aus')+
     '\nPBR-Qualität: '+(pbr?pbr.status:($('pbr').checked?'benötigt Streaming + LOD + Thin Instances':'aus'))+
     '\nGLB-Assets: '+glbStatus+
     '\nCell-Streaming: '+(cells?'AN':'AUS')+
@@ -187,6 +192,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      runRouteId=window.SDNordhafenRouteIdentity.identify({profile:level,seed:1337,
        chunkSize:fixture.chunkSize,route});
      function moveRoute(){
+       if(player&&player.ready)return;
        const chunk=route[routeIndex%route.length];
        const x=(chunk.x+.5)*fixture.chunkSize,z=(chunk.z+.5)*fixture.chunkSize;
        camera.target.set(x,0,z);
@@ -228,6 +234,12 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          mesh.scaling.set(obj.type==='building'?4:1,h,obj.type==='building'?4:1);
        }
      }
+     if($('player').checked){
+       player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,
+         motion:window.SDNordhafenPlayerMotion,fixture});
+       player.start().then(ok=>{if(!ok&&player)status.textContent=player.status;});
+       runFailure='Spielersteuerung: kein fester Kamerarouten-Vergleich';
+     }
      moveRoute();
      routeTimer=setInterval(moveRoute,500);
      bridge=window.SDNordhafenBabylonSessionBridge.create({
@@ -238,6 +250,10 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      gpuStart.disabled=false;gpuStatus.textContent='GPU-Messung bereit (nur per Klick).';
      engine.runRenderLoop(()=>{
        if(scene){
+         if(player&&player.ready){
+           const pos=player.update(engine.getDeltaTime()/1000);
+           if(pos&&streamer){streamer.update(pos.x,pos.z);player.syncColliders(streamer);}
+         }
          scene.render();
          if(pbr&&pbr.enabled)pbr.updateShadows(camera.target,scene.meshes);
          if(drawProbe&&!runComplete){
@@ -256,7 +272,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        }
      });
      timer=setInterval(show,1000);show();
-     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;$('thin').disabled=true;$('glb').disabled=true;$('pbr').disabled=true;
+     start.disabled=true;stop.disabled=false;$('level').disabled=true;$('streaming').disabled=true;$('lod').disabled=true;$('thin').disabled=true;$('glb').disabled=true;$('pbr').disabled=true;$('player').disabled=true;
      status.textContent='Messung aktiv. Dies ist eine Proxy-Testszene. '+thinStatus+' | '+glbStatus;
    }catch(e){cleanup();status.textContent='Fehler: '+e.message;}
  }
