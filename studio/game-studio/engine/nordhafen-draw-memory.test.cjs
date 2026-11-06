@@ -72,7 +72,9 @@ test('incomplete route never produces a completed comparison',()=>{
  const s=summarize([{drawCalls:7,heapBytes:200}],{complete:false});
  assert.equal(s.complete,false);
  const html=fs.readFileSync(path.join(__dirname,'nordhafen-live-webgl-lab.html'),'utf8');
- assert.match(html,/routeIndex===route\.length&&!runComplete/);
- assert.match(html,/Lauf unvollständig/);
- assert.match(html,/comparison\[runMode\]=window\.SDNordhafenDrawMemory\.summarize\(runSamples,\{complete:true\}\)/);
+ assert.match(html,/runRouteLength=route\.length/);
+ assert.match(html,/routeIndex===runRouteLength/);
+ assert.match(html,/Lauf ungültig:/);
+ assert.match(html,/summary:window\.SDNordhafenDrawMemory\.summarize\(runSamples,\{complete:true\}\)/);
+ assert.match(html,/if\(!verdict\.valid\)runFailure/);
 });
