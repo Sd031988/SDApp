@@ -44,7 +44,8 @@ const files = [
   'nordhafen-ops-combat.test.cjs',
   'nordhafen-ops-controls.test.cjs',
   'nordhafen-ops-enemies.test.cjs',
-  'nordhafen-ops-mission.test.cjs'
+  'nordhafen-ops-mission.test.cjs',
+  'nordhafen-ops-lifecycle.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
