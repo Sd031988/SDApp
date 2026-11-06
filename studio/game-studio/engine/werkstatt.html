@@ -52,9 +52,9 @@ pre#code{margin:0 12px 10px;background:#0b1017;border:1px solid var(--rand);bord
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=7"></script>
 <script src="./sd-assets.js?v=2"></script>
-<script src="./sd-teile.js?v=1"></script>
+<script src="./sd-teile.js?v=2"></script>
 <script src="./sd-bauplan-pakete.js?v=1"></script>
-<script src="./sd-fahrzeug.js?v=7"></script>
+<script src="./sd-fahrzeug.js?v=8"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-foto.js?v=1"></script>
 <script>window.EXTRA = {};</script>
@@ -267,12 +267,14 @@ window.SD_WERKSTATT = { werte, bauen, wahl: t => document.querySelector('.tabs b
       }
       const kn = el('div', { className: 'z', style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' });
       kn.append(el('button', { textContent: '📋 Anleitung für ChatGPT kopieren', onclick: () => navigator.clipboard.writeText(SDTeile.ANLEITUNG).then(() => meldung('📋 Anleitung kopiert – bei ChatGPT einfügen und dahinter schreiben, was gebaut werden soll'), () => { KI.text = SDTeile.ANLEITUNG; reglerZeigen(); meldung('Kopieren nicht erlaubt – Text steht jetzt im Feld'); }) }),
+        el('button', { textContent: '🏎 Beispiel: Sportwagen', onclick: async () => { ta.value = JSON.stringify(await (await fetch('./beispiele/sportwagen.json')).json(), null, 1); KI.text = ta.value; bauen(); } }),
         el('button', { textContent: '🔨 Bauen', className: 'haupt', onclick: () => { KI.text = ta.value; try { localStorage.setItem('sdKiBauplan', KI.text); } catch (e) { /* egal */ } bauen(); } }));
       box.append(kn); const ta = el('textarea', { value: KI.text, spellcheck: false, style: 'width:100%;height:240px;font:12px/1.4 Consolas,monospace;background:#0b1017;color:#dfe7ef;border:1px solid #2a3442;border-radius:8px;padding:8px' }); box.append(ta);
       const f = el('div', { className: 'hinweis', id: 'kiFehler' }); box.append(f);
       const sp = el('button', { textContent: '💾 In „Meine Modelle“ speichern', style: 'width:100%;margin-top:6px', onclick: async () => { const { daten, fehler } = SDTeile.pruefen(ta.value); if (!daten || !daten.teile.length) { meldung('⨯ ' + (fehler[0] || 'Leer')); return; }
         const nm = SDAssets.name((prompt('Name für das Modell:', daten.name) || daten.name).trim() || daten.name); if (await SDAssets.holen(nm) && !confirm('„' + nm + '“ gibt es schon. Ersetzen?')) return;
-        await SDAssets.speichern({ name: nm, typ: 'teile', json: JSON.stringify(daten), teile: daten.teile.length, groesse: JSON.stringify(daten).length }); KI.gespeichert = nm; KI.gespeichertText = ta.value; meldung('💾 „' + nm + '“ gespeichert – im Skript: sd.teileModell(\'' + nm + '\', { pos: [0, null, 0] })'); } });
+        const fahrbar = ['rad_vl', 'rad_vr', 'rad_hl', 'rad_hr'].every(id => daten.teile.some(t => t.id === id));
+        await SDAssets.speichern({ name: nm, typ: 'teile', json: JSON.stringify(daten), teile: daten.teile.length, fahrbar, groesse: JSON.stringify(daten).length }); KI.gespeichert = nm; KI.gespeichertText = ta.value; meldung('💾 „' + nm + '“ gespeichert – ' + (fahrbar ? 'fahrbar: sd.auto({ pos: [0, null, 0], bauplan: \'' + nm + '\' })' : 'im Skript: sd.teileModell(\'' + nm + '\', { pos: [0, null, 0] })')); } });
       box.append(sp);
       const spielen = el('button', { type: 'button', textContent: '🎮 Spiel-Code kopieren', style: 'width:100%;margin-top:6px', onclick: async () => {
         if (!KI.gespeichert || KI.gespeichertText !== ta.value) { meldung('Zuerst die aktuelle Version als „Meine Modelle“ speichern'); return; }

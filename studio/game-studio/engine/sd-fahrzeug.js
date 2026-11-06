@@ -123,7 +123,21 @@
       return w.fertig(raeder, T, { propeller, extraMeshes: [blatt, nabe] });
     }
     /** Ein Fahrzeug bauen: typ 'limousine'|'suv'|'sport'|'pickup'|'bus'|'motorrad'|'boot'|'flugzeug' */
-    function auto(o) { const t = (o && o.typ) || 'limousine'; return t === 'motorrad' ? motorradBauen(o) : t === 'boot' ? bootBauen(o) : t === 'flugzeug' ? flugzeugBauen(o) : autoBauen(o); }
+    /** Auto aus einem KI-Bauplan (sd-teile): Räder heißen rad_vl/rad_vr/rad_hl/rad_hr, vorne ist +z, Boden y = 0 */
+    function bauplanAuto(o) {
+      if (!window.SDTeile) throw new Error('sd-teile.js fehlt'); const r = window.SDTeile.bauen(BAB, szene, BK, o.bauplan); if (!r.wurzel) throw new Error('Bauplan: ' + r.fehler.join(', '));
+      const wurzel = new BAB.TransformNode('auto', szene), modell = r.wurzel; modell.parent = wurzel; const raeder = [], namen = { rad_vl: [true, true], rad_vr: [true, false], rad_hl: [false, true], rad_hr: [false, false] };
+      modell.computeWorldMatrix(true); Object.values(r.knoten).forEach(n => n.computeWorldMatrix(true));
+      for (const [id, [vorn, links]] of Object.entries(namen)) { const n = r.knoten[id]; if (!n) continue; const p = n.getAbsolutePosition(), t = n.__t, rr = (t.durchmesser || 0.7) / 2;
+        const lenk = new BAB.TransformNode('lenk', szene); lenk.parent = wurzel; lenk.position = V(p.x, rr, p.z); const dreh = new BAB.TransformNode('dreh', szene); dreh.parent = lenk;
+        n.parent = dreh; n.position = V(0, 0, 0); raeder.push({ lenk, dreh, x: p.x, z: p.z, vorn, links, meshes: n.getChildMeshes(), r: rr }); }
+      if (raeder.length < 4) throw new Error('Für ein fahrbares Auto braucht der Bauplan 4 Räder mit den ids rad_vl, rad_vr, rad_hl, rad_hr');
+      const { min, max } = modell.getHierarchyBoundingVectors(true), L = max.z - min.z, B = Math.max(1.2, max.x - min.x), H = max.y, rad = raeder.reduce((a, q) => a + q.r, 0) / 4;
+      const masse = o.masse || Math.round(900 + L * B * H * 60), T = Object.assign({}, TYPEN.limousine, { name: (r.daten && r.daten.name) || 'Eigenes Auto', L, B, H, rad, masse, motor: o.motor || masse * 5.2, vmax: o.vmax || 58, lenk: o.lenkung || 0.55, kabH: H * 0.4, frei: rad * 0.5 });
+      const karosse = modell.getChildMeshes().filter(m => !raeder.some(q => q.meshes.includes(m)));
+      return { wurzel, karosse, raeder, typ: T, abm: { L, B, H }, lackMesh: null, bauplan: r };
+    }
+    function auto(o) { if (o && o.bauplan) return bauplanAuto(o); const t = (o && o.typ) || 'limousine'; return t === 'motorrad' ? motorradBauen(o) : t === 'boot' ? bootBauen(o) : t === 'flugzeug' ? flugzeugBauen(o) : autoBauen(o); }
     return { auto, TYPEN };
   }
 
@@ -138,7 +152,8 @@
 
     /** sd.auto({ pos:[x,y,z], drehung, typ:'limousine'|'suv'|'sport'|'pickup'|'bus', farbe }) – fahrbares Auto */
     function auto(o) {
-      o = o || {}; const g = B.auto(o), T = g.typ, id = 'auto' + (zaehler++), art = T.art || 'auto';
+      o = o || {}; if (typeof o.bauplan === 'string' && !/^\s*[{[]/.test(o.bauplan)) o = Object.assign({}, o, { bauplan: ctx.eigene(o.bauplan, 'teile').json });
+      const g = B.auto(o), T = g.typ, id = 'auto' + (zaehler++), art = T.art || 'auto';
       const x = o.pos[0], z = o.pos[2]; let y = (o.pos[1] ?? ctx.hoehe(x, z)) + 0.6;
       const MOUNT = 0.35; let yb = T.rad + MOUNT + 0.04, yt = Math.max(yb + 0.3, T.H * 0.85), breite = T.zweirad ? 0.7 : T.B, tiefe = T.L * 0.98;   // Kollisionskörper liegt ÜBER den Federbeinen
       if (art === 'boot') { yb = 0; yt = 1.0; if (o.pos[1] == null && ctx.wasserHoehe != null) y = Math.max(ctx.hoehe(x, z), ctx.wasserHoehe) + 0.2; }

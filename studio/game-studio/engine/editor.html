@@ -56,11 +56,11 @@ dialog{background:#111821;color:var(--txt);border:1px solid var(--rand);border-r
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.31.3/babylonjs.loaders.min.js"></script>
 <script src="./sd-baukasten.js?v=7"></script>
 <script src="./sd-assets.js?v=1"></script>
-<script src="./sd-fahrzeug.js?v=7"></script>
+<script src="./sd-fahrzeug.js?v=8"></script>
 <script src="./sd-mensch.js?v=2"></script>
 <script src="./sd-engine.js?v=10"></script>
-<script src="./sd-szene.js?v=5"></script>
-<script src="./sd-teile.js?v=1"></script>
+<script src="./sd-szene.js?v=6"></script>
+<script src="./sd-teile.js?v=2"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id), V = (x, y, z) => new BABYLON.Vector3(x, y, z);
@@ -103,7 +103,7 @@ async function vorschau(o, i) {
       const tt = new BABYLON.DynamicTexture('zt' + i, { width: 128, height: 64 }, sz, false), c = tt.getContext(); c.fillStyle = '#1a1005'; c.fillRect(0, 0, 128, 64); c.fillStyle = '#ffb547'; c.font = 'bold 40px system-ui'; c.textAlign = 'center'; c.fillText('M' + p.mission + '·' + p.schritt, 64, 46); tt.update();
       const sch = BABYLON.MeshBuilder.CreatePlane('zl', { width: 3, height: 1.5 }, sz); sch.parent = inhalt; sch.position.y = 9; sch.billboardMode = 7; const sm = new BABYLON.StandardMaterial('zsm' + i, sz); sm.diffuseTexture = tt; sm.emissiveColor = new BABYLON.Color3(1, 1, 1); sm.disableLighting = true; sch.material = sm; }
     else if (o.art === 'laden') { inhalt = BABYLON.MeshBuilder.CreateBox('theke', { width: 3, height: 1.1, depth: 1 }, sz); inhalt.position.y = 0.55; inhalt.material = BK.material('holz', '#a87a4a'); const d = BABYLON.MeshBuilder.CreateBox('dach', { width: 3.6, height: 0.12, depth: 2 }, sz); d.parent = inhalt; d.position.y = 2.05; d.material = BK.material(null, '#c83a2a'); }
-    else if (o.art === 'kimodell') { let r = null; try { const a = p.name && await SDAssets.holen(p.name); if (a && window.SDTeile) r = SDTeile.bauen(BABYLON, sz, BK, a.json); } catch (e) { /* fehlt */ } if (r && r.wurzel) { inhalt = r.wurzel; inhalt.scaling.setAll(p.skalierung || 1); } else { inhalt = BABYLON.MeshBuilder.CreateBox('k', { size: 1.5 }, sz); inhalt.position.y = 0.75; inhalt.material = BK.material(null, '#6a8ad8'); } }
+    else if (o.art === 'kimodell' || o.art === 'kiauto') { let r = null; try { const a = p.name && await SDAssets.holen(p.name); if (a && window.SDTeile) r = SDTeile.bauen(BABYLON, sz, BK, a.json); } catch (e) { /* fehlt */ } if (r && r.wurzel) { inhalt = r.wurzel; inhalt.scaling.setAll(p.skalierung || 1); } else { inhalt = BABYLON.MeshBuilder.CreateBox('k', { size: 1.5 }, sz); inhalt.position.y = 0.75; inhalt.material = BK.material(null, '#6a8ad8'); } }
     else if (o.art === 'kiste') { inhalt = BABYLON.MeshBuilder.CreateBox('k', { size: 0.7 }, sz); inhalt.position.y = 0.35; inhalt.material = BK.material('holz', '#c2a14a'); }
     else if (o.art === 'fels') { inhalt = BABYLON.MeshBuilder.CreateIcoSphere('f', { radius: p.groesse * 0.6, subdivisions: 1, flat: true }, sz); inhalt.scaling.y = 0.6; inhalt.material = BK.material('beton', '#8a8680'); }
     else if (o.art === 'box') { inhalt = BABYLON.MeshBuilder.CreateBox('b', { width: p.b, height: p.h, depth: p.t }, sz); inhalt.bakeCurrentTransformIntoVertices(); BK.weltUV(inhalt, 2); inhalt.position.y = p.h / 2; inhalt.material = BK.material(p.textur, p.farbe); }
