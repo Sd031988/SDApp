@@ -30,20 +30,20 @@
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
   let disposed=false;
   const colors=[new BABYLON.Color3(.55,.63,.7),new BABYLON.Color3(.65,.57,.48),new BABYLON.Color3(.48,.57,.61)];
-  const facade=new BABYLON.DynamicTexture('nordhafen-facade',{width:128,height:256},scene,false);
-  textures.push(facade);
-  const ctx=facade.getContext();
-  ctx.fillStyle='#667887';ctx.fillRect(0,0,128,256);
-  for(let row=0;row<10;row++)for(let col=0;col<4;col++){
-   ctx.fillStyle=(row+col)%4===0?'#e6c987':'#233e52';
-   ctx.fillRect(col*32+7,row*25+5,18,15);
-   ctx.fillStyle='#c5d4d8';ctx.fillRect(col*32+7,row*25+5,18,2);
-  }
-  facade.update();
-  // Nine independent UV scales: 3 facade colors x 3 building height classes.
-  const facadeMaterials=colors.map((color,i)=>[0,1,2].map(k=>{
-   const texture=facade.clone('nordhafen-facade-height-'+k+'-color-'+i);
-   texture.vScale=[1,2,3][k];textures.push(texture);
+  // Render each height class into its own uploaded texture; never clone DynamicTexture.
+  const facadeTextures=[1,2,3].map((rowsFactor,k)=>{
+   const texture=new BABYLON.DynamicTexture('nordhafen-facade-height-'+k,{width:128,height:256*rowsFactor},scene,false);
+   textures.push(texture);
+   const ctx=texture.getContext();
+   ctx.fillStyle='#667887';ctx.fillRect(0,0,128,256*rowsFactor);
+   for(let row=0;row<10*rowsFactor;row++)for(let col=0;col<4;col++){
+    ctx.fillStyle=(row+col)%4===0?'#e6c987':'#233e52';
+    ctx.fillRect(col*32+7,row*25+5,18,15);
+    ctx.fillStyle='#c5d4d8';ctx.fillRect(col*32+7,row*25+5,18,2);
+   }
+   texture.update();return texture;
+  });
+  const facadeMaterials=colors.map((color,i)=>facadeTextures.map((texture,k)=>{
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-facade-'+i+'-'+k,scene);
    m.baseColor=color;m.baseTexture=texture;m.metallic=.04;m.roughness=.86;
    materials.push(m);return m;
@@ -52,10 +52,14 @@
    const m=new BABYLON.PBRMetallicRoughnessMaterial('city-simple-'+i,scene);
    m.baseColor=color;m.metallic=0;m.roughness=1;materials.push(m);return m;
   });
-  for(let i=0;i<3;i++){
-   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i,{size:1},scene);
-   source.material=facadeMaterials[i][0];source.isVisible=false;sources.push(source);owned.push(source);
+  for(let i=0;i<3;i++)for(let k=0;k<3;k++){
+   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i+'-'+k,{size:1},scene);
+   source.material=facadeMaterials[i][k];source.isVisible=false;sources.push(source);owned.push(source);
   }
+  const simpleSources=colors.map((_,i)=>{
+   const source=BABYLON.MeshBuilder.CreateBox('city-simple-source-'+i,{size:1},scene);
+   source.material=simpleMaterials[i];source.isVisible=false;owned.push(source);return source;
+  });
   const trunkMat=new BABYLON.PBRMetallicRoughnessMaterial('city-tree-trunk-brown',scene);
   trunkMat.baseColor=new BABYLON.Color3(.36,.22,.12);trunkMat.metallic=0;trunkMat.roughness=1;materials.push(trunkMat);
   const crownMat=new BABYLON.PBRMetallicRoughnessMaterial('city-tree-crown-green',scene);
@@ -114,18 +118,17 @@
     for(let v=0;v<3;v++){
      if(!groups[v].length)continue;
      if(!useThinInstances){
-      const material=level==='full'?null:simpleMaterials[v];
       for(const obj of groups[v]){
        const h=height(seed,obj);
-       const mesh=sources[v].createInstance('city-instance-'+chunk.id+'-'+obj.id);
-       mesh.material=material||facadeMaterials[v][heightClass(seed,obj)];
+       const source=level==='full'?sources[v*3+heightClass(seed,obj)]:simpleSources[v];
+       const mesh=source.createInstance('city-instance-'+chunk.id+'-'+obj.id);
        mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
        const size=footprint(seed,obj);
        mesh.scaling.set(size.width,h,size.depth);mesh.isVisible=true;meshes.push(mesh);
       }
       continue;
      }
-     const mesh=sources[v].clone('city-cell-'+chunk.id+'-'+v);
+     const mesh=(level==='full'?sources[v*3]:simpleSources[v]).clone('city-cell-'+chunk.id+'-'+v);
      mesh.isVisible=false;mesh.material=level==='full'?facadeMaterials[v][0]:simpleMaterials[v];mesh.thinInstanceSetBuffer?.('matrix',null,16);
      const matrix=new Float32Array(groups[v].length*16);
      groups[v].forEach((obj,i)=>{
@@ -143,9 +146,9 @@
      for(const obj of trees){
       const x=chunk.x*fixture.chunkSize+obj.x,z=chunk.z*fixture.chunkSize+obj.z;
       const trunk=trunkSource.createInstance('city-tree-trunk-'+chunk.id+'-'+obj.id);
-      trunk.position.set(x,1.2,z);trunk.scaling.set(.65,2.4,.65);trunk.material=trunkMat;trunk.isVisible=true;meshes.push(trunk);
+      trunk.position.set(x,1.2,z);trunk.scaling.set(.65,2.4,.65);trunk.isVisible=true;meshes.push(trunk);
       const crown=crownSource.createInstance('city-tree-crown-'+chunk.id+'-'+obj.id);
-      crown.position.set(x,3.4,z);crown.scaling.set(2.8,2.8,2.8);crown.material=crownMat;crown.isVisible=true;meshes.push(crown);
+      crown.position.set(x,3.4,z);crown.scaling.set(2.8,2.8,2.8);crown.isVisible=true;meshes.push(crown);
      }
     }else if(trees.length){
      for(const [source,part,scale,y] of [[trunkSource,'trunk',new BABYLON.Vector3(.65,2.4,.65),1.2],[crownSource,'crown',new BABYLON.Vector3(2.8,2.8,2.8),3.4]]){
@@ -169,7 +172,7 @@
    for(const texture of textures)texture.dispose();
    scene.fogMode=BABYLON.Scene.FOGMODE_NONE;
   }
-  return {buildCell,dispose,get facadeTexture(){return facade;},get sources(){return sources;}};
+  return {buildCell,dispose,get facadeTexture(){return facadeTextures[0];}get facadeTextures(){return facadeTextures;},get sources(){return sources;}};
  }
  return Object.freeze({create,height,variant,footprint,heightClass,buildingGroups,checkedMatrices});
 });
