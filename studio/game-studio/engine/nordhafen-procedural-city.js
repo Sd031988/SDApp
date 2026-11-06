@@ -22,8 +22,8 @@
    if(matrices.length!==count*16||!Array.from(matrices).every(Number.isFinite))throw new TypeError('invalid thin instance matrices');
    return matrices;
   }
- function create({scene,BABYLON,fixture,seed=1337,building,tree}={}){
-  if(!scene||!BABYLON||!fixture||!building||!tree)throw new TypeError('city scene required');
+ function create({scene,BABYLON,fixture,seed=1337}={}){
+  if(!scene||!BABYLON||!fixture)throw new TypeError('city scene required');
   const owned=[],materials=[],textures=[],sources=[],span=fixture.grid*fixture.chunkSize;
   let disposed=false;
   const colors=[new BABYLON.Color3(.55,.63,.7),new BABYLON.Color3(.65,.57,.48),new BABYLON.Color3(.48,.57,.61)];
@@ -43,9 +43,11 @@
    materials.push(m);return m;
   });
   for(let i=0;i<3;i++){
-   const source=building.clone('city-building-source-'+i);
-   source.material=facadeMaterials[i];source.isVisible=false;source.thinInstanceSetBuffer?.('matrix',null,16);sources.push(source);owned.push(source);
+   const source=BABYLON.MeshBuilder.CreateBox('city-building-source-'+i,{size:1},scene);
+   source.material=facadeMaterials[i];source.isVisible=false;sources.push(source);owned.push(source);
   }
+  const treeSource=BABYLON.MeshBuilder.CreateCylinder('city-tree-source',{height:1,diameter:.5},scene);
+  treeSource.isVisible=false;owned.push(treeSource);
   // Gradient sky via vertex colors, no external shader or CDN.
   const sky=BABYLON.MeshBuilder.CreateBox('city-gradient-sky',{size:span*6},scene);
   const positions=sky.getVerticesData(BABYLON.VertexBuffer.PositionKind);
@@ -59,7 +61,7 @@
   skyMat.fogEnabled=false;sky.applyFog=false;
   skyMat.disableLighting=true;skyMat.backFaceCulling=false;skyMat.emissiveColor=new BABYLON.Color3(1,1,1);
   skyMat.useVertexColors=true;sky.material=skyMat;sky.isPickable=false;
-  sky.infiniteDistance=true;sky.isVisible=false;owned.push(sky);materials.push(skyMat); // Temporarily isolate suspect sky geometry
+  sky.infiniteDistance=true;sky.isVisible=true;owned.push(sky);materials.push(skyMat);
   scene.fogMode=BABYLON.Scene.FOGMODE_LINEAR;
   scene.fogStart=100;scene.fogEnd=215;
   scene.fogColor=new BABYLON.Color3(.68,.75,.79);
@@ -107,7 +109,7 @@
     }
     const trees=chunk.objects.filter(o=>o.type==='vegetation');
     if(trees.length){
-     const mesh=tree.clone('city-cell-trees-'+chunk.id);
+     const mesh=treeSource.clone('city-cell-trees-'+chunk.id);
      mesh.isVisible=false;
      const matrix=new Float32Array(trees.length*16);
      trees.forEach((obj,i)=>{
