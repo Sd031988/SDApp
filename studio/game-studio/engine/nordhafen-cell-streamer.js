@@ -73,7 +73,7 @@
    const candidates=chunks.filter(c=>!loaded.has(c.id)&&!pending.has(c.id)&&distance(c,cameraX,cameraZ)<=loadRadius)
     .sort((a,b)=>distance(a,cameraX,cameraZ)-distance(b,cameraX,cameraZ)||a.id.localeCompare(b.id));
    let newLoads=0;
-   for(const chunk of candidates.filter(c=>!failures.has(c.id)||clock()>=failures.get(c.id).retryAt).slice(0,Math.max(0,Math.min(budget,2)-pending.size))){
+   for(const chunk of candidates.filter(c=>!failures.has(c.id)||clock()>=failures.get(c.id).retryAt).slice(0,Math.max(0,budget-pending.size))){
     const start=clock();
     let cell;
     try{
