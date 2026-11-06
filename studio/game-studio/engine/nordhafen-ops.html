@@ -73,7 +73,8 @@ async function start(){
    targets.push({mesh,health:50});
    const marker=document.createElement('div');marker.className='marker';marker.textContent='◆ '+(i+1);document.body.append(marker);markerNodes.push(marker);
   }
-  const enemySpawns=controls.enemyPositions(startPosition,fixture.chunkSize||64);
+  sites=missionRules.locations(startPosition,fixture.grid*fixture.chunkSize);
+  const enemySpawns=sites.towers.flatMap((mast,i)=>[{x:mast.x+(i===2?-16:0),z:mast.z+(i===2?0:-16),patrolAxis:i===2?'z':'x'},{x:mast.x+(i===2?16:0),z:mast.z+(i===2?0:16),patrolAxis:i===2?'z':'x'}]);
   for(let i=0;i<6;i++){
    const {x,z,patrolAxis}=enemySpawns[i];
    const mesh=BABYLON.MeshBuilder.CreateCapsule('enemy-'+i,{height:1.8,radius:.38},scene);
@@ -83,7 +84,6 @@ async function start(){
    const bar=BABYLON.MeshBuilder.CreatePlane('enemy-health-'+i,{width:1,height:.12},scene);bar.parent=mesh;bar.position.set(0,1.2,0);bar.billboardMode=BABYLON.Mesh.BILLBOARDMODE_ALL;bar.isPickable=false;const bm=new BABYLON.StandardMaterial('enemy-health-mat-'+i,scene);bm.emissiveColor=BABYLON.Color3.FromHexString(palette.healthBar);bm.disableLighting=true;bar.material=bm;
    enemies.push({mesh,bar,patrolAxis,state:enemyRules.spawn(i,x,z)});
   }
-  sites=missionRules.locations(startPosition,fixture.grid*fixture.chunkSize);
   for(let i=0;i<3;i++){
    const point=sites.towers[i],mast=BABYLON.MeshBuilder.CreateCylinder('radio-mast-'+i,{height:12,diameterTop:.3,diameterBottom:.9,tessellation:8},scene);
    mast.position.set(point.x,6,point.z);mast.isPickable=false;
