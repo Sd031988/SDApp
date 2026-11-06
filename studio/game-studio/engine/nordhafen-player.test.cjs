@@ -53,15 +53,19 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
   };}
   dispose(){}
  }
+ let ctrlMesh;
  const makeMesh=()=>({
   position:{x:0,y:0,z:0,set(x,y,z){Object.assign(this,{x,y,z});}},
   scaling:{y:1,set(){}},visibility:1,isPickable:true,dispose(){}
  });
- const BABYLON={Vector3,Ray:class{constructor(origin,direction,length){
+ const BABYLON={Vector3,
+ StandardMaterial:class{constructor(name,scene){this.name=name;this.scene=scene;this.diffuseColor=null;this.emissiveColor=null;}dispose(){}},
+ Color3:class{constructor(r,g,b){Object.assign(this,{r,g,b});}},
+ Ray:class{constructor(origin,direction,length){
   Object.assign(this,{origin,direction,length});ray=this;
  }},HavokPlugin:class{},PhysicsAggregate:Aggregate,
  PhysicsShapeType:{BOX:1,CAPSULE:2},
- MeshBuilder:{CreateGround:makeMesh,CreateCapsule:makeMesh,CreateBox:makeMesh}};
+ MeshBuilder:{CreateGround:makeMesh,CreateCapsule:()=>{ctrlMesh=makeMesh();return ctrlMesh;},CreateBox:makeMesh}};
  const scene={enablePhysics(){},pickWithRay(r,predicate){
   rayPredicate=predicate;return {hit:rayHit,distance:.1,pickedMesh:{isPickable:true}};
  }};
@@ -71,6 +75,7 @@ test('Havok controller locks capsule inertia and grounds via downward raycast, n
  const ctrl=create({scene,camera,canvas,BABYLON,motion:{step},fixture:{grid:1,chunks:[]}});
  try{
   assert.equal(await ctrl.start(),true);
+  assert.ok(ctrlMesh.material,'player mesh receives a material');
   assert.deepEqual(inertia,Vector3.Zero());
   ctrl.update(.02);
   assert.equal(ray.length,.1+.15,'ray covers 10 cm capsule inset plus 15 cm below');
