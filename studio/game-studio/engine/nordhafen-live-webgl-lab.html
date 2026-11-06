@@ -108,7 +108,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      if($('streaming').checked){
        const cellBuilder=$('lod').checked ? chunk=>{
-         const lod=window.SDNordhafenCellLOD.create({
+         const lod=window.SDNordhafenCellLOD.create({near:35,far:70,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder'){
                const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+chunk.id,{size:1},scene);
