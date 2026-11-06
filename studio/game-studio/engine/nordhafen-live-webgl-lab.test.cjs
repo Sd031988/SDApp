@@ -91,7 +91,7 @@ test('device regression: sliced builders wired into streaming and LOD',()=>{
  assert.match(html,/SDNordhafenBuildSlices\.run\(work/);
  assert.match(html,/SDNordhafenBuildSlices\.run\(/);
  assert.match(html,/budgetMs:4/);
- assert.match(html,/buildCellSliced\(source,opts\)/);
+ assert.match(html,/buildCellSliced\(source,\{\.\.\.opts,level\}\)/);
 });
 
 test('step 9: city is PBR opt-in and new procedural module is integrated',()=>{
@@ -154,5 +154,5 @@ test('active city disposes legacy floor so only city ground remains',()=>{
 });
 test('each frame streams around current camera target and simplified city retains buildings',()=>{
  assert.match(html,/streamer.update\(camera.target.x,camera.target.z\)/);
- assert.match(html,/city\?obj.type==='building'\|\|i%4===0/);
+ assert.match(html,/obj.type==='building'\|\|\(level==='simplified'&&obj.type==='vegetation'&&i%2===0\)/);
 });
