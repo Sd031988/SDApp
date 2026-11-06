@@ -39,6 +39,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 <script src="./nordhafen-frame-window-audit.js"></script>
 <script src="./nordhafen-thin-instances.js"></script>
 <script src="./nordhafen-pbr-quality.js"></script>
+<script src="./nordhafen-procedural-city.js"></script>
 <script src="./nordhafen-player-motion.js"></script>
 <script src="./nordhafen-player-controller.js"></script>
 <script>
@@ -46,11 +47,12 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
 (function(){
  const $=id=>document.getElementById(id);
  const canvas=$('viewport'),start=$('start'),stop=$('stop'),status=$('status'),out=$('metrics');
- let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,player=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
+ let engine=null,scene=null,bridge=null,timer=null,gpu=null,streamer=null,pbr=null,city=null,player=null,routeTimer=null,routeIndex=0,drawProbe=null,comparison={},runSamples=[],runComplete=false,runMode=null,runRouteId=null,runRouteLength=0,runProfile=null,runFailure=null,glbStatus='GLB aus',glbGeneration=0;
  const gpuStart=$('gpu-start'),gpuStop=$('gpu-stop'),gpuStatus=$('gpu-status');
  function stopGPU(){if(gpu){gpu.stop();gpu=null;}gpuStart.disabled=true;gpuStop.disabled=true;}
  function cleanup(){
    glbGeneration++;
+   if(city){city.dispose();city=null;}
    if(pbr){pbr.dispose();pbr=null;}
    if(player){player.dispose();player=null;}
    if(routeTimer!==null){clearInterval(routeTimer);routeTimer=null;}
@@ -96,6 +98,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
     '\nFPS (Endframe-Takt): '+(f.fps===null?'noch keine':f.fps)+
     '\nFrame-Intervall p50: '+fmt(f.frameP50Ms)+
     '\nFrame-Intervall p95: '+fmt(f.frameP95Ms)+
+    '\nDraw Calls (aktuell): '+metric(measurement.drawCalls)+
     '\nGPU p50: '+fmt(g&&g.gpuP50Ms)+' | GPU p95: '+fmt(g&&g.gpuP95Ms)+
     '\nGPU Samples: '+(g?g.sampleCount:0)+
     '\nGPU gemessen: '+(g && g.measured ? 'JA' : 'NEIN (mind. '+(g ? g.minimumSamples : 30)+' gültige Hardware-Samples nötig)')+
@@ -125,8 +128,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      drawProbe=window.SDNordhafenDrawMemory.create({scene});
      scene.clearColor=new BABYLON.Color4(.04,.08,.12,1);
      const span=fixture.grid*64;
-     const camera=new BABYLON.ArcRotateCamera('lab-camera',-Math.PI/3,1.1,span*1.4,
-       new BABYLON.Vector3(span/2,0,span/2),scene);
+     const camera=new BABYLON.ArcRotateCamera('lab-camera',-Math.PI/2.8,1.2,75,
+       new BABYLON.Vector3(32,12,32),scene);
      camera.attachControl(canvas,true);
      new BABYLON.HemisphericLight('lab-light',new BABYLON.Vector3(0,1,0),scene);
      const building=BABYLON.MeshBuilder.CreateBox('building-source',{size:1},scene);
@@ -149,6 +152,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        pbr.start();
      }
      building.isVisible=false;tree.isVisible=false;
+     if(pbr&&pbr.enabled){
+       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,building,tree});
+     }
      function buildCell(chunk){
        if(thinEnabled){
          const cell=window.SDNordhafenThinInstances.create({chunk,sourceByType:{building:glbBuilding||building,vegetation:tree},BABYLON});
@@ -170,6 +176,12 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        return {meshes,materials};
      }
      async function buildCellSliced(chunk,{signal,recordBuildSlice}={}){
+       if(city){
+         const started=performance.now();
+         const result=city.buildCell(chunk,{signal});
+         if(recordBuildSlice)recordBuildSlice(performance.now()-started);
+         return result;
+       }
        const meshes=[],materials=[];
        const types=new Map();
        for(const obj of chunk.objects){
@@ -212,8 +224,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          await window.SDNordhafenBuildSlices.run(
            chunk.objects.filter(obj=>obj.type==='building'),obj=>{
              const mesh=BABYLON.MeshBuilder.CreateBox('lod-placeholder-'+obj.id,{size:1},scene);
-             mesh.position.set(chunk.x*fixture.chunkSize+obj.x,3,chunk.z*fixture.chunkSize+obj.z);
-             mesh.scaling.set(4,6,4);
+             const h=city?window.SDNordhafenProceduralCity.height(1337,obj):6;
+             mesh.position.set(chunk.x*fixture.chunkSize+obj.x,h/2,chunk.z*fixture.chunkSize+obj.z);
+             mesh.scaling.set(4,h,4);
              mesh.isVisible=false;meshes.push(mesh);
            },{budgetMs:4,signal:opts.signal,recordSlice:opts.recordBuildSlice,
              nextFrame:()=>new Promise(resolve=>requestAnimationFrame(resolve))});
@@ -233,7 +246,9 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        if(player&&player.ready)return;
        const chunk=route[routeIndex%route.length];
        const x=(chunk.x+.5)*fixture.chunkSize,z=(chunk.z+.5)*fixture.chunkSize;
-       camera.target.set(x,0,z);
+       camera.target.set(x,12,z);
+       camera.radius=75;
+       camera.beta=1.2;
        if(streamer)streamer.update(x,z);
        routeIndex++;
 
