@@ -25,7 +25,7 @@
   const extractProgress=within&&!damage?state.extractProgress+delta:0;
   return {...state,extractProgress,status:extractProgress>=EXTRACT_SECONDS?'won':'playing',activated:null};
  }
- function alertNearby(enemies,point,count=2,radius=95){
+ function alertNearby(enemies,point,count=2,radius=32){
   const nearest=enemies.map((enemy,i)=>({i,dist:distance(enemy,point)})).filter(x=>enemies[x.i].health>0&&x.dist<=radius).sort((a,b)=>a.dist-b.dist).slice(0,count);
   const ids=new Set(nearest.map(x=>x.i));
   return enemies.map((enemy,i)=>ids.has(i)?{...enemy,state:'alert',time:0}:enemy);
