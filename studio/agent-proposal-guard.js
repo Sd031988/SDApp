@@ -73,7 +73,7 @@ function validateProposal(proposal,options){
  }
  return {ok:true,changes,summary:{count:changes.length,created:changes.filter(x=>x.operation==='create').length,
   replaced:changes.filter(x=>x.operation==='replace').length,totalChars:total,
-  note:'Vorschau בלבד: Dateien wurden nicht gespeichert und kein Code wurde ausgeführt.'}};
+  note:'Vorschau: Dateien wurden nicht gespeichert und kein Code wurde ausgeführt.'}};
 }
 const api=Object.freeze({LIMITS,safePath,hashText,prepareContext,validateProposal});
 root.SDStudioAgentProposal=api;
