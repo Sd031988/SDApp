@@ -134,7 +134,7 @@
    for(const id of [...loaded.keys()])unload(id);
    failures.clear();
   }
-  return Object.freeze({update,report,dispose});
+  return Object.freeze({update,report,dispose,loadedChunkIds:()=>Object.freeze([...loaded.keys()])});
  }
  return Object.freeze({create});
 });
