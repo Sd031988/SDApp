@@ -91,3 +91,51 @@ test('report exposes unloadedCells and failedCells but no pendingCells',()=>{
  assert.equal(Object.hasOwn(r,'pendingCells'),false);
  stream.dispose();
 });
+
+function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};}
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+test('async Promise cell resolves and records actual load duration',async()=>{
+ let now=10;const d=deferred(),{stream}=harness({now:()=>now,buildCell:()=>d.promise});
+ stream.update(32,32);assert.equal(stream.report().inFlightLoads,1);
+ now=42;d.resolve({meshes:[],materials:[]});await tick();
+ assert.equal(stream.report().loadedCells,1);
+ assert.equal(stream.report().loadMsP50,32);stream.dispose();
+});
+test('camera departure aborts pending load and disposes late result without visibility',async()=>{
+ const d=deferred();let freed=0,signal;
+ const {stream}=harness({buildCell:(chunk,opts)=>{signal=opts.signal;return d.promise;}});
+ stream.update(32,32);stream.update(10000,10000);
+ assert.equal(signal.aborted,true);
+ d.resolve({meshes:[{dispose(){freed++;}}],materials:[]});await tick();
+ assert.equal(freed,1);assert.equal(stream.report().loadedCells,0);stream.dispose();
+});
+test('no more than two asynchronous builds in flight',async()=>{
+ const ds=[];const {stream}=harness({loadRadius:300,unloadRadius:350,buildCell:()=>{
+  const d=deferred();ds.push(d);return d.promise;
+ }});
+ for(let i=0;i<5;i++)stream.update(128,128);
+ assert.equal(ds.length,2);assert.equal(stream.report().inFlightLoads,2);
+ for(const d of ds)d.resolve({meshes:[],materials:[]});await tick();stream.dispose();
+});
+test('failed async cell leaves independent successful cells loaded',async()=>{
+ const ds=new Map();const {stream}=harness({loadRadius:110,unloadRadius:130,buildCell:chunk=>{
+  const d=deferred();ds.set(chunk.id,d);return d.promise;
+ }});
+ stream.update(32,32);
+ assert.ok(ds.size>=1);
+ const entries=[...ds.entries()];
+ entries[0][1].reject(new Error('network'));
+ for(const [,d] of entries.slice(1))d.resolve({meshes:[],materials:[]});
+ await tick();
+ assert.equal(stream.report().failedCells,1);
+ if(entries.length>1)assert.ok(stream.report().loadedCells>=1);
+ stream.dispose();
+});
+test('dispose aborts pending loads and frees late result once',async()=>{
+ const d=deferred();let freed=0,signal;
+ const {stream}=harness({buildCell:(chunk,opts)=>{signal=opts.signal;return d.promise;}});
+ stream.update(32,32);stream.dispose();stream.dispose();
+ assert.equal(signal.aborted,true);
+ d.resolve({meshes:[{dispose(){freed++;}}],materials:[]});await tick();
+ assert.equal(freed,1);assert.equal(stream.report().loadedCells,0);
+});
