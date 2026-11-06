@@ -79,3 +79,16 @@ test('GLB normalization module remains registered for a future verified asset',(
  assert.match(html,/nordhafen-thin-instances\.js/);
  assert.doesNotMatch(html,/BoomBox\.glb/);
 });
+
+test('device regression: LOD placeholders are real per-building boxes, not flat cell discs',()=>{
+ assert.match(html,/chunk\.objects\.filter\(obj=>obj\.type==='building'\)/);
+ assert.match(html,/mesh\.scaling\.set\(4,6,4\)/);
+ assert.doesNotMatch(html,/mesh\.scaling\.set\(64,4,64\)/);
+});
+test('device regression: sliced builders wired into streaming and LOD',()=>{
+ assert.match(html,/nordhafen-build-slices\.js/);
+ assert.match(html,/SDNordhafenBuildSlices\.run\(work/);
+ assert.match(html,/SDNordhafenBuildSlices\.run\(/);
+ assert.match(html,/budgetMs:4/);
+ assert.match(html,/buildCellSliced\(source,opts\)/);
+});
