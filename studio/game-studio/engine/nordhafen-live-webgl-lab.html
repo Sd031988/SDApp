@@ -288,7 +288,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      }
      if($('streaming').checked){
        let cellBuilder=$('lod').checked ? async (chunk,opts={})=>{
-         const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
+         const lod=window.SDNordhafenCellLOD.create({near:90,far:150,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder')return placeholderSliced(chunk,opts);
              const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((obj,i)=>obj.type==='building'||(level==='simplified'&&obj.type==='vegetation'&&i%2===0))};
