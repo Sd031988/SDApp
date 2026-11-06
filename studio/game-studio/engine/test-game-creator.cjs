@@ -28,7 +28,8 @@ const files = [
   'gpu-timing-statistics.test.cjs',
   'gpu-timing-session.test.cjs',
   'webgl2-gpu-query-boundary.test.cjs',
-  'webgl2-gpu-query-repeatability.test.cjs'
+  'webgl2-gpu-query-repeatability.test.cjs',
+  'nordhafen-lab-gpu-wiring.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
