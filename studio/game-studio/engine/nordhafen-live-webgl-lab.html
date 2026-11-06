@@ -144,7 +144,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      const span=fixture.grid*64;
      const camera=new BABYLON.ArcRotateCamera('lab-camera',-Math.PI/2.8,1.2,75,
        new BABYLON.Vector3(32,12,32),scene);
-     if(preset.freeze){camera.setPosition(new BABYLON.Vector3(160,45,40));camera.setTarget(new BABYLON.Vector3(160,10,160));}
+     if(preset.freeze){camera.setPosition(new BABYLON.Vector3(100,30,60));camera.setTarget(new BABYLON.Vector3(160,8,140));}
      else camera.attachControl(canvas,true);
      new BABYLON.HemisphericLight('lab-light',new BABYLON.Vector3(0,1,0),scene);
      const building=BABYLON.MeshBuilder.CreateBox('building-source',{size:1},scene);
@@ -169,7 +169,7 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
      building.isVisible=false;tree.isVisible=false;
      if(pbr&&pbr.enabled){
        scene.getMeshByName('pbr-ground')?.dispose();
-       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,building,tree});
+       city=window.SDNordhafenProceduralCity.create({scene,BABYLON,fixture,seed:1337,loadRadius:160});
      }
      function buildCell(chunk){
        if(thinEnabled){
@@ -191,10 +191,10 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
        }
        return {meshes,materials};
      }
-     async function buildCellSliced(chunk,{signal,recordBuildSlice}={}){
+     async function buildCellSliced(chunk,{signal,recordBuildSlice,level='full'}={}){
        if(city){
          const started=performance.now();
-         const result=city.buildCell(chunk,{signal});
+         const result=city.buildCell(chunk,{signal,level});
          if(recordBuildSlice)recordBuildSlice(performance.now()-started);
          return result;
        }
@@ -274,8 +274,8 @@ h1{font-size:1.1rem;margin:0 0 8px}button,select{padding:8px;border-radius:6px}
          const lod=window.SDNordhafenCellLOD.create({near:45,far:100,hysteresis:8,
            buildLevel:level=>{
              if(level==='placeholder')return placeholderSliced(chunk,opts);
-             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((obj,i)=>city?obj.type==='building'||i%4===0:i%4===0)};
-             return buildCellSliced(source,opts);
+             const source=level==='full'?chunk:{...chunk,objects:chunk.objects.filter((obj,i)=>obj.type==='building'||(level==='simplified'&&obj.type==='vegetation'&&i%2===0))};
+             return buildCellSliced(source,{...opts,level});
            }
          });
          return {meshes:[],materials:[],updateLOD:d=>lod.update(d),needsLODUpdate:d=>lod.needsUpdate(d),lodLevel:()=>lod.level,dispose:()=>lod.dispose()};
