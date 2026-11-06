@@ -4,7 +4,7 @@
    still required before any hosted model or runner is connected. */
 (function(root){
 'use strict';
-const LIMITS=Object.freeze({selectedFiles:12,fileChars:30000,contextChars:100000,proposalFileChars:60000,proposalChars:180000,pathChars:240});
+const LIMITS=Object.freeze({selectedFiles:12,proposalFiles:40,fileChars:30000,contextChars:100000,proposalFileChars:70000,proposalChars:320000,pathChars:240});
 const SECRET_PATH=/(?:^|\/)(?:\.env(?:\.[^/]*)?|\.git(?:\/|$)|\.ssh(?:\/|$)|credentials?(?:\.[^/]*)?|secrets?(?:\.[^/]*)?|private[-_]?keys?(?:\.[^/]*)?|id_rsa|id_ed25519)(?:$|\/)/i;
 const BINARY_EXT=/\.(?:png|jpe?g|gif|webp|avif|ico|pdf|zip|gz|7z|rar|mp3|wav|ogg|mp4|mov|glb|gltf|woff2?|ttf|otf|eot|wasm|exe|dll|so|dylib|p12|pfx|pem|key|keystore)$/i;
 const SECRET_VALUE=/(?:-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bAKIA[0-9A-Z]{16}\b|\bgh[pousr]_[A-Za-z0-9_]{30,}\b|\bsk-[A-Za-z0-9_-]{24,}\b|\bAIza[0-9A-Za-z_-]{30,}\b|\b(?:password|passwd|client_secret|api_key|access_token)\s*[:=]\s*["'][^"'\s]{8,}["'])/i;
@@ -50,7 +50,7 @@ function validateProposal(proposal,options){
   for(const path of opts.newFilePaths)if(safePath(path))allowed.add(path);
  }
  if(!proposal||typeof proposal!=='object'||!Array.isArray(proposal.changes))return {ok:false,error:'Der Agent-Vorschlag hat kein gültiges changes-Format.'};
- if(proposal.changes.length<1||proposal.changes.length>LIMITS.selectedFiles)return {ok:false,error:'Ein Vorschlag muss 1 bis '+LIMITS.selectedFiles+' Dateiänderungen enthalten.'};
+ if(proposal.changes.length<1||proposal.changes.length>LIMITS.proposalFiles)return {ok:false,error:'Ein Vorschlag muss 1 bis '+LIMITS.proposalFiles+' Dateiänderungen enthalten.'};
  const seen=new Set(),changes=[];let total=0;
  for(const item of proposal.changes){
   if(!item||typeof item!=='object'||!safePath(item.path))return {ok:false,error:'Der Vorschlag enthält einen ungültigen oder geschützten Dateipfad.'};
