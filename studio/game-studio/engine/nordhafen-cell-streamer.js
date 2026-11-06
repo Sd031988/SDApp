@@ -83,21 +83,20 @@
      }});
      if(cell&&typeof cell.then==='function'){
        const job={controller};pending.set(chunk.id,job);newLoads++;
-       Promise.resolve(cell).then(result=>{
+       Promise.resolve(cell).then(async result=>{
          if(!result||!Array.isArray(result.meshes)||!Array.isArray(result.materials))
            throw new TypeError('buildCell must return {meshes,materials}');
          if(disposed||controller.signal.aborted||pending.get(chunk.id)!==job){freeCell(result);return;}
+         if(typeof result.updateLOD==='function'){
+           const after=await result.updateLOD(distance(chunk,cameraX,cameraZ));
+           if(after!==null)lodSwitchesTotal++;
+         }
+         if(disposed||controller.signal.aborted||pending.get(chunk.id)!==job){freeCell(result);return;}
          pending.delete(chunk.id);
-         try{
-           if(typeof result.updateLOD==='function'){
-             const after=result.updateLOD(distance(chunk,cameraX,cameraZ));
-             if(after!==null)lodSwitchesTotal++;
-           }
-           loaded.set(chunk.id,result);failures.delete(chunk.id);loadsTotal++;
-           const elapsed=clock()-start;
-           if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
-         }catch(e){freeCell(result);recordFailure(chunk.id);}
-       },()=>{
+         loaded.set(chunk.id,result);failures.delete(chunk.id);loadsTotal++;
+         const elapsed=clock()-start;
+         if(Number.isFinite(elapsed)&&elapsed>=0){samples.push(elapsed);if(samples.length>512)samples.shift();}
+       }).catch(()=>{
          if(pending.get(chunk.id)===job){pending.delete(chunk.id);recordFailure(chunk.id);}
        });
        continue;
