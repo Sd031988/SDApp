@@ -74,3 +74,12 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Regressionstest ergänzt: erfolgreicher Schreib-/Lesevorgang, Exception bei `setItem`, stiller Nicht-Speicherfall sowie beide Statusmeldungsstellen.
 - JavaScript-Parsing der Änderungen geprüft; vollständiger Node-Testlauf, Playwright und reale Browser-Speicherfehler wurden in diesem Durchgang nicht ausgeführt.
 - Restrisiken: Browserdaten können später gelöscht werden, Browser-/Geräte-Synchronisation fehlt; auch eine erfolgreiche direkte Rücklesung garantiert keine dauerhafte Datensicherung. Kein fachlich validiertes automatisches Schreibfeedback.
+
+
+### 2026-11-07 – Manuelle Selbstkontrolle für freie Schreibaufgaben
+
+- In `deutsch/lernwerk-vereinheitlicht.js` wurden fünf stufenspezifische Checklisten ergänzt (Alphabetisierung, A1, A2, B1, Praxis). Die Lernenden markieren selbst, ob sie die geforderten Inhaltspunkte bearbeitet haben.
+- Eine Fortschrittsanzeige zählt die selbst angekreuzten Punkte; sie ist ausdrücklich **keine automatische Sprachbewertung**. Bestehende Schreibentwürfe und deren Speicherformat bleiben unverändert.
+- In `tests/lernwerk-data.test.cjs` prüft ein neuer Regressionstest das Vorhandensein und die Eindeutigkeit der Kriterien sowie die Anbindung der Checkboxen.
+- Prüfung in diesem Durchgang: JavaScript-Quelltext und Testdatei wurden syntaktisch als Funktionen geparst; vollständiger Node-Testlauf und Playwright-Browserprüfung nicht durchgeführt.
+- Restrisiken: Checkboxen prüfen nicht, ob die Aussagen tatsächlich zutreffen; sie werden bei einer Neudarstellung zurückgesetzt. Keine automatische Beurteilung von Grammatik, Wortschatz, Textkohärenz oder B1-Prüfungsreife. Vor Veröffentlichung End-to-End-Test einschließlich Tastaturbedienung und Mobilansicht durchführen.
