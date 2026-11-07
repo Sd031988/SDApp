@@ -7,6 +7,7 @@ const $=id=>document.getElementById(id);
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n};
 let parsed=null,stagedProject=null,stagedSnapshot=null,busy=false,changeMode=false;
 let repairDraft=null,repairSource=null,testResult=null;
+let agentRequest=null;
 function currentFiles(){
  const p=typeof S!=='undefined'&&S.p;
  if(!p)return {};
@@ -62,7 +63,7 @@ function openDialog(mode){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
  $('kiProject').textContent=S.p?'Aktuelles Projekt: '+S.p.name:'Noch kein Projekt geöffnet.';
  $('kiOverlay').hidden=false;
- parsed=null;stagedSnapshot=null;stagedProject=null;
+ parsed=null;stagedSnapshot=null;stagedProject=null;agentRequest=null;
  clearRepairDraft();
  $('kiResult').value='';$('kiFiles').replaceChildren();$('kiDiff').hidden=true;$('kiApply').disabled=true;$('kiDirect').disabled=true;
  $('kiReview').hidden=true;$('kiReviewFindings').replaceChildren();
@@ -158,8 +159,17 @@ function promptText(){
  let prompt='';
  if(changeMode){
   if(!$('kiChangeConsent').checked){status('Bitte zuerst ausdrücklich bestätigen, dass du die ausgewählten Code-Dateien in die KI-Anfrage kopieren möchtest.',true);return ''}
+  const guard=window.SDStudioAgentProposal;
+  if(!guard){status('Sichere Dateiprüfung fehlt. Bitte Studio neu laden.',true);return ''}
   const chosen=[...$('kiSources').querySelectorAll('input:checked')].map(el=>el.dataset.path);
-  try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:currentFiles()},chosen);}
+  const prepared=guard.prepareContext({consent:$('kiChangeConsent').checked,goal:$('kiGoal').value,
+   files:currentFiles(),selectedPaths:chosen});
+  if(!prepared.ok){status(prepared.error,true);return ''}
+  const scopedFiles=Object.fromEntries(prepared.request.files.map(file=>[file.path,file.content]));
+  try{prompt=core.buildChangePrompt($('kiGoal').value,{name:S.p?.name,dateien:scopedFiles},
+   prepared.request.files.map(file=>file.path));
+   if(prompt)agentRequest={project:S.p,files:{...scopedFiles}};
+  }
   catch(e){status(e.message||String(e),true);return ''}
  }else{
   prompt=core.buildPrompt($('kiGoal').value,S.p,S.aktiv,selectedSource());
@@ -174,6 +184,49 @@ async function copyPrompt(){
   $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;$('kiClipboard').focus();$('kiClipboard').select();
   status('Kopieren blockiert. Text ist markiert: bitte manuell kopieren.',true);
  }
+}
+function startDirectAgent(){
+ if(!changeMode||!promptText()||!agentRequest)return;
+ const expected=agentRequest,goal=$('kiGoal').value;
+ let endpoint;
+ try{endpoint=new URL($('kiAgentAddress').value);
+  if(endpoint.origin!=='https://sd-maschinen-kenner.onrender.com'&&
+   !(endpoint.protocol==='http:'&&['localhost','127.0.0.1'].includes(endpoint.hostname)))throw Error();
+ }catch(_){status('Bitte die SD-Agent-Adresse oder eine lokale Agent-Adresse angeben.',true);return;}
+ const session=crypto.randomUUID();
+ endpoint.pathname='/coding';endpoint.search=new URLSearchParams({origin:location.origin,session});endpoint.hash='';
+ const popup=window.open(endpoint.href,'sd-coding-'+session,'popup,width=780,height=820');
+ if(!popup){status('Bitte das Agent-Fenster im Browser zulassen.',true);return;}
+ const request={consent:true,goal,files:Object.entries(expected.files).map(([path,content])=>({path,content})),newPaths:[]};
+ let sent=false;
+ const stop=()=>{window.removeEventListener('message',receive);clearTimeout(timer);};
+ const receive=event=>{
+  if(event.source!==popup||event.origin!==endpoint.origin||event.data?.session!==session)return;
+  if(event.data.type==='SD_CODING_READY'&&!sent){sent=true;popup.postMessage({type:'SD_CODING_REQUEST',session,request},endpoint.origin);}
+  if(event.data.type==='SD_CODING_RESULT'&&sent){
+   stop();
+   if(agentRequest!==expected||S.p!==expected.project||$('kiGoal').value!==goal){
+    status('Der Studio-Auftrag wurde inzwischen geändert. Bitte den aktuellen Auftrag erneut starten.',true);return;
+   }
+   const output=event.data.result?.studioOutput;
+   if(typeof output!=='string'||output.length>400000){status('Ungültige Agent-Antwort.',true);return;}
+   if(!output.trim()){status('Der Agent hat keine Dateiänderungen vorgeschlagen.');return;}
+   $('kiResult').value=output;analyse();
+   if(!parsed?.errors.length)status('Agent-Vorschlag eingelesen. Dateivergleich und Prüfbericht im Agent-Fenster prüfen, dann bewusst übernehmen.');
+  }
+ };
+ window.addEventListener('message',receive);
+ const timer=setTimeout(()=>{stop();status('Agent-Verbindung beendet. Bei Bedarf den Auftrag erneut starten.',true);},15*60*1000);
+ status('Agent-Fenster geöffnet. Dort anmelden, Anbieter wählen und Auftrag starten.');
+}
+function exportAgentRequest(){
+ if(!changeMode||!promptText()||!agentRequest)return;
+ const request={consent:true,goal:$('kiGoal').value,files:Object.entries(agentRequest.files).map(([path,content])=>({path,content})),newPaths:[]};
+ const blob=new Blob([JSON.stringify(request,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='sd-coding-request.json';document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ status('Auftrag gespeichert. Im PC-Agenten mit coding_proposal und ausdrücklich gewähltem Anbieter verarbeiten; die Antwort anschließend hier einfügen.');
 }
 function showPromptPreview(){
  const prompt=promptText();if(!prompt)return;
@@ -201,7 +254,8 @@ function renderCodeReview(){
  const panel=$('kiReview'),items=$('kiReviewFindings'),headline=$('kiReviewSummary');
  if(!panel||!items||!headline)return null;
  items.replaceChildren();
- if(!parsed||parsed.errors.length||!selectedFiles().length){panel.hidden=true;return null;}
+ // Keep findings visible even when proposal validation has blocked import.
+ if(!parsed||!selectedFiles().length){panel.hidden=true;return null;}
  panel.hidden=false;
  const engine=window.SDKICodeReview;
  if(!engine||typeof engine.review!=='function'){
@@ -442,12 +496,41 @@ function renderPlan(){
  updateActions();
  status(parsed.errors.length?parsed.errors.length+' Problem(e) mit Dateipfaden. Bitte korrigieren.':plan.length+' reine Code-Datei(en) erkannt; Erklärungstext ignoriert. Noch nichts gespeichert.',parsed.errors.length>0);
 }
+function validateProposalPreview(){
+ if(!parsed||parsed.errors.length)return;
+ const guard=window.SDStudioAgentProposal;
+ if(!guard){parsed.errors.push('Sichere Prüfung der KI-Dateien fehlt. Bitte Studio neu laden.');return;}
+ const originals=stagedSnapshot||{};
+ if(agentRequest){
+  if(S.p!==agentRequest.project){parsed.errors.push('Projekt seit der KI-Anfrage gewechselt. Erstelle eine neue Anfrage.');return;}
+  for(const file of parsed.files){
+   const existed=Object.prototype.hasOwnProperty.call(originals,file.path);
+   const approved=Object.prototype.hasOwnProperty.call(agentRequest.files,file.path);
+   if(existed&&!approved){parsed.errors.push('Nicht für diese KI-Anfrage freigegebene Datei: '+file.path);return;}
+   if(approved&&originals[file.path]!==agentRequest.files[file.path]){
+    parsed.errors.push('Datei seit der KI-Anfrage verändert: '+file.path+'. Erstelle eine neue Anfrage mit dem aktuellen Stand.');return;
+   }
+  }
+ }
+ const changes=parsed.files.map(file=>{
+  const exists=Object.prototype.hasOwnProperty.call(originals,file.path);
+  return {path:file.path,operation:exists?'replace':'create',content:file.content,
+   baseHash:exists?guard.hashText(originals[file.path]):null,reason:'KI-Vorschlag'};
+ });
+ const existing=changes.filter(item=>item.operation==='replace').map(item=>item.path);
+ const created=changes.filter(item=>item.operation==='create').map(item=>item.path);
+ const result=guard.validateProposal({changes},{files:originals,allowedPaths:existing,
+  allowNewFiles:true,newFilePaths:created});
+ if(!result.ok)parsed.errors.push('Sichere Agentenprüfung: '+result.error);
+ else parsed.agentProposal=result;
+}
 function analyse(){
  clearRepairDraft();
  $('kiDiff').hidden=true;
  parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
  stagedSnapshot=currentFiles();
+ validateProposalPreview();
  renderPlan();
 }
 async function pasteWholeAnswer(){
@@ -578,6 +661,15 @@ function setup(){
  $('kiChangeConsent').addEventListener('change',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiGoal').addEventListener('input',()=>{$('kiClipboard').value='';$('kiClipboard').hidden=true;});
  $('kiPromptPreview').addEventListener('click',showPromptPreview);
+ const exportButton=node('button','','📦 Auftrag für PC-Agent speichern');
+ exportButton.type='button';exportButton.id='kiAgentRequestExport';
+ exportButton.addEventListener('click',exportAgentRequest);
+ $('kiPromptPreview').after(exportButton);
+ const address=node('input');address.id='kiAgentAddress';address.type='url';address.value='https://sd-maschinen-kenner.onrender.com';
+ const addressLabel=node('label','kiLabel','Agent-Adresse (online oder lokal)');addressLabel.append(address);
+ const directAgent=node('button','','🤖 Auftrag direkt im Agenten bearbeiten');directAgent.type='button';directAgent.id='kiAgentDirect';
+ directAgent.addEventListener('click',startDirectAgent);
+ exportButton.after(addressLabel,directAgent);
  $('kiClose').addEventListener('click',closeDialog);
  overlay.addEventListener('click',e=>{if(e.target===overlay)closeDialog()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!overlay.hidden){e.preventDefault();closeDialog()}});
