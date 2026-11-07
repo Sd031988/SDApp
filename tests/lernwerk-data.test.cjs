@@ -94,3 +94,18 @@ test('draft persistence reports failures and verifies browser storage',()=>{
  assert.equal((source.match(/status\.textContent=save\(writingKey,next\)\?/g)||[]).length,2);
  assert.match(source,/Speichern fehlgeschlagen!/);
 });
+
+test('writing self-checklists cover every level without automatic grading',()=>{
+ const start=source.indexOf('const writingChecks=');
+ const end=source.indexOf(';const writingKey=',start);
+ assert.ok(start>=0&&end>start,'Writing checklists are defined');
+ const checks=new Function(source.slice(start,end+1)+'return writingChecks')();
+ for(const lv of ['alpha','a1','a2','b1','praxis']){
+  assert.ok(Array.isArray(checks[lv])&&checks[lv].length>=3,lv);
+  assert.equal(new Set(checks[lv]).size,checks[lv].length,lv);
+  assert.ok(checks[lv].every(v=>typeof v==='string'&&v.length>12),lv);
+ }
+ assert.match(source,/data-writing-check/);
+ assert.match(source,/keine automatische Bewertung/i);
+ assert.match(source,/addEventListener\('change',updateChecks\)/);
+});
