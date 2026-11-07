@@ -107,5 +107,5 @@ test('writing self-checklists cover every level without automatic grading',()=>{
  }
  assert.match(source,/data-writing-check/);
  assert.match(source,/keine automatische Bewertung/i);
- assert.match(source,/addEventListener\('change',updateChecks\)/);
+ assert.ok(source.includes("addEventListener('change',updateChecks)"));
 });
