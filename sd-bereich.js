@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'] || {};
+  const L = () => (window.SD_I18N && window.SD_I18N[window.SD_LANG]) || (window.SD_I18N && window.SD_I18N.de) || {};
   function t(k, v) {
     let s = L()[k] != null ? L()[k] : ((window.SD_I18N.de || {})[k] != null ? window.SD_I18N.de[k] : k);
     if (v) Object.keys(v).forEach((x) => { s = String(s).split('{' + x + '}').join(v[x]); });
@@ -69,6 +69,7 @@
     const z = ['BEGIN:VEVENT', 'UID:' + (e.uid || neueId()) + '-' + tag + '@thesdhub.com',
       'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
       'DTSTART;VALUE=DATE:' + tag, 'DTEND;VALUE=DATE:' + ende, 'SUMMARY:' + icsText(e.titel)];
+    if (e.rrule && /^[A-Z=;0-9,]+$/.test(e.rrule)) z.push('RRULE:' + e.rrule);   // z. B. FREQ=WEEKLY (Jobsuche)
     if (e.text) z.push('DESCRIPTION:' + icsText(e.text));
     const vorher = Math.max(0, Number(e.vorher) || 0);
     if (vorher > 0) z.push('BEGIN:VALARM', 'TRIGGER:-PT' + (vorher * 24 - 9) + 'H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(e.titel), 'END:VALARM');
