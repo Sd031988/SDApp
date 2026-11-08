@@ -109,3 +109,11 @@ test('writing self-checklists cover every level without automatic grading',()=>{
  assert.match(source,/keine automatische Bewertung/i);
  assert.ok(source.includes("addEventListener('change',updateChecks)"));
 });
+
+test('incorrect answer feedback supports another attempt without revealing the answer',()=>{
+ assert.match(source,/Noch nicht ganz\. Lies die Lernhilfe erneut/);
+ assert.doesNotMatch(source,/Die richtige Antwort lautet/);
+ assert.match(source,/hint\.id='sdun-retry'/);
+ assert.match(source,/feedback\.appendChild\(hint\)/);
+ assert.match(source,/item\.opts\[item\.correct\]/);
+});
