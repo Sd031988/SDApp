@@ -2,7 +2,7 @@
 (function () {
   const X = {
     de: {
-      fi_titel: '⚙️ Filter', fi_tage: 'Veröffentlicht', fi_alle: 'egal wann', fi_1: 'seit gestern', fi_7: 'in den letzten 7 Tagen', fi_14: 'in den letzten 14 Tagen', fi_30: 'in den letzten 30 Tagen',
+      fi_titel: '⚙️ Filter', fi_tage: 'Veröffentlicht', fi_alle: 'egal wann', fi_1: 'seit gestern', fi_7: 'in den letzten 7 Tagen', fi_14: 'in den letzten 14 Tagen', fi_28: 'in den letzten 28 Tagen',
       fi_unbef: 'nur unbefristet', fi_za: 'ohne Zeitarbeit', fi_pav: 'ohne private Arbeitsvermittler',
       b_karte: '🗺️ Auf der Karte zeigen', karte_fehler: 'Die Karte konnte nicht geladen werden.',
       r_erklaeren: '🗣️ Einfach erklären', r_passt: '🎯 Passt das zu mir?', r_weg: '🚌 Weg dorthin',
@@ -30,7 +30,7 @@
       ki_daten: 'Für „Passt das zu mir?“ werden Anzeige und Lebenslauf-Angaben (ohne Name und Kontaktdaten) an den SD-Server und dessen KI-Anbieter geschickt.'
     },
     en: {
-      fi_titel: '⚙️ Filters', fi_tage: 'Published', fi_alle: 'any time', fi_1: 'since yesterday', fi_7: 'in the last 7 days', fi_14: 'in the last 14 days', fi_30: 'in the last 30 days',
+      fi_titel: '⚙️ Filters', fi_tage: 'Published', fi_alle: 'any time', fi_1: 'since yesterday', fi_7: 'in the last 7 days', fi_14: 'in the last 14 days', fi_28: 'in the last 28 days',
       fi_unbef: 'permanent only', fi_za: 'no temporary agency work', fi_pav: 'no private recruitment agencies',
       b_karte: '🗺️ Show on map', karte_fehler: 'The map could not be loaded.',
       r_erklaeren: '🗣️ Explain simply', r_passt: '🎯 Does it suit me?', r_weg: '🚌 How to get there',
@@ -58,7 +58,7 @@
       ki_daten: 'For “Does it suit me?”, the ad and your CV details (without name and contact data) are sent to the SD server and its AI provider.'
     },
     fa: {
-      fi_titel: '⚙️ فیلتر', fi_tage: 'زمان انتشار', fi_alle: 'فرقی نمی‌کند', fi_1: 'از دیروز', fi_7: 'در ۷ روز گذشته', fi_14: 'در ۱۴ روز گذشته', fi_30: 'در ۳۰ روز گذشته',
+      fi_titel: '⚙️ فیلتر', fi_tage: 'زمان انتشار', fi_alle: 'فرقی نمی‌کند', fi_1: 'از دیروز', fi_7: 'در ۷ روز گذشته', fi_14: 'در ۱۴ روز گذشته', fi_28: 'در ۲۸ روز گذشته',
       fi_unbef: 'فقط قرارداد دائمی', fi_za: 'بدون کار موقت (Zeitarbeit)', fi_pav: 'بدون کاریابی خصوصی',
       b_karte: '🗺️ نشان دادن روی نقشه', karte_fehler: 'نقشه بارگیری نشد.',
       r_erklaeren: '🗣️ توضیح ساده', r_passt: '🎯 به من می‌خورد؟', r_weg: '🚌 راه رسیدن',
@@ -86,7 +86,7 @@
       ki_daten: 'برای «به من می‌خورد؟» آگهی و اطلاعات رزومه (بدون نام و اطلاعات تماس) به سرور SD و ارائه‌دهنده هوش مصنوعی آن فرستاده می‌شود.'
     },
     ar: {
-      fi_titel: '⚙️ فلاتر', fi_tage: 'تاريخ النشر', fi_alle: 'أي وقت', fi_1: 'منذ الأمس', fi_7: 'خلال آخر 7 أيام', fi_14: 'خلال آخر 14 يوماً', fi_30: 'خلال آخر 30 يوماً',
+      fi_titel: '⚙️ فلاتر', fi_tage: 'تاريخ النشر', fi_alle: 'أي وقت', fi_1: 'منذ الأمس', fi_7: 'خلال آخر 7 أيام', fi_14: 'خلال آخر 14 يوماً', fi_28: 'خلال آخر 28 يوماً',
       fi_unbef: 'عقود دائمة فقط', fi_za: 'بدون عمل مؤقت (Zeitarbeit)', fi_pav: 'بدون وسطاء توظيف خاصين',
       b_karte: '🗺️ العرض على الخريطة', karte_fehler: 'تعذّر تحميل الخريطة.',
       r_erklaeren: '🗣️ شرح مبسّط', r_passt: '🎯 هل تناسبني؟', r_weg: '🚌 الطريق إليها',
@@ -114,7 +114,7 @@
       ki_daten: 'من أجل «هل تناسبني؟» يُرسل الإعلان وبيانات السيرة الذاتية (بدون الاسم وبيانات الاتصال) إلى خادم SD ومزوّد الذكاء الاصطناعي لديه.'
     },
     ur: {
-      fi_titel: '⚙️ فلٹر', fi_tage: 'شائع ہوئی', fi_alle: 'کبھی بھی', fi_1: 'کل سے', fi_7: 'پچھلے 7 دنوں میں', fi_14: 'پچھلے 14 دنوں میں', fi_30: 'پچھلے 30 دنوں میں',
+      fi_titel: '⚙️ فلٹر', fi_tage: 'شائع ہوئی', fi_alle: 'کبھی بھی', fi_1: 'کل سے', fi_7: 'پچھلے 7 دنوں میں', fi_14: 'پچھلے 14 دنوں میں', fi_28: 'پچھلے 28 دنوں میں',
       fi_unbef: 'صرف مستقل', fi_za: 'عارضی ملازمت (Zeitarbeit) کے بغیر', fi_pav: 'نجی ملازمت ایجنسیوں کے بغیر',
       b_karte: '🗺️ نقشے پر دکھائیں', karte_fehler: 'نقشہ لوڈ نہیں ہو سکا۔',
       r_erklaeren: '🗣️ آسان وضاحت', r_passt: '🎯 کیا یہ میرے لیے مناسب ہے؟', r_weg: '🚌 وہاں کیسے جائیں',
@@ -142,7 +142,7 @@
       ki_daten: '«کیا یہ میرے لیے مناسب ہے؟» کے لیے اشتہار اور سی وی کی معلومات (نام اور رابطے کے بغیر) SD سرور اور اس کے AI فراہم کنندہ کو بھیجی جاتی ہیں۔'
     },
     uk: {
-      fi_titel: '⚙️ Фільтри', fi_tage: 'Опубліковано', fi_alle: 'будь-коли', fi_1: 'з учорашнього дня', fi_7: 'за останні 7 днів', fi_14: 'за останні 14 днів', fi_30: 'за останні 30 днів',
+      fi_titel: '⚙️ Фільтри', fi_tage: 'Опубліковано', fi_alle: 'будь-коли', fi_1: 'з учорашнього дня', fi_7: 'за останні 7 днів', fi_14: 'за останні 14 днів', fi_28: 'за останні 28 днів',
       fi_unbef: 'лише безстрокові', fi_za: 'без тимчасової зайнятості (Zeitarbeit)', fi_pav: 'без приватних агентств з працевлаштування',
       b_karte: '🗺️ Показати на карті', karte_fehler: 'Не вдалося завантажити карту.',
       r_erklaeren: '🗣️ Пояснити просто', r_passt: '🎯 Чи підходить мені?', r_weg: '🚌 Як дістатися',
@@ -170,7 +170,7 @@
       ki_daten: 'Для «Чи підходить мені?» оголошення і дані резюме (без імені та контактів) надсилаються на сервер SD і його постачальнику ШІ.'
     },
     ti: {
-      fi_titel: '⚙️ መጻረዪ', fi_tage: 'ዝተዘርግሐሉ', fi_alle: 'ዝኾነ ግዜ', fi_1: 'ካብ ትማሊ', fi_7: 'ኣብ ዝሓለፉ 7 መዓልትታት', fi_14: 'ኣብ ዝሓለፉ 14 መዓልትታት', fi_30: 'ኣብ ዝሓለፉ 30 መዓልትታት',
+      fi_titel: '⚙️ መጻረዪ', fi_tage: 'ዝተዘርግሐሉ', fi_alle: 'ዝኾነ ግዜ', fi_1: 'ካብ ትማሊ', fi_7: 'ኣብ ዝሓለፉ 7 መዓልትታት', fi_14: 'ኣብ ዝሓለፉ 14 መዓልትታት', fi_28: 'ኣብ ዝሓለፉ 28 መዓልትታት',
       fi_unbef: 'ቀዋሚ ጥራይ', fi_za: 'ብዘይ ግዝያዊ ስራሕ (Zeitarbeit)', fi_pav: 'ብዘይ ብሕታውያን ኣማሓደርቲ ስራሕ',
       b_karte: '🗺️ ኣብ ካርታ ኣርኢ', karte_fehler: 'ካርታ ክጽዓን ኣይከኣለን።',
       r_erklaeren: '🗣️ ብቐሊል ግለጽ', r_passt: '🎯 ይሰማማዓኒ ድዩ?', r_weg: '🚌 መገዲ ናብኡ',
