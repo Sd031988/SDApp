@@ -361,7 +361,9 @@
             }
         };
     </script>
+    <script src="../i18n-mehr/messen.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
+    <script src="../i18n-mehr/sprachwahl.js?v=2"></script>
     <script src="../sd-bereich.js?v=2"></script>
     <script src="blatt.js?v=1"></script>
     <script>
@@ -449,7 +451,7 @@
             $('kalibHinweis').className = d.pxMm ? 'gut' : 'hinweis';
             $('linDrehen').textContent = t(senkrecht ? 'lin_quer' : 'lin_drehen');
             document.querySelectorAll('[data-einheit]').forEach(b => b.classList.toggle('an', b.dataset.einheit === einheit));
-            $('linWert').textContent = marker == null ? '–' : (einheit === 'cm' ? zahlFmt(marker / 10, 1) + ' cm' : zahlFmt(marker / 25.4, 2) + ' ' + (en() ? 'in' : 'Zoll'));
+            $('linWert').textContent = marker == null ? '–' : (einheit === 'cm' ? zahlFmt(marker / 10, 1) + ' cm' : zahlFmt(marker / 25.4, 2) + ' ' + (en() ? 'in' : t('zoll')));
         }
         function linZeiger(e) {
             const r = linCanvas.getBoundingClientRect();
