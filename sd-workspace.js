@@ -27,7 +27,7 @@ const items=[
  {id:'vertraege',title:'Verträge',icon:'📑',url:'/vertraege/',group:'Alltag'}
 ];
 const others={
- arbeiten:['Arbeiten','💼'],anerkennung:['Anerkennung','🏅'],mappe:['Dokumentenmappe','🗂️'],
+ arbeiten:['Arbeiten','💼'],jobsuche:['Arbeit finden','🔎'],anerkennung:['Anerkennung','🏅'],mappe:['Dokumentenmappe','🗂️'],
  messen:['Werkzeuge','📏'],ordnen:['Dokumente ordnen','🗃️'],steuer:['Steuern','🧮'],
  stunden:['Arbeitszeiten','🕒'],training:['Training','🏋️'], 'online-upload':['Online-Upload','☁️'],
  passfoto:['Passfoto','📸']

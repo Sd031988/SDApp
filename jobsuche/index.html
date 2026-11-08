@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SD Arbeit finden</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta name="description" content="Jobsuche einfach: einmal eingeben, in den großen Jobbörsen suchen (Bundesagentur für Arbeit, Indeed, StepStone, LinkedIn), Stellen merken und den Weg zur Bewerbung gehen.">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../sd-bereich.css?v=1">
+    <style>
+        .portale { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+        .portal { display: grid; gap: 2px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; min-width: 0; }
+        .portal b { font-size: .98rem; }
+        .portal small { color: var(--muted); font-size: .8rem; line-height: 1.4; }
+        .portal.haupt { border: 2px solid var(--accent); }
+        .portal[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+        .schritte { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+        .schritte a { text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; display: grid; gap: 2px; }
+        .schritte a small { color: var(--muted); font-size: .8rem; }
+        ul.tipps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .9rem; line-height: 1.5; }
+        .zuletzt { display: flex; flex-wrap: wrap; gap: 6px; }
+    </style>
+    <script src="../sd-sync.js?v=2"></script>
+<link rel="stylesheet" href="../sd-workspace.css?v=20261101-appshell-1">
+<script defer src="../sd-workspace.js?v=20261101-appshell-1" data-sd-app="jobsuche" data-sd-mode="standard"></script>
+</head>
+
+<body>
+    <header class="topbar">
+        <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
+        <div class="brand">
+            <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
+            <div><strong data-i18n="titel">Arbeit finden</strong><small data-i18n="untertitel">Einmal eingeben – in allen großen Jobbörsen suchen</small></div>
+        </div>
+        <div class="sd-lang-switch">
+            <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
+            <button type="button" class="sd-lang-btn" data-lang="en" onclick="sdApplyLang('en')">EN</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="karte">
+            <h2 data-i18n="s_suche">🔎 Was und wo suchst du?</h2>
+            <div class="zeile">
+                <label class="feld"><span data-i18n="f_was">Beruf oder Stichwort</span><input type="text" id="was" maxlength="80" placeholder="z. B. Koch, Lagerhelfer, Pflegefachkraft" data-i18n-placeholder="f_was_ph"></label>
+                <label class="feld"><span data-i18n="f_wo">Ort oder PLZ</span><input type="text" id="wo" maxlength="60" placeholder="z. B. Heidelberg" data-i18n-placeholder="f_wo_ph"></label>
+            </div>
+            <div class="zeile3">
+                <label class="feld"><span data-i18n="f_umkreis">Umkreis</span>
+                    <select id="umkreis"><option value="10">10 km</option><option value="25" selected>25 km</option><option value="50">50 km</option><option value="100">100 km</option></select></label>
+                <label class="feld"><span data-i18n="f_art">Was für eine Stelle?</span>
+                    <select id="art">
+                        <option value="arbeit" data-i18n="a_arbeit">Arbeit</option>
+                        <option value="minijob" data-i18n="a_minijob">Minijob</option>
+                        <option value="ausbildung" data-i18n="a_ausbildung">Ausbildung</option>
+                        <option value="praktikum" data-i18n="a_praktikum">Praktikum</option>
+                    </select></label>
+                <label class="feld"><span data-i18n="f_zeit">Arbeitszeit</span>
+                    <select id="zeit">
+                        <option value="" data-i18n="z_egal">egal</option>
+                        <option value="vz" data-i18n="z_vz">Vollzeit</option>
+                        <option value="tz" data-i18n="z_tz">Teilzeit</option>
+                        <option value="ho" data-i18n="z_ho">Homeoffice</option>
+                    </select></label>
+            </div>
+            <p class="info" data-i18n="portale_info">Tippe auf eine Jobbörse – sie öffnet sich mit deiner Suche. Die Stellen kommen direkt von dort; SD Hub zeigt keine eigenen Anzeigen.</p>
+            <div class="portale" id="portale"></div>
+            <div class="zuletzt" id="zuletzt"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s_merken">⭐ Stelle gefunden? Merken!</h2>
+            <p class="info" data-i18n="merken_info">Trag die Stelle hier ein – sie landet im Bewerbungs-Tracker mit dem Status „gemerkt“. Dort kannst du später Bewerbung, Frist und Antwort festhalten.</p>
+            <form id="merkForm" style="display:grid;gap:10px;">
+                <div class="zeile">
+                    <label class="feld"><span data-i18n="m_firma">Firma</span><input type="text" id="mFirma" maxlength="100" required></label>
+                    <label class="feld"><span data-i18n="m_stelle">Stelle</span><input type="text" id="mStelle" maxlength="100"></label>
+                </div>
+                <div class="zeile">
+                    <label class="feld"><span data-i18n="m_ort">Ort</span><input type="text" id="mOrt" maxlength="60"></label>
+                    <label class="feld"><span data-i18n="m_link">Link zur Anzeige</span><input type="url" id="mLink" maxlength="500" placeholder="https://…"></label>
+                </div>
+                <label class="feld"><span data-i18n="m_frist">Bewerben bis <small>(falls angegeben)</small></span><input type="date" id="mFrist" style="max-width:220px"></label>
+                <div class="knoepfe"><button type="submit" class="btn prim" data-i18n="m_speichern">⭐ Im Bewerbungs-Tracker merken</button>
+                    <a class="btn" href="../bewerbungen/index.html" data-i18n="m_tracker">📌 Zum Bewerbungs-Tracker</a></div>
+            </form>
+            <div id="gemerkt" style="display:grid;gap:8px;"></div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s_weiter">📝 So geht es weiter</h2>
+            <div class="schritte">
+                <a href="../Lebenslauf_app.html"><b data-i18n="w_cv">📄 Lebenslauf und Anschreiben</b><small data-i18n="w_cv_t">Bewerbung schreiben und als PDF speichern</small></a>
+                <a href="../training/index.html"><b data-i18n="w_gespraech">🎤 Vorstellungsgespräch üben</b><small data-i18n="w_gespraech_t">Typische Fragen und Antworten trainieren</small></a>
+                <a href="../anerkennung/index.html"><b data-i18n="w_anerk">🎓 Abschluss anerkennen</b><small data-i18n="w_anerk_t">Ausländische Zeugnisse und Berufe</small></a>
+                <a href="../deutsch/index.html"><b data-i18n="w_deutsch">🇩🇪 Deutsch lernen</b><small data-i18n="w_deutsch_t">Von Alphabetisierung bis B1</small></a>
+                <a href="../arbeiten/index.html"><b data-i18n="w_visum">🌍 Aus dem Ausland?</b><small data-i18n="w_visum_t">Visum- und Job-Wegweiser</small></a>
+                <a href="../vertraege/index.html"><b data-i18n="w_kuend">✍️ Alten Job kündigen</b><small data-i18n="w_kuend_t">Frist berechnen, Kündigung schreiben</small></a>
+            </div>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s_tipps">💡 Gut zu wissen</h2>
+            <ul class="tipps">
+                <li data-i18n="t1">Die Jobbörse der Bundesagentur für Arbeit ist kostenlos und hat besonders viele Stellen – auch Ausbildung und Minijobs.</li>
+                <li data-i18n="t2">Wenn dein Job endet: Melde dich rechtzeitig bei der Agentur für Arbeit arbeitsuchend – spätestens 3 Monate vor dem Ende, wenn du es später erfährst, innerhalb von 3 Tagen. Wer Bürgergeld bekommt, wendet sich an das Jobcenter.</li>
+                <li data-i18n="t3">Keine passende Anzeige? Eine Initiativbewerbung direkt an Firmen in deiner Nähe kann sich lohnen.</li>
+                <li data-i18n="t4">Vorsicht bei Betrug: Seriöse Arbeitgeber verlangen kein Geld für eine Stelle, keine Bankdaten und keine Ausweiskopie, bevor es einen Vertrag gibt. Nachrichten mit „schnell viel Geld verdienen“ ignorieren.</li>
+            </ul>
+            <p class="quelle"><span data-i18n="quelle">Offizielle Jobbörse:</span> <a href="https://www.arbeitsagentur.de/jobsuche/" target="_blank" rel="noopener">arbeitsagentur.de/jobsuche</a></p>
+        </section>
+    </main>
+
+    <script>
+        window.SD_I18N = {
+            de: {
+                titel: 'Arbeit finden', untertitel: 'Einmal eingeben – in allen großen Jobbörsen suchen',
+                s_suche: '🔎 Was und wo suchst du?', f_was: 'Beruf oder Stichwort', f_was_ph: 'z. B. Koch, Lagerhelfer, Pflegefachkraft', f_wo: 'Ort oder PLZ', f_wo_ph: 'z. B. Heidelberg',
+                f_umkreis: 'Umkreis', f_art: 'Was für eine Stelle?', a_arbeit: 'Arbeit', a_minijob: 'Minijob', a_ausbildung: 'Ausbildung', a_praktikum: 'Praktikum',
+                f_zeit: 'Arbeitszeit', z_egal: 'egal', z_vz: 'Vollzeit', z_tz: 'Teilzeit', z_ho: 'Homeoffice',
+                portale_info: 'Tippe auf eine Jobbörse – sie öffnet sich mit deiner Suche. Die Stellen kommen direkt von dort; SD Hub zeigt keine eigenen Anzeigen.',
+                p_ba: 'Bundesagentur für Arbeit', p_ba_t: 'Offizielle Jobbörse · kostenlos · auch Ausbildung und Minijobs',
+                p_indeed: 'Indeed', p_indeed_t: 'Sehr viele Anzeigen aus vielen Quellen',
+                p_stepstone: 'StepStone', p_stepstone_t: 'Viele Fach- und Bürojobs', p_stepstone_leer: 'Bitte zuerst einen Beruf eingeben',
+                p_linkedin: 'LinkedIn', p_linkedin_t: 'Gut für Büro-, IT- und internationale Jobs',
+                zuletzt: 'Zuletzt gesucht:',
+                s_merken: '⭐ Stelle gefunden? Merken!', merken_info: 'Trag die Stelle hier ein – sie landet im Bewerbungs-Tracker mit dem Status „gemerkt“. Dort kannst du später Bewerbung, Frist und Antwort festhalten.',
+                m_firma: 'Firma', m_stelle: 'Stelle', m_ort: 'Ort', m_link: 'Link zur Anzeige', m_frist: 'Bewerben bis (falls angegeben)',
+                m_speichern: '⭐ Im Bewerbungs-Tracker merken', m_tracker: '📌 Zum Bewerbungs-Tracker', m_ok: '⭐ Gemerkt: {x}', m_gemerkt: 'Gemerkte Stellen ({n})', m_anzeige: 'Anzeige öffnen', m_bewerben: 'Bewerbung schreiben',
+                s_weiter: '📝 So geht es weiter', w_cv: '📄 Lebenslauf und Anschreiben', w_cv_t: 'Bewerbung schreiben und als PDF speichern',
+                w_gespraech: '🎤 Vorstellungsgespräch üben', w_gespraech_t: 'Typische Fragen und Antworten trainieren', w_anerk: '🎓 Abschluss anerkennen', w_anerk_t: 'Ausländische Zeugnisse und Berufe',
+                w_deutsch: '🇩🇪 Deutsch lernen', w_deutsch_t: 'Von Alphabetisierung bis B1', w_visum: '🌍 Aus dem Ausland?', w_visum_t: 'Visum- und Job-Wegweiser', w_kuend: '✍️ Alten Job kündigen', w_kuend_t: 'Frist berechnen, Kündigung schreiben',
+                s_tipps: '💡 Gut zu wissen',
+                t1: 'Die Jobbörse der Bundesagentur für Arbeit ist kostenlos und hat besonders viele Stellen – auch Ausbildung und Minijobs.',
+                t2: 'Wenn dein Job endet: Melde dich rechtzeitig bei der Agentur für Arbeit arbeitsuchend – spätestens 3 Monate vor dem Ende, wenn du es später erfährst, innerhalb von 3 Tagen. Wer Bürgergeld bekommt, wendet sich an das Jobcenter.',
+                t3: 'Keine passende Anzeige? Eine Initiativbewerbung direkt an Firmen in deiner Nähe kann sich lohnen.',
+                t4: 'Vorsicht bei Betrug: Seriöse Arbeitgeber verlangen kein Geld für eine Stelle, keine Bankdaten und keine Ausweiskopie, bevor es einen Vertrag gibt. Nachrichten mit „schnell viel Geld verdienen“ ignorieren.',
+                quelle: 'Offizielle Jobbörse:'
+            },
+            en: {
+                titel: 'Find work', untertitel: 'Enter once – search all major job boards',
+                s_suche: '🔎 What and where are you looking?', f_was: 'Job or keyword', f_was_ph: 'e.g. cook, warehouse worker, nurse', f_wo: 'Town or postcode', f_wo_ph: 'e.g. Heidelberg',
+                f_umkreis: 'Radius', f_art: 'What kind of job?', a_arbeit: 'Job', a_minijob: 'Mini-job', a_ausbildung: 'Apprenticeship (Ausbildung)', a_praktikum: 'Internship',
+                f_zeit: 'Working hours', z_egal: 'any', z_vz: 'Full-time', z_tz: 'Part-time', z_ho: 'Home office',
+                portale_info: 'Tap a job board – it opens with your search. The jobs come straight from there; SD Hub shows no ads of its own.',
+                p_ba: 'Federal Employment Agency', p_ba_t: 'Official job board · free · also apprenticeships and mini-jobs',
+                p_indeed: 'Indeed', p_indeed_t: 'Lots of ads from many sources',
+                p_stepstone: 'StepStone', p_stepstone_t: 'Many skilled and office jobs', p_stepstone_leer: 'Please enter a job first',
+                p_linkedin: 'LinkedIn', p_linkedin_t: 'Good for office, IT and international jobs',
+                zuletzt: 'Recent searches:',
+                s_merken: '⭐ Found a job? Save it!', merken_info: 'Enter the job here – it goes into the application tracker with the status “saved”. There you can later record your application, deadline and answer.',
+                m_firma: 'Company', m_stelle: 'Job', m_ort: 'Location', m_link: 'Link to the ad', m_frist: 'Apply by (if given)',
+                m_speichern: '⭐ Save in application tracker', m_tracker: '📌 Go to application tracker', m_ok: '⭐ Saved: {x}', m_gemerkt: 'Saved jobs ({n})', m_anzeige: 'Open ad', m_bewerben: 'Write application',
+                s_weiter: '📝 Next steps', w_cv: '📄 CV and cover letter', w_cv_t: 'Write your application and save it as a PDF',
+                w_gespraech: '🎤 Practise the interview', w_gespraech_t: 'Train typical questions and answers', w_anerk: '🎓 Get your qualification recognised', w_anerk_t: 'Foreign certificates and professions',
+                w_deutsch: '🇩🇪 Learn German', w_deutsch_t: 'From literacy to B1', w_visum: '🌍 Coming from abroad?', w_visum_t: 'Visa and job guide', w_kuend: '✍️ Quit your old job', w_kuend_t: 'Calculate notice, write the letter',
+                s_tipps: '💡 Good to know',
+                t1: 'The job board of the Federal Employment Agency is free and has a particularly large number of jobs – including apprenticeships and mini-jobs.',
+                t2: 'If your job ends: register as a job seeker with the Agentur für Arbeit in time – at least 3 months before the end, or within 3 days if you find out later. If you receive Bürgergeld, contact the Jobcenter.',
+                t3: 'No suitable ad? A speculative application sent directly to companies near you can be worth it.',
+                t4: 'Beware of scams: serious employers do not ask for money for a job, bank details or a copy of your ID before there is a contract. Ignore messages promising “quick big money”.',
+                quelle: 'Official job board:'
+            }
+        };
+    </script>
+    <script src="../i18n.js?v=1"></script>
+    <script src="../sd-bereich.js?v=2"></script>
+    <script>
+        const { $, t, esc } = SD;
+        const KEY = 'sdJobsuche';
+        const TRACKER = 'sdBewerbungen';   // gleicher Speicher wie der Bewerbungs-Tracker
+        const d = SD.lesen(KEY, {});
+        if (!Array.isArray(d.zuletzt)) d.zuletzt = [];
+        ['was', 'wo', 'umkreis', 'art', 'zeit'].forEach(k => { if (d[k] != null && $(k)) $(k).value = d[k]; });
+
+        const slug = (s) => String(s || '').trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        function suche() {
+            return { was: $('was').value.trim(), wo: $('wo').value.trim(), umkreis: $('umkreis').value, art: $('art').value, zeit: $('zeit').value };
+        }
+        // Zusatzwort für Portale ohne eigenen Filter
+        function zusatz(s) {
+            const z = { minijob: 'Minijob', ausbildung: 'Ausbildung', praktikum: 'Praktikum' }[s.art] || '';
+            const h = { tz: 'Teilzeit', ho: 'Homeoffice' }[s.zeit] || '';
+            return [s.was, z, h].filter(Boolean).join(' ');
+        }
+        function links(s) {
+            const q = (o) => Object.entries(o).filter(e => e[1]).map(e => e[0] + '=' + encodeURIComponent(e[1])).join('&');
+            // Bundesagentur: angebotsart 1 = Arbeit, 4 = Ausbildung/duales Studium, 34 = Praktikum/Trainee; arbeitszeit vz/tz/ho/mj
+            const ba = 'https://www.arbeitsagentur.de/jobsuche/suche?' + q({
+                angebotsart: { arbeit: '1', minijob: '1', ausbildung: '4', praktikum: '34' }[s.art],
+                was: s.was, wo: s.wo, umkreis: s.wo ? s.umkreis : '', arbeitszeit: s.art === 'minijob' ? 'mj' : s.zeit
+            });
+            const text = zusatz(s);
+            const indeed = 'https://de.indeed.com/jobs?' + q({ q: text, l: s.wo, radius: s.wo ? s.umkreis : '' });
+            const st = slug(text);
+            const stepstone = st ? 'https://www.stepstone.de/jobs/' + st + (s.wo ? '/in-' + slug(s.wo) + '?' + q({ radius: s.umkreis }) : '') : '';
+            const linkedin = 'https://www.linkedin.com/jobs/search/?' + q({ keywords: text, location: s.wo });
+            return [['ba', ba, true], ['indeed', indeed], ['stepstone', stepstone], ['linkedin', linkedin]];
+        }
+        function zeigePortale() {
+            const s = suche();
+            $('portale').innerHTML = links(s).map(([id, url, haupt]) =>
+                '<a class="portal' + (haupt ? ' haupt' : '') + '" target="_blank" rel="noopener" data-p="' + id + '"' + (url ? ' href="' + esc(url) + '"' : ' aria-disabled="true"') + '>' +
+                '<b>' + esc(t('p_' + id)) + ' ↗</b><small>' + esc(url ? t('p_' + id + '_t') : t('p_' + id + '_leer')) + '</small></a>').join('');
+            $('zuletzt').innerHTML = d.zuletzt.length ? '<span class="info" style="margin:0">' + esc(t('zuletzt')) + '</span>' +
+                d.zuletzt.map((z, i) => '<button type="button" class="chip" data-z="' + i + '">' + esc([z.was, z.wo].filter(Boolean).join(' · ')) + '</button>').join('') : '';
+        }
+        function speichern() { const s = suche(); Object.assign(d, s); SD.schreiben(KEY, d); }
+        ['was', 'wo', 'umkreis', 'art', 'zeit'].forEach(k => $(k).addEventListener('input', () => { speichern(); zeigePortale(); }));
+        $('portale').addEventListener('click', () => {
+            const s = suche();
+            if (!s.was && !s.wo) return;
+            d.zuletzt = [s].concat(d.zuletzt.filter(z => !(z.was === s.was && z.wo === s.wo))).slice(0, 5);
+            SD.schreiben(KEY, d);
+            setTimeout(zeigePortale, 0);
+        });
+        $('zuletzt').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-z]'); if (!b) return;
+            const z = d.zuletzt[+b.dataset.z]; if (!z) return;
+            ['was', 'wo', 'umkreis', 'art', 'zeit'].forEach(k => { if (z[k] != null) $(k).value = z[k]; });
+            speichern(); zeigePortale();
+        });
+
+        // ---- Merken: direkt im Bewerbungs-Tracker ----
+        function trackerLesen() { try { const l = JSON.parse(localStorage.getItem(TRACKER) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+        function zeigeGemerkt() {
+            const l = trackerLesen().filter(b => b.status === 'gemerkt').slice(-5).reverse();
+            if (!l.length) { $('gemerkt').innerHTML = ''; return; }
+            $('gemerkt').innerHTML = '<h3 style="margin:6px 0 0;font-size:.95rem">' + esc(t('m_gemerkt', { n: trackerLesen().filter(b => b.status === 'gemerkt').length })) + '</h3>' +
+                l.map(b => '<div class="eintrag"><div class="oben"><b>' + esc(b.firma || '–') + '</b>' + (b.frist ? '<span class="marke">' + esc(SD.fmt(b.frist)) + '</span>' : '') + '</div>' +
+                    '<div class="meta">' + esc([b.position, b.ort].filter(Boolean).join(' · ')) + '</div>' +
+                    '<div class="knoepfe">' + (/^https?:\/\//i.test(b.link || '') ? '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(b.link) + '">' + esc(t('m_anzeige')) + ' ↗</a>' : '') +
+                    '<a class="btn klein" href="../Lebenslauf_app.html">' + esc(t('m_bewerben')) + '</a></div></div>').join('');
+        }
+        $('merkForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const firma = $('mFirma').value.trim(); if (!firma) return;
+            const l = trackerLesen();
+            const link = $('mLink').value.trim();
+            l.push({
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), erstellt: Date.now(), status: 'gemerkt',
+                firma, position: $('mStelle').value.trim(), ort: $('mOrt').value.trim(), link: /^https?:\/\//i.test(link) ? link : '',
+                frist: $('mFrist').value || '', verlauf: [{ datum: SD.heuteIso(), status: 'gemerkt' }]
+            });
+            try { localStorage.setItem(TRACKER, JSON.stringify(l)); } catch (err) { }
+            SD.toast(t('m_ok', { x: firma }));
+            $('merkForm').reset();
+            zeigeGemerkt();
+        });
+        document.addEventListener('sd-lang-changed', () => { zeigePortale(); zeigeGemerkt(); });
+        zeigePortale(); zeigeGemerkt();
+    </script>
+</body>
+
+</html>
