@@ -206,9 +206,27 @@
     }
   };
 
+  // sprache(): Sprache der KI-Ausgabe (de/en). Oberflaechentexte gibt es zusaetzlich in weiteren Sprachen.
   function sprache() { return window.SD_LANG === 'en' ? 'en' : 'de'; }
+  const MEHR_SPRACHEN = ['fa', 'ar', 'ur', 'uk', 'ti'];
+  let mehrLaedt = false;
+  function mehrTexteLaden() {
+    const l = window.SD_LANG;
+    if (!MEHR_SPRACHEN.includes(l) || window.SD_KI_TEXTE_MEHR || mehrLaedt) return;
+    mehrLaedt = true;
+    const sc = document.createElement('script');
+    sc.src = new URL('i18n-mehr/sd-ki.js?v=1', SKRIPT_URL).href;
+    sc.onload = () => document.dispatchEvent(new CustomEvent('sd-ki-texte'));
+    (document.head || document.documentElement).appendChild(sc);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mehrTexteLaden); else setTimeout(mehrTexteLaden, 0);
+  function aufSprache(fn) {
+    document.addEventListener('sd-lang-changed', () => { mehrTexteLaden(); fn(); });
+    document.addEventListener('sd-ki-texte', fn);
+  }
   function tx(key, vars) {
-    let s = (TEXTE[sprache()] || TEXTE.de)[key];
+    const mehr = (window.SD_KI_TEXTE_MEHR || {})[window.SD_LANG];
+    let s = mehr && mehr[key] != null ? mehr[key] : (TEXTE[sprache()] || TEXTE.de)[key];
     if (s == null) s = TEXTE.de[key] || key;
     if (vars) Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); });
     return s;
@@ -363,7 +381,7 @@
     };
     zeichnen();
     document.addEventListener('sd-ki-anbieter', zeichnen);
-    document.addEventListener('sd-lang-changed', zeichnen);
+    aufSprache(zeichnen);
     return box;
   }
 
@@ -1385,7 +1403,7 @@
     schliessen.onclick = () => { lotseStopp(); o.remove(); };
     const neuZeichnen = () => { if (document.body.contains(o)) zeichnen(); };
     document.addEventListener('sd-ki-anbieter', neuZeichnen);
-    document.addEventListener('sd-lang-changed', neuZeichnen);
+    aufSprache(neuZeichnen);
     zeichnen();
     return o;
   }
@@ -1417,7 +1435,7 @@
     };
     aktualisieren();
     document.addEventListener('sd-ki-anbieter', aktualisieren);
-    document.addEventListener('sd-lang-changed', aktualisieren);
+    aufSprache(aktualisieren);
   }
 
   window.sdKi = {
