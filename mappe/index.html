@@ -258,11 +258,13 @@
             }
         };
     </script>
+    <script src="../i18n-mehr/mappe.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
+    <script src="../i18n-mehr/sprachwahl.js?v=2"></script>
     <script>
         'use strict';
         const $ = (id) => document.getElementById(id);
-        const L = () => window.SD_I18N[window.SD_LANG === 'en' ? 'en' : 'de'];
+        const L = () => window.SD_I18N[window.SD_LANG] || window.SD_I18N.de;
         const t = (k, v) => { let s = L()[k] != null ? L()[k] : (window.SD_I18N.de[k] || k); if (v) Object.keys(v).forEach(x => { s = String(s).split('{' + x + '}').join(v[x]); }); return s; };
         const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
