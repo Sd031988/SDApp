@@ -135,11 +135,12 @@
   function zeigeListe(neueRefs) {
     $('ergebnis').innerHTML = liste.map(j => stelleHtml(j, neueRefs && neueRefs.has(j.refnr))).join('');
     $('karteBtn').hidden = !liste.some(j => j.lat != null && j.lon != null);
-    if (!$('karte').hidden) karteZeichnen();
+    if ($('karteBtn').hidden) $('karte').hidden = true;
+    else if (!$('karte').hidden) karteZeichnen();
     $('mehr').hidden = !(liste.length < gesamt && liste.length < 1000);
   }
   async function suchen(mehr, neueRefs) {
-    if (laeuft) return;
+    if (laeuft) return false;
     const s = mehr ? aktuelleSuche : suche();
     if (!s.was && !s.wo) { $('status').textContent = t('r_eingeben'); return; }
     laeuft = true;
@@ -154,8 +155,10 @@
       $('status').textContent = gesamt ? t('r_anzahl', { n: gesamt.toLocaleString('de-DE') }) : t('r_keine');
       zeigeListe(neueRefs);
       gesehenMerken(s, j.stellen);
+      return true;
     } catch (e) {
       $('status').textContent = t('r_fehler', { f: (e && e.name === 'AbortError') ? t('r_zeit') : ((e && e.message) || String(e)) });
+      return false;
     } finally {
       clearTimeout(wach); laeuft = false;
       $('suchen').disabled = false; $('mehr').disabled = false;
@@ -204,7 +207,7 @@
     Object.keys(FILTER).forEach(k => { const el = $(FILTER[k]); if (el.type === 'checkbox') el.checked = !!s[k]; else el.value = s[k] || ''; });
     speichernFelder(); zeigePortale();
     const alt = new Set(s.gesehen || []);
-    suchen(false, null).then(() => { zeigeListe(new Set(liste.map(x => x.refnr).filter(r => !alt.has(r)))); });
+    suchen(false, null).then((ok) => { if (ok) zeigeListe(new Set(liste.map(x => x.refnr).filter(r => !alt.has(r)))); });
     $('ergebnis').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   async function neueStellenPruefen() {
