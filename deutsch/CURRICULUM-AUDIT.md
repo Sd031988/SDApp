@@ -83,3 +83,11 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - In `tests/lernwerk-data.test.cjs` prüft ein neuer Regressionstest das Vorhandensein und die Eindeutigkeit der Kriterien sowie die Anbindung der Checkboxen.
 - Prüfung in diesem Durchgang: JavaScript-Quelltext und Testdatei wurden syntaktisch als Funktionen geparst; vollständiger Node-Testlauf und Playwright-Browserprüfung nicht durchgeführt.
 - Restrisiken: Checkboxen prüfen nicht, ob die Aussagen tatsächlich zutreffen; sie werden bei einer Neudarstellung zurückgesetzt. Keine automatische Beurteilung von Grammatik, Wortschatz, Textkohärenz oder B1-Prüfungsreife. Vor Veröffentlichung End-to-End-Test einschließlich Tastaturbedienung und Mobilansicht durchführen.
+
+### 2026-11-08 – Keine Lösungsvorgabe nach falscher Auswahl
+
+- Bei einer falschen Multiple-Choice-Antwort wurde bisher die korrekte Option unmittelbar angezeigt. Das unterlief die Wiederholungsfunktion und konnte die Aussagekraft des Lernfortschritts mindern.
+- Der Hinweis fordert nun zum erneuten Lesen der Lernhilfe und Vergleichen der Antworten auf; der Button „Noch einmal versuchen“ bleibt bestehen. Richtige Antworten werden weiterhin über den vorhandenen Erfolgszweig verarbeitet.
+- Regressionstest in `tests/lernwerk-data.test.cjs` prüft, dass der falsche Antwortzweig die richtige Option nicht mehr ausdrücklich verrät und der Wiederholungsbutton erhalten bleibt.
+- JavaScript-Parsing der bearbeiteten Quell- und Testdatei erfolgreich; ein vollständiger Node-Testlauf sowie Playwright-Browsertests wurden nicht ausgeführt.
+- Restrisiken: Manche allgemeine Lernhilfen können weiterhin indirekte Hinweise geben; die Wiederholung ist keine standardisierte Prüfung. Vor Freigabe Browserprüfung, Tastaturbedienung und didaktische Prüfung der Aufgaben durchführen.
