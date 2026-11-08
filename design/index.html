@@ -8,8 +8,8 @@
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <script src="../agent/zugang-krypto.js"></script>
 <style>html,body{margin:0;background:#15161a}</style>
-<link rel="stylesheet" href="../sd-workspace.css?v=20261101-appshell-1">
-<script defer src="../sd-workspace.js?v=20261101-appshell-1" data-sd-app="design" data-sd-mode="compact"></script>
+<link rel="stylesheet" href="../sd-workspace.css?v=20261108-ui-1">
+<script defer src="../sd-workspace.js?v=20261108-ui-1" data-sd-app="design" data-sd-mode="compact"></script>
 </head>
 <body>
 <noscript>Bitte JavaScript einschalten.</noscript>
@@ -164,7 +164,7 @@ function dsEigenschaften(){const box=$("dsRechts");if(!box)return;const e=dsSel(
   if(!e){box.innerHTML='<div class="dsT">HINTERGRUND</div>'+
      dsFeld("Art",'<select data-hg="art"><option value="farbe">Farbe</option><option value="verlauf">Verlauf</option><option value="radial">Kreis-Verlauf</option></select>')+
      dsFeld("Farbe 1",'<input type="color" data-hg="a">')+(d.hg.art!=="farbe"?dsFeld("Farbe 2",'<input type="color" data-hg="b">')+(d.hg.art==="verlauf"?dsFeld("Winkel",'<input type="range" min="0" max="360" data-hg="winkel">'):""):"")+
-     '<div class="dsT">VERLÄUFE</div><div class="dsChips">'+DS_VERLAEUFE.map((v,i)=>'<button class="dsChip" data-verlauf="'+i+'" style="background:linear-gradient(135deg,'+v[0]+','+v[1]+')"></button>').join("")+'</div>'+
+     '<div class="dsT">VERLÄUFE</div><div class="dsChips">'+DS_VERLAEUFE.map((v,i)=>'<button class="dsChip" data-verlauf="'+i+'" aria-label="Farbverlauf '+(i+1)+'" title="Farbverlauf '+(i+1)+'" style="background:linear-gradient(135deg,'+v[0]+','+v[1]+')"></button>').join("")+'</div>'+
      '<div class="dsT">FORMAT</div>'+dsFeld("Größe",'<select id="dsFormat">'+DS_FORMATE.map((f,i)=>'<option value="'+i+'"'+(f[1]===d.w&&f[2]===d.h?" selected":"")+'>'+f[0]+' ('+f[1]+'×'+f[2]+')</option>').join("")+'<option value="eigen">Eigene Größe …</option></select>')+
      '<div class="dsHinweis">Tipp: Element anklicken zum Bearbeiten · Doppelklick auf Text zum Schreiben · Pfeiltasten verschieben · Entf löscht · Strg+D verdoppelt · Strg+Z rückgängig · Umschalt beim Ziehen = Seitenverhältnis</div>';
     box.querySelectorAll("[data-hg]").forEach(i=>{const k=i.dataset.hg;i.value=d.hg[k]==null?(k==="winkel"?135:"#dddddd"):d.hg[k];i.oninput=()=>{if(!i._m){dsMerken();i._m=1}d.hg[k]=k==="winkel"?+i.value:i.value;if(k==="art")dsZeichnen();else $("dsFlaeche").style.background=dsHgCss(d.hg)};i.onchange=()=>{i._m=0;dsZeichnen()}});
@@ -293,9 +293,9 @@ function dsStil(){if($("dsStil"))return;const s=document.createElement("style");
  "#dsKopf #dsName{width:180px}#dsLinks,#dsRechts{overflow:auto;padding:10px;background:#1b1c21}#dsLinks{border-right:1px solid #2b2d34}#dsRechts{border-left:1px solid #2b2d34}"+
  ".dsT{font-size:11px;letter-spacing:.08em;color:#9a9aa5;margin:12px 0 6px;font-weight:600}.dsT:first-child{margin-top:0}"+
  ".dsKacheln{display:grid;grid-template-columns:1fr 1fr;gap:6px}.dsKacheln button{padding:10px 4px!important;display:grid;gap:3px;justify-items:center;font-size:12px!important}.dsKacheln button span{font-size:20px}"+
- ".dsVorl{display:grid;gap:5px}.dsVorl button{text-align:left}.dsChips{display:flex;flex-wrap:wrap;gap:5px}.dsChip{width:30px;height:30px;padding:0!important;border-radius:50%!important;border:2px solid #33363f!important}"+
+ ".dsVorl{display:grid;gap:5px}.dsVorl button{text-align:left}.dsChips{display:flex;flex-wrap:wrap;gap:5px}.dsChip{width:34px;height:34px;padding:0!important;border-radius:50%!important;border:2px solid #33363f!important}"+
  ".dsPal{display:flex;border-radius:7px;overflow:hidden;height:22px;cursor:pointer;border:1px solid #33363f;margin-bottom:5px}.dsPal i{flex:1}.dsPal:hover{outline:2px solid #a855f7}"+
- ".dsEmoji{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:2px}.dsEmoji button{padding:3px!important;font-size:17px!important;background:transparent!important;border:0!important}"+
+ ".dsEmoji{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:2px}.dsEmoji button{padding:3px!important;min-height:34px;font-size:17px!important;background:transparent!important;border:0!important}"+
  "#dsMitte{overflow:auto;display:grid;place-items:center;background:radial-gradient(circle,#26272e 1px,transparent 1px) 0 0/18px 18px,#121317;position:relative}"+
  "#dsBuehne{position:relative;box-shadow:0 20px 60px rgba(0,0,0,.6)}#dsFlaeche{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden}"+
  ".dsEl{cursor:move;user-select:none;outline:1px dashed transparent}.dsEl:hover{outline-color:rgba(168,85,247,.6)}.dsEl.sel{outline:2px solid #a855f7}.dsEl.lock{cursor:default}.dsEl[contenteditable=true]{cursor:text;user-select:text;outline:2px solid #ec4899}"+

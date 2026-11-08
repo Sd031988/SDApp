@@ -77,3 +77,14 @@ body[data-sd-ws-mode=compact] .sd-ws-panel{top:auto;bottom:calc(72px + env(safe-
 @media(max-width:760px){body[data-sd-ws-mode=compact] .sd-ws-launch{bottom:calc(10px + env(safe-area-inset-bottom,0px));left:10px;padding:7px 10px;font-size:11px!important}
  body[data-sd-ws-mode=compact] .sd-ws-panel{left:10px;right:10px;width:auto}}
 @media(prefers-reduced-motion:reduce){.sd-ws-bar *,.sd-ws-dock *,.sd-ws-panel *{transition:none!important;animation:none!important}}
+/* Schutz gegen Seiten-CSS, das die Leiste breiter als den Bildschirm macht (z. B. Schreibstudio) */
+.sd-ws-bar{width:auto!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important}
+.sd-ws-brand{min-width:0!important;overflow:hidden}
+.sd-ws-brand-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Größere Tippflächen auf Touch-Geräten (Handy/Tablet) – mind. ~36 px */
+@media (pointer:coarse){
+ .sd-lang-btn{min-height:36px!important;min-width:40px}
+ .chip,.btn,.btn.klein,.stroke-btn,.link-btn-klein,.dsChip{min-height:36px}
+ .dsChip{min-width:36px}
+ label.check input[type=checkbox],label.check input[type=radio]{width:22px;height:22px}
+}

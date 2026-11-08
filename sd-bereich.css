@@ -83,3 +83,10 @@ body{font-family:"Atkinson Next","Segoe UI",system-ui,sans-serif;background:line
 .btn:focus-visible,.back-link:focus-visible{outline:3px solid #f2bf48;outline-offset:3px}
 @media(min-width:1000px){main{max-width:930px;padding-left:26px;padding-right:26px}}
 @media(max-width:760px){.karte{border-radius:16px}.knoepfe .btn{min-height:44px}}
+
+/* Größere Tippflächen auf Touch-Geräten (Handy/Tablet) */
+@media (pointer: coarse) {
+  .sd-lang-btn { min-height: 36px; min-width: 40px; }
+  .chip, .btn, .btn.klein { min-height: 36px; }
+  label.check input { width: 22px; height: 22px; }
+}

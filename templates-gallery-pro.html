@@ -264,6 +264,9 @@
         .page-dot {
             width: 10px;
             height: 10px;
+            box-sizing: content-box;
+            padding: 13px;
+            background-clip: content-box;
             border-radius: 50%;
             background: var(--border-light);
             border: none;
@@ -497,6 +500,7 @@
             for (let i = 0; i < 10; i++) {
                 const dot = document.createElement('button');
                 dot.className = `page-dot ${i === 0 ? 'active' : ''}`;
+                dot.setAttribute('aria-label', 'Seite ' + (i + 1));
                 dot.onclick = () => goToPage(i);
                 pagination.appendChild(dot);
             }
