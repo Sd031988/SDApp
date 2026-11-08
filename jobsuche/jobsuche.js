@@ -6,7 +6,7 @@
   const { $, t, esc } = SD;
   const SERVER = (() => { try { return localStorage.getItem('sdLearnServer') || ''; } catch (e) { return ''; } })() || 'https://sd-maschinen-kenner.onrender.com';
   const KEY = 'sdJobsuche', TRACKER = 'sdBewerbungen';
-  const FELDER = ['was', 'wo', 'umkreis', 'art', 'zeit'];
+  const FELDER = ['was', 'wo', 'umkreis', 'art', 'zeit', 'land'];
   const d = SD.lesen(KEY, {});
   if (!Array.isArray(d.suchen)) d.suchen = [];
   FELDER.forEach(k => { if (d[k] != null && $(k)) $(k).value = d[k]; });
@@ -68,7 +68,7 @@
   const fWert = (k) => { const el = $(FILTER[k]); return el.type === 'checkbox' ? el.checked : el.value; };
   if (d.filter) Object.keys(FILTER).forEach(k => { const el = $(FILTER[k]); if (d.filter[k] != null) { if (el.type === 'checkbox') el.checked = !!d.filter[k]; else el.value = d.filter[k]; } });
   if (d.filter && Object.values(d.filter).some(Boolean)) $('filterBox').open = true;
-  const suche = () => ({ was: $('was').value.trim(), wo: $('wo').value.trim(), umkreis: $('umkreis').value, art: $('art').value, zeit: $('zeit').value,
+  const suche = () => ({ land: $('land').value || 'de', was: $('was').value.trim(), wo: $('wo').value.trim(), umkreis: $('umkreis').value, art: $('art').value, zeit: $('zeit').value,
     tage: fWert('tage'), unbef: fWert('unbef'), ohneZa: fWert('ohneZa'), ohnePav: fWert('ohnePav') });
   const ANGEBOT = { arbeit: '1', minijob: '1', ausbildung: '4', praktikum: '34' };
   const azeit = (s) => (s.art === 'minijob' ? 'mj' : s.zeit);
@@ -80,6 +80,13 @@
 
   function portale(s) {
     const text = zusatz(s), st = slug(text);
+    if (s.land && s.land !== 'de') {
+      const ort = [s.wo, landName(s.land)].filter(Boolean).join(', ');
+      const l = [];
+      if (INDEED.includes(s.land)) l.push(['indeed', 'https://' + s.land + '.indeed.com/jobs?' + qs({ q: s.was, l: s.wo })]);
+      l.push(['linkedin', 'https://www.linkedin.com/jobs/search/?' + qs({ keywords: s.was, location: ort })], ['eures', 'https://eures.europa.eu/']);
+      return l;
+    }
     const l = [
       ['ba', baUrl(s)],
       ['indeed', 'https://de.indeed.com/jobs?' + qs({ q: text, l: s.wo, radius: s.wo ? s.umkreis : '' })],
@@ -101,6 +108,7 @@
   FELDER.forEach(k => $(k).addEventListener('input', () => { speichernFelder(); zeigePortale(); }));
 
   async function jobsHolen(s, seite) {
+    if ((s.land || 'de') !== 'de') return jobsHolenEU(s, seite);
     const ctrl = new AbortController();
     const zeit = setTimeout(() => ctrl.abort(), 75000);   // der kostenlose Server braucht beim Aufwachen bis ~1 Minute
     try {
@@ -116,10 +124,59 @@
     } finally { clearTimeout(zeit); }
   }
 
+  // ---------- Europa (EURES) ----------
+  const EU = ['at', 'be', 'bg', 'hr', 'cy', 'cz', 'dk', 'ee', 'fi', 'fr', 'gr', 'hu', 'ie', 'it', 'lv', 'lt', 'lu', 'mt', 'nl', 'pl', 'pt', 'ro', 'sk', 'si', 'es', 'se', 'is', 'li', 'no', 'ch'];
+  // Sprachen, in denen Stellenanzeigen im Land meist geschrieben sind (für die Übersetzung des Suchworts)
+  const LANDSPRACHE = { at: [], li: [], be: ['Niederländisch', 'Französisch'], bg: ['Bulgarisch'], hr: ['Kroatisch'], cy: ['Griechisch', 'Englisch'], cz: ['Tschechisch'],
+    dk: ['Dänisch'], ee: ['Estnisch'], fi: ['Finnisch'], fr: ['Französisch'], gr: ['Griechisch'], hu: ['Ungarisch'], ie: ['Englisch'], it: ['Italienisch'],
+    lv: ['Lettisch'], lt: ['Litauisch'], lu: ['Französisch'], mt: ['Englisch'], nl: ['Niederländisch'], pl: ['Polnisch'], pt: ['Portugiesisch'], ro: ['Rumänisch'],
+    sk: ['Slowakisch'], si: ['Slowenisch'], es: ['Spanisch'], se: ['Schwedisch'], is: ['Isländisch'], no: ['Norwegisch'], ch: ['Französisch', 'Italienisch'] };
+  const INDEED = ['at', 'be', 'ch', 'cz', 'dk', 'es', 'fi', 'fr', 'gr', 'hu', 'ie', 'it', 'lu', 'nl', 'no', 'pl', 'pt', 'ro', 'se'];
+  const landName = (cc) => { try { return new Intl.DisplayNames([window.SD_LANG || 'de', 'de'], { type: 'region' }).of(cc.toUpperCase()); } catch (e) { return cc.toUpperCase(); } };
+  function zeigeLaender() {
+    const wert = $('land').value || d.land || 'de';
+    const andere = EU.map(cc => [cc, landName(cc)]).sort((a, b) => a[1].localeCompare(b[1]));
+    $('land').innerHTML = '<option value="de">' + esc(landName('de')) + ' – ' + esc(t('land_ba')) + '</option>' +
+      '<optgroup label="' + esc(t('land_eu')) + '">' + andere.map(([cc, n]) => '<option value="' + cc + '">' + esc(n) + '</option>').join('') + '</optgroup>';
+    $('land').value = wert;
+    landAnsicht();
+  }
+  function landAnsicht() {
+    const eu = ($('land').value || 'de') !== 'de';
+    $('filterBox').hidden = eu;
+    $('euHinweis').hidden = !eu;
+    $('euHinweis').textContent = eu ? t('eu_info') : '';
+  }
+  $('land').addEventListener('change', () => { landAnsicht(); speichernFelder(); zeigePortale(); });
+  const uebersetzungen = {};
+  async function suchwoerter(s) {
+    const sprachen = LANDSPRACHE[s.land] || [];
+    if (!s.was || !sprachen.length) return [s.was];
+    const k = s.land + '|' + s.was.toLowerCase();
+    if (uebersetzungen[k]) return uebersetzungen[k];
+    let liste2 = [s.was];
+    try {
+      const j = await post('/hub/ki', { system: 'Du übersetzt Berufsbezeichnungen für eine Jobsuche. Antworte nur mit den Begriffen.',
+        prompt: 'Übersetze die Berufsbezeichnung bzw. das Suchwort „' + s.was + '“ in diese Sprache(n): ' + sprachen.join(', ') +
+          '. Nimm die übliche Bezeichnung aus Stellenanzeigen in ' + landName(s.land) + '. Antworte NUR mit den Begriffen, getrennt durch |, ohne Erklärung, höchstens ' + sprachen.length + ' Begriffe.' });
+      const neu = String(j.text || '').split(/[|\n]/).map(x => x.replace(/^[\s\-*•"„“]+|[\s"“”.]+$/g, '')).filter(x => x && x.length <= 60 && !/[:]/.test(x)).slice(0, 2);
+      liste2 = [s.was].concat(neu.filter(x => x.toLowerCase() !== s.was.toLowerCase()));
+    } catch (e) { /* ohne Übersetzung weitersuchen */ }
+    return (uebersetzungen[k] = liste2);
+  }
+  async function jobsHolenEU(s, seite) {
+    const begriffe = await suchwoerter(s);
+    if (begriffe.length > 1) $('euHinweis').textContent = t('eu_begriffe', { b: begriffe.join(' · ') });
+    const lang = ['de', 'en', 'uk', 'ar'].includes(window.SD_LANG) ? window.SD_LANG : 'de';
+    return post('/hub/jobs-eu', { land: s.land, begriffe, seite: seite || 1, sprache: lang });
+  }
+
   let liste = [], seite = 1, gesamt = 0, aktuelleSuche = null, laeuft = false;
   function stelleHtml(j, neu) {
-    const link = detailUrl(j.refnr);
-    const meta = [j.firma, [j.ort, j.entfernung && j.entfernung !== '0' ? j.entfernung + ' km' : ''].filter(Boolean).join(' · '),
+    const eu = j.quelle === 'eures';
+    const link = eu ? j.link : detailUrl(j.refnr);
+    const ortText = j.quelle === 'eures' ? (j.ort || '').split(',').filter(Boolean).map(c => landName(c.trim().toLowerCase())).join(', ') : j.ort;
+    const meta = [j.firma, [ortText, j.entfernung && j.entfernung !== '0' ? j.entfernung + ' km' : ''].filter(Boolean).join(' · '),
       j.datum ? t('r_seit', { d: SD.fmt(j.datum) }) : ''].filter(Boolean);
     const geh = gehaltText(j.gehalt);
     const marken = [geh ? '<span class="marke' + (geh.unter ? ' warn' : '') + '" lang="' + esc(window.SD_LANG || 'de') + '">💶 ' + esc(geh.text) + (geh.unter ? ' · ⚠️ ' + esc(t('geh_unter')) : '') + '</span>' : '',
@@ -131,9 +188,9 @@
       '<a class="btn klein prim" target="_blank" rel="noopener" href="' + esc(link) + '">' + esc(t('r_oeffnen')) + ' ↗</a>' +
       '<button type="button" class="btn klein" data-merk="' + esc(j.refnr) + '">' + esc(t('r_merken')) + '</button>' +
       '<button type="button" class="btn klein" data-bew="' + esc(j.refnr) + '">' + esc(t('r_bewerben')) + '</button>' +
-      '<button type="button" class="btn klein" data-erkl="' + esc(j.refnr) + '">' + esc(t('r_erklaeren')) + '</button>' +
-      '<button type="button" class="btn klein" data-pass="' + esc(j.refnr) + '">' + esc(t('r_passt')) + '</button>' +
-      (j.ort ? '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(wegUrl(j)) + '">' + esc(t('r_weg')) + ' ↗</a>' : '') +
+      (eu ? '' : '<button type="button" class="btn klein" data-erkl="' + esc(j.refnr) + '">' + esc(t('r_erklaeren')) + '</button>' +
+      '<button type="button" class="btn klein" data-pass="' + esc(j.refnr) + '">' + esc(t('r_passt')) + '</button>') +
+      (j.ort && !eu ? '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(wegUrl(j)) + '">' + esc(t('r_weg')) + ' ↗</a>' : '') +
       '</div><div class="ki-box" data-box="' + esc(j.refnr) + '" hidden></div></div>';
   }
   // Gehalt nur anzeigen, wenn die Anzeige es nennt; Hinweis bei Stundenlohn unter dem Mindestlohn (13,90 € seit 2026)
@@ -170,7 +227,7 @@
       if (mehr) { seite++; liste = liste.concat(j.stellen.filter(x => !liste.some(y => y.refnr === x.refnr))); }
       else { seite = 1; liste = j.stellen; aktuelleSuche = s; }
       gesamt = j.gesamt;
-      $('status').textContent = gesamt ? t('r_anzahl', { n: gesamt.toLocaleString('de-DE') }) : t('r_keine');
+      $('status').textContent = gesamt ? t('r_anzahl', { n: gesamt.toLocaleString('de-DE') }) : (t('r_keine') + (s.land === 'de' && s.wo ? ' ' + t('r_ausland') : ''));
       zeigeListe(neueRefs);
       gesehenMerken(s, j.stellen);
       return true;
@@ -189,7 +246,7 @@
 
   // ---------- Gespeicherte Suchen ----------
   const gleich = (a, b) => FELDER.concat(Object.keys(FILTER)).every(k => String(a[k] || '') === String(b[k] || ''));
-  const name = (s) => [s.was || '…', s.wo, t('a_' + s.art)].filter(Boolean).join(' · ');
+  const name = (s) => [s.was || '…', s.wo, s.land && s.land !== 'de' ? landName(s.land) : t('a_' + s.art)].filter(Boolean).join(' · ');
   function gesehenMerken(s, stellen) {
     const g = d.suchen.find(x => gleich(x, s));
     if (!g) return;
@@ -222,6 +279,8 @@
       return;
     }
     FELDER.forEach(k => { if (s[k] != null) $(k).value = s[k]; });
+    if (!s.land) $('land').value = 'de';
+    landAnsicht();
     Object.keys(FILTER).forEach(k => { const el = $(FILTER[k]); if (el.type === 'checkbox') el.checked = !!s[k]; else el.value = s[k] || ''; });
     speichernFelder(); zeigePortale();
     const alt = new Set(s.gesehen || []);
@@ -253,7 +312,7 @@
   }
   function ausStelle(refnr) {
     const j = liste.find(x => x.refnr === refnr); if (!j) return null;
-    return { firma: j.firma || '–', position: j.titel || j.beruf, ort: j.ort, link: detailUrl(j.refnr), notizen: j.beruf && j.beruf !== j.titel ? 'Beruf: ' + j.beruf : '' };
+    return { firma: j.firma || '–', position: j.titel || j.beruf, ort: j.quelle === 'eures' ? landName(j.ort.split(',')[0] || 'de') : j.ort, link: j.quelle === 'eures' ? j.link : detailUrl(j.refnr), notizen: j.beruf && j.beruf !== j.titel ? 'Beruf: ' + j.beruf : '' };
   }
   // Bewerbung: Firma/Stelle in die Lebenslauf-App, Anzeige (Text oder Link) in „Anschreiben zur Stellenanzeige“
   function bewerben(b) {
@@ -454,7 +513,7 @@
   $('hOrt').addEventListener('input', zeigeHilfe);
 
   // ---------- Start ----------
-  function alles() { spracheZeigen(); zeigeFaehig(); zeigePortale(); zeigeSuchen(); zeigeGemerkt(); zeigeErlaubnis(); zeigeLohn(); zeigeHilfe(); if (liste.length) zeigeListe(); }
+  function alles() { spracheZeigen(); zeigeLaender(); zeigeFaehig(); zeigePortale(); zeigeSuchen(); zeigeGemerkt(); zeigeErlaubnis(); zeigeLohn(); zeigeHilfe(); if (liste.length) zeigeListe(); }
   document.addEventListener('sd-lang-changed', alles);
   alles();
   if (d.suchen.length) neueStellenPruefen();
