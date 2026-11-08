@@ -19,5 +19,10 @@
   st.textContent = '.sd-lang-select{font:inherit;font-size:.85rem;font-weight:700;min-height:36px;padding:4px 8px;border-radius:999px;border:1px solid var(--line,#cfd8dc);background:var(--paper,#fff);color:var(--ink,#1b2b2a);max-width:140px}';
   document.head.appendChild(st);
   document.addEventListener('sd-lang-changed', () => document.querySelectorAll('.sd-lang-select').forEach(s => { s.value = window.SD_LANG || 'de'; }));
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bauen); else bauen();
+  // Eingabefelder richten sich nach dem eingetippten Text (z. B. Deutsch links, Dari rechts) – auch auf RTL-Seiten
+  function eingabeRichtung() {
+    document.querySelectorAll('input[type=text]:not([dir]),input[type=email]:not([dir]),input[type=search]:not([dir]),input:not([type]):not([dir]),textarea:not([dir])').forEach(e => e.setAttribute('dir', 'auto'));
+  }
+  function start() { bauen(); eingabeRichtung(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
