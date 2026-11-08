@@ -27,6 +27,7 @@
       s_hilfe: '🤝 Hilfe in deiner Nähe', hilfe_info: 'Kostenlose Beratung zu Arbeit, Bewerbung und Aufenthalt. Gib deinen Ort oder deine PLZ ein:',
       h_aa: 'Agentur für Arbeit', h_aa_t: 'Arbeitsuchend melden, Berufsberatung, Weiterbildung', h_jc: 'Jobcenter', h_jc_t: 'Wenn du Bürgergeld bekommst',
       h_mbe: 'Migrationsberatung', h_mbe_t: 'Kostenlose Beratung für Erwachsene ab 27 Jahren', h_jmd: 'Jugendmigrationsdienst', h_jmd_t: 'Kostenlose Beratung für junge Menschen von 12 bis 27 Jahren',
+      geh_std: 'pro Stunde', geh_monat: 'pro Monat', geh_jahr: 'pro Jahr', geh_unter: 'unter Mindestlohn?', ho_badge: 'Homeoffice möglich',
       ki_daten: 'Für „Passt das zu mir?“ werden Anzeige und Lebenslauf-Angaben (ohne Name und Kontaktdaten) an den SD-Server und dessen KI-Anbieter geschickt.'
     },
     en: {
@@ -55,6 +56,7 @@
       s_hilfe: '🤝 Help near you', hilfe_info: 'Free advice on work, applications and residence. Enter your town or postcode:',
       h_aa: 'Agentur für Arbeit', h_aa_t: 'Register as job seeker, career advice, training', h_jc: 'Jobcenter', h_jc_t: 'If you receive Bürgergeld',
       h_mbe: 'Migration advice', h_mbe_t: 'Free advice for adults aged 27 and over', h_jmd: 'Youth Migration Service', h_jmd_t: 'Free advice for young people aged 12 to 27',
+      geh_std: 'per hour', geh_monat: 'per month', geh_jahr: 'per year', geh_unter: 'below minimum wage?', ho_badge: 'Home office possible',
       ki_daten: 'For “Does it suit me?”, the ad and your CV details (without name and contact data) are sent to the SD server and its AI provider.'
     },
     fa: {
@@ -83,6 +85,7 @@
       s_hilfe: '🤝 کمک نزدیک شما', hilfe_info: 'مشاوره رایگان درباره کار، درخواست کار و اقامت. شهر یا کد پستی خود را بنویسید:',
       h_aa: 'اداره کار (Agentur für Arbeit)', h_aa_t: 'ثبت‌نام کارجو، مشاوره شغلی، دوره‌های آموزشی', h_jc: 'Jobcenter', h_jc_t: 'اگر Bürgergeld می‌گیرید',
       h_mbe: 'مشاوره مهاجرت', h_mbe_t: 'مشاوره رایگان برای بزرگسالان ۲۷ سال به بالا', h_jmd: 'خدمات مهاجرت جوانان', h_jmd_t: 'مشاوره رایگان برای جوانان ۱۲ تا ۲۷ سال',
+      geh_std: 'در ساعت', geh_monat: 'در ماه', geh_jahr: 'در سال', geh_unter: 'کمتر از حداقل دستمزد؟', ho_badge: 'کار از خانه ممکن است',
       ki_daten: 'برای «به من می‌خورد؟» آگهی و اطلاعات رزومه (بدون نام و اطلاعات تماس) به سرور SD و ارائه‌دهنده هوش مصنوعی آن فرستاده می‌شود.'
     },
     ar: {
@@ -111,6 +114,7 @@
       s_hilfe: '🤝 مساعدة قريبة منك', hilfe_info: 'استشارة مجانية حول العمل والتقديم والإقامة. أدخل مدينتك أو الرمز البريدي:',
       h_aa: 'وكالة العمل (Agentur für Arbeit)', h_aa_t: 'التسجيل كباحث عن عمل، الإرشاد المهني، التدريب', h_jc: 'Jobcenter', h_jc_t: 'إذا كنت تحصل على Bürgergeld',
       h_mbe: 'استشارة الهجرة', h_mbe_t: 'استشارة مجانية للبالغين من 27 عاماً فما فوق', h_jmd: 'خدمة هجرة الشباب', h_jmd_t: 'استشارة مجانية للشباب من 12 إلى 27 عاماً',
+      geh_std: 'للساعة', geh_monat: 'شهرياً', geh_jahr: 'سنوياً', geh_unter: 'أقل من الحد الأدنى للأجور؟', ho_badge: 'العمل من المنزل ممكن',
       ki_daten: 'من أجل «هل تناسبني؟» يُرسل الإعلان وبيانات السيرة الذاتية (بدون الاسم وبيانات الاتصال) إلى خادم SD ومزوّد الذكاء الاصطناعي لديه.'
     },
     ur: {
@@ -139,6 +143,7 @@
       s_hilfe: '🤝 آپ کے قریب مدد', hilfe_info: 'کام، درخواست اور رہائش پر مفت مشورہ۔ اپنا شہر یا پوسٹ کوڈ لکھیں:',
       h_aa: 'ادارۂ روزگار (Agentur für Arbeit)', h_aa_t: 'ملازمت کے متلاشی کا اندراج، کیریئر مشورہ، تربیت', h_jc: 'Jobcenter', h_jc_t: 'اگر آپ Bürgergeld لیتے ہیں',
       h_mbe: 'مائیگریشن مشاورت', h_mbe_t: '27 سال اور زائد عمر کے بالغوں کے لیے مفت مشورہ', h_jmd: 'نوجوانوں کی مائیگریشن سروس', h_jmd_t: '12 سے 27 سال کے نوجوانوں کے لیے مفت مشورہ',
+      geh_std: 'فی گھنٹہ', geh_monat: 'ماہانہ', geh_jahr: 'سالانہ', geh_unter: 'کم از کم اجرت سے کم؟', ho_badge: 'گھر سے کام ممکن',
       ki_daten: '«کیا یہ میرے لیے مناسب ہے؟» کے لیے اشتہار اور سی وی کی معلومات (نام اور رابطے کے بغیر) SD سرور اور اس کے AI فراہم کنندہ کو بھیجی جاتی ہیں۔'
     },
     uk: {
@@ -167,6 +172,7 @@
       s_hilfe: '🤝 Допомога поруч', hilfe_info: 'Безкоштовні консультації щодо роботи, заявок і перебування. Введіть місто або поштовий індекс:',
       h_aa: 'Агентство з питань праці (Agentur für Arbeit)', h_aa_t: 'Реєстрація шукача роботи, профорієнтація, навчання', h_jc: 'Jobcenter', h_jc_t: 'Якщо ви отримуєте Bürgergeld',
       h_mbe: 'Міграційна консультація', h_mbe_t: 'Безкоштовні консультації для дорослих від 27 років', h_jmd: 'Молодіжна міграційна служба', h_jmd_t: 'Безкоштовні консультації для молоді від 12 до 27 років',
+      geh_std: 'за годину', geh_monat: 'на місяць', geh_jahr: 'на рік', geh_unter: 'нижче мінімальної оплати?', ho_badge: 'Можна працювати з дому',
       ki_daten: 'Для «Чи підходить мені?» оголошення і дані резюме (без імені та контактів) надсилаються на сервер SD і його постачальнику ШІ.'
     },
     ti: {
@@ -195,6 +201,7 @@
       s_hilfe: '🤝 ኣብ ጥቓኻ ሓገዝ', hilfe_info: 'ብዛዕባ ስራሕ፣ ሕቶ ስራሕን መንበርን ናጻ ምኽሪ። ከተማኻ ወይ ኮድ ፖስታ ጽሓፍ:',
       h_aa: 'ኤጀንሲ ስራሕ (Agentur für Arbeit)', h_aa_t: 'ከም ስራሕ ደላዪ ምምዝጋብ፣ ሞያዊ ምኽሪ፣ ስልጠና', h_jc: 'Jobcenter', h_jc_t: 'Bürgergeld እንተትረክብ',
       h_mbe: 'ምኽሪ ስደት', h_mbe_t: 'ንዓበይቲ ካብ 27 ዓመት ንላዕሊ ናጻ ምኽሪ', h_jmd: 'ኣገልግሎት ስደት መንእሰያት', h_jmd_t: 'ንመንእሰያት ካብ 12 ክሳብ 27 ዓመት ናጻ ምኽሪ',
+      geh_std: 'ኣብ ሰዓት', geh_monat: 'ኣብ ወርሒ', geh_jahr: 'ኣብ ዓመት', geh_unter: 'ትሕቲ ዝተሓተ ደሞዝ?', ho_badge: 'ካብ ገዛ ምስራሕ ይከኣል',
       ki_daten: 'ን «ይሰማማዓኒ ድዩ?» እቲ ምልክታን ሓበሬታ ታሪኽ ህይወትን (ብዘይ ስምን ሓበሬታ ርክብን) ናብ ሰርቨር SD ከምኡ’ውን ናብ ኣቕራቢ AI ይለኣኽ።'
     }
   };

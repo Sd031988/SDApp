@@ -121,8 +121,12 @@
     const link = detailUrl(j.refnr);
     const meta = [j.firma, [j.ort, j.entfernung && j.entfernung !== '0' ? j.entfernung + ' km' : ''].filter(Boolean).join(' · '),
       j.datum ? t('r_seit', { d: SD.fmt(j.datum) }) : ''].filter(Boolean);
+    const geh = gehaltText(j.gehalt);
+    const marken = [geh ? '<span class="marke' + (geh.unter ? ' warn' : '') + '" lang="' + esc(window.SD_LANG || 'de') + '">💶 ' + esc(geh.text) + (geh.unter ? ' · ⚠️ ' + esc(t('geh_unter')) : '') + '</span>' : '',
+      j.homeoffice ? '<span class="marke" lang="' + esc(window.SD_LANG || 'de') + '">🏠 ' + esc(t('ho_badge')) + '</span>' : ''].filter(Boolean).join(' ');
     return '<div class="stelle' + (neu ? ' neu' : '') + '" lang="de"><h3>' + (neu ? '🆕 ' : '') + esc(j.titel || j.beruf) + '</h3>' +
       '<div class="meta">' + esc(meta.join(' · ')) + '</div>' +
+      (marken ? '<div class="reihe">' + marken + '</div>' : '') +
       '<div class="knoepfe">' +
       '<a class="btn klein prim" target="_blank" rel="noopener" href="' + esc(link) + '">' + esc(t('r_oeffnen')) + ' ↗</a>' +
       '<button type="button" class="btn klein" data-merk="' + esc(j.refnr) + '">' + esc(t('r_merken')) + '</button>' +
@@ -131,6 +135,20 @@
       '<button type="button" class="btn klein" data-pass="' + esc(j.refnr) + '">' + esc(t('r_passt')) + '</button>' +
       (j.ort ? '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(wegUrl(j)) + '">' + esc(t('r_weg')) + ' ↗</a>' : '') +
       '</div><div class="ki-box" data-box="' + esc(j.refnr) + '" hidden></div></div>';
+  }
+  // Gehalt nur anzeigen, wenn die Anzeige es nennt; Hinweis bei Stundenlohn unter dem Mindestlohn (13,90 € seit 2026)
+  const MINDESTLOHN = 13.90;
+  function gehaltText(g) {
+    if (!g || !g.art) return null;
+    const einheit = { STUNDENLOHN: 'geh_std', MONATSGEHALT: 'geh_monat', JAHRESGEHALT: 'geh_jahr' }[g.art];
+    if (!einheit) return null;
+    const f = (x) => x.toLocaleString('de-DE', { minimumFractionDigits: x % 1 ? 2 : 0, maximumFractionDigits: 2 }) + ' €';
+    const von = g.fest || g.von, bis = g.fest ? null : g.bis;
+    if (!von && !bis) return null;
+    const betrag = von && bis && bis !== von ? f(von) + ' – ' + f(bis) : f(von || bis);
+    // Azubis und Pflichtpraktika fallen nicht unter den Mindestlohn – dort keinen Hinweis zeigen
+    const niedrig = g.art === 'STUNDENLOHN' && (von || bis) < MINDESTLOHN && !(aktuelleSuche && ['ausbildung', 'praktikum'].includes(aktuelleSuche.art));
+    return { text: betrag + ' ' + t(einheit), unter: niedrig };
   }
   function zeigeListe(neueRefs) {
     $('ergebnis').innerHTML = liste.map(j => stelleHtml(j, neueRefs && neueRefs.has(j.refnr))).join('');
