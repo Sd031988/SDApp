@@ -1,9 +1,10 @@
-const VERSION = "dokument-scanner-v15";
+const VERSION = "dokument-scanner-v16";
 const SHELL = [
   "./",
   "./index.html",
   "./app.css",
   "./js/app.js",
+  "../i18n-mehr/scanner.js?v=1",
   "./js/vision.js",
   "./js/docdetect.js",
   "./manifest.webmanifest",
