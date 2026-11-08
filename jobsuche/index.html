@@ -79,11 +79,25 @@
                         <option value="ho" data-i18n="z_ho">Homeoffice</option>
                     </select></label>
             </div>
+            <details id="filterBox">
+                <summary data-i18n="fi_titel">⚙️ Filter</summary>
+                <div class="zeile" style="margin-top:8px">
+                    <label class="feld"><span data-i18n="fi_tage">Veröffentlicht</span>
+                        <select id="fTage"><option value="" data-i18n="fi_alle">egal wann</option><option value="1" data-i18n="fi_1">seit gestern</option><option value="7" data-i18n="fi_7">in den letzten 7 Tagen</option><option value="14" data-i18n="fi_14">in den letzten 14 Tagen</option><option value="30" data-i18n="fi_30">in den letzten 30 Tagen</option></select></label>
+                    <div style="display:grid;gap:6px;align-content:end">
+                        <label class="check"><input type="checkbox" id="fUnbef"> <span data-i18n="fi_unbef">nur unbefristet</span></label>
+                        <label class="check"><input type="checkbox" id="fOhneZa"> <span data-i18n="fi_za">ohne Zeitarbeit</span></label>
+                        <label class="check"><input type="checkbox" id="fOhnePav"> <span data-i18n="fi_pav">ohne private Arbeitsvermittler</span></label>
+                    </div>
+                </div>
+            </details>
             <div class="knoepfe">
                 <button type="button" class="btn prim gross" id="suchen" data-i18n="b_suchen">🔎 Stellen anzeigen</button>
                 <button type="button" class="btn" id="speichernSuche" data-i18n="b_suche_speichern">💾 Suche speichern</button>
             </div>
             <p class="info" id="status" aria-live="polite"></p>
+            <div class="knoepfe"><button type="button" class="btn" id="karteBtn" hidden data-i18n="b_karte">🗺️ Auf der Karte zeigen</button></div>
+            <div id="karte" hidden style="height:340px;border-radius:12px;border:1px solid var(--line);"></div>
             <div id="ergebnis" style="display:grid;gap:8px;"></div>
             <div class="knoepfe"><button type="button" class="btn" id="mehr" hidden data-i18n="b_mehr">Weitere Stellen laden</button></div>
             <h3 style="margin:8px 0 0;font-size:.95rem" data-i18n="s_portale">Auch hier suchen (öffnet sich mit deiner Suche):</h3>
@@ -122,6 +136,42 @@
         </section>
 
         <section class="karte">
+            <h2 data-i18n="s_erlaubnis">🪪 Darf ich in Deutschland arbeiten?</h2>
+            <p class="info" data-i18n="er_info">Das steht in deinem Aufenthaltsdokument bzw. im Zusatzblatt. Wähle, was du hast:</p>
+            <label class="feld"><span data-i18n="er_doc">Mein Dokument</span>
+                <select id="erDoc">
+                    <option value="" data-i18n="er_bitte">– bitte wählen –</option>
+                    <option value="eu" data-i18n="er_eu">Pass oder Ausweis aus EU, Island, Liechtenstein, Norwegen oder der Schweiz</option>
+                    <option value="nl" data-i18n="er_nl">Niederlassungserlaubnis oder Daueraufenthalt-EU</option>
+                    <option value="ae" data-i18n="er_ae">Aufenthaltserlaubnis (auch Blaue Karte, § 24 für Menschen aus der Ukraine)</option>
+                    <option value="ag" data-i18n="er_ag">Aufenthaltsgestattung (Asylverfahren läuft)</option>
+                    <option value="du" data-i18n="er_du">Duldung</option>
+                    <option value="visum" data-i18n="er_visum">Visum</option>
+                </select></label>
+            <p class="hinweis" id="erText" hidden></p>
+            <p class="quelle" data-i18n="er_quelle">Das ist eine allgemeine Orientierung, keine Rechtsberatung. Verbindlich entscheidet die Ausländerbehörde – frag dort nach, bevor du einen Vertrag unterschreibst.</p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s_lohn">💶 Wie viel verdiene ich?</h2>
+            <p class="info" data-i18n="lohn_info">Mindestlohn seit 1. Januar 2026: 13,90 € pro Stunde (ab 1. Januar 2027: 14,60 €). Beim Minijob darfst du bis 603 € im Monat verdienen.</p>
+            <div class="zeile3">
+                <label class="feld"><span data-i18n="lohn_std">Stunden pro Woche</span><input type="number" id="lStd" min="1" max="60" value="40" inputmode="decimal"></label>
+                <label class="feld"><span data-i18n="lohn_euro">Euro pro Stunde (brutto)</span><input type="number" id="lEuro" min="1" max="200" step="0.01" value="13.90" inputmode="decimal"></label>
+                <div class="feld"><span data-i18n="lohn_monat">Brutto pro Monat (ca.)</span><b id="lErg" style="font-size:1.3rem"></b></div>
+            </div>
+            <p class="hinweis" id="lHinweis" hidden></p>
+            <p class="quelle" data-i18n="lohn_quelle">Netto bekommst du weniger: Es gehen Steuern und Sozialversicherung ab – wie viel, hängt z. B. von Steuerklasse und Krankenkasse ab. Rechnung: Stunden × Lohn × 4,33 Wochen.</p>
+        </section>
+
+        <section class="karte">
+            <h2 data-i18n="s_hilfe">🤝 Hilfe in deiner Nähe</h2>
+            <p class="info" data-i18n="hilfe_info">Kostenlose Beratung zu Arbeit, Bewerbung und Aufenthalt. Gib deinen Ort oder deine PLZ ein:</p>
+            <label class="feld" style="max-width:260px"><span data-i18n="f_wo">Ort oder PLZ</span><input type="text" id="hOrt" maxlength="60"></label>
+            <div class="portale" id="hilfe"></div>
+        </section>
+
+        <section class="karte">
             <h2 data-i18n="s_weiter">📝 So geht es weiter</h2>
             <div class="schritte">
                 <a href="../Lebenslauf_app.html"><b data-i18n="w_cv">📄 Lebenslauf und Anschreiben</b><small data-i18n="w_cv_t">Bewerbung schreiben und als PDF speichern</small></a>
@@ -143,10 +193,11 @@
     </main>
 
     <script src="texte.js?v=1"></script>
+    <script src="texte2.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
     <script src="../sd-bereich.js?v=3"></script>
     <script src="../sd-ki.js?v=20"></script>
-    <script src="jobsuche.js?v=1"></script>
+    <script src="jobsuche.js?v=2"></script>
 </body>
 
 </html>

@@ -64,7 +64,12 @@
   });
 
   // ---------- Suche ----------
-  const suche = () => ({ was: $('was').value.trim(), wo: $('wo').value.trim(), umkreis: $('umkreis').value, art: $('art').value, zeit: $('zeit').value });
+  const FILTER = { tage: 'fTage', unbef: 'fUnbef', ohneZa: 'fOhneZa', ohnePav: 'fOhnePav' };
+  const fWert = (k) => { const el = $(FILTER[k]); return el.type === 'checkbox' ? el.checked : el.value; };
+  if (d.filter) Object.keys(FILTER).forEach(k => { const el = $(FILTER[k]); if (d.filter[k] != null) { if (el.type === 'checkbox') el.checked = !!d.filter[k]; else el.value = d.filter[k]; } });
+  if (d.filter && Object.values(d.filter).some(Boolean)) $('filterBox').open = true;
+  const suche = () => ({ was: $('was').value.trim(), wo: $('wo').value.trim(), umkreis: $('umkreis').value, art: $('art').value, zeit: $('zeit').value,
+    tage: fWert('tage'), unbef: fWert('unbef'), ohneZa: fWert('ohneZa'), ohnePav: fWert('ohnePav') });
   const ANGEBOT = { arbeit: '1', minijob: '1', ausbildung: '4', praktikum: '34' };
   const azeit = (s) => (s.art === 'minijob' ? 'mj' : s.zeit);
   const slug = (s) => String(s || '').trim().toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -91,7 +96,8 @@
       '<a class="portal" target="_blank" rel="noopener" data-p="' + id + '"' + (url ? ' href="' + esc(url) + '"' : ' aria-disabled="true"') + '>' +
       '<b>' + esc(t('p_' + id)) + ' ↗</b><small>' + esc(url ? t('p_' + id + '_t') : t('p_leer')) + '</small></a>').join('');
   }
-  function speichernFelder() { Object.assign(d, suche()); merke(); }
+  function speichernFelder() { const s = suche(); FELDER.forEach(k => { d[k] = s[k]; }); d.filter = { tage: s.tage, unbef: s.unbef, ohneZa: s.ohneZa, ohnePav: s.ohnePav }; merke(); }
+  Object.values(FILTER).forEach(id => $(id).addEventListener('change', speichernFelder));
   FELDER.forEach(k => $(k).addEventListener('input', () => { speichernFelder(); zeigePortale(); }));
 
   async function jobsHolen(s, seite) {
@@ -100,7 +106,8 @@
     try {
       const r = await fetch(SERVER + '/hub/jobs', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal,
-        body: JSON.stringify({ was: s.was, wo: s.wo, umkreis: s.umkreis, angebotsart: ANGEBOT[s.art], arbeitszeit: azeit(s), seite: seite || 1 })
+        body: JSON.stringify({ was: s.was, wo: s.wo, umkreis: s.umkreis, angebotsart: ANGEBOT[s.art], arbeitszeit: azeit(s), seite: seite || 1,
+          tage: s.tage || '', befristung: s.unbef ? '2' : '', ohneZeitarbeit: !!s.ohneZa, ohneVermittler: !!s.ohnePav })
       });
       let j = {};
       try { j = await r.json(); } catch (e) { j = {}; }
@@ -120,10 +127,15 @@
       '<a class="btn klein prim" target="_blank" rel="noopener" href="' + esc(link) + '">' + esc(t('r_oeffnen')) + ' ↗</a>' +
       '<button type="button" class="btn klein" data-merk="' + esc(j.refnr) + '">' + esc(t('r_merken')) + '</button>' +
       '<button type="button" class="btn klein" data-bew="' + esc(j.refnr) + '">' + esc(t('r_bewerben')) + '</button>' +
-      '</div></div>';
+      '<button type="button" class="btn klein" data-erkl="' + esc(j.refnr) + '">' + esc(t('r_erklaeren')) + '</button>' +
+      '<button type="button" class="btn klein" data-pass="' + esc(j.refnr) + '">' + esc(t('r_passt')) + '</button>' +
+      (j.ort ? '<a class="btn klein" target="_blank" rel="noopener" href="' + esc(wegUrl(j)) + '">' + esc(t('r_weg')) + ' ↗</a>' : '') +
+      '</div><div class="ki-box" data-box="' + esc(j.refnr) + '" hidden></div></div>';
   }
   function zeigeListe(neueRefs) {
     $('ergebnis').innerHTML = liste.map(j => stelleHtml(j, neueRefs && neueRefs.has(j.refnr))).join('');
+    $('karteBtn').hidden = !liste.some(j => j.lat != null && j.lon != null);
+    if (!$('karte').hidden) karteZeichnen();
     $('mehr').hidden = !(liste.length < gesamt && liste.length < 1000);
   }
   async function suchen(mehr, neueRefs) {
@@ -155,7 +167,7 @@
   $('wo').addEventListener('keydown', (e) => { if (e.key === 'Enter') suchen(false); });
 
   // ---------- Gespeicherte Suchen ----------
-  const gleich = (a, b) => FELDER.every(k => String(a[k] || '') === String(b[k] || ''));
+  const gleich = (a, b) => FELDER.concat(Object.keys(FILTER)).every(k => String(a[k] || '') === String(b[k] || ''));
   const name = (s) => [s.was || '…', s.wo, t('a_' + s.art)].filter(Boolean).join(' · ');
   function gesehenMerken(s, stellen) {
     const g = d.suchen.find(x => gleich(x, s));
@@ -189,6 +201,7 @@
       return;
     }
     FELDER.forEach(k => { if (s[k] != null) $(k).value = s[k]; });
+    Object.keys(FILTER).forEach(k => { const el = $(FILTER[k]); if (el.type === 'checkbox') el.checked = !!s[k]; else el.value = s[k] || ''; });
     speichernFelder(); zeigePortale();
     const alt = new Set(s.gesehen || []);
     suchen(false, null).then(() => { zeigeListe(new Set(liste.map(x => x.refnr).filter(r => !alt.has(r)))); });
@@ -239,6 +252,8 @@
     location.href = '../Lebenslauf_app.html#anschreiben';
   }
   $('ergebnis').addEventListener('click', (e) => {
+    const k = e.target.closest('[data-erkl],[data-pass],[data-vor]');
+    if (k) { kiAktion(k); return; }
     const m = e.target.closest('[data-merk]'), w = e.target.closest('[data-bew]');
     if (!m && !w) return;
     const s = ausStelle((m || w).dataset.merk || (m || w).dataset.bew); if (!s) return;
@@ -306,8 +321,119 @@
     });
   });
 
+  // ---------- Weg, Karte ----------
+  const wegUrl = (j) => 'https://www.google.com/maps/dir/?api=1&travelmode=transit&destination=' + encodeURIComponent([j.firma, j.ort].filter(Boolean).join(', '));
+  let karte = null, ebene = null;
+  function ladeCss(href) { if (!document.querySelector('link[href="' + href + '"]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l); } }
+  function ladeSkript(src) { return new Promise((ok, f) => { if (window.L && window.L.map) return ok(); const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = f; document.head.appendChild(s); }); }
+  async function karteZeichnen() {
+    ladeCss('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
+    try { await ladeSkript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'); } catch (e) { $('karte').hidden = true; SD.toast(t('karte_fehler')); return; }
+    if (!karte) {
+      karte = L.map('karte');
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' }).addTo(karte);
+    }
+    if (ebene) ebene.remove();
+    const punkte = liste.filter(j => j.lat != null && j.lon != null);
+    ebene = L.layerGroup(punkte.map(j => L.marker([j.lat, j.lon]).bindPopup('<b>' + esc(j.titel) + '</b><br>' + esc(j.firma) + '<br>' + esc(j.ort) +
+      '<br><a target="_blank" rel="noopener" href="' + esc(detailUrl(j.refnr)) + '">' + esc(t('r_oeffnen')) + ' ↗</a>'))).addTo(karte);
+    if (punkte.length) karte.fitBounds(L.latLngBounds(punkte.map(j => [j.lat, j.lon])).pad(0.2), { maxZoom: 13 });
+    setTimeout(() => karte.invalidateSize(), 50);
+  }
+  $('karteBtn').addEventListener('click', () => { $('karte').hidden = !$('karte').hidden; if (!$('karte').hidden) karteZeichnen(); });
+
+  // ---------- KI: Anzeige erklären / Passt das zu mir? (KI des SD-Servers, ohne Schlüssel) ----------
+  const SPRACHNAME = { de: 'Deutsch', en: 'Englisch', fa: 'Dari (afghanisches Persisch)', ar: 'Arabisch', ur: 'Urdu', uk: 'Ukrainisch', ti: 'Tigrinya' };
+  const BCP = { de: 'de-DE', en: 'en-GB', fa: 'fa-AF', ar: 'ar', ur: 'ur-PK', uk: 'uk-UA', ti: 'ti-ER' };
+  const details = {};
+  async function post(pfad, body) {
+    const r = await fetch(SERVER + pfad, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    let j = {}; try { j = await r.json(); } catch (e) { j = {}; }
+    if (!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    return j;
+  }
+  async function anzeigeHolen(refnr) {
+    if (details[refnr]) return details[refnr];
+    const j = await post('/hub/jobdetail', { refnr });
+    const teile = [j.titel && 'Titel: ' + j.titel, j.firma && 'Arbeitgeber: ' + j.firma, j.arbeitszeit && 'Arbeitszeit: ' + j.arbeitszeit,
+      j.befristung && 'Befristung: ' + j.befristung, j.verguetung && 'Vergütung: ' + j.verguetung, j.eintritt && 'Eintritt: ' + j.eintritt, '', j.beschreibung];
+    return (details[refnr] = teile.filter(x => x != null).join('\n').slice(0, 9000));
+  }
+  function cvText() {
+    const c = SD.lebenslauf() || {};
+    const z = [['Wunschposition', c.position], ['Berufserfahrung', c.erfahrung], ['Ausbildung', c.ausbildung], ['Kenntnisse', c.kenntnisse],
+      ['Sprachen', c.sprachen], ['Führerschein', c.fuehrerschein]].filter(x => x[1] && String(x[1]).trim());
+    return z.map(x => x[0] + ': ' + String(x[1]).trim()).join('\n').slice(0, 3500);
+  }
+  async function kiAktion(k) {
+    const refnr = k.dataset.erkl || k.dataset.pass || k.dataset.vor;
+    const box = $('ergebnis').querySelector('[data-box="' + CSS.escape(refnr) + '"]');
+    if (!box) return;
+    if (k.dataset.vor) { vorlesen(box.querySelector('.ki-text').textContent, k); return; }
+    const lang = SPRACHNAME[window.SD_LANG] ? window.SD_LANG : 'de';
+    box.hidden = false; box.setAttribute('lang', lang); box.dir = ['fa', 'ar', 'ur'].includes(lang) ? 'rtl' : 'ltr';
+    box.innerHTML = '<p class="info">' + esc(t('ki_laedt')) + '</p>';
+    try {
+      let cv = '';
+      if (k.dataset.pass) {
+        cv = cvText();
+        if (!cv) { box.innerHTML = '<p class="hinweis">' + esc(t('ki_kein_cv')) + '</p><a class="btn klein" href="../Lebenslauf_app.html">' + esc(t('w_cv')) + '</a>'; return; }
+      }
+      const anzeige = await anzeigeHolen(refnr);
+      const sprache = SPRACHNAME[lang];
+      const regeln = 'Erfinde nichts. Was nicht in der Anzeige steht, nennst du nicht oder sagst ehrlich, dass es nicht drinsteht. Kurze, einfache Sätze. Kein Markdown außer Spiegelstrichen. Antworte nur auf ' + sprache + '.';
+      const prompt = k.dataset.erkl
+        ? 'Erkläre diese deutsche Stellenanzeige einfach und verständlich auf ' + sprache + ' (höchstens 180 Wörter), mit diesen Teilen:\n1. Was ist die Arbeit?\n2. Was musst du mitbringen?\n3. Arbeitszeit und Vertrag\n4. Bezahlung (nur wenn genannt)\n5. Wie bewirbst du dich?\nWichtige deutsche Fachwörter darfst du in Klammern dazuschreiben.\n\n=== STELLENANZEIGE ===\n' + anzeige
+        : 'Vergleiche die Stellenanzeige mit dem Lebenslauf. Antworte auf ' + sprache + ' (höchstens 160 Wörter) mit genau drei Teilen:\n✅ Was passt (nur Dinge, die wirklich im Lebenslauf stehen)\n⚠️ Was fehlt oder unklar ist\n💡 Ein ehrlicher Tipp für die Bewerbung\nBehaupte keine Kenntnisse, die nicht im Lebenslauf stehen.\n\n=== LEBENSLAUF ===\n' + cv + '\n\n=== STELLENANZEIGE ===\n' + anzeige;
+      const j = await post('/hub/ki', { prompt, system: regeln });
+      box.innerHTML = '<div class="ki-text" style="white-space:pre-wrap;font-size:.9rem;line-height:1.5;border-inline-start:3px solid var(--accent);padding-inline-start:10px"></div>' +
+        '<div class="knoepfe" style="margin-top:6px"><button type="button" class="btn klein" data-vor="' + esc(refnr) + '">' + esc(t('ki_vorlesen')) + '</button></div>' +
+        '<p class="quelle">' + esc(t('ki_hinweis')) + (k.dataset.pass ? ' ' + esc(t('ki_daten')) : '') + '</p>';
+      box.querySelector('.ki-text').textContent = String(j.text || '').replace(/\*\*/g, '');
+    } catch (e) {
+      box.innerHTML = '<p class="hinweis">' + esc(t('ki_fehler', { f: (e && e.message) || String(e) })) + '</p>';
+    }
+  }
+  function vorlesen(text, knopf) {
+    const ss = window.speechSynthesis;
+    if (!ss) { SD.toast(t('vor_fehlt')); return; }
+    if (ss.speaking) { ss.cancel(); return; }
+    const lang = BCP[window.SD_LANG] || 'de-DE';
+    const stimme = ss.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2)));
+    if (!stimme) { SD.toast(t('vor_keine_stimme')); return; }
+    const u = new SpeechSynthesisUtterance(text); u.voice = stimme; u.lang = stimme.lang; u.rate = 0.95;
+    ss.speak(u);
+  }
+
+  // ---------- Arbeitserlaubnis ----------
+  function zeigeErlaubnis() {
+    const v = $('erDoc').value;
+    $('erText').hidden = !v;
+    $('erText').textContent = v ? t('er_t_' + v) : '';
+  }
+  $('erDoc').addEventListener('change', () => { d.erDoc = $('erDoc').value; merke(); zeigeErlaubnis(); });
+  if (d.erDoc) $('erDoc').value = d.erDoc;
+
+  // ---------- Lohn ----------
+  function zeigeLohn() {
+    const std = Math.max(0, Number(String($('lStd').value).replace(',', '.')) || 0), euro = Math.max(0, Number(String($('lEuro').value).replace(',', '.')) || 0);
+    const monat = std * euro * 4.33;
+    $('lErg').textContent = monat ? monat.toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }) : '–';
+    const h = euro && euro < 13.9 ? t('lohn_unter') : (monat && monat <= 603 ? t('lohn_minijob') : '');
+    $('lHinweis').hidden = !h; $('lHinweis').textContent = h;
+  }
+  ['lStd', 'lEuro'].forEach(id => $(id).addEventListener('input', zeigeLohn));
+
+  // ---------- Hilfe vor Ort (Kartensuche) ----------
+  const HILFE = [['h_aa', 'Agentur für Arbeit'], ['h_jc', 'Jobcenter'], ['h_mbe', 'Migrationsberatung für erwachsene Zuwanderer'], ['h_jmd', 'Jugendmigrationsdienst']];
+  function zeigeHilfe() {
+    const ort = $('hOrt').value.trim() || $('wo').value.trim();
+    $('hilfe').innerHTML = HILFE.map(([k, q]) => '<a class="portal" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q + (ort ? ' ' + ort : '')) + '"><b>' + esc(t(k)) + ' ↗</b><small>' + esc(t(k + '_t')) + '</small></a>').join('');
+  }
+  $('hOrt').addEventListener('input', zeigeHilfe);
+
   // ---------- Start ----------
-  function alles() { spracheZeigen(); zeigeFaehig(); zeigePortale(); zeigeSuchen(); zeigeGemerkt(); if (liste.length) zeigeListe(); }
+  function alles() { spracheZeigen(); zeigeFaehig(); zeigePortale(); zeigeSuchen(); zeigeGemerkt(); zeigeErlaubnis(); zeigeLohn(); zeigeHilfe(); if (liste.length) zeigeListe(); }
   document.addEventListener('sd-lang-changed', alles);
   alles();
   if (d.suchen.length) neueStellenPruefen();
