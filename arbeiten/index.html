@@ -388,7 +388,9 @@
             }
         };
     </script>
+    <script src="../i18n-mehr/arbeiten.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
+    <script src="../i18n-mehr/sprachwahl.js?v=2"></script>
     <script src="../sd-bereich.js?v=2"></script>
     <script>
         'use strict';
@@ -411,18 +413,19 @@
 
         const euro = (x) => new Intl.NumberFormat(window.SD_LANG === 'en' ? 'en-GB' : 'de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: x % 1 ? 2 : 0 }).format(x);
         // Bedingung: ok = true (erfüllt) | false (fehlt, lässt sich aber schaffen) | 'hart' (passt nicht) | null (offen / prüfen) | 'info'
+        const tl = (k, de, en) => { const L = (window.SD_I18N || {})[window.SD_LANG]; return (L && L[k]) || (window.SD_LANG === 'en' ? en : de); };
         const B = (ok, k, v) => ({ ok, text: t(k, v) });
 
         function punkteChancenkarte(a) {
             const p = [];
             if (a.anerk === 'teil') p.push(['b_c_quali_teil', 4]);
             if (a.de >= 4) p.push(['Deutsch B2', 3]); else if (a.de === 3) p.push(['Deutsch B1', 2]); else if (a.de === 2) p.push(['Deutsch A2', 1]);
-            if (a.en >= 5) p.push([window.SD_LANG === 'en' ? 'English C1' : 'Englisch C1', 1]);
+            if (a.en >= 5) p.push([tl('pk_en', 'Englisch C1', 'English C1'), 1]);
             if (a.erfahrung >= 5) p.push([t('er_5'), 3]); else if (a.erfahrung >= 2) p.push([t('er_2'), 2]);
-            if (a.mangel) p.push([window.SD_LANG === 'en' ? 'Qualification in a shortage occupation' : 'Abschluss in einem Engpassberuf', 1]);
-            if (a.alter > 0 && a.alter <= 35) p.push([window.SD_LANG === 'en' ? 'Age up to 35' : 'Alter bis 35', 2]); else if (a.alter > 0 && a.alter <= 40) p.push([window.SD_LANG === 'en' ? 'Age up to 40' : 'Alter bis 40', 1]);
-            if (a.vorauf) p.push([window.SD_LANG === 'en' ? 'Previous stay in Germany' : 'Voraufenthalt in Deutschland', 1]);
-            if (a.partner) p.push([window.SD_LANG === 'en' ? 'Spouse applies too' : 'Ehepartner beantragt mit', 1]);
+            if (a.mangel) p.push([tl('pk_mangel', 'Abschluss in einem Engpassberuf', 'Qualification in a shortage occupation'), 1]);
+            if (a.alter > 0 && a.alter <= 35) p.push([tl('pk_35', 'Alter bis 35', 'Age up to 35'), 2]); else if (a.alter > 0 && a.alter <= 40) p.push([tl('pk_40', 'Alter bis 40', 'Age up to 40'), 1]);
+            if (a.vorauf) p.push([tl('pk_vorauf', 'Voraufenthalt in Deutschland', 'Previous stay in Germany'), 1]);
+            if (a.partner) p.push([tl('pk_partner', 'Ehepartner beantragt mit', 'Spouse applies too'), 1]);
             return p.map(([k, n]) => [k.startsWith('b_') ? t(k) : k, n]);
         }
 
@@ -577,7 +580,7 @@
             $('ortHinweis').innerHTML = hinweise.map(x => '<p class="hinweis">' + esc(x) + '</p>').join('');
             const gut = wege.filter(w => w.status !== 'nein').sort((x, y) => (x.status === 'ja' ? 0 : 1) - (y.status === 'ja' ? 0 : 1));
             const schlecht = wege.filter(w => w.status === 'nein');
-            $('wegeJa').innerHTML = gut.length ? gut.map(wegHtml).join('') : '<p class="leer">' + esc(window.SD_LANG === 'en' ? 'No way fits yet based on your answers. Look at the reasons below – often a language certificate or recognition opens a way. Free advice: hotline below.' : 'Nach deinen Angaben passt noch kein Weg. Sieh dir unten die Gründe an – oft öffnet ein Sprachzertifikat oder die Anerkennung einen Weg. Kostenlose Beratung: Hotline unten.') + '</p>';
+            $('wegeJa').innerHTML = gut.length ? gut.map(wegHtml).join('') : '<p class="leer">' + esc(tl('keine_wege', 'Nach deinen Angaben passt noch kein Weg. Sieh dir unten die Gründe an – oft öffnet ein Sprachzertifikat oder die Anerkennung einen Weg. Kostenlose Beratung: Hotline unten.', 'No way fits yet based on your answers. Look at the reasons below – often a language certificate or recognition opens a way. Free advice: hotline below.')) + '</p>';
             $('andereBox').hidden = !schlecht.length;
             $('wegeNein').innerHTML = schlecht.map(wegHtml).join('');
             // Schritte aus den passenden / möglichen Wegen
