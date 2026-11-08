@@ -102,6 +102,7 @@
                         </select></span></label>
             </div>
             <p class="info" id="fVorschlag"></p>
+            <p class="hinweis" id="fArbeitHinweis" hidden></p>
             <label class="feld"><span data-i18n="f_gekuendigt">Schon gekündigt zum</span><small data-i18n="f_gekuendigt_hilfe">leer lassen, wenn der Vertrag weiterläuft</small><input type="date" id="fGekuendigt"></label>
             <label class="feld"><span data-i18n="f_notiz">Notiz</span><textarea id="fNotiz" rows="2" maxlength="600"></textarea></label>
             <p class="fehler" id="fFehler" hidden></p>
@@ -144,6 +145,10 @@
                 k_betreff: 'Kündigung meines Vertrags{nr}', k_hinweis: '📝 Kündigung aus „Verträge & Kündigungen“ übernommen.',
                 k_text: 'hiermit kündige ich meinen Vertrag{nr} fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir die Kündigung und das Datum des Vertragsendes schriftlich.\n\nEine erteilte Einzugsermächtigung (SEPA-Lastschriftmandat) widerrufe ich zum Vertragsende.',
                 k_nr: ' (Kunden-/Vertragsnummer: {nr})', k_naechst: 'zum nächstmöglichen Zeitpunkt',
+                arbeit_hinweis: 'Wichtig bei der Kündigung als Arbeitnehmer: Die Kündigung muss auf Papier sein und von dir eigenhändig unterschrieben werden – per E-Mail, Fax oder WhatsApp ist sie unwirksam (§ 623 BGB). Gesetzliche Frist: 4 Wochen zum 15. oder zum Monatsende (§ 622 Abs. 1 BGB), in der Probezeit 2 Wochen (§ 622 Abs. 3 BGB). Arbeits- oder Tarifvertrag können längere Fristen vorsehen – bitte dort nachsehen. Melde dich rechtzeitig bei der Agentur für Arbeit arbeitsuchend (spätestens 3 Monate vor dem Ende, sonst innerhalb von 3 Tagen) – wer selbst kündigt, kann beim Arbeitslosengeld eine Sperrzeit bekommen.',
+                ka_betreff: 'Kündigung meines Arbeitsverhältnisses{nr}', ka_nr: ' (Personalnummer: {nr})',
+                ka_text: 'hiermit kündige ich das mit Ihnen bestehende Arbeitsverhältnis ordentlich und fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir den Erhalt dieser Kündigung und das Ende des Arbeitsverhältnisses schriftlich.\n\nZugleich bitte ich Sie um ein qualifiziertes Arbeitszeugnis sowie um Auskunft über meinen noch offenen Urlaubsanspruch.',
+                ka_hinweis: '📝 Arbeitskündigung aus „Verträge & Kündigungen“ übernommen. Bitte ausdrucken und eigenhändig unterschreiben – per E-Mail ist die Kündigung unwirksam.',
                 kal_titel: 'Letzter Tag: {x} kündigen', kal_text: 'Vertrag endet dann am {d}. Kündigungsfrist: {f}.',
                 kal_keine: 'Kein Kündigungstermin zu berechnen (Vertragsbeginn eintragen).',
                 csv_kopf: 'Art;Anbieter;Für;Nummer;Kosten;pro Monate;Beginn;Mindestlaufzeit;Kündigungsfrist;Kündigen bis;Ende',
@@ -151,7 +156,7 @@
                 arten: {
                     handy: ['📱', 'Handy / Mobilfunk'], internet: ['🌐', 'Internet / Festnetz'], strom: ['⚡', 'Strom'], gas: ['🔥', 'Gas / Heizung'],
                     fitness: ['🏋️', 'Fitnessstudio'], streaming: ['📺', 'Streaming / Abo'], zeitung: ['📰', 'Zeitung / Zeitschrift'],
-                    versicherung: ['🛡️', 'Versicherung'], miete: ['🏠', 'Miete (als Mieter)'], kfz: ['🚗', 'Kfz-Versicherung'], sonstiges: ['📄', 'Sonstiges']
+                    versicherung: ['🛡️', 'Versicherung'], miete: ['🏠', 'Miete (als Mieter)'], kfz: ['🚗', 'Kfz-Versicherung'], arbeit: ['💼', 'Arbeitsvertrag (als Arbeitnehmer)'], sonstiges: ['📄', 'Sonstiges']
                 }
             },
             en: {
@@ -183,6 +188,10 @@
                 k_betreff: 'Kündigung meines Vertrags{nr}', k_hinweis: '📝 Cancellation from “Contracts & Cancellations” inserted.',
                 k_text: 'hiermit kündige ich meinen Vertrag{nr} fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir die Kündigung und das Datum des Vertragsendes schriftlich.\n\nEine erteilte Einzugsermächtigung (SEPA-Lastschriftmandat) widerrufe ich zum Vertragsende.',
                 k_nr: ' (Kunden-/Vertragsnummer: {nr})', k_naechst: 'zum nächstmöglichen Zeitpunkt',
+                arbeit_hinweis: 'Important when you resign as an employee: the notice must be on paper and signed by you by hand – by e-mail, fax or WhatsApp it is invalid (§ 623 BGB). Statutory notice: 4 weeks to the 15th or to the end of a month (§ 622 (1) BGB), during probation 2 weeks (§ 622 (3) BGB). Your employment or collective agreement may set longer periods – please check. Register as a job seeker with the Agentur für Arbeit in time (at least 3 months before the end, otherwise within 3 days) – if you resign yourself, you may get a blocking period for unemployment benefit.',
+                ka_betreff: 'Kündigung meines Arbeitsverhältnisses{nr}', ka_nr: ' (Personalnummer: {nr})',
+                ka_text: 'hiermit kündige ich das mit Ihnen bestehende Arbeitsverhältnis ordentlich und fristgerecht zum {d}, hilfsweise zum nächstmöglichen Zeitpunkt.\n\nBitte bestätigen Sie mir den Erhalt dieser Kündigung und das Ende des Arbeitsverhältnisses schriftlich.\n\nZugleich bitte ich Sie um ein qualifiziertes Arbeitszeugnis sowie um Auskunft über meinen noch offenen Urlaubsanspruch.',
+                ka_hinweis: '📝 Resignation from “Contracts & Cancellations” inserted. Please print it and sign it by hand – by e-mail the resignation is invalid.',
                 kal_titel: 'Last day: cancel {x}', kal_text: 'The contract then ends on {d}. Notice period: {f}.',
                 kal_keine: 'No cancellation date to calculate (enter the start date).',
                 csv_kopf: 'Type;Provider;For;Number;Cost;per months;Start;Minimum term;Notice;Cancel by;End',
@@ -190,7 +199,7 @@
                 arten: {
                     handy: ['📱', 'Mobile phone'], internet: ['🌐', 'Internet / landline'], strom: ['⚡', 'Electricity'], gas: ['🔥', 'Gas / heating'],
                     fitness: ['🏋️', 'Gym'], streaming: ['📺', 'Streaming / subscription'], zeitung: ['📰', 'Newspaper / magazine'],
-                    versicherung: ['🛡️', 'Insurance'], miete: ['🏠', 'Rent (as tenant)'], kfz: ['🚗', 'Car insurance'], sonstiges: ['📄', 'Other']
+                    versicherung: ['🛡️', 'Insurance'], miete: ['🏠', 'Rent (as tenant)'], kfz: ['🚗', 'Car insurance'], arbeit: ['💼', 'Employment contract (as employee)'], sonstiges: ['📄', 'Other']
                 }
             }
         };
@@ -213,6 +222,7 @@
             versicherung: { mindest: 12, danach: 12, frist: [3, 'monate'] },
             kfz: { mindest: 12, danach: 12, frist: [1, 'monate'] },
             miete: { mindest: 0, danach: 0, frist: [3, 'monate'] },
+            arbeit: { mindest: 0, danach: 0, frist: [4, 'wochen'] },
             sonstiges: { mindest: 12, danach: 0, frist: [1, 'monate'] }
         };
         const ARTEN = Object.keys(VORSCHLAG);
@@ -226,7 +236,18 @@
             const e = v.fristEinheit || 'monate';
             return t('frist_text', { n, e: t(n === 1 ? 'fe1_' + e : 'fe_' + e) });
         }
-        const termin = SD.vertragTermin;
+        // Arbeitsvertrag: gesetzliche Frist von 4 Wochen endet zum 15. oder zum Monatsende (§ 622 Abs. 1 BGB)
+        const zum15oderEnde = (iso) => {
+            const d = SD.datum(iso), j = d.getFullYear(), m = d.getMonth(), tag = d.getDate();
+            const ende = new Date(j, m + 1, 0).getDate();
+            const z = tag <= 15 ? new Date(j, m, 15) : new Date(j, m, ende);
+            return z.getFullYear() + '-' + String(z.getMonth() + 1).padStart(2, '0') + '-' + String(z.getDate()).padStart(2, '0');
+        };
+        const termin = (v) => {
+            const x = SD.vertragTermin(v);
+            if (v.art === 'arbeit' && x.art === 'jederzeit' && v.fristEinheit === 'wochen' && Number(v.fristZahl) === 4) x.ende = zum15oderEnde(x.ende);
+            return x;
+        };
         const proMonat = (v) => SD.zahl(v.kosten) / (Number(v.intervall) || 1);
         const laeuft = (v) => !(v.gekuendigt && v.gekuendigt < SD.heuteIso());
 
@@ -275,9 +296,10 @@
 
         function kuendigen(v) {
             const x = termin(v);
-            const nr = v.nummer ? t('k_nr', { nr: v.nummer }) : '';
             // Das Schreiben ist immer auf Deutsch (Empfaenger ist ein deutscher Anbieter)
-            const de = window.SD_I18N.de;
+            const de0 = window.SD_I18N.de, arbeit = v.art === 'arbeit';
+            const de = arbeit ? Object.assign({}, de0, { k_betreff: de0.ka_betreff, k_nr: de0.ka_nr, k_text: de0.ka_text }) : de0;
+            const nr = v.nummer ? t('k_nr', { nr: v.nummer }) : '';
             const zum = x.art === 'bis' || x.art === 'jederzeit' ? SD.datum(x.ende).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : de.k_naechst;
             const text = de.k_text.split('{nr}').join(nr ? de.k_nr.split('{nr}').join(v.nummer) : '').split('{d}').join(zum)
                 .replace('fristgerecht zum zum nächstmöglichen Zeitpunkt, hilfsweise zum nächstmöglichen Zeitpunkt', 'fristgerecht zum nächstmöglichen Zeitpunkt');
@@ -285,7 +307,7 @@
                 empfaenger: [v.anbieter, v.anschrift].filter(Boolean).join('\n'),
                 betreff: de.k_betreff.split('{nr}').join(nr ? de.k_nr.split('{nr}').join(v.nummer) : ''),
                 anrede: 'Sehr geehrte Damen und Herren,',
-                text, hinweis: t('k_hinweis')
+                text, hinweis: t(arbeit ? 'ka_hinweis' : 'k_hinweis')
             });
         }
 
@@ -319,6 +341,8 @@
             const teile = [t('f_mindest') + ' ' + (v.mindest ? v.mindest + ' ' + t('fe_monate') : t('ml_0')),
             v.danach ? t('da_' + v.danach) : t('da_unbefristet'), t('f_frist') + ' ' + v.frist[0] + ' ' + t((v.frist[0] === 1 ? 'fe1_' : 'fe_') + v.frist[1])];
             $('fVorschlag').textContent = t('vorschlag', { art: artInfo(a)[1], text: teile.join(', ') });
+            $('fArbeitHinweis').hidden = a !== 'arbeit';
+            $('fArbeitHinweis').textContent = a === 'arbeit' ? t('arbeit_hinweis') : '';
         }
         function setzeVorschlag() {
             const v = VORSCHLAG[$('fArt').value];
