@@ -12,7 +12,7 @@
 .sd-ws-bar,.sd-ws-dock,.sd-ws-launch,.sd-ws-panel,.sd-ws-kopf-knopf{font-family:var(--sd-text)!important;letter-spacing:normal!important;line-height:1.4!important}
 .sd-ws-bar *,.sd-ws-dock *,.sd-ws-launch *,.sd-ws-panel *{box-sizing:border-box!important}
 .sd-ic{flex:0 0 auto;vertical-align:-3px}
-.sd-ws-bar{position:relative;z-index:110;display:flex!important;align-items:center;gap:12px;min-height:56px;padding:8px clamp(14px,2.5vw,28px);
+.sd-ws-bar{grid-column:1/-1;position:relative;z-index:110;display:flex!important;align-items:center;gap:12px;min-height:56px;padding:8px clamp(14px,2.5vw,28px);
  background:#15372f;color:#fff!important;border-bottom:1px solid #28564a;width:auto!important;max-width:100%!important}
 .sd-ws-bar a,.sd-ws-bar button,.sd-ws-dock a,.sd-ws-dock button,.sd-ws-launch,.sd-ws-panel a,.sd-ws-panel button,.sd-ws-kopf-knopf{
  color:inherit!important;font-family:inherit!important;text-decoration:none!important;font-style:normal!important;text-transform:none!important;opacity:1!important}
@@ -24,7 +24,7 @@
 .sd-ws-bar .sd-ws-kopf-knopf{background:transparent;border:1px solid #ffffff4c}
 .sd-ws-bar .sd-ws-kopf-knopf:hover{background:#ffffff17}
 /* Knopf in der eigenen Kopfzeile der Seite */
-.topbar .sd-ws-kopf-knopf,header .sd-ws-kopf-knopf,.kopf .sd-ws-kopf-knopf{background:transparent;border:1px solid var(--sd-linie);color:var(--sd-marke)!important}
+.topbar .sd-ws-kopf-knopf,header .sd-ws-kopf-knopf,.kopf .sd-ws-kopf-knopf,.brand .sd-ws-kopf-knopf{background:transparent;border:1px solid var(--sd-linie);color:var(--sd-marke)!important}
 .topbar .sd-ws-kopf-knopf:hover,header .sd-ws-kopf-knopf:hover{background:#eef3ee}
 .sd-ws-panel[hidden],.sd-ws-dock[hidden],.sd-ws-bar[hidden]{display:none!important}
 .sd-ws-panel{display:grid;gap:12px;position:fixed;top:64px;right:14px;width:min(400px,calc(100vw - 24px));padding:16px;border-radius:10px;
@@ -74,7 +74,7 @@ body[data-sd-ws-mode=compact] .sd-ws-panel{top:auto;bottom:calc(68px + env(safe-
 /* ---------- Gemeinsamer heller Stil (alle Alltags-Bereiche) ---------- */
 html[data-sd-stil=hub]{--ink:#172e29;--muted:#5d6d66;--accent:#2c5c4e;--accent-dark:#173a34;--accent-soft:#e7eee8;--accent-hover:#173a34;--paper:#fffefa;--line:#d9dfd6;--canvas:#f4f2ec}
 html[data-sd-stil=hub] body{font-family:var(--sd-text)!important;background:var(--sd-grund)!important;color:var(--sd-tinte)}
-html[data-sd-stil=hub] :is(h1,h2,h3,legend,.brand strong,.karte>h2,.card>h2){font-family:var(--sd-titel)!important;letter-spacing:-.02em;color:var(--sd-tinte)}
+html[data-sd-stil=hub] :is(h1,h2,h3,legend,summary,.brand strong,.karte>h2,.card>h2){font-family:var(--sd-titel)!important;letter-spacing:-.02em;color:var(--sd-tinte)}
 html[data-sd-stil=hub] :is(h1,h2){font-weight:800}
 html[data-sd-stil=hub] :is(h3,h4,summary){font-weight:700}
 html[data-sd-stil=hub] :is(p,li,label,small,td,th,input,select,textarea,button){font-family:var(--sd-text)}

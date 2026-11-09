@@ -173,10 +173,13 @@ function create(){
  buildLinks();
  if(mode==='standard'){
   // Nur eine Kopfzeile: Hat die Seite eine eigene, kommt dort ein kleiner Knopf hinein.
-  const eigene=document.querySelector('body > header, .topbar, body > .kopf, .app-header, .studio-header');
+  // Seiten mit Spalten-Layout über die ganze Höhe (z. B. Schreibstudio): Knopf in den Kopf der Seitenleiste
+  const cs=getComputedStyle(document.body);
+  const spalten=cs.display.includes('flex')&&!cs.flexDirection.startsWith('column');
+  const eigene=document.querySelector('body > header, .topbar, body > .kopf, .app-header, .studio-header')||(spalten?document.querySelector('aside .brand, .editor-sidebar .brand, .sidebar .brand'):null);
   if(eigene){
    const b=menuButton('sd-ws-kopf-knopf');b.append(svg('grid',18),el('span','','Bereiche'));
-   (eigene.querySelector('.topbar-right,.top-actions,.header-actions,.actions')||eigene).append(b);
+   (eigene.querySelector('.topbar-left')||eigene.querySelector('.topbar-right,.top-actions,.header-actions,.actions')||eigene).append(b);
   }else{
    const bar=el('div','sd-ws-bar');
    bar.setAttribute('role','navigation');bar.setAttribute('aria-label','SD Hub Navigation');
