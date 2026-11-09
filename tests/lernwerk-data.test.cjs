@@ -117,3 +117,21 @@ test('incorrect answer feedback supports another attempt without revealing the a
  assert.match(source,/feedback\.appendChild\(hint\)/);
  assert.match(source,/item\.opts\[item\.correct\]/);
 });
+
+test('writing guides offer level-specific scaffolding without complete model answers',()=>{
+ const start=source.indexOf('const writingGuides=');
+ const end=source.indexOf(';const writingKey=',start);
+ assert.ok(start>=0&&end>start,'writing guides are defined');
+ const guides=new Function(source.slice(start,end+1)+'return writingGuides')();
+ for(const level of ['alpha','a1','a2','b1','praxis']){
+  assert.ok(guides[level],level);
+  for(const field of ['structure','language','review'])assert.ok(typeof guides[level][field]==='string'&&guides[level][field].length>35,level+': '+field);
+ }
+ assert.match(guides.b1.language,/weil/);
+ assert.match(guides.b1.review,/80–120/);
+ assert.match(source,/class="sdun-writing-guide"/);
+ assert.match(source,/esc\(writingGuides\[level\]\.structure\)/);
+ assert.match(source,/esc\(writingGuides\[level\]\.language\)/);
+ assert.match(source,/esc\(writingGuides\[level\]\.review\)/);
+ assert.match(source,/keine automatische Bewertung/);
+});
