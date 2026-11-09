@@ -91,3 +91,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Regressionstest in `tests/lernwerk-data.test.cjs` prüft, dass der falsche Antwortzweig die richtige Option nicht mehr ausdrücklich verrät und der Wiederholungsbutton erhalten bleibt.
 - JavaScript-Parsing der bearbeiteten Quell- und Testdatei erfolgreich; ein vollständiger Node-Testlauf sowie Playwright-Browsertests wurden nicht ausgeführt.
 - Restrisiken: Manche allgemeine Lernhilfen können weiterhin indirekte Hinweise geben; die Wiederholung ist keine standardisierte Prüfung. Vor Freigabe Browserprüfung, Tastaturbedienung und didaktische Prüfung der Aufgaben durchführen.
+
+### 2026-11-09 – Stufengerechte Schreibhilfen
+
+- Bestand geprüft: Schreibaufgaben und Selbstkontrollen für Alphabetisierung, A1, A2, B1 und Praxis waren vorhanden, aber konkrete Hilfen für Textaufbau, Satzverknüpfung und Überarbeitung fehlten.
+- Ergänzt: Je Stufe ein ausklappbarer Hilfebereich mit drei Abschnitten (Aufbau, Sprache/Grammatik, Kontrolle vor der Abgabe). B1 enthält Hinweise zu formeller Beschwerde, Konnektoren und der aufgabenspezifischen Wortvorgabe von 80–120 Wörtern. Keine fertigen Musterlösungen; bestehende Entwurfsspeicherung und Selbstkontrolle unverändert.
+- Tests: JavaScript-Quelltext und Testdatei syntaktisch geprüft; alle fünf Hilfedatensätze auf die drei Pflichtfelder und Mindestinhalt geprüft; Test für sichere HTML-Einbindung ergänzt. Vollständige Node-Testsuite und Playwright-Browserprüfung **nicht** ausgeführt.
+- Restrisiken: Hinweise ersetzen keine fachlich validierte Schreibbewertung. Didaktische Qualität, tatsächliche Anzeige auf Mobilgeräten, Tastaturbedienbarkeit und Wortschatz-/GER-Abdeckung vor Freigabe zusätzlich prüfen.
