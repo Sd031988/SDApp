@@ -10,12 +10,14 @@ const assert=require('node:assert/strict');
   const page=await browser.newPage({viewport:{width:1440,height:900}});
   const base='http://127.0.0.1:8769';
   await page.goto(base+'/fristen/',{waitUntil:'domcontentloaded',timeout:30000});
-  await page.locator('.sd-ws-bar').waitFor({state:'visible',timeout:15000});
+  // Seiten mit eigener Kopfzeile bekommen keine zweite Leiste, sondern einen Bereiche-Knopf darin.
+  await page.locator('header.topbar .sd-ws-kopf-knopf').waitFor({state:'visible',timeout:15000});
+  assert.equal(await page.locator('.sd-ws-bar').count(),0,'Keine zweite Kopfzeile');
   assert.equal(await page.locator('.sd-ws-dock').isVisible(),false);
   assert.equal(await page.locator('header.topbar').count(),1,'Original Fristen header remains');
   assert.equal(await page.locator('main .karte').count()>0,true,'Existing utility cards preserved');
-  assert.equal(await page.locator('.sd-ws-brand-label strong').innerText(),'Fristen');
-  await page.locator('.sd-ws-bar .sd-ws-menu-toggle').click();
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.sdStil),'hub','Gemeinsamer Stil aktiv');
+  await page.locator('header.topbar .sd-ws-kopf-knopf').click();
   assert.equal(await page.locator('#sdWorkspacePanel').isVisible(),true);
   assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app').count(),16);
   assert.equal(await page.locator('#sdWorkspacePanel .sd-ws-app[href^="/kids/"]').count(),0,'Game links must be absent from work launcher');

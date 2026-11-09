@@ -80,7 +80,7 @@ const P={
 };
 function svg(name,size){
  const p=P[name];if(!p)return null;
- const s=document.createElementNS('http://www.w3.org/2000/svg','svg');
+ const t=document.createElement('template');t.innerHTML='<svg></svg>';const s=t.content.firstChild; // HTML-Parser setzt den SVG-Namensraum
  s.setAttribute('viewBox','0 0 24 24');s.setAttribute('width',size||18);s.setAttribute('height',size||18);
  s.setAttribute('fill','none');s.setAttribute('stroke','currentColor');s.setAttribute('stroke-width','1.8');
  s.setAttribute('stroke-linecap','round');s.setAttribute('stroke-linejoin','round');s.setAttribute('aria-hidden','true');
