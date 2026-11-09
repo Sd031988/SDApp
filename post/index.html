@@ -84,8 +84,8 @@
         .beleg b { color: var(--muted); font-weight: normal; font-size: .76rem; display: block; }
     </style>
     <script src="../sd-sync.js?v=2"></script>
-<link rel="stylesheet" href="../sd-workspace.css?v=20261108-ui-1">
-<script defer src="../sd-workspace.js?v=20261108-ui-1" data-sd-app="post" data-sd-mode="standard"></script>
+<link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-4">
+<script defer src="../sd-workspace.js?v=20261109-stil-4" data-sd-app="post" data-sd-mode="standard"></script>
 </head>
 
 <body>
@@ -105,7 +105,7 @@
         <!-- Schritt 1: Brief erfassen -->
         <section class="karte" id="erfassen">
             <h2 data-i18n="s1_titel">📬 Welchen Brief hast du bekommen?</h2>
-            <p class="info" data-i18n="s1_info">Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) – oder wähle ein PDF. Bis zu 6 Seiten.</p>
+            <p class="info" data-i18n="s1_info">Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) oder wähle ein PDF. Bis zu 6 Seiten.</p>
             <input type="file" id="kameraInput" accept="image/*" capture="environment" hidden>
             <input type="file" id="dateiInput" accept="image/*,application/pdf,.pdf,.docx,.txt" multiple hidden>
             <div class="knoepfe">
@@ -178,7 +178,7 @@
         <section class="karte" id="antwortKarte" hidden>
             <h2 data-i18n="antwort_titel">✍️ Antwort schreiben</h2>
             <div class="chips" id="vorschlaege"></div>
-            <label class="feld"><span data-i18n="anliegen">Was möchtest du antworten?</span> <small data-i18n="anliegen_hilfe">In deinen Worten und in deiner Sprache – z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.</small>
+            <label class="feld"><span data-i18n="anliegen">Was möchtest du antworten?</span> <small data-i18n="anliegen_hilfe">In deinen Worten und in deiner Sprache, z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.</small>
                 <textarea id="anliegen" rows="3" dir="auto"></textarea></label>
             <p class="status" id="spInfo"></p>
             <div class="knoepfe">
@@ -222,13 +222,13 @@
         window.SD_I18N = {
             de: {
                 titel: 'Post-Assistent', untertitel: 'Briefe verstehen, Fristen nicht verpassen', s1_titel: '📬 Welchen Brief hast du bekommen?',
-                s1_info: 'Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) – oder wähle ein PDF. Bis zu 6 Seiten.',
+                s1_info: 'Fotografiere jede Seite des Briefs (gerade, hell, ganze Seite) oder wähle ein PDF. Bis zu 6 Seiten.',
                 foto: '📷 Seite fotografieren', datei: '📎 Datei / Foto wählen', text_summary: '… oder Text des Briefs einfügen', text_ph: 'Text hier einfügen (z. B. aus einer E-Mail oder einem PDF)',
                 sprache_lbl: 'Erklärung auf', erklaeren: '🔍 Brief erklären', worum: '📄 Worum geht es?', frist_titel: '⏰ Frist', frist_datum: 'Datum der Frist', erinnern: 'Erinnern',
                 vor1: '1 Tag vorher', vor3: '3 Tage vorher', vor7: '1 Woche vorher', kalender: '📅 Erinnerung in den Kalender', merken: '📌 In meine Fristenliste',
                 aufgaben: '✅ Was du jetzt tun solltest', wichtig: '⚠️ Wichtig',
                 ki_hinweis: 'Die Erklärung kommt von einer KI und kann Fehler enthalten. Prüfe Fristen, Beträge und Zeichen immer im Original-Brief. Keine Rechtsberatung.',
-                antwort_titel: '✍️ Antwort schreiben', anliegen: 'Was möchtest du antworten?', anliegen_hilfe: 'In deinen Worten und in deiner Sprache – z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.',
+                antwort_titel: '✍️ Antwort schreiben', anliegen: 'Was möchtest du antworten?', anliegen_hilfe: 'In deinen Worten und in deiner Sprache, z. B. „Ich kann nur 50 € im Monat zahlen“. Sprechen oder tippen.',
                 entwurf: '✨ Antwort entwerfen', betreff: 'Betreff', brieftext: 'Brieftext (auf Deutsch, an den Absender)', uebersetzung: '🌍 Das steht in deiner Antwort',
                 entwurf_hinweis: 'Lies den Entwurf genau. Ergänze alle [Lücken] und streiche, was nicht stimmt. Wichtige Briefe (z. B. Widerspruch) per Einschreiben oder mit Eingangsbestätigung schicken und eine Kopie behalten.',
                 schreibstudio: '📄 Im Schreibstudio als Brief öffnen', kopieren: '📋 Kopieren', kopiert: '✓ Kopiert',
@@ -246,10 +246,10 @@
                 nichts: 'Bitte zuerst den Brief fotografieren, eine Datei wählen oder den Text einfügen.',
                 lese: '📖 Lese Seite {n} …', ki_laeuft: '🤖 Die KI liest und erklärt den Brief …', entwurf_laeuft: '🤖 Die KI entwirft die Antwort …',
                 f_absender: 'Absender', f_datum: 'Brief vom', f_zeichen: 'Zeichen / Nummer', f_betrag: 'Betrag',
-                keine_frist: 'Im Brief steht keine Frist.', frist_selbst: 'Kein festes Datum erkannt. Trag das Datum selbst ein – im Zweifel lieber ein paar Tage früher.',
+                keine_frist: 'Im Brief steht keine Frist.', frist_selbst: 'Kein festes Datum erkannt. Trag das Datum selbst ein, im Zweifel lieber ein paar Tage früher.',
                 frist_pruefen: 'Bitte das Datum mit dem Brief vergleichen.', frist_vorbei: '⚠️ Dieses Datum liegt schon in der Vergangenheit – handle sofort oder frag eine Beratungsstelle.',
                 datum_fehlt: 'Bitte zuerst das Datum der Frist eintragen.', gemerkt: '✓ In der Fristenliste gespeichert.', schon_gemerkt: '✓ Ist schon in der Fristenliste – aktualisiert.',
-                anliegen_fehlt: 'Bitte schreib oder sag kurz, was du antworten möchtest – oder tippe oben auf einen Vorschlag.',
+                anliegen_fehlt: 'Bitte schreib oder sag kurz, was du antworten möchtest, oder tippe oben auf einen Vorschlag.',
                 nicht_verstanden: 'Die KI-Antwort hatte nicht das erwartete Format – hier ist sie:',
                 lotse_sprache: 'Hinweis: Mit 🔒 SD Lotse klappt die Erklärung am besten auf Deutsch oder Englisch.',
                 erklaert_auf: 'Erklärt auf {s}', heute: 'heute fällig', morgen: 'morgen fällig', noch: 'noch {n} Tage', ueber: 'seit {n} Tagen vorbei', ohne_datum: 'ohne Datum',
@@ -262,8 +262,8 @@
                 ki_fehler: 'Die KI konnte den Brief diesmal nicht erklären ({x}). Datum, Frist, Betrag und Nummern unten wurden ohne KI direkt aus dem Brieftext gelesen.',
                 r_frist: 'Bis {d} erledigen: „{x}“', r_termin: 'Termin am {d}{u} wahrnehmen: „{x}“', r_zahlen: '{b} überweisen an IBAN {i}{v} – vorher prüfen, ob die Forderung stimmt.',
                 r_vz: ', Verwendungszweck: {v}', r_rechtsbehelf: 'Im Brief steht eine Rechtsbehelfsbelehrung: Du kannst Widerspruch bzw. Einspruch einlegen. Die Frist dafür steht im Brief.',
-                r_vollstreckung: 'Es geht um Vollstreckung oder Pfändung – reagiere schnell und hol dir Hilfe, z. B. bei einer Schuldnerberatung.',
-                r_gericht: 'Im Brief wird ein Gericht genannt – Fristen hier unbedingt einhalten.', r_regel: 'Frist laut Brief: „{x}“'
+                r_vollstreckung: 'Es geht um Vollstreckung oder Pfändung. Reagiere schnell und hol dir Hilfe, z. B. bei einer Schuldnerberatung.',
+                r_gericht: 'Im Brief wird ein Gericht genannt. Halte die Fristen unbedingt ein.', r_regel: 'Frist laut Brief: „{x}“'
             },
             en: {
                 titel: 'Letter assistant', untertitel: 'Understand letters, never miss a deadline', s1_titel: '📬 Which letter did you receive?',
@@ -317,7 +317,7 @@
     <script src="../i18n-mehr/sprachwahl.js?v=2"></script>
     <script src="../gemini-modelle.js?v=1"></script>
     <script src="../sd-lotse-modelle.js?v=3"></script>
-    <script src="../sd-ki.js?v=21"></script>
+    <script src="../sd-ki.js?v=23"></script>
     <script src="brief-regeln.js?v=1"></script>
     <script>
         'use strict';

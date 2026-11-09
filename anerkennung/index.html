@@ -20,8 +20,8 @@
         .vzeile { display: grid; gap: 8px; grid-template-columns: 110px 110px 1fr 1fr auto; align-items: end; }
         @media (max-width: 640px) { .vzeile { grid-template-columns: 1fr 1fr; padding-bottom: 8px; border-bottom: 1px dashed var(--line); } .vzeile button { justify-self: start; } }
     </style>
-<link rel="stylesheet" href="../sd-workspace.css?v=20261108-ui-1">
-<script defer src="../sd-workspace.js?v=20261108-ui-1" data-sd-app="anerkennung" data-sd-mode="standard"></script>
+<link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-4">
+<script defer src="../sd-workspace.js?v=20261109-stil-4" data-sd-app="anerkennung" data-sd-mode="standard"></script>
 </head>
 
 <body>
@@ -29,7 +29,7 @@
         <a class="back-link" href="../index.html#bereiche" aria-label="Zur Übersicht">←</a>
         <div class="brand">
             <img class="sd-logo" src="../icon.svg" alt="" aria-hidden="true">
-            <div><strong data-i18n="titel">Anerkennung von Abschlüssen</strong><small data-i18n="untertitel">Ausländische Ausbildung, Studium, Schule – Schritt für Schritt</small></div>
+            <div><strong data-i18n="titel">Anerkennung von Abschlüssen</strong><small data-i18n="untertitel">Ausländische Ausbildung, Studium und Schule, Schritt für Schritt</small></div>
         </div>
         <div class="sd-lang-switch">
             <button type="button" class="sd-lang-btn" data-lang="de" onclick="sdApplyLang('de')">DE</button>
@@ -49,7 +49,7 @@
 
         <section class="karte" id="frage2" hidden>
             <h2 data-i18n="f2">2 · Ist dein Beruf in Deutschland „reglementiert“?</h2>
-            <p class="info" data-i18n="f2_info">Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben – z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.</p>
+            <p class="info" data-i18n="f2_info">Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben, z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.</p>
             <div class="wahl" id="wahlReg">
                 <button type="button" class="btn" data-reg="ja" data-i18n="r_ja">Ja, reglementiert (z. B. Gesundheit, Erziehung, Lehramt)</button>
                 <button type="button" class="btn" data-reg="nein" data-i18n="r_nein">Nein, nicht reglementiert</button>
@@ -72,8 +72,8 @@
         </section>
 
         <section class="karte" id="antragKarte" hidden>
-            <h2 data-i18n="an_titel">📝 Antrag vorbereiten – als PDF</h2>
-            <p class="info" data-i18n="an_info">Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF – mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.</p>
+            <h2 data-i18n="an_titel">📝 Antrag als PDF vorbereiten</h2>
+            <p class="info" data-i18n="an_info">Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.</p>
             <p class="hinweis" id="anHinweis"></p>
 
             <h3 data-i18n="an_person">1. Angaben zur Person</h3>
@@ -137,8 +137,8 @@
             <h2 data-i18n="hilfe_titel">🤝 Kostenlose Beratung</h2>
             <ul class="punkte">
                 <li><span data-i18n="hotline">Hotline „Arbeiten und Leben in Deutschland“:</span> <b>+49 30 1815-1111</b> – <span data-i18n="hotline_zeit">Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch</span></li>
-                <li data-i18n="iq">IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ – Beratungsstellen in allen Bundesländern.</li>
-                <li data-i18n="ba">Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden – vorher fragen, nachträglich geht es nicht.</li>
+                <li data-i18n="iq">IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ mit Beratungsstellen in allen Bundesländern.</li>
+                <li data-i18n="ba">Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden. Vorher fragen, nachträglich geht es nicht.</li>
             </ul>
             <div class="knoepfe">
                 <a class="btn klein" href="https://www.anerkennung-in-deutschland.de/" target="_blank" rel="noopener" data-i18n="link_portal">🔎 Anerkennungs-Finder (offizielles Portal)</a>
@@ -155,33 +155,33 @@
                 <li><a href="https://zab.kmk.org/en/statement-comparability/fees" target="_blank" rel="noopener">ZAB – Gebühren der Zeugnisbewertung</a></li>
                 <li><a href="https://anabin.kmk.org/rechercheanleitung-hochschulabschluss" target="_blank" rel="noopener">anabin – Bewertung ausländischer Hochschulabschlüsse</a></li>
             </ul>
-            <p class="quelle" data-i18n="stand">Stand der Angaben: Oktober 2026. Keine Rechtsberatung – verbindlich ist immer die zuständige Stelle.</p>
+            <p class="quelle" data-i18n="stand">Stand der Angaben: Oktober 2026. Keine Rechtsberatung. Verbindlich ist immer die zuständige Stelle.</p>
         </section>
     </main>
 
     <script>
         window.SD_I18N = {
             de: {
-                titel: 'Anerkennung von Abschlüssen', untertitel: 'Ausländische Ausbildung, Studium, Schule – Schritt für Schritt',
+                titel: 'Anerkennung von Abschlüssen', untertitel: 'Ausländische Ausbildung, Studium und Schule, Schritt für Schritt',
                 f1: '1 · Was möchtest du anerkennen lassen?', a_beruf: '🛠️ Berufsausbildung / Berufsabschluss', a_studium: '🎓 Studium / Hochschulabschluss', a_schule: '🏫 Schulabschluss (z. B. für Ausbildung oder Studium)',
                 f2: '2 · Ist dein Beruf in Deutschland „reglementiert“?',
-                f2_info: 'Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben – z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.',
+                f2_info: 'Reglementiert heißt: Man darf den Beruf in Deutschland nur mit staatlicher Zulassung bzw. Anerkennung ausüben, z. B. Ärztin, Krankenpfleger, Erzieher. Nicht reglementiert sind z. B. Angestellte im Einzelhandel oder Informatiker.',
                 r_ja: 'Ja, reglementiert (z. B. Gesundheit, Erziehung, Lehramt)', r_nein: 'Nein, nicht reglementiert', r_weiss: 'Weiß ich nicht',
                 check_titel: '✅ Deine Checkliste', check_info: 'Typische Schritte und Unterlagen. Welche Unterlagen genau nötig sind, sagt dir die zuständige Stelle. Dein Fortschritt wird auf dem Gerät gespeichert.',
                 zur_mappe: '🗂️ Unterlagen in der Dokumenten-Mappe sammeln', zum_lebenslauf: '📄 Lebenslauf erstellen',
                 hilfe_titel: '🤝 Kostenlose Beratung', hotline: 'Hotline „Arbeiten und Leben in Deutschland“:', hotline_zeit: 'Mo–Do 9–16 Uhr, Fr 9–12 Uhr, auf Deutsch und Englisch',
-                iq: 'IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ – Beratungsstellen in allen Bundesländern.',
-                ba: 'Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden – vorher fragen, nachträglich geht es nicht.',
+                iq: 'IQ-Anerkennungsberatung im Förderprogramm „Integration durch Qualifizierung“ mit Beratungsstellen in allen Bundesländern.',
+                ba: 'Agentur für Arbeit bzw. Jobcenter: Bei Arbeitsuche können unter Umständen Kosten für Übersetzungen und Beglaubigungen übernommen werden. Vorher fragen, nachträglich geht es nicht.',
                 link_portal: '🔎 Anerkennungs-Finder (offizielles Portal)', link_iq: 'IQ-Beratung finden', quellen_titel: '📚 Quellen',
-                stand: 'Stand der Angaben: Oktober 2026. Keine Rechtsberatung – verbindlich ist immer die zuständige Stelle.',
+                stand: 'Stand der Angaben: Oktober 2026. Keine Rechtsberatung. Verbindlich ist immer die zuständige Stelle.',
                 e_reg_titel: '➡️ Anerkennung ist für dich Pflicht',
-                e_reg: ['Ohne Anerkennung darfst du in diesem Beruf in Deutschland nicht arbeiten.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de – sie hängt vom Beruf und vom Bundesland ab.', 'Die Stelle vergleicht deinen Abschluss mit dem deutschen Referenzberuf. Gibt es große Unterschiede, können Berufserfahrung oder eine Qualifikationsanalyse sie ausgleichen.', 'Ist der Abschluss nur teilweise gleichwertig, bekommst du einen Bescheid und kannst eine Anpassungsqualifizierung machen (z. B. mit Praktikum).', 'Dauer: bis zu 4 Monate, gerechnet ab dem Zeitpunkt, an dem alle Unterlagen vollständig sind. Die Kosten legt die zuständige Stelle fest – vorher dort fragen.'],
-                e_frei_titel: '➡️ Anerkennung ist freiwillig – kann sich aber lohnen',
-                e_frei: ['Du darfst in diesem Beruf auch ohne Anerkennung arbeiten.', 'Ein Anerkennungsbescheid hilft Arbeitgebern, deinen Abschluss einzuschätzen – das kann bei Bewerbung und Gehalt helfen.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de.', 'Dauer: bis zu 4 Monate ab vollständigen Unterlagen. Die Kosten legt die zuständige Stelle fest.'],
+                e_reg: ['Ohne Anerkennung darfst du in diesem Beruf in Deutschland nicht arbeiten.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de. Sie hängt vom Beruf und vom Bundesland ab.', 'Die Stelle vergleicht deinen Abschluss mit dem deutschen Referenzberuf. Gibt es große Unterschiede, können Berufserfahrung oder eine Qualifikationsanalyse sie ausgleichen.', 'Ist der Abschluss nur teilweise gleichwertig, bekommst du einen Bescheid und kannst eine Anpassungsqualifizierung machen (z. B. mit Praktikum).', 'Dauer: bis zu 4 Monate, gerechnet ab dem Zeitpunkt, an dem alle Unterlagen vollständig sind. Die Kosten legt die zuständige Stelle fest. Frag am besten vorher dort.'],
+                e_frei_titel: '➡️ Anerkennung ist freiwillig, kann sich aber lohnen',
+                e_frei: ['Du darfst in diesem Beruf auch ohne Anerkennung arbeiten.', 'Ein Anerkennungsbescheid hilft Arbeitgebern, deinen Abschluss einzuschätzen. Das kann bei Bewerbung und Gehalt helfen.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de.', 'Dauer: bis zu 4 Monate ab vollständigen Unterlagen. Die Kosten legt die zuständige Stelle fest.'],
                 e_weiss_titel: '➡️ Erst klären: reglementiert oder nicht?',
                 e_weiss: ['Gib deinen Beruf im Anerkennungs-Finder auf anerkennung-in-deutschland.de ein. Dort steht, ob er reglementiert ist und welche Stelle zuständig ist.', 'Oder ruf die Hotline „Arbeiten und Leben in Deutschland“ an (siehe unten).', 'Danach hier oben die passende Antwort wählen.'],
                 e_studium_frei_titel: '➡️ Zeugnisbewertung bei der ZAB',
-                e_studium_frei: ['Für Studienabschlüsse in nicht reglementierten Berufen gibt es keine formale Anerkennung, aber eine Zeugnisbewertung der Zentralstelle für ausländisches Bildungswesen (ZAB).', 'Sie beschreibt deinen Abschluss und vergleicht ihn mit deutschen Abschlüssen – hilfreich bei Bewerbungen.', 'Kosten laut ZAB: 208 € (Ersatz-Ausfertigung 104 €). Eine finanzielle Förderung muss vor dem Antrag beantragt werden.', 'Vorab kannst du in der Datenbank anabin nachsehen, wie deine Hochschule und dein Abschluss eingestuft sind.'],
+                e_studium_frei: ['Für Studienabschlüsse in nicht reglementierten Berufen gibt es keine formale Anerkennung, aber eine Zeugnisbewertung der Zentralstelle für ausländisches Bildungswesen (ZAB).', 'Sie beschreibt deinen Abschluss und vergleicht ihn mit deutschen Abschlüssen. Das hilft bei Bewerbungen.', 'Kosten laut ZAB: 208 € (Ersatz-Ausfertigung 104 €). Eine finanzielle Förderung muss vor dem Antrag beantragt werden.', 'Vorab kannst du in der Datenbank anabin nachsehen, wie deine Hochschule und dein Abschluss eingestuft sind.'],
                 e_schule_titel: '➡️ Zeugnisanerkennungsstelle deines Bundeslandes',
                 e_schule: ['Ausländische Schulabschlüsse (z. B. vergleichbar mit Haupt- oder Realschulabschluss oder Hochschulreife) bewerten die Zeugnisanerkennungsstellen der Bundesländer – für ein Studium teils auch direkt die Hochschulen.', 'Die zuständige Stelle findest du über den Anerkennungs-Finder auf anerkennung-in-deutschland.de.', 'Übersetzungen der Zeugnisse sind nötig; ob beglaubigte Kopien oder Übersetzungen von gerichtlich ermächtigten Übersetzern verlangt werden, sagt die Stelle.'],
                 cl: {
@@ -204,7 +204,7 @@
                 land_offen: 'Für dieses Bundesland haben wir die zuständige Stelle noch nicht selbst geprüft. Du findest sie in der offiziellen Datenbank anabin: dort „Suchen nach anderen Stellen“ → Zuständigkeit „Zeugnisanerkennung“ → dein Bundesland.', land_anabin: '🔎 Stelle in anabin suchen', land_finder: 'Anerkennungs-Finder',
                 land_formular: '⚠️ Dieses Bundesland hat ein eigenes Antragsformular. Bitte das offizielle Formular verwenden – das PDF unten hilft dir beim Ausfüllen und kann als Anschreiben beigelegt werden.',
                 land_stand: 'Angaben geprüft im Oktober 2026 auf den Seiten des Landes. Gebühren und Formulare können sich ändern.',
-                an_titel: '📝 Antrag vorbereiten – als PDF', an_info: 'Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF – mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.',
+                an_titel: '📝 Antrag als PDF vorbereiten', an_info: 'Fülle die Felder aus. Daraus entsteht ein fertiger, unterschriftsreifer Antrag als PDF mit deinen Daten, deiner Schulzeit und der Liste der Anlagen. Bitte alles in lateinischer Schrift schreiben, genau wie im Pass.',
                 an_hinweis_offen: 'Wähle oben dein Bundesland. Ohne eigenes Landesformular kannst du dieses PDF als Antrag unterschrieben einreichen; frag im Zweifel bei der Stelle nach.',
                 an_hinweis_formular: 'Dein Bundesland verlangt ein eigenes Formular. Nutze das PDF als Ausfüllhilfe und als Anschreiben zum offiziellen Formular.',
                 an_hinweis_frei: 'Für dein Bundesland ist uns kein eigenes Pflichtformular bekannt. Frag bei der Stelle nach, ob ein formloser Antrag (dieses PDF) reicht.',

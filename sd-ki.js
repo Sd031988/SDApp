@@ -37,7 +37,7 @@
 
   const TEXTE = {
     de: {
-      anbieter_titel: 'KI wählen',
+      anbieter_titel: 'KI wählen', aendern: 'Ändern', zuklappen: 'Zuklappen', ki_kurz: 'KI', key_fehlt_kurz: 'Schlüssel fehlt', einrichten: 'Einrichten',
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini-Schlüssel nötig · Texte gehen an Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'eigene KI · lokal auf diesem Gerät · ohne Schlüssel',
       openai: '🟢 ChatGPT', openai_sub: 'OpenAI · eigener Schlüssel · Zahlung nach Nutzung',
@@ -121,7 +121,7 @@
       p_uebersetzen: 'Übersetze den folgenden Text vollständig und sinngetreu in diese Sprache: {sprache}. Behalte Absätze, Aufzählungen, Zahlen, Beträge, Daten und Namen bei. Gib ausschließlich die Übersetzung aus, ohne Einleitung oder Kommentar.'
     },
     en: {
-      anbieter_titel: 'Choose AI',
+      anbieter_titel: 'Choose AI', aendern: 'Change', zuklappen: 'Collapse', ki_kurz: 'AI', key_fehlt_kurz: 'key missing', einrichten: 'Set up',
       gemini: '☁️ Gemini', gemini_sub: 'online · Gemini key needed · text is sent to Google',
       lotse: '🔒 SD Lotse', lotse_sub: 'own AI · local on this device · no key',
       openai: '🟢 ChatGPT', openai_sub: 'OpenAI · own key · pay per use',
@@ -215,7 +215,7 @@
     if (!MEHR_SPRACHEN.includes(l) || window.SD_KI_TEXTE_MEHR || mehrLaedt) return;
     mehrLaedt = true;
     const sc = document.createElement('script');
-    sc.src = new URL('i18n-mehr/sd-ki.js?v=1', SKRIPT_URL).href;
+    sc.src = new URL('i18n-mehr/sd-ki.js?v=3', SKRIPT_URL).href;
     sc.onload = () => document.dispatchEvent(new CustomEvent('sd-ki-texte'));
     (document.head || document.documentElement).appendChild(sc);
   }
@@ -266,7 +266,11 @@
     st.id = 'sdki-styles';
     st.textContent = `
 .sdki-wahl{border:1px solid #d8e0dc;border-radius:12px;padding:10px;background:#fbfdfc;margin:0 0 12px;font-family:inherit}
-.sdki-wahl-titel{font-size:.72rem;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;color:#647482;margin-bottom:6px}
+.sdki-wahl-titel{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.72rem;font-weight:bold;text-transform:uppercase;letter-spacing:.04em;color:#647482;margin-bottom:6px}
+.sdki-wahl.sdki-zu{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;font-size:.88rem;color:#5d6d66}
+.sdki-zeile-kurz strong{color:#172e29}
+.sdki-fehlt{color:#9a5b00}
+.sdki-aendern{border:1px solid #d9dfd6;background:#fff;border-radius:7px;padding:6px 11px;min-height:34px;font:inherit;font-size:.82rem;font-weight:700;color:#173a34;cursor:pointer;text-transform:none;letter-spacing:normal}
 .sdki-optionen{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .sdki-opt{display:flex;flex-direction:column;gap:2px;border:1px solid #d8e0dc;border-radius:10px;padding:8px 10px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;color:#172a3a;min-height:44px}
 .sdki-opt strong{font-size:.9rem}
@@ -365,10 +369,23 @@
     const box = document.createElement('div');
     box.className = 'sdki-wahl';
     container.prepend(box);
+    // Kompakt: eine Zeile "KI: Gemini · ändern". Aufgeklappt nur bei Bedarf oder wenn ein Schlüssel fehlt.
+    let offen = null;
     const zeichnen = () => {
       const a = anbieter();
+      const keyFehlt = (ONLINE[a] && !onlineKey(a)) || (a === 'gemini' && !geminiKey());
+      const auf = offen === null ? false : offen;
+      const kurzName = String(tx(a)).replace(/^\s*\S+\s+/, '');
+      if (!auf) {
+        box.className = 'sdki-wahl sdki-zu';
+        box.innerHTML = '<span class="sdki-zeile-kurz">' + esc(tx('ki_kurz')) + ': <strong>' + esc(kurzName) + '</strong>' + (keyFehlt ? ' · <span class="sdki-fehlt">' + esc(tx('key_fehlt_kurz')) + '</span>' : '') + '</span>' +
+          '<button type="button" class="sdki-aendern">' + esc(tx(keyFehlt ? 'einrichten' : 'aendern')) + '</button>';
+        box.querySelector('.sdki-aendern').onclick = () => { offen = true; zeichnen(); };
+        return;
+      }
+      box.className = 'sdki-wahl';
       box.innerHTML =
-        '<div class="sdki-wahl-titel">' + esc(tx('anbieter_titel')) + '</div>' +
+        '<div class="sdki-wahl-titel"><span>' + esc(tx('anbieter_titel')) + '</span>' + (keyFehlt ? '' : '<button type="button" class="sdki-aendern">' + esc(tx('zuklappen')) + '</button>') + '</div>' +
         '<div class="sdki-optionen" role="radiogroup">' +
         ANBIETER_WERTE.map(w => '<button type="button" class="sdki-opt' + (a === w ? ' aktiv' : '') + '" data-a="' + w + '" role="radio" aria-checked="' + (a === w) + '"><strong>' + esc(tx(w)) + '</strong><small>' + esc(tx(w + '_sub')) + '</small></button>').join('') +
         '</div>' +
@@ -377,6 +394,7 @@
           : '') +
         (ONLINE[a] || (a === 'gemini' && geminiFeld) ? schluesselBoxHtml(a) : '');
       box.querySelectorAll('.sdki-opt').forEach(b => { b.onclick = () => setzeAnbieter(b.dataset.a); });
+      const zu = box.querySelector('.sdki-wahl-titel .sdki-aendern'); if (zu) zu.onclick = () => { offen = false; zeichnen(); };
       if (ONLINE[a] || (a === 'gemini' && geminiFeld)) verbindeSchluesselBox(box, a);
     };
     zeichnen();

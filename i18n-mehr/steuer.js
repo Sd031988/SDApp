@@ -119,11 +119,17 @@
     [/^📥 Vordrucke (\d{4}) herunterladen$/, ['📥 Download $1 forms', '📥 دانلود فرم‌های $1', '📥 تنزيل استمارات $1', '📥 $1 کے فارم ڈاؤن لوڈ کریں', '📥 Завантажити формуляри $1', '📥 ቅጥዕታት $1 ኣውርድ']]
   ];
 
+  const EMO_WEG = /^\s*(?:\p{Extended_Pictographic}|[ℹ⬇⬆▶⚙⚠✏✍✉☁✈])(?:\uFE0F|\u200D\p{Extended_Pictographic})*\s*/u;
+  let W2 = null;
+  function ohneEmoji(k) {
+    if (!W2) { W2 = {}; Object.keys(W).forEach(x => { const y = x.replace(EMO_WEG, ''); if (y !== x && !W[y]) W2[y] = W[x]; }); }
+    return W2[k.replace(EMO_WEG, '')];
+  }
   function uebersetze(s) {
     if (col < 0 || !s) return null;
     const kern = s.trim().replace(/\s+/g, ' ');
     if (!kern) return null;
-    const w = W[kern];
+    const w = W[kern] || ohneEmoji(kern);
     if (w) return w[col];
     for (const [re, z] of P) { if (re.test(kern)) return kern.replace(re, z[col]); }
     return null;

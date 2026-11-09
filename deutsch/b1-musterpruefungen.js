@@ -1183,10 +1183,15 @@ const css=document.createElement('style');css.textContent=`
  #b1x .b1x-overview-grid{grid-template-columns:repeat(auto-fill,minmax(40px,1fr))}
 }
 
+.b1-entries{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0}
+.b1-entry{display:grid;gap:3px;text-align:left;padding:14px 16px;border-radius:10px;border:1px solid #ffffff26;background:#ffffff0d;color:inherit;font:inherit;text-decoration:none;cursor:pointer}
+.b1-entry:hover{border-color:#efb05d;background:#ffffff14}
+.b1-entry b{font-size:1rem}
+.b1-entry small{opacity:.75;font-size:.85rem}
 `;document.head.appendChild(css);
 function attach(){
  if(root)return;const h=el('lBody');if(!h||h.querySelector('#sdB1FullEntry')||!h.querySelector('.l-wrap')||h.querySelector('.l-loading'))return;
- const b=document.createElement('button');b.id='sdB1FullEntry';b.type='button';b.className='b1-entry';b.innerHTML='<b>🎓 B1-Musterprüfungen</b><small>Goethe · telc · DTZ – je 5 Mustersätze</small>';b.onclick=open;
+ const b=document.createElement('div');b.id='sdB1FullEntry';b.className='b1-entries';b.innerHTML='<button type="button" class="b1-entry"><b>B1-Musterprüfungen</b><small>Goethe, telc und DTZ, je 5 Übungssätze</small></button><a class="b1-entry" href="b1-pruefung.html"><b>B1-Prüfungstraining</b><small>Alle Prüfungsteile Schritt für Schritt üben</small></a>';b.querySelector('button').onclick=open;
  const old=h.querySelector('#sdB1Entry');if(old)old.remove();
  const tiles=h.querySelector('.l-kacheln');if(tiles)tiles.insertAdjacentElement('afterend',b);else h.querySelector('.l-wrap').insertAdjacentElement('afterbegin',b);
 }
@@ -1198,7 +1203,7 @@ function attachFixedEntry(){
  b.innerHTML='<b>🎓 B1-Musterprüfungen öffnen</b><small>Goethe · telc · DTZ – 15 Übungssätze</small>';
  b.onclick=open;target.parentNode.insertBefore(b,target);b.style.display='block';
 }
-function refreshEntry(){attach();attachFixedEntry();}
+function refreshEntry(){attach();const f=document.getElementById('sdB1FixedEntry');if(f)f.remove();}
 new MutationObserver(refreshEntry).observe(document.documentElement,{childList:true,subtree:true});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refreshEntry);else refreshEntry();
 })();
