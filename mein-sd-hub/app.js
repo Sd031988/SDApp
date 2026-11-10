@@ -2,6 +2,8 @@
 (function(){
 "use strict";
 const D=window.SDPersonalData;
+/* Text mit `Code` sicher als Textknoten und <code> einsetzen (kein innerHTML). */
+function mitCode(el,text){String(text||"").split("`").forEach((teil,i)=>{if(!teil)return;if(i%2){const c=document.createElement("code");c.textContent=teil;el.appendChild(c)}else el.appendChild(document.createTextNode(teil))});return el}
 if(!D){document.body.insertAdjacentText("afterbegin","SD Hub konnte die Lerninhalte nicht laden. Bitte die Seite neu laden.");return}
 const $=id=>document.getElementById(id);
 const mk=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e};
@@ -265,8 +267,8 @@ function renderCodeLesson(l){
  const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
  node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
  node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
- l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);node("p","",step.text,sec);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);node("p","",step.erklaerung,sec)}});
- node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);String(f.text).split("`").forEach((teil,i)=>{if(teil)i%2?node("code","",teil,li):li.appendChild(document.createTextNode(teil))})});
+ l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(node("p","",undefined,sec),ohneDoppel);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(node("p","",undefined,sec),erkl)}});
+ node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);mitCode(li,f.text)});
  node("h5","","Jetzt selbst schreiben",wrap);
  const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
  const grid=node("div","code-workspace",undefined,wrap),editor=node("div","code-editor",undefined,grid);
@@ -300,7 +302,7 @@ function renderCodeLesson(l){
  q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
  });
  if(l.uebungen&&window.SDAkademieUebungen){node("h5","","Weitere Übungen",wrap);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(wrap,u))}
- node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
+ node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(node("li","",undefined,ul),x));
  const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
  const status=node("p","message","",wrap);
  studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
