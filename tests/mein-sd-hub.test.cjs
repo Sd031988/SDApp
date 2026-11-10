@@ -33,26 +33,30 @@ test("Praxis-Editor nutzt isolierte Vorschau und Studio-IndexedDB",()=>{assert.m
 
 test("Alle zwölf Lektionen enthalten Lösungen, Fehlerhilfen und drei Quizfragen",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/code.js"));assert.equal(lessons.length,12);for(const lesson of lessons){assert.ok(lesson.aufgabe.pruefungen.length>=2);assert.ok(lesson.fehler.length>=2);assert.ok(lesson.schritte.length>=4);assert.ok(lesson.schritte.every(x=>x.code&&x.text.length>100));assert.equal(lesson.quiz.length,3);assert.ok(lesson.quiz.every(x=>x.antworten.length>=3));assert.ok(lesson.aufgabe.loesung.html)}});
 
-test("Kein Erklärungssatz steht wortgleich in mehr als zwei Lektionen",()=>{
- const lessons=require(path.join(root,"mein-sd-hub/kurse/code.js"));
- const usage=new Map();
- const sentenceParts=text=>text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+test("Kein Satz in Schritten, Fehlern, Quiz-Erklärungen und Merksätzen erscheint in mehr als zwei Lektionen aller Kurse",()=>{
+ const lessons=data.academy.flatMap(c=>require(path.join(root,"mein-sd-hub/kurse",c.id+".js")));
+ const occurrences=new Map();
+ const sentences=text=>String(text||"").match(/[^.!?]+(?:[.!?]+|$)/g)||[];
  for(const lesson of lessons){
-  const unique=new Set();
-  for(const step of lesson.schritte){
-   for(const raw of sentenceParts(step.text+" "+step.erklaerung)){
-    const sentence=raw.trim().replace(/\\s+/g," ");
-    if(sentence.length>=15)unique.add(sentence);
-   }
+  const own=new Set();
+  const sources=[
+   ...(lesson.schritte||[]).flatMap(step=>[step.text,step.erklaerung]),
+   ...(lesson.fehler||[]).map(f=>f.text),
+   ...(lesson.quiz||[]).map(q=>q.erklaerung),
+   ...(lesson.merke||[])
+  ];
+  for(const source of sources)for(const raw of sentences(source)){
+   const sentence=raw.trim().replace(/\\s+/g," ");
+   if(sentence.length>=15)own.add(sentence);
   }
-  for(const sentence of unique){
-   const owners=usage.get(sentence)||[];
-   owners.push(lesson.id);
-   usage.set(sentence,owners);
+  for(const sentence of own){
+   const ids=occurrences.get(sentence)||[];
+   ids.push(lesson.id);
+   occurrences.set(sentence,ids);
   }
  }
- const repeated=[...usage].filter(([,owners])=>owners.length>2);
- assert.deepEqual(repeated.map(([sentence,owners])=>({sentence,owners})),[]);
+ const repeats=[...occurrences].filter(([,ids])=>ids.length>2);
+ assert.deepEqual(repeats.map(([sentence,ids])=>({sentence,ids})),[]);
 });
 test("Quizantworten sind über verschiedene Positionen verteilt",()=>{
  const lessons=require(path.join(root,"mein-sd-hub/kurse/code.js"));
