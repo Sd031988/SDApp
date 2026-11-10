@@ -178,3 +178,14 @@ test("JavaScript Aufbau P4: acht Lektionen, Lösungen, Fehlbeispiele und verteil
  assert.ok(fragen.length>=3);
  for(const q of fragen){assert.equal(q.antworten.length,3);assert.ok(q.richtig>=0&&q.richtig<3);}
 });
+
+test("P4 Quiz-App lädt lokale JSON-Datei und behandelt Fehler sicher",()=>{
+ const html=load("mein-sd-hub/p4-quiz.html");
+ assert.match(html,/fetch\("\.\/daten\/fragen\.json"\)/);
+ assert.match(html,/antwort\.ok/);
+ assert.match(html,/catch\(fehler\)/);
+ assert.match(html,/\.textContent=/);
+ assert.doesNotMatch(html,/\.innerHTML\s*=/);
+ assert.match(html,/aria-live="polite"/);
+ assert.match(html,/type="button"/);
+});
