@@ -70,3 +70,17 @@ test("Quizantworten sind über verschiedene Positionen verteilt",()=>{
 });
 
 test("Kurskatalog bleibt klein und Fortschritts-IDs sind stabil",()=>{assert.ok(load("mein-sd-hub/data.js").length<20000);for(const course of data.academy){assert.equal(course.anzahl,data.academyLessonIds[course.id].length);assert.ok(course.bereich&&course.stufe&&Array.isArray(course.voraussetzungen));assert.deepEqual(require(path.join(root,"mein-sd-hub/kurse",course.id+".js")).map(l=>l.id),data.academyLessonIds[course.id]);}assert.deepEqual(data.sanitizeState({completedLessons:["g-1","p-12"]}).completedLessons,["g-1","p-12"])});
+
+test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
+ const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
+ const cases=[
+  [{typ:"auswahl",richtig:[0,2],antworten:["A","B","C"]},[0,2],[1]],
+  [{typ:"luecke",loesung:["Berlin","Montag"]},["Berlin","Montag"],["","Montag"]],
+  [{typ:"zuordnen",paare:[["rot","Farbe"],["Apfel","Obst"]] },["Farbe","Obst"],["Obst","Farbe"]],
+  [{typ:"reihenfolge",loesung:["Öffnen","Schreiben","Speichern"]},["Öffnen","Schreiben","Speichern"],["Speichern","Öffnen","Schreiben"]],
+  [{typ:"hoeren",text:"Guten Morgen",loesung:"Guten Morgen"},"Guten Morgen",""],
+ ];
+ for(const [exercise,correct,wrong] of cases){assert.equal(engine.pruefen(exercise,correct).ok,true,exercise.typ);assert.equal(engine.pruefen(exercise,wrong).ok,false,exercise.typ)}
+ assert.equal(engine.pruefen({typ:"schreiben",musterloesung:"Hallo"},"Hallo").ok,null);
+ assert.doesNotMatch(load("mein-sd-hub/akademie-uebungen.js"),/\\beval\\s*\\(/);
+});
