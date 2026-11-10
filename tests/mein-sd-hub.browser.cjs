@@ -222,7 +222,7 @@ for(const width of [320,390,1300]){
   await c1.locator(".ak-lesson-quiz .answers button").nth(correctIndex).click();
   await c1.locator(".ak-lesson-quiz button.btn").click();
  }
- assert.match(await c1.locator(".ak-lesson-quiz").innerText(),/Alle drei Verständnisfragen/);
+ assert.equal(await c1.evaluate(()=>Object.values(localStorage).some(raw=>{try{return JSON.parse(raw).completedLessons?.includes("d-1")}catch{return false}})),true,"C1 speichert den Abschluss erst nach allen drei richtigen Antworten");
  for(let i=0;i<8;i++){
   await c1.locator(".lesson-btn").nth(i).click();
   assert.equal(await c1.locator(".ak-practice-step").count(),4,"C1 Schrittzahl "+i);
