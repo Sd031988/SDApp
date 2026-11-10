@@ -125,12 +125,71 @@ function searchGoal(){const text=$("goalSearch").value.trim();if(!text){$("goalS
 document.querySelector('.goal[data-goal="lernen"]').click();
 // Akademie
 let courseId="german",lessonId="g-1",answered=false;
-function renderCourses(){
-clearChildren("courses");D.academy.forEach(course=>{const complete=course.lessons.filter(l=>state.completedLessons.includes(l.id)).length;const btn=node("button","course"+(course.id===courseId?" active":""),undefined,$("courses"));btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));node("span","emoji",course.icon,btn);node("b","",course.name,btn);node("small","",course.summary,btn);const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);bar.style.width=(complete/course.lessons.length*100)+"%";node("div","progress-label",complete+" / "+course.lessons.length+" Lektionen",btn);btn.addEventListener("click",()=>{courseId=course.id;lessonId=course.lessons[0].id;answered=false;renderCourses()})});
-renderLessonList();
+const kursLadevorgaenge=new Map();
+function ladeKurs(id){
+ const kurs=findCourse(id);
+ if(!kurs)return Promise.reject(new Error("Kurs nicht gefunden"));
+ if(kurs.lessons)return Promise.resolve(kurs);
+ if(kursLadevorgaenge.has(id))return kursLadevorgaenge.get(id);
+ const p=new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src="./kurse/"+encodeURIComponent(id)+".js";
+  script.onload=()=>{
+   const lessons=window.SDAkademieKurse?.[id];
+   if(!Array.isArray(lessons)){reject(new Error("Lektionsdaten fehlen"));return}
+   kurs.lessons=lessons;resolve(kurs);
+  };
+  script.onerror=()=>reject(new Error("Kursdatei konnte nicht geladen werden"));
+  document.head.appendChild(script);
+ }).catch(error=>{kursLadevorgaenge.delete(id);throw error});
+ kursLadevorgaenge.set(id,p);return p;
 }
-function renderLessonList(){const c=findCourse(courseId);if(!c)return;$("courseHeading").textContent=c.icon+" "+c.name;$("courseSummary").textContent=c.summary;clearChildren("lessonList");
-c.lessons.forEach(l=>{const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));const left=node("span","",undefined,btn);node("b","",l.title,left);node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()})});renderLesson()}
+function renderCourses(){
+ clearChildren("courses");
+ for(const bereich of ["Programmieren","Computer & Internet","Deutsch","Arbeit & Beruf"]){
+  const group=node("section","course-group",undefined,$("courses"));
+  node("h3","",bereich,group);
+  const entries=node("div","course-group-list",undefined,group);
+  for(const course of D.academy.filter(c=>c.bereich===bereich)){
+   const ids=D.academyLessonIds[course.id]||[];
+   const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
+   const btn=node("button","course"+(course.id===courseId?" active":""),undefined,entries);
+   btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));
+   node("span","emoji",course.icon,btn);
+   node("b","",course.name,btn);
+   node("span","badge",course.stufe,btn);
+   node("small","",course.summary,btn);
+   node("small","","Empfohlene Reihenfolge: "+(D.academy.filter(c=>c.bereich===bereich).indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
+   const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);
+   bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
+   node("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
+   btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids[0];answered=false;renderCourses()});
+  }
+ }
+ renderLessonList();
+}
+function renderLessonList(){
+ const c=findCourse(courseId);if(!c)return;
+ $("courseHeading").textContent=c.icon+" "+c.name;
+ $("courseSummary").textContent=c.summary;
+ clearChildren("lessonList");clearChildren("lessonDetail");
+ if(!c.lessons){
+  const status=node("p","panel-sub","Lade Kurs …",$("lessonDetail"));
+  status.setAttribute("role","status");
+  ladeKurs(c.id).then(()=>{if(courseId===c.id)renderLessonList()}).catch(()=>{if(courseId===c.id)status.textContent="Der Kurs konnte nicht geladen werden. Bitte erneut öffnen."});
+  return;
+ }
+ c.lessons.forEach(l=>{
+  const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
+  btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));
+  const left=node("span","",undefined,btn);
+  node("b","",l.title,left);
+  node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
+  node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
+  btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()});
+ });
+ renderLesson();
+}
 function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
 l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
 if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=node("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
