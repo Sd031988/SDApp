@@ -139,9 +139,9 @@ if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(
 
 const academyDrafts=new Map();
 function previewHtml(code){
- const safeStyle=code.css.replace(/<\\/style/gi,"<\\\\/style");
- const safeScript=code.js.replace(/<\\/script/gi,"<\\\\/script");
- return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+safeStyle+'</style></head><body>'+code.html+'<script>'+safeScript+'<\\/script></body></html>';
+ const style=code.css.replace(/<\\/style/gi,"<" + "/style");
+ const script=code.js.replace(/<\\/script/gi,"<" + "/script");
+ return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+style+'</style></head><body>'+code.html+'<script>'+script+'<'+'/script></body></html>';
 }
 function academyToStudio(name,code){
  return new Promise((resolve,reject)=>{
@@ -155,7 +155,7 @@ function academyToStudio(name,code){
    get.onerror=()=>{db.close();reject(get.error)};
    get.onsuccess=()=>{
     if(get.result){db.close();reject(new Error("Ein Projekt mit diesem Namen existiert bereits. Bitte ändere den Namen."));return}
-    store.add({name,dateien:{"index.html":code.html,"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
+    store.add({name,dateien:{"index.html":'<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"></head><body>'+code.html+'<script src="script.js"><'+'/script></body></html>',"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
    };
    tx.oncomplete=()=>{db.close();resolve()};
    tx.onerror=()=>{db.close();reject(tx.error)};
@@ -197,7 +197,7 @@ function renderCodeLesson(l){
  node("h5","","Wissen prüfen",wrap);
  let correct=0;const quizBoxes=[];
  l.quiz.forEach((q,qi)=>{const box=node("section","code-quiz",undefined,wrap);quizBoxes.push(box);node("h5","",(qi+1)+". "+q.frage,box);const answers=node("div","answers",undefined,box),feedback=node("p","feedback",undefined,box);feedback.hidden=true;
- q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}}});
+ q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderLessonList()}}});
  });
  node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
  const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
