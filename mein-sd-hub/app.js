@@ -266,7 +266,7 @@ function renderCodeLesson(l){
  node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
  node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
  l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);node("p","",step.text,sec);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);node("p","",step.erklaerung,sec)}});
- node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>node("li","",f.titel+": "+f.text,errors));
+ node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);String(f.text).split("`").forEach((teil,i)=>{if(teil)i%2?node("code","",teil,li):li.appendChild(document.createTextNode(teil))})});
  node("h5","","Jetzt selbst schreiben",wrap);
  const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
  const grid=node("div","code-workspace",undefined,wrap),editor=node("div","code-editor",undefined,grid);

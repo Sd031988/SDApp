@@ -27,9 +27,25 @@ const goals=[
 {id:"kreativ",emoji:"💻",title:"Etwas entwickeln",subtitle:"Webseiten, Apps und Designs",query:"code webseite design programmieren",itemIds:["studio","design"]},
 {id:"ki",emoji:"✨",title:"KI ausprobieren",subtitle:"Fragen, Ideen und Texte",query:"ki assistent chat",itemIds:["ki","studio"]}
 ];
-const academy=[{"id":"german","name":"Deutsch im Alltag","icon":"🗣️","bereich":"Deutsch","stufe":"1 Einsteiger","summary":"Praktische Sätze für tägliche Situationen.","dauer":24,"voraussetzungen":[],"anzahl":4},{"id":"digital","name":"Computer & Internet","icon":"🖥️","bereich":"Computer & Internet","stufe":"1 Einsteiger","summary":"Digitale Grundlagen sicher anwenden.","dauer":23,"voraussetzungen":[],"anzahl":4},{"id":"career","name":"Bewerbung & Beruf","icon":"💼","bereich":"Arbeit & Beruf","stufe":"2 Grundlagen","summary":"Schrittweise auf Bewerbungen vorbereiten.","dauer":26,"voraussetzungen":[],"anzahl":4},{"id":"code","name":"Programmieren anfangen","icon":"💻","bereich":"Programmieren","stufe":"1 Einsteiger","summary":"Zwölf Schritte bis zu deiner eigenen Webseite.","dauer":240,"voraussetzungen":[],"anzahl":12}];
-const academyLessonIds={"german":["g-1","g-2","g-3","g-4"],"digital":["d-1","d-2","d-3","d-4"],"career":["c-1","c-2","c-3","c-4"],"code":["p-1","p-2","p-3","p-4","p-5","p-6","p-7","p-8","p-9","p-10","p-11","p-12"]};
+const academy=[{"id":"german","name":"Deutsch im Alltag","icon":"🗣️","bereich":"Deutsch","stufe":"1 Einsteiger","summary":"Praktische Sätze für tägliche Situationen.","dauer":24,"voraussetzungen":[],"anzahl":4},{"id":"digital","name":"Computer & Internet","icon":"🖥️","bereich":"Computer & Internet","stufe":"1 Einsteiger","summary":"Digitale Grundlagen sicher anwenden.","dauer":23,"voraussetzungen":[],"anzahl":4},{"id":"career","name":"Bewerbung & Beruf","icon":"💼","bereich":"Arbeit & Beruf","stufe":"2 Grundlagen","summary":"Schrittweise auf Bewerbungen vorbereiten.","dauer":26,"voraussetzungen":[],"anzahl":4},{"id":"code","name":"Programmieren anfangen","icon":"💻","bereich":"Programmieren","stufe":"1 Einsteiger","summary":"Zwölf Schritte bis zu deiner eigenen Webseite.","dauer":240,"voraussetzungen":[],"anzahl":12},{"id":"webdesign","name":"Webseiten gestalten","icon":"🎨","bereich":"Programmieren","stufe":"2 Grundlagen","summary":"CSS, Layout, Formulare und Barrierefreiheit mit eigenem Vereinsprojekt.","dauer":200,"voraussetzungen":["Programmieren anfangen"],"anzahl":8}];
+const academyLessonIds={"german":["g-1","g-2","g-3","g-4"],"digital":["d-1","d-2","d-3","d-4"],"career":["c-1","c-2","c-3","c-4"],"code":["p-1","p-2","p-3","p-4","p-5","p-6","p-7","p-8","p-9","p-10","p-11","p-12"],"webdesign":["p2-1","p2-2","p2-3","p2-4","p2-5","p2-6","p2-7","p2-8"]};
 const codeChecks={
+ "p2-class-html":({doc})=>doc.querySelectorAll(".hinweis").length>=2,
+ "p2-class-css":({doc,css})=>/\.hinweis\s*\{[^}]*color\s*:/i.test(css),
+ "p2-padding-html":({doc})=>!!doc.querySelector(".karte"),
+ "p2-padding-css":({doc,css})=>/padding\s*:/.test(css)&&/margin\s*:/.test(css)&&/border\s*:/.test(css),
+ "p2-flex-html":({doc})=>doc.querySelectorAll("nav a").length>=2,
+ "p2-flex-css":({doc,css})=>/display\s*:\s*flex/.test(css)&&/flex-wrap\s*:\s*wrap/.test(css),
+ "p2-grid-html":({doc})=>doc.querySelectorAll("main article").length>=2,
+ "p2-grid-css":({doc,css})=>/display\s*:\s*grid/.test(css)&&/grid-template-columns\s*:/.test(css),
+ "p2-media-html":({doc})=>!!doc.querySelector("main article"),
+ "p2-media-css":({doc,css})=>/@media\s*\(min-width\s*:\s*700px\)/.test(css)&&/grid-template-columns/.test(css),
+ "p2-form-html":({doc})=>!!doc.querySelector("label[for=mail]")&&!!doc.querySelector("input#mail[type=email][required]"),
+ "p2-form-css":({doc,css})=>!!doc.querySelector("button[type=submit]"),
+ "p2-alt-html":({doc})=>!!doc.querySelector("img[alt]:not([alt=\"\"])"),
+ "p2-alt-css":({doc,css})=>!!doc.querySelector("h1")&&!!doc.querySelector("img[src^=\"data:image/svg+xml\"]"),
+ "p2-project-html":({doc})=>!!doc.querySelector("header h1")&&!!doc.querySelector("a[href=\"#kontakt\"]")&&!!doc.querySelector("#kontakt"),
+ "p2-project-css":({doc,css})=>/display\s*:\s*grid/.test(css)&&/@media\s*\(min-width/.test(css),
  h1:({doc})=>!!doc.querySelector("h1"),
  "changed-h1":({doc})=>!!doc.querySelector("h1")&&!["Hallo Welt",""].includes(doc.querySelector("h1").textContent.trim()),
  p:({doc})=>!!doc.querySelector("p"),
