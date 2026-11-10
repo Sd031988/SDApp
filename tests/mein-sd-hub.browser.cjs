@@ -36,6 +36,18 @@ await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
 assert.equal(await page.locator("#courses .course").count(),4);
+const lessonChecks=await page.evaluate(()=>{
+ const D=window.SDPersonalData;
+ return D.academy.find(c=>c.id==="code").lessons.map(lesson=>{
+  const run=code=>{const doc=new DOMParser().parseFromString(code.html,"text/html");return lesson.aufgabe.pruefungen.map(p=>D.pruefeCode(p.test,code,doc))};
+  return {id:lesson.id,solution:run(lesson.aufgabe.loesung),start:run(lesson.beispiel)};
+ });
+});
+for(const lesson of lessonChecks){
+ assert.ok(lesson.solution.every(Boolean),"Musterlösung nicht bestanden: "+lesson.id);
+ assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
+}
+
 await page.locator(".answers button").first().click();
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
