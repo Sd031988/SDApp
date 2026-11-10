@@ -98,3 +98,10 @@ Stand: 01.11.2026. Arbeitsdokument, **keine Zertifizierung**. Maßstab: GER/CEFR
 - Ergänzt: Je Stufe ein ausklappbarer Hilfebereich mit drei Abschnitten (Aufbau, Sprache/Grammatik, Kontrolle vor der Abgabe). B1 enthält Hinweise zu formeller Beschwerde, Konnektoren und der aufgabenspezifischen Wortvorgabe von 80–120 Wörtern. Keine fertigen Musterlösungen; bestehende Entwurfsspeicherung und Selbstkontrolle unverändert.
 - Tests: JavaScript-Quelltext und Testdatei syntaktisch geprüft; alle fünf Hilfedatensätze auf die drei Pflichtfelder und Mindestinhalt geprüft; Test für sichere HTML-Einbindung ergänzt. Vollständige Node-Testsuite und Playwright-Browserprüfung **nicht** ausgeführt.
 - Restrisiken: Hinweise ersetzen keine fachlich validierte Schreibbewertung. Didaktische Qualität, tatsächliche Anzeige auf Mobilgeräten, Tastaturbedienbarkeit und Wortschatz-/GER-Abdeckung vor Freigabe zusätzlich prüfen.
+
+
+### 2026-11-10 – Schreibentwurf als TXT-Datei sichern
+- Ausgangslage: Schreibentwürfe wurden ausschließlich im jeweiligen Browser gespeichert; bei Speicherfehlern wurde zwar zum Kopieren geraten, aber keine direkte Dateisicherung angeboten.
+- Änderung: Die fünf Schreibbereiche bieten nun „Text als Datei sichern (.txt)“. Ein nichtleerer Entwurf wird als UTF-8-Textdatei mit stufenbezogenem Dateinamen über einen lokalen Blob-Download angeboten. Leere Entwürfe werden nicht exportiert; Fehler bei der Dateierstellung werden sichtbar gemeldet. Es werden keine Texte an einen Server übertragen.
+- Prüfungen: JavaScript-Quelltext und Testdatei über Parser geprüft; statischer Regressionstest für Exportbutton, Blob-MIME, Dateinamen, URL-Freigabe und Meldungen hinzugefügt. **Vollständiger Node-Testlauf und Browser-/Mobiltests nicht durchgeführt.**
+- Risiken: Browser können Downloads blockieren; die Erfolgsmeldung bestätigt nur den Start, nicht die tatsächliche Speicherung. TXT enthält keine Selbstkontroll-Häkchen und ist keine Prüfungsbewertung. Lokal gespeicherte Entwürfe bleiben weiterhin verlierbar. Für eine B1-Freigabe fehlen außerdem Wortschatz-/GER-Abgleich, Hör-/Sprechprüfung und fachlich validierte Schreibbewertung.
