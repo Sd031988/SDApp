@@ -258,11 +258,8 @@ test("C1: alle Übungslösungen bestehen, falsche und leere Antworten nicht",()=
 
 /* Gemeinsamer Qualitätsvertrag für alle ab jetzt neu erstellten oder überarbeiteten Kurse.
  * Neue Kursdateien müssen in der Liste ergänzt werden, unabhängig vom Fachgebiet. */
-const qualityCourses=[
- ["digital.js","digital"],
- ["javascript-aufbau.js","javascript-aufbau"],
- ["saubere-webapps.js","saubere-webapps"]
-];
+const legacyAcademyIds=new Set(["german","career","code","webdesign","javascript"]);
+const qualityCourses=data.academy.filter(course=>!legacyAcademyIds.has(course.id)).map(course=>[course.id+".js",course.id]);
 function checkAcademyQuality(courseName,lessons){
  const sequences=new Map(),tips=new Map();
  for(const lesson of lessons){
