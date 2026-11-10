@@ -139,8 +139,8 @@ if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(
 
 const academyDrafts=new Map();
 function previewHtml(code){
- const style=code.css.replace(/<\\/style/gi,"<" + "/style");
- const script=code.js.replace(/<\\/script/gi,"<" + "/script");
+ const style=code.css.replace(new RegExp("<"+"/style","gi"),"<" + "/style");
+ const script=code.js.replace(new RegExp("<"+"/script","gi"),"<" + "/script");
  return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+style+'</style></head><body>'+code.html+'<script>'+script+'<'+'/script></body></html>';
 }
 function academyToStudio(name,code){
