@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v160';
+const CACHE_NAME = 'sd-bewerbungsstudio-v161';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -13,7 +13,8 @@ const APP_FILES = [
   './mein-sd-hub/kurse/german.js',
   './mein-sd-hub/kurse/digital.js',
   './mein-sd-hub/kurse/career.js',
-  './mein-sd-hub/kurse/code.js'
+  './mein-sd-hub/kurse/code.js',
+  './mein-sd-hub/kurse/webdesign.js'
 ];
 
 self.addEventListener('install', event => {
