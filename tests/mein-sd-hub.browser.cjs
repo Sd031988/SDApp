@@ -232,4 +232,8 @@ for(const width of [320,390,1300]){
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
+ const {execFileSync}=require("node:child_process");
+ for(const testFile of ["tests/hub-homepage.browser.cjs","tests/hub/dashboard.browser.cjs"]){
+  execFileSync(process.execPath,[path.join(root,testFile)],{cwd:root,stdio:"inherit",timeout:180000});
+ }
 })().catch(err=>{console.error(err);process.exitCode=1});
