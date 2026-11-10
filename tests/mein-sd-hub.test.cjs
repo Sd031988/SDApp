@@ -189,3 +189,16 @@ test("P4 Quiz-App lädt lokale JSON-Datei und behandelt Fehler sicher",()=>{
  assert.match(html,/aria-live="polite"/);
  assert.match(html,/type="button"/);
 });
+
+test("P4: Jede Musterlösung besteht beide Codeprüfungen, falscher Code nicht",()=>{
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/javascript-aufbau.js"));
+ for(const lesson of lessons){
+  const good=lesson.aufgabe.loesung;
+  const goodDoc={querySelector:selector=>selector==="h1"?{}:null};
+  const badDoc={querySelector:()=>null};
+  for(const pruefung of lesson.aufgabe.pruefungen){
+   assert.equal(data.pruefeCode(pruefung.test,good,goodDoc),true,lesson.id+" Musterlösung "+pruefung.test);
+   assert.equal(data.pruefeCode(pruefung.test,{html:"",css:"",js:""},badDoc),false,lesson.id+" falsche Lösung "+pruefung.test);
+  }
+ }
+});
