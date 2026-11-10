@@ -226,7 +226,15 @@ function renderCourseFinal(course){
   next();
  };
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);
+if(Array.isArray(l.schrittePraxis)){
+ const details=node("section","ak-practice-steps",undefined,q);
+ node("h5","","Schritt für Schritt",details);
+ l.schrittePraxis.forEach((step,i)=>{const item=node("section","ak-practice-step",undefined,details);node("h5","",(i+1)+". "+step.titel,item);mitCode(node("p","",undefined,item),step.text)});
+ if(Array.isArray(l.fehler)){const problems=node("section","ak-practice-errors",undefined,q);node("h5","","Typische Fehler und richtige Wege",problems);l.fehler.forEach(f=>{node("h6","",f.titel,problems);mitCode(node("p","",undefined,problems),f.text)})}
+ if(Array.isArray(l.merke)){const memory=node("section","ak-practice-memory",undefined,q);node("h5","","Merksätze",memory);l.merke.forEach(t=>mitCode(node("p","",undefined,memory),t))}
+}
+node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
 if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
 l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
 if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=node("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
