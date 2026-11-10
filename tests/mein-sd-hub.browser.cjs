@@ -181,6 +181,30 @@ for(const width of [320,390,1300]){
  await exercisePage.close();
 }
 
+
+/* Kursabschluss: alle vier Bestandslektionen, zehn Fragen und Druckansicht. */
+const finalPage=await browser.newPage({viewport:{width:390,height:844}});
+finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
+await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+await finalPage.locator('[data-tab="akademie"]').click();
+await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await finalPage.locator(".lesson-btn").first().waitFor();
+const germanAnswers=[0,1,1,2];
+for(let i=0;i<4;i++){
+ await finalPage.locator(".lesson-btn").nth(i).click();
+ await finalPage.locator(".quiz .answers button").nth(germanAnswers[i]).click();
+}
+await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
+for(let i=0;i<10;i++){
+ await finalPage.locator(".ak-final-questions .answers button").nth(germanAnswers[i%4]).click();
+}
+assert.match(await finalPage.locator(".ak-final-questions").innerText(),/10 von 10/);
+assert.equal(await finalPage.getByText("Teilnahmebestätigung",{exact:true}).count(),1);
+assert.match(await finalPage.locator(".ak-certificate").innerText(),/KEIN offizielles Zertifikat/);
+await finalPage.locator(".ak-certificate input").fill("Testperson");
+assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung drucken"}).count(),1);
+await finalPage.close();
+
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
