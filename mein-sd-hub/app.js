@@ -143,22 +143,27 @@ function previewHtml(code){
  const script=code.js.replace(new RegExp("<"+"/script","gi"),"<" + "/script");
  return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+style+'</style></head><body>'+code.html+'<script>'+script+'<'+'/script></body></html>';
 }
-function academyToStudio(name,code){
+function academyToStudio(baseName,code){
  return new Promise((resolve,reject)=>{
   const req=indexedDB.open("sdCodeStudio",1);
   req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("projekte"))db.createObjectStore("projekte",{keyPath:"name"})};
   req.onerror=()=>reject(req.error);
   req.onsuccess=()=>{
-   const db=req.result,tx=db.transaction("projekte","readwrite");
-   const store=tx.objectStore("projekte");
-   const get=store.get(name);
-   get.onerror=()=>{db.close();reject(get.error)};
-   get.onsuccess=()=>{
-    if(get.result){db.close();reject(new Error("Ein Projekt mit diesem Namen existiert bereits."));return}
-    store.add({name,dateien:{"index.html":'<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"></head><body>'+code.html+'<script src="script.js"><'+'/script></body></html>',"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
+   const db=req.result;
+   let number=1;
+   const choose=()=>{
+    const name=baseName+(number===1?"":" ("+number+")");
+    const tx=db.transaction("projekte","readwrite"),store=tx.objectStore("projekte");
+    const check=store.get(name);
+    check.onsuccess=()=>{
+     if(check.result){number++;return}
+     const html=['<!doctype html>','<html lang="de">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <link rel="stylesheet" href="style.css">','</head>','<body>',code.html,'  <script src="script.js"><'+'/script>','</body>','</html>'].join("\\n");
+     store.add({name,dateien:{"index.html":html,"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
+    };
+    tx.oncomplete=()=>{if(check.result){choose()}else{db.close();resolve(name)}};
+    tx.onerror=()=>{db.close();reject(tx.error)};
    };
-   tx.oncomplete=()=>{db.close();resolve()};
-   tx.onerror=()=>{db.close();reject(tx.error)};
+   choose();
   };
  });
 }
@@ -166,7 +171,8 @@ function renderCodeLesson(l){
  const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
  node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
  node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
- l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);node("p","",step.text,sec)});
+ l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);node("p","",step.text,sec);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);node("p","",step.erklaerung,sec)}});
+ node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>node("li","",f.titel+": "+f.text,errors));
  node("h5","","Jetzt selbst schreiben",wrap);
  const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
  const grid=node("div","code-workspace",undefined,wrap),editor=node("div","code-editor",undefined,grid);
@@ -197,12 +203,12 @@ function renderCodeLesson(l){
  node("h5","","Wissen prüfen",wrap);
  let correct=0;const quizBoxes=[];
  l.quiz.forEach((q,qi)=>{const box=node("section","code-quiz",undefined,wrap);quizBoxes.push(box);node("h5","",(qi+1)+". "+q.frage,box);const answers=node("div","answers",undefined,box),feedback=node("p","feedback",undefined,box);feedback.hidden=true;
- q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderLessonList()}}});
+ q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
  });
  node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
  const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
  const status=node("p","message","",wrap);
- studio.onclick=async()=>{studio.disabled=true;const name="Akademie – "+l.title;try{await academyToStudio(name,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
+ studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
 }
 // Deutschland Pfade
 let pathId="start";
