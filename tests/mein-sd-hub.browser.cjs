@@ -36,7 +36,7 @@ await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
 assert.equal(await page.locator("#courses .course").count(),await page.evaluate(()=>window.SDPersonalData.academy.length));
-await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
 await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
  const D=window.SDPersonalData;
@@ -57,7 +57,7 @@ assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 await page.locator('[data-tab="akademie"]').click();
-await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
 await page.locator(".lesson-btn").first().waitFor();
 assert.equal(await page.locator(".lesson-btn").count(),12);
 assert.equal(await page.locator(".code-textarea").count(),1);
@@ -110,7 +110,7 @@ for(const width of [320,390,1300]){
  const checkPage=await browser.newPage({viewport:{width,height:840}});
  await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await checkPage.locator('[data-tab="akademie"]').click();
- await checkPage.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+ await checkPage.locator(".course").filter({has:checkPage.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
  await checkPage.locator(".lesson-btn").first().waitFor();
 assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
