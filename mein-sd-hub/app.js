@@ -305,7 +305,7 @@ function academyToStudio(baseName,code){
 function renderCodeLesson(l){
  const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
  node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
- node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
+ node("h4","",l.title,wrap);if(l.explanation)node("p","ak-intro",l.explanation,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
  l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(node("p","",undefined,sec),ohneDoppel);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(node("p","",undefined,sec),erkl)}});
  node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);mitCode(li,f.text)});
  node("h5","","Jetzt selbst schreiben",wrap);
