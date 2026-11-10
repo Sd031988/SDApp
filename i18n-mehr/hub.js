@@ -3,7 +3,7 @@
   const X = {
     fa: {
       titel: 'SD Hub – یادگیری، طراحی و کشف', h1: 'یاد بگیر. بساز. کشف کن.', lead: 'یادگیری آلمانی، نوشتن درخواست کار، کار با اسناد یا ساختن نرم‌افزار: همه ابزارهای تو در یک جا.',
-      suche_ph: 'چه کاری می‌خواهی انجام بدهی؟', suche_label: 'جستجوی ابزار', q_personal: 'SD Hub من', personal_kicker: 'جدید در SD Hub', personal_title: 'SD Hub شخصی تو',
+      suche_ph: 'چه کاری می‌خواهی انجام بدهی؟', zuletzt: 'اخیراً استفاده شده', beliebt: 'پرکاربرد', alle_bereiche: 'نمایش همه بخش‌ها', suche_label: 'جستجوی ابزار', q_personal: 'SD Hub من', personal_kicker: 'جدید در SD Hub', personal_title: 'SD Hub شخصی تو',
       personal_desc: 'ابزار مناسب پیدا کن، چیزهای تازه یاد بگیر، قدم‌های بعدی را برنامه‌ریزی کن و پروژه‌های خودت را بساز. همه در یک بخش.', personal_open: 'همین حالا ببین ↗',
       personal_way: '🧭 راهنما', personal_school: '🎓 آکادمی', personal_plan: '📋 راه من', personal_projects: '💻 کارگاه پروژه', personal_speech: '🗣️ تمرین زبان',
       q_cv: 'نوشتن رزومه', q_brief: 'فهمیدن نامه', q_foto: 'عکس پاسپورتی', q_scan: 'اسکن سند', q_kuendigen: 'فسخ قرارداد',
@@ -31,7 +31,7 @@
     },
     ar: {
       titel: 'SD Hub – تعلّم وصمّم واكتشف', h1: 'تعلّم. صمّم. اكتشف.', lead: 'تعلّم الألمانية، أنشئ طلبات التوظيف، عدّل المستندات أو طوّر البرامج: كل أدواتك في مكان واحد.',
-      suche_ph: 'ماذا تريد أن تفعل؟', suche_label: 'البحث عن أداة', q_personal: 'SD Hub الخاص بي', personal_kicker: 'جديد في SD Hub', personal_title: 'SD Hub الشخصي',
+      suche_ph: 'ماذا تريد أن تفعل؟', zuletzt: 'المستخدمة مؤخرًا', beliebt: 'الأكثر استخدامًا', alle_bereiche: 'عرض كل الأقسام', suche_label: 'البحث عن أداة', q_personal: 'SD Hub الخاص بي', personal_kicker: 'جديد في SD Hub', personal_title: 'SD Hub الشخصي',
       personal_desc: 'اعثر على الأدوات المناسبة، تعلّم شيئاً جديداً، خطّط خطواتك القادمة وصمّم مشاريعك. كل ذلك في مكان واحد.', personal_open: 'اكتشف الآن ↗',
       personal_way: '🧭 الدليل', personal_school: '🎓 الأكاديمية', personal_plan: '📋 طريقي', personal_projects: '💻 ورشة المشاريع', personal_speech: '🗣️ مدرّب اللغة',
       q_cv: 'كتابة السيرة الذاتية', q_brief: 'فهم رسالة', q_foto: 'صورة جواز سفر', q_scan: 'مسح مستند', q_kuendigen: 'إلغاء عقد',
@@ -59,7 +59,7 @@
     },
     ur: {
       titel: 'SD Hub – سیکھیں، بنائیں اور دریافت کریں', h1: 'سیکھیں۔ بنائیں۔ دریافت کریں۔', lead: 'جرمن سیکھنا، نوکری کی درخواست بنانا، دستاویزات میں ترمیم یا سافٹ ویئر بنانا: آپ کے سب اوزار ایک جگہ۔',
-      suche_ph: 'آپ کیا کرنا چاہتے ہیں؟', suche_label: 'مددگار تلاش کریں', q_personal: 'میرا SD Hub', personal_kicker: 'SD Hub میں نیا', personal_title: 'آپ کا ذاتی SD Hub',
+      suche_ph: 'آپ کیا کرنا چاہتے ہیں؟', zuletzt: 'حال ہی میں استعمال شدہ', beliebt: 'مقبول', alle_bereiche: 'تمام حصے دکھائیں', suche_label: 'مددگار تلاش کریں', q_personal: 'میرا SD Hub', personal_kicker: 'SD Hub میں نیا', personal_title: 'آپ کا ذاتی SD Hub',
       personal_desc: 'مناسب مددگار تلاش کریں، نیا سیکھیں، اگلے قدموں کی منصوبہ بندی کریں اور اپنے پروجیکٹ بنائیں۔ سب کچھ ایک جگہ۔', personal_open: 'ابھی دیکھیں ↗',
       personal_way: '🧭 رہنما', personal_school: '🎓 اکیڈمی', personal_plan: '📋 میرا راستہ', personal_projects: '💻 پروجیکٹ ورکشاپ', personal_speech: '🗣️ زبان کی مشق',
       q_cv: 'سی وی لکھیں', q_brief: 'خط سمجھیں', q_foto: 'پاسپورٹ تصویر', q_scan: 'دستاویز اسکین کریں', q_kuendigen: 'معاہدہ ختم کریں',
@@ -87,7 +87,7 @@
     },
     uk: {
       titel: 'SD Hub – вчитися, створювати й відкривати', h1: 'Вчитися. Створювати. Відкривати.', lead: 'Вивчати німецьку, готувати заявки на роботу, редагувати документи чи розробляти програми: усі інструменти в одному місці.',
-      suche_ph: 'Що ви хочете зробити?', suche_label: 'Шукати помічника', q_personal: 'Мій SD Hub', personal_kicker: 'Нове в SD Hub', personal_title: 'Ваш особистий SD Hub',
+      suche_ph: 'Що ви хочете зробити?', zuletzt: 'Нещодавно використані', beliebt: 'Популярне', alle_bereiche: 'Показати всі розділи', suche_label: 'Шукати помічника', q_personal: 'Мій SD Hub', personal_kicker: 'Нове в SD Hub', personal_title: 'Ваш особистий SD Hub',
       personal_desc: 'Знаходьте потрібних помічників, вчіться новому, плануйте наступні кроки й створюйте власні проєкти. Усе в одному розділі.', personal_open: 'Переглянути ↗',
       personal_way: '🧭 Путівник', personal_school: '🎓 Академія', personal_plan: '📋 Мій шлях', personal_projects: '💻 Майстерня проєктів', personal_speech: '🗣️ Мовний тренер',
       q_cv: 'Написати резюме', q_brief: 'Зрозуміти лист', q_foto: 'Фото на паспорт', q_scan: 'Сканувати документ', q_kuendigen: 'Розірвати договір',
@@ -115,7 +115,7 @@
     },
     ti: {
       titel: 'SD Hub – ተማሃር፣ ስራሕ፣ ኣለሽ', h1: 'ተማሃር። ስራሕ። ኣለሽ።', lead: 'ጀርመን ምምሃር፣ ሕቶ ስራሕ ምድላው፣ ሰነዳት ምስራሕ ወይ ሶፍትዌር ምምዕባል: ኩሎም መሳርሒታትካ ኣብ ሓደ ቦታ።',
-      suche_ph: 'እንታይ ክትገብር ትደሊ?', suche_label: 'ሓጋዚ ድለ', q_personal: 'ናተይ SD Hub', personal_kicker: 'ሓድሽ ኣብ SD Hub', personal_title: 'ናትካ ውልቃዊ SD Hub',
+      suche_ph: 'እንታይ ክትገብር ትደሊ?', zuletzt: 'ቀረባ ዝተጠቐምካሎም', beliebt: 'ብዙሕ ዝጥቀሙሎም', alle_bereiche: 'ኩሉ ክፍልታት ኣርኢ', suche_label: 'ሓጋዚ ድለ', q_personal: 'ናተይ SD Hub', personal_kicker: 'ሓድሽ ኣብ SD Hub', personal_title: 'ናትካ ውልቃዊ SD Hub',
       personal_desc: 'ዝሰማማዑ ሓገዝቲ ርከብ፣ ሓድሽ ተማሃር፣ ቀጻሊ ስጉምትታትካ ኣውጽእ፣ ናይ ገዛእ ርእስኻ ፕሮጀክትታት ስራሕ። ኩሉ ኣብ ሓደ ክፍሊ።', personal_open: 'ሕጂ ርአ ↗',
       personal_way: '🧭 መምርሒ', personal_school: '🎓 ኣካዳሚ', personal_plan: '📋 መገደይ', personal_projects: '💻 ቤት-ዕዮ ፕሮጀክት', personal_speech: '🗣️ ምልምማድ ቋንቋ',
       q_cv: 'ታሪኽ ህይወት ጽሓፍ', q_brief: 'ደብዳበ ተረዳእ', q_foto: 'ስእሊ ፓስፖርት', q_scan: 'ሰነድ ስካን ግበር', q_kuendigen: 'ውዕል ኣቋርጽ',

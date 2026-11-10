@@ -250,6 +250,7 @@
 .chip-ic{flex:0 0 auto;vertical-align:-3px}
 </style>
 <link rel="stylesheet" href="design/editorial-home.css?v=20261108-1" />
+<link rel="stylesheet" href="design/bento-home.css?v=20261110-1" />
 </head>
 <body>
     <header class="kopf">
@@ -263,34 +264,40 @@
                     </select>
                 </label>
             </div>
-            <div class="held">
+        </div>
+    </header>
+
+    <section class="breite bento" id="bento" aria-label="Start">
+            <div class="start-karte">
                 <div>
-                    <h1 data-i18n="h1">Lernen. Gestalten. Entdecken.</h1>
+                    <h1 data-i18n="suche_ph">Was möchtest du tun?</h1>
                     <p class="unter" data-i18n="lead">Deutsch lernen, Bewerbungen erstellen, Dokumente bearbeiten oder Software entwickeln: Deine Werkzeuge an einem Ort.</p>
-                    <a class="sd-dashboard-launch" href="mein-sd-hub/" aria-label="Mein SD Hub Dashboard mit allen Apps aufrufen">
-                      <span class="sd-dashboard-launch-icon" aria-hidden="true">▦</span>
-                      <span><strong data-i18n="dash_t">Zum neuen SD Hub Dashboard</strong><small data-i18n="dash_s">Alle Apps übersichtlich · PC & Handy</small></span>
-                      <span aria-hidden="true">↗</span>
-                    </a>
+                </div>
+                <div>
                     <div class="suche" role="search">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
                         <input type="search" id="suche" autocomplete="off" data-i18n-placeholder="suche_ph" placeholder="Was möchtest du tun?" aria-label="Helfer suchen" aria-describedby="treffer">
                     </div>
                     <p class="treffer" id="treffer" aria-live="polite"></p>
-                    <nav class="schnell" aria-label="Schnellzugriff"><a class="chip" href="mein-sd-hub/" data-such="persönlich mein sd hub wegweiser akademie kurs lernen projekt sprache"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg> <span data-i18n="q_personal">Mein SD Hub</span></a><a class="chip" href="Lebenslauf_app.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/"><span aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
-                </div>
-                <div class="szene" id="szene" role="group" aria-label="Interaktive 3D-Themenordner">
-                    <div class="stapel" id="stapel">
-                        <div class="lage" role="button" tabindex="0" data-thema="deutsch" style="--i:7;--farbe:#098a75"><i class="tab"></i><i class="papier"></i><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></div><div class="lage" role="button" tabindex="0" data-thema="arbeit" style="--i:6;--farbe:#2f5fd0"><i class="tab"></i><i class="papier"></i><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></div><div class="lage" role="button" tabindex="0" data-thema="post" style="--i:5;--farbe:#c2410c"><i class="tab"></i><i class="papier"></i><span data-i18n="t_post">Briefe &amp; Ämter</span></div><div class="lage" role="button" tabindex="0" data-thema="geld" style="--i:4;--farbe:#1f7a4d"><i class="tab"></i><i class="papier"></i><span data-i18n="t_geld">Finanzen &amp; Verträge</span></div><div class="lage" role="button" tabindex="0" data-thema="doku" style="--i:3;--farbe:#6d3fd4"><i class="tab"></i><i class="papier"></i><span data-i18n="t_doku">Dokumente &amp; Fotos</span></div><div class="lage" role="button" tabindex="0" data-thema="wohnen" style="--i:2;--farbe:#b4235a"><i class="tab"></i><i class="papier"></i><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></div><div class="lage" role="button" tabindex="0" data-thema="ki" style="--i:1;--farbe:#0e7490"><i class="tab"></i><i class="papier"></i><span data-i18n="t_ki">KI, Code &amp; Design</span></div><div class="blatt"><i></i><i></i><i></i><i></i><i></i><span class="stempel">SD</span></div>
-                        <div class="schwebt muenze"><b>€</b></div>
-                        <div class="schwebt kalender"><b><em id="kalTag">1</em></b></div>
-                        <div class="schwebt haken"><b>✓</b></div>
-                    </div>
+                    <p class="unterzeile" id="zuletztTitel" data-i18n="zuletzt" hidden>Zuletzt benutzt</p>
+                    <nav class="schnell" id="zuletzt" aria-label="Zuletzt benutzt" hidden></nav>
+                    <p class="unterzeile" id="beliebtTitel" data-i18n="beliebt">Beliebt</p>
+                    <nav class="schnell" id="beliebt" aria-label="Schnellzugriff"><a class="chip" href="mein-sd-hub/" data-such="persönlich mein sd hub wegweiser akademie kurs lernen projekt sprache"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg> <span data-i18n="q_personal">Mein SD Hub</span></a><a class="chip" href="Lebenslauf_app.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg> <span data-i18n="q_cv">Lebenslauf schreiben</span></a><a class="chip" href="post/index.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg> <span data-i18n="q_brief">Brief verstehen</span></a><a class="chip" href="passfoto/" data-geraet="handy"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> <span data-i18n="q_foto">Passfoto machen</span></a><a class="chip" href="scanner/" data-geraet="handy"><span aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <span data-i18n="q_scan">Dokument scannen</span></a><a class="chip" href="vertraege/index.html"><svg class="chip-ic" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg> <span data-i18n="q_kuendigen">Vertrag kündigen</span></a></nav>
+                    <a class="sd-dashboard-launch" href="mein-sd-hub/" aria-label="Mein SD Hub Dashboard mit allen Apps aufrufen">
+                      <span class="sd-dashboard-launch-icon" aria-hidden="true">▦</span>
+                      <span><strong data-i18n="dash_t">Zum neuen SD Hub Dashboard</strong><small data-i18n="dash_s">Alle Apps übersichtlich · PC & Handy</small></span>
+                      <span aria-hidden="true">↗</span>
+                    </a>
                 </div>
             </div>
-            <nav class="reiter" id="reiter" aria-label="Themen"><a href="#thema-deutsch" data-thema="deutsch" style="--farbe:#098a75"><span data-i18n="t_deutsch">Deutsch &amp; Lernen</span></a><a href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><span data-i18n="t_arbeit">Arbeit &amp; Zukunft</span></a><a href="#thema-post" data-thema="post" style="--farbe:#c2410c"><span data-i18n="t_post">Briefe &amp; Ämter</span></a><a href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><span data-i18n="t_geld">Finanzen &amp; Verträge</span></a><a href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><span data-i18n="t_doku">Dokumente &amp; Fotos</span></a><a href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span></a><a href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><span data-i18n="t_ki">KI, Code &amp; Design</span></a></nav>
-        </div>
-    </header>
+            <a class="bk hoch" href="#thema-deutsch" data-thema="deutsch" style="--farbe:#098a75"><h2 data-i18n="t_deutsch">Deutsch &amp; Lernen</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">📚</span></a>
+            <a class="bk breit" href="#thema-arbeit" data-thema="arbeit" style="--farbe:#2f5fd0"><h2 data-i18n="t_arbeit">Arbeit &amp; Zukunft</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">💼</span></a>
+            <a class="bk " href="#thema-post" data-thema="post" style="--farbe:#c2410c"><h2 data-i18n="t_post">Briefe &amp; Ämter</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">✉️</span></a>
+            <a class="bk " href="#thema-geld" data-thema="geld" style="--farbe:#1f7a4d"><h2 data-i18n="t_geld">Finanzen &amp; Verträge</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">💶</span></a>
+            <a class="bk breit" href="#thema-doku" data-thema="doku" style="--farbe:#6d3fd4"><h2 data-i18n="t_doku">Dokumente &amp; Fotos</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">📄</span></a>
+            <a class="bk breit" href="#thema-wohnen" data-thema="wohnen" style="--farbe:#b4235a"><h2 data-i18n="t_wohnen">Wohnen &amp; Zuhause</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">🏠</span></a>
+            <a class="bk breit" href="#thema-ki" data-thema="ki" style="--farbe:#0e7490"><h2 data-i18n="t_ki">KI, Code &amp; Design</h2><ul class="bk-liste"></ul><span class="bk-zahl" aria-hidden="true"></span><span class="bk-ic" aria-hidden="true">🤖</span></a>
+    </section>
 
     <section class="breite" aria-labelledby="sd-personal-h">
         <div class="sd-persoenlich" id="mein-sd-hub">
@@ -412,7 +419,7 @@
             <section class="thema" style="--farbe:#6d3fd4" data-thema="doku" id="thema-doku">
                 <h2 class="reiterkopf"><span data-i18n="t_doku">Dokumente &amp; Fotos</span><small class="anzahl">5</small></h2>
                 <div class="mappe-flaeche"><div class="kacheln">
-                    <a class="kachel" href="scanner/" data-such="scan scannen kamera qr barcode visitenkarte scanner scanner dokumente mit dem handy scannen scan documents with your phone">
+                    <a class="kachel" href="scanner/" data-geraet="handy" data-such="scan scannen kamera qr barcode visitenkarte scanner scanner dokumente mit dem handy scannen scan documents with your phone">
                         <span class="symbol" aria-hidden="true"><svg class="scan-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="7" y="6" width="18" height="20" rx="2" fill="#f4f7f9" stroke="#c9d3da" stroke-width=".8"/><path d="M11 12h10M11 16h10M11 20h7" stroke="#9fb0bc" stroke-width="1.8" stroke-linecap="round"/><path d="M3 9V4h5M24 4h5v5M29 23v5h-5M8 28H3v-5" fill="none" stroke="#2ecc71" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
                         <span class="text"><b data-i18n="a_scanner">Scanner</b><small data-i18n="k_scanner">Dokumente mit dem Handy scannen</small></span>
                     </a>
@@ -420,7 +427,7 @@
                         <span class="symbol" aria-hidden="true">📄</span>
                         <span class="text"><b data-i18n="a_pdf">PDF-Studio</b><small data-i18n="k_pdf">PDFs bearbeiten und unterschreiben</small></span>
                     </a>
-                    <a class="kachel" href="passfoto/" data-such="passfoto passbild biometrisch visum ausweis photo passfoto passport photo passbilder für viele länder passport photos for many countries">
+                    <a class="kachel" href="passfoto/" data-geraet="handy" data-such="passfoto passbild biometrisch visum ausweis photo passfoto passport photo passbilder für viele länder passport photos for many countries">
                         <span class="symbol" aria-hidden="true">📸</span>
                         <span class="text"><b data-i18n="a_passfoto">Passfoto</b><small data-i18n="k_passfoto">Passbilder für viele Länder</small></span>
                     </a>
@@ -437,7 +444,7 @@
             <section class="thema" style="--farbe:#b4235a" data-thema="wohnen" id="thema-wohnen">
                 <h2 class="reiterkopf"><span data-i18n="t_wohnen">Wohnen &amp; Zuhause</span><small class="anzahl">2</small></h2>
                 <div class="mappe-flaeche"><div class="kacheln">
-                    <a class="kachel" href="messen/index.html" data-such="messen kamera ar lineal maßband metermaß meter zentimeter zoll fläche quadratmeter wohnfläche umrechnen einheiten ruler measure area convert messen &amp; maße measuring kamera (ar), lineal, foto, flächen, umrechnen camera (ar), ruler, photo, areas, conversion">
+                    <a class="kachel" href="messen/index.html" data-geraet="handy" data-such="messen kamera ar lineal maßband metermaß meter zentimeter zoll fläche quadratmeter wohnfläche umrechnen einheiten ruler measure area convert messen &amp; maße measuring kamera (ar), lineal, foto, flächen, umrechnen camera (ar), ruler, photo, areas, conversion">
                         <span class="symbol" aria-hidden="true">📏</span>
                         <span class="text"><b data-i18n="a_messen">Messen &amp; Maße</b><small data-i18n="k_messen">Kamera (AR), Lineal, Foto, Flächen, Umrechnen</small></span>
                     </a>
@@ -502,6 +509,9 @@
   "h1": "Lernen. Gestalten. Entdecken.",
   "lead": "Deutsch lernen, Bewerbungen erstellen, Dokumente bearbeiten oder Software entwickeln: Deine Werkzeuge an einem Ort.",
   "suche_ph": "Was möchtest du tun?",
+  "zuletzt": "Zuletzt benutzt",
+  "beliebt": "Beliebt",
+  "alle_bereiche": "Alle Bereiche zeigen",
   "suche_label": "Helfer suchen",
   "q_personal": "Mein SD Hub",
   "personal_kicker": "Neu im SD Hub",
@@ -628,6 +638,9 @@
   "h1": "Learn. Create. Explore.",
   "lead": "Learn German, create applications, work with documents or build software: your tools, in one place.",
   "suche_ph": "What do you want to do?",
+  "zuletzt": "Recently used",
+  "beliebt": "Popular",
+  "alle_bereiche": "Show all areas",
   "suche_label": "Search helpers",
   "q_personal": "My SD Hub",
   "personal_kicker": "New in SD Hub",
@@ -758,110 +771,93 @@
             'use strict';
             const T = () => window.SD_I18N[window.SD_LANG] || window.SD_I18N.de;
             const ruhig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const stapel = document.getElementById('stapel');
-            const szene = document.getElementById('szene');
-            // Kalenderblatt zeigt den heutigen Tag
-            document.getElementById('kalTag').textContent = String(new Date().getDate());
+            const HANDY = window.matchMedia('(max-width: 820px), (pointer: coarse)');
+            const geraetOk = function (el) { return el.dataset.geraet !== 'handy' || HANDY.matches; };
+            let offen = null;
 
-            // Reiter <-> Aktenstapel: Fahren oder Fokus auf einen Reiter zieht die passende Mappe heraus
-            function ziehe(thema) {
-                stapel.classList.toggle('zieht', !!thema);
-                stapel.querySelectorAll('.lage').forEach(function (l) { l.classList.toggle('raus', l.dataset.thema === thema); });
-                document.querySelectorAll('#reiter a').forEach(function (a) { a.classList.toggle('an', a.dataset.thema === thema); });
-            }
-            document.querySelectorAll('#reiter a').forEach(function (a) {
-                a.addEventListener('pointerenter', function () { ziehe(a.dataset.thema); });
-                a.addEventListener('focus', function () { ziehe(a.dataset.thema); });
-                a.addEventListener('pointerleave', function () { ziehe(null); });
-                a.addEventListener('blur', function () { ziehe(null); });
-            });
-            // Die 3D-Ordner bleiben auch ohne Maus oder Touch bedienbar.
-            // Eine aktive Suche wird zurückgesetzt, damit das Ziel sichtbar ist.
-            function oeffneThema(thema) {
-                const feld = document.getElementById('suche');
-                if (feld.value.trim()) { feld.value = ''; filtern(); }
-                pausiere();
-                const ziel = document.getElementById('thema-' + thema);
-                if (ziel) ziel.scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth' });
-            }
-            stapel.querySelectorAll('.lage').forEach(function (l) {
-                l.addEventListener('pointerenter', function () { ziehe(l.dataset.thema); });
-                l.addEventListener('focus', function () { ziehe(l.dataset.thema); });
-                l.addEventListener('pointerleave', function () { ziehe(null); });
-                l.addEventListener('blur', function () { ziehe(null); });
-                l.addEventListener('click', function () { oeffneThema(l.dataset.thema); });
-                l.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); oeffneThema(l.dataset.thema); }
+            // Bento-Kacheln: Namen der Werkzeuge aus den Bereichen unten übernehmen (mit Übersetzung)
+            function bentoFuellen() {
+                document.querySelectorAll('.thema').forEach(function (s) {
+                    const da = Array.prototype.filter.call(s.querySelectorAll('.kachel'), geraetOk);
+                    const anz = s.querySelector('.anzahl');
+                    if (anz) anz.textContent = String(da.length);
+                    const bk = document.querySelector('.bk[data-thema="' + s.dataset.thema + '"]');
+                    if (!bk) return;
+                    const liste = bk.querySelector('.bk-liste');
+                    liste.innerHTML = '';
+                    da.slice(0, bk.classList.contains('hoch') ? 5 : 3).forEach(function (k) {
+                        const b = k.querySelector('.text b');
+                        const li = document.createElement('li');
+                        li.setAttribute('data-i18n', b.getAttribute('data-i18n'));
+                        li.textContent = b.textContent;
+                        liste.appendChild(li);
+                    });
+                    bk.querySelector('.bk-zahl').textContent = String(da.length);
                 });
+                document.querySelectorAll('.chip[data-geraet]').forEach(function (c) { c.hidden = !geraetOk(c); });
+            }
+            // Klick auf eine Bento-Kachel zeigt unten nur diesen Bereich; nochmal, ✕ oder Esc zeigt wieder alle
+            function zeigeBereich(thema) {
+                offen = thema;
+                document.body.toggleAttribute('data-offen', !!thema);
+                document.querySelectorAll('.bk').forEach(function (b) { b.setAttribute('aria-expanded', String(b.dataset.thema === thema)); });
+                document.querySelectorAll('.thema').forEach(function (s) { s.classList.toggle('offen', s.dataset.thema === thema); });
+            }
+            document.querySelectorAll('.thema .reiterkopf').forEach(function (h) {
+                const zu = document.createElement('button');
+                zu.type = 'button'; zu.className = 'bereich-zu'; zu.textContent = '✕';
+                zu.setAttribute('data-i18n-title', 'alle_bereiche'); zu.title = T().alle_bereiche || 'Alle Bereiche zeigen';
+                zu.setAttribute('aria-label', zu.title);
+                zu.addEventListener('click', function () { const t = offen; zeigeBereich(null); const b = document.querySelector('.bk[data-thema="' + t + '"]'); if (b) b.focus(); });
+                h.appendChild(zu);
             });
-            document.querySelectorAll('#reiter a').forEach(function (a) {
-                a.addEventListener('click', function () {
+            document.querySelectorAll('.bk').forEach(function (b) {
+                b.addEventListener('click', function (e) {
+                    e.preventDefault();
                     const feld = document.getElementById('suche');
                     if (feld.value.trim()) { feld.value = ''; filtern(); }
-                    pausiere();
+                    zeigeBereich(offen === b.dataset.thema ? null : b.dataset.thema);
+                    if (offen) document.getElementById('thema-' + offen).scrollIntoView({ behavior: ruhig ? 'auto' : 'smooth', block: 'start' });
                 });
             });
-            // Von selbst: alle paar Sekunden zieht sich die naechste Mappe heraus
-            // und zeigt ihr Thema. Pausiert, sobald jemand selbst zeigt/tippt,
-            // wenn der Kopf nicht sichtbar ist oder der Tab im Hintergrund liegt.
-            const lagen = Array.prototype.slice.call(stapel.querySelectorAll('.lage')).reverse();
-            let autoNr = 0, pauseBis = 0, sichtbar = true;
-            function pausiere(ms) { pauseBis = Date.now() + (ms || 7000); }
-            function autoSchritt() {
-                if (ruhig || !sichtbar || document.hidden || Date.now() < pauseBis) return;
-                const l = lagen[autoNr % lagen.length];
-                autoNr++;
-                ziehe(l.dataset.thema);
-                setTimeout(function () { if (Date.now() >= pauseBis) ziehe(null); }, 1900);
-            }
-            if (!ruhig) {
-                setTimeout(function () { autoSchritt(); setInterval(autoSchritt, 2600); }, 2300);
-                if ('IntersectionObserver' in window) new IntersectionObserver(function (e) { sichtbar = e[0].isIntersecting; }).observe(szene);
-            }
-            document.querySelectorAll('#reiter a, .lage').forEach(function (el) { el.addEventListener('pointerenter', function () { pausiere(); }); });
-            // Am Handy: mit dem Finger seitlich drehen; Neigen des Handys bewegt den Stapel
-            if (!ruhig) {
-                let startX = null, startDreh = 0, dreh = 0;
-                szene.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'touch') return; startX = e.clientX; startDreh = dreh; pausiere(9000); });
-                szene.addEventListener('pointermove', function (e) {
-                    if (startX === null || e.pointerType !== 'touch') return;
-                    dreh = Math.max(-45, Math.min(45, startDreh + (e.clientX - startX) * 0.35));
-                    stapel.classList.add('zieht-hand');
-                    stapel.style.setProperty('--dreh', dreh.toFixed(1) + 'deg');
+            document.addEventListener('keydown', function (e) {
+                const feld = document.getElementById('suche');
+                if (e.key === 'Escape' && offen) zeigeBereich(null);
+                if (e.key === '/' && document.activeElement !== feld && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); feld.focus(); }
+            });
+
+            // Zuletzt benutzt: merkt sich nur in diesem Browser, welche Werkzeuge angeklickt wurden
+            function zuletztLesen() { try { return JSON.parse(localStorage.getItem('sdZuletzt') || '[]'); } catch (e) { return []; } }
+            function zuletztZeigen() {
+                const nav = document.getElementById('zuletzt');
+                nav.innerHTML = '';
+                zuletztLesen().forEach(function (href) {
+                    const k = Array.prototype.find.call(document.querySelectorAll('.kachel'), function (x) { return x.getAttribute('href') === href; });
+                    if (!k || !geraetOk(k)) return;
+                    const b = k.querySelector('.text b');
+                    const a = document.createElement('a');
+                    a.className = 'chip'; a.href = href;
+                    const sym = document.createElement('span'); sym.className = 'chip-sym'; sym.setAttribute('aria-hidden', 'true'); sym.innerHTML = k.querySelector('.symbol').innerHTML;
+                    const t = document.createElement('span'); t.setAttribute('data-i18n', b.getAttribute('data-i18n')); t.textContent = b.textContent;
+                    a.appendChild(sym); a.appendChild(t); nav.appendChild(a);
                 });
-                const loslassen = function () { if (startX === null) return; startX = null; dreh = 0; stapel.classList.remove('zieht-hand'); stapel.style.setProperty('--dreh', '0deg'); };
-                szene.addEventListener('pointerup', loslassen);
-                szene.addEventListener('pointercancel', loslassen);
-                let neigFrame = 0;
-                window.addEventListener('deviceorientation', function (e) {
-                    if (e.gamma == null || startX !== null || neigFrame) return;
-                    neigFrame = requestAnimationFrame(function () {
-                        neigFrame = 0;
-                        const g = Math.max(-30, Math.min(30, e.gamma || 0));
-                        const b = Math.max(-25, Math.min(25, (e.beta == null ? 45 : e.beta) - 45));
-                        stapel.style.setProperty('--rz', (-34 + g * 0.6).toFixed(1) + 'deg');
-                        stapel.style.setProperty('--rx', (58 - b * 0.35).toFixed(1) + 'deg');
-                    });
-                });
+                const da = nav.children.length > 0;
+                nav.hidden = !da; document.getElementById('zuletztTitel').hidden = !da;
+                document.getElementById('beliebt').hidden = da; document.getElementById('beliebtTitel').hidden = da;
             }
-            // Der Stapel folgt leicht dem Zeiger (nur mit Maus/Stift, nicht beim Wischen am Handy)
-            if (!ruhig) {
-                const kopf = document.querySelector('.kopf');
-                kopf.addEventListener('pointermove', function (e) {
-                    if (e.pointerType === 'touch') return;
-                    const r = szene.getBoundingClientRect();
-                    const dx = (e.clientX - (r.left + r.width / 2)) / window.innerWidth;
-                    const dy = (e.clientY - (r.top + r.height / 2)) / window.innerHeight;
-                    stapel.style.setProperty('--rz', (-34 + dx * 16).toFixed(2) + 'deg');
-                    stapel.style.setProperty('--rx', (58 - dy * 12).toFixed(2) + 'deg');
-                });
-                kopf.addEventListener('pointerleave', function () { stapel.style.removeProperty('--rz'); stapel.style.removeProperty('--rx'); });
-            }
+            document.addEventListener('click', function (e) {
+                const k = e.target.closest('.kachel, #zuletzt .chip');
+                if (!k) return;
+                const href = k.getAttribute('href');
+                const liste = [href].concat(zuletztLesen().filter(function (h) { return h !== href; })).slice(0, 4);
+                try { localStorage.setItem('sdZuletzt', JSON.stringify(liste)); } catch (err) { /* privat: egal */ }
+            });
 
             // Suche: Kacheln nach Wort filtern (Name, Kurztext, Stichwoerter in beiden Sprachen)
             const feld = document.getElementById('suche');
             function filtern() {
                 const q = feld.value.trim().toLowerCase();
+                if (q && offen) zeigeBereich(null);
                 const woerter = q.split(/\s+/).filter(Boolean);
                 let treffer = 0;
                 document.querySelectorAll('.thema').forEach(function (s) {
@@ -869,8 +865,8 @@
                     s.querySelectorAll('.kachel').forEach(function (k) {
                         const text = (k.dataset.such + ' ' + k.textContent).toLowerCase();
                         const ok = woerter.every(function (w) { return text.indexOf(w) !== -1; });
-                        k.hidden = !ok;
-                        if (ok) sichtbar++;
+                        k.hidden = !ok || !geraetOk(k);
+                        if (!k.hidden) sichtbar++;
                     });
                     s.hidden = sichtbar === 0;
                     treffer += sichtbar;
@@ -901,12 +897,16 @@
             sprachSync();
             document.addEventListener('sd-lang-changed', function () { sprachSync(); mappeHinweis(); filtern(); });
             mappeHinweis();
+            bentoFuellen(); zuletztZeigen(); filtern();
+            HANDY.addEventListener('change', function () { bentoFuellen(); zuletztZeigen(); filtern(); });
         })();
 
         if ('serviceWorker' in navigator) {
+            // Beim allerersten Besuch gibt es noch keinen Service Worker: dann ist es keine "neue Version"
+            const sdHatteSW = !!navigator.serviceWorker.controller;
             navigator.serviceWorker.register('sw.js');
             // Hinweis, sobald im Hintergrund eine neue Version geladen wurde
-            navigator.serviceWorker.addEventListener('controllerchange', sdUpdateBereit);
+            navigator.serviceWorker.addEventListener('controllerchange', function () { if (sdHatteSW) sdUpdateBereit(); });
         }
         function sdUpdateBereit() {
             if (document.getElementById('sd-update-banner')) return;

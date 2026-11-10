@@ -1,0 +1,64 @@
+/* SD Hub · Bento-Startseite · 2026-11-10
+   Große bunte Bereichs-Kacheln + Startkarte mit Suche. Ergänzt editorial-home.css. */
+.kopf{border-bottom:0}
+.leiste{border-bottom:0}
+
+.bento{display:grid;grid-auto-flow:dense;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(165px,auto);gap:14px;padding-top:26px;padding-bottom:6px}
+
+/* Startkarte */
+.start-karte{grid-column:span 2;grid-row:span 2;background:var(--papier);border:1px solid var(--linie);border-radius:26px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;gap:18px;box-shadow:0 1px 2px #14201d0d,0 10px 28px #14201d0f}
+.start-karte h1{margin:0;font-family:var(--titel);font-weight:800;font-size:clamp(2.1rem,4.2vw,3.15rem);line-height:1.04;letter-spacing:-.035em;color:var(--tinte);text-wrap:balance}
+.start-karte .unter{margin:12px 0 0;color:var(--leise);font-size:1.02rem;line-height:1.6;max-width:46ch}
+.start-karte .suche{margin-top:0;max-width:none}
+.start-karte .suche input{background:var(--grund);border:2px solid transparent;border-radius:18px;box-shadow:none;padding-block:18px}
+.start-karte .suche input:focus{border-color:var(--fokus);box-shadow:0 0 0 4px #efb05d40;background:#fff}
+.start-karte .treffer{color:var(--leise);margin:6px 0 0 4px;min-height:1.2em}
+.unterzeile{margin:6px 0 8px;font-size:.76rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--leise)}
+.start-karte .schnell{margin-top:0;gap:8px}
+.start-karte .chip{color:var(--tinte);background:var(--grund);border:0;border-radius:999px;padding:8px 14px;font-weight:700;font-size:.88rem}
+.start-karte .chip:hover{background:var(--linie)}
+.chip-sym{display:inline-flex;font-size:1.05em}.chip-sym svg{width:1.3em;height:1.3em}
+.start-karte .sd-dashboard-launch{margin-top:14px;max-width:none;border-radius:16px}
+
+/* Bereichs-Kacheln */
+.bk{position:relative;overflow:hidden;display:flex;flex-direction:column;border-radius:26px;padding:22px;color:#fff;text-decoration:none;
+ background:radial-gradient(120% 90% at 100% 100%,#ffffff2e,transparent 55%),var(--farbe);
+ box-shadow:0 1px 2px #0000000f,0 10px 26px #0000001a;transition:transform .18s ease,box-shadow .18s ease}
+.bk:hover{transform:translateY(-4px);box-shadow:0 16px 32px #00000026}
+.bk:focus-visible{outline:3px solid var(--fokus);outline-offset:3px}
+.bk[aria-expanded="true"]{outline:3px solid var(--tinte);outline-offset:3px}
+.bk h2{margin:0;font-family:var(--titel);font-size:1.32rem;font-weight:800;letter-spacing:-.02em;line-height:1.15;max-width:85%}
+.bk-liste{list-style:none;margin:10px 0 0;padding:0;font-size:.92rem;line-height:1.5;opacity:.94;max-width:68%}
+.bk-zahl{margin-top:auto;align-self:flex-start;background:#ffffff33;border-radius:999px;padding:3px 12px;font-weight:800;font-size:.85rem}
+.bk-zahl::after{content:" →"}
+.bk-ic{position:absolute;right:16px;bottom:12px;font-size:66px;line-height:1;transition:transform .25s ease;filter:drop-shadow(0 6px 10px #0000002e)}
+.bk:hover .bk-ic{transform:rotate(-8deg) scale(1.08)}
+.bento .breit{grid-column:span 2}
+.bento .hoch{grid-row:span 2}
+
+/* Bereiche unten: bei offener Kachel nur dieser Bereich */
+body[data-offen] .thema:not(.offen){display:none}
+body[data-offen] .thema.offen{margin-top:0}
+.bereich-zu{display:none;margin-left:10px;border:0;background:#e7eee8;color:var(--tinte);border-radius:999px;width:36px;height:36px;font-size:1rem;cursor:pointer}
+body[data-offen] .thema.offen .bereich-zu{display:inline-grid;place-items:center}
+.reiterkopf .anzahl{margin-left:auto}
+
+[dir="rtl"] .bk-ic{right:auto;left:16px}
+[dir="rtl"] .bk-zahl::after{content:" ←"}
+
+@media(max-width:900px){
+ .bento{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .start-karte{grid-row:auto}
+ .bento .hoch{grid-row:auto}
+}
+@media(max-width:560px){
+ .bento{grid-template-columns:minmax(0,1fr);grid-auto-rows:auto;padding-top:16px;gap:12px}
+ .start-karte,.bento .breit{grid-column:auto}
+ .start-karte{padding:20px;border-radius:22px}
+ .bk{min-height:150px;border-radius:22px}
+ .bk-ic{font-size:54px}
+ .bk-liste{max-width:72%}
+ .start-karte .schnell{flex-wrap:nowrap;overflow-x:auto;margin-inline:-20px;padding-inline:20px}
+ .start-karte .chip{flex:0 0 auto}
+}
+@media(prefers-reduced-motion:reduce){.bk,.bk-ic{transition:none}}

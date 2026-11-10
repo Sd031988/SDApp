@@ -3,11 +3,15 @@ const test=require("node:test"),assert=require("node:assert/strict"),fs=require(
 const root=path.resolve(__dirname,".."),html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const topics=["deutsch","arbeit","post","geld","doku","wohnen","ki"];
 const count=(re)=>(html.match(re)||[]).length;
-test("Professional 3D stack retains seven keyboard-accessible folders",()=>{
- assert.match(html,/class="szene" id="szene"/);assert.match(html,/class="stapel" id="stapel"/);
- assert.equal(count(/class="lage" role="button" tabindex="0"/g),7);
- for(const topic of topics){assert.match(html,new RegExp('class="lage" role="button" tabindex="0" data-thema="'+topic+'"'));assert.match(html,new RegExp('id="thema-'+topic+'"'));assert.match(html,new RegExp('href="#thema-'+topic+'"'))}
- assert.match(html,/function oeffneThema\(thema\)/);assert.match(html,/e.key === 'Enter' \|\| e.key === ' '/)
+test("Bento start page has seven area tiles linked to their sections",()=>{
+ assert.match(html,/class="breite bento" id="bento"/);assert.match(html,/class="start-karte"/);
+ assert.equal(count(/<a class="bk[ "]/g),7);
+ for(const topic of topics){assert.match(html,new RegExp('href="#thema-'+topic+'" data-thema="'+topic+'"'));assert.match(html,new RegExp('id="thema-'+topic+'"'))}
+ assert.match(html,/function zeigeBereich\(thema\)/);assert.match(html,/e.key === 'Escape'/)
+});
+test("Camera tools are marked phone-only",()=>{
+ for(const href of ["scanner/","passfoto/","messen/index.html"])assert.match(html,new RegExp('class="kachel" href="'+href.replace(/[.\/]/g,m=>"\\"+m)+'" data-geraet="handy"'));
+ assert.match(html,/k.hidden = !ok \|\| !geraetOk\(k\)/)
 });
 test("All homepage topic sections contain at least one tool",()=>{
  for(const topic of topics){const start=html.indexOf('id="thema-'+topic+'"');assert.ok(start>0,topic);const end=html.indexOf("</section>",start),block=html.slice(start,end);assert.ok(block.includes('class="kachel"'),topic)}

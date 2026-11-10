@@ -65,7 +65,7 @@ assert.equal(await page.locator("#statLessons").innerText(),"0");
 await page.reload();
 assert.equal(await page.locator("#statFavs").innerText(),"0");
 assert.equal(await page.locator("#statLessons").innerText(),"0");
-const home=await ctx.newPage();await home.goto(base+"/",{waitUntil:"load"});assert.equal(await home.locator("#stapel").count(),1);assert.equal(await home.locator("#mein-sd-hub").count(),1);await home.close();
+const home=await ctx.newPage();await home.goto(base+"/",{waitUntil:"load"});assert.equal(await home.locator("#bento").count(),1);assert.equal(await home.locator("#mein-sd-hub").count(),1);await home.close();
 const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 await mobile.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 await mobile.locator('[data-tab="wegweiser"]').click();

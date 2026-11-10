@@ -15,7 +15,7 @@ test("Professional landing page contains no games in visible sections or menus",
  assert.ok(!visible.includes('href="kids/'),'Games should not be linked from the professional homepage');
  assert.ok(!visible.includes('data-thema="kids"'));
  assert.ok(!visible.includes('id="thema-kids"'));
- assert.equal((visible.match(/class="lage" role="button"/g)||[]).length,7);
+ assert.equal((visible.match(/<a class="bk[ "]/g)||[]).length,7);
  assert.equal((visible.match(/class="thema"/g)||[]).length,7);
 });
 test("Work dashboard excludes game links, goal and featured tile",()=>{
