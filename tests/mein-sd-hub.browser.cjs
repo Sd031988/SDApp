@@ -116,7 +116,7 @@ for(const width of [320,390,1300]){
  assert.equal(await checkPage.locator(".code-checks .code-error").count(),0);
  for(const quiz of await checkPage.locator(".code-quiz").all())await quiz.locator(".answers button").first().click();
  await checkPage.locator(".code-lesson button").filter({hasText:"Im Code-Studio öffnen"}).click();
- await checkPage.waitForURL(/\\/studio\\/index\\.html\\?projekt=/,{timeout:15000});
+ await checkPage.waitForURL(url=>url.pathname==="/studio/index.html"&&url.searchParams.has("projekt"),{timeout:15000});
  const name=new URL(checkPage.url()).searchParams.get("projekt");
  assert.ok(name.startsWith("Akademie – "));
  await checkPage.close();
