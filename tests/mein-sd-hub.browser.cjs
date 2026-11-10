@@ -128,6 +128,59 @@ assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  await checkPage.close();
 }
 
+
+/* Alle Übungsformen werden mit Touch-freundlichen Bedienelementen geprüft. */
+for(const width of [320,390,1300]){
+ const exercisePage=await browser.newPage({viewport:{width,height:840}});
+ exercisePage.on("pageerror",e=>errors.push("Übung "+width+": "+e.message));
+ await exercisePage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await exercisePage.locator('[data-tab="akademie"]').click();
+ const cases=[
+  ["Deutsch im Alltag",0,"luecke"],
+  ["Deutsch im Alltag",0,"hoeren"],
+  ["Deutsch im Alltag",1,"zuordnen"],
+  ["Computer & Internet",1,"auswahl"],
+  ["Computer & Internet",2,"reihenfolge"],
+  ["Bewerbung & Beruf",2,"schreiben"]
+ ];
+ for(const [course,lesson,typ] of cases){
+  await exercisePage.locator(".course").filter({hasText:course}).click();
+  await exercisePage.locator(".lesson-btn").nth(lesson).click();
+  const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:{
+   luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
+   auswahl:"Verdächtige Nachricht",reihenfolge:"Eine Datei sicher",schreiben:"Ein kurzer Satz"
+  }[typ]})});
+  await box.waitFor();
+  const check=box.getByRole("button",{name:"Prüfen"});
+  if(typ==="schreiben"){
+   await box.locator("textarea").fill("Ich interessiere mich für die Stelle im Verkauf.");
+   await check.click();
+   assert.match(await box.locator('[role="status"]').innerText(),/keine automatische Note/i);
+   assert.equal(await box.getByRole("button",{name:"Lösung zeigen"}).isVisible(),true);
+   assert.match(await box.innerText(),/Checkliste|Ich nenne die Stelle/);
+  }else{
+   for(let attempt=1;attempt<=3;attempt++){
+    await check.click();
+    assert.match(await box.locator('[role="status"]').innerText(),/Noch nicht richtig/);
+    assert.equal(await box.locator(".hint, p").filter({hasText:/^Tipp:/}).isVisible(),attempt>=2);
+    assert.equal(await box.getByRole("button",{name:"Lösung zeigen"}).isVisible(),attempt>=3);
+   }
+   await box.getByRole("button",{name:"Lösung zeigen"}).click();
+   assert.match(await box.innerText(),/Musterlösung:/);
+   if(typ==="luecke"){await box.locator('input[type="text"]').nth(0).fill("heiße");await box.locator('input[type="text"]').nth(1).fill("wohne")}
+   if(typ==="hoeren")await box.locator('input[type="text"]').fill("Samira");
+   if(typ==="zuordnen"){await box.locator("select").nth(0).selectOption({label:"Wo finde ich Brot?"});await box.locator("select").nth(1).selectOption({label:"Wie viel kostet das?"});await box.locator("select").nth(2).selectOption({label:"Kann ich bitte bezahlen?"})}
+   if(typ==="auswahl"){await box.locator('input[type="checkbox"]').nth(0).check();await box.locator('input[type="checkbox"]').nth(1).check()}
+   if(typ==="reihenfolge"){await box.getByRole("button",{name:"Ordner öffnen Hoch"}).click();await box.getByRole("button",{name:"Datei sinnvoll benennen Hoch"}).click()}
+   await check.click();
+   assert.match(await box.locator('[role="status"]').innerText(),/Richtig/);
+  }
+  const extra=await exercisePage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+  assert.ok(extra<=3,"Übungsansicht läuft bei "+width+" px "+typ+" über: "+extra);
+ }
+ await exercisePage.close();
+}
+
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
