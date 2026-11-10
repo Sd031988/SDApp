@@ -89,6 +89,27 @@ assert.equal(await mobile.locator("#goalGrid .goal").count(),5);
 const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
 assert.ok(overflow<=3,"Unexpected mobile horizontal overflow: "+overflow);
 await mobile.close();
+for(const width of [320,390,1300]){
+ const checkPage=await browser.newPage({viewport:{width,height:840}});
+ await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await checkPage.locator('[data-tab="akademie"]').click();
+ await checkPage.locator(".course").last().click();
+ assert.equal(await checkPage.locator(".lesson-btn").count(),12);
+ const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"Horizontales Scrollen bei "+width+" px: "+overflow);
+ await checkPage.locator(".code-textarea").fill("<h1>Meine eigene Webseite</h1><p>Ich lerne HTML.</p>");
+ await checkPage.waitForTimeout(450);
+ assert.match(await checkPage.locator(".code-frame").getAttribute("srcdoc"),/Meine eigene Webseite/);
+ await checkPage.locator(".code-pruefen").click();
+ assert.equal(await checkPage.locator(".code-checks .code-error").count(),0);
+ for(const quiz of await checkPage.locator(".code-quiz").all())await quiz.locator(".answers button").first().click();
+ await checkPage.locator(".code-lesson button").filter({hasText:"Im Code-Studio öffnen"}).click();
+ await checkPage.waitForURL(/\\/studio\\/index\\.html\\?projekt=/,{timeout:15000});
+ const name=new URL(checkPage.url()).searchParams.get("projekt");
+ assert.ok(name.startsWith("Akademie – "));
+ await checkPage.close();
+}
+
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
