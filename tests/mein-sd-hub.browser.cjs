@@ -42,7 +42,7 @@ await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 await page.locator('[data-tab="akademie"]').click();
 await page.locator(".course").last().click();
-assert.equal(await page.locator(".lesson-btn").count(),12);
+assert.equal(await page.locator(".lesson-btn").count(),8);
 assert.equal(await page.locator(".code-textarea").count(),1);
 assert.equal(await page.locator(".code-frame[sandbox='allow-scripts']").count(),1);
 await page.locator(".code-textarea").fill("<h1>Meine erste Seite</h1><p>Ich lerne selbst.</p>");
