@@ -5,7 +5,7 @@ const fs=require("node:fs");
 const path=require("node:path");
 const {chromium}=require("playwright");
 const root=path.resolve(__dirname,"..");
-const mime={".html":"text/html;charset=utf-8",".js":"application/javascript;charset=utf-8",".css":"text/css;charset=utf-8",".svg":"image/svg+xml",".woff2":"font/woff2",".png":"image/png"};
+const mime={".html":"text/html;charset=utf-8",".js":"application/javascript;charset=utf-8",".mjs":"application/javascript;charset=utf-8",".css":"text/css;charset=utf-8",".svg":"image/svg+xml",".woff2":"font/woff2",".png":"image/png"};
 const server=http.createServer((req,res)=>{
 try{
 const url=new URL(req.url,"http://localhost");let rel=decodeURIComponent(url.pathname).replace(/^\/+/,"");if(!rel||rel.endsWith("/"))rel+="index.html";
@@ -205,7 +205,35 @@ await finalPage.locator(".ak-certificate input").fill("Testperson");
 assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung drucken"}).count(),1);
 await finalPage.close();
 
+
+/* P4: Browser lädt echte Module aus zwei Dateien. */
+const modulePage=await browser.newPage({viewport:{width:390,height:800}});
+modulePage.on("pageerror",e=>errors.push("P4 Modul: "+e.message));
+await modulePage.goto(base+"/mein-sd-hub/p4-module/index.html",{waitUntil:"load"});
+await modulePage.getByText("Doppelt von 5 ist 10").waitFor();
+await modulePage.close();
+
+/* P4: eigenständige Quiz-App lädt lokale JSON-Daten und bleibt mobil bedienbar. */
+for(const width of [320,390,1300]){
+ const quizPage=await browser.newPage({viewport:{width,height:800}});
+ quizPage.on("pageerror",e=>errors.push("P4 Quiz "+width+": "+e.message));
+ await quizPage.goto(base+"/mein-sd-hub/p4-quiz.html",{waitUntil:"load"});
+ await quizPage.getByRole("button",{name:"Quiz starten"}).click();
+ await quizPage.getByRole("heading",{name:/Welche Methode erzeugt/}).waitFor();
+ for(const answer of ["map","JSON.parse","antwort.ok"]){
+  await quizPage.getByRole("button",{name:answer,exact:true}).click();
+ }
+ assert.match(await quizPage.locator("#meldung").innerText(),/3 von 3/);
+ const overflow=await quizPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"P4 Quiz bei "+width+" px horizontaler Überlauf: "+overflow);
+ await quizPage.close();
+}
+
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
+ const {execFileSync}=require("node:child_process");
+ for(const testFile of ["tests/hub-homepage.browser.cjs","tests/hub/dashboard.browser.cjs"]){
+  execFileSync(process.execPath,[path.join(root,testFile)],{cwd:root,stdio:"inherit",timeout:180000});
+ }
 })().catch(err=>{console.error(err);process.exitCode=1});

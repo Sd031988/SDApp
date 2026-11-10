@@ -286,6 +286,7 @@ function renderCodeLesson(l){
  select(active);update();
  const reset=node("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm("Deinen Code durch den Startcode ersetzen?"))return;Object.assign(code,l.beispiel);select(active);update()};
  node("h5","","Deine Aufgabe",wrap);node("p","",l.aufgabe.text,wrap);
+ if(l.projektLink&&/^\/mein-sd-hub\/p4-(?:quiz\.html|module\/index\.html)$/.test(l.projektLink)){const link=node("a","btn outline small","Vollständiges Praxisprojekt öffnen",wrap);link.href=l.projektLink;link.target="_blank";link.rel="noopener noreferrer";}
  const checks=node("div","code-checks",undefined,wrap),check=node("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
  const hint=node("p","hint",l.aufgabe.tipp,wrap);hint.hidden=true;
  const solution=node("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;

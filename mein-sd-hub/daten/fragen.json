@@ -1,0 +1,29 @@
+[
+  {
+    "frage": "Welche Methode erzeugt aus jedem Array-Eintrag einen neuen Wert?",
+    "antworten": [
+      "map",
+      "filter",
+      "reduce"
+    ],
+    "richtig": 0
+  },
+  {
+    "frage": "Welcher Ausdruck liest einen JSON-Text?",
+    "antworten": [
+      "JSON.stringify",
+      "JSON.parse",
+      "localStorage.clear"
+    ],
+    "richtig": 1
+  },
+  {
+    "frage": "Wie prüfst du einen HTTP-Erfolg?",
+    "antworten": [
+      "antwort.length",
+      "antwort.name",
+      "antwort.ok"
+    ],
+    "richtig": 2
+  }
+]
