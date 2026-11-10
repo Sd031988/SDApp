@@ -134,3 +134,26 @@ test("Webseiten gestalten: acht vollständige Lektionen mit eigener Praxis",()=>
 });
 
 test("JavaScript Grundlagen enthält neun Praxislektionen mit Quiz und Lösungen",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/javascript.js"));assert.equal(lessons.length,9);for(const lesson of lessons){assert.equal(lesson.schritte.length,4);assert.equal(lesson.quiz.length,3);assert.ok(lesson.fehler.length>=2);assert.equal(lesson.aufgabe.pruefungen.length,2);assert.ok(lesson.aufgabe.loesung.js.length>20);for(const check of lesson.aufgabe.pruefungen)assert.equal(typeof data.pruefeCode(check.test,{html:"",css:"",js:""},{querySelector:()=>null,querySelectorAll:()=>[]}),"boolean");}});
+
+test("Neue Programmierkurse: mindestens 800 Zeichen Erklärung pro Lektion",()=>{
+ for(const id of ["webdesign","javascript"]){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
+  for(const lesson of lessons){
+   const length=lesson.schritte.reduce((sum,step)=>sum+step.text.length,0);
+   assert.ok(length>=800,lesson.id+": nur "+length+" Zeichen Erklärung");
+   assert.ok(lesson.schritte.every(step=>step.code&&step.erklaerung),lesson.id+": Code und Erklärung erforderlich");
+  }
+ }
+});
+test("JavaScript-Grundlagen: jeder Fehler hat ein konkretes falsches und richtiges Beispiel",()=>{
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/javascript.js"));
+ for(const lesson of lessons){
+  assert.equal(lesson.fehler.length,2,lesson.id);
+  for(const error of lesson.fehler){
+   assert.match(error.text,/Falsch:/,lesson.id);
+   assert.match(error.text,/Richtig:/,lesson.id);
+   assert.ok(error.text.length>=140,lesson.id+" "+error.titel);
+  }
+  assert.notEqual(lesson.fehler[0].text,lesson.fehler[1].text,lesson.id);
+ }
+});
