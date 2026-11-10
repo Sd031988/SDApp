@@ -36,6 +36,8 @@ await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
 assert.equal(await page.locator("#courses .course").count(),4);
+await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
  const D=window.SDPersonalData;
  return D.academy.find(c=>c.id==="code").lessons.map(lesson=>{
@@ -48,12 +50,15 @@ for(const lesson of lessonChecks){
  assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
 }
 
+await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 await page.locator(".answers button").first().click();
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 await page.locator('[data-tab="akademie"]').click();
-await page.locator(".course").last().click();
+await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 assert.equal(await page.locator(".lesson-btn").count(),12);
 assert.equal(await page.locator(".code-textarea").count(),1);
 assert.equal(await page.locator(".code-frame[sandbox='allow-scripts']").count(),1);
@@ -67,7 +72,7 @@ await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
 await page.locator(".code-textarea").fill("body { background-color: #eef; }");
 await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
 assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
-await page.locator(".course").first().click();
+await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
 await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -105,8 +110,9 @@ for(const width of [320,390,1300]){
  const checkPage=await browser.newPage({viewport:{width,height:840}});
  await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await checkPage.locator('[data-tab="akademie"]').click();
- await checkPage.locator(".course").last().click();
- assert.equal(await checkPage.locator(".lesson-btn").count(),12);
+ await checkPage.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+ await checkPage.locator(".lesson-btn").first().waitFor();
+assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"Horizontales Scrollen bei "+width+" px: "+overflow);
  await checkPage.locator(".code-textarea").fill("<h1>Meine eigene Webseite</h1><p>Ich lerne HTML.</p>");
