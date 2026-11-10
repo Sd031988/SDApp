@@ -206,6 +206,13 @@ assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung dru
 await finalPage.close();
 
 
+/* P4: Browser lädt echte Module aus zwei Dateien. */
+const modulePage=await browser.newPage({viewport:{width:390,height:800}});
+modulePage.on("pageerror",e=>errors.push("P4 Modul: "+e.message));
+await modulePage.goto(base+"/mein-sd-hub/p4-module/index.html",{waitUntil:"load"});
+await modulePage.getByText("Doppelt von 5 ist 10").waitFor();
+await modulePage.close();
+
 /* P4: eigenständige Quiz-App lädt lokale JSON-Daten und bleibt mobil bedienbar. */
 for(const width of [320,390,1300]){
  const quizPage=await browser.newPage({viewport:{width,height:800}});
