@@ -5,7 +5,7 @@ const fs=require("node:fs");
 const path=require("node:path");
 const {chromium}=require("playwright");
 const root=path.resolve(__dirname,"..");
-const mime={".html":"text/html;charset=utf-8",".js":"application/javascript;charset=utf-8",".css":"text/css;charset=utf-8",".svg":"image/svg+xml",".woff2":"font/woff2",".png":"image/png"};
+const mime={".html":"text/html;charset=utf-8",".js":"application/javascript;charset=utf-8",".mjs":"application/javascript;charset=utf-8",".css":"text/css;charset=utf-8",".svg":"image/svg+xml",".woff2":"font/woff2",".png":"image/png"};
 const server=http.createServer((req,res)=>{
 try{
 const url=new URL(req.url,"http://localhost");let rel=decodeURIComponent(url.pathname).replace(/^\/+/,"");if(!rel||rel.endsWith("/"))rel+="index.html";
