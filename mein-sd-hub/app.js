@@ -125,13 +125,107 @@ function searchGoal(){const text=$("goalSearch").value.trim();if(!text){$("goalS
 document.querySelector('.goal[data-goal="lernen"]').click();
 // Akademie
 let courseId="german",lessonId="g-1",answered=false;
-function renderCourses(){
-clearChildren("courses");D.academy.forEach(course=>{const complete=course.lessons.filter(l=>state.completedLessons.includes(l.id)).length;const btn=node("button","course"+(course.id===courseId?" active":""),undefined,$("courses"));btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));node("span","emoji",course.icon,btn);node("b","",course.name,btn);node("small","",course.summary,btn);const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);bar.style.width=(complete/course.lessons.length*100)+"%";node("div","progress-label",complete+" / "+course.lessons.length+" Lektionen",btn);btn.addEventListener("click",()=>{courseId=course.id;lessonId=course.lessons[0].id;answered=false;renderCourses()})});
-renderLessonList();
+const kursLadevorgaenge=new Map();
+function ladeKurs(id){
+ const kurs=findCourse(id);
+ if(!kurs)return Promise.reject(new Error("Kurs nicht gefunden"));
+ if(kurs.lessons)return Promise.resolve(kurs);
+ if(kursLadevorgaenge.has(id))return kursLadevorgaenge.get(id);
+ const p=new Promise((resolve,reject)=>{
+  const script=document.createElement("script");
+  script.src="./kurse/"+encodeURIComponent(id)+".js";
+  script.onload=()=>{
+   const lessons=window.SDAkademieKurse?.[id];
+   if(!Array.isArray(lessons)){reject(new Error("Lektionsdaten fehlen"));return}
+   kurs.lessons=lessons;resolve(kurs);
+  };
+  script.onerror=()=>reject(new Error("Kursdatei konnte nicht geladen werden"));
+  document.head.appendChild(script);
+ }).catch(error=>{kursLadevorgaenge.delete(id);throw error});
+ kursLadevorgaenge.set(id,p);return p;
 }
-function renderLessonList(){const c=findCourse(courseId);if(!c)return;$("courseHeading").textContent=c.icon+" "+c.name;$("courseSummary").textContent=c.summary;clearChildren("lessonList");
-c.lessons.forEach(l=>{const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));const left=node("span","",undefined,btn);node("b","",l.title,left);node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()})});renderLesson()}
+function renderCourses(){
+ clearChildren("courses");
+ for(const bereich of ["Programmieren","Computer & Internet","Deutsch","Arbeit & Beruf"]){
+  const group=node("section","course-group",undefined,$("courses"));
+  node("h3","",bereich,group);
+  const entries=node("div","course-group-list",undefined,group);
+  for(const course of D.academy.filter(c=>c.bereich===bereich)){
+   const ids=D.academyLessonIds[course.id]||[];
+   const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
+   const btn=node("button","course"+(course.id===courseId?" active":""),undefined,entries);
+   btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));
+   node("span","emoji",course.icon,btn);
+   node("b","",course.name,btn);
+   node("span","badge",course.stufe,btn);
+   node("small","",course.summary,btn);
+   node("small","","Empfohlene Reihenfolge: "+(D.academy.filter(c=>c.bereich===bereich).indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
+   const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);
+   bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
+   node("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
+   btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids[0];answered=false;renderCourses()});
+  }
+ }
+ renderLessonList();
+}
+function renderLessonList(){
+ const c=findCourse(courseId);if(!c)return;
+ $("courseHeading").textContent=c.icon+" "+c.name;
+ $("courseSummary").textContent=c.summary;
+ clearChildren("lessonList");clearChildren("lessonDetail");
+ if(!c.lessons){
+  const status=node("p","panel-sub","Lade Kurs …",$("lessonDetail"));
+  status.setAttribute("role","status");
+  ladeKurs(c.id).then(()=>{if(courseId===c.id)renderLessonList()}).catch(()=>{if(courseId===c.id)status.textContent="Der Kurs konnte nicht geladen werden. Bitte erneut öffnen."});
+  return;
+ }
+ c.lessons.forEach(l=>{
+  const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
+  btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));
+  const left=node("span","",undefined,btn);
+  node("b","",l.title,left);
+  node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
+  node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
+  btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()});
+ });
+ renderLesson();renderCourseFinal(c);
+}
+function renderCourseFinal(course){
+ const target=$("lessonDetail"),completed=course.lessons.every(l=>state.completedLessons.includes(l.id));
+ const section=node("section","ak-course-final",undefined,target);
+ node("h4","","Kursabschluss",section);
+ if(!completed){node("p","","Schließe zuerst alle Lektionen dieses Kurses ab. Danach kannst du den Abschlusstest machen.",section);return}
+ const start=node("button","btn outline small","Abschlusstest starten (10 Fragen)",section);start.type="button";
+ start.onclick=()=>{
+  start.disabled=true;
+  const pool=course.lessons.flatMap(l=>l.quiz?.map(q=>({frage:q.frage,antworten:q.antworten,richtig:q.richtig}))||(l.question?[{frage:l.question,antworten:l.choices,richtig:l.answer}]:[]));
+  if(!pool.length){node("p","","Für diesen Kurs fehlen noch Abschlussfragen.",section);return}
+  let index=0,points=0;
+  const area=node("div","ak-final-questions",undefined,section);
+  const next=()=>{
+   area.replaceChildren();
+   if(index===10){
+    node("p","",points+" von 10 Fragen richtig beantwortet.",area);
+    if(points<7){const retry=node("button","btn outline small","Erneut versuchen",area);retry.onclick=()=>{index=0;points=0;next()};return}
+    const certificate=node("section","ak-certificate",undefined,area);
+    node("h2","","Teilnahmebestätigung",certificate);
+    node("p","","Du hast den Kurs „"+course.name+"“ abgeschlossen.",certificate);
+    const label=node("label","","Name (freiwillig): ",certificate),input=node("input","",undefined,label);input.placeholder="Dein Name";
+    node("p","","Datum: "+new Date().toLocaleDateString("de-DE"),certificate);
+    node("p","","Diese Teilnahmebestätigung ist KEIN offizielles Zertifikat.",certificate);
+    const print=node("button","btn primary","Teilnahmebestätigung drucken",certificate);print.type="button";print.onclick=()=>window.print();
+    return;
+   }
+   const q=pool[index%pool.length];
+   node("h5","",(index+1)+". "+q.frage,area);
+   const answers=node("div","answers",undefined,area);
+   q.antworten.forEach((text,i)=>{const btn=node("button","",text,answers);btn.type="button";btn.onclick=()=>{if(i===q.richtig)points++;index++;next()}});
+  };
+  next();
+ };
+}
 function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
+if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
 l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
 if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=node("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
 })});
@@ -205,6 +299,7 @@ function renderCodeLesson(l){
  l.quiz.forEach((q,qi)=>{const box=node("section","code-quiz",undefined,wrap);quizBoxes.push(box);node("h5","",(qi+1)+". "+q.frage,box);const answers=node("div","answers",undefined,box),feedback=node("p","feedback",undefined,box);feedback.hidden=true;
  q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
  });
+ if(l.uebungen&&window.SDAkademieUebungen){node("h5","","Weitere Übungen",wrap);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(wrap,u))}
  node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
  const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
  const status=node("p","message","",wrap);

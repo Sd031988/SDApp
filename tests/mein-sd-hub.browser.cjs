@@ -36,6 +36,8 @@ await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
 assert.equal(await page.locator("#courses .course").count(),4);
+await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
  const D=window.SDPersonalData;
  return D.academy.find(c=>c.id==="code").lessons.map(lesson=>{
@@ -48,12 +50,15 @@ for(const lesson of lessonChecks){
  assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
 }
 
+await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 await page.locator(".answers button").first().click();
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 await page.locator('[data-tab="akademie"]').click();
-await page.locator(".course").last().click();
+await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+await page.locator(".lesson-btn").first().waitFor();
 assert.equal(await page.locator(".lesson-btn").count(),12);
 assert.equal(await page.locator(".code-textarea").count(),1);
 assert.equal(await page.locator(".code-frame[sandbox='allow-scripts']").count(),1);
@@ -67,7 +72,7 @@ await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
 await page.locator(".code-textarea").fill("body { background-color: #eef; }");
 await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
 assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
-await page.locator(".course").first().click();
+await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
 await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -105,8 +110,9 @@ for(const width of [320,390,1300]){
  const checkPage=await browser.newPage({viewport:{width,height:840}});
  await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await checkPage.locator('[data-tab="akademie"]').click();
- await checkPage.locator(".course").last().click();
- assert.equal(await checkPage.locator(".lesson-btn").count(),12);
+ await checkPage.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
+ await checkPage.locator(".lesson-btn").first().waitFor();
+assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"Horizontales Scrollen bei "+width+" px: "+overflow);
  await checkPage.locator(".code-textarea").fill("<h1>Meine eigene Webseite</h1><p>Ich lerne HTML.</p>");
@@ -121,6 +127,83 @@ for(const width of [320,390,1300]){
  assert.ok(name.startsWith("Akademie – "));
  await checkPage.close();
 }
+
+
+/* Alle Übungsformen werden mit Touch-freundlichen Bedienelementen geprüft. */
+for(const width of [320,390,1300]){
+ const exercisePage=await browser.newPage({viewport:{width,height:840}});
+ exercisePage.on("pageerror",e=>errors.push("Übung "+width+": "+e.message));
+ await exercisePage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await exercisePage.locator('[data-tab="akademie"]').click();
+ const cases=[
+  ["Deutsch im Alltag",0,"luecke"],
+  ["Deutsch im Alltag",0,"hoeren"],
+  ["Deutsch im Alltag",1,"zuordnen"],
+  ["Computer & Internet",1,"auswahl"],
+  ["Computer & Internet",2,"reihenfolge"],
+  ["Bewerbung & Beruf",2,"schreiben"]
+ ];
+ for(const [course,lesson,typ] of cases){
+  await exercisePage.locator(".course").filter({hasText:course}).click();
+  await exercisePage.locator(".lesson-btn").nth(lesson).click();
+  const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:{
+   luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
+   auswahl:"Verdächtige Nachricht",reihenfolge:"Eine Datei sicher",schreiben:"Ein kurzer Satz"
+  }[typ]})});
+  await box.waitFor();
+  const check=box.getByRole("button",{name:"Prüfen"});
+  if(typ==="schreiben"){
+   await box.locator("textarea").fill("Ich interessiere mich für die Stelle im Verkauf.");
+   await check.click();
+   assert.match(await box.locator('[role="status"]').innerText(),/keine automatische Note/i);
+   assert.equal(await box.getByRole("button",{name:"Lösung zeigen"}).isVisible(),true);
+   assert.match(await box.innerText(),/Checkliste|Ich nenne die Stelle/);
+  }else{
+   for(let attempt=1;attempt<=3;attempt++){
+    await check.click();
+    assert.match(await box.locator('[role="status"]').innerText(),/Noch nicht richtig/);
+    assert.equal(await box.locator(".hint, p").filter({hasText:/^Tipp:/}).isVisible(),attempt>=2);
+    assert.equal(await box.getByRole("button",{name:"Lösung zeigen"}).isVisible(),attempt>=3);
+   }
+   await box.getByRole("button",{name:"Lösung zeigen"}).click();
+   assert.match(await box.innerText(),/Musterlösung:/);
+   if(typ==="luecke"){await box.locator('input[type="text"]').nth(0).fill("heiße");await box.locator('input[type="text"]').nth(1).fill("wohne")}
+   if(typ==="hoeren")await box.locator('input[type="text"]').fill("Samira");
+   if(typ==="zuordnen"){await box.locator("select").nth(0).selectOption({label:"Wo finde ich Brot?"});await box.locator("select").nth(1).selectOption({label:"Wie viel kostet das?"});await box.locator("select").nth(2).selectOption({label:"Kann ich bitte bezahlen?"})}
+   if(typ==="auswahl"){await box.locator('input[type="checkbox"]').nth(0).check();await box.locator('input[type="checkbox"]').nth(1).check()}
+   if(typ==="reihenfolge"){await box.getByRole("button",{name:"Ordner öffnen Hoch"}).click();await box.getByRole("button",{name:"Datei sinnvoll benennen Hoch"}).click()}
+   await check.click();
+   assert.match(await box.locator('[role="status"]').innerText(),/Richtig/);
+  }
+  const extra=await exercisePage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+  assert.ok(extra<=3,"Übungsansicht läuft bei "+width+" px "+typ+" über: "+extra);
+ }
+ await exercisePage.close();
+}
+
+
+/* Kursabschluss: alle vier Bestandslektionen, zehn Fragen und Druckansicht. */
+const finalPage=await browser.newPage({viewport:{width:390,height:844}});
+finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
+await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+await finalPage.locator('[data-tab="akademie"]').click();
+await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await finalPage.locator(".lesson-btn").first().waitFor();
+const germanAnswers=[0,1,1,2];
+for(let i=0;i<4;i++){
+ await finalPage.locator(".lesson-btn").nth(i).click();
+ await finalPage.locator(".quiz .answers button").nth(germanAnswers[i]).click();
+}
+await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
+for(let i=0;i<10;i++){
+ await finalPage.locator(".ak-final-questions .answers button").nth(germanAnswers[i%4]).click();
+}
+assert.match(await finalPage.locator(".ak-final-questions").innerText(),/10 von 10/);
+assert.equal(await finalPage.getByText("Teilnahmebestätigung",{exact:true}).count(),1);
+assert.match(await finalPage.locator(".ak-certificate").innerText(),/KEIN offizielles Zertifikat/);
+await finalPage.locator(".ak-certificate input").fill("Testperson");
+assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung drucken"}).count(),1);
+await finalPage.close();
 
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
