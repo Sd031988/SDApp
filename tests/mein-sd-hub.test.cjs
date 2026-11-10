@@ -84,3 +84,25 @@ test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
  assert.equal(engine.pruefen({typ:"schreiben",musterloesung:"Hallo"},"Hallo").ok,null);
  assert.equal(load("mein-sd-hub/akademie-uebungen.js").includes("eval("),false);
 });
+
+test("Jede tatsächlich eingebaute Übung hat eine prüfbare Musterlösung und einen falschen Versuch",()=>{
+ const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
+ const types=new Set();
+ for(const id of ["german","digital","career","code"]){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
+  for(const lesson of lessons)for(const u of lesson.uebungen||[]){
+   types.add(u.typ);
+   if(u.typ==="schreiben"){
+    assert.ok(u.musterloesung.length>30,lesson.id);
+    assert.ok(u.checkliste.length>=3,lesson.id);
+    assert.equal(engine.pruefen(u,"").ok,null);
+    continue;
+   }
+   const solution=u.typ==="auswahl"?u.richtig:u.typ==="zuordnen"?u.paare.map(p=>p[1]):u.loesung;
+   const wrong=u.typ==="auswahl"?[]:u.typ==="hoeren"?"":u.typ==="reihenfolge"?[...u.start]:u.typ==="zuordnen"?u.paare.map(()=> ""):u.loesung.map(()=> "");
+   assert.equal(engine.pruefen(u,solution).ok,true,lesson.id+" "+u.typ+" Musterlösung");
+   assert.equal(engine.pruefen(u,wrong).ok,false,lesson.id+" "+u.typ+" Falschantwort");
+  }
+ }
+ assert.deepEqual([...types].sort(),["auswahl","hoeren","luecke","reihenfolge","schreiben","zuordnen"]);
+});
