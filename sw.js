@@ -17,7 +17,8 @@ const APP_FILES = [
   './mein-sd-hub/kurse/webdesign.js',
   './mein-sd-hub/kurse/javascript.js',
   './mein-sd-hub/kurse/javascript-aufbau.js',
-  './mein-sd-hub/daten/fragen.json'
+  './mein-sd-hub/daten/fragen.json',
+  './mein-sd-hub/p4-quiz.html'
 ];
 
 self.addEventListener('install', event => {
