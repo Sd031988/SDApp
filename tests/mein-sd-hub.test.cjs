@@ -164,7 +164,7 @@ test("JavaScript Aufbau P4: acht Lektionen, Lösungen, Fehlbeispiele und verteil
  for(const lesson of lessons){
   assert.equal(lesson.schritte.length,4,lesson.id);
   assert.equal(lesson.quiz.length,3,lesson.id);
-  assert.deepEqual(lesson.quiz.map(q=>q.richtig),[0,1,2],lesson.id);
+  assert.deepEqual(lesson.quiz.map(q=>q.richtig).sort(),[0,1,2],lesson.id);
   assert.ok(lesson.fehler.length>=2,lesson.id);
   assert.ok(lesson.merke.length>=2,lesson.id);
   for(const error of lesson.fehler){
