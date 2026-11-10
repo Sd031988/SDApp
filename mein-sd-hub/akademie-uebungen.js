@@ -41,7 +41,7 @@ function render(container,uebung){
   else speak.onclick=()=>{window.speechSynthesis.cancel();const msg=new SpeechSynthesisUtterance(uebung.text||"");msg.lang="de-DE";window.speechSynthesis.speak(msg)};
   const label=el("label","Deine Antwort ",box),field=el("input",undefined,label);field.type="text";read=()=>field.value;
  }else{el("p","Dieser Übungstyp wird nicht unterstützt.",box);return}
- const button=el("button","Prüfen",box);button.type="button";
+ const button=el("button","Prüfen",box);button.type="button";button.className="btn outline small uebung-pruefen";
  const status=el("p","",box);status.setAttribute("role","status");status.setAttribute("aria-live","polite");
  const hint=el("p","Tipp: "+(uebung.tipp||"Lies die Aufgabe noch einmal."),box);hint.hidden=true;
  const show=el("button","Lösung zeigen",box);show.type="button";show.hidden=true;

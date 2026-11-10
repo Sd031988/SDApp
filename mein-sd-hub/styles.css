@@ -39,3 +39,4 @@
  .ak-certificate{position:absolute;left:0;top:0;width:100%;border:0}
  .ak-certificate button{display:none!important}
 }
+.course small+small{display:block;margin-top:4px}
