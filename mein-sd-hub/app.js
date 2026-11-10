@@ -154,7 +154,7 @@ function academyToStudio(name,code){
    const get=store.get(name);
    get.onerror=()=>{db.close();reject(get.error)};
    get.onsuccess=()=>{
-    if(get.result){db.close();reject(new Error("Ein Projekt mit diesem Namen existiert bereits. Bitte ändere den Namen."));return}
+    if(get.result){db.close();reject(new Error("Ein Projekt mit diesem Namen existiert bereits."));return}
     store.add({name,dateien:{"index.html":'<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"></head><body>'+code.html+'<script src="script.js"><'+'/script></body></html>',"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
    };
    tx.oncomplete=()=>{db.close();resolve()};
@@ -184,7 +184,7 @@ function renderCodeLesson(l){
  select(active);update();
  const reset=node("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm("Deinen Code durch den Startcode ersetzen?"))return;Object.assign(code,l.beispiel);select(active);update()};
  node("h5","","Deine Aufgabe",wrap);node("p","",l.aufgabe.text,wrap);
- const checks=node("div","code-checks",undefined,wrap),check=node("button","btn outline small","Prüfen",wrap);check.type="button";
+ const checks=node("div","code-checks",undefined,wrap),check=node("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
  const hint=node("p","hint",l.aufgabe.tipp,wrap);hint.hidden=true;
  const solution=node("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;
  let failures=0,passed=false;
@@ -202,7 +202,7 @@ function renderCodeLesson(l){
  node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
  const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
  const status=node("p","message","",wrap);
- studio.onclick=async()=>{studio.disabled=true;const name="Akademie – "+l.title+" – "+Date.now();try{await academyToStudio(name,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
+ studio.onclick=async()=>{studio.disabled=true;const name="Akademie – "+l.title;try{await academyToStudio(name,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
 }
 // Deutschland Pfade
 let pathId="start";
