@@ -157,7 +157,7 @@ function academyToStudio(baseName,code){
     const check=store.get(name);
     check.onsuccess=()=>{
      if(check.result){number++;return}
-     const html=['<!doctype html>','<html lang="de">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <link rel="stylesheet" href="style.css">','</head>','<body>',code.html,'  <script src="script.js"><'+'/script>','</body>','</html>'].join("\\n");
+     const html=['<!doctype html>','<html lang="de">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <link rel="stylesheet" href="style.css">','</head>','<body>',code.html,'  <script src="script.js"><'+'/script>','</body>','</html>'].join("\n");
      store.add({name,dateien:{"index.html":html,"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
     };
     tx.oncomplete=()=>{if(check.result){choose()}else{db.close();resolve(name)}};
