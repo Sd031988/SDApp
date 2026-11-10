@@ -32,3 +32,39 @@ test("Programmierkurs hat zwölf Praxislektionen und sichere Prüfungen",()=>{co
 test("Praxis-Editor nutzt isolierte Vorschau und Studio-IndexedDB",()=>{assert.match(js,/sandbox","allow-scripts"/);assert.doesNotMatch(js,/allow-same-origin/);assert.match(js,/indexedDB.open\("sdCodeStudio",1\)/);assert.match(js,/setTimeout\(update,400\)/)});
 
 test("Alle zwölf Lektionen enthalten Lösungen, Fehlerhilfen und drei Quizfragen",()=>{const lessons=data.academy.find(c=>c.id==="code").lessons;assert.equal(lessons.length,12);for(const lesson of lessons){assert.ok(lesson.aufgabe.pruefungen.length>=2);assert.ok(lesson.fehler.length>=2);assert.ok(lesson.schritte.length>=4);assert.ok(lesson.schritte.every(x=>x.code&&x.text.length>100));assert.equal(lesson.quiz.length,3);assert.ok(lesson.quiz.every(x=>x.antworten.length>=3));assert.ok(lesson.aufgabe.loesung.html)}});
+
+test("Kein Erklärungssatz steht wortgleich in mehr als zwei Lektionen",()=>{
+ const lessons=data.academy.find(c=>c.id==="code").lessons;
+ const usage=new Map();
+ const sentenceParts=text=>text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[];
+ for(const lesson of lessons){
+  const unique=new Set();
+  for(const step of lesson.schritte){
+   for(const raw of sentenceParts(step.text+" "+step.erklaerung)){
+    const sentence=raw.trim().replace(/\\s+/g," ");
+    if(sentence.length>=15)unique.add(sentence);
+   }
+  }
+  for(const sentence of unique){
+   const owners=usage.get(sentence)||[];
+   owners.push(lesson.id);
+   usage.set(sentence,owners);
+  }
+ }
+ const repeated=[...usage].filter(([,owners])=>owners.length>2);
+ assert.deepEqual(repeated.map(([sentence,owners])=>({sentence,owners})),[]);
+});
+test("Quizantworten sind über verschiedene Positionen verteilt",()=>{
+ const lessons=data.academy.find(c=>c.id==="code").lessons;
+ const positions=lessons.flatMap(l=>l.quiz.map(q=>q.richtig));
+ assert.deepEqual([...new Set(positions)].sort(),[0,1,2]);
+ for(const lesson of lessons){
+  assert.equal(lesson.quiz.length,3);
+  assert.deepEqual([...new Set(lesson.quiz.map(q=>q.richtig))].sort(),[0,1,2],lesson.id);
+  for(const q of lesson.quiz){
+   assert.equal(q.antworten.length,3);
+   assert.equal(q.begruendungen.length,3);
+   assert.ok(q.begruendungen.every(reason=>reason.length>=15));
+  }
+ }
+});
