@@ -8,6 +8,7 @@ const APP_FILES = [
   './mein-sd-hub/index.html',
   './mein-sd-hub/data.js',
   './mein-sd-hub/app.js',
+  './mein-sd-hub/akademie-uebungen.js',
   './mein-sd-hub/styles.css',
   './mein-sd-hub/kurse/german.js',
   './mein-sd-hub/kurse/digital.js',
