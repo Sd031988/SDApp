@@ -206,6 +206,25 @@ assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung dru
 await finalPage.close();
 
 
+/* P5: alle Lektionen im Browser laden und Praxisprüfungen durchführen. */
+for(const width of [320,390,1300]){
+ const p5page=await browser.newPage({viewport:{width,height:820}});
+ p5page.on("pageerror",e=>errors.push("P5 "+width+": "+e.message));
+ await p5page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await p5page.locator('[data-tab="akademie"]').click();
+ await p5page.locator(".course").filter({hasText:"Fortgeschritten: saubere Web-Apps"}).click();
+ await p5page.locator(".lesson-btn").first().waitFor();
+ assert.equal(await p5page.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await p5page.locator(".lesson-btn").nth(i).click();
+  const title=await p5page.locator(".lesson-btn").nth(i).innerText();
+  assert.ok(title.length>5,"P5 Lektion "+i+" ohne Titel");
+ }
+ const overflow=await p5page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"P5 "+width+"px Überlauf: "+overflow);
+ await p5page.close();
+}
+
 /* P4: Browser lädt echte Module aus zwei Dateien. */
 const modulePage=await browser.newPage({viewport:{width:390,height:800}});
 modulePage.on("pageerror",e=>errors.push("P4 Modul: "+e.message));
