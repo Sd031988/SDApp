@@ -19,7 +19,7 @@ test("17 direct tools and guided goals have valid IDs and unique URLs",()=>{asse
 test("all referenced local tool URLs resolve to a real file",()=>{const links=new Set(data.items.map(x=>x.href));for(const p of data.paths)for(const step of p.steps)links.add(step[2]);for(const p of data.academy)assert.ok(p.anzahl>0);for(const href of links){const file=fileForHref(href);assert.ok(file,"unsafe URL "+href);assert.ok(fs.existsSync(file),"missing "+href)}});
 test("recommendation matches natural German B1 request",()=>{const found=data.recommend("Ich möchte B1 üben");assert.ok(found.some(x=>x.id==="b1"),JSON.stringify(found.map(x=>x.id)))});
 test("recommendations handle common needs and do not leak unbounded data",()=>{for(const [query,target] of [["Pibo spielen","pibo"],["Lebenslauf schreiben","jobs"],["PDF unterschreiben","pdf"],["Code programmieren","studio"],["Brief verstehen","post"]]){const found=data.recommend(query,8);assert.ok(found.some(x=>x.id===target),query+" -> "+found.map(x=>x.id))}assert.ok(data.recommend("ich",999).length<=8);assert.deepEqual(data.recommend(""),[])});
-test("four courses, twenty-four lessons and valid correct answers",()=>{assert.equal(data.academy.length,8);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,57);assert.equal(new Set(lessons.map(x=>x.id)).size,57);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.choices.length>=3);assert.ok(l.answer>=0&&l.answer<l.choices.length);assert.ok(l.question.length>12);assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
+test("four courses, twenty-four lessons and valid correct answers",()=>{assert.equal(data.academy.length,8);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,61);assert.equal(new Set(lessons.map(x=>x.id)).size,61);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.choices.length>=3);assert.ok(l.answer>=0&&l.answer<l.choices.length);assert.ok(l.question.length>12);assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
 test("paths contain twenty distinct checkable steps",()=>{assert.equal(data.paths.length,4);assert.equal(data.paths.reduce((n,p)=>n+p.steps.length,0),20);for(const p of data.paths){assert.equal(p.steps.length,5);for(const step of p.steps)assert.equal(step.length,3)}});
 test("translation examples cover supported languages",()=>{assert.ok(data.phrases.length>=10);for(const p of data.phrases){for(const lang of ["de","en","fa","ur","ti"])assert.ok(typeof p[lang]==="string"&&p[lang].length>2,p.id+" "+lang)}});
 test("safe state sanitizer rejects unknown ids, duplicates and private fields",()=>{const s=data.sanitizeState({completedLessons:["g-1","g-1","not-a-lesson"],completedSteps:["job:2","job:2","bad:8"],favorites:["pibo","pibo","evil"],recent:["studio","evil"],nickname:"<script>alert(1)</script>",privateData:"must-drop",updatedAt:"s".repeat(400)});assert.deepEqual(s.completedLessons,["g-1"]);assert.deepEqual(s.completedSteps,["job:2"]);assert.deepEqual(s.favorites,["pibo"]);assert.deepEqual(s.recent,["studio"]);assert.ok(!s.nickname.includes("<"));assert.ok(!("privateData"in s));assert.ok(s.updatedAt.length<=32)});
@@ -226,5 +226,32 @@ test("P5: alle acht Praxislösungen bestehen und leere Lösungen scheitern",()=>
    assert.equal(data.pruefeCode(check.test,lesson.aufgabe.loesung,doc),true,lesson.id+" Musterlösung "+check.test);
    assert.equal(data.pruefeCode(check.test,{html:"",css:"",js:""},badDoc),false,lesson.id+" leere Antwort "+check.test);
   }
+ }
+});
+
+test("C1 Computer-Start: alte Fortschritts-IDs, acht Lektionen und vertiefte Schritte",()=>{
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/digital.js"));
+ assert.deepEqual(lessons.map(l=>l.id),["d-1","d-2","d-3","d-4","d-5","d-6","d-7","d-8"]);
+ assert.equal(data.academy.find(c=>c.id==="digital").anzahl,8);
+ for(const lesson of lessons){
+  assert.equal(lesson.schrittePraxis.length,4,lesson.id);
+  assert.ok(lesson.schrittePraxis.reduce((n,s)=>n+s.text.length,0)>=800,lesson.id);
+  assert.ok(lesson.fehler.length>=2,lesson.id);
+  assert.ok(lesson.merke.length>=2,lesson.id);
+  for(const fehler of lesson.fehler){assert.match(fehler.text,/Falsch:/);assert.match(fehler.text,/Richtig:/)}
+  assert.ok(lesson.choices.length>=3&&lesson.answer>=0&&lesson.answer<lesson.choices.length,lesson.id);
+ }
+ assert.ok(lessons[1].uebungen.some(u=>u.typ==="auswahl"));
+ assert.ok(lessons[2].uebungen.some(u=>u.typ==="reihenfolge"));
+});
+test("C1: alle Übungslösungen bestehen, falsche und leere Antworten nicht",()=>{
+ const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/digital.js"));
+ for(const lesson of lessons)for(const u of lesson.uebungen||[]){
+  const richtig=u.typ==="auswahl"?u.richtig:u.typ==="reihenfolge"?u.loesung:u.typ==="zuordnen"?u.paare.map(p=>p[1]):u.typ==="luecke"?u.loesung:null;
+  assert.notEqual(richtig,null,lesson.id);
+  assert.equal(engine.pruefen(u,richtig).ok,true,lesson.id+" Musterlösung");
+  const falsch=u.typ==="auswahl"?[]:u.typ==="reihenfolge"?[...u.loesung].reverse():u.typ==="zuordnen"?u.paare.map(()=>"?"):u.loesung.map(()=>"");
+  assert.equal(engine.pruefen(u,falsch).ok,false,lesson.id+" falsche Antwort");
  }
 });
