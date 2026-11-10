@@ -82,5 +82,5 @@ test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
  ];
  for(const [exercise,correct,wrong] of cases){assert.equal(engine.pruefen(exercise,correct).ok,true,exercise.typ);assert.equal(engine.pruefen(exercise,wrong).ok,false,exercise.typ)}
  assert.equal(engine.pruefen({typ:"schreiben",musterloesung:"Hallo"},"Hallo").ok,null);
- assert.doesNotMatch(load("mein-sd-hub/akademie-uebungen.js"),/\\beval\\s*\\(/);
+ assert.equal(load("mein-sd-hub/akademie-uebungen.js").includes("eval("),false);
 });
