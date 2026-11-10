@@ -35,7 +35,7 @@ assert.equal(await page.locator("#statFavs").innerText(),"1");
 await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
-assert.equal(await page.locator("#courses .course").count(),4);
+assert.equal(await page.locator("#courses .course").count(),await page.evaluate(()=>window.SDPersonalData.academy.length));
 await page.locator(".course").filter({hasText:"Programmieren anfangen"}).click();
 await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
