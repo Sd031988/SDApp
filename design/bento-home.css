@@ -37,10 +37,13 @@
 .bento .hoch{grid-row:span 2}
 
 /* Bereiche unten: bei offener Kachel nur dieser Bereich */
+/* Die Werkzeug-Listen unten erscheinen nur nach Klick auf eine Kachel oder bei einer Suche */
+body:not([data-offen]):not([data-suche]) .thema{display:none}
 body[data-offen] .thema:not(.offen){display:none}
 body[data-offen] .thema.offen{margin-top:0}
 .bereich-zu{display:none;margin-left:10px;border:0;background:#e7eee8;color:var(--tinte);border-radius:999px;width:36px;height:36px;font-size:1rem;cursor:pointer}
 body[data-offen] .thema.offen .bereich-zu{display:inline-grid;place-items:center}
+body:not([data-offen]):not([data-suche]) main#bereiche{padding-top:22px}
 .reiterkopf .anzahl{margin-left:auto}
 
 [dir="rtl"] .bk-ic{right:auto;left:16px}

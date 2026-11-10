@@ -20,12 +20,14 @@ await page.goto(base+"/",{waitUntil:"load"});
 assert.equal(await page.locator("#bento .bk").count(),7);
 const handy=viewport.width<=820;
 assert.equal(await page.locator(".thema").count(),7);
+// Ohne Klick und ohne Suche sind die Listen unten zu
+assert.equal(await page.locator(".thema:visible").count(),0);
 assert.equal(await page.locator("#mein-sd-hub").count(),1);
 assert.equal(await page.locator('.sd-dashboard-launch').getAttribute('href'),'mein-sd-hub/');
 // Kamera-Werkzeuge nur am Handy
-assert.equal(await page.locator('.kachel[href="passfoto/"]').isVisible(),handy);
-assert.equal(await page.locator('.kachel[href="scanner/"]').isVisible(),handy);
-assert.equal(await page.locator('.kachel[href="messen/index.html"]').isVisible(),handy);
+assert.equal(await page.locator('.kachel[href="passfoto/"]').evaluate(el=>!el.hidden),handy);
+assert.equal(await page.locator('.kachel[href="scanner/"]').evaluate(el=>!el.hidden),handy);
+assert.equal(await page.locator('.kachel[href="messen/index.html"]').evaluate(el=>!el.hidden),handy);
 assert.equal(await page.locator('.bk[data-thema="doku"] .bk-zahl').innerText(),handy?"5":"3");
 assert.equal(await page.locator('#thema-deutsch .kachel').count(),5);
 assert.equal(await page.locator('#thema-kids .kachel').count(),0);
@@ -40,7 +42,8 @@ assert.equal(await page.locator("#suche").inputValue(),"");
 assert.equal(await page.locator('#thema-ki').isVisible(),true);
 assert.equal(await page.locator('#thema-deutsch').isVisible(),false);
 await page.keyboard.press("Escape");
-assert.equal(await page.locator('#thema-deutsch').isVisible(),true);
+assert.equal(await page.locator('#thema-ki').isVisible(),false);
+assert.equal(await page.locator('#thema-deutsch').isVisible(),false);
 await page.locator("#suche").fill("nonexistent-very-unlikely-search");
 assert.equal(await page.locator("#nichts").isVisible(),true);
 await page.locator('#bento .bk[data-thema="deutsch"]').evaluate(el=>el.click());
