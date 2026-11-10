@@ -206,6 +206,24 @@ assert.equal(await finalPage.getByRole("button",{name:"Teilnahmebestätigung dru
 await finalPage.close();
 
 
+/* C1: Nicht-Programmierkurs zeigt Lernschritte und passende Übungen ohne Code-Editor. */
+for(const width of [320,390,1300]){
+ const c1=await browser.newPage({viewport:{width,height:820}});
+ c1.on("pageerror",e=>errors.push("C1 "+width+": "+e.message));
+ await c1.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await c1.locator('[data-tab="akademie"]').click();
+ await c1.locator(".course").filter({hasText:"Computer-Start"}).click();
+ await c1.locator(".lesson-btn").first().waitFor();
+ assert.equal(await c1.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await c1.locator(".lesson-btn").nth(i).click();
+  assert.equal(await c1.locator(".ak-practice-step").count(),4,"C1 Schrittzahl "+i);
+  assert.equal(await c1.locator(".code-editor").count(),0,"C1 zeigt unerwartet einen Code-Editor");
+ }
+ const overflow=await c1.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"C1 "+width+"px Überlauf: "+overflow);
+ await c1.close();
+}
 /* P5: alle Lektionen im Browser laden und Praxisprüfungen durchführen. */
 for(const width of [320,390,1300]){
  const p5page=await browser.newPage({viewport:{width,height:820}});
