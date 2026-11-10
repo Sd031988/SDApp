@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P4 Praxisprojekt – Quiz-App</title>
+<style>body{font:1rem/1.6 system-ui,sans-serif;max-width:42rem;margin:auto;padding:1.25rem;color:#182337;background:#f5f7fb}main{background:white;padding:1.5rem;border-radius:1rem}button{font:inherit;display:block;margin:.75rem 0;padding:.7rem 1rem;border:1px solid #526987;border-radius:.5rem;background:white;cursor:pointer}button:focus-visible{outline:3px solid #2164c5}button:disabled{opacity:.6}#meldung{min-height:2rem}</style></head>
+<body><main><h1>Meine Quiz-App</h1><p>Ein Praxisprojekt für JavaScript Aufbau. Die Fragen kommen aus einer lokalen JSON-Datei.</p>
+<button id="start" type="button">Quiz starten</button><section aria-live="polite" id="quiz"><p id="meldung">Bereit für die erste Frage.</p></section>
+</main><script>
+"use strict";
+const start=document.querySelector("#start");
+const quiz=document.querySelector("#quiz");
+let fragen=[],index=0,punkte=0;
+function status(text){const p=document.createElement("p");p.id="meldung";p.textContent=text;quiz.replaceChildren(p)}
+function zeigeFrage(){
+ quiz.replaceChildren();
+ if(index>=fragen.length){status("Geschafft: "+punkte+" von "+fragen.length+" Fragen richtig.");start.disabled=false;start.textContent="Erneut starten";return}
+ const frage=fragen[index];
+ const h=document.createElement("h2");h.textContent=(index+1)+". "+frage.frage;quiz.appendChild(h);
+ frage.antworten.forEach((antwort,i)=>{const knopf=document.createElement("button");knopf.type="button";knopf.textContent=antwort;knopf.addEventListener("click",()=>{if(i===frage.richtig)punkte++;index++;zeigeFrage()});quiz.appendChild(knopf)});
+}
+start.addEventListener("click",async()=>{
+ start.disabled=true;status("Fragen werden geladen.");
+ try{
+  const antwort=await fetch("./daten/fragen.json");
+  if(!antwort.ok)throw new Error("HTTP "+antwort.status);
+  const daten=await antwort.json();
+  if(!Array.isArray(daten)||!daten.length||!daten.every(f=>typeof f.frage==="string"&&Array.isArray(f.antworten)&&Number.isInteger(f.richtig)&&f.richtig>=0&&f.richtig<f.antworten.length))throw new Error("Ungültige Fragenliste");
+  fragen=daten;index=0;punkte=0;zeigeFrage();
+ }catch(fehler){console.error("Quiz laden:",fehler);status("Das Quiz konnte nicht geladen werden. Prüfe die lokale JSON-Datei und lade die Seite erneut.");start.disabled=false}
+});
+</script></body></html>
