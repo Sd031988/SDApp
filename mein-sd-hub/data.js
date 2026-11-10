@@ -56,16 +56,16 @@ const codeChecks={
  "three-li":({doc})=>doc.querySelectorAll("ul li").length>=3,
  a:({doc})=>!!doc.querySelector("a"),
  href:({doc})=>!!doc.querySelector('a[href^="https://"]'),
- background:({css})=>/body\\s*\\{[^}]*background(?:-color)?\\s*:/i.test(css),
- color:({css})=>/h1\\s*\\{[^}]*color\\s*:/i.test(css),
+ background:({css})=>/body\s*\{[^}]*background(?:-color)?\s*:/i.test(css),
+ color:({css})=>/h1\s*\{[^}]*color\s*:/i.test(css),
  section:({doc})=>!!doc.querySelector("section"),
- padding:({css})=>/\\.karte\\s*\\{[^}]*padding\\s*:/i.test(css),
- radius:({css})=>/\\.karte\\s*\\{[^}]*border-radius\\s*:/i.test(css),
+ padding:({css})=>/\.karte\s*\{[^}]*padding\s*:/i.test(css),
+ radius:({css})=>/\.karte\s*\{[^}]*border-radius\s*:/i.test(css),
  button:({doc})=>!!doc.querySelector("button"),
- listener:({js})=>/addEventListener\\s*\\(\\s*['"]click['"]/.test(js),
- textcontent:({js})=>/\\.textContent\\s*=/.test(js),
+ listener:({js})=>/addEventListener\s*\(\s*['"]click['"]/.test(js),
+ textcontent:({js})=>/\.textContent\s*=/.test(js),
  input:({doc})=>!!doc.querySelector("input"),
- value:({js})=>/\\.value\\b/.test(js)
+ value:({js})=>/\.value\b/.test(js)
 };
 function pruefeCode(test,code,doc){return Boolean(codeChecks[test]&&codeChecks[test]({...code,doc}))}
 const paths=[
