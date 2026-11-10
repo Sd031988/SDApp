@@ -135,3 +135,13 @@ test('writing guides offer level-specific scaffolding without complete model ans
  assert.match(source,/esc\(writingGuides\[level\]\.review\)/);
  assert.match(source,/keine automatische Bewertung/);
 });
+
+test('writing drafts offer explicit UTF-8 TXT backup without automatic grading',()=>{
+ assert.match(source,/id="sdun-writing-export"/);
+ assert.match(source,/new Blob\(\[text\],\{type:'text\/plain;charset=utf-8'\}\)/);
+ assert.match(source,/link\.download='sd-hub-schreibentwurf-'\+level\+'\.txt'/);
+ assert.match(source,/URL\.revokeObjectURL\(url\)/);
+ assert.match(source,/Bitte schreibe zuerst einen Text/);
+ assert.match(source,/Datei-Download gestartet\. Bitte prüfe/);
+ assert.match(source,/Datei konnte nicht erstellt werden/);
+});
