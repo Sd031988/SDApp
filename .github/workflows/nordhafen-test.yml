@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 jobs:
   nordhafen-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
     timeout-minutes: 5
     permissions:
       contents: read
@@ -30,7 +30,7 @@ jobs:
         run: node --test studio/game-studio/engine/nordhafen.test.cjs studio/game-studio/engine/sd-taktik-bewegung.test.cjs
 
   nordhafen-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
     timeout-minutes: 8
     permissions:
       contents: read

@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 jobs:
   playwright:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
