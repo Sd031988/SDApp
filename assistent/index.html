@@ -23,6 +23,7 @@
         }
 
         * { box-sizing: border-box; }
+        #hubSetupOverlay[hidden] { display: none !important; }
 
         html, body {
             height: 100%;
@@ -1332,9 +1333,39 @@
         <button type="button" class="icon-btn" id="chatsBtn" data-i18n-title="chats_title" title="Meine Chats">💬</button>
         <button type="button" class="icon-btn" id="neuChatBtn" data-i18n-title="neu_chat_title" title="Neuer Chat">＋</button>
         <a class="icon-btn agent-link" href="../agent/index.html" data-i18n-title="agent_title" title="KI-Agent: erledigt Aufgaben mit Werkzeugen"><span aria-hidden="true">🛠️</span><span class="agent-text" data-i18n="agent_link">Agent</span></a>
+        <button type="button" class="icon-btn" id="hubSetupBtn" aria-label="KI einrichten" title="KI einrichten">🧭</button>
         <button type="button" class="icon-btn" id="settingsBtn" aria-expanded="false" aria-controls="settings"
             data-i18n-title="settings_title" title="Einstellungen">⚙️</button>
     </header>
+
+    <div id="hubSetupOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="hubSetupTitle"
+        style="position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:16px;">
+        <section style="width:min(600px,100%);max-height:90vh;overflow:auto;background:#fffdf8;border:1px solid #d8e0dc;border-radius:18px;padding:22px;box-shadow:0 18px 60px rgba(15,23,42,.28);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <h2 id="hubSetupTitle" style="margin:0;font-size:1.3rem;">Deine KI im SD Hub einrichten</h2>
+                <button type="button" id="hubSetupClose" class="icon-btn" aria-label="Schließen">×</button>
+            </div>
+            <p id="hubSetupIntro" style="line-height:1.55;margin:10px 0 16px;color:#53625e;"></p>
+            <div id="hubSetupDevice" role="status" aria-live="polite" style="padding:12px;border:1px solid #d8e0dc;border-radius:12px;background:#f5f8f6;line-height:1.55;font-size:.92rem;"></div>
+            <div style="margin-top:16px;">
+                <label for="hubSetupProvider" id="hubSetupProviderLabel" style="display:block;font-weight:700;margin-bottom:6px;"></label>
+                <select id="hubSetupProvider" style="width:100%;padding:11px;border:1px solid #cbd5d1;border-radius:10px;font:inherit;">
+                    <option value="gemini">Gemini</option>
+                    <option value="openai">ChatGPT (OpenAI)</option>
+                    <option value="claude">Claude</option>
+                </select>
+                <p id="hubSetupKeyStatus" style="font-size:.86rem;color:#53625e;line-height:1.5;margin:7px 0 0;"></p>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;">
+                <button type="button" id="hubSetupLocal" class="btn btn-ghost" style="min-height:48px;"></button>
+                <button type="button" id="hubSetupOnline" class="btn btn-primary" style="min-height:48px;"></button>
+            </div>
+            <p id="hubSetupPrivacy" style="font-size:.82rem;color:#65736e;line-height:1.5;margin:12px 0 0;"></p>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                <button type="button" id="hubSetupLater" class="btn btn-ghost"></button>
+            </div>
+        </section>
+    </div>
 
     <nav class="mode-bar" aria-label="KI wählen">
         <div class="mode-switch">
@@ -1350,6 +1381,7 @@
     <section class="settings" id="settings" aria-label="Einstellungen">
         <div class="settings-inner">
             <h2 data-i18n="settings_title">Einstellungen</h2>
+            <button type="button" class="btn btn-ghost" id="hubSetupReopen" style="margin:0 0 12px;">🧭 KI-Einrichtung starten</button>
             <div class="field">
                 <label for="anbieterWahl" data-i18n="lbl_anbieter">Online-KI</label>
                 <select id="anbieterWahl">
@@ -1615,6 +1647,121 @@
             aktualisiereKeyHinweis();
         }
 
+        const HUB_SETUP_STORAGE = 'sdHubKiEinrichtungGesehen';
+        function wizardTexte() {
+            const en = window.SD_LANG === 'en';
+            return en ? {
+                title: 'Set up AI in SD Hub',
+                intro: 'Choose between private AI that runs on this device and an online provider. SD checks what this browser can run and recommends a local model automatically.',
+                checking: 'Checking this device for local AI …',
+                localReady: '✅ Local AI is available in this browser. Recommended: {model} · about {size} GB download. The model is stored in this browser. Prompts stay on this device; if Wikipedia lookup is enabled, the question may be sent to Wikipedia.',
+                localNo: '⚠️ This browser or device cannot run local AI (WebGPU unavailable). Use an online provider below, or try Chrome/Edge on a computer.',
+                provider: 'Choose an online provider',
+                keyReady: '✅ A key is saved for {name}. You can use it now.',
+                keyMissing: '🔑 No key is saved for {name} yet. You can add it securely in Settings; the key stays in this browser.',
+                localBtn: '🔒 Use private SD Lotse',
+                localBtnReady: '▶️ Continue with SD Lotse',
+                onlineBtn: '☁️ Use {name}',
+                keyBtn: '🔑 Set up {name} key',
+                privacy: 'Local mode needs no key. Prompts stay on this device; if Wikipedia lookup is enabled, a knowledge question may be sent to Wikipedia. Online providers receive your prompts. You can change this later.',
+                later: 'Later',
+                reopen: '🧭 Open AI setup',
+                close: 'Close',
+                setupSeen: 'SD Hub AI setup'
+            } : {
+                title: 'Deine KI im SD Hub einrichten',
+                intro: 'Wähle zwischen privater KI auf diesem Gerät und einem Online-Anbieter. SD prüft, was dein Browser ausführen kann, und empfiehlt automatisch ein passendes lokales Modell.',
+                checking: 'Prüfe, ob dieses Gerät lokale KI unterstützt …',
+                localReady: '✅ Lokale KI ist in diesem Browser verfügbar. Empfehlung: {model} · etwa {size} GB Download. Das Modell wird in diesem Browser gespeichert. Deine Eingaben bleiben auf dem Gerät; wenn Wikipedia-Nachschlagen aktiv ist, kann die Frage an Wikipedia gehen.',
+                localNo: '⚠️ Dieser Browser oder dieses Gerät kann lokale KI nicht ausführen (WebGPU fehlt). Nutze unten einen Online-Anbieter oder probiere Chrome/Edge auf einem Computer.',
+                provider: 'Online-Anbieter auswählen',
+                keyReady: '✅ Für {name} ist ein Schlüssel gespeichert. Du kannst ihn jetzt verwenden.',
+                keyMissing: '🔑 Für {name} ist noch kein Schlüssel gespeichert. Du kannst ihn sicher in den Einstellungen eintragen; der Schlüssel bleibt in diesem Browser.',
+                localBtn: '🔒 Private SD-Lotse-KI nutzen',
+                localBtnReady: '▶️ Mit SD Lotse fortfahren',
+                onlineBtn: '☁️ {name} nutzen',
+                keyBtn: '🔑 {name}-Schlüssel einrichten',
+                privacy: 'Der lokale Modus braucht keinen Schlüssel. Deine Eingaben bleiben auf dem Gerät; bei aktiviertem Wikipedia-Nachschlagen kann eine Wissensfrage an Wikipedia gehen. Online-Anbieter erhalten deine Eingaben. Du kannst die Auswahl später ändern.',
+                later: 'Später',
+                reopen: '🧭 KI-Einrichtung öffnen',
+                close: 'Schließen',
+                setupSeen: 'SD Hub KI-Einrichtung'
+            };
+        }
+        function hubSetupKeyFor(provider) {
+            const info = ANBIETER[provider] || ANBIETER.gemini;
+            return !!(speicherLesen(sessionStorage, info.keyStorage) || speicherLesen(localStorage, info.keyStorage));
+        }
+        function renderHubSetupKeyStatus() {
+            const txt = wizardTexte();
+            const provider = $('hubSetupProvider').value;
+            const ready = hubSetupKeyFor(provider);
+            $('hubSetupKeyStatus').textContent = ready
+                ? txt.keyReady.replace('{name}', ANBIETER[provider].name)
+                : txt.keyMissing.replace('{name}', ANBIETER[provider].name);
+            $('hubSetupOnline').textContent = ready
+                ? txt.onlineBtn.replace('{name}', ANBIETER[provider].name)
+                : txt.keyBtn.replace('{name}', ANBIETER[provider].name);
+        }
+        async function renderHubSetup() {
+            const txt = wizardTexte();
+            $('hubSetupTitle').textContent = txt.title;
+            $('hubSetupIntro').textContent = txt.intro;
+            $('hubSetupProviderLabel').textContent = txt.provider;
+            $('hubSetupPrivacy').textContent = txt.privacy;
+            $('hubSetupLater').textContent = txt.later;
+            $('hubSetupBtn').title = txt.reopen;
+            $('hubSetupBtn').setAttribute('aria-label', txt.reopen);
+            $('hubSetupReopen').textContent = txt.reopen;
+            $('hubSetupClose').setAttribute('aria-label', txt.close);
+            const provider = anbieter();
+            $('hubSetupProvider').value = ANBIETER[provider] ? provider : 'gemini';
+            renderHubSetupKeyStatus();
+            $('hubSetupDevice').textContent = txt.checking;
+            const localBtn = $('hubSetupLocal');
+            const gpu = await pruefeWebGpu();
+            const key = LM.empfehlung(gpu.ok ? gpu : null);
+            const model = LM.KATALOG[key];
+            const size = (LM.speicherBedarf(key, gpu.ok ? gpu : null) / 1000).toLocaleString(window.SD_LANG === 'en' ? 'en' : 'de', { maximumFractionDigits: 1 });
+            $('hubSetupDevice').textContent = gpu.ok
+                ? txt.localReady.replace('{model}', model.name).replace('{size}', size)
+                : txt.localNo;
+            localBtn.disabled = !gpu.ok;
+            localBtn.textContent = (llama.engine && llama.modellId === llamaModellId()) ? txt.localBtnReady : txt.localBtn;
+            renderHubSetupKeyStatus();
+        }
+        function openHubSetup(firstRun) {
+            $('hubSetupOverlay').hidden = false;
+            renderHubSetup();
+        }
+        function closeHubSetup() {
+            $('hubSetupOverlay').hidden = true;
+            try { localStorage.setItem(HUB_SETUP_STORAGE, '1'); } catch (e) {}
+        }
+        function hubSetupUseLocal() {
+            optionen.llamaModell = 'auto';
+            closeHubSetup();
+            setzeModus('llama');
+        }
+        function hubSetupUseOnline() {
+            const provider = $('hubSetupProvider').value;
+            optionen.anbieter = ANBIETER[provider] ? provider : 'gemini';
+            speichereOptionen();
+            aktualisiereAnbieter();
+            setzeModus('gemini');
+            closeHubSetup();
+            if (!hubSetupKeyFor(provider)) {
+                $('settings').classList.add('open');
+                $('settingsBtn').setAttribute('aria-expanded', 'true');
+                setTimeout(() => $('apiKey').focus(), 150);
+            } else {
+                $('input').focus();
+            }
+        }
+        async function oeffneHubSetup() {
+            await renderHubSetup();
+            $('hubSetupOverlay').hidden = false;
+        }
         function aktualisiereKeyHinweis() {
             $('noKeyCallout').hidden = !!aktuellerKey() || optionen.modus === 'llama';
         }
@@ -3735,6 +3882,18 @@
             const offen = $('settings').classList.toggle('open');
             $('settingsBtn').setAttribute('aria-expanded', offen ? 'true' : 'false');
         };
+        $('hubSetupBtn').onclick = oeffneHubSetup;
+        $('hubSetupReopen').onclick = oeffneHubSetup;
+        $('hubSetupClose').onclick = closeHubSetup;
+        $('hubSetupLater').onclick = closeHubSetup;
+        $('hubSetupProvider').onchange = () => {
+            optionen.anbieter = $('hubSetupProvider').value;
+            speichereOptionen();
+            aktualisiereAnbieter();
+            renderHubSetupKeyStatus();
+        };
+        $('hubSetupLocal').onclick = hubSetupUseLocal;
+        $('hubSetupOnline').onclick = hubSetupUseOnline;
         $('saveKeyBtn').onclick = speichereKey;
         $('actCv').onclick = inLebenslaufUebernehmen;
 
@@ -3876,6 +4035,7 @@
             aktualisiereAnbieter();
             aktualisiereSendenKnopf();
             if (optionen.modus === 'llama') aktualisiereLlamaKarte();
+            if (!$('hubSetupOverlay').hidden) renderHubSetup();
         });
 
         $('chatsBtn').onclick = () => chats.oeffne();
@@ -3898,6 +4058,9 @@
         pruefeLotseAbsturz();
         setzeModus(optionen.modus);
         aktualisiereSendenKnopf();
+        try {
+            if (!localStorage.getItem(HUB_SETUP_STORAGE)) setTimeout(() => openHubSetup(true), 250);
+        } catch (e) { /* Einrichtung bleibt über die Schaltfläche erreichbar */ }
     </script>
 </body>
 
