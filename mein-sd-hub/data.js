@@ -27,9 +27,27 @@ const goals=[
 {id:"kreativ",emoji:"💻",title:"Etwas entwickeln",subtitle:"Webseiten, Apps und Designs",query:"code webseite design programmieren",itemIds:["studio","design"]},
 {id:"ki",emoji:"✨",title:"KI ausprobieren",subtitle:"Fragen, Ideen und Texte",query:"ki assistent chat",itemIds:["ki","studio"]}
 ];
-const academy=[{"id":"german","name":"Deutsch im Alltag","icon":"🗣️","bereich":"Deutsch","stufe":"1 Einsteiger","summary":"Praktische Sätze für tägliche Situationen.","dauer":24,"voraussetzungen":[],"anzahl":4},{"id":"digital","name":"Computer & Internet","icon":"🖥️","bereich":"Computer & Internet","stufe":"1 Einsteiger","summary":"Digitale Grundlagen sicher anwenden.","dauer":23,"voraussetzungen":[],"anzahl":4},{"id":"career","name":"Bewerbung & Beruf","icon":"💼","bereich":"Arbeit & Beruf","stufe":"2 Grundlagen","summary":"Schrittweise auf Bewerbungen vorbereiten.","dauer":26,"voraussetzungen":[],"anzahl":4},{"id":"code","name":"Programmieren anfangen","icon":"💻","bereich":"Programmieren","stufe":"1 Einsteiger","summary":"Zwölf Schritte bis zu deiner eigenen Webseite.","dauer":240,"voraussetzungen":[],"anzahl":12},{"id":"webdesign","name":"Webseiten gestalten","icon":"🎨","bereich":"Programmieren","stufe":"2 Grundlagen","summary":"CSS, Layout, Formulare und Barrierefreiheit mit eigenem Vereinsprojekt.","dauer":200,"voraussetzungen":["Programmieren anfangen"],"anzahl":8}];
-const academyLessonIds={"german":["g-1","g-2","g-3","g-4"],"digital":["d-1","d-2","d-3","d-4"],"career":["c-1","c-2","c-3","c-4"],"code":["p-1","p-2","p-3","p-4","p-5","p-6","p-7","p-8","p-9","p-10","p-11","p-12"],"webdesign":["p2-1","p2-2","p2-3","p2-4","p2-5","p2-6","p2-7","p2-8"]};
+const academy=[{"id":"german","name":"Deutsch im Alltag","icon":"🗣️","bereich":"Deutsch","stufe":"1 Einsteiger","summary":"Praktische Sätze für tägliche Situationen.","dauer":24,"voraussetzungen":[],"anzahl":4},{"id":"digital","name":"Computer & Internet","icon":"🖥️","bereich":"Computer & Internet","stufe":"1 Einsteiger","summary":"Digitale Grundlagen sicher anwenden.","dauer":23,"voraussetzungen":[],"anzahl":4},{"id":"career","name":"Bewerbung & Beruf","icon":"💼","bereich":"Arbeit & Beruf","stufe":"2 Grundlagen","summary":"Schrittweise auf Bewerbungen vorbereiten.","dauer":26,"voraussetzungen":[],"anzahl":4},{"id":"code","name":"Programmieren anfangen","icon":"💻","bereich":"Programmieren","stufe":"1 Einsteiger","summary":"Zwölf Schritte bis zu deiner eigenen Webseite.","dauer":240,"voraussetzungen":[],"anzahl":12},{"id":"webdesign","name":"Webseiten gestalten","icon":"🎨","bereich":"Programmieren","stufe":"2 Grundlagen","summary":"CSS, Layout, Formulare und Barrierefreiheit mit eigenem Vereinsprojekt.","dauer":200,"voraussetzungen":["Programmieren anfangen"],"anzahl":8},{"id":"javascript","name":"JavaScript Grundlagen","icon":"⚡","bereich":"Programmieren","stufe":"2 Grundlagen","summary":"Datentypen, Listen, Funktionen, DOM und eine eigene To-do-Liste.","dauer":225,"voraussetzungen":["Programmieren anfangen"],"anzahl":9}];
+const academyLessonIds={"german":["g-1","g-2","g-3","g-4"],"digital":["d-1","d-2","d-3","d-4"],"career":["c-1","c-2","c-3","c-4"],"code":["p-1","p-2","p-3","p-4","p-5","p-6","p-7","p-8","p-9","p-10","p-11","p-12"],"webdesign":["p2-1","p2-2","p2-3","p2-4","p2-5","p2-6","p2-7","p2-8"],"javascript":["p3-1","p3-2","p3-3","p3-4","p3-5","p3-6","p3-7","p3-8","p3-9"]};
 const codeChecks={
+ "p3-1-html":({doc})=>!!doc.querySelector("h1"),
+ "p3-1-js":({js})=>/\bconst\b/.test(js)&&/\btrue\b/.test(js),
+ "p3-2-html":({doc})=>!!doc.querySelector("ul#liste"),
+ "p3-2-js":({js})=>/\.push\s*\(/.test(js)&&/\.length\b/.test(js),
+ "p3-3-html":({doc})=>!!doc.querySelector("h1"),
+ "p3-3-js":({js})=>/for\s*\(/.test(js)&&/\bof\b/.test(js),
+ "p3-4-html":({doc})=>!!doc.querySelector("h1"),
+ "p3-4-js":({js})=>/function\s+\w+\s*\(/.test(js)&&/\breturn\b/.test(js),
+ "p3-5-html":({doc})=>!!doc.querySelector("h1"),
+ "p3-5-js":({js})=>/\{\s*name\s*:/.test(js)&&/\.name\b/.test(js),
+ "p3-6-html":({doc})=>!!doc.querySelector("#ausgabe"),
+ "p3-6-js":({js})=>/querySelector\s*\(/.test(js)&&/\.textContent\s*=/.test(js),
+ "p3-7-html":({doc})=>!!doc.querySelector("button#knopf"),
+ "p3-7-js":({js})=>/addEventListener\s*\(\s*['"]click['"]/.test(js),
+ "p3-8-html":({doc})=>!!doc.querySelector("#ausgabe"),
+ "p3-8-js":({js})=>/console\.log\s*\(/.test(js)&&/Boolean\s*\(/.test(js),
+ "p3-9-html":({doc})=>!!doc.querySelector("input#aufgabe"),
+ "p3-9-js":({js})=>/createElement\s*\(\s*['"]li['"]/.test(js)&&/\.textContent\s*=/.test(js),
  "p2-class-html":({doc})=>doc.querySelectorAll(".hinweis").length>=2,
  "p2-class-css":({doc,css})=>/\.hinweis\s*\{[^}]*color\s*:/i.test(css),
  "p2-padding-html":({doc})=>!!doc.querySelector(".karte"),
