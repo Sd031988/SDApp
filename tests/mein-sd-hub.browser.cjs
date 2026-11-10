@@ -36,10 +36,38 @@ await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await page.locator('[data-tab="akademie"]').click();
 assert.equal(await page.locator("#courses .course").count(),4);
+const lessonChecks=await page.evaluate(()=>{
+ const D=window.SDPersonalData;
+ return D.academy.find(c=>c.id==="code").lessons.map(lesson=>{
+  const run=code=>{const doc=new DOMParser().parseFromString(code.html,"text/html");return lesson.aufgabe.pruefungen.map(p=>D.pruefeCode(p.test,code,doc))};
+  return {id:lesson.id,solution:run(lesson.aufgabe.loesung),start:run(lesson.beispiel)};
+ });
+});
+for(const lesson of lessonChecks){
+ assert.ok(lesson.solution.every(Boolean),"Musterlösung nicht bestanden: "+lesson.id);
+ assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
+}
+
 await page.locator(".answers button").first().click();
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
+await page.locator('[data-tab="akademie"]').click();
+await page.locator(".course").last().click();
+assert.equal(await page.locator(".lesson-btn").count(),12);
+assert.equal(await page.locator(".code-textarea").count(),1);
+assert.equal(await page.locator(".code-frame[sandbox='allow-scripts']").count(),1);
+await page.locator(".code-textarea").fill("<h1>Meine erste Seite</h1><p>Ich lerne selbst.</p>");
+await page.waitForTimeout(500);
+assert.match(await page.locator(".code-frame").getAttribute("srcdoc"),/Meine erste Seite/);
+await page.locator(".code-pruefen").click();
+const expectedChecks=await page.evaluate(()=>window.SDPersonalData.academy.find(c=>c.id==="code").lessons[0].aufgabe.pruefungen.length);
+assert.equal(await page.locator(".code-checks .code-ok").count(),expectedChecks+1);
+await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
+await page.locator(".code-textarea").fill("body { background-color: #eef; }");
+await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
+assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
+await page.locator(".course").first().click();
 await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -73,6 +101,27 @@ assert.equal(await mobile.locator("#goalGrid .goal").count(),5);
 const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
 assert.ok(overflow<=3,"Unexpected mobile horizontal overflow: "+overflow);
 await mobile.close();
+for(const width of [320,390,1300]){
+ const checkPage=await browser.newPage({viewport:{width,height:840}});
+ await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await checkPage.locator('[data-tab="akademie"]').click();
+ await checkPage.locator(".course").last().click();
+ assert.equal(await checkPage.locator(".lesson-btn").count(),12);
+ const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"Horizontales Scrollen bei "+width+" px: "+overflow);
+ await checkPage.locator(".code-textarea").fill("<h1>Meine eigene Webseite</h1><p>Ich lerne HTML.</p>");
+ await checkPage.waitForTimeout(450);
+ assert.match(await checkPage.locator(".code-frame").getAttribute("srcdoc"),/Meine eigene Webseite/);
+ await checkPage.locator(".code-pruefen").click();
+ assert.equal(await checkPage.locator(".code-checks .code-error").count(),0);
+ for(const quiz of await checkPage.locator(".code-quiz").all())await quiz.locator(".answers button").first().click();
+ await checkPage.locator(".code-lesson button").filter({hasText:"Im Code-Studio öffnen"}).click();
+ await checkPage.waitForURL(url=>url.pathname==="/studio/index.html"&&url.searchParams.has("projekt"),{timeout:15000});
+ const name=new URL(checkPage.url()).searchParams.get("projekt");
+ assert.ok(name.startsWith("Akademie – "));
+ await checkPage.close();
+}
+
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}

@@ -130,11 +130,85 @@ clearChildren("courses");D.academy.forEach(course=>{const complete=course.lesson
 renderLessonList();
 }
 function renderLessonList(){const c=findCourse(courseId);if(!c)return;$("courseHeading").textContent=c.icon+" "+c.name;$("courseSummary").textContent=c.summary;clearChildren("lessonList");
-c.lessons.forEach(l=>{const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));const left=node("span","",undefined,btn);node("b","",l.title,left);node("small","",l.minutes+" Minuten · Übungsfrage",left);node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()})});renderLesson()}
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
+c.lessons.forEach(l=>{const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));const left=node("span","",undefined,btn);node("b","",l.title,left);node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()})});renderLesson()}
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
 l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
 if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=node("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
 })});
+}
+
+const academyDrafts=new Map();
+function previewHtml(code){
+ const style=code.css.replace(new RegExp("<"+"/style","gi"),"<" + "/style");
+ const script=code.js.replace(new RegExp("<"+"/script","gi"),"<" + "/script");
+ return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+style+'</style></head><body>'+code.html+'<script>'+script+'<'+'/script></body></html>';
+}
+function academyToStudio(baseName,code){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open("sdCodeStudio",1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("projekte"))db.createObjectStore("projekte",{keyPath:"name"})};
+  req.onerror=()=>reject(req.error);
+  req.onsuccess=()=>{
+   const db=req.result;
+   let number=1;
+   const choose=()=>{
+    const name=baseName+(number===1?"":" ("+number+")");
+    const tx=db.transaction("projekte","readwrite"),store=tx.objectStore("projekte");
+    const check=store.get(name);
+    check.onsuccess=()=>{
+     if(check.result){number++;return}
+     const html=['<!doctype html>','<html lang="de">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <link rel="stylesheet" href="style.css">','</head>','<body>',code.html,'  <script src="script.js"><'+'/script>','</body>','</html>'].join("\n");
+     store.add({name,dateien:{"index.html":html,"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
+    };
+    tx.oncomplete=()=>{if(check.result){choose()}else{db.close();resolve(name)}};
+    tx.onerror=()=>{db.close();reject(tx.error)};
+   };
+   choose();
+  };
+ });
+}
+function renderCodeLesson(l){
+ const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
+ node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
+ node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
+ l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);node("p","",step.text,sec);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);node("p","",step.erklaerung,sec)}});
+ node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>node("li","",f.titel+": "+f.text,errors));
+ node("h5","","Jetzt selbst schreiben",wrap);
+ const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
+ const grid=node("div","code-workspace",undefined,wrap),editor=node("div","code-editor",undefined,grid);
+ const tabs=node("div","code-tabs",undefined,editor),label=node("label","",undefined,editor),textarea=node("textarea","code-textarea",undefined,editor);
+ textarea.spellcheck=false;textarea.autocapitalize="off";textarea.autocomplete="off";textarea.autocorrect="off";
+ const keys=[["html","HTML"],["css","CSS"],["js","JavaScript"]];
+ let active="html",timer;
+ function select(key){active=key;label.textContent=key.toUpperCase()+" bearbeiten";textarea.value=code[key];keys.forEach(([k])=>buttons[k].setAttribute("aria-pressed",String(k===key)))}
+ const buttons={};
+ keys.forEach(([key,title])=>{const b=node("button","",title,tabs);b.type="button";buttons[key]=b;b.onclick=()=>select(key)});
+ const view=node("div","code-preview",undefined,grid);node("strong","","Live-Vorschau",view);
+ const frame=node("iframe","code-frame",undefined,view);frame.setAttribute("sandbox","allow-scripts");frame.title="Vorschau deiner Webseite";
+ const update=()=>{frame.srcdoc=previewHtml(code)};
+ textarea.addEventListener("input",()=>{code[active]=textarea.value;clearTimeout(timer);timer=setTimeout(update,400)});
+ select(active);update();
+ const reset=node("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm("Deinen Code durch den Startcode ersetzen?"))return;Object.assign(code,l.beispiel);select(active);update()};
+ node("h5","","Deine Aufgabe",wrap);node("p","",l.aufgabe.text,wrap);
+ const checks=node("div","code-checks",undefined,wrap),check=node("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
+ const hint=node("p","hint",l.aufgabe.tipp,wrap);hint.hidden=true;
+ const solution=node("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;
+ let failures=0,passed=false;
+ check.onclick=()=>{checks.replaceChildren();const doc=new DOMParser().parseFromString(code.html,"text/html");
+  const results=l.aufgabe.pruefungen.map(p=>{const ok=D.pruefeCode(p.test,code,doc);node("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+p.beschreibung,checks);return ok});
+  passed=results.every(Boolean);if(!passed)failures++;hint.hidden=failures<2;solution.hidden=failures<3;
+  if(passed)node("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks);
+ };
+ solution.onclick=()=>{Object.assign(code,l.aufgabe.loesung);select(active);update();checks.replaceChildren();passed=false};
+ node("h5","","Wissen prüfen",wrap);
+ let correct=0;const quizBoxes=[];
+ l.quiz.forEach((q,qi)=>{const box=node("section","code-quiz",undefined,wrap);quizBoxes.push(box);node("h5","",(qi+1)+". "+q.frage,box);const answers=node("div","answers",undefined,box),feedback=node("p","feedback",undefined,box);feedback.hidden=true;
+ q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
+ });
+ node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>node("li","",x,ul));
+ const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
+ const status=node("p","message","",wrap);
+ studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
 }
 // Deutschland Pfade
 let pathId="start";
