@@ -36,7 +36,7 @@ test("Alle zwölf Lektionen enthalten Lösungen, Fehlerhilfen und drei Quizfrage
 test("Kein Satz in Schritten, Fehlern, Quiz-Erklärungen und Merksätzen erscheint in mehr als zwei Lektionen aller Kurse",()=>{
  const lessons=data.academy.flatMap(c=>require(path.join(root,"mein-sd-hub/kurse",c.id+".js")));
  const occurrences=new Map();
- const sentences=text=>String(text||"").match(/[^.!?]+(?:[.!?]+|$)/g)||[];
+ const sentences=text=>String(text||"").replace(/`[^`]*`/g,code=>code.replace(/[.!?]/g,"∎")).match(/[^.!?]+(?:[.!?]+|$)/g)||[];
  for(const lesson of lessons){
   const own=new Set();
   const sources=[
