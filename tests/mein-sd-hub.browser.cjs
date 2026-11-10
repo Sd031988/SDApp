@@ -139,8 +139,8 @@ for(const width of [320,390,1300]){
   ["Deutsch im Alltag",0,"luecke"],
   ["Deutsch im Alltag",0,"hoeren"],
   ["Deutsch im Alltag",1,"zuordnen"],
-  ["Computer & Internet",1,"auswahl"],
-  ["Computer & Internet",2,"reihenfolge"],
+  ["Computer-Start",1,"auswahl"],
+  ["Computer-Start",2,"reihenfolge"],
   ["Bewerbung & Beruf",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
