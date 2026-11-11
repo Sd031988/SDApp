@@ -272,6 +272,14 @@ for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag
    assert.equal(await germanPage.locator(".ak-lesson-quiz .answers button").count(),3,courseName+" Quiz "+i);
    assert.equal(await germanPage.locator(".ak-uebung").count(),4,courseName+" Übungen "+i);
    const lessonData=await germanPage.evaluate(([name,n])=>window.SDPersonalData.academy.find(c=>c.name===name).lessons[n],[courseName,i]);
+   if(lessonData.standHinweis){
+    const note=germanPage.locator(".ak-legal-note");
+    assert.equal(await note.isVisible(),true,lessonData.id+" sichtbarer Rechtsstand");
+    assert.ok((await note.innerText()).includes(lessonData.standHinweis));
+    assert.equal(await note.locator("a").getAttribute("href"),lessonData.standQuelle.url);
+    assert.equal(await note.locator("a").getAttribute("rel"),"noopener noreferrer");
+   }else assert.equal(await germanPage.locator(".ak-legal-note").count(),0,lessonData.id);
+
    if(lessonData.quellen){
     assert.deepEqual(await germanPage.locator(".ak-sources a").evaluateAll(links=>links.map(a=>a.href)),lessonData.quellen.map(s=>s.url));
     for(const source of lessonData.quellen)assert.ok((await germanPage.locator(".ak-sources").innerText()).includes(source.stand));
@@ -334,6 +342,13 @@ for(const width of [320,390,1300]){
   assert.equal(await c4.locator(".ak-practice-step").count(),4,"C4 Schritte "+i);
   assert.equal(await c4.locator(".ak-lesson-quiz .answers button").count(),3,"C4 Quiz "+i);
   assert.equal(await c4.locator(".code-editor").count(),0,"C4 ohne Code-Editor");
+  if(i===2){
+   const lesson=await c4.locator(".ak-practice-steps").innerText();
+   assert.match(lesson,/übliche Werte nach DIN 5008 \(Form B\)/);
+   assert.match(lesson,/105 mm und 210 mm/);
+   assert.equal(await c4.locator('.ak-sources a[href="https://desy.zoll-portal.de/inhalte/pdf-dokumente/"]').count(),1);
+  }
+
  }
  const overflow=await c4.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"C4 "+width+"px Überlauf: "+overflow);
@@ -403,8 +418,4 @@ for(const width of [320,390,1300]){
 assert.deepEqual(errors,[],"Browser page errors: "+errors.join(", "));
 console.log("PASS: Desktop + mobile interactive journey, data persistence, privacy and homepage link");
 }finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
- const {execFileSync}=require("node:child_process");
- for(const testFile of ["tests/hub-homepage.browser.cjs","tests/hub/dashboard.browser.cjs"]){
-  execFileSync(process.execPath,[path.join(root,testFile)],{cwd:root,stdio:"inherit",timeout:180000});
- }
 })().catch(err=>{console.error(err);process.exitCode=1});

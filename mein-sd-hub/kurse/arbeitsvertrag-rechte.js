@@ -4,7 +4,7 @@
     "id": "b4-1",
     "title": "Wesentliche Arbeitsbedingungen herauslesen",
     "minutes": 40,
-    "explanation": "Du findest Tätigkeit, Arbeitsort, Beginn, Vergütung und Arbeitszeit und hältst unklare Punkte fest.",
+    "explanation": "Entgelt ist die Bezahlung für deine Arbeit. Du suchst im Vertrag nach Arbeit, Ort, Beginn, Bezahlung und Arbeitszeit.",
     "tip": "Markiere in einem fiktiven Vertrag nur tatsächlich genannte Bedingungen und stelle zu einer Lücke eine konkrete Rückfrage.",
     "schrittePraxis": [
       {
@@ -13,15 +13,15 @@
       },
       {
         "titel": "Vertrag und Nachweis unterscheiden",
-        "text": "Arbeitsvertrag und Nachweis wesentlicher Bedingungen erfüllen nicht in jedem Fall dieselbe Funktion. § 2 NachwG nennt Angaben, die der Arbeitgeber nachweisen muss, etwa Beginn, Ort, Tätigkeit, Entgelt und Arbeitszeit. Form und Fristen haben Einzelregeln und Ausnahmen. Daraus folgt weder „nur Papier ist immer gültig“ noch „jede kurze Nachricht enthält schon alle nötigen Angaben“."
+        "text": "Der Arbeitsvertrag regelt die vereinbarte Arbeit. Ein Nachweis hält wichtige Bedingungen fest. § 2 NachwG nennt unter anderem Beginn, Ort, Tätigkeit, Entgelt und Arbeitszeit. Für Form und Fristen gelten einzelne Regeln und Ausnahmen. Eine kurze Nachricht enthält nicht automatisch alle nötigen Angaben. Umgekehrt ist nicht für jede Situation nur Papier zulässig."
       },
       {
         "titel": "Vertragsbegriffe gezielt lesen",
-        "text": "Die Vergütung – die Vergütungen bezeichnet die Gegenleistung für die Arbeit. Der Arbeitsort – die Arbeitsorte und die Bedingung – die Bedingungen grenzen das Arbeitsverhältnis ein. Lies außerdem Hinweise auf Tarifvertrag oder Betriebsvereinbarung. Ein Verweis kann weitere Regeln betreffen, deren Inhalt du vor einer Entscheidung verstehen solltest."
+        "text": "Prüfe, welche Arbeit du machen sollst und wo du eingesetzt wirst. Suche außerdem Beginn, Arbeitszeit und Bezahlung. Ein Tarifvertrag kann weitere Bedingungen regeln. Verweist dein Vertrag darauf, frage nach dem passenden Text. Markiere unklare Stellen. Notiere dazu eine konkrete Frage, statt die Bedeutung zu raten."
       },
       {
         "titel": "Mit offenen Fragen zur Klärung gehen",
-        "text": "Notiere den Wortlaut, die betroffene Seite und die Frage dazu. Unterschreibe keine erfundene Ergänzung im Namen des Betriebs. Bei widersprüchlichen oder unverständlichen Bedingungen lässt du die konkrete Fassung fachkundig prüfen. Dieser Kurs übt das Lesen typischer Angaben; er bewertet nicht die Wirksamkeit eines persönlichen Vertrags."
+        "text": "Schreibe die unklare Stelle mit Seitenzahl auf. Notiere, was du dazu wissen möchtest. Ergänze keine Vertragsangabe im Namen des Betriebs. Frage, welche Fassung gelten soll. Widersprechen sich Gespräch und Text, lass das vor deiner Entscheidung klären. Bei einer rechtlichen Streitfrage brauchst du eine Prüfung deines konkreten Vertrags."
       }
     ],
     "fehler": [
@@ -137,7 +137,12 @@
         "url": "https://www.gesetze-im-internet.de/nachwg/__2.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Nachweis wesentlicher Arbeitsbedingungen",
+      "url": "https://www.gesetze-im-internet.de/nachwg/__2.html"
+    }
   },
   {
     "id": "b4-2",
@@ -156,7 +161,7 @@
       },
       {
         "titel": "Eine Unstimmigkeit konkret benennen",
-        "text": "Die Abrechnung – die Abrechnungen, der Abzug – die Abzüge und der Zuschlag – die Zuschläge helfen beim Nachfragen. Notiere die fragliche Position und den Monat. Vergleiche eine Stundenvergütung nicht ohne Umrechnung mit einem Monatsbetrag. Für rechtliche Mindestgrenzen und ihre Ausnahmen sind die jeweils geltenden Regeln zu prüfen; der Kurs nennt keinen dauerhaft festgeschriebenen Geldbetrag."
+        "text": "Ein Zuschlag ist ein zusätzlicher Betrag, etwa für bestimmte Arbeitszeiten. Ein Abzug verringert den ausgewiesenen Betrag. Nenne bei einer Frage immer Monat und Position. Vergleiche einen Stundenlohn nicht direkt mit einem Monatsbetrag. Prüfe außerdem die aktuell geltenden Mindestregeln und ihre Ausnahmen. Eine feste Nettoquote gilt nicht für alle Personen."
       },
       {
         "titel": "Mit passenden Unterlagen nachfragen",
@@ -281,7 +286,12 @@
         "url": "https://www.bmas.de/DE/Arbeit/Arbeitsrecht/Mindestlohn/Informationen-zum-Mindestlohn/informationen-zum-mindestlohn-deutsch.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Abrechnung des Arbeitsentgelts",
+      "url": "https://www.gesetze-im-internet.de/gewo/__108.html"
+    }
   },
   {
     "id": "b4-3",
@@ -296,11 +306,11 @@
       },
       {
         "titel": "Drei Zeitbegriffe auseinanderhalten",
-        "text": "Arbeitszeit, Ruhepause und Ruhezeit erfüllen unterschiedliche Funktionen. Das Arbeitszeitgesetz begrenzt Arbeitszeiten und regelt Erholung. § 3 ArbZG sieht grundsätzlich acht werktägliche Stunden vor; eine Verlängerung auf zehn setzt den gesetzlich verlangten Ausgleich voraus. Sonderregeln können einschlägig sein. Ein Vertrag kann deshalb nicht beliebig jede Arbeitsdauer erlauben."
+        "text": "Arbeitszeit ist die Zeit, in der du arbeitest. Eine Ruhepause unterbricht den Einsatz. Die Ruhezeit liegt zwischen zwei Einsätzen. § 3 ArbZG sieht grundsätzlich acht werktägliche Stunden vor. Bis zu zehn sind nur mit dem gesetzlich nötigen Ausgleich erlaubt. Sonderregeln können gelten. Ein Vertrag darf deshalb nicht jede beliebige Arbeitsdauer erlauben."
       },
       {
         "titel": "Den tatsächlichen Ablauf erfassen",
-        "text": "Der Arbeitsbeginn und das Arbeitsende werden hier ohne Plural gebraucht. Die Unterbrechung – die Unterbrechungen bezeichnet einen zusätzlichen Eintrag im Zeitnachweis. Erfasse die tatsächlich geleisteten Zeiten nach dem vorgesehenen Verfahren. Eine eingetragene Pause, in der weitergearbeitet wurde, beschreibt den Ablauf nicht richtig."
+        "text": "Erfasse, wann du wirklich beginnst und aufhörst. Notiere auch echte Pausen nach dem vorgesehenen Verfahren. Eine Pause im Dienstplan ist nicht unbedingt eine genommene Pause. Hast du weitergearbeitet, muss die Aufzeichnung den tatsächlichen Ablauf zeigen. Frage bei unklaren Eingaben nach, statt Zeiten passend zu machen."
       },
       {
         "titel": "Unklarheiten mit dem Plan abgleichen",
@@ -430,7 +440,12 @@
         "url": "https://www.gesetze-im-internet.de/arbzg/__5.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei bmas.de.",
+    "standQuelle": {
+      "titel": "BMAS: Arbeitszeitregeln",
+      "url": "https://www.bmas.de/DE/Arbeit/Arbeitsrecht/Arbeitnehmerrechte/Regelungen-zur-Arbeitszeit/regelungen-zur-arbeitszeit.html"
+    }
   },
   {
     "id": "b4-4",
@@ -445,15 +460,15 @@
       },
       {
         "titel": "Wunsch und Gewährung auseinanderhalten",
-        "text": "Nach § 7 BUrlG werden Urlaubswünsche bei der zeitlichen Festlegung berücksichtigt; das Gesetz nennt auch entgegenstehende betriebliche oder vorrangige soziale Gründe. Ein eingereichter Wunsch wird dadurch nicht automatisch zum bestätigten Zeitraum. Kläre den vorgesehenen Antragsweg und die Rückmeldung im Betrieb. Eine ungeprüfte Selbstbeurlaubung ist keine Lösung für einen offenen Antrag."
+        "text": "§ 7 BUrlG regelt, wann du Urlaub nimmst. Der Arbeitgeber muss deine Wünsche berücksichtigen. Dringende betriebliche Gründe oder vorrangige Urlaubswünsche anderer können entgegenstehen. Ein Antrag ist noch keine Bestätigung. Kläre den Antragsweg und warte auf eine eindeutige Rückmeldung. Nimm einen ungeklärten Urlaub nicht einfach selbst."
       },
       {
         "titel": "Urlaubsangaben nachvollziehbar lesen",
-        "text": "Der Antrag – die Anträge, die Vertretung – die Vertretungen und der Zeitraum – die Zeiträume gehören zur Planung. Die Anzahl der Urlaubstage muss zum geltenden Anspruch und zur Verteilung der Arbeitstage passen. Eine Zahl aus einer fremden Sechstagewoche lässt sich nicht gedankenlos auf jedes andere Modell übertragen. Der Kurs legt keinen persönlichen Urlaubsanspruch fest."
+        "text": "Prüfe, an welchen Tagen du normalerweise arbeitest. Davon hängt ab, wie Urlaubstage auf deinen Arbeitsplan umgerechnet werden. Übernimm nicht einfach die Zahl aus einem anderen Arbeitsmodell. Stelle den Antrag über den vorgesehenen Weg. Bewahre die Rückmeldung auf. Erst daraus erkennst du, welcher Zeitraum gewährt ist."
       },
       {
         "titel": "Bei Problemen zeitnah klären",
-        "text": "Notiere den angefragten Zeitraum und die konkrete offene Frage. Bitte um Erklärung, wenn eine Rückmeldung unklar ist. Regeln zum Übertragen oder Verfallen von Urlaub können zusätzliche Voraussetzungen und Rechtsprechung betreffen; eine pauschale Jahresendregel reicht für den Einzelfall nicht aus. Bei Streit helfen die zuständigen betrieblichen Stellen oder eine rechtliche Beratung."
+        "text": "Notiere den angefragten Zeitraum und die konkrete offene Frage. Bitte um Erklärung, wenn eine Rückmeldung unklar ist. Ob Urlaub ins nächste Jahr übertragen wird oder verfällt, hängt von weiteren Regeln und Voraussetzungen ab. Lass deinen Fall prüfen. Bei Streit helfen die zuständigen betrieblichen Stellen oder eine rechtliche Beratung."
       }
     ],
     "fehler": [
@@ -569,13 +584,18 @@
         "url": "https://www.gesetze-im-internet.de/burlg/__7.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Zeitpunkt und Übertragung des Urlaubs",
+      "url": "https://www.gesetze-im-internet.de/burlg/__7.html"
+    }
   },
   {
     "id": "b4-5",
     "title": "Arbeitsunfähigkeit richtig melden",
     "minutes": 40,
-    "explanation": "Du unterscheidest eigene Mitteilung und erforderliche ärztliche Feststellung beziehungsweise Nachweisabläufe.",
+    "explanation": "Arbeitsunfähigkeit heißt hier: Wegen Krankheit kannst du deine Arbeit nicht ausführen. Du lernst, was du melden und ärztlich klären musst.",
     "tip": "Kläre vorab den betrieblichen Meldeweg und behalte Mitteilung und Nachweis als zwei eigene Aufgaben im Blick.",
     "schrittePraxis": [
       {
@@ -584,15 +604,15 @@
       },
       {
         "titel": "Mitteilung und Nachweis unterscheiden",
-        "text": "§ 5 EntgFG verlangt die unverzügliche Mitteilung von Arbeitsunfähigkeit und voraussichtlicher Dauer. Daneben bestehen Regeln zur ärztlichen Feststellung und zum Nachweis. Bei vielen gesetzlich Versicherten gilt ein elektronischer Ablauf, aber nicht in jeder Konstellation. Der Arbeitgeber kann eine frühere ärztliche Feststellung verlangen. „Immer erst nach drei Tagen handeln“ ist deshalb keine verlässliche Regel."
+        "text": "§ 5 EntgFG verlangt, dass du Arbeitsunfähigkeit und voraussichtliche Dauer unverzüglich meldest. Das heißt: ohne schuldhaftes Warten. Dazu kommen ärztliche Feststellung und Nachweis. Für viele gesetzlich Versicherte gilt ein elektronischer Ablauf. Das gilt nicht in jedem Fall. Der Arbeitgeber kann die ärztliche Feststellung früher verlangen. Warte deshalb nicht pauschal drei Tage."
       },
       {
         "titel": "Klar und ohne unnötige Details melden",
-        "text": "Die Arbeitsunfähigkeit und die Dauer werden hier ohne Plural verwendet. Lerne außerdem der Zeitraum – die Zeiträume und die Meldung – die Meldungen. Teile mit, dass du nicht arbeiten kannst und wie lange voraussichtlich. Erfinde weder eine ärztliche Feststellung noch eine sichere Rückkehr, wenn sie noch unklar ist. Bei Verlängerung musst du die weitere Mitteilung und Feststellung beachten."
+        "text": "Melde, dass du nicht arbeiten kannst und wie lange das voraussichtlich dauert. Ist die Dauer noch unklar, sage das offen. Erfinde keine feste Rückkehr. Dauert die Arbeitsunfähigkeit länger, informiere den Betrieb erneut. Kläre auch, ob eine weitere ärztliche Feststellung nötig ist. Nutze dafür den vereinbarten Meldeweg."
       },
       {
         "titel": "Den konkreten Ablauf absichern",
-        "text": "Prüfe, wer erreichbar ist und welcher Weg im Betrieb vorgesehen ist. Eine elektronische Übermittlung ersetzt nicht automatisch alle eigenen Pflichten. Bei Besonderheiten, etwa Behandlung im Ausland oder anderen Versicherungsfällen, klärst du den passenden Ablauf. In der Übung werden keine Diagnose und keine Gesundheitsdokumente hochgeladen; es geht um verständliche Kommunikation."
+        "text": "Kläre, wen du im Betrieb erreichst und wie du dich meldest. Elektronische Daten ersetzen deine eigene Meldung nicht. Frage bei besonderen Fällen nach dem passenden Ablauf, etwa bei einer Erkrankung im Ausland. Musst du länger fehlen, aktualisiere deine Angaben. In dieser Übung schreibst du eine Meldung ohne Diagnose oder echte Gesundheitsdokumente."
       }
     ],
     "fehler": [
@@ -708,30 +728,35 @@
         "url": "https://www.gesetze-im-internet.de/entgfg/__5.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Arbeitsunfähigkeit melden und nachweisen",
+      "url": "https://www.gesetze-im-internet.de/entgfg/__5.html"
+    }
   },
   {
     "id": "b4-6",
     "title": "Probezeit und Befristung getrennt lesen",
     "minutes": 40,
-    "explanation": "Du erkennst, dass Erprobung und Vertragsende verschiedene Fragen betreffen.",
+    "explanation": "Die Befristung begrenzt die Vertragsdauer. Die Probezeit ist die vereinbarte erste Zeit, in der Betrieb und Beschäftigte die Zusammenarbeit erproben.",
     "tip": "Markiere in einem fiktiven Vertrag Probezeit und Enddatum in zwei verschiedenen Farben.",
     "schrittePraxis": [
       {
         "titel": "Zwei Zeitangaben unterscheiden",
-        "text": "Firas: „Mein Beispielvertrag nennt ein Ende im nächsten Jahr und eine Probezeit am Anfang.“ Beraterin: „Die Befristung betrifft das vereinbarte Ende. Die Probezeit betrifft eine anfängliche Erprobung und kann für Kündigungsregeln wichtig sein.“ Firas: „Dann endet der Vertrag nicht schon deshalb mit der Probezeit?“ Beraterin: „Genau, die Angaben müssen getrennt gelesen werden.“"
+        "text": "Firas: „Mein Vertrag nennt ein Enddatum und eine Probezeit am Anfang.“ Beraterin: „Das sind verschiedene Angaben. Die Befristung betrifft die Dauer. Die Probezeit dient dazu, die Zusammenarbeit zu erproben.“ Firas: „Dann endet der Vertrag nicht automatisch am Ende der Probezeit?“ Beraterin: „Genau. Prüfen Sie beide Angaben getrennt.“"
       },
       {
         "titel": "Ein festes Enddatum erkennen",
-        "text": "Bei einer kalendermäßigen Befristung endet das Arbeitsverhältnis grundsätzlich mit dem vereinbarten Zeitablauf. § 15 TzBfG enthält weitere Regeln, auch zu Zweckbefristung und ordentlicher Kündigung. Ob eine Befristung wirksam vereinbart ist, muss gesondert geprüft werden. Eine mündliche Bemerkung „vielleicht länger“ ist noch keine bestätigte Verlängerung."
+        "text": "Steht ein wirksam vereinbartes Enddatum fest, endet ein kalendermäßig befristeter Vertrag grundsätzlich mit diesem Datum. § 15 TzBfG enthält weitere Regeln. Bei einer Zweckbefristung ist statt eines Datums ein bestimmter Zweck vereinbart. Auch für eine ordentliche Kündigung gelten besondere Voraussetzungen. Lass bei Zweifeln prüfen, ob die konkrete Befristung wirksam vereinbart wurde."
       },
       {
         "titel": "Probezeit nicht pauschal bewerten",
-        "text": "Die Probezeit – die Probezeiten und die Verlängerung – die Verlängerungen sind eigene Begriffe. § 622 BGB enthält für eine vereinbarte Probezeit eine besondere Kündigungsregel in einem begrenzten Zeitraum; tarifliche Abweichungen können relevant sein. Bei befristeten Verhältnissen verlangt § 15 TzBfG außerdem ein angemessenes Verhältnis. Eine beliebige Dauer ist daher nicht automatisch passend."
+        "text": "Eine Verlängerung ändert die bisher vereinbarte Dauer. „Vielleicht länger“ ist noch keine bestätigte Verlängerung. Für die Probezeit enthält § 622 BGB eine besondere Kündigungsregel. Sie gilt nur in einem begrenzten Zeitraum. Tarifverträge können abweichen. Bei befristeten Stellen muss die Probezeit zu Dauer und Tätigkeit passen. Das regelt § 15 TzBfG."
       },
       {
         "titel": "Konkrete Wirkung prüfen lassen",
-        "text": "Trage Enddatum, Probezeit und Kündigungsklausel getrennt in eine Übersicht ein. Frage bei widersprüchlichen Angaben nach und hole bei Wirksamkeitsfragen fachkundige Hilfe. Der Kurs rechnet keine persönliche Kündigungsfrist aus. Ein Übergang von einer Probephase zu weiterer Beschäftigung ist nicht dasselbe wie die Verlängerung einer Befristung."
+        "text": "Trage Enddatum, Probezeit und Kündigungsklausel getrennt in eine Übersicht ein. Frage bei widersprüchlichen Angaben nach und hole bei Wirksamkeitsfragen fachkundige Hilfe. Lass deine Kündigungsfrist anhand von Vertrag, Gesetz und möglichen Tarifregeln prüfen. Ein Übergang von einer Probephase zu weiterer Beschäftigung ist nicht dasselbe wie die Verlängerung einer Befristung."
       }
     ],
     "fehler": [
@@ -852,7 +877,12 @@
         "url": "https://www.gesetze-im-internet.de/bgb/__622.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Ende eines befristeten Vertrags",
+      "url": "https://www.gesetze-im-internet.de/tzbfg/__15.html"
+    }
   },
   {
     "id": "b4-7",
@@ -867,15 +897,15 @@
       },
       {
         "titel": "Fristen nicht mit Gesprächen verwechseln",
-        "text": "§ 4 KSchG nennt grundsätzlich drei Wochen nach Zugang der schriftlichen Kündigung für die Klage gegen ihre Wirksamkeit. Besonderheiten müssen im Einzelfall geprüft werden. Eine interne Beschwerde oder ein Gespräch ersetzt die Klage nicht automatisch und stoppt die Frist nicht einfach. Deshalb wird der konkrete Zugang und die erforderliche Reaktion umgehend fachkundig geklärt."
+        "text": "§ 4 KSchG nennt grundsätzlich drei Wochen nach Zugang der schriftlichen Kündigung für eine Klage gegen ihre Wirksamkeit. Lass Besonderheiten sofort prüfen. Eine interne Beschwerde ersetzt die Klage nicht automatisch. Auch ein Gespräch stoppt die Frist nicht einfach. Kläre deshalb umgehend den Empfangstag und die nötige rechtliche Handlung."
       },
       {
         "titel": "Wichtige Unterlagen zusammenstellen",
-        "text": "Die Kündigung – die Kündigungen, der Zugang – die Zugänge und die Frist – die Fristen gehören zur Beratung. Sichere Schreiben, Umschlag soweit vorhanden, Vertrag und relevante Nachrichten. Das Datum auf dem Schreiben und der tatsächliche Zugang können verschieden sein. Rechne den letzten Tag nicht allein mit einer groben Monatsannahme aus."
+        "text": "Sichere die Kündigung, den Vertrag und wichtige Nachrichten. Bewahre auch den Umschlag auf, wenn er noch da ist. Zugang bedeutet hier: Wann hast du das Schreiben tatsächlich erhalten? Dieses Datum kann vom Briefdatum abweichen. Notiere es genau. Lass die Frist prüfen, statt nur einen Monat ab dem Briefdatum zu rechnen."
       },
       {
         "titel": "Die passende Unterstützung erreichen",
-        "text": "Wende dich unverzüglich etwa an eine arbeitsrechtliche Beratung, eine zuständige Gewerkschaft oder die Rechtsantragstelle des Arbeitsgerichts. Kläre die dort mögliche Hilfe und mitzubringende Unterlagen. Unterschreibe einen Aufhebungsvertrag oder Verzicht nicht allein unter Zeitdruck. Der Kurs entscheidet weder, ob die Kündigung wirksam ist, noch welche konkrete Klage in deinem Fall erforderlich ist."
+        "text": "Suche sofort Hilfe, etwa bei einer arbeitsrechtlichen Beratung oder deiner zuständigen Gewerkschaft. Auch die Rechtsantragstelle des Arbeitsgerichts ist eine Anlaufstelle. Frage, welche Hilfe du dort bekommst und welche Unterlagen du brauchst. Unterschreibe unter Zeitdruck keinen Aufhebungsvertrag oder Verzicht. Lass die Folgen vorher prüfen."
       }
     ],
     "fehler": [
@@ -974,7 +1004,7 @@
         "typ": "schreiben",
         "titel": "Eine Beratungsanfrage verfassen",
         "aufgabe": "Schreibe drei Sätze: schriftliche Kündigung heute erhalten, Unterlagen vorhanden, sofortige Fristprüfung erbeten.",
-        "musterloesung": "Ich habe heute eine schriftliche Kündigung erhalten und benötige kurzfristig arbeitsrechtliche Hilfe. Schreiben, Vertrag und relevante Nachrichten kann ich zur Prüfung vorlegen. Bitte teilen Sie mir sofort mit, wie ich den Zugang und mögliche Klagefristen klären lassen kann; auf ein internes Gespräch möchte ich dafür nicht erst warten.",
+        "musterloesung": "Ich habe heute eine schriftliche Kündigung erhalten und benötige kurzfristig arbeitsrechtliche Hilfe. Schreiben, Vertrag und relevante Nachrichten kann ich zur Prüfung vorlegen. Bitte helfen Sie mir, den Zugang und mögliche Klagefristen zu klären. Ich möchte nicht erst auf ein internes Gespräch warten.",
         "checkliste": [
           "Ist der tatsächliche Zugang als heute genannt?",
           "Nennst du die verfügbaren Unterlagen?",
@@ -991,7 +1021,12 @@
         "url": "https://www.gesetze-im-internet.de/kschg/__4.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Klagefrist bei Kündigung",
+      "url": "https://www.gesetze-im-internet.de/kschg/__4.html"
+    }
   },
   {
     "id": "b4-8",
@@ -1006,15 +1041,15 @@
       },
       {
         "titel": "Fakten und Bewertung trennen",
-        "text": "Schreibe auf, was wann tatsächlich passiert ist und welche Nachricht oder Aufzeichnung das belegt. „An drei Tagen jeweils länger gearbeitet“ ist ein überprüfbarer Ansatz. „Der Betrieb handelt immer illegal“ ist bereits eine pauschale Bewertung. Eine Beratung braucht konkrete Angaben und kann zusätzliche Umstände klären. Der Kurs ersetzt diese Einzelfallprüfung nicht."
+        "text": "Beschreibe, was an welchem Tag passiert ist. Nenne passende Belege. „An drei Tagen länger gearbeitet“ ist ein konkreter Anfang. „Der Betrieb handelt immer illegal“ ist schon ein Urteil. Für die Beratung sind genaue Zeiten und Vereinbarungen hilfreicher. Ob daraus ein Anspruch folgt, muss anhand deines Falls geprüft werden."
       },
       {
         "titel": "Die Frage und Unterlagen zuordnen",
-        "text": "Die Zeitleiste – die Zeitleisten, die Vereinbarung – die Vereinbarungen und der Anspruch – die Ansprüche gehören zur Vorbereitung. Ordne jedem offenen Punkt eine Vertragsstelle, Abrechnung oder Nachricht zu. Halte fest, welche Erklärung du bereits angefragt hast. Stelle keine heimlich veränderten Zeitnachweise her und sammle keine fremden Personaldaten für deine private Übersicht."
+        "text": "Erstelle eine kurze Zeitleiste: Was ist an welchem Tag passiert? Ordne jedem Punkt einen vorhandenen Beleg zu. Dazu können Vertrag, Abrechnung und Nachrichten gehören. Notiere auch deine bisherigen Rückfragen. Verändere keine Zeitnachweise nachträglich. Sammle für deine Frage keine fremden Personaldaten, die dafür nicht nötig sind."
       },
       {
         "titel": "Früh handeln und Grenzen der Hilfe klären",
-        "text": "Frage, welche Fristen zu beachten sind und wer für die konkrete Prüfung zuständig ist. Betriebsrat oder Gewerkschaft können je nach Situation unterstützen; eine Rechtsberatung oder gerichtliche Stelle hat andere Aufgaben. Verlasse dich nicht darauf, dass eine allgemeine Kursantwort jede Frist wahrt. Dokumentiere erhaltene Hinweise und den ausdrücklich vereinbarten nächsten Schritt."
+        "text": "Frage früh, welche Fristen gelten und wer dir helfen kann. Ein Betriebsrat oder eine Gewerkschaft kann je nach Fall unterstützen. Kläre, wann du eine Rechtsberatung oder das Gericht brauchst. Eine allgemeine Kursantwort wahrt keine persönliche Frist. Notiere deshalb den nächsten vereinbarten Schritt und bis wann du ihn erledigen musst."
       }
     ],
     "fehler": [
@@ -1130,6 +1165,11 @@
         "url": "https://www.bmas.de/DE/Service/Publikationen/Broschueren/a711-arbeitsrecht.html",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei bmas.de.",
+    "standQuelle": {
+      "titel": "BMAS: Arbeitsrecht und wichtige Regeln",
+      "url": "https://www.bmas.de/DE/Service/Publikationen/Broschueren/a711-arbeitsrecht.html"
+    }
   }
 ];if(typeof module!=="undefined"&&module.exports)module.exports=root.SDAkademieKurse["arbeitsvertrag-rechte"];})(typeof window!=="undefined"?window:globalThis);

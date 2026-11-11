@@ -6,6 +6,7 @@ on:
       - "mein-sd-hub/**"
       - "tests/mein-sd-hub*.cjs"
       - "tests/hub-homepage*.cjs"
+      - "tests/hub/**"
       - "tests/play-separation*.cjs"
       - "play/**"
       - "kids/index.html"
@@ -18,6 +19,7 @@ on:
       - "mein-sd-hub/**"
       - "tests/mein-sd-hub*.cjs"
       - "tests/hub-homepage*.cjs"
+      - "tests/hub/**"
       - "tests/play-separation*.cjs"
       - "play/**"
       - "kids/index.html"
@@ -41,7 +43,9 @@ jobs:
         with:
           node-version: "22"
       - name: Validate course, routes, links and state
-        run: node --test tests/mein-sd-hub.test.cjs tests/hub-homepage.test.cjs tests/play-separation.test.cjs
+        run: |
+          node tests/mein-sd-hub.test.cjs
+          node --test tests/hub-homepage.test.cjs tests/play-separation.test.cjs
       - name: Install Playwright and Chromium
         run: |
           npm install --no-save playwright@1.56.1
@@ -50,4 +54,5 @@ jobs:
         run: |
           node tests/mein-sd-hub.browser.cjs
           node tests/hub-homepage.browser.cjs
+          node tests/hub/dashboard.browser.cjs
           node tests/play-separation.browser.cjs

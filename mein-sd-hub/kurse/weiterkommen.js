@@ -17,7 +17,7 @@
       },
       {
         "titel": "Ein überprüfbares Ergebnis wählen",
-        "text": "Das Entwicklungsziel – die Entwicklungsziele, die Auswertung – die Auswertungen und die Anforderung – die Anforderungen helfen beim Planen. Ein geeignetes Übungsergebnis wäre eine verständliche Auswertung mit Beispieldaten. „Besser werden“ bleibt unbestimmt. Lege fest, woran du erkennst, dass die Aufgabe gelingt, und wer dir dazu Rückmeldung geben kann."
+        "text": "Lege fest, woran du deinen Fortschritt erkennst. Für Seda kann das eine Auswertung mit Beispieldaten sein. Besprecht vorher, was sie zeigen soll: etwa Bestände und fehlende Mengen. Bitte danach um Rückmeldung zu genau diesen Punkten. „Besser werden“ ist als Ziel zu ungenau. Ein sichtbares Ergebnis lässt sich gemeinsam prüfen."
       },
       {
         "titel": "Den nächsten Schritt begrenzen",
@@ -152,11 +152,11 @@
       },
       {
         "titel": "Reglementierung als eigene Frage prüfen",
-        "text": "In reglementierten Berufen ist eine entsprechende Anerkennung beziehungsweise Berufszulassung für die Ausübung nötig. Bei nicht reglementierten Berufen ist formale Anerkennung für den Berufszugang oft nicht zwingend, kann aber nützlich sein; andere Voraussetzungen können dennoch gelten. Prüfe die konkrete Berufsbezeichnung und den geplanten Einsatz. Eine pauschale Aussage für alle Abschlüsse wäre unzuverlässig."
+        "text": "Reglementiert heißt: Für die Berufsausübung ist eine bestimmte staatliche Erlaubnis vorgeschrieben. Dafür brauchst du die passende Anerkennung oder Berufszulassung. Bei nicht reglementierten Berufen ist formale Anerkennung für den Zugang oft freiwillig. Sie kann trotzdem helfen. Prüfe die genaue Berufsbezeichnung und weitere Voraussetzungen. Berufliche Anerkennung und Aufenthaltserlaubnis sind getrennte Fragen."
       },
       {
         "titel": "Das passende Verfahren finden",
-        "text": "Die Anerkennung – die Anerkennungen, die Zuständigkeit – die Zuständigkeiten und der Abschluss – die Abschlüsse haben unterschiedliche Bedeutungen. Ein Schulabschluss, Hochschulabschluss und Berufsabschluss können zu verschiedenen Verfahren gehören. Der Anerkennungs-Finder hilft bei der Orientierung. Eine allgemeine Übersetzung des Dokuments ist noch kein Anerkennungsbescheid."
+        "text": "Prüfe zuerst die Art deines Abschlusses: Schule, Hochschule oder Berufsausbildung. Dafür können verschiedene Stellen zuständig sein. Der Anerkennungs-Finder hilft dir, den passenden Weg zu suchen. Ein Bescheid ist eine schriftliche Entscheidung der zuständigen Stelle. Eine Übersetzung erklärt nur den Text der Urkunde. Sie ist noch kein Anerkennungsbescheid."
       },
       {
         "titel": "Beratung vor Annahmen nutzen",
@@ -276,7 +276,12 @@
         "url": "https://www.anerkennung-in-deutschland.de/html/de/faq.php",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei anerkennung-in-deutschland.de.",
+    "standQuelle": {
+      "titel": "Anerkennung in Deutschland: häufige Fragen",
+      "url": "https://www.anerkennung-in-deutschland.de/html/de/faq.php"
+    }
   },
   {
     "id": "b5-3",
@@ -291,11 +296,11 @@
       },
       {
         "titel": "Eine verfahrensbezogene Übersicht anlegen",
-        "text": "Lege Spalten für angeforderte Unterlage, vorhanden, benötigte Form und offene Frage an. Eine allgemeine Internetliste muss nicht zu deinem Beruf passen. Maßgeblich ist der bestätigte Bedarf im konkreten Verfahren. Fehlende Originale oder Nachweise werden mit der zuständigen Stelle besprochen; du ersetzt sie nicht durch selbst erfundene Bescheinigungen."
+        "text": "Lege Spalten für angeforderte Unterlage, vorhanden, benötigte Form und offene Frage an. Eine allgemeine Internetliste muss nicht zu deinem Beruf passen. Richte dich nach der Liste, die deine zuständige Stelle bestätigt hat. Fehlt ein Original oder Nachweis, frage die zuständige Stelle nach dem weiteren Weg. Erfinde keinen Ersatzbeleg."
       },
       {
         "titel": "Original, Kopie und Übersetzung unterscheiden",
-        "text": "Die Urkunde – die Urkunden, die Kopie – die Kopien und die Übersetzung – die Übersetzungen sind verschiedene Fassungen. Ob Beglaubigung oder bestimmte Übersetzungsanforderungen gelten, wird ausdrücklich geprüft. Ein gut lesbarer Scan ist nicht automatisch eine beglaubigte Kopie. Bewahre Originale sicher auf und versende sie nicht ohne geklärten Bedarf und sicheren Weg."
+        "text": "Ein Original ist das ursprüngliche Dokument. Eine Kopie gibt es wieder. Eine Übersetzung überträgt den Text in eine andere Sprache. Frage, welche Form benötigt wird. Ein Scan ist nicht automatisch beglaubigt. Eine Beglaubigung bestätigt die Kopie nach dem vorgeschriebenen Verfahren. Versende Originale nur, wenn Bedarf und sicherer Versandweg geklärt sind."
       },
       {
         "titel": "Kosten und nächsten Kontakt klären",
@@ -415,7 +420,12 @@
         "url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/anerkennung-abschluss",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei arbeitsagentur.de.",
+    "standQuelle": {
+      "titel": "Bundesagentur für Arbeit: Abschluss anerkennen",
+      "url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/anerkennung-abschluss"
+    }
   },
   {
     "id": "b5-4",
@@ -434,11 +444,11 @@
       },
       {
         "titel": "Lernform und Alltag abgleichen",
-        "text": "Das Lernziel – die Lernziele, die Voraussetzung – die Voraussetzungen und das Angebot – die Angebote gehören zum Vergleich. Prüfe Termine, Dauer, Lernort und technische Anforderungen. Ein Onlinekurs kann feste Live-Zeiten enthalten und ist nicht automatisch jederzeit frei abrufbar. Rechne auch Vor- und Nachbereitung ein, wenn du deine verfügbare Zeit planst."
+        "text": "Prüfe neben dem Inhalt auch Lernort, Termine und Technik. Ein Onlinekurs kann feste Live-Zeiten haben. Er ist nicht automatisch jederzeit abrufbar. Frage nach der nötigen Vor- und Nachbereitung. Trage diese Zeiten in deinen Wochenplan ein. So erkennst du, ob der Kurs mit Arbeit, Betreuung und Arbeitsweg zusammenpasst."
       },
       {
         "titel": "Mit einer konkreten Frage weitergehen",
-        "text": "Notiere bei beiden Kursen Inhalte, Voraussetzungen, Abschluss und offene Fragen. Das Portal mein NOW der Bundesagentur für Arbeit bietet Orientierung zu Weiterbildungen und Beratung. Ein Suchtreffer ist keine Qualitätsgarantie oder Förderzusage. Bitte den Anbieter um fehlende Angaben und entscheide erst danach, ob das Angebot zu deinem Ziel passt."
+        "text": "Notiere bei beiden Kursen Inhalte, Voraussetzungen, Abschluss und offene Fragen. Das Portal mein NOW der Bundesagentur für Arbeit bietet Orientierung zu Weiterbildungen und Beratung. Prüfe Inhalt und Qualität jedes gefundenen Angebots. Eine Förderung ist damit noch nicht zugesagt. Bitte den Anbieter um fehlende Angaben und entscheide erst danach, ob das Angebot zu deinem Ziel passt."
       }
     ],
     "fehler": [
@@ -554,7 +564,12 @@
         "url": "https://www.arbeitsagentur.de/karriere-und-weiterbildung/nationales-onlineportal-berufliche-weiterbildung-mein-now",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei arbeitsagentur.de.",
+    "standQuelle": {
+      "titel": "Bundesagentur für Arbeit: Weiterbildung und Beratung",
+      "url": "https://www.arbeitsagentur.de/karriere-und-weiterbildung/nationales-onlineportal-berufliche-weiterbildung-mein-now"
+    }
   },
   {
     "id": "b5-5",
@@ -569,15 +584,15 @@
       },
       {
         "titel": "Förderfähigkeit und Zusage unterscheiden",
-        "text": "Bei einem Bildungsgutschein werden individuelle Voraussetzungen im Beratungsgespräch geklärt. Nach den Informationen der Bundesagentur für Arbeit müssen ausgewählter Träger und Weiterbildung passend zugelassen sein. Ein Gutschein kann nach Ziel, Zeit oder Region begrenzt sein. Die bloße Werbung eines Anbieters ersetzt keine Entscheidung für deinen konkreten Fall."
+        "text": "Mit einem Bildungsgutschein kann die Agentur für Arbeit eine passende Weiterbildung finanzieren. Im Gespräch prüft sie deine Voraussetzungen. Der Anbieter und die Weiterbildung müssen für die Förderung zugelassen sein. Frage nach den passenden Nachweisen. Ein Gutschein kann nach Ziel, Zeit oder Region begrenzt sein. Eine Werbeaussage bestätigt noch nicht, dass du persönlich die Förderung erhältst."
       },
       {
         "titel": "Alle Kostenpositionen erfassen",
-        "text": "Die Kursgebühr – die Kursgebühren, die Fahrtkosten und die Bewilligung – die Bewilligungen betreffen verschiedene Fragen. Prüfe neben Teilnahmeentgelt auch Lernmittel, Prüfung und mögliche zusätzliche Wege. Welche Positionen übernommen werden, muss konkret geklärt sein. Ein angekündigter Zuschuss ist nicht automatisch der gesamte Preis und noch kein ausgezahltes Geld."
+        "text": "Eine Bewilligung ist die bestätigte Entscheidung über eine beantragte Förderung. Prüfe, welche Kosten sie tatsächlich abdeckt. Frage nach Kursgebühr, Lernmitteln, Prüfung und nötigen Fahrten. Ein Zuschuss kann nur einen Teil übernehmen. Kläre deshalb, was du selbst bezahlen müsstest. Gehe keine Kostenbindung ein, solange der nötige Ablauf ungeklärt ist."
       },
       {
         "titel": "Reihenfolge und Belege absichern",
-        "text": "Lies die Bedingungen und frage, ob vor Antrag oder Bewilligung schon eine verbindliche Verpflichtung eingegangen werden darf. Notiere zuständige Stelle, benötigte Unterlagen und Fristen. Bewahre die tatsächliche Entscheidung auf. Der Kurs verspricht keine Förderung; er zeigt, wie du offene Finanzierungsfragen vor einer eigenen Kostenbindung sichtbar machst."
+        "text": "Kläre vor dem Buchen, wann Antrag und Bewilligung nötig sind. Frage, ab wann du dich verbindlich anmelden darfst. Notiere zuständige Stelle, benötigte Unterlagen und Fristen. Bewahre die tatsächliche Entscheidung auf. Notiere, wer welche Kosten übernimmt und was noch offen ist. Prüfe diese Punkte, bevor du einen kostenpflichtigen Vertrag schließt."
       }
     ],
     "fehler": [
@@ -693,7 +708,12 @@
         "url": "https://www.arbeitsagentur.de/karriere-und-weiterbildung/bildungsgutschein",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei arbeitsagentur.de.",
+    "standQuelle": {
+      "titel": "Bundesagentur für Arbeit: Bildungsgutschein",
+      "url": "https://www.arbeitsagentur.de/karriere-und-weiterbildung/bildungsgutschein"
+    }
   },
   {
     "id": "b5-6",
@@ -712,7 +732,7 @@
       },
       {
         "titel": "Vereinbarungen präzise benennen",
-        "text": "Lerne die Entwicklung – die Entwicklungen und der Übungsplan – die Übungspläne. „Verantwortung“ wird hier ohne Plural gebraucht und bezeichnet den tatsächlich übernommenen Aufgabenbereich. Eine vereinbarte Übung ist noch keine Beförderung oder Änderung der Vergütung. Wenn später Aufgaben oder Bedingungen geändert werden sollen, müssen diese gesondert geklärt werden. Der Lernversuch dient zunächst der gemeinsamen Einschätzung."
+        "text": "Ein Übungsplan dient zum Lernen. Er überträgt dir noch nicht die Verantwortung für echte Schichten. Auch eine höhere Bezahlung folgt daraus nicht automatisch. Kläre neue Aufgaben und Bedingungen gesondert. Besprecht zuerst den Versuch: Was gelingt schon? Was musst du noch lernen? Haltet den nächsten Schritt gemeinsam fest."
       },
       {
         "titel": "Den Lernversuch nachbereiten",
@@ -832,7 +852,12 @@
         "url": "https://www.arbeitsagentur.de/karriere-und-weiterbildung/nationales-onlineportal-berufliche-weiterbildung-mein-now",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei bmas.de.",
+    "standQuelle": {
+      "titel": "BMAS: Arbeitsbedingungen und Weiterbildung",
+      "url": "https://www.bmas.de/DE/Service/Publikationen/Broschueren/a711-arbeitsrecht.html"
+    }
   },
   {
     "id": "b5-7",
@@ -851,7 +876,7 @@
       },
       {
         "titel": "Ertrag und Zahlungsfähigkeit unterscheiden",
-        "text": "Der Umsatz – die Umsätze, die Ausgabe – die Ausgaben und die Liquidität – hier ohne Plural – haben unterschiedliche Bedeutungen. Im fiktiven Beispiel sind 300 Euro am Monatsanfang verfügbar, 200 Euro gehen sofort ab und 250 Euro erst am Monatsende ein. Vor diesem Eingang bleiben 100 Euro verfügbar. Erwartetes späteres Geld bezahlt nicht automatisch eine früher fällige Rechnung."
+        "text": "Umsatz ist das Geld aus deinen Verkäufen, bevor du Kosten abziehst. Liquidität heißt: Du kannst fällige Rechnungen rechtzeitig bezahlen. Im Beispiel hast du zuerst 300 Euro. Davon zahlst du sofort 200 Euro. Bis zum späteren Eingang von 250 Euro bleiben 100 Euro. Plane deshalb nicht nur Beträge, sondern auch Zahlungstage."
       },
       {
         "titel": "Vor Verpflichtungen Beratung nutzen",
@@ -971,7 +996,12 @@
         "url": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Gr%C3%BCndung-und-Nachfolge/Gr%C3%BCndung/",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei make-it-in-germany.com.",
+    "standQuelle": {
+      "titel": "Make it in Germany: Gründung vorbereiten",
+      "url": "https://www.make-it-in-germany.com/de/arbeiten-in-deutschland/existenzgruendung"
+    }
   },
   {
     "id": "b5-8",
@@ -986,15 +1016,15 @@
       },
       {
         "titel": "Abhängigkeiten sichtbar machen",
-        "text": "Ein Entwicklungsplan muss nicht alle Möglichkeiten gleichzeitig verfolgen. Markiere, welche Entscheidung eine andere voraussetzt. Eine Kurswahl kann von einer festgestellten Qualifikationslücke abhängen; eine Anmeldung von geklärter Finanzierung. Ein offener Antrag ist noch keine Zusage. Halte daher für jeden Schritt Ausgangslage, benötigte Information und nächste Handlung fest."
+        "text": "Ein Entwicklungsplan muss nicht alle Möglichkeiten gleichzeitig verfolgen. Markiere, welche Entscheidung eine andere voraussetzt. Wähle einen Kurs passend zu dem, was du noch lernen musst. Kläre vor der Anmeldung, wie du ihn finanzierst. Ein offener Antrag ist noch keine Zusage. Halte daher für jeden Schritt Ausgangslage, benötigte Information und nächste Handlung fest."
       },
       {
         "titel": "Termine und Ergebnisse verbinden",
-        "text": "Der Meilenstein – die Meilensteine, die Rückschau – die Rückschauen und die Entscheidung – die Entscheidungen helfen bei der Übersicht. „Nächste Woche Zuständigkeit klären“ ist überprüfbarer als „bald alles erledigen“. Ein Termin für eine eigene Handlung ist nicht automatisch eine garantierte Bearbeitungsfrist der Behörde. Plane Puffer und kennzeichne fremde Entscheidungen als abhängig."
+        "text": "Ein Meilenstein ist ein prüfbares Zwischenergebnis. Notiere zum Beispiel: „Nächste Woche frage ich nach der zuständigen Stelle.“ Das ist dein eigener Arbeitsschritt. Du kannst damit keine Antwort der Behörde bis zu diesem Termin garantieren. Plane Wartezeit ein. Markiere, auf welche Antwort du vor einer weiteren Entscheidung noch angewiesen bist."
       },
       {
         "titel": "Den Plan nach Belegen aktualisieren",
-        "text": "Prüfe regelmäßig, welche Antwort tatsächlich eingegangen und welche Aufgabe erledigt ist. Passe die Reihenfolge an, wenn neue Informationen vorliegen. Eine verworfene Kursidee kann ein sinnvolles Ergebnis sorgfältiger Prüfung sein. Der Abschluss dieser Reihe bedeutet nicht, dass Anerkennung, Finanzierung oder Selbstständigkeit bereits genehmigt sind; er gibt dir einen geordneten nächsten Arbeitsplan."
+        "text": "Prüfe regelmäßig, welche Antwort tatsächlich eingegangen und welche Aufgabe erledigt ist. Passe die Reihenfolge an, wenn neue Informationen vorliegen. Eine verworfene Kursidee kann ein sinnvolles Ergebnis sorgfältiger Prüfung sein. Nach dem Kurs hast du einen Plan für deine nächsten Schritte. Über Anerkennung, Finanzierung oder eine nötige Erlaubnis entscheiden die zuständigen Stellen."
       }
     ],
     "fehler": [
@@ -1110,6 +1140,11 @@
         "url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/anerkennung-abschluss",
         "stand": "2026-11-11"
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei arbeitsagentur.de.",
+    "standQuelle": {
+      "titel": "Bundesagentur für Arbeit: Anerkennungsweg",
+      "url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/anerkennung-abschluss"
+    }
   }
 ];if(typeof module!=="undefined"&&module.exports)module.exports=root.SDAkademieKurse["weiterkommen"];})(typeof window!=="undefined"?window:globalThis);
