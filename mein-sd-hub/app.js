@@ -135,7 +135,7 @@ function ladeKurs(id){
  kursLadevorgaenge.set(id,p);return p;
 }
 const A=window.SDAkademieI18n;
-function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
+function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined){A.bind(el,text);if(!el.dataset.akSource&&el.closest("#lessonDetail,#lessonList")){el.lang="de";el.dir="ltr"}}if(["code-lesson","quiz"].includes(cls)){el.lang="de";el.dir="ltr"}return el}
 function renderCourses(){
  clearChildren("courses");
  for(const bereich of ["Programmieren","Computer & Internet","Deutsch","Arbeit & Beruf"]){
@@ -230,7 +230,7 @@ function academySourceUrl(raw){
  const hosts=["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
  return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
+function renderLesson(){academyPythonRunner?.stop();clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.sprache==="python"){renderPythonLesson(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
 if(l.standHinweis&&l.standQuelle){
  const url=academySourceUrl(l.standQuelle.url);
  if(url){
@@ -316,7 +316,7 @@ function academyToStudio(baseName,code){
     check.onsuccess=()=>{
      if(check.result){number++;return}
      const html=['<!doctype html>','<html lang="de">','<head>','  <meta charset="utf-8">','  <meta name="viewport" content="width=device-width, initial-scale=1">','  <link rel="stylesheet" href="style.css">','</head>','<body>',code.html,'  <script src="script.js"><'+'/script>','</body>','</html>'].join("\n");
-     store.add({name,dateien:{"index.html":html,"style.css":code.css,"script.js":code.js},haupt:"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
+     store.add({name,dateien:code.python!==undefined?{"main.py":code.python}:{"index.html":html,"style.css":code.css,"script.js":code.js},haupt:code.python!==undefined?"main.py":"index.html",versionen:[],erstellt:Date.now(),t:Date.now()});
     };
     tx.oncomplete=()=>{if(check.result){choose()}else{db.close();resolve(name)}};
     tx.onerror=()=>{db.close();reject(tx.error)};
@@ -325,6 +325,55 @@ function academyToStudio(baseName,code){
   };
  });
 }
+let academyPythonRunner;
+function renderPythonLesson(l){
+ const wrap=akNode('section','code-lesson python-lesson',undefined,$('lessonDetail'));wrap.lang='de';wrap.dir='ltr';
+ akNode('h4','',l.title,wrap);akNode('p','ak-intro',l.explanation,wrap);
+ akNode('h5','','Dein Ziel',wrap);akNode('p','',l.ziel,wrap);
+ for(const [i,step] of l.schritte.entries()){
+  const sec=akNode('section','code-step',undefined,wrap);akNode('h5','',(i+1)+'. '+step.titel,sec);
+  mitCode(akNode('p','',undefined,sec),step.text);node('code','',step.code,akNode('pre','code-example',undefined,sec));mitCode(akNode('p','',undefined,sec),step.erklaerung);
+ }
+ akNode('h5','','Häufige Fehler',wrap);
+ for(const f of l.fehler){akNode('h6','',f.titel,wrap);mitCode(akNode('p','',undefined,wrap),f.text);}
+ akNode('h5','','Deine Aufgabe',wrap);akNode('p','',l.aufgabe.text,wrap);
+ const editor=akNode('textarea','code-textarea python-editor',undefined,wrap);editor.lang='de';editor.dir='ltr';editor.rows=12;editor.spellcheck=false;editor.setAttribute('aria-label','Python-Code');
+ const draft=academyDrafts.get(l.id)||{python:l.beispiel.python};academyDrafts.set(l.id,draft);editor.value=draft.python;editor.oninput=()=>{draft.python=editor.value;passed=false;};
+ const inputLabel=akNode('label','','Eingaben vor dem Start',wrap),input=akNode('textarea','',undefined,inputLabel);input.dir='ltr';input.value=l.beispiel.eingabe||'';input.rows=2;
+ const run=akNode('button','btn primary','Python ausführen und prüfen',wrap),stop=akNode('button','btn outline small','Python stoppen',wrap);stop.hidden=true;
+ const bar=akNode('progress','',undefined,wrap);bar.max=100;bar.hidden=true;A.attr(bar,'aria-label','Python laden');
+ const status=akNode('p','message','',wrap);status.setAttribute('role','status');
+ const output=akNode('pre','code-example python-output',undefined,wrap);output.lang='de';output.dir='ltr';
+ const hint=akNode('p','hint',undefined,wrap);hint.hidden=true;
+ const solution=akNode('button','btn outline small','Lösung zeigen',wrap);solution.hidden=true;
+ const online=akNode('button','btn outline small','Im Code-Studio öffnen ↗',wrap);
+ let passed=false,failures=0;const correct=new Set();
+ const finish=()=>{if(passed&&correct.size===l.quiz.length&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses();}};
+ run.onclick=async()=>{
+  const source=editor.value;draft.python=source;run.disabled=true;stop.hidden=false;bar.hidden=false;bar.value=0;output.textContent='';passed=false;
+  academyPythonRunner=window.SDPythonRunner.create();stop.onclick=()=>academyPythonRunner.stop();
+  try{
+   const result=await academyPythonRunner.run({files:{'main.py':source},main:'main.py',stdin:input.value,checks:l.aufgabe.faelle},{
+    onProgress:data=>{bar.value=data.percent;A.set(status,'Python laden: '+data.percent+' %');},
+    onOutput:data=>{output.textContent+=data.text+'\n';}
+   });
+   passed=source===editor.value&&result.checks.length===l.aufgabe.faelle.length&&result.checks.every(c=>c.ok);
+   A.set(status,passed?'Alle Python-Prüfungen bestanden.':'Die Python-Prüfungen sind noch nicht bestanden.');
+   if(!passed)failures++;finish();
+  }catch(error){status.textContent=error.message;status.lang='de';status.dir='ltr';failures++;}
+  finally{run.disabled=false;stop.hidden=true;bar.hidden=true;hint.hidden=failures<2;solution.hidden=failures<3;}
+ };
+ A.set(hint,'Tipp: '+l.aufgabe.tipp);
+ solution.onclick=()=>{draft.python=l.aufgabe.loesung.python;editor.value=draft.python;passed=false;};
+ online.onclick=async()=>{online.disabled=true;try{const name=await academyToStudio('Akademie – '+l.title,{python:editor.value});location.href='/studio/index.html?projekt='+encodeURIComponent(name);}catch(error){status.textContent=error.message;online.disabled=false;}};
+ akNode('h5','','Wissen prüfen',wrap);
+ l.quiz.forEach((q,qi)=>{
+  const box=akNode('section','code-quiz',undefined,wrap);akNode('h5','',q.frage,box);const choices=akNode('div','answers',undefined,box),feedback=akNode('p','feedback',undefined,box);
+  q.antworten.forEach((answer,index)=>{const button=akNode('button','',answer,choices);button.onclick=()=>{if(correct.has(qi))return;const ok=index===q.richtig;feedback.textContent=q.begruendungen[index]+' '+q.erklaerung;feedback.lang='de';feedback.dir='ltr';if(ok){correct.add(qi);Array.from(choices.children).forEach(b=>b.disabled=true);finish();}feedback.classList.toggle('error',!ok);};});
+ });
+ akNode('h5','','Das merkst du dir',wrap);for(const text of l.merke)mitCode(akNode('p','',undefined,wrap),text);
+}
+
 function renderCodeLesson(l){
  const area=$("lessonDetail"),wrap=akNode("section","code-lesson",undefined,area);
  akNode("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);

@@ -256,7 +256,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     </div>
     <div id="unten">
       <div id="untenTabs"><button data-u="ausgabe" class="an">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
-      <div data-feld="ausgabe"><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
+      <div data-feld="ausgabe"><pre id="ausgabe">Bereit.</pre><div id="pythonControls" role="status"><span id="pythonStatus"></span><progress id="pythonProgress" max="100" value="0" hidden aria-label="Python laden"></progress><button id="pythonStop" type="button" hidden>Python stoppen</button><button id="pythonOnline" type="button" hidden>Online-Ausweichlösung: Wandbox</button></div><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
       <div data-feld="konsole" hidden><div id="konsoleAus"></div><div class="reihe"><input id="konsoleEin" placeholder="❯ JavaScript in der Vorschau ausführen, z. B. document.title" style="flex:1"><button id="konsoleLeer">Leeren</button></div></div>
       <div data-feld="probleme" hidden>
         <div class="reihe" id="diagnoseAktionen">
@@ -473,6 +473,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./agent-proposal-guard.js?v=20261106-proposal-guard-1"></script>
 <script src="./studio-visual-text.js?v=20261101-visual-1"></script>
 <script src="./studio-modules.js?v=20261101-module-1"></script>
+<script src="./python-runner.js"></script>
 <script src="studio.js?v=20261101-module-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>

@@ -19,7 +19,7 @@ test("17 direct tools and guided goals have valid IDs and unique URLs",()=>{asse
 test("all referenced local tool URLs resolve to a real file",()=>{const links=new Set(data.items.map(x=>x.href));for(const p of data.paths)for(const step of p.steps)links.add(step[2]);for(const p of data.academy)assert.ok(p.anzahl>0);for(const href of links){const file=fileForHref(href);assert.ok(file,"unsafe URL "+href);assert.ok(fs.existsSync(file),"missing "+href)}});
 test("recommendation matches natural German B1 request",()=>{const found=data.recommend("Ich möchte B1 üben");assert.ok(found.some(x=>x.id==="b1"),JSON.stringify(found.map(x=>x.id)))});
 test("recommendations handle common needs and do not leak unbounded data",()=>{for(const [query,target] of [["Pibo spielen","pibo"],["Lebenslauf schreiben","jobs"],["PDF unterschreiben","pdf"],["Code programmieren","studio"],["Brief verstehen","post"]]){const found=data.recommend(query,8);assert.ok(found.some(x=>x.id===target),query+" -> "+found.map(x=>x.id))}assert.ok(data.recommend("ich",999).length<=8);assert.deepEqual(data.recommend(""),[])});
-test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,19);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,153);assert.equal(new Set(lessons.map(x=>x.id)).size,153);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
+test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,20);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,161);assert.equal(new Set(lessons.map(x=>x.id)).size,161);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
 test("paths contain twenty distinct checkable steps",()=>{assert.equal(data.paths.length,4);assert.equal(data.paths.reduce((n,p)=>n+p.steps.length,0),20);for(const p of data.paths){assert.equal(p.steps.length,5);for(const step of p.steps)assert.equal(step.length,3)}});
 test("translation examples cover supported languages",()=>{assert.ok(data.phrases.length>=10);for(const p of data.phrases){for(const lang of ["de","en","fa","ur","ti"])assert.ok(typeof p[lang]==="string"&&p[lang].length>2,p.id+" "+lang)}});
 test("safe state sanitizer rejects unknown ids, duplicates and private fields",()=>{const s=data.sanitizeState({completedLessons:["g-1","g-1","not-a-lesson"],completedSteps:["job:2","job:2","bad:8"],favorites:["pibo","pibo","evil"],recent:["studio","evil"],nickname:"<script>alert(1)</script>",privateData:"must-drop",updatedAt:"s".repeat(400)});assert.deepEqual(s.completedLessons,["g-1"]);assert.deepEqual(s.completedSteps,["job:2"]);assert.deepEqual(s.favorites,["pibo"]);assert.deepEqual(s.recent,["studio"]);assert.ok(!s.nickname.includes("<"));assert.ok(!("privateData"in s));assert.ok(s.updatedAt.length<=32)});
@@ -521,4 +521,15 @@ test("DIN 5008: sichere Form-B-Maße, klare Empfehlung und verlinkte Vorlage",()
  const text=l.schrittePraxis.map(s=>s.text).join(" ");
  for(const pattern of [/übliche Werte nach DIN 5008 \(Form B\)/,/links 25 mm/,/rechts üblicherweise 20 mm/,/45 mm unter/,/zwei Leerzeilen/,/105 mm und 210 mm/,/12 pt/,/keine vorgeschriebene DIN-Schriftgröße/])assert.match(text,pattern);
  assert.ok(l.quellen.some(q=>q.url==="https://desy.zoll-portal.de/inhalte/pdf-dokumente/"));
+});
+
+test('Python: acht ausführbare Praxislektionen mit variierenden Testdaten und konkreten Fehlern',()=>{
+ const lessons=require('../mein-sd-hub/kurse/python.js');assert.equal(lessons.length,8);
+ for(const lesson of lessons){
+  assert.equal(lesson.sprache,'python');assert.equal(lesson.schritte.length,4);assert.equal(lesson.quiz.length,3);
+  assert(lesson.schritte.every(s=>s.code&&s.erklaerung));assert(lesson.aufgabe.faelle.length>=2);
+  assert.notEqual(lesson.beispiel.python,lesson.aufgabe.loesung.python);
+  for(const e of lesson.fehler){assert.match(e.text,/Falsch:/);assert.match(e.text,/Richtig:/);assert(e.text.length>=140);}
+  for(const q of lesson.quiz){assert.equal(q.begruendungen.length,3);assert(q.begruendungen.every(s=>s.length>20));}
+ }
 });

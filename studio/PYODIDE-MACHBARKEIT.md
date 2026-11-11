@@ -36,3 +36,12 @@ Nur Code- und Quellenprüfung. Kein lokaler Browserstart, kein Pyodide-Prototyp 
 - [Web Worker und Module-Modus](https://pyodide.org/en/stable/usage/webworker.html)
 - [FAQ: Dateisystem und Browsergrenzen](https://pyodide.org/en/stable/usage/faq.html)
 - [Version 314.0.7 und Downloadgrößen](https://github.com/pyodide/pyodide/releases/tag/314.0.7)
+
+## Freigegebene Umsetzung
+Die Umsetzung wurde am 11.11.2026 freigegeben. Dieser PR enthält jetzt die selbst gehostete Minimalinstallation 314.0.7, einen frischen Module-Worker je Lauf, bytebasierten Downloadfortschritt bis 95 % und danach die Initialisierung bis 100 %. CacheStorage speichert die geprüften Runtime-Dateien für spätere Starts. Schlägt die Speicherung fehl oder wird der Cache gelöscht, ist Offline-Start nicht zugesichert.
+
+Python läuft standardmäßig lokal. Nach einem Fehler kann die Person Wandbox ausdrücklich auswählen; vor der Übertragung von Code und Eingaben erscheint ein eigener Zustimmungsdialog. Andere Programmiersprachen behalten ihre bisherige Ausführung. Worker halten die Oberfläche bedienbar, sind aber keine Sicherheitsgrenze gegenüber Browser-Web-APIs: nur vertrauenswürdigen Quelltext ausführen. Python-Pakete werden nicht automatisch von fremden Servern installiert.
+
+Der neue Kurs enthält acht Lektionen mit ausgearbeiteten Erklärungen, Testfällen für wechselnde Daten, Fehlbeispielen, je drei begründeten Quizfragen und einem Ausgabenplan mit JSON. Virtuelle Dateien sind pro Lauf flüchtig. Die Python-Prüfung verlangt tatsächliche Ausführung; Kommentare und bloß fest ausgegebene Beispielantworten reichen nicht.
+
+Die lokale Shell ist inzwischen verfügbar: Akademie- und Studio-Node-Prüfungen wurden ausgeführt. Der lokale Chromium-Start scheitert an `socket() failed: Operation not permitted`; Browser-Messungen werden deshalb in GitHub Actions ermittelt und im PR berichtet. Ein Desktop-CI-Wert über lokalen HTTP ist keine Handy- oder Mobilfunkmessung.

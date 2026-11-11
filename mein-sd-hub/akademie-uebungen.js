@@ -15,7 +15,7 @@ function pruefen(uebung,antwort){
 function render(container,uebung){
  const A=root.SDAkademieI18n||{bind:()=>{},set:(el,t)=>{el.textContent=t},attr:(el,k,t)=>el.setAttribute(k,t)};
  const el=(tag,txt,parent=container)=>{const n=document.createElement(tag);if(txt!==undefined){n.textContent=txt;A.bind(n,txt)}parent.appendChild(n);return n};
- const box=el("section");box.className="ak-uebung";
+ const box=el("section");box.className="ak-uebung";box.lang="de";box.dir="ltr";
  el("h5",uebung.titel||"Übung",box);
  el("p",uebung.aufgabe||"",box);
  let read;
