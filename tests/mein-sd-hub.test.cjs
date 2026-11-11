@@ -404,6 +404,6 @@ test("D1 und D2: Lehrinhalte mit vier Übungsformen und stabilen IDs",()=>{
  assert.deepEqual(a2.map(l=>l.id),Array.from({length:8},(_,i)=>"d2-"+(i+1)));
  for(const [name,lessons] of [["D1",a1],["D2",a2]]){
   checkAcademyQuality(name,lessons);
-  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.fehler.length,2);assert.deepEqual(l.uebungen.map(u=>u.typ),["luecke","zuordnen","hoeren","schreiben"]);assert.ok(l.schrittePraxis.some(s=>/der |die |das /u.test(s.text)));}
+  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.fehler.length,2);assert.deepEqual(l.uebungen.map(u=>u.typ),["luecke","zuordnen","hoeren","schreiben"]);const writing=l.uebungen.find(u=>u.typ==="schreiben");assert.ok(Array.isArray(writing.checkliste),l.id+" Checkliste fehlt");assert.ok(writing.checkliste.length>=3&&writing.checkliste.length<=4,l.id+" Checkliste muss 3–4 Punkte haben");for(const point of writing.checkliste){assert.ok(point.length>=18,l.id+" Checklistenpunkt zu allgemein");assert.match(point,/[?.!]$/,l.id+" Checklistenpunkt unvollständig")}assert.ok(l.schrittePraxis.some(s=>/der |die |das /u.test(s.text)));}
  }
 });
