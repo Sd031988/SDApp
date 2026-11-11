@@ -302,3 +302,31 @@ test("C2 Internet & E-Mail: acht Lektionen und 24 begründete Quizfragen",()=>{
  assert.equal(data.academy.find(c=>c.id==="internet-email").anzahl,8);
  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.ok(l.fehler.length>=2);assert.ok(l.merke.length>=2)}
 });
+
+test("Alle Kurse: ein Fehler-Titel kommt in höchstens zwei Lektionen vor",()=>{
+ const titles=new Map();
+ for(const course of data.academy){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
+  for(const lesson of lessons)for(const error of lesson.fehler||[]){
+   const title=String(error.titel||error.title||"").trim();
+   assert.ok(title.length>8,lesson.id+" braucht einen aussagekräftigen Fehler-Titel");
+   const ids=titles.get(title)||new Set();ids.add(lesson.id);titles.set(title,ids);
+  }
+ }
+ for(const [title,ids] of titles)assert.ok(ids.size<=2,"Fehler-Titel mehrfach: "+title+" in "+[...ids].join(", "));
+});
+
+test("Alle Kurse: keine zwei Kurse teilen dieselbe vollständige Quiz-Antwortfolge",()=>{
+ const seen=new Map();
+ for(const course of data.academy){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
+  const quizLessons=lessons.filter(lesson=>Array.isArray(lesson.quiz)&&lesson.quiz.length>0);
+  if(!quizLessons.length)continue; // Alt-Kurse ohne Quiz besitzen keine Antwortfolge.
+  const sequence=quizLessons.map(lesson=>lesson.quiz.map(q=>{
+   assert.ok(Number.isInteger(q.richtig)&&q.richtig>=0&&q.richtig<q.antworten.length,lesson.id+" gültige Antwort");
+   return q.richtig;
+  }).join("")).join("|");
+  assert.ok(!seen.has(sequence),course.id+" hat dieselbe Antwortfolge wie "+seen.get(sequence));
+  seen.set(sequence,course.id);
+ }
+});
