@@ -1,8 +1,8 @@
 /* =====================================================================
    SD Code-Studio (online) – professioneller Code-Editor im Browser
    Projekte liegen im Browser-Speicher (IndexedDB). Webseiten laufen über
-   einen Vorschau-Server im Browser (vorschau-sw.js). Programme in Python,
-   C, C++, C#, Java, Rust und Go laufen über den kostenlosen Dienst wandbox.org.
+   einen Vorschau-Server im Browser (vorschau-sw.js). Python läuft lokal
+   im Worker. C, C++, C#, Java, Rust und Go nutzen weiterhin wandbox.org.
    ===================================================================== */
 'use strict';
 const $ = id => document.getElementById(id);
