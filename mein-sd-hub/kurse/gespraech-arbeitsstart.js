@@ -17,7 +17,7 @@
       },
       {
         "titel": "Format und Anfahrt getrennt prüfen",
-        "text": "Der Zugang – die Zugänge, die Einladung – die Einladungen und die Kontaktperson – die Kontaktpersonen erleichtern die Notiz. Für ein Videogespräch brauchst du einen ruhigen Platz und funktionierende Technik. Für einen Besuch prüfst du Anfahrt und Empfang. Ein Link wird vor dem Öffnen dem tatsächlichen Absender zugeordnet; eine unerwartete Installation klärst du über den bekannten Kontakt."
+        "text": "Prüfe für ein Videogespräch Kamera, Mikrofon und einen ruhigen Platz. Bei einem Besuch brauchst du den richtigen Eingang und die Anfahrt. Ein Zugangslink muss zum bestätigten Absender passen. Verlangt die Nachricht eine unerwartete Installation, frage beim bekannten Kontakt nach. Halte dessen Telefonnummer für Probleme bereit."
       },
       {
         "titel": "Einen überschaubaren Techniktest machen",
@@ -149,7 +149,7 @@
       },
       {
         "titel": "Mit Verben konkret werden",
-        "text": "Die Bestandsliste – die Bestandslisten und die Beratung – die Beratungen benennen Arbeitsinhalte. „Erstellen“, „prüfen“ und „beraten“ zeigen Tätigkeiten. „Ich war für alles zuständig“ lässt Umfang und Verantwortung offen. Sage etwa „Ich erstellte jede Woche die Bestandsliste“. Wenn du eine Aufgabe nur mit Hilfe erledigt hast, kennzeichne diesen Umfang auch in der Vorstellung."
+        "text": "Beschreibe deinen Beitrag mit Verben. „Ich erstellte jede Woche die Bestandsliste“ ist genauer als „Ich war für alles zuständig“. Sage, welche Aufgabe du selbst erledigt hast. Hast du dabei Hilfe gebraucht, nenne das ebenfalls. Eine kurze, genaue Beschreibung zeigt mehr als ein großer Titel ohne Beispiel."
       },
       {
         "titel": "Die Vorstellung mündlich erproben",
@@ -281,7 +281,7 @@
       },
       {
         "titel": "Eigenen und gemeinsamen Anteil trennen",
-        "text": "Der Beitrag – die Beiträge, die Abweichung – die Abweichungen und die Einlagerung – die Einlagerungen benennen verschiedene Teile des Beispiels. „Ich meldete“ beschreibt Bilals Handlung. „Das Team klärte“ lässt die gemeinsame Verantwortung sichtbar. Diese Unterscheidung wirkt präziser als „Ich habe allein alle Probleme gelöst“, wenn andere an der Lösung beteiligt waren."
+        "text": "Trenne deinen Beitrag von der Arbeit des Teams. Bilal verglich die Kartons und meldete die falsche Menge. Das Team klärte danach die Abweichung. Eine Abweichung ist hier ein Unterschied zwischen Liste und Lieferung. Bilal sollte deshalb nicht behaupten, dass er allein über die Nachlieferung entschieden hat."
       },
       {
         "titel": "Auf Nachfragen vorbereitet bleiben",
@@ -413,7 +413,7 @@
       },
       {
         "titel": "Einen konkreten Lernschritt beschreiben",
-        "text": "Die Eingabe – die Eingaben, die Anleitung – die Anleitungen und die Übungsbuchung – die Übungsbuchungen gehören zum Lernplan. Ein kontrollierter Versuch mit Beispieldaten ist etwas anderes als eine ungeprüfte Buchung im Produktivsystem. Kläre, wo geübt werden darf und wer die ersten Schritte begleitet. Bei Fehlern fragst du vor weiteren Änderungen nach."
+        "text": "Frage, wo und mit welchen Daten du üben darfst. Eine Übungsbuchung nutzt passende Beispieldaten. Sie darf nicht ungefragt echte Bestände verändern. Lass dir den Ablauf zuerst zeigen. Wiederhole dann einen freigegebenen Schritt unter Anleitung. Vergleiche deine Eingaben mit der Vorgabe und frage bei einem Fehler nach."
       },
       {
         "titel": "Angemessen über Grenzen sprechen",
@@ -545,7 +545,7 @@
       },
       {
         "titel": "Unbekannte Bedingungen dokumentieren",
-        "text": "Die Aufgabenverteilung – die Aufgabenverteilungen und der Dienstplan – die Dienstpläne benennen wichtige Rahmenbedingungen. Eine Beschreibung einer typischen Schicht ist nicht automatisch eine feste vertragliche Zusage für jeden Tag. Notiere die Antwort mit ihrem tatsächlichen Umfang. Wenn eine Bedingung für dich entscheidend ist, bitte um konkrete Klärung statt sie aus einem Beispiel zu verallgemeinern."
+        "text": "Ein Dienstplan zeigt, wann du eingesetzt wirst. Frage, wie früh du ihn bekommst und wie Änderungen mitgeteilt werden. Die Beschreibung einer typischen Frühschicht ist noch keine feste Zusage für jeden Tag. Ist eine Zeit für dich entscheidend, bitte um eine klare Auskunft. Notiere, was bestätigt und was noch offen ist."
       },
       {
         "titel": "Nach der Antwort zusammenfassen",
@@ -677,11 +677,11 @@
       },
       {
         "titel": "Mitbringliste nicht erfinden",
-        "text": "Die Ansprechperson – die Ansprechpersonen und die Ausgabe – die Ausgaben helfen bei der Orientierung. Bringe die ausdrücklich angeforderten und für den Zweck nötigen Unterlagen über den vereinbarten Weg mit. Eine Kursliste ersetzt keine betriebliche Aufforderung. Schicke sensible Angaben nicht vorsorglich an irgendeine Adresse, nur weil bald dein erster Tag ist."
+        "text": "Bringe die vorher angeforderten Unterlagen über den vereinbarten Weg mit. Eine allgemeine Kursliste ersetzt keine Nachricht deines Betriebs. Fehlt eine Angabe, frage die Kontaktperson. Sende sensible Daten nicht vorsorglich an eine unbekannte Adresse. Notiere auch, ob Kleidung vor Ort ausgegeben wird oder ob du etwas mitbringen sollst."
       },
       {
         "titel": "Am Anfang aufmerksam nachfragen",
-        "text": "Plane Zeit für Anmeldung und Orientierung ein. Frage, wo persönliche Sachen abgelegt werden und wer die Einarbeitung begleitet. Eine höfliche Rückfrage ist besser als das Betreten eines unklaren Bereichs. Aufgaben, Sicherheitsregeln und Zugänge werden dir erklärt; ein früheres Gespräch über eine ähnliche Tätigkeit ersetzt nicht die Einführung in diesen Betrieb."
+        "text": "Plane Zeit für Anmeldung und Orientierung ein. Frage, wo persönliche Sachen abgelegt werden und wer die Einarbeitung begleitet. Eine höfliche Rückfrage ist besser als das Betreten eines unklaren Bereichs. Lass dir Aufgaben, Sicherheitsregeln und Zugänge im neuen Betrieb erklären. Vorerfahrung ersetzt diese Einführung nicht."
       }
     ],
     "fehler": [
@@ -809,7 +809,7 @@
       },
       {
         "titel": "Unklare Schritte konkret benennen",
-        "text": "Die Einweisung – die Einweisungen, die Abschaltung – die Abschaltungen und die Schutzmaßnahme – die Schutzmaßnahmen sind zentrale Begriffe. „Ich verstehe gar nichts“ ist weniger gezielt als „Bitte zeigen Sie mir die Abschaltung noch einmal“. Beziehe dich auf die konkrete Aufgabe. Betriebliche Sicherheitsanweisungen und zuständige Personen bestimmen das weitere Vorgehen."
+        "text": "Bei einer Einweisung zeigt dir eine zuständige Person die nötigen Arbeitsschritte und Schutzmaßnahmen. Frage genau nach dem unklaren Schritt. „Bitte zeigen Sie mir die Abschaltung noch einmal“ ist eine klare Bitte. Wiederhole danach den Ablauf in eigenen Worten. So kann die Anleiterin prüfen, ob ihr dasselbe meint."
       },
       {
         "titel": "Lernstand und Freigabe unterscheiden",
@@ -941,7 +941,7 @@
       },
       {
         "titel": "Nächste Schritte schriftlich sichern",
-        "text": "Der Ausnahmefall – die Ausnahmefälle, die Begleitung – die Begleitungen und die Rückmeldung – die Rückmeldungen benennen den Lernbedarf. Notiere, welche Person eine Frage klärt und wann der nächste Versuch stattfindet. Eine Rückmeldung über den Lernstand ist nicht automatisch eine Änderung des Arbeitsvertrags. Halte ihren tatsächlichen Inhalt fest, ohne zusätzliche Entscheidungen hineinzulesen."
+        "text": "Notiere die offene Aufgabe und die zuständige Person. Ben braucht Hilfe beim Melden beschädigter Verpackungen. Er hält deshalb die Schichtleitung als Kontakt fest. Außerdem vereinbart er Begleitung beim nächsten Fall. Ein solcher Lernhinweis ändert noch keine Vertragsbedingung. Schreibe nur auf, was im Gespräch wirklich vereinbart wurde."
       },
       {
         "titel": "Fortschritt mit einer neuen Beobachtung prüfen",

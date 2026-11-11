@@ -481,3 +481,44 @@ test("B5: Quellen, alle Stufen und gespeicherter Berufsfortschritt bleiben nachv
  assert.equal(engineResult(),null);
  function engineResult(){return require(path.join(root,"mein-sd-hub/akademie-uebungen.js")).pruefen(lessons[7].uebungen[3],"Ein beliebiger freier Text").ok}
 });
+
+
+// Der vorgeschriebene Stand-Hinweis ist bewusst ein separates Feld.
+// Die Anti-Wiederholungsprüfungen für eigenständige Lehrtexte bleiben unverändert.
+test("Rechtsstand: Paragrafen, Fristen und kuratierte Rechtsthemen haben sichtbaren Hinweis und echte Quellen",()=>{
+ const hosts=new Set(["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.verbraucherzentrale.de","www.anerkennung-in-deutschland.de","www.make-it-in-germany.com"]);
+ const required={"arbeit-finden":["b1-2","b1-3","b1-5"],"arbeitsvertrag-rechte":Array.from({length:8},(_,i)=>"b4-"+(i+1)),"weiterkommen":Array.from({length:7},(_,i)=>"b5-"+(i+2))};
+ for(const [id,curated] of Object.entries(required))for(const l of require(path.join(root,"mein-sd-hub/kurse",id+".js"))){
+  const {standHinweis,standQuelle,...content}=l;
+  if(!curated.includes(l.id)&&!/[§]|frist/iu.test(JSON.stringify(content)))continue;
+  assert.match(standHinweis||"",/^Stand: November 2026\. Allgemeine Information, keine Rechtsberatung\. Prüfe aktuelle Regeln bei /,l.id);
+  const url=new URL(standQuelle.url);assert.equal(url.protocol,"https:");assert.ok(hosts.has(url.hostname),l.id);
+  assert.ok(standHinweis.includes(url.hostname.replace(/^www\./,"")),l.id+" Quelle im Hinweis");
+ }
+});
+
+test("Berufskurse: kurze Sätze und verständliche Fachbegriffe ohne Fülltext",()=>{
+ const segmenter=new Intl.Segmenter("de",{granularity:"sentence"});
+ for(const id of ["arbeit-finden","career","gespraech-arbeitsstart","arbeitsvertrag-rechte","weiterkommen"]){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
+  for(const l of lessons)for(const step of l.schrittePraxis){
+   for(const {segment} of segmenter.segment(step.text)){
+    const words=segment.trim().split(/\s+/u).filter(w=>/[\p{L}\p{N}]/u.test(w));
+    assert.ok(words.length<=20,l.id+" "+words.length+" Wörter: "+segment);
+   }
+   assert.doesNotMatch(step.text,/werden hier ohne Plural verwendet|wird hier ohne Plural gebraucht/iu,l.id);
+  }
+ }
+ const contracts=require(path.join(root,"mein-sd-hub/kurse/arbeitsvertrag-rechte.js"));
+ assert.match(contracts[0].explanation,/Entgelt ist das Geld/);
+ assert.match(contracts[4].explanation,/Arbeitsunfähigkeit heißt/);
+ assert.match(contracts[5].explanation,/Befristung begrenzt/);
+ assert.match(contracts[5].explanation,/Probezeit ist/);
+});
+
+test("DIN 5008: sichere Form-B-Maße, klare Empfehlung und verlinkte Vorlage",()=>{
+ const l=require(path.join(root,"mein-sd-hub/kurse/buero-programme.js")).find(l=>l.id==="c4-3");
+ const text=l.schrittePraxis.map(s=>s.text).join(" ");
+ for(const pattern of [/übliche Werte nach DIN 5008 \(Form B\)/,/links 25 mm/,/rechts üblicherweise 20 mm/,/45 mm unter/,/zwei Leerzeilen/,/105 mm und 210 mm/,/12 pt/,/keine vorgeschriebene DIN-Schriftgröße/])assert.match(text,pattern);
+ assert.ok(l.quellen.some(q=>q.url==="https://desy.zoll-portal.de/inhalte/pdf-dokumente/"));
+});

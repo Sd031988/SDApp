@@ -17,7 +17,7 @@
       },
       {
         "titel": "Zeit und Arbeitsweg realistisch prüfen",
-        "text": "Zum Profil gehören das Zeitfenster – die Zeitfenster, die Erfahrung – die Erfahrungen und der Arbeitsweg – die Arbeitswege. Rechne beim Weg auch Umstieg und Fußweg ein. Eine halbe Stunde Fahrt bedeutet nicht automatisch, dass du bei einer Schicht bis 15 Uhr um 15 Uhr zu Hause bist. Vergleiche Arbeitsende und tatsächlich nötige Ankunftszeit."
+        "text": "Für dein Zeitfenster zählen Arbeitszeit und Heimweg. Rechne auch den Weg zur Haltestelle und mögliche Umstiege ein. Endet die Schicht um 15 Uhr, bist du erst später zu Hause. Prüfe deshalb zwei Zeiten: Wann endet die Arbeit? Wann musst du zu Hause sein? Teste den Weg zu einer passenden Uhrzeit."
       },
       {
         "titel": "Suchkriterien gewichten",
@@ -136,7 +136,7 @@
     "id": "b1-2",
     "title": "Beschäftigungsformen auseinanderhalten",
     "minutes": 40,
-    "explanation": "Du unterscheidest Umfang und Dauer einer Stelle, ohne aus einem einzelnen Wort alle Vertragsbedingungen abzuleiten.",
+    "explanation": "Befristet heißt: Ein Vertrag endet nach der vereinbarten Zeit oder nach einem vereinbarten Zweck. Du prüfst Umfang und Dauer einer Stelle getrennt.",
     "tip": "Prüfe bei jeder Stelle getrennt Wochenstunden, Vertragsdauer und Einsatzzeiten.",
     "schrittePraxis": [
       {
@@ -145,15 +145,15 @@
       },
       {
         "titel": "Zwei verschiedene Fragen stellen",
-        "text": "„Vollzeit oder Teilzeit?“ betrifft den Arbeitsumfang. „Befristet oder unbefristet?“ betrifft die Dauer. Eine Teilzeitstelle kann befristet oder unbefristet sein. Vollzeit ist ebenfalls kein Versprechen einer dauerhaften Beschäftigung. Die genaue Stundenzahl ergibt sich aus den geltenden Vereinbarungen; sie lässt sich nicht allein aus dem Etikett ablesen."
+        "text": "„Vollzeit oder Teilzeit?“ betrifft den Arbeitsumfang. „Befristet oder unbefristet?“ betrifft die Dauer. Eine Teilzeitstelle kann befristet oder unbefristet sein. Vollzeit ist ebenfalls kein Versprechen einer dauerhaften Beschäftigung. Lies nach, wie viele Stunden vereinbart sind. Das Wort „Teilzeit“ allein nennt noch keine feste Stundenzahl."
       },
       {
         "titel": "Weitere Begriffe einordnen",
-        "text": "Die Befristung – die Befristungen nennt eine zeitliche Begrenzung, die Schicht – die Schichten einen Einsatzabschnitt. Ein Praktikum dient einem anderen Zweck als eine reguläre Stelle, doch konkrete Aufgaben und Bedingungen müssen geklärt werden. Bezeichne nicht jede kurze Beschäftigung als Praktikum. Auch Bezahlung und Lernanteil sind eigene Prüfpunkte."
+        "text": "Eine Schicht ist ein Abschnitt der Arbeitszeit, etwa der Frühdienst. Ein Praktikum soll Einblick oder Lernerfahrung bieten. Frage nach Aufgaben, Anleitung und Bezahlung. Eine kurze Stelle ist nicht allein wegen ihrer Dauer ein Praktikum. Lass dir erklären, welche Arbeit du übernehmen sollst und welche Bedingungen gelten."
       },
       {
         "titel": "Vor einer Entscheidung nachfragen",
-        "text": "Frage beispielsweise „Auf welche Wochentage verteilen sich die Stunden?“. Eine Angabe wie „20 Stunden“ beantwortet diese Frage noch nicht. Vergleiche die Antworten mit deinem Suchprofil. Bei rechtlichen oder aufenthaltsbezogenen Voraussetzungen brauchst du die auf deinen Fall passende Auskunft; das Wort „Teilzeit“ ersetzt diese Prüfung nicht."
+        "text": "Frage beispielsweise „Auf welche Wochentage verteilen sich die Stunden?“. Eine Angabe wie „20 Stunden“ beantwortet diese Frage noch nicht. Vergleiche die Antworten mit deinem Suchprofil. Kläre, ob rechtliche Regeln oder dein Aufenthaltstitel die Arbeit erlauben. „Teilzeit“ beantwortet diese Frage nicht. Nutze dafür eine passende Beratungsstelle."
       }
     ],
     "fehler": [
@@ -262,7 +262,12 @@
         "tipp": "Bleibe bei den genannten Angaben und kennzeichne Unbekanntes.",
         "erklaerung": "Der Vergleich ergänzt keine Vertragsdetails, die im Beispiel fehlen."
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei gesetze-im-internet.de.",
+    "standQuelle": {
+      "titel": "Beschäftigungsbedingungen nachweisen",
+      "url": "https://www.gesetze-im-internet.de/nachwg/__2.html"
+    }
   },
   {
     "id": "b1-3",
@@ -281,11 +286,11 @@
       },
       {
         "titel": "Aufgaben mit eigenen Erfahrungen abgleichen",
-        "text": "Der Abgleich – die Abgleiche verbindet die Anforderung – die Anforderungen mit einem Beispiel aus deiner Praxis. Für „Kasse führen“ kann eine passende belegbare Kassentätigkeit relevant sein. Eine bloße Vorliebe für Kaffee ersetzt keine Erfahrung mit Kunden. Nenne tatsächliche Beispiele und notiere ehrlich, welche Tätigkeiten du erst lernen müsstest."
+        "text": "Vergleiche jede wichtige Aufgabe mit deiner Erfahrung. Für „Kasse führen“ kannst du eine echte Kassentätigkeit nennen. Sage dazu, wo und wie lange du das gemacht hast. Erfahrung als Gast in einem Café reicht dafür nicht. Notiere auch Aufgaben, die du erst lernen musst. So bereitest du eine ehrliche Bewerbung vor."
       },
       {
         "titel": "Bewerbungsweg und Lücken beachten",
-        "text": "Die Anzeige nennt ein Portal als Bewerbungsweg. Eine Bewerbung an eine zufällige E-Mail-Adresse folgt dieser Vorgabe nicht. Ort, Schichtbeginn oder konkrete Samstage können noch fehlen. Sammle solche Fragen, bevor du die Stelle als passend bewertest. Speichere die Anzeige mit Datum und Kennziffer, damit du bei einer späteren Rückmeldung weißt, auf welche Stelle du dich beworben hast."
+        "text": "Die Anzeige nennt ein Portal als Bewerbungsweg. Eine Bewerbung an eine zufällige E-Mail-Adresse folgt dieser Vorgabe nicht. Ort, Schichtbeginn oder konkrete Samstage können noch fehlen. Sammle solche Fragen, bevor du die Stelle als passend bewertest. Speichere Anzeige, Datum und Kennziffer. So kannst du eine spätere Rückmeldung der richtigen Stelle zuordnen."
       }
     ],
     "fehler": [
@@ -394,7 +399,12 @@
         "tipp": "Belege jede Aussage mit einer Stelle im Anzeigentext.",
         "erklaerung": "Die Auswertung hält fest, was bekannt und was noch zu klären ist."
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei arbeitsagentur.de.",
+    "standQuelle": {
+      "titel": "Bundesagentur für Arbeit: Stellen finden",
+      "url": "https://www.arbeitsagentur.de/arbeitslos-arbeit-finden/bewerbungstraining/job-finden"
+    }
   },
   {
     "id": "b1-4",
@@ -413,11 +423,11 @@
       },
       {
         "titel": "Treffer nach Inhalt bewerten",
-        "text": "Ein Treffer – die Treffer ist nur ein Suchergebnis, keine Zusage. Der Umkreis – die Umkreise und der Filter – die Filter bestimmen die Auswahl. „Büroassistenz“ kann andere Anforderungen haben als „Bürohilfe“. Lies daher Aufgaben und Voraussetzungen erneut, auch wenn der Titel ähnlich klingt. Prüfe die Erreichbarkeit anhand tatsächlicher Verbindungen zu den benötigten Zeiten."
+        "text": "Ein Treffer ist eine gefundene Stellenanzeige. Er bedeutet noch keine Zusage. Ähnliche Titel können andere Aufgaben meinen: Büroassistenz kann mehr Verantwortung verlangen als Bürohilfe. Lies deshalb auch den Text. Prüfe dann die Busverbindung zum Arbeitsbeginn. Ein naher Ort hilft wenig, wenn morgens kein passender Bus fährt."
       },
       {
         "titel": "Suchstand nachvollziehbar sichern",
-        "text": "Notiere Suchwort, Ort und wichtige Filter für einen späteren Vergleich. Speichere nur passende Anzeigen und die dazugehörigen Originaladressen. Ein Suchauftrag kann neue Treffer melden, doch jede Anzeige muss einzeln geprüft werden. Vermeide, aus vielen Treffern einen sicheren Vermittlungserfolg abzuleiten; entscheidend ist die sachliche Passung zum eigenen Profil."
+        "text": "Notiere Suchwort, Ort und wichtige Filter für einen späteren Vergleich. Speichere nur passende Anzeigen und die dazugehörigen Originaladressen. Ein Suchauftrag kann neue Treffer melden, doch jede Anzeige muss einzeln geprüft werden. Viele Treffer sind noch kein Erfolg bei der Bewerbung. Prüfe, welche Stellen wirklich zu deiner Erfahrung und deinen Zeiten passen."
       }
     ],
     "fehler": [
@@ -545,7 +555,7 @@
       },
       {
         "titel": "Daten sparsam weitergeben",
-        "text": "Die Forderung – die Forderungen, der Absender – die Absender und der Nachweis – die Nachweise helfen beim Beschreiben des Problems. Zugangsdaten und Freigabecodes gehören nicht in eine Bewerbung. Auch Ausweiskopien werden nicht vorsorglich an ungeprüfte Kontakte geschickt. Ein Lebenslauf enthält bereits persönliche Daten; prüfe deshalb den Empfänger vor dem Versand."
+        "text": "Ein Lebenslauf enthält persönliche Daten. Prüfe deshalb vor dem Versand, wer sie erhält. Schicke keine Zugangsdaten oder Bankfreigabecodes. Solche Codes gehören nicht zur Bewerbung. Sende auch keine Ausweiskopie an einen ungeprüften Kontakt. Frage bei einem unbekannten Dokumentenwunsch zuerst über einen selbst gefundenen Firmenkontakt nach."
       },
       {
         "titel": "Eine unabhängige Klärung vorbereiten",
@@ -658,7 +668,12 @@
         "tipp": "Begründe die Prüfung mit dem konkreten Vorgang, nicht nur mit einem Gefühl.",
         "erklaerung": "Die Notiz hält den Befund und die noch nötige Prüfung auseinander."
       }
-    ]
+    ],
+    "standHinweis": "Stand: November 2026. Allgemeine Information, keine Rechtsberatung. Prüfe aktuelle Regeln bei verbraucherzentrale.de.",
+    "standQuelle": {
+      "titel": "Verbraucherzentrale: gefälschte Stellenanzeigen",
+      "url": "https://www.verbraucherzentrale.de/wissen/digitale-welt/datenschutz/gefaelschte-stellenanzeigen-was-ist-jobscamming-28475"
+    }
   },
   {
     "id": "b1-6",
@@ -677,7 +692,7 @@
       },
       {
         "titel": "Gespräch und Bewerbungsweg verbinden",
-        "text": "Der Messestand – die Messestände, der Kontakt – die Kontakte und die Kennziffer – die Kennziffern helfen bei der Nachbereitung. Ein freundliches Gespräch ist noch kein Arbeitsplatzangebot. Frage, wie du dich bewerben sollst und ob du dich auf den Kontakt beziehen darfst. Notiere Funktion und Name nur so, wie sie tatsächlich genannt oder bestätigt wurden."
+        "text": "Notiere nach dem Gespräch Betrieb, Datum und die genannte Stelle. Eine Kennziffer ist die Nummer der Anzeige. Sie hilft, die richtige Stelle wiederzufinden. Frage nach dem Bewerbungsweg. Möchtest du den Namen der Kontaktperson nennen? Frage, ob du dich in der Bewerbung auf das Gespräch beziehen darfst."
       },
       {
         "titel": "Nach der Messe gezielt handeln",
@@ -805,15 +820,15 @@
       },
       {
         "titel": "Kriterien gleich anwenden",
-        "text": "Lege Spalten für Tätigkeiten, Zeiten, Ort, Anforderungen und offene Fragen an. Trage nur belegte Informationen ein. Ein unbekannter Wert bekommt „offen“ und keine ausgedachte Bestnote. Prüfe feste Grenzen zuerst. Ein Angebot mit ungeklärten Schichten ist weder automatisch passend noch automatisch ungeeignet; die fehlende Angabe muss geklärt werden."
+        "text": "Lege Spalten für Tätigkeiten, Zeiten, Ort, Anforderungen und offene Fragen an. Trage nur belegte Informationen ein. Fehlt eine Angabe, schreibe „offen“. Frage nach, bevor du die Stelle bewertest. Prüfe feste Grenzen zuerst. Sind die Schichten unklar, kannst du die Zeiten noch nicht beurteilen. Frage beim Betrieb nach."
       },
       {
         "titel": "Gewichtungen nachvollziehbar halten",
-        "text": "Die Bewertung – die Bewertungen beruht auf dem Kriterium – die Kriterien. Ein kurzer Weg kann wichtig sein, aber eine feste Betreuungslücke nicht aufheben. Zahlenpunkte sind nur eine Hilfe; sie machen eine unpassende Schicht nicht passend. Schreibe deshalb einen kurzen Grund zu deiner Einschätzung und markiere, wenn ein besonders wichtiges Kriterium noch offen ist."
+        "text": "Ein Kriterium ist ein Punkt, nach dem du Angebote vergleichst. Für Noah sind feste Vormittage besonders wichtig. Ein kurzer Weg kann eine unpassende Arbeitszeit nicht ausgleichen. Schreibe daher zu jeder Bewertung einen Grund. Punkte allein reichen nicht: Prüfe zuerst, ob die Stelle deine festen Zeitgrenzen einhält."
       },
       {
         "titel": "Eine vorläufige Auswahl treffen",
-        "text": "Formuliere eine begründete Reihenfolge, die Unsicherheiten sichtbar lässt. „B passt derzeit besser, weil die Vormittage feststehen; den Arbeitsweg muss ich noch testen“ ist präziser als „B ist perfekt“. Stelle anschließend eine konkrete Frage zu A. Nach der Antwort aktualisierst du den Vergleich. So bleibt die Entscheidung mit neuen Informationen überprüfbar."
+        "text": "Ordne die Stellen nach deinen wichtigsten Kriterien. Begründe die Reihenfolge und nenne offene Fragen. „B passt derzeit besser, weil die Vormittage feststehen; den Arbeitsweg muss ich noch testen“ ist präziser als „B ist perfekt“. Stelle anschließend eine konkrete Frage zu A. Nach der Antwort aktualisierst du den Vergleich. So bleibt die Entscheidung mit neuen Informationen überprüfbar."
       }
     ],
     "fehler": [
@@ -941,7 +956,7 @@
       },
       {
         "titel": "Status ohne falsche Fortschrittsangaben notieren",
-        "text": "Die Übersicht – die Übersichten enthält die Rückfrage – die Rückfragen und die Rückmeldung – die Rückmeldungen. Geeignete Statuswörter sind „gefunden“, „geprüft“, „Rückfrage offen“ und „Bewerbung versandt“. Markiere eine Bewerbung erst nach tatsächlichem Versand als versandt. Eine automatische Eingangsbestätigung ist noch keine Einladung oder Zusage."
+        "text": "Halte für jede Stelle den tatsächlichen Stand fest. „Gefunden“ heißt: Du hast eine Anzeige entdeckt. „Geprüft“ heißt: Du hast sie mit deinem Profil verglichen. „Versandt“ schreibst du erst nach dem Absenden. Eine automatische Antwort bestätigt meist nur den Eingang. Warte auf eine eigene Einladung oder Entscheidung."
       },
       {
         "titel": "Zur Bewerbungsvorbereitung übergehen",

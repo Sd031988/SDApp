@@ -17,11 +17,11 @@
       },
       {
         "titel": "Unterlagen aus der Vorgabe ableiten",
-        "text": "Das Anschreiben – die Anschreiben erklärt die Passung, der Lebenslauf – die Lebensläufe ordnet den Werdegang. Welche Unterlagen gewünscht sind, steht möglichst in der Anzeige oder im Portal. Wenn ausdrücklich nur ein Lebenslauf gefordert ist, sendest du nicht automatisch eine umfangreiche Mappe. Eine fehlende Angabe klärst du über den offiziellen Kontakt."
+        "text": "Ein Anschreiben erklärt, warum deine Erfahrung zur Stelle passt. Der Lebenslauf zeigt deinen bisherigen Weg. Lies zuerst, welche Unterlagen der Betrieb verlangt. Wird nur ein Lebenslauf gewünscht, schickst du nicht ungefragt eine große Mappe. Ist die Liste unklar? Frage über den offiziellen Kontakt nach, bevor du die Bewerbung vorbereitest."
       },
       {
         "titel": "Den Plan vor dem Schreiben prüfen",
-        "text": "Notiere Kennziffer, gewünschte Dokumente und Einreichungsweg. Danach entwirfst du die Inhalte. Ein allgemeiner Text ohne Bezug zur Tätigkeit erklärt kaum, warum die Stelle passt. Behalte die Anzeige für die spätere Gesprächsvorbereitung. Im Kurs verwenden wir fiktive Personen; Angaben zu Erfahrungen werden auch im Beispiel nicht als bereits erworbene echte Qualifikationen ausgegeben."
+        "text": "Notiere Kennziffer, gewünschte Dokumente und Einreichungsweg. Danach entwirfst du die Inhalte. Ein allgemeiner Text ohne Bezug zur Tätigkeit erklärt kaum, warum die Stelle passt. Behalte die Anzeige für die spätere Gesprächsvorbereitung. Prüfe am Ende jede Behauptung in deinem Entwurf. Kannst du sie mit einer echten Tätigkeit oder einem vorhandenen Nachweis erklären?"
       }
     ],
     "fehler": [
@@ -149,7 +149,7 @@
       },
       {
         "titel": "Phasen offen und knapp benennen",
-        "text": "Die Station – die Stationen, die Tätigkeit – die Tätigkeiten und die Weiterbildung – die Weiterbildungen sind nützliche Begriffe. Ein Sprachkurs oder eine Familienphase ist keine erfundene Beschäftigung. Nenne nur den tatsächlich passenden Sachverhalt. Vermeide unnötige private Details; es geht um einen nachvollziehbaren beruflichen Weg und um Angaben, die du vertreten kannst."
+        "text": "Beschreibe auch Zeiten ohne Beschäftigung knapp und ehrlich. Hast du einen Sprachkurs besucht, nenne den Kurs und den Zeitraum. Eine Familienphase ist keine Beschäftigung in einem Betrieb. Erfinde deshalb keine Stelle, um eine Lücke zu verdecken. Private Einzelheiten brauchst du dafür nicht ausführlich zu erklären."
       },
       {
         "titel": "Kontaktdaten und Ausgabe kontrollieren",
@@ -281,7 +281,7 @@
       },
       {
         "titel": "Angemessen und korrekt formulieren",
-        "text": "Die Motivation – die Motivationen und die Bewerbung – die Bewerbungen gehören zum Wortfeld. Eine passende Formulierung lautet „Die Kundenberatung interessiert mich, weil ich gern verständlich auf Fragen eingehe“. Nach „weil“ schließt das Verb den Nebensatz ab. Verwende eine bekannte Ansprechperson nur dann mit richtigem Namen; andernfalls ist eine allgemeine Anrede besser als ein erfundener Name."
+        "text": "Erkläre dein Interesse an einer konkreten Aufgabe. Du kannst schreiben: „Die Kundenberatung interessiert mich, weil ich gern verständlich auf Fragen eingehe.“ Nach „weil“ steht das Verb hinten. Kennst du den richtigen Namen der Kontaktperson, nutze ihn in der Anrede. Sonst wählst du eine allgemeine Anrede, statt einen Namen zu raten."
       },
       {
         "titel": "Vor dem Versand den Bezug kontrollieren",
@@ -413,11 +413,11 @@
       },
       {
         "titel": "Eigene Fragen aus der Anzeige ableiten",
-        "text": "Die Rückfrage – die Rückfragen und die Einarbeitung – die Einarbeitungen betreffen den künftigen Alltag. Wenn die Anzeige keine genaue Stundenverteilung nennt, bereite diese Frage vor. Unterscheide eine Information zur Stelle von einer Zusage. „Wie ist die Einarbeitung organisiert?“ setzt noch nicht voraus, dass du bereits eingestellt bist."
+        "text": "Leite eigene Fragen aus der Anzeige ab. Steht dort keine genaue Stundenverteilung, frage nach den Wochentagen und Zeiten. Du kannst auch fragen: „Wie ist die Einarbeitung organisiert?“ Damit möchtest du den Ablauf kennenlernen. Du behauptest noch nicht, dass der Betrieb dich eingestellt hat. Notiere die Antwort möglichst genau."
       },
       {
         "titel": "Die passende Fassung bereitlegen",
-        "text": "Speichere die tatsächlich versandten Dokumente mit Datum und Stelle. Sonst bereitest du dich womöglich auf einen später veränderten Entwurf vor. Notiere zwei sachliche Rückfragen und prüfe Einladung, Ort und Uhrzeit. Der nächste Kurs vertieft das Gespräch und die ersten Arbeitstage; hier geht es um den Zusammenhang zwischen deinen Unterlagen und deinen Antworten."
+        "text": "Speichere die tatsächlich versandten Dokumente mit Datum und Stelle. Sonst bereitest du dich womöglich auf einen später veränderten Entwurf vor. Notiere zwei sachliche Rückfragen und prüfe Einladung, Ort und Uhrzeit. Nutze hier deine Unterlagen, um Antworten auf Nachfragen zu üben. Der nächste Kurs behandelt das Gespräch und die ersten Arbeitstage genauer."
       }
     ],
     "fehler": [
@@ -545,7 +545,7 @@
       },
       {
         "titel": "Dateien sinnvoll benennen",
-        "text": "Die Anlage – die Anlagen, das Zeugnis – die Zeugnisse und das Zertifikat – die Zertifikate haben unterschiedliche Funktionen. Namen wie „Zertifikat_Kursname.pdf“ sind verständlicher als „scan_neu_7.pdf“. Halte dich an Größe und Dateiformat des Portals. Ob Dokumente gemeinsam oder einzeln hochgeladen werden, hängt vom vorgegebenen Bewerbungsweg ab."
+        "text": "Benenne Dateien so, dass der Inhalt erkennbar ist, etwa „Zertifikat_Kursname.pdf“. Ein Zeugnis und eine Kursbescheinigung können Unterschiedliches belegen. Prüfe den Text jedes Nachweises. Im Portal stehen meist Dateiformat und Größenlimit. Lies auch, ob du Dokumente einzeln oder als gemeinsame Datei hochladen sollst."
       },
       {
         "titel": "Lesbarkeit und Datenschutz kontrollieren",
@@ -677,7 +677,7 @@
       },
       {
         "titel": "Technische Vorgaben lesen",
-        "text": "Der Entwurf – die Entwürfe, der Upload – die Uploads und der Eingang – die Eingänge beschreiben verschiedene Schritte. Ein Portal kann getrennte PDF-Dateien und Größenlimits vorgeben. Halte dich an die konkrete Anzeige statt an eine pauschale Dateiregel. Ein Fehlerhinweis wird vor dem Versand geklärt; mehrfaches unkontrolliertes Klicken kann zu Unklarheiten führen."
+        "text": "Ein Entwurf ist eine gespeicherte, noch nicht abgesendete Bewerbung. Ein Upload legt zunächst nur Dateien im Portal ab. Lies vor dem Absenden die Hinweise zu Format und Dateigröße. Prüfe Fehlermeldungen und behebe sie. Klicke erst danach auf „Bewerbung senden“. Kontrolliere anschließend den neuen Status."
       },
       {
         "titel": "Den tatsächlichen Ausgang dokumentieren",
@@ -809,7 +809,7 @@
       },
       {
         "titel": "Dateistände verständlich benennen",
-        "text": "Die Fassung – die Fassungen und die Kontrolle – die Kontrollen helfen beim Ordnen. Ein Dateiname mit Datum und Stelle zeigt mehr als „final_neu_wirklich“. Bewahre die versandte Fassung getrennt von einem später korrigierten Entwurf auf. Ändere nicht stillschweigend den Nachweis dessen, was du tatsächlich eingereicht hast; dokumentiere erforderliche Nachreichungen nachvollziehbar."
+        "text": "Bewahre die versandte Fassung mit Datum und Stelle auf. Ein später geänderter Entwurf ist eine andere Fassung. Überschreibe deshalb nicht die Datei, die deinen tatsächlichen Versand belegt. Musst du etwas nachreichen, notiere den Inhalt und das neue Datum. So kannst du im Gespräch erklären, welche Unterlagen der Betrieb erhalten hat."
       },
       {
         "titel": "Eine kurze Endkontrolle anwenden",
@@ -941,7 +941,7 @@
       },
       {
         "titel": "Höflich antworten und ehrlich bleiben",
-        "text": "Die Nachreichung – die Nachreichungen und die Einladung – die Einladungen gehören zum Ablauf. „Vielen Dank für Ihre Nachricht. Das angeforderte Zertifikat reiche ich über das Portal nach“ ist eine sachliche Antwort, wenn das auch stimmt. Fehlt dir der Nachweis, erfindest du ihn nicht. Erkläre kurz, welcher Beleg tatsächlich vorliegt, und frage nach dem passenden weiteren Vorgehen."
+        "text": "Antworte nur mit Angaben, die stimmen. Eine mögliche Antwort lautet: „Vielen Dank. Ich reiche das angeforderte Zertifikat über das Portal nach.“ Prüfe vorher, ob die Datei vorliegt. Fehlt der Nachweis, sage das offen. Frage, welcher andere Beleg oder nächste Schritt möglich ist. Versprich keine Datei, die du nicht besitzt."
       },
       {
         "titel": "Den weiteren Verlauf dokumentieren",

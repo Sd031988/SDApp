@@ -235,7 +235,20 @@ function renderCourseFinal(course){
   next();
  };
 }
+function academySourceUrl(raw){
+ let url;try{url=new URL(raw)}catch{return null}
+ const hosts=["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
+ return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
+}
 function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);
+if(l.standHinweis&&l.standQuelle){
+ const url=academySourceUrl(l.standQuelle.url);
+ if(url){
+  const note=node("aside","ak-legal-note",undefined,q);note.setAttribute("role","note");
+  node("p","",l.standHinweis,note);
+  const link=node("a","",l.standQuelle.titel+" ↗",note);link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
+ }
+}
 if(Array.isArray(l.schrittePraxis)){
  const details=node("section","ak-practice-steps",undefined,q);
  node("h5","","Schritt für Schritt",details);
@@ -248,8 +261,7 @@ if(Array.isArray(l.quellen)){
  node("h5","","Quellen und weiterer Prüfweg",sources);
  const list=node("ul","",undefined,sources);
  for(const source of l.quellen){
-  let url;try{url=new URL(source.url)}catch{continue}
-  if(url.protocol!=="https:"||url.username||url.password||!["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de"].includes(url.hostname))continue;
+  const url=academySourceUrl(source.url);if(!url)continue;
   const item=node("li","",undefined,list),a=node("a","",source.titel,item);
   a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";
   if(/^\d{4}-\d{2}-\d{2}$/.test(source.stand||""))node("small",""," · geprüft: "+source.stand,item);
