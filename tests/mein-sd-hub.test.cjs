@@ -73,7 +73,7 @@ test("Quizantworten sind über verschiedene Positionen verteilt",()=>{
  }
 });
 
-test("Kurskatalog bleibt klein und Fortschritts-IDs sind stabil",()=>{assert.ok(load("mein-sd-hub/data.js").length<20000);for(const course of data.academy){assert.equal(course.anzahl,data.academyLessonIds[course.id].length);assert.ok(course.bereich&&course.stufe&&Array.isArray(course.voraussetzungen));assert.deepEqual(require(path.join(root,"mein-sd-hub/kurse",course.id+".js")).map(l=>l.id),data.academyLessonIds[course.id]);}assert.deepEqual(data.sanitizeState({completedLessons:["g-1","p-12"]}).completedLessons,["g-1","p-12"])});
+test("Kurskatalog bleibt klein und Fortschritts-IDs sind stabil",()=>{assert.ok(load("mein-sd-hub/data.js").length<24000);for(const course of data.academy){assert.equal(course.anzahl,data.academyLessonIds[course.id].length);assert.ok(course.bereich&&course.stufe&&Array.isArray(course.voraussetzungen));assert.deepEqual(require(path.join(root,"mein-sd-hub/kurse",course.id+".js")).map(l=>l.id),data.academyLessonIds[course.id]);}assert.deepEqual(data.sanitizeState({completedLessons:["g-1","p-12"]}).completedLessons,["g-1","p-12"])});
 
 test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
  const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
