@@ -45,6 +45,7 @@ jobs:
       - name: Validate course, routes, links and state
         run: |
           node tests/mein-sd-hub.test.cjs
+          node --test tests/mein-sd-hub-i18n.test.cjs
           node --test tests/hub-homepage.test.cjs tests/play-separation.test.cjs
       - name: Install Playwright and Chromium
         run: |
