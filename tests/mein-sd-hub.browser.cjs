@@ -196,7 +196,7 @@ for(let i=0;i<8;i++){
 }
 await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
 for(let i=0;i<10;i++){
- await finalPage.locator(".ak-final-questions .answers button").nth([0,1,2,1,2,0,2,0,1,2][i]).click();
+ await finalPage.locator(".ak-final-questions .answers button").nth([0,1,2,1,2,0,2,0,1,1][i]).click();
 }
 assert.match(await finalPage.locator(".ak-final-questions").innerText(),/10 von 10/);
 assert.equal(await finalPage.getByText("Teilnahmebestätigung",{exact:true}).count(),1);
