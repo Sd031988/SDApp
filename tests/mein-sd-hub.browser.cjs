@@ -251,6 +251,25 @@ for(const width of [320,390,1300]){
  assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
  await c2.close();
 }
+/* C5: Profi-Werkzeuge auf drei Viewports ohne Code-Editor prüfen. */
+for(const width of [320,390,1300]){
+ const c5=await browser.newPage({viewport:{width,height:820}});
+ c5.on("pageerror",e=>errors.push("C5 "+width+": "+e.message));
+ await c5.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await c5.locator('[data-tab="akademie"]').click();
+ await c5.locator(".course").filter({has:c5.locator("b",{hasText:/^Digitale Profi-Werkzeuge$/})}).click();
+ await c5.locator(".lesson-btn").first().waitFor();
+ assert.equal(await c5.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await c5.locator(".lesson-btn").nth(i).click();
+  assert.equal(await c5.locator(".ak-practice-step").count(),4,"C5 Schritte "+i);
+  assert.equal(await c5.locator(".ak-lesson-quiz .answers button").count(),3,"C5 Quiz "+i);
+  assert.equal(await c5.locator(".code-editor").count(),0,"C5 ohne Code-Editor");
+ }
+ const overflow=await c5.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"C5 "+width+"px Überlauf: "+overflow);
+ await c5.close();
+}
 /* C4: Büro-Programme auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
  const c4=await browser.newPage({viewport:{width,height:820}});
