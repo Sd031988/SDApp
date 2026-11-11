@@ -46,3 +46,5 @@ html[data-sd-theme="dark"] :is(.text small,.mitnehmen p){color:var(--theme-muted
 html[data-sd-theme="dark"] .bk{background:color-mix(in srgb,var(--farbe) 76%,#000)}
 :focus-visible{outline:3px solid var(--focus,var(--fokus,#efb35e));outline-offset:3px}
 @media print{html[data-sd-theme="dark"] .ak-certificate,html[data-sd-theme="dark"] .ak-certificate :is(p,label,input){background:#fff!important;color:#173630!important}}
+
+html[data-sd-theme="dark"] .mitnehmen a{background:var(--theme-inset);color:var(--theme-text);border-color:var(--line)}
