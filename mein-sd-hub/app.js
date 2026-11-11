@@ -177,6 +177,8 @@ function renderLessonList(){
  const c=findCourse(courseId);if(!c)return;
  $("courseHeading").textContent=c.icon+" "+c.name;
  $("courseSummary").textContent=c.summary;
+ if(c.id==="deutsch-b1"){const a=node("a","btn outline small","B1-Prüfungstraining öffnen ↗",$("courseSummary"));a.href="/deutsch/b1-pruefung.html";}
+
  clearChildren("lessonList");clearChildren("lessonDetail");
  if(!c.lessons){
   const status=node("p","panel-sub","Lade Kurs …",$("lessonDetail"));
