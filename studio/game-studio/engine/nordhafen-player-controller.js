@@ -8,7 +8,7 @@
  function create({scene,camera,canvas,BABYLON,motion,fixture,cityGeometry}={}){
   if(!scene||!camera||!canvas||!BABYLON||!motion||!fixture)throw new TypeError('player dependencies required');
   let disposed=false,ready=false,driving=false,player=null,aggregate=null,ground=null,groundBody=null;
-  let vehicleMasks=null;
+  let vehicleMasks=null,vehiclePrestep=null,teleportPending=false;
   const colliders=new Map(),pressed=new Set();
   let status='Physik wird geladen',facing=null,character=null,characterState='lädt',animation='idle',modelGeneration=0;
   const pointerDocument=canvas.ownerDocument||(typeof document!=='undefined'?document:null);
@@ -151,6 +151,7 @@
    const body=aggregate.body;
    if(active){
     vehicleMasks={membership:aggregate.shape.filterMembershipMask,collide:aggregate.shape.filterCollideMask};
+    vehiclePrestep=body.getPrestepType?.();
     body.setLinearVelocity(BABYLON.Vector3.Zero());
     body.setMotionType(BABYLON.PhysicsMotionType.ANIMATED);
     aggregate.shape.filterMembershipMask=0;aggregate.shape.filterCollideMask=0;
@@ -161,8 +162,18 @@
     const p=exitPosition||player.position;
     const destination=new BABYLON.Vector3(p.x,Math.max(1,p.y??1),p.z);
     player.position.copyFrom(destination);
-    body.setTargetTransform?.(destination,BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,player.rotation.y||0));
     body.setMotionType(BABYLON.PhysicsMotionType.DYNAMIC);
+    // Havok's setTargetTransform sets a *velocity* for animated bodies; a
+    // one-step TELEPORT prestep is required to restore the capsule at the car.
+    if(body.setPrestepType&&BABYLON.PhysicsPrestepType&&scene.onAfterPhysicsObservable?.addOnce){
+     teleportPending=true;
+     body.setPrestepType(BABYLON.PhysicsPrestepType.TELEPORT);
+     scene.onAfterPhysicsObservable.addOnce(()=>{
+      if(disposed)return;
+      body.setPrestepType(vehiclePrestep??BABYLON.PhysicsPrestepType.DISABLED);
+      teleportPending=false;
+     });
+    }else body.setTargetTransform?.(destination,BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,player.rotation.y||0));
     aggregate.shape.filterMembershipMask=vehicleMasks?.membership??0xffffffff;
     aggregate.shape.filterCollideMask=vehicleMasks?.collide??0xffffffff;
     body.setLinearVelocity(BABYLON.Vector3.Zero());
@@ -174,7 +185,7 @@
   }
   function update(dt){
    if(!ready||disposed)return null;
-   if(driving)return player.position;
+   if(driving||teleportPending)return player.position;
    const p=player.position;
    const state={x:p.x,y:p.y,z:p.z,vy:aggregate.body.getLinearVelocity().y,
     yaw:Math.atan2(-Math.cos(camera.alpha),-Math.sin(camera.alpha)),grounded:groundedByRaycast()};
