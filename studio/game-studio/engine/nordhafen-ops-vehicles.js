@@ -66,7 +66,7 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
   for(const x of [-.95,.95])for(const z of [-1.35,1.35]){
    const wheel=BABYLON.MeshBuilder.CreateCylinder('ops-car-wheel',
     {diameter:.68,height:.24,tessellation:14},scene);
-   wheel.parent=root;wheel.rotation.z=Math.PI/2;wheel.position.set(x,-.36,z);wheel.material=tire;
+   wheel.parent=root;wheel.rotation.z=Math.PI/2;wheel.position.set(x,0,z);wheel.material=tire;
   }
   return root;
  }
@@ -96,7 +96,7 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
    const root=new BABYLON.TransformNode('ops-car-visual',scene);
    for(const node of result.meshes||[])if(!node.parent)node.parent=root;
    root.parent=chassis;root.scaling.set(scale,scale,scale);
-   root.position.set(-(min.x+max.x)/2*scale,-.62-min.y*scale,-(min.z+max.z)/2*scale);
+   root.position.set(-(min.x+max.x)/2*scale,-.34-min.y*scale,-(min.z+max.z)/2*scale);
    assetRoot=root;imported=result;modelLoaded=true;fallback.dispose();
    onStatus('Fahrzeug geladen: '+MODELS.find(m=>m.id===choice).name);
   }catch(error){
@@ -129,7 +129,7 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
    physics.raycastToRef(from,to,ray,{collideWith:0xffffffff&~4});
    if(!ray.hasHit||ray.body===aggregate.body||!ray.hitPointWorld)continue;
    const dist=BABYLON.Vector3.Distance(from,ray.hitPointWorld);
-   const compression=clamp(.72-dist,0,.5);
+   const compression=clamp(.46-dist,0,.35);
    const force=clamp(compression*mass*9.81/(4*.18)-velocity.y*mass*.8,
     0,mass*9.81*.8);
    aggregate.body.applyImpulse(new BABYLON.Vector3(0,force*dt,0),from);
