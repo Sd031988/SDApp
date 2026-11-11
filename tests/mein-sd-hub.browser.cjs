@@ -212,7 +212,7 @@ for(const width of [320,390,1300]){
  c1.on("pageerror",e=>errors.push("C1 "+width+": "+e.message));
  await c1.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c1.locator('[data-tab="akademie"]').click();
- await c1.locator(".course").filter({hasText:"Computer-Start"}).click();
+ await c1.locator(".course").filter({has:c1.locator("b",{hasText:/^Computer-Start$/})}).click();
  await c1.locator(".lesson-btn").first().waitFor();
  assert.equal(await c1.locator(".lesson-btn").count(),8);
  await c1.locator(".lesson-btn").first().click();
