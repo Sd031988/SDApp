@@ -43,8 +43,8 @@
         "frage": "Was ist bei Dario noch unklar?",
         "antworten": [
           "Die Wochenstundenzahl.",
-          "Ob im Text ein Arbeitsort steht.",
-          "Dass ein Beginn genannt wird."
+          "Der ausdrücklich genannte Arbeitsort.",
+          "Der in den Unterlagen angegebene Beginn."
         ],
         "richtig": 0,
         "erklaerung": "Der Dialog bezeichnet ausdrücklich die fehlende klare Wochenstundenzahl."
@@ -52,9 +52,9 @@
       {
         "frage": "Was ist ein sinnvoller nächster Schritt?",
         "antworten": [
-          "Selbst zwanzig Stunden im fremden Namen eintragen.",
+          "Die Gesprächsangabe ohne Abstimmung selbst eintragen.",
           "Die Arbeitszeit mit dem Vertragspartner klären.",
-          "Die Lücke grundsätzlich ignorieren."
+          "Die fehlende Zahl aus einem allgemeinen Mustervertrag übernehmen."
         ],
         "richtig": 1,
         "erklaerung": "Eine Vertragsbedingung wird abgestimmt und nicht eigenmächtig ersetzt."
@@ -62,8 +62,8 @@
       {
         "frage": "Welche Aussage ist differenziert?",
         "antworten": [
-          "Jede Nachricht ist automatisch ein vollständiger Nachweis.",
-          "Nur die Seitenzahl entscheidet über Gültigkeit.",
+          "Ein zugänglicher elektronischer Text genügt unabhängig von Branche und Inhalt.",
+          "Eine Papierunterschrift belegt allein die Vollständigkeit aller Bedingungen.",
           "Form und Nachweispflichten müssen konkret geprüft werden."
         ],
         "richtig": 2,
@@ -181,9 +181,9 @@
       {
         "frage": "Was beschreibt Brutto?",
         "antworten": [
-          "Immer den exakten Kontoeingang.",
+          "Den Betrag, der nach allen Abzügen auf dem Konto eingeht.",
           "Das Entgelt vor den entsprechenden Abzügen.",
-          "Nur eine freiwillige Prämie."
+          "Nur den Grundlohn ohne weitere Entgeltbestandteile."
         ],
         "richtig": 1,
         "erklaerung": "Brutto ist die Ausgangsgröße vor den berücksichtigten Abzügen."
@@ -191,8 +191,8 @@
       {
         "frage": "Was hilft bei einer Abrechnungsfrage?",
         "antworten": [
-          "Nur „alles falsch“ schreiben.",
-          "Einen beliebigen Monat nennen.",
+          "Nur den Kontoeingang ohne zugehörigen Abrechnungsmonat nennen.",
+          "Nur den Gesamtbetrag ohne die fragliche Position angeben.",
           "Zeitraum und fragliche Position angeben."
         ],
         "richtig": 2,
@@ -202,8 +202,8 @@
         "frage": "Warum ist eine feste Nettoquote unzuverlässig?",
         "antworten": [
           "Individuelle Grundlagen und Positionen können unterschiedlich sein.",
-          "Brutto hat nie etwas mit Vergütung zu tun.",
-          "Jede Person erhält immer denselben Betrag."
+          "Weil die Nettoquote allein von der Stellenbezeichnung abhängt.",
+          "Weil derselbe Bruttobetrag bei allen Personen dieselbe Auszahlung ergibt."
         ],
         "richtig": 0,
         "erklaerung": "Abzüge und weitere Positionen hängen von den jeweiligen Verhältnissen ab."
@@ -325,8 +325,8 @@
       {
         "frage": "Was muss bei acht Stunden Anwesenheit zusätzlich geprüft werden?",
         "antworten": [
-          "Ob der Tag einen Namen hat.",
-          "Nur der Weg zum Betrieb.",
+          "Nur die laut Dienstplan vorgesehene Gesamtanwesenheit.",
+          "Nur die vereinbarte Wochenstundenzahl ohne Tagesablauf.",
           "Die tatsächlichen Arbeits- und Pausenzeiten."
         ],
         "richtig": 2,
@@ -336,8 +336,8 @@
         "frage": "Was bezeichnet die Ruhezeit im Beispiel?",
         "antworten": [
           "Die Erholung zwischen den Einsätzen.",
-          "Jede beliebige Kaffeebestellung.",
-          "Nur die Beschriftung der Zeiterfassung."
+          "Die Mittagspause innerhalb derselben Schicht.",
+          "Die Fahrtzeit vom Betrieb nach Hause."
         ],
         "richtig": 0,
         "erklaerung": "Die Ruhezeit betrifft den Abstand zwischen Einsätzen, nicht die Mittagspause."
@@ -345,9 +345,9 @@
       {
         "frage": "Welche Erfassung ist sachlich korrekt?",
         "antworten": [
-          "Eine fiktive Pause trotz Weiterarbeit.",
+          "Die geplanten Zeiten auch dann, wenn tatsächlich anders gearbeitet wurde.",
           "Der tatsächliche Beginn, das Ende und echte Unterbrechungen.",
-          "Nur die laut Plan gewünschte Zeit."
+          "Eine eingetragene Pause, während der weitergearbeitet wurde."
         ],
         "richtig": 1,
         "erklaerung": "Der Nachweis soll tatsächliche Zeiten statt bloßer Planung abbilden."
@@ -474,9 +474,9 @@
       {
         "frage": "Welchen Status hat Rosas Urlaub?",
         "antworten": [
-          "Schon vollständig bestätigt.",
+          "Bereits gewährter Zeitraum ohne weitere Rückfrage.",
           "Noch offen mit Rückfrage zur Vertretung.",
-          "Bereits vollständig genommen."
+          "Abgelehnter Antrag trotz noch offener Rückmeldung."
         ],
         "richtig": 1,
         "erklaerung": "Rosa hat beantragt, aber noch keine Genehmigung erhalten."
@@ -484,8 +484,8 @@
       {
         "frage": "Was ist ein sinnvoller nächster Schritt?",
         "antworten": [
-          "Den Betrieb ohne Nachricht verlassen.",
-          "Eine Genehmigung selbst ausstellen.",
+          "Den gewünschten Zeitraum ohne Rückmeldung als genehmigt eintragen.",
+          "Die offene Anfrage als automatische Ablehnung behandeln.",
           "Die Vertretungsfrage und Rückmeldung klären."
         ],
         "richtig": 2,
@@ -495,8 +495,8 @@
         "frage": "Was ist beim Vergleich von Urlaubstagen wichtig?",
         "antworten": [
           "Die Verteilung der regelmäßigen Arbeitstage.",
-          "Nur die Farbe des Formulars.",
-          "Nur die Länge des Monatsnamens."
+          "Nur die Zahl aus dem Vertrag einer anderen Wochenverteilung.",
+          "Nur die Länge des gewünschten Zeitraums ohne Anspruchsprüfung."
         ],
         "richtig": 0,
         "erklaerung": "Die Zahl der Arbeitstage beeinflusst die sachgerechte Einordnung eines Urlaubsanspruchs."
@@ -613,8 +613,8 @@
       {
         "frage": "Was bleibt trotz elektronischem Ablauf nötig?",
         "antworten": [
-          "Grundsätzlich keine eigene Handlung mehr.",
-          "Eine erfundene Diagnose schicken.",
+          "Nur das Abwarten des elektronischen Abrufs ohne eigene Nachricht.",
+          "Nur die spätere Rückkehrmeldung nach Ende der Erkrankung.",
           "Die unverzügliche eigene Mitteilung."
         ],
         "richtig": 2,
@@ -624,8 +624,8 @@
         "frage": "Welche Dauer wird mitgeteilt?",
         "antworten": [
           "Die voraussichtliche Dauer nach dem bekannten Stand.",
-          "Immer genau eine Woche.",
-          "Eine frei gewählte Zahl ohne Grundlage."
+          "Eine feste Rückkehr, obwohl sie noch nicht eingeschätzt werden kann.",
+          "Nur den Zeitpunkt des Arzttermins statt der erwarteten Dauer."
         ],
         "richtig": 0,
         "erklaerung": "Die Mitteilung folgt dem tatsächlich bekannten voraussichtlichen Zeitraum."
@@ -633,9 +633,9 @@
       {
         "frage": "Warum ist „immer erst nach drei Tagen“ unzureichend?",
         "antworten": [
-          "Weil niemand je einen Nachweis braucht.",
+          "Weil die eigene Meldung bis zur ersten Abrechnung warten kann.",
           "Weil frühere Feststellung und besondere Abläufe relevant sein können.",
-          "Weil jede Erkrankung automatisch Urlaub ist."
+          "Weil die elektronische Übermittlung die ärztliche Feststellung ersetzt."
         ],
         "richtig": 1,
         "erklaerung": "Das Gesetz sieht differenzierte Feststellungs- und Nachweisregeln vor."
@@ -753,8 +753,8 @@
         "frage": "Welche Angabe betrifft das vereinbarte Ende?",
         "antworten": [
           "Die Befristung.",
-          "Nur der Firmenname.",
-          "Die Farbe des Vertragsumschlags."
+          "Die anfängliche Probephase unabhängig vom Enddatum.",
+          "Nur die erste im Vertrag erwähnte Kündigungsfrist."
         ],
         "richtig": 0,
         "erklaerung": "Die Befristung beschreibt die zeitliche Begrenzung, nicht bloß die anfängliche Erprobung."
@@ -762,8 +762,8 @@
       {
         "frage": "Was bedeutet „vielleicht länger“?",
         "antworten": [
-          "Eine sichere neue Vertragsdauer.",
-          "Automatisch eine wirksame Verlängerung.",
+          "Eine bereits abgeschlossene Verlängerungsvereinbarung.",
+          "Eine bestätigte Änderung des bisher genannten Enddatums.",
           "Eine Möglichkeit ohne bereits bestätigte Verlängerung."
         ],
         "richtig": 2,
@@ -772,9 +772,9 @@
       {
         "frage": "Was ist bei einer persönlichen Kündigungsfrage nötig?",
         "antworten": [
-          "Nur die Überschrift Probezeit lesen.",
+          "Nur die Dauer der Probezeit ohne weitere Klauseln lesen.",
           "Die konkreten Regeln und Unterlagen prüfen lassen.",
-          "Immer irgendeine feste Frist annehmen."
+          "Die Frist aus einem fremden Mustervertrag unverändert übernehmen."
         ],
         "richtig": 1,
         "erklaerung": "Vertrag, Gesetz und mögliche weitere Regelungen können zusammenwirken."
@@ -896,9 +896,9 @@
       {
         "frage": "Was sollte Jelena sofort festhalten?",
         "antworten": [
-          "Nur die Farbe des Briefpapiers.",
+          "Nur das Datum oben auf dem Schreiben.",
           "Den tatsächlichen Zugang des Schreibens.",
-          "Eine erfundene Zustimmung des Betriebsrats."
+          "Nur den später vereinbarten Gesprächstermin."
         ],
         "richtig": 1,
         "erklaerung": "Der Zugang ist ein wesentlicher Bezugspunkt für die Fristprüfung."
@@ -907,8 +907,8 @@
         "frage": "Was ist beim Warten auf die Chefin zu beachten?",
         "antworten": [
           "Interne Gespräche ersetzen die fristgerechte rechtliche Reaktion nicht automatisch.",
-          "Eine Klage ist grundsätzlich nie nötig.",
-          "Jede Frist stoppt automatisch."
+          "Die interne Beschwerde wahrt allein bereits jede Klagefrist.",
+          "Die Frist beginnt erst nach der Antwort auf die interne Beschwerde."
         ],
         "richtig": 0,
         "erklaerung": "Eine ausstehende Antwort ist kein verlässlicher Grund, die Fristklärung aufzuschieben."
@@ -916,8 +916,8 @@
       {
         "frage": "Welche allgemeine Klagefrist nennt § 4 KSchG?",
         "antworten": [
-          "Beliebig lange nach dem letzten Telefonat.",
-          "Immer drei Monate nach dem ersten Gespräch.",
+          "Drei Wochen erst nach dem internen Klärungsgespräch.",
+          "Einen Monat nach dem Datum auf dem Schreiben.",
           "Grundsätzlich drei Wochen nach Zugang der schriftlichen Kündigung."
         ],
         "richtig": 2,
@@ -1035,8 +1035,8 @@
       {
         "frage": "Welche Unterlagen helfen im Beispiel zuerst?",
         "antworten": [
-          "Ein beliebiges Werbeprospekt.",
-          "Eine erfundene Zusage.",
+          "Nur die letzte Kontobewegung ohne Arbeitszeitaufzeichnung.",
+          "Nur einen allgemeinen Stundenplan ohne tatsächliche Zeiten.",
           "Zeitaufzeichnungen, Vertrag und Abrechnung."
         ],
         "richtig": 2,
@@ -1045,9 +1045,9 @@
       {
         "frage": "Welche Frage ist sachlich vorbereitet?",
         "antworten": [
-          "Warum ist jede Firma immer rechtswidrig?",
+          "Kann ich aus längerer Anwesenheit allein schon einen festen Zahlungsanspruch ableiten?",
           "Wie sind die dokumentierten zusätzlichen Zeiten nach den geltenden Regeln zu behandeln?",
-          "Wie kann ich Nachweise passend verändern?"
+          "Genügt der Monatsgesamtbetrag ohne Prüfung der vereinbarten Regeln?"
         ],
         "richtig": 1,
         "erklaerung": "Die Frage knüpft an Tatsachen an und lässt die rechtliche Bewertung offen."
@@ -1056,8 +1056,8 @@
         "frage": "Was sollte frühzeitig geklärt werden?",
         "antworten": [
           "Mögliche Fristen und zuständige Hilfe.",
-          "Nur die Schriftfarbe der Notiz.",
-          "Wie man alle Belege wegwirft."
+          "Nur ob die Nachricht an den Betrieb bereits gelesen wurde.",
+          "Nur die Formulierung der nächsten Rückfrage ohne zeitliche Prüfung."
         ],
         "richtig": 0,
         "erklaerung": "Fristen können die nötige Reaktion bestimmen und dürfen nicht ungeprüft verstreichen."
