@@ -1,0 +1,6 @@
+{
+  "requestedBy": "repository owner",
+  "date": "2026-11-11",
+  "scope": "Delete branches whose exact head commit is an ancestor of current main. Exclude main, protected branches and all open PR heads.",
+  "execution": "One-time main push; changing this file deliberately reruns cleanup."
+}
