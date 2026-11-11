@@ -1,8 +1,8 @@
 /* =====================================================================
    SD Code-Studio (online) – professioneller Code-Editor im Browser
    Projekte liegen im Browser-Speicher (IndexedDB). Webseiten laufen über
-   einen Vorschau-Server im Browser (vorschau-sw.js). Programme in Python,
-   C, C++, C#, Java, Rust und Go laufen über den kostenlosen Dienst wandbox.org.
+   einen Vorschau-Server im Browser (vorschau-sw.js). Python läuft lokal
+   im Worker. C, C++, C#, Java, Rust und Go nutzen weiterhin wandbox.org.
    ===================================================================== */
 'use strict';
 const $ = id => document.getElementById(id);
@@ -84,7 +84,7 @@ const VORLAGEN = [
     'index.html': '<!doctype html>\n<html lang="de">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>Trinkgeld-Rechner</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <form class="app" id="form">\n    <h1>💶 Trinkgeld-Rechner</h1>\n    <label>Rechnung (€) <input id="betrag" type="number" step="0.01" value="42"></label>\n    <label>Trinkgeld <input id="prozent" type="range" min="0" max="25" value="10"> <b id="pz">10 %</b></label>\n    <label>Personen <input id="personen" type="number" min="1" value="2"></label>\n    <output id="ergebnis"></output>\n  </form>\n  <script src="app.js"></script>\n</body>\n</html>\n',
     'style.css': 'body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui; background: linear-gradient(135deg, #a7f3d0, #93c5fd); }\n.app { background: white; padding: 28px; border-radius: 20px; width: min(380px, 92vw); display: grid; gap: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.15); }\nlabel { display: grid; gap: 6px; font-weight: 600; }\ninput[type=number] { font-size: 1.1rem; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; }\noutput { font-size: 1.4rem; background: #f1f5f9; border-radius: 12px; padding: 14px; text-align: center; }\n',
     'app.js': 'const $ = id => document.getElementById(id);\n\nfunction rechnen() {\n  const betrag = parseFloat($("betrag").value) || 0;\n  const prozent = parseInt($("prozent").value, 10);\n  const personen = Math.max(1, parseInt($("personen").value, 10) || 1);\n  const gesamt = betrag * (1 + prozent / 100);\n  $("pz").textContent = prozent + " %";\n  $("ergebnis").textContent = `Pro Person: ${(gesamt / personen).toFixed(2)} €`;\n}\n\n$("form").addEventListener("input", rechnen);\nrechnen();\n' } },
-  { id: 'python', label: '🐍 Python-Programm', info: 'läuft online über wandbox.org', haupt: 'main.py', dateien: { 'main.py': 'def main():\n    namen = ["Anna", "Ben", "Cem"]\n    for i, name in enumerate(namen, 1):\n        print(f"{i}. Hallo {name}!")\n\n\nif __name__ == "__main__":\n    main()\n' } },
+  { id: 'python', label: '🐍 Python-Programm', info: 'läuft lokal im Browser mit Python', haupt: 'main.py', dateien: { 'main.py': 'def main():\n    namen = ["Anna", "Ben", "Cem"]\n    for i, name in enumerate(namen, 1):\n        print(f"{i}. Hallo {name}!")\n\n\nif __name__ == "__main__":\n    main()\n' } },
   { id: 'cpp', label: '⚙️ C++-Programm', info: 'läuft online über wandbox.org', haupt: 'main.cpp', dateien: { 'main.cpp': '#include <iostream>\n#include <vector>\n\nint main() {\n    std::vector<int> zahlen{3, 1, 4, 1, 5};\n    int summe = 0;\n    for (int z : zahlen) summe += z;\n    std::cout << "Summe: " << summe << std::endl;\n    return 0;\n}\n' } },
   { id: 'java', label: '☕ Java-Programm', info: 'läuft online über wandbox.org', haupt: 'Main.java', dateien: { 'Main.java': 'public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 3; i++) {\n            System.out.println("Hallo aus Java " + i);\n        }\n    }\n}\n' } },
   { id: 'csharp', label: '🟪 C#-Programm', info: 'läuft online über wandbox.org', haupt: 'Program.cs', dateien: { 'Program.cs': 'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hallo aus C#!");\n    }\n}\n' } },
@@ -1054,8 +1054,29 @@ async function wbCompiler(sp) { if (!wbListe) wbListe = fetch(WB + 'list.json').
 function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0; i < 4; i++) { const r = await fetch(WB + 'compile.json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const tx = await r.text();
     if (/^Error: Too many/i.test(tx) || r.status === 429) { await new Promise(ok => setTimeout(ok, 2500 * (i + 1))); continue; } try { return JSON.parse(tx); } catch (e) { throw new Error('Online-Compiler antwortet nicht richtig: ' + tx.slice(0, 120)); } }
     throw new Error('Online-Compiler ist gerade überlastet – bitte gleich nochmal.'); }); wbKette = lauf.catch(() => {}); return lauf; }
-async function programmStarten(spWahl) {
+$('pythonOnline').onclick=()=>{if(confirm('Online-Ausweichlösung: Dein Python-Code und die Eingaben werden an wandbox.org geschickt. Möchtest du das ausdrücklich erlauben?'))programmStarten('python',true);};
+const pythonRunner=window.SDPythonRunner.create();
+async function pythonLokalStarten(){
+ let stdin=($('eingabe').value||'').replace(/ \| /g,'\n');
+ if(!stdin.trim()&&liestEingabe('python',S.p.dateien)){stdin=await eingabeFragen('python');if(stdin===null)return;}
+ unten('ausgabe');ansicht('ausgabe');$('starten').disabled=true;
+ const progress=$('pythonProgress'),label=$('pythonStatus'),stop=$('pythonStop'),online=$('pythonOnline');
+ progress.hidden=false;stop.hidden=false;online.hidden=true;progress.value=0;
+ let text='';S.problemeProgramm=[];probleme();
+ stop.onclick=()=>pythonRunner.stop();
+ try{
+  const result=await pythonRunner.run({files:{...S.p.dateien},main:S.aktiv,stdin},{
+   onProgress:data=>{progress.value=data.percent;label.textContent=data.phase+' · '+data.percent+' %';},
+   onOutput:data=>{text+=data.text+'\n';ausgabe(text);}
+  });
+  label.textContent='Python lokal ausgeführt · Start '+(result.readyMs/1000).toFixed(2)+' s';
+  ausgabe('✅ Python lokal im Browser ausgeführt\n\n'+(text||'(keine Ausgabe)'));
+ }catch(error){label.textContent=error.message;ausgabe(text+'\n❌ '+error.message);fehlerSammeln(error.message,S.aktiv);online.hidden=false;}
+ finally{$('starten').disabled=false;stop.hidden=true;progress.hidden=true;}
+}
+async function programmStarten(spWahl, onlinePython=false) {
   const sp = spWahl || programmSprache(S.aktiv); await speichernJetzt();
+  if(sp === 'python' && !onlinePython)return pythonLokalStarten();
   const info = sp === 'python' ? (i => ({ gruende: [i.pakete.length ? 'Python-Pakete: ' + i.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', i.fenster ? 'ein Fenster (tkinter/turtle)' : ''].filter(Boolean) }))(pyFremde(S.p.dateien)) : nurAufPc(sp, S.p.dateien);
   if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); }
   let stdinText = ($('eingabe').value || '').replace(/ \| /g, '\n'); if (!stdinText.trim() && liestEingabe(sp, S.p.dateien)) { const e = await eingabeFragen(sp); if (e == null) return; stdinText = e; }
@@ -1973,7 +1994,7 @@ const EINGABE_RE = { python: /\binput\s*\(|sys\.stdin/, java: /new\s+Scanner\s*\
 function liestEingabe(sp, dateien) { const re = EINGABE_RE[sp]; if (!re) return false; return Object.entries(dateien).some(([p, t]) => programmSprache(p) === sp || (sp === 'node' && /\.m?js$/.test(p)) ? re.test(String(t)) : false) || re.test(String(dateien[S.aktiv] || '')); }
 function eingabeFragen(sp) { return new Promise(ok => { let o = $('einFrage'); if (!o) { o = document.createElement('div'); o.id = 'einFrage'; o.className = 'dialog'; document.body.appendChild(o); }
   o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(560px,96vw)"><b style="font-size:16px">⌨ Dein Programm fragt nach Eingaben</b>' +
-    '<p class="hinweis" style="padding:0">Online kann man nicht während des Laufens tippen. Schreib die Eingaben vorher hier hinein – <b>jede Zeile ist eine Eingabe</b> (z. B. erst den Namen, dann eine Zahl).</p>' +
+    '<p class="hinweis" style="padding:0">Hier werden Eingaben vor dem Start gesammelt. Schreib die Eingaben vorher hier hinein – <b>jede Zeile ist eine Eingabe</b> (z. B. erst den Namen, dann eine Zahl).</p>' +
     '<textarea id="einText" rows="5" placeholder="Anna\n42" style="font:13px ui-monospace,Consolas,monospace"></textarea>' +
     '<div class="reihe"><button id="einPc">💻 Lieber auf meinem PC (live tippen)</button><span style="flex:1"></span><button id="einAbbr">Abbrechen</button><button class="primary" id="einLos">▶ Mit diesen Eingaben starten</button></div></div>';
   const fertig = w => { o.hidden = true; ok(w); }; $('einLos').onclick = () => fertig($('einText').value.replace(/\s+$/, '') + '\n'); $('einAbbr').onclick = () => fertig(null);

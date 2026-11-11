@@ -427,6 +427,8 @@ for(const lang of ["fa","en","ar","ur","uk","ti","de"]){
  await translated.locator("#langWahl").selectOption(lang);
  await translated.evaluate(value=>window.sdApplyLang(value),lang);
  const dict=await translated.evaluate(()=>window.SDAkademieI18n.dictionaries[window.SD_LANG]);
+ assert.equal(await translated.locator("#lessonDetail .quiz > h4").first().getAttribute("dir"),"ltr");
+ assert.equal(await translated.locator("#lessonDetail .quiz > h4").first().getAttribute("lang"),"de");
  assert.equal(await translated.locator("html").getAttribute("dir"),["fa","ar","ur"].includes(lang)?"rtl":"ltr");
  assert.equal(await translated.locator(".uebung-pruefen").first().innerText(),dict["Prüfen"]);
  assert.equal(await translated.locator("#kursZurueck").innerText(),dict["← Alle Kurse"]);
