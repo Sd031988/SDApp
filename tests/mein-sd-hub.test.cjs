@@ -510,7 +510,7 @@ test("Berufskurse: kurze Sätze und verständliche Fachbegriffe ohne Fülltext",
   }
  }
  const contracts=require(path.join(root,"mein-sd-hub/kurse/arbeitsvertrag-rechte.js"));
- assert.match(contracts[0].explanation,/Entgelt ist das Geld/);
+ assert.match(contracts[0].explanation,/Entgelt ist die Bezahlung/);
  assert.match(contracts[4].explanation,/Arbeitsunfähigkeit heißt/);
  assert.match(contracts[5].explanation,/Befristung begrenzt/);
  assert.match(contracts[5].explanation,/Probezeit ist/);

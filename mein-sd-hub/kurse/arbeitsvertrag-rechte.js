@@ -4,7 +4,7 @@
     "id": "b4-1",
     "title": "Wesentliche Arbeitsbedingungen herauslesen",
     "minutes": 40,
-    "explanation": "Entgelt ist das Geld, das du für deine Arbeit bekommst. Du suchst im Vertrag nach Arbeit, Ort, Beginn, Bezahlung und Arbeitszeit.",
+    "explanation": "Entgelt ist die Bezahlung für deine Arbeit. Du suchst im Vertrag nach Arbeit, Ort, Beginn, Bezahlung und Arbeitszeit.",
     "tip": "Markiere in einem fiktiven Vertrag nur tatsächlich genannte Bedingungen und stelle zu einer Lücke eine konkrete Rückfrage.",
     "schrittePraxis": [
       {
@@ -1004,7 +1004,7 @@
         "typ": "schreiben",
         "titel": "Eine Beratungsanfrage verfassen",
         "aufgabe": "Schreibe drei Sätze: schriftliche Kündigung heute erhalten, Unterlagen vorhanden, sofortige Fristprüfung erbeten.",
-        "musterloesung": "Ich habe heute eine schriftliche Kündigung erhalten und benötige kurzfristig arbeitsrechtliche Hilfe. Schreiben, Vertrag und relevante Nachrichten kann ich zur Prüfung vorlegen. Bitte teilen Sie mir sofort mit, wie ich den Zugang und mögliche Klagefristen klären lassen kann; auf ein internes Gespräch möchte ich dafür nicht erst warten.",
+        "musterloesung": "Ich habe heute eine schriftliche Kündigung erhalten und benötige kurzfristig arbeitsrechtliche Hilfe. Schreiben, Vertrag und relevante Nachrichten kann ich zur Prüfung vorlegen. Bitte helfen Sie mir, den Zugang und mögliche Klagefristen zu klären. Ich möchte nicht erst auf ein internes Gespräch warten.",
         "checkliste": [
           "Ist der tatsächliche Zugang als heute genannt?",
           "Nennst du die verfügbaren Unterlagen?",
