@@ -257,7 +257,7 @@ for(const width of [320,390,1300]){
  await c2.close();
 }
 /* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
-for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8],["Arbeit finden",8],["Bewerbung",8]]){
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8],["Arbeit finden",8],["Bewerbung",8],["Vorstellungsgespräch & erste Arbeitstage",8]]){
  for(const width of [320,390,1300]){
   const germanPage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
   germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
