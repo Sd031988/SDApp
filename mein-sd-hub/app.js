@@ -146,25 +146,27 @@ function ladeKurs(id){
  }).catch(error=>{kursLadevorgaenge.delete(id);throw error});
  kursLadevorgaenge.set(id,p);return p;
 }
+const A=window.SDAkademieI18n;
+function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
 function renderCourses(){
  clearChildren("courses");
  for(const bereich of ["Programmieren","Computer & Internet","Deutsch","Arbeit & Beruf"]){
-  const group=node("section","course-group",undefined,$("courses"));
-  node("h3","",bereich,group);
-  const entries=node("div","course-group-list",undefined,group);
+  const group=akNode("section","course-group",undefined,$("courses"));
+  akNode("h3","",bereich,group);
+  const entries=akNode("div","course-group-list",undefined,group);
   for(const course of D.academy.filter(c=>c.bereich===bereich)){
    const ids=D.academyLessonIds[course.id]||[];
    const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
-   const btn=node("button","course"+(course.id===courseId?" active":""),undefined,entries);
+   const btn=akNode("button","course"+(course.id===courseId?" active":""),undefined,entries);
    btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));
-   node("span","emoji",course.icon,btn);
-   node("b","",course.name,btn);
-   node("span","badge",course.stufe,btn);
-   node("small","",course.summary,btn);
-   node("small","","Empfohlene Reihenfolge: "+(D.academy.filter(c=>c.bereich===bereich).indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
-   const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);
+   akNode("span","emoji",course.icon,btn);
+   akNode("b","",course.name,btn);
+   akNode("span","badge",course.stufe,btn);
+   akNode("small","",course.summary,btn);
+   akNode("small","","Empfohlene Reihenfolge: "+(D.academy.filter(c=>c.bereich===bereich).indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
+   const track=akNode("div","progress-track",undefined,btn),bar=akNode("div","progress-bar",undefined,track);
    bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
-   node("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
+   akNode("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
    btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben()});
   }
  }
@@ -175,62 +177,62 @@ function zeigeKursOben(){const ak=$("akademie"),z=$("kursZurueck");if(z&&!z.data
 function zeigeLektionOben(){const d=$("lessonDetail"),a=document.querySelector(".lesson-btn.active");if(a)a.scrollIntoView({block:"nearest",inline:"center"});d.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}
 function renderLessonList(){
  const c=findCourse(courseId);if(!c)return;
- $("courseHeading").textContent=c.icon+" "+c.name;
- $("courseSummary").textContent=c.summary;
- if(c.id==="deutsch-b1"){const a=node("a","btn outline small","B1-Prüfungstraining öffnen ↗",$("courseSummary"));a.href="/deutsch/b1-pruefung.html";}
+ $("courseHeading").replaceChildren();$("courseHeading").append(document.createTextNode(c.icon+" "));akNode("span","",c.name,$("courseHeading"));
+ $("courseSummary").replaceChildren();akNode("span","",c.summary,$("courseSummary"));
+ if(c.id==="deutsch-b1"){const a=akNode("a","btn outline small","B1-Prüfungstraining öffnen ↗",$("courseSummary"));a.href="/deutsch/b1-pruefung.html";}
 
  clearChildren("lessonList");clearChildren("lessonDetail");
  if(!c.lessons){
-  const status=node("p","panel-sub","Lade Kurs …",$("lessonDetail"));
+  const status=akNode("p","panel-sub","Lade Kurs …",$("lessonDetail"));
   status.setAttribute("role","status");
-  ladeKurs(c.id).then(()=>{if(courseId===c.id)renderLessonList()}).catch(()=>{if(courseId===c.id)status.textContent="Der Kurs konnte nicht geladen werden. Bitte erneut öffnen."});
+  ladeKurs(c.id).then(()=>{if(courseId===c.id)renderLessonList()}).catch(()=>{if(courseId===c.id)A.set(status,"Der Kurs konnte nicht geladen werden. Bitte erneut öffnen.")});
   return;
  }
  c.lessons.forEach(l=>{
-  const btn=node("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
+  const btn=akNode("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
   btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));
-  const left=node("span","",undefined,btn);
-  node("b","",l.title,left);
-  node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
-  node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
+  const left=akNode("span","",undefined,btn);
+  akNode("b","",l.title,left);
+  akNode("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
+  akNode("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
   btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList();zeigeLektionOben()});
  });
  renderLesson();
- const pos=c.lessons.findIndex(l=>l.id===lessonId),nav=node("nav","ak-lektion-nav",undefined,$("lessonDetail"));nav.setAttribute("aria-label","Lektionen blättern");
- if(pos>0){const b=node("button","btn outline small","← "+c.lessons[pos-1].title,nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos-1].id;answered=false;renderLessonList();zeigeLektionOben()}}
- if(pos>=0&&pos<c.lessons.length-1){const b=node("button","btn primary small","Nächste Lektion: "+c.lessons[pos+1].title+" →",nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos+1].id;answered=false;renderLessonList();zeigeLektionOben()}}
+ const pos=c.lessons.findIndex(l=>l.id===lessonId),nav=akNode("nav","ak-lektion-nav",undefined,$("lessonDetail"));A.attr(nav,"aria-label","Lektionen blättern");
+ if(pos>0){const b=akNode("button","btn outline small","← "+c.lessons[pos-1].title,nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos-1].id;answered=false;renderLessonList();zeigeLektionOben()}}
+ if(pos>=0&&pos<c.lessons.length-1){const b=akNode("button","btn primary small","Nächste Lektion: "+c.lessons[pos+1].title+" →",nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos+1].id;answered=false;renderLessonList();zeigeLektionOben()}}
  renderCourseFinal(c);
 }
 function renderCourseFinal(course){
  const target=$("lessonDetail"),completed=course.lessons.every(l=>state.completedLessons.includes(l.id));
- const section=node("section","ak-course-final",undefined,target);
- node("h4","","Kursabschluss",section);
- if(!completed){node("p","","Schließe zuerst alle Lektionen dieses Kurses ab. Danach kannst du den Abschlusstest machen.",section);return}
- const start=node("button","btn outline small","Abschlusstest starten (10 Fragen)",section);start.type="button";
+ const section=akNode("section","ak-course-final",undefined,target);
+ akNode("h4","","Kursabschluss",section);
+ if(!completed){akNode("p","","Schließe zuerst alle Lektionen dieses Kurses ab. Danach kannst du den Abschlusstest machen.",section);return}
+ const start=akNode("button","btn outline small","Abschlusstest starten (10 Fragen)",section);start.type="button";
  start.onclick=()=>{
   start.disabled=true;
   const pool=course.lessons.flatMap(l=>l.quiz?.map(q=>({frage:q.frage,antworten:q.antworten,richtig:q.richtig}))||(l.question?[{frage:l.question,antworten:l.choices,richtig:l.answer}]:[]));
-  if(!pool.length){node("p","","Für diesen Kurs fehlen noch Abschlussfragen.",section);return}
+  if(!pool.length){akNode("p","","Für diesen Kurs fehlen noch Abschlussfragen.",section);return}
   let index=0,points=0;
-  const area=node("div","ak-final-questions",undefined,section);
+  const area=akNode("div","ak-final-questions",undefined,section);
   const next=()=>{
    area.replaceChildren();
    if(index===10){
-    node("p","",points+" von 10 Fragen richtig beantwortet.",area);
-    if(points<7){const retry=node("button","btn outline small","Erneut versuchen",area);retry.onclick=()=>{index=0;points=0;next()};return}
-    const certificate=node("section","ak-certificate",undefined,area);
-    node("h2","","Teilnahmebestätigung",certificate);
-    node("p","","Du hast den Kurs „"+course.name+"“ abgeschlossen.",certificate);
-    const label=node("label","","Name (freiwillig): ",certificate),input=node("input","",undefined,label);input.placeholder="Dein Name";
-    node("p","","Datum: "+new Date().toLocaleDateString("de-DE"),certificate);
-    node("p","","Diese Teilnahmebestätigung ist KEIN offizielles Zertifikat.",certificate);
-    const print=node("button","btn primary","Teilnahmebestätigung drucken",certificate);print.type="button";print.onclick=()=>window.print();
+    akNode("p","",points+" von 10 Fragen richtig beantwortet.",area);
+    if(points<7){const retry=akNode("button","btn outline small","Erneut versuchen",area);retry.onclick=()=>{index=0;points=0;next()};return}
+    const certificate=akNode("section","ak-certificate",undefined,area);
+    akNode("h2","","Teilnahmebestätigung",certificate);
+    akNode("p","","Du hast den Kurs „"+course.name+"“ abgeschlossen.",certificate);
+    const label=akNode("label","","Name (freiwillig): ",certificate),input=akNode("input","",undefined,label);A.attr(input,"placeholder","Dein Name");
+    akNode("p","","Datum: "+new Date().toLocaleDateString("de-DE"),certificate);
+    akNode("p","","Diese Teilnahmebestätigung ist KEIN offizielles Zertifikat.",certificate);
+    const print=akNode("button","btn primary","Teilnahmebestätigung drucken",certificate);print.type="button";print.onclick=()=>window.print();
     return;
    }
    const q=pool[index%pool.length];
-   node("h5","",(index+1)+". "+q.frage,area);
-   const answers=node("div","answers",undefined,area);
-   q.antworten.forEach((text,i)=>{const btn=node("button","",text,answers);btn.type="button";btn.onclick=()=>{if(i===q.richtig)points++;index++;next()}});
+   akNode("h5","",(index+1)+". "+q.frage,area);
+   const answers=akNode("div","answers",undefined,area);
+   q.antworten.forEach((text,i)=>{const btn=akNode("button","",text,answers);btn.type="button";btn.onclick=()=>{if(i===q.richtig)points++;index++;next()}});
   };
   next();
  };
@@ -240,57 +242,57 @@ function academySourceUrl(raw){
  const hosts=["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
  return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;if(l.schritte){renderCodeLesson(l);return}const q=node("div","quiz",undefined,$("lessonDetail"));node("span","badge","LEKTION · "+l.minutes+" MIN",q);node("h4","",l.title,q);node("p","",l.explanation,q);
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
 if(l.standHinweis&&l.standQuelle){
  const url=academySourceUrl(l.standQuelle.url);
  if(url){
-  const note=node("aside","ak-legal-note",undefined,q);note.setAttribute("role","note");
-  node("p","",l.standHinweis,note);
-  const link=node("a","",l.standQuelle.titel+" ↗",note);link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
+  const note=akNode("aside","ak-legal-note",undefined,q);note.setAttribute("role","note");
+  akNode("p","",l.standHinweis,note);
+  const link=akNode("a","",l.standQuelle.titel+" ↗",note);link.href=url.href;link.target="_blank";link.rel="noopener noreferrer";
  }
 }
 if(Array.isArray(l.schrittePraxis)){
- const details=node("section","ak-practice-steps",undefined,q);
- node("h5","","Schritt für Schritt",details);
- l.schrittePraxis.forEach((step,i)=>{const item=node("section","ak-practice-step",undefined,details);node("h5","",(i+1)+". "+step.titel,item);mitCode(node("p","",undefined,item),step.text)});
- if(Array.isArray(l.fehler)){const problems=node("section","ak-practice-errors",undefined,q);node("h5","","Typische Fehler und richtige Wege",problems);l.fehler.forEach(f=>{node("h6","",f.titel,problems);mitCode(node("p","",undefined,problems),f.text)})}
- if(Array.isArray(l.merke)){const memory=node("section","ak-practice-memory",undefined,q);node("h5","","Merksätze",memory);l.merke.forEach(t=>mitCode(node("p","",undefined,memory),t))}
+ const details=akNode("section","ak-practice-steps",undefined,q);
+ akNode("h5","","Schritt für Schritt",details);
+ l.schrittePraxis.forEach((step,i)=>{const item=akNode("section","ak-practice-step",undefined,details);akNode("h5","",(i+1)+". "+step.titel,item);mitCode(akNode("p","",undefined,item),step.text)});
+ if(Array.isArray(l.fehler)){const problems=akNode("section","ak-practice-errors",undefined,q);akNode("h5","","Typische Fehler und richtige Wege",problems);l.fehler.forEach(f=>{akNode("h6","",f.titel,problems);mitCode(akNode("p","",undefined,problems),f.text)})}
+ if(Array.isArray(l.merke)){const memory=akNode("section","ak-practice-memory",undefined,q);akNode("h5","","Merksätze",memory);l.merke.forEach(t=>mitCode(akNode("p","",undefined,memory),t))}
 }
 if(Array.isArray(l.quellen)){
- const sources=node("section","ak-sources",undefined,q);
- node("h5","","Quellen und weiterer Prüfweg",sources);
- const list=node("ul","",undefined,sources);
+ const sources=akNode("section","ak-sources",undefined,q);
+ akNode("h5","","Quellen und weiterer Prüfweg",sources);
+ const list=akNode("ul","",undefined,sources);
  for(const source of l.quellen){
   const url=academySourceUrl(source.url);if(!url)continue;
-  const item=node("li","",undefined,list),a=node("a","",source.titel,item);
+  const item=akNode("li","",undefined,list),a=akNode("a","",source.titel,item);
   a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";
-  if(/^\d{4}-\d{2}-\d{2}$/.test(source.stand||""))node("small",""," · geprüft: "+source.stand,item);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(source.stand||""))akNode("small",""," · geprüft: "+source.stand,item);
  }
 }
 if(Array.isArray(l.quiz)){
  if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
- const quizArea=node("section","ak-lesson-quiz",undefined,q);
+ const quizArea=akNode("section","ak-lesson-quiz",undefined,q);
  let index=0;
  const showQuestion=()=>{
   quizArea.replaceChildren();
   if(index>=l.quiz.length){
-   node("p","feedback","✓ Alle drei Verständnisfragen richtig beantwortet.",quizArea);
+   akNode("p","feedback","✓ Alle drei Verständnisfragen richtig beantwortet.",quizArea);
    if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}
    return;
   }
   const current=l.quiz[index];
-  node("h4","",(index+1)+"/"+l.quiz.length+" · "+current.frage,quizArea);
-  const choices=node("div","answers",undefined,quizArea),feedback=node("p","feedback",undefined,quizArea);
+  akNode("h4","",(index+1)+"/"+l.quiz.length+" · "+current.frage,quizArea);
+  const choices=akNode("div","answers",undefined,quizArea),feedback=akNode("p","feedback",undefined,quizArea);
   current.antworten.forEach((choice,i)=>{
-   const button=node("button","",choice,choices);button.type="button";
+   const button=akNode("button","",choice,choices);button.type="button";
    button.onclick=()=>{
     const correct=i===current.richtig;
     feedback.className="feedback"+(correct?"":" error");
-    feedback.textContent=(correct?"✓ Richtig. ":"Noch nicht richtig. ")+(current.erklaerung||l.tip||"");
+    A.set(feedback,(correct?"✓ Richtig. ":"Noch nicht richtig. ")+(current.erklaerung||l.tip||""));
     if(!correct)return;
     [...choices.children].forEach(b=>b.disabled=true);
     button.classList.add("correct");
-    const next=node("button","btn outline small",index===l.quiz.length-1?"Lektion abschließen":"Nächste Frage",quizArea);
+    const next=akNode("button","btn outline small",index===l.quiz.length-1?"Lektion abschließen":"Nächste Frage",quizArea);
     next.type="button";next.onclick=()=>{index++;showQuestion()};
    };
   });
@@ -298,10 +300,10 @@ if(Array.isArray(l.quiz)){
  showQuestion();
  return;
 }
-node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
+akNode("h4","",l.question,q);const answers=akNode("div","answers",undefined,q),feedback=akNode("div","",undefined,q);let locked=false;
 if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
-l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
-if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=node("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
+l.choices.forEach((choice,i)=>{const b=akNode("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");A.set(feedback,(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip);
+if(correct&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();}else if(!correct){const retry=akNode("button","btn outline small","Noch einmal versuchen ↻",q);retry.type="button";retry.style.marginTop="12px";retry.addEventListener("click",()=>renderLesson())}
 })});
 }
 
@@ -336,49 +338,49 @@ function academyToStudio(baseName,code){
  });
 }
 function renderCodeLesson(l){
- const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
- node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
- node("h4","",l.title,wrap);if(l.explanation)node("p","ak-intro",l.explanation,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
- l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(node("p","",undefined,sec),ohneDoppel);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(node("p","",undefined,sec),erkl)}});
- node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);mitCode(li,f.text)});
- node("h5","","Jetzt selbst schreiben",wrap);
+ const area=$("lessonDetail"),wrap=akNode("section","code-lesson",undefined,area);
+ akNode("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
+ akNode("h4","",l.title,wrap);if(l.explanation)akNode("p","ak-intro",l.explanation,wrap);akNode("h5","","Dein Ziel",wrap);akNode("p","",l.ziel,wrap);
+ l.schritte.forEach((step,i)=>{const sec=akNode("section","code-step",undefined,wrap);akNode("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(akNode("p","",undefined,sec),ohneDoppel);if(step.code){const pre=akNode("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(akNode("p","",undefined,sec),erkl)}});
+ akNode("h5","","Häufige Fehler",wrap);const errors=akNode("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=akNode("li","",undefined,errors);akNode("b","",f.titel+": ",li);mitCode(li,f.text)});
+ akNode("h5","","Jetzt selbst schreiben",wrap);
  const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
- const grid=node("div","code-workspace",undefined,wrap),editor=node("div","code-editor",undefined,grid);
- const tabs=node("div","code-tabs",undefined,editor),label=node("label","",undefined,editor),textarea=node("textarea","code-textarea",undefined,editor);
+ const grid=akNode("div","code-workspace",undefined,wrap),editor=akNode("div","code-editor",undefined,grid);
+ const tabs=akNode("div","code-tabs",undefined,editor),label=akNode("label","",undefined,editor),textarea=akNode("textarea","code-textarea",undefined,editor);
  textarea.spellcheck=false;textarea.autocapitalize="off";textarea.autocomplete="off";textarea.autocorrect="off";
  const keys=[["html","HTML"],["css","CSS"],["js","JavaScript"]];
  let active="html",timer;
- function select(key){active=key;label.textContent=key.toUpperCase()+" bearbeiten";textarea.value=code[key];keys.forEach(([k])=>buttons[k].setAttribute("aria-pressed",String(k===key)))}
+ function select(key){active=key;A.set(label,key.toUpperCase()+" bearbeiten");textarea.value=code[key];keys.forEach(([k])=>buttons[k].setAttribute("aria-pressed",String(k===key)))}
  const buttons={};
- keys.forEach(([key,title])=>{const b=node("button","",title,tabs);b.type="button";buttons[key]=b;b.onclick=()=>select(key)});
- const view=node("div","code-preview",undefined,grid);node("strong","","Live-Vorschau",view);
- const frame=node("iframe","code-frame",undefined,view);frame.setAttribute("sandbox","allow-scripts");frame.title="Vorschau deiner Webseite";
+ keys.forEach(([key,title])=>{const b=akNode("button","",title,tabs);b.type="button";buttons[key]=b;b.onclick=()=>select(key)});
+ const view=akNode("div","code-preview",undefined,grid);akNode("strong","","Live-Vorschau",view);
+ const frame=akNode("iframe","code-frame",undefined,view);frame.setAttribute("sandbox","allow-scripts");A.attr(frame,"title","Vorschau deiner Webseite");
  const update=()=>{frame.srcdoc=previewHtml(code)};
  textarea.addEventListener("input",()=>{code[active]=textarea.value;clearTimeout(timer);timer=setTimeout(update,400)});
  select(active);update();
- const reset=node("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm("Deinen Code durch den Startcode ersetzen?"))return;Object.assign(code,l.beispiel);select(active);update()};
- node("h5","","Deine Aufgabe",wrap);node("p","",l.aufgabe.text,wrap);
- if(l.projektLink&&/^\/mein-sd-hub\/p4-(?:quiz\.html|module\/index\.html)$/.test(l.projektLink)){const link=node("a","btn outline small","Vollständiges Praxisprojekt öffnen",wrap);link.href=l.projektLink;link.target="_blank";link.rel="noopener noreferrer";}
- const checks=node("div","code-checks",undefined,wrap),check=node("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
- const hint=node("p","hint",l.aufgabe.tipp,wrap);hint.hidden=true;
- const solution=node("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;
+ const reset=akNode("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm(A.t("Deinen Code durch den Startcode ersetzen?")))return;Object.assign(code,l.beispiel);select(active);update()};
+ akNode("h5","","Deine Aufgabe",wrap);akNode("p","",l.aufgabe.text,wrap);
+ if(l.projektLink&&/^\/mein-sd-hub\/p4-(?:quiz\.html|module\/index\.html)$/.test(l.projektLink)){const link=akNode("a","btn outline small","Vollständiges Praxisprojekt öffnen",wrap);link.href=l.projektLink;link.target="_blank";link.rel="noopener noreferrer";}
+ const checks=akNode("div","code-checks",undefined,wrap),check=akNode("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
+ const hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,wrap);hint.hidden=true;
+ const solution=akNode("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;
  let failures=0,passed=false;
  check.onclick=()=>{checks.replaceChildren();const doc=new DOMParser().parseFromString(code.html,"text/html");
-  const results=l.aufgabe.pruefungen.map(p=>{const ok=D.pruefeCode(p.test,code,doc);node("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+p.beschreibung,checks);return ok});
+  const results=l.aufgabe.pruefungen.map(p=>{const ok=D.pruefeCode(p.test,code,doc);akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+p.beschreibung,checks);return ok});
   passed=results.every(Boolean);if(!passed)failures++;hint.hidden=failures<2;solution.hidden=failures<3;
-  if(passed)node("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks);
+  if(passed)akNode("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks);
  };
  solution.onclick=()=>{Object.assign(code,l.aufgabe.loesung);select(active);update();checks.replaceChildren();passed=false};
- node("h5","","Wissen prüfen",wrap);
+ akNode("h5","","Wissen prüfen",wrap);
  let correct=0;const quizBoxes=[];
- l.quiz.forEach((q,qi)=>{const box=node("section","code-quiz",undefined,wrap);quizBoxes.push(box);node("h5","",(qi+1)+". "+q.frage,box);const answers=node("div","answers",undefined,box),feedback=node("p","feedback",undefined,box);feedback.hidden=true;
- q.antworten.forEach((answer,i)=>{const b=node("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;feedback.textContent=(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung;feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
+ l.quiz.forEach((q,qi)=>{const box=akNode("section","code-quiz",undefined,wrap);quizBoxes.push(box);akNode("h5","",(qi+1)+". "+q.frage,box);const answers=akNode("div","answers",undefined,box),feedback=akNode("p","feedback",undefined,box);feedback.hidden=true;
+ q.antworten.forEach((answer,i)=>{const b=akNode("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;A.set(feedback,(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung);feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
  });
- if(l.uebungen&&window.SDAkademieUebungen){node("h5","","Weitere Übungen",wrap);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(wrap,u))}
- node("h5","","Das merkst du dir",wrap);const ul=node("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(node("li","",undefined,ul),x));
- const studio=node("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
- const status=node("p","message","",wrap);
- studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){status.textContent="Projekt konnte nicht gespeichert werden: "+e.message;studio.disabled=false}};
+ if(l.uebungen&&window.SDAkademieUebungen){akNode("h5","","Weitere Übungen",wrap);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(wrap,u))}
+ akNode("h5","","Das merkst du dir",wrap);const ul=akNode("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
+ const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
+ const status=akNode("p","message","",wrap);
+ studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(status,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}};
 }
 // Deutschland Pfade
 let pathId="start";

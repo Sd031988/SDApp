@@ -58,3 +58,13 @@
 .ak-legal-note{border:1px solid currentColor;border-radius:8px;padding:12px 16px;margin:16px 0;line-height:1.6}
 .ak-legal-note p{margin:0 0 8px}
 .ak-legal-note a{overflow-wrap:anywhere}
+
+/* Vorhandene globale Sprachwahl. Code und deutsche Lernschritte bleiben LTR. */
+.top-inner{flex-wrap:wrap}
+#langWahl{max-width:10em;min-width:0;border:1px solid currentColor;border-radius:6px;padding:5px;background:transparent;color:inherit}
+#langWahl option{background:#fff;color:#172e29}
+html[dir="rtl"] #akademie{text-align:start}
+html[dir="rtl"] .top nav{margin-left:0;margin-inline-start:auto}
+#akademie .code-example,#akademie .code-textarea,#akademie .code-frame,#akademie code{direction:ltr;text-align:left;unicode-bidi:isolate}
+#akademie .ak-practice-step,#akademie .code-step,#akademie .ak-legal-note{direction:ltr;unicode-bidi:isolate;text-align:left}
+@media(max-width:390px){.top-inner{gap:8px;padding-block:10px}.top nav{gap:0}#langWahl{max-width:8em}.course small,.course b{overflow-wrap:anywhere}}
