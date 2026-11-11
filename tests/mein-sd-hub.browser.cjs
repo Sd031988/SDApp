@@ -50,7 +50,7 @@ for(const lesson of lessonChecks){
  assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
 }
 
-await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await page.locator(".lesson-btn").first().waitFor();
 for(const correct of require(path.join(root,"mein-sd-hub/kurse/german.js"))[0].quiz.map(q=>q.richtig)){
  await page.locator(".ak-lesson-quiz .answers button").nth(correct).click();
@@ -75,7 +75,7 @@ await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
 await page.locator(".code-textarea").fill("body { background-color: #eef; }");
 await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
 assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
-await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -190,7 +190,7 @@ const finalPage=await browser.newPage({viewport:{width:390,height:844}});
 finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
 await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
 await finalPage.locator('[data-tab="akademie"]').click();
-await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await finalPage.locator(".course").filter({has:finalPage.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await finalPage.locator(".lesson-btn").first().waitFor();
 const germanQuiz=require(path.join(root,"mein-sd-hub/kurse/german.js"));
 for(let i=0;i<8;i++){
