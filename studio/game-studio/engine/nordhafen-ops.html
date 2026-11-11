@@ -7,29 +7,30 @@ html,body{margin:0;height:100%;background:#0b1520;color:#edf4fb;font:15px system
 #cross{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;font-size:28px;text-shadow:0 1px 3px #000}
 #damageOverlay{position:fixed;inset:0;border:0 solid #f24a4a;pointer-events:none;z-index:3;transition:border-width .12s}#flash{position:fixed;left:54%;top:57%;width:18px;height:18px;border-radius:50%;background:#ffd26b;box-shadow:0 0 35px 16px #ff9b39;opacity:0;pointer-events:none}
 #missionProgress{position:fixed;left:50%;top:64%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;display:none;place-items:center;background:conic-gradient(#ffbc35 var(--progress,0%),#102235c9 0);font-weight:bold;text-shadow:0 1px 4px #000;pointer-events:none;z-index:6}#objectiveMarker{position:fixed;z-index:7;color:#ffe86c;background:#112436d9;border:1px solid #ffe86c;border-radius:8px;padding:6px 10px;font-weight:700;pointer-events:none;display:none}#cross{z-index:5}.marker{position:fixed;z-index:4;color:#ffdf3b;font-weight:900;text-shadow:0 1px 4px #000;pointer-events:none}#menu{position:fixed;inset:0;background:#07131edb;display:grid;place-items:center}#menu article{max-width:480px;padding:30px;background:#1a2b3d;border-radius:12px}
-button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}
+button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bottom:12px;left:12px;background:#07131ebc;padding:8px}#driveControls[hidden]{display:none}#driveControls{position:fixed;inset:auto 10px 28px 10px;z-index:8;display:flex;justify-content:space-between;align-items:end;gap:7px;pointer-events:none}#driveControls button{pointer-events:auto;touch-action:none;min-width:58px;min-height:58px;background:#152f45e9;border:1px solid #91c4e0;border-radius:14px;color:#fff;font-size:22px}#driveControls .pedals{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}#driveControls #vehicleToggle{font-size:14px;min-width:105px}@media (hover:hover) and (pointer:fine){#driveControls{display:none!important}}
 </style></head><body><canvas id="game" aria-label="Nordhafen Ops 3D-Spiel"></canvas><div id="cross">+</div><div id="flash"></div><div id="damageOverlay"></div><div id="missionProgress"></div><div id="objectiveMarker"></div><div id="hud">Etappe A – Schießstand</div><div id="status" role="status">Bereit</div>
-<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Mission: Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), hole das Datenpaket aus der obersten Etage und halte die Hafen-Extraktion 20 Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen, Maus schauen, Linksklick schießen, rechte Maustaste zielen, R nachladen, E Funkmast aktivieren, Shift sprinten. Esc gibt die Maus frei. <strong>Handy: noch nicht unterstützt (nur PC).</strong></p><label for="mode">Modus</label> <select id="mode"><option value="mission">Mission</option><option value="city">Freie Stadt (Prototyp)</option><option value="royale">Nordhafen Royale (Prototyp)</option></select> <label for="difficulty">Schwierigkeit</label> <select id="difficulty"><option value="easy">Leicht</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select><label for="volume">Lautstärke</label><input id="volume" type="range" min="0" max="100" value="60"><p id="records">Bestzeiten und Siege werden lokal gespeichert, soweit der Browser es erlaubt.</p><p id="tutorial">Tutorial: Schießstand am Start (T überspringen); Funkmasten und Datenpaket mit E aktivieren. Fahrzeug und Touch-Steuerung sind noch nicht spielbar.</p><button id="play">Starten</button> <button id="restart" style="display:none">Neustart</button></article></div>
+<div id="driveControls" hidden aria-label="Fahrzeugsteuerung"><div class="pedals"><button data-drive-key="KeyA" aria-label="Links lenken">◀</button><button data-drive-key="KeyW" aria-label="Gas geben">▲</button><button data-drive-key="KeyD" aria-label="Rechts lenken">▶</button><button data-drive-key="Space" aria-label="Handbremse">P</button><button data-drive-key="KeyS" aria-label="Rückwärts">▼</button></div><button id="vehicleToggle" aria-label="Einsteigen oder aussteigen">Einsteigen</button></div>
+<div id="menu"><article><h1 id="menuTitle">NORDHAFEN OPS</h1><p id="menuText">Mission: Aktiviere drei Funkmasten (E jeweils drei Sekunden halten), hole das Datenpaket aus der obersten Etage und halte die Hafen-Extraktion 20 Sekunden. Schießstand bleibt am Start.</p><p>PC: WASD laufen oder fahren, F ein-/aussteigen, Leertaste Handbremse, B bremsen; Maus schauen, Linksklick schießen, R nachladen, E interagieren. <strong>Handy: Touch-Autosteuerung im Modus Freie Stadt als Testfunktion; Fußsteuerung weiterhin PC.</strong></p><label for="mode">Modus</label> <select id="mode"><option value="mission">Mission</option><option value="city">Freie Stadt (Prototyp)</option><option value="royale">Nordhafen Royale (Prototyp)</option></select> <label for="carChoice">Auto (Freie Stadt)</label> <select id="carChoice"><option value="sportscar">Sportwagen</option><option value="sportscar2">Sportwagen 2</option><option value="suv">SUV</option><option value="taxi">Taxi</option><option value="cop">Polizeiauto</option><option value="normalcar1">Stadtauto 1</option><option value="normalcar2">Stadtauto 2</option></select> <label for="difficulty">Schwierigkeit</label> <select id="difficulty"><option value="easy">Leicht</option><option value="normal" selected>Normal</option><option value="hard">Schwer</option></select><label for="volume">Lautstärke</label><input id="volume" type="range" min="0" max="100" value="60"><p id="records">Bestzeiten und Siege werden lokal gespeichert, soweit der Browser es erlaubt.</p><p id="tutorial">Tutorial: Schießstand am Start (T überspringen); Funkmasten und Datenpaket mit E aktivieren. Im Modus Freie Stadt steht dein gewähltes Auto am Start: F einsteigen, WASD fahren, Leertaste Handbremse, F bei Stillstand aussteigen. Touch-Tasten zum Testen auf dem iPhone.</p><button id="play">Starten</button> <button id="restart" style="display:none">Neustart</button></article></div>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script><script src="./nordhafen-ops-menu.js"></script><script src="./nordhafen-ops-weapons.js"></script><script src="./nordhafen-ops-audio.js"></script><script src="./nordhafen-ops-campaign.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script><script src="./nordhafen-ops-city.js"></script><script src="./nordhafen-ops-vehicles.js"></script><script src="./nordhafen-ops-menu.js"></script><script src="./nordhafen-ops-weapons.js"></script><script src="./nordhafen-ops-audio.js"></script><script src="./nordhafen-ops-campaign.js"></script>
 <script>
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission,interiors=window.SDNordhafenOpsInteriors,modes=window.SDNordhafenOpsModes,menuRules=window.SDNordhafenOpsMenu,weaponRules=window.SDNordhafenOpsWeapons,audioRules=window.SDNordhafenOpsAudio,campaign=window.SDNordhafenOpsCampaign;
-let sound=null,engine,scene,streamer,city,player,targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=weaponRules.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,paused=false,holdingE=false,mission=campaign.initial(),skipRange=false,dataMesh=null,sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],interiorSites=[],interiorLoaded=new Map(),frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='',mode='mission',wanted={level:0,quiet:0},royaleElapsed=0,royalePlayers=[],cityMissions=modes.missions(),loot=modes.loot(20261107,50);
+const $=id=>document.getElementById(id),canvas=$('game'),combat=window.SDNordhafenOpsCombat,controls=window.SDNordhafenOpsControls,enemyRules=window.SDNordhafenOpsEnemies,missionRules=window.SDNordhafenOpsMission,interiors=window.SDNordhafenOpsInteriors,modes=window.SDNordhafenOpsModes,menuRules=window.SDNordhafenOpsMenu,weaponRules=window.SDNordhafenOpsWeapons,audioRules=window.SDNordhafenOpsAudio,campaign=window.SDNordhafenOpsCampaign,vehicleRules=window.SDNordhafenOpsVehicles,cityRules=window.SDNordhafenOpsCity;
+let sound=null,engine,scene,streamer,city,player,vehicles=null,vehicleKeys=new Set(),targets=[],enemies=[],health=100,ended=false,elapsed=0,weapon=weaponRules.initial(),lastShot=0,flashUntil=0,hitUntil=0,aiming=false,paused=false,holdingE=false,mission=campaign.initial(),skipRange=false,dataMesh=null,sites=null,mastMeshes=[],extractMesh=null,damageThisFrame=false,defeated=0,markerNodes=[],interiorSites=[],interiorLoaded=new Map(),frameSamples=[],lastUi=0,lastMarkers=0,lastHud='',lastProgress='',lastMarker='',mode='mission',wanted={level:0,quiet:0},royaleElapsed=0,royalePlayers=[],cityMissions=modes.missions(),loot=modes.loot(20261107,50);
 function status(t){$('status').textContent=t;}
 function showRecords(){const r=menuRules.read(localStorage);$('records').textContent='Bestzeit Mission: '+(r.bestMissionSeconds===null?'—':Math.round(r.bestMissionSeconds)+' s')+' · Siege: Mission '+r.wins.mission+', Stadt '+r.wins.city+', Royale '+r.wins.royale;}
 showRecords();
 function clear(){
- sound?.dispose();sound=null;engine?.stopRenderLoop();for(const items of interiorLoaded.values())for(const item of items){item.body?.dispose();item.mesh.dispose();}interiorLoaded.clear();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
+ sound?.dispose();sound=null;engine?.stopRenderLoop();vehicles?.dispose();vehicles=null;vehicleKeys.clear();$('driveControls').hidden=true;for(const items of interiorLoaded.values())for(const item of items){item.body?.dispose();item.mesh.dispose();}interiorLoaded.clear();player?.dispose();streamer?.dispose();city?.dispose?.();scene?.dispose();engine?.dispose();
  engine=scene=streamer=city=player=null;targets=[];enemies=[];health=100;ended=false;elapsed=0;weapon=weaponRules.initial();paused=false;holdingE=false;mission=campaign.initial();skipRange=false;dataMesh=null;sites=null;mastMeshes=[];extractMesh=null;interiorSites=[];damageThisFrame=false;defeated=0;frameSamples=[];lastUi=0;lastMarkers=0;lastHud='';lastProgress='';lastMarker='';$('missionProgress').style.display='none';$('objectiveMarker').style.display='none';markerNodes.forEach(m=>m.remove());markerNodes=[];
 }
 function shoot(){
- if(!scene||!player?.ready||ended||paused)return;
+ if(!scene||!player?.ready||ended||paused||vehicles?.driving)return;
  const now=performance.now();lastShot=now;
  const result=weaponRules.fire(weapon);weapon=result.state;
  if(result.event!=='fired'){if(result.event!=='cooldown')status(result.event==='empty'?'Magazin leer – R nachladen':'Nachladen läuft');return;}
@@ -47,6 +48,21 @@ function shoot(){
    if(target.health===0){target.mesh.dispose();targets=targets.filter(t=>t!==target);}
   }
  }else status('Schuss abgegeben');
+}
+function toggleVehicle(){
+ if(!vehicles||!player?.ready||mode!=='city'||paused||ended)return;
+ if(vehicles.driving){
+  const destination=vehicles.exit();
+  if(!destination){status('Zum Aussteigen anhalten (höchstens 6 km/h).');return;}
+  if(!player.setVehicleMode(false,destination)){status('Aussteigen gescheitert: Spielerphysik prüfen');return;}
+  vehicleKeys.clear();status('Ausgestiegen – WASD laufen, F erneut einsteigen.');
+ }else{
+  const location=player.update(0);
+  if(!vehicles.enter(location)){status('Näher zum Auto gehen (maximal 5,5 m).');return;}
+  if(!player.setVehicleMode(true)){vehicles.exit();status('Einsteigen gescheitert: Havok-Spieler prüfen');return;}
+  vehicleKeys.clear();status('Im Auto – WASD fahren, Leertaste Handbremse, F im Stand aussteigen.');
+ }
+ $('vehicleToggle').textContent=vehicles.driving?'Aussteigen':'Einsteigen';
 }
 async function start(){
  const selected=menuRules.settings({mode:$('mode').value,difficulty:$('difficulty').value,volume:$('volume').value});mode=selected.mode;wanted={level:0,quiet:0};royaleElapsed=0;royalePlayers=Array.from({length:24},(_,id)=>({id,alive:true}));cityMissions=modes.missions();
@@ -70,6 +86,13 @@ async function start(){
   player=window.SDNordhafenPlayerController.create({scene,camera,canvas,BABYLON,motion,fixture:controllerFixture,cityGeometry:window.SDNordhafenProceduralCity});
   if(!await player.start())throw Error(player.status);
   const startPosition=player.update(0)||new BABYLON.Vector3(32,.9,32);
+  if(mode==='city'){
+   vehicles=vehicleRules.create({scene,BABYLON,cityRules,
+    spawn:{x:startPosition.x+4,y:1.05,z:startPosition.z,heading:0},
+    model:$('carChoice').value,onStatus:status});
+   $('driveControls').hidden=false;
+   $('vehicleToggle').textContent='Einsteigen';
+  }
   const forward=new BABYLON.Vector3(-Math.cos(camera.alpha),0,-Math.sin(camera.alpha));
   const right=new BABYLON.Vector3(-forward.z,0,forward.x);
   const placements=controls.targetPositions(startPosition,forward,right);
@@ -141,11 +164,21 @@ async function start(){
     else if(interiorLoaded.has(i)){for(const item of interiorLoaded.get(i)){item.body?.dispose();item.mesh.dispose();}interiorLoaded.delete(i);}
    });
   }
-  const onKey=e=>{if(e.code==='Escape'){if(e.repeat||ended)return;paused=!paused;$('menuTitle').textContent='PAUSE';$('menuText').textContent='Spiel pausiert. Fortsetzen oder Neustart.';$('play').textContent='Fortsetzen';$('restart').style.display=paused?'inline-block':'none';$('menu').style.display=paused?'grid':'none';return;}if(e.code==='KeyT'&&mission.phase==='range')skipRange=true;if(e.code==='KeyR'){weapon=weaponRules.reload(weapon);status(weaponRules.active(weapon).reload?'Nachladen …':'Nachladen nicht nötig');}if(/^Digit[1-5]$/.test(e.code)){weapon=weaponRules.select(weapon,Number(e.code.slice(-1))-1);status('Waffe: '+weaponRules.active(weapon).id);}if(e.code==='KeyE')holdingE=true;};
-  const onKeyUp=e=>{if(e.code==='KeyE')holdingE=false;};
+  const onKey=e=>{if(vehicles&&/^(Key[WASDBF]|Arrow(Up|Down|Left|Right)|Space)$/.test(e.code))vehicleKeys.add(e.code);if(e.code==='KeyF'&&!e.repeat){toggleVehicle();return;}if(e.code==='Escape'){if(e.repeat||ended)return;paused=!paused;$('menuTitle').textContent='PAUSE';$('menuText').textContent='Spiel pausiert. Fortsetzen oder Neustart.';$('play').textContent='Fortsetzen';$('restart').style.display=paused?'inline-block':'none';$('menu').style.display=paused?'grid':'none';return;}if(e.code==='KeyT'&&mission.phase==='range')skipRange=true;if(e.code==='KeyR'){weapon=weaponRules.reload(weapon);status(weaponRules.active(weapon).reload?'Nachladen …':'Nachladen nicht nötig');}if(/^Digit[1-5]$/.test(e.code)){weapon=weaponRules.select(weapon,Number(e.code.slice(-1))-1);status('Waffe: '+weaponRules.active(weapon).id);}if(e.code==='KeyE')holdingE=true;};
+  const onKeyUp=e=>{vehicleKeys.delete(e.code);if(e.code==='KeyE')holdingE=false;};
   window.addEventListener('keydown',onKey,{signal:controller.signal});
   canvas.addEventListener('wheel',e=>{e.preventDefault();weapon=weaponRules.select(weapon,(weapon.selected+(e.deltaY>0?1:4))%5);status('Waffe: '+weaponRules.active(weapon).id);},{passive:false,signal:controller.signal});
   window.addEventListener('keyup',onKeyUp,{signal:controller.signal});
+  window.addEventListener('blur',()=>vehicleKeys.clear(),{signal:controller.signal});
+  for(const button of document.querySelectorAll('[data-drive-key]')){
+   const key=button.dataset.driveKey;
+   button.addEventListener('pointerdown',e=>{e.preventDefault();vehicleKeys.add(key);button.setPointerCapture?.(e.pointerId);},{signal:controller.signal});
+   const release=e=>{e.preventDefault();vehicleKeys.delete(key);};
+   button.addEventListener('pointerup',release,{signal:controller.signal});
+   button.addEventListener('pointercancel',release,{signal:controller.signal});
+   button.addEventListener('lostpointercapture',()=>vehicleKeys.delete(key),{signal:controller.signal});
+  }
+  $('vehicleToggle').addEventListener('click',toggleVehicle,{signal:controller.signal});
   canvas.addEventListener('mousedown',e=>{if(e.button===0)shoot();if(e.button===2)aiming=true;},{signal:controller.signal});
   canvas.addEventListener('mouseup',e=>{if(e.button===2)aiming=false;},{signal:controller.signal});
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal:controller.signal});
@@ -154,8 +187,11 @@ async function start(){
    frameSamples.push({at:tick,ms:rawMs});if(frameSamples.length>400)frameSamples.shift();frameSamples=controls.frameWindow(frameSamples,tick);
    if(paused||ended)return;if(!ended&&!paused){elapsed+=dt;weapon=weaponRules.tick(weapon,dt);}
    damageThisFrame=false;
-   const pos=ended||paused?null:player.update(dt);if(pos){controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;
-    if(aiming){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
+   const walking=ended||paused?null:player.update(dt);
+   if(vehicles&&walking)vehicles.update(dt,vehicleRules.keysToInput(vehicleKeys));
+   const pos=vehicles?.driving?vehicles.position():walking;
+   if(pos){if(vehicles?.driving){vehicles.chase(camera,dt);}else{controls.shoulder(camera,pos,BABYLON);camera.radius=aiming?5.2:7.5;}
+    if(aiming&&!vehicles?.driving){const yaw=-camera.alpha-Math.PI/2;const body=scene.getMeshByName('nordhafen-player');const model=scene.getTransformNodeByName('nordhafen-character-root');if(body)body.rotation.y=yaw;if(model)model.rotation.y=yaw;}
     streamer.update(pos.x,pos.z);player.syncColliders(streamer);updateInteriors(pos);
     const desired=camera.radius,from=camera.target,to=camera.position,direction=to.subtract(from),length=direction.length();
     const obstruction=scene.pickWithRay(new BABYLON.Ray(from,direction.normalize(),length),m=>m.name.startsWith('interior-')&&m.isPickable!==false);
@@ -187,7 +223,7 @@ async function start(){
     if(tick-lastUi>=100){const progressText=(showProgress?'1':'0')+'|'+Math.round(progress*100);if(progressText!==lastProgress){lastProgress=progressText;$('missionProgress').style.display=showProgress?'grid':'none';$('missionProgress').style.setProperty('--progress',(Math.min(1,progress)*100)+'%');$('missionProgress').textContent=Math.ceil((mission.phase==='extract'?campaign.EXTRACT:campaign.HOLD)*(1-progress))+'s';}}
    }
    if(mode==='royale'&&pos){const circle=modes.zone(royaleElapsed);health=Math.max(0,health-modes.zoneDamage(pos,circle,dt));}
-   if(mode==='city'&&pos){/* Free-roam prototype: wanted and mission progression remain modular, not fully wired. */}
+   if(mode==='city'&&pos){/* Free roam: car movement runs through the dedicated Havok adapter. */}
    if(mode==='mission'&&mission.status!=='playing'){
     ended=true;sound?.play(mission.status==='won'?'win':'lose',Number($('volume').value));if(mission.status==='won'){const records=menuRules.finish(menuRules.read(localStorage),mode,elapsed,true);menuRules.write(localStorage,records);showRecords();}$('restart').style.display='none';$('menuTitle').textContent=mission.status==='won'?'MISSION ERFOLGREICH':'NIEDERLAGE';
     $('menuText').textContent=mission.status==='won'?'Extraktion gelungen! Zeit: '+Math.floor(elapsed)+' s · Treffer: '+weapon.hits+' · Gegner besiegt: '+defeated:'Du wurdest ausgeschaltet. Starte einen neuen Versuch.';
@@ -207,11 +243,11 @@ async function start(){
    if(!damageThisFrame)$('damageOverlay').style.borderWidth='0';
    const now=performance.now();$('flash').style.opacity=now<flashUntil?'1':'0';
    $('cross').style.color=now<hitUntil?'#f66':'white';
-   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')+'\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+campaign.objective(mission)+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length+'\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
+   if(tick-lastUi>=100){lastUi=tick;const hudText='NORDHAFEN OPS · '+(mode==='city'?'FREIE STADT':mode==='royale'?'ROYALE':'MISSION')+'\nLeben: '+health+' / 100\nWaffe: '+weaponRules.active(weapon).id+' · Munition: '+weaponRules.active(weapon).ammo+' / '+weaponRules.active(weapon).reserve+(weaponRules.active(weapon).reload?' · Nachladen':'')+'\nSchießstand: '+targets.length+' / 5\nMission: '+campaign.objective(mission)+'\nGegner: '+enemies.filter(e=>e.state.health>0).length+' / '+enemies.length+'\nZeit: '+Math.floor(elapsed)+' s\nFPS: '+engine.getFps().toFixed(0)+'\n'+(mode==='city'?'Fahndung: '+wanted.level+'/3 · Missionen: '+cityMissions.filter(m=>m.done).length+'/5':mode==='royale'?'Noch übrig: '+modes.royaleResult(royalePlayers).remaining+' · Zone '+modes.zone(royaleElapsed).phase+'/5':'')+'\nAuto: '+(vehicles?(vehicles.driving?Math.abs(vehicles.speedKmh).toFixed(0)+' km/h · F aussteigen':'F einsteigen (5,5 m)'):'—')+'\nFrame p95 (5 s): '+controls.frameP95(frameSamples.map(s=>s.ms)).toFixed(1)+' ms'+'\n'+player.characterStatus;
     if(hudText!==lastHud){$('hud').textContent=hudText;lastHud=hudText;}
    }
   });
-  status('Mission: Schießstand abschließen oder mit T überspringen.');
+  status(mode==='city'?'Freie Stadt: F einsteigen · WASD fahren · Leertaste Handbremse':'Mission: Schießstand abschließen oder mit T überspringen.');
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
  finally{$('play').disabled=false;}
 }
