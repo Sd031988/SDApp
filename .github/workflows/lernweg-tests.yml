@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check JavaScript syntax across Deutsch learning modules and tests
+        run: |
+          find deutsch tests -type f \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) -print0 | xargs -0 -r -n 1 node --check
       - name: Validate exercise catalog and progress migration
         run: node --test tests/lernwerk-data.test.cjs
       - name: Install Playwright test runner
