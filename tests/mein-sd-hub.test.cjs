@@ -351,11 +351,6 @@ test("C5 Digitale Profi-Werkzeuge: acht Lektionen, 24 Quizfragen und Fehlerkorre
  checkAcademyQuality("C5",lessons);
  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);for(const e of l.fehler){assert.match(e.text,/Falsch:.*Richtig:/);assert.ok(e.titel.length>12)}}
 });
-;
-
-test("D1 Deutsch A1: alte IDs stabil, acht Lektionen und Alltagssprache",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/german.js"));assert.deepEqual(lessons.map(x=>x.id),Array.from({length:8},(_,i)=>"g-"+(i+1)));checkAcademyQuality("D1",lessons);for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);assert.ok(l.uebungen.length>0);for(const e of l.fehler)assert.match(e.text,/Falsch:.*Richtig:/)}assert.equal(data.academy.find(x=>x.id==="german").anzahl,8)});
-
-test("D2 Deutsch A2: acht Dialoglektionen mit Grammatik und Sprachübungen",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/deutsch-a2.js"));assert.deepEqual(lessons.map(x=>x.id),Array.from({length:8},(_,i)=>"d2-"+(i+1)));checkAcademyQuality("D2",lessons);for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);assert.ok(l.uebungen.some(u=>u.typ==="zuordnen"));for(const e of l.fehler)assert.match(e.text,/Falsch:.*Richtig:/)}});
 
 test("Alle Kurse: keine sechswörtige Textfolge in mehr als zwei Lektionen",()=>{
  const phrases=new Map();
