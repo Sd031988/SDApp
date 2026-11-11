@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "mein-sd-hub/**"
+      - "design/**"
       - "tests/mein-sd-hub*.cjs"
       - "tests/hub-homepage*.cjs"
       - "tests/hub/**"
@@ -56,4 +57,5 @@ jobs:
           node tests/mein-sd-hub.browser.cjs
           node tests/hub-homepage.browser.cjs
           node tests/hub/dashboard.browser.cjs
+          node tests/mein-sd-hub-theme.browser.cjs
           node tests/play-separation.browser.cjs

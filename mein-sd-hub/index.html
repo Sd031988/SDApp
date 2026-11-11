@@ -2,12 +2,14 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script src="/design/theme.js"></script>
 <meta name="theme-color" content="#0c3533">
 <meta name="description" content="Mein SD Hub: persönliches Dashboard, Wegweiser, Akademie, Alltag in Deutschland, Projektwerkstatt und Sprachtrainer.">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./dashboard-ui.css?v=20261101-premium-1">
 <link rel="stylesheet" href="./editorial-dashboard.css?v=20261102-1">
+<link rel="stylesheet" href="/design/theme.css">
 <title>Mein SD Hub – Lernen, gestalten, entdecken</title>
 </head>
 <body>
@@ -20,7 +22,7 @@
 </nav><select id="langWahl" data-ak-aria-label="Sprache / Language" class="sprach-wahl" aria-label="Sprache / Language" onchange="sdApplyLang(this.value)">
                         <option value="de">Deutsch</option><option value="en">English</option><option value="fa">دری</option><option value="ar">العربية</option>
                         <option value="ur">اردو</option><option value="uk">Українська</option><option value="ti">ትግርኛ</option>
-                    </select><button id="themeSwitch" class="theme-switch" type="button" aria-label="Dunkles Design aktivieren" title="Hell-/Dunkelmodus">◐ <span>Design</span></button>
+                    </select><select id="themeSwitch" class="theme-switch" data-sd-theme-choice aria-label="Darstellung"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="auto">Automatisch</option></select>
 </div></header>
 <section class="hero" aria-labelledby="hero-title"><div class="wrap hero-in"><div>
 <span class="overline">SD Hub · Persönlicher Bereich</span>

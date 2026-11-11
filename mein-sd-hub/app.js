@@ -79,18 +79,6 @@ function renderApps(){
  $("appEmpty").hidden=visible!==0;
 }
 $("appSearch").addEventListener("input",e=>{appSearch=e.target.value.trim().toLocaleLowerCase("de");renderApps()});
-const themeBtn=$("themeSwitch");
-let mode="light";try{mode=localStorage.getItem("sdhub-theme-v1")==="dark"?"dark":"light"}catch(e){}
-function setTheme(value){
- mode=value==="dark"?"dark":"light";
- document.documentElement.dataset.sdTheme=mode;
- themeBtn.setAttribute("aria-pressed",String(mode==="dark"));
- themeBtn.setAttribute("aria-label",mode==="dark"?"Helles Design aktivieren":"Dunkles Design aktivieren");
- themeBtn.querySelector("span").textContent=mode==="dark"?"Hell":"Dunkel";
- try{localStorage.setItem("sdhub-theme-v1",mode)}catch(e){}
-}
-themeBtn.addEventListener("click",()=>setTheme(mode==="dark"?"light":"dark"));
-setTheme(mode);
 function renderDashboard(){
 $("greeting").textContent=state.nickname?"Hallo, "+state.nickname+"!":"Willkommen im SD Hub!";
 if($("nickname")!==document.activeElement)$("nickname").value=state.nickname;
