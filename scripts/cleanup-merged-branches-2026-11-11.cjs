@@ -8,7 +8,7 @@ module.exports = async function cleanup({ github, context, core, dryRun = true }
   if (metadata.default_branch !== 'main') throw new Error('Unexpected default branch');
   const branches = await github.paginate(api.repos.listBranches, { owner, repo, per_page: 100 });
   const open = await github.paginate(api.pulls.list, { owner, repo, state: 'open', per_page: 100 });
-  const protectedHeads = new Set(open.filter(p => p.head.repo?.full_name === owner + '/' + repo).map(p => p.head.ref));
+  const protectedHeads = new Set(open.flatMap(p => [p.head, p.base].filter(ref => ref?.repo?.full_name === owner + '/' + repo).map(ref => ref.ref)));
   const result = { dryRun, deleted: [], eligible: [], skipped: [], failed: [] };
   const skip = (name, reason) => result.skipped.push({ name, reason });
   for (const branch of branches) {
@@ -19,7 +19,8 @@ module.exports = async function cleanup({ github, context, core, dryRun = true }
       const { data: current } = await api.repos.getBranch({ owner, repo, branch: name });
       if (current.protected || current.commit.sha !== branch.commit.sha) { skip(name, 'protected or changed during audit'); continue; }
       const prs = await github.paginate(api.pulls.list, { owner, repo, state: 'open', head: owner + ':' + name, per_page: 100 });
-      if (prs.length) { skip(name, 'open PR'); continue; }
+      const basePrs = await github.paginate(api.pulls.list, { owner, repo, state: 'open', base: name, per_page: 100 });
+      if (prs.length || basePrs.length) { skip(name, 'open PR'); continue; }
       const { data: main } = await api.repos.getBranch({ owner, repo, branch: 'main' });
       const { data: comparison } = await api.repos.compareCommitsWithBasehead({
         owner, repo, basehead: current.commit.sha + '...' + main.commit.sha, per_page: 1
@@ -29,11 +30,12 @@ module.exports = async function cleanup({ github, context, core, dryRun = true }
       if (!contained) { skip(name, 'not fully contained in main'); continue; }
       result.eligible.push({ name, sha: current.commit.sha, main: main.commit.sha });
       if (!dryRun) {
-        const [{ data: finalHead }, finalPrs] = await Promise.all([
+        const [{ data: finalHead }, finalPrs, finalBasePrs] = await Promise.all([
           api.repos.getBranch({ owner, repo, branch: name }),
-          github.paginate(api.pulls.list, { owner, repo, state: 'open', head: owner + ':' + name, per_page: 100 })
+          github.paginate(api.pulls.list, { owner, repo, state: 'open', head: owner + ':' + name, per_page: 100 }),
+          github.paginate(api.pulls.list, { owner, repo, state: 'open', base: name, per_page: 100 })
         ]);
-        if (finalHead.protected || finalHead.commit.sha !== current.commit.sha || finalPrs.length) {
+        if (finalHead.protected || finalHead.commit.sha !== current.commit.sha || finalPrs.length || finalBasePrs.length) {
           skip(name, 'changed, protected or open PR before deletion'); continue;
         }
         await api.git.deleteRef({ owner, repo, ref: 'heads/' + name });

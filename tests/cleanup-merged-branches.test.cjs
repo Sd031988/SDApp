@@ -18,7 +18,7 @@ function fixture(dryRun) {
   };
   const pulls = { list: Symbol('pulls') };
   const github = { rest: { repos, pulls, git: { deleteRef: async ({ ref }) => deleted.push(ref) } },
-    paginate: async (method, args) => method === repos.listBranches ? branches : args.head
+    paginate: async (method, args) => method === repos.listBranches ? branches : args.base ? [] : args.head
       ? (args.head.endsWith(':new-pr') ? [{}] : [])
       : [{ head: { ref: 'open', repo: { full_name: 'Sd031988/SDApp' } } }]
   };
@@ -41,4 +41,18 @@ test('deletion respects open PRs, changed heads, protected branches and squash a
 test('unexpected repository aborts before deletion', async () => {
   const f = fixture(false); f.args.context.repo.repo = 'other';
   await assert.rejects(cleanup(f.args), /Unexpected repository/); assert.deepEqual(f.deleted, []);
+});
+
+test('head moved immediately before deletion is retained', async () => {
+  const f = fixture(false), original = f.args.github.rest.repos.getBranch; let reads = 0;
+  f.args.github.rest.repos.getBranch = async args => args.branch === 'merged' && ++reads === 2
+    ? { data: { protected: false, commit: { sha: 'moved-head' } } } : original(args);
+  const result = await cleanup(f.args);
+  assert(!result.deleted.includes('merged')); assert(!f.deleted.includes('heads/merged'));
+});
+test('branch serving as base of an open PR is retained', async () => {
+  const f = fixture(false), original = f.args.github.paginate;
+  f.args.github.paginate = async (method, args) => args.base === 'merged' ? [{}] : original(method, args);
+  const result = await cleanup(f.args);
+  assert(!result.deleted.includes('merged'));
 });
