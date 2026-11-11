@@ -578,11 +578,11 @@
         "erklaerung": "Ein unabhängig gefundener Kontakt ermöglicht die Prüfung, ohne die Forderung ungeprüft zu erfüllen."
       },
       {
-        "frage": "Was beweist ein Firmenlogo allein?",
+        "frage": "Welche Schlussfolgerung ist aus einem Firmenlogo allein zulässig?",
         "antworten": [
-          "Dass die Nachricht vom Arbeitgeber versandt wurde.",
-          "Dass der genannte Kontakt zur Bewerbung berechtigt ist.",
-          "Nicht die Identität des Absenders."
+          "Die Nachricht wurde nachweislich vom Arbeitgeber versandt.",
+          "Die genannte Kontaktperson ist nachweislich zur Bewerbung berechtigt.",
+          "Die Identität des Absenders muss weiterhin unabhängig geprüft werden."
         ],
         "richtig": 2,
         "erklaerung": "Ein Logo kann kopiert werden und bestätigt den Absender deshalb nicht."

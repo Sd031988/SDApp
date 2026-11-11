@@ -189,11 +189,11 @@
         "erklaerung": "Diese Angaben helfen, den konkreten Beruf und die zuständige Stelle einzugrenzen."
       },
       {
-        "frage": "Was ersetzt ein Arbeitgeberlob nicht?",
+        "frage": "Welche Voraussetzung kann trotz positiver Arbeitgeberreaktion gesondert nötig sein?",
         "antworten": [
           "Eine erforderliche formale Anerkennung oder Berufszulassung.",
-          "Eine betriebliche Einschätzung der praktischen Eignung.",
-          "Ein erstes Gespräch über die Bewerbung."
+          "Die im Lob schon enthaltene betriebliche Eignungseinschätzung.",
+          "Der im Beispiel bereits erfolgte erste Kontakt mit dem Betrieb."
         ],
         "richtig": 0,
         "erklaerung": "Eine betriebliche Eignungseinschätzung ist nicht automatisch eine staatliche Entscheidung."
@@ -330,8 +330,8 @@
       {
         "frage": "Was ist ein Scan nicht automatisch?",
         "antworten": [
-          "Eine lesbare Abbildung.",
-          "Eine elektronische Dokumentdatei.",
+          "Eine elektronische Abbildung eines Dokuments.",
+          "Eine gespeicherte Dokumentdatei.",
           "Eine beglaubigte Kopie."
         ],
         "richtig": 2,
@@ -599,8 +599,8 @@
         "frage": "Was bedeutet förderfähig in einer Anzeige nicht automatisch?",
         "antworten": [
           "Eine persönliche Bewilligung für Meral.",
-          "Eine endgültige Kostenentscheidung für den persönlichen Fall.",
-          "Eine verbindliche Zusage für alle Nebenkosten."
+          "Eine allgemeine Fördermöglichkeit, die individuell geprüft werden muss.",
+          "Einen Hinweis auf ein Förderverfahren mit zu klärenden Voraussetzungen."
         ],
         "richtig": 0,
         "erklaerung": "Die Werbung ersetzt keine Prüfung ihrer individuellen Voraussetzungen."

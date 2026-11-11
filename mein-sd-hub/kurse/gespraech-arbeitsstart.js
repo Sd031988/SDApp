@@ -842,14 +842,14 @@
         "erklaerung": "Er klärt einen sicherheitsrelevanten unbekannten Schritt vor der eigenen Handlung."
       },
       {
-        "frage": "Was beweist bloßes Nicken nicht?",
+        "frage": "Woran lässt sich das Verständnis eines Ablaufs am besten prüfen?",
         "antworten": [
-          "Dass der Ablauf verstanden wurde.",
-          "Dass die Erklärung angehört wurde.",
-          "Dass eine zustimmende Geste erfolgt ist."
+          "Die Person erklärt den Ablauf in eigenen Worten und klärt offene Schritte.",
+          "Die Person nickt während der Erklärung zustimmend.",
+          "Die Person kennt bereits ein ähnliches Maschinenmodell."
         ],
         "richtig": 0,
-        "erklaerung": "Eine Zustimmungsgeste ersetzt keine Überprüfung des tatsächlichen Verständnisses."
+        "erklaerung": "Eine Erklärung in eigenen Worten macht das Verständnis prüfbar; Nicken und Vorerfahrung allein reichen dafür nicht."
       },
       {
         "frage": "Welche Rückfrage ist konkret?",
