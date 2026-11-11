@@ -142,7 +142,7 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
   const longitudinal=BABYLON.Vector3.Dot(velocity,f);
   speedKmh=longitudinal*3.6;
   if(!driving)return;
-  const desired=cityRules.drive({...state,speed:longitudinal,heading:heading()},t,input);
+  const desired=cityRules.drive({...state,heading:heading()},t,input);
   const target=desired.speed,force=clamp((target-longitudinal)*mass*5,-mass*12,mass*9);
   aggregate.body.applyImpulse(f.scale(force*t),chassis.position);
   const angular=aggregate.body.getAngularVelocity(),yawRate=Math.tan(desired.steering)*longitudinal/2.6;
