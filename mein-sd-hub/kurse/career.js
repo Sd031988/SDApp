@@ -42,9 +42,9 @@
       {
         "frage": "Welche Aussage beschreibt Linas Bestellerfahrung korrekt?",
         "antworten": [
-          "Sie leitete die gesamte Abteilung.",
+          "Sie bearbeitete Bestellungen vollständig eigenverantwortlich.",
           "Sie erfasste Bestellungen unter Anleitung.",
-          "Sie entwickelte das Bestellsystem."
+          "Sie war für die Freigabe aller Bestellungen zuständig."
         ],
         "richtig": 1,
         "erklaerung": "Lina nennt ausdrücklich eine angeleitete Erfassung und keine Leitungsaufgabe."
@@ -53,8 +53,8 @@
         "frage": "Was gehört in die Belegliste?",
         "antworten": [
           "Ein echtes Beispiel zu einer Anforderung.",
-          "Ein frei erfundenes Zertifikat.",
-          "Die Farbe des Firmenbriefpapiers."
+          "Eine allgemeine Eigenschaft ohne Tätigkeitsbezug.",
+          "Ein Nachweis, der nur ähnlich wie die geforderte Qualifikation heißt."
         ],
         "richtig": 0,
         "erklaerung": "Ein konkretes Beispiel macht die behauptete Erfahrung nachvollziehbar."
@@ -62,8 +62,8 @@
       {
         "frage": "Was prüfst du vor dem Schreiben?",
         "antworten": [
-          "Nur die Länge des Firmennamens.",
-          "Nur die Anzahl der Bilder.",
+          "Nur die übliche Unterlagenliste aus einer früheren Bewerbung.",
+          "Nur das eigene Wunschdatum für ein Gespräch.",
           "Geforderte Unterlagen und Bewerbungsweg."
         ],
         "richtig": 2,
@@ -174,8 +174,8 @@
       {
         "frage": "Welche Station entspricht Omids Angaben?",
         "antworten": [
-          "Werkstattmeister ohne Datumsangabe.",
-          "Leiter der gesamten Produktion.",
+          "Werkstatt, 03/2023–02/2025, selbstständige Leitung der Montage.",
+          "Werkstatt, 03/2023–02/2025, abgeschlossene Meisterausbildung.",
           "Werkstatt, 03/2023–02/2025, Materialvorbereitung und angeleitete Montage."
         ],
         "richtig": 2,
@@ -185,8 +185,8 @@
         "frage": "Was verbessert die Vergleichbarkeit der Stationen?",
         "antworten": [
           "Ein einheitliches Datums- und Gliederungsformat.",
-          "Für jede Station ein anderes Format.",
-          "Verzicht auf alle Zeitangaben."
+          "Die Stationen allein nach der Länge ihrer Beschreibung ordnen.",
+          "Für jede Station ein anderes Datumsformat verwenden."
         ],
         "richtig": 0,
         "erklaerung": "Gleiche Strukturen lassen Zeiträume und Funktionen leichter erfassen."
@@ -194,9 +194,9 @@
       {
         "frage": "Was prüfst du nach dem PDF-Export?",
         "antworten": [
-          "Nur den Dateinamen.",
+          "Nur ob sich die Datei technisch öffnen lässt.",
           "Lesbarkeit, Seitenumbrüche und vollständige Inhalte.",
-          "Nur die Anzahl der Buchstaben im Namen."
+          "Nur ob der Dateiname die Stelle nennt."
         ],
         "richtig": 1,
         "erklaerung": "Der Export kann trotz korrektem Entwurf Layoutfehler verursachen."
@@ -306,9 +306,9 @@
       {
         "frage": "Welches Beispiel stützt Noras Interesse an Kundenberatung?",
         "antworten": [
-          "Sie mag das Firmenlogo.",
+          "Sie interessiert sich für das Getränkesortiment als Kundin.",
           "Sie hat im Vereinscafé Fragen beantwortet.",
-          "Sie hat den Arbeitsort nie angesehen."
+          "Sie hat die Stellenanzeige mehrfach gelesen."
         ],
         "richtig": 1,
         "erklaerung": "Das Beantworten von Fragen zeigt einen relevanten Bezug zu Beratung."
@@ -327,8 +327,8 @@
         "frage": "Was sollte das Anschreiben ergänzen?",
         "antworten": [
           "Motivation und ausgewählte passende Belege.",
-          "Alle Lebenslaufdaten wortgleich.",
-          "Eine erfundene Einstellungszusage."
+          "Den gesamten Lebenslauf noch einmal in ganzen Sätzen.",
+          "Nur eine allgemeine Liste positiver Eigenschaften."
         ],
         "richtig": 0,
         "erklaerung": "Das Anschreiben erklärt den Bezug zur Stelle, statt den Lebenslauf vollständig zu wiederholen."
@@ -438,8 +438,8 @@
       {
         "frage": "Welche Aufgabe hat Nora tatsächlich ausgeführt?",
         "antworten": [
-          "Die gesamte Buchhaltung geleitet.",
-          "Die Abrechnung allein durchgeführt.",
+          "Getränke kassiert und die Tagesabrechnung geführt.",
+          "Den Einkauf und die Preise des Cafés festgelegt.",
           "Getränkewünsche notiert und weitergegeben."
         ],
         "richtig": 2,
@@ -449,8 +449,8 @@
         "frage": "Welche eigene Frage passt zur Stelle?",
         "antworten": [
           "Wie ist die Einarbeitung organisiert?",
-          "Warum haben Sie mich schon eingestellt?",
-          "Wann bekomme ich garantiert eine Beförderung?"
+          "Wann beginnt meine bereits zugesagte Einarbeitung?",
+          "Welche Schulung habe ich laut Ihrer Zusage schon bestanden?"
         ],
         "richtig": 0,
         "erklaerung": "Die Einarbeitung ist eine sachliche Frage zum Arbeitsalltag ohne angenommene Zusage."
@@ -458,9 +458,9 @@
       {
         "frage": "Welche Fassung solltest du vorher lesen?",
         "antworten": [
-          "Eine beliebige alte Vorlage.",
+          "Den zuletzt überarbeiteten, noch nicht versandten Entwurf.",
           "Die tatsächlich versandten Unterlagen.",
-          "Nur einen leeren Musterlebenslauf."
+          "Eine allgemeine Vorlage ohne die Angaben zur Stelle."
         ],
         "richtig": 1,
         "erklaerung": "Die Gesprächspartner können sich auf genau die eingereichte Fassung beziehen."
@@ -570,9 +570,9 @@
       {
         "frage": "Welche Anlage passt zur ausdrücklich geforderten Qualifikation?",
         "antworten": [
-          "Ein alter Bibliotheksausweis.",
+          "Der Bibliotheksausweis als allgemeiner Identitätsbeleg.",
           "Das passende Kurszertifikat.",
-          "Ein Foto ohne Dokumentbezug."
+          "Eine Teilnahmebestätigung eines anderen, nicht verlangten Kurses."
         ],
         "richtig": 1,
         "erklaerung": "Das Zertifikat bezieht sich auf den in der Anzeige verlangten Kurs."
@@ -580,8 +580,8 @@
       {
         "frage": "Was muss nach dem Scannen geprüft werden?",
         "antworten": [
-          "Nur ob die Datei irgendeinen Namen hat.",
-          "Nur die Größe des Logos.",
+          "Nur ob ein Upload ohne Fehlermeldung gelingt.",
+          "Nur ob die Datei einen passenden Namen hat.",
           "Lesbarkeit und Vollständigkeit aller Seiten."
         ],
         "richtig": 2,
@@ -591,8 +591,8 @@
         "frage": "Was bestätigt eine bloße Teilnahmebestätigung?",
         "antworten": [
           "Die Teilnahme im beschriebenen Umfang.",
-          "Automatisch jeden Berufsabschluss.",
-          "Eine Einstellungszusage des Arbeitgebers."
+          "Eine bestandene Abschlussprüfung ohne weitere Angabe.",
+          "Die Gleichwertigkeit mit dem verlangten Berufsabschluss."
         ],
         "richtig": 0,
         "erklaerung": "Eine Teilnahmebestätigung darf nicht zu einem anderen Qualifikationsnachweis umgedeutet werden."
@@ -702,9 +702,9 @@
       {
         "frage": "Was bedeutet der Status Entwurf?",
         "antworten": [
-          "Die Bewerbung ist bereits angenommen.",
+          "Die Bewerbung ist abgeschickt, aber noch ungelesen.",
           "Die Bewerbung ist noch nicht fertig eingereicht.",
-          "Das Gespräch ist vereinbart."
+          "Die Unterlagen sind bereits inhaltlich geprüft."
         ],
         "richtig": 1,
         "erklaerung": "Ein gespeicherter Entwurf ist noch kein abgeschlossener Versand."
@@ -713,8 +713,8 @@
         "frage": "Was wird vor dem Absenden verglichen?",
         "antworten": [
           "Formularangaben und zugehörige Unterlagen.",
-          "Nur Farben und Schriftarten.",
-          "Nur die Zahl der Portalbuttons."
+          "Nur die Angaben im automatisch ausgefüllten Formular.",
+          "Nur die hochgeladenen PDF-Dateien."
         ],
         "richtig": 0,
         "erklaerung": "Doppelt angegebene Daten müssen konsistent sein und Erkennungsfehler korrigiert werden."
@@ -722,9 +722,9 @@
       {
         "frage": "Was bestätigt eine Eingangsbestätigung?",
         "antworten": [
-          "Eine sichere Einstellung.",
+          "Die Unterlagen sind vollständig und fachlich geprüft.",
           "Den Eingang der Bewerbung.",
-          "Eine bestandene Probezeit."
+          "Die Person wurde für ein Gespräch ausgewählt."
         ],
         "richtig": 1,
         "erklaerung": "Der Eingang sagt noch nichts über Auswahl oder Einstellungsentscheidung aus."
@@ -835,8 +835,8 @@
         "frage": "Welchen Fehler enthält Majas Entwurf?",
         "antworten": [
           "Der Firmenname ist zwischen Betreff und Text widersprüchlich.",
-          "Jede PDF-Datei ist grundsätzlich falsch.",
-          "Eine Bewerbung darf keinen Betreff haben."
+          "Die Dateiform ist falsch, weil ein PDF verwendet wird.",
+          "Die Kennziffer ist nachweislich falsch, obwohl sie noch nicht geprüft wurde."
         ],
         "richtig": 0,
         "erklaerung": "Firma West und Firma Ost passen im selben Schreiben nicht zur gleichen Bewerbung."
@@ -844,8 +844,8 @@
       {
         "frage": "Warum reicht eine Rechtschreibprüfung nicht?",
         "antworten": [
-          "Sie speichert grundsätzlich jede Bewerbung.",
-          "Sie ersetzt eine Stellenanzeige.",
+          "Sie prüft automatisch den Bezug zur aktuellen Anzeige.",
+          "Sie erkennt jeden falschen Empfänger anhand des Dateinamens.",
           "Ein falscher Firmenname kann korrekt geschrieben sein."
         ],
         "richtig": 2,
@@ -854,9 +854,9 @@
       {
         "frage": "Welche Datei bleibt für die Nachbereitung wichtig?",
         "antworten": [
-          "Nur eine leere Vorlage.",
+          "Nur die zuletzt gespeicherte spätere Änderung.",
           "Die tatsächlich versandte Fassung.",
-          "Nur der älteste Entwurf."
+          "Nur die ursprüngliche Vorlage vor der Anpassung."
         ],
         "richtig": 1,
         "erklaerung": "Sie zeigt, auf welche Angaben sich ein späteres Gespräch beziehen kann."
@@ -966,9 +966,9 @@
       {
         "frage": "Was verlangt die Personalstelle?",
         "antworten": [
-          "Eine sofortige Arbeitsaufnahme.",
+          "Den bisherigen Termin für ein Gespräch absagen.",
           "Das genannte Kurszertifikat bis Freitag.",
-          "Eine Zahlung für eine sichere Zusage."
+          "Einen neuen Lebenslauf ohne das Zertifikat senden."
         ],
         "richtig": 1,
         "erklaerung": "Die Nachricht fordert einen konkreten Nachweis innerhalb einer genannten Frist."
@@ -977,8 +977,8 @@
         "frage": "Welche Aussage zum Status ist korrekt?",
         "antworten": [
           "Das Bewerbungsverfahren läuft mit einer Nachforderung weiter.",
-          "Die Probezeit ist schon beendet.",
-          "Die Einstellung ist damit garantiert."
+          "Die Bewerbung ist endgültig erfolgreich abgeschlossen.",
+          "Die fehlende Unterlage wurde bereits als vorhanden bestätigt."
         ],
         "richtig": 0,
         "erklaerung": "Eine Nachforderung ist weder Einstellungszusage noch Abschluss des Verfahrens."
@@ -986,8 +986,8 @@
       {
         "frage": "Was tust du, wenn das Zertifikat nicht vorliegt?",
         "antworten": [
-          "Trotzdem behaupten, es sei angehängt.",
-          "Ein Zertifikat selbst erfinden.",
+          "Einen ähnlichen Nachweis ohne Erläuterung als gefordertes Zertifikat senden.",
+          "Den Versand zusagen, ohne das Dokument vorher zu prüfen.",
           "Die Lücke ehrlich erklären und das Vorgehen klären."
         ],
         "richtig": 2,
