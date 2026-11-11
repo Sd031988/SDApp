@@ -52,7 +52,10 @@ for(const lesson of lessonChecks){
 
 await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
 await page.locator(".lesson-btn").first().waitFor();
-await page.locator(".answers button").first().click();
+for(const correct of require(path.join(root,"mein-sd-hub/kurse/german.js"))[0].quiz.map(q=>q.richtig)){
+ await page.locator(".ak-lesson-quiz .answers button").nth(correct).click();
+ await page.locator(".ak-lesson-quiz .btn").click();
+}
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
