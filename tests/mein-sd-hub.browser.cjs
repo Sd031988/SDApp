@@ -189,10 +189,13 @@ await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
 await finalPage.locator('[data-tab="akademie"]').click();
 await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
 await finalPage.locator(".lesson-btn").first().waitFor();
-const germanAnswers=[0,1,1,2];
+const germanQuiz=require(path.join(root,"mein-sd-hub/kurse/german.js"));
 for(let i=0;i<8;i++){
  await finalPage.locator(".lesson-btn").nth(i).click();
- await finalPage.locator(".quiz .answers button").nth(i<4?germanAnswers[i]:0).click();
+ for(let j=0;j<3;j++){
+  await finalPage.locator(".ak-lesson-quiz .answers button").nth(germanQuiz[i].quiz[j].richtig).click();
+  await finalPage.locator(".ak-lesson-quiz .btn").click();
+ }
 }
 await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
 for(let i=0;i<10;i++){
