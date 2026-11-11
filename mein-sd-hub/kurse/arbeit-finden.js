@@ -43,8 +43,8 @@
         "frage": "Welche Angabe ist eine belegte berufliche Tätigkeit?",
         "antworten": [
           "Ich habe Waren eingeräumt.",
-          "Ich bin für jeden Beruf perfekt.",
-          "Ich brauche nie eine Einarbeitung."
+          "Ich möchte künftig Waren einräumen.",
+          "Ich würde gern Kunden beraten."
         ],
         "richtig": 0,
         "erklaerung": "Das Einräumen beschreibt eine konkrete Erfahrung statt einer pauschalen Behauptung."
@@ -52,9 +52,9 @@
       {
         "frage": "Was muss Huda bei einer Schicht besonders prüfen?",
         "antworten": [
-          "Ob die Anzeige eine große Überschrift hat.",
+          "Ob allein die Fahrtzeit unter dreißig Minuten liegt.",
           "Ob die Arbeitszeit mit ihrer Grenze vereinbar ist.",
-          "Ob der Firmenname kurz ist."
+          "Ob der Betrieb grundsätzlich Teilzeit anbietet."
         ],
         "richtig": 1,
         "erklaerung": "Ihre Verfügbarkeit bis 15 Uhr ist eine konkrete Grenze für die Auswahl."
@@ -62,8 +62,8 @@
       {
         "frage": "Was gehört zum realistischen Arbeitsweg?",
         "antworten": [
-          "Nur die Zeit im Bus.",
-          "Nur die Entfernung auf der Karte.",
+          "Nur die reine Fahrzeit ohne Anschlusswege.",
+          "Die Entfernung unabhängig vom Schichtbeginn.",
           "Fahrt, Umstieg und Fußweg."
         ],
         "richtig": 2,
@@ -175,7 +175,7 @@
         "frage": "Welcher Begriff beschreibt die Dauer?",
         "antworten": [
           "Teilzeit.",
-          "Schichtarbeit.",
+          "Frühschicht.",
           "Unbefristet."
         ],
         "richtig": 2,
@@ -185,8 +185,8 @@
         "frage": "Was bleibt bei „20 Stunden pro Woche“ offen?",
         "antworten": [
           "Die genaue Verteilung auf die Tage.",
-          "Ob zwanzig eine Zahl ist.",
-          "Dass überhaupt Zeit gearbeitet wird."
+          "Die vereinbarte Zahl der Wochenstunden.",
+          "Dass der Arbeitsumfang zwanzig Stunden beträgt."
         ],
         "richtig": 0,
         "erklaerung": "Die Wochenstundenzahl legt allein noch keinen konkreten Dienstplan fest."
@@ -194,9 +194,9 @@
       {
         "frage": "Welche Kombination ist möglich?",
         "antworten": [
-          "Teilzeit nur ohne Vertrag.",
+          "Teilzeit bedeutet eine Befristung auf wenige Monate.",
           "Teilzeit und unbefristet.",
-          "Vollzeit immer für unbegrenzte Dauer."
+          "Vollzeit legt gleichzeitig das Vertragsende fest."
         ],
         "richtig": 1,
         "erklaerung": "Umfang und Dauer lassen sich unabhängig voneinander kombinieren."
@@ -317,8 +317,8 @@
         "frage": "Wie soll die Bewerbung eingereicht werden?",
         "antworten": [
           "Über das genannte Portal.",
-          "Nur persönlich am Samstag.",
-          "An jede beliebige E-Mail-Adresse."
+          "Per E-Mail an die allgemeine Caféadresse.",
+          "Persönlich während einer Samstagsschicht."
         ],
         "richtig": 0,
         "erklaerung": "Der Bewerbungsweg wird in der Anzeige ausdrücklich als Portal bezeichnet."
@@ -326,8 +326,8 @@
       {
         "frage": "Was muss Jana wegen ihrer Zeitplanung prüfen?",
         "antworten": [
-          "Die Farbe der Kaffeetassen.",
-          "Die Zahl der Wörter in der Anzeige.",
+          "Ob Samstagsarbeit in der Anzeige erwähnt ist.",
+          "Ob es sich um eine Stelle mit 25 Wochenstunden handelt.",
           "Welche Samstage und Schichtzeiten vorgesehen sind."
         ],
         "richtig": 2,
@@ -439,8 +439,8 @@
         "frage": "Welche erste Änderung passt zu Emils Situation?",
         "antworten": [
           "Den Umkreis von zwei auf zehn Kilometer erweitern.",
-          "Sofort in ganz Europa suchen.",
-          "Alle beruflichen Anforderungen ignorieren."
+          "Nur nach Vollzeit statt nach einer Bürotätigkeit suchen.",
+          "Den Radius beibehalten und nur ältere Anzeigen einblenden."
         ],
         "richtig": 0,
         "erklaerung": "Emil hat zehn Kilometer als mögliche Grenze genannt; eine gezielte Erweiterung ist nachvollziehbar."
@@ -448,8 +448,8 @@
       {
         "frage": "Was muss bei Büroassistenz erneut geprüft werden?",
         "antworten": [
-          "Nur die Länge des Titels.",
-          "Ob der Treffer oben steht.",
+          "Nur ob Büroassistenz und Bürohilfe ähnlich klingen.",
+          "Nur ob der Arbeitsort innerhalb des neuen Radius liegt.",
           "Aufgaben und Anforderungen."
         ],
         "richtig": 2,
@@ -458,9 +458,9 @@
       {
         "frage": "Warum nur einen Filter auf einmal ändern?",
         "antworten": [
-          "Damit niemals neue Treffer erscheinen.",
+          "Damit die erste Trefferzahl unverändert bleibt.",
           "Damit die Wirkung der Änderung erkennbar bleibt.",
-          "Damit jede Stelle automatisch passt."
+          "Damit ein ähnlicher Titel die Prüfung der Aufgaben ersetzt."
         ],
         "richtig": 1,
         "erklaerung": "Ein einzelner veränderter Faktor ermöglicht einen sinnvollen Vergleich."
@@ -570,9 +570,9 @@
       {
         "frage": "Was ist bei der Zahlungsforderung ein sinnvoller nächster Schritt?",
         "antworten": [
-          "Sofort überweisen, damit die Stelle bleibt.",
+          "Die Rechnung bezahlen und die Stelle danach prüfen.",
           "Die Anzeige über einen unabhängigen Firmenkontakt prüfen.",
-          "Den eigenen Freigabecode mitsenden."
+          "Nur die Absenderadresse innerhalb der Nachricht beantworten."
         ],
         "richtig": 1,
         "erklaerung": "Ein unabhängig gefundener Kontakt ermöglicht die Prüfung, ohne die Forderung ungeprüft zu erfüllen."
@@ -580,8 +580,8 @@
       {
         "frage": "Was beweist ein Firmenlogo allein?",
         "antworten": [
-          "Dass eine sichere Einstellung vorliegt.",
-          "Dass eine Zahlung erforderlich ist.",
+          "Dass die Nachricht vom Arbeitgeber versandt wurde.",
+          "Dass der genannte Kontakt zur Bewerbung berechtigt ist.",
           "Nicht die Identität des Absenders."
         ],
         "richtig": 2,
@@ -591,8 +591,8 @@
         "frage": "Welche Angabe gehört nicht in eine Bewerbung?",
         "antworten": [
           "Ein Bankfreigabecode.",
-          "Eine passende berufliche Erfahrung.",
-          "Eine erreichbare Kontaktadresse."
+          "Eine Beschreibung der bisherigen Tätigkeit.",
+          "Eine erreichbare E-Mail-Adresse."
         ],
         "richtig": 0,
         "erklaerung": "Ein Freigabecode ermöglicht sensible Kontoaktionen und dient nicht der Bewerbung."
@@ -702,8 +702,8 @@
       {
         "frage": "Welche Frage passt zu Minas Zeitplanung?",
         "antworten": [
-          "Wie groß ist Ihr Messestand?",
-          "Wie viele Plakate haben Sie?",
+          "Welche Unterlagen brauche ich nach einer Einstellung?",
+          "Wie ist die Abteilung am Standort aufgebaut?",
           "Welche Schichten sind vorgesehen?"
         ],
         "richtig": 2,
@@ -713,8 +713,8 @@
         "frage": "Was empfiehlt der Referent als nächsten Weg?",
         "antworten": [
           "Die Karriereseite des Betriebs prüfen.",
-          "Sofort ohne Anzeige einen Vertrag unterschreiben.",
-          "Eine Bewerbung an einen fremden Messestand schicken."
+          "Direkt am Stand ohne Anzeige einen Vertrag erwarten.",
+          "Die Unterlagen nur an den Namen auf einem fremden Flyer senden."
         ],
         "richtig": 0,
         "erklaerung": "Der Referent verweist auf die Originalanzeige auf der Karriereseite."
@@ -722,9 +722,9 @@
       {
         "frage": "Was ist durch das Gespräch noch nicht erfolgt?",
         "antworten": [
-          "Ein erster Kontakt.",
+          "Ein erster Kontakt zum Betrieb.",
           "Eine verbindliche Einstellung.",
-          "Eine Information über den Bewerbungsweg."
+          "Eine Information zum Bewerbungsweg."
         ],
         "richtig": 1,
         "erklaerung": "Der Hinweis auf eine Anzeige ist keine Einstellungszusage."
@@ -834,9 +834,9 @@
       {
         "frage": "Welche Information fehlt bei A?",
         "antworten": [
-          "Die Nähe des Arbeitsorts.",
+          "Die Nähe zum Arbeitsort.",
           "Die Schichtzeiten.",
-          "Dass es ein Angebot gibt."
+          "Die festen Vormittage von B."
         ],
         "richtig": 1,
         "erklaerung": "A ist als nah beschrieben, aber die konkrete Verteilung der Arbeit ist unbekannt."
@@ -844,8 +844,8 @@
       {
         "frage": "Welcher Vergleich ist sachlich?",
         "antworten": [
-          "A hat bestimmt nur Frühschichten.",
-          "B ist garantiert in jeder Hinsicht perfekt.",
+          "A passt zeitlich, weil der Arbeitsort nahe liegt.",
+          "B passt bereits vollständig, weil feste Vormittage genannt sind.",
           "B hat feste Vormittage; der Arbeitsweg muss noch geprüft werden."
         ],
         "richtig": 2,
@@ -855,8 +855,8 @@
         "frage": "Was sollte Noah zuerst bei A klären?",
         "antworten": [
           "Ob die Zeiten mit seiner Verfügbarkeit vereinbar sind.",
-          "Ob die Anzeige mehr Bilder hat.",
-          "Ob die Überschrift größer als bei B ist."
+          "Ob der kurze Weg die Arbeitszeiten entbehrlich macht.",
+          "Ob der Firmenname derselbe wie in der Übersicht ist."
         ],
         "richtig": 0,
         "erklaerung": "Die Arbeitszeit ist wegen seiner Betreuung eine entscheidende Voraussetzung."
@@ -966,9 +966,9 @@
       {
         "frage": "Welches Tagesziel ist direkt beeinflussbar?",
         "antworten": [
-          "Heute eine sichere Zusage erhalten.",
+          "Heute auf jeden Fall eine Einladung erhalten.",
           "Zwei Anzeigen anhand des Profils prüfen.",
-          "Alle Betriebe müssen antworten."
+          "Bis heute Abend die Antwort des Betriebs bekommen."
         ],
         "richtig": 1,
         "erklaerung": "Das Prüfen kann Aylin selbst durchführen; fremde Entscheidungen kann sie nicht erzwingen."
@@ -977,8 +977,8 @@
         "frage": "Was bedeutet eine automatische Eingangsbestätigung?",
         "antworten": [
           "Die Unterlagen sind eingegangen.",
-          "Die Person ist eingestellt.",
-          "Das Vorstellungsgespräch ist bestanden."
+          "Die Bewerbung wurde für ein Gespräch ausgewählt.",
+          "Die Unterlagen sind inhaltlich vollständig geprüft."
         ],
         "richtig": 0,
         "erklaerung": "Der Eingang ist bestätigt, eine inhaltliche Entscheidung damit noch nicht."
@@ -986,9 +986,9 @@
       {
         "frage": "Welche Angabe erleichtert die Zuordnung ähnlicher Stellen?",
         "antworten": [
-          "Die Farbe der Webseite.",
+          "Die allgemeine Bezeichnung des Arbeitgebers.",
           "Die Kennziffer der Anzeige.",
-          "Die Größe des Firmenlogos."
+          "Der Ort, an dem die Anzeige gefunden wurde."
         ],
         "richtig": 1,
         "erklaerung": "Die Kennziffer identifiziert die konkrete Ausschreibung."

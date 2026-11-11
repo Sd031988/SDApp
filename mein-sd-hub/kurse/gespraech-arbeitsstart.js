@@ -43,8 +43,8 @@
         "frage": "Welches Format ist vereinbart?",
         "antworten": [
           "Videogespräch.",
-          "Besuch im Betrieb.",
-          "Schriftliche Abschlussprüfung."
+          "Ein persönlicher Termin im Betrieb.",
+          "Ein Telefongespräch ohne Videozugang."
         ],
         "richtig": 0,
         "erklaerung": "Die Einladung nennt ausdrücklich ein Videogespräch."
@@ -52,9 +52,9 @@
       {
         "frage": "Wann soll Amin den Link erhalten?",
         "antworten": [
-          "Erst nach dem Gespräch.",
+          "Erst unmittelbar nach Beginn des Gesprächs.",
           "Am Vortag.",
-          "Grundsätzlich nie."
+          "Zusammen mit einer späteren Vertragszusage."
         ],
         "richtig": 1,
         "erklaerung": "Die Personalstelle sagt den Versand des Links am Vortag zu."
@@ -62,8 +62,8 @@
       {
         "frage": "Welche Antwort bestätigt den Termin klar?",
         "antworten": [
-          "Ich finde Termine interessant.",
-          "Vielleicht irgendwann.",
+          "Vielen Dank, ich freue mich auf eine spätere Rückmeldung.",
+          "Vielen Dank, bitte halten Sie mich über mögliche Termine auf dem Laufenden.",
           "Vielen Dank, ich bestätige Mittwoch um 10 Uhr."
         ],
         "richtig": 2,
@@ -174,8 +174,8 @@
       {
         "frage": "Welches Beispiel nennt Sara als selbstständig übernommen?",
         "antworten": [
-          "Die ganze Geschäftsleitung.",
-          "Die gesamte Personalplanung.",
+          "Die gesamte Warenbestellung des Betriebs.",
+          "Die vollständige Organisation aller Beratungsschichten.",
           "Die wöchentliche Bestandsliste."
         ],
         "richtig": 2,
@@ -185,8 +185,8 @@
         "frage": "Was gehört in eine kurze Vorstellung?",
         "antworten": [
           "Relevante Tätigkeit und Bezug zur Stelle.",
-          "Jede private Einzelheit seit der Kindheit.",
-          "Nur eine Liste unbelegter Eigenschaften."
+          "Eine chronologische Aufzählung aller privaten Stationen.",
+          "Nur eine Liste von Eigenschaften ohne Bezug zur Tätigkeit."
         ],
         "richtig": 0,
         "erklaerung": "Auswahl und Stellenbezug machen die Vorstellung für das Gespräch nützlich."
@@ -194,9 +194,9 @@
       {
         "frage": "Warum laut üben?",
         "antworten": [
-          "Damit jede Rückfrage ausgeschlossen wird.",
+          "Damit auf jede Frage derselbe auswendig gelernte Text folgt.",
           "Damit Verständlichkeit und Länge hörbar werden.",
-          "Damit die Erfahrung beliebig verändert werden kann."
+          "Damit alle Stationen ohne Auswahl vollständig erwähnt werden."
         ],
         "richtig": 1,
         "erklaerung": "Mündliches Erproben zeigt, ob die Kernaussagen tatsächlich ankommen."
@@ -306,9 +306,9 @@
       {
         "frage": "Was war Bilals eigener Beitrag?",
         "antworten": [
-          "Die Nachlieferung allein genehmigen.",
+          "Die Nachlieferung selbst genehmigen.",
           "Menge vergleichen und Abweichung melden.",
-          "Den Liefervertrag neu verhandeln."
+          "Die Abweichung ohne Abstimmung allein erledigen."
         ],
         "richtig": 1,
         "erklaerung": "Bilal nennt Kontrolle und Meldung ausdrücklich als eigene Handlungen."
@@ -317,8 +317,8 @@
         "frage": "Welche Ergebnisangabe passt zum Beispiel?",
         "antworten": [
           "Die Abweichung wurde vor der Einlagerung geklärt.",
-          "Bilal sparte sicher 80 Prozent aller Kosten.",
-          "Der Betrieb stellte nie wieder Fragen."
+          "Die gesamte Nachlieferung wurde von Bilal entschieden.",
+          "Die Kontrolle führte zu einer gemessenen Einsparung von 80 Prozent."
         ],
         "richtig": 0,
         "erklaerung": "Nur die rechtzeitige Klärung wird im Gespräch tatsächlich beschrieben."
@@ -326,8 +326,8 @@
       {
         "frage": "Wie gehst du mit einer unsicheren Einzelheit um?",
         "antworten": [
-          "Eine passende Zahl erfinden.",
-          "Die Frage ignorieren.",
+          "Eine ungefähre Zahl als sichere Erinnerung nennen.",
+          "Die unsichere Einzelheit ohne Hinweis als bestätigt darstellen.",
           "Die Unsicherheit offen benennen."
         ],
         "richtig": 2,
@@ -438,8 +438,8 @@
       {
         "frage": "Welche Aussage ist ehrlich und hilfreich?",
         "antworten": [
-          "Ich kann grundsätzlich nichts.",
-          "Ich kenne jedes Warenprogramm perfekt.",
+          "Das ist praktisch dasselbe Programm, deshalb beherrsche ich es schon.",
+          "Das Programm ist neu, deshalb habe ich keine verwertbaren Vorkenntnisse.",
           "Dieses System ist neu; ich habe mit einem anderen Bestände erfasst."
         ],
         "richtig": 2,
@@ -449,8 +449,8 @@
         "frage": "Wo sollte Eva zunächst üben?",
         "antworten": [
           "In einer geklärten Übungsumgebung unter Anleitung.",
-          "Ungefragt in echten Lagerbeständen.",
-          "Nur durch zufälliges Klicken ohne Kontrolle."
+          "Direkt im laufenden Bestand ohne vorherige Klärung.",
+          "Allein anhand einzelner Bildschirmfotos ohne Rückmeldung."
         ],
         "richtig": 0,
         "erklaerung": "Ein kontrollierter Übungsweg schützt den Ablauf und ermöglicht Rückfragen."
@@ -458,9 +458,9 @@
       {
         "frage": "Was macht den Lernplan konkret?",
         "antworten": [
-          "Die Aussage „Ich lerne halt schnell“.",
+          "Nur die Eigenschaft „Ich lerne schnell“ nennen.",
           "Ablauf zeigen lassen, Übungsbuchung machen, Eingaben prüfen.",
-          "Ein erfundenes Schulungszertifikat."
+          "Die Kenntnis des alten Systems als fertige Schulung ausweisen."
         ],
         "richtig": 1,
         "erklaerung": "Der Plan benennt überprüfbare Handlungen statt einer allgemeinen Eigenschaft."
@@ -570,9 +570,9 @@
       {
         "frage": "Welche Nachfrage konkretisiert die Aufgabenverteilung?",
         "antworten": [
-          "Welche Farbe hat die Arbeitskleidung im Prospekt?",
+          "Welche Unterlagen sind nach einer Einstellung abzugeben?",
           "Könnten Sie eine typische Frühschicht beschreiben?",
-          "Ist jede Arbeit immer ganz gleich?"
+          "Wie viele Personen arbeiten insgesamt im Unternehmen?"
         ],
         "richtig": 1,
         "erklaerung": "Eine typische Schicht macht die allgemeine Antwort zur Verteilung anschaulich."
@@ -580,8 +580,8 @@
       {
         "frage": "Was darf Jonas aus der Antwort ableiten?",
         "antworten": [
-          "Jeder Tag ist vertraglich identisch geregelt.",
-          "Er wird nie Kunden beraten.",
+          "Diese Reihenfolge gilt als feste Zusage für jede spätere Schicht.",
+          "Kundenberatung gehört nicht zur beschriebenen Tätigkeit.",
           "In der beschriebenen Frühschicht beginnt es mit Warenpflege."
         ],
         "richtig": 2,
@@ -591,8 +591,8 @@
         "frage": "Was hilft bei einer entscheidenden offenen Bedingung?",
         "antworten": [
           "Gezielt nach der konkreten Regelung fragen.",
-          "Die gewünschte Antwort einfach annehmen.",
-          "Die Frage aus Angst grundsätzlich vermeiden."
+          "Die Regelung aus einer typischen Beispielschicht ableiten.",
+          "Die erwünschte Bedingung ohne Rückmeldung als gegeben annehmen."
         ],
         "richtig": 0,
         "erklaerung": "Ein wichtiger offener Punkt braucht eine ausdrückliche Klärung."
@@ -702,8 +702,8 @@
       {
         "frage": "Wo soll Nila sich melden?",
         "antworten": [
-          "Direkt in einem beliebigen Lager.",
-          "Zu Hause per unbekanntem Link.",
+          "Direkt bei Herrn Kunz ohne Anmeldung am Empfang.",
+          "Am Firmensitz ohne Prüfung der genannten Kontaktperson.",
           "Am Empfang bei Frau Seifert."
         ],
         "richtig": 2,
@@ -712,9 +712,9 @@
       {
         "frage": "Was gilt für die Arbeitskleidung im Beispiel?",
         "antworten": [
-          "Nila muss sie selbst erfinden.",
+          "Sie muss unabhängig von der Absprache selbst beschafft werden.",
           "Sie wird im Betrieb ausgegeben.",
-          "Sie wird nicht benötigt, egal welche Aufgabe folgt."
+          "Sie wird erst nach einer privaten Bestellung ausgegeben."
         ],
         "richtig": 1,
         "erklaerung": "Die Teamleitung kündigt die Ausgabe der Kleidung vor Ort an."
@@ -723,8 +723,8 @@
         "frage": "Was ist bei unklarem Eingang sinnvoll?",
         "antworten": [
           "Den Treffpunkt über die bekannte Kontaktperson klären.",
-          "Einfach einem fremden Lieferwagen folgen.",
-          "Den ersten Tag ohne Nachricht auslassen."
+          "Den nächstgelegenen Eingang ohne Rückfrage verwenden.",
+          "Die spätere Einarbeitungsperson als ersten Treffpunkt annehmen."
         ],
         "richtig": 0,
         "erklaerung": "Eine gezielte Klärung vermeidet falsche Wege und unbefugtes Betreten."
@@ -834,9 +834,9 @@
       {
         "frage": "Was macht Karim vor dem Start richtig?",
         "antworten": [
-          "Er startet sofort wegen seiner Vorerfahrung.",
+          "Er startet, weil er bereits ein ähnliches Modell kennt.",
           "Er lässt sich die Abschaltung erneut zeigen.",
-          "Er kopiert eine fremde Freigabe."
+          "Er übernimmt die Schritte der alten Maschine unverändert."
         ],
         "richtig": 1,
         "erklaerung": "Er klärt einen sicherheitsrelevanten unbekannten Schritt vor der eigenen Handlung."
@@ -845,8 +845,8 @@
         "frage": "Was beweist bloßes Nicken nicht?",
         "antworten": [
           "Dass der Ablauf verstanden wurde.",
-          "Dass ein Gespräch stattfindet.",
-          "Dass jemand den Kopf bewegen kann."
+          "Dass die Erklärung angehört wurde.",
+          "Dass eine zustimmende Geste erfolgt ist."
         ],
         "richtig": 0,
         "erklaerung": "Eine Zustimmungsgeste ersetzt keine Überprüfung des tatsächlichen Verständnisses."
@@ -854,8 +854,8 @@
       {
         "frage": "Welche Rückfrage ist konkret?",
         "antworten": [
-          "Kann ich einfach irgendetwas machen?",
-          "Alles ist irgendwie komisch.",
+          "Ich glaube, eine ähnliche Abschaltung kenne ich schon.",
+          "Kann ich die Abschaltung beim ersten eigenen Einsatz ausprobieren?",
           "Bitte zeigen Sie mir die Abschaltung noch einmal."
         ],
         "richtig": 2,
@@ -967,8 +967,8 @@
         "frage": "Was gelingt Ben bereits?",
         "antworten": [
           "Die Warenannahme nach Checkliste.",
-          "Die gesamte Betriebsleitung.",
-          "Jede Ausnahme völlig ohne Rückfrage."
+          "Die Meldung beschädigter Verpackungen ohne Begleitung.",
+          "Die Entscheidung über alle Ausnahmen der Warenannahme."
         ],
         "richtig": 0,
         "erklaerung": "Ben beschreibt den normalen Ablauf als gelungen und grenzt den Ausnahmefall ab."
@@ -976,8 +976,8 @@
       {
         "frage": "Wen soll er bei beschädigter Verpackung informieren?",
         "antworten": [
-          "Niemanden.",
-          "Einen beliebigen Kunden.",
+          "Direkt den Lieferanten ohne betrieblichen Meldeweg.",
+          "Eine Kollegin ohne geklärte Zuständigkeit.",
           "Die Schichtleitung."
         ],
         "richtig": 2,
@@ -986,9 +986,9 @@
       {
         "frage": "Welche Rückmeldung wäre besonders hilfreich?",
         "antworten": [
-          "Alles ist immer irgendwie okay.",
+          "Der Ablauf klappt wohl; weitere Angaben brauchen wir nicht.",
           "Die Checkliste ist vollständig; bei Schäden bitte die Schichtleitung informieren.",
-          "Du darfst grundsätzlich keine Fragen stellen."
+          "Bei Schäden entscheide zunächst selbst und melde dich später."
         ],
         "richtig": 1,
         "erklaerung": "Die Rückmeldung verbindet konkreten Fortschritt mit einem gezielten Hinweis."
