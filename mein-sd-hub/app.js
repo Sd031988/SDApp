@@ -234,6 +234,37 @@ if(Array.isArray(l.schrittePraxis)){
  if(Array.isArray(l.fehler)){const problems=node("section","ak-practice-errors",undefined,q);node("h5","","Typische Fehler und richtige Wege",problems);l.fehler.forEach(f=>{node("h6","",f.titel,problems);mitCode(node("p","",undefined,problems),f.text)})}
  if(Array.isArray(l.merke)){const memory=node("section","ak-practice-memory",undefined,q);node("h5","","Merksätze",memory);l.merke.forEach(t=>mitCode(node("p","",undefined,memory),t))}
 }
+if(Array.isArray(l.quiz)){
+ if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
+ const quizArea=node("section","ak-lesson-quiz",undefined,q);
+ let index=0;
+ const showQuestion=()=>{
+  quizArea.replaceChildren();
+  if(index>=l.quiz.length){
+   node("p","feedback","✓ Alle drei Verständnisfragen richtig beantwortet.",quizArea);
+   if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}
+   return;
+  }
+  const current=l.quiz[index];
+  node("h4","",(index+1)+"/"+l.quiz.length+" · "+current.frage,quizArea);
+  const choices=node("div","answers",undefined,quizArea),feedback=node("p","feedback",undefined,quizArea);
+  current.antworten.forEach((choice,i)=>{
+   const button=node("button","",choice,choices);button.type="button";
+   button.onclick=()=>{
+    const correct=i===current.richtig;
+    feedback.className="feedback"+(correct?"":" error");
+    feedback.textContent=(correct?"✓ Richtig. ":"Noch nicht richtig. ")+(current.erklaerung||l.tip||"");
+    if(!correct)return;
+    [...choices.children].forEach(b=>b.disabled=true);
+    button.classList.add("correct");
+    const next=node("button","btn outline small",index===l.quiz.length-1?"Lektion abschließen":"Nächste Frage",quizArea);
+    next.type="button";next.onclick=()=>{index++;showQuestion()};
+   };
+  });
+ };
+ showQuestion();
+ return;
+}
 node("h4","",l.question,q);const answers=node("div","answers",undefined,q),feedback=node("div","",undefined,q);let locked=false;
 if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
 l.choices.forEach((choice,i)=>{const b=node("button","",choice,answers);b.type="button";b.addEventListener("click",()=>{if(locked)return;locked=true;const correct=i===l.answer;[...answers.children].forEach((option,j)=>{option.disabled=true;if(j===l.answer)option.classList.add("correct");else if(j===i)option.classList.add("wrong")});feedback.className="feedback"+(correct?"":" error");feedback.textContent=(correct?"✓ Richtig! Lektion abgeschlossen. ":"Das war noch nicht richtig. ") +l.tip;
@@ -274,7 +305,7 @@ function academyToStudio(baseName,code){
 function renderCodeLesson(l){
  const area=$("lessonDetail"),wrap=node("section","code-lesson",undefined,area);
  node("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
- node("h4","",l.title,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
+ node("h4","",l.title,wrap);if(l.explanation)node("p","ak-intro",l.explanation,wrap);node("h5","","Dein Ziel",wrap);node("p","",l.ziel,wrap);
  l.schritte.forEach((step,i)=>{const sec=node("section","code-step",undefined,wrap);node("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(node("p","",undefined,sec),ohneDoppel);if(step.code){const pre=node("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(node("p","",undefined,sec),erkl)}});
  node("h5","","Häufige Fehler",wrap);const errors=node("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=node("li","",undefined,errors);node("b","",f.titel+": ",li);mitCode(li,f.text)});
  node("h5","","Jetzt selbst schreiben",wrap);

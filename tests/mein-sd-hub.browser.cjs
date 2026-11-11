@@ -215,6 +215,14 @@ for(const width of [320,390,1300]){
  await c1.locator(".course").filter({hasText:"Computer-Start"}).click();
  await c1.locator(".lesson-btn").first().waitFor();
  assert.equal(await c1.locator(".lesson-btn").count(),8);
+ await c1.locator(".lesson-btn").first().click();
+ for(const [questionIndex,correctIndex] of [2,0,1].entries()){
+  assert.match(await c1.locator(".ak-lesson-quiz h4").innerText(),new RegExp((questionIndex+1)+"/3"));
+  assert.equal(await c1.locator(".ak-lesson-quiz .answers button").count(),3);
+  await c1.locator(".ak-lesson-quiz .answers button").nth(correctIndex).click();
+  await c1.locator(".ak-lesson-quiz button.btn").click();
+ }
+ assert.equal(await c1.evaluate(()=>Array.from({length:localStorage.length},(_,i)=>localStorage.getItem(localStorage.key(i))).some(raw=>{try{return JSON.parse(raw).completedLessons?.includes("d-1")}catch{return false}})),true,"C1 speichert den Abschluss erst nach allen drei richtigen Antworten");
  for(let i=0;i<8;i++){
   await c1.locator(".lesson-btn").nth(i).click();
   assert.equal(await c1.locator(".ak-practice-step").count(),4,"C1 Schrittzahl "+i);
