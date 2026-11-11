@@ -337,3 +337,10 @@ test("C3 Sicher im Netz: acht Lektionen, eindeutige Fehlerkorrekturen und Quiz",
  checkAcademyQuality("C3",lessons);
  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);for(const e of l.fehler){assert.match(e.text,/Falsch:.*Richtig:/);assert.ok(e.titel.length>12)}}
 });
+
+test("C4 Büro-Programme: acht Lektionen, 24 Quizfragen und Fehlerkorrekturen",()=>{
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/buero-programme.js"));
+ assert.deepEqual(lessons.map(l=>l.id),Array.from({length:8},(_,i)=>"c4-"+(i+1)));
+ checkAcademyQuality("C4",lessons);
+ for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);for(const e of l.fehler){assert.match(e.text,/Falsch:.*Richtig:/);assert.ok(e.titel.length>12)}}
+});
