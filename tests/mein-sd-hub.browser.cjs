@@ -257,7 +257,7 @@ for(const width of [320,390,1300]){
  await c2.close();
 }
 /* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
-for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8],["Arbeit finden",8],["Bewerbung",8],["Vorstellungsgespräch & erste Arbeitstage",8]]){
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8],["Arbeit finden",8],["Bewerbung",8],["Vorstellungsgespräch & erste Arbeitstage",8],["Arbeitsvertrag & Rechte verstehen",8]]){
  for(const width of [320,390,1300]){
   const germanPage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
   germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
@@ -271,6 +271,30 @@ for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag
    assert.equal(await germanPage.locator(".ak-practice-step").count(),4,courseName+" Schritte "+i);
    assert.equal(await germanPage.locator(".ak-lesson-quiz .answers button").count(),3,courseName+" Quiz "+i);
    assert.equal(await germanPage.locator(".ak-uebung").count(),4,courseName+" Übungen "+i);
+   const lessonData=await germanPage.evaluate(([name,n])=>window.SDPersonalData.academy.find(c=>c.name===name).lessons[n],[courseName,i]);
+   if(lessonData.quellen){
+    assert.deepEqual(await germanPage.locator(".ak-sources a").evaluateAll(links=>links.map(a=>a.href)),lessonData.quellen.map(s=>s.url));
+    for(const source of lessonData.quellen)assert.ok((await germanPage.locator(".ak-sources").innerText()).includes(source.stand));
+   }
+   // Eine neue Lektion pro Kurs wird am Desktop zusätzlich mit echten Eingaben durchlaufen.
+   if(width===1300&&i===0&&!["Deutsch im Alltag","Deutsch A2 – Alltag und Beruf"].includes(courseName)){
+    for(const [n,u] of lessonData.uebungen.entries()){
+     const box=germanPage.locator(".ak-uebung").nth(n);
+     if(u.typ==="luecke")for(const [j,value] of u.loesung.entries())await box.locator("input").nth(j).fill(value);
+     if(u.typ==="zuordnen")for(const [j,pair] of u.paare.entries())await box.locator("select").nth(j).selectOption(pair[1]);
+     if(u.typ==="hoeren")await box.locator("input").fill(u.loesung);
+     if(u.typ==="schreiben")await box.locator("textarea").fill(u.musterloesung);
+     await box.getByRole("button",{name:"Prüfen",exact:true}).click();
+     assert.match(await box.locator('[role="status"]').innerText(),u.typ==="schreiben"?/keine automatische Note/:/✓ Richtig/);
+     if(u.typ==="schreiben")for(const point of u.checkliste)assert.ok((await box.innerText()).includes(point));
+    }
+    for(const question of lessonData.quiz){
+     await germanPage.locator(".ak-lesson-quiz .answers button").nth(question.richtig).click();
+     await germanPage.locator(".ak-lesson-quiz").getByRole("button",{name:/Nächste Frage|Lektion abschließen/}).click();
+    }
+    assert.equal(await germanPage.locator(".lesson-btn").nth(i).locator(".done-tag").count(),1,courseName+" Fortschritt");
+   }
+
   }
   const overflow=await germanPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert.ok(overflow<=3,courseName+" "+width+"px Überlauf: "+overflow);
