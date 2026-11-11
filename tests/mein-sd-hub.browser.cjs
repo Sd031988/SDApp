@@ -251,6 +251,25 @@ for(const width of [320,390,1300]){
  assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
  await c2.close();
 }
+/* C4: Büro-Programme auf drei Viewports ohne Code-Editor prüfen. */
+for(const width of [320,390,1300]){
+ const c4=await browser.newPage({viewport:{width,height:820}});
+ c4.on("pageerror",e=>errors.push("C4 "+width+": "+e.message));
+ await c4.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await c4.locator('[data-tab="akademie"]').click();
+ await c4.locator(".course").filter({has:c4.locator("b",{hasText:/^Büro-Programme$/})}).click();
+ await c4.locator(".lesson-btn").first().waitFor();
+ assert.equal(await c4.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await c4.locator(".lesson-btn").nth(i).click();
+  assert.equal(await c4.locator(".ak-practice-step").count(),4,"C4 Schritte "+i);
+  assert.equal(await c4.locator(".ak-lesson-quiz .answers button").count(),3,"C4 Quiz "+i);
+  assert.equal(await c4.locator(".code-editor").count(),0,"C4 ohne Code-Editor");
+ }
+ const overflow=await c4.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"C4 "+width+"px Überlauf: "+overflow);
+ await c4.close();
+}
 /* C3: alle Sicherheitslektionen im Browser laden, ohne Code-Editor. */
 for(const width of [320,390,1300]){
  const c3=await browser.newPage({viewport:{width,height:820}});
