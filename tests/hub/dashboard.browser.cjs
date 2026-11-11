@@ -40,7 +40,7 @@ const assert=require('node:assert/strict');
   assert.equal(await page.locator('.sd-app-card').count(),2);
   await page.getByRole('button',{name:'Alle',exact:true}).click();
   assert.equal(await page.locator('.sd-app-card').count(),cardCount);
-  await page.locator('#themeSwitch').click();
+  await page.locator('#themeSwitch').selectOption('dark');
   assert.equal(await page.locator('html').getAttribute('data-sd-theme'),'dark');
   await page.reload({waitUntil:'domcontentloaded'});
   await page.locator('.sd-app-card').first().waitFor();

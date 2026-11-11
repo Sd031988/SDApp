@@ -15,6 +15,7 @@
 </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script src="/design/theme.js"></script>
     <meta name="theme-color" content="#0c3533" />
     <meta name="description" content="Deutsch lernen, Bewerbungen, Dokumente, KI und eigene Software: Professionelle Werkzeuge an einem Ort." />
     <link rel="manifest" href="manifest-hub.json" />
@@ -251,13 +252,15 @@
 </style>
 <link rel="stylesheet" href="design/editorial-home.css?v=20261108-1" />
 <link rel="stylesheet" href="design/bento-home.css?v=20261110-1" />
+<link rel="stylesheet" href="design/theme.css">
 </head>
 <body>
     <header class="kopf">
         <div class="breite">
             <div class="leiste">
                 <a class="marke" href="index.html"><img src="icon.svg" alt="" width="38" height="38"><span>SD Hub</span></a>
-                <label class="sprache"><span class="sr-only">Sprache / Language</span>
+                <select id="themeSwitch" class="theme-switch" data-sd-theme-choice aria-label="Darstellung"><option value="light">Hell</option><option value="dark">Dunkel</option><option value="auto">Automatisch</option></select>
+<label class="sprache"><span class="sr-only">Sprache / Language</span>
                     <select id="langWahl" class="sprach-wahl" aria-label="Sprache / Language" onchange="sdApplyLang(this.value)">
                         <option value="de">Deutsch</option><option value="en">English</option><option value="fa">دری</option><option value="ar">العربية</option>
                         <option value="ur">اردو</option><option value="uk">Українська</option><option value="ti">ትግርኛ</option>
