@@ -19,7 +19,7 @@ const port=server.address().port,base="http://127.0.0.1:"+port;
 let browser;
 try{
 browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
-const ctx=await browser.newContext({acceptDownloads:true,viewport:{width:1250,height:820}});const page=await ctx.newPage();const errors=[];
+const ctx=await browser.newContext({acceptDownloads:true,reducedMotion:"reduce",viewport:{width:1250,height:820}});const page=await ctx.newPage();const errors=[];
 page.on("pageerror",e=>errors.push(e.message));
 await page.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 assert.match(await page.title(),/Mein SD Hub/);
@@ -101,7 +101,7 @@ await page.reload();
 assert.equal(await page.locator("#statFavs").innerText(),"0");
 assert.equal(await page.locator("#statLessons").innerText(),"0");
 const home=await ctx.newPage();await home.goto(base+"/",{waitUntil:"load"});assert.equal(await home.locator("#bento").count(),1);assert.equal(await home.locator("#mein-sd-hub").count(),1);await home.close();
-const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+const mobile=await browser.newPage({reducedMotion:"reduce",viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 await mobile.goto(base+"/mein-sd-hub/",{waitUntil:"load"});
 await mobile.locator('[data-tab="wegweiser"]').click();
 assert.equal(await mobile.locator("#goalGrid .goal").count(),5);
@@ -109,7 +109,7 @@ const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-wi
 assert.ok(overflow<=3,"Unexpected mobile horizontal overflow: "+overflow);
 await mobile.close();
 for(const width of [320,390,1300]){
- const checkPage=await browser.newPage({viewport:{width,height:840}});
+ const checkPage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:840}});
  await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await checkPage.locator('[data-tab="akademie"]').click();
  await checkPage.locator(".course").filter({has:checkPage.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
@@ -133,7 +133,7 @@ assert.equal(await checkPage.locator(".lesson-btn").count(),12);
 
 /* Alle Übungsformen werden mit Touch-freundlichen Bedienelementen geprüft. */
 for(const width of [320,390,1300]){
- const exercisePage=await browser.newPage({viewport:{width,height:840}});
+ const exercisePage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:840}});
  exercisePage.on("pageerror",e=>errors.push("Übung "+width+": "+e.message));
  await exercisePage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await exercisePage.locator('[data-tab="akademie"]').click();
@@ -187,7 +187,7 @@ for(const width of [320,390,1300]){
 
 
 /* Kursabschluss: alle vier Bestandslektionen, zehn Fragen und Druckansicht. */
-const finalPage=await browser.newPage({viewport:{width:390,height:844}});
+const finalPage=await browser.newPage({reducedMotion:"reduce",viewport:{width:390,height:844}});
 finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
 await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
 await finalPage.locator('[data-tab="akademie"]').click();
@@ -213,7 +213,7 @@ await finalPage.close();
 
 /* C1: Nicht-Programmierkurs zeigt Lernschritte und passende Übungen ohne Code-Editor. */
 for(const width of [320,390,1300]){
- const c1=await browser.newPage({viewport:{width,height:820}});
+ const c1=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  c1.on("pageerror",e=>errors.push("C1 "+width+": "+e.message));
  await c1.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c1.locator('[data-tab="akademie"]').click();
@@ -239,7 +239,7 @@ for(const width of [320,390,1300]){
 }
 /* C2: Nicht-Programmierkurs lädt alle acht Internet- und E-Mail-Lektionen. */
 for(const width of [320,390,1300]){
- const c2=await browser.newPage({viewport:{width,height:820}});
+ const c2=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  c2.on("pageerror",e=>errors.push("C2 "+width+": "+e.message));
  await c2.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c2.locator('[data-tab="akademie"]').click();
@@ -257,9 +257,9 @@ for(const width of [320,390,1300]){
  await c2.close();
 }
 /* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
-for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8]]){
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8]]){
  for(const width of [320,390,1300]){
-  const germanPage=await browser.newPage({viewport:{width,height:820}});
+  const germanPage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
   germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
   await germanPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await germanPage.locator('[data-tab="akademie"]').click();
@@ -279,7 +279,7 @@ for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag
 }
 /* C5: Profi-Werkzeuge auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
- const c5=await browser.newPage({viewport:{width,height:820}});
+ const c5=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  c5.on("pageerror",e=>errors.push("C5 "+width+": "+e.message));
  await c5.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c5.locator('[data-tab="akademie"]').click();
@@ -298,7 +298,7 @@ for(const width of [320,390,1300]){
 }
 /* C4: Büro-Programme auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
- const c4=await browser.newPage({viewport:{width,height:820}});
+ const c4=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  c4.on("pageerror",e=>errors.push("C4 "+width+": "+e.message));
  await c4.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c4.locator('[data-tab="akademie"]').click();
@@ -317,7 +317,7 @@ for(const width of [320,390,1300]){
 }
 /* C3: alle Sicherheitslektionen im Browser laden, ohne Code-Editor. */
 for(const width of [320,390,1300]){
- const c3=await browser.newPage({viewport:{width,height:820}});
+ const c3=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  c3.on("pageerror",e=>errors.push("C3 "+width+": "+e.message));
  await c3.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c3.locator('[data-tab="akademie"]').click();
@@ -336,7 +336,7 @@ for(const width of [320,390,1300]){
 }
 /* P5: alle Lektionen im Browser laden und Praxisprüfungen durchführen. */
 for(const width of [320,390,1300]){
- const p5page=await browser.newPage({viewport:{width,height:820}});
+ const p5page=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:820}});
  p5page.on("pageerror",e=>errors.push("P5 "+width+": "+e.message));
  await p5page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await p5page.locator('[data-tab="akademie"]').click();
@@ -354,7 +354,7 @@ for(const width of [320,390,1300]){
 }
 
 /* P4: Browser lädt echte Module aus zwei Dateien. */
-const modulePage=await browser.newPage({viewport:{width:390,height:800}});
+const modulePage=await browser.newPage({reducedMotion:"reduce",viewport:{width:390,height:800}});
 modulePage.on("pageerror",e=>errors.push("P4 Modul: "+e.message));
 await modulePage.goto(base+"/mein-sd-hub/p4-module/index.html",{waitUntil:"load"});
 await modulePage.getByText("Doppelt von 5 ist 10").waitFor();
@@ -362,7 +362,7 @@ await modulePage.close();
 
 /* P4: eigenständige Quiz-App lädt lokale JSON-Daten und bleibt mobil bedienbar. */
 for(const width of [320,390,1300]){
- const quizPage=await browser.newPage({viewport:{width,height:800}});
+ const quizPage=await browser.newPage({reducedMotion:"reduce",viewport:{width,height:800}});
  quizPage.on("pageerror",e=>errors.push("P4 Quiz "+width+": "+e.message));
  await quizPage.goto(base+"/mein-sd-hub/p4-quiz.html",{waitUntil:"load"});
  await quizPage.getByRole("button",{name:"Quiz starten"}).click();
