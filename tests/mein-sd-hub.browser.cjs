@@ -257,6 +257,24 @@ for(const width of [320,390,1300]){
  assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
  await c2.close();
 }
+/* D2: Deutsch A2 in drei Viewports mit Sprachübungen. */
+for(const width of [320,390,1300]){
+ const d2=await browser.newPage({viewport:{width,height:820}});
+ d2.on("pageerror",e=>errors.push("D2 "+width+": "+e.message));
+ await d2.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await d2.locator('[data-tab="akademie"]').click();
+ await d2.locator(".course").filter({has:d2.locator("b",{hasText:/^Deutsch A2$/})}).click();
+ await d2.locator(".lesson-btn").first().waitFor();
+ assert.equal(await d2.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await d2.locator(".lesson-btn").nth(i).click();
+  assert.equal(await d2.locator(".ak-practice-step").count(),4);
+  assert.equal(await d2.locator(".ak-lesson-quiz .answers button").count(),3);
+  assert.equal(await d2.locator(".code-editor").count(),0);
+ }
+ assert.ok(await d2.evaluate(()=>document.documentElement.scrollWidth-innerWidth)<=3,"D2 Überlauf "+width);
+ await d2.close();
+}
 /* C5: Profi-Werkzeuge auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
  const c5=await browser.newPage({viewport:{width,height:820}});
