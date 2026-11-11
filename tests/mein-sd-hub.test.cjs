@@ -19,7 +19,7 @@ test("17 direct tools and guided goals have valid IDs and unique URLs",()=>{asse
 test("all referenced local tool URLs resolve to a real file",()=>{const links=new Set(data.items.map(x=>x.href));for(const p of data.paths)for(const step of p.steps)links.add(step[2]);for(const p of data.academy)assert.ok(p.anzahl>0);for(const href of links){const file=fileForHref(href);assert.ok(file,"unsafe URL "+href);assert.ok(fs.existsSync(file),"missing "+href)}});
 test("recommendation matches natural German B1 request",()=>{const found=data.recommend("Ich möchte B1 üben");assert.ok(found.some(x=>x.id==="b1"),JSON.stringify(found.map(x=>x.id)))});
 test("recommendations handle common needs and do not leak unbounded data",()=>{for(const [query,target] of [["Pibo spielen","pibo"],["Lebenslauf schreiben","jobs"],["PDF unterschreiben","pdf"],["Code programmieren","studio"],["Brief verstehen","post"]]){const found=data.recommend(query,8);assert.ok(found.some(x=>x.id===target),query+" -> "+found.map(x=>x.id))}assert.ok(data.recommend("ich",999).length<=8);assert.deepEqual(data.recommend(""),[])});
-test("four courses, twenty-four lessons and valid correct answers",()=>{assert.equal(data.academy.length,13);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,101);assert.equal(new Set(lessons.map(x=>x.id)).size,101);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
+test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,14);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,109);assert.equal(new Set(lessons.map(x=>x.id)).size,109);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
 test("paths contain twenty distinct checkable steps",()=>{assert.equal(data.paths.length,4);assert.equal(data.paths.reduce((n,p)=>n+p.steps.length,0),20);for(const p of data.paths){assert.equal(p.steps.length,5);for(const step of p.steps)assert.equal(step.length,3)}});
 test("translation examples cover supported languages",()=>{assert.ok(data.phrases.length>=10);for(const p of data.phrases){for(const lang of ["de","en","fa","ur","ti"])assert.ok(typeof p[lang]==="string"&&p[lang].length>2,p.id+" "+lang)}});
 test("safe state sanitizer rejects unknown ids, duplicates and private fields",()=>{const s=data.sanitizeState({completedLessons:["g-1","g-1","not-a-lesson"],completedSteps:["job:2","job:2","bad:8"],favorites:["pibo","pibo","evil"],recent:["studio","evil"],nickname:"<script>alert(1)</script>",privateData:"must-drop",updatedAt:"s".repeat(400)});assert.deepEqual(s.completedLessons,["g-1"]);assert.deepEqual(s.completedSteps,["job:2"]);assert.deepEqual(s.favorites,["pibo"]);assert.deepEqual(s.recent,["studio"]);assert.ok(!s.nickname.includes("<"));assert.ok(!("privateData"in s));assert.ok(s.updatedAt.length<=32)});
@@ -406,4 +406,31 @@ test("D1 und D2: Lehrinhalte mit vier Übungsformen und stabilen IDs",()=>{
   checkAcademyQuality(name,lessons);
   for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.fehler.length,2);assert.deepEqual(l.uebungen.map(u=>u.typ),["luecke","zuordnen","hoeren","schreiben"]);const writing=l.uebungen.find(u=>u.typ==="schreiben");assert.ok(Array.isArray(writing.checkliste),l.id+" Checkliste fehlt");assert.ok(writing.checkliste.length>=3&&writing.checkliste.length<=4,l.id+" Checkliste muss 3–4 Punkte haben");for(const point of writing.checkliste){assert.ok(point.length>=18,l.id+" Checklistenpunkt zu allgemein");assert.match(point,/[?.!]$/,l.id+" Checklistenpunkt unvollständig")}assert.ok(l.schrittePraxis.some(s=>/der |die |das /u.test(s.text)));}
  }
+});
+
+
+test("D3: vollständiger B1-Kurs, stabile IDs und auswertbare Übungen",()=>{
+ const lessons=require(path.join(root,"mein-sd-hub/kurse/deutsch-b1.js"));
+ const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
+ assert.deepEqual(lessons.map(l=>l.id),Array.from({length:8},(_,i)=>"d3-"+(i+1)));
+ checkAcademyQuality("D3",lessons);
+ for(const l of lessons){
+  assert.equal(l.schrittePraxis.length,4);assert.equal(l.fehler.length,2);
+  assert.deepEqual(l.uebungen.map(u=>u.typ),["luecke","zuordnen","hoeren","schreiben"]);
+  for(const e of l.fehler)assert.match(e.text,/Falsch:.*Richtig:/);
+  for(const u of l.uebungen){
+   if(u.typ==="schreiben"){
+    assert.ok(u.musterloesung.length>100);assert.ok(u.checkliste.length>=3&&u.checkliste.length<=4);
+    assert.equal(new Set(u.checkliste).size,u.checkliste.length);
+    for(const point of u.checkliste)assert.ok(point.length>=25&&/[?.!]$/.test(point));
+    assert.equal(engine.pruefen(u,u.musterloesung).ok,null,"Freier Text bleibt Selbstkontrolle");
+   }else{
+    const answer=u.typ==="zuordnen"?u.paare.map(p=>p[1]):u.loesung;
+    assert.equal(engine.pruefen(u,answer).ok,true,l.id+" "+u.typ);
+    assert.equal(engine.pruefen(u,u.typ==="hoeren"?"":answer.map(()=>"?")).ok,false,l.id+" falscher Versuch");
+   }
+  }
+ }
+ assert.match(load("sw.js"),/kurse\/deutsch-b1\.js/);
+ assert.match(js,/b1-pruefung\.html/);
 });
