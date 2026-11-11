@@ -143,13 +143,13 @@ for(const width of [320,390,1300]){
   ["Deutsch im Alltag",1,"zuordnen"],
   ["Computer-Start",1,"auswahl"],
   ["Computer-Start",2,"reihenfolge"],
-  ["Bewerbung & Beruf",2,"schreiben"]
+  ["Bewerbung",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
   await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course+"$")})}).click();
   await exercisePage.locator(".lesson-btn").nth(lesson).click();
   // Deutsch-Übungen werden aus den Kursdaten gelesen, damit Titel und Lösungen nicht doppelt gepflegt werden
-  const daten=course==="Deutsch im Alltag"?await exercisePage.evaluate(([n,t])=>window.SDAkademieKurse.german[n].uebungen.find(u=>u.typ===t),[lesson,typ]):null;
+  const daten=await exercisePage.evaluate(([name,n,t])=>window.SDPersonalData.academy.find(c=>c.name===name).lessons[n].uebungen.find(u=>u.typ===t),[course,lesson,typ]);
   const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:daten?daten.titel:{
    luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
    auswahl:"Verdächtige Nachricht",reihenfolge:"Eine Datei sicher",schreiben:"Ein kurzer Satz"
@@ -161,7 +161,7 @@ for(const width of [320,390,1300]){
    await check.click();
    assert.match(await box.locator('[role="status"]').innerText(),/keine automatische Note/i);
    assert.equal(await box.getByRole("button",{name:"Lösung zeigen"}).isVisible(),true);
-   assert.match(await box.innerText(),/Checkliste|Ich nenne die Stelle/);
+   for(const point of daten.checkliste)assert.ok((await box.innerText()).includes(point),"Schreibcheckliste: "+point);
   }else{
    for(let attempt=1;attempt<=3;attempt++){
     await check.click();
