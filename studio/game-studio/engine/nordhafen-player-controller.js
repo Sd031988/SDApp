@@ -7,7 +7,8 @@
  'use strict';
  function create({scene,camera,canvas,BABYLON,motion,fixture,cityGeometry}={}){
   if(!scene||!camera||!canvas||!BABYLON||!motion||!fixture)throw new TypeError('player dependencies required');
-  let disposed=false,ready=false,player=null,aggregate=null,ground=null,groundBody=null;
+  let disposed=false,ready=false,driving=false,player=null,aggregate=null,ground=null,groundBody=null;
+  let vehicleMasks=null;
   const colliders=new Map(),pressed=new Set();
   let status='Physik wird geladen',facing=null,character=null,characterState='lädt',animation='idle',modelGeneration=0;
   const pointerDocument=canvas.ownerDocument||(typeof document!=='undefined'?document:null);
@@ -58,6 +59,7 @@
     }
     named.idle.setWeightForAllAnimatables?.(1);
     character={root:rootNode,meshes,groups,named,floorY:minY,weights:{idle:1,walk:0,run:0}};
+    if(driving)rootNode.setEnabled(false);
     characterState='Modell geladen';player.visibility=0;
    }catch(e){
     if(rootNode)rootNode.dispose?.();
@@ -142,8 +144,37 @@
    const hit=scene.pickWithRay(ray,mesh=>mesh!==player&&mesh.isPickable!==false);
    return !!(hit&&hit.hit&&hit.pickedMesh!==player&&hit.distance<=.25);
   }
+  function setVehicleMode(active,exitPosition){
+   if(!ready||disposed||!aggregate?.body.setMotionType)return false;
+   if(!!active===driving)return true;
+   pressed.clear();
+   const body=aggregate.body;
+   if(active){
+    vehicleMasks={membership:aggregate.shape.filterMembershipMask,collide:aggregate.shape.filterCollideMask};
+    body.setLinearVelocity(BABYLON.Vector3.Zero());
+    body.setMotionType(BABYLON.PhysicsMotionType.ANIMATED);
+    aggregate.shape.filterMembershipMask=0;aggregate.shape.filterCollideMask=0;
+    player.visibility=0;player.isPickable=false;
+    if(character)character.root.setEnabled(false);
+    driving=true;
+   }else{
+    const p=exitPosition||player.position;
+    const destination=new BABYLON.Vector3(p.x,Math.max(1,p.y??1),p.z);
+    player.position.copyFrom(destination);
+    body.setTargetTransform?.(destination,BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,player.rotation.y||0));
+    body.setMotionType(BABYLON.PhysicsMotionType.DYNAMIC);
+    aggregate.shape.filterMembershipMask=vehicleMasks?.membership??0xffffffff;
+    aggregate.shape.filterCollideMask=vehicleMasks?.collide??0xffffffff;
+    body.setLinearVelocity(BABYLON.Vector3.Zero());
+    vehicleMasks=null;driving=false;
+    player.isPickable=true;
+    if(character)character.root.setEnabled(true);
+   }
+   return true;
+  }
   function update(dt){
    if(!ready||disposed)return null;
+   if(driving)return player.position;
    const p=player.position;
    const state={x:p.x,y:p.y,z:p.z,vy:aggregate.body.getLinearVelocity().y,
     yaw:Math.atan2(-Math.cos(camera.alpha),-Math.sin(camera.alpha)),grounded:groundedByRaycast()};
@@ -191,7 +222,7 @@
    if(ground)ground.dispose();
    status='Spieler freigegeben';
   }
-  return {start,update,syncColliders,dispose,get status(){return status;},get ready(){return ready;},get playerY(){return player?player.position.y:null;},get grounded(){return ready?groundedByRaycast():false;},get characterStatus(){return characterState;},get animation(){return animation;}};
+  return {start,update,setVehicleMode,syncColliders,dispose,get status(){return status;},get ready(){return ready;},get playerY(){return player?player.position.y:null;},get grounded(){return ready?groundedByRaycast():false;},get characterStatus(){return characterState;},get animation(){return animation;}};
  }
  return Object.freeze({create});
 });
