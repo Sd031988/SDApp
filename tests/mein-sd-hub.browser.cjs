@@ -50,9 +50,11 @@ for(const lesson of lessonChecks){
  assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
 }
 
-await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await page.locator(".lesson-btn").first().waitFor();
-await page.locator(".answers button").first().click();
+// Lektion gilt erst nach allen drei richtig beantworteten Quizfragen als erledigt
+const g1Antworten=await page.evaluate(()=>window.SDAkademieKurse.german.find(l=>l.id==="g-1").quiz.map(q=>q.antworten[q.richtig]));
+for(const antwort of g1Antworten){const quiz=page.locator("#lessonDetail .ak-lesson-quiz");await quiz.locator(".answers button",{hasText:antwort}).first().click();await quiz.getByRole("button",{name:/Nächste Frage|Lektion abschließen/}).click()}
 assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
@@ -72,7 +74,7 @@ await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
 await page.locator(".code-textarea").fill("body { background-color: #eef; }");
 await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
 assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
-await page.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -146,7 +148,9 @@ for(const width of [320,390,1300]){
  for(const [course,lesson,typ] of cases){
   await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course+"$")})}).click();
   await exercisePage.locator(".lesson-btn").nth(lesson).click();
-  const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:{
+  // Deutsch-Übungen werden aus den Kursdaten gelesen, damit Titel und Lösungen nicht doppelt gepflegt werden
+  const daten=course==="Deutsch im Alltag"?await exercisePage.evaluate(([n,t])=>window.SDAkademieKurse.german[n].uebungen.find(u=>u.typ===t),[lesson,typ]):null;
+  const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:daten?daten.titel:{
    luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
    auswahl:"Verdächtige Nachricht",reihenfolge:"Eine Datei sicher",schreiben:"Ein kurzer Satz"
   }[typ]})});
@@ -167,9 +171,9 @@ for(const width of [320,390,1300]){
    }
    await box.getByRole("button",{name:"Lösung zeigen"}).click();
    assert.match(await box.innerText(),/Musterlösung:/);
-   if(typ==="luecke"){await box.locator('input[type="text"]').nth(0).fill("heiße");await box.locator('input[type="text"]').nth(1).fill("wohne")}
-   if(typ==="hoeren")await box.locator('input[type="text"]').fill("Samira");
-   if(typ==="zuordnen"){await box.locator("select").nth(0).selectOption({label:"Wo finde ich Brot?"});await box.locator("select").nth(1).selectOption({label:"Wie viel kostet das?"});await box.locator("select").nth(2).selectOption({label:"Kann ich bitte bezahlen?"})}
+   if(typ==="luecke")for(const [i,wort] of daten.loesung.entries())await box.locator('input[type="text"]').nth(i).fill(wort);
+   if(typ==="hoeren")await box.locator('input[type="text"]').fill(daten.loesung);
+   if(typ==="zuordnen")for(const [i,paar] of daten.paare.entries())await box.locator("select").nth(i).selectOption({label:paar[1]});
    if(typ==="auswahl"){await box.locator('input[type="checkbox"]').nth(0).check();await box.locator('input[type="checkbox"]').nth(1).check()}
    if(typ==="reihenfolge"){await box.getByRole("button",{name:"Ordner öffnen Hoch"}).click();await box.getByRole("button",{name:"Datei sinnvoll benennen Hoch"}).click()}
    await check.click();
@@ -187,16 +191,17 @@ const finalPage=await browser.newPage({viewport:{width:390,height:844}});
 finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
 await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
 await finalPage.locator('[data-tab="akademie"]').click();
-await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
+await finalPage.locator(".course").filter({has:finalPage.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
 await finalPage.locator(".lesson-btn").first().waitFor();
-const germanAnswers=[0,1,1,2];
+const germanQuiz=await finalPage.evaluate(()=>window.SDAkademieKurse.german.map(l=>l.quiz.map(q=>q.richtig)));
 for(let i=0;i<4;i++){
  await finalPage.locator(".lesson-btn").nth(i).click();
- await finalPage.locator(".quiz .answers button").nth(germanAnswers[i]).click();
+ for(const richtig of germanQuiz[i]){const quiz=finalPage.locator("#lessonDetail .ak-lesson-quiz");await quiz.locator(".answers button").nth(richtig).click();await quiz.getByRole("button",{name:/Nächste Frage|Lektion abschließen/}).click()}
 }
 await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
+const finalRichtig=germanQuiz.flat();
 for(let i=0;i<10;i++){
- await finalPage.locator(".ak-final-questions .answers button").nth(germanAnswers[i%4]).click();
+ await finalPage.locator(".ak-final-questions .answers button").nth(finalRichtig[i%finalRichtig.length]).click();
 }
 assert.match(await finalPage.locator(".ak-final-questions").innerText(),/10 von 10/);
 assert.equal(await finalPage.getByText("Teilnahmebestätigung",{exact:true}).count(),1);
@@ -250,6 +255,27 @@ for(const width of [320,390,1300]){
  const overflow=await c2.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
  await c2.close();
+}
+/* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8]]){
+ for(const width of [320,390,1300]){
+  const germanPage=await browser.newPage({viewport:{width,height:820}});
+  germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
+  await germanPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+  await germanPage.locator('[data-tab="akademie"]').click();
+  await germanPage.locator(".course").filter({has:germanPage.locator("b",{hasText:new RegExp("^"+courseName+"$")})}).click();
+  await germanPage.locator(".lesson-btn").first().waitFor();
+  assert.equal(await germanPage.locator(".lesson-btn").count(),count);
+  for(let i=0;i<count;i++){
+   await germanPage.locator(".lesson-btn").nth(i).click();
+   assert.equal(await germanPage.locator(".ak-practice-step").count(),4,courseName+" Schritte "+i);
+   assert.equal(await germanPage.locator(".ak-lesson-quiz .answers button").count(),3,courseName+" Quiz "+i);
+   assert.equal(await germanPage.locator(".ak-uebung").count(),4,courseName+" Übungen "+i);
+  }
+  const overflow=await germanPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+  assert.ok(overflow<=3,courseName+" "+width+"px Überlauf: "+overflow);
+  await germanPage.close();
+ }
 }
 /* C5: Profi-Werkzeuge auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
