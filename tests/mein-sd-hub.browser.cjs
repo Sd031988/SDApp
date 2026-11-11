@@ -251,6 +251,27 @@ for(const width of [320,390,1300]){
  assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
  await c2.close();
 }
+/* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8]]){
+ for(const width of [320,390,1300]){
+  const germanPage=await browser.newPage({viewport:{width,height:820}});
+  germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
+  await germanPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+  await germanPage.locator('[data-tab="akademie"]').click();
+  await germanPage.locator(".course").filter({has:germanPage.locator("b",{hasText:new RegExp("^"+courseName+"$")})}).click();
+  await germanPage.locator(".lesson-btn").first().waitFor();
+  assert.equal(await germanPage.locator(".lesson-btn").count(),count);
+  for(let i=0;i<count;i++){
+   await germanPage.locator(".lesson-btn").nth(i).click();
+   assert.equal(await germanPage.locator(".ak-practice-step").count(),4,courseName+" Schritte "+i);
+   assert.equal(await germanPage.locator(".ak-lesson-quiz .answers button").count(),3,courseName+" Quiz "+i);
+   assert.equal(await germanPage.locator(".ak-uebung").count(),4,courseName+" Übungen "+i);
+  }
+  const overflow=await germanPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+  assert.ok(overflow<=3,courseName+" "+width+"px Überlauf: "+overflow);
+  await germanPage.close();
+ }
+}
 /* C5: Profi-Werkzeuge auf drei Viewports ohne Code-Editor prüfen. */
 for(const width of [320,390,1300]){
  const c5=await browser.newPage({viewport:{width,height:820}});
