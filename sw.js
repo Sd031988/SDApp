@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v173';
+const CACHE_NAME = 'sd-bewerbungsstudio-v174';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -13,6 +13,7 @@ const APP_FILES = [
   './mein-sd-hub/kurse/german.js',
   './mein-sd-hub/kurse/deutsch-a2.js',
   './mein-sd-hub/kurse/deutsch-b1.js',
+  './mein-sd-hub/kurse/deutsch-beruf.js',
   './mein-sd-hub/kurse/digital.js',
   './mein-sd-hub/kurse/internet-email.js',
   './mein-sd-hub/kurse/sicher-im-netz.js',
