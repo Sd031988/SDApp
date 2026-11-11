@@ -144,7 +144,7 @@ for(const width of [320,390,1300]){
   ["Bewerbung & Beruf",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
-  await exercisePage.locator(".course").filter({hasText:course}).click();
+  await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course+"$")})}).click();
   await exercisePage.locator(".lesson-btn").nth(lesson).click();
   const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:{
    luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
@@ -212,7 +212,7 @@ for(const width of [320,390,1300]){
  c1.on("pageerror",e=>errors.push("C1 "+width+": "+e.message));
  await c1.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await c1.locator('[data-tab="akademie"]').click();
- await c1.locator(".course").filter({hasText:"Computer-Start"}).click();
+ await c1.locator(".course").filter({has:c1.locator("b",{hasText:/^Computer-Start$/})}).click();
  await c1.locator(".lesson-btn").first().waitFor();
  assert.equal(await c1.locator(".lesson-btn").count(),8);
  await c1.locator(".lesson-btn").first().click();
@@ -231,6 +231,25 @@ for(const width of [320,390,1300]){
  const overflow=await c1.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"C1 "+width+"px Überlauf: "+overflow);
  await c1.close();
+}
+/* C2: Nicht-Programmierkurs lädt alle acht Internet- und E-Mail-Lektionen. */
+for(const width of [320,390,1300]){
+ const c2=await browser.newPage({viewport:{width,height:820}});
+ c2.on("pageerror",e=>errors.push("C2 "+width+": "+e.message));
+ await c2.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
+ await c2.locator('[data-tab="akademie"]').click();
+ await c2.locator(".course").filter({hasText:"Internet & E-Mail"}).click();
+ await c2.locator(".lesson-btn").first().waitFor();
+ assert.equal(await c2.locator(".lesson-btn").count(),8);
+ for(let i=0;i<8;i++){
+  await c2.locator(".lesson-btn").nth(i).click();
+  assert.equal(await c2.locator(".ak-practice-step").count(),4,"C2 Schrittzahl "+i);
+  assert.equal(await c2.locator(".ak-lesson-quiz .answers button").count(),3,"C2 Quiz "+i);
+  assert.equal(await c2.locator(".code-editor").count(),0,"C2 darf keinen Code-Editor zeigen");
+ }
+ const overflow=await c2.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(overflow<=3,"C2 "+width+"px Überlauf: "+overflow);
+ await c2.close();
 }
 /* P5: alle Lektionen im Browser laden und Praxisprüfungen durchführen. */
 for(const width of [320,390,1300]){
