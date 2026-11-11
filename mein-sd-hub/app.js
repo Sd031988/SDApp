@@ -243,6 +243,18 @@ if(Array.isArray(l.schrittePraxis)){
  if(Array.isArray(l.fehler)){const problems=node("section","ak-practice-errors",undefined,q);node("h5","","Typische Fehler und richtige Wege",problems);l.fehler.forEach(f=>{node("h6","",f.titel,problems);mitCode(node("p","",undefined,problems),f.text)})}
  if(Array.isArray(l.merke)){const memory=node("section","ak-practice-memory",undefined,q);node("h5","","Merksätze",memory);l.merke.forEach(t=>mitCode(node("p","",undefined,memory),t))}
 }
+if(Array.isArray(l.quellen)){
+ const sources=node("section","ak-sources",undefined,q);
+ node("h5","","Quellen und weiterer Prüfweg",sources);
+ const list=node("ul","",undefined,sources);
+ for(const source of l.quellen){
+  let url;try{url=new URL(source.url)}catch{continue}
+  if(url.protocol!=="https:"||url.username||url.password||!["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de"].includes(url.hostname))continue;
+  const item=node("li","",undefined,list),a=node("a","",source.titel,item);
+  a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(source.stand||""))node("small",""," · geprüft: "+source.stand,item);
+ }
+}
 if(Array.isArray(l.quiz)){
  if(l.uebungen&&window.SDAkademieUebungen)l.uebungen.forEach(u=>window.SDAkademieUebungen.render(q,u));
  const quizArea=node("section","ak-lesson-quiz",undefined,q);
