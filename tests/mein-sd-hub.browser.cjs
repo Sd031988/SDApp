@@ -182,7 +182,7 @@ for(const width of [320,390,1300]){
 }
 
 
-/* Kursabschluss: alle vier Bestandslektionen, zehn Fragen und Druckansicht. */
+/* D1-Kursabschluss: acht Lektionen, zehn Fragen und Druckansicht. */
 const finalPage=await browser.newPage({viewport:{width:390,height:844}});
 finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
 await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
@@ -190,13 +190,13 @@ await finalPage.locator('[data-tab="akademie"]').click();
 await finalPage.locator(".course").filter({hasText:"Deutsch im Alltag"}).click();
 await finalPage.locator(".lesson-btn").first().waitFor();
 const germanAnswers=[0,1,1,2];
-for(let i=0;i<4;i++){
+for(let i=0;i<8;i++){
  await finalPage.locator(".lesson-btn").nth(i).click();
- await finalPage.locator(".quiz .answers button").nth(germanAnswers[i]).click();
+ await finalPage.locator(".quiz .answers button").nth(i<4?germanAnswers[i]:0).click();
 }
 await finalPage.getByRole("button",{name:"Abschlusstest starten (10 Fragen)"}).click();
 for(let i=0;i<10;i++){
- await finalPage.locator(".ak-final-questions .answers button").nth(germanAnswers[i%4]).click();
+ await finalPage.locator(".ak-final-questions .answers button").nth([0,1,2,1,2,0,2,0,1,2][i]).click();
 }
 assert.match(await finalPage.locator(".ak-final-questions").innerText(),/10 von 10/);
 assert.equal(await finalPage.getByText("Teilnahmebestätigung",{exact:true}).count(),1);
