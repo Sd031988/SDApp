@@ -351,3 +351,53 @@ test("C5 Digitale Profi-Werkzeuge: acht Lektionen, 24 Quizfragen und Fehlerkorre
  checkAcademyQuality("C5",lessons);
  for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);for(const e of l.fehler){assert.match(e.text,/Falsch:.*Richtig:/);assert.ok(e.titel.length>12)}}
 });
+;
+
+test("D1 Deutsch A1: alte IDs stabil, acht Lektionen und Alltagssprache",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/german.js"));assert.deepEqual(lessons.map(x=>x.id),Array.from({length:8},(_,i)=>"g-"+(i+1)));checkAcademyQuality("D1",lessons);for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);assert.ok(l.uebungen.length>0);for(const e of l.fehler)assert.match(e.text,/Falsch:.*Richtig:/)}assert.equal(data.academy.find(x=>x.id==="german").anzahl,8)});
+
+test("D2 Deutsch A2: acht Dialoglektionen mit Grammatik und Sprachübungen",()=>{const lessons=require(path.join(root,"mein-sd-hub/kurse/deutsch-a2.js"));assert.deepEqual(lessons.map(x=>x.id),Array.from({length:8},(_,i)=>"d2-"+(i+1)));checkAcademyQuality("D2",lessons);for(const l of lessons){assert.equal(l.schrittePraxis.length,4);assert.equal(l.quiz.length,3);assert.equal(l.fehler.length,2);assert.ok(l.uebungen.some(u=>u.typ==="zuordnen"));for(const e of l.fehler)assert.match(e.text,/Falsch:.*Richtig:/)}});
+
+test("Alle Kurse: keine sechswörtige Textfolge in mehr als zwei Lektionen",()=>{
+ const phrases=new Map();
+ const words=text=>String(text||"").toLocaleLowerCase("de-DE").match(/[a-zäöüß]+(?:[-'][a-zäöüß]+)*/gu)||[];
+ for(const course of data.academy){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
+  for(const lesson of lessons){
+   const parts=[lesson.explanation,lesson.tip,...(lesson.schrittePraxis||[]).map(s=>s.text),...(lesson.fehler||[]).map(e=>e.text)];
+   const found=new Set();
+   for(const part of parts){const w=words(part);for(let i=0;i<=w.length-6;i++)found.add(w.slice(i,i+6).join(" "))}
+   for(const phrase of found){const ids=phrases.get(phrase)||new Set();ids.add(lesson.id);phrases.set(phrase,ids)}
+  }
+ }
+ for(const [phrase,ids] of phrases)assert.ok(ids.size<=2,"Wiederholte Wortfolge: "+JSON.stringify(phrase)+" in "+[...ids].join(", "));
+});
+
+test("Alle Kurse: keine generischen Quiz-Platzhalterantworten",()=>{
+ const forbidden=/andere\\s+situation|unbekannte\\s+information|nicht\\s+die\\s+gesuchte|andere\\s+information/iu;
+ for(const course of data.academy){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
+  for(const lesson of lessons)for(const q of lesson.quiz||[]){
+   for(const answer of q.antworten||[])assert.doesNotMatch(String(answer),forbidden,lesson.id+" unbrauchbarer Ablenker");
+  }
+ }
+});
+
+test("Alle Kurse: Schrittüberschriften vollständig und nicht serienweise gleich",()=>{
+ const patterns=new Map();
+ for(const course of data.academy){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
+  for(const lesson of lessons){
+   const used=new Set();
+   for(const step of lesson.schrittePraxis||[]){
+    const title=String(step.titel||"").trim();
+    assert.ok(title.length>=8,lesson.id+" zu kurze Schrittüberschrift");
+    assert.doesNotMatch(title,/[-–,:;\\/]\\s*$/u,lesson.id+" abgebrochene Schrittüberschrift");
+    assert.doesNotMatch(title,/\\.{2,}$/u,lesson.id+" abgebrochene Schrittüberschrift");
+    const shape=title.toLocaleLowerCase("de-DE").replace(/:.*$/u,"").replace(/\\b\\d+\\b/gu,"#").trim();
+    used.add(shape);
+   }
+   for(const shape of used){const ids=patterns.get(shape)||new Set();ids.add(lesson.id);patterns.set(shape,ids)}
+  }
+ }
+ for(const [shape,ids] of patterns)assert.ok(ids.size<=2,"Wiederholter Überschriftenaufbau "+JSON.stringify(shape)+" in "+[...ids].join(", "));
+});
