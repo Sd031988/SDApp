@@ -15,7 +15,7 @@ permissions:
   pull-requests: read
 concurrency:
   group: merged-branch-cleanup-2026-11-11
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   audit:
     if: github.event_name == 'pull_request'
