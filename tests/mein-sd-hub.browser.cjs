@@ -144,7 +144,7 @@ for(const width of [320,390,1300]){
   ["Bewerbung & Beruf",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
-  await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course.replace(/[.*+?^${}()|[\]\\]/g,"\\exercisePage.locator(".course").filter({hasText:course}).click();")+"$")})}).click();
+  await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course+"$")})}).click();
   await exercisePage.locator(".lesson-btn").nth(lesson).click();
   const box=exercisePage.locator(".ak-uebung").filter({has:exercisePage.locator("h5",{hasText:{
    luecke:"Satz zur Vorstellung",hoeren:"Eine Vorstellung hören",zuordnen:"Höfliche Fragen",
