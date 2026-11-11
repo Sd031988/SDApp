@@ -368,7 +368,7 @@ test("Alle Kurse: keine sechswörtige Textfolge in mehr als zwei Lektionen",()=>
 });
 
 test("Alle Kurse: keine generischen Quiz-Platzhalterantworten",()=>{
- const forbidden=/andere\\s+situation|unbekannte\\s+information|nicht\\s+die\\s+gesuchte|andere\\s+information/iu;
+ const forbidden=/andere\s+situation|unbekannte\s+information|nicht\s+die\s+gesuchte|andere\s+information/iu;
  for(const course of data.academy){
   const lessons=require(path.join(root,"mein-sd-hub/kurse",course.id+".js"));
   for(const lesson of lessons)for(const q of lesson.quiz||[]){
@@ -386,9 +386,9 @@ test("Alle Kurse: Schrittüberschriften vollständig und nicht serienweise gleic
    for(const step of lesson.schrittePraxis||[]){
     const title=String(step.titel||"").trim();
     assert.ok(title.length>=8,lesson.id+" zu kurze Schrittüberschrift");
-    assert.doesNotMatch(title,/[-–,:;\\/]\\s*$/u,lesson.id+" abgebrochene Schrittüberschrift");
-    assert.doesNotMatch(title,/\\.{2,}$/u,lesson.id+" abgebrochene Schrittüberschrift");
-    const shape=title.toLocaleLowerCase("de-DE").replace(/:.*$/u,"").replace(/\\b\\d+\\b/gu,"#").trim();
+    assert.doesNotMatch(title,/[-–,:;\/]\s*$/u,lesson.id+" abgebrochene Schrittüberschrift");
+    assert.doesNotMatch(title,/\.{2,}$/u,lesson.id+" abgebrochene Schrittüberschrift");
+    const shape=title.toLocaleLowerCase("de-DE").replace(/:.*$/u,"").replace(/\b\d+\b/gu,"#").trim();
     used.add(shape);
    }
    for(const shape of used){const ids=patterns.get(shape)||new Set();ids.add(lesson.id);patterns.set(shape,ids)}
