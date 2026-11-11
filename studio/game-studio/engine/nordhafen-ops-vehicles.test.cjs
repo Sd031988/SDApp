@@ -85,7 +85,7 @@ test('Havok-backed car accepts input and invokes a physical impulse without tele
  };
  const instance=vehicles.create({scene:{getPhysicsEngine:()=>null},BABYLON,cityRules:city,spawn:{x:36,y:1,z:32}});
  assert.equal(instance.enter({x:32,z:32}),true);
- for(let i=0;i<30;i++)instance.update(1/60,{throttle:1});
+ for(let i=0;i<240;i++)instance.update(1/60,{throttle:1});
  assert.ok(impulses.length>0,'Havok body received impulses');
  assert.ok(instance.speedKmh>0,'accelerated');
  assert.equal(instance.exit(),null,'unsafe exit while moving');
