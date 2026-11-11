@@ -126,7 +126,7 @@ $("goalSearch").addEventListener("keydown",e=>{if(e.key==="Enter")searchGoal()})
 function searchGoal(){const text=$("goalSearch").value.trim();if(!text){$("goalStatus").textContent="Bitte beschreibe kurz dein Ziel.";return}wayItems=D.recommend(text,8).filter(inWorkspace).slice(0,6);document.querySelectorAll(".goal").forEach(x=>{x.classList.remove("active");x.setAttribute("aria-pressed","false")});if(!wayItems.length){$("goalStatus").textContent="Dazu gibt es noch keine eindeutige Empfehlung. Du kannst die Kategorien oben auswählen.";wayItems=[];return renderWayResults()}$("goalStatus").textContent=wayItems.length+" passende Werkzeuge gefunden (lokale Stichwortsuche).";renderWayResults()}
 document.querySelector('.goal[data-goal="lernen"]').click();
 // Akademie
-let courseId="german",lessonId="g-1",answered=false;
+let courseId="german",lessonId="g-1",answered=false,kursOffen=false;
 const kursLadevorgaenge=new Map();
 function ladeKurs(id){
  const kurs=findCourse(id);
@@ -165,11 +165,14 @@ function renderCourses(){
    const track=node("div","progress-track",undefined,btn),bar=node("div","progress-bar",undefined,track);
    bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
    node("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
-   btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids[0];answered=false;renderCourses()});
+   btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben()});
   }
  }
  renderLessonList();
 }
+/* Geöffneter Kurs steht oben (vor den Kurskarten), damit niemand weit nach unten scrollen muss. */
+function zeigeKursOben(){const ak=$("akademie"),z=$("kursZurueck");if(z&&!z.dataset.an){z.dataset.an="1";z.addEventListener("click",()=>{kursOffen=false;zeigeKursOben();$("courses").scrollIntoView({block:"start"})})}ak.classList.toggle("kurs-offen",kursOffen);if(!kursOffen)return;const p=$("coursePanel");p.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});$("courseHeading").focus({preventScroll:true})}
+function zeigeLektionOben(){const d=$("lessonDetail"),a=document.querySelector(".lesson-btn.active");if(a)a.scrollIntoView({block:"nearest",inline:"center"});d.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}
 function renderLessonList(){
  const c=findCourse(courseId);if(!c)return;
  $("courseHeading").textContent=c.icon+" "+c.name;
@@ -188,9 +191,13 @@ function renderLessonList(){
   node("b","",l.title,left);
   node("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
   node("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
-  btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList()});
+  btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList();zeigeLektionOben()});
  });
- renderLesson();renderCourseFinal(c);
+ renderLesson();
+ const pos=c.lessons.findIndex(l=>l.id===lessonId),nav=node("nav","ak-lektion-nav",undefined,$("lessonDetail"));nav.setAttribute("aria-label","Lektionen blättern");
+ if(pos>0){const b=node("button","btn outline small","← "+c.lessons[pos-1].title,nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos-1].id;answered=false;renderLessonList();zeigeLektionOben()}}
+ if(pos>=0&&pos<c.lessons.length-1){const b=node("button","btn primary small","Nächste Lektion: "+c.lessons[pos+1].title+" →",nav);b.type="button";b.onclick=()=>{lessonId=c.lessons[pos+1].id;answered=false;renderLessonList();zeigeLektionOben()}}
+ renderCourseFinal(c);
 }
 function renderCourseFinal(course){
  const target=$("lessonDetail"),completed=course.lessons.every(l=>state.completedLessons.includes(l.id));
