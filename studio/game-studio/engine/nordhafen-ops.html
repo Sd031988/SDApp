@@ -260,7 +260,7 @@ async function start(){
    if(tick-lastMarkers>=100){lastMarkers=tick;
    if(pos&&miniMap&&!$('minimap').hidden){miniMap.draw({player:pos,
     goal:mode==='city'?cityObjectiveRules.goal(cityProgress,sites):mode==='mission'?campaign.target(mission,sites):null,
-    traffic:cityTraffic?.positions||[],heading:-camera.alpha-Math.PI/2,
+    traffic:cityTraffic?.positions||[],loot:mode==='royale'?lootMeshes.filter(drop=>drop.active).map(drop=>drop.item):[],heading:-camera.alpha-Math.PI/2,
     objective:mode==='city'?cityObjectiveRules.title(cityProgress):mode==='mission'?campaign.objective(mission):'Nordhafen Royale',zone:mode==='royale'?modes.zone(royaleElapsed,royaleCenter):null});}
    for(let i=0;i<markerNodes.length;i++){const target=targets.find(t=>t.mesh.name==='target-'+i);const marker=markerNodes[i];if(!target){marker.style.display='none';continue;}const projected=BABYLON.Vector3.Project(target.mesh.position,BABYLON.Matrix.Identity(),scene.getTransformMatrix(),camera.viewport.toGlobal(engine.getRenderWidth(),engine.getRenderHeight()));marker.style.display='block';marker.style.left=Math.max(24,Math.min(innerWidth-24,projected.x/engine.getRenderWidth()*innerWidth))+'px';marker.style.top=Math.max(24,Math.min(innerHeight-24,projected.y/engine.getRenderHeight()*innerHeight-48))+'px';}
    if(sites&&(mode==='mission'||mode==='city')){const point=mode==='city'?cityObjectiveRules.goal(cityProgress,sites):campaign.target(mission,sites),label=mode==='city'?cityObjectiveRules.title(cityProgress):campaign.objective(mission);if(!point){$('objectiveMarker').style.display='none';}else{
