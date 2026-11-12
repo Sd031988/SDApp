@@ -36,9 +36,12 @@ const moreGroups={
    page.on('pageerror',e=>errors.push(e.message));
    await page.goto(url,{waitUntil:'domcontentloaded'});
    await page.locator('#studioStart').waitFor({state:'visible'});
+   fs.mkdirSync('studio-layout-artifacts',{recursive:true});
+   await page.screenshot({path:'studio-layout-artifacts/start-'+width+'.png'});
    assert.equal(await page.locator('.startKarten>*').count(),5);
    assert(await page.locator('#letzteProjekte button').count()<=5);
    await page.getByRole('button',{name:'Zum geöffneten Projekt',exact:true}).click();
+   await page.screenshot({path:'studio-layout-artifacts/editor-'+width+'.png'});
    // Five desktop actions; the explicitly requested compact mobile layout has three.
    assert.equal(await page.locator('#kopf button:visible').count(),width<820?3:5);
    for(const [trigger,menu,groups] of [['projektMenuBtn','projektMenu',projectGroups],['kopfMehr','mehrMenu',moreGroups]]){
@@ -59,6 +62,7 @@ const moreGroups={
    }
    await page.locator('#projektMenuBtn').click();await page.locator('#kopf').click({position:{x:2,y:2}});assert.equal(await page.locator('#projektMenu').isVisible(),false);
    await page.locator('#kiBtn').click();
+   await page.screenshot({path:'studio-layout-artifacts/ki-'+width+'.png'});
    assert.equal(await page.locator('#kiTabs [role="tab"]').count(),3);
    for(const [id,label] of [['kiCodeBtn','Neues Programm'],['kiChangeBtn','Projekt ändern'],['kiCheckTab','Prüfen & reparieren']]){
     await page.locator('#'+id).click();assert.equal(await page.locator('#'+id).getAttribute('aria-selected'),'true');assert.equal(await page.locator('#'+id).innerText(),label);
