@@ -39,6 +39,8 @@ function renderChangeSources(){
 function selectMode(mode){
  changeMode=mode==='change';
  const check=mode==='check';
+ // The existing repair view is shared, not duplicated: it follows the selected task.
+ if(check)$('kiRepairSlot').append($('kiReview'));else $('kiReviewHome').after($('kiReview'));
  $('kiAuthoring').hidden=check;$('kiPruefen').hidden=!check;$('kiServicesSection').hidden=check;
  for(const [id,m] of [['kiCodeBtn','new'],['kiChangeBtn','change'],['kiCheckTab','check']]){const b=$(id);b.setAttribute('aria-selected',String((mode||'new')===m));b.tabIndex=(mode||'new')===m?0:-1;}
  $('kiAuthoring').setAttribute('aria-labelledby',changeMode?'kiChangeBtn':'kiCodeBtn');

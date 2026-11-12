@@ -311,9 +311,9 @@ button,input,select,textarea{font:inherit;color:inherit}
       <p>Mit der freiwilligen Chrome-Erweiterung kannst du eine Antwort in ChatGPT oder Gemini markieren, per Rechtsklick an das Studio senden und hier sicher prüfen.</p>
       <a href="./chatgpt-bruecke.html" target="_blank" rel="noopener noreferrer">Erweiterung einrichten und installieren ↗</a>
     </div>
-</div><section id="kiPruefen" role="tabpanel" aria-labelledby="kiCheckTab" hidden><h3>Prüfen & reparieren</h3><div class="kiActions"><button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button><button id="agentReviewBtn" type="button" title="Mehrstufiger Projekt-Review: Plan, Tests, Sicherheit und Freigabe – nur lesend">🧠 Projekt-Review</button><button type="button" data-studio-action="fehlerfinder">Fehlerfinder</button></div><p>Projekt lokal prüfen oder eine KI-Antwort unten analysieren, um Reparatur-Vorschläge vorzubereiten.</p><div id="kiDiagnoseSlot"></div><div id="kiReviewSlot"></div></section>
+</div><section id="kiPruefen" role="tabpanel" aria-labelledby="kiCheckTab" hidden><h3>Prüfen & reparieren</h3><div class="kiActions"><button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button><button id="agentReviewBtn" type="button" title="Mehrstufiger Projekt-Review: Plan, Tests, Sicherheit und Freigabe – nur lesend">🧠 Projekt-Review</button><button type="button" data-studio-action="fehlerfinder">Fehlerfinder</button></div><p>Projekt lokal prüfen oder eine KI-Antwort unten analysieren, um Reparatur-Vorschläge vorzubereiten.</p><div id="kiDiagnoseSlot"></div><div id="kiReviewSlot"></div><div id="kiRepairSlot"></div></section>
 <div id="kiServicesSection"><button id="kiServicesBtn" title="Google KI, Google AI Studio und ChatGPT öffnen oder dort anmelden" type="button">🤖 KI-Dienste</button><section id="kiServicesOverlay" hidden aria-label="Google KI ohne Registrierung ausprobieren">
-  <div class="kiServicesDialog" role="dialog" aria-modal="true" aria-labelledby="kiServicesTitle">
+  <div class="kiServicesDialog" role="region" aria-labelledby="kiServicesTitle">
     <div class="kiServicesHead">
       <div><p class="kiServicesEyebrow">SD Code-Studio · Google KI</p><h2 id="kiServicesTitle">✨ Google KI nutzen</h2>
         <p>Du brauchst kein zusätzliches SD-Code-Studio-Konto. Probiere Google KI zuerst ohne Registrierung aus.</p></div>
@@ -363,6 +363,7 @@ button,input,select,textarea{font:inherit;color:inherit}
       <button type="button" id="kiApply" disabled>📁 Als Kopie des aktuellen Projekts (alte Dateien bleiben)</button>
     </div>
     <div id="kiFiles" class="kiFiles" aria-label="Erkannte Dateien"></div>
+    <span id="kiReviewHome" hidden></span>
     <section id="kiReview" class="kiReview" hidden aria-label="Automatische lokale Codeprüfung">
       <h3>🛡 Automatische Codeprüfung</h3>
       <p id="kiReviewSummary" role="status" aria-live="polite"></p>
@@ -404,7 +405,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
 </section>
 <section id="agentReviewOverlay" hidden aria-label="Mehrstufiger Projekt-Review">
- <div class="agentReviewDialog" role="dialog" aria-modal="true" aria-labelledby="agentReviewTitle">
+ <div class="agentReviewDialog" role="region" aria-labelledby="agentReviewTitle">
   <div class="agentReviewHead">
    <div><h2 id="agentReviewTitle">🧠 Projekt-Review</h2><p>Planen · Entwickeln · Testen · Sicherheit · Freigabe</p></div>
    <button id="agentReviewClose" type="button" aria-label="Review schließen">✕ Schließen</button>

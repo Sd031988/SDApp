@@ -65,6 +65,7 @@ const moreGroups={
    await page.locator('#kiBtn').click();
    await page.screenshot({path:'studio-layout-artifacts/ki-'+width+'.png'});
    assert.equal(await page.locator('#kiTabs [role="tab"]').count(),3);
+   assert.equal(await page.locator('#kiOverlay [role="dialog"]').count(),1,'One AI window; services and review are inline regions');
    for(const [id,label] of [['kiCodeBtn','Neues Programm'],['kiChangeBtn','Projekt ändern'],['kiCheckTab','Prüfen & reparieren']]){
     await page.locator('#'+id).click();assert.equal(await page.locator('#'+id).getAttribute('aria-selected'),'true');assert.equal(await page.locator('#'+id).innerText(),label);
    }
