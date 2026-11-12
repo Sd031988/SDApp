@@ -45,7 +45,7 @@ function selectMode(mode){
  for(const [id,m] of [['kiCodeBtn','new'],['kiChangeBtn','change'],['kiCheckTab','check']]){const b=$(id);b.setAttribute('aria-selected',String((mode||'new')===m));b.tabIndex=(mode||'new')===m?0:-1;}
  $('kiAuthoring').setAttribute('aria-labelledby',changeMode?'kiChangeBtn':'kiCodeBtn');
  // Neues Programm: leeres Projekt ist der Standard. Änderung: Kopie/direkt, damit nichts verloren geht.
- if($('kiNeu'))$('kiNeu').hidden=changeMode;
+ if($('kiNeu'))$('kiNeu').hidden=changeMode||check;
  $('kiApply').classList.toggle('kiPrimary',changeMode);
  $('kiChangeBox').hidden=!changeMode;
  $('kiIncludeRow').hidden=changeMode;

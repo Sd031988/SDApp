@@ -69,6 +69,11 @@ const moreGroups={
    for(const [id,label] of [['kiCodeBtn','Neues Programm'],['kiChangeBtn','Projekt ändern'],['kiCheckTab','Prüfen & reparieren']]){
     await page.locator('#'+id).click();assert.equal(await page.locator('#'+id).getAttribute('aria-selected'),'true');assert.equal(await page.locator('#'+id).innerText(),label);
    }
+   assert.equal(await page.locator('#kiNeu').isVisible(),false,'Repair tab cannot create a new empty project');
+   await page.locator('#kiPruefen [data-studio-action="fehlerfinder"]').click();
+   await page.locator('#kiDiagnoseSlot [data-feld="probleme"]').waitFor({state:'visible'});
+   assert.match(await page.locator('#diagnoseStand').innerText(),/Fehlerfinder:/);
+   await page.locator('#kiCheckTab').focus();
    await page.keyboard.press('Home');assert.equal(await page.locator('#kiCodeBtn').getAttribute('aria-selected'),'true');
    assert.equal(await page.locator('#kiServicesBtn').isVisible(),true);
    assert.equal(await page.locator('#kiNeu').isVisible(),true);
