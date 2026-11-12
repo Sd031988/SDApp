@@ -41,10 +41,12 @@ function create({canvas,camera,document:doc,signal,fire=()=>{},onVehicle=()=>{}}
    if(code){const wasHeld=[...held.values()].includes(code);held.set(e.pointerId,code);if(!wasHeld)emit('keydown',code);}
    else if(action==='fire')fire();
    else if(action==='reload'){emit('keydown','KeyR');emit('keyup','KeyR');}
-   else if(action==='vehicle')onVehicle();
+   // Vehicle selection waits for click: hiding this pad during pointerdown
+   // cancels the gesture in mobile WebKit / touch emulation.
   },{signal});
   for(const name of ['pointerup','pointercancel','lostpointercapture'])
    button.addEventListener(name,e=>{release(e.pointerId);},{signal});
+  if(action==='vehicle')button.addEventListener('click',e=>{e.preventDefault();onVehicle();},{signal});
  }
  canvas.addEventListener('pointerdown',e=>{
   if(e.pointerType!=='touch'||lookPointer!==null)return;
