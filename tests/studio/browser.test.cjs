@@ -108,6 +108,7 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#agentReviewCopy').isEnabled(),true);
     await page.locator('#agentReviewClose').click();
     assert.equal(await page.locator('#agentReviewOverlay').isVisible(),false);
+    await page.locator('#kiClose').click();
 
     for (const width of [1600,1280,1080,1024,900,801,800,600,390,320]) {
       await page.setViewportSize({width,height:800});

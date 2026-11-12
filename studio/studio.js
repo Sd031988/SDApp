@@ -2144,6 +2144,8 @@ async function studioStartZeigen() {
  $('studioStart').hidden=false;
 }
 function studioLayoutEinrichten() {
+ const workspaceButton=document.querySelector('.sd-ws-launch');
+ if(workspaceButton){workspaceButton.append(document.createTextNode('Alle SD Hub Bereiche'));$('mehrMenu').append(workspaceButton);}
  const menuPairs=[['projektMenuBtn','projektMenu'],['kopfMehr','mehrMenu']];
  const closeMenus=(restore=false)=>menuPairs.forEach(([bid,mid])=>{if(!$(mid).hidden&&restore)$(bid).focus();$(mid).hidden=true;$(bid).setAttribute('aria-expanded','false')});
  for(const [bid,mid] of menuPairs){const trigger=$(bid),menu=$(mid);trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls',mid);menu.setAttribute('role','menu');menu.querySelectorAll('button,a').forEach(b=>b.setAttribute('role','menuitem'));
@@ -2158,11 +2160,12 @@ function studioLayoutEinrichten() {
  $('neuDatei').onclick=dateiDialog;$('baumNeu').onclick=dateiDialog;
  const actions={vorlagen:vorlagenWaehlen,ki:()=>window.SDKICodingUI?.openDialog(),weiter:studioStartSchliessen,oeffnen:()=>einfuegenDialog(''),start:studioStartZeigen,
   wechsel:async()=>{await projektListe();palette([...$('projektWahl').options].filter(o=>o.value!=='__neu').map(o=>({label:o.textContent,name:o.value})),'Projekt wechseln',x=>projektOeffnen(x.name))},umbenennen:projektUmbenennen,duplizieren:projektDuplizieren,ordner:()=>$('hochOrdner').click(),zip:()=>$('hochZip').click(),github:githubProjektImport,backup:cloudProjektBackup,seiten:meineSeiten,offline:seiteLoeschen,pc:aufPcAusfuehren,versionen:()=>seite('versionen'),loeschen:projektLoeschen,
-  builder:einKlickAppBuilder,desktop:desktopExport,framework:frameworkProjektExport,export:projektAssistent,visuell:visuellerWebsiteDesigner,jxl:()=>window.open('./jpeg-xl.html','_blank','noopener'),lernen:programmierLernmodus,lernpruefen:lernaufgabePruefen,fortschritt:lernfortschrittAnzeigen,zertifikat:lernZertifikat,thema:()=>seite('einst'),groesser:()=>schrift(1),kleiner:()=>schrift(-1),umbruch:()=>$('eUmbruch').click(),fokus,tasten:()=>{ausgabe(KUERZEL);unten('ausgabe');ansicht('ausgabe')},einstellungen:()=>seite('einst'),leeredatei:()=>{$('dateiDialog').hidden=true;neueDatei('')},review:()=>{window.SDKICodingUI?.openDialog('check');$('agentReviewBtn').click()},fehlerfinder:automatischerFehlerfinder,suche:()=>seite('suche'),formatieren,json:editorDiagnoseAnzeigen,pcvorschau:()=>{geraet('100%');ansicht('vorschau')},handyvorschau:()=>{geraet('390px');ansicht('vorschau')},mehr:()=>$('kopfMehr').click()};
+  builder:einKlickAppBuilder,desktop:desktopExport,framework:frameworkProjektExport,export:projektAssistent,visuell:visuellerWebsiteDesigner,jxl:()=>window.open('./jpeg-xl.html','_blank','noopener'),lernen:programmierLernmodus,lernpruefen:lernaufgabePruefen,fortschritt:lernfortschrittAnzeigen,zertifikat:lernZertifikat,thema:()=>seite('einst'),groesser:()=>schrift(1),kleiner:()=>schrift(-1),umbruch:()=>$('eUmbruch').click(),fokus,tasten:()=>{ausgabe(KUERZEL);unten('ausgabe');ansicht('ausgabe')},einstellungen:()=>seite('einst'),leeredatei:()=>{$('dateiDialog').hidden=true;neueDatei('')},review:()=>{window.SDKICodingUI?.openDialog('check');$('agentReviewBtn').click()},fehlerfinder:automatischerFehlerfinder,suche:()=>seite('suche'),formatieren,json:editorDiagnoseAnzeigen,pcvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('100%');ansicht('vorschau')},handyvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('390px');ansicht('vorschau')},mehr:()=>$('kopfMehr').click()};
  document.querySelectorAll('[data-studio-action]').forEach(b=>b.onclick=()=>{if(b.closest('#studioStart')&&b.dataset.studioAction!=='weiter')studioStartSchliessen();actions[b.dataset.studioAction]?.()});
  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);
  for(const id of ['dateiDialog','studioPanel'])$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).hidden=true});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenus(true);for(const id of ['dateiDialog','studioPanel'])$(id).hidden=true}});
+ $('suchErg').addEventListener('click',e=>{if(e.target.closest('.sz'))$('studioPanel').hidden=true});
  $('kiBtn').onclick=()=>window.SDKICodingUI?.openDialog();
  $('startDirekt').onchange=()=>store.set('sdStudioDirekt',$('startDirekt').checked);
 }

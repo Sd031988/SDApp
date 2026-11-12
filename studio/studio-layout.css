@@ -17,3 +17,6 @@
  #haupt>#unten{display:none}
  #mitte{flex-direction:column}#vorschau{width:100%!important;min-width:0;height:100%;border:0}#status,#akt{display:none!important}#handyNav{display:grid!important;grid-column:1;grid-row:4;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--sakt);padding-bottom:env(safe-area-inset-bottom)}#handyNav button{font-size:12px;white-space:normal;padding:0!important;min-width:0}#untenTabs{padding:0;gap:0;overflow:auto}#untenTabs button{font-size:10px;letter-spacing:0;padding:7px 5px!important}#untenTabs #untenZu{display:none}#studioStart{inset:50px 0 0;padding:18px}.startKarten{grid-template-columns:1fr}.startKarten button,.startKarten a{padding:18px}.startInhalt{gap:14px}#kiTabs button{font-size:12px;padding:8px 5px;min-width:0!important}#kiOverlay .kiDialog{padding:12px}#kiReviewSlot .agentReviewDialog{padding:10px}#kiOverlay .kiServicesGrid{grid-template-columns:1fr}
 }
+
+/* Keep cross-app navigation reachable without covering the four mobile tabs. */
+body[data-sd-ws-mode=compact] #mehrMenu .sd-ws-launch{position:static!important;display:flex!important;width:100%;height:auto;border-radius:6px;gap:8px;box-shadow:none;padding:10px;justify-content:flex-start}
