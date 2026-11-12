@@ -2153,9 +2153,9 @@ function studioLayoutEinrichten() {
  const workspaceButton=document.querySelector('.sd-ws-launch');
  if(workspaceButton){workspaceButton.append(document.createTextNode('Alle SD Hub Bereiche'));$('mehrMenu').append(workspaceButton);}
  const menuPairs=[['projektMenuBtn','projektMenu'],['kopfMehr','mehrMenu']];
- const closeMenus=(restore=false)=>menuPairs.forEach(([bid,mid])=>{if(!$(mid).hidden&&restore)$(bid).focus();$(mid).hidden=true;$(bid).setAttribute('aria-expanded','false')});
+ const closeMenus=(restore=false)=>menuPairs.forEach(([bid,mid])=>{if(!$(mid).hidden&&restore)($(mid)._studioReturnFocus||$(bid)).focus();$(mid).hidden=true;$(bid).setAttribute('aria-expanded','false')});
  for(const [bid,mid] of menuPairs){const trigger=$(bid),menu=$(mid);trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls',mid);menu.setAttribute('role','menu');menu.querySelectorAll('button,a').forEach(b=>b.setAttribute('role','menuitem'));
-  const open=()=>{const was=menu.hidden;closeMenus();menu.hidden=!was;trigger.setAttribute('aria-expanded',String(was));if(was)menu.querySelector('button,a').focus()};trigger.onclick=open;
+  const open=()=>{const was=menu.hidden;menu._studioReturnFocus=trigger.getClientRects().length?trigger:document.activeElement;closeMenus();menu.hidden=!was;trigger.setAttribute('aria-expanded',String(was));if(was)menu.querySelector('button,a').focus()};trigger.onclick=open;
   trigger.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(menu.hidden)open();const items=menu.querySelectorAll('button,a');items[e.key==='ArrowUp'?items.length-1:0].focus()}};
   menu.addEventListener('keydown',e=>{const items=[...menu.querySelectorAll('button,a')].filter(b=>!b.disabled),i=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();items[e.key==='Home'?0:e.key==='End'?items.length-1:(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length].focus()}if(e.key==='Escape'){e.preventDefault();closeMenus(true)}if(e.key==='Tab')closeMenus()});
   menu.addEventListener('click',e=>{if(e.target.closest('button,a'))closeMenus()});

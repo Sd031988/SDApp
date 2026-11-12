@@ -60,6 +60,7 @@ const moreGroups={
     await page.keyboard.press('ArrowDown');
     assert.notEqual(await page.evaluate(()=>document.activeElement.id||document.activeElement.textContent),first);
     await page.keyboard.press('Escape');assert.equal(await page.locator('#'+menu).isVisible(),false);
+    assert.equal(await page.evaluate(()=>document.activeElement.getClientRects().length>0),true,'Escape restores visible keyboard focus');
    }
    await page.locator('#projektMenuBtn').click();await page.locator('#kopf').click({position:{x:2,y:2}});assert.equal(await page.locator('#projektMenu').isVisible(),false);
    await page.locator('#kiBtn').click();
