@@ -55,6 +55,7 @@ const files = [
   'nordhafen-ops-campaign.test.cjs',
   'nordhafen-ops-audio.test.cjs',
   'nordhafen-ops-city.test.cjs',
+  'nordhafen-ops-vehicles.test.cjs',
   'nordhafen-ops-royale.test.cjs'
 ];
 for (const file of files) {
