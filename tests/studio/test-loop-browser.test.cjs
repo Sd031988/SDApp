@@ -1,4 +1,9 @@
 'use strict';
+async function openKI(page,tab){
+ if(!await page.locator('#kiOverlay').isVisible())await page.locator('#kiBtn').click();
+ await page.locator('#'+tab).click();
+}
+
 const {chromium}=require('playwright');
 const {spawn}=require('node:child_process');
 const assert=require('node:assert/strict');
@@ -20,11 +25,11 @@ const assert=require('node:assert/strict');
   browser=await chromium.launch({headless:true});
   const page=await browser.newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:8878/studio/index.html',{waitUntil:'domcontentloaded',timeout:30000});
+  await page.goto('http://127.0.0.1:8878/studio/index.html?projekt=meine-webseite',{waitUntil:'domcontentloaded',timeout:30000});
   await page.locator('#app').waitFor({state:'visible',timeout:20000});
   await page.waitForFunction(()=>typeof S!=='undefined'&&S.gestartet&&S.p&&S.p.name,null,{timeout:25000});
   const original=await page.evaluate(()=>JSON.stringify(S.p?.dateien||{}));
-  await page.locator('#kiCodeBtn').click();
+  await openKI(page,'kiCodeBtn');
   // Browser runtime is never invoked for user-supplied source: test this separately.
   await page.evaluate(()=>{
    window.SDKITestLoop.run([{path:'app.js',content:'window.__notExecutedByStaticTests=true'}],{},

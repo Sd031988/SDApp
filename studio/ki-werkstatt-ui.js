@@ -38,6 +38,10 @@ function renderChangeSources(){
 }
 function selectMode(mode){
  changeMode=mode==='change';
+ const check=mode==='check';
+ $('kiAuthoring').hidden=check;$('kiPruefen').hidden=!check;$('kiServicesSection').hidden=check;
+ for(const [id,m] of [['kiCodeBtn','new'],['kiChangeBtn','change'],['kiCheckTab','check']]){const b=$(id);b.setAttribute('aria-selected',String((mode||'new')===m));b.tabIndex=(mode||'new')===m?0:-1;}
+ $('kiAuthoring').setAttribute('aria-labelledby',changeMode?'kiChangeBtn':'kiCodeBtn');
  // Neues Programm: leeres Projekt ist der Standard. Änderung: Kopie/direkt, damit nichts verloren geht.
  if($('kiNeu'))$('kiNeu').hidden=changeMode;
  $('kiApply').classList.toggle('kiPrimary',changeMode);
@@ -73,7 +77,7 @@ function openDialog(mode){
  $('kiInclude').checked=false;$('kiClipboard').hidden=true;
  selectMode(mode);
  status('Beschreibe die Aufgabe. Erstelle die Anfrage und füge danach den KI-Code hier ein.');
- $('kiGoal').focus();
+ $(mode==='check'?'kiCheckTab':'kiGoal').focus();
 }
 function openChangeDialog(){openDialog('change');}
 /* Local Agent -> KI-Werkstatt: task and suggested file paths only.
@@ -97,7 +101,7 @@ function openChangeDialogWithGoal(goal,paths){
 }
 function openServices(){
  if(!S.gestartet){toast('Bitte Code-Studio zuerst vollständig starten.');return}
- $('kiOverlay').hidden=true;
+ if($('kiOverlay').hidden)openDialog();
  $('kiServicesOverlay').hidden=false;
  $('kiServicesQuestion').focus();
 }
@@ -147,7 +151,7 @@ function acceptBrowserBridge(event){
  status('✓ '+(m.provider==='chatgpt'?'ChatGPT':'Gemini')+'-Auswahl angekommen. Nur erkannte Code-Dateien sind vorbereitet. Bitte prüfen, vergleichen und die Übernahme ausdrücklich bestätigen.');
  window.postMessage({type:'SD_STUDIO_SELECTED_CHAT_ACK',version:1,nonce:m.nonce},location.origin);
 }
-function closeDialog(){$('kiOverlay').hidden=true;}
+function closeDialog(){$('kiOverlay').hidden=true;closeServices();const panel=document.querySelector('#kiDiagnoseSlot [data-feld]');if(panel){$('unten').append(panel);unten('probleme')}if($('kiBtn'))$('kiBtn').focus();}
 function selectedSource(){
  if(!$('kiInclude').checked||!S.p||!S.aktiv)return null;
  const code=currentFiles()[S.aktiv];
@@ -677,8 +681,10 @@ async function apply(){
 function setup(){
  window.addEventListener('message',acceptBrowserBridge);
  const button=$('kiCodeBtn'),overlay=$('kiOverlay');if(!button||!overlay)return;
- button.addEventListener('click',()=>openDialog());
- $('kiChangeBtn').addEventListener('click',openChangeDialog);
+ for(const [id,mode] of [['kiCodeBtn','new'],['kiChangeBtn','change'],['kiCheckTab','check']]){const b=$(id);b.setAttribute('role','tab');b.setAttribute('aria-controls',mode==='check'?'kiPruefen':'kiAuthoring');b.addEventListener('click',()=>{if(overlay.hidden)openDialog(mode);else selectMode(mode)});}
+ $('kiTabs').addEventListener('keydown',e=>{const tabs=[...$('kiTabs').querySelectorAll('[role=tab]')],i=tabs.indexOf(document.activeElement);if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const b=tabs[e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:-1)+3)%3];b.click();b.focus()}});
+ $('kiReviewSlot').append($('agentReviewOverlay'));
+ $('diagnoseBtn').onclick=()=>{diagnoseAnzeigen();$('kiDiagnoseSlot').append(document.querySelector('[data-feld=probleme]'));};
  const serviceBtn=$('kiServicesBtn'),serviceOverlay=$('kiServicesOverlay');
  if(serviceBtn&&serviceOverlay){
   serviceBtn.addEventListener('click',openServices);

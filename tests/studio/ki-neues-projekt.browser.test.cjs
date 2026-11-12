@@ -1,4 +1,9 @@
 'use strict';
+async function openKI(page,tab){
+ if(!await page.locator('#kiOverlay').isVisible())await page.locator('#kiBtn').click();
+ await page.locator('#'+tab).click();
+}
+
 /* KI-Werkstatt: „Als neues, leeres Projekt übernehmen“ darf KEINEN alten Code mitnehmen. */
 const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
@@ -25,7 +30,7 @@ const assert = require('node:assert/strict');
     const page = await browser.newPage({viewport:{width:1300,height:900}});
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:8766/studio/index.html', {waitUntil:'domcontentloaded',timeout:30000});
+    await page.goto('http://127.0.0.1:8766/studio/index.html?projekt=meine-webseite', {waitUntil:'domcontentloaded',timeout:30000});
     await page.locator('#app').waitFor({state:'visible',timeout:15000});
     await page.waitForFunction(()=>typeof S!=='undefined'&&S.gestartet&&S.p,{timeout:15000});
     await page.waitForTimeout(800);
@@ -37,13 +42,13 @@ const assert = require('node:assert/strict');
     assert.equal(await page.evaluate(()=>S.p.name),'altes-projekt');
 
     // Änderungsmodus: kein „neues, leeres Projekt“ anbieten
-    await page.locator('#kiChangeBtn').click();
+    await openKI(page,'kiChangeBtn');
     assert.equal(await page.locator('#kiNeu').isVisible(),false,'Im Änderungsmodus kein leeres Projekt');
     await page.keyboard.press('Escape');
     await page.evaluate(()=>{const o=document.getElementById('kiOverlay');if(o&&!o.hidden){const z=document.getElementById('kiClose');if(z)z.click();else o.hidden=true}});
 
     // Neues Programm: KI-Antwort mit zwei Dateien
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     assert.equal(await page.locator('#kiNeu').isVisible(),true);
     await page.locator('#kiGoal').fill('Mein neues Spiel');
     const t='```';

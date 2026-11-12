@@ -83,6 +83,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Studio im Browser testen
         run: |
+          node tests/studio/layout.browser.test.cjs
           node tests/studio/browser.test.cjs
           node tests/studio/ki-neues-projekt.browser.test.cjs
           node tests/studio/test-loop-browser.test.cjs
