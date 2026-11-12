@@ -383,7 +383,8 @@ button,input,select,textarea{font:inherit;color:inherit}
     <div class="kiActions">
       <button type="button" id="kiPaste">📋 Gesamte KI-Antwort einfügen</button>
       <button type="button" id="kiAnalyse">🔎 Dateien automatisch erkennen</button>
-      <button type="button" id="kiApply" class="kiPrimary" disabled>📁 Als neue Projektkopie übernehmen</button>
+      <button type="button" id="kiNeu" class="kiPrimary" disabled>✨ Als neues, leeres Projekt übernehmen</button>
+      <button type="button" id="kiApply" disabled>📁 Als Kopie des aktuellen Projekts (alte Dateien bleiben)</button>
     </div>
     <div id="kiFiles" class="kiFiles" aria-label="Erkannte Dateien"></div>
     <section id="kiReview" class="kiReview" hidden aria-label="Automatische lokale Codeprüfung">
@@ -423,7 +424,7 @@ button,input,select,textarea{font:inherit;color:inherit}
       <p class="kiHint">Öffnet index.html und weitere ausgewählte Code-Dateien im aktuellen Projekt. Bei Änderungen wird vorher ein Stand unter 🕘 Versionen gesichert. Kein automatisches Ausführen.</p>
     </div>
     <p id="kiStatus" role="status" aria-live="polite"></p>
-    <p class="kiHint">Wähle vor der Übernahme genau die zu ändernden Dateien. Direktes Übernehmen erstellt eine Sicherung unter 🕘 Versionen; als Projektkopie bleibt das Original unangetastet. Der Code startet erst mit <strong>▶ Ausführen</strong>.</p>
+    <p class="kiHint"><strong>✨ Neues, leeres Projekt:</strong> nur der KI-Code, kein alter Code. <strong>📁 Kopie:</strong> alle bisherigen Dateien plus KI-Änderungen. Direktes Übernehmen erstellt eine Sicherung unter 🕘 Versionen; als Projektkopie bleibt das Original unangetastet. Der Code startet erst mit <strong>▶ Ausführen</strong>.</p>
   </div>
 </section>
 <section id="agentReviewOverlay" hidden aria-label="Mehrstufiger Projekt-Review">

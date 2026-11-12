@@ -38,6 +38,9 @@ function renderChangeSources(){
 }
 function selectMode(mode){
  changeMode=mode==='change';
+ // Neues Programm: leeres Projekt ist der Standard. Änderung: Kopie/direkt, damit nichts verloren geht.
+ if($('kiNeu'))$('kiNeu').hidden=changeMode;
+ $('kiApply').classList.toggle('kiPrimary',changeMode);
  $('kiChangeBox').hidden=!changeMode;
  $('kiIncludeRow').hidden=changeMode;
  $('kiGoalLabel').textContent=changeMode?'1. Welche Änderung möchtest du an deinem bestehenden Projekt?':'1. Was möchtest du programmieren?';
@@ -452,6 +455,7 @@ function updateActions(){
   !!review&&!review.blocked&&!review.skipped;
  $('kiApply').disabled=!ready;
  $('kiDirect').disabled=!ready;
+ if($('kiNeu'))$('kiNeu').disabled=!ready;
 }
 function openSelectedInEditor(files){
  const preferred=files.find(f=>f.path==='index.html')||
@@ -607,6 +611,34 @@ async function applyDirect(){
  }catch(e){console.error(e);status('Direkte Übernahme fehlgeschlagen: '+(e?.message||String(e)),true)}
  finally{busy=false;updateActions()}
 }
+/* KI-Code als NEUES, LEERES Projekt: nur die ausgewählten KI-Dateien, nichts aus dem offenen Projekt. */
+async function applyNew(){
+ if(busy||!parsed||parsed.errors.length||!parsed.files.length){status('Zuerst Code ohne Fehler analysieren.',true);return}
+ const chosen=new Set([...$('kiFiles').querySelectorAll('input[type=checkbox]:checked')].map(x=>x.dataset.path));
+ const selected=parsed.files.filter(f=>chosen.has(f.path));
+ if(!selected.length){status('Wähle mindestens eine Datei aus.',true);return}
+ if(!checkSelectedCodeReview())return;
+ const ziel=($('kiGoal').value||'').trim().split(/\s+/).slice(0,4).join(' ');
+ const vorschlag=await uniqueName(ziel||'ki-projekt');
+ const eingabe=window.prompt('Name für das NEUE Projekt (nur der KI-Code, kein alter Code):',vorschlag);
+ if(eingabe===null)return;
+ const name=await uniqueName(eingabe.trim()||vorschlag);
+ busy=true;updateActions();status('Neues Projekt wird angelegt …');
+ try{
+  if(S.p&&S.geaendert)await speichernJetzt();
+  const files={};for(const file of selected)files[file.path]=file.content;
+  const haupt=selected.find(f=>/(^|\/)index\.html$/i.test(f.path))?.path||selected.find(f=>/(^|\/)(main|app)\.(py|js|ts)$/i.test(f.path))?.path||selected[0].path;
+  await projSchreiben({name,dateien:files,haupt,versionen:[],erstellt:Date.now(),kiQuelle:null});
+  await projektOeffnen(name,haupt,{keineAutoVorschau:true});
+  if(S.p?.name!==name)throw Error('Neues Projekt konnte nicht geöffnet werden');
+  closeDialog();
+  ausgabe('✨ Neues Projekt „'+name+'“ mit '+selected.length+' KI-Datei(en) angelegt:\n'+selected.map(f=>'• '+f.path).join('\n')+
+   '\nKein alter Code übernommen. Nicht automatisch ausgeführt – mit ▶ Ausführen prüfen.');
+  if(typeof ansicht==='function')ansicht('code');
+  toast('✨ Neues Projekt „'+name+'“ angelegt. ▶ Ausführen zum Testen.');
+ }catch(e){console.error(e);status('Neues Projekt fehlgeschlagen: '+(e?.message||String(e))+'. Bestehende Projekte bleiben unverändert.',true)}
+ finally{busy=false;updateActions()}
+}
 async function apply(){
  if(busy||!parsed||parsed.errors.length||!parsed.files.length){status('Zuerst Code ohne Fehler analysieren.',true);return}
  if(!S.gestartet||stagedProject!==(S.p?S.p.name:null)){status('Projekt gewechselt. Bitte KI-Code neu analysieren.',true);return}
@@ -687,6 +719,7 @@ function setup(){
  $('kiDirect').addEventListener('click',applyDirect);
  $('kiPaste').addEventListener('click',pasteWholeAnswer);
  $('kiApply').addEventListener('click',apply);
+ if($('kiNeu'))$('kiNeu').addEventListener('click',applyNew);
  $('kiResult').addEventListener('input',()=>{clearRepairDraft();parsed=null;stagedSnapshot=null;updateActions();status('Antwort geändert – analysieren oder den vollständigen Text einfügen.')});
  $('kiResult').addEventListener('paste',()=>setTimeout(()=>{if(!$('kiOverlay').hidden)analyse()},30));
  // A mobile route without a sixth tab avoids shrinking the existing navigation.
