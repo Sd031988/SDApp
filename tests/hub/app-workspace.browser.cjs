@@ -58,6 +58,12 @@ const assert=require('node:assert/strict');
   // Dense applications must not gain a second toolbar covering the editor or chat.
   for(const p of ['/studio/','/deutsch/','/assistent/']){
    await page.goto(base+p,{waitUntil:'domcontentloaded',timeout:30000});
+   if(p==='/studio/'){
+    await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit);
+    if(await page.locator('#studioStart').isVisible())await page.getByRole('button',{name:'Zum geöffneten Projekt',exact:true}).click();
+    await page.locator('#handyNav [data-a="werkzeuge"]').click();
+    await page.locator('[data-feld="werkzeuge"] [data-studio-action="mehr"]').click();
+   }
    await page.locator('.sd-ws-launch').waitFor({state:'visible',timeout:12000});
    assert.equal(await page.locator('.sd-ws-bar').count(),0,p+': no injected top toolbar');
    assert.equal(await page.locator('.sd-ws-dock').count(),0,p+': no bottom toolbar over native controls');

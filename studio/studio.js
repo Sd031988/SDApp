@@ -1171,8 +1171,14 @@ function unten(n) { document.querySelectorAll('#untenTabs button[data-u]').forEa
 function ausgabe(t) { $('ausgabe').textContent = t; if (!$('unten').querySelector('[data-feld="ausgabe"]').hidden) return; }
 
 /* ---------------- Seitenleiste ---------------- */
-function seite(n) { document.querySelectorAll('#akt button[data-s]').forEach(b => b.classList.toggle('an', b.dataset.s === n && !$('app').classList.contains('seiteZu')));
-  document.querySelectorAll('#seite [data-panel]').forEach(p => p.hidden = p.dataset.panel !== n); if (n === 'versionen') versionenZeigen(); if (n === 'suche') setTimeout(() => $('suchQ').focus(), 30); }
+function seite(n) {
+  document.querySelectorAll('#akt button[data-s]').forEach(b => b.classList.toggle('an', b.dataset.s === n));
+  // The file tree stays in the sidebar. Search, versions and settings have their own dialog.
+  document.querySelectorAll('#studioPanel [data-panel]').forEach(p => p.hidden = p.dataset.panel !== n);
+  $('studioPanel').hidden = n === 'explorer';
+  if (n === 'versionen') versionenZeigen();
+  if (n !== 'explorer') setTimeout(() => $(n === 'suche' ? 'suchQ' : n === 'versionen' ? 'versText' : 'themaWahl').focus(), 30);
+}
 function sucheLaufen() { const q = $('suchQ').value, box = $('suchErg'); box.innerHTML = ''; if (!q || !S.p) return; const gross = $('suchGross').checked; let treffer = 0, dateien = 0;
   for (const [pfad, inhalt] of Object.entries(S.p.dateien)) { if (istBinaer(inhalt)) continue; const zeilen = inhalt.split('\n'); const funde = [];
     zeilen.forEach((z, i) => { if ((gross ? z : z.toLowerCase()).includes(gross ? q : q.toLowerCase())) funde.push([i + 1, z]); });
@@ -2156,7 +2162,6 @@ function studioLayoutEinrichten() {
  }
  document.addEventListener('pointerdown',e=>{if(!menuPairs.some(([b,m])=>$(b).contains(e.target)||$(m).contains(e.target)))closeMenus()});
  const panel=$('studioPanelInhalt');document.querySelectorAll('#seite [data-panel]:not([data-panel="explorer"])').forEach(p=>panel.append(p));
- const oldSeite=seite;seite=function(n){if(n==='explorer'){oldSeite(n);return}document.querySelectorAll('#studioPanel [data-panel]').forEach(p=>p.hidden=p.dataset.panel!==n);$('studioPanel').hidden=false;if(n==='versionen')versionenZeigen();setTimeout(()=>$(n==='suche'?'suchQ':n==='versionen'?'versText':'themaWahl').focus(),30)};
  $('neuDatei').onclick=dateiDialog;$('baumNeu').onclick=dateiDialog;
  const actions={vorlagen:vorlagenWaehlen,ki:()=>window.SDKICodingUI?.openDialog(),weiter:studioStartSchliessen,oeffnen:()=>einfuegenDialog(''),start:studioStartZeigen,
   wechsel:async()=>{await projektListe();palette([...$('projektWahl').options].filter(o=>o.value!=='__neu').map(o=>({label:o.textContent,name:o.value})),'Projekt wechseln',x=>projektOeffnen(x.name))},umbenennen:projektUmbenennen,duplizieren:projektDuplizieren,ordner:()=>$('hochOrdner').click(),zip:()=>$('hochZip').click(),github:githubProjektImport,backup:cloudProjektBackup,seiten:meineSeiten,offline:seiteLoeschen,pc:aufPcAusfuehren,versionen:()=>seite('versionen'),loeschen:projektLoeschen,
@@ -2182,14 +2187,16 @@ async function starten() {
     if (l.length) await projektOeffnen(l.find(p => p.name === letztes) ? letztes : l[0].name);
     else { await projSchreiben({ name: 'meine-webseite', dateien: JSON.parse(JSON.stringify(VORLAGEN[0].dateien)), haupt: 'index.html', versionen: [], erstellt: Date.now() }); await projektOeffnen('meine-webseite'); ausgabe('👋 Willkommen im SD Code-Studio! Das ist deine erste Webseite – ändere den Code, die Vorschau rechts aktualisiert sich sofort.\n\n＋ Projekt = neue Vorlage · 📋 Einfügen = Anleitung aus ChatGPT & Co. automatisch als Projekt · F5 = Ausführen'); } }
   await projektListe(); verdrahten(); studioLayoutEinrichten();
-  if (!studioProjektParameter && !store.get('sdStudioDirekt',false) && !studioDesignImport) await studioStartZeigen(); setTimeout(() => S.cm && S.cm.refresh(), 300);
+  if (!studioProjektParameter && !store.get('sdStudioDirekt',false) && !studioDesignImport) await studioStartZeigen();
+  S.layoutBereit=true;
+  setTimeout(() => S.cm && S.cm.refresh(), 300);
 }
 function verdrahten() {
   document.querySelectorAll('#akt button[data-s]').forEach(b => b.onclick = () => { const offen = !$('app').classList.contains('seiteZu') && b.classList.contains('an'); $('app').classList.toggle('seiteZu', offen); seite(b.dataset.s); setTimeout(() => S.cm && S.cm.refresh(), 50); });
   document.querySelectorAll('#untenTabs button[data-u]').forEach(b => b.onclick = () => unten(b.dataset.u)); $('untenZu').onclick = () => { $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('projektWahl').onchange = () => { const v = $('projektWahl').value; if (v === '__neu') { projektListe(); vorlagenWaehlen(); } else projektOeffnen(v); };
   $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen; $('onlineBtn').onclick = onlineDialog;
-  $('starten').onclick = ausfuehren; $('kopfMehr').onclick = handyMehr; $('diagnoseBtn').onclick = diagnoseAnzeigen;
+  $('starten').onclick = ausfuehren; $('kopfMehr').onclick = handyMehr;
   $('diagnoseErneut').onclick = diagnoseAnzeigen; $('diagnoseKI').onclick = diagnoseKIStarten;
   $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;

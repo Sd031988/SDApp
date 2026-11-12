@@ -684,7 +684,7 @@ function setup(){
  for(const [id,mode] of [['kiCodeBtn','new'],['kiChangeBtn','change'],['kiCheckTab','check']]){const b=$(id);b.setAttribute('role','tab');b.setAttribute('aria-controls',mode==='check'?'kiPruefen':'kiAuthoring');b.addEventListener('click',()=>{if(overlay.hidden)openDialog(mode);else selectMode(mode)});}
  $('kiTabs').addEventListener('keydown',e=>{const tabs=[...$('kiTabs').querySelectorAll('[role=tab]')],i=tabs.indexOf(document.activeElement);if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const b=tabs[e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowRight'?1:-1)+3)%3];b.click();b.focus()}});
  $('kiReviewSlot').append($('agentReviewOverlay'));
- $('diagnoseBtn').onclick=()=>{diagnoseAnzeigen();$('kiDiagnoseSlot').append(document.querySelector('[data-feld=probleme]'));};
+ $('diagnoseBtn').addEventListener('click',()=>{diagnoseAnzeigen();$('kiDiagnoseSlot').append(document.querySelector('[data-feld=probleme]'));});
  const serviceBtn=$('kiServicesBtn'),serviceOverlay=$('kiServicesOverlay');
  if(serviceBtn&&serviceOverlay){
   serviceBtn.addEventListener('click',openServices);

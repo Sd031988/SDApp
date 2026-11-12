@@ -34,6 +34,7 @@ const moreGroups={
   for(const width of [1300,390]){
    const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
+   await page.addInitScript(()=>{if(!localStorage.getItem('sdStudioEinst'))localStorage.setItem('sdStudioEinst',JSON.stringify({konfetti:false}))});
    await page.goto(url,{waitUntil:'domcontentloaded'});
    await page.locator('#studioStart').waitFor({state:'visible'});
    fs.mkdirSync('studio-layout-artifacts',{recursive:true});
@@ -82,12 +83,12 @@ const moreGroups={
    assert.deepEqual(commands,baseline,'Every original palette command must be preserved');
    assert.equal(await page.locator('#palListe>div').count(),baseline.length);await page.keyboard.press('Escape');
    await page.locator('#startDirekt').evaluate(e=>{e.checked=true;e.dispatchEvent(new Event('change'))});
-   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof S!=='undefined'&&S.p&&S.gestartet&&typeof studioLayoutEinrichten==='function');
+   await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit);
    assert.equal(await page.locator('#studioStart').isVisible(),false);
    await page.evaluate(()=>store.set('sdStudioDirekt',false));
    const name=await page.evaluate(()=>S.p.name);
    await page.goto(url+'?projekt='+encodeURIComponent(name),{waitUntil:'domcontentloaded'});
-   await page.waitForFunction(()=>typeof S!=='undefined'&&S.p&&document.getElementById('kiBtn').onclick);
+   await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit);
    assert.equal(await page.locator('#studioStart').isVisible(),false);
    await page.setViewportSize({width:320,height:800});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
