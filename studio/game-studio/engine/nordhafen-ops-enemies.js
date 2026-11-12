@@ -12,7 +12,7 @@
  function step(enemy,player,dt,{visible=false,pursue=false,random=.5,patrolAxis='x',elapsed=Infinity}={}){
   if(enemy.health<=0)return {enemy:{...enemy,state:'dead'},shoot:false};
   const profile=TYPES[enemy.type]||TYPES.guard;
-  if(!awake(enemy,player,80))return {enemy,shoot:false,spread:0};
+  if(!awake(enemy,player,pursue?110:80))return {enemy,shoot:false,spread:0};
   if(elapsed<10)visible=false;
   const deltaX=player.x-enemy.x,deltaZ=player.z-enemy.z,distance=Math.hypot(deltaX,deltaZ);
   let state=enemy.state;
