@@ -46,7 +46,7 @@ function shoot(){
  const picked=scene.pickWithRay(ray,m=>m.isPickable!==false&&m.isVisible!==false&&m.visibility!==0);
  if(picked?.hit&&picked.distance<=120){
   const enemy=enemies.find(t=>t.mesh===picked.pickedMesh);
-  if(enemy){sound?.play('hit',Number($('volume').value));weapon=weaponRules.hit(weapon);enemy.state=enemyRules.damage(enemy.state,weaponRules.active(weapon).damage);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/enemyRules.TYPES[enemy.state.type].health;return;}
+  if(enemy){sound?.play('hit',Number($('volume').value));weapon=weaponRules.hit(weapon);enemy.state=enemyRules.damage(enemy.state,weaponRules.active(weapon).damage);hitUntil=now+180;status(enemy.state.health===0?'Gegner ausgeschaltet!':'Gegner getroffen: '+enemy.state.health+' HP');if(enemy.state.health===0){defeated++;if(mode==='royale'&&enemy.royaleId){royalePlayers[enemy.royaleId].alive=false;royalePlayers[0].kills++;}enemy.mesh.dispose();enemy.mesh=null;}else if(enemy.bar)enemy.bar.scaling.x=enemy.state.health/enemyRules.TYPES[enemy.state.type].health;return;}
   const target=targets.find(t=>t.mesh===picked.pickedMesh);
   if(target){sound?.play('hit',Number($('volume').value));weapon=weaponRules.hit(weapon);target.health=Math.max(0,target.health-weaponRules.active(weapon).damage);
    hitUntil=now+180;status(target.health===0?'Ziel ausgeschaltet!':'Treffer! Ziel-Leben: '+target.health);
