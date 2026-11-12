@@ -1,5 +1,7 @@
 /* Nordhafen Ops: opt-in drivable vehicle adapter for Freie Stadt.
- * Uses the existing Ops city rules, licensed Quaternius GLBs and Havok physics.
+ * Uses the existing Ops city rules, licensed Quaternius GLBs and Havok physics:
+ * raycast suspension per wheel, rear-wheel drive, brakes, handbrake and tyre grip.
+ * Tuning values live in nordhafen-ops-vehicle-config.js.
  * No changes to the legacy sd.auto / SD-Fahrzeug engine.
  */
 (function(root,factory){
@@ -34,24 +36,46 @@ function exitPoint(position,heading,side=1){
  return {x:position.x+Math.cos(heading)*direction*3.1,
   y:Math.max(1,position.y+.35),z:position.z-Math.sin(heading)*direction*3.1};
 }
-function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}}={}){
+function defaultConfig(){
+ const source=typeof globalThis!=='undefined'&&globalThis.SDNordhafenOpsVehicleConfig;
+ if(source)return source.PLAYER_CAR;
+ if(typeof require==='function'){try{return require('./nordhafen-ops-vehicle-config.js').PLAYER_CAR;}catch(_){}}
+ return null;
+}
+function maxSteerAt(cfg,speed){
+ const t=clamp(Math.abs(speed)/Math.max(1,cfg.maxSpeed),0,1);
+ return cfg.maxSteer+(cfg.minSteerAtSpeed-cfg.maxSteer)*t;
+}
+function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{},config=defaultConfig()}={}){
  if(!scene||!BABYLON||!cityRules||!spawn||!BABYLON.PhysicsAggregate)
   throw new TypeError('vehicle requires Havok scene, Babylon, city rules and spawn');
- const mass=1450,bodyWidth=1.95,bodyLength=4.25;
+ if(!config)throw new TypeError('vehicle requires nordhafen-ops-vehicle-config.js');
+ const cfg=config,mass=cfg.mass,V3=BABYLON.Vector3;
  const choice=modelChoice(model);
  let disposed=false,driving=false,loadGeneration=0,assetRoot=null,imported=null,modelLoaded=false;
  const chassis=BABYLON.MeshBuilder.CreateBox('ops-vehicle-chassis',
-  {width:bodyWidth,height:.72,depth:bodyLength},scene);
- chassis.position=new BABYLON.Vector3(spawn.x,spawn.y??1.05,spawn.z);
+  {width:cfg.body.width,height:cfg.body.height,depth:cfg.body.depth},scene);
+ chassis.position=new V3(spawn.x,spawn.y??cfg.spawnHeight+.1,spawn.z);
  chassis.rotationQuaternion=BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,spawn.heading||0);
  chassis.isVisible=false;chassis.isPickable=false;chassis.metadata={opsVehicle:true};
  const aggregate=new BABYLON.PhysicsAggregate(chassis,BABYLON.PhysicsShapeType.BOX,
-  {mass,friction:.65,restitution:.04},scene);
+  {mass,friction:.35,restitution:.05},scene);
  aggregate.shape.filterMembershipMask=4;
- aggregate.body.setAngularDamping(.88);
- aggregate.body.setLinearDamping(.08);
+ const body=aggregate.body;
+ body.setAngularDamping(cfg.angularDamping);
+ body.setLinearDamping(cfg.linearDamping);
+ const comLocal=new V3(0,cfg.centerOfMassY,0);
+ if(body.getMassProperties&&body.setMassProperties){
+  const props=body.getMassProperties();
+  body.setMassProperties({...props,mass,centerOfMass:comLocal});
+ }
  const physics=scene.getPhysicsEngine();
  const ray=typeof BABYLON.PhysicsRaycastResult==='function'?new BABYLON.PhysicsRaycastResult():null;
+ const wheelLoad=mass*9.81/4;
+ const springRate=wheelLoad/cfg.staticCompression;
+ const damper=2*cfg.dampingRatio*Math.sqrt(springRate*mass/4);
+ const wheels=[[-1,1,true],[1,1,true],[-1,-1,false],[1,-1,false]].map(([sx,sz,front])=>
+  ({local:new V3(sx*cfg.wheelX,cfg.wheelY,sz*cfg.wheelZ),front,grounded:false,compression:0,load:0}));
  let state=cityRules.car(spawn.x,spawn.z,spawn.heading||0),speedKmh=0,steering=0;
  function makeFallback(){
   const root=new BABYLON.TransformNode('ops-car-fallback',scene);root.parent=chassis;
@@ -119,38 +143,74 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
   const point=exitPoint(chassis.position,heading());
   driving=false;state=cityRules.exit(state);return point;
  }
- function suspension(dt){
-  if(!ray||!physics?.raycastToRef)return;
-  const world=chassis.computeWorldMatrix(true),velocity=aggregate.body.getLinearVelocity();
-  for(const x of [-.76,.76])for(const z of [-1.45,1.45]){
-   const from=BABYLON.Vector3.TransformCoordinates(new BABYLON.Vector3(x,-.1,z),world);
-   const to=from.add(new BABYLON.Vector3(0,-1,0));
+ function cross(a,b){return new V3(a.y*b.z-a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);}
+ function dot(a,b){return a.x*b.x+a.y*b.y+a.z*b.z;}
+ // One Havok step of tyre/suspension forces. Rear-wheel drive, four-wheel brakes,
+ // lateral grip limited by wheel load (friction circle approximation).
+ function wheelForces(t,input){
+  const world=chassis.computeWorldMatrix(true);
+  const up=V3.TransformNormal(new V3(0,1,0),world).normalize();
+  const f=V3.TransformNormal(new V3(0,0,1),world).normalize();
+  const right=cross(up,f);
+  const com=V3.TransformCoordinates(comLocal,world);
+  const v=body.getLinearVelocity(),w=body.getAngularVelocity();
+  const longitudinal=dot(v,f);
+  const throttle=driving?clamp(Number(input.throttle)||0,-1,1):0;
+  let drive=0,brake=driving?clamp(Number(input.brake)||0,0,1):(Math.abs(longitudinal)>.3?.25:0);
+  if(throttle>0){if(longitudinal<-1)brake=Math.max(brake,1);else if(longitudinal<cfg.maxSpeed)drive=cfg.engineForce*throttle;}
+  else if(throttle<0){if(longitudinal>1)brake=Math.max(brake,1);else if(longitudinal>-cfg.maxReverseSpeed)drive=cfg.reverseForce*throttle;}
+  const handbrake=driving&&!!input.handbrake;
+  const target=driving?clamp(Number(input.steer)||0,-1,1)*maxSteerAt(cfg,longitudinal):0;
+  steering+=clamp(target-steering,-cfg.steerSpeed*t,cfg.steerSpeed*t);
+  const steerF=f.scale(Math.cos(steering)).add(right.scale(Math.sin(steering)));
+  const steerR=cross(up,steerF);
+  let grounded=0;
+  for(const wheel of wheels){
+   const from=V3.TransformCoordinates(wheel.local,world);
+   const to=from.add(up.scale(-cfg.restLength));
+   wheel.grounded=false;wheel.compression=0;wheel.load=0;
+   if(!ray||!physics?.raycastToRef)continue;
    ray.reset?.();
    physics.raycastToRef(from,to,ray,{collideWith:0xffffffff&~4});
-   if(!ray.hasHit||ray.body===aggregate.body||!ray.hitPointWorld)continue;
-   const dist=BABYLON.Vector3.Distance(from,ray.hitPointWorld);
-   const compression=clamp(.46-dist,0,.35);
-   const force=clamp(compression*mass*9.81/(4*.18)-velocity.y*mass*.8,
-    0,mass*9.81*.8);
-   aggregate.body.applyImpulse(new BABYLON.Vector3(0,force*dt,0),from);
+   if(!ray.hasHit||ray.body===body||!ray.hitPointWorld)continue;
+   const dist=V3.Distance(from,ray.hitPointWorld);
+   const compression=clamp(cfg.restLength-dist,0,cfg.restLength);
+   const r=from.subtract(com);
+   const vp=v.add(cross(w,r));
+   const closing=-dot(vp,up);
+   const load=clamp(springRate*compression+damper*closing,0,wheelLoad*cfg.maxSuspensionForce);
+   wheel.grounded=true;wheel.compression=compression;wheel.load=load;grounded++;
+   let impulse=up.scale(load*t);
+   const fw=wheel.front?steerF:f,rw=wheel.front?steerR:right;
+   const vLong=dot(vp,fw),vLat=dot(vp,rw);
+   const limit=(wheel.front?cfg.gripFront:cfg.gripRear)*load;
+   const sideGrip=!wheel.front&&handbrake?cfg.handbrakeRearGrip:1;
+   let longForce=0;
+   if(!wheel.front)longForce+=drive/2;
+   const stopping=brake*cfg.brakeForce/4+(handbrake&&!wheel.front?cfg.handbrakeForce/2:0);
+   if(stopping>0&&Math.abs(vLong)>.05)longForce-=Math.sign(vLong)*Math.min(stopping,Math.abs(vLong)*mass/4/t);
+   longForce=clamp(longForce,-limit,limit);
+   // Friction circle, softened: drive/brake force only partly reduces side grip.
+   const latLimit=Math.sqrt(Math.max(0,limit*limit-.35*longForce*longForce))*sideGrip;
+   const latForce=clamp(-vLat*cfg.corneringStiffness*mass/4,-latLimit,latLimit);
+   impulse=impulse.add(fw.scale(longForce*t)).add(rw.scale(latForce*t));
+   body.applyImpulse(impulse,from);
   }
+  if(grounded>0){
+   const resist=cfg.rollingResistance*Math.sign(longitudinal)*Math.min(1,Math.abs(longitudinal))
+    +cfg.airDrag*longitudinal*Math.abs(longitudinal);
+   body.applyImpulse(f.scale(-resist*t),com);
+  }
+  return {longitudinal,grounded};
  }
  function update(dt,input={}){
   if(disposed)return;
-  const t=clamp(Number.isFinite(dt)?dt:0,0,.05),f=forward();
-  const velocity=aggregate.body.getLinearVelocity();
-  const longitudinal=BABYLON.Vector3.Dot(velocity,f);
-  speedKmh=longitudinal*3.6;
+  const t=clamp(Number.isFinite(dt)?dt:0,0,.05);
+  if(t<=0)return;
+  const result=wheelForces(t,input);
+  speedKmh=result.longitudinal*3.6;
   if(!driving)return;
-  const desired=cityRules.drive({...state,heading:heading()},t,input);
-  const target=desired.speed,force=clamp((target-longitudinal)*mass*5,-mass*12,mass*9);
-  aggregate.body.applyImpulse(f.scale(force*t),chassis.position);
-  const angular=aggregate.body.getAngularVelocity(),yawRate=Math.tan(desired.steering)*longitudinal/2.6;
-  aggregate.body.setAngularVelocity(new BABYLON.Vector3(
-   angular.x,angular.y+clamp(yawRate-angular.y,-2.5*t,2.5*t),angular.z));
-  steering=desired.steering;
-  suspension(t);
-  state={...desired,x:chassis.position.x,z:chassis.position.z,heading:heading()};
+  state={...state,speed:result.longitudinal,steering,x:chassis.position.x,z:chassis.position.z,heading:heading()};
  }
  function chase(camera,dt){
   if(!driving||disposed)return;
@@ -171,7 +231,9 @@ function create({scene,BABYLON,cityRules,spawn,model='sportscar',onStatus=()=>{}
  return {enter,exit,update,chase,dispose,position,
   get driving(){return driving;},get speedKmh(){return speedKmh;},
   get modelLoaded(){return modelLoaded;},get model(){return choice;},
-  get steering(){return steering;}};
+  get steering(){return steering;},
+  get wheelsOnGround(){return wheels.filter(w=>w.grounded).length;},
+  get physicsBody(){return body;}};
 }
 return Object.freeze({MODELS,modelChoice,near,keysToInput,canExit,exitPoint,create});
 });

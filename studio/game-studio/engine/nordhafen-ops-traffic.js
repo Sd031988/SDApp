@@ -1,6 +1,7 @@
 /* Visible lightweight traffic for Nordhafen Ops Freie Stadt.
- * Reuses nordhafen-ops-city.js movement rules. Not yet collidable Havok cars:
- * vehicle physics stays with the player's drivable SUV/GLB adapter.
+ * Reuses nordhafen-ops-city.js movement rules. Each AI car carries a kinematic
+ * (ANIMATED) Havok box so the player's car collides with it; AI cars themselves
+ * have no driving physics (performance on mobile).
  */
 (function(root,factory){
  const api=factory();
@@ -43,6 +44,12 @@ function advance(car,dt,player,worldSize=512,cityRules){
  next[other]=car.road;
  return next;
 }
+function colliderSize(){
+ const source=typeof globalThis!=='undefined'&&globalThis.SDNordhafenOpsVehicleConfig;
+ if(source)return source.TRAFFIC_CAR.collider;
+ if(typeof require==='function'){try{return require('./nordhafen-ops-vehicle-config.js').TRAFFIC_CAR.collider;}catch(_){}}
+ return {width:1.8,height:1.35,depth:3.7};
+}
 function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,seed=1337}={}){
  if(!scene||!BABYLON||!cityRules)throw new TypeError('traffic needs scene, Babylon, city rules');
  const objects=[],materials=[],cars=plan(worldSize,mobile?Math.min(5,count):count,seed);
@@ -72,7 +79,21 @@ function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,see
   }
   root.position.set(car.x,0,car.z);root.rotation.y=car.heading;
   objects.push(root);
-  return {root,state:car,visible:true};
+  let collider=null;
+  if(BABYLON.PhysicsAggregate&&scene.getPhysicsEngine?.()){
+   const size=colliderSize();
+   collider=BABYLON.MeshBuilder.CreateBox('ops-traffic-collider-'+car.id,{width:size.width,height:size.height,depth:size.depth},scene);
+   collider.isVisible=false;collider.isPickable=false;
+   collider.position.set(car.x,size.height/2+.05,car.z);
+   collider.rotationQuaternion=BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,car.heading);
+   const aggregate=new BABYLON.PhysicsAggregate(collider,BABYLON.PhysicsShapeType.BOX,{mass:0,friction:.6},scene);
+   aggregate.body.setMotionType(BABYLON.PhysicsMotionType.ANIMATED);
+   aggregate.body.disablePreStep=false; // body follows the mesh transform every step
+   aggregate.shape.filterMembershipMask=8;
+   collider.metadata={opsTraffic:true,aggregate};
+   objects.push(collider);
+  }
+  return {root,collider,state:car,visible:true};
  });
  let disposed=false,visible=0;
  function update(dt,player){
@@ -83,12 +104,17 @@ function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,see
    const v=item.state;
    const near=!!player&&Math.hypot(v.x-player.x,v.z-player.z)<(mobile?105:155);
    if(near){item.root.position.set(v.x,0,v.z);item.root.rotation.y=v.heading;visible++;}
+   if(item.collider){
+    item.collider.position.x=v.x;item.collider.position.z=v.z;
+    item.collider.rotationQuaternion=BABYLON.Quaternion.RotationAxis(BABYLON.Axis.Y,v.heading);
+   }
    if(near!==item.visible){item.root.setEnabled(near);item.visible=near;}
   }
   return visible;
  }
  function dispose(){
   if(disposed)return;disposed=true;
+  for(const item of carsInWorld)item.collider?.metadata?.aggregate?.dispose();
   for(const root of objects)root.dispose(false,false);
   for(const m of materials)m.dispose();
   objects.length=0;
@@ -96,7 +122,8 @@ function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,see
  return Object.freeze({update,dispose,
   get visible(){return visible;},
   get count(){return carsInWorld.length;},
-  get positions(){return carsInWorld.filter(x=>x.visible).map(x=>({x:x.state.x,z:x.state.z}));}
+  get positions(){return carsInWorld.filter(x=>x.visible).map(x=>({x:x.state.x,z:x.state.z}));},
+  get colliders(){return carsInWorld.filter(x=>x.collider).map(x=>({position:x.collider.position,physicsBody:x.collider.metadata.aggregate.body}));}
  });
 }
 return Object.freeze({plan,obstacle,advance,create});

@@ -37,7 +37,7 @@ function create({canvas,camera,document:doc,signal,fire=()=>{},onVehicle=()=>{}}
   const code=button.dataset.footKey,action=button.dataset.footAction;
   button.addEventListener('pointerdown',e=>{
    e.preventDefault();
-   button.setPointerCapture?.(e.pointerId);
+   try{button.setPointerCapture?.(e.pointerId);}catch(_){/* pointer already released */}
    if(code){const wasHeld=[...held.values()].includes(code);held.set(e.pointerId,code);if(!wasHeld)emit('keydown',code);}
    else if(action==='fire')fire();
    else if(action==='reload'){emit('keydown','KeyR');emit('keyup','KeyR');}
@@ -51,7 +51,7 @@ function create({canvas,camera,document:doc,signal,fire=()=>{},onVehicle=()=>{}}
  canvas.addEventListener('pointerdown',e=>{
   if(e.pointerType!=='touch'||lookPointer!==null)return;
   lookPointer=e.pointerId;lookX=e.clientX;lookY=e.clientY;
-  canvas.setPointerCapture?.(e.pointerId);
+  try{canvas.setPointerCapture?.(e.pointerId);}catch(_){/* pointer already released */}
  },{signal});
  canvas.addEventListener('pointermove',e=>{
   if(e.pointerId!==lookPointer)return;

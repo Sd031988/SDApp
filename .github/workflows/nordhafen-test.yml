@@ -7,6 +7,8 @@ on:
       - 'studio/game-studio/engine/nordhafen.test.cjs'
       - 'studio/game-studio/engine/nordhafen-ops-*'
       - 'tests/studio/nordhafen-ops-browser.test.cjs'
+      - 'tests/studio/nordhafen-ops-physics.test.cjs'
+      - 'tests/studio/nordhafen-ops-perf.cjs'
       - 'studio/game-studio/engine/sd-taktik-bewegung.js'
       - 'studio/game-studio/engine/sd-taktik-bewegung.test.cjs'
       - 'studio/game-studio/engine/sd-engine.js'
@@ -30,10 +32,14 @@ jobs:
           node-version: '22'
       - name: Nordhafen Editor-Map und Spielskript testen
         run: node --test studio/game-studio/engine/nordhafen.test.cjs studio/game-studio/engine/sd-taktik-bewegung.test.cjs
+      - name: Havok-Fahrphysik (echtes Havok-WASM in Node) testen
+        run: |
+          npm install --no-save --no-package-lock babylonjs @babylonjs/havok
+          node --test tests/studio/nordhafen-ops-physics.test.cjs
 
   nordhafen-browser:
     runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
-    timeout-minutes: 8
+    timeout-minutes: 14
     permissions:
       contents: read
     steps:
@@ -50,6 +56,22 @@ jobs:
       - name: Nordhafen Ops große Stadt und Autosteuerung in Chromium testen
         if: always()
         run: node tests/studio/nordhafen-ops-browser.test.cjs
+      - name: Nordhafen Ops FPS messen (SwiftShader, nur Vergleichswert)
+        if: always()
+        continue-on-error: true
+        env:
+          NORDHAFEN_PERF_OUT: game-studio-workspace-artifacts/nordhafen-ops-perf.json
+        run: |
+          mkdir -p game-studio-workspace-artifacts
+          node tests/studio/nordhafen-ops-perf.cjs
+      - name: FPS-Messung archivieren
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nordhafen-ops-perf
+          path: game-studio-workspace-artifacts/nordhafen-ops-perf.json
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Desktop- und Mobil-Screenshots archivieren
         if: always()
         uses: actions/upload-artifact@v4
