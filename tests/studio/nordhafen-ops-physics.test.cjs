@@ -158,3 +158,32 @@ test('AI traffic cars carry kinematic Havok colliders that block the player car'
  assert.ok(closest>1.7,'player car stopped at the AI car, centre distance '+closest.toFixed(2)+' m');
  car.dispose();cars.dispose();scene.dispose();engine.dispose();
 });
+test('the car drives over a 15 cm curb – it bumps but does not take off or get stuck',()=>{
+ const streets=require(path.join(engineDir,'nordhafen-ops-streets.js'));
+ for(const [label,throttle,seconds] of [['slow',.3,6],['fast',1,3.2]]){
+  const engine=new BABYLON.NullEngine(),scene=new BABYLON.Scene(engine);
+  scene.enablePhysics(new BABYLON.Vector3(0,-9.81,0),new BABYLON.HavokPlugin(false,havok));
+  new BABYLON.FreeCamera('test-camera',new BABYLON.Vector3(0,5,-10),scene);
+  const ground=BABYLON.MeshBuilder.CreateBox('ground',{width:1200,height:1,depth:1200},scene);ground.position.set(256,-.5,256);
+  new BABYLON.PhysicsAggregate(ground,BABYLON.PhysicsShapeType.BOX,{mass:0,friction:1},scene);
+  const walks=streets.create({scene,BABYLON,worldSize:512});
+  assert.equal(walks.colliderCount,256,'every sidewalk strip is a Havok collider');
+  // Road of the street at x=256..269, heading +x across the sidewalk at x=266..269.
+  const car=vehicles.create({scene,BABYLON,cityRules:city,spawn:{x:259,y:1.05,z:300,heading:Math.PI/2},model:'suv'});
+  for(let i=0;i<60;i++){car.update(STEP,{});scene.render();}
+  const restY=car.position().y;
+  car.enter(car.position());
+  let maxY=-Infinity,minWheels=4,maxUpTilt=1;
+  for(let i=0;i<Math.round(seconds/STEP);i++){
+   car.update(STEP,{throttle});scene.render();
+   maxY=Math.max(maxY,car.position().y);minWheels=Math.min(minWheels,car.wheelsOnGround);
+   const up=BABYLON.Vector3.TransformNormal(new BABYLON.Vector3(0,1,0),scene.getMeshByName('ops-vehicle-chassis').computeWorldMatrix(true)).y;
+   maxUpTilt=Math.min(maxUpTilt,up);
+  }
+  assert.ok(car.position().x>272,label+': crossed the curb, x='+car.position().x.toFixed(1));
+  assert.ok(maxY<restY+.45,label+': no take-off (max height +'+(maxY-restY).toFixed(2)+' m)');
+  assert.ok(maxUpTilt>.9,label+': stays upright over the curb');
+  assert.ok(minWheels>=2,label+': at least two wheels keep contact');
+  car.dispose();walks.dispose();scene.dispose();engine.dispose();
+ }
+});

@@ -5,17 +5,19 @@
  const TYPES=Object.freeze({guard:Object.freeze({health:50,speed:2.6,detect:35,damage:8,color:'#4b515b',role:'warrior'}),scout:Object.freeze({health:32,speed:4.1,detect:45,damage:5,color:'#326e4a',role:'ranger'}),heavy:Object.freeze({health:120,speed:1.5,detect:28,damage:15,color:'#555f78',role:'monk'})});
  function awake(enemy,player,range=70){return Math.hypot(enemy.x-player.x,enemy.z-player.z)<=range;}
  function hear(enemy,shot,range=60){return shot&&Math.hypot(enemy.x-shot.x,enemy.z-shot.z)<=range&&enemy.health>0?{...enemy,state:'alert',time:0}:enemy;}
- function spawn(id,x,z,type='guard'){const profile=TYPES[type]||TYPES.guard;return {id,x,z,type:TYPES[type]?type:'guard',homeX:x,homeZ:z,health:profile.health,state:'patrol',time:0,shotCooldown:1+id*.13,patrolPhase:id*.8};}
- function damage(enemy,amount){const health=Math.max(0,enemy.health-Math.max(0,amount));return {...enemy,health,state:health===0?'dead':enemy.state};}
+ function spawn(id,x,z,type='guard'){const profile=TYPES[type]||TYPES.guard;return {id,x,z,type:TYPES[type]?type:'guard',homeX:x,homeZ:z,health:profile.health,armor:0,weaponLevel:id%4===0?1:0,state:'patrol',time:0,shotCooldown:1+id*.13,patrolPhase:id*.8};}
+ function damage(enemy,amount){const raw=Math.max(0,amount),absorbed=Math.min(enemy.armor||0,raw*.65),armor=Math.max(0,(enemy.armor||0)-absorbed),health=Math.max(0,enemy.health-(raw-absorbed));return {...enemy,armor,health,state:health===0?'dead':enemy.state};}
+ function heal(enemy,amount){const max=TYPES[enemy.type]?.health||MAX_HEALTH;return {...enemy,health:Math.min(max,enemy.health+Math.max(0,amount))};}
  function hurt(health,amount){return Math.max(0,health-Math.max(0,amount));}
- function step(enemy,player,dt,{visible=false,random=.5,patrolAxis='x',elapsed=Infinity}={}){
+ function step(enemy,player,dt,{visible=false,pursue=false,pursuitRange=110,random=.5,patrolAxis='x',elapsed=Infinity}={}){
   if(enemy.health<=0)return {enemy:{...enemy,state:'dead'},shoot:false};
   const profile=TYPES[enemy.type]||TYPES.guard;
-  if(!awake(enemy,player,80))return {enemy,shoot:false,spread:0};
+  if(!awake(enemy,player,pursue?Math.max(110,pursuitRange):80))return {enemy,shoot:false,spread:0};
   if(elapsed<10)visible=false;
   const deltaX=player.x-enemy.x,deltaZ=player.z-enemy.z,distance=Math.hypot(deltaX,deltaZ);
   let state=enemy.state;
   if(visible&&distance<profile.detect)state=distance<14?'shoot':'chase';
+  else if(pursue&&distance<Math.max(110,pursuitRange))state='chase';
   else if(state==='shoot'||state==='chase')state=distance<45?'search':'patrol';
   else if(state==='search'&&enemy.time>3)state='patrol';
   else if(state==='alert'&&enemy.time>12)state='search';
@@ -32,5 +34,5 @@
   const spread=(random-.5)*.35;
   return {enemy:{...enemy,x,z,state,time:state===enemy.state?enemy.time+dt:0,shotCooldown:shoot?1.2+enemy.id*.11:cooldown},shoot,spread};
  }
- return Object.freeze({MAX_HEALTH,PLAYER_HEALTH,TYPES,awake,hear,spawn,damage,hurt,step});
+ return Object.freeze({MAX_HEALTH,PLAYER_HEALTH,TYPES,awake,hear,spawn,damage,heal,hurt,step});
 });

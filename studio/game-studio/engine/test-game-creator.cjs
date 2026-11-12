@@ -58,7 +58,8 @@ const files = [
   'nordhafen-ops-vehicles.test.cjs',
   'nordhafen-ops-playable-city.test.cjs',
   'nordhafen-ops-traffic-minimap.test.cjs',
-  'nordhafen-ops-royale.test.cjs'
+  'nordhafen-ops-royale.test.cjs',
+  'nordhafen-ops-pedestrians.test.cjs'
 ];
 for (const file of files) {
   if (!fs.statSync(path.join(root, file)).isFile())
