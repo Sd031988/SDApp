@@ -12,7 +12,16 @@
   const colliders=new Map(),pressed=new Set();
   let status='Physik wird geladen',facing=null,character=null,characterState='lädt',animation='idle',modelGeneration=0;
   const pointerDocument=canvas.ownerDocument||(typeof document!=='undefined'?document:null);
-  function pointerClick(){if(ready&&canvas.requestPointerLock)canvas.requestPointerLock();}
+  function pointerClick(){
+   // Touch devices use drag-to-look in Nordhafen Ops. Pointer lock can reject
+   // on iOS Safari and must never interrupt a mobile camera gesture.
+   const view=pointerDocument?.defaultView;
+   if(view?.matchMedia?.('(pointer: coarse)').matches)return;
+   if(ready&&canvas.requestPointerLock){
+    const request=canvas.requestPointerLock();
+    request?.catch?.(()=>{});
+   }
+  }
   function pointerMove(e){if(!ready||!pointerDocument||pointerDocument.pointerLockElement!==canvas)return;
    camera.alpha-=(e.movementX||0)*.0025;
    camera.beta=Math.max(camera.lowerBetaLimit??.35,Math.min(camera.upperBetaLimit??2.7,camera.beta-(e.movementY||0)*.0025));
