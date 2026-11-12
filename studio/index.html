@@ -162,36 +162,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
 <script defer src="../sd-workspace.js?v=20261109-stil-7" data-sd-app="studio" data-sd-mode="compact"></script>
 <style>/* größere Tippflächen auf Touch-Geräten */@media (pointer:coarse){#leerNeu,#leerVorlage,#leerEinf,#agentReviewBtn{min-height:36px}}</style>
+<link rel="stylesheet" href="./studio-layout.css?v=20261112">
 </head>
 <body>
 <div id="app" hidden>
-  <div id="kopf">
-    <div id="kopfWerkzeuge" tabindex="0" aria-label="Projektwahl und Werkzeuge, horizontal scrollbar">
-    <span class="logo">⟨/⟩ SD Code-Studio</span>
-    <select id="projektWahl" title="Projekt wechseln"></select>
-    <button id="befehleBtn" title="Alle Befehle (Strg+Umschalt+P)">⌘ <span class="lang">Befehle</span></button>
-    <button id="neuDatei" title="Neue Datei">＋ <span class="lang">Datei</span></button>
-    <button id="neuProjekt" title="Neues Projekt mit Vorlage">＋ <span class="lang">Projekt</span></button>
-    <button id="einfuegenBtn" title="Anleitung oder Code einfügen → Ordner und Dateien automatisch">📋 <span class="lang">Einfügen</span></button>
-    <button id="kiCodeBtn" title="Mit KI programmieren – ChatGPT/Gemini-Code prüfen und sicher einfügen" type="button">✨ KI Coding</button>
-    <button id="kiChangeBtn" title="Wünsche eine Änderung an deinem geöffneten Projekt und übernimm den korrigierten Code" type="button">✏️ Ändern</button>
-    <button id="kiServicesBtn" title="Google KI, Google AI Studio und ChatGPT öffnen oder dort anmelden" type="button">🤖 KI-Dienste</button>
-    <button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button>
-    <button id="agentReviewBtn" type="button" title="Mehrstufiger Projekt-Review: Plan, Tests, Sicherheit und Freigabe – nur lesend">🧠 Projekt-Review</button>
-    <a class="sd-hub-link" href="./devtools.html" target="_blank" rel="noopener" title="Lokale Entwicklerwerkzeuge in einem neuen Tab öffnen">🧰 Entwickler-Tools ↗</a>
-    <a class="sd-hub-link" href="./jpeg-xl.html" target="_blank" rel="noopener" title="JPEG XL und kompatible Bild-Fallbacks für Webseiten vorbereiten">🖼 Bild-Assets ↗</a>
-    <a class="sd-hub-link" href="./game-studio/index.html" target="_blank" rel="noopener" title="3D-Spiele und Spielwelten gestalten">🎮 3D Game-Studio ↗</a>
-    <button id="designBtn" title="Im Design-Studio gestalten – ohne Code">🎨 <span class="lang">Design</span></button>
-    <button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button>
-    <span class="luecke"></span>
-    <a class="sd-hub-link" href="../mein-sd-hub/#projekte" target="_blank" rel="noopener" title="Mein SD Hub Projektwerkstatt in einem neuen Tab öffnen">🏠 Mein SD Hub ↗</a>
-    </div>
-    <div id="kopfAktionen">
-      <button id="kopfMehr" type="button" title="Alle wichtigen Werkzeuge anzeigen" aria-label="Weitere Werkzeuge anzeigen">☰ Mehr</button>
-      <button id="kont"></button>
-      <button id="starten" class="primary" type="button" title="Projekt ausführen (F5 oder Strg+Enter)" aria-keyshortcuts="F5 Control+Enter">▶ Ausführen</button>
-    </div>
-  </div>
+<div id="kopf" role="toolbar" aria-label="Projekt und Aktionen"><div id="kopfWerkzeuge"><button type="button" id="projektMenuBtn">📁 <span id="kopfProjektName">Projekt</span> ▾</button><button id="neuDatei" title="Neue Datei">＋ <span class="lang">Datei</span></button><button type="button" id="kiBtn">✨ KI</button></div><div id="kopfAktionen"><button type="button" id="kopfMehr">☰ Mehr</button><button id="starten" class="primary" type="button" title="Projekt ausführen (F5 oder Strg+Enter)" aria-keyshortcuts="F5 Control+Enter">▶ Ausführen</button></div></div>
   <div id="akt">
     <button data-s="explorer" class="an" title="Explorer">📁</button>
     <button data-s="suche" title="In allen Dateien suchen (Strg+Umschalt+F)">🔍</button>
@@ -200,17 +175,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
   <div id="seite">
     <div data-panel="explorer">
-      <div class="sk"><span id="projektName">PROJEKT</span><button id="baumNeu" title="Neue Datei">＋</button><button id="baumOrdner" title="Neuer Ordner">📁</button><button id="baumHoch" title="Dateien hochladen">⬆</button></div>
+      <div class="sk"><span id="projektName">PROJEKT</span><button id="baumNeu" title="Neue Datei">＋ Datei</button><button id="baumOrdner" title="Neuer Ordner">＋ Ordner</button></div>
       <div id="baum"></div>
-      <div style="padding:8px 10px"><a href="./devtools.html" target="_blank" rel="noopener" class="sd-hub-link" style="display:inline-block" title="Lokale Entwicklerwerkzeuge öffnen">🧰 Entwickler-Tools ↗</a></div>
-      <div style="padding:8px 10px"><a href="./game-studio/index.html" target="_blank" rel="noopener" class="sd-hub-link" style="display:inline-block" title="3D-Spielwelten erstellen">🎮 3D Game-Studio ↗</a></div>
-      <div class="sk" title="Fertige Dateien zum Programmieren – Bereich aufklappen, Datei antippen"><span>＋ DATEIEN HINZUFÜGEN</span></div>
-      <div id="katalog"></div>
-      <div class="sk"><span>PROJEKT</span></div>
-      <div class="sl"><button id="zipBtn">⬇ Als ZIP herunterladen</button><button id="htmlBtn">⬇ Als eine HTML-Datei</button>
-        <button onclick="document.getElementById('hochOrdner').click()">⬆ Ordner hochladen</button><button onclick="document.getElementById('hochZip').click()">⬆ ZIP öffnen</button>
-        <div class="hinweis">Deine Projekte liegen nur in diesem Browser. Sichere wichtige Projekte als ZIP. Eine automatische GitHub-/Cloud-Synchronisierung erfordert eine separate, ausdrücklich erlaubte Verbindung.</div>
-        <button id="projektCheckBtn" type="button">🛡 Projekt auf Veröffentlichung prüfen</button></div>
     </div>
     <div data-panel="suche" hidden>
       <div class="sk"><span>SUCHEN</span></div>
@@ -255,7 +221,8 @@ button,input,select,textarea{font:inherit;color:inherit}
       </div>
     </div>
     <div id="unten">
-      <div id="untenTabs"><button data-u="ausgabe" class="an">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
+      <div id="untenTabs"><button data-u="ausgabe" class="an">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
+      <div data-feld="werkzeuge" hidden><button data-studio-action="fehlerfinder">Fehlerfinder</button><button data-studio-action="review">Projekt-Review</button><button data-studio-action="suche">In allen Dateien suchen</button><button data-studio-action="formatieren">Code formatieren</button><button data-studio-action="json">JSON prüfen</button><button data-studio-action="pcvorschau">Vorschau PC</button><button data-studio-action="handyvorschau">Vorschau Handy</button><button data-studio-action="mehr">☰ Mehr</button><a class="knopfLink" href="./devtools.html" target="_blank" rel="noopener">Entwickler-Tools ↗</a></div>
       <div data-feld="ausgabe"><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
       <div data-feld="konsole" hidden><div id="konsoleAus"></div><div class="reihe"><input id="konsoleEin" placeholder="❯ JavaScript in der Vorschau ausführen, z. B. document.title" style="flex:1"><button id="konsoleLeer">Leeren</button></div></div>
       <div data-feld="probleme" hidden>
@@ -270,8 +237,15 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
   <div id="status"><span id="sbDatei"></span><span id="sbPos"></span><span class="luecke"></span><span id="sbProbleme">⨯ 0</span><span id="sbSprache"></span><span id="sbGesp"></span></div>
   <div id="tasten"></div>
-  <div id="handyNav"><button data-a="dateien"><span>📁</span><small>Dateien</small></button><button data-a="code" class="an"><span>✏️</span><small>Code</small></button><button data-a="vorschau"><span>👁</span><small>Vorschau</small></button><button data-a="ausgabe"><span>⌨</span><small>Ausgabe</small></button><button data-a="mehr"><span>⋯</span><small>Mehr</small></button></div>
+  <div id="handyNav"><button data-a="dateien">📁 Dateien</button><button data-a="code">✏️ Code</button><button data-a="vorschau">👁 Vorschau</button><button data-a="werkzeuge">🛠 Werkzeuge</button></div>
 </div>
+
+<select id="projektWahl" hidden aria-label="Projekt wechseln"></select>
+<div id="projektMenu" class="studioMenu" hidden aria-label="Projektmenü"><section role="group" aria-label="Projekt"><h3>Projekt</h3><button id="neuProjekt" title="Neues Projekt mit Vorlage">Neues Projekt (Vorlage)</button><button type="button" data-studio-action="wechsel">Projekt wechseln</button><button type="button" data-studio-action="umbenennen">Umbenennen</button><button type="button" data-studio-action="duplizieren">Duplizieren</button></section><section role="group" aria-label="Hinein & heraus"><h3>Hinein & heraus</h3><button id="baumHoch" title="Dateien hochladen">Dateien hochladen</button><button type="button" data-studio-action="ordner">Ordner hochladen</button><button type="button" data-studio-action="zip">ZIP hochladen</button><button id="einfuegenBtn" title="Anleitung oder Code einfügen → Ordner und Dateien automatisch">Anleitung oder Code einfügen</button><button type="button" data-studio-action="github">GitHub importieren</button><button id="zipBtn">Als ZIP</button><button id="htmlBtn">Als eine HTML-Datei</button><button type="button" data-studio-action="backup">Cloud-Backup</button></section><section role="group" aria-label="Teilen"><h3>Teilen</h3><button id="onlineBtn" title="Online stellen – eigener Link für alle (mit Zugangsschlüssel)">🌐 <span class="lang">Online stellen</span></button><button type="button" data-studio-action="seiten">Meine Seiten online</button><button type="button" data-studio-action="offline">Offline nehmen</button><button type="button" data-studio-action="pc">Auf meinem PC ausführen</button><button id="projektCheckBtn" type="button">🛡 Projekt auf Veröffentlichung prüfen</button></section><section role="group" aria-label="Sicherheit"><h3>Sicherheit</h3><button type="button" data-studio-action="versionen">Versionen</button><button type="button" data-studio-action="loeschen">Projekt löschen</button><button id="kont"></button></section><p class="hinweis">Deine Projekte liegen nur in diesem Browser. Sichere wichtige Projekte als ZIP. GitHub-/Cloud-Synchronisierung erfordert eine separate, ausdrücklich erlaubte Verbindung.</p></div>
+<div id="mehrMenu" class="studioMenu" hidden aria-label="Mehr"><section role="group" aria-label="Bauen & veröffentlichen"><h3>Bauen & veröffentlichen</h3><button type="button" data-studio-action="builder">App-Builder</button><button type="button" data-studio-action="desktop">Desktop-App</button><button type="button" data-studio-action="framework">Framework-Projekt</button><button type="button" data-studio-action="export">Export-Assistent</button></section><section role="group" aria-label="Gestalten"><h3>Gestalten</h3><button type="button" data-studio-action="visuell">Visueller Designer</button><button id="designBtn" title="Im Design-Studio gestalten – ohne Code">Design-Studio</button><a href="./jpeg-xl.html" target="_blank" rel="noopener">JPEG-XL-Assets</a></section><section role="group" aria-label="Lernen"><h3>Lernen</h3><button type="button" data-studio-action="lernen">Lernmodus</button><button type="button" data-studio-action="lernpruefen">Lernaufgabe prüfen</button><button type="button" data-studio-action="fortschritt">Lernfortschritt</button><button type="button" data-studio-action="zertifikat">Teilnahmezertifikat</button></section><section role="group" aria-label="Ansicht"><h3>Ansicht</h3><button type="button" data-studio-action="thema">Farbthema</button><button type="button" data-studio-action="groesser">Schrift größer</button><button type="button" data-studio-action="kleiner">Schrift kleiner</button><button type="button" data-studio-action="umbruch">Zeilenumbruch</button><button type="button" data-studio-action="fokus">Fokus-Modus</button><button type="button" data-studio-action="tasten">Tastenkürzel</button><button id="befehleBtn" title="Alle Befehle (Strg+Umschalt+P)">Alle Befehle · Strg+Umschalt+P</button><button type="button" data-studio-action="einstellungen">Weitere Einstellungen</button><button type="button" data-studio-action="start">Startbildschirm</button></section><a href="../mein-sd-hub/#projekte">Mein SD Hub ↗</a></div>
+<div id="dateiDialog" class="dialog" hidden><div class="karte studioDialog" role="dialog" aria-modal="true" aria-labelledby="dateiTitel"><div class="reihe"><h2 id="dateiTitel">Dateien hinzufügen</h2><button data-close="dateiDialog">✕ Schließen</button></div><button type="button" data-studio-action="leeredatei">＋ Leere Datei</button><div id="katalog"></div></div></div>
+<div id="studioPanel" class="dialog" hidden><div class="karte studioDialog" role="dialog" aria-modal="true" aria-label="Projektwerkzeuge"><button data-close="studioPanel">✕ Schließen</button><div id="studioPanelInhalt"></div></div></div>
+<section id="studioStart" hidden aria-labelledby="startTitel"><div class="startInhalt"><p>⟨/⟩ SD Code-Studio</p><h1 id="startTitel">Was möchtest du machen?</h1><div class="startKarten"><button type="button" data-studio-action="vorlagen">🌐 Webseite bauen <small>Eine Vorlage auswählen</small></button><button type="button" data-studio-action="ki">✨ Mit KI erstellen <small>Ein neues Programm entwickeln</small></button><a href="../mein-sd-hub/#akademie">🎓 Programmieren lernen <small>Zur Akademie</small></a><a href="./game-studio/index.html">🎮 3D-Spiel bauen <small>Game-Studio öffnen</small></a><button type="button" data-studio-action="oeffnen">📂 Datei oder ZIP öffnen <small>Ein bestehendes Projekt importieren</small></button></div><h2>Zuletzt geöffnet</h2><div id="letzteProjekte"></div><label><input id="startDirekt" type="checkbox"> Beim nächsten Mal direkt das letzte Projekt öffnen</label><button type="button" data-studio-action="weiter">Zum geöffneten Projekt</button></div></section>
 <div id="palette" hidden><div class="pk"><input id="palIn" spellcheck="false"><div id="palListe"></div></div></div>
 <div id="einfuegen" class="dialog" hidden><div class="karte">
   <b>📋 Anleitung oder Code einfügen → Projekt automatisch aufbauen</b>
@@ -314,8 +288,32 @@ button,input,select,textarea{font:inherit;color:inherit}
 <div id="toast"></div>
 <input type="file" id="hochDatei" multiple hidden><input type="file" id="hochOrdner" webkitdirectory multiple hidden><input type="file" id="hochZip" accept=".zip" hidden>
 
-<section id="kiServicesOverlay" hidden aria-label="Google KI ohne Registrierung ausprobieren">
-  <div class="kiServicesDialog" role="dialog" aria-modal="true" aria-labelledby="kiServicesTitle">
+<section id="kiOverlay" hidden aria-label="KI Coding Dialog">
+  <div class="kiDialog" role="dialog" aria-modal="true" aria-labelledby="kiTitle">
+    <div class="kiHead"><div><span class="kiEyebrow">SD Code-Studio · KI-Werkstatt</span><h2 id="kiTitle">✨ Mit KI programmieren</h2><p id="kiProject"></p></div><button type="button" id="kiClose" aria-label="KI-Coding schließen">✕</button></div>
+    <div id="kiTabs" role="tablist" aria-label="KI-Aufgabe"><button id="kiCodeBtn" title="Mit KI programmieren – ChatGPT/Gemini-Code prüfen und sicher einfügen" type="button">Neues Programm</button><button id="kiChangeBtn" title="Wünsche eine Änderung an deinem geöffneten Projekt und übernimm den korrigierten Code" type="button">Projekt ändern</button><button type="button" id="kiCheckTab">Prüfen & reparieren</button></div><div id="kiAuthoring" role="tabpanel" aria-labelledby="kiCodeBtn"><p class="kiNote"><strong>Ohne API-Schlüssel:</strong> ChatGPT oder Gemini in einem neuen Tab verwenden. Das Studio sendet keine Projektdateien automatisch an diese Dienste. Eine echte KI-Unterhaltung direkt hier erfordert eine autorisierte Integration.</p>
+    <label class="kiLabel" for="kiGoal" id="kiGoalLabel">1. Was möchtest du programmieren?</label>
+    <textarea id="kiGoal" rows="3" maxlength="3000" placeholder="Zum Beispiel: Baue eine Webseite mit Startseite, Galerie und Kontakt."></textarea>
+    <div id="kiChangeBox" hidden class="kiChangeBox">
+      <p class="kiHint">Wähle die Dateien aus, die ChatGPT/Gemini für diese Änderung verstehen muss. Der bisherige Code wird nur nach deiner ausdrücklichen Zustimmung in die kopierte Anfrage aufgenommen. Andere Projektdateien bleiben unverändert.</p>
+      <div id="kiSources" class="kiSources" aria-label="Vorhandene Dateien für Änderungsanfrage auswählen"></div>
+      <label class="kiCheck kiConsent"><input id="kiChangeConsent" type="checkbox"> Ich möchte die Inhalte der oben ausgewählten Dateien ausdrücklich in meine KI-Anfrage kopieren.</label>
+      <button type="button" id="kiPromptPreview">🔎 Änderungsanfrage vor dem Kopieren anzeigen</button>
+    </div>
+    <label class="kiCheck" id="kiIncludeRow"><input id="kiInclude" type="checkbox"> Inhalt meiner geöffneten Datei freiwillig in die kopierbare Anfrage aufnehmen (niemals Zugangsdaten)</label>
+    <div class="kiActions">
+      <button type="button" id="kiCopy">📋 Anfrage kopieren</button>
+      <button type="button" id="kiChatGPT">ChatGPT öffnen ↗</button>
+      <button type="button" id="kiGemini">Gemini öffnen ↗</button>
+    </div>
+    <textarea id="kiClipboard" rows="4" hidden readonly aria-label="KI-Anfrage manuell kopieren"></textarea>
+    <div class="kiBridgeHint"><strong>🔗 ChatGPT direkt verbinden – ohne API</strong>
+      <p>Mit der freiwilligen Chrome-Erweiterung kannst du eine Antwort in ChatGPT oder Gemini markieren, per Rechtsklick an das Studio senden und hier sicher prüfen.</p>
+      <a href="./chatgpt-bruecke.html" target="_blank" rel="noopener noreferrer">Erweiterung einrichten und installieren ↗</a>
+    </div>
+</div><section id="kiPruefen" role="tabpanel" aria-labelledby="kiCheckTab" hidden><h3>Prüfen & reparieren</h3><div class="kiActions"><button id="diagnoseBtn" type="button" title="Alle Projektdateien auf Fehler und fehlende Verknüpfungen prüfen">🩺 <span class="lang">Prüfen</span></button><button id="agentReviewBtn" type="button" title="Mehrstufiger Projekt-Review: Plan, Tests, Sicherheit und Freigabe – nur lesend">🧠 Projekt-Review</button><button type="button" data-studio-action="fehlerfinder">Fehlerfinder</button></div><p>Projekt lokal prüfen oder eine KI-Antwort unten analysieren, um Reparatur-Vorschläge vorzubereiten.</p><div id="kiDiagnoseSlot"></div><div id="kiReviewSlot"></div><div id="kiRepairSlot"></div></section>
+<div id="kiServicesSection"><button id="kiServicesBtn" title="Google KI, Google AI Studio und ChatGPT öffnen oder dort anmelden" type="button">🤖 KI-Dienste</button><section id="kiServicesOverlay" hidden aria-label="Google KI ohne Registrierung ausprobieren">
+  <div class="kiServicesDialog" role="region" aria-labelledby="kiServicesTitle">
     <div class="kiServicesHead">
       <div><p class="kiServicesEyebrow">SD Code-Studio · Google KI</p><h2 id="kiServicesTitle">✨ Google KI nutzen</h2>
         <p>Du brauchst kein zusätzliches SD-Code-Studio-Konto. Probiere Google KI zuerst ohne Registrierung aus.</p></div>
@@ -354,29 +352,7 @@ button,input,select,textarea{font:inherit;color:inherit}
     </div>
   </div>
 </section>
-<section id="kiOverlay" hidden aria-label="KI Coding Dialog">
-  <div class="kiDialog" role="dialog" aria-modal="true" aria-labelledby="kiTitle">
-    <div class="kiHead"><div><span class="kiEyebrow">SD Code-Studio · KI-Werkstatt</span><h2 id="kiTitle">✨ Mit KI programmieren</h2><p id="kiProject"></p></div><button type="button" id="kiClose" aria-label="KI-Coding schließen">✕</button></div>
-    <p class="kiNote"><strong>Ohne API-Schlüssel:</strong> ChatGPT oder Gemini in einem neuen Tab verwenden. Das Studio sendet keine Projektdateien automatisch an diese Dienste. Eine echte KI-Unterhaltung direkt hier erfordert eine autorisierte Integration.</p>
-    <label class="kiLabel" for="kiGoal" id="kiGoalLabel">1. Was möchtest du programmieren?</label>
-    <textarea id="kiGoal" rows="3" maxlength="3000" placeholder="Zum Beispiel: Baue eine Webseite mit Startseite, Galerie und Kontakt."></textarea>
-    <div id="kiChangeBox" hidden class="kiChangeBox">
-      <p class="kiHint">Wähle die Dateien aus, die ChatGPT/Gemini für diese Änderung verstehen muss. Der bisherige Code wird nur nach deiner ausdrücklichen Zustimmung in die kopierte Anfrage aufgenommen. Andere Projektdateien bleiben unverändert.</p>
-      <div id="kiSources" class="kiSources" aria-label="Vorhandene Dateien für Änderungsanfrage auswählen"></div>
-      <label class="kiCheck kiConsent"><input id="kiChangeConsent" type="checkbox"> Ich möchte die Inhalte der oben ausgewählten Dateien ausdrücklich in meine KI-Anfrage kopieren.</label>
-      <button type="button" id="kiPromptPreview">🔎 Änderungsanfrage vor dem Kopieren anzeigen</button>
-    </div>
-    <label class="kiCheck" id="kiIncludeRow"><input id="kiInclude" type="checkbox"> Inhalt meiner geöffneten Datei freiwillig in die kopierbare Anfrage aufnehmen (niemals Zugangsdaten)</label>
-    <div class="kiActions">
-      <button type="button" id="kiCopy">📋 Anfrage kopieren</button>
-      <button type="button" id="kiChatGPT">ChatGPT öffnen ↗</button>
-      <button type="button" id="kiGemini">Gemini öffnen ↗</button>
-    </div>
-    <textarea id="kiClipboard" rows="4" hidden readonly aria-label="KI-Anfrage manuell kopieren"></textarea>
-    <div class="kiBridgeHint"><strong>🔗 ChatGPT direkt verbinden – ohne API</strong>
-      <p>Mit der freiwilligen Chrome-Erweiterung kannst du eine Antwort in ChatGPT oder Gemini markieren, per Rechtsklick an das Studio senden und hier sicher prüfen.</p>
-      <a href="./chatgpt-bruecke.html" target="_blank" rel="noopener noreferrer">Erweiterung einrichten und installieren ↗</a>
-    </div>
+</div>
     <label class="kiLabel" for="kiResult">2. Gesamte KI-Antwort einfügen – nur Programmcode wird importiert</label>
     <p class="kiHint">Kopiere die <strong>gesamte KI-Antwort</strong> auf einmal, auch wenn Erklärungen davor oder dazwischen stehen. Das Studio filtert die Erklärungen heraus und übernimmt nur erkannte Codeblöcke. HTML, CSS, JavaScript, Python, Java, C/C++, C#, TypeScript, Rust, Go und weitere Sprachen werden getrennten Dateien zugeordnet.</p>
     <textarea id="kiResult" rows="7" spellcheck="false" placeholder="### Datei: index.html&#10;&#96;&#96;&#96;html&#10;&lt;!doctype html&gt; ...&#10;&#96;&#96;&#96;&#10;&#10;### Datei: css/style.css&#10;&#96;&#96;&#96;css&#10;body { ... }&#10;&#96;&#96;&#96;"></textarea>
@@ -387,6 +363,7 @@ button,input,select,textarea{font:inherit;color:inherit}
       <button type="button" id="kiApply" disabled>📁 Als Kopie des aktuellen Projekts (alte Dateien bleiben)</button>
     </div>
     <div id="kiFiles" class="kiFiles" aria-label="Erkannte Dateien"></div>
+    <span id="kiReviewHome" hidden></span>
     <section id="kiReview" class="kiReview" hidden aria-label="Automatische lokale Codeprüfung">
       <h3>🛡 Automatische Codeprüfung</h3>
       <p id="kiReviewSummary" role="status" aria-live="polite"></p>
@@ -428,7 +405,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   </div>
 </section>
 <section id="agentReviewOverlay" hidden aria-label="Mehrstufiger Projekt-Review">
- <div class="agentReviewDialog" role="dialog" aria-modal="true" aria-labelledby="agentReviewTitle">
+ <div class="agentReviewDialog" role="region" aria-labelledby="agentReviewTitle">
   <div class="agentReviewHead">
    <div><h2 id="agentReviewTitle">🧠 Projekt-Review</h2><p>Planen · Entwickeln · Testen · Sicherheit · Freigabe</p></div>
    <button id="agentReviewClose" type="button" aria-label="Review schließen">✕ Schließen</button>

@@ -1,4 +1,9 @@
 'use strict';
+async function openKI(page,tab){
+ if(!await page.locator('#kiOverlay').isVisible())await page.locator('#kiBtn').click();
+ await page.locator('#'+tab).click();
+}
+
 const { chromium } = require('playwright');
 const { spawn } = require('node:child_process');
 const assert = require('node:assert/strict');
@@ -24,7 +29,7 @@ const assert = require('node:assert/strict');
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto('http://127.0.0.1:8765/studio/index.html', {waitUntil:'domcontentloaded',timeout:30000});
+    await page.goto('http://127.0.0.1:8765/studio/index.html?projekt=meine-webseite', {waitUntil:'domcontentloaded',timeout:30000});
     await page.waitForTimeout(1200);
     assert.match(await page.title(), /Code-Studio/);
     // Regression: new AI buttons must never push ▶ Ausführen outside of the screen.
@@ -40,7 +45,7 @@ const assert = require('node:assert/strict');
     assert.equal(codeReviewChecks.found,true);
     assert.equal(codeReviewChecks.blocked,true);
     assert.equal(codeReviewChecks.exposed,false);
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiResult').fill(['### Datei: app.js','~~~javascript',
       'const token="ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ12345";','~~~'].join('\n'));
     await page.locator('#kiAnalyse').click();
@@ -51,7 +56,7 @@ const assert = require('node:assert/strict');
     await page.locator('#kiClose').click();
 
     // Repair suggestions are stage-only: old/new code compared, no implicit project writes.
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiResult').fill([
       '### Datei: index.html','~~~html',
       '<a href="/help" target="_blank">Hilfe</a>','~~~'
@@ -68,7 +73,7 @@ const assert = require('node:assert/strict');
     // The import remains a separate, explicitly confirmed action.
     await page.locator('#kiDiffClose').click();
     await page.locator('#kiClose').click();
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiResult').fill([
       '### Datei: app.js','~~~javascript','eval(userCode);','~~~'
     ].join('\n'));
@@ -80,6 +85,7 @@ const assert = require('node:assert/strict');
     await page.locator('#kiClose').click();
 
     // ECC-inspired review stays read-only and is accessible as a real dialog.
+    await openKI(page,'kiCheckTab');
     await page.locator('#agentReviewBtn').click();
     assert.equal(await page.locator('#agentReviewOverlay').isVisible(),true);
     assert.match(await page.locator('#agentReviewSummary').innerText(),/Dateien/);
@@ -96,11 +102,13 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#kiGoal').inputValue(),'Repariere Login und Layout');
     assert.equal(await page.locator('#kiChangeConsent').isChecked(),false);
     await page.locator('#kiClose').click();
+    await openKI(page,'kiCheckTab');
     await page.locator('#agentReviewBtn').click();
     await page.locator('#agentReviewAgain').click();
     assert.equal(await page.locator('#agentReviewCopy').isEnabled(),true);
     await page.locator('#agentReviewClose').click();
     assert.equal(await page.locator('#agentReviewOverlay').isVisible(),false);
+    await page.locator('#kiClose').click();
 
     for (const width of [1600,1280,1080,1024,900,801,800,600,390,320]) {
       await page.setViewportSize({width,height:800});
@@ -115,17 +123,17 @@ const assert = require('node:assert/strict');
           display:getComputedStyle(run).display,screen:document.documentElement.clientWidth,
           toolsWidth:toolbar.clientWidth,toolsScrollWidth:toolbar.scrollWidth};
       });
-      assert(metrics.run.width>70&&metrics.run.height>=30,'Run button is not properly sized at '+width);
+      assert(metrics.run.width>=(width<820?50:70)&&metrics.run.height>=30,'Run button is not properly sized at '+width);
       assert(metrics.run.left>=-1&&metrics.run.right<=metrics.screen+1,
         'Run button outside screen at '+width+': '+JSON.stringify(metrics));
-      assert(metrics.more.left>=-1&&metrics.more.right<=metrics.screen+1,'More menu outside screen at '+width);
+      if(width>=820) assert(metrics.more.left>=-1&&metrics.more.right<=metrics.screen+1,'More menu outside screen at '+width);
       assert.equal(metrics.hit,true,'Run button must remain clickable at '+width);
       assert.notEqual(metrics.display,'none','Run button hidden at '+width);
-      if(width===1080) assert(metrics.toolsScrollWidth>metrics.toolsWidth,'Additional tools must scroll instead of hiding Run');
+      assert(metrics.toolsScrollWidth<=metrics.toolsWidth+1,'Compact toolbar fits at '+width);
     }
     await page.setViewportSize({width:1080,height:800});
     await page.locator('#kopfMehr').click();
-    assert.match(await page.locator('#palListe').innerText(),/▶ Ausführen/,'Fallback Run is available in More menu');
+    assert.match(await page.locator('#mehrMenu').innerText(),/App-Builder/,'More menu contains building tools');
     await page.keyboard.press('Escape');
     await page.setViewportSize({width:1280,height:900});
 
@@ -318,10 +326,11 @@ const assert = require('node:assert/strict');
     // KI Coding: real browser flow, review, copy creation, then existing ▶ execute.
     await page.locator('#efZu').click(); // Close earlier Import dialog.
     assert.equal(await page.locator('#kiCodeBtn').count(),1,'KI Coding button visible');
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
     await page.locator('#kiGoal').fill('Erstelle eine kleine Webseite mit Überschrift.');
     await page.locator('#kiClose').click();
+    await page.locator('#projektMenuBtn').click();
     await page.locator('#einfuegenBtn').click();
     assert.equal(await page.locator('#einfuegen').isVisible(),true,'Standard import dialog opens');
     const aiBefore=await page.evaluate(()=>({name:S.p.name,files:JSON.stringify(S.p.dateien)}));
@@ -402,7 +411,7 @@ const assert = require('node:assert/strict');
       '### Datei: main.py',ticks+'python','print("Direct Python")',ticks,
       'Diese Erklärung darf nicht in die Dateien.'
     ].join('\n');
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiResult').fill(directAnswer);
     await page.locator('#kiAnalyse').click();
     assert.equal(await page.locator('#kiDirect').isEnabled(),true,'Direkt-import button enabled for recognized code');
@@ -434,8 +443,7 @@ const assert = require('node:assert/strict');
     // When all files are already present, a single button should just open the editor (also on mobile).
     await page.setViewportSize({width:390,height:844});
     // Compact mobile toolbar puts secondary AI actions in the accessible More menu.
-    await page.locator('#kopfMehr').click();
-    await page.locator('#palListe span').getByText('✨ KI Coding',{exact:true}).click();
+    await page.locator('#kiBtn').click();
     await page.locator('#kiResult').fill(directAnswer);
     await page.locator('#kiAnalyse').click();
     await page.locator('#kiDirect').click(); // No overwrite dialog necessary for identical content.
@@ -454,8 +462,9 @@ const assert = require('node:assert/strict');
       cm.replaceRange('\n<script src="missing-diagnose-file.js"></script>',{line:end,ch:cm.getLine(end).length},undefined,'+input');
     });
     await page.waitForFunction(()=>S.problemeAnalyse.some(x=>/missing-diagnose-file.js/.test(x.text)),{timeout:12000});
+    await openKI(page,'kiCheckTab');
     await page.locator('#diagnoseBtn').click();
-    assert.equal(await page.locator('#unten [data-feld="probleme"]').isVisible(),true,'Diagnostics panel opens');
+    assert.equal(await page.locator('#kiDiagnoseSlot [data-feld="probleme"]').isVisible(),true,'Diagnostics panel opens');
     const diagText=await page.locator('#problemListe').innerText();
     assert.match(diagText,/missing-diagnose-file.js/,'Newly edited broken reference is recognized');
     assert.equal(await page.locator('#diagnoseKI').isEnabled(),true);
@@ -508,7 +517,7 @@ const assert = require('node:assert/strict');
       js:S.p.dateien["js/app.js"],
       versions:S.p.versionen.length
     }));
-    await page.locator('#kiChangeBtn').click();
+    await openKI(page,'kiChangeBtn');
     assert.equal(await page.locator('#kiOverlay').isVisible(),true);
     assert.equal(await page.locator('#kiChangeBox').isVisible(),true);
     await page.locator('#kiGoal').fill('Füge einen Drucken-Knopf hinzu, alles andere behalten');
@@ -554,6 +563,7 @@ const assert = require('node:assert/strict');
     // and safe copy-only preparation for use without a ChatGPT/Gemini account.
     await page.setViewportSize({width:1280,height:900});
     assert.equal(await page.locator('#kiServicesBtn').count(),1,'Guest-first Google KI navigation exists');
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiServicesBtn').click();
     assert.equal(await page.locator('#kiServicesOverlay').isVisible(),true);
     assert.match(await page.locator('#kiServicesOverlay').innerText(),/ohne Registrierung/);
@@ -579,6 +589,7 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('#kiServicesOverlay').isVisible(),false);
     assert.equal(await page.locator('#kiOverlay').isVisible(),true,'Guest Google code can be reimported');
     await page.locator('#kiClose').click();
+    await openKI(page,'kiCodeBtn');
     await page.locator('#kiServicesBtn').click();
     await page.locator('#kiServicesChange').click();
     assert.equal(await page.locator('#kiChangeBox').isVisible(),true,'Google answer can update existing project after file approval');
@@ -591,7 +602,7 @@ const assert = require('node:assert/strict');
 
     // AI comparison: side-by-side old/new code, with no writes until explicitly confirmed.
     await page.setViewportSize({width:1280,height:900});
-    await page.locator('#kiCodeBtn').click();
+    await openKI(page,'kiCodeBtn');
     const beforeDiff=await page.evaluate(()=>({html:S.p.dateien['index.html'],versionCount:S.p.versionen.length}));
     await page.locator('#kiResult').fill('### Datei: index.html\n'+ticks+'html\n<!doctype html><title>Vergleich</title><h1>Vorschau statt Speichern</h1>\n'+ticks);
     await page.locator('#kiAnalyse').click();

@@ -108,6 +108,9 @@ async function projektOeffnen(name, datei, optionen) {
     // Stop any earlier preview immediately; the AI copy must remain inactive until ▶ Run.
     const frame=$('frame');frame.removeAttribute('src');frame.srcdoc='';frame.setAttribute('sandbox','allow-scripts allow-forms');
   }
+  if ($('studioStart')) studioStartSchliessen();
+  if ($('kopfProjektName')) $('kopfProjektName').textContent=name;
+  store.set('sdStudioRecent',[name,...store.get('sdStudioRecent',[]).filter(n=>n!==name)].slice(0,5));
   store.set('sdStudioLetztes', name); $('projektName').textContent = name;
   const dat = Object.keys(p.dateien).sort();
   const haupt = datei && p.dateien[datei] != null ? datei : (p.haupt && p.dateien[p.haupt] != null ? p.haupt : dat.find(d => /(^|\/)index\.html$/.test(d)) || dat.find(d => !istBinaer(p.dateien[d])) || null);
@@ -1168,8 +1171,14 @@ function unten(n) { document.querySelectorAll('#untenTabs button[data-u]').forEa
 function ausgabe(t) { $('ausgabe').textContent = t; if (!$('unten').querySelector('[data-feld="ausgabe"]').hidden) return; }
 
 /* ---------------- Seitenleiste ---------------- */
-function seite(n) { document.querySelectorAll('#akt button[data-s]').forEach(b => b.classList.toggle('an', b.dataset.s === n && !$('app').classList.contains('seiteZu')));
-  document.querySelectorAll('#seite [data-panel]').forEach(p => p.hidden = p.dataset.panel !== n); if (n === 'versionen') versionenZeigen(); if (n === 'suche') setTimeout(() => $('suchQ').focus(), 30); }
+function seite(n) {
+  document.querySelectorAll('#akt button[data-s]').forEach(b => b.classList.toggle('an', b.dataset.s === n));
+  // The file tree stays in the sidebar. Search, versions and settings have their own dialog.
+  document.querySelectorAll('#studioPanel [data-panel]').forEach(p => p.hidden = p.dataset.panel !== n);
+  $('studioPanel').hidden = n === 'explorer';
+  if (n === 'versionen') versionenZeigen();
+  if (n !== 'explorer') setTimeout(() => $(n === 'suche' ? 'suchQ' : n === 'versionen' ? 'versText' : 'themaWahl').focus(), 30);
+}
 function sucheLaufen() { const q = $('suchQ').value, box = $('suchErg'); box.innerHTML = ''; if (!q || !S.p) return; const gross = $('suchGross').checked; let treffer = 0, dateien = 0;
   for (const [pfad, inhalt] of Object.entries(S.p.dateien)) { if (istBinaer(inhalt)) continue; const zeilen = inhalt.split('\n'); const funde = [];
     zeilen.forEach((z, i) => { if ((gross ? z : z.toLowerCase()).includes(gross ? q : q.toLowerCase())) funde.push([i + 1, z]); });
@@ -1194,7 +1203,7 @@ function palette(items, platzhalter, fn) { PAL = { alle: items, liste: items, wa
   inp.oninput = () => { const q = inp.value.toLowerCase().trim(); PAL.liste = !q ? PAL.alle : PAL.alle.filter(x => { let i = 0; const t = (x.label + ' ' + (x.info || '')).toLowerCase(); for (const ch of q) { i = t.indexOf(ch, i); if (i < 0) return false; i++; } return true; }); PAL.wahl = 0; palZeigen(); };
   inp.onkeydown = e => { if (e.key === 'ArrowDown') { e.preventDefault(); PAL.wahl = Math.min(PAL.liste.length - 1, PAL.wahl + 1); palZeigen(); } else if (e.key === 'ArrowUp') { e.preventDefault(); PAL.wahl = Math.max(0, PAL.wahl - 1); palZeigen(); } else if (e.key === 'Enter') { e.preventDefault(); const x = PAL.liste[PAL.wahl]; palZu(); if (x) PAL.fn(x); } else if (e.key === 'Escape') { e.preventDefault(); palZu(); } };
   palZeigen(); inp.focus(); setTimeout(() => inp.focus(), 20); }
-function palZeigen() { const box = $('palListe'); box.innerHTML = ''; PAL.liste.slice(0, 80).forEach((x, i) => { const e = document.createElement('div'); e.className = i === PAL.wahl ? 'an' : ''; e.innerHTML = '<span></span><small></small>'; e.querySelector('span').textContent = x.label; e.querySelector('small').textContent = x.info || ''; e.onclick = () => { palZu(); PAL.fn(x); }; box.appendChild(e); }); if (!PAL.liste.length) box.innerHTML = '<div style="opacity:.6;padding:8px">Nichts gefunden</div>'; }
+function palZeigen() { const box = $('palListe'); box.innerHTML = ''; PAL.liste.forEach((x, i) => { const e = document.createElement('div'); e.className = i === PAL.wahl ? 'an' : ''; e.innerHTML = '<span></span><small></small>'; e.querySelector('span').textContent = x.label; e.querySelector('small').textContent = x.info || ''; e.onclick = () => { palZu(); PAL.fn(x); }; box.appendChild(e); }); if (!PAL.liste.length) box.innerHTML = '<div style="opacity:.6;padding:8px">Nichts gefunden</div>'; }
 function palZu() { $('palette').hidden = true; if (S.cm) S.cm.focus(); }
 function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filter(d => !/\.gitkeep$/.test(d)).map(d => ({ label: icon(d) + ' ' + d.split('/').pop(), info: d, d })), 'Datei öffnen …', x => dateiOeffnen(x.d)); }
 function befehle() { const B = [
@@ -2068,8 +2077,9 @@ async function dateiErsetzen() { if (!S.aktiv) { toast('Keine Datei offen.'); re
   if (S.cm) { S.cm.setValue(t); S.p.dateien[S.aktiv] = t; tabsZeigen(); speichernBald(); S.cm.focus(); } else if (S.ta) { S.ta.value = t; S.ta.dispatchEvent(new Event('input')); }
   toast('📥 Code eingefügt (' + t.split('\n').length + ' Zeilen) – ↶ holt den alten zurück.'); }
 /* ---------------- Handy: eine Ansicht nach der anderen + Zeichen-Leiste ---------------- */
-const istHandy = () => matchMedia('(max-width:800px)').matches;
+const istHandy = () => matchMedia('(max-width:819px)').matches;
 function ansicht(n) { if (!istHandy()) return; const app = $('app');
+  if (n === 'werkzeuge') unten('werkzeuge');
   if (n === 'mehr') { handyMehr(); return; }
   app.dataset.ansicht = n; document.querySelectorAll('#handyNav button').forEach(b => b.classList.toggle('an', b.dataset.a === n));
   if (n === 'dateien') { app.classList.remove('seiteZu'); if (!document.querySelector('#seite [data-panel]:not([hidden])')) seite('explorer'); }
@@ -2093,7 +2103,7 @@ function handyEinrichten() {
   $('baum').addEventListener('click', e => { if (istHandy() && e.target.closest('.bz.datei') && e.target.tagName !== 'BUTTON') ansicht('code'); });
   $('suchErg').addEventListener('click', e => { if (istHandy() && e.target.closest('.sz')) ansicht('code'); });
   $('problemListe').addEventListener('click', e => { if (istHandy() && e.target.closest('.pr')) ansicht('code'); });
-  const mq = matchMedia('(max-width:800px)'); const wechsel = () => { if (mq.matches) ansicht($('app').dataset.ansicht || 'code'); else { delete $('app').dataset.ansicht; } setTimeout(() => S.cm && S.cm.refresh(), 60); };
+  const mq = matchMedia('(max-width:819px)'); const wechsel = () => { if (mq.matches) ansicht($('app').dataset.ansicht || 'code'); else { delete $('app').dataset.ansicht; } setTimeout(() => S.cm && S.cm.refresh(), 60); };
   mq.addEventListener ? mq.addEventListener('change', wechsel) : mq.addListener(wechsel); wechsel();
   // roter Punkt bei neuen Problemen
   const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="ausgabe"]'); if (k) k.classList.toggle('punkt', n > 0 && $('app').dataset.ansicht !== 'ausgabe'); });
@@ -2127,23 +2137,66 @@ function sperre(nurSchluessel) {
   setTimeout(() => $('spCode').focus(), 30);
 }
 
+/* Surface organization. All actions delegate to the existing project/editor logic. */
+function dateiDialog() { $('dateiDialog').hidden=false; katalogOnline(); $('dateiDialog').querySelector('button').focus(); }
+function studioStartSchliessen() { $('studioStart').hidden=true; setTimeout(()=>S.cm&&S.cm.refresh(),30); }
+async function studioStartZeigen() {
+ const box=$('letzteProjekte');box.replaceChildren();
+ const names=store.get('sdStudioRecent',[]);
+ const recent=(await projAlle()).sort((a,b)=>{const ai=names.indexOf(a.name),bi=names.indexOf(b.name);return (ai<0?Infinity:ai)-(bi<0?Infinity:bi)||b.t-a.t}).slice(0,5);
+ for(const p of recent){const b=document.createElement('button');b.textContent=p.name;b.onclick=async()=>{await projektOeffnen(p.name);studioStartSchliessen()};box.append(b)}
+ if(!recent.length)box.textContent='Noch keine Projekte geöffnet.';
+ $('startDirekt').checked=store.get('sdStudioDirekt',false)===true;
+ $('studioStart').hidden=false;
+}
+function studioLayoutEinrichten() {
+ const workspaceButton=document.querySelector('.sd-ws-launch');
+ if(workspaceButton){workspaceButton.append(document.createTextNode('Alle SD Hub Bereiche'));$('mehrMenu').append(workspaceButton);}
+ const menuPairs=[['projektMenuBtn','projektMenu'],['kopfMehr','mehrMenu']];
+ const closeMenus=(restore=false)=>menuPairs.forEach(([bid,mid])=>{if(!$(mid).hidden&&restore)($(mid)._studioReturnFocus||$(bid)).focus();$(mid).hidden=true;$(bid).setAttribute('aria-expanded','false')});
+ for(const [bid,mid] of menuPairs){const trigger=$(bid),menu=$(mid);trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls',mid);menu.setAttribute('role','menu');menu.querySelectorAll('button,a').forEach(b=>b.setAttribute('role','menuitem'));
+  const open=()=>{const was=menu.hidden;menu._studioReturnFocus=trigger.getClientRects().length?trigger:document.activeElement;closeMenus();menu.hidden=!was;trigger.setAttribute('aria-expanded',String(was));if(was)menu.querySelector('button,a').focus()};trigger.onclick=open;
+  trigger.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(menu.hidden)open();const items=menu.querySelectorAll('button,a');items[e.key==='ArrowUp'?items.length-1:0].focus()}};
+  menu.addEventListener('keydown',e=>{const items=[...menu.querySelectorAll('button,a')].filter(b=>!b.disabled),i=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();items[e.key==='Home'?0:e.key==='End'?items.length-1:(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length].focus()}if(e.key==='Escape'){e.preventDefault();closeMenus(true)}if(e.key==='Tab')closeMenus()});
+  menu.addEventListener('click',e=>{if(e.target.closest('button,a'))closeMenus()});
+ }
+ document.addEventListener('pointerdown',e=>{if(!menuPairs.some(([b,m])=>$(b).contains(e.target)||$(m).contains(e.target)))closeMenus()});
+ const panel=$('studioPanelInhalt');document.querySelectorAll('#seite [data-panel]:not([data-panel="explorer"])').forEach(p=>panel.append(p));
+ $('neuDatei').onclick=dateiDialog;$('baumNeu').onclick=dateiDialog;
+ const actions={vorlagen:vorlagenWaehlen,ki:()=>window.SDKICodingUI?.openDialog(),weiter:studioStartSchliessen,oeffnen:()=>einfuegenDialog(''),start:studioStartZeigen,
+  wechsel:async()=>{await projektListe();palette([...$('projektWahl').options].filter(o=>o.value!=='__neu').map(o=>({label:o.textContent,name:o.value})),'Projekt wechseln',x=>projektOeffnen(x.name))},umbenennen:projektUmbenennen,duplizieren:projektDuplizieren,ordner:()=>$('hochOrdner').click(),zip:()=>$('hochZip').click(),github:githubProjektImport,backup:cloudProjektBackup,seiten:meineSeiten,offline:seiteLoeschen,pc:aufPcAusfuehren,versionen:()=>seite('versionen'),loeschen:projektLoeschen,
+  builder:einKlickAppBuilder,desktop:desktopExport,framework:frameworkProjektExport,export:projektAssistent,visuell:visuellerWebsiteDesigner,jxl:()=>window.open('./jpeg-xl.html','_blank','noopener'),lernen:programmierLernmodus,lernpruefen:lernaufgabePruefen,fortschritt:lernfortschrittAnzeigen,zertifikat:lernZertifikat,thema:()=>seite('einst'),groesser:()=>schrift(1),kleiner:()=>schrift(-1),umbruch:()=>$('eUmbruch').click(),fokus,tasten:()=>{ausgabe(KUERZEL);unten('ausgabe');ansicht('ausgabe')},einstellungen:()=>seite('einst'),leeredatei:()=>{$('dateiDialog').hidden=true;neueDatei('')},review:()=>{window.SDKICodingUI?.openDialog('check');$('agentReviewBtn').click()},fehlerfinder:async()=>{await automatischerFehlerfinder();if(!$('kiOverlay').hidden){unten('probleme');$('kiDiagnoseSlot').append(document.querySelector('[data-feld=probleme]'));$('diagnoseStand').textContent='Fehlerfinder: '+S.problemeProgramm.length+' Befunde (statische Prüfung)';}else ansicht('ausgabe')},suche:()=>seite('suche'),formatieren,json:editorDiagnoseAnzeigen,pcvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('100%');ansicht('vorschau')},handyvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('390px');ansicht('vorschau')},mehr:()=>$('kopfMehr').click()};
+ document.querySelectorAll('[data-studio-action]').forEach(b=>b.onclick=()=>{if(b.closest('#studioStart')&&b.dataset.studioAction!=='weiter')studioStartSchliessen();actions[b.dataset.studioAction]?.()});
+ document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);
+ for(const id of ['dateiDialog','studioPanel'])$(id).addEventListener('click',e=>{if(e.target===$(id))$(id).hidden=true});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenus(true);for(const id of ['dateiDialog','studioPanel'])$(id).hidden=true}});
+ $('suchErg').addEventListener('click',e=>{if(e.target.closest('.sz'))$('studioPanel').hidden=true});
+ $('kiBtn').onclick=()=>window.SDKICodingUI?.openDialog();
+ $('startDirekt').onchange=()=>store.set('sdStudioDirekt',$('startDirekt').checked);
+}
+
 /* ---------------- Start ---------------- */
 async function starten() {
   S.gestartet = true; $('app').hidden = false; zaehlerZeigen();
   thema(einst().thema || 'Mitternacht');
   const [cm] = await Promise.all([editorLaden(), swStarten()]);
   editorBauen(cm); thema(einst().thema || 'Mitternacht');
-  if (!(await designUebernehmen())) { const l = (await projAlle()).sort((a, b) => b.t - a.t); const letztes = store.get('sdStudioLetztes', '');
+  const studioProjektParameter=new URLSearchParams(location.search).has('projekt');
+  const studioDesignImport=await designUebernehmen();
+  if (!studioDesignImport) { const l = (await projAlle()).sort((a, b) => b.t - a.t); const letztes = store.get('sdStudioLetztes', '');
     if (l.length) await projektOeffnen(l.find(p => p.name === letztes) ? letztes : l[0].name);
     else { await projSchreiben({ name: 'meine-webseite', dateien: JSON.parse(JSON.stringify(VORLAGEN[0].dateien)), haupt: 'index.html', versionen: [], erstellt: Date.now() }); await projektOeffnen('meine-webseite'); ausgabe('👋 Willkommen im SD Code-Studio! Das ist deine erste Webseite – ändere den Code, die Vorschau rechts aktualisiert sich sofort.\n\n＋ Projekt = neue Vorlage · 📋 Einfügen = Anleitung aus ChatGPT & Co. automatisch als Projekt · F5 = Ausführen'); } }
-  await projektListe(); verdrahten(); setTimeout(() => S.cm && S.cm.refresh(), 300);
+  await projektListe(); verdrahten(); studioLayoutEinrichten();
+  if (!studioProjektParameter && !store.get('sdStudioDirekt',false) && !studioDesignImport) await studioStartZeigen();
+  S.layoutBereit=true;
+  setTimeout(() => S.cm && S.cm.refresh(), 300);
 }
 function verdrahten() {
   document.querySelectorAll('#akt button[data-s]').forEach(b => b.onclick = () => { const offen = !$('app').classList.contains('seiteZu') && b.classList.contains('an'); $('app').classList.toggle('seiteZu', offen); seite(b.dataset.s); setTimeout(() => S.cm && S.cm.refresh(), 50); });
   document.querySelectorAll('#untenTabs button[data-u]').forEach(b => b.onclick = () => unten(b.dataset.u)); $('untenZu').onclick = () => { $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); };
   $('projektWahl').onchange = () => { const v = $('projektWahl').value; if (v === '__neu') { projektListe(); vorlagenWaehlen(); } else projektOeffnen(v); };
   $('neuDatei').onclick = () => neueDatei(''); $('neuProjekt').onclick = vorlagenWaehlen; $('einfuegenBtn').onclick = () => einfuegenDialog(''); $('designBtn').onclick = designOeffnen; $('onlineBtn').onclick = onlineDialog;
-  $('starten').onclick = ausfuehren; $('kopfMehr').onclick = handyMehr; $('diagnoseBtn').onclick = diagnoseAnzeigen;
+  $('starten').onclick = ausfuehren; $('kopfMehr').onclick = handyMehr;
   $('diagnoseErneut').onclick = diagnoseAnzeigen; $('diagnoseKI').onclick = diagnoseKIStarten;
   $('befehleBtn').onclick = befehle; $('baumNeu').onclick = () => neueDatei(''); $('baumOrdner').onclick = () => { const o = sicherPfad(prompt('Name des neuen Ordners:')); if (o) { S.p.dateien[o + '/.gitkeep'] = ''; S.offen.add(o); projSchreiben(S.p); baum(); } };
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
