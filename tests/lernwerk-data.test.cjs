@@ -145,3 +145,28 @@ test('writing drafts offer explicit UTF-8 TXT backup without automatic grading',
  assert.match(source,/Datei-Download gestartet\. Bitte prüfe/);
  assert.match(source,/Datei konnte nicht erstellt werden/);
 });
+
+
+test('B1 exam blueprints have complete, consistent sections and timing',()=>{
+ const examSource=fs.readFileSync('deutsch/b1-musterpruefungen.js','utf8');
+ const begin=examSource.indexOf('const E=');
+ const end=examSource.indexOf('const themes=',begin);
+ assert.ok(begin>=0&&end>begin,'B1 exam blueprint is available');
+ const blueprints=new Function(examSource.slice(begin,end)+'return E')();
+ for(const kind of ['goethe','telc','dtz']){
+  const exam=blueprints[kind];
+  assert.ok(exam&&typeof exam.name==='string'&&exam.name.trim(),kind);
+  assert.ok(Array.isArray(exam.parts)&&exam.parts.length>=4,kind);
+  const ids=new Set();
+  for(const part of exam.parts){
+   const [id,title,minutes,groups,formats]=part;
+   assert.ok(typeof id==='string'&&id&&typeof title==='string'&&title,kind);
+   assert.ok(!ids.has(id),kind+': duplicate section '+id);
+   ids.add(id);
+   assert.ok(Number.isInteger(minutes)&&minutes>0,kind+': '+id+' duration');
+   assert.ok(Array.isArray(groups)&&groups.length>0&&groups.every(n=>Number.isInteger(n)&&n>0),kind+': '+id+' tasks');
+   assert.ok(Array.isArray(formats)&&formats.length===groups.length&&formats.every(s=>typeof s==='string'&&s.trim()),kind+': '+id+' task formats');
+  }
+  for(const required of ['lesen','hoeren','schreiben','sprechen'])assert.ok(ids.has(required),kind+': missing '+required);
+ }
+});
