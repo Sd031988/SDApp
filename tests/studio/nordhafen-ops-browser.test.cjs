@@ -44,6 +44,9 @@ async function play(page,url){
  const counts=trafficLine&&trafficLine.split(String.fromCharCode(10))[0].trim().split('/');
  assert.ok(counts&&Number(counts[1])>=5,'AI traffic created');
  assert.ok(Number(counts[0])>=1,'AI cars visible around player');
+ const people=(await page.locator('#hud').innerText()).match(/Passanten: (\d+)\/(\d+)/);
+ assert.ok(people,'pedestrian HUD line');
+ assert.ok(Number(people[1])>=1,'pedestrians placed around the player');
  return errors;
 }
 (async()=>{
