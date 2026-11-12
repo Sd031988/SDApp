@@ -41,7 +41,7 @@ async function play(page,url){
  },undefined,{timeout:15000});
  assert.equal(await page.locator('#mapPanel').isVisible(),true,'minimap is visible in running city');
  const trafficLine=(await page.locator('#hud').innerText()).split('Verkehr: ')[1];
- const counts=trafficLine&&trafficLine.split(' / ')[0].split('/');
+ const counts=trafficLine&&trafficLine.split(String.fromCharCode(10))[0].trim().split('/');
  assert.ok(counts&&Number(counts[1])>=5,'AI traffic created');
  assert.ok(Number(counts[0])>=1,'AI cars visible around player');
  return errors;
