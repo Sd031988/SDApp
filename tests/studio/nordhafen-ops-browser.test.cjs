@@ -34,6 +34,16 @@ async function play(page,url){
  const state=await page.locator('#status').innerText();
  assert.ok(!state.includes('Start fehlgeschlagen:'),'3D game failed: '+state);
  assert.match(await page.locator('#hud').innerText(),/FREIE STADT/);
+ await page.waitForFunction(()=>{
+  const hud=document.getElementById('hud')?.textContent||'';
+  const map=document.getElementById('minimap');
+  return hud.includes('Verkehr: ')&&map&&map.getContext('2d').getImageData(88,88,1,1).data[3]>0;
+ },undefined,{timeout:15000});
+ assert.equal(await page.locator('#mapPanel').isVisible(),true,'minimap is visible in running city');
+ const trafficLine=(await page.locator('#hud').innerText()).split('Verkehr: ')[1];
+ const counts=trafficLine&&trafficLine.split(' / ')[0].split('/');
+ assert.ok(counts&&Number(counts[1])>=5,'AI traffic created');
+ assert.ok(Number(counts[0])>=1,'AI cars visible around player');
  return errors;
 }
 (async()=>{
@@ -45,7 +55,11 @@ async function play(page,url){
   fs.mkdirSync(screenshotDir,{recursive:true});
   const desktop=await browser.newPage({viewport:{width:1280,height:800}});
   const desktopErrors=await play(desktop,url);
+  await desktop.locator('#mapToggle').click();
+  assert.equal(await desktop.locator('#minimap').isVisible(),false,'map can be hidden');
   await desktop.locator('#game').focus();
+  await desktop.keyboard.press('m');
+  assert.equal(await desktop.locator('#minimap').isVisible(),true,'M shows map again');
   await desktop.keyboard.press('f');
   await desktop.waitForFunction(()=>document.getElementById('vehicleToggle')?.textContent==='Aussteigen',undefined,{timeout:15000});
   await desktop.keyboard.down('w');
@@ -58,6 +72,7 @@ async function play(page,url){
   const phone=await browser.newPage({viewport:{width:393,height:852},isMobile:true,hasTouch:true,deviceScaleFactor:1});
   const phoneErrors=await play(phone,url);
   assert.equal(await phone.locator('#footControls').isVisible(),true,'foot controls on mobile');
+  assert.equal(await phone.locator('#minimap').isVisible(),true,'map remains visible on mobile');
   await phone.locator('[data-foot-action="vehicle"]').tap();
   await phone.screenshot({path:path.join(screenshotDir,'nordhafen-ops-mobile-after-enter-tap.png')});
   const mobileState=await phone.evaluate(()=>({status:document.getElementById('status').textContent,vehicle:document.getElementById('vehicleToggle').textContent,footHidden:document.getElementById('footControls').hidden,driveHidden:document.getElementById('driveControls').hidden}));
