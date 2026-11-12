@@ -1,0 +1,7 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),m=require('./nordhafen-ops-menu.js');
+test('invalid settings fall back and volume is clamped',()=>{assert.deepEqual(m.settings({mode:'bad',difficulty:'unknown',volume:200}),{mode:'mission',difficulty:'normal',volume:100});assert.equal(m.settings({mode:'royale',difficulty:'hard',volume:0}).volume,0);});
+test('mission records keep fastest win and all modes track wins',()=>{let r=m.initial();r=m.finish(r,'mission',150,true);r=m.finish(r,'mission',180,true);r=m.finish(r,'mission',120,true);r=m.finish(r,'royale',50,true);r=m.finish(r,'city',50,false);assert.equal(r.bestMissionSeconds,120);assert.deepEqual(r.wins,{mission:3,city:0,royale:1});});
+test('storage failures never prevent playing',()=>{const broken={getItem(){throw Error('denied');},setItem(){throw Error('denied');}};assert.deepEqual(m.read(broken),m.initial());assert.equal(m.write(broken,m.initial()),false);});
+test('persisted records survive reload and malformed values are sanitized',()=>{const values=new Map(),storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)};const r=m.finish(m.initial(),'mission',87,true);assert.equal(m.write(storage,r),true);assert.deepEqual(m.read(storage),r);values.set(m.KEY,'{broken');assert.deepEqual(m.read(storage),m.initial());});
+test('help contains interaction and pause controls',()=>{const help=m.help();assert.ok(help.includes('Esc'));assert.ok(help.includes('E interagieren'));});
