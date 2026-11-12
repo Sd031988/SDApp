@@ -282,7 +282,7 @@ async function start(){
  }catch(e){status('Start fehlgeschlagen: '+e.message);clear();$('menu').style.display='grid';}
  finally{$('play').disabled=false;}
 }
-let controller=new AbortController();const generalTutorial=$('tutorial').textContent;$('mode').addEventListener('change',()=>{$('tutorial').textContent=$('mode').value==='royale'?'Royale: Sammle Waffen, Munition, Medkits und Rüstung. Bots kämpfen gegeneinander und verfolgen Beute. Verlasse die rote Zone nicht; am Ende gewinnt der letzte Überlebende.':'Mission: Aktiviere Funkmasten, sichere das Datenpaket und erreiche die Extraktion. Freie Stadt: erledige Aufträge, fahre und erkunde Nordhafen.';});
+let controller=new AbortController();const generalTutorial=$('tutorial').textContent;$('mode').addEventListener('change',()=>{$('tutorial').textContent=$('mode').value==='royale'?'Royale: Sammle Waffen, Munition, Medkits und Rüstung. Bots kämpfen gegeneinander und verfolgen Beute. Verlasse die rote Zone nicht; am Ende gewinnt der letzte Überlebende.':generalTutorial;});
 $('play').addEventListener('click',()=>{if(paused&&!ended){paused=false;$('menu').style.display='none';return;}controller.abort();controller=new AbortController();start();});
 $('restart').addEventListener('click',()=>{controller.abort();controller=new AbortController();start();});
 window.addEventListener('resize',()=>engine?.resize());
