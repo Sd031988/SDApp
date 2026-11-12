@@ -47,7 +47,9 @@ test('Free City page wires controller, physics car, F key, mobile UI and has com
  assert.ok(inline.length>0);
  for(const [i,code] of inline.entries())assert.doesNotThrow(()=>new vm.Script(code,{filename:'ops-inline-'+i+'.js'}));
 });
-test('Havok-backed car accepts input and invokes a physical impulse without teleporting',async()=>{
+// Real Havok driving (acceleration, brakes, steering, wall and AI-car collisions) is
+// tested with the Havok WASM engine in tests/studio/nordhafen-ops-physics.test.cjs.
+test('without Havok ground contact the car never moves by itself (no teleport, no fake speed)',async()=>{
  class V{
   constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;}
   set(x,y,z){Object.assign(this,{x,y,z});return this;}
@@ -85,10 +87,13 @@ test('Havok-backed car accepts input and invokes a physical impulse without tele
  };
  const instance=vehicles.create({scene:{getPhysicsEngine:()=>null},BABYLON,cityRules:city,spawn:{x:36,y:1,z:32}});
  assert.equal(instance.enter({x:32,z:32}),true);
+ const before={x:instance.position().x,z:instance.position().z};
  for(let i=0;i<240;i++)instance.update(1/60,{throttle:1});
- assert.ok(impulses.length>0,'Havok body received impulses');
- assert.ok(instance.speedKmh>0,'accelerated');
- assert.equal(instance.exit(),null,'unsafe exit while moving');
+ assert.equal(impulses.length,0,'no wheel on the ground → no drive impulse');
+ assert.equal(instance.speedKmh,0);
+ assert.deepEqual({x:instance.position().x,z:instance.position().z},before,'position only changes through Havok');
+ assert.equal(instance.wheelsOnGround,0);
  assert.equal(instance.driving,true);
+ assert.ok(instance.exit(),'standing car can be left');
  instance.dispose();
 });

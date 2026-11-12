@@ -20,7 +20,7 @@ button{padding:12px 20px;font:inherit;cursor:pointer}#status{position:fixed;bott
 <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
 <script src="./nordhafen-benchmark.js"></script><script src="./nordhafen-cell-streamer.js"></script>
 <script src="./nordhafen-procedural-city.js"></script><script src="./nordhafen-player-motion.js"></script>
-<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script><script src="./nordhafen-ops-city.js"></script><script src="./nordhafen-ops-city-objectives.js"></script><script src="./nordhafen-ops-traffic.js"></script><script src="./nordhafen-ops-minimap.js"></script><script src="./nordhafen-ops-vehicles.js"></script><script src="./nordhafen-ops-mobile.js"></script><script src="./nordhafen-ops-menu.js"></script><script src="./nordhafen-ops-weapons.js"></script><script src="./nordhafen-ops-audio.js"></script><script src="./nordhafen-ops-campaign.js"></script>
+<script src="./nordhafen-player-controller.js"></script><script src="./nordhafen-ops-combat.js"></script><script src="./nordhafen-ops-controls.js"></script><script src="./nordhafen-ops-enemies.js"></script><script src="./nordhafen-ops-mission.js"></script><script src="./nordhafen-ops-interiors.js"></script><script src="./nordhafen-ops-modes.js"></script><script src="./nordhafen-ops-city.js"></script><script src="./nordhafen-ops-city-objectives.js"></script><script src="./nordhafen-ops-vehicle-config.js"></script><script src="./nordhafen-ops-traffic.js"></script><script src="./nordhafen-ops-minimap.js"></script><script src="./nordhafen-ops-vehicles.js"></script><script src="./nordhafen-ops-mobile.js"></script><script src="./nordhafen-ops-menu.js"></script><script src="./nordhafen-ops-weapons.js"></script><script src="./nordhafen-ops-audio.js"></script><script src="./nordhafen-ops-campaign.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -184,7 +184,7 @@ async function start(){
   window.addEventListener('blur',()=>vehicleKeys.clear(),{signal:controller.signal});
   for(const button of document.querySelectorAll('[data-drive-key]')){
    const key=button.dataset.driveKey;
-   button.addEventListener('pointerdown',e=>{e.preventDefault();vehicleKeys.add(key);button.setPointerCapture?.(e.pointerId);},{signal:controller.signal});
+   button.addEventListener('pointerdown',e=>{e.preventDefault();vehicleKeys.add(key);try{button.setPointerCapture?.(e.pointerId);}catch(_){/* pointer already released */}},{signal:controller.signal});
    const release=e=>{e.preventDefault();vehicleKeys.delete(key);};
    button.addEventListener('pointerup',release,{signal:controller.signal});
    button.addEventListener('pointercancel',release,{signal:controller.signal});
