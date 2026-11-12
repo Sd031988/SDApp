@@ -59,6 +59,9 @@ async function play(page,url){
   const phoneErrors=await play(phone,url);
   assert.equal(await phone.locator('#footControls').isVisible(),true,'foot controls on mobile');
   await phone.locator('[data-foot-action="vehicle"]').tap();
+  await phone.screenshot({path:path.join(screenshotDir,'nordhafen-ops-mobile-after-enter-tap.png')});
+  const mobileState=await phone.evaluate(()=>({status:document.getElementById('status').textContent,vehicle:document.getElementById('vehicleToggle').textContent,footHidden:document.getElementById('footControls').hidden,driveHidden:document.getElementById('driveControls').hidden}));
+  console.log('Mobile entry diagnostics:',JSON.stringify(mobileState),JSON.stringify(phoneErrors));
   await phone.waitForFunction(()=>document.getElementById('vehicleToggle')?.textContent==='Aussteigen',undefined,{timeout:15000});
   assert.equal(await phone.locator('#driveControls').isVisible(),true,'car pad on mobile');
   assert.equal(await phone.locator('#footControls').isVisible(),false,'on-foot pad hidden while driving');
