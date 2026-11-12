@@ -9,15 +9,15 @@
  function damage(enemy,amount){const raw=Math.max(0,amount),absorbed=Math.min(enemy.armor||0,raw*.65),armor=Math.max(0,(enemy.armor||0)-absorbed),health=Math.max(0,enemy.health-(raw-absorbed));return {...enemy,armor,health,state:health===0?'dead':enemy.state};}
  function heal(enemy,amount){const max=TYPES[enemy.type]?.health||MAX_HEALTH;return {...enemy,health:Math.min(max,enemy.health+Math.max(0,amount))};}
  function hurt(health,amount){return Math.max(0,health-Math.max(0,amount));}
- function step(enemy,player,dt,{visible=false,pursue=false,random=.5,patrolAxis='x',elapsed=Infinity}={}){
+ function step(enemy,player,dt,{visible=false,pursue=false,pursuitRange=110,random=.5,patrolAxis='x',elapsed=Infinity}={}){
   if(enemy.health<=0)return {enemy:{...enemy,state:'dead'},shoot:false};
   const profile=TYPES[enemy.type]||TYPES.guard;
-  if(!awake(enemy,player,pursue?110:80))return {enemy,shoot:false,spread:0};
+  if(!awake(enemy,player,pursue?Math.max(110,pursuitRange):80))return {enemy,shoot:false,spread:0};
   if(elapsed<10)visible=false;
   const deltaX=player.x-enemy.x,deltaZ=player.z-enemy.z,distance=Math.hypot(deltaX,deltaZ);
   let state=enemy.state;
   if(visible&&distance<profile.detect)state=distance<14?'shoot':'chase';
-  else if(pursue&&distance<110)state='chase';
+  else if(pursue&&distance<Math.max(110,pursuitRange))state='chase';
   else if(state==='shoot'||state==='chase')state=distance<45?'search':'patrol';
   else if(state==='search'&&enemy.time>3)state='patrol';
   else if(state==='alert'&&enemy.time>12)state='search';
