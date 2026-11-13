@@ -170,3 +170,12 @@ test('B1 exam blueprints have complete, consistent sections and timing',()=>{
   for(const required of ['lesen','hoeren','schreiben','sprechen'])assert.ok(ids.has(required),kind+': missing '+required);
  }
 });
+
+
+test('writing word counter uses correct German singular and plural',()=>{
+ assert.match(source,/count\.textContent=words\+' '\+\(words===1\?'Wort':'Wörter'\)/);
+ const label=words=>words+' '+(words===1?'Wort':'Wörter');
+ assert.equal(label(0),'0 Wörter');
+ assert.equal(label(1),'1 Wort');
+ assert.equal(label(2),'2 Wörter');
+});
