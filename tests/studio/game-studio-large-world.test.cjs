@@ -92,3 +92,14 @@ assert.equal(Core.serialize(old),v1);
 assert.equal(Project.serialize(old),v2);
 assert.throws(()=>World.parse(v1),/Großwelt v3/);
 });
+test('Runtime lehnt ungültige Zellradien vor der Initialisierung ab',()=>{
+const world=World.generate(31,1),before=World.serialize(world);
+for(const radius of [-1,4,0.5,NaN,Infinity,'1',null]){
+assert.throws(()=>World.runtime(world,radius),/Ungültiger aktiver Zellenradius/);
+}
+for(const radius of [0,1,2,3]){
+const runtime=World.runtime(world,radius);
+assert(runtime.query(0,0).activeCells>0);
+}
+assert.equal(World.serialize(world),before,'Ungültige Radiuswerte dürfen das Projekt nicht verändern');
+});
