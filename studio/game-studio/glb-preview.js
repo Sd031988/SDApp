@@ -113,5 +113,23 @@ drag={x:event.clientX,y:event.clientY};schedule();
 for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,()=>drag=null);
 canvas.addEventListener('wheel',event=>{if(!model)return;event.preventDefault();zoom=Math.max(.45,Math.min(2.5,zoom*(event.deltaY>0?.92:1.08)));schedule();},{passive:false});
 window.addEventListener('resize',schedule);
-canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();setInfo('3D-Kontext verloren. Bitte die GLB-Vorschau neu laden.',true);buffers=[];model=null;});
+canvas.addEventListener('webglcontextlost',event=>{
+event.preventDefault();
+if(request){cancelAnimationFrame(request);request=0;}
+// All GPU handles are invalid after restoration. Preserve the parsed model and file.
+gl=null;program=null;locations=null;buffers=[];
+setInfo('3D-Kontext verloren. Warte auf Wiederherstellung.',true);
+});
+canvas.addEventListener('webglcontextrestored',()=>{
+const saved=model,view={yaw,pitch,zoom};
+gl=null;program=null;locations=null;buffers=[];
+if(!saved){setInfo('3D-Vorschau bereit. Bitte GLB-Datei wählen.');return;}
+try{
+show(saved,importName||'3D-Modell');
+yaw=view.yaw;pitch=view.pitch;zoom=view.zoom;
+schedule();
+}catch(err){
+setInfo('3D-Vorschau konnte nicht wiederhergestellt werden: '+(err?.message||'Unbekannter Fehler'),true);
+}
+});
 })();
