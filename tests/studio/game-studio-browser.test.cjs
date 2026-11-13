@@ -116,6 +116,40 @@ await page.locator('#undoAction').click();
 assert.equal(await page.locator('#objectCount').innerText(),'7');
 await page.locator('#redoAction').click();
 assert.equal(await page.locator('#objectCount').innerText(),'8');
+// Main WebGL renderer: repeated GPU loss/restore must rebuild GPU resources
+// without changing v2 model instances, history, or serialized project data.
+const canLoseMainContext=await page.locator('#stage').evaluate(el=>{
+el.__sdMainLossTest=el.getContext('webgl').getExtension('WEBGL_lose_context');
+return Boolean(el.__sdMainLossTest);
+});
+if(canLoseMainContext){
+for(let cycle=0;cycle<2;cycle++){
+await page.locator('#stage').evaluate(el=>el.__sdMainLossTest.loseContext());
+await page.waitForFunction(()=>document.body.dataset.gameWebgl==='lost',null,{timeout:15000});
+assert.equal(await page.locator('#objectCount').innerText(),'8');
+await page.locator('#stage').evaluate(el=>el.__sdMainLossTest.restoreContext());
+await page.waitForFunction(()=>{
+const el=document.getElementById('stage'),gl=el.getContext('webgl');
+return document.body.dataset.gameWebgl==='ready'&&!gl.isContextLost()&&
+Boolean(gl.getParameter(gl.CURRENT_PROGRAM))&&gl.getError()===gl.NO_ERROR;
+},null,{timeout:15000});
+assert.equal(await page.locator('#objectCount').innerText(),'8');
+assert.equal(await page.locator('#stageError').isVisible(),false);
+}
+await page.locator('#undoAction').click();
+assert.equal(await page.locator('#objectCount').innerText(),'7');
+await page.locator('#redoAction').click();
+assert.equal(await page.locator('#objectCount').innerText(),'8');
+const recoveredDownloadEvent=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const recoveredDownload=await recoveredDownloadEvent;
+const recoveredScene=JSON.parse(fs.readFileSync(await recoveredDownload.path(),'utf8'));
+assert.equal(recoveredScene.version,2);
+assert.equal(recoveredScene.assets.length,1);
+assert.equal(recoveredScene.objects.length,8);
+assert(Math.abs(recoveredScene.objects[6].rotationY-Math.PI/2)<1e-9);
+console.log('Haupt-WebGL-Renderer: zwei GPU-Verlust-/Wiederherstellungszyklen mit v2-Modellen und Undo/Redo bestanden.');
+}else console.log('WEBGL_lose_context fehlt: Haupt-Renderer-Recovery-Test übersprungen.');
 // The saved project must restore model geometry and asset references.
 await page.locator('#sceneFile').setInputFiles({name:'model-project.json',mimeType:'application/json',buffer:v2Payload});
 await page.waitForFunction(()=>document.querySelector('#objectCount').textContent==='7');
@@ -132,6 +166,23 @@ buffer:Buffer.from(projectCore.serialize(projectCore.fresh()))
 });
 await page.waitForFunction(()=>document.querySelector('#objectCount').textContent==='6');
 assert.equal(await page.locator('#undoAction').isDisabled(),true);
+// Legacy v1 files must also survive a GPU reset without silent migration.
+if(canLoseMainContext){
+await page.locator('#stage').evaluate(el=>el.__sdMainLossTest.loseContext());
+await page.waitForFunction(()=>document.body.dataset.gameWebgl==='lost',null,{timeout:15000});
+await page.locator('#stage').evaluate(el=>el.__sdMainLossTest.restoreContext());
+await page.waitForFunction(()=>{
+const gl=document.getElementById('stage').getContext('webgl');
+return document.body.dataset.gameWebgl==='ready'&&!gl.isContextLost()&&Boolean(gl.getParameter(gl.CURRENT_PROGRAM));
+},null,{timeout:15000});
+const v1RecoveredDownloadEvent=page.waitForEvent('download');
+await page.locator('#saveScene').click();
+const v1RecoveredDownload=await v1RecoveredDownloadEvent;
+const v1Recovered=JSON.parse(fs.readFileSync(await v1RecoveredDownload.path(),'utf8'));
+assert.deepEqual(v1Recovered,JSON.parse(projectCore.serialize(projectCore.fresh())));
+assert.equal(await page.locator('#undoAction').isDisabled(),true);
+console.log('Haupt-WebGL-Renderer: zusätzlicher v1-Kontextverlust mit unverändertem JSON-Roundtrip bestanden.');
+}
 await page.locator('#glbPreview').hover();
 await page.mouse.down();await page.mouse.move(540,380);await page.mouse.up();
 await page.locator('#glbFile').setInputFiles({name:'bad.glb',mimeType:'model/gltf-binary',buffer:Buffer.alloc(44)});
