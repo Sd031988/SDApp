@@ -588,7 +588,11 @@ async function zipEinlesen(f, ziel = S.p.dateien) {
 }
 function mimeVon(p) { const e = (p.split('.').pop() || '').toLowerCase(); return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', jxl: 'image/jxl', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', pdf: 'application/pdf' }[e] || 'application/octet-stream'; }
 function herunterladen(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
-async function zipExport() { if (!S.p) return; await speichernJetzt(); herunterladen(zipBauen(S.p.dateien), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
+// Herunterladen als Startpaket: vorher prüfen, dann mit Startdatei (Windows/Mac/Linux) und Anleitung (studio/startpaket.js)
+async function zipExport() { if (!S.p) return; await speichernJetzt();
+  if (window.SDStartpaket) { try { await SDStartpaket.exportieren(S.p, S.aktiv, slug(S.p.name), herunterladen, toast); return; } catch (e) { console.error(e); toast('Startpaket ging nicht – lade den reinen Quellcode.'); } }
+  zipSichern(); }
+function zipSichern() { if (!S.p) return; herunterladen(zipBauen(S.p.dateien), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
 
 /* Desktop-App als eigenständiges Electron-Projekt exportieren. */
 
@@ -1060,7 +1064,7 @@ function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0
 async function programmStarten(spWahl) {
   const sp = spWahl || programmSprache(S.aktiv); await speichernJetzt();
   const info = sp === 'python' ? (i => ({ gruende: [i.pakete.length ? 'Python-Pakete: ' + i.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', i.fenster ? 'ein Fenster (tkinter/turtle)' : ''].filter(Boolean) }))(pyFremde(S.p.dateien)) : nurAufPc(sp, S.p.dateien);
-  if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); }
+  if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); if (w === 'paket') return zipExport(); }
   let stdinText = ($('eingabe').value || '').replace(/ \| /g, '\n'); if (!stdinText.trim() && liestEingabe(sp, S.p.dateien)) { const e = await eingabeFragen(sp); if (e == null) return; stdinText = e; }
   if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
   const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)) || (sp === 'node' && /\.(m?js|cjs|json)$/.test(x) && !/^package(-lock)?\.json$/.test(x)) || (sp === 'typescript' && /\.ts$/.test(x)));
@@ -1946,9 +1950,10 @@ function pcFrage(info) { return new Promise(ok => { let o = $('pcFrage'); if (!o
   const was = (info.gruende || []).join(' und ');
   o.hidden = false; o.innerHTML = '<div class="karte" style="width:min(600px,96vw)"><b style="font-size:16px">💻 Dieses Programm läuft nur auf deinem PC</b><p style="margin:0;line-height:1.55"></p>' +
     '<p class="hinweis" style="padding:0">Online laufen nur Konsolen-Programme mit der Standard-Bibliothek – ohne Fenster, ohne Zusatz-Pakete und ohne Server. Auf deinem PC nutzt der SD KI-Agent deine installierten Programme und holt fehlende Pakete (pip, npm …) automatisch.</p>' +
-    '<div class="reihe"><button id="pfOnline">Trotzdem online versuchen</button><span style="flex:1"></span><button id="pfAbbr">Abbrechen</button><button class="primary" id="pfPc">💻 Auf meinem PC ausführen</button></div></div>';
+    '<p class="hinweis" style="padding:0">Ohne SD KI-Agent: Lade das Projekt als <b>Startpaket</b> herunter, entpacke es und starte START-WINDOWS.cmd – Umgebung und Pakete richtet die Datei selbst ein.</p>' +
+    '<div class="reihe" style="flex-wrap:wrap"><button id="pfOnline">Trotzdem online versuchen</button><button id="pfPaket">⬇ Als Startpaket herunterladen</button><span style="flex:1"></span><button id="pfAbbr">Abbrechen</button><button class="primary" id="pfPc">💻 Auf meinem PC ausführen</button></div></div>';
   o.querySelector('p').textContent = 'Dein Code braucht ' + was + '.';
-  const fertig = w => { o.hidden = true; ok(w); }; $('pfPc').onclick = () => fertig('pc'); $('pfOnline').onclick = () => fertig('online'); $('pfAbbr').onclick = () => fertig(null); o.onclick = e => { if (e.target === o) fertig(null); }; }); }
+  const fertig = w => { o.hidden = true; ok(w); }; $('pfPc').onclick = () => fertig('pc'); $('pfPaket').onclick = () => fertig('paket'); $('pfOnline').onclick = () => fertig('online'); $('pfAbbr').onclick = () => fertig(null); o.onclick = e => { if (e.target === o) fertig(null); }; }); }
 
 /* Was läuft online NICHT (Fenster, Zusatz-Pakete, Server)? -> lieber auf dem PC */
 const NODE_EINGEBAUT = new Set('assert buffer child_process cluster console constants crypto dgram dns domain events fs http http2 https inspector module net os path perf_hooks process punycode querystring readline repl stream string_decoder timers tls tty url util v8 vm worker_threads zlib test'.split(' '));
@@ -2027,7 +2032,7 @@ function onlineDialog() {
     return report;
   };
   showReport();
-  $('onZip').onclick=()=>zipExport();
+  $('onZip').onclick=()=>{speichernJetzt().then(zipSichern);};
   $('onName').value = (S.p.online && S.p.online.name) || slug(S.p.name).replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   const vorschau = () => { $('onUrl').textContent = 'https://sd031988.github.io/sd-seiten/' + ($('onName').value.trim().toLowerCase() || '…') + '/'; }; $('onName').oninput = vorschau; vorschau();
   $('onRecht').checked = false; $('onZu').onclick = () => { box.hidden = true; }; box.onclick = e => { if (e.target === box) box.hidden = true; };
