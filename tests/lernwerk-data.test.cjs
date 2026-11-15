@@ -179,3 +179,15 @@ test('writing word counter uses correct German singular and plural',()=>{
  assert.equal(label(1),'1 Wort');
  assert.equal(label(2),'2 Wörter');
 });
+
+
+test('A2 writing self-check addresses reason clause and unambiguous rescheduling',()=>{
+ const start=source.indexOf('const writingChecks=');
+ const end=source.indexOf(';const writingKey=',start);
+ const checks=new Function(source.slice(start,end+1)+'return writingChecks')();
+ assert.equal(checks.a2.length,4);
+ assert.ok(checks.a2.some(point=>/weil/.test(point)&&/Verb/.test(point)&&/Ende/.test(point)));
+ assert.ok(checks.a2.some(point=>/Tag/.test(point)&&/Uhrzeit/.test(point)));
+ assert.ok(checks.a2.some(point=>/Anrede/.test(point)));
+ assert.ok(checks.a2.some(point=>/Grußformel/.test(point)));
+});
