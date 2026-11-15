@@ -1,5 +1,23 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (16.11.2026): KI im Terminal (Gemini CLI, Claude Code, Codex) mit Live-Abgleich
+
+Im Code-Studio: Menü → **„🖥 KI im Terminal (Gemini, Claude, Codex – PC)“** (`studio/pc-terminal.js`).
+1. Das Studio übergibt das Projekt wie bisher über `POST /__vom_hub` und öffnet `http://localhost:8765/?studio=<name>&terminal=1`.
+2. In der **eigenen Oberfläche des Agenten** wählt der Nutzer Gemini CLI, Claude Code, Codex oder die Eingabeaufforderung.
+   Die Werkzeuge `ki_terminal_status` und `ki_terminal_oeffnen` laufen nur über `/__tool` (gleicher Ursprung, `allowed()`).
+   Es öffnet sich ein echtes Terminal-Fenster im Projektordner (`~/Ollama_Projekte/<name>`); fehlt das Programm, installiert
+   der Knopf es mit `npm install -g` (braucht Node.js).
+3. Live-Abgleich alle 2 s: `POST /__vom_hub` mit `{"aktion":"lesen","name","stand"}` (Textdateien lesen, ohne `.venv`,
+   `node_modules`, `.alt` …) und `{"aktion":"datei","name","pfad","inhalt"|"loeschen"}` (eine Textdatei schreiben/löschen).
+
+Regeln (bitte nicht aufweichen):
+- Die Webseite darf über `/__vom_hub` nur **Dateien im übergebenen Projektordner** lesen und schreiben – **nie etwas starten**.
+  Das Terminal öffnet ausschließlich die Agent-Oberfläche auf Nutzerklick.
+- `aktion: datei` blockiert Pfade mit `..`, außerhalb des Projekts, in `.venv`/`node_modules`/`.alt` und ausführbare Endungen
+  (`VOM_HUB_VERBOTEN`). Erlaubte Ursprünge bleiben `HUB_ORIGINS` + lokales Web-Studio.
+- `ping` meldet `"sync": true`; ältere Agenten erkennt das Studio daran und bittet um „Nach Updates suchen“.
+
 ## Neu (04.11.2026): Online-Werkzeuge kommen automatisch auf den PC
 
 Der PC-Agent (localhost:8765): Der Knopf **„💻 Code-Studio“** öffnet `http://localhost:8766/studio/` (dasselbe Studio wie online).
