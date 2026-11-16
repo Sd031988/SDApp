@@ -144,6 +144,16 @@ test("change prompts include only user-approved complete file contents",()=>{
  assert(request.includes("### Datei:"));
  assert.equal(project.dateien["index.html"],"<h1>Meine Rechnung</h1>");
 });
+test("change prompt forbids unsolicited edits and preserves importer format",()=>{
+ const project={name:"Demo",dateien:{"app.js":"function brake(){return 1}","other.js":"console.log('untouched')"}};
+ const request=core.buildChangePrompt("Nur brake sanfter machen",project,["app.js"]);
+ assert.match(request,/AUSSCHLIESSLICH die ausdrücklich gewünschte Funktion/);
+ assert.match(request,/Keine ungefragten Refactorings/);
+ assert.match(request,/kleinstmöglichen Änderung/);
+ assert.match(request,/vollständige Inhalte NUR für tatsächlich geänderte Dateien/);
+ assert.match(request,/### Datei:/);
+ assert(!request.includes("console.log('untouched')"));
+});
 test("change prompts reject secrets, missing paths, oversized and empty selection",()=>{
  const project={name:"safe",dateien:{
   "app.js":"console.log('hello')",
