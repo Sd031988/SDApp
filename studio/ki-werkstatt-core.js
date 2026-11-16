@@ -205,7 +205,49 @@ function buildChangePrompt(goal,project,selected){
   'Am Ende soll die vollständige KI-Antwort in SD Code-Studio eingefügt werden können; Erklärungstext steht immer außerhalb der Codeblöcke.'
  ].join('\n\n');
 }
-const api={safePath,parse,buildPlan,buildPrompt,buildChangePrompt,suggestChangeFiles,changeFileAllowed,languageFiles};
+function applyUnifiedPatch(input,existing){
+ const errors=[],files=[],warnings=[];
+ const text=String(input||'').replace(/\r\n?/g,'\n');
+ if(text.length>MAX_TOTAL)return {files,errors:['Patch zu groß.'],warnings};
+ const lines=text.split('\n');let i=0;
+ while(i<lines.length){
+  if(!lines[i].startsWith('--- ')){i++;continue}
+  const old=lines[i++].slice(4).trim().replace(/^a\//,'');
+  if(i>=lines.length||!lines[i].startsWith('+++ ')){errors.push('Patch-Kopf unvollständig.');break}
+  const next=lines[i++].slice(4).trim().replace(/^b\//,'');
+  if(!safePath(old)||old!==next||!Object.prototype.hasOwnProperty.call(existing,next)||typeof existing[next]!=='string'){errors.push('Patch-Dateipfad unbekannt oder unsicher: '+next);break}
+  let source=existing[next].replace(/\r\n?/g,'\n');
+  let parts=source.split('\n'),offset=0,seen=false;
+  while(i<lines.length&&lines[i].startsWith('@@')){
+   const header=lines[i++].match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+   if(!header){errors.push('Ungültiger Hunk-Kopf: '+next);break}
+   const before=[],after=[];
+   while(i<lines.length&&!lines[i].startsWith('@@')&&!lines[i].startsWith('--- ')){
+    const line=lines[i++];
+    if(line==='\\ No newline at end of file')continue;
+    if(!line&&i===lines.length)break;
+    const op=line[0],value=line.slice(1);
+    if(![' ','+','-'].includes(op)){errors.push('Ungültige Patch-Zeile: '+next);break}
+    if(op!=='+' )before.push(value);
+    if(op!=='-')after.push(value);
+   }
+   if(errors.length)break;
+   if(before.length!==Number(header[2]??1)||after.length!==Number(header[4]??1)){errors.push('Patch-Zeilenzahl stimmt nicht: '+next);break}
+   const pos=Number(header[1])-1+offset;
+   if(pos<0||pos>parts.length||before.some((line,k)=>parts[pos+k]!==line)){errors.push('Patch-Konflikt: Originalcode stimmt nicht überein: '+next);break}
+   parts.splice(pos,before.length,...after);offset+=after.length-before.length;seen=true;
+  }
+  if(errors.length)break;
+  if(!seen){errors.push('Keine Änderung für '+next);break}
+  if(files.some(f=>f.path===next)){errors.push('Doppelte Patch-Datei: '+next);break}
+  const content=parts.join('\n');
+  if(content.length>MAX_SINGLE){errors.push('Datei nach Patch zu groß: '+next);break}
+  files.push({path:next,content,language:next.split('.').pop()});
+ }
+ if(!files.length&&!errors.length)errors.push('Kein Unified-Diff-Patch gefunden.');
+ return {files:errors.length?[]:files,errors,warnings,skipped:0};
+}
+const api={applyUnifiedPatch,safePath,parse,buildPlan,buildPrompt,buildChangePrompt,suggestChangeFiles,changeFileAllowed,languageFiles};
 root.SDKICoding=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
