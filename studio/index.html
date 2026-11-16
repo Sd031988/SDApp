@@ -157,6 +157,18 @@ button,input,select,textarea{font:inherit;color:inherit}
   #kopfAktionen #starten{padding:0 8px!important;font-size:13px}
   #kopfWerkzeuge .logo{display:none}
 }
+#unten>[data-feld="kiaendern"]{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr auto auto;gap:4px 12px}
+#unten>[data-feld="kiaendern"][hidden]{display:none!important}
+#haupt.untenZu #unten>[data-feld="kiaendern"]{display:none}
+.kaSpalte{display:grid;grid-template-rows:auto 1fr;gap:4px;min-width:0;min-height:0}
+.kaKopf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--smut)}.kaKopf label{flex:1;min-width:0;font-weight:600;color:var(--stext)}
+.kaKopf button{padding:3px 10px!important;font-size:12px}.kaKopf .kaHaupt{background:var(--sacc)!important;color:#fff!important;border-color:var(--sacc)!important}
+.kaLink{font-size:12px;color:var(--sacc)}
+.kaSpalte textarea{width:100%;min-height:56px;resize:none;box-sizing:border-box;background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px;padding:6px 8px;font:12px/1.4 ui-monospace,Consolas,monospace}
+#kaKopie{min-height:40px}
+#kaStatus,#kaZurueck{grid-column:1/-1;margin:0;font-size:12px;color:var(--smut)}#kaStatus[data-art="ok"]{color:#4ade80}#kaStatus[data-art="fehler"]{color:#f59e0b}
+#kaZurueck{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#f59e0b}#kaZurueck[hidden]{display:none}#kaZurueck div{flex:1;min-width:0}
+@media (max-width:819px){#unten>[data-feld="kiaendern"]{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:auto}.kaSpalte textarea{min-height:90px}}
 </style>
 <style>.sd-json-fehler{background:rgba(235,65,65,.24);border-bottom:2px wavy #f66}</style>
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
@@ -221,9 +233,22 @@ button,input,select,textarea{font:inherit;color:inherit}
       </div>
     </div>
     <div id="unten">
-      <div id="untenTabs"><button data-u="ausgabe" class="an">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
+      <div id="untenTabs"><button data-u="kiaendern" class="an" id="kaTab" title="Änderungswunsch an Gemini/ChatGPT/Claude kopieren und die Antwort hier einfügen">✨ ÄNDERN MIT KI</button><button data-u="ausgabe">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
       <div data-feld="werkzeuge" hidden><button data-studio-action="fehlerfinder">Fehlerfinder</button><button data-studio-action="review">Projekt-Review</button><button data-studio-action="suche">In allen Dateien suchen</button><button data-studio-action="formatieren">Code formatieren</button><button data-studio-action="json">JSON prüfen</button><button data-studio-action="pcvorschau">Vorschau PC</button><button data-studio-action="handyvorschau">Vorschau Handy</button><button data-studio-action="mehr">☰ Mehr</button><a class="knopfLink" href="./devtools.html" target="_blank" rel="noopener">Entwickler-Tools ↗</a></div>
-      <div data-feld="ausgabe"><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
+      <div data-feld="kiaendern">
+        <div class="kaSpalte">
+          <div class="kaKopf"><label for="kaWunsch">1. Was soll geändert werden?</label><button type="button" id="kaKopieren" class="kaHaupt">📋 Anfrage kopieren</button><a class="kaLink" href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer">Gemini ↗</a></div>
+          <textarea id="kaWunsch" placeholder="z. B. Der Knopf „Senden“ soll grün sein und beim Klick eine Bestätigung zeigen."></textarea>
+          <textarea id="kaKopie" readonly hidden aria-label="Anfrage zum manuellen Kopieren"></textarea>
+        </div>
+        <div class="kaSpalte">
+          <div class="kaKopf"><label for="kaAntwort">2. Antwort der KI hier einfügen</label><button type="button" id="kaUebernehmen">Übernehmen</button><button type="button" id="kaRueck" hidden>↶ Rückgängig</button></div>
+          <textarea id="kaAntwort" placeholder="Ganze Antwort von Gemini einfügen (dort unter der Antwort auf „Kopieren“). Nur die zurückgegebenen Dateien werden übernommen."></textarea>
+        </div>
+        <p id="kaStatus" role="status" aria-live="polite">Die Anfrage enthält die Dateien dieses Projekts (ohne Zugangsdaten). Du kopierst und fügst sie selbst ein – das Studio sendet nichts.</p>
+        <div id="kaZurueck" hidden></div>
+      </div>
+      <div data-feld="ausgabe" hidden><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
       <div data-feld="konsole" hidden><div id="konsoleAus"></div><div class="reihe"><input id="konsoleEin" placeholder="❯ JavaScript in der Vorschau ausführen, z. B. document.title" style="flex:1"><button id="konsoleLeer">Leeren</button></div></div>
       <div data-feld="probleme" hidden>
         <div class="reihe" id="diagnoseAktionen">
@@ -451,9 +476,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./agent-proposal-guard.js?v=20261106-proposal-guard-1"></script>
 <script src="./studio-visual-text.js?v=20261101-visual-1"></script>
 <script src="./studio-modules.js?v=20261101-module-1"></script>
-<script src="studio.js?v=20261116-terminal-1"></script>
+<script src="studio.js?v=20261116-kiaendern-1"></script>
 <script src="startpaket.js?v=20261116-2"></script>
 <script src="pc-terminal.js?v=20261116-1"></script>
+<script src="ki-aendern.js?v=20261116-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
