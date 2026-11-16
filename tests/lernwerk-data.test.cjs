@@ -191,3 +191,15 @@ test('A2 writing self-check addresses reason clause and unambiguous rescheduling
  assert.ok(checks.a2.some(point=>/Anrede/.test(point)));
  assert.ok(checks.a2.some(point=>/Grußformel/.test(point)));
 });
+
+
+test('alphabetization writing guidance distinguishes names from everyday words',()=>{
+ const guideSource=fs.readFileSync('deutsch/lernwerk-vereinheitlicht.js','utf8');
+ const start=guideSource.indexOf('const writingGuides=');
+ const end=guideSource.indexOf(';const writingKey=',start);
+ assert.ok(start>=0&&end>start,'Writing guides are defined');
+ const guides=new Function(guideSource.slice(start,end+1)+'return writingGuides')();
+ assert.match(guides.alpha.review,/Großbuchstaben.*Namens/);
+ assert.match(guides.alpha.review,/drei Wörtern/);
+ assert.doesNotMatch(guides.alpha.review,/Großbuchstaben am Wortanfang/);
+});
