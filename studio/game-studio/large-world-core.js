@@ -129,6 +129,7 @@ obj.x=x;obj.z=z;
 return obj;
 }
 function runtime(world,radius=1){
+if(!validInt(radius,0,3))fail('Ungültiger aktiver Zellenradius.');
 const cellMap=new Map(world.cells.map(c=>[key(c.cx,c.cz),c]));
 let prev=new Set(),entered=0,exited=0;
 return Object.freeze({
