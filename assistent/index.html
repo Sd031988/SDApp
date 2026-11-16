@@ -1517,7 +1517,9 @@
     <script src="../sd-lotse-modelle.js?v=3"></script>
     <script src="../sd-ki.js?v=23"></script>
     <script src="../sd-chats.js?v=1"></script>
+    <script src="../i18n-mehr/assistent.js?v=1"></script>
     <script src="../i18n.js?v=1"></script>
+    <script src="../i18n-mehr/sprachwahl.js?v=2"></script>
     <script>
         'use strict';
 
@@ -1668,7 +1670,7 @@
                 reopen: '🧭 Open AI setup',
                 close: 'Close',
                 setupSeen: 'SD Hub AI setup'
-            } : {
+            } : Object.assign({
                 title: 'Deine KI im SD Hub einrichten',
                 intro: 'Wähle zwischen privater KI auf diesem Gerät und einem Online-Anbieter. SD prüft, was dein Browser ausführen kann, und empfiehlt automatisch ein passendes lokales Modell.',
                 checking: 'Prüfe, ob dieses Gerät lokale KI unterstützt …',
@@ -1686,7 +1688,7 @@
                 reopen: '🧭 KI-Einrichtung öffnen',
                 close: 'Schließen',
                 setupSeen: 'SD Hub KI-Einrichtung'
-            };
+            }, (window.SD_ASSISTENT_WIZARD || {})[window.SD_LANG] || {});
         }
         function hubSetupKeyFor(provider) {
             const info = ANBIETER[provider] || ANBIETER.gemini;
@@ -1942,8 +1944,12 @@
             const sprache = erkenneSprache(letzteNachrichtDerPerson());
             if (sprache === 'en') return '\n\nThe user\'s latest message is in English. Reply in English.';
             if (sprache === 'de') return '\n\nThe user\'s latest message is in German. Reply in German (Deutsch).';
+            // Andere Schrift (z. B. Dari, Arabisch, Ukrainisch, Tigrinya): in der Sprache dieser Nachricht antworten
+            if (/[؀-ۿЀ-ӿሀ-፿]/.test(letzteNachrichtDerPerson() || '')) return '\n\nReply in the same language as the user\'s latest message.';
             // Unklar (z. B. nur "Hi" oder "OK"): in der Sprache der App antworten
-            return window.SD_LANG === 'en' ? '\n\nReply in English.' : '\n\nReply in German (Deutsch).';
+            const APP_SPRACHE = { en: 'English', fa: 'Dari (Afghan Persian)', ps: 'Pashto', ar: 'Arabic', ur: 'Urdu', uk: 'Ukrainian', ti: 'Tigrinya' };
+            const l = window.SD_LANG || 'de';
+            return APP_SPRACHE[l] ? '\n\nReply in ' + APP_SPRACHE[l] + '.' : '\n\nReply in German (Deutsch).';
         }
 
         // ------------------------------------------------------------
