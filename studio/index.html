@@ -221,6 +221,11 @@ button,input,select,textarea{font:inherit;color:inherit}
       </div>
     </div>
     <div id="unten">
+      <section id="kiQuickCorrection" aria-label="KI-Korrektur einfügen" style="padding:10px 12px;border-bottom:1px solid var(--sline);background:var(--sside)">
+  <div class="reihe" style="align-items:center;flex-wrap:wrap"><strong>✨ KI-Korrektur einfügen</strong><span style="color:var(--smut)">Nur die gewünschten Codezeilen ändern</span></div>
+  <textarea id="kiQuickAnswer" rows="3" aria-label="Korrigierten Code oder Unified-Diff-Patch einfügen" placeholder="Antwort von ChatGPT, Gemini oder Claude hier einfügen (am besten Unified-Diff-Patch) …" style="width:100%;resize:vertical;margin:7px 0"></textarea>
+  <div class="reihe" style="align-items:center;flex-wrap:wrap"><button id="kiQuickCheck" type="button">🔎 Korrektur prüfen &amp; Stelle finden</button><span id="kiQuickStatus" role="status" aria-live="polite">Keine Dateien werden ohne Bestätigung verändert.</span></div>
+</section>
       <div id="untenTabs"><button data-u="ausgabe" class="an">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
       <div data-feld="werkzeuge" hidden><button data-studio-action="fehlerfinder">Fehlerfinder</button><button data-studio-action="review">Projekt-Review</button><button data-studio-action="suche">In allen Dateien suchen</button><button data-studio-action="formatieren">Code formatieren</button><button data-studio-action="json">JSON prüfen</button><button data-studio-action="pcvorschau">Vorschau PC</button><button data-studio-action="handyvorschau">Vorschau Handy</button><button data-studio-action="mehr">☰ Mehr</button><a class="knopfLink" href="./devtools.html" target="_blank" rel="noopener">Entwickler-Tools ↗</a></div>
       <div data-feld="ausgabe"><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
@@ -454,11 +459,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="studio.js?v=20261116-terminal-1"></script>
 <script src="startpaket.js?v=20261116-2"></script>
 <script src="pc-terminal.js?v=20261116-1"></script>
-<script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
+<script src="./ki-werkstatt-core.js?v=20261116-minimal-patch-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
 <script src="./ki-test-loop.js?v=20261102-test-loop-1"></script>
-<script src="./ki-werkstatt-ui.js?v=20261106-direct-agent-1"></script>
+<script src="./ki-werkstatt-ui.js?v=20261116-quick-correction-1"></script>
 <script src="./agent-review-ui.js?v=20261102-agent-safety-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
