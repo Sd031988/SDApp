@@ -141,7 +141,7 @@ test("change prompts include only user-approved complete file contents",()=>{
  assert(!request.includes("print('never share')"));
  assert(request.includes("Unveränderte Dateien NICHT erneut ausgeben"));
  assert(request.includes("Knopf zum Drucken hinzufügen"));
- assert(request.includes("### Datei:"));
+ assert(request.includes("Unified-Diff-Patch"));
  assert.equal(project.dateien["index.html"],"<h1>Meine Rechnung</h1>");
 });
 test("change prompt forbids unsolicited edits and preserves importer format",()=>{
@@ -150,8 +150,8 @@ test("change prompt forbids unsolicited edits and preserves importer format",()=
  assert.match(request,/AUSSCHLIESSLICH die ausdrücklich gewünschte Funktion/);
  assert.match(request,/Keine ungefragten Refactorings/);
  assert.match(request,/kleinstmöglichen Änderung/);
- assert.match(request,/vollständige Inhalte NUR für tatsächlich geänderte Dateien/);
- assert.match(request,/### Datei:/);
+ assert.match(request,/Keine vollständigen Dateien/);
+ assert.match(request,/Unified-Diff-Patch/);
  assert(!request.includes("console.log('untouched')"));
 });
 test("change prompts reject secrets, missing paths, oversized and empty selection",()=>{
@@ -168,4 +168,15 @@ test("change prompts reject secrets, missing paths, oversized and empty selectio
  assert.throws(()=>core.buildChangePrompt("Test",project,["too-big.js"]),/zu groß/);
  assert.throws(()=>core.buildChangePrompt("Test",project,[]),/mindestens eine/);
  assert.throws(()=>core.buildChangePrompt(" ",project,["app.js"]),/Änderung beschreiben/);
+});
+
+test("minimal patch applies only selected lines and rejects stale context",()=>{
+ const original={"app.js":"const speed = 10;\nconst brake = 2;\nconst other = true;\n"};
+ const patch="--- a/app.js\n+++ b/app.js\n@@ -1,3 +1,3 @@\n const speed = 10;\n-const brake = 2;\n+const brake = 3;\n const other = true;\n";
+ const result=core.applyUnifiedPatch(patch,original);
+ assert.deepEqual(result.errors,[]);
+ assert.equal(result.files[0].content,"const speed = 10;\nconst brake = 3;\nconst other = true;\n");
+ assert.equal(original["app.js"],"const speed = 10;\nconst brake = 2;\nconst other = true;\n");
+ assert.match(core.applyUnifiedPatch(patch,{"app.js":"changed"}).errors.join(" "),/Konflikt/);
+ assert.match(core.applyUnifiedPatch(patch,{}).errors.join(" "),/unbekannt/);
 });
