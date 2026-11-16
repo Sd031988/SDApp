@@ -139,7 +139,7 @@ test("change prompts include only user-approved complete file contents",()=>{
  assert(request.includes("<h1>Meine Rechnung</h1>"));
  assert(request.includes("body{color:orange}"));
  assert(!request.includes("print('never share')"));
- assert(request.includes("Unveränderte Dateien NICHT erneut ausgeben"));
+ assert(request.includes("Keine vollständigen Dateien"));
  assert(request.includes("Knopf zum Drucken hinzufügen"));
  assert(request.includes("Unified-Diff-Patch"));
  assert.equal(project.dateien["index.html"],"<h1>Meine Rechnung</h1>");
