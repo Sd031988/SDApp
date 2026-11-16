@@ -537,7 +537,9 @@ function validateProposalPreview(){
 function analyse(){
  clearRepairDraft();
  $('kiDiff').hidden=true;
- parsed=core.parse($('kiResult').value,S.aktiv,currentFiles());
+ const response=$('kiResult').value.trim();
+ const patchMode=changeMode&&/^--- (?:a\/)?[^\n]+\n\+\+\+ (?:b\/)?[^\n]+\n@@ /m.test(response);
+ parsed=patchMode?core.applyUnifiedPatch(response,currentFiles()):core.parse(response,S.aktiv,currentFiles());
  stagedProject=S.p?S.p.name:null;
  stagedSnapshot=currentFiles();
  validateProposalPreview();
