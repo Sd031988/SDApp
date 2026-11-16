@@ -1,5 +1,15 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (16.11.2026, später): KI im Terminal in jedem Ordner + Gemini-Schlüssel
+
+- Knopf **„🖥 KI im Terminal“** links in der Agent-Oberfläche (`kiTerminalWahl(null)`): Ordner frei wählen
+  (`ordner_waehlen` öffnet einen tkinter-Dialog in eigenem Prozess) oder Pfad einfügen. `ki_terminal_oeffnen(..., ordner=)`
+  prüft nur, dass der Ordner existiert; eigene Ordner haben **keinen** Live-Abgleich mit dem Studio.
+- `gemini_schluessel(aktion=status|setzen|entfernen)`: speichert den Schlüssel in `~/.sd_ki_agent/gemini_api_key` (0600).
+  Er wird beim Start nur als Umgebungsvariable `GEMINI_API_KEY` an Gemini CLI übergeben – **nie** in die .cmd-Datei,
+  nie an die Webseite; `status` liefert nur die letzten 4 Zeichen; das `/__tool`-Protokoll zeigt `schluessel` als `***`.
+- Beide Werkzeuge nur über `/__tool` (gleicher Ursprung), nicht über `/__vom_hub`.
+
 ## Neu (16.11.2026): KI im Terminal (Gemini CLI, Claude Code, Codex) mit Live-Abgleich
 
 Im Code-Studio: Menü → **„🖥 KI im Terminal (Gemini, Claude, Codex – PC)“** (`studio/pc-terminal.js`).
