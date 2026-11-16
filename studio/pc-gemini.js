@@ -88,7 +88,7 @@
     if (ZUSTAND.pc) { if (window.SDPcOrdner) await SDPcOrdner.jetzt(); }
     else if (window.SDPcTerminal && SDPcTerminal._takt) { await SDPcTerminal._takt(); }
     let r;
-    try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
+    try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text, modell: ($('gmModell') && $('gmModell').value) || 'auto' }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
     if (!r || !r.ok) {
       if (r && r.freigabe === false) { ZUSTAND.frei = false; knoepfe(); }
       blase('info', (r && r.error) || 'Senden ging nicht.'); return;
@@ -111,7 +111,11 @@
       blase('ki', e.antwort || '(keine Textantwort)', extra);
       if (ZUSTAND.pc) { if (window.SDPcOrdner) setTimeout(() => SDPcOrdner.jetzt(), 300); }
       else if (window.SDPcTerminal && SDPcTerminal._takt) setTimeout(() => SDPcTerminal._takt(), 300);
-    } else blase('info', 'Fehler: ' + ((e && e.fehler) || 'unbekannt'));
+    } else {
+      const f = (e && e.fehler) || 'unbekannt';
+      const m = $('gmModell') ? $('gmModell').value : 'auto';
+      blase('info', 'Fehler: ' + f + (m !== 'auto' && /model|modell|not found|404|permission|quota|429/i.test(f) ? '\nTipp: Oben „Automatisch“ wählen – vielleicht ist dieses Modell mit deinem Schlüssel nicht verfügbar oder das Kontingent ist aufgebraucht.' : ''));
+    }
     knoepfe(); $('gmEingabe').focus();
   }
 
@@ -128,6 +132,8 @@
     $('gmVerbinden').onclick = verbinden;
     $('gmSenden').onclick = senden;
     $('gmNeu').onclick = neu;
+    try { const m = localStorage.getItem('sdGeminiModell'); if (m && $('gmModell').querySelector('option[value="' + m + '"]')) $('gmModell').value = m; } catch (e) { /* egal */ }
+    $('gmModell').onchange = () => { try { localStorage.setItem('sdGeminiModell', $('gmModell').value); } catch (e) { /* egal */ } };
     $('gmEingabe').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); senden(); } });
     setInterval(() => { const ab = ZUSTAND.pc ? (window.SDPcOrdner && SDPcOrdner.aktiv) : (window.SDPcTerminal && SDPcTerminal.aktiv); if (ZUSTAND.frei && (!S.p || S.p !== ZUSTAND.projekt || !ab)) { ZUSTAND.frei = false; knoepfe(); status('Verbindung getrennt – „Verbinden“ startet sie neu.'); } }, 2000);
     knoepfe();

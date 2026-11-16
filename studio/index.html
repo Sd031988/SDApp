@@ -176,7 +176,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .gmMsg{border:1px solid var(--sline);border-radius:8px;padding:6px 9px;max-width:100%}.gm-du{align-self:flex-end;background:var(--ssel);max-width:85%}.gm-info{color:#f59e0b}
 .gmWer{font-size:11px;font-weight:700;color:var(--smut);margin-bottom:2px}.gmText{white-space:pre-wrap;word-break:break-word}.gmExtra{font-size:12px;color:#4ade80;margin-top:4px}
 .gmZeile{display:flex;gap:8px;align-items:stretch}.gmZeile textarea{flex:1;min-width:0;resize:none;background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px;padding:6px 8px;font:13px/1.4 system-ui,sans-serif}
-.gmKnoepfe{display:flex;flex-direction:column;gap:4px}.gmKnoepfe button{padding:4px 10px!important;font-size:12px}
+.gmKnoepfe{display:flex;flex-direction:column;gap:4px}.gmKnoepfe button,.gmKnoepfe select{padding:4px 10px!important;font-size:12px}#gmModell{background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px}
 #gmStatus{margin:0;font-size:12px;color:var(--smut)}#gmStatus[data-art="ok"]{color:#4ade80}#gmStatus[data-art="fehler"]{color:#f59e0b}
 @media (max-width:819px){.gmZeile{flex-direction:column}.gmKnoepfe{flex-direction:row;flex-wrap:wrap}}
 #pcBaumBox{border-bottom:1px solid var(--sline);margin-bottom:4px}#pcBaum{max-height:46vh;overflow:auto;font-size:13px}
@@ -265,7 +265,7 @@ button,input,select,textarea{font:inherit;color:inherit}
         <div id="gmVerlauf" aria-live="polite"></div>
         <div class="gmZeile">
           <textarea id="gmEingabe" rows="2" placeholder="Schreib Gemini, was es im Projekt machen soll – z. B. „Finde den Fehler in app.js und repariere ihn“ (Enter = senden, Shift+Enter = neue Zeile)"></textarea>
-          <div class="gmKnoepfe"><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
+          <div class="gmKnoepfe"><select id="gmModell" title="Welches Gemini-Modell soll arbeiten?" aria-label="Gemini-Modell"><option value="auto">Automatisch</option><option value="hydrogen">Gemini 4 Hydrogen</option><option value="flash">Flash (günstiger)</option><option value="pro">Pro (stärker)</option></select><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
         </div>
         <p id="gmStatus" role="status">Gemini CLI läuft dabei unsichtbar auf deinem PC (über den SD KI-Agenten) und bearbeitet die Dateien dieses Projekts. Beim ersten Mal musst du es im Agenten-Fenster erlauben.</p>
       </div>
@@ -502,7 +502,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="pc-terminal.js?v=20261116-2"></script>
 <script src="ki-aendern.js?v=20261116-1"></script>
 <script src="pc-ordner.js?v=20261117-1"></script>
-<script src="pc-gemini.js?v=20261117-1"></script>
+<script src="pc-gemini.js?v=20261117-2"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
