@@ -88,7 +88,7 @@
     if (ZUSTAND.pc) { if (window.SDPcOrdner) await SDPcOrdner.jetzt(); }
     else if (window.SDPcTerminal && SDPcTerminal._takt) { await SDPcTerminal._takt(); }
     let r;
-    try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text, modell: ($('gmModell') && $('gmModell').value) || 'auto' }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
+    try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text, modell: ($('gmModell') && $('gmModell').value) || 'flash' }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
     if (!r || !r.ok) {
       if (r && r.freigabe === false) { ZUSTAND.frei = false; knoepfe(); }
       blase('info', (r && r.error) || 'Senden ging nicht.'); return;
@@ -113,8 +113,8 @@
       else if (window.SDPcTerminal && SDPcTerminal._takt) setTimeout(() => SDPcTerminal._takt(), 300);
     } else {
       const f = (e && e.fehler) || 'unbekannt';
-      const m = $('gmModell') ? $('gmModell').value : 'auto';
-      blase('info', 'Fehler: ' + f + (m !== 'auto' && /model|modell|not found|404|permission|quota|429/i.test(f) ? '\nTipp: Oben „Automatisch“ wählen – vielleicht ist dieses Modell mit deinem Schlüssel nicht verfügbar oder das Kontingent ist aufgebraucht.' : ''));
+      const m = $('gmModell') ? $('gmModell').value : 'flash';
+      blase('info', 'Fehler: ' + f + (/model|modell|not found|404|permission|quota|429|billing/i.test(f) ? (m === 'hydrogen' || m === 'pro' ? '\nTipp: Hydrogen und Pro brauchen ein bezahltes Konto. Mit kostenlosem Schlüssel oben „Flash“ wählen.' : '\nTipp: Vielleicht sind die 250 kostenlosen Anfragen für heute aufgebraucht – morgen geht es wieder.') : ''));
     }
     knoepfe(); $('gmEingabe').focus();
   }

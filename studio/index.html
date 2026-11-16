@@ -265,7 +265,7 @@ button,input,select,textarea{font:inherit;color:inherit}
         <div id="gmVerlauf" aria-live="polite"></div>
         <div class="gmZeile">
           <textarea id="gmEingabe" rows="2" placeholder="Schreib Gemini, was es im Projekt machen soll – z. B. „Finde den Fehler in app.js und repariere ihn“ (Enter = senden, Shift+Enter = neue Zeile)"></textarea>
-          <div class="gmKnoepfe"><select id="gmModell" title="Welches Gemini-Modell soll arbeiten?" aria-label="Gemini-Modell"><option value="auto">Automatisch</option><option value="hydrogen">Gemini 4 Hydrogen</option><option value="flash">Flash (günstiger)</option><option value="pro">Pro (stärker)</option></select><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
+          <div class="gmKnoepfe"><select id="gmModell" title="Mit einem kostenlosen API-Schlüssel ist laut Google nur Flash enthalten (250 Anfragen pro Tag). Hydrogen und Pro brauchen ein bezahltes Konto." aria-label="Gemini-Modell"><option value="flash" selected>Flash – kostenlos mit Schlüssel (250/Tag)</option><option value="auto">Automatisch</option><option value="hydrogen">Gemini 4 Hydrogen – kostenpflichtig</option><option value="pro">Pro – kostenpflichtig</option></select><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
         </div>
         <p id="gmStatus" role="status">Gemini CLI läuft dabei unsichtbar auf deinem PC (über den SD KI-Agenten) und bearbeitet die Dateien dieses Projekts. Beim ersten Mal musst du es im Agenten-Fenster erlauben.</p>
       </div>
@@ -502,7 +502,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="pc-terminal.js?v=20261116-2"></script>
 <script src="ki-aendern.js?v=20261116-1"></script>
 <script src="pc-ordner.js?v=20261117-1"></script>
-<script src="pc-gemini.js?v=20261117-2"></script>
+<script src="pc-gemini.js?v=20261117-3"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
