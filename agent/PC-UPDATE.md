@@ -1,5 +1,14 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026): PC-Ordner im Code-Studio (z. B. Unreal-Projekt)
+
+Studio: Menü **„🖥 PC-Ordner öffnen (z. B. Unreal-Projekt)“** (`studio/pc-ordner.js`). Projekt „PC-<name>“ mit `pc:{id,name,pfad}`.
+- `/__vom_hub`: `ordner_anfragen` (merkt nur eine Bitte vor, Token), `ordner_status`, `ordner_liste`, `ordner_lesen`, `ordner_datei`.
+- Freigabe **nur in der Agent-Oberfläche**: Nutzer wählt den Ordner dort selbst (`ordner_waehlen`/Pfad) und klickt „Erlauben“
+  (`ordner_freigeben` über `/__tool`). Gilt bis zum Neustart. Laufwerk-Wurzel und Benutzerordner werden abgelehnt.
+- Lesen/Schreiben nur Textdateien (`ORDNER_TEXT_EXT`), max. 2 MB, Pfad-Prüfung per `realpath`, kein Löschen,
+  keine ausführbaren Endungen beim Schreiben (`VOM_HUB_VERBOTEN`). Gemini darf im freigegebenen Ordner arbeiten (`name = "ordner:<id>"`).
+
 ## Neu (16.11.2026, nachts): Gemini im Hintergrund – Chat im Code-Studio
 
 Im Studio unten Reiter **„✦ GEMINI (PC)“** (`studio/pc-gemini.js`): Projekt übergeben, Live-Abgleich starten, dann Chat.

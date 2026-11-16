@@ -64,6 +64,7 @@ jobs:
           node --check studio/chatgpt-transfer-extension/studio-bridge.js
           node --check studio/ki-aendern.js
           node --check studio/pc-gemini.js
+          node --check studio/pc-ordner.js
           node --check studio/pc-terminal.js
           node --check studio/startpaket.js
       - name: Windows-Python-Brücke prüfen

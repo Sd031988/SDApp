@@ -29,7 +29,8 @@
   }
 
   function knoepfe() {
-    const verbunden = !!(ZUSTAND.name && ZUSTAND.frei && window.SDPcTerminal && SDPcTerminal.aktiv && S.p && S.p === ZUSTAND.projekt);
+    const abgleich = ZUSTAND.pc ? !!(window.SDPcOrdner && SDPcOrdner.aktiv) : !!(window.SDPcTerminal && SDPcTerminal.aktiv);
+    const verbunden = !!(ZUSTAND.name && ZUSTAND.frei && abgleich && S.p && S.p === ZUSTAND.projekt);
     $('gmVerbinden').hidden = verbunden;
     $('gmSenden').disabled = !verbunden || !!ZUSTAND.job;
     $('gmNeu').hidden = !verbunden;
@@ -44,6 +45,15 @@
     if (!ping || !ping.ok) { status('Der SD KI-Agent ist nicht erreichbar. Starte ihn auf deinem PC (Desktop-Symbol) und klick dann noch einmal auf „Verbinden“. Fragt der Browser nach Zugriff aufs lokale Netzwerk: „Zulassen“.', 'fehler'); return; }
     if (!ping.gemini_chat) { status('Dein SD KI-Agent ist zu alt für den Gemini-Chat. Öffne ihn und klick auf „Nach Updates suchen“.', 'fehler'); return; }
     if (typeof speichernJetzt === 'function') await speichernJetzt();
+    if (S.p.pc) {
+      if (!(window.SDPcOrdner && SDPcOrdner.aktiv)) { status('Der PC-Ordner ist nicht verbunden. Links im Explorer auf 🔌 klicken und im SD KI-Agenten „Erlauben“, dann hier noch einmal „Verbinden“.', 'fehler'); return; }
+      const name = 'ordner:' + SDPcOrdner.id;
+      const st = await hub({ aktion: 'gemini_status', name });
+      if (!st.installiert) { status('Gemini CLI ist auf deinem PC noch nicht installiert. Im SD KI-Agenten: „🖥 KI im Terminal“ → bei Gemini CLI „Installieren und starten“.', 'fehler'); return; }
+      ZUSTAND = { name, projekt: S.p, frei: !!st.frei, job: null, pc: true, verlauf: [] };
+      status(st.frei ? '✓ Verbunden – Gemini arbeitet im PC-Ordner „' + S.p.pc.name + '“.' + (st.schluessel ? '' : ' Hinweis: Kein Gemini-Schlüssel im Agenten gespeichert.') : 'Ordner nicht freigegeben – bitte neu verbinden.', st.frei ? 'ok' : 'fehler');
+      knoepfe(); if (st.frei) $('gmEingabe').focus(); return;
+    }
     let j;
     try { j = await hub({ name: S.p.name, dateien: S.p.dateien }, 20000); } catch (e) { j = { error: String(e.message || e) }; }
     if (!j || !j.ok) { status('Übertragen ging nicht: ' + ((j && j.error) || '?'), 'fehler'); return; }
@@ -75,7 +85,8 @@
     blase('du', text);
     // Eigene Änderungen zuerst auf den PC bringen
     if (typeof speichernJetzt === 'function') await speichernJetzt();
-    if (window.SDPcTerminal && SDPcTerminal._takt) { await SDPcTerminal._takt(); }
+    if (ZUSTAND.pc) { if (window.SDPcOrdner) await SDPcOrdner.jetzt(); }
+    else if (window.SDPcTerminal && SDPcTerminal._takt) { await SDPcTerminal._takt(); }
     let r;
     try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
     if (!r || !r.ok) {
@@ -96,9 +107,10 @@
     if (warteText) warteText.parentNode.remove();
     if (e && e.status === 'fertig') {
       const d = e.dateien || {};
-      const extra = (d.plus || d.minus) ? 'Dateien geändert: +' + d.plus + ' / −' + d.minus + ' Zeilen – kommt gleich automatisch ins Studio (vorher wird eine Version gesichert).' : '';
+      const extra = (d.plus || d.minus) ? 'Dateien geändert: +' + d.plus + ' / −' + d.minus + ' Zeilen' + (ZUSTAND.pc ? ' – geöffnete Dateien werden gleich aktualisiert, neue Dateien siehst du im PC-Baum links.' : ' – kommt gleich automatisch ins Studio (vorher wird eine Version gesichert).') : '';
       blase('ki', e.antwort || '(keine Textantwort)', extra);
-      if (window.SDPcTerminal && SDPcTerminal._takt) setTimeout(() => SDPcTerminal._takt(), 300);
+      if (ZUSTAND.pc) { if (window.SDPcOrdner) setTimeout(() => SDPcOrdner.jetzt(), 300); }
+      else if (window.SDPcTerminal && SDPcTerminal._takt) setTimeout(() => SDPcTerminal._takt(), 300);
     } else blase('info', 'Fehler: ' + ((e && e.fehler) || 'unbekannt'));
     knoepfe(); $('gmEingabe').focus();
   }
@@ -117,7 +129,7 @@
     $('gmSenden').onclick = senden;
     $('gmNeu').onclick = neu;
     $('gmEingabe').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); senden(); } });
-    setInterval(() => { if (ZUSTAND.frei && (!S.p || S.p !== ZUSTAND.projekt || !(window.SDPcTerminal && SDPcTerminal.aktiv))) { ZUSTAND.frei = false; knoepfe(); status('Verbindung getrennt – „Verbinden“ startet sie neu.'); } }, 2000);
+    setInterval(() => { const ab = ZUSTAND.pc ? (window.SDPcOrdner && SDPcOrdner.aktiv) : (window.SDPcTerminal && SDPcTerminal.aktiv); if (ZUSTAND.frei && (!S.p || S.p !== ZUSTAND.projekt || !ab)) { ZUSTAND.frei = false; knoepfe(); status('Verbindung getrennt – „Verbinden“ startet sie neu.'); } }, 2000);
     knoepfe();
   }
 
