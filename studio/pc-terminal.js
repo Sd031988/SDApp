@@ -22,7 +22,7 @@
     if (!SYNC) { if (o) o.remove(); return; }
     if (!o) {
       o = document.createElement('div'); o.id = 'pcSyncPill';
-      o.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:9000;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:13px/1.3 system-ui;box-shadow:0 6px 20px #0006;max-width:calc(100vw - 28px)';
+      o.style.cssText = 'position:fixed;right:14px;bottom:52px;z-index:9000;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:13px/1.3 system-ui;box-shadow:0 6px 20px #0006;max-width:calc(100vw - 28px)';
       o.innerHTML = '<span class="pt"></span><button type="button" style="border:1px solid #3b3463;background:transparent;color:inherit;border-radius:999px;padding:5px 10px;cursor:pointer;font:inherit">Trennen</button>';
       o.querySelector('button').onclick = () => stoppen('Live-Abgleich mit dem PC beendet.');
       document.body.appendChild(o);

@@ -1,5 +1,15 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (16.11.2026, nachts): Gemini im Hintergrund – Chat im Code-Studio
+
+Im Studio unten Reiter **„✦ GEMINI (PC)“** (`studio/pc-gemini.js`): Projekt übergeben, Live-Abgleich starten, dann Chat.
+- `/__vom_hub` kennt `gemini_status`, `gemini_anfragen`, `gemini_frage`, `gemini_ergebnis`, `gemini_neu`; `ping` meldet `gemini_chat: true`.
+- **Ausnahme von „Webseite startet nichts“, eng begrenzt:** `gemini_frage` startet NUR `gemini` mit festen Argumenten
+  (`-p "Bearbeite die Aufgabe aus der Eingabe." --approval-mode auto_edit -o json [-r latest]`) im Projektordner;
+  der Nutzertext geht über **stdin**, nie über die Kommandozeile. Nur für Projekte, die der Nutzer **in der Agent-Oberfläche**
+  per Klick freigegeben hat (`gemini_freigabe` über `/__tool`, gilt bis zum Neustart). `gemini_anfragen` merkt die Bitte nur vor.
+- Ein Auftrag pro Projekt gleichzeitig, max. 20.000 Zeichen, 15 Minuten Zeitlimit. Schlüssel aus `gemini_schluessel` als `GEMINI_API_KEY`.
+
 ## Neu (16.11.2026, später): KI im Terminal in jedem Ordner + Gemini-Schlüssel
 
 - Knopf **„🖥 KI im Terminal“** links in der Agent-Oberfläche (`kiTerminalWahl(null)`): Ordner frei wählen

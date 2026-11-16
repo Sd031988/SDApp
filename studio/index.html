@@ -169,6 +169,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 #kaStatus,#kaZurueck{grid-column:1/-1;margin:0;font-size:12px;color:var(--smut)}#kaStatus[data-art="ok"]{color:#4ade80}#kaStatus[data-art="fehler"]{color:#f59e0b}
 #kaZurueck{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#f59e0b}#kaZurueck[hidden]{display:none}#kaZurueck div{flex:1;min-width:0}
 @media (max-width:819px){#unten>[data-feld="kiaendern"]{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:auto}.kaSpalte textarea{min-height:90px}}
+#unten>[data-feld="gemini"]{display:grid;grid-template-rows:1fr auto auto;gap:6px}
+#unten>[data-feld="gemini"][hidden]{display:none!important}
+#haupt.untenZu #unten>[data-feld="gemini"]{display:none}
+#gmVerlauf{overflow:auto;min-height:40px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.gmMsg{border:1px solid var(--sline);border-radius:8px;padding:6px 9px;max-width:100%}.gm-du{align-self:flex-end;background:var(--ssel);max-width:85%}.gm-info{color:#f59e0b}
+.gmWer{font-size:11px;font-weight:700;color:var(--smut);margin-bottom:2px}.gmText{white-space:pre-wrap;word-break:break-word}.gmExtra{font-size:12px;color:#4ade80;margin-top:4px}
+.gmZeile{display:flex;gap:8px;align-items:stretch}.gmZeile textarea{flex:1;min-width:0;resize:none;background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px;padding:6px 8px;font:13px/1.4 system-ui,sans-serif}
+.gmKnoepfe{display:flex;flex-direction:column;gap:4px}.gmKnoepfe button{padding:4px 10px!important;font-size:12px}
+#gmStatus{margin:0;font-size:12px;color:var(--smut)}#gmStatus[data-art="ok"]{color:#4ade80}#gmStatus[data-art="fehler"]{color:#f59e0b}
+@media (max-width:819px){.gmZeile{flex-direction:column}.gmKnoepfe{flex-direction:row;flex-wrap:wrap}}
 </style>
 <style>.sd-json-fehler{background:rgba(235,65,65,.24);border-bottom:2px wavy #f66}</style>
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
@@ -233,7 +243,7 @@ button,input,select,textarea{font:inherit;color:inherit}
       </div>
     </div>
     <div id="unten">
-      <div id="untenTabs"><button data-u="kiaendern" class="an" id="kaTab" title="Änderungswunsch an Gemini/ChatGPT/Claude kopieren und die Antwort hier einfügen">✨ ÄNDERN MIT KI</button><button data-u="ausgabe">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
+      <div id="untenTabs"><button data-u="kiaendern" class="an" id="kaTab" title="Änderungswunsch an Gemini/ChatGPT/Claude kopieren und die Antwort hier einfügen">✨ ÄNDERN MIT KI</button><button data-u="gemini" id="gmTab" title="Gemini CLI arbeitet im Hintergrund auf deinem PC – du schreibst hier, die Änderungen kommen ins Studio">✦ GEMINI (PC)</button><button data-u="ausgabe">AUSGABE</button><button data-u="konsole">KONSOLE<span class="zahl" id="konsoleAnz"></span></button><button data-u="probleme">PROBLEME<span class="zahl" id="problemAnz"></span></button><button data-u="werkzeuge">🛠 Werkzeuge</button><span style="flex:1"></span><button id="untenZu" title="Ein-/ausklappen (Strg+J)">▾</button></div>
       <div data-feld="werkzeuge" hidden><button data-studio-action="fehlerfinder">Fehlerfinder</button><button data-studio-action="review">Projekt-Review</button><button data-studio-action="suche">In allen Dateien suchen</button><button data-studio-action="formatieren">Code formatieren</button><button data-studio-action="json">JSON prüfen</button><button data-studio-action="pcvorschau">Vorschau PC</button><button data-studio-action="handyvorschau">Vorschau Handy</button><button data-studio-action="mehr">☰ Mehr</button><a class="knopfLink" href="./devtools.html" target="_blank" rel="noopener">Entwickler-Tools ↗</a></div>
       <div data-feld="kiaendern">
         <div class="kaSpalte">
@@ -247,6 +257,14 @@ button,input,select,textarea{font:inherit;color:inherit}
         </div>
         <p id="kaStatus" role="status" aria-live="polite">Die Anfrage enthält die Dateien dieses Projekts (ohne Zugangsdaten). Du kopierst und fügst sie selbst ein – das Studio sendet nichts.</p>
         <div id="kaZurueck" hidden></div>
+      </div>
+      <div data-feld="gemini" hidden>
+        <div id="gmVerlauf" aria-live="polite"></div>
+        <div class="gmZeile">
+          <textarea id="gmEingabe" rows="2" placeholder="Schreib Gemini, was es im Projekt machen soll – z. B. „Finde den Fehler in app.js und repariere ihn“ (Enter = senden, Shift+Enter = neue Zeile)"></textarea>
+          <div class="gmKnoepfe"><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
+        </div>
+        <p id="gmStatus" role="status">Gemini CLI läuft dabei unsichtbar auf deinem PC (über den SD KI-Agenten) und bearbeitet die Dateien dieses Projekts. Beim ersten Mal musst du es im Agenten-Fenster erlauben.</p>
       </div>
       <div data-feld="ausgabe" hidden><pre id="ausgabe">Bereit.</pre><input id="eingabe" placeholder="Eingabe fürs Programm (optional) – mehrere Eingaben mit „ | “ trennen, z. B. Anna | 42"></div>
       <div data-feld="konsole" hidden><div id="konsoleAus"></div><div class="reihe"><input id="konsoleEin" placeholder="❯ JavaScript in der Vorschau ausführen, z. B. document.title" style="flex:1"><button id="konsoleLeer">Leeren</button></div></div>
@@ -476,10 +494,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./agent-proposal-guard.js?v=20261106-proposal-guard-1"></script>
 <script src="./studio-visual-text.js?v=20261101-visual-1"></script>
 <script src="./studio-modules.js?v=20261101-module-1"></script>
-<script src="studio.js?v=20261116-kiaendern-1"></script>
+<script src="studio.js?v=20261116-gemini-1"></script>
 <script src="startpaket.js?v=20261116-2"></script>
-<script src="pc-terminal.js?v=20261116-1"></script>
+<script src="pc-terminal.js?v=20261116-2"></script>
 <script src="ki-aendern.js?v=20261116-1"></script>
+<script src="pc-gemini.js?v=20261116-1"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
