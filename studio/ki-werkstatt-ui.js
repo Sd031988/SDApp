@@ -718,6 +718,16 @@ function setup(){
  $('kiCopy').addEventListener('click',copyPrompt);
  $('kiChatGPT').addEventListener('click',()=>openAI('https://chatgpt.com/'));
  $('kiGemini').addEventListener('click',()=>openAI('https://gemini.google.com/'));
+ $('kiQuickCheck')?.addEventListener('click',()=>{
+  const input=$('kiQuickAnswer'),message=$('kiQuickStatus');
+  if(!input.value.trim()){message.textContent='Bitte zuerst eine KI-Korrektur einfügen.';input.focus();return}
+  if(!S.gestartet||!S.p){message.textContent='Bitte zuerst ein bestehendes Projekt öffnen.';return}
+  openDialog('change');
+  if($('kiOverlay').hidden){message.textContent='KI-Werkstatt konnte nicht geöffnet werden.';return}
+  $('kiResult').value=input.value;
+  analyse();
+  message.textContent=parsed?.errors?.length?'Prüfung meldet Konflikte. Details in der KI-Werkstatt.':'Änderung geprüft. Dateizuordnung und Unterschiede vor der Übernahme kontrollieren.';
+ });
  $('kiAnalyse').addEventListener('click',analyse);
  $('kiFiles').addEventListener('change',()=>{clearRepairDraft();updateActions()});
  $('kiRepairPrepare').addEventListener('click',createRepairDraft);
