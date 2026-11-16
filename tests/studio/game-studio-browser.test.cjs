@@ -76,6 +76,26 @@ const previewWebgl=await page.locator('#glbPreview').evaluate(el=>({
 available:Boolean(el.getContext('webgl')),canvasWidth:el.width,canvasHeight:el.height
 }));
 assert.equal(previewWebgl.available,true);
+// Recover the GLB preview from a simulated GPU context loss without losing
+// the selected asset or modifying the editable scene. Some GPUs omit the extension.
+const canSimulateLoss=await page.locator('#glbPreview').evaluate(el=>{
+// getExtension() returns null while the context is lost: keep the handle.
+el.__sdTestContextLoss=el.getContext('webgl').getExtension('WEBGL_lose_context');
+return Boolean(el.__sdTestContextLoss);
+});
+if(canSimulateLoss){
+await page.locator('#glbPreview').evaluate(el=>el.__sdTestContextLoss.loseContext());
+await page.waitForFunction(()=>document.getElementById('glbInfo').textContent.includes('Warte auf Wiederherstellung.'),null,{timeout:15000});
+await page.locator('#glbPreview').evaluate(el=>el.__sdTestContextLoss.restoreContext());
+await page.waitForFunction(()=>{
+const info=document.getElementById('glbInfo');
+const gl=document.getElementById('glbPreview').getContext('webgl');
+return info.dataset.error==='false'&&info.textContent.includes('studio-test.glb')&&
+!gl.isContextLost()&&Boolean(gl.getParameter(gl.CURRENT_PROGRAM));
+},null,{timeout:15000});
+assert.equal(await page.locator('#glbPreviewWrap').isVisible(),true);
+assert.equal(await page.locator('#objectCount').innerText(),'6');
+}else console.log('WEBGL_lose_context nicht verfügbar: Wiederherstellungs-Simulation übersprungen.');
 // GLB becomes a real editable and serializable object in a versioned v2 scene.
 assert.equal(await page.locator('#glbPlace').isVisible(),true);
 await page.locator('#glbPlace').click();
