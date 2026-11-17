@@ -88,7 +88,7 @@
     }
     let out = '', info = '', phase = '';
     const ergebnis = await new Promise(ok => {
-      const uhr = setInterval(() => zeigen('⏳ Läuft (Python ' + version + ', im Browser) … ' + Math.round((Date.now() - t0) / 1000) + ' s' + (info ? '\n' + info : ''), out), 1000);
+      const uhr = setInterval(() => zeigen('⏳ Läuft (Python im Browser) … ' + Math.round((Date.now() - t0) / 1000) + ' s' + (info ? '\n' + info : ''), out), 1000);
       const stopp = setTimeout(() => { clearInterval(uhr); beenden(); ok({ typ: 'zeit' }); }, o.zeitlimit || ZEITLIMIT);
       aktuell = d => {
         if (nr !== laufNr) return;
@@ -101,7 +101,7 @@
       worker.postMessage({ typ: 'start', dateien: o.dateien, haupt: o.haupt, stdin: o.stdin || '' });
     });
     SDPython._stopp = null;
-    const kopfInfo = 'Python ' + version + ', direkt im Browser · ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s';
+    const kopfInfo = 'Python im Browser · Pyodide ' + version + ' · ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s';
     if (ergebnis.typ === 'fertig') { zeigen('✅ Ausgeführt (' + kopfInfo + ')', out || '(keine Ausgabe)'); return 'ok'; }
     if (ergebnis.typ === 'zeit') { zeigen('⏹ Nach ' + Math.round((o.zeitlimit || ZEITLIMIT) / 1000) + ' s beendet (Endlosschleife oder wartet auf Eingabe?) [Schritt: ' + (phase || '?') + (info ? ' · ' + info : '') + ']', out); return 'fehler'; }
     if (ergebnis.typ === 'gestoppt') { zeigen('⏹ Gestoppt.', out); return 'fehler'; }

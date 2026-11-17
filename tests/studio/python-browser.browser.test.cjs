@@ -27,7 +27,7 @@ const {chromium}=require('playwright');
   };
   let t=await lauf({'main.py':'from helfer import gruss\nname = input("Name? ")\nzahl = int(input())\nprint(gruss(name), zahl * 2)\n','helfer.py':'def gruss(n):\n    return "Hallo " + n\n','daten/info.txt':'x'},'main.py','Anna | 21','✅|❌|ℹ',180000);
   console.log(t.slice(0,400));
-  assert.match(t,/✅ Ausgeführt \(Python [\d.]+, direkt im Browser/);assert.match(t,/Hallo Anna 42/);
+  assert.match(t,/✅ Ausgeführt \(Python im Browser · Pyodide [\d.]+/);assert.match(t,/Hallo Anna 42/);
   t=await lauf({'main.py':'import numpy as np\nprint("Summe", int(np.arange(5).sum()))\n'},'main.py','','✅|❌',180000);
   console.log(t.slice(0,300));assert.match(t,/Summe 10/);
   t=await lauf({'main.py':'def f():\n    return 1 / 0\n\nprint("vorher")\nf()\n'},'main.py','','❌|✅');
