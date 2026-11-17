@@ -6,7 +6,7 @@
    Klappt das Laden nicht (z. B. offline), nimmt das Studio wie bisher den Online-Dienst. */
 (function () {
   'use strict';
-  const PYODIDE = 'https://cdn.jsdelivr.net/npm/pyodide@0/';
+  const PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';   // feste Version (in CI geprüft), Pakete liegen daneben
   const ZEITLIMIT = 120000;
   let worker = null, bereit = null, laufNr = 0, aktuell = null;
 
@@ -105,12 +105,22 @@
     if (ergebnis.typ === 'fertig') { zeigen('✅ Ausgeführt (' + kopfInfo + ')', out || '(keine Ausgabe)'); return 'ok'; }
     if (ergebnis.typ === 'zeit') { zeigen('⏹ Nach ' + Math.round((o.zeitlimit || ZEITLIMIT) / 1000) + ' s beendet (Endlosschleife oder wartet auf Eingabe?) [Schritt: ' + (phase || '?') + (info ? ' · ' + info : '') + ']', out); return 'fehler'; }
     if (ergebnis.typ === 'gestoppt') { zeigen('⏹ Gestoppt.', out); return 'fehler'; }
-    const tb = String(ergebnis.text || '');
+    const tb = aufraeumen(String(ergebnis.text || ''));
     const fehlt = (tb.match(/No module named '([\w.]+)'/) || [])[1];
     const tipp = fehlt ? '\n\n💡 Das Modul „' + fehlt + '“ gibt es im Browser nicht' + (/^(tkinter|turtle|pygame|_tkinter)/.test(fehlt) ? ' (Fenster-Programme laufen nur auf dem PC).' : '.') + ' Nimm „💻 Auf meinem PC ausführen“ (SD KI-Agent) oder lade das Startpaket herunter.' : '';
     zeigen('❌ LAUFZEITFEHLER (' + kopfInfo + ')', (out ? 'Ausgabe:\n' + out + '\n' : '') + tb.trim() + tipp);
     if (typeof fehlerSammeln === 'function') fehlerSammeln(tb, o.haupt);
     return 'fehler';
+  }
+
+  // Interne Pyodide-/runpy-Zeilen aus dem Traceback entfernen – übrig bleiben nur die Zeilen aus deinen Dateien
+  function aufraeumen(tb) {
+    const z = tb.split('\n'), aus = [];
+    for (let i = 0; i < z.length; i++) {
+      if (/^\s*File "(\/lib\/|<exec>|<frozen )/.test(z[i])) { while (i + 1 < z.length && /^\s{4,}/.test(z[i + 1]) && !/^\s*File "/.test(z[i + 1])) i++; continue; }
+      aus.push(z[i]);
+    }
+    return aus.join('\n');
   }
 
   window.SDPython = { starten, laden, beenden, _stopp: null, get geladen() { return !!bereit; } };
