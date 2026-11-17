@@ -17,6 +17,7 @@ Im Studio unten Reiter **„✦ GEMINI (PC)“** (`studio/pc-gemini.js`): Projek
   (`-p "Bearbeite die Aufgabe aus der Eingabe." --approval-mode auto_edit -o json [-r latest]`) im Projektordner;
   der Nutzertext geht über **stdin**, nie über die Kommandozeile. Nur für Projekte, die der Nutzer **in der Agent-Oberfläche**
   per Klick freigegeben hat (`gemini_freigabe` über `/__tool`, gilt bis zum Neustart). `gemini_anfragen` merkt die Bitte nur vor.
+- Vertrauen (17.11.): Headless-Läufe setzen `GEMINI_CLI_TRUST_WORKSPACE=true` (sonst bricht Gemini in nicht vertrauten Ordnern ab). Deshalb darf die Webseite **keine** `.gemini/`, `.claude/`, `.codex/`, `.vscode/`-Dateien schreiben (`VOM_HUB_VERBOTEN`), sonst könnte ein Projekt Hooks/MCP-Server einschleusen.
 - Modellwahl (17.11.): `modell` nur aus `GEMINI_MODELLE` (auto, hydrogen → `-m gemini-4-hydrogen`, flash, pro); alles andere wird abgelehnt.
 - Ein Auftrag pro Projekt gleichzeitig, max. 20.000 Zeichen, 15 Minuten Zeitlimit. Schlüssel aus `gemini_schluessel` als `GEMINI_API_KEY`.
 
