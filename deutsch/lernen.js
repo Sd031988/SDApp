@@ -1302,6 +1302,10 @@
       } catch (e) { d = {ok: false, error: 'Keine Verbindung zum Server'}; }
       btn.disabled = false;
       if (!d.ok) { $('lWRes').innerHTML = '<div class="l-fb bad">⚠️ ' + esc(d.error || 'Fehler') + '<br>' + kiKnopf() + '</div>'; return; }
+      if (!Number.isFinite(Number(d.score)) || !Array.isArray(d.tips) || typeof d.corrected !== 'string') {
+        $('lWRes').innerHTML = '<div class="l-fb bad">⚠️ Die Korrekturantwort ist unvollständig. Dein Entwurf bleibt gespeichert; bitte versuche es erneut.</div>';
+        return;
+      }
       const cls = d.score >= 80 ? 'ok' : (d.score >= 50 ? 'mid' : 'bad');
       $('lWRes').innerHTML = '<div class="l-fb ' + cls + '"><b>' + d.score + ' / 100</b>' + (d.praise ? '<p>👍 ' + esc(d.praise) + '</p>' : '') +
         (d.missing_l1 ? '<div class="l-l1"' + l1Attr() + '>📝 ' + l1h(d.missing_l1) + '</div>' : '') + '</div>' +
