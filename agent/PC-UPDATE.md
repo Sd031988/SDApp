@@ -1,5 +1,22 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, spät): Hilfe für kleine lokale Modelle (Version 20261117174953)
+
+Damit kleine Modelle (bis 14B, z. B. Qwen 3.5 4B; Größe aus dem Namen, unbekannt = klein) im Agent-Modus zuverlässiger arbeiten:
+- **Passende Werkzeuge:** `werkzeugAuswahl()` schickt nur Kern-Werkzeuge (Dateien, Befehle, Plan, Websuche) plus Gruppen, die zum Auftrag
+  passen (Browser, GitHub, Hugging Face, Programme bauen/starten, Vorschau bei Bau-Aufträgen) und schon benutzte. Etwa 13–16 statt 33.
+  Schalter in den Einstellungen: „Kleine Modelle: nur passende Werkzeuge mitschicken“ (an).
+- **Aufrufe reparieren:** falsche Werkzeugnamen (`readfile`, `functions.read-file`) und Feldnamen (`file_path`, `old_str` …) werden
+  zugeordnet, Typen angeglichen (Zahl/Wahrheitswert/Liste aus Text). Fehlen Pflichtfelder: nicht ausführen, sondern genaue Meldung mit Beispiel.
+  Nach Fehlern ein kurzer „Korrigieren und erneut versuchen“-Hinweis; derselbe gescheiterte Aufruf ab dem 2. Mal: „anderen Weg nehmen“.
+- **Nicht aufgeben:** Antwortet ein kleines Modell „Ich kann das nicht / kein Zugriff“, wird einmal mit der Werkzeugliste nachgehakt.
+- **Pfade:** `run_tool` sucht bei „nicht gefunden“ ähnliche Pfade (Projektordner + nächster vorhandener Ordner). Lesen/Auflisten nimmt einen
+  eindeutigen Treffer gleichen Namens direkt (mit Hinweis), `edit_file` schlägt nur vor. `edit_file` findet eine Stelle auch bei
+  abweichenden Leerzeichen/Einrückung, wenn sie eindeutig ist, sonst zeigt es die ähnlichste Stelle.
+- **Empfohlene Einstellungen je Modell** (nur ohne eigene Temperatur, Schalter in den Einstellungen): Qwen3/3.5 0.7/0.8/20 (mit Nachdenken
+  0.6/0.95/20), Gemma 1.0/64/0.95, DeepSeek-R1 0.6/0.95, Llama 3 0.6/0.9, Mistral 0.15.
+- Gilt für den Agenten im Fenster; die Hintergrund-Schleife in Python nutzt davon die Pfad-/Feld-Reparatur.
+
 ## Neu (17.11.2026, abends): Agent-Browser (Playwright)
 
 - Knopf **„🌐 Agent-Browser“**: Status, **Installation mit einem Klick** (`browser_installieren` → `pip install --user playwright`, ohne Admin;
