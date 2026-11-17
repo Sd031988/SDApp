@@ -30,13 +30,16 @@
       py.setStderr({ batched: s => postMessage({ typ: 'err', text: s + '\\n' }) });
       py.setStdin({ stdin: () => zeilen.length ? zeilen.shift() : undefined });
       try {
+        postMessage({ typ: 'phase', text: 'Dateien' });
         for (const [pfad, inhalt] of Object.entries(m.dateien)) {
           const voll = dir + '/' + pfad; const ord = voll.slice(0, voll.lastIndexOf('/'));
           py.FS.mkdirTree(ord); py.FS.writeFile(voll, inhalt);
         }
         const haupt = dir + '/' + m.haupt; const hauptDir = haupt.slice(0, haupt.lastIndexOf('/'));
+        postMessage({ typ: 'phase', text: 'Pakete' });
         try { await py.loadPackagesFromImports(Object.values(m.dateien).filter(t => typeof t === 'string').join('\\n'), { messageCallback: t => postMessage({ typ: 'info', text: t }) }); }
         catch (err) { postMessage({ typ: 'info', text: 'Pakete: ' + String(err && err.message || err) }); }
+        postMessage({ typ: 'phase', text: 'Start' });
         py.globals.set('_sd_haupt', haupt); py.globals.set('_sd_dir', hauptDir);
         await py.runPythonAsync([
           'import sys, os, runpy',
@@ -83,7 +86,7 @@
       zeigen('ℹ Python im Browser ließ sich nicht laden (' + e.message + ').\nDas Studio nimmt stattdessen den Online-Dienst.');
       return 'fallback';
     }
-    let out = '', info = '';
+    let out = '', info = '', phase = '';
     const ergebnis = await new Promise(ok => {
       const uhr = setInterval(() => zeigen('⏳ Läuft (Python ' + version + ', im Browser) … ' + Math.round((Date.now() - t0) / 1000) + ' s' + (info ? '\n' + info : ''), out), 1000);
       const stopp = setTimeout(() => { clearInterval(uhr); beenden(); ok({ typ: 'zeit' }); }, o.zeitlimit || ZEITLIMIT);
@@ -91,6 +94,7 @@
         if (nr !== laufNr) return;
         if (d.typ === 'out' || d.typ === 'err') out += d.text;
         else if (d.typ === 'info') info = d.text;
+        else if (d.typ === 'phase') phase = d.text;
         else if (d.typ === 'fertig' || d.typ === 'fehler') { clearInterval(uhr); clearTimeout(stopp); aktuell = null; ok(d); }
       };
       SDPython._stopp = () => { clearInterval(uhr); clearTimeout(stopp); beenden(); ok({ typ: 'gestoppt' }); };
@@ -98,7 +102,7 @@
     SDPython._stopp = null;
     const kopfInfo = 'Python ' + version + ', direkt im Browser · ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s';
     if (ergebnis.typ === 'fertig') { zeigen('✅ Ausgeführt (' + kopfInfo + ')', out || '(keine Ausgabe)'); return 'ok'; }
-    if (ergebnis.typ === 'zeit') { zeigen('⏹ Nach ' + Math.round((o.zeitlimit || ZEITLIMIT) / 1000) + ' s beendet (Endlosschleife oder wartet auf Eingabe?).', out); return 'fehler'; }
+    if (ergebnis.typ === 'zeit') { zeigen('⏹ Nach ' + Math.round((o.zeitlimit || ZEITLIMIT) / 1000) + ' s beendet (Endlosschleife oder wartet auf Eingabe?) [Schritt: ' + (phase || '?') + (info ? ' · ' + info : '') + ']', out); return 'fehler'; }
     if (ergebnis.typ === 'gestoppt') { zeigen('⏹ Gestoppt.', out); return 'fehler'; }
     const tb = String(ergebnis.text || '');
     const fehlt = (tb.match(/No module named '([\w.]+)'/) || [])[1];
