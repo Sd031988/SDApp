@@ -136,7 +136,7 @@
         globals: globalsFuer(pfad, text, namen), parserOptions: { ecmaFeatures: { jsx: /\.jsx$/i.test(pfad) } } },
       rules: {
         'no-undef': 'error', 'no-unused-vars': ['warn', { vars: modul ? 'all' : 'local', args: 'none', caughtErrors: 'none' }], 'no-unreachable': 'error',
-        'no-dupe-keys': 'error', 'no-redeclare': 'error', 'no-const-assign': 'error', 'no-func-assign': 'error', 'no-dupe-args': 'error',
+        'no-dupe-keys': 'error', 'no-redeclare': ['error', { builtinGlobals: false }], 'no-const-assign': 'error', 'no-func-assign': 'error', 'no-dupe-args': 'error',
         'no-self-assign': 'warn', 'no-cond-assign': 'warn', 'no-empty': ['warn', { allowEmptyCatch: true }], 'eqeqeq': ['warn', 'smart'],
         'use-isnan': 'error', 'valid-typeof': 'error', 'no-dupe-else-if': 'warn', 'no-duplicate-case': 'warn', 'no-unsafe-finally': 'warn',
         'getter-return': 'warn', 'no-loss-of-precision': 'warn', 'no-unused-labels': 'warn', 'no-sparse-arrays': 'warn', 'no-compare-neg-zero': 'warn'

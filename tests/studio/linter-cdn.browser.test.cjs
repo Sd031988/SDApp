@@ -53,7 +53,8 @@ const {chromium}=require('playwright');
   assert.ok(js.some(f=>/app\.js:3 warning .*no-unused-vars.*'x'/.test(f)),'ungenutzte lokale Variable');
   assert.ok(js.some(f=>/app\.js:4 warning .*eqeqeq/.test(f)),'== erkannt');
   assert.ok(js.some(f=>/kaputt\.js:\d+ error ESLint Syntax/.test(f)),'Syntaxfehler erkannt');
-  assert.deepEqual(errors,[]);
+  assert.ok(!js.some(f=>/no-redeclare/.test(f)),'keine falschen Doppel-Deklarationen');
+  assert.deepEqual(errors.filter(e=>!/ergbnis/.test(e)),[],'nur der absichtliche Fehler aus der Vorschau');
   console.log('PASS Ruff und ESLint im Browser: Prüfen und Formatieren');
  } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
