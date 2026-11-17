@@ -22,7 +22,30 @@
     ? 'Antigravity CLI ist auf deinem PC noch nicht installiert. Im SD KI-Agenten: „🖥 KI im Terminal“ → Antigravity CLI „Installieren und starten“ und im Browser mit deinem Google-Konto (AI Pro) anmelden.'
     : 'Gemini CLI ist auf deinem PC noch nicht installiert. Im SD KI-Agenten: „🖥 KI im Terminal“ → bei Gemini CLI „Installieren und starten“.';
 
-  function status(text, art) { const o = $('gmStatus'); if (o) { o.textContent = text; o.dataset.art = art || ''; } }
+  function status(text, art) { const o = $('gmStatus'); if (o) { o.textContent = text; o.dataset.art = art || ''; } befehleHinweis(); }
+
+  // Hat der Nutzer im Agenten „Antigravity darf auch Befehle ausführen“ angekreuzt? -> sichtbar machen + Sperren-Knopf
+  function befehleHinweis() {
+    const o = $('gmStatus'); if (!o) return;
+    let h = $('gmBefehle');
+    let e = $('gmBefehleAn');
+    const kannFragen = !ZUSTAND.befehle && ZUSTAND.frei && !ZUSTAND.pc && motor() === 'antigravity';
+    if (kannFragen && !e) {
+      e = document.createElement('button'); e.type = 'button'; e.id = 'gmBefehleAn'; e.textContent = 'Befehle erlauben …';
+      e.title = 'Im SD KI-Agenten erlauben, dass Antigravity in diesem Projekt auch Befehle ausführt';
+      e.style.cssText = 'font-size:11px;padding:0 8px;margin-left:8px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+      e.onclick = befehleErlauben;
+    }
+    if (kannFragen) o.appendChild(e); else if (e) e.remove();
+    if (!(ZUSTAND.befehle && motor() === 'antigravity')) { if (h) h.remove(); return; }
+    if (!h) {
+      h = document.createElement('span'); h.id = 'gmBefehle'; h.style.cssText = 'color:#f59e0b;margin-left:8px';
+      h.innerHTML = '⚠ Antigravity darf hier auch Befehle ausführen. <button type="button" style="font-size:11px;padding:0 8px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer">Befehle sperren</button>';
+      h.querySelector('button').onclick = async () => { try { await hub({ aktion: 'gemini_befehle_aus', name: ZUSTAND.name }); } catch (e) { /* egal */ }
+        ZUSTAND.befehle = false; befehleHinweis(); status('Befehle gesperrt – Antigravity darf hier wieder nur Dateien ändern.', 'ok'); };
+    }
+    o.appendChild(h);
+  }
 
   function blase(wer, text, extra) {
     const box = $('gmVerlauf'); if (!box) return null;
@@ -60,6 +83,21 @@
     status('⏹ Gestoppt – du kannst eine neue Nachricht schreiben.', 'ok');
   }
 
+  async function befehleErlauben() {
+    const name = ZUSTAND.name; if (!name) return;
+    await hub({ aktion: 'gemini_anfragen', name, erneut: true });
+    window.open(agentUrl() + '/?gemini_freigabe=1', 'sdagent');
+    status('Bitte im Fenster des SD KI-Agenten das Kästchen „Antigravity darf hier auch Befehle ausführen“ ankreuzen und „Erlauben“ klicken …');
+    let st = null;
+    for (let i = 0; i < 120; i++) {
+      await warte(2000);
+      try { st = await hub({ aktion: 'gemini_status', name, motor: motor() }); } catch (x) { continue; }
+      if (!st.angefragt) break;
+    }
+    ZUSTAND.frei = !!(st && st.frei); ZUSTAND.befehle = !!(st && st.befehle); knoepfe();
+    status(ZUSTAND.befehle ? '✓ Antigravity darf in diesem Projekt jetzt auch Befehle ausführen.' : (ZUSTAND.frei ? 'Befehle bleiben gesperrt – Antigravity darf nur Dateien ändern.' : 'Nicht freigegeben – bitte neu verbinden.'), ZUSTAND.frei ? 'ok' : 'fehler');
+  }
+
   async function verbinden() {
     if (!S.p) { status('Bitte zuerst ein Projekt öffnen.', 'fehler'); return; }
     status('Verbinde mit dem SD KI-Agenten auf deinem PC …');
@@ -73,7 +111,7 @@
       const name = 'ordner:' + SDPcOrdner.id;
       const st = await hub({ aktion: 'gemini_status', name, motor: motor() });
       if (!st.installiert) { status(fehltText(), 'fehler'); return; }
-      ZUSTAND = { name, projekt: S.p, frei: !!st.frei, job: null, pc: true, verlauf: [] };
+      ZUSTAND = { name, projekt: S.p, frei: !!st.frei, job: null, pc: true, verlauf: [], befehle: !!st.befehle };
       status(st.frei ? '✓ Verbunden – ' + motorName() + ' arbeitet im PC-Ordner „' + S.p.pc.name + '“.' + (st.schluessel || motor() === 'antigravity' ? '' : ' Hinweis: Kein Gemini-Schlüssel im Agenten gespeichert.') : 'Ordner nicht freigegeben – bitte neu verbinden.', st.frei ? 'ok' : 'fehler');
       knoepfe(); if (st.frei) $('gmEingabe').focus(); return;
     }
@@ -95,7 +133,7 @@
       }
       if (!st.frei) { status('Nicht freigegeben. Mit „Verbinden“ kannst du es noch einmal versuchen.', 'fehler'); knoepfe(); return; }
     }
-    ZUSTAND.frei = true;
+    ZUSTAND.frei = true; ZUSTAND.befehle = !!st.befehle;
     status('✓ Verbunden mit ' + motorName() + ' auf deinem PC – Projekt „' + j.name + '“.' + (st.schluessel || motor() === 'antigravity' ? '' : ' Hinweis: Kein Gemini-Schlüssel im Agenten gespeichert; dann nutzt Gemini deine Google-Anmeldung aus dem Terminal.'), 'ok');
     knoepfe(); $('gmEingabe').focus();
   }

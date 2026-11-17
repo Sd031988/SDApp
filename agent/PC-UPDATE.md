@@ -1,5 +1,15 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Antigravity darf auf Wunsch auch Befehle ausführen
+
+- **Bewusste Ausnahme von der Regel „/__vom_hub startet nichts“, vom Nutzer ausdrücklich gewünscht:** In den Freigabe-Fenstern des Agenten
+  (Projekt und PC-Ordner) gibt es das Kästchen „⚠ Antigravity darf hier auch Befehle ausführen“ (Standard aus). Nur per Klick in der
+  Agent-Oberfläche (`/__tool`: `gemini_freigabe`/`ordner_freigeben` mit `befehle:true`), gilt pro Projekt bis zum Neustart (`AGY_BEFEHLE`).
+  Dann läuft agy mit `--dangerously-skip-permissions`. Die Webseite kann das nur *anfragen* (`gemini_anfragen` mit `erneut:true` öffnet den
+  Dialog erneut) oder *wegnehmen* (`gemini_befehle_aus`), nie selbst einschalten.
+- Studio zeigt „⚠ Antigravity darf hier auch Befehle ausführen · Befehle sperren“ bzw. „Befehle erlauben …“.
+- Größerer Chat im Tab „✦ GEMINI (PC)“ (⤢ Größer/⤡ Kleiner); gesperrte Befehle werden im Chat einzeln genannt.
+
 ## Neu (17.11.2026, abends): Gemini/Antigravity im Studio abbrechbar
 
 - `_prozess()` startet gemini/agy abbrechbar (`job["proc"]`); `gemini_stopp` und `gemini_neu` beenden laufende Aufträge
