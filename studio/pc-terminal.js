@@ -21,15 +21,18 @@
     let o = document.getElementById('pcSyncPill');
     if (!SYNC) { if (o) o.remove(); return; }
     if (!o) {
-      // Klein in der Statusleiste unten (verdeckt nichts); nur ohne Statusleiste als schwebende Pille
-      let leiste = document.getElementById('status'); if (leiste && getComputedStyle(leiste).display === 'none') leiste = null;
       o = document.createElement('span'); o.id = 'pcSyncPill';
-      o.style.cssText = leiste ? 'display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-width:0;overflow:hidden'
-        : 'position:fixed;right:14px;top:60px;z-index:9000;display:flex;align-items:center;gap:8px;padding:4px 8px 4px 12px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:12px/1.3 system-ui';
       o.innerHTML = '<span class="pt" style="overflow:hidden;text-overflow:ellipsis"></span><button type="button" title="Live-Abgleich mit dem PC beenden" style="border:1px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:0 7px;cursor:pointer;font:inherit;font-size:11px;line-height:1.5;opacity:.8">Trennen</button>';
       o.querySelector('button').onclick = () => stoppen('Live-Abgleich mit dem PC beendet.');
-      if (leiste) { const l = leiste.querySelector('.luecke'); leiste.insertBefore(o, l ? l.nextSibling : null); } else document.body.appendChild(o);
     }
+    // Klein in der Statusleiste unten (verdeckt nichts); auf schmalen Bildschirmen oben in der Kopfleiste
+    const sichtbar = el => el && getComputedStyle(el).display !== 'none';
+    const leiste = document.getElementById('status'), kopf = document.getElementById('kopf');
+    const ziel = sichtbar(leiste) ? leiste : sichtbar(kopf) ? kopf : null;
+    o.style.cssText = ziel ? 'display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-width:0;max-width:45vw;overflow:hidden;font-size:12px'
+      : 'position:fixed;right:10px;top:8px;z-index:9000;display:flex;align-items:center;gap:8px;padding:3px 8px 3px 12px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:12px/1.3 system-ui';
+    if (ziel && o.parentElement !== ziel) { const l = ziel === leiste ? leiste.querySelector('.luecke') : null; ziel.insertBefore(o, l ? l.nextSibling : null); }
+    else if (!ziel && o.parentElement !== document.body) document.body.appendChild(o);
     const ok = SYNC.fehler < 3;
     o.querySelector('.pt').textContent = (ok ? '● Live mit PC: ' : '○ PC nicht erreichbar: ') + SYNC.name;
     o.querySelector('.pt').style.color = ok ? '#8ee6a8' : '#f2c46d';
