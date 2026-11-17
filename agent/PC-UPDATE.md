@@ -1,5 +1,11 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Gemini/Antigravity im Studio abbrechbar
+
+- `_prozess()` startet gemini/agy abbrechbar (`job["proc"]`); `gemini_stopp` und `gemini_neu` beenden laufende Aufträge
+  (Windows: `taskkill /F /T`). Studio: Knopf „⏹ Stopp“, „Neues Gespräch“ bricht eine hängende Antwort ab.
+- „Live mit PC“ sitzt jetzt klein in der Statusleiste unten statt als schwebende Pille.
+
 ## Neu (17.11.2026, abends): Gemini-Modellliste aufgeräumt, 503-Überlastung
 
 - `anbieter_modelle("gemini")` zeigt nur Chat-Modelle (`gemini-*`, ohne Live/Übersetzen/Computer-Use/Customtools/Antigravity-intern/

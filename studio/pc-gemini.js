@@ -38,8 +38,26 @@
     const verbunden = !!(ZUSTAND.name && ZUSTAND.frei && abgleich && S.p && S.p === ZUSTAND.projekt);
     $('gmVerbinden').hidden = verbunden;
     $('gmSenden').disabled = !verbunden || !!ZUSTAND.job;
+    const st = stoppKnopf(); if (st) st.hidden = !ZUSTAND.job && !ZUSTAND.haengt;
     $('gmNeu').hidden = !verbunden;
     $('gmEingabe').disabled = !verbunden;
+  }
+
+  function stoppKnopf() {
+    let b = $('gmStopp');
+    if (!b && $('gmSenden')) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'gmStopp'; b.hidden = true; b.textContent = '⏹ Stopp';
+      b.title = 'Laufende Antwort abbrechen'; b.onclick = stoppen;
+      $('gmSenden').insertAdjacentElement('afterend', b);
+    }
+    return b;
+  }
+
+  async function stoppen() {
+    if (!ZUSTAND.name) return;
+    try { await hub({ aktion: 'gemini_stopp', name: ZUSTAND.name }); } catch (e) { /* egal */ }
+    ZUSTAND.job = null; ZUSTAND.haengt = false; knoepfe();
+    status('⏹ Gestoppt – du kannst eine neue Nachricht schreiben.', 'ok');
   }
 
   async function verbinden() {
@@ -96,9 +114,10 @@
     try { r = await hub({ aktion: 'gemini_frage', name: ZUSTAND.name, text, modell: ($('gmModell') && $('gmModell').value) || 'flash', motor: motor() }, 15000); } catch (e) { r = { error: String(e.message || e) }; }
     if (!r || !r.ok) {
       if (r && r.freigabe === false) { ZUSTAND.frei = false; knoepfe(); }
+      if (r && r.laeuft) { ZUSTAND.haengt = true; knoepfe(); $('gmEingabe').value = text; }
       blase('info', (r && r.error) || 'Senden ging nicht.'); return;
     }
-    ZUSTAND.job = r.job; knoepfe();
+    ZUSTAND.job = r.job; ZUSTAND.haengt = false; knoepfe();
     const warteText = blase('ki', motorName() + ' arbeitet …');
     let e = null;
     while (ZUSTAND.job === r.job) {
@@ -108,8 +127,10 @@
       if (e.status !== 'läuft') break;
       if (warteText) warteText.textContent = motorName() + ' arbeitet … ' + e.sekunden + ' s';
     }
-    ZUSTAND.job = null;
+    const gestoppt = ZUSTAND.job !== r.job || (e && e.status === 'abgebrochen');
+    if (ZUSTAND.job === r.job) ZUSTAND.job = null;
     if (warteText) warteText.parentNode.remove();
+    if (gestoppt) { blase('info', '⏹ Abgebrochen.'); knoepfe(); return; }
     if (e && e.status === 'fertig') {
       const d = e.dateien || {};
       const extra = Array.isArray(d.liste) ? (d.liste.length ? 'Geänderte Dateien: ' + d.liste.join(', ') + (ZUSTAND.pc ? '' : ' – kommt gleich automatisch ins Studio.') : '') : (d.plus || d.minus) ? 'Dateien geändert: +' + d.plus + ' / −' + d.minus + ' Zeilen' + (ZUSTAND.pc ? ' – geöffnete Dateien werden gleich aktualisiert, neue Dateien siehst du im PC-Baum links.' : ' – kommt gleich automatisch ins Studio (vorher wird eine Version gesichert).') : '';
@@ -127,8 +148,9 @@
   async function neu() {
     if (!ZUSTAND.name) return;
     try { await hub({ aktion: 'gemini_neu', name: ZUSTAND.name }); } catch (e) { /* egal */ }
+    ZUSTAND.job = null; ZUSTAND.haengt = false; knoepfe();
     $('gmVerlauf').innerHTML = '';
-    status('Neues Gespräch – Gemini hat das bisherige vergessen.', 'ok');
+    status('Neues Gespräch – ' + motorName() + ' hat das bisherige vergessen (eine laufende Antwort wurde abgebrochen).', 'ok');
   }
 
   function bauen() {

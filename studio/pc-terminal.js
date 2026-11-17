@@ -21,11 +21,14 @@
     let o = document.getElementById('pcSyncPill');
     if (!SYNC) { if (o) o.remove(); return; }
     if (!o) {
-      o = document.createElement('div'); o.id = 'pcSyncPill';
-      o.style.cssText = 'position:fixed;right:14px;bottom:52px;z-index:9000;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:13px/1.3 system-ui;box-shadow:0 6px 20px #0006;max-width:calc(100vw - 28px)';
-      o.innerHTML = '<span class="pt"></span><button type="button" style="border:1px solid #3b3463;background:transparent;color:inherit;border-radius:999px;padding:5px 10px;cursor:pointer;font:inherit">Trennen</button>';
+      // Klein in der Statusleiste unten (verdeckt nichts); nur ohne Statusleiste als schwebende Pille
+      let leiste = document.getElementById('status'); if (leiste && getComputedStyle(leiste).display === 'none') leiste = null;
+      o = document.createElement('span'); o.id = 'pcSyncPill';
+      o.style.cssText = leiste ? 'display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-width:0;overflow:hidden'
+        : 'position:fixed;right:14px;top:60px;z-index:9000;display:flex;align-items:center;gap:8px;padding:4px 8px 4px 12px;border-radius:999px;background:#1b1730;color:#ece8ff;border:1px solid #3b3463;font:12px/1.3 system-ui';
+      o.innerHTML = '<span class="pt" style="overflow:hidden;text-overflow:ellipsis"></span><button type="button" title="Live-Abgleich mit dem PC beenden" style="border:1px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:0 7px;cursor:pointer;font:inherit;font-size:11px;line-height:1.5;opacity:.8">Trennen</button>';
       o.querySelector('button').onclick = () => stoppen('Live-Abgleich mit dem PC beendet.');
-      document.body.appendChild(o);
+      if (leiste) { const l = leiste.querySelector('.luecke'); leiste.insertBefore(o, l ? l.nextSibling : null); } else document.body.appendChild(o);
     }
     const ok = SYNC.fehler < 3;
     o.querySelector('.pt').textContent = (ok ? '● Live mit PC: ' : '○ PC nicht erreichbar: ') + SYNC.name;
