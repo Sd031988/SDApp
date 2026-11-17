@@ -168,6 +168,15 @@
         if (ZUSTAND.frei) { ZUSTAND.frei = false; knoepfe(); status('Umgestellt auf ' + motorName() + ' – bitte „Verbinden“.'); } };
       motorAnzeigen();
     }
+    // Chat-Bereich größer: unten mehr Platz, solange der Gemini-Tab offen ist (Wahl wird gemerkt, Standard: groß)
+    let gross = true; try { gross = localStorage.getItem('sdGeminiGross') !== '0'; } catch (e) { /* egal */ }
+    const feld = $('gmVerlauf').parentElement, haupt = $('haupt');
+    const groesse = () => { const an = gross && !feld.hidden; if (haupt) haupt.classList.toggle('gmGross', an);
+      $('gmGross').textContent = gross ? '⤡ Kleiner' : '⤢ Größer'; if (an) $('gmVerlauf').scrollTop = $('gmVerlauf').scrollHeight; };
+    $('gmGross').onclick = () => { gross = !gross; try { localStorage.setItem('sdGeminiGross', gross ? '1' : '0'); } catch (e) { /* egal */ } groesse();
+      if (typeof window.dispatchEvent === 'function') window.dispatchEvent(new Event('resize')); };
+    new MutationObserver(() => { groesse(); window.dispatchEvent(new Event('resize')); }).observe(feld, { attributes: true, attributeFilter: ['hidden'] });
+    groesse();
     $('gmEingabe').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); senden(); } });
     setInterval(() => { const ab = ZUSTAND.pc ? (window.SDPcOrdner && SDPcOrdner.aktiv) : (window.SDPcTerminal && SDPcTerminal.aktiv); if (ZUSTAND.frei && (!S.p || S.p !== ZUSTAND.projekt || !ab)) { ZUSTAND.frei = false; knoepfe(); status('Verbindung getrennt – „Verbinden“ startet sie neu.'); } }, 2000);
     knoepfe();

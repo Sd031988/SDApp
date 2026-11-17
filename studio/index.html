@@ -171,6 +171,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 @media (max-width:819px){#unten>[data-feld="kiaendern"]{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:auto}.kaSpalte textarea{min-height:90px}}
 #unten>[data-feld="gemini"]{display:grid;grid-template-rows:1fr auto auto;gap:6px}
 #unten>[data-feld="gemini"][hidden]{display:none!important}
+#haupt.gmGross:not(.untenZu){grid-template-rows:auto minmax(140px,1fr) minmax(260px,58%)}
+#gmGross{white-space:nowrap}
 #haupt.untenZu #unten>[data-feld="gemini"]{display:none}
 #gmVerlauf{overflow:auto;min-height:40px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .gmMsg{border:1px solid var(--sline);border-radius:8px;padding:6px 9px;max-width:100%}.gm-du{align-self:flex-end;background:var(--ssel);max-width:85%}.gm-info{color:#f59e0b}
@@ -267,7 +269,7 @@ button,input,select,textarea{font:inherit;color:inherit}
         <div id="gmVerlauf" aria-live="polite"></div>
         <div class="gmZeile">
           <textarea id="gmEingabe" rows="2" placeholder="Schreib Gemini, was es im Projekt machen soll – z. B. „Finde den Fehler in app.js und repariere ihn“ (Enter = senden, Shift+Enter = neue Zeile)"></textarea>
-          <div class="gmKnoepfe"><select id="gmMotor" title="Gemini CLI (kostenlos/Schlüssel) oder Antigravity CLI (dein Google-AI-Pro-Abo)" aria-label="KI auf dem PC"><option value="gemini" selected>Gemini CLI</option><option value="antigravity">Antigravity (AI Pro)</option></select><select id="gmModell" title="Mit einem kostenlosen API-Schlüssel ist laut Google nur Flash enthalten (250 Anfragen pro Tag). Hydrogen und Pro brauchen ein bezahltes Konto." aria-label="Gemini-Modell"><option value="flash" selected>Flash – kostenlos mit Schlüssel (250/Tag)</option><option value="auto">Automatisch</option><option value="hydrogen">Gemini 4 Hydrogen – kostenpflichtig</option><option value="pro">Pro – kostenpflichtig</option></select><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button></div>
+          <div class="gmKnoepfe"><select id="gmMotor" title="Gemini CLI (kostenlos/Schlüssel) oder Antigravity CLI (dein Google-AI-Pro-Abo)" aria-label="KI auf dem PC"><option value="gemini" selected>Gemini CLI</option><option value="antigravity">Antigravity (AI Pro)</option></select><select id="gmModell" title="Mit einem kostenlosen API-Schlüssel ist laut Google nur Flash enthalten (250 Anfragen pro Tag). Hydrogen und Pro brauchen ein bezahltes Konto." aria-label="Gemini-Modell"><option value="flash" selected>Flash – kostenlos mit Schlüssel (250/Tag)</option><option value="auto">Automatisch</option><option value="hydrogen">Gemini 4 Hydrogen – kostenpflichtig</option><option value="pro">Pro – kostenpflichtig</option></select><button type="button" id="gmVerbinden" class="kaHaupt">🔌 Verbinden</button><button type="button" id="gmSenden">Senden</button><button type="button" id="gmNeu" hidden title="Gemini vergisst das bisherige Gespräch">Neues Gespräch</button><button type="button" id="gmGross" title="Chat-Bereich größer oder kleiner machen">⤢ Größer</button></div>
         </div>
         <p id="gmStatus" role="status">Gemini CLI läuft dabei unsichtbar auf deinem PC (über den SD KI-Agenten) und bearbeitet die Dateien dieses Projekts. Beim ersten Mal musst du es im Agenten-Fenster erlauben.</p>
       </div>
@@ -507,7 +509,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="python-browser.js?v=20261117-2"></script>
 <script src="ki-vervollstaendigung.js?v=20261117-1"></script>
 <script src="pc-ordner.js?v=20261117-1"></script>
-<script src="pc-gemini.js?v=20261117-5"></script>
+<script src="pc-gemini.js?v=20261117-6"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
