@@ -98,6 +98,7 @@
         else if (d.typ === 'fertig' || d.typ === 'fehler') { clearInterval(uhr); clearTimeout(stopp); aktuell = null; ok(d); }
       };
       SDPython._stopp = () => { clearInterval(uhr); clearTimeout(stopp); beenden(); ok({ typ: 'gestoppt' }); };
+      worker.postMessage({ typ: 'start', dateien: o.dateien, haupt: o.haupt, stdin: o.stdin || '' });
     });
     SDPython._stopp = null;
     const kopfInfo = 'Python ' + version + ', direkt im Browser · ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s';
