@@ -1,5 +1,15 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Agent-Browser live (Version 20261117180508)
+
+- **Mauszeiger:** lila Pfeil (`#sd-agent-cursor`) gleitet zum Element, Klick-Welle vor dem Klick; Feld rot umrandet.
+  Tippen Buchstabe für Buchstabe (`press_sequentially`, bis 200 Zeichen, sonst `fill`).
+- **Live-Ansicht im Agent-Fenster** (`browserLive`, rechts, verkleinerbar zu „🌐 Agent-Browser live ansehen“): Auftrag, Adresse, Bild
+  (JPEG, ca. jede Sekunde über `browser_live`, startet nie einen Browser), Schrittliste mit Uhrzeit. Öffnet sich bei Browser-Werkzeugen
+  und bei `web_search`/`fetch_url`, wenn „Alles sichtbar machen“ an ist.
+- **Pause – ich übernehme** (`browser_pause`): Browser-Werkzeuge warten (bis 15 Min.), bis der Nutzer „Weiter“ klickt; das nächste
+  Ergebnis bekommt den Hinweis, dass der Nutzer die Seite selbst bedient hat. `browser_live`/`browser_pause` nur über `/__tool`.
+
 ## Neu (17.11.2026, spät): Agent-Browser zeigt alles (Version 20261117175641)
 
 - Schalter im Dialog „🌐 Agent-Browser“: **„Alles sichtbar machen“** (Standard an, gespeichert als Fehlen von
