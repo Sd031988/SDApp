@@ -65,6 +65,7 @@ jobs:
           node --check studio/ki-aendern.js
           node --check studio/pc-gemini.js
           node --check studio/pc-ordner.js
+          node --check studio/linter.js
           node --check studio/pc-terminal.js
           node --check studio/startpaket.js
       - name: Windows-Python-Brücke prüfen
@@ -89,6 +90,7 @@ jobs:
       - name: Studio im Browser testen
         run: |
           node tests/studio/layout.browser.test.cjs
+          node tests/studio/linter-cdn.browser.test.cjs
           node tests/studio/browser.test.cjs
           node tests/studio/ki-neues-projekt.browser.test.cjs
           node tests/studio/test-loop-browser.test.cjs

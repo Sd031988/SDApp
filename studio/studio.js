@@ -1098,6 +1098,7 @@ function diagnoseAktualisieren() {
   }
   try { S.problemeAnalyse = window.SDKIDiagnose.inspect(files); }
   catch (e) { console.warn('Studio-Diagnose:', e); S.problemeAnalyse = []; }
+  if (window.SDLinter) SDLinter.nachDiagnose();
   probleme();
   return S.problemeAnalyse;
 }
@@ -1505,8 +1506,9 @@ let prettierP = null;
 function prettierLaden() { if (!prettierP) { const B = 'https://cdn.jsdelivr.net/npm/prettier@3.3.3/'; const lade = u => new Promise((ok, nein) => { const s = document.createElement('script'); s.src = B + u; s.onload = ok; s.onerror = nein; document.head.appendChild(s); });
   prettierP = lade('standalone.js').then(() => Promise.all(['plugins/html.js', 'plugins/postcss.js', 'plugins/babel.js', 'plugins/estree.js', 'plugins/markdown.js', 'plugins/typescript.js'].map(lade))).then(() => window.prettier).catch(e => { prettierP = null; throw e; }); } return prettierP; }
 async function formatieren() { if (!S.aktiv || !S.cm) return; const e = S.aktiv.split('.').pop().toLowerCase();
+  if (/^pyw?$/.test(e) && window.SDLinter) return SDLinter.formatieren();
   const parser = { html: 'html', htm: 'html', vue: 'vue', css: 'css', scss: 'scss', less: 'less', js: 'babel', mjs: 'babel', jsx: 'babel', json: 'json', ts: 'typescript', tsx: 'typescript', md: 'markdown' }[e];
-  if (!parser) { toast('Formatieren gibt es für HTML, CSS, JavaScript, TypeScript, JSON und Markdown.'); return; }
+  if (!parser) { toast('Formatieren gibt es für HTML, CSS, JavaScript, TypeScript, JSON, Markdown und Python.'); return; }
   try { toast('✨ Formatiere …'); const pr = await prettierLaden(); const neu = await pr.format(S.cm.getValue(), { parser, plugins: window.prettierPlugins ? Object.values(window.prettierPlugins) : [], tabWidth: 2, printWidth: 110 });
     const pos = S.cm.getCursor(); S.cm.setValue(neu); S.cm.setCursor(pos); S.p.dateien[S.aktiv] = neu; speichernBald(); toast('✨ Formatiert'); }
   catch (err) { toast('Formatieren ging nicht: ' + String(err.message || err).split('\n')[0].slice(0, 120)); } }
