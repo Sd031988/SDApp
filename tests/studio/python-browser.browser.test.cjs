@@ -19,7 +19,7 @@ const {chromium}=require('playwright');
   const lauf=async(dateien,haupt,eingabe,muster,timeout)=>{
    await page.evaluate(async([d,h])=>{const st=document.getElementById('studioStart');if(st)st.hidden=true;
     await projSchreiben({name:'py-test',dateien:d,haupt:h,versionen:[],erstellt:Date.now()});await projektOeffnen('py-test',h);},[dateien,haupt]);
-   await page.fill('#eingabe',eingabe||'');
+   await page.evaluate(v=>{document.getElementById('eingabe').value=v},eingabe||'');
    await page.evaluate(()=>ausfuehren());
    await page.waitForFunction(m=>new RegExp(m).test(document.getElementById('ausgabe').textContent),muster,{timeout:timeout||120000});
    return page.textContent('#ausgabe');
