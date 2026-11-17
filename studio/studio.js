@@ -1066,6 +1066,14 @@ async function programmStarten(spWahl) {
   const info = sp === 'python' ? (i => ({ gruende: [i.pakete.length ? 'Python-Pakete: ' + i.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', i.fenster ? 'ein Fenster (tkinter/turtle)' : ''].filter(Boolean) }))(pyFremde(S.p.dateien)) : nurAufPc(sp, S.p.dateien);
   if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); if (w === 'paket') return zipExport(); }
   let stdinText = ($('eingabe').value || '').replace(/ \| /g, '\n'); if (!stdinText.trim() && liestEingabe(sp, S.p.dateien)) { const e = await eingabeFragen(sp); if (e == null) return; stdinText = e; }
+  if (sp === 'python' && window.SDPython && einst().pyLokal !== false) {
+    const d0 = S.p.dateien, k0 = Object.keys(d0);
+    const h = S.aktiv && /\.pyw?$/.test(S.aktiv) ? S.aktiv : (k0.find(x => /(^|\/)(main|app)\.py$/.test(x)) || k0.find(x => /\.py$/.test(x)));
+    const texte = {}; for (const [k, v] of Object.entries(d0)) if (typeof v === 'string' && !/^data:/.test(v)) texte[k] = v;
+    unten('ausgabe'); ansicht('ausgabe'); S.problemeProgramm = []; probleme(); $('starten').disabled = true;
+    let r; try { r = await SDPython.starten({ dateien: texte, haupt: h, stdin: stdinText }); } finally { $('starten').disabled = false; }
+    if (r !== 'fallback') { if (r === 'ok' && !S.p.erfolg) { S.p.erfolg = 1; konfetti(); } return; }
+  }
   if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
   const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)) || (sp === 'node' && /\.(m?js|cjs|json)$/.test(x) && !/^package(-lock)?\.json$/.test(x)) || (sp === 'typescript' && /\.ts$/.test(x)));
   let haupt = S.aktiv; const t = d[haupt];
