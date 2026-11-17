@@ -1,5 +1,12 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Gemini-Modellliste aufgeräumt, 503-Überlastung
+
+- `anbieter_modelle("gemini")` zeigt nur Chat-Modelle (`gemini-*`, ohne Live/Übersetzen/Computer-Use/Customtools/Antigravity-intern/
+  Bild/Audio/Gemma/datierte Vorschauen); Cache im Fenster neu (v2).
+- 503 „high demand“: bis zu 6 Gratis-Modelle von Gemini nacheinander (Reihenfolge 2.5-flash, flash-latest, x.y-flash, flash-lite, …);
+  klare Meldung, dass es Andrang bei Google ist und nicht der Schlüssel. Fehlversuche (`c.versucht`) werden nach 10 Min. vergessen.
+
 ## Neu (17.11.2026, abends): Antigravity CLI / Google AI Pro (Version 20261117183755)
 
 - „🖥 KI im Terminal“: **Antigravity CLI** (`agy`). Installation unter Windows mit dem offiziellen Google-Skript
