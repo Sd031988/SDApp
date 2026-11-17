@@ -34,7 +34,26 @@ const {chromium}=require('playwright');
   assert.match(await page.locator('#problemListe').innerText(),/Ruff F821/);
   await page.evaluate(()=>SDLinter.formatieren());
   await page.waitForFunction(()=>/print\(f\(\)\)/.test(S.p.dateien['main.py']),null,{timeout:20000});
+  // JavaScript mit ESLint
+  await page.evaluate(async()=>{await projSchreiben({name:'js-lint',dateien:{
+    'index.html':'<script src="helfer.js"></script><script src="app.js"></script>',
+    'helfer.js':'function rechne(a, b) {\n  return a + b;\n}\n',
+    'app.js':'const ergebnis = rechne(1, 2);\nconsole.log(ergbnis);\nfunction ungenutzt() { let x = 5; }\nif (ergebnis == "3") { document.title = "ok"; }\n',
+    'kaputt.js':'function f( {\n  return 1;\n'},haupt:'index.html',versionen:[],erstellt:Date.now()});await projektOeffnen('js-lint','app.js');});
+  let jsOk=false;
+  for(let i=0;i<3&&!jsOk;i++){await page.evaluate(()=>SDLinter.lintenJetzt().catch(()=>{}));
+   try{await page.waitForFunction(()=>(S.problemeAnalyse||[]).some(p=>p.lint&&/ESLint/.test(p.text)),null,{timeout:45000});jsOk=true}catch(e){console.log('ESLint-Versuch',i+1,await page.evaluate(()=>SDLinter.eslintStatus))}}
+  console.log('ESLint-Status:',await page.evaluate(()=>SDLinter.eslintStatus));
+  const js=await page.evaluate(()=>(S.problemeAnalyse||[]).filter(p=>p.lint).map(p=>p.file+':'+p.line+' '+p.severity+' '+p.text));
+  console.log(js.join('\n'));
+  assert.ok(jsOk,'ESLint liefert Ergebnisse');
+  assert.ok(js.some(f=>/app\.js:2 error .*no-undef.*ergbnis/.test(f)),'Tippfehler im Namen erkannt');
+  assert.ok(!js.some(f=>/no-undef.*rechne/.test(f)),'Funktion aus anderem Skript ist bekannt');
+  assert.ok(!js.some(f=>/no-undef.*(console|document)/.test(f)),'Browser-Namen sind bekannt');
+  assert.ok(js.some(f=>/app\.js:3 warning .*no-unused-vars.*'x'/.test(f)),'ungenutzte lokale Variable');
+  assert.ok(js.some(f=>/app\.js:4 warning .*eqeqeq/.test(f)),'== erkannt');
+  assert.ok(js.some(f=>/kaputt\.js:\d+ error ESLint Syntax/.test(f)),'Syntaxfehler erkannt');
   assert.deepEqual(errors,[]);
-  console.log('PASS Ruff im Browser: Prüfen und Formatieren');
+  console.log('PASS Ruff und ESLint im Browser: Prüfen und Formatieren');
  } finally { await browser.close(); server.close(); }
 })().catch(e=>{console.error(e);process.exit(1)});
