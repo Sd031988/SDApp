@@ -1,5 +1,16 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Agent-Browser (Playwright)
+
+- Knopf **„🌐 Agent-Browser“**: Status, **Installation mit einem Klick** (`browser_installieren` → `pip install --user playwright`, ohne Admin;
+  unter Windows wird das vorhandene **Edge** gesteuert, kein Browser-Download; sonst Chrome bzw. `playwright install chromium`), Test.
+- Werkzeuge für das Modell: `browser_oeffnen`, `browser_lesen`, `browser_klicken`, `browser_tippen`, `browser_taste`, `browser_scrollen`,
+  `browser_zurueck`, `browser_schliessen`. Eigenes Profil `~/.sd_ki_agent/browser-profil` (getrennt von den Anmeldungen des Nutzers).
+- **Regeln:** Passwort-/Zahlungs-/IBAN-Felder und Kartennummern lehnt `browser_tippen` ab. `browser_pruefen` erkennt Absenden/Kaufen/
+  Löschen/Anmelden/Formular-Submit → die Oberfläche fragt dann **immer**, auch bei „Immer erlauben“. Seitentext wird als Information
+  markiert, die Systemanweisung verbietet, Anweisungen von Webseiten zu folgen. Nur über `/__tool` (gleicher Ursprung), nie über `/__vom_hub`.
+- Test-Schalter (nur Entwicklung): `SD_AGENT_BROWSER_HEADLESS=1`.
+
 ## Neu (17.11.2026): PC-Ordner im Code-Studio (z. B. Unreal-Projekt)
 
 Studio: Menü **„🖥 PC-Ordner öffnen (z. B. Unreal-Projekt)“** (`studio/pc-ordner.js`). Projekt „PC-<name>“ mit `pc:{id,name,pfad}`.
