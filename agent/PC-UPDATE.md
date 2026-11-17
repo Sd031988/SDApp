@@ -3,7 +3,7 @@
 ## Neu (17.11.2026, abends): Antigravity CLI / Google AI Pro (Version 20261117183755)
 
 - „🖥 KI im Terminal“: **Antigravity CLI** (`agy`). Installation unter Windows mit dem offiziellen Google-Skript
-  (`irm https://antigravity.google/cli/install.ps1 | iex`), erster Start meldet im Browser mit dem Google-Konto an (AI Pro).
+  (`irm https://antigravity.google/cli/install.ps1 | iex`, landet in `%LOCALAPPDATA%\agy\bin\agy.exe`), erster Start meldet im Browser mit dem Google-Konto an (AI Pro).
   `_agy_befehl()` sucht PATH und übliche Orte (`~/.local/bin` …).
 - Code-Studio, Tab „✦ GEMINI (PC)“: Auswahl **Gemini CLI / Antigravity (AI Pro)** (`motor` in `gemini_status`/`gemini_frage`).
   Antigravity läuft headless: `agy -p --input-format stream-json --output-format stream-json --mode accept-edits [--conversation id]`,
