@@ -1,5 +1,14 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, spät): Agent-Browser zeigt alles (Version 20261117175641)
+
+- Schalter im Dialog „🌐 Agent-Browser“: **„Alles sichtbar machen“** (Standard an, gespeichert als Fehlen von
+  `~/.sd_ki_agent/browser_sichtbar_aus`; Werkzeug `browser_sichtbar` nur für die Oberfläche).
+- Ist Playwright installiert und der Schalter an, laufen `web_search` (DuckDuckGo-HTML) und `fetch_url` (nur Webseiten, keine PDF/JSON/Dateien)
+  im sichtbaren Agent-Browser statt unsichtbar per urllib; klappt das nicht, wird wie bisher im Hintergrund geladen.
+- Jede Browser-Aktion holt den Tab nach vorn und blendet oben ein lila Band ein („🤖 SD KI-Agent: sucht nach …/klickt hier ↓/tippt …“);
+  Felder und Knöpfe werden vor Klick/Eingabe kurz rot umrandet. Das Band wird beim Lesen ausgeblendet und landet nicht im Seitentext.
+
 ## Neu (17.11.2026, spät): Hilfe für kleine lokale Modelle (Version 20261117174953)
 
 Damit kleine Modelle (bis 14B, z. B. Qwen 3.5 4B; Größe aus dem Namen, unbekannt = klein) im Agent-Modus zuverlässiger arbeiten:
