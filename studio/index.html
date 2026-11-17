@@ -169,16 +169,26 @@ button,input,select,textarea{font:inherit;color:inherit}
 #kaStatus,#kaZurueck{grid-column:1/-1;margin:0;font-size:12px;color:var(--smut)}#kaStatus[data-art="ok"]{color:#4ade80}#kaStatus[data-art="fehler"]{color:#f59e0b}
 #kaZurueck{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#f59e0b}#kaZurueck[hidden]{display:none}#kaZurueck div{flex:1;min-width:0}
 @media (max-width:819px){#unten>[data-feld="kiaendern"]{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:auto}.kaSpalte textarea{min-height:90px}}
-#unten>[data-feld="gemini"]{display:grid;grid-template-rows:1fr auto auto;gap:6px}
+#unten>[data-feld="gemini"]{display:grid;grid-template-rows:minmax(40px,1fr) auto auto;gap:6px;overflow:auto}
 #unten>[data-feld="gemini"][hidden]{display:none!important}
 #haupt.gmGross:not(.untenZu){grid-template-rows:auto minmax(140px,1fr) minmax(260px,58%)}
 #gmGross{white-space:nowrap}
+#haupt:not(.gmGross) .gmKnoepfe{display:grid;grid-template-columns:1fr 1fr;flex-basis:320px;align-content:start}
+@media (min-width:801px){
+  /* Großer Gemini-Chat + Vorschau: Vorschau geht bis ganz unten, der Chat liegt nur unter dem Code */
+  #haupt.gmNeben{grid-template-columns:minmax(0,1fr) minmax(280px,46%)}
+  #haupt.gmNeben>#mitte{display:contents}
+  #haupt.gmNeben>div:first-child{grid-column:1/3}
+  #haupt.gmNeben #editorSpalte{grid-column:1;grid-row:2}
+  #haupt.gmNeben #vorschau{grid-column:2;grid-row:2/4;width:auto;min-width:0}
+  #haupt.gmNeben>#unten{grid-column:1;grid-row:3;min-width:0}
+}
 #haupt.untenZu #unten>[data-feld="gemini"]{display:none}
 #gmVerlauf{overflow:auto;min-height:40px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .gmMsg{border:1px solid var(--sline);border-radius:8px;padding:6px 9px;max-width:100%}.gm-du{align-self:flex-end;background:var(--ssel);max-width:85%}.gm-info{color:#f59e0b}
 .gmWer{font-size:11px;font-weight:700;color:var(--smut);margin-bottom:2px}.gmText{white-space:pre-wrap;word-break:break-word}.gmExtra{font-size:12px;color:#4ade80;margin-top:4px}
 .gmZeile{display:flex;gap:8px;align-items:stretch}.gmZeile textarea{flex:1;min-width:0;resize:none;background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px;padding:6px 8px;font:13px/1.4 system-ui,sans-serif}
-.gmKnoepfe{display:flex;flex-direction:column;gap:4px}.gmKnoepfe button,.gmKnoepfe select{padding:4px 10px!important;font-size:12px}#gmMotor,#gmModell{background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px}
+.gmKnoepfe{display:flex;flex-direction:column;gap:4px;flex:0 0 190px;min-width:0}.gmKnoepfe select{width:100%;min-width:0}.gmKnoepfe button,.gmKnoepfe select{padding:4px 10px!important;font-size:12px}#gmMotor,#gmModell{background:var(--sside);color:var(--stext);border:1px solid var(--sline);border-radius:6px}
 #gmStatus{margin:0;font-size:12px;color:var(--smut)}#gmStatus[data-art="ok"]{color:#4ade80}#gmStatus[data-art="fehler"]{color:#f59e0b}
 @media (max-width:819px){.gmZeile{flex-direction:column}.gmKnoepfe{flex-direction:row;flex-wrap:wrap}}
 #pcBaumBox{border-bottom:1px solid var(--sline);margin-bottom:4px}#pcBaum{max-height:46vh;overflow:auto;font-size:13px}
@@ -509,7 +519,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="python-browser.js?v=20261117-2"></script>
 <script src="ki-vervollstaendigung.js?v=20261117-1"></script>
 <script src="pc-ordner.js?v=20261117-1"></script>
-<script src="pc-gemini.js?v=20261117-7"></script>
+<script src="pc-gemini.js?v=20261117-8"></script>
 <script src="./ki-werkstatt-core.js?v=20261106-agent-fences-1"></script>
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>

@@ -209,11 +209,16 @@
     // Chat-Bereich größer: unten mehr Platz, solange der Gemini-Tab offen ist (Wahl wird gemerkt, Standard: groß)
     let gross = true; try { gross = localStorage.getItem('sdGeminiGross') !== '0'; } catch (e) { /* egal */ }
     const feld = $('gmVerlauf').parentElement, haupt = $('haupt');
-    const groesse = () => { const an = gross && !feld.hidden; if (haupt) haupt.classList.toggle('gmGross', an);
+    const vor = $('vorschau');
+    const groesse = () => { const an = gross && !feld.hidden; if (haupt) { haupt.classList.toggle('gmGross', an);
+        haupt.classList.toggle('gmNeben', an && !!vor && !vor.hidden && innerWidth > 800); }
       $('gmGross').textContent = gross ? '⤡ Kleiner' : '⤢ Größer'; if (an) $('gmVerlauf').scrollTop = $('gmVerlauf').scrollHeight; };
     $('gmGross').onclick = () => { gross = !gross; try { localStorage.setItem('sdGeminiGross', gross ? '1' : '0'); } catch (e) { /* egal */ } groesse();
       if (typeof window.dispatchEvent === 'function') window.dispatchEvent(new Event('resize')); };
-    new MutationObserver(() => { groesse(); window.dispatchEvent(new Event('resize')); }).observe(feld, { attributes: true, attributeFilter: ['hidden'] });
+    const beob = new MutationObserver(() => { groesse(); window.dispatchEvent(new Event('resize')); });
+    beob.observe(feld, { attributes: true, attributeFilter: ['hidden'] });
+    if (vor) beob.observe(vor, { attributes: true, attributeFilter: ['hidden'] });
+    let breit = innerWidth > 800; addEventListener('resize', () => { if ((innerWidth > 800) !== breit) { breit = innerWidth > 800; groesse(); } });
     groesse();
     $('gmEingabe').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); senden(); } });
     setInterval(() => { const ab = ZUSTAND.pc ? (window.SDPcOrdner && SDPcOrdner.aktiv) : (window.SDPcTerminal && SDPcTerminal.aktiv); if (ZUSTAND.frei && (!S.p || S.p !== ZUSTAND.projekt || !ab)) { ZUSTAND.frei = false; knoepfe(); status('Verbindung getrennt – „Verbinden“ startet sie neu.'); } }, 2000);
