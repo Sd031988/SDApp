@@ -21,7 +21,8 @@ const {chromium}=require('playwright');
     await projSchreiben({name:'py-test',dateien:d,haupt:h,versionen:[],erstellt:Date.now()});await projektOeffnen('py-test',h);},[dateien,haupt]);
    await page.evaluate(v=>{document.getElementById('eingabe').value=v},eingabe||'');
    await page.evaluate(()=>ausfuehren());
-   await page.waitForFunction(m=>new RegExp(m).test(document.getElementById('ausgabe').textContent),muster,{timeout:timeout||120000});
+   try{await page.waitForFunction(m=>new RegExp(m).test(document.getElementById('ausgabe').textContent),muster,{timeout:timeout||120000});}
+   catch(e){console.log('AUSGABE:',await page.textContent('#ausgabe'));console.log('pcFrage sichtbar:',await page.evaluate(()=>!!(document.getElementById('pcFrage')&&!document.getElementById('pcFrage').hidden)));console.log('Fehler:',errors);throw e}
    return page.textContent('#ausgabe');
   };
   let t=await lauf({'main.py':'from helfer import gruss\nname = input("Name? ")\nzahl = int(input())\nprint(gruss(name), zahl * 2)\n','helfer.py':'def gruss(n):\n    return "Hallo " + n\n','daten/info.txt':'x'},'main.py','Anna | 21','✅|❌|ℹ',180000);

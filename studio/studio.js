@@ -1064,6 +1064,7 @@ function wbSenden(body) { const lauf = wbKette.then(async () => { for (let i = 0
 async function programmStarten(spWahl) {
   const sp = spWahl || programmSprache(S.aktiv); await speichernJetzt();
   const info = sp === 'python' ? (i => ({ gruende: [i.pakete.length ? 'Python-Pakete: ' + i.pakete.map(k => k + (PIP_NAMEN[k] ? ' (' + PIP_NAMEN[k] + ')' : '')).join(', ') : '', i.fenster ? 'ein Fenster (tkinter/turtle)' : ''].filter(Boolean) }))(pyFremde(S.p.dateien)) : nurAufPc(sp, S.p.dateien);
+  if (sp === 'python' && window.SDPython && einst().pyLokal !== false) info.gruende = info.gruende.filter(g => !/^Python-Pakete/.test(g));   // Pyodide lädt viele Pakete selbst
   if (info.gruende.length) { const w = await pcFrage(info); if (!w) return; if (w === 'pc') return aufPcAusfuehren(); if (w === 'paket') return zipExport(); }
   let stdinText = ($('eingabe').value || '').replace(/ \| /g, '\n'); if (!stdinText.trim() && liestEingabe(sp, S.p.dateien)) { const e = await eingabeFragen(sp); if (e == null) return; stdinText = e; }
   if (sp === 'python' && window.SDPython && einst().pyLokal !== false) {
