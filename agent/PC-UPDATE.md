@@ -1,5 +1,15 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (17.11.2026, abends): Gemini-Hilfe für das lokale Modell (Version 20261117181812)
+
+- Werkzeug `gemini_hilfe(auftrag, dateien, ordner, fehler)`: **eine** API-Anfrage pro Runde (`generateContent`, Schlüssel aus
+  `~/.sd_ki_agent/gemini_api_key`, Header `x-goog-api-key`), Modell `gemini-flash-latest` (Ersatz `gemini-2.5-flash`), Pro nur per Einstellung.
+- Gemini gibt vollständige Dateien im Format `=== DATEI: pfad === … === ENDE ===` zurück; geschrieben wird nur innerhalb des Projektordners
+  (kein `..`, keine absoluten Pfade, nichts aus `VOM_HUB_VERBOTEN`, nichts mit „… rest unverändert“), mit Sicherung/Rückgängig.
+- Das lokale Modell testet (build_run/check_preview) und ruft bei Fehlern erneut mit `fehler` auf; höchstens 5 Runden pro Auftrag.
+- 429 → `GEMINI_LEER`: Hinweis im Chat, das lokale Modell macht allein weiter. Tageszähler `~/.sd_ki_agent/gemini_zaehler.json`,
+  sichtbar in den Einstellungen („✦ Gemini-Hilfe für den Agenten: Flash/Pro/Aus“). Test-Schalter: `OLLAMA_LAUNCHER_GEMINI_API`.
+
 ## Neu (17.11.2026, abends): Agent-Browser live (Version 20261117180508)
 
 - **Mauszeiger:** lila Pfeil (`#sd-agent-cursor`) gleitet zum Element, Klick-Welle vor dem Klick; Feld rot umrandet.
