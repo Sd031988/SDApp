@@ -183,7 +183,7 @@ function show(){
  panel.querySelectorAll('[data-unit]').forEach(b=>b.onclick=()=>{unit=Number(b.dataset.unit);show()});
  panel.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>speak(data.units[unit][Number(b.dataset.say)]));
  panel.querySelectorAll('[data-word]').forEach(b=>b.onclick=()=>speak(vocabulary[level][Number(b.dataset.word)][0]));
- panel.querySelector('#pre-done').onclick=()=>{const p=progress();p[level+':'+unit]=true;try{localStorage.setItem(key,JSON.stringify(p))}catch(_){}show()};
+ panel.querySelector('#pre-done').onclick=()=>{const p=progress();p[level+':'+unit]=true;try{localStorage.setItem(key,JSON.stringify(p));if(localStorage.getItem(key)!==JSON.stringify(p))throw Error('Fortschritt nicht gespeichert');show();}catch(_){const feedback=panel.querySelector('#pre-feedback');if(feedback){feedback.textContent='Fortschritt konnte nicht gespeichert werden. Bitte prüfe den verfügbaren Browserspeicher und versuche es erneut.';feedback.setAttribute('role','alert');}else{const notice=document.createElement('p');notice.setAttribute('role','alert');notice.textContent='Fortschritt konnte nicht gespeichert werden. Bitte prüfe den Browserspeicher.';panel.querySelector('#pre-done').insertAdjacentElement('afterend',notice);}}};
  panel.querySelector('#pre-next').onclick=()=>{unit=(unit+1)%data.units.length;show()};
 }
 function close(){stopRecording();if('speechSynthesis' in window)speechSynthesis.cancel();panel?.remove();panel=null;document.getElementById('lBody')?.style.removeProperty('display');}
