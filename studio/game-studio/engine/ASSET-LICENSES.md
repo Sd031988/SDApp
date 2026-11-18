@@ -121,3 +121,8 @@ No asset is bundled or redistributed in this PR.
 - Lizenz: **CC0 1.0 Universal (Public Domain Dedication)** laut `License.txt` im vom Nutzer am 07.11.2026 übergebenen Original-Paket.
 - Unverändert in GLB umgewandelt.
 - Modellgröße nur ca. 3–8 × 3–6 × 2–4,5 Einheiten → für die Stadt deutlich hochskalieren (Faktor ≈ 3–5, Grundfläche an die Grundstücke der Stadt anpassen). Größte Dateien: building1-large (1,6 MB), house1 (1,2 MB) – nur bei Bedarf laden.
+
+## Passanten in Nordhafen Ops – Platzhalter
+
+- Freie Stadt nutzt `assets/nordhafen-char-monk.glb`, `-cleric.glb`, `-wizard.glb`, `-ranger.glb` (Quaternius RPG Characters, CC0 1.0, siehe oben) **vorübergehend als Platzhalter** für Passanten.
+- Das sind Fantasy-Figuren, keine Stadtbewohner. Sie werden ersetzt, sobald passende CC0-Figuren in Alltagskleidung mit belegter Lizenz vorliegen.

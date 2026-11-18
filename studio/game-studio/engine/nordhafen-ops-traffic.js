@@ -32,11 +32,16 @@ function obstacle(car,player){
  const ahead=((car.axis==='x'?player.x-car.x:player.z-car.z)*car.direction);
  return ahead>=0&&ahead<15?ahead:Infinity;
 }
-function advance(car,dt,player,worldSize=512,cityRules){
+function nearestObstacle(car,player,others=[]){
+ let best=obstacle(car,player);
+ for(const o of others)best=Math.min(best,obstacle(car,o));
+ return best;
+}
+function advance(car,dt,player,worldSize=512,cityRules,others=[]){
  if(!cityRules||typeof cityRules.traffic!=='function')throw new TypeError('city traffic rules required');
  const t=clamp(Number.isFinite(dt)?dt:0,0,.05);
  const current={...car,heading:car.heading};
- const next=cityRules.traffic(current,t,{obstacleDistance:obstacle(current,player),stopDistance:12,cruise:car.cruise});
+ const next=cityRules.traffic(current,t,{obstacleDistance:nearestObstacle(current,player,others),stopDistance:12,cruise:car.cruise});
  const low=12,high=worldSize-12,span=high-low;
  const lane=car.axis==='x'?'x':'z',other=lane==='x'?'z':'x';
  if(next[lane]>high)next[lane]=low+(next[lane]-high)%span;
@@ -96,11 +101,12 @@ function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,see
   return {root,collider,state:car,visible:true};
  });
  let disposed=false,visible=0;
- function update(dt,player){
+ // others: extra obstacles, e.g. pedestrians crossing the road
+ function update(dt,player,others=[]){
   if(disposed)return 0;
   visible=0;
   for(const item of carsInWorld){
-   item.state=advance(item.state,dt,player,worldSize,cityRules);
+   item.state=advance(item.state,dt,player,worldSize,cityRules,others);
    const v=item.state;
    const near=!!player&&Math.hypot(v.x-player.x,v.z-player.z)<(mobile?105:155);
    if(near){item.root.position.set(v.x,0,v.z);item.root.rotation.y=v.heading;visible++;}
@@ -126,5 +132,5 @@ function create({scene,BABYLON,cityRules,worldSize=512,count=10,mobile=false,see
   get colliders(){return carsInWorld.filter(x=>x.collider).map(x=>({position:x.collider.position,physicsBody:x.collider.metadata.aggregate.body}));}
  });
 }
-return Object.freeze({plan,obstacle,advance,create});
+return Object.freeze({plan,obstacle,nearestObstacle,advance,create});
 });
