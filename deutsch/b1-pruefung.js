@@ -137,16 +137,25 @@
     const tasks=activeTasks(), automatic=part==='lesen'||part==='hoeren';
     const correct=automatic?answers.filter((a,i)=>a===tasks[i].answer).length:null;
     const result={exam,setNumber,part,date:new Date().toISOString(),correct,total:tasks.length,answers,seconds:Math.round((Date.now()-started)/1000)};
-    try{const old=JSON.parse(localStorage.getItem('sdB1Pruefungen')||'[]');old.push(result);localStorage.setItem('sdB1Pruefungen',JSON.stringify(old.slice(-30)));}catch(_){}
+    let saved=false;
+    try{
+      const previous=JSON.parse(localStorage.getItem('sdB1Pruefungen')||'[]');
+      const history=Array.isArray(previous)?previous:[];
+      history.push(result);
+      const serialized=JSON.stringify(history.slice(-30));
+      localStorage.setItem('sdB1Pruefungen',serialized);
+      saved=localStorage.getItem('sdB1Pruefungen')===serialized;
+    }catch(_){saved=false;}
+    const saveNotice=saved?'':'<p role="alert" class="b1-save-warning">⚠ Ergebnis konnte nicht auf diesem Gerät gespeichert werden. Bitte kopiere deinen Text beziehungsweise notiere dein Ergebnis, bevor du die Übersicht öffnest.</p>';
     const detail=automatic?'<h2>'+correct+' von '+tasks.length+' richtig</h2><p>'+Math.round(correct/tasks.length*100)+' % in diesem Übungsblock</p>'+
       tasks.map((t,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(t.q)+'</p><small>Deine Antwort: '+esc(t.options[answers[i]])+'<br>Richtig: '+esc(t.options[t.answer])+'</small></div>').join(''):
-      '<h2>Übungsblock abgeschlossen</h2><p>Deine Antwort wurde auf diesem Gerät gespeichert. Für Schreiben und Sprechen gibt es hier noch keine automatische Sprach- oder Textbewertung.</p>'+
+      '<h2>Übungsblock abgeschlossen</h2><p>'+(saved?'Deine Antwort wurde auf diesem Gerät gespeichert. ':'Deine Antwort ist nur in dieser Ansicht verfügbar. ')+'Für Schreiben und Sprechen gibt es hier noch keine automatische Sprach- oder Textbewertung.</p>'+
       answers.map((a,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(a||'(Keine Antwort)')+'</p></div>').join('');
     setResults[part]={correct,total:tasks.length,seconds:result.seconds};
     const order=['hoeren','lesen','schreiben','sprechen'];
     const next=fullRun?order[order.indexOf(part)+1]:null;
     const progress=fullRun?'<p class="b1-muted">Durchgehender Übungslauf: '+order.map(k=>(setResults[k]?'✓ ':'○ ')+labels[k]).join(' · ')+'</p>':'';
-    layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p>'+progress+detail+
+    layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p>'+progress+saveNotice+detail+
       '<button class="b1-next" id="b1-again">'+(next?'Weiter zu '+labels[next]:'Zur Prüfungsübersicht')+'</button>');
     $('b1-again').onclick=()=>{if(next){part=next;index=0;answers=[];started=Date.now();question();}else overview();};
   }
@@ -174,7 +183,7 @@
     .b1-choice,.b1-answer{display:flex;flex-direction:column;gap:5px;text-align:left;border:1px solid var(--border,#444);background:var(--bg2,#171722);color:inherit;padding:15px;border-radius:14px;font:inherit;cursor:pointer}
     .b1-choice.selected{border-color:#fdba74;background:rgba(194,65,12,.17)}.b1-choice small{color:var(--muted,#aaa)}
     .b1-answer{flex-direction:row;align-items:flex-start;line-height:1.5}.b1-answer input{margin:5px 7px 0 0}
-    .b1-passage{padding:16px;background:var(--bg2,#171722);border:1px solid var(--border,#444);border-radius:14px;line-height:1.7;white-space:pre-wrap;margin:14px 0}
+    .b1-save-warning{padding:12px;border:1px solid #f59e0b;border-radius:10px;color:#fbbf24;line-height:1.5}\n    .b1-passage{padding:16px;background:var(--bg2,#171722);border:1px solid var(--border,#444);border-radius:14px;line-height:1.7;white-space:pre-wrap;margin:14px 0}
     .b1-progress{display:flex;justify-content:space-between;margin:18px 0;color:#fdba74;font-weight:700}
     .b1-next,.b1-audio{padding:14px 18px;border:0;border-radius:12px;font:inherit;font-weight:700;cursor:pointer;margin:12px 0;background:#c2410c;color:#fff}
     .b1-next{width:100%}.b1-audio{background:#334155}
