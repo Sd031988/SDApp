@@ -155,8 +155,21 @@
     const order=['hoeren','lesen','schreiben','sprechen'];
     const next=fullRun?order[order.indexOf(part)+1]:null;
     const progress=fullRun?'<p class="b1-muted">Durchgehender Übungslauf: '+order.map(k=>(setResults[k]?'✓ ':'○ ')+labels[k]).join(' · ')+'</p>':'';
+    const exportable=!automatic;
     layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p>'+progress+saveNotice+detail+
+      (exportable?'<button class="b1-audio" id="b1-copy-answers" type="button">📋 Meine Antworten kopieren</button><p id="b1-copy-status" role="status" aria-live="polite"></p>':'')+
       '<button class="b1-next" id="b1-again">'+(next?'Weiter zu '+labels[next]:'Zur Prüfungsübersicht')+'</button>');
+    if(exportable) $('b1-copy-answers').onclick=async()=>{
+      const text=answers.map((answer,i)=>'Aufgabe '+(i+1)+'\\n'+(answer||'(Keine Antwort)')).join('\\n\\n');
+      const status=$('b1-copy-status');
+      try{
+        if(!navigator.clipboard?.writeText) throw new Error('Zwischenablage nicht verfügbar');
+        await navigator.clipboard.writeText(text);
+        if(status) status.textContent='Antworten kopiert. Du kannst sie jetzt in einem Dokument sichern.';
+      }catch(_){
+        if(status) status.textContent='Automatisches Kopieren nicht möglich. Markiere die Antworten oben und kopiere sie manuell.';
+      }
+    };
     $('b1-again').onclick=()=>{if(next){part=next;index=0;answers=[];started=Date.now();question();}else overview();};
   }
   function attach(){
