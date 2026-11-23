@@ -201,7 +201,7 @@
     fa: { cont: 'ادامه', listen: 'گوش کنید', speak: 'صحبت کنید', check: 'بررسی', next: 'بعدی', again: 'دوباره', trans: 'ترجمه',
           right: 'درست است!', almost: 'تقریباً درست', wrong: 'متأسفانه غلط', chat: 'تمرین گفتگو', weak: 'کلمات دشوار',
           place: 'آزمون تعیین سطح', newp: 'شخص جدید', name: 'نام', lesson: 'درس', unit: 'واحد', done: 'تمام', start: 'شروع',
-          book: 'واحد من', dict: 'فرهنگ لغت', gram: 'دستور زبان', words: 'لغات', phrases: 'عبارات مهم', read: 'خواندن', hear: 'شنیدن',
+          book: 'واحد من', dict: 'فرهنگ لغت', praxis: 'تمرین: زندگی روزمره و کار', gram: 'دستور زبان', words: 'لغات', phrases: 'عبارات مهم', read: 'خواندن', hear: 'شنیدن',
           write: 'نوشتن', cards: 'کارت‌های لغت', print: 'چاپ', know: 'بلدم', practice: 'باز هم تمرین', flip: 'برگرداندن',
           correct: 'اصلاح کن', model: 'جواب نمونه', play: 'پخش', showtext: 'نمایش متن', exercises: 'تمرین‌ها با معلم', search: 'جستجو',
           wotd: 'کلمهٔ روز', goal: 'هدف روزانه', review: 'تکرار روزانه', articles: 'حرف تعریف', order: 'ساختن جمله', dictation: 'املا', train: 'تمرین', pics: 'تمرین با عکس', tricks: 'ترفندهای حرف تعریف', trick: 'ترفند یادآوری', videos: 'ویدیو در یوتیوب',
@@ -210,7 +210,7 @@
     en: { cont: 'Continue', listen: 'Listen', speak: 'Speak', check: 'Check', next: 'Next', again: 'Again', trans: 'Translation',
           right: 'Correct!', almost: 'Almost', wrong: 'Not quite', chat: 'Practice conversation', weak: 'Difficult words',
           place: 'Placement test', newp: 'New person', name: 'Name', lesson: 'Lesson', unit: 'Unit', done: 'Done', start: 'Start',
-          book: 'My unit', dict: 'Dictionary', gram: 'Grammar', words: 'Vocabulary', phrases: 'Useful phrases', read: 'Reading', hear: 'Listening',
+          book: 'My unit', dict: 'Dictionary', praxis: 'Practice: everyday life and work', gram: 'Grammar', words: 'Vocabulary', phrases: 'Useful phrases', read: 'Reading', hear: 'Listening',
           write: 'Writing', cards: 'Flashcards', print: 'Print', know: 'I know it', practice: 'Practise again', flip: 'Turn over',
           correct: 'Correct it', model: 'Model answer', play: 'Play', showtext: 'Show text', exercises: 'Exercises with the teacher', search: 'Search',
           wotd: 'Word of the day', goal: 'Daily goal', review: 'Daily review', articles: 'Articles', order: 'Sentence building', dictation: 'Dictation', train: 'Training', pics: 'Picture quiz', tricks: 'Article tricks', trick: 'Memory trick', videos: 'Videos on YouTube',
@@ -219,7 +219,7 @@
     ur: { cont: 'جاری رکھیں', listen: 'سنیں', speak: 'بولیں', check: 'جانچیں', next: 'اگلا', again: 'دوبارہ', trans: 'ترجمہ',
           right: 'درست!', almost: 'تقریباً درست', wrong: 'افسوس، غلط', chat: 'گفتگو کی مشق', weak: 'مشکل الفاظ',
           place: 'سطح جانچنے کا ٹیسٹ', newp: 'نیا شخص', name: 'نام', lesson: 'سبق', unit: 'یونٹ', done: 'مکمل', start: 'شروع',
-          book: 'میرا یونٹ', dict: 'لغت', gram: 'قواعد', words: 'الفاظ', phrases: 'اہم جملے', read: 'پڑھنا', hear: 'سننا',
+          book: 'میرا یونٹ', dict: 'لغت', praxis: 'مشق: روزمرہ زندگی اور کام', gram: 'قواعد', words: 'الفاظ', phrases: 'اہم جملے', read: 'پڑھنا', hear: 'سننا',
           write: 'لکھنا', cards: 'یادداشتی کارڈ', print: 'پرنٹ', know: 'مجھے آتا ہے', practice: 'پھر سے مشق', flip: 'پلٹیں',
           correct: 'درست کریں', model: 'نمونہ جواب', play: 'چلائیں', showtext: 'متن دکھائیں', exercises: 'استاد کے ساتھ مشقیں', search: 'تلاش',
           wotd: 'آج کا لفظ', goal: 'روزانہ کا ہدف', review: 'روزانہ دہرائی', articles: 'حرفِ تعریف', order: 'جملہ بنانا', dictation: 'املا', train: 'مشق', pics: 'تصویری کوئز', tricks: 'حرفِ تعریف کے گُر', trick: 'یاد رکھنے کا گُر', videos: 'یوٹیوب پر ویڈیوز',
@@ -228,7 +228,7 @@
     ti: { cont: 'ቀጽል', listen: 'ስማዕ', speak: 'ተዛረብ', check: 'ፈትሽ', next: 'ዝቕጽል', again: 'ደጊም', trans: 'ትርጉም',
           right: 'ቅኑዕ!', almost: 'ዳርጋ ቅኑዕ', wrong: 'ጌጋ', chat: 'ልምምድ ዝርርብ', weak: 'ከቢድ ቃላት',
           place: 'ፈተና ደረጃ', newp: 'ሓድሽ ሰብ', name: 'ስም', lesson: 'ትምህርቲ', unit: 'ክፍሊ', done: 'ተወዲኡ', start: 'ጀምር',
-          book: 'ክፍለይ', dict: 'መዝገበ ቃላት', gram: 'ሰዋስው', words: 'ቃላት', phrases: 'ኣገደስቲ ሓረጋት', read: 'ምንባብ', hear: 'ምስማዕ',
+          book: 'ክፍለይ', dict: 'መዝገበ ቃላት', praxis: 'ልምምድ: መዓልታዊ ህይወትን ስራን', gram: 'ሰዋስው', words: 'ቃላት', phrases: 'ኣገደስቲ ሓረጋት', read: 'ምንባብ', hear: 'ምስማዕ',
           write: 'ምጽሓፍ', cards: 'ካርድታት ቃላት', print: 'ሕተም', know: 'እፈልጦ እየ', practice: 'ደጊም ተለማመድ', flip: 'ገልብጥ',
           correct: 'ኣርም', model: 'ኣብነታዊ መልሲ', play: 'ኣጻውት', showtext: 'ጽሑፍ ኣርኢ', exercises: 'ልምምድ ምስ መምህር', search: 'ድለ',
           wotd: 'ቃል ናይ ሎሚ', goal: 'መዓልታዊ ዕላማ', review: 'መዓልታዊ ድግግም', articles: 'መስተዋድድ', order: 'ሓረግ ምህናጽ', dictation: 'ጽሑፍ ብምስማዕ', train: 'ልምምድ', pics: 'ፈተና ብስእሊ', tricks: 'ምኽርታት መስተዋድድ', trick: 'መዘኻኸሪ', videos: 'ቪድዮታት ኣብ ዩቱብ',
@@ -451,7 +451,7 @@
     if ($('learn')) {
       $('learn').dataset.wired = '1';
       $('lClose').onclick = closeLearn;
-      $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else showHome(); };
+      $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else if (L.view === 'praxis-l') showPraxis(); else showHome(); };
       $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
       if ($('lLvBtn')) $('lLvBtn').onclick = showLevels;
       if ($('lSprTop')) $('lSprTop').onclick = showSprache;
@@ -464,7 +464,7 @@
       '<button type="button" class="l-btn-round" id="lClose" aria-label="Schließen">✕</button></div><div id="lBody" class="l-body"></div>';
     document.body.appendChild(d);
     $('lClose').onclick = closeLearn;
-    $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else showHome(); };
+    $('lBack').onclick = () => { stopAll(); if (L.view === 'home' || L.view === 'profiles') closeLearn(); else if (L.view.startsWith('book-') && L.bk) showUnit(L.bk.level, L.bk.unit); else if (L.view.startsWith('train-')) showTraining(); else if (L.view === 'praxis-l') showPraxis(); else showHome(); };
     $('lProfBtn').onclick = () => { stopAll(); showProfiles(); };
     $('lLvBtn').onclick = showLevels;
     $('lSprTop').onclick = showSprache;
@@ -644,7 +644,8 @@
       kachel('lTrainBtn', '🏋️', 'Üben', 'train', 'Wörter und Sätze aus ' + inf.kurz) +
       kachel('lChatBtn', '💬', 'Sprechen', 'chat', 'Gespräch mit dem KI-Lehrer') +
       kachel('lBookBtn', '📖', 'Meine Einheit', 'book', lv.units[p.unit] || '') +
-      kachel('lDictBtn', '🔤', 'Wörterbuch', 'dict', 'Wörter suchen und hören') + '</div>';
+      kachel('lDictBtn', '🔤', 'Wörterbuch', 'dict', 'Wörter suchen und hören') +
+      kachel('lPraxisBtn', '💬', 'Praxis: Alltag und Beruf', 'praxis', 'Gespräche, Termine, Briefe und Arbeit – Schritt für Schritt') + '</div>';
     h += '<details class="l-level l-way lvc-' + p.level + '"><summary>🗺️ ' + bi('Dein Weg', 'way') + ' <small>' + esc(inf.kurz) + ' · ' + dn + '/' + nU + '</small></summary>';
     lv.units.forEach((u, i) => {
       const d5 = !!p.done[p.level + ':' + i + ':5'], cur = i === p.unit;
@@ -666,11 +667,106 @@
     $('lChatBtn').onclick = () => startChat(p.level, p.unit, false);
     $('lBookBtn').onclick = () => showUnit(p.level, p.unit);
     $('lDictBtn').onclick = showDict;
+    $('lPraxisBtn').onclick = showPraxis;
     $('lGramBtn').onclick = showGrammarAll;
     if ($('lWeakBtn')) $('lWeakBtn').onclick = startWeak;
     $('lPlaceBtn').onclick = startPlacement;
     $('lSprBtn').onclick = showSprache;
     document.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const [lvId, ui] = b.dataset.u.split(':'); showUnit(lvId, +ui); });
+  }
+  // ----- Praxis: Alltag und Beruf -----
+  // Situations-Lektionen (früher eigene Deutschkurse in der Akademie) – jetzt hier, damit Deutsch an einem Ort ist.
+  // Inhalt kommt aus ../mein-sd-hub/kurse/*.js, die Übungen aus ../mein-sd-hub/akademie-uebungen.js (alles lokal, ohne Server).
+  const PRAXIS = [
+    {id: 'german', name: 'Alltag: erste Gespräche', niveau: ['alpha', 'A1']},
+    {id: 'deutsch-a2', name: 'Alltag auf A2', niveau: ['A2']},
+    {id: 'deutsch-b1', name: 'Alltag auf B1', niveau: ['B1']},
+    {id: 'deutsch-beruf', name: 'Deutsch für den Beruf', niveau: ['B1']}
+  ];
+  const PRAXIS_V = '20261123';
+  const praxisSkripte = {};
+  function praxisLaden(src) {
+    if (!praxisSkripte[src]) praxisSkripte[src] = new Promise((ok, nein) => {
+      const s = document.createElement('script'); s.src = src; s.onload = ok;
+      s.onerror = () => { delete praxisSkripte[src]; nein(new Error('laden')); }; document.head.appendChild(s);
+    });
+    return praxisSkripte[src];
+  }
+  async function praxisKurs(id) { await praxisLaden('../mein-sd-hub/kurse/' + id + '.js?v=' + PRAXIS_V); return ((window.SDAkademieKurse || {})[id]) || []; }
+  function praxisFertig(p) { p.praxis = p.praxis || {}; return p.praxis; }
+  async function showPraxis() {
+    if (!prof()) { showProfiles(); return; }
+    stopAll(); L.view = 'praxis'; topbar();
+    body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
+    let kurse;
+    try { kurse = await Promise.all(PRAXIS.map(k => praxisKurs(k.id))); }
+    catch (e) { body('<div class="l-card">❌ Die Praxis-Lektionen konnten nicht geladen werden. Bitte Internet prüfen.</div>'); return; }
+    if (L.view !== 'praxis') return;
+    const p = prof(), f = praxisFertig(p);
+    let h = '<div class="l-lhead">' + lvChip(p.level, 'Praxis') + '<small>Alltag und Beruf</small></div>' +
+      '<h2 class="l-h">💬 ' + bi('Praxis: Alltag und Beruf', 'praxis') + '</h2>' +
+      '<p class="l-note">Echte Situationen Schritt für Schritt: Gespräche, Termine, Briefe, Telefonate und Arbeit – mit Übungen zum Lesen, Hören und Schreiben.</p>';
+    PRAXIS.forEach((k, i) => {
+      const ls = kurse[i], dn = ls.filter(l => f[l.id]).length, passt = k.niveau.includes(p.level);
+      h += '<details class="l-level l-praxis"' + (passt ? ' open' : '') + '><summary>' + esc(k.name) + ' <small>' + dn + '/' + ls.length + (passt ? ' · passt zu deinem Niveau' : '') + '</small></summary>';
+      ls.forEach(l => { h += '<button type="button" class="l-unit" data-pl="' + esc(k.id) + '|' + esc(l.id) + '"><span>' + (f[l.id] ? '✅' : '○') + ' ' + esc(l.title) + '</span><small>' + esc(l.minutes || '') + ' Min.</small></button>'; });
+      h += '</details>';
+    });
+    body(h);
+    document.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { const [k, l] = b.dataset.pl.split('|'); startPraxis(k, l); });
+  }
+  async function startPraxis(kursId, lessonId) {
+    stopAll(); L.view = 'praxis-l'; topbar();
+    body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
+    let kurs = [], lesson = null;
+    try { kurs = await praxisKurs(kursId); lesson = kurs.find(l => l.id === lessonId); await praxisLaden('../mein-sd-hub/akademie-uebungen.js?v=' + PRAXIS_V); } catch (e) {}
+    if (L.view !== 'praxis-l') return;
+    if (!lesson || !window.SDAkademieUebungen) { body('<div class="l-card">❌ Die Lektion konnte nicht geladen werden. Bitte Internet prüfen.</div>'); return; }
+    const seiten = [];
+    seiten.push({html: '<h2 class="l-h">' + esc(lesson.title) + '</h2><p class="l-ptext">' + esc(lesson.explanation || '') + '</p>' +
+      (lesson.tip ? '<div class="l-card l-tipp">💡 ' + esc(lesson.tip) + '</div>' : '')});
+    (lesson.schrittePraxis || []).forEach(s => seiten.push({html: '<h3 class="l-ph">' + esc(s.titel) + '</h3><p class="l-ptext">' + esc(s.text) + '</p>' +
+      '<button type="button" class="l-btn l-vorlesen" data-sag="' + esc(s.text) + '">🔊 Vorlesen</button>'}));
+    if ((lesson.fehler || []).length) seiten.push({html: '<h3 class="l-ph">⚠️ Häufige Fehler</h3>' + lesson.fehler.map(x => '<div class="l-card"><b>' + esc(x.titel) + '</b><span>' + esc(x.text) + '</span></div>').join('')});
+    (lesson.uebungen || []).forEach(u => seiten.push({uebung: u}));
+    if ((lesson.quiz || []).length) seiten.push({quiz: lesson.quiz.map(q => [q.frage, q.antworten, q.richtig, q.erklaerung])});
+    seiten.push({ende: true});
+    let pos = 0, quizOk = false;
+    const zeige = () => {
+      stopAll(); const s = seiten[pos];
+      body('<div class="l-lhead">' + lvChip(prof().level, 'Praxis') + '<small>Schritt ' + (pos + 1) + ' von ' + seiten.length + '</small></div>' +
+        '<div class="l-progress"><div style="width:' + Math.round((pos + 1) / seiten.length * 100) + '%"></div></div>' +
+        '<div id="lPx" class="l-px">' + (s.html || '') + '</div>' +
+        '<div class="l-px-nav"><button type="button" class="l-btn" id="lPxZur"' + (pos ? '' : ' disabled') + '>← Zurück</button>' +
+        (s.ende ? '' : '<button type="button" class="l-btn l-px-weiter" id="lPxWei">Weiter →</button>') + '</div>');
+      const box = $('lPx');
+      if (s.uebung) window.SDAkademieUebungen.render(box, s.uebung);
+      if (s.quiz) {
+        box.innerHTML = '<h3 class="l-ph">✅ Wissen prüfen</h3>' + quizHtml(s.quiz, 'px') + '<div id="lPxErg"></div>';
+        wireQuiz(s.quiz, 'px', (right, n) => {
+          quizResult($('lPxErg'), right, n);
+          $('lPxErg').insertAdjacentHTML('beforeend', '<ul class="l-px-erkl">' + s.quiz.map(q => '<li>' + esc(q[3] || '') + '</li>').join('') + '</ul>');
+          if (right === n) { quizOk = true; $('lPxWei').disabled = false; }
+          else $('lPxErg').insertAdjacentHTML('beforeend', '<button type="button" class="l-btn" id="lPxNeu">🔁 Noch einmal</button>'), ($('lPxNeu').onclick = zeige);
+        });
+      }
+      if (s.ende) {
+        const p = prof(), f = praxisFertig(p), neu = !f[lesson.id];
+        if (neu) { f[lesson.id] = Date.now(); gain(20); }
+        const i = kurs.indexOf(lesson), naechste = kurs[i + 1];
+        box.innerHTML = '<div class="l-card l-geschafft"><h2 class="l-h">🎉 Geschafft!</h2><p>' + (neu ? '+20 ⭐' : 'Gut wiederholt!') + '</p>' +
+          ((lesson.merke || []).length ? '<h3 class="l-ph">Das merkst du dir</h3><ul>' + lesson.merke.map(m => '<li>' + esc(m) + '</li>').join('') + '</ul>' : '') + '</div>' +
+          '<div class="l-grid">' + (naechste ? '<button type="button" class="l-btn l-px-weiter" id="lPxNext">▶ ' + esc(naechste.title) + '</button>' : '') +
+          '<button type="button" class="l-btn" id="lPxListe">📋 Alle Praxis-Lektionen</button></div>';
+        if (naechste) $('lPxNext').onclick = () => startPraxis(kursId, naechste.id);
+        $('lPxListe').onclick = showPraxis;
+      }
+      box.querySelectorAll('[data-sag]').forEach(b => b.onclick = () => lSpeak(b.dataset.sag, false));
+      $('lPxZur').onclick = () => { pos--; zeige(); };
+      const w = $('lPxWei');
+      if (w) { if (s.quiz && !quizOk) w.disabled = true; w.onclick = () => { pos++; zeige(); }; }
+    };
+    zeige();
   }
   // Übungs-Seite: alle Trainings an einem Ort, nach Art sortiert und kurz erklärt
   function showTraining() {

@@ -254,6 +254,27 @@
   .l-tonhinweis button { margin-left: 8px; border: 0; border-radius: 8px; padding: 6px 12px; background: #22c55e; color: #fff; font: inherit; font-weight: 700; }
   .l-umzug { background: linear-gradient(135deg, rgba(34,197,94,.18), rgba(139,92,246,.14)); }
   noscript { display: block; padding: 24px; }
+/* Praxis: Alltag und Beruf (Situations-Lektionen mit Übungen) */
+#lPraxisBtn { grid-column: 1 / -1; min-height: 84px; }
+.l-px { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.l-ph { font-size: 18px; margin: 4px 0; }
+.l-ptext { font-size: 17px; line-height: 1.75; margin: 0; }
+.l-tipp { flex-direction: row; gap: 8px; }
+.l-px-nav { display: flex; gap: 10px; justify-content: space-between; margin: 18px 0 72px; }
+.l-px-nav .l-btn, .l-geschafft ~ .l-grid .l-btn, .l-vorlesen { grid-column: auto; grid-row: auto; width: auto; }
+.l-vorlesen { align-self: flex-start; }
+.l-px-weiter { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.l-px-weiter:disabled, .l-px-nav .l-btn:disabled { opacity: .45; cursor: not-allowed; }
+.l-px-erkl { margin: 10px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.6; }
+.ak-uebung { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 16px; color: var(--text); }
+.ak-uebung h5 { font-size: 17px; margin: 0 0 6px; }
+.ak-uebung p { line-height: 1.65; }
+.ak-uebung label { display: block; margin: 12px 0; line-height: 1.6; }
+.ak-uebung input:not([type=checkbox]), .ak-uebung select, .ak-uebung textarea { width: 100%; max-width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; margin-top: 4px; border-radius: 12px; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); }
+.ak-uebung button { min-height: 44px; margin: 6px 6px 0 0; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font: inherit; cursor: pointer; white-space: normal; }
+.ak-uebung button.uebung-pruefen { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.ak-uebung [hidden] { display: none !important; }
+.ak-uebung [role=status] { min-height: 1.5em; margin-top: 8px; line-height: 1.6; }
 </style>
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
 <script defer src="../sd-workspace.js?v=20261109-stil-7" data-sd-app="deutsch" data-sd-mode="compact"></script>
@@ -269,7 +290,7 @@
 <script src="../gemini-modelle.js?v=1"></script>
 <script src="../sd-ki.js?v=23"></script>
 <script src="lern-api.js?v=8"></script>
-<script src="lernen.js?v=11"></script>
+<script src="lernen.js?v=12"></script>
 <script src="umzug.js?v=1"></script>
 <script src="b1-musterpruefungen.js?v=20261109-stil"></script>
 <script>Promise.resolve(openLearn()).then(() => window.SDUmzug && SDUmzug.pruefen());</script>

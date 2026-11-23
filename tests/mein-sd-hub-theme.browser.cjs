@@ -6,6 +6,8 @@ const server=http.createServer((req,res)=>{try{
  const file=path.resolve(root,"."+rel);if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return}
  fs.readFile(file,(e,data)=>{if(e){res.writeHead(404).end();return}res.setHeader("Content-Type",({".html":"text/html",".js":"application/javascript",".css":"text/css",".svg":"image/svg+xml",".woff2":"font/woff2"})[path.extname(file)]||"application/octet-stream");res.end(data)});
 }catch{res.writeHead(400).end()}});
+async function kursKlick(page,muster){const re=muster instanceof RegExp?muster:new RegExp(muster);const liste=await page.evaluate(()=>window.SDPersonalData.academy.map(c=>[c.id,c.name]));const c=liste.find(([,n])=>re.test(n));if(!c)throw new Error("Kurs fehlt: "+re);
+ const karte=page.locator('.course[data-kurs="'+c[0]+'"]');if(await karte.count())await karte.click();else await page.evaluate(id=>{location.hash="kurs="+id},c[0]);await page.locator("body.ak-raum #lessonList .lesson-btn").first().waitFor()}
 (async()=>{await new Promise(r=>server.listen(0,"127.0.0.1",r));let browser;
 try{
  browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
@@ -18,7 +20,7 @@ try{
   assert.equal(await page.locator("#themeSwitch").inputValue(),"auto");
   if(route.includes("mein-sd-hub")){
    await page.locator('[data-tab="akademie"]').click();
-   await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
+   await kursKlick(page,/^Deutsch im Alltag$/);
    await page.locator(".quiz").waitFor();
   }
   const sample=await page.evaluate(isHub=>{

@@ -15,6 +15,8 @@ fs.readFile(p,(err,body)=>{if(err){res.writeHead(404);return res.end("Not found"
 );
 async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n=>document.querySelector('.ak-step-balken button[aria-current="step"]')?.dataset.akTitle===n,name))return;await page.locator(".ak-step-nav .ak-weiter").click()}throw new Error("Seite nicht erreicht: "+name)}
 async function raumZu(page){if(await page.evaluate(()=>document.body.classList.contains("ak-raum")))await page.locator("#kursZurueck").click()}
+async function kursKlick(page,muster){const re=muster instanceof RegExp?muster:new RegExp(muster);const liste=await page.evaluate(()=>window.SDPersonalData.academy.map(c=>[c.id,c.name]));const c=liste.find(([,n])=>re.test(n));if(!c)throw new Error("Kurs fehlt: "+re);
+ const karte=page.locator('.course[data-kurs="'+c[0]+'"]');if(await karte.count())await karte.click();else await page.evaluate(id=>{location.hash="kurs="+id},c[0]);await page.locator("body.ak-raum #lessonList .lesson-btn").first().waitFor()}
 (async()=>{
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const port=server.address().port,base="http://127.0.0.1:"+port;
@@ -37,8 +39,11 @@ assert.equal(await page.locator("#statFavs").innerText(),"1");
 await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await raumZu(page);await page.locator('[data-tab="akademie"]').click();
-assert.equal(await page.locator("#courses .course").count(),await page.evaluate(()=>window.SDPersonalData.academy.length));
-await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
+assert.equal(await page.locator("#courses .course").count(),await page.evaluate(()=>window.SDPersonalData.academy.filter(c=>c.bereich!=="Deutsch").length+1));
+// Deutsch ist ein einziger Bereich: in der Akademie genau eine Karte, die zu „Deutsch lernen“ führt
+assert.equal(await page.locator("#courses a.ak-deutsch-karte").count(),1);
+assert.match(await page.locator("#courses a.ak-deutsch-karte").getAttribute("href"),/\.\.\/deutsch\/$/);
+await raumZu(page);await kursKlick(page,/^Programmieren anfangen$/);
 await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
  const D=window.SDPersonalData;
@@ -52,7 +57,7 @@ for(const lesson of lessonChecks){
  assert.ok(lesson.start.some(x=>!x),"Startcode ist schon vollständig: "+lesson.id);
 }
 
-await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
+await raumZu(page);await kursKlick(page,/^Deutsch im Alltag$/);
 await page.locator(".lesson-btn").first().waitFor();
 // Lektion gilt erst nach allen drei richtig beantworteten Quizfragen als erledigt
 const g1Antworten=await page.evaluate(()=>window.SDAkademieKurse.german.find(l=>l.id==="g-1").quiz.map(q=>q.antworten[q.richtig]));
@@ -61,7 +66,7 @@ assert.equal(await page.locator('[data-tab="uebersicht"]').count(),1);
 await raumZu(page);await page.locator('[data-tab="uebersicht"]').click();
 assert.equal(await page.locator("#statLessons").innerText(),"1");
 await raumZu(page);await page.locator('[data-tab="akademie"]').click();
-await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
+await raumZu(page);await kursKlick(page,/^Programmieren anfangen$/);
 await page.locator(".lesson-btn").first().waitFor();
 assert.equal(await page.locator(".lesson-btn").count(),12);
 assert.equal(await page.locator(".code-textarea").count(),1);
@@ -77,7 +82,7 @@ await page.locator(".code-tabs button").filter({hasText:"CSS"}).click();
 await page.locator(".code-textarea").fill("body { background-color: #eef; }");
 await page.locator(".code-tabs button").filter({hasText:"HTML"}).click();
 assert.match(await page.locator(".code-textarea").inputValue(),/Meine erste Seite/);
-await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
+await raumZu(page);await kursKlick(page,/^Deutsch im Alltag$/);
 await raumZu(page);await page.locator('[data-tab="leben"]').click();
 assert.equal(await page.locator("#pathGrid .path").count(),4);
 await page.locator("#pathSteps input[type=checkbox]").first().check();
@@ -115,7 +120,7 @@ for(const width of [320,390,1300]){
  const checkPage=await browser.newPage({locale:"de-DE",reducedMotion:"reduce",viewport:{width,height:840}});
  await checkPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(checkPage);await checkPage.locator('[data-tab="akademie"]').click();
- await raumZu(checkPage);await checkPage.locator(".course").filter({has:checkPage.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
+ await raumZu(checkPage);await kursKlick(checkPage,/^Programmieren anfangen$/);
  await checkPage.locator(".lesson-btn").first().waitFor();
 assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
@@ -131,8 +136,7 @@ assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  for(const [qi,quiz] of (await checkPage.locator(".ak-seite:not([hidden]) .code-quiz").all()).entries())await quiz.locator(".answers button").nth(richtige[qi]).click();
  await zuSeite(checkPage,"Das merkst du dir");
  await checkPage.locator(".code-lesson button").filter({hasText:"Im Code-Studio öffnen"}).click();
- await checkPage.waitForURL(url=>url.pathname==="/studio/index.html"&&url.searchParams.has("projekt"),{timeout:15000});
- const name=new URL(checkPage.url()).searchParams.get("projekt");
+ let name=null;await checkPage.waitForURL(url=>{if(url.pathname==="/studio/index.html"&&url.searchParams.has("projekt")){name=url.searchParams.get("projekt");return true}return false},{timeout:15000});
  assert.ok(name.startsWith("Akademie – "));
  await checkPage.close();
 }
@@ -153,7 +157,7 @@ for(const width of [320,390,1300]){
   ["Bewerbung",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
-  await raumZu(exercisePage);await exercisePage.locator(".course").filter({has:exercisePage.locator("b",{hasText:new RegExp("^"+course+"$")})}).click();
+  await raumZu(exercisePage);await kursKlick(exercisePage,new RegExp("^"+course+"$"));
   await exercisePage.locator(".lesson-btn").nth(lesson).click();
   // Deutsch-Übungen werden aus den Kursdaten gelesen, damit Titel und Lösungen nicht doppelt gepflegt werden
   const daten=await exercisePage.evaluate(([name,n,t])=>window.SDPersonalData.academy.find(c=>c.name===name).lessons[n].uebungen.find(u=>u.typ===t),[course,lesson,typ]);
@@ -198,7 +202,7 @@ const finalPage=await browser.newPage({locale:"de-DE",reducedMotion:"reduce",vie
 finalPage.on("pageerror",e=>errors.push("Abschluss: "+e.message));
 await finalPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
 await raumZu(finalPage);await finalPage.locator('[data-tab="akademie"]').click();
-await raumZu(finalPage);await finalPage.locator(".course").filter({has:finalPage.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
+await raumZu(finalPage);await kursKlick(finalPage,/^Deutsch im Alltag$/);
 await finalPage.locator(".lesson-btn").first().waitFor();
 const germanQuiz=await finalPage.evaluate(()=>window.SDAkademieKurse.german.map(l=>l.quiz.map(q=>q.richtig)));
 for(let i=0;i<4;i++){
@@ -224,7 +228,7 @@ for(const width of [320,390,1300]){
  c1.on("pageerror",e=>errors.push("C1 "+width+": "+e.message));
  await c1.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(c1);await c1.locator('[data-tab="akademie"]').click();
- await raumZu(c1);await c1.locator(".course").filter({has:c1.locator("b",{hasText:/^Computer-Start$/})}).click();
+ await raumZu(c1);await kursKlick(c1,/^Computer-Start$/);
  await c1.locator(".lesson-btn").first().waitFor();
  assert.equal(await c1.locator(".lesson-btn").count(),8);
  await c1.locator(".lesson-btn").first().click();
@@ -250,7 +254,7 @@ for(const width of [320,390,1300]){
  c2.on("pageerror",e=>errors.push("C2 "+width+": "+e.message));
  await c2.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(c2);await c2.locator('[data-tab="akademie"]').click();
- await raumZu(c2);await c2.locator(".course").filter({has:c2.locator("b",{hasText:/^Internet & E-Mail$/})}).click();
+ await raumZu(c2);await kursKlick(c2,/^Internet & E-Mail$/);
  await c2.locator(".lesson-btn").first().waitFor();
  assert.equal(await c2.locator(".lesson-btn").count(),8);
  for(let i=0;i<8;i++){
@@ -270,7 +274,7 @@ for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag
   germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));
   await germanPage.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await raumZu(germanPage);await germanPage.locator('[data-tab="akademie"]').click();
-  await raumZu(germanPage);await germanPage.locator(".course").filter({has:germanPage.locator("b",{hasText:new RegExp("^"+courseName+"$")})}).click();
+  await raumZu(germanPage);await kursKlick(germanPage,new RegExp("^"+courseName+"$"));
   await germanPage.locator(".lesson-btn").first().waitFor();
   assert.equal(await germanPage.locator(".lesson-btn").count(),count);
   for(let i=0;i<count;i++){
@@ -322,7 +326,7 @@ for(const width of [320,390,1300]){
  c5.on("pageerror",e=>errors.push("C5 "+width+": "+e.message));
  await c5.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(c5);await c5.locator('[data-tab="akademie"]').click();
- await raumZu(c5);await c5.locator(".course").filter({has:c5.locator("b",{hasText:/^Digitale Profi-Werkzeuge$/})}).click();
+ await raumZu(c5);await kursKlick(c5,/^Digitale Profi-Werkzeuge$/);
  await c5.locator(".lesson-btn").first().waitFor();
  assert.equal(await c5.locator(".lesson-btn").count(),8);
  for(let i=0;i<8;i++){
@@ -341,7 +345,7 @@ for(const width of [320,390,1300]){
  c4.on("pageerror",e=>errors.push("C4 "+width+": "+e.message));
  await c4.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(c4);await c4.locator('[data-tab="akademie"]').click();
- await raumZu(c4);await c4.locator(".course").filter({has:c4.locator("b",{hasText:/^Büro-Programme$/})}).click();
+ await raumZu(c4);await kursKlick(c4,/^Büro-Programme$/);
  await c4.locator(".lesson-btn").first().waitFor();
  assert.equal(await c4.locator(".lesson-btn").count(),8);
  for(let i=0;i<8;i++){
@@ -367,7 +371,7 @@ for(const width of [320,390,1300]){
  c3.on("pageerror",e=>errors.push("C3 "+width+": "+e.message));
  await c3.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(c3);await c3.locator('[data-tab="akademie"]').click();
- await raumZu(c3);await c3.locator(".course").filter({has:c3.locator("b",{hasText:/^Sicher im Netz$/})}).click();
+ await raumZu(c3);await kursKlick(c3,/^Sicher im Netz$/);
  await c3.locator(".lesson-btn").first().waitFor();
  assert.equal(await c3.locator(".lesson-btn").count(),8);
  for(let i=0;i<8;i++){
@@ -428,7 +432,7 @@ const translated=await browser.newPage({locale:"de-DE",viewport:{width:320,heigh
 translated.on("pageerror",e=>errors.push("i18n: "+e.message));
 await translated.goto(base+"/mein-sd-hub/#akademie");
 await raumZu(translated);await translated.locator('[data-tab="akademie"]').click();
-await raumZu(translated);await translated.locator(".course").filter({has:translated.locator("b",{hasText:/^Deutsch im Alltag$/})}).click();
+await raumZu(translated);await kursKlick(translated,/^Deutsch im Alltag$/);
 await translated.locator(".ak-uebung input").first().fill("Mein Test");
 for(const lang of ["fa","en","ar","ur","uk","ti","de"]){
  await translated.locator("#langWahl").selectOption(lang);

@@ -45,7 +45,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&mobileMenu&&!mobile
 document.addEventListener("click",e=>{if(mobileMenu&&!mobileMenu.hidden&&!e.target.closest(".tabs-shell")){mobileMenu.hidden=true;mobileMore.setAttribute("aria-expanded","false")}});
 document.querySelectorAll("[data-tablink]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();setTab(a.dataset.tablink,true)}));
 document.addEventListener("click",e=>{const b=e.target.closest("[data-goto]");if(b)setTab(b.dataset.goto,true);const a=e.target.closest("a[data-track]");if(a)track(a.dataset.track)});
-window.addEventListener("hashchange",()=>setTab(location.hash.slice(1),false));
+window.addEventListener("hashchange",()=>{if(!kursAusHash())setTab(location.hash.slice(1),false)});
 function clearChildren(id){$(id).replaceChildren()}
 function simpleLink(item){const a=itemLink(item,null,"simple-link");a.replaceChildren();node("span","",item.icon+"  "+item.title,a);node("span","","↗",a);return a}
 function renderApps(){
@@ -160,6 +160,20 @@ function renderAkToolbar(){
  $("akSuche").addEventListener("input",e=>{akFilter.text=e.target.value;renderCourses()});
  $("akStufe").addEventListener("change",e=>{akFilter.stufe=e.target.value;renderCourses()});
 }
+/* Direkter Link in einen Kursraum: …/mein-sd-hub/#kurs=<id> (auch für alte Lesezeichen der früheren Deutschkurse) */
+function kursAusHash(){const m=location.hash.match(/^#kurs=([\w-]+)$/);if(!m)return false;const c=D.academy.find(x=>x.id===m[1]);if(!c)return false;
+ history.replaceState(null,"","#akademie");setTab("akademie",false);const ids=D.academyLessonIds[c.id]||[];
+ courseId=c.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben();return true}
+/* Deutsch lernen ist ein eigener, vollständiger Bereich (Alphabet bis B1, Praxis für Alltag und Beruf, B1-Training).
+   Die Akademie zeigt dafür eine einzige Karte, damit Deutsch nicht an zwei Stellen getrennt angeboten wird. */
+function deutschKarte(entries){
+ const a=akNode("a","course ak-deutsch-karte",undefined,entries);a.href="../deutsch/";
+ const banner=node("span","ak-banner ak-b-"+(BEREICH_KLASSE.Deutsch||"programmieren"),undefined,a);banner.setAttribute("aria-hidden","true");
+ node("span","ak-icon","📚",banner);akNode("span","ak-bereich","Deutsch",banner);
+ akNode("span","emoji","📚",a);akNode("b","","Deutsch lernen – vom Alphabet bis B1",a);akNode("span","badge","Alphabet · A1 · A2 · B1",a);
+ akNode("small","","Alle Deutschkurse an einem Ort: Einheiten mit Wörtern, Grammatik, Hören und Sprechen, Erklärungen auf Dari, Englisch, Urdu und Tigrinya, dazu Praxis für Alltag und Beruf und B1-Prüfungstraining.",a);
+ akNode("span","ak-cta","Zu Deutsch lernen →",a);
+}
 function renderCourses(){
  renderAkStats();renderAkToolbar();renderUniKatalog();
  clearChildren("courses");let treffer=0;
@@ -169,6 +183,7 @@ function renderCourses(){
   const group=akNode("section","course-group",undefined,$("courses"));
   akNode("h3","",bereich,group);
   const entries=akNode("div","course-group-list",undefined,group);
+  if(bereich==="Deutsch"){treffer+=sichtbar.length;deutschKarte(entries);continue}
   for(const course of sichtbar){
    treffer++;
    const ids=D.academyLessonIds[course.id]||[];
@@ -617,5 +632,5 @@ $("speechSpeed").addEventListener("change",()=>stopSpeech());
 window.addEventListener("pagehide",()=>stopSpeech());
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopSpeech()});
 {const l=A.lang(),wahl=$("translateLang");if(wahl&&[...wahl.options].some(o=>o.value===l))wahl.value=l}
-renderDashboard();renderCourses();renderPaths();renderProjects();renderPhrases();setTab(location.hash.slice(1),false);
+renderDashboard();renderCourses();renderPaths();renderProjects();renderPhrases();if(!kursAusHash())setTab(location.hash.slice(1),false);
 })();
