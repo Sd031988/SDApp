@@ -26,3 +26,17 @@ test("Lösung angesehen: nur halbe XP; alte Lektionen werden nachgetragen; kaput
  T.setzen({});L.abgleichen(["ps-1"],()=>"python-start");assert.equal(L.wartet("python-start"),true);
  L.ausklappen("python-start",[lek]);assert.equal(L.anzahlFaellig(),2);assert.equal(L.wartet("python-start"),false);
  T.setzen({k:{"<x>:1":{k:"a",b:1,d:1},"ok:1":{k:"python-start",b:99,d:1}},t:{"abc":5},z:{kurs:"<b>",lektion:"x"}});assert.deepEqual(T.roh().k,{});assert.equal(T.roh().z,null)});
+test("Zusätzliche Wiederholungsfragen: gültig, zu echten Lektionen, je zwei pro Akademie-Lektion",()=>{
+ const fs=require("fs"),hub=path.join(__dirname,"..","mein-sd-hub");
+ for(const f of fs.readdirSync(path.join(hub,"kurse")))require(path.join(hub,"kurse",f));
+ require(path.join(hub,"akademie-wiederholung.js"));const W=window.SDAkWiederholung,K=window.SDAkademieKurse;
+ const ids=new Map();for(const [k,ls] of Object.entries(K))for(const l of ls)ids.set(l.id,k);
+ for(const [id,fs2] of Object.entries(W)){assert.ok(ids.has(id),"unbekannte Lektion "+id);
+  for(const q of fs2){assert.ok(q.frage.length>8&&q.erklaerung.length>8,id);assert.equal(q.antworten.length,3,id);assert.equal(new Set(q.antworten).size,3,id+" doppelte Antwort");
+   assert.ok(Number.isInteger(q.richtig)&&q.richtig>=0&&q.richtig<3,id);assert.equal((q.frage.match(/`/g)||[]).length%2,0,id+" Backticks")}}
+ for(const [id,k] of ids)if(!/^(german|deutsch-)/.test(k))assert.equal((W[id]||[]).length,2,"zwei Zusatzfragen fehlen bei "+id);
+ // geschafft legt auch Zusatzkarten an
+ T.setzen({});L.geschafft("python-start",{id:"ps-1",quiz:[{},{}]});const keys=Object.keys(T.roh().k).sort();
+ assert.deepEqual(keys,["ps-1:0","ps-1:1","ps-1:w0","ps-1:w1"]);
+ T.setzen({l:{"ps-2":{h:0,g:1}}});L.abgleichen(["ps-2"],()=>"python-start");assert.ok(T.roh().k["ps-2:w1"],"Zusatzkarten für alte Lektion");
+});

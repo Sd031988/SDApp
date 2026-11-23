@@ -219,7 +219,7 @@ async function wiederholen(){
  const esc=e=>{if(e.key==="Escape")ende()};document.addEventListener("keydown",esc);zu.onclick=ende;zu.focus();
  akNode("p","hint","Die Fragen werden geladen …",feld);
  for(const k of L.offeneKurse()){try{const kurs=await ladeKurs(k);L.ausklappen(k,kurs.lessons)}catch(e){}}
- const fragen=[];for(const f of L.auswahl(5)){let q=null;try{q=(await ladeKurs(f.kurs)).lessons.find(x=>x.id===f.lektion)?.quiz?.[f.qi]}catch(e){}
+ const fragen=[];for(const f of L.auswahl(5)){let q=null;try{q=/^w\d+$/.test(f.qi)?(window.SDAkWiederholung?.[f.lektion]||[])[+f.qi.slice(1)]:(await ladeKurs(f.kurs)).lessons.find(x=>x.id===f.lektion)?.quiz?.[+f.qi]}catch(e){}
   if(q&&Array.isArray(q.antworten)&&Number.isInteger(q.richtig))fragen.push({f,q});else L.entfernen(f.s)}
  if(!raum.isConnected)return;
  let i=0,richtig=0,xp=0;const nochmal=[];

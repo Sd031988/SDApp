@@ -16,7 +16,7 @@ async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n
   await ctx.addInitScript(()=>{if(window.top!==window)return;if(sessionStorage.getItem("seed"))return;sessionStorage.setItem("seed","1");
    const t=Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000),tt={};tt[t-1]=100;tt[t-2]=100;
    localStorage.setItem("sdhub.personal.v1",JSON.stringify({version:1,completedLessons:["ps-1","p-1"],completedSteps:[],favorites:[],recent:[],nickname:"Testperson",updatedAt:""}));
-   localStorage.setItem("sdhub.akademie.lernen.v1",JSON.stringify({v:1,k:{"ps-1:0":{k:"python-start",b:0,d:t},"ps-1:1":{k:"python-start",b:0,d:t},"ps-1:2":{k:"python-start",b:0,d:t+2}},p:{},l:{"ps-1":{h:0,g:1}},t:tt,z:{kurs:"python-start",lektion:"ps-2"}}))});
+   localStorage.setItem("sdhub.akademie.lernen.v1",JSON.stringify({v:1,k:{"ps-1:0":{k:"python-start",b:0,d:t},"ps-1:w0":{k:"python-start",b:0,d:t},"ps-1:2":{k:"python-start",b:0,d:t+2}},p:{},l:{"ps-1":{h:0,g:1}},t:tt,z:{kurs:"python-start",lektion:"ps-2"}}))});
   const page=await ctx.newPage();const errors=[];page.on("pageerror",e=>errors.push(e.message));
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await page.locator(".ak-tor h2").waitFor();
@@ -34,15 +34,18 @@ async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n
   // Wiederholen: alle richtig beantworten → XP, Tagesziel, Serie heute
   await page.locator("#akWdhStart").click();await page.locator(".ak-wdh .answers button").first().waitFor();
   assert.match(await page.locator(".ak-wdh-zahl").innerText(),/^Frage 1 von 5$/);
+  let zusatz=false;
   for(let i=0;i<5;i++){
    const frage=await page.locator(".ak-wdh-feld h4").innerText();
-   const richtig=await page.evaluate(f=>{for(const ls of Object.values(window.SDAkademieKurse))for(const l of ls)for(const q of l.quiz||[]){const t=String(q.frage).replace(/`/g,"");if(t===f)return String(q.antworten[q.richtig]).replace(/`/g,"")}return null},frage);
+   const richtig=await page.evaluate(f=>{const alle=[...Object.values(window.SDAkademieKurse).flat().flatMap(l=>l.quiz||[]),...Object.values(window.SDAkWiederholung).flat()];for(const q of alle){const t=String(q.frage).replace(/`/g,"");if(t===f)return String(q.antworten[q.richtig]).replace(/`/g,"")}return null},frage);
    assert.ok(richtig,"Frage gefunden: "+frage);
+   if(await page.evaluate(f=>window.SDAkWiederholung["ps-1"][0].frage.replace(/`/g,"")===f,frage))zusatz=true;
    await page.locator(".ak-wdh .answers button").filter({hasText:richtig}).first().click();
    assert.match(await page.locator(".ak-wdh .feedback").innerText(),/^✓ Richtig\./);
    await page.locator(".ak-wdh-feld>button").click();
   }
   assert.match(await page.locator(".ak-wdh-ende").innerText(),/5 von 5 richtig · \+50 XP/);
+  assert.ok(zusatz,"Zusatzfrage kam in der Wiederholung vor");
   await page.locator(".ak-wdh-ende button").click();assert.equal(await page.locator(".ak-wdh").count(),0);
   assert.match(await lp.locator(".ak-lp-ziel").innerText(),/Tagesziel erreicht!/);
   assert.equal(await lp.locator(".ak-lp-serie .ak-lp-gross").innerText(),"3");

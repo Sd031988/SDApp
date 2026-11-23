@@ -19,7 +19,7 @@
   function pruefen(x) {
     const d = leer(); if (!x || typeof x !== "object") return d;
     for (const [s, c] of Object.entries(x.k || {})) {
-      const m = /^([\w-]{1,40}):(\d{1,2})$/.exec(s);
+      const m = /^([\w-]{1,40}):(w?\d{1,2})$/.exec(s);
       if (m && c && id(c.k) && zahl(c.b, ABSTAND.length) !== null && zahl(c.d, 1e6) !== null) d.k[s] = {k: c.k, b: c.b, d: c.d};
     }
     for (const [l, k] of Object.entries(x.p || {})) if (id(l) && id(k)) d.p[l] = k;
@@ -36,6 +36,8 @@
   // Lektionen, die schon vor dieser Funktion geschafft wurden, kommen einmal in die Wiederholung
   function abgleichen(geschafft, kursVon) {
     let neu = false;
+    // zusätzliche Wiederholungsfragen auch für früher geschaffte Lektionen anlegen (ab morgen fällig)
+    for (const l of geschafft) { const k = kursVon(l); if (k && daten.l[l] && daten.l[l].g && !daten.p[l] && extraKarten(l, k, tag() + 1)) neu = true; }
     for (const l of geschafft) {
       if ((daten.l[l] && daten.l[l].g) || daten.p[l]) continue;
       const k = kursVon(l); if (!k) continue;
@@ -44,6 +46,12 @@
     if (neu) sichern();
   }
 
+  // zusätzliche Fragen aus akademie-wiederholung.js: Schlüssel „lektion:w0“, „lektion:w1“ …
+  function extraKarten(l, kurs, faelligAb) {
+    const ex = ((root.SDAkWiederholung || {})[l]) || []; let neu = false;
+    ex.forEach((q, j) => { const s = l + ":w" + j; if (!daten.k[s]) { daten.k[s] = {k: kurs, b: 0, d: faelligAb}; neu = true; } });
+    if (neu) sichern(); return neu;
+  }
   // Quiz einer Lektion bestanden: Fragen kommen morgen zum ersten Mal wieder
   function geschafft(kurs, lektion) {
     if (!id(kurs) || !lektion || !id(lektion.id)) return {neu: false, xp: 0};
@@ -51,6 +59,7 @@
     const erst = !e.g; e.g = 1;
     delete daten.p[lektion.id];
     (lektion.quiz || []).forEach((q, i) => { const s = lektion.id + ":" + i; if (!daten.k[s]) daten.k[s] = {k: kurs, b: 0, d: tag() + 1}; });
+    extraKarten(lektion.id, kurs, tag() + 1);
     let xp = 0;
     if (erst) { xp = e.h >= 3 ? XP_LEKTION / 2 : XP_LEKTION; xpDazu(xp); }
     sichern(); return {neu: !!erst, xp};
@@ -70,7 +79,7 @@
   // fällige Karten, Kurse gemischt (verschachteltes Üben); offene Alt-Lektionen zählen als fällig
   function faellig() {
     const h = tag();
-    return Object.entries(daten.k).filter(([, c]) => c.d <= h).map(([s, c]) => ({s, kurs: c.k, lektion: s.split(":")[0], qi: +s.split(":")[1], b: c.b}));
+    return Object.entries(daten.k).filter(([, c]) => c.d <= h).map(([s, c]) => ({s, kurs: c.k, lektion: s.split(":")[0], qi: s.split(":")[1], b: c.b}));
   }
   const anzahlFaellig = () => faellig().length;
   const wartet = k => Object.values(daten.p).includes(k);
@@ -82,7 +91,7 @@
     let neu = false;
     for (const [l, k] of Object.entries(daten.p)) {
       if (k !== kurs) continue; const lek = lektionen.find(x => x.id === l);
-      if (lek) (lek.quiz || []).forEach((q, i) => { const s = l + ":" + i; if (!daten.k[s]) daten.k[s] = {k: kurs, b: 0, d: tag()}; });
+      if (lek) { (lek.quiz || []).forEach((q, i) => { const s = l + ":" + i; if (!daten.k[s]) daten.k[s] = {k: kurs, b: 0, d: tag()}; }); extraKarten(l, kurs, tag() + 1); }
       delete daten.p[l]; neu = true;
     }
     if (neu) sichern();
