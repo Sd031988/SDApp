@@ -638,6 +638,7 @@
       '<p class="l-note">Oder such dir dein Niveau selbst aus:</p>' + levelCards(prof(), null) + '</div>');
     $('lPlace').onclick = startPlacement;
     document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { setLevel(b.dataset.setlv); showHome(); });
+    if ($('lB1PruefCard')) $('lB1PruefCard').onclick = showB1Pruefung;
   }
 
   // ----- Startseite -----
