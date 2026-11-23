@@ -19,7 +19,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   for(const g of ["Python & KI","C++ & Rust","Uni-Kurse & Videos"])assert.ok(await page.locator(".course-group h3",{hasText:g}).count()===1,g);
   // Profi-Katalog: Kennzahlen, Suche, Universitätskurse mit Kostenhinweis
   assert.equal(await page.locator("#akStats .ak-stat").count(),5);
-  await page.locator("#akSuche").fill("Rust");
+  await page.locator("#akSuche").fill("Ownership");
   assert.equal(await page.locator("#courses button.course").count(),1);
   await page.locator("#akSuche").fill("");
   assert.ok(await page.locator("#akUniGrid .ak-uni-karte").count()>=16);
