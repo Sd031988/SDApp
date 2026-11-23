@@ -13,7 +13,7 @@
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
   const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz", "buero-programme", "digitale-profiwerkzeuge", "arbeit-finden", "career", "gespraech-arbeitsstart", "arbeitsvertrag-rechte", "weiterkommen"] };
-  const FEST_VERSION = "20261123";
+  const FEST_VERSION = "20261123t";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
   let laeuft = false, nochmal = false, zustand = {};

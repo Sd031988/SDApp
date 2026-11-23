@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v218';
+const CACHE_NAME = 'sd-bewerbungsstudio-v219';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -74,6 +74,6 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
       }
       return response;
-    }).catch(() => caches.match(event.request))
+    }).catch(() => caches.match(event.request).then(r => r || caches.match(event.request, { ignoreSearch: true })))
   );
 });

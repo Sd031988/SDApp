@@ -123,7 +123,7 @@ function ladeKurs(id){
  if(kursLadevorgaenge.has(id))return kursLadevorgaenge.get(id);
  const p=new Promise((resolve,reject)=>{
   const script=document.createElement("script");
-  script.src="./kurse/"+encodeURIComponent(id)+".js";
+  script.src="./kurse/"+encodeURIComponent(id)+".js?v=20261123t";
   script.onload=()=>{
    const lessons=window.SDAkademieKurse?.[id];
    if(!Array.isArray(lessons)){reject(new Error("Lektionsdaten fehlen"));return}
