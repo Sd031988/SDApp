@@ -449,6 +449,7 @@ function lektionsUeberblick(st,l,label){
  akNode("span","badge",label,w);
  if(state.completedLessons.includes(l.id))akNode("p","code-ok","✓ Lektion abgeschlossen.",w);
  akNode("h4","",l.title,w);if(l.explanation)akNode("p","ak-intro",l.explanation,w);
+ if(window.SDKursVideos)try{window.SDKursVideos.bauen(w,courseId,l.id,x=>A.t(x))}catch(e){}
  akNode("h5","","Dein Ziel",w);akNode("p","",l.ziel,w);
  akNode("h5","","In dieser Lektion",w);const ol=node("ol","ak-step-plan",undefined,w);
  l.schritte.forEach(s=>akNode("li","",s.titel,ol));

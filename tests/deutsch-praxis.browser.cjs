@@ -31,6 +31,8 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   const schritte=async()=>page.evaluate(()=>document.querySelector(".l-lhead small").textContent);
   assert.match(await schritte(),/^Schritt 1 von \d+$/);
   assert.ok(await page.locator("#lPx h2 .l-px-tr[lang=fa]").count()===1&&await page.locator("#lPx p.l-ptext .l-px-tr").count()===1,"Titel und Erklärung auf Dari");
+  assert.equal(await page.locator("#lPx .kv-box .kv-start").count(),1,"Video zur ersten Lektion");
+  assert.equal(await page.locator("#lPx .kv-box h5 .l-px-tr").count(),1,"Video-Überschrift auf Dari");
   let uebungDari=false;
   let quizGesehen=false,uebungen=0;
   for(let i=0;i<20;i++){

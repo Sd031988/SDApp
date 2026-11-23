@@ -683,7 +683,7 @@
     {id: 'deutsch-b1', name: 'Alltag auf B1', niveau: ['B1']},
     {id: 'deutsch-beruf', name: 'Deutsch für den Beruf', niveau: ['B1']}
   ];
-  const PRAXIS_V = '20261123b';
+  const PRAXIS_V = '20261124a';
   const praxisSkripte = {};
   function praxisLaden(src) {
     if (!praxisSkripte[src]) praxisSkripte[src] = new Promise((ok, nein) => {
@@ -756,12 +756,16 @@
     body(h);
     document.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { const [k, l] = b.dataset.pl.split('|'); startPraxis(k, l); });
   }
+  const KV_FA = {'Video zu dieser Lektion': 'ویدیو برای این درس', 'Video zum ganzen Kurs': 'ویدیو برای تمام کورس',
+    'Videos von anderen Anbietern auf YouTube. YouTube wird erst geladen, wenn du auf ein Video tippst.': 'ویدیوها از ارائه‌دهندگان دیگر در یوتیوب هستند. یوتیوب فقط وقتی بار می‌شود که روی یک ویدیو بزنی.',
+    'Auf YouTube öffnen ↗': 'در یوتیوب باز کن ↗'};
   async function startPraxis(kursId, lessonId) {
     stopAll(); L.view = 'praxis-l'; topbar();
     body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
     let kurs = [], lesson = null;
     let ue = {};
-    try { kurs = await praxisKurs(kursId); lesson = kurs.find(l => l.id === lessonId); await praxisLaden('../mein-sd-hub/akademie-uebungen.js?v=' + PRAXIS_V); ue = await praxisUe(kursId); } catch (e) {}
+    try { kurs = await praxisKurs(kursId); lesson = kurs.find(l => l.id === lessonId); await praxisLaden('../mein-sd-hub/akademie-uebungen.js?v=' + PRAXIS_V); ue = await praxisUe(kursId); await praxisLaden('../mein-sd-hub/kurs-videos.js?v=' + PRAXIS_V).catch(() => {}); } catch (e) {}
+    if (spr() === 'fa') ue = Object.assign({}, KV_FA, ue);
     if (L.view !== 'praxis-l') return;
     if (!lesson || !window.SDAkademieUebungen) { body('<div class="l-card">❌ Die Lektion konnte nicht geladen werden. Bitte Internet prüfen.</div>'); return; }
     const seiten = [];
@@ -803,6 +807,7 @@
         if (naechste) $('lPxNext').onclick = () => startPraxis(kursId, naechste.id);
         $('lPxListe').onclick = showPraxis;
       }
+      if (pos === 0 && window.SDKursVideos) try { window.SDKursVideos.bauen(box, kursId, lesson.id); } catch (e) {}
       pxUebersetzen(box, ue);
       box.querySelectorAll('[data-sag]').forEach(b => b.onclick = () => lSpeak(b.dataset.sag, false));
       $('lPxZur').onclick = () => { pos--; zeige(); };

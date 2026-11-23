@@ -53,7 +53,7 @@ async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n
   await ctx2.addInitScript(ohneKI);await ctx2.addInitScript(()=>{try{localStorage.setItem("sdSprache","fa");localStorage.setItem("sdhub.personal.v1",JSON.stringify({completedLessons:["ps-1"]}))}catch(e){}});
   const p2=await ctx2.newPage();const err2=[];p2.on("pageerror",e=>err2.push(e.message));await kursOeffnen(p2,base);await p2.locator("#lessonList .lesson-btn").first().click();await p2.locator(".code-lesson").waitFor();
   await p2.waitForFunction(()=>/ترجمهٔ ثابت/.test(document.getElementById("akUeHinweis")?.textContent||""),null,{timeout:15000});
-  const st=await p2.evaluate(()=>{const ps=[...document.querySelectorAll(".code-lesson p, .code-lesson h4, .code-lesson h5, .code-lesson li, .code-lesson button")].filter(e=>!e.closest("pre,#akUeHinweis"));
+  const st=await p2.evaluate(()=>{const ps=[...document.querySelectorAll(".code-lesson p, .code-lesson h4, .code-lesson h5, .code-lesson li, .code-lesson button")].filter(e=>!e.closest("pre,#akUeHinweis,.kv-start"));
    const deutsch=ps.map(e=>{const c=e.cloneNode(true);c.querySelectorAll("code").forEach(x=>x.remove());return c.textContent}).filter(t=>/[äöüß]|\b(und|der|die|das|ist|nicht|mit|eine?)\b/.test(t));
    return {deutsch,code:document.querySelector(".code-step pre").textContent,inline:[...document.querySelectorAll(".code-step p code")].map(c=>c.textContent),
     titel:document.querySelector("#lessonList .lesson-btn b").textContent,dir:document.querySelector(".code-step p").getAttribute("data-ak-ue")}});

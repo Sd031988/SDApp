@@ -36,6 +36,11 @@ async function raumZu(page){if(await page.evaluate(()=>document.body.classList.c
   assert.deepEqual(raum,{klasse:true,voll:true,oben:true},"Kursraum nicht im Vollbild");
   // Schritt für Schritt: Fortschrittsbalken, erste Seite ist die Übersicht, Aufgabe und Quiz sind gesperrt
   assert.ok(await page.locator(".ak-step-balken button").count()>=8);
+  // Video zur Lektion auf der Übersicht: YouTube erst nach Klick
+  assert.equal(await page.locator(".ak-seite:not([hidden]) .kv-box .kv-start").count(),2,"Videos zur ersten Python-Lektion");
+  assert.equal(await page.locator(".ak-seite:not([hidden]) .kv-box iframe").count(),0,"kein YouTube vor dem Klick");
+  await page.locator(".ak-seite:not([hidden]) .kv-start").first().click();
+  assert.match(await page.locator(".ak-seite:not([hidden]) .kv-rahmen iframe").getAttribute("src"),/^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]{11}\?/);
   assert.equal(await page.locator(".ak-step-nav .ak-zurueck").isDisabled(),true);
   await page.locator(".ak-step-nav .ak-weiter").click();
   assert.equal(await page.locator(".ak-seite:not([hidden]) .code-step").count(),1,"Eine Erklärung pro Seite");
