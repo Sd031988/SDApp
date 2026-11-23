@@ -12,7 +12,7 @@
   const RTL = ["ar", "fa", "ur"];
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
-  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz"] };
+  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz", "buero-programme", "digitale-profiwerkzeuge"] };
   const FEST_VERSION = "20261123";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
@@ -153,6 +153,16 @@
       const root = document.getElementById(id); if (!root) continue;
       for (const el of [root, ...root.querySelectorAll("*")]) {
         if (el.closest(AUSLASSEN)) continue;
+        // Von der Bedienungs-Übersetzung schon (teilweise) ersetzter Text: vom deutschen Original ausgehen
+        const quelle = el.dataset && el.dataset.akSource;
+        if (quelle && el.childNodes.length === 1 && el.firstChild.nodeType === 3 && Object.prototype.hasOwnProperty.call(d, String(quelle).trim())) {
+          const t = el.firstChild, neu = d[String(quelle).trim()];
+          if (t.nodeValue !== t.__festSet) {
+            t.__festOrig = t.nodeValue; t.nodeValue = neu; t.__festSet = neu; t.__akLang = l;
+            festListe.push({ text: t }); festMarkieren(el, l); n++;
+          }
+          continue;
+        }
         let lauf = [];
         const pruefen = () => {
           if (!lauf.length) return;
