@@ -30,3 +30,11 @@ for(const [l,kurse] of Object.entries(FEST))for(const k of kurse)test("Feste Üb
  for(const [de,tr] of eintraege){assert.ok(alle.has(de),"veralteter Eintrag: "+de);assert.equal(code(tr),code(de),"Code-Stelle verändert: "+de);
   assert.ok(tr.trim().length>0)}
 });
+test("Feste Übersetzung der Hub-Seiten: jeder Eintrag kommt auf der Seite vor",()=>{
+ const roh=["index.html","app.js","data.js"].map(f=>fs.readFileSync(path.join(hub,f),"utf8")).join("\n");
+ const quellen=roh.replace(/<[^>]+>/g,"").replace(/\s+/g,"")+roh.replace(/\s+/g,""); // Text ohne Tags und Attribute wie placeholder
+ for(const l of fs.readdirSync(path.join(hub,"seite-uebersetzt"))){
+  require(path.join(hub,"seite-uebersetzt",l));const d=window.SDHubSeite[l.replace(/\.js$/,"")];
+  for(const k of [...Object.keys(d.texte),...Object.keys(d.bloecke),...Object.keys(d.platzhalter)])assert.ok(quellen.includes(k.replace(/\s+/g,"")),l+": veralteter Eintrag „"+k+"“");
+ }
+});
