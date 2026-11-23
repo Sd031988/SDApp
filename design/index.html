@@ -18,13 +18,13 @@
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 function slug(t){return String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"design"}
-/* ---------- Kontingent: ohne Schlüssel 10 Nutzungen (Bild- oder Webseiten-Export) pro 24 Stunden ---------- */
+/* ---------- Exporte: kostenlos und ohne Limit ---------- */
 const SD_FREI=10,SD_KEY="sdDesignNutzung";let SD_FREIGESCHALTET=false;
 function sdNutzungen(){const jetzt=Date.now();return (store.get(SD_KEY,[])||[]).filter(t=>jetzt-t<864e5)}
-function sdKontZeigen(){const n=$("sdKont");if(!n)return;if(SD_FREIGESCHALTET){n.textContent="🔓 Unbegrenzt";n.title="Mit deinem Zugangsschlüssel freigeschaltet";return}
+function sdKontZeigen(){const n=$("sdKont");if(!n)return;n.textContent="✓ Kostenlos";n.title="Alle Exporte kostenlos und ohne Limit";n.style.color="#86efac";return;if(SD_FREIGESCHALTET){n.textContent="🔓 Unbegrenzt";n.title="Mit deinem Zugangsschlüssel freigeschaltet";return}
   const rest=Math.max(0,SD_FREI-sdNutzungen().length);n.textContent="🎟 "+rest+" von "+SD_FREI+" frei";n.title="Ohne Zugangsschlüssel: "+SD_FREI+" Exporte (Bild oder Webseite) in 24 Stunden";n.style.color=rest?"#c4b5fd":"#fca5a5"}
 async function sdSchluesselPruefen(code){try{const zug=await (await fetch("../agent/zugang.json?t="+Date.now(),{cache:"no-store"})).json();return !!(await sdZugang.oeffnen(zug,code))}catch(e){return false}}
-async function sdDarf(){if(SD_FREIGESCHALTET)return true;const l=sdNutzungen();if(l.length<SD_FREI){l.push(Date.now());store.set(SD_KEY,l);sdKontZeigen();return true}
+async function sdDarf(){return true;if(SD_FREIGESCHALTET)return true;const l=sdNutzungen();if(l.length<SD_FREI){l.push(Date.now());store.set(SD_KEY,l);sdKontZeigen();return true}
   sdSperre();return false}
 function sdSperre(){let o=$("sdSperre");if(o)o.remove();o=document.createElement("div");o.id="sdSperre";$("dsBox").appendChild(o);
   const l=sdNutzungen(),wieder=new Date(Math.min(...l)+864e5);

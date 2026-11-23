@@ -2125,19 +2125,16 @@ function handyEinrichten() {
   const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="ausgabe"]'); if (k) k.classList.toggle('punkt', n > 0 && $('app').dataset.ansicht !== 'ausgabe'); });
   beob.observe($('problemAnz'), { childList: true, characterData: true, subtree: true }); beob.observe($('konsoleAnz'), { childList: true, characterData: true, subtree: true });
 }
-/* ---------------- Zugang: 10× Öffnen in 24 Stunden ohne Schlüssel ---------------- */
+/* ---------------- Zugang: Code-Studio kostenlos; Schlüssel nur für „Online stellen“ ---------------- */
 const FREI = 10, ZAEHL = 'sdStudioOeffnungen';
 function oeffnungen() { const j = Date.now(); return (store.get(ZAEHL, []) || []).filter(t => j - t < 864e5); }
 async function schluesselOk(code) { try { const zug = await (await fetch('../agent/zugang.json?t=' + Date.now(), { cache: 'no-store' })).json(); return !!(await sdZugang.oeffnen(zug, code)); } catch (e) { return false; } }
-function zaehlerZeigen() { if (window.SD_PC && $('kont')) { $('kont').innerHTML = '💻<span class="lang"> PC-Version</span>'; $('kont').title = 'Läuft im SD KI-Agenten auf deinem PC – ohne Limit'; } const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (window.SD_PC) return; if (S.frei) { n.innerHTML = '🔓<span class="lang"> Unbegrenzt</span>'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } const rest = Math.max(0, FREI - oeffnungen().length); n.innerHTML = '🎟 ' + rest + '<span class="lang">/' + FREI + ' heute</span>'; n.title = 'Ohne Zugangsschlüssel kannst du das Code-Studio ' + FREI + '× in 24 Stunden öffnen. Klick: Schlüssel eingeben'; }
+function zaehlerZeigen() { if (window.SD_PC && $('kont')) { $('kont').innerHTML = '💻<span class="lang"> PC-Version</span>'; $('kont').title = 'Läuft im SD KI-Agenten auf deinem PC – ohne Limit'; } const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (window.SD_PC) return; if (S.frei) { n.innerHTML = '🔓<span class="lang"> Unbegrenzt</span>'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } n.innerHTML = '✓<span class="lang"> Kostenlos</span>'; n.title = 'Das Code-Studio ist kostenlos und ohne Limit. Nur „Online stellen“ braucht einen Zugangsschlüssel (Schutz vor Betrugsseiten).'; }
 async function zugangPruefen() {
   if (window.SD_PC) { S.frei = true; return true; }   // im SD KI-Agenten auf dem PC: ohne Limit (PC-Paket gibt es nur mit Schlüssel)
   const gemerkt = (() => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang'); } catch (e) { return null; } })();
   if (gemerkt && await schluesselOk(gemerkt)) { S.frei = true; return true; }
-  let gezaehlt = false; try { gezaehlt = sessionStorage.getItem('sdStudioSitzung') === '1'; } catch (e) { /* egal */ }
-  if (gezaehlt) return true;                       // Neuladen im selben Tab zählt nicht nochmal
-  const l = oeffnungen(); if (l.length < FREI) { l.push(Date.now()); store.set(ZAEHL, l); try { sessionStorage.setItem('sdStudioSitzung', '1'); } catch (e) { /* egal */ } return true; }
-  return false;
+  return true;                                     // Code-Studio ist kostenlos und ohne Limit
 }
 function sperre(nurSchluessel) {
   const o = $('sperre'); o.hidden = false; const l = oeffnungen();
