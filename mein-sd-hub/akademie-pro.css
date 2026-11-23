@@ -181,3 +181,52 @@ html[data-sd-theme="dark"] .ak-wdh{--ak-card:#203129;--ak-ink:#edf5ef;--ak-muted
 .ak-wdh .answers button.correct{border-color:#2e9c6a;background:#dcf5e8;color:#0d3b28}
 .ak-wdh .answers button.falsch{border-color:#c0392b;background:#fde4e1;color:#5c1a12}
 .ak-wdh-ende{text-align:center;padding:10px 0}
+/* Elegante Gestaltung: Serifen-Überschriften, Fakultätsfarben, Wappen, Kurskarten wie im Vorlesungsverzeichnis */
+#akademie{--ak-serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Noto Serif",Georgia,serif;--fak:#0f6b52}
+#akademie .ak-tor h2,#akademie .ak-lernplatz>h3,#akademie .ak-fak-titel,#courses .course-group h3,#courses .ak-k>b,#courseHeading,.ak-wdh-kopf h3,.ak-wdh-ende h4{font-family:var(--ak-serif);letter-spacing:-.005em}
+#akademie .ak-tor h2{font-weight:700}
+#courses .course-group h3{font-size:1.3rem;font-weight:600;margin:22px 0 12px;display:flex;align-items:center;gap:10px}
+#courses .course-group h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ak-line),transparent)}
+.ak-stat b,.ak-lp-gross,.ak-lp-ring b{font-family:var(--ak-serif)!important;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
+@media (max-width:520px){.ak-lp-grid{grid-template-columns:1fr 1fr}.ak-lp-grid>.ak-lp-weiter{grid-column:1/-1}}
+.ak-fak-programmieren{--fak:#2f5d8a}.ak-fak-python-ki{--fak:#2e7d5b}.ak-fak-cpp-rust{--fak:#a4532a}.ak-fak-uni{--fak:#6b4c9a}
+.ak-fak-computer{--fak:#2c7a7b}.ak-fak-deutsch{--fak:#9b3546}.ak-fak-arbeit{--fak:#9a7a22}.ak-fak-alle{--fak:#0f6b52}
+html[data-sd-theme="dark"] .ak-fak-programmieren{--fak:#8fb6e0}html[data-sd-theme="dark"] .ak-fak-python-ki{--fak:#8fe0b9}html[data-sd-theme="dark"] .ak-fak-cpp-rust{--fak:#f0a77d}
+html[data-sd-theme="dark"] .ak-fak-uni{--fak:#c4a8ec}html[data-sd-theme="dark"] .ak-fak-computer{--fak:#86d6d6}html[data-sd-theme="dark"] .ak-fak-deutsch{--fak:#f0a0ad}
+html[data-sd-theme="dark"] .ak-fak-arbeit{--fak:#e9c46a}html[data-sd-theme="dark"] .ak-fak-alle{--fak:#8fe0b9}
+.ak-fwappen{width:34px;height:39px;flex:none}
+.ak-fw-grund{fill:var(--fak);opacity:.1}
+.ak-fw-rand{fill:none;stroke:var(--fak);stroke-width:1.6}
+.ak-fw-sym{fill:none;stroke:var(--fak);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ak-licon{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-inline-end:4px}
+/* Suche und Niveau in einer Zeile, Fakultäten als Kacheln darunter */
+.ak-toolbar{display:grid;grid-template-columns:1fr auto;grid-template-areas:"suche stufe" "fak fak";gap:12px;align-items:center}
+.ak-toolbar .ak-suche{grid-area:suche}.ak-toolbar .ak-stufe{grid-area:stufe}.ak-toolbar #akBereiche{grid-area:fak}
+#akBereiche.ak-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:10px}
+#akBereiche .ak-fak{display:flex;align-items:center;gap:12px;text-align:start;padding:12px 14px;border-radius:14px;border:1px solid var(--ak-line);background:var(--ak-card);color:var(--ak-ink);font:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+#akBereiche .ak-fak:hover{border-color:var(--fak)}
+#akBereiche .ak-fak[aria-pressed="true"]{border-color:var(--fak);box-shadow:inset 0 0 0 1px var(--fak);background:color-mix(in srgb,var(--fak) 8%,var(--ak-card));color:var(--ak-ink)}
+.ak-fak-text{display:flex;flex-direction:column;min-width:0}
+.ak-fak-text b{font-family:var(--ak-serif);font-size:1rem;font-weight:600;line-height:1.2}
+.ak-fak-text small{color:var(--ak-muted);font-size:.78rem}
+@media (max-width:520px){.ak-toolbar{grid-template-columns:1fr;grid-template-areas:"suche" "stufe" "fak"}#akBereiche.ak-chips{grid-template-columns:1fr 1fr}#akBereiche .ak-fak{padding:10px;gap:8px}#akBereiche .ak-fwappen{width:28px;height:32px}}
+/* Kurskarten */
+#courses .course.ak-k{padding:16px 18px 14px;gap:6px;background:var(--ak-card);border:1px solid var(--ak-line);border-top:3px solid var(--fak);border-radius:14px;text-align:start}
+#courses .course.ak-k>*{margin-left:0!important;margin-right:0!important}
+#courses .course.ak-k:hover{border-color:color-mix(in srgb,var(--fak) 45%,var(--ak-line));border-top-color:var(--fak);box-shadow:0 14px 30px rgba(15,58,48,.09)}
+.ak-k-kopf{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.ak-k-code{font-size:.72rem;font-weight:800;letter-spacing:.14em;color:var(--fak);text-transform:uppercase}
+.ak-k-dots{margin-inline-start:auto;display:inline-flex;gap:4px}
+.ak-k-dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--fak);display:block}
+.ak-k-dots i.an{background:var(--fak)}
+#courses .ak-k>b{font-size:1.18rem;font-weight:600;line-height:1.25;color:var(--ak-ink)}
+#courses .ak-k .ak-k-text{color:var(--ak-muted);line-height:1.5}
+.ak-k-vor{color:var(--ak-muted);font-size:.78rem;font-style:italic}
+.ak-k-fuss{display:flex;align-items:center;gap:10px;margin-top:auto!important;padding-top:12px;border-top:1px solid var(--ak-line)}
+.ak-k-fuss .progress-label{font-size:.8rem;color:var(--ak-muted);font-variant-numeric:tabular-nums}
+.ak-k-fuss .ak-cta{margin:0 0 0 auto!important;padding:0;color:var(--fak);font-size:.88rem}
+.ak-ring{width:30px;height:30px;flex:none}
+.ak-ring circle{fill:none;stroke-width:3.5}
+.ak-ring-grund{stroke:var(--ak-soft)}
+.ak-ring-wert{stroke:var(--fak);stroke-linecap:round}
+#courses .ak-deutsch-karte .badge{align-self:flex-start}

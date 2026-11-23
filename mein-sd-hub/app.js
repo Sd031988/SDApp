@@ -138,6 +138,23 @@ const A=window.SDAkademieI18n;
 function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
 const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"];
 const BEREICH_KLASSE={"Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch","Arbeit & Beruf":"arbeit"};
+/* Wappen der Fakultäten: Schild mit Symbol als feine Linienzeichnung (statische SVG-Bausteine, keine Fremddaten) */
+const WAPPEN_SYMBOL={
+ "programmieren":'<path d="M15 17l-5 5 5 5M25 17l5 5-5 5M22.5 14.5l-5 15"/>',
+ "python-ki":'<path d="M13.5 17.5 26 22l-12.5 4.5"/><circle cx="13" cy="17" r="2.4"/><circle cx="13" cy="27" r="2.4"/><circle cx="27" cy="22" r="2.6"/>',
+ "cpp-rust":'<circle cx="20" cy="22" r="4"/><path d="M20 13.5v3.5M20 27v3.5M11.5 22H15M25 22h3.5M14 16l2.5 2.5M23.5 25.5 26 28M14 28l2.5-2.5M23.5 18.5 26 16"/>',
+ "uni":'<path d="m9 19.5 11-5 11 5-11 5zM14 22v5c3 2.6 9 2.6 12 0v-5M31 19.5v6"/>',
+ "computer":'<path d="M11 15h18v11H11zM16.5 30.5h7M20 26v4.5"/>',
+ "deutsch":'<path d="M11 15h18v10.5h-9l-5 4v-4h-4z"/><path d="M16.5 23l2.5-6 2.5 6M17.4 21h3.2"/>',
+ "arbeit":'<path d="M10.5 18.5h19v11h-19zM16 18.5v-3h8v3M10.5 23.5h19"/>',
+ "alle":'<path d="M12 18c3-1.2 6-.8 8 1.2 2-2 5-2.4 8-1.2v10.5c-3-1.2-6-.8-8 1.2-2-2-5-2.4-8-1.2zM20 19.2v10.5"/>'};
+function wappen(klasse,cls){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 40 46");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-fwappen "+(cls||""));
+ s.innerHTML='<path class="ak-fw-grund" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><path class="ak-fw-rand" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><g class="ak-fw-sym">'+(WAPPEN_SYMBOL[klasse]||WAPPEN_SYMBOL.alle)+'</g>';return s}
+const KURS_CODE={"code":"WEB 101","webdesign":"WEB 102","javascript":"JS 101","javascript-aufbau":"JS 201","saubere-webapps":"JS 301","python-start":"PY 101","python-aufbau":"PY 201","ki-python":"KI 101","cpp-start":"CPP 101","cpp-spiele":"CPP 201","rust-start":"RS 101","uni-kurse":"UNI 100","digital":"IT 101","internet-email":"IT 102","sicher-im-netz":"IT 201","buero-programme":"IT 202","digitale-profiwerkzeuge":"IT 301","arbeit-finden":"BER 101","career":"BER 102","gespraech-arbeitsstart":"BER 103","arbeitsvertrag-rechte":"BER 201","weiterkommen":"BER 202"};
+const SVG_ICON={uhr:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',buch:'<path d="M4.5 6c2.5-1 5-.8 7.5 1 2.5-1.8 5-2 7.5-1v12c-2.5-1-5-.8-7.5 1-2.5-1.8-5-2-7.5-1zM12 7v12"/>'};
+function linienIcon(name){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 24 24");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-licon");s.innerHTML=SVG_ICON[name]||"";return s}
+function fortschrittsRing(anteil){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 36 36");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-ring");
+ const u=2*Math.PI*15;s.innerHTML='<circle cx="18" cy="18" r="15" class="ak-ring-grund"/><circle cx="18" cy="18" r="15" class="ak-ring-wert" stroke-dasharray="'+(u*anteil).toFixed(1)+' '+u.toFixed(1)+'" transform="rotate(-90 18 18)"/>';return s}
 const akFilter={text:"",bereich:"",stufe:""};
 function stufenGruppe(s){const n=parseInt(s,10);return !n?"":n<=1?"1":n<=3?"2":"3"}
 function dauerText(min){return min>=90?(Math.round(min/30)/2).toLocaleString("de-DE")+" Std.":min+" Min."}
@@ -154,7 +171,9 @@ function renderAkStats(){
 }
 function renderAkToolbar(){
  const chips=$("akBereiche");if(!chips||chips.dataset.fertig)return;chips.dataset.fertig="1";
- const knopf=(wert,text)=>{const b=akNode("button","",text,chips);b.type="button";b.dataset.wert=wert;b.setAttribute("aria-pressed",String(akFilter.bereich===wert));
+ const knopf=(wert,text)=>{const b=node("button","ak-fak",undefined,chips);b.type="button";b.dataset.wert=wert;b.setAttribute("aria-pressed",String(akFilter.bereich===wert));
+  const kl=wert?BEREICH_KLASSE[wert]:"alle";b.classList.add("ak-fak-"+kl);b.append(wappen(kl));const t=node("span","ak-fak-text",undefined,b);akNode("b","",text,t);
+  const n=wert?D.academy.filter(c=>c.bereich===wert).length:D.academy.length;akNode("small","",A.t(n===1?"{n} Kurs":"{n} Kurse").replace("{n}",n),t);
   b.onclick=()=>{akFilter.bereich=wert;[...chips.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert===wert)));kursOffen=false;renderCourses();zeigeKursOben()}};
  knopf("","Alle Bereiche");BEREICHE.forEach(b=>knopf(b,b));
  $("akSuche").addEventListener("input",e=>{akFilter.text=e.target.value;renderCourses()});
@@ -253,9 +272,7 @@ function kursAusHash(){const m=location.hash.match(/^#kurs=([\w-]+)$/);if(!m)ret
    Die Akademie zeigt dafür eine einzige Karte, damit Deutsch nicht an zwei Stellen getrennt angeboten wird. */
 function deutschKarte(entries){
  const a=akNode("a","course ak-deutsch-karte",undefined,entries);a.href="../deutsch/";
- const banner=node("span","ak-banner ak-b-"+(BEREICH_KLASSE.Deutsch||"programmieren"),undefined,a);banner.setAttribute("aria-hidden","true");
- node("span","ak-icon","📚",banner);akNode("span","ak-bereich","Deutsch",banner);
- akNode("span","emoji","📚",a);akNode("b","","Deutsch lernen – vom Alphabet bis B1",a);akNode("span","badge","Alphabet · A1 · A2 · B1",a);
+ a.classList.add("ak-k","ak-fak-deutsch");const kopf=node("span","ak-k-kopf",undefined,a);kopf.append(wappen("deutsch"));node("span","ak-k-code","DE A1–B1",kopf);akNode("b","","Deutsch lernen – vom Alphabet bis B1",a);akNode("span","badge","Alphabet · A1 · A2 · B1",a);
  akNode("small","","Alle Deutschkurse an einem Ort: Einheiten mit Wörtern, Grammatik, Hören und Sprechen, Erklärungen auf Dari, Englisch, Urdu und Tigrinya, dazu Praxis für Alltag und Beruf und B1-Prüfungstraining.",a);
  akNode("span","ak-cta","Zu Deutsch lernen →",a);
 }
@@ -275,18 +292,19 @@ function renderCourses(){
    const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
    const btn=akNode("button","course"+(course.id===courseId?" active":""),undefined,entries);
    btn.type="button";btn.dataset.kurs=course.id;btn.setAttribute("aria-pressed",String(course.id===courseId));
-   const banner=node("span","ak-banner ak-b-"+(BEREICH_KLASSE[bereich]||"programmieren"),undefined,btn);banner.setAttribute("aria-hidden","true");
-   node("span","ak-icon",course.icon,banner);akNode("span","ak-bereich",bereich,banner);
-   akNode("span","emoji",course.icon,btn);
+   btn.classList.add("ak-k","ak-fak-"+(BEREICH_KLASSE[bereich]||"programmieren"));
+   const kopf=node("span","ak-k-kopf",undefined,btn);kopf.append(wappen(BEREICH_KLASSE[bereich]));
+   node("span","ak-k-code",KURS_CODE[course.id]||course.id.slice(0,3).toUpperCase(),kopf);
+   const stufe=parseInt(stufenGruppe(course.stufe),10)||1,dots=node("span","ak-k-dots",undefined,kopf);dots.title=A.t(course.stufe);
+   for(let i=1;i<=3;i++)node("i",i<=stufe?"an":"",undefined,dots);akNode("span","ak-sr",course.stufe,dots);
    akNode("b","",course.name,btn);
-   akNode("span","badge",course.stufe,btn);
-   akNode("small","",course.summary,btn);
-   const meta=node("span","ak-meta",undefined,btn);node("span","","⏱ "+dauerText(course.dauer||ids.length*30),meta);akNode("span","","📘 "+ids.length+" Lektionen",meta);
-   akNode("small","","Empfohlene Reihenfolge: "+(kurse.indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
-   const track=akNode("div","progress-track",undefined,btn),bar=akNode("div","progress-bar",undefined,track);
-   bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
-   akNode("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
-   akNode("span","ak-cta",complete===ids.length&&ids.length?"✓ Abgeschlossen – wiederholen":complete?"Weiterlernen →":"Kurs starten →",btn);
+   akNode("small","ak-k-text",course.summary,btn);
+   const meta=node("span","ak-meta",undefined,btn);const m1=node("span","",undefined,meta);m1.append(linienIcon("uhr"),document.createTextNode(dauerText(course.dauer||ids.length*30)));
+   const m2=node("span","",undefined,meta);m2.append(linienIcon("buch"));akNode("span","",ids.length+" Lektionen",m2);
+   if(course.voraussetzungen.length)akNode("small","ak-k-vor",A.t("Voraussetzung: {x}").replace("{x}",course.voraussetzungen.map(v=>A.t(v)).join(", ")),btn);
+   const fuss=node("span","ak-k-fuss",undefined,btn);fuss.append(fortschrittsRing(ids.length?complete/ids.length:0));
+   akNode("span","progress-label",complete+" / "+ids.length+" Lektionen",fuss);
+   akNode("span","ak-cta",complete===ids.length&&ids.length?"✓ Abgeschlossen – wiederholen":complete?"Weiterlernen →":"Kurs starten →",fuss);
    btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben()});
   }
  }
@@ -343,7 +361,7 @@ function renderLessonList(){
   const kopf=node("div","ak-kurskopf",undefined);kopf.id="akKurskopf";$("lessonList").before(kopf);
   const ids=D.academyLessonIds[c.id]||[],fertig=ids.filter(id=>state.completedLessons.includes(id)).length;
   const meta=node("div","ak-kursmeta",undefined,kopf);
-  [c.bereich,c.stufe,"⏱ "+dauerText(c.dauer||ids.length*30),"📘 "+ids.length+" Lektionen","✓ "+fertig+" / "+ids.length+" erledigt","Kostenlos · ohne Konto"].forEach(x=>akNode("span","",x,meta));
+  [c.bereich,c.stufe,dauerText(c.dauer||ids.length*30),ids.length+" Lektionen","✓ "+fertig+" / "+ids.length+" erledigt","Kostenlos · ohne Konto"].forEach(x=>akNode("span","",x,meta));
   const ziele=c.lessons.map(l=>l.ziel||l.explanation).filter(Boolean).slice(0,6);
   if(ziele.length){const box=node("details","ak-lernziele",undefined,kopf);akNode("summary","","Was du in diesem Kurs lernst",box);const ul=node("ul","",undefined,box);ul.lang="de";ziele.forEach(z=>node("li","",z,ul))}}
  c.lessons.forEach(l=>{
