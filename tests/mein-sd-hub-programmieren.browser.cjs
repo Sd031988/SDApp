@@ -10,6 +10,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
  fs.readFile(p,(e,b)=>{if(e){res.writeHead(404);return res.end()}res.writeHead(200,{"Content-Type":mime[path.extname(p)]||"application/octet-stream"});res.end(b)})});
 async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n=>document.querySelector('.ak-step-balken button[aria-current="step"]')?.dataset.akTitle===n,name))return;await page.locator(".ak-step-nav .ak-weiter").click()}throw new Error("Seite nicht erreicht: "+name)}
 async function quizLoesen(page,kurs,index){const quiz=await page.evaluate(([k,i])=>window.SDAkademieKurse[k][i].quiz.map(q=>q.antworten[q.richtig]),[kurs,index]);const boxen=page.locator(".ak-seite:not([hidden]) .code-quiz");for(let i=0;i<quiz.length;i++)await boxen.nth(i).locator("button",{hasText:quiz[i]}).first().click()}
+async function raumZu(page){if(await page.evaluate(()=>document.body.classList.contains("ak-raum")))await page.locator("#kursZurueck").click()}
 (async()=>{
  await new Promise(r=>server.listen(0,"127.0.0.1",r));const base="http://127.0.0.1:"+server.address().port;
  const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
@@ -28,8 +29,11 @@ async function quizLoesen(page,kurs,index){const quiz=await page.evaluate(([k,i]
   assert.ok(await page.locator("#akUniGrid .ak-kosten").count()>=6,"Coursera-Kostenhinweis fehlt");
   await page.locator("#akUniFilter button",{hasText:"Komplett kostenlos"}).click();
   assert.equal(await page.locator("#akUniGrid .ak-vorschau").count(),0);
-  await page.locator("button.course").filter({has:page.locator("b",{hasText:/^Python für Einsteiger$/})}).click();
+  await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Python für Einsteiger$/})}).click();
   await page.locator(".code-lesson h4",{hasText:"Dein erstes Python-Programm"}).waitFor();
+  // Kursraum: Kurs füllt den ganzen Bildschirm, Seitenleiste und Katalog sind verdeckt
+  const raum=await page.evaluate(()=>{const r=document.getElementById("coursePanel").getBoundingClientRect();return {klasse:document.body.classList.contains("ak-raum"),voll:r.top<=0&&r.left<=0&&r.right>=innerWidth&&r.bottom>=innerHeight,oben:document.elementFromPoint(innerWidth/2,innerHeight-5)?.closest("#coursePanel")!==null}});
+  assert.deepEqual(raum,{klasse:true,voll:true,oben:true},"Kursraum nicht im Vollbild");
   // Schritt für Schritt: Fortschrittsbalken, erste Seite ist die Übersicht, Aufgabe und Quiz sind gesperrt
   assert.ok(await page.locator(".ak-step-balken button").count()>=8);
   assert.equal(await page.locator(".ak-step-nav .ak-zurueck").isDisabled(),true);
@@ -57,7 +61,7 @@ async function quizLoesen(page,kurs,index){const quiz=await page.evaluate(([k,i]
   assert.equal(await page.locator(".ak-lektion-nav").isVisible(),true,"Nächste Lektion erst am Ende");
   // C++-Lektion: Lösung zeigen, prüfen, ins Code-Studio übernehmen
   await page.locator("#kursZurueck").click();
-  await page.locator("button.course").filter({has:page.locator("b",{hasText:/^C\+\+ für Einsteiger$/})}).click();
+  await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^C\+\+ für Einsteiger$/})}).click();
   await page.locator(".code-lesson h4",{hasText:"Hallo Welt in C++"}).waitFor();
   await zuSeite(page,"Jetzt selbst schreiben");
   await page.locator(".code-lesson .code-pruefen").click();await page.locator(".code-lesson .code-pruefen").click();

@@ -25,7 +25,7 @@ function save(){state.updatedAt=new Date().toISOString();try{localStorage.setIte
 function track(id){if(!findItem(id))return;state.recent=[id,...state.recent.filter(x=>x!==id)].slice(0,8);save()}
 function toggleFavorite(id){if(!findItem(id))return;state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):[id,...state.favorites];save();renderWayResults()}
 function itemLink(it, label, cls){const a=mk("a",cls||"",label||it.title+" ↗");a.href=it.href;a.dataset.track=it.id;return a}
-function setTab(id,scroll){if(!["uebersicht","wegweiser","akademie","leben","projekte","sprache"].includes(id))id="uebersicht";
+function setTab(id,scroll){if(!["uebersicht","wegweiser","akademie","leben","projekte","sprache"].includes(id))id="uebersicht";try{if(id!=="akademie"&&kursOffen){kursOffen=false;$("akademie").classList.remove("kurs-offen");document.body.classList.remove("ak-raum")}}catch(e){}
 document.querySelectorAll(".module").forEach(m=>m.hidden=m.id!==id);
 document.querySelectorAll(".tab").forEach(b=>{const active=b.dataset.tab===id;b.classList.toggle("active",active);b.setAttribute("aria-selected",String(active));if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 try{history.replaceState(null,"","#"+id)}catch(e){}
@@ -212,7 +212,19 @@ function renderUniKatalog(){
  }
 }
 /* Geöffneter Kurs steht oben (vor den Kurskarten), damit niemand weit nach unten scrollen muss. */
-function zeigeKursOben(){const ak=$("akademie"),z=$("kursZurueck");if(z&&!z.dataset.an){z.dataset.an="1";z.addEventListener("click",()=>{kursOffen=false;zeigeKursOben();$("courses").scrollIntoView({block:"start"})})}ak.classList.toggle("kurs-offen",kursOffen);if(!kursOffen)return;const p=$("coursePanel");p.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});$("courseHeading").focus({preventScroll:true})}
+/* Kursraum: Ein geöffneter Kurs füllt den ganzen Bildschirm, ohne Menüs und Katalog drumherum.
+   „← Alle Kurse“, Esc und die Zurück-Taste des Browsers verlassen den Raum. */
+let raumPopIgnorieren=false;
+function kursRaumVerlassen(){kursOffen=false;zeigeKursOben();$("courses").scrollIntoView({block:"start"})}
+function zeigeKursOben(){const ak=$("akademie"),z=$("kursZurueck");
+ if(z&&!z.dataset.an){z.dataset.an="1";
+  z.addEventListener("click",()=>{const zurueck=history.state&&history.state.akRaum;kursRaumVerlassen();if(zurueck){raumPopIgnorieren=true;history.back()}});
+  addEventListener("popstate",()=>{if(raumPopIgnorieren){raumPopIgnorieren=false;return}if(kursOffen)kursRaumVerlassen()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&kursOffen&&!e.target.closest("textarea,input"))z.click()})}
+ ak.classList.toggle("kurs-offen",kursOffen);document.body.classList.toggle("ak-raum",kursOffen);
+ if(!kursOffen)return;
+ if(!(history.state&&history.state.akRaum))history.pushState({akRaum:1},"",location.href);
+ const p=$("coursePanel");p.scrollTop=0;$("courseHeading").focus({preventScroll:true})}
 function zeigeLektionOben(){const d=$("lessonDetail"),a=document.querySelector(".lesson-btn.active");if(a)a.scrollIntoView({block:"nearest",inline:"center"});d.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})}
 function renderLessonList(){
  const c=findCourse(courseId);if(!c)return;
@@ -233,7 +245,7 @@ function renderLessonList(){
   const meta=node("div","ak-kursmeta",undefined,kopf);
   [c.bereich,c.stufe,"⏱ "+dauerText(c.dauer||ids.length*30),"📘 "+ids.length+" Lektionen","✓ "+fertig+" / "+ids.length+" erledigt","Kostenlos · ohne Konto"].forEach(x=>akNode("span","",x,meta));
   const ziele=c.lessons.map(l=>l.ziel||l.explanation).filter(Boolean).slice(0,6);
-  if(ziele.length){const box=node("div","ak-lernziele",undefined,kopf);akNode("h4","","Was du in diesem Kurs lernst",box);const ul=node("ul","",undefined,box);ul.lang="de";ziele.forEach(z=>node("li","",z,ul))}}
+  if(ziele.length){const box=node("details","ak-lernziele",undefined,kopf);akNode("summary","","Was du in diesem Kurs lernst",box);const ul=node("ul","",undefined,box);ul.lang="de";ziele.forEach(z=>node("li","",z,ul))}}
  c.lessons.forEach(l=>{
   const btn=akNode("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
   btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));
