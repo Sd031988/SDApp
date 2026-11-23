@@ -13,7 +13,7 @@
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
   const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz", "buero-programme", "digitale-profiwerkzeuge", "arbeit-finden", "career", "gespraech-arbeitsstart", "arbeitsvertrag-rechte", "weiterkommen"] };
-  const FEST_VERSION = "20261123t";
+  const FEST_VERSION = "20261123u";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
   let laeuft = false, nochmal = false, zustand = {};
@@ -218,10 +218,11 @@
     } catch (e) { st = "unavailable"; }
     if (st === "unavailable") return { fehlt: "browser" };
     if (st !== "available" && !zustand.erlaubt) return { fehlt: "laden" };
-    const t = await self.Translator.create({
+    const t = await Promise.race([self.Translator.create({
       sourceLanguage: "de", targetLanguage: l,
       monitor(m) { m.addEventListener("downloadprogress", e => hinweis("fortschritt", T("Sprachmodell wird geladen …") + " " + Math.round((e.loaded || 0) * 100) + " %")); }
-    });
+    }), new Promise(r => setTimeout(() => r(null), 120000))]).catch(() => null);
+    if (!t) return { fehlt: "browser" };
     uebersetzer[l] = t; return t;
   }
 
@@ -254,7 +255,10 @@
         const orig = n.__akOrig, kern = orig.trim();
         if (++i % 8 === 1) hinweis("fortschritt", T("Übersetze …") + " " + Math.round(i / offen.length * 100) + " %");
         let neu;
-        try { neu = c[kern] !== undefined ? c[kern] : await tr.translate(kern); } catch (e) { continue; }
+        try {
+          neu = c[kern] !== undefined ? c[kern] : await Promise.race([tr.translate(kern),
+            new Promise((_, nein) => setTimeout(() => nein(new Error("zeit")), 4000))]);   // hängende Browser-KI darf feste Übersetzungen nicht blockieren
+        } catch (e) { if (e && e.message === "zeit") { uebersetzer[l] = { fehlt: "browser" }; hinweis(fest ? "fest" : "browser"); return; } continue; }
         c[kern] = neu; setzen(n, orig, neu, l);
       }
       merken(l);

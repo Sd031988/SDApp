@@ -99,3 +99,5 @@ html[data-sd-theme="dark"] #akademie{--ak-card:var(--sd-surface,#203129);--ak-in
 .ak-xp{display:inline-block;padding:8px 14px;border-radius:999px;background:#fff4d6;color:#6b4b00;font-weight:800}
 .code-quiz .answers button.falsch{border-color:#c9625a}
 #lessonDetail:has(.ak-stepper):not(.ak-am-ende) .ak-lektion-nav{display:none}
+.ak-stepper{scroll-margin-top:8px}
+.ak-tiefer:has(p[data-ak-ue="rtl"]){border-left:0;border-right:4px solid #5aa883;border-radius:10px 0 0 10px}

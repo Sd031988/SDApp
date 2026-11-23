@@ -123,7 +123,7 @@ function ladeKurs(id){
  if(kursLadevorgaenge.has(id))return kursLadevorgaenge.get(id);
  const p=new Promise((resolve,reject)=>{
   const script=document.createElement("script");
-  script.src="./kurse/"+encodeURIComponent(id)+".js?v=20261123t";
+  script.src="./kurse/"+encodeURIComponent(id)+".js?v=20261123u";
   script.onload=()=>{
    const lessons=window.SDAkademieKurse?.[id];
    if(!Array.isArray(lessons)){reject(new Error("Lektionsdaten fehlen"));return}
@@ -403,7 +403,7 @@ function lektionsStepper(wrap,l){
   zur.disabled=i===0;const letzte=i===seiten.length-1;wei.hidden=letzte;wei.disabled=!seiten[i].offen;wei.classList.remove("ak-puls");
   A.set(sperrHinweis,letzte||seiten[i].offen?"":seiten[i].sperrText);
   $("lessonDetail").classList.toggle("ak-am-ende",letzte);
-  if(scroll)kopf.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  if(scroll)wrap.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
  }
  function seite(name,sperrText){
   const el=node("section","ak-seite",undefined,inhalt);el.hidden=true;
