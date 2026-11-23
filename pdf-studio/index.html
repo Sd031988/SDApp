@@ -2611,10 +2611,20 @@
     // (normal, fett, kursiv). Ohne Internet bleibt die naechste Schrift der
     // Kette aktiv - es geht nichts kaputt.
     const geladeneWebSchriften = new Set();
+    // Datenschutz: Google Fonts nur nach ausdrücklicher Zustimmung laden (dabei erhält Google die IP-Adresse).
+    // Ohne Zustimmung bleibt die nächste Schrift der Kette aktiv.
+    function googleSchriftenErlaubt() {
+      let w = null; try { w = localStorage.getItem('sdGoogleSchriften'); } catch (e) {}
+      if (w === 'ja') return true; if (w === 'nein') return false;
+      const ok = confirm('Für eine passende Ersatzschrift kann diese Schrift von Google Fonts geladen werden. Dabei erhält Google technisch bedingt Ihre IP-Adresse.\n\nOK = erlauben, Abbrechen = ohne Google Fonts (eine ähnliche Systemschrift wird genutzt).');
+      try { localStorage.setItem('sdGoogleSchriften', ok ? 'ja' : 'nein'); } catch (e) {}
+      return ok;
+    }
     function ladeSchrift(fontCss) {
       if (!fontCss) return Promise.resolve();
       const eintraege = SCHRIFTEN.filter(f => f.css === fontCss || fontCss.endsWith(f.css));
       const zuLaden = eintraege.map(f => f.google).filter(g => g && !geladeneWebSchriften.has(g));
+      if (zuLaden.length && !googleSchriftenErlaubt()) zuLaden.length = 0;
       zuLaden.forEach(g => {
         geladeneWebSchriften.add(g);
         const link = document.createElement('link');
