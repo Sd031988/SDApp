@@ -12,7 +12,7 @@
   const RTL = ["ar", "fa", "ur"];
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
-  const FEST = { fa: ["python-start"] };
+  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start"] };
   const FEST_VERSION = "20261123";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
