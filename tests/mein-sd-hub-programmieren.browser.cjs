@@ -17,6 +17,15 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await page.locator('[data-tab="akademie"]').click();
   for(const g of ["Python & KI","C++ & Rust","Uni-Kurse & Videos"])assert.ok(await page.locator(".course-group h3",{hasText:g}).count()===1,g);
+  // Profi-Katalog: Kennzahlen, Suche, Universitätskurse mit Kostenhinweis
+  assert.equal(await page.locator("#akStats .ak-stat").count(),5);
+  await page.locator("#akSuche").fill("Rust");
+  assert.equal(await page.locator("#courses button.course").count(),1);
+  await page.locator("#akSuche").fill("");
+  assert.ok(await page.locator("#akUniGrid .ak-uni-karte").count()>=16);
+  assert.ok(await page.locator("#akUniGrid .ak-kosten").count()>=6,"Coursera-Kostenhinweis fehlt");
+  await page.locator("#akUniFilter button",{hasText:"Komplett kostenlos"}).click();
+  assert.equal(await page.locator("#akUniGrid .ak-vorschau").count(),0);
   await page.locator("button.course").filter({has:page.locator("b",{hasText:/^Python für Einsteiger$/})}).click();
   await page.locator(".code-lesson h4",{hasText:"Dein erstes Python-Programm"}).waitFor();
   const ta=page.locator(".code-lesson textarea.code-textarea").first();

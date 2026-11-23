@@ -1,0 +1,63 @@
+/* SD Akademie – professionelles Kursportal: Kennzahlen, Suche/Filter, Kurskarten mit Banner, Kursseite, Universitätskurse */
+#akademie{--ak-card:#fff;--ak-ink:#14332c;--ak-muted:#5a716b;--ak-line:#d7e6de;--ak-soft:#eef6f1;--ak-accent:#0f6b52;--ak-accent-ink:#fff;--ak-chip:#f4f8f5}
+html[data-sd-theme="dark"] #akademie{--ak-card:var(--sd-surface,#203129);--ak-ink:var(--sd-ink,#edf5ef);--ak-muted:var(--sd-muted,#bdcfc3);--ak-line:#3d5a4c;--ak-soft:#1a2a23;--ak-accent:#8fe0b9;--ak-accent-ink:#0f241c;--ak-chip:#1a2a23}
+.ak-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ak-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px;margin:4px 0 18px}
+.ak-stat{background:var(--ak-card);border:1px solid var(--ak-line);border-radius:14px;padding:14px 16px;color:var(--ak-ink)}
+.ak-stat b{display:block;font-size:1.65rem;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ak-stat span{font-size:.82rem;color:var(--ak-muted)}
+.ak-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px}
+.ak-suche{flex:1 1 260px;min-width:0}
+.ak-suche input,.ak-stufe select{width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid var(--ak-line);border-radius:12px;background:var(--ak-card);color:var(--ak-ink);font:inherit}
+.ak-suche input:focus,.ak-stufe select:focus{outline:3px solid var(--focus,#f9c94c);outline-offset:1px}
+.ak-stufe{flex:0 0 auto}
+.ak-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ak-chips button{border:1px solid var(--ak-line);background:var(--ak-chip);color:var(--ak-ink);border-radius:999px;padding:7px 13px;font:600 .85rem/1.2 inherit;cursor:pointer}
+.ak-chips button[aria-pressed="true"]{background:var(--ak-accent);border-color:var(--ak-accent);color:var(--ak-accent-ink)}
+.ak-treffer{margin:4px 0 10px;color:var(--ak-muted);font-size:.85rem;min-height:1.2em}
+/* Kurskarten */
+#courses .course{position:relative;display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:16px;transition:transform .15s ease,box-shadow .15s ease}
+#courses .course:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0f3a3014}
+@media (prefers-reduced-motion:reduce){#courses .course{transition:none}#courses .course:hover{transform:none}}
+#courses .course>*:not(.ak-banner){margin-left:18px;margin-right:18px}
+#courses .course>.emoji{display:none}
+.ak-banner{height:84px;display:flex;align-items:flex-end;justify-content:space-between;padding:12px 16px;color:#fff;margin-bottom:12px}
+.ak-banner .ak-icon{font-size:2.1rem;line-height:1;filter:drop-shadow(0 2px 4px #0004)}
+.ak-banner .ak-bereich{font:700 .7rem/1 inherit;letter-spacing:.08em;text-transform:uppercase;background:#ffffff2b;border:1px solid #ffffff55;border-radius:999px;padding:5px 9px}
+.ak-b-programmieren{background:linear-gradient(135deg,#1e3a8a,#3b82f6)}
+.ak-b-python-ki{background:linear-gradient(135deg,#065f46,#10b981)}
+.ak-b-cpp-rust{background:linear-gradient(135deg,#7c2d12,#ea580c)}
+.ak-b-uni{background:linear-gradient(135deg,#581c87,#a855f7)}
+.ak-b-computer{background:linear-gradient(135deg,#0f766e,#14b8a6)}
+.ak-b-deutsch{background:linear-gradient(135deg,#9f1239,#f43f5e)}
+.ak-b-arbeit{background:linear-gradient(135deg,#854d0e,#eab308)}
+#courses .course>b{font-size:1.05rem}
+.ak-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px!important;font-size:.8rem;color:var(--ak-muted);font-variant-numeric:tabular-nums}
+.ak-cta{margin-top:auto!important;padding:12px 0 16px;font-weight:700;color:var(--ak-accent);font-size:.9rem}
+#courses .course .progress-track{margin-top:10px}
+/* Kursseite */
+.ak-kurskopf{display:grid;gap:12px;margin:6px 0 14px}
+.ak-kursmeta{display:flex;flex-wrap:wrap;gap:8px}
+.ak-kursmeta span{background:var(--ak-soft);border:1px solid var(--ak-line);border-radius:999px;padding:5px 11px;font-size:.8rem;color:var(--ak-ink)}
+.ak-lernziele{background:var(--ak-soft);border:1px solid var(--ak-line);border-radius:14px;padding:14px 18px;color:var(--ak-ink)}
+.ak-lernziele h4{margin:0 0 8px;font-size:.95rem}
+.ak-lernziele ul{margin:0;padding-left:1.1em;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:4px 22px}
+.ak-lernziele li{font-size:.88rem;line-height:1.45}
+/* Universitätskurse */
+.ak-uni{margin-top:34px}
+.ak-uni-head h3{margin:4px 0 6px;font-size:1.35rem;color:var(--ak-ink)}
+.ak-uni-head p{margin:0 0 12px;color:var(--ak-muted);max-width:70ch;line-height:1.55}
+.ak-uni-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin-top:12px}
+.ak-uni-karte{display:flex;flex-direction:column;gap:8px;background:var(--ak-card);border:1px solid var(--ak-line);border-radius:16px;padding:16px;color:var(--ak-ink);min-width:0}
+.ak-uni-kopf{display:flex;gap:10px;align-items:center;min-width:0}
+.ak-mono{flex:0 0 42px;height:42px;border-radius:10px;display:grid;place-items:center;font:800 .78rem/1 inherit;color:#fff;background:#334155}
+.ak-uni-kopf small{display:block;color:var(--ak-muted);font-size:.78rem}
+.ak-uni-kopf b{display:block;font-size:.88rem;overflow-wrap:anywhere}
+.ak-uni-karte h4{margin:0;font-size:1rem;line-height:1.35}
+.ak-tags{display:flex;flex-wrap:wrap;gap:6px}
+.ak-tags span{font-size:.74rem;border-radius:999px;padding:4px 9px;background:var(--ak-soft);border:1px solid var(--ak-line)}
+.ak-tags .ak-frei{background:#dcfce7;border-color:#86efac;color:#14532d}
+.ak-tags .ak-vorschau{background:#fef3c7;border-color:#fcd34d;color:#713f12}
+.ak-uni-karte a{margin-top:auto;align-self:flex-start;font-weight:700;color:var(--ak-accent);text-decoration:none;border:1px solid var(--ak-line);border-radius:10px;padding:8px 12px}
+.ak-uni-karte a:hover{background:var(--ak-soft)}
+.ak-uni-karte .ak-kosten{font-size:.78rem;color:var(--ak-muted);line-height:1.45}

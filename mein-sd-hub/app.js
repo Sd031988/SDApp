@@ -136,29 +136,80 @@ function ladeKurs(id){
 }
 const A=window.SDAkademieI18n;
 function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
+const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"];
+const BEREICH_KLASSE={"Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch","Arbeit & Beruf":"arbeit"};
+const akFilter={text:"",bereich:"",stufe:""};
+function stufenGruppe(s){const n=parseInt(s,10);return !n?"":n<=1?"1":n<=3?"2":"3"}
+function dauerText(min){return min>=90?(Math.round(min/30)/2).toLocaleString("de-DE")+" Std.":min+" Min."}
+function passtFilter(c){
+ if(akFilter.bereich&&c.bereich!==akFilter.bereich)return false;
+ if(akFilter.stufe&&stufenGruppe(c.stufe)!==akFilter.stufe&&c.stufe!=="Alle Stufen")return false;
+ const q=akFilter.text.trim().toLowerCase();if(!q)return true;
+ return [c.name,c.summary,c.bereich,A.t(c.name),A.t(c.summary)].join(" ").toLowerCase().includes(q);
+}
+function renderAkStats(){
+ const box=$("akStats");if(!box||box.dataset.fertig)return;box.dataset.fertig="1";
+ const lektionen=D.academy.reduce((n,c)=>n+c.anzahl,0),stunden=Math.round(D.academy.reduce((n,c)=>n+(c.dauer||0),0)/60);
+ [[D.academy.length,"Kurse"],[lektionen,"Lektionen"],[stunden+"+","Stunden Lernzeit"],[BEREICHE.length,"Fachbereiche"],["0 €","kostenlos, ohne Konto"]].forEach(([zahl,text])=>{const s=akNode("div","ak-stat",undefined,box);node("b","",String(zahl),s);akNode("span","",text,s)});
+}
+function renderAkToolbar(){
+ const chips=$("akBereiche");if(!chips||chips.dataset.fertig)return;chips.dataset.fertig="1";
+ const knopf=(wert,text)=>{const b=akNode("button","",text,chips);b.type="button";b.dataset.wert=wert;b.setAttribute("aria-pressed",String(akFilter.bereich===wert));
+  b.onclick=()=>{akFilter.bereich=wert;[...chips.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert===wert)));kursOffen=false;renderCourses();zeigeKursOben()}};
+ knopf("","Alle Bereiche");BEREICHE.forEach(b=>knopf(b,b));
+ $("akSuche").addEventListener("input",e=>{akFilter.text=e.target.value;renderCourses()});
+ $("akStufe").addEventListener("change",e=>{akFilter.stufe=e.target.value;renderCourses()});
+}
 function renderCourses(){
- clearChildren("courses");
- for(const bereich of ["Programmieren","Python & KI","C++ & Rust","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"]){
+ renderAkStats();renderAkToolbar();renderUniKatalog();
+ clearChildren("courses");let treffer=0;
+ for(const bereich of BEREICHE){
+  const kurse=D.academy.filter(c=>c.bereich===bereich),sichtbar=kurse.filter(passtFilter);
+  if(!sichtbar.length)continue;
   const group=akNode("section","course-group",undefined,$("courses"));
   akNode("h3","",bereich,group);
   const entries=akNode("div","course-group-list",undefined,group);
-  for(const course of D.academy.filter(c=>c.bereich===bereich)){
+  for(const course of sichtbar){
+   treffer++;
    const ids=D.academyLessonIds[course.id]||[];
    const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
    const btn=akNode("button","course"+(course.id===courseId?" active":""),undefined,entries);
    btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));
+   const banner=node("span","ak-banner ak-b-"+(BEREICH_KLASSE[bereich]||"programmieren"),undefined,btn);banner.setAttribute("aria-hidden","true");
+   node("span","ak-icon",course.icon,banner);akNode("span","ak-bereich",bereich,banner);
    akNode("span","emoji",course.icon,btn);
    akNode("b","",course.name,btn);
    akNode("span","badge",course.stufe,btn);
    akNode("small","",course.summary,btn);
-   akNode("small","","Empfohlene Reihenfolge: "+(D.academy.filter(c=>c.bereich===bereich).indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
+   const meta=node("span","ak-meta",undefined,btn);node("span","","⏱ "+dauerText(course.dauer||ids.length*30),meta);akNode("span","","📘 "+ids.length+" Lektionen",meta);
+   akNode("small","","Empfohlene Reihenfolge: "+(kurse.indexOf(course)+1)+" · "+(course.voraussetzungen.length?course.voraussetzungen.join(", "):"Keine Voraussetzungen"),btn);
    const track=akNode("div","progress-track",undefined,btn),bar=akNode("div","progress-bar",undefined,track);
    bar.style.width=(ids.length?complete/ids.length*100:0)+"%";
    akNode("div","progress-label",complete+" / "+ids.length+" Lektionen",btn);
+   akNode("span","ak-cta",complete===ids.length&&ids.length?"✓ Abgeschlossen – wiederholen":complete?"Weiterlernen →":"Kurs starten →",btn);
    btn.addEventListener("click",()=>{courseId=course.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben()});
   }
  }
+ const info=$("akTreffer");if(info)A.set(info,treffer===D.academy.length?"":treffer?treffer+" Kurse gefunden":"Kein Kurs passt zu deiner Suche.");
  renderLessonList();
+}
+function renderUniKatalog(){
+ const grid=$("akUniGrid"),filter=$("akUniFilter"),K=window.SDUniKatalog;if(!grid||!Array.isArray(K))return;
+ if(!filter.dataset.fertig){filter.dataset.fertig="1";[["","Alle"],["frei","Komplett kostenlos"],["vorschau","Coursera (Vorschau kostenlos)"]].forEach(([w,t])=>{const b=akNode("button","",t,filter);b.type="button";b.dataset.wert=w;b.setAttribute("aria-pressed",String(w===""));
+  b.onclick=()=>{filter.dataset.wahl=w;[...filter.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert===w)));renderUniKatalog()}})}
+ const wahl=filter.dataset.wahl||"";grid.replaceChildren();
+ const erlaubt=["cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","www.elementsofai.com","open.hpi.de","ki-campus.org","www.coursera.org"];
+ const farben={HU:"#a51c30",MIT:"#8a8b8c",UH:"#1d4f91",HPI:"#b1063a",KI:"#2b6cb0",UM:"#00274c",SU:"#8c1515",UI:"#e84a27",DU:"#012169",MSU:"#18453b"};
+ for(const k of K){
+  if(wahl&&k.kosten!==wahl)continue;if(akFilter.bereich&&k.bereich!==akFilter.bereich&&k.bereich!=="Alle Stufen")continue;
+  let url;try{url=new URL(k.url)}catch(e){continue}if(url.protocol!=="https:"||!erlaubt.includes(url.hostname))continue;
+  const c=node("article","ak-uni-karte",undefined,grid),kopf=node("div","ak-uni-kopf",undefined,c),mono=node("span","ak-mono",k.kurz,kopf);mono.style.background=farben[k.kurz]||"#334155";mono.setAttribute("aria-hidden","true");
+  const w=node("div","",undefined,kopf);node("b","",k.uni,w);node("small","",k.anbieter,w);
+  node("h4","",k.titel,c);
+  const tags=node("div","ak-tags",undefined,c);akNode("span",k.kosten==="frei"?"ak-frei":"ak-vorschau",k.kosten==="frei"?"Kostenlos":"Vorschau kostenlos",tags);akNode("span","",k.stufe,tags);node("span","",k.sprache,tags);if(k.video)akNode("span","","Videos",tags);
+  if(k.kosten==="vorschau")akNode("p","ak-kosten","Das erste Modul ist kostenlos. Für den ganzen Kurs und das Zertifikat verlangt Coursera Geld; Finanzhilfe kann man dort beantragen.",c);
+  const a=akNode("a","",k.anbieter==="Coursera"?"Bei Coursera ansehen ↗":"Zum Kurs ↗",c);a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";
+ }
 }
 /* Geöffneter Kurs steht oben (vor den Kurskarten), damit niemand weit nach unten scrollen muss. */
 function zeigeKursOben(){const ak=$("akademie"),z=$("kursZurueck");if(z&&!z.dataset.an){z.dataset.an="1";z.addEventListener("click",()=>{kursOffen=false;zeigeKursOben();$("courses").scrollIntoView({block:"start"})})}ak.classList.toggle("kurs-offen",kursOffen);if(!kursOffen)return;const p=$("coursePanel");p.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});$("courseHeading").focus({preventScroll:true})}
@@ -176,6 +227,13 @@ function renderLessonList(){
   ladeKurs(c.id).then(()=>{if(courseId===c.id)renderLessonList()}).catch(()=>{if(courseId===c.id)A.set(status,"Der Kurs konnte nicht geladen werden. Bitte erneut öffnen.")});
   return;
  }
+ {const alt=$("akKurskopf");if(alt)alt.remove();
+  const kopf=node("div","ak-kurskopf",undefined);kopf.id="akKurskopf";$("lessonList").before(kopf);
+  const ids=D.academyLessonIds[c.id]||[],fertig=ids.filter(id=>state.completedLessons.includes(id)).length;
+  const meta=node("div","ak-kursmeta",undefined,kopf);
+  [c.bereich,c.stufe,"⏱ "+dauerText(c.dauer||ids.length*30),"📘 "+ids.length+" Lektionen","✓ "+fertig+" / "+ids.length+" erledigt","Kostenlos · ohne Konto"].forEach(x=>akNode("span","",x,meta));
+  const ziele=c.lessons.map(l=>l.ziel||l.explanation).filter(Boolean).slice(0,6);
+  if(ziele.length){const box=node("div","ak-lernziele",undefined,kopf);akNode("h4","","Was du in diesem Kurs lernst",box);const ul=node("ul","",undefined,box);ul.lang="de";ziele.forEach(z=>node("li","",z,ul))}}
  c.lessons.forEach(l=>{
   const btn=akNode("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
   btn.type="button";btn.setAttribute("aria-pressed",String(l.id===lessonId));
