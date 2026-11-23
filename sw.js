@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v204';
+const CACHE_NAME = 'sd-bewerbungsstudio-v205';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',

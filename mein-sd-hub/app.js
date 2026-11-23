@@ -174,7 +174,7 @@ function renderCourses(){
    const ids=D.academyLessonIds[course.id]||[];
    const complete=ids.filter(id=>state.completedLessons.includes(id)).length;
    const btn=akNode("button","course"+(course.id===courseId?" active":""),undefined,entries);
-   btn.type="button";btn.setAttribute("aria-pressed",String(course.id===courseId));
+   btn.type="button";btn.dataset.kurs=course.id;btn.setAttribute("aria-pressed",String(course.id===courseId));
    const banner=node("span","ak-banner ak-b-"+(BEREICH_KLASSE[bereich]||"programmieren"),undefined,btn);banner.setAttribute("aria-hidden","true");
    node("span","ak-icon",course.icon,banner);akNode("span","ak-bereich",bereich,banner);
    akNode("span","emoji",course.icon,btn);
@@ -220,7 +220,7 @@ function renderLessonList(){
  $("courseSummary").replaceChildren();akNode("span","",c.summary,$("courseSummary"));
  if(c.id==="deutsch-b1"){const a=akNode("a","btn outline small","B1-Prüfungstraining öffnen ↗",$("courseSummary"));a.href="/deutsch/b1-pruefung.html";}
 
- clearChildren("lessonList");clearChildren("lessonDetail");
+ clearChildren("lessonList");clearChildren("lessonDetail");$("lessonList").dataset.kurs=c.id;
  if(!c.lessons){
   const status=akNode("p","panel-sub","Lade Kurs …",$("lessonDetail"));
   status.setAttribute("role","status");
