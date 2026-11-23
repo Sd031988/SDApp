@@ -160,7 +160,7 @@
       (exportable?'<button class="b1-audio" id="b1-copy-answers" type="button">📋 Meine Antworten kopieren</button><p id="b1-copy-status" role="status" aria-live="polite"></p>':'')+
       '<button class="b1-next" id="b1-again">'+(next?'Weiter zu '+labels[next]:'Zur Prüfungsübersicht')+'</button>');
     if(exportable) $('b1-copy-answers').onclick=async()=>{
-      const text=answers.map((answer,i)=>'Aufgabe '+(i+1)+'\\n'+(answer||'(Keine Antwort)')).join('\\n\\n');
+      const text=answers.map((answer,i)=>'Aufgabe '+(i+1)+'\n'+(answer||'(Keine Antwort)')).join('\n\n');
       const status=$('b1-copy-status');
       try{
         if(!navigator.clipboard?.writeText) throw new Error('Zwischenablage nicht verfügbar');
