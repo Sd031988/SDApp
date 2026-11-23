@@ -12,7 +12,7 @@
   const RTL = ["ar", "fa", "ur"];
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
-  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code"] };
+  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital"] };
   const FEST_VERSION = "20261123";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
@@ -128,7 +128,7 @@
     let treffer = genau(key); if (treffer !== undefined) return treffer;
     let vor = "", rest = key;
     for (let i = 0; i < 3; i++) {                                         // „1. “, „✓ “, „← “, „Tipp: “ usw. davor
-      const m = rest.match(/^(\d+\.\s+|[✓✗←]\s+|[^.:!?`]{1,40}?[.:!?]\s+)([\s\S]+)$/); if (!m) break;
+      const m = rest.match(/^(\d+\.\s+|\d+\/\d+\s*·\s+|[✓✗←]\s+|[^.:!?`]{1,40}?[.:!?]\s+)([\s\S]+)$/); if (!m) break;
       const p = m[1].trim(), pt = d[p] !== undefined ? d[p] : T(p);
       vor += pt + " "; rest = m[2];
       treffer = genau(rest); if (treffer !== undefined) return vor + treffer;

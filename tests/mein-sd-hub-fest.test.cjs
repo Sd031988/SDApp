@@ -12,7 +12,8 @@ function texte(kurs){
   (l.schritte||[]).forEach(s=>{add(s.titel);add(s.text);add(s.erklaerung);const e=String(s.erklaerung||"").trim(),v=String(s.text||"").trim();if(e&&v.endsWith(e))add(v.slice(0,-e.length))});(l.fehler||[]).forEach(f=>{add(f.titel);add(f.text)});
   if(l.aufgabe){add(l.aufgabe.text);add(l.aufgabe.tipp);(l.aufgabe.muster||[]).forEach(m=>add(m.beschreibung));(l.aufgabe.pruefungen||[]).forEach(m=>add(m.beschreibung))}
   (l.quiz||[]).forEach(q=>{add(q.frage);(q.antworten||[]).forEach(add);add(q.erklaerung);(q.begruendungen||[]).forEach(add)});
-  (l.merke||[]).forEach(add);(l.quellen||[]).forEach(q=>{add(q.titel);add(q.info)})}
+  add(l.tip);(l.schrittePraxis||[]).forEach(s=>{add(s.titel);add(s.text)});(l.uebungen||[]).forEach(u=>{add(u.titel);add(u.aufgabe);add(u.tipp);add(u.erklaerung);(u.typ==="auswahl"?u.antworten:[]).forEach(add);(u.typ==="reihenfolge"?u.start:[]).forEach(add);(u.paare||[]).forEach(p=>add(p[0]));(u.luecken||[]).forEach(add)});
+ (l.merke||[]).forEach(add);(l.quellen||[]).forEach(q=>{add(q.titel);add(q.info)})}
  return out;
 }
 const code=s=>(s.match(/`[^`]*`/g)||[]).sort().join("|");
