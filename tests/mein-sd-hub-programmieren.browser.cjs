@@ -12,7 +12,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
  await new Promise(r=>server.listen(0,"127.0.0.1",r));const base="http://127.0.0.1:"+server.address().port;
  const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
  try{
-  const page=await browser.newPage({locale:"de-DE",viewport:{width:1250,height:900}});const errors=[];page.on("pageerror",e=>errors.push(e.message));
+  const page=await browser.newPage({locale:"de-DE",viewport:{width:1250,height:900}});const errors=[];page.on("pageerror",e=>errors.push(e.message));page.on("console",m=>{if(m.type()==="error")console.error("Konsole:",m.text())});
   page.on("dialog",d=>d.accept());
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await page.locator('[data-tab="akademie"]').click();
@@ -23,8 +23,9 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   await ta.fill('print("Hallo Welt")\nprint("Amina")\n');
   if(!process.env.SD_OFFLINE){
    await page.locator(".code-lesson button",{hasText:"Ausführen"}).click();
-   await page.waitForFunction(()=>/Ausgeführt/.test(document.querySelector(".code-lesson pre.code-example:not([hidden]):last-of-type")?.textContent||[...document.querySelectorAll(".code-lesson pre.code-example")].map(p=>p.textContent).join("")),null,{timeout:120000});
-   const out=await page.evaluate(()=>[...document.querySelectorAll(".code-lesson pre.code-example")].map(p=>p.textContent).join("\n"));
+   try{await page.waitForFunction(()=>/Ausgeführt|LAUFZEITFEHLER|nicht laden|nicht im Browser|Gestoppt|beendet/.test(document.querySelector(".prog-ausgabe")?.textContent||""),null,{timeout:180000})}
+   catch(e){console.error("Ausgabe bis jetzt:",await page.locator(".prog-ausgabe").textContent(),"Fehler:",errors);throw e}
+   const out=await page.locator(".prog-ausgabe").textContent();console.log("Python-Ausgabe:",out.replace(/\n/g," | "));
    assert.match(out,/Hallo Welt/);
   }
   await page.locator(".code-lesson .code-pruefen").click();

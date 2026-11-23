@@ -405,7 +405,7 @@ function renderProgrammLektion(l){
  ta.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey){e.preventDefault();const s=ta.selectionStart;ta.setRangeText("    ",s,ta.selectionEnd,"end");d.code=ta.value}});
  let eingabe=null;
  if(l.sprache==="python"&&/input\(/.test(l.start+(l.aufgabe.loesung||""))){akNode("label","","Eingaben für das Programm (eine pro Zeile)",wrap);eingabe=akNode("textarea","code-textarea",undefined,wrap);eingabe.style.minHeight="60px";eingabe.value=d.eingabe;eingabe.oninput=()=>{d.eingabe=eingabe.value}}
- const leiste=akNode("div","code-tabs",undefined,wrap),out=akNode("pre","code-example",undefined,wrap);out.hidden=true;out.setAttribute("aria-live","polite");
+ const leiste=akNode("div","code-tabs",undefined,wrap),out=akNode("pre","code-example prog-ausgabe",undefined,wrap);out.hidden=true;out.setAttribute("aria-live","polite");
  let letzteAusgabe=null;
  if(l.sprache==="python"){
   const run=akNode("button","btn primary small","▶ Ausführen",leiste);run.type="button";
