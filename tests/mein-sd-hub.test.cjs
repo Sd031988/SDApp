@@ -19,7 +19,7 @@ test("17 direct tools and guided goals have valid IDs and unique URLs",()=>{asse
 test("all referenced local tool URLs resolve to a real file",()=>{const links=new Set(data.items.map(x=>x.href));for(const p of data.paths)for(const step of p.steps)links.add(step[2]);for(const p of data.academy)assert.ok(p.anzahl>0);for(const href of links){const file=fileForHref(href);assert.ok(file,"unsafe URL "+href);assert.ok(fs.existsSync(file),"missing "+href)}});
 test("recommendation matches natural German B1 request",()=>{const found=data.recommend("Ich möchte B1 üben");assert.ok(found.some(x=>x.id==="b1"),JSON.stringify(found.map(x=>x.id)))});
 test("recommendations handle common needs and do not leak unbounded data",()=>{for(const [query,target] of [["Pibo spielen","pibo"],["Lebenslauf schreiben","jobs"],["PDF unterschreiben","pdf"],["Code programmieren","studio"],["Brief verstehen","post"]]){const found=data.recommend(query,8);assert.ok(found.some(x=>x.id===target),query+" -> "+found.map(x=>x.id))}assert.ok(data.recommend("ich",999).length<=8);assert.deepEqual(data.recommend(""),[])});
-test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,19);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,153);assert.equal(new Set(lessons.map(x=>x.id)).size,153);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
+test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,26);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,203);assert.equal(new Set(lessons.map(x=>x.id)).size,203);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
 test("paths contain twenty distinct checkable steps",()=>{assert.equal(data.paths.length,4);assert.equal(data.paths.reduce((n,p)=>n+p.steps.length,0),20);for(const p of data.paths){assert.equal(p.steps.length,5);for(const step of p.steps)assert.equal(step.length,3)}});
 test("translation examples cover supported languages",()=>{assert.ok(data.phrases.length>=10);for(const p of data.phrases){for(const lang of ["de","en","fa","ur","ti"])assert.ok(typeof p[lang]==="string"&&p[lang].length>2,p.id+" "+lang)}});
 test("safe state sanitizer rejects unknown ids, duplicates and private fields",()=>{const s=data.sanitizeState({completedLessons:["g-1","g-1","not-a-lesson"],completedSteps:["job:2","job:2","bad:8"],favorites:["pibo","pibo","evil"],recent:["studio","evil"],nickname:"<script>alert(1)</script>",privateData:"must-drop",updatedAt:"s".repeat(400)});assert.deepEqual(s.completedLessons,["g-1"]);assert.deepEqual(s.completedSteps,["job:2"]);assert.deepEqual(s.favorites,["pibo"]);assert.deepEqual(s.recent,["studio"]);assert.ok(!s.nickname.includes("<"));assert.ok(!("privateData"in s));assert.ok(s.updatedAt.length<=32)});
@@ -73,7 +73,7 @@ test("Quizantworten sind über verschiedene Positionen verteilt",()=>{
  }
 });
 
-test("Kurskatalog bleibt klein und Fortschritts-IDs sind stabil",()=>{assert.ok(load("mein-sd-hub/data.js").length<26000);for(const course of data.academy){assert.equal(course.anzahl,data.academyLessonIds[course.id].length);assert.ok(course.bereich&&course.stufe&&Array.isArray(course.voraussetzungen));assert.deepEqual(require(path.join(root,"mein-sd-hub/kurse",course.id+".js")).map(l=>l.id),data.academyLessonIds[course.id]);}assert.deepEqual(data.sanitizeState({completedLessons:["g-1","p-12"]}).completedLessons,["g-1","p-12"])});
+test("Kurskatalog bleibt klein und Fortschritts-IDs sind stabil",()=>{assert.ok(load("mein-sd-hub/data.js").length<30000);for(const course of data.academy){assert.equal(course.anzahl,data.academyLessonIds[course.id].length);assert.ok(course.bereich&&course.stufe&&Array.isArray(course.voraussetzungen));assert.deepEqual(require(path.join(root,"mein-sd-hub/kurse",course.id+".js")).map(l=>l.id),data.academyLessonIds[course.id]);}assert.deepEqual(data.sanitizeState({completedLessons:["g-1","p-12"]}).completedLessons,["g-1","p-12"])});
 
 test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
  const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
@@ -521,4 +521,21 @@ test("DIN 5008: sichere Form-B-Maße, klare Empfehlung und verlinkte Vorlage",()
  const text=l.schrittePraxis.map(s=>s.text).join(" ");
  for(const pattern of [/übliche Werte nach DIN 5008 \(Form B\)/,/links 25 mm/,/rechts üblicherweise 20 mm/,/45 mm unter/,/zwei Leerzeilen/,/105 mm und 210 mm/,/12 pt/,/keine vorgeschriebene DIN-Schriftgröße/])assert.match(text,pattern);
  assert.ok(l.quellen.some(q=>q.url==="https://desy.zoll-portal.de/inhalte/pdf-dokumente/"));
+});
+
+test("Python-, KI-, C++- und Rust-Lektionen: Muster ohne eval, Lösung besteht, Startcode nicht",()=>{
+ for(const id of ["python-start","python-aufbau","ki-python","cpp-start","cpp-spiele","rust-start"]){
+  const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
+  for(const l of lessons){
+   assert.ok(["python","cpp","rust"].includes(l.sprache),l.id);
+   assert.ok(l.ziel.length>25&&l.schritte.length>=3&&l.fehler.length>=2&&l.merke.length>=2,l.id);
+   for(const s of l.schritte)assert.ok(s.text.split(/[.!?]+/).filter(x=>x.trim()).length>=3&&s.code&&s.erklaerung,l.id+" "+s.titel);
+   assert.equal(l.quiz.length,3,l.id);
+   assert.deepEqual([...new Set(l.quiz.map(q=>q.richtig))].sort(),[0,1,2],l.id);
+   const pr=c=>l.aufgabe.muster.map(m=>new RegExp(m.regex,m.flags||"").test(c));
+   assert.ok(pr(l.aufgabe.loesung).every(Boolean),l.id+" Lösung");
+   assert.ok(!pr(l.start).every(Boolean),l.id+" Startcode");
+   for(const q of l.quellen||[])assert.match(q.url,/^https:\/\//,l.id);
+  }
+ }
 });

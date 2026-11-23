@@ -138,7 +138,7 @@ const A=window.SDAkademieI18n;
 function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
 function renderCourses(){
  clearChildren("courses");
- for(const bereich of ["Programmieren","Computer & Internet","Deutsch","Arbeit & Beruf"]){
+ for(const bereich of ["Programmieren","Python & KI","C++ & Rust","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"]){
   const group=akNode("section","course-group",undefined,$("courses"));
   akNode("h3","",bereich,group);
   const entries=akNode("div","course-group-list",undefined,group);
@@ -227,10 +227,10 @@ function renderCourseFinal(course){
 }
 function academySourceUrl(raw){
  let url;try{url=new URL(raw)}catch{return null}
- const hosts=["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
+ const hosts=["docs.python.org","doc.rust-lang.org","www.learncpp.com","en.cppreference.com","cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","open.hpi.de","ki-campus.org","www.elementsofai.com","www.freecodecamp.org","developers.google.com","course.fast.ai","www.khanacademy.org","www.rust-lang.org","www.python.org","numpy.org","www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
  return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.sprache){renderProgrammLektion(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
 if(l.standHinweis&&l.standQuelle){
  const url=academySourceUrl(l.standQuelle.url);
  if(url){
@@ -369,6 +369,75 @@ function renderCodeLesson(l){
  const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
  const status=akNode("p","message","",wrap);
  studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(status,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}};
+}
+/* Programmier-Lektionen (Python, C++, Rust): Code schreiben, prüfen, Python direkt im Browser ausführen (Pyodide wie im Code-Studio),
+   C++/Rust im Code-Studio ausführen. Prüfungen sind Textmuster (kein eval) plus – bei Python – die erwartete Ausgabe. */
+const SPRACHEN={python:{name:"Python",datei:"main.py"},cpp:{name:"C++",datei:"main.cpp"},rust:{name:"Rust",datei:"src/main.rs"}};
+let pythonLaden=null;
+function pythonBereit(){
+ if(window.SDPython)return Promise.resolve();
+ if(!pythonLaden)pythonLaden=new Promise((ok,nein)=>{const s=document.createElement("script");s.src="/studio/python-browser.js";s.onload=()=>window.SDPython?ok():nein(new Error("Python fehlt"));s.onerror=()=>{pythonLaden=null;nein(new Error("Python konnte nicht geladen werden"))};document.head.appendChild(s)});
+ return pythonLaden;
+}
+function programmZuStudio(baseName,datei,code){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open("sdCodeStudio",1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains("projekte"))db.createObjectStore("projekte",{keyPath:"name"})};
+  req.onerror=()=>reject(req.error);
+  req.onsuccess=()=>{const db=req.result;let number=1;
+   const choose=()=>{const name=baseName+(number===1?"":" ("+number+")");const tx=db.transaction("projekte","readwrite"),store=tx.objectStore("projekte");const check=store.get(name);
+    check.onsuccess=()=>{if(check.result){number++;return}store.add({name,dateien:{[datei]:code},haupt:datei,versionen:[],erstellt:Date.now(),t:Date.now()})};
+    tx.oncomplete=()=>{if(check.result)choose();else{db.close();resolve(name)}};tx.onerror=()=>{db.close();reject(tx.error)}};
+   choose()};
+ });
+}
+function renderProgrammLektion(l){
+ const sp=SPRACHEN[l.sprache]||SPRACHEN.python,area=$("lessonDetail"),wrap=akNode("section","code-lesson",undefined,area);
+ akNode("span","badge",sp.name.toUpperCase()+" · "+l.minutes+" MIN",wrap);
+ if(state.completedLessons.includes(l.id))akNode("p","code-ok","✓ Lektion abgeschlossen.",wrap);
+ akNode("h4","",l.title,wrap);if(l.explanation)akNode("p","ak-intro",l.explanation,wrap);akNode("h5","","Dein Ziel",wrap);akNode("p","",l.ziel,wrap);
+ l.schritte.forEach((step,i)=>{const sec=akNode("section","code-step",undefined,wrap);akNode("h5","",(i+1)+". "+step.titel,sec);mitCode(akNode("p","",undefined,sec),step.text);if(step.code){const pre=akNode("pre","code-example",undefined,sec);node("code","",step.code,pre)}if(step.erklaerung)mitCode(akNode("p","",undefined,sec),step.erklaerung)});
+ akNode("h5","","Häufige Fehler",wrap);const errors=akNode("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=akNode("li","",undefined,errors);akNode("b","",f.titel+": ",li);mitCode(li,f.text)});
+ akNode("h5","","Jetzt selbst schreiben",wrap);akNode("p","",l.aufgabe.text,wrap);
+ const key="prog:"+l.id;if(!academyDrafts.has(key))academyDrafts.set(key,{code:l.start,eingabe:l.aufgabe.eingabe||""});const d=academyDrafts.get(key);
+ const label=akNode("label","",sp.name+"-Code ("+sp.datei+")",wrap),ta=akNode("textarea","code-textarea",undefined,wrap);label.style.fontWeight="700";
+ ta.spellcheck=false;ta.autocapitalize="off";ta.autocomplete="off";ta.value=d.code;ta.oninput=()=>{d.code=ta.value};
+ ta.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey){e.preventDefault();const s=ta.selectionStart;ta.setRangeText("    ",s,ta.selectionEnd,"end");d.code=ta.value}});
+ let eingabe=null;
+ if(l.sprache==="python"&&/input\(/.test(l.start+(l.aufgabe.loesung||""))){akNode("label","","Eingaben für das Programm (eine pro Zeile)",wrap);eingabe=akNode("textarea","code-textarea",undefined,wrap);eingabe.style.minHeight="60px";eingabe.value=d.eingabe;eingabe.oninput=()=>{d.eingabe=eingabe.value}}
+ const leiste=akNode("div","code-tabs",undefined,wrap),out=akNode("pre","code-example",undefined,wrap);out.hidden=true;out.setAttribute("aria-live","polite");
+ let letzteAusgabe=null;
+ if(l.sprache==="python"){
+  const run=akNode("button","btn primary small","▶ Ausführen",leiste);run.type="button";
+  run.onclick=async()=>{run.disabled=true;out.hidden=false;out.textContent=A.t("Python wird geladen …");
+   try{await pythonBereit();const vorher=window.ausgabe;let text="";window.ausgabe=t=>{text=String(t);out.textContent=text};
+    const r=await window.SDPython.starten({dateien:{"main.py":d.code},haupt:"main.py",stdin:d.eingabe,zeitlimit:30000});window.ausgabe=vorher;
+    letzteAusgabe=r==="ok"?text.split("\n").slice(2).join("\n"):null;if(r==="fallback")out.textContent=A.t("Python lässt sich gerade nicht im Browser starten (z. B. offline). Öffne die Lektion im Code-Studio.")}
+   catch(e){out.textContent=e.message}finally{run.disabled=false}};
+ }
+ const pruef=akNode("button","btn outline small code-pruefen","Prüfen",leiste);pruef.type="button";
+ const checks=akNode("div","code-checks",undefined,wrap),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,wrap);hint.hidden=true;
+ const loes=akNode("button","btn outline small","Lösung zeigen",wrap);loes.type="button";loes.hidden=true;let fehlversuche=0;
+ pruef.onclick=()=>{checks.replaceChildren();
+  const erg=l.aufgabe.muster.map(m=>{let ok=false;try{ok=new RegExp(m.regex,m.flags||"").test(d.code)}catch(e){ok=false}akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+m.beschreibung,checks);return ok});
+  if(l.sprache==="python"&&Array.isArray(l.aufgabe.ausgabe)&&l.aufgabe.ausgabe.length){
+   const ok=letzteAusgabe!==null&&l.aufgabe.ausgabe.every(s=>letzteAusgabe.includes(s));
+   akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+(letzteAusgabe===null?"Führe dein Programm zuerst mit ▶ Ausführen aus.":"Die Ausgabe enthält: "+l.aufgabe.ausgabe.join(" · ")),checks);erg.push(ok)}
+  else if(l.sprache!=="python")akNode("p","hint","Diese Prüfung liest deinen Code. Ausführen kannst du ihn mit „Im Code-Studio öffnen“.",checks);
+  const alle=erg.every(Boolean);if(!alle)fehlversuche++;hint.hidden=fehlversuche<1;loes.hidden=fehlversuche<2;
+  if(alle)akNode("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks)};
+ loes.onclick=()=>{d.code=l.aufgabe.loesung;ta.value=d.code;checks.replaceChildren()};
+ akNode("h5","","Wissen prüfen",wrap);let richtig=0;
+ l.quiz.forEach((q,qi)=>{const box=akNode("section","code-quiz",undefined,wrap);akNode("h5","",(qi+1)+". "+q.frage,box);const answers=akNode("div","answers",undefined,box),fb=akNode("p","feedback",undefined,box);fb.hidden=true;
+  q.antworten.forEach((a,i)=>{const b=akNode("button","",a,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;
+   if(i!==q.richtig){fb.hidden=false;fb.className="feedback error";A.set(fb,"Noch nicht richtig. "+(q.begruendungen?.[i]||"Lies die Erklärung oben noch einmal."));return}
+   box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);b.classList.add("correct");fb.hidden=false;fb.className="feedback";A.set(fb,"✓ Richtig. "+q.erklaerung);richtig++;
+   if(richtig===l.quiz.length&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();$("lessonDetail").scrollIntoView({block:"start"})}}})});
+ akNode("h5","","Das merkst du dir",wrap);const ul=akNode("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
+ if(Array.isArray(l.quellen)&&l.quellen.length){akNode("h5","","Weiterlernen (kostenlos)",wrap);const ql=akNode("ul","",undefined,wrap);
+  for(const s of l.quellen){const url=academySourceUrl(s.url);if(!url)continue;const li=akNode("li","",undefined,ql),a=akNode("a","",s.titel+" ↗",li);a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";if(s.info)akNode("small",""," · "+s.info,li)}}
+ const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";const st=akNode("p","message","",wrap);
+ studio.onclick=async()=>{studio.disabled=true;try{const name=await programmZuStudio("Akademie – "+l.title,sp.datei,d.code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(st,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}};
 }
 // Deutschland Pfade
 let pathId="start";
