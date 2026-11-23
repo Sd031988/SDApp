@@ -14,6 +14,7 @@ function texte(kurs){
   (l.quiz||[]).forEach(q=>{add(q.frage);(q.antworten||[]).forEach(add);add(q.erklaerung);(q.begruendungen||[]).forEach(add)});
   add(l.tip);(l.schrittePraxis||[]).forEach(s=>{add(s.titel);add(s.text)});(l.uebungen||[]).forEach(u=>{add(u.titel);add(u.aufgabe);add(u.tipp);add(u.erklaerung);(u.typ==="auswahl"?u.antworten:[]).forEach(add);(u.typ==="reihenfolge"?u.start:[]).forEach(add);(u.paare||[]).forEach(p=>add(p[0]));(u.luecken||[]).forEach(add);(u.checkliste||[]).forEach(add)});add(l.standHinweis);if(l.standQuelle)add(l.standQuelle.titel);
  (l.merke||[]).forEach(add);(l.quellen||[]).forEach(q=>{add(q.titel);add(q.info)})}
+ for(const l of L)(l.schritte||[]).forEach(s=>(s.tiefer||[]).forEach(add)); // „Genauer erklärt“ (später ergänzt, deshalb am Ende)
  return out;
 }
 const code=s=>(s.match(/`[^`]*`/g)||[]).sort().join("|");

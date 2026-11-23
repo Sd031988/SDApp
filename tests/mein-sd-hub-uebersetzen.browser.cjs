@@ -15,6 +15,7 @@ async function kursOeffnen(page,base){
  await page.evaluate(()=>{const b=[...document.querySelectorAll("button.course")].find(x=>x.querySelector(".ak-icon")?.textContent==="🐍");b.click()});
  await page.locator(".code-lesson").waitFor();
 }
+async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n=>document.querySelector('.ak-step-balken button[aria-current="step"]')?.dataset.akTitle===n,name))return;await page.locator(".ak-step-nav .ak-weiter").click()}throw new Error("Seite nicht erreicht: "+name)}
 (async()=>{
  await new Promise(r=>server.listen(0,"127.0.0.1",r));const base="http://127.0.0.1:"+server.address().port;
  const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
@@ -49,8 +50,8 @@ async function kursOeffnen(page,base){
   // 2) Feste Übersetzung (Dari) ohne Translator API, wie auf dem iPhone: Texte auf Dari, Code unverändert
   const ohneKI=()=>{try{delete window.Translator;delete self.Translator}catch(e){}Object.defineProperty(window,"Translator",{value:undefined,configurable:true})};
   const ctx2=await browser.newContext({locale:"fa",viewport:{width:390,height:844}});
-  await ctx2.addInitScript(ohneKI);await ctx2.addInitScript(()=>{try{localStorage.setItem("sdSprache","fa")}catch(e){}});
-  const p2=await ctx2.newPage();const err2=[];p2.on("pageerror",e=>err2.push(e.message));await kursOeffnen(p2,base);
+  await ctx2.addInitScript(ohneKI);await ctx2.addInitScript(()=>{try{localStorage.setItem("sdSprache","fa");localStorage.setItem("sdhub.personal.v1",JSON.stringify({completedLessons:["ps-1"]}))}catch(e){}});
+  const p2=await ctx2.newPage();const err2=[];p2.on("pageerror",e=>err2.push(e.message));await kursOeffnen(p2,base);await p2.locator("#lessonList .lesson-btn").first().click();await p2.locator(".code-lesson").waitFor();
   await p2.waitForFunction(()=>/ترجمهٔ ثابت/.test(document.getElementById("akUeHinweis")?.textContent||""),null,{timeout:15000});
   const st=await p2.evaluate(()=>{const ps=[...document.querySelectorAll(".code-lesson p, .code-lesson h4, .code-lesson h5, .code-lesson li, .code-lesson button")].filter(e=>!e.closest("pre,#akUeHinweis"));
    const deutsch=ps.map(e=>{const c=e.cloneNode(true);c.querySelectorAll("code").forEach(x=>x.remove());return c.textContent}).filter(t=>/[äöüß]|\b(und|der|die|das|ist|nicht|mit|eine?)\b/.test(t));
@@ -60,6 +61,7 @@ async function kursOeffnen(page,base){
   assert.equal(st.code,'print("Hallo!")');assert.ok(st.inline.includes("print"),"Inline-Code fehlt");
   assert.equal(st.titel,"اولین برنامهٔ پایتون شما");assert.equal(st.dir,"rtl");
   // Quiz-Rückmeldung ebenfalls auf Dari
+  await zuSeite(p2,"Wissen prüfen");
   await p2.locator(".code-quiz").first().locator(".answers button").nth(1).click();
   await p2.waitForFunction(()=>/کاغذ/.test(document.querySelector(".code-quiz .feedback").textContent));
   // Zurück auf Deutsch: Original, Code unverändert

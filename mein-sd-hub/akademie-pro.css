@@ -67,3 +67,35 @@ html[data-sd-theme="dark"] #akademie{--ak-card:var(--sd-surface,#203129);--ak-in
 #akademie [data-ak-ue="ltr"]{direction:ltr}
 .ak-ue-hinweis{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--ak-soft);border:1px solid var(--ak-line);border-radius:12px;padding:10px 14px;margin:0 0 12px;color:var(--ak-ink)}
 .ak-ue-hinweis p{margin:0;flex:1 1 280px;font-size:.88rem;line-height:1.5}
+
+/* Lektionen Schritt für Schritt (Fortschrittsbalken, eine Seite pro Erklärung, Aufgabe links / Editor rechts) */
+.ak-stepper{position:relative;margin-bottom:28px}
+.ak-step-kopf{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;align-items:center;gap:12px;padding:10px 0 12px;background:var(--white,#fff);border-bottom:1px solid var(--line,#dce8df);margin-bottom:6px}
+.ak-step-balken{display:flex;gap:4px;flex:1;min-width:0;margin:0;padding:0;list-style:none}
+.ak-step-balken li{flex:1;min-width:6px}
+.ak-step-balken button{display:block;width:100%;height:10px;min-height:10px!important;padding:0;border:0;border-radius:6px;background:#d8e6de;cursor:pointer}
+.ak-step-balken button.fertig{background:#5aa883}
+.ak-step-balken button.aktiv{background:#17664d;box-shadow:0 0 0 2px #17664d33}
+.ak-step-balken button:disabled{cursor:not-allowed;opacity:.65}
+.ak-step-zahl{flex:none;font-size:13px;font-weight:700;color:var(--muted,#5e8175);font-variant-numeric:tabular-nums}
+.ak-seite{animation:akEin .18s ease-out}
+@keyframes akEin{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ak-seite{animation:none}}
+.ak-seite>.code-step{border-bottom:0}
+.ak-seite .code-step p,.ak-tiefer p{font-size:16px;line-height:1.75;max-width:72ch}
+.ak-tiefer{margin:18px 0 6px;padding:14px 16px;border-left:4px solid #5aa883;background:#f2f8f4;border-radius:0 10px 10px 0}
+.ak-tiefer h6{margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#17664d}
+.ak-step-plan{padding-left:22px;line-height:1.9}
+.ak-fehler-liste li{margin:10px 0;line-height:1.65}
+.ak-step-nav{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#dce8df)}
+.ak-step-nav .btn{margin:0!important}
+.ak-step-sperre{font-size:13px;color:var(--muted,#5e8175)}
+.ak-step-nav .btn.ak-puls{animation:akPuls 1.2s ease-in-out 2}
+@keyframes akPuls{50%{box-shadow:0 0 0 6px #17664d33}}
+.ak-split{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.ak-split-text,.ak-split-code{min-width:0}
+@media (min-width:980px){.ak-split{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}.ak-split-code{position:sticky;top:64px;align-self:start}}
+.ak-split-code .code-frame{height:280px}
+.ak-xp{display:inline-block;padding:8px 14px;border-radius:999px;background:#fff4d6;color:#6b4b00;font-weight:800}
+.code-quiz .answers button.falsch{border-color:#c9625a}
+#lessonDetail:has(.ak-stepper):not(.ak-am-ende) .ak-lektion-nav{display:none}

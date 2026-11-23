@@ -383,50 +383,135 @@ function academyToStudio(baseName,code){
   };
  });
 }
+/* Lektionen Schritt für Schritt (Aufbau wie bei boot.dev): eine Erklärung pro Seite, Fortschrittsbalken oben,
+   „Weiter“ schaltet die nächste Seite frei. Die eigene Aufgabe und das Quiz müssen bestanden sein, bevor es weitergeht.
+   Der Stand bleibt beim Neuzeichnen erhalten (nur im Speicher dieser Seite). */
+const lektionsStand=new Map();
+function lektionsStepper(wrap,l){
+ const gelernt=state.completedLessons.includes(l.id);
+ const kopf=node("div","ak-step-kopf",undefined,wrap),balken=node("ol","ak-step-balken",undefined,kopf),zahl=akNode("span","ak-step-zahl","Schritt 1 von 1",kopf);
+ A.attr(balken,"aria-label","Fortschritt in dieser Lektion");
+ const inhalt=node("div","ak-step-inhalt",undefined,wrap),nav=node("div","ak-step-nav",undefined,wrap);
+ const zur=akNode("button","btn outline small ak-zurueck","← Zurück",nav),wei=akNode("button","btn primary small ak-weiter","Weiter →",nav);zur.type="button";wei.type="button";
+ const sperrHinweis=akNode("span","ak-step-sperre","",nav);
+ const merk=lektionsStand.get(l.id)||{pos:0,frei:0};lektionsStand.set(l.id,merk);
+ const seiten=[];
+ function zeige(i,scroll){
+  i=Math.max(0,Math.min(i,seiten.length-1));merk.pos=i;if(gelernt)merk.frei=seiten.length-1;
+  seiten.forEach((s,k)=>{s.el.hidden=k!==i;s.seg.classList.toggle("aktiv",k===i);s.seg.classList.toggle("fertig",k<i||k<merk.frei||gelernt);s.seg.disabled=k>merk.frei;s.seg.setAttribute("aria-current",k===i?"step":"false")});
+  A.set(zahl,"Schritt "+(i+1)+" von "+seiten.length);
+  zur.disabled=i===0;const letzte=i===seiten.length-1;wei.hidden=letzte;wei.disabled=!seiten[i].offen;wei.classList.remove("ak-puls");
+  A.set(sperrHinweis,letzte||seiten[i].offen?"":seiten[i].sperrText);
+  $("lessonDetail").classList.toggle("ak-am-ende",letzte);
+  if(scroll)kopf.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+ }
+ function seite(name,sperrText){
+  const el=node("section","ak-seite",undefined,inhalt);el.hidden=true;
+  const li=node("li","",undefined,balken),seg=node("button","",undefined,li);seg.type="button";A.attr(seg,"aria-label",name);A.attr(seg,"title",name);
+  const s={el,seg,name,sperrText:sperrText||"",offen:!sperrText||gelernt};
+  s.freigeben=()=>{if(s.offen)return;s.offen=true;if(seiten[merk.pos]===s){wei.disabled=false;wei.classList.add("ak-puls");A.set(sperrHinweis,"")}};
+  seg.onclick=()=>{const k=seiten.indexOf(s);if(k<=merk.frei)zeige(k,true)};
+  seiten.push(s);return s;
+ }
+ wei.onclick=()=>{const i=merk.pos;if(!seiten[i].offen)return;merk.frei=Math.max(merk.frei,i+1);zeige(i+1,true)};
+ zur.onclick=()=>zeige(merk.pos-1,true);
+ return {seite,start(){zeige(merk.pos,false)}};
+}
+function lektionsUeberblick(st,l,label){
+ const w=st.seite("Übersicht").el;
+ akNode("span","badge",label,w);
+ if(state.completedLessons.includes(l.id))akNode("p","code-ok","✓ Lektion abgeschlossen.",w);
+ akNode("h4","",l.title,w);if(l.explanation)akNode("p","ak-intro",l.explanation,w);
+ akNode("h5","","Dein Ziel",w);akNode("p","",l.ziel,w);
+ akNode("h5","","In dieser Lektion",w);const ol=node("ol","ak-step-plan",undefined,w);
+ l.schritte.forEach(s=>akNode("li","",s.titel,ol));
+ akNode("li","","Häufige Fehler",ol);akNode("li","","Jetzt selbst schreiben",ol);akNode("li","","Wissen prüfen",ol);
+}
+function tieferAbschnitt(sec,step){
+ if(!Array.isArray(step.tiefer)||!step.tiefer.length)return;
+ const box=node("div","ak-tiefer",undefined,sec);akNode("h6","","Genauer erklärt",box);
+ step.tiefer.forEach(t=>mitCode(akNode("p","",undefined,box),t));
+}
+function lektionsFehler(st,l){
+ const w=st.seite("Häufige Fehler").el;akNode("h5","","Häufige Fehler",w);
+ const ul=node("ul","ak-fehler-liste",undefined,w);
+ l.fehler.forEach(f=>{const li=akNode("li","",undefined,ul);akNode("b","",f.titel+": ",li);mitCode(li,f.text)});
+}
+function lektionsQuiz(st,l,beiFertig){
+ const s=st.seite("Wissen prüfen","Beantworte alle Fragen richtig, dann geht es weiter."),w=s.el;
+ akNode("h5","","Wissen prüfen",w);let richtig=0;
+ l.quiz.forEach((q,qi)=>{const box=akNode("section","code-quiz",undefined,w);akNode("h5","",(qi+1)+". "+q.frage,box);const answers=akNode("div","answers",undefined,box),fb=akNode("p","feedback",undefined,box);fb.hidden=true;
+  q.antworten.forEach((a,i)=>{const b=akNode("button","",a,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;
+   if(i!==q.richtig){fb.hidden=false;fb.className="feedback error";A.set(fb,"Noch nicht richtig. "+(q.begruendungen?.[i]||"Lies die Erklärung oben noch einmal."));b.classList.add("falsch");return}
+   box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);b.classList.add("correct");fb.hidden=false;fb.className="feedback";A.set(fb,"✓ Richtig. "+q.erklaerung);richtig++;
+   if(richtig===l.quiz.length){s.freigeben();beiFertig()}}})});
+}
+function lektionsAbschluss(st,l,extra){
+ const w=st.seite("Das merkst du dir").el;
+ if(state.completedLessons.includes(l.id)){const b=akNode("p","ak-xp","🏆 Lektion geschafft · +100 XP",w);b.setAttribute("role","status");akNode("p","hint","Dein Stand: "+(state.completedLessons.length*100)+" XP",w)}
+ akNode("h5","","Das merkst du dir",w);const ul=akNode("ul","",undefined,w);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
+ if(Array.isArray(l.quellen)&&l.quellen.length){akNode("h5","","Weiterlernen (kostenlos)",w);const ql=akNode("ul","",undefined,w);
+  for(const q of l.quellen){const url=academySourceUrl(q.url);if(!url)continue;const li=akNode("li","",undefined,ql),a=akNode("a","",q.titel+" ↗",li);a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";if(q.info)akNode("small",""," · "+q.info,li)}}
+ extra(w);
+}
+let pythonNichtVerfuegbar=false;
+async function pythonLauf(code,stdin,out){
+ out.hidden=false;out.textContent=A.t("Python wird geladen …");
+ try{await pythonBereit()}catch(e){pythonNichtVerfuegbar=true;throw e}
+ const vorher=window.ausgabe;let text="";window.ausgabe=t=>{text=String(t);out.textContent=text};
+ try{const r=await window.SDPython.starten({dateien:{"main.py":code},haupt:"main.py",stdin:stdin||"",zeitlimit:30000});
+  if(r==="fallback"){pythonNichtVerfuegbar=true;out.textContent=A.t("Python lässt sich gerade nicht im Browser starten (z. B. offline). Öffne die Lektion im Code-Studio.");return null}
+  return r==="ok"?text.split("\n").slice(2).join("\n"):null}
+ finally{window.ausgabe=vorher}
+}
+function schrittSeiten(st,l,python){
+ l.schritte.forEach((step,i)=>{const sec=akNode("section","code-step",undefined,st.seite(step.titel).el);akNode("h5","",(i+1)+". "+step.titel,sec);
+  const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)&&voll!==erkl?voll.slice(0,-erkl.length).trim():voll;
+  mitCode(akNode("p","",undefined,sec),ohneDoppel);
+  if(step.code){const pre=akNode("pre","code-example",undefined,sec);node("code","",step.code,pre);
+   if(python&&!/input\(/.test(step.code)){const b=akNode("button","btn outline small","▶ Beispiel ausführen",sec);b.type="button";const out=akNode("pre","code-example prog-ausgabe",undefined,sec);out.hidden=true;out.setAttribute("aria-live","polite");
+    b.onclick=async()=>{b.disabled=true;try{await pythonLauf(step.code,"",out)}catch(e){out.textContent=e.message}finally{b.disabled=false}}}}
+  if(erkl&&erkl!==ohneDoppel)mitCode(akNode("p","",undefined,sec),erkl);
+  tieferAbschnitt(sec,step);
+ });
+}
 function renderCodeLesson(l){
- const area=$("lessonDetail"),wrap=akNode("section","code-lesson",undefined,area);
- akNode("span","badge","PRAXIS · "+l.minutes+" MIN",wrap);
- akNode("h4","",l.title,wrap);if(l.explanation)akNode("p","ak-intro",l.explanation,wrap);akNode("h5","","Dein Ziel",wrap);akNode("p","",l.ziel,wrap);
- l.schritte.forEach((step,i)=>{const sec=akNode("section","code-step",undefined,wrap);akNode("h5","",(i+1)+". "+step.titel,sec);const erkl=String(step.erklaerung||"").trim(),voll=String(step.text||"").trim(),ohneDoppel=erkl&&voll.endsWith(erkl)?voll.slice(0,-erkl.length).trim():voll;mitCode(akNode("p","",undefined,sec),ohneDoppel);if(step.code){const pre=akNode("pre","code-example",undefined,sec);node("code","",step.code,pre);if(erkl)mitCode(akNode("p","",undefined,sec),erkl)}});
- akNode("h5","","Häufige Fehler",wrap);const errors=akNode("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=akNode("li","",undefined,errors);akNode("b","",f.titel+": ",li);mitCode(li,f.text)});
- akNode("h5","","Jetzt selbst schreiben",wrap);
+ const area=$("lessonDetail"),wrap=akNode("section","code-lesson ak-stepper",undefined,area),st=lektionsStepper(wrap,l);
+ lektionsUeberblick(st,l,"PRAXIS · "+l.minutes+" MIN");
+ schrittSeiten(st,l,false);
+ lektionsFehler(st,l);
  const code=academyDrafts.get(l.id)||{...l.beispiel};academyDrafts.set(l.id,code);
- const grid=akNode("div","code-workspace",undefined,wrap),editor=akNode("div","code-editor",undefined,grid);
+ const auf=st.seite("Jetzt selbst schreiben","Bestehe zuerst alle Prüfungen deiner Aufgabe."),split=node("div","ak-split",undefined,auf.el);
+ const links=node("div","ak-split-text",undefined,split),rechts=node("div","ak-split-code",undefined,split);
+ akNode("h5","","Jetzt selbst schreiben",links);akNode("p","",l.aufgabe.text,links);
+ if(l.projektLink&&/^\/mein-sd-hub\/p4-(?:quiz\.html|module\/index\.html)$/.test(l.projektLink)){const link=akNode("a","btn outline small","Vollständiges Praxisprojekt öffnen",links);link.href=l.projektLink;link.target="_blank";link.rel="noopener noreferrer"}
+ const editor=node("div","code-editor",undefined,rechts);
  const tabs=akNode("div","code-tabs",undefined,editor),label=akNode("label","",undefined,editor),textarea=akNode("textarea","code-textarea",undefined,editor);
  textarea.spellcheck=false;textarea.autocapitalize="off";textarea.autocomplete="off";textarea.autocorrect="off";
- const keys=[["html","HTML"],["css","CSS"],["js","JavaScript"]];
- let active="html",timer;
+ const keys=[["html","HTML"],["css","CSS"],["js","JavaScript"]];let active="html",timer;const buttons={};
  function select(key){active=key;A.set(label,key.toUpperCase()+" bearbeiten");textarea.value=code[key];keys.forEach(([k])=>buttons[k].setAttribute("aria-pressed",String(k===key)))}
- const buttons={};
  keys.forEach(([key,title])=>{const b=akNode("button","",title,tabs);b.type="button";buttons[key]=b;b.onclick=()=>select(key)});
- const view=akNode("div","code-preview",undefined,grid);akNode("strong","","Live-Vorschau",view);
+ const view=akNode("div","code-preview",undefined,rechts);akNode("strong","","Live-Vorschau",view);
  const frame=akNode("iframe","code-frame",undefined,view);frame.setAttribute("sandbox","allow-scripts");A.attr(frame,"title","Vorschau deiner Webseite");
  const update=()=>{frame.srcdoc=previewHtml(code)};
  textarea.addEventListener("input",()=>{code[active]=textarea.value;clearTimeout(timer);timer=setTimeout(update,400)});
  select(active);update();
  const reset=akNode("button","btn outline small","Zurücksetzen",editor);reset.type="button";reset.onclick=()=>{if(!confirm(A.t("Deinen Code durch den Startcode ersetzen?")))return;Object.assign(code,l.beispiel);select(active);update()};
- akNode("h5","","Deine Aufgabe",wrap);akNode("p","",l.aufgabe.text,wrap);
- if(l.projektLink&&/^\/mein-sd-hub\/p4-(?:quiz\.html|module\/index\.html)$/.test(l.projektLink)){const link=akNode("a","btn outline small","Vollständiges Praxisprojekt öffnen",wrap);link.href=l.projektLink;link.target="_blank";link.rel="noopener noreferrer";}
- const checks=akNode("div","code-checks",undefined,wrap),check=akNode("button","btn outline small code-pruefen","Prüfen",wrap);check.type="button";
- const hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,wrap);hint.hidden=true;
- const solution=akNode("button","btn outline small","Lösung zeigen",wrap);solution.type="button";solution.hidden=true;
- let failures=0,passed=false;
+ const check=akNode("button","btn primary small code-pruefen","Prüfen",links);check.type="button";
+ const checks=akNode("div","code-checks",undefined,links),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,links);hint.hidden=true;
+ const solution=akNode("button","btn outline small","Lösung zeigen",links);solution.type="button";solution.hidden=true;
+ let failures=0;
  check.onclick=()=>{checks.replaceChildren();const doc=new DOMParser().parseFromString(code.html,"text/html");
   const results=l.aufgabe.pruefungen.map(p=>{const ok=D.pruefeCode(p.test,code,doc);akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+p.beschreibung,checks);return ok});
-  passed=results.every(Boolean);if(!passed)failures++;hint.hidden=failures<2;solution.hidden=failures<3;
-  if(passed)akNode("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks);
- };
- solution.onclick=()=>{Object.assign(code,l.aufgabe.loesung);select(active);update();checks.replaceChildren();passed=false};
- akNode("h5","","Wissen prüfen",wrap);
- let correct=0;const quizBoxes=[];
- l.quiz.forEach((q,qi)=>{const box=akNode("section","code-quiz",undefined,wrap);quizBoxes.push(box);akNode("h5","",(qi+1)+". "+q.frage,box);const answers=akNode("div","answers",undefined,box),feedback=akNode("p","feedback",undefined,box);feedback.hidden=true;
- q.antworten.forEach((answer,i)=>{const b=akNode("button","",answer,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);if(i===q.richtig)correct++;feedback.hidden=false;A.set(feedback,(i===q.richtig?"✓ Richtig. ":"Noch nicht richtig. ")+(q.begruendungen?.[i]||"")+" "+q.erklaerung);feedback.classList.toggle("error",i!==q.richtig);if(quizBoxes.every(x=>x.dataset.done)&&correct===l.quiz.length&&passed&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}}});
- });
- if(l.uebungen&&window.SDAkademieUebungen){akNode("h5","","Weitere Übungen",wrap);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(wrap,u))}
- akNode("h5","","Das merkst du dir",wrap);const ul=akNode("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
- const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";
- const status=akNode("p","message","",wrap);
- studio.onclick=async()=>{studio.disabled=true;const baseName="Akademie – "+l.title;try{const name=await academyToStudio(baseName,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(status,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}};
+  const passed=results.every(Boolean);if(!passed)failures++;hint.hidden=failures<2;solution.hidden=failures<3;
+  if(passed){akNode("p","code-ok","Sehr gut! Weiter geht es mit dem Quiz.",checks);auf.freigeben()}};
+ solution.onclick=()=>{Object.assign(code,l.aufgabe.loesung);select(active);update();checks.replaceChildren()};
+ lektionsQuiz(st,l,()=>{if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderDashboard();renderCourses()}});
+ if(l.uebungen&&window.SDAkademieUebungen){const w=st.seite("Weitere Übungen").el;akNode("h5","","Weitere Übungen",w);l.uebungen.forEach(u=>window.SDAkademieUebungen.render(w,u))}
+ lektionsAbschluss(st,l,w=>{
+  const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",w);studio.type="button";const status=akNode("p","message","",w);
+  studio.onclick=async()=>{studio.disabled=true;try{const name=await academyToStudio("Akademie – "+l.title,code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(status,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}}});
+ st.start();
 }
 /* Programmier-Lektionen (Python, C++, Rust): Code schreiben, prüfen, Python direkt im Browser ausführen (Pyodide wie im Code-Studio),
    C++/Rust im Code-Studio ausführen. Prüfungen sind Textmuster (kein eval) plus – bei Python – die erwartete Ausgabe. */
@@ -450,52 +535,40 @@ function programmZuStudio(baseName,datei,code){
  });
 }
 function renderProgrammLektion(l){
- const sp=SPRACHEN[l.sprache]||SPRACHEN.python,area=$("lessonDetail"),wrap=akNode("section","code-lesson",undefined,area);
- akNode("span","badge",sp.name.toUpperCase()+" · "+l.minutes+" MIN",wrap);
- if(state.completedLessons.includes(l.id))akNode("p","code-ok","✓ Lektion abgeschlossen.",wrap);
- akNode("h4","",l.title,wrap);if(l.explanation)akNode("p","ak-intro",l.explanation,wrap);akNode("h5","","Dein Ziel",wrap);akNode("p","",l.ziel,wrap);
- l.schritte.forEach((step,i)=>{const sec=akNode("section","code-step",undefined,wrap);akNode("h5","",(i+1)+". "+step.titel,sec);mitCode(akNode("p","",undefined,sec),step.text);if(step.code){const pre=akNode("pre","code-example",undefined,sec);node("code","",step.code,pre)}if(step.erklaerung)mitCode(akNode("p","",undefined,sec),step.erklaerung)});
- akNode("h5","","Häufige Fehler",wrap);const errors=akNode("ul","",undefined,wrap);l.fehler.forEach(f=>{const li=akNode("li","",undefined,errors);akNode("b","",f.titel+": ",li);mitCode(li,f.text)});
- akNode("h5","","Jetzt selbst schreiben",wrap);akNode("p","",l.aufgabe.text,wrap);
+ const sp=SPRACHEN[l.sprache]||SPRACHEN.python,area=$("lessonDetail"),wrap=akNode("section","code-lesson ak-stepper",undefined,area),st=lektionsStepper(wrap,l);
+ lektionsUeberblick(st,l,sp.name.toUpperCase()+" · "+l.minutes+" MIN");
+ schrittSeiten(st,l,l.sprache==="python");
+ lektionsFehler(st,l);
  const key="prog:"+l.id;if(!academyDrafts.has(key))academyDrafts.set(key,{code:l.start,eingabe:l.aufgabe.eingabe||""});const d=academyDrafts.get(key);
- const label=akNode("label","",sp.name+"-Code ("+sp.datei+")",wrap),ta=akNode("textarea","code-textarea",undefined,wrap);label.style.fontWeight="700";
+ const auf=st.seite("Jetzt selbst schreiben","Bestehe zuerst alle Prüfungen deiner Aufgabe."),split=node("div","ak-split",undefined,auf.el);
+ const links=node("div","ak-split-text",undefined,split),rechts=node("div","ak-split-code",undefined,split);
+ akNode("h5","","Jetzt selbst schreiben",links);akNode("p","",l.aufgabe.text,links);
+ const label=akNode("label","",sp.name+"-Code ("+sp.datei+")",rechts),ta=akNode("textarea","code-textarea",undefined,rechts);label.style.fontWeight="700";
  ta.spellcheck=false;ta.autocapitalize="off";ta.autocomplete="off";ta.value=d.code;ta.oninput=()=>{d.code=ta.value};
  ta.addEventListener("keydown",e=>{if(e.key==="Tab"&&!e.shiftKey){e.preventDefault();const s=ta.selectionStart;ta.setRangeText("    ",s,ta.selectionEnd,"end");d.code=ta.value}});
- let eingabe=null;
- if(l.sprache==="python"&&/input\(/.test(l.start+(l.aufgabe.loesung||""))){akNode("label","","Eingaben für das Programm (eine pro Zeile)",wrap);eingabe=akNode("textarea","code-textarea",undefined,wrap);eingabe.style.minHeight="60px";eingabe.value=d.eingabe;eingabe.oninput=()=>{d.eingabe=eingabe.value}}
- const leiste=akNode("div","code-tabs",undefined,wrap),out=akNode("pre","code-example prog-ausgabe",undefined,wrap);out.hidden=true;out.setAttribute("aria-live","polite");
+ if(l.sprache==="python"&&/input\(/.test(l.start+(l.aufgabe.loesung||""))){akNode("label","","Eingaben für das Programm (eine pro Zeile)",rechts);const eingabe=akNode("textarea","code-textarea",undefined,rechts);eingabe.style.minHeight="60px";eingabe.value=d.eingabe;eingabe.oninput=()=>{d.eingabe=eingabe.value}}
+ const leiste=akNode("div","code-tabs",undefined,rechts),out=akNode("pre","code-example prog-ausgabe",undefined,rechts);out.hidden=true;out.setAttribute("aria-live","polite");
  let letzteAusgabe=null;
- if(l.sprache==="python"){
-  const run=akNode("button","btn primary small","▶ Ausführen",leiste);run.type="button";
-  run.onclick=async()=>{run.disabled=true;out.hidden=false;out.textContent=A.t("Python wird geladen …");
-   try{await pythonBereit();const vorher=window.ausgabe;let text="";window.ausgabe=t=>{text=String(t);out.textContent=text};
-    const r=await window.SDPython.starten({dateien:{"main.py":d.code},haupt:"main.py",stdin:d.eingabe,zeitlimit:30000});window.ausgabe=vorher;
-    letzteAusgabe=r==="ok"?text.split("\n").slice(2).join("\n"):null;if(r==="fallback")out.textContent=A.t("Python lässt sich gerade nicht im Browser starten (z. B. offline). Öffne die Lektion im Code-Studio.")}
-   catch(e){out.textContent=e.message}finally{run.disabled=false}};
- }
+ if(l.sprache==="python"){const run=akNode("button","btn primary small","▶ Ausführen",leiste);run.type="button";
+  run.onclick=async()=>{run.disabled=true;try{letzteAusgabe=await pythonLauf(d.code,d.eingabe,out)}catch(e){out.textContent=e.message}finally{run.disabled=false}}}
  const pruef=akNode("button","btn outline small code-pruefen","Prüfen",leiste);pruef.type="button";
- const checks=akNode("div","code-checks",undefined,wrap),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,wrap);hint.hidden=true;
- const loes=akNode("button","btn outline small","Lösung zeigen",wrap);loes.type="button";loes.hidden=true;let fehlversuche=0;
+ const checks=akNode("div","code-checks",undefined,links),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,links);hint.hidden=true;
+ const loes=akNode("button","btn outline small","Lösung zeigen",links);loes.type="button";loes.hidden=true;let fehlversuche=0;
  pruef.onclick=()=>{checks.replaceChildren();
   const erg=l.aufgabe.muster.map(m=>{let ok=false;try{ok=new RegExp(m.regex,m.flags||"").test(d.code)}catch(e){ok=false}akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+m.beschreibung,checks);return ok});
-  if(l.sprache==="python"&&Array.isArray(l.aufgabe.ausgabe)&&l.aufgabe.ausgabe.length){
+  if(l.sprache==="python"&&Array.isArray(l.aufgabe.ausgabe)&&l.aufgabe.ausgabe.length&&pythonNichtVerfuegbar&&letzteAusgabe===null)akNode("p","hint","Python läuft auf diesem Gerät gerade nicht. Die Ausgabe wird deshalb nicht geprüft.",checks);
+  else if(l.sprache==="python"&&Array.isArray(l.aufgabe.ausgabe)&&l.aufgabe.ausgabe.length){
    const ok=letzteAusgabe!==null&&l.aufgabe.ausgabe.every(s=>letzteAusgabe.includes(s));
    akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+(letzteAusgabe===null?"Führe dein Programm zuerst mit ▶ Ausführen aus.":"Die Ausgabe enthält: "+l.aufgabe.ausgabe.join(" · ")),checks);erg.push(ok)}
   else if(l.sprache!=="python")akNode("p","hint","Diese Prüfung liest deinen Code. Ausführen kannst du ihn mit „Im Code-Studio öffnen“.",checks);
   const alle=erg.every(Boolean);if(!alle)fehlversuche++;hint.hidden=fehlversuche<1;loes.hidden=fehlversuche<2;
-  if(alle)akNode("p","code-ok","Sehr gut! Jetzt beantworte die Quizfragen.",checks)};
+  if(alle){akNode("p","code-ok","Sehr gut! Weiter geht es mit dem Quiz.",checks);auf.freigeben()}};
  loes.onclick=()=>{d.code=l.aufgabe.loesung;ta.value=d.code;checks.replaceChildren()};
- akNode("h5","","Wissen prüfen",wrap);let richtig=0;
- l.quiz.forEach((q,qi)=>{const box=akNode("section","code-quiz",undefined,wrap);akNode("h5","",(qi+1)+". "+q.frage,box);const answers=akNode("div","answers",undefined,box),fb=akNode("p","feedback",undefined,box);fb.hidden=true;
-  q.antworten.forEach((a,i)=>{const b=akNode("button","",a,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;
-   if(i!==q.richtig){fb.hidden=false;fb.className="feedback error";A.set(fb,"Noch nicht richtig. "+(q.begruendungen?.[i]||"Lies die Erklärung oben noch einmal."));return}
-   box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);b.classList.add("correct");fb.hidden=false;fb.className="feedback";A.set(fb,"✓ Richtig. "+q.erklaerung);richtig++;
-   if(richtig===l.quiz.length&&!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses();$("lessonDetail").scrollIntoView({block:"start"})}}})});
- akNode("h5","","Das merkst du dir",wrap);const ul=akNode("ul","",undefined,wrap);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
- if(Array.isArray(l.quellen)&&l.quellen.length){akNode("h5","","Weiterlernen (kostenlos)",wrap);const ql=akNode("ul","",undefined,wrap);
-  for(const s of l.quellen){const url=academySourceUrl(s.url);if(!url)continue;const li=akNode("li","",undefined,ql),a=akNode("a","",s.titel+" ↗",li);a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";if(s.info)akNode("small",""," · "+s.info,li)}}
- const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",wrap);studio.type="button";const st=akNode("p","message","",wrap);
- studio.onclick=async()=>{studio.disabled=true;try{const name=await programmZuStudio("Akademie – "+l.title,sp.datei,d.code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(st,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}};
+ lektionsQuiz(st,l,()=>{if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}});
+ lektionsAbschluss(st,l,w=>{
+  const studio=akNode("button","btn primary","Im Code-Studio öffnen ↗",w);studio.type="button";const status=akNode("p","message","",w);
+  studio.onclick=async()=>{studio.disabled=true;try{const name=await programmZuStudio("Akademie – "+l.title,sp.datei,d.code);location.href="/studio/index.html?projekt="+encodeURIComponent(name)}catch(e){A.set(status,"Projekt konnte nicht gespeichert werden: "+e.message);studio.disabled=false}}});
+ st.start();
 }
 // Deutschland Pfade
 let pathId="start";

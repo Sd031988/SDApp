@@ -13,6 +13,7 @@ const p=path.resolve(root,rel);if(p!==root&&!p.startsWith(root+path.sep)){res.wr
 fs.readFile(p,(err,body)=>{if(err){res.writeHead(404);return res.end("Not found")}res.writeHead(200,{"Content-Type":mime[path.extname(p)]||"application/octet-stream"});res.end(body)})
 }catch(e){res.writeHead(400);res.end("Bad request")}}
 );
+async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n=>document.querySelector('.ak-step-balken button[aria-current="step"]')?.dataset.akTitle===n,name))return;await page.locator(".ak-step-nav .ak-weiter").click()}throw new Error("Seite nicht erreicht: "+name)}
 (async()=>{
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const port=server.address().port,base="http://127.0.0.1:"+port;
@@ -64,6 +65,7 @@ await page.locator(".lesson-btn").first().waitFor();
 assert.equal(await page.locator(".lesson-btn").count(),12);
 assert.equal(await page.locator(".code-textarea").count(),1);
 assert.equal(await page.locator(".code-frame[sandbox='allow-scripts']").count(),1);
+await zuSeite(page,"Jetzt selbst schreiben");
 await page.locator(".code-textarea").fill("<h1>Meine erste Seite</h1><p>Ich lerne selbst.</p>");
 await page.waitForTimeout(500);
 assert.match(await page.locator(".code-frame").getAttribute("srcdoc"),/Meine erste Seite/);
@@ -117,12 +119,16 @@ for(const width of [320,390,1300]){
 assert.equal(await checkPage.locator(".lesson-btn").count(),12);
  const overflow=await checkPage.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,"Horizontales Scrollen bei "+width+" px: "+overflow);
+ await zuSeite(checkPage,"Jetzt selbst schreiben");
  await checkPage.locator(".code-textarea").fill("<h1>Meine eigene Webseite</h1><p>Ich lerne HTML.</p>");
  await checkPage.waitForTimeout(450);
  assert.match(await checkPage.locator(".code-frame").getAttribute("srcdoc"),/Meine eigene Webseite/);
  await checkPage.locator(".code-pruefen").click();
  assert.equal(await checkPage.locator(".code-checks .code-error").count(),0);
- for(const quiz of await checkPage.locator(".code-quiz").all())await quiz.locator(".answers button").first().click();
+ await checkPage.locator(".ak-step-nav .ak-weiter:not([disabled])").click();
+ const richtige=await checkPage.evaluate(()=>window.SDPersonalData.academy.find(c=>c.id==="code").lessons[0].quiz.map(q=>q.richtig));
+ for(const [qi,quiz] of (await checkPage.locator(".ak-seite:not([hidden]) .code-quiz").all()).entries())await quiz.locator(".answers button").nth(richtige[qi]).click();
+ await zuSeite(checkPage,"Das merkst du dir");
  await checkPage.locator(".code-lesson button").filter({hasText:"Im Code-Studio öffnen"}).click();
  await checkPage.waitForURL(url=>url.pathname==="/studio/index.html"&&url.searchParams.has("projekt"),{timeout:15000});
  const name=new URL(checkPage.url()).searchParams.get("projekt");
