@@ -57,6 +57,7 @@ jobs:
         run: |
           node tests/mein-sd-hub.browser.cjs
           node tests/mein-sd-hub-programmieren.browser.cjs
+          node tests/mein-sd-hub-uebersetzen.browser.cjs
           node tests/hub-homepage.browser.cjs
           node tests/hub/dashboard.browser.cjs
           node tests/mein-sd-hub-theme.browser.cjs
