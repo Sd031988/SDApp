@@ -574,4 +574,30 @@ W("uk-3",
 W("uk-4",
  ["Was ist das offizielle Lernbuch für Rust?", ["Das Rust-Buch auf doc.rust-lang.org", "Ein beliebiger Blog", "Eine App ohne Herkunft"], 0, "Es stammt vom Rust-Projekt selbst."],
  ["Was bringt dich beim Programmierenlernen am weitesten?", ["Regelmäßig üben und eigene kleine Projekte bauen", "Nur Videos ansehen", "Jede Woche eine neue Sprache"], 0, "Praxis festigt Wissen."]);
+
+/* ---------- Cybersecurity: Linux für Cybersicherheit ---------- */
+W("sec1-1",
+ ["Was ist ein Snapshot einer virtuellen Maschine?", ["Ein gespeicherter Zustand, zu dem man zurückkehren kann", "Ein Foto vom Bildschirm", "Ein Virenscanner"], 0, "Nach einem Fehler stellst du den Snapshot wieder her."],
+ ["Was bedeutet die Tilde `~` im Prompt?", ["Dein Home-Verzeichnis", "Die Wurzel des Systems", "Einen Fehler"], 0, "~ steht für /home/BENUTZER."]);
+W("sec1-2",
+ ["Wohin führt `cd ..`?", ["In den übergeordneten Ordner", "In das Home-Verzeichnis", "Zur Wurzel /"], 0, "Zwei Punkte stehen für den Ordner darüber."],
+ ["Wo stehen unter Linux die meisten Einstellungen von Diensten?", ["In /etc", "In /tmp", "In /home/bilder"], 0, "/etc enthält die Konfigurationsdateien."]);
+W("sec1-3",
+ ["Wie hängst du eine Zeile an eine Datei an, ohne den Inhalt zu löschen?", ["`echo \"Text\" >> datei.txt`", "`echo \"Text\" > datei.txt`", "`rm datei.txt`"], 0, ">> hängt an, > überschreibt."],
+ ["Was macht `cp a.txt b.txt`?", ["Kopiert a.txt nach b.txt, a.txt bleibt erhalten", "Benennt a.txt um", "Löscht a.txt"], 0, "Beim Kopieren bleibt das Original unverändert."]);
+W("sec1-4",
+ ["Was zeigt `grep -v CRON syslog`?", ["Alle Zeilen ohne CRON", "Nur Zeilen mit CRON", "Die Anzahl der CRON-Zeilen"], 0, "-v kehrt die Auswahl um."],
+ ["Was ergibt `grep Failed auth.log | wc -l`?", ["Die Anzahl der Zeilen mit Failed", "Alle Wörter der Datei", "Die Dateigröße"], 0, "grep filtert, wc -l zählt die gefilterten Zeilen."]);
+W("sec1-5",
+ ["Was findet `find /tmp -type f -name \"*.sh\"`?", ["Alle Dateien in /tmp, die auf .sh enden", "Alle Ordner namens sh", "Gelöschte Skripte"], 0, "-type f beschränkt auf Dateien, -name auf das Muster."],
+ ["Warum gibt man bei find einen Startordner an?", ["Damit die Suche schneller und übersichtlicher ist", "Weil find sonst nichts findet", "Weil es Pflicht für root ist"], 0, "Die Suche über das ganze System ab / dauert lange."]);
+W("sec1-6",
+ ["Welche Rechte hat eine Datei mit 640?", ["Besitzer lesen/schreiben, Gruppe lesen, andere nichts", "Alle dürfen alles", "Nur andere dürfen lesen"], 0, "6 = rw, 4 = r, 0 = keine Rechte."],
+ ["Was bedeutet `x` bei einem Ordner?", ["Man darf den Ordner betreten", "Man darf ihn löschen", "Er ist versteckt"], 0, "Ohne x kann man nicht in den Ordner wechseln."]);
+W("sec1-7",
+ ["Welche Benutzernummer hat root?", ["0", "1000", "1"], 0, "root hat die UID 0."],
+ ["Was zeigt `id`?", ["Benutzer, Gruppe und Gruppenmitgliedschaften", "Die IP-Adresse", "Das Passwort"], 0, "Die Gruppe sudo zeigt Administratorrechte an."]);
+W("sec1-8",
+ ["Warum sortiert man vor `uniq -c`?", ["Damit gleiche Zeilen nebeneinander stehen und richtig gezählt werden", "Damit die Datei kleiner wird", "Weil uniq sonst nichts ausgibt"], 0, "uniq fasst nur aufeinanderfolgende gleiche Zeilen zusammen."],
+ ["Viele Fehlversuche in wenigen Sekunden von einer Adresse deuten am ehesten auf …", ["ein automatisiertes Werkzeug", "einen Stromausfall", "ein Druckerproblem"], 0, "Menschen tippen nicht so schnell; trotzdem gilt: erst belegen, dann bewerten."]);
 })(typeof window !== "undefined" ? window : globalThis);

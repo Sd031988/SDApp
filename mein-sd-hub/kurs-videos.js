@@ -80,6 +80,10 @@
     "cpp-start": {_kurs: [V("Y7SYP0fv4mc", "C++ Tutorial deutsch 1: „Hallo Welt“")]},
     "rust-start": {_kurs: [V("VBdgdhhb3OE", "RUST Tutorial für Anfänger – Lerne Rust in 60 Minuten (deutsch)")],
       "rs-5": [V("GwVXof81rdM", "Rust Tutorial: Ownership & Borrowing (Englisch)")]},
+    "cyber-linux": {_kurs: [V("jgXvAZ1Djms", "Linux Terminal Tutorial für Anfänger – Teil 1: Befehle ls und cd")],
+      "sec1-2": [V("jgXvAZ1Djms", "Linux Terminal Tutorial für Anfänger – Teil 1: Befehle ls und cd")],
+      "sec1-3": [V("Oho8_foyW44", "Linux Terminal Tutorial für Einsteiger – Teil 2: mkdir, touch und echo")],
+      "sec1-6": [V("hcXA2nePQ4M", "Linux-Rechte erklärt: chmod/chown für Linux, Unix & Raspberry Pi")]},
     "uni-kurse": {"uk-1": [CS50P]},
     "buero-programme": {
       "c4-3": [V("hGe2e8cK7XM", "Geschäftsbrief-Vorlage nach DIN 5008 in Word erstellen")],

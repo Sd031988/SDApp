@@ -230,3 +230,32 @@ html[data-sd-theme="dark"] .ak-fak-arbeit{--fak:#e9c46a}html[data-sd-theme="dark
 .ak-ring-grund{stroke:var(--ak-soft)}
 .ak-ring-wert{stroke:var(--fak);stroke-linecap:round}
 #courses .ak-deutsch-karte .badge{align-self:flex-start}
+/* Cybersecurity */
+.ak-fak-cyber{--fak:#a23b3b}html[data-sd-theme="dark"] .ak-fak-cyber{--fak:#f2a29a}
+.ak-sec-hinweis{border:1px solid #a23b3b55;border-inline-start:4px solid #a23b3b;background:color-mix(in srgb,#a23b3b 6%,var(--ak-card,#fff));border-radius:12px;padding:12px 14px;display:grid;gap:4px;color:var(--ak-ink,inherit);margin:6px 0}
+.ak-sec-hinweis p{margin:0;font-size:.88rem;line-height:1.5}
+.ak-sec-hinweis ul{margin:0;padding-inline-start:1.1em;font-size:.88rem}
+html[data-sd-theme="dark"] .ak-sec-hinweis{border-color:#f2a29a66;border-inline-start-color:#f2a29a}
+/* Übungs-Terminal */
+.ak-term{display:grid;gap:10px;margin:8px 0}
+.ak-term-aufgaben{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ak-term-aufgaben li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border:1px solid var(--ak-line,#d7e6de);background:var(--ak-card,#fff);color:var(--ak-ink,#14332c);opacity:.65}
+.ak-term-aufgaben li.aktiv{opacity:1;border-color:var(--ak-accent,#0f6b52);box-shadow:inset 3px 0 0 var(--ak-accent,#0f6b52)}
+.ak-term-aufgaben li.ok{opacity:1}
+.ak-term-status{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ak-soft,#eef6f1);font-weight:800;font-size:.8rem;flex:none}
+.ak-term-aufgaben li.ok .ak-term-status{background:#2e9c6a;color:#fff}
+.ak-term-aufgaben li>span:nth-child(2){flex:1;min-width:0}
+.ak-term-tipp{border:1px solid var(--ak-line,#d7e6de);background:transparent;color:inherit;border-radius:999px;padding:3px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+.ak-term-tipptext{flex-basis:100%;color:var(--ak-muted,#5a716b)}
+.ak-term-fenster{background:#0d1512;color:#d6f5e3;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;border-radius:12px;padding:12px 14px;min-height:180px;max-height:340px;overflow:auto;border:1px solid #23362e}
+.ak-term-fenster pre{margin:2px 0 6px;white-space:pre-wrap;word-break:break-word;font:inherit}
+.ak-term-befehl{white-space:pre-wrap;word-break:break-word}
+.ak-term-prompt{color:#8fe0b9;font-weight:700}
+.ak-term-fehler{color:#ffb4a8}
+.ak-term-erfolg{color:#f3cf6b;margin:4px 0 8px}
+.ak-term-zeile{display:flex;align-items:center;gap:8px;background:#0d1512;border:1px solid #23362e;border-radius:12px;padding:8px 10px;font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ak-term-zeile .ak-term-prompt{white-space:nowrap}
+.ak-term-zeile input{flex:1;min-width:0;background:transparent;border:0;color:#fff;font:inherit;outline:none}
+.ak-term-zeile:focus-within{outline:3px solid var(--focus,#f9c94c);outline-offset:1px}
+.ak-term-hinweis{margin:0;font-size:.78rem;color:var(--ak-muted,#5a716b)}
+@media (max-width:520px){.ak-term-zeile .ak-term-prompt{max-width:45%;overflow:hidden;text-overflow:ellipsis}}

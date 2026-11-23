@@ -136,8 +136,8 @@ function ladeKurs(id){
 }
 const A=window.SDAkademieI18n;
 function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
-const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"];
-const BEREICH_KLASSE={"Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch","Arbeit & Beruf":"arbeit"};
+const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Cybersecurity","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"];
+const BEREICH_KLASSE={"Cybersecurity":"cyber","Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch","Arbeit & Beruf":"arbeit"};
 /* Wappen der Fakultäten: Schild mit Symbol als feine Linienzeichnung (statische SVG-Bausteine, keine Fremddaten) */
 const WAPPEN_SYMBOL={
  "programmieren":'<path d="M15 17l-5 5 5 5M25 17l5 5-5 5M22.5 14.5l-5 15"/>',
@@ -147,10 +147,11 @@ const WAPPEN_SYMBOL={
  "computer":'<path d="M11 15h18v11H11zM16.5 30.5h7M20 26v4.5"/>',
  "deutsch":'<path d="M11 15h18v10.5h-9l-5 4v-4h-4z"/><path d="M16.5 23l2.5-6 2.5 6M17.4 21h3.2"/>',
  "arbeit":'<path d="M10.5 18.5h19v11h-19zM16 18.5v-3h8v3M10.5 23.5h19"/>',
+ "cyber":'<path d="M14.5 21v-3.6a5.5 5.5 0 0 1 11 0V21"/><path d="M12 21h16v10.5H12z"/><path d="M20 25v3"/>',
  "alle":'<path d="M12 18c3-1.2 6-.8 8 1.2 2-2 5-2.4 8-1.2v10.5c-3-1.2-6-.8-8 1.2-2-2-5-2.4-8-1.2zM20 19.2v10.5"/>'};
 function wappen(klasse,cls){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 40 46");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-fwappen "+(cls||""));
  s.innerHTML='<path class="ak-fw-grund" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><path class="ak-fw-rand" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><g class="ak-fw-sym">'+(WAPPEN_SYMBOL[klasse]||WAPPEN_SYMBOL.alle)+'</g>';return s}
-const KURS_CODE={"code":"WEB 101","webdesign":"WEB 102","javascript":"JS 101","javascript-aufbau":"JS 201","saubere-webapps":"JS 301","python-start":"PY 101","python-aufbau":"PY 201","ki-python":"KI 101","cpp-start":"CPP 101","cpp-spiele":"CPP 201","rust-start":"RS 101","uni-kurse":"UNI 100","digital":"IT 101","internet-email":"IT 102","sicher-im-netz":"IT 201","buero-programme":"IT 202","digitale-profiwerkzeuge":"IT 301","arbeit-finden":"BER 101","career":"BER 102","gespraech-arbeitsstart":"BER 103","arbeitsvertrag-rechte":"BER 201","weiterkommen":"BER 202"};
+const KURS_CODE={"cyber-linux":"SEC 101","code":"WEB 101","webdesign":"WEB 102","javascript":"JS 101","javascript-aufbau":"JS 201","saubere-webapps":"JS 301","python-start":"PY 101","python-aufbau":"PY 201","ki-python":"KI 101","cpp-start":"CPP 101","cpp-spiele":"CPP 201","rust-start":"RS 101","uni-kurse":"UNI 100","digital":"IT 101","internet-email":"IT 102","sicher-im-netz":"IT 201","buero-programme":"IT 202","digitale-profiwerkzeuge":"IT 301","arbeit-finden":"BER 101","career":"BER 102","gespraech-arbeitsstart":"BER 103","arbeitsvertrag-rechte":"BER 201","weiterkommen":"BER 202"};
 const SVG_ICON={uhr:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',buch:'<path d="M4.5 6c2.5-1 5-.8 7.5 1 2.5-1.8 5-2 7.5-1v12c-2.5-1-5-.8-7.5 1-2.5-1.8-5-2-7.5-1zM12 7v12"/>'};
 function linienIcon(name){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 24 24");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-licon");s.innerHTML=SVG_ICON[name]||"";return s}
 function fortschrittsRing(anteil){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 36 36");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-ring");
@@ -363,6 +364,7 @@ function renderLessonList(){
   const meta=node("div","ak-kursmeta",undefined,kopf);
   [c.bereich,c.stufe,dauerText(c.dauer||ids.length*30),ids.length+" Lektionen","✓ "+fertig+" / "+ids.length+" erledigt","Kostenlos · ohne Konto"].forEach(x=>akNode("span","",x,meta));
   const ziele=c.lessons.map(l=>l.ziel||l.explanation).filter(Boolean).slice(0,6);
+  if(c.bereich==="Cybersecurity")sicherheitsHinweis(kopf,false);
   if(ziele.length){const box=node("details","ak-lernziele",undefined,kopf);akNode("summary","","Was du in diesem Kurs lernst",box);const ul=node("ul","",undefined,box);ul.lang="de";ziele.forEach(z=>node("li","",z,ul))}}
  c.lessons.forEach(l=>{
   const btn=akNode("button","lesson-btn"+(l.id===lessonId?" active":""),undefined,$("lessonList"));
@@ -415,10 +417,10 @@ function renderCourseFinal(course){
 }
 function academySourceUrl(raw){
  let url;try{url=new URL(raw)}catch{return null}
- const hosts=["docs.python.org","doc.rust-lang.org","www.learncpp.com","en.cppreference.com","cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","open.hpi.de","ki-campus.org","www.elementsofai.com","www.freecodecamp.org","developers.google.com","course.fast.ai","www.khanacademy.org","www.rust-lang.org","www.python.org","numpy.org","www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
+ const hosts=["docs.python.org","doc.rust-lang.org","www.learncpp.com","en.cppreference.com","cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","open.hpi.de","ki-campus.org","www.elementsofai.com","www.freecodecamp.org","developers.google.com","course.fast.ai","www.khanacademy.org","www.rust-lang.org","www.python.org","numpy.org","www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de","ubuntu.com","help.ubuntu.com","man7.org","www.sudo.ws","www.virtualbox.org","www.bsi.bund.de","owasp.org","portswigger.net","tryhackme.com"];
  return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;try{if(L)L.zuletzt(courseId,l.id)}catch(e){}A.notice($("lessonDetail"));if(l.sprache){renderProgrammLektion(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;try{if(L)L.zuletzt(courseId,l.id)}catch(e){}A.notice($("lessonDetail"));if(l.sprache){renderProgrammLektion(l);return}if(l.terminal&&l.schritte){renderTerminalLektion(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
 if(l.standHinweis&&l.standQuelle){
  const url=academySourceUrl(l.standQuelle.url);
  if(url){
@@ -453,6 +455,7 @@ if(Array.isArray(l.quiz)){
   quizArea.replaceChildren();
   if(index>=l.quiz.length){
    akNode("p","feedback","✓ Alle drei Verständnisfragen richtig beantwortet.",quizArea);
+   try{if(L)L.geschafft(courseId,l)}catch(e){}
    if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}
    return;
   }
@@ -556,7 +559,8 @@ function lektionsUeberblick(st,l,label){
  akNode("h5","","Dein Ziel",w);akNode("p","",l.ziel,w);
  akNode("h5","","In dieser Lektion",w);const ol=node("ol","ak-step-plan",undefined,w);
  l.schritte.forEach(s=>akNode("li","",s.titel,ol));
- akNode("li","","Häufige Fehler",ol);akNode("li","","Jetzt selbst schreiben",ol);akNode("li","","Wissen prüfen",ol);
+ akNode("li","","Häufige Fehler",ol);akNode("li","",l.terminal?"Im Terminal üben":"Jetzt selbst schreiben",ol);akNode("li","","Wissen prüfen",ol);
+ if(findCourse(courseId)?.bereich==="Cybersecurity")sicherheitsHinweis(w,true);
 }
 function tieferAbschnitt(sec,step){
  if(!Array.isArray(step.tiefer)||!step.tiefer.length)return;
@@ -594,6 +598,29 @@ function hilfeLeiter(links,l,offen,hint,loes){
   if(stufe>=2)hint.hidden=false;
   if(stufe>=3){loes.hidden=false;b.disabled=true;A.set(b,"Hilfe 3/3")}else A.set(b,stufe===1?"Hilfe 2/3":"Hilfe 3/3")};
  loes.addEventListener("click",()=>{if(L)L.hilfe(l.id,3);if(!loes.dataset.warn){loes.dataset.warn="1";akNode("p","hint","Mit Lösung gibt es für diese Lektion nur 50 XP.",links)}});
+}
+/* Cybersecurity: rechtlicher Hinweis und legale Übungswege (Kurskopf und Lektionsübersicht) */
+const LEGAL_UEBEN=[["TryHackMe – Pre Security (geführte Labs)","https://tryhackme.com/path/outline/presecurity"],["PortSwigger Web Security Academy (kostenlos)","https://portswigger.net/web-security"],["OWASP Juice Shop (absichtlich verwundbare Übungs-App)","https://owasp.org/www-project-juice-shop/"],["§ 202a StGB – Ausspähen von Daten","https://www.gesetze-im-internet.de/stgb/__202a.html"]];
+function sicherheitsHinweis(parent,kurz){
+ const box=akNode("aside","ak-sec-hinweis",undefined,parent);box.setAttribute("role","note");
+ akNode("b","","Nur zur Verteidigung",box);
+ akNode("p","","Diese Kurse bringen dir bei, Systeme zu verstehen und zu schützen. Übe nur auf eigenen Geräten, im Übungs-Terminal oder auf Plattformen, die genau dafür gemacht sind. Wer ohne Erlaubnis auf fremde Systeme zugreift, kann sich strafbar machen (§§ 202a–202d, 303a und 303b StGB).",box);
+ if(kurz)return;
+ akNode("small","","Legal üben:",box);const ul=node("ul","",undefined,box);
+ for(const [t,u] of LEGAL_UEBEN){const url=academySourceUrl(u);if(!url)continue;const a=akNode("a","",t+" ↗",node("li","",undefined,ul));a.href=url.href;a.target="_blank";a.rel="noopener noreferrer"}
+}
+function renderTerminalLektion(l){
+ const area=$("lessonDetail"),wrap=akNode("section","code-lesson ak-stepper",undefined,area),st=lektionsStepper(wrap,l);
+ lektionsUeberblick(st,l,"SICHERHEIT · "+l.minutes+" MIN");
+ schrittSeiten(st,l,false);
+ lektionsFehler(st,l);
+ const s=st.seite("Im Terminal üben","Löse alle Aufgaben im Terminal, dann geht es weiter.");
+ akNode("h5","","Im Terminal üben",s.el);
+ if(window.SDTerminal)window.SDTerminal.erstellen(s.el,l.terminal,()=>s.freigeben());
+ else akNode("p","hint","Das Übungs-Terminal konnte nicht geladen werden. Bitte Seite neu laden.",s.el);
+ lektionsQuiz(st,l,()=>{if(!state.completedLessons.includes(l.id)){state.completedLessons.push(l.id);save();renderCourses()}});
+ lektionsAbschluss(st,l,()=>{});
+ st.start();
 }
 let pythonNichtVerfuegbar=false;
 async function pythonLauf(code,stdin,out){

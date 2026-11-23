@@ -11,6 +11,7 @@ on:
       - "tests/deutsch-praxis*.cjs"
       - "tests/kurs-videos*.cjs"
       - "tests/akademie-lernen*.cjs"
+      - "tests/akademie-terminal*.cjs"
       - "tests/hub-homepage*.cjs"
       - "tests/hub/**"
       - "tests/play-separation*.cjs"
@@ -28,6 +29,7 @@ on:
       - "tests/deutsch-praxis*.cjs"
       - "tests/kurs-videos*.cjs"
       - "tests/akademie-lernen*.cjs"
+      - "tests/akademie-terminal*.cjs"
       - "tests/hub-homepage*.cjs"
       - "tests/hub/**"
       - "tests/play-separation*.cjs"
@@ -68,6 +70,7 @@ jobs:
           node tests/mein-sd-hub-uebersetzen.browser.cjs
           node tests/deutsch-praxis.browser.cjs
           node tests/akademie-lernen.browser.cjs
+          node tests/akademie-terminal.browser.cjs
           node tests/hub-homepage.browser.cjs
           node tests/hub/dashboard.browser.cjs
           node tests/mein-sd-hub-theme.browser.cjs
