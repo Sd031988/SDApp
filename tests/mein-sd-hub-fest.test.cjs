@@ -28,7 +28,9 @@ for(const [l,kurse] of Object.entries(FEST))for(const k of kurse)test("Feste Üb
  const eintraege=Object.entries(d);assert.ok(eintraege.length>100,"zu wenige Einträge");
  const satz=/([A-Za-zÄÖÜäöüß]{2,} +){2,}[A-Za-zÄÖÜäöüß]{2,}/; // mindestens drei Wörter: echter Text, kein Code wie „display: flex“
  let fehlend=[];for(const de of alle)if(satz.test(de.replace(/`[^`]*`/g,""))&&!(de in d))fehlend.push(de);
- assert.ok(fehlend.length<=alle.size*0.02,fehlend.length+" Texte ohne Übersetzung: "+fehlend.slice(0,5).join(" | "));
+ // Deutschkurse: deutsche Beispielsätze, Antworten und Lückensätze bleiben absichtlich deutsch (die Übersetzung steht nur als Hilfe darunter)
+ const deutschKurs=/^(german|deutsch-)/.test(k);
+ assert.ok(fehlend.length<=alle.size*(deutschKurs?0.2:0.02),fehlend.length+" Texte ohne Übersetzung: "+fehlend.slice(0,5).join(" | "));
  for(const [de,tr] of eintraege){assert.ok(alle.has(de),"veralteter Eintrag: "+de);assert.equal(code(tr),code(de),"Code-Stelle verändert: "+de);
   assert.ok(tr.trim().length>0)}
 });

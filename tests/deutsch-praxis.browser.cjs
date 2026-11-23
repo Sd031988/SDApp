@@ -24,13 +24,17 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   await page.locator("[data-pl]").first().waitFor();
   assert.equal(await page.locator("[data-pl]").count(),28,"alle Praxis-Lektionen");
   assert.equal(await page.locator("details.l-praxis[open]").count(),1,"passender Kurs ist aufgeklappt");
+  // Profil spricht Dari (Standard): jede Lektion zeigt ihren Titel zusätzlich auf Dari
+  assert.equal(await page.locator("[data-pl] .l-px-tr[dir=rtl]").count(),28,"Dari-Titel in der Liste");
   await page.locator("[data-pl]").first().click();
   await page.locator("#lPxWei").waitFor();
   const schritte=async()=>page.evaluate(()=>document.querySelector(".l-lhead small").textContent);
   assert.match(await schritte(),/^Schritt 1 von \d+$/);
+  assert.ok(await page.locator("#lPx h2 .l-px-tr[lang=fa]").count()===1&&await page.locator("#lPx p.l-ptext .l-px-tr").count()===1,"Titel und Erklärung auf Dari");
+  let uebungDari=false;
   let quizGesehen=false,uebungen=0;
   for(let i=0;i<20;i++){
-   if(await page.locator("#lPx .ak-uebung").count())uebungen++;
+   if(await page.locator("#lPx .ak-uebung").count()){uebungen++;if(await page.locator("#lPx .ak-uebung .l-px-tr").count())uebungDari=true}
    if(await page.locator("#lPx .l-bq").count()){
     quizGesehen=true;assert.equal(await page.locator("#lPxWei").isDisabled(),true,"Quiz sperrt Weiter");
     const qs=await page.evaluate(()=>window.SDAkademieKurse.german[0].quiz.map(q=>q.antworten[q.richtig]));
@@ -39,7 +43,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
    if(!(await page.locator("#lPxWei").count()))break;
    await page.locator("#lPxWei:not([disabled])").click();
   }
-  assert.ok(quizGesehen,"Quiz fehlt");assert.equal(uebungen,4,"vier Übungen");
+  assert.ok(quizGesehen,"Quiz fehlt");assert.ok(uebungDari,"Übungen mit Dari-Hilfe");assert.equal(uebungen,4,"vier Übungen");
   await page.locator(".l-geschafft").waitFor();
   const gespeichert=await page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem("sdLearn")).profiles)[0].praxis);
   assert.ok(gespeichert["g-1"],"Abschluss gespeichert");

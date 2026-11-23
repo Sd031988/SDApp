@@ -683,7 +683,7 @@
     {id: 'deutsch-b1', name: 'Alltag auf B1', niveau: ['B1']},
     {id: 'deutsch-beruf', name: 'Deutsch für den Beruf', niveau: ['B1']}
   ];
-  const PRAXIS_V = '20261123';
+  const PRAXIS_V = '20261123b';
   const praxisSkripte = {};
   function praxisLaden(src) {
     if (!praxisSkripte[src]) praxisSkripte[src] = new Promise((ok, nein) => {
@@ -694,12 +694,52 @@
   }
   async function praxisKurs(id) { await praxisLaden('../mein-sd-hub/kurse/' + id + '.js?v=' + PRAXIS_V); return ((window.SDAkademieKurse || {})[id]) || []; }
   function praxisFertig(p) { p.praxis = p.praxis || {}; return p.praxis; }
+  // Feste Übersetzung (z. B. Dari) der Praxis-Texte: Deutsch bleibt stehen, die Übersetzung steht klein darunter.
+  const PRAXIS_UE = {fa: ['german', 'deutsch-a2', 'deutsch-b1', 'deutsch-beruf']};
+  async function praxisUe(id) {
+    const l = spr(); if (!(PRAXIS_UE[l] || []).includes(id)) return {};
+    try { await praxisLaden('../mein-sd-hub/kurse-uebersetzt/' + l + '/' + id + '.js?v=' + PRAXIS_V); } catch (e) { return {}; }
+    return (((window.SDAkademieFest || {})[l] || {})[id]) || {};
+  }
+  const PX_VOR = ['✓ Richtig. ', '✗ Noch nicht richtig. ', 'Tipp: ', 'Musterlösung: '];
+  function pxSuche(d, t) {
+    t = t.replace(/\s+/g, ' ').trim(); if (!t) return '';
+    const n = t.replace(/^\d+\.\s+/, '');
+    const o = t.replace(/^[^\p{L}\p{N}„"]+/u, '');
+    if (d[t]) return d[t]; if (d[n]) return d[n]; if (d[o]) return d[o];
+    for (const v of PX_VOR) if (t.startsWith(v) && d[t.slice(v.length)]) return d[t.slice(v.length)];
+    return '';
+  }
+  // deutsche Zitate „…“ bleiben im Dari-Text als Ganzes links-nach-rechts lesbar
+  const pxHtml = u => !rtl() ? esc(u) : u.split(/(„[^“]*“)/).map((t, i) => i % 2 ? '<bdi dir="ltr">' + esc(t) + '</bdi>' : l1h(t)).join('');
+  // hängt an jedes Text-Element im Bereich die Übersetzung an und beobachtet spätere Änderungen (Rückmeldungen, Tipps)
+  function pxUebersetzen(box, d) {
+    if (!box || !Object.keys(d).length) return;
+    const lauf = () => {
+      beob.disconnect();
+      box.querySelectorAll('*').forEach(e => {
+        if (/^(OPTION|SELECT|INPUT|TEXTAREA|SCRIPT|STYLE|CODE)$/.test(e.tagName) || e.classList.contains('l-px-tr') || e.closest('.l-px-tr')) return;
+        let text = '', nurText = true;
+        e.childNodes.forEach(k => { if (k.nodeType === 3) text += k.textContent; else if (!(k.classList && k.classList.contains('l-px-tr'))) nurText = false; });
+        if (!nurText) return;
+        const alt = e.querySelector(':scope > .l-px-tr'), u = pxSuche(d, text);
+        if (alt && alt.dataset.q === text) return;
+        if (alt) alt.remove();
+        if (!u) return;
+        const sp = document.createElement('span'); sp.className = 'l-l1 l-px-tr'; sp.dataset.q = text;
+        sp.setAttribute('lang', spr()); if (rtl()) sp.setAttribute('dir', 'rtl'); sp.innerHTML = pxHtml(u); e.appendChild(sp);
+      });
+      beob.observe(box, {childList: true, subtree: true, characterData: true});
+    };
+    const beob = new MutationObserver(lauf); lauf();
+  }
   async function showPraxis() {
     if (!prof()) { showProfiles(); return; }
     stopAll(); L.view = 'praxis'; topbar();
     body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
     let kurse;
-    try { kurse = await Promise.all(PRAXIS.map(k => praxisKurs(k.id))); }
+    let ues = [];
+    try { kurse = await Promise.all(PRAXIS.map(k => praxisKurs(k.id))); ues = await Promise.all(PRAXIS.map(k => praxisUe(k.id))); }
     catch (e) { body('<div class="l-card">❌ Die Praxis-Lektionen konnten nicht geladen werden. Bitte Internet prüfen.</div>'); return; }
     if (L.view !== 'praxis') return;
     const p = prof(), f = praxisFertig(p);
@@ -709,7 +749,8 @@
     PRAXIS.forEach((k, i) => {
       const ls = kurse[i], dn = ls.filter(l => f[l.id]).length, passt = k.niveau.includes(p.level);
       h += '<details class="l-level l-praxis"' + (passt ? ' open' : '') + '><summary>' + esc(k.name) + ' <small>' + dn + '/' + ls.length + (passt ? ' · passt zu deinem Niveau' : '') + '</small></summary>';
-      ls.forEach(l => { h += '<button type="button" class="l-unit" data-pl="' + esc(k.id) + '|' + esc(l.id) + '"><span>' + (f[l.id] ? '✅' : '○') + ' ' + esc(l.title) + '</span><small>' + esc(l.minutes || '') + ' Min.</small></button>'; });
+      ls.forEach(l => { const u = (ues[i] || {})[l.title]; h += '<button type="button" class="l-unit" data-pl="' + esc(k.id) + '|' + esc(l.id) + '"><span>' + (f[l.id] ? '✅' : '○') + ' ' + esc(l.title) +
+        (u ? '<span class="l-l1 l-px-tr"' + l1Attr() + '>' + pxHtml(u) + '</span>' : '') + '</span><small>' + esc(l.minutes || '') + ' Min.</small></button>'; });
       h += '</details>';
     });
     body(h);
@@ -719,7 +760,8 @@
     stopAll(); L.view = 'praxis-l'; topbar();
     body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
     let kurs = [], lesson = null;
-    try { kurs = await praxisKurs(kursId); lesson = kurs.find(l => l.id === lessonId); await praxisLaden('../mein-sd-hub/akademie-uebungen.js?v=' + PRAXIS_V); } catch (e) {}
+    let ue = {};
+    try { kurs = await praxisKurs(kursId); lesson = kurs.find(l => l.id === lessonId); await praxisLaden('../mein-sd-hub/akademie-uebungen.js?v=' + PRAXIS_V); ue = await praxisUe(kursId); } catch (e) {}
     if (L.view !== 'praxis-l') return;
     if (!lesson || !window.SDAkademieUebungen) { body('<div class="l-card">❌ Die Lektion konnte nicht geladen werden. Bitte Internet prüfen.</div>'); return; }
     const seiten = [];
@@ -761,6 +803,7 @@
         if (naechste) $('lPxNext').onclick = () => startPraxis(kursId, naechste.id);
         $('lPxListe').onclick = showPraxis;
       }
+      pxUebersetzen(box, ue);
       box.querySelectorAll('[data-sag]').forEach(b => b.onclick = () => lSpeak(b.dataset.sag, false));
       $('lPxZur').onclick = () => { pos--; zeige(); };
       const w = $('lPxWei');
