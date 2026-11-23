@@ -8,8 +8,8 @@
 (function () {
   "use strict";
   const VORHANDEN = ["fa"];
-  const VERSION = "20261123";
-  const AUSLASSEN = "script,style,textarea,input,select,pre,code,#lessonDetail,#lessonList,#akKurskopf,[data-ak-source],[data-hub-ue]";
+  const VERSION = "20261123b";
+  const AUSLASSEN = "script,style,textarea,input,pre,code,#lessonDetail,#lessonList,#akKurskopf,[data-ak-source],[data-hub-ue]";
   const RTL = ["fa", "ar", "ur"];
   const geladen = {};
   let aktiv = null, eintraege = [], laeuft = false, nochmal = false;
@@ -39,7 +39,7 @@
   function vorlage(d, t) {
     for (const [muster, ziel] of Object.entries(d.vorlagen || {})) {
       const m = t.match(new RegExp("^" + muster.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("\\{x\\}", "(.+)") + "$"));
-      if (m) return ziel.replace("{x}", m[1]);
+      if (m) return ziel.replace("{x}", d.texte?.[m[1]] !== undefined ? d.texte[m[1]] : m[1]);
     }
     return undefined;
   }
@@ -68,6 +68,10 @@
     for (const n of knoten) {
       const roh = n.nodeValue, kern = norm(roh);
       let neu = d.texte?.[kern]; if (neu === undefined) neu = vorlage(d, kern);
+      if (neu === undefined) {                                   // „🧭 Titel“: Symbol davor, Titel aus dem Wörterbuch
+        const m = kern.match(/^([^\p{L}\p{N}]+\s)(.+)$/u);
+        if (m && d.texte?.[m[2]] !== undefined) neu = m[1] + d.texte[m[2]];
+      }
       if (neu === undefined) continue;
       eintraege.push({ text: n, orig: roh });
       n.nodeValue = roh.match(/^\s*/)[0] + neu + roh.match(/\s*$/)[0]; n.__hubSet = n.nodeValue;
