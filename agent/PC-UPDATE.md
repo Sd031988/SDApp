@@ -1,5 +1,13 @@
 # SD Lotze PC-Agent und Online-Werkzeuge
 
+## Neu (23.11.2026): raea – Videos und Animationen im Agenten
+
+- „🖥 KI im Terminal“ → **raea** (Windows: `irm https://raea.io/install.ps1 | iex`, landet unter `~\.raea`; `_raea_befehl()` sucht PATH und
+  `~\.raea\bin`, `~\.raea`, `~\.local\bin`). Lizenz FSL-1.1-ALv2 (frei nutzbar, kein Konkurrenzprodukt).
+- Agent-Werkzeuge: `raea_anleitung` (raea guide), `raea_projekt` (raea init), `raea_render` (render … -o …mp4 / --frame N → PNG),
+  `raea_pruefen` (raea check). Für kleine Modelle nur bei Video-/Animations-Aufträgen mitgeschickt. Fehlt raea: `RAEA_FEHLT` mit Hinweis.
+- Nur mit einer raea-Attrappe getestet; echte Ausgaben von raea können abweichen.
+
 ## Neu (17.11.2026, abends): Antigravity darf auf Wunsch auch Befehle ausführen
 
 - **Bewusste Ausnahme von der Regel „/__vom_hub startet nichts“, vom Nutzer ausdrücklich gewünscht:** In den Freigabe-Fenstern des Agenten
