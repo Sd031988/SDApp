@@ -10,6 +10,7 @@ on:
       - "deutsch/**"
       - "tests/deutsch-praxis*.cjs"
       - "tests/kurs-videos*.cjs"
+      - "tests/akademie-lernen*.cjs"
       - "tests/hub-homepage*.cjs"
       - "tests/hub/**"
       - "tests/play-separation*.cjs"
@@ -26,6 +27,7 @@ on:
       - "deutsch/**"
       - "tests/deutsch-praxis*.cjs"
       - "tests/kurs-videos*.cjs"
+      - "tests/akademie-lernen*.cjs"
       - "tests/hub-homepage*.cjs"
       - "tests/hub/**"
       - "tests/play-separation*.cjs"
@@ -53,7 +55,7 @@ jobs:
       - name: Validate course, routes, links and state
         run: |
           node tests/mein-sd-hub.test.cjs
-          node --test tests/mein-sd-hub-i18n.test.cjs tests/mein-sd-hub-fest.test.cjs tests/kurs-videos.test.cjs
+          node --test tests/mein-sd-hub-i18n.test.cjs tests/mein-sd-hub-fest.test.cjs tests/kurs-videos.test.cjs tests/akademie-lernen.test.cjs
           node --test tests/hub-homepage.test.cjs tests/play-separation.test.cjs
       - name: Install Playwright and Chromium
         run: |
@@ -65,6 +67,7 @@ jobs:
           node tests/mein-sd-hub-programmieren.browser.cjs
           node tests/mein-sd-hub-uebersetzen.browser.cjs
           node tests/deutsch-praxis.browser.cjs
+          node tests/akademie-lernen.browser.cjs
           node tests/hub-homepage.browser.cjs
           node tests/hub/dashboard.browser.cjs
           node tests/mein-sd-hub-theme.browser.cjs

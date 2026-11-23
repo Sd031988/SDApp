@@ -160,6 +160,91 @@ function renderAkToolbar(){
  $("akSuche").addEventListener("input",e=>{akFilter.text=e.target.value;renderCourses()});
  $("akStufe").addEventListener("change",e=>{akFilter.stufe=e.target.value;renderCourses()});
 }
+/* Lernplatz: Lernausweis, Lernserie, Tagesziel, Wiederholung und Weiterlernen (Logik in akademie-lernen.js) */
+const L=window.SDAkLernen;
+const RAENGE=[[0,"Neuling"],[500,"Entdecker"],[1500,"Fortgeschritten"],[3000,"Profi"],[6000,"Meister"]];
+function lektionKurs(id){for(const [k,ids] of Object.entries(D.academyLessonIds))if(ids.includes(id))return k;return ""}
+function datumText(d){return d.toLocaleDateString(document.documentElement.lang||"de-DE",{weekday:"long",day:"numeric",month:"long"})}
+function renderLernplatz(){
+ const box=$("akLernplatz");if(!box||!L)return;box.replaceChildren();
+ L.abgleichen(state.completedLessons,lektionKurs);
+ // Lektionen von früher: Fragen erst aus den Kursdateien holen, dann neu zeichnen (keine geschätzte Zahl anzeigen)
+ const offen=L.offeneKurse().filter(k=>L.wartet(k));
+ if(offen.length){Promise.all(offen.map(k=>ladeKurs(k).then(c=>L.ausklappen(k,c.lessons)).catch(()=>L.verwerfen(k)))).then(()=>renderLernplatz());}
+ const kopf=akNode("h3","","Dein Lernplatz",box);kopf.id="akLernplatzTitel";
+ const grid=node("div","ak-lp-grid",undefined,box);
+ const xp=state.completedLessons.length*100;let rang=RAENGE[0],next=null;
+ RAENGE.forEach((r,i)=>{if(xp>=r[0]){rang=r;next=RAENGE[i+1]||null}});
+ // Lernausweis
+ const aus=node("div","ak-lp ak-lp-ausweis",undefined,grid);akNode("span","ak-lp-label","Lernausweis",aus);
+ node("b","ak-lp-name",state.nickname||A.t("Gast"),aus);
+ akNode("span","ak-lp-rang",A.t("Rang: {rang}").replace("{rang}",A.t(rang[1])),aus);
+ akNode("span","ak-lp-zahl",A.t("{n} XP").replace("{n}",xp.toLocaleString("de-DE")),aus);
+ if(next){const b=node("div","ak-lp-balken",undefined,aus);const f=node("span","",undefined,b);f.style.width=Math.round((xp-rang[0])/(next[0]-rang[0])*100)+"%";
+  akNode("small","",A.t("Noch {n} XP bis {rang}").replace("{n}",next[0]-xp).replace("{rang}",A.t(next[1])),aus)}
+ // Lernserie
+ const se=L.serie(),sb=node("div","ak-lp ak-lp-serie"+(se.heute?" aktiv":""),undefined,grid);akNode("span","ak-lp-label","Lernserie",sb);
+ node("b","ak-lp-gross",String(se.tage),sb);akNode("span","",se.tage===1?"Tag in Folge":"Tage in Folge",sb);
+ akNode("small","",se.heute?"Heute schon gelernt ✓":"Lerne heute, damit die Serie wächst.",sb);
+ akNode("small","ak-lp-fein","Ein verpasster Tag pro Woche wird verziehen.",sb);
+ // Tagesziel
+ const hx=L.heuteXp(),zb=node("div","ak-lp ak-lp-ziel",undefined,grid);akNode("span","ak-lp-label","Tagesziel",zb);
+ const ring=node("div","ak-lp-ring",undefined,zb);ring.style.setProperty("--p",Math.min(100,Math.round(hx/L.ZIEL*100)));
+ node("b","",Math.min(hx,999)+"",ring);
+ akNode("span","",hx>=L.ZIEL?"Tagesziel erreicht!":A.t("{n} von {total} XP").replace("{n}",hx).replace("{total}",L.ZIEL),zb);
+ akNode("small","ak-lp-fein","Lektion: 100 XP · Wiederholungsfrage: 10 XP",zb);
+ // Wiederholen
+ const n=L.anzahlFaellig(),wb=node("div","ak-lp ak-lp-wdh"+(n?" faellig":""),undefined,grid);akNode("span","ak-lp-label","Heute wiederholen",wb);
+ if(n){node("b","ak-lp-gross",String(Math.min(n,99)),wb);akNode("span","",n===1?"Frage fällig":"Fragen fällig",wb);
+  const go=akNode("button","btn primary small","Jetzt wiederholen",wb);go.type="button";go.id="akWdhStart";go.onclick=()=>wiederholen()}
+ else{const t=L.naechste();akNode("span","",state.completedLessons.length?"Heute ist nichts fällig.":"Schließe eine Lektion ab – dann kommen hier Wiederholungsfragen.",wb);
+  if(t)akNode("small","",A.t("Nächste Wiederholung: {datum}").replace("{datum}",datumText(L.datumVon(t))),wb)}
+ // Weiterlernen
+ const z=L.zuletzt(),c=z&&findCourse(z.kurs),weiter=node("div","ak-lp ak-lp-weiter",undefined,grid);akNode("span","ak-lp-label","Weiterlernen",weiter);
+ if(c&&c.bereich!=="Deutsch"){akNode("b","",c.name,weiter);const ids=D.academyLessonIds[c.id]||[],f=ids.filter(i=>state.completedLessons.includes(i)).length;
+  akNode("span","",A.t("{n} von {total} Lektionen").replace("{n}",f).replace("{total}",ids.length),weiter);
+  const b=akNode("button","btn outline small","Weiter →",weiter);b.type="button";b.onclick=()=>{courseId=c.id;lessonId=ids.includes(z.lektion)?z.lektion:ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben()}}
+ else akNode("span","","Wähle unten einen Kurs, um zu beginnen.",weiter);
+}
+/* Wiederholungsraum: bis zu fünf gemischte Fragen aus geschafften Lektionen */
+async function wiederholen(){
+ if(!L)return;const alt=document.activeElement;
+ const raum=node("div","ak-wdh",undefined,document.body);raum.setAttribute("role","dialog");raum.setAttribute("aria-modal","true");raum.setAttribute("aria-labelledby","akWdhTitel");
+ const innen=node("div","ak-wdh-innen",undefined,raum),kopf=node("div","ak-wdh-kopf",undefined,innen);
+ const t=akNode("h3","","Heute wiederholen",kopf);t.id="akWdhTitel";
+ const zu=akNode("button","btn outline small","Schließen",kopf);zu.type="button";
+ const zahl=akNode("p","ak-wdh-zahl","",innen),feld=node("div","ak-wdh-feld",undefined,innen);
+ document.body.classList.add("ak-wdh-offen");
+ const ende=()=>{raum.remove();document.body.classList.remove("ak-wdh-offen");document.removeEventListener("keydown",esc);renderLernplatz();renderLessonListSicher();if(alt&&alt.focus)try{alt.focus()}catch(e){}};
+ const esc=e=>{if(e.key==="Escape")ende()};document.addEventListener("keydown",esc);zu.onclick=ende;zu.focus();
+ akNode("p","hint","Die Fragen werden geladen …",feld);
+ for(const k of L.offeneKurse()){try{const kurs=await ladeKurs(k);L.ausklappen(k,kurs.lessons)}catch(e){}}
+ const fragen=[];for(const f of L.auswahl(5)){let q=null;try{q=(await ladeKurs(f.kurs)).lessons.find(x=>x.id===f.lektion)?.quiz?.[f.qi]}catch(e){}
+  if(q&&Array.isArray(q.antworten)&&Number.isInteger(q.richtig))fragen.push({f,q});else L.entfernen(f.s)}
+ if(!raum.isConnected)return;
+ let i=0,richtig=0,xp=0;const nochmal=[];
+ function zeige(){
+  feld.replaceChildren();
+  if(i>=fragen.length){A.set(zahl,"");const e=akNode("div","ak-wdh-ende",undefined,feld);akNode("h4","",fragen.length?"Wiederholung beendet":"Heute ist nichts fällig.",e);
+   if(fragen.length){akNode("p","ak-xp",A.t("{r} von {n} richtig · +{xp} XP").replace("{r}",richtig).replace("{n}",fragen.length).replace("{xp}",xp),e);
+    if(nochmal.length)akNode("p","hint","Falsche Fragen kommen morgen wieder.",e)}
+   const b=akNode("button","btn primary","Zurück zur Akademie",e);b.type="button";b.onclick=ende;b.focus();return}
+  const {f,q}=fragen[i];A.set(zahl,A.t("Frage {n} von {total}").replace("{n}",i+1).replace("{total}",fragen.length));
+  const c=findCourse(f.kurs);if(c)akNode("small","ak-wdh-herkunft",c.name,feld);
+  const fr=mitCode(node("h4","",undefined,feld),q.frage);fr.lang="de";
+  const opts=q.antworten.map((a,k)=>({a,k}));for(let j=opts.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[opts[j],opts[r]]=[opts[r],opts[j]]}
+  const ans=node("div","answers",undefined,feld),fb=node("p","feedback",undefined,feld);fb.hidden=true;
+  opts.forEach(o=>{const b=mitCode(node("button","",undefined,ans),o.a);b.type="button";b.lang="de";b.onclick=()=>{
+   [...ans.children].forEach(x=>x.disabled=true);const ok=o.k===q.richtig;
+   if(ok){richtig++;xp+=L.antwort(f.s,true);b.classList.add("correct")}else{L.antwort(f.s,false);nochmal.push(f);b.classList.add("falsch");[...ans.children][opts.findIndex(x=>x.k===q.richtig)].classList.add("correct")}
+   fb.hidden=false;fb.className="feedback"+(ok?"":" error");A.set(fb,(ok?"✓ Richtig. ":"Noch nicht richtig. ")+(q.erklaerung||""));
+   const w=akNode("button","btn primary small",i+1<fragen.length?"Nächste Frage":"Fertig",feld);w.type="button";w.onclick=()=>{i++;zeige()};w.focus()}});
+  ans.querySelector("button")?.focus();
+ }
+ zeige();
+}
+function renderLessonListSicher(){try{if(kursOffen)renderLessonList()}catch(e){}}
+function stufenText(id){const s=L?L.stufe(id,state.completedLessons.includes(id)):(state.completedLessons.includes(id)?1:0);return [null,"✓ Geschafft","★ Sicher","★★ Gemeistert"][s]}
 /* Direkter Link in einen Kursraum: …/mein-sd-hub/#kurs=<id> (auch für alte Lesezeichen der früheren Deutschkurse) */
 function kursAusHash(){const m=location.hash.match(/^#kurs=([\w-]+)$/);if(!m)return false;const c=D.academy.find(x=>x.id===m[1]);if(!c)return false;
  history.replaceState(null,"","#akademie");setTab("akademie",false);const ids=D.academyLessonIds[c.id]||[];
@@ -175,7 +260,7 @@ function deutschKarte(entries){
  akNode("span","ak-cta","Zu Deutsch lernen →",a);
 }
 function renderCourses(){
- renderAkStats();renderAkToolbar();renderUniKatalog();
+ renderAkStats();renderAkToolbar();renderUniKatalog();renderLernplatz();
  clearChildren("courses");let treffer=0;
  for(const bereich of BEREICHE){
   const kurse=D.academy.filter(c=>c.bereich===bereich),sichtbar=kurse.filter(passtFilter);
@@ -267,7 +352,7 @@ function renderLessonList(){
   const left=akNode("span","",undefined,btn);
   akNode("b","",l.title,left);
   akNode("small","",l.minutes+" Minuten · "+(l.schritte?"Praxis & Quiz":"Übungsfrage"),left);
-  akNode("span",state.completedLessons.includes(l.id)?"done-tag":"panel-sub",state.completedLessons.includes(l.id)?"✓ Gelernt":"Öffnen ↗",btn);
+  const st=stufenText(l.id);akNode("span",st?"done-tag ak-stufe-"+(L?L.stufe(l.id,true):1):"panel-sub",st||"Öffnen ↗",btn);
   btn.addEventListener("click",()=>{lessonId=l.id;answered=false;renderLessonList();zeigeLektionOben()});
  });
  renderLesson();
@@ -315,7 +400,7 @@ function academySourceUrl(raw){
  const hosts=["docs.python.org","doc.rust-lang.org","www.learncpp.com","en.cppreference.com","cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","open.hpi.de","ki-campus.org","www.elementsofai.com","www.freecodecamp.org","developers.google.com","course.fast.ai","www.khanacademy.org","www.rust-lang.org","www.python.org","numpy.org","www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de","www.existenzgruendungsportal.de","www.verbraucherzentrale.de","www.make-it-in-germany.com","desy.zoll-portal.de","www.dinmedia.de"];
  return url.protocol==="https:"&&!url.username&&!url.password&&hosts.includes(url.hostname)?url:null;
 }
-function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;A.notice($("lessonDetail"));if(l.sprache){renderProgrammLektion(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
+function renderLesson(){clearChildren("lessonDetail");const l=findCourse(courseId).lessons.find(x=>x.id===lessonId);if(!l)return;try{if(L)L.zuletzt(courseId,l.id)}catch(e){}A.notice($("lessonDetail"));if(l.sprache){renderProgrammLektion(l);return}if(l.schritte){renderCodeLesson(l);return}const q=akNode("div","quiz",undefined,$("lessonDetail"));akNode("span","badge","LEKTION · "+l.minutes+" MIN",q);akNode("h4","",l.title,q);akNode("p","",l.explanation,q);
 if(l.standHinweis&&l.standQuelle){
  const url=academySourceUrl(l.standQuelle.url);
  if(url){
@@ -472,15 +557,25 @@ function lektionsQuiz(st,l,beiFertig){
   q.antworten.forEach((a,i)=>{const b=akNode("button","",a,answers);b.type="button";b.onclick=()=>{if(box.dataset.done)return;
    if(i!==q.richtig){fb.hidden=false;fb.className="feedback error";A.set(fb,"Noch nicht richtig. "+(q.begruendungen?.[i]||"Lies die Erklärung oben noch einmal."));b.classList.add("falsch");return}
    box.dataset.done="1";[...answers.children].forEach(x=>x.disabled=true);b.classList.add("correct");fb.hidden=false;fb.className="feedback";A.set(fb,"✓ Richtig. "+q.erklaerung);richtig++;
-   if(richtig===l.quiz.length){s.freigeben();beiFertig()}}})});
+   if(richtig===l.quiz.length){s.freigeben();try{if(L)L.geschafft(courseId,l)}catch(e){}beiFertig()}}})});
 }
 function lektionsAbschluss(st,l,extra){
  const w=st.seite("Das merkst du dir").el;
- if(state.completedLessons.includes(l.id)){const b=akNode("p","ak-xp","🏆 Lektion geschafft · +100 XP",w);b.setAttribute("role","status");akNode("p","hint","Dein Stand: "+(state.completedLessons.length*100)+" XP",w)}
+ if(state.completedLessons.includes(l.id)){const b=akNode("p","ak-xp",L&&L.hilfeStufe(l.id)>=3?"🏆 Lektion geschafft · +50 XP (mit Lösung)":"🏆 Lektion geschafft · +100 XP",w);b.setAttribute("role","status");akNode("p","hint","Dein Stand: "+(state.completedLessons.length*100)+" XP",w)}
  akNode("h5","","Das merkst du dir",w);const ul=akNode("ul","",undefined,w);l.merke.forEach(x=>mitCode(akNode("li","",undefined,ul),x));
  if(Array.isArray(l.quellen)&&l.quellen.length){akNode("h5","","Weiterlernen (kostenlos)",w);const ql=akNode("ul","",undefined,w);
   for(const q of l.quellen){const url=academySourceUrl(q.url);if(!url)continue;const li=akNode("li","",undefined,ql),a=akNode("a","",q.titel+" ↗",li);a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";if(q.info)akNode("small",""," · "+q.info,li)}}
  extra(w);
+}
+/* Hilfe in drei Stufen: 1 Denkanstoß (was noch fehlt), 2 Tipp, 3 Lösung (dann halbe XP für die Lektion) */
+function hilfeLeiter(links,l,offen,hint,loes){
+ const b=akNode("button","btn outline small ak-hilfe","Hilfe 1/3",links);b.type="button";
+ const denk=node("p","hint ak-denk",undefined,links);denk.hidden=true;let stufe=0;
+ b.onclick=()=>{stufe=Math.min(3,stufe+1);if(stufe<3&&L)L.hilfe(l.id,stufe);
+  const o=offen();denk.hidden=false;denk.textContent=A.t("Denkanstoß:")+" "+(o?A.t("Achte noch auf:")+" "+o:A.t("Alle Prüfungen sind erfüllt. Drücke „Prüfen“."));
+  if(stufe>=2)hint.hidden=false;
+  if(stufe>=3){loes.hidden=false;b.disabled=true;A.set(b,"Hilfe 3/3")}else A.set(b,stufe===1?"Hilfe 2/3":"Hilfe 3/3")};
+ loes.addEventListener("click",()=>{if(L)L.hilfe(l.id,3);if(!loes.dataset.warn){loes.dataset.warn="1";akNode("p","hint","Mit Lösung gibt es für diese Lektion nur 50 XP.",links)}});
 }
 let pythonNichtVerfuegbar=false;
 async function pythonLauf(code,stdin,out){
@@ -528,6 +623,7 @@ function renderCodeLesson(l){
  const check=akNode("button","btn primary small code-pruefen","Prüfen",links);check.type="button";
  const checks=akNode("div","code-checks",undefined,links),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,links);hint.hidden=true;
  const solution=akNode("button","btn outline small","Lösung zeigen",links);solution.type="button";solution.hidden=true;
+ hilfeLeiter(links,l,()=>{const doc=new DOMParser().parseFromString(code.html,"text/html");const p=l.aufgabe.pruefungen.find(p=>!D.pruefeCode(p.test,code,doc));return p?p.beschreibung:""},hint,solution);
  let failures=0;
  check.onclick=()=>{checks.replaceChildren();const doc=new DOMParser().parseFromString(code.html,"text/html");
   const results=l.aufgabe.pruefungen.map(p=>{const ok=D.pruefeCode(p.test,code,doc);akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+p.beschreibung,checks);return ok});
@@ -582,6 +678,7 @@ function renderProgrammLektion(l){
  const pruef=akNode("button","btn outline small code-pruefen","Prüfen",leiste);pruef.type="button";
  const checks=akNode("div","code-checks",undefined,links),hint=akNode("p","hint","Tipp: "+l.aufgabe.tipp,links);hint.hidden=true;
  const loes=akNode("button","btn outline small","Lösung zeigen",links);loes.type="button";loes.hidden=true;let fehlversuche=0;
+ hilfeLeiter(links,l,()=>{const m=l.aufgabe.muster.find(m=>{try{return !new RegExp(m.regex,m.flags||"").test(d.code)}catch(e){return true}});return m?m.beschreibung:""},hint,loes);
  pruef.onclick=()=>{checks.replaceChildren();
   const erg=l.aufgabe.muster.map(m=>{let ok=false;try{ok=new RegExp(m.regex,m.flags||"").test(d.code)}catch(e){ok=false}akNode("p",ok?"code-ok":"code-error",(ok?"✓ ":"✗ ")+m.beschreibung,checks);return ok});
   if(l.sprache==="python"&&Array.isArray(l.aufgabe.ausgabe)&&l.aufgabe.ausgabe.length&&pythonNichtVerfuegbar&&letzteAusgabe===null)akNode("p","hint","Python läuft auf diesem Gerät gerade nicht. Die Ausgabe wird deshalb nicht geprüft.",checks);

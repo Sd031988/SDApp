@@ -129,3 +129,55 @@ body.ak-raum #coursePanel>.ak-raum-kopf{max-width:none;margin-inline:calc(-1 * m
 .kv-rahmen{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
 .kv-rahmen iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .kv-link{font-size:.85em;justify-self:start}
+/* Eingang der Akademie: Tor mit Wappen */
+.ak-tor{position:relative;overflow:hidden;display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:center;padding:30px 28px 24px;margin:0 0 22px;border-radius:22px;color:#f4efe2;
+ background:radial-gradient(120% 90% at 50% -30%,rgba(233,196,106,.28),transparent 60%),repeating-linear-gradient(90deg,transparent 0 46px,rgba(255,255,255,.035) 46px 48px),linear-gradient(160deg,#173d33,#0e2621 70%)}
+.ak-tor::after{content:"";position:absolute;inset:auto 0 0 0;height:4px;background:linear-gradient(90deg,#e9c46a,#c99a3b,#e9c46a)}
+.ak-wappen{width:76px;height:86px;color:#e9c46a;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+.ak-tor-text{min-width:0}
+.ak-tor .overline{color:#e9c46a;letter-spacing:.18em}
+.ak-tor h2{margin:.15em 0 .3em;color:#fff;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.08;text-wrap:balance}
+.ak-tor p{margin:0;max-width:62ch;color:#d9e5dd;line-height:1.55}
+.ak-tor .ak-tor-klein{margin-top:8px;font-size:.82rem;color:#a9bfb2}
+.ak-tor .ak-stats{grid-column:1/-1;margin:18px 0 4px}
+.ak-tor .ak-stat{background:rgba(255,255,255,.07);border-color:rgba(233,196,106,.28);color:#fff}
+.ak-tor .ak-stat span{color:#c9d8ce}
+@media (max-width:620px){.ak-tor{grid-template-columns:1fr;padding:24px 18px 20px;text-align:center}.ak-wappen{margin:0 auto;width:60px;height:68px}.ak-tor p{margin-inline:auto}.ak-tor .ak-stats{grid-template-columns:repeat(2,1fr)}.ak-tor .ak-stat:last-child{grid-column:1/-1}}
+/* Lernplatz */
+.ak-lernplatz{margin:0 0 26px}
+.ak-lernplatz>h3,.ak-fak-titel{margin:0 0 12px;color:var(--ak-ink);font-size:1.25rem}
+.ak-lp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr));gap:12px}
+.ak-lp{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:16px;background:var(--ak-card);border:1px solid var(--ak-line);color:var(--ak-ink);min-width:0}
+.ak-lp .btn{margin-top:auto;align-self:flex-start}
+.ak-lp-label{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ak-muted)}
+.ak-lp-name{font-size:1.15rem;overflow-wrap:anywhere}
+.ak-lp-rang{font-weight:700;color:var(--ak-accent)}
+.ak-lp-zahl,.ak-lp small{color:var(--ak-muted);font-size:.85rem}
+.ak-lp-fein{font-size:.75rem!important;opacity:.85}
+.ak-lp-gross{font-size:2.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.ak-lp-balken{height:8px;border-radius:99px;background:var(--ak-soft);overflow:hidden;margin-top:4px}
+.ak-lp-balken span{display:block;height:100%;background:linear-gradient(90deg,var(--ak-accent),#e9c46a)}
+.ak-lp-ausweis{background:linear-gradient(150deg,var(--ak-card),var(--ak-soft));border-color:#e9c46a80}
+.ak-lp-serie.aktiv .ak-lp-gross{color:#d9822b}
+.ak-lp-wdh.faellig{border-color:var(--ak-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--ak-accent) 18%,transparent)}
+.ak-lp-ring{--p:0;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--ak-accent) calc(var(--p)*1%),var(--ak-soft) 0)}
+.ak-lp-ring b{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--ak-card);font-variant-numeric:tabular-nums}
+/* Stufen in der Lektionsliste */
+.done-tag.ak-stufe-2{background:#fff3d6;color:#7a5200}
+.done-tag.ak-stufe-3{background:#e9c46a;color:#3d2a00}
+html[data-sd-theme="dark"] .done-tag.ak-stufe-2{background:#4a3b12;color:#ffe3a1}
+/* Wiederholungsraum */
+body.ak-wdh-offen{overflow:hidden}
+.ak-wdh{position:fixed;inset:0;z-index:1000;background:rgba(9,22,18,.72);display:grid;place-items:center;padding:16px}
+.ak-wdh-innen{width:min(680px,100%);max-height:100%;overflow:auto;background:var(--ak-card,#fff);color:var(--ak-ink,#14332c);border-radius:20px;padding:20px;border-top:5px solid #e9c46a}
+.ak-wdh{--ak-card:#fff;--ak-ink:#14332c;--ak-muted:#5a716b;--ak-line:#d7e6de;--ak-soft:#eef6f1;--ak-accent:#0f6b52}
+html[data-sd-theme="dark"] .ak-wdh{--ak-card:#203129;--ak-ink:#edf5ef;--ak-muted:#bdcfc3;--ak-line:#3d5a4c;--ak-soft:#1a2a23;--ak-accent:#8fe0b9}
+.ak-wdh-kopf{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ak-wdh-kopf h3{margin:0}
+.ak-wdh-zahl{color:var(--ak-muted);margin:6px 0 12px;font-size:.9rem}
+.ak-wdh-herkunft{display:block;color:var(--ak-accent);font-weight:700;margin-bottom:4px}
+.ak-wdh .answers{display:grid;gap:8px;margin:12px 0}
+.ak-wdh .answers button{text-align:start;padding:12px 14px;border-radius:12px;border:1px solid var(--ak-line);background:var(--ak-soft);color:inherit;font:inherit;cursor:pointer}
+.ak-wdh .answers button.correct{border-color:#2e9c6a;background:#dcf5e8;color:#0d3b28}
+.ak-wdh .answers button.falsch{border-color:#c0392b;background:#fde4e1;color:#5c1a12}
+.ak-wdh-ende{text-align:center;padding:10px 0}
