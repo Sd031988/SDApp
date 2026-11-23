@@ -12,7 +12,7 @@
   const RTL = ["ar", "fa", "ur"];
   const AUSLASSEN = "pre,code,textarea,input,select,script,style,.ak-ue-hinweis,.code-example,[data-ak-fest]";
   // Kurse mit fester Übersetzung je Sprache
-  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz", "buero-programme", "digitale-profiwerkzeuge", "arbeit-finden"] };
+  const FEST = { fa: ["python-start", "python-aufbau", "ki-python", "cpp-start", "cpp-spiele", "rust-start", "webdesign", "javascript", "javascript-aufbau", "saubere-webapps", "code", "digital", "internet-email", "sicher-im-netz", "buero-programme", "digitale-profiwerkzeuge", "arbeit-finden", "career", "gespraech-arbeitsstart", "arbeitsvertrag-rechte", "weiterkommen"] };
   const FEST_VERSION = "20261123";
   const BEREICHE = ["lessonDetail", "lessonList", "akKurskopf"];
   const uebersetzer = {};
@@ -135,6 +135,14 @@
     }
     return undefined;
   }
+  function quelleSuchen(d, q) {                                          // „Nächste Lektion: {title} →“ als Vorlage der Bedienung
+    const m = q.match(/^([^:]{1,40}: )(.+?)( →)$/);
+    if (m && Object.prototype.hasOwnProperty.call(d, m[2])) {
+      const muster = m[1] + "{title}" + m[3], v = T(muster);
+      if (v && v !== muster && v.includes("{title}")) return v.replace("{title}", d[m[2]]);
+    }
+    return festSuchen(d, q);
+  }
   function mitCodeSpan(text) {
     const span = document.createElement("span"); span.setAttribute("data-ak-fest", "");
     String(text).split("`").forEach((teil, i) => {
@@ -155,8 +163,9 @@
         if (el.closest(AUSLASSEN)) continue;
         // Von der Bedienungs-Übersetzung schon (teilweise) ersetzter Text: vom deutschen Original ausgehen
         const quelle = el.dataset && el.dataset.akSource;
-        if (quelle && el.childNodes.length === 1 && el.firstChild.nodeType === 3 && Object.prototype.hasOwnProperty.call(d, String(quelle).trim())) {
-          const t = el.firstChild, neu = d[String(quelle).trim()];
+        const qNeu = quelle && el.childNodes.length === 1 && el.firstChild.nodeType === 3 ? quelleSuchen(d, String(quelle).trim()) : undefined;
+        if (qNeu !== undefined) {
+          const t = el.firstChild, neu = qNeu;
           if (t.nodeValue !== t.__festSet) {
             t.__festOrig = t.nodeValue; t.nodeValue = neu; t.__festSet = neu; t.__akLang = l;
             festListe.push({ text: t }); festMarkieren(el, l); n++;
