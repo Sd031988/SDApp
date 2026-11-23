@@ -19,7 +19,10 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   await Promise.all([page.waitForURL(/\/deutsch\/$/),karte.click()]);
   // Profil anlegen, Niveau A1 wählen, Praxis öffnen
   await page.locator('input[placeholder="Name"]').fill("Test");await page.getByRole("button",{name:/Profil anlegen/}).click();
+  // B1-Prüfung ist ein eigener Bereich nach B1 und erscheint nicht mehr oben in allen Niveaus
+  await page.locator("#lB1PruefCard").waitFor();assert.equal(await page.locator(".b1-entries,#sdB1FixedEntry").count(),0);
   await page.locator("#lBody button",{hasText:/^A1Anfänger/}).click();
+  await page.locator("#lPraxisBtn").waitFor();assert.equal(await page.locator(".b1-entries,#sdB1FixedEntry,#lB1PruefBtn").count(),0,"keine B1-Prüfung auf der A1-Startseite");
   await page.locator("#lPraxisBtn").click();
   await page.locator("[data-pl]").first().waitFor();
   assert.equal(await page.locator("[data-pl]").count(),28,"alle Praxis-Lektionen");
@@ -53,6 +56,9 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   assert.match(await page.locator("details.l-praxis").first().locator("summary").textContent(),/1\/4/,"Fortschritt in der Liste");
   const breite=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);assert.ok(breite<=2,"kein seitliches Scrollen");
   assert.deepEqual(errors,[]);
+  // eigener B1-Prüfungsbereich öffnet die Musterprüfungen
+  await page.goto(base+"/deutsch/");await page.locator("#lLvBtn").click();await page.locator("#lB1PruefCard").click();
+  await page.locator("#lB1Muster").click();await page.locator("#b1x").waitFor();
   console.log("Deutsch Praxis: OK");
  }finally{await browser.close();server.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

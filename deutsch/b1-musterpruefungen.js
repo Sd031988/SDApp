@@ -1203,7 +1203,6 @@ function attachFixedEntry(){
  b.innerHTML='<b>🎓 B1-Musterprüfungen öffnen</b><small>Goethe · telc · DTZ – 15 Übungssätze</small>';
  b.onclick=open;target.parentNode.insertBefore(b,target);b.style.display='block';
 }
-function refreshEntry(){attach();const f=document.getElementById('sdB1FixedEntry');if(f)f.remove();}
-new MutationObserver(refreshEntry).observe(document.documentElement,{childList:true,subtree:true});
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refreshEntry);else refreshEntry();
+// Die B1-Prüfung hat jetzt einen eigenen Bereich in der Lern-App (nach B1); hier nur noch die Öffnen-Funktion bereitstellen.
+window.SDB1Muster={open};
 })();

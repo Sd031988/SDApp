@@ -201,7 +201,7 @@
     fa: { cont: 'ادامه', listen: 'گوش کنید', speak: 'صحبت کنید', check: 'بررسی', next: 'بعدی', again: 'دوباره', trans: 'ترجمه',
           right: 'درست است!', almost: 'تقریباً درست', wrong: 'متأسفانه غلط', chat: 'تمرین گفتگو', weak: 'کلمات دشوار',
           place: 'آزمون تعیین سطح', newp: 'شخص جدید', name: 'نام', lesson: 'درس', unit: 'واحد', done: 'تمام', start: 'شروع',
-          book: 'واحد من', dict: 'فرهنگ لغت', praxis: 'تمرین: زندگی روزمره و کار', gram: 'دستور زبان', words: 'لغات', phrases: 'عبارات مهم', read: 'خواندن', hear: 'شنیدن',
+          book: 'واحد من', dict: 'فرهنگ لغت', praxis: 'تمرین: زندگی روزمره و کار', b1pruef: 'امتحان B1', gram: 'دستور زبان', words: 'لغات', phrases: 'عبارات مهم', read: 'خواندن', hear: 'شنیدن',
           write: 'نوشتن', cards: 'کارت‌های لغت', print: 'چاپ', know: 'بلدم', practice: 'باز هم تمرین', flip: 'برگرداندن',
           correct: 'اصلاح کن', model: 'جواب نمونه', play: 'پخش', showtext: 'نمایش متن', exercises: 'تمرین‌ها با معلم', search: 'جستجو',
           wotd: 'کلمهٔ روز', goal: 'هدف روزانه', review: 'تکرار روزانه', articles: 'حرف تعریف', order: 'ساختن جمله', dictation: 'املا', train: 'تمرین', pics: 'تمرین با عکس', tricks: 'ترفندهای حرف تعریف', trick: 'ترفند یادآوری', videos: 'ویدیو در یوتیوب',
@@ -210,7 +210,7 @@
     en: { cont: 'Continue', listen: 'Listen', speak: 'Speak', check: 'Check', next: 'Next', again: 'Again', trans: 'Translation',
           right: 'Correct!', almost: 'Almost', wrong: 'Not quite', chat: 'Practice conversation', weak: 'Difficult words',
           place: 'Placement test', newp: 'New person', name: 'Name', lesson: 'Lesson', unit: 'Unit', done: 'Done', start: 'Start',
-          book: 'My unit', dict: 'Dictionary', praxis: 'Practice: everyday life and work', gram: 'Grammar', words: 'Vocabulary', phrases: 'Useful phrases', read: 'Reading', hear: 'Listening',
+          book: 'My unit', dict: 'Dictionary', praxis: 'Practice: everyday life and work', b1pruef: 'B1 exam', gram: 'Grammar', words: 'Vocabulary', phrases: 'Useful phrases', read: 'Reading', hear: 'Listening',
           write: 'Writing', cards: 'Flashcards', print: 'Print', know: 'I know it', practice: 'Practise again', flip: 'Turn over',
           correct: 'Correct it', model: 'Model answer', play: 'Play', showtext: 'Show text', exercises: 'Exercises with the teacher', search: 'Search',
           wotd: 'Word of the day', goal: 'Daily goal', review: 'Daily review', articles: 'Articles', order: 'Sentence building', dictation: 'Dictation', train: 'Training', pics: 'Picture quiz', tricks: 'Article tricks', trick: 'Memory trick', videos: 'Videos on YouTube',
@@ -219,7 +219,7 @@
     ur: { cont: 'جاری رکھیں', listen: 'سنیں', speak: 'بولیں', check: 'جانچیں', next: 'اگلا', again: 'دوبارہ', trans: 'ترجمہ',
           right: 'درست!', almost: 'تقریباً درست', wrong: 'افسوس، غلط', chat: 'گفتگو کی مشق', weak: 'مشکل الفاظ',
           place: 'سطح جانچنے کا ٹیسٹ', newp: 'نیا شخص', name: 'نام', lesson: 'سبق', unit: 'یونٹ', done: 'مکمل', start: 'شروع',
-          book: 'میرا یونٹ', dict: 'لغت', praxis: 'مشق: روزمرہ زندگی اور کام', gram: 'قواعد', words: 'الفاظ', phrases: 'اہم جملے', read: 'پڑھنا', hear: 'سننا',
+          book: 'میرا یونٹ', dict: 'لغت', praxis: 'مشق: روزمرہ زندگی اور کام', b1pruef: 'B1 امتحان', gram: 'قواعد', words: 'الفاظ', phrases: 'اہم جملے', read: 'پڑھنا', hear: 'سننا',
           write: 'لکھنا', cards: 'یادداشتی کارڈ', print: 'پرنٹ', know: 'مجھے آتا ہے', practice: 'پھر سے مشق', flip: 'پلٹیں',
           correct: 'درست کریں', model: 'نمونہ جواب', play: 'چلائیں', showtext: 'متن دکھائیں', exercises: 'استاد کے ساتھ مشقیں', search: 'تلاش',
           wotd: 'آج کا لفظ', goal: 'روزانہ کا ہدف', review: 'روزانہ دہرائی', articles: 'حرفِ تعریف', order: 'جملہ بنانا', dictation: 'املا', train: 'مشق', pics: 'تصویری کوئز', tricks: 'حرفِ تعریف کے گُر', trick: 'یاد رکھنے کا گُر', videos: 'یوٹیوب پر ویڈیوز',
@@ -228,7 +228,7 @@
     ti: { cont: 'ቀጽል', listen: 'ስማዕ', speak: 'ተዛረብ', check: 'ፈትሽ', next: 'ዝቕጽል', again: 'ደጊም', trans: 'ትርጉም',
           right: 'ቅኑዕ!', almost: 'ዳርጋ ቅኑዕ', wrong: 'ጌጋ', chat: 'ልምምድ ዝርርብ', weak: 'ከቢድ ቃላት',
           place: 'ፈተና ደረጃ', newp: 'ሓድሽ ሰብ', name: 'ስም', lesson: 'ትምህርቲ', unit: 'ክፍሊ', done: 'ተወዲኡ', start: 'ጀምር',
-          book: 'ክፍለይ', dict: 'መዝገበ ቃላት', praxis: 'ልምምድ: መዓልታዊ ህይወትን ስራን', gram: 'ሰዋስው', words: 'ቃላት', phrases: 'ኣገደስቲ ሓረጋት', read: 'ምንባብ', hear: 'ምስማዕ',
+          book: 'ክፍለይ', dict: 'መዝገበ ቃላት', praxis: 'ልምምድ: መዓልታዊ ህይወትን ስራን', b1pruef: 'ፈተና B1', gram: 'ሰዋስው', words: 'ቃላት', phrases: 'ኣገደስቲ ሓረጋት', read: 'ምንባብ', hear: 'ምስማዕ',
           write: 'ምጽሓፍ', cards: 'ካርድታት ቃላት', print: 'ሕተም', know: 'እፈልጦ እየ', practice: 'ደጊም ተለማመድ', flip: 'ገልብጥ',
           correct: 'ኣርም', model: 'ኣብነታዊ መልሲ', play: 'ኣጻውት', showtext: 'ጽሑፍ ኣርኢ', exercises: 'ልምምድ ምስ መምህር', search: 'ድለ',
           wotd: 'ቃል ናይ ሎሚ', goal: 'መዓልታዊ ዕላማ', review: 'መዓልታዊ ድግግም', articles: 'መስተዋድድ', order: 'ሓረግ ምህናጽ', dictation: 'ጽሑፍ ብምስማዕ', train: 'ልምምድ', pics: 'ፈተና ብስእሊ', tricks: 'ምኽርታት መስተዋድድ', trick: 'መዘኻኸሪ', videos: 'ቪድዮታት ኣብ ዩቱብ',
@@ -506,7 +506,22 @@
       return '<button type="button" class="l-lvcard lvc-' + id + (id === cur ? ' on' : '') + '" data-setlv="' + id + '">' +
         '<span class="l-lvbig">' + esc(inf.kurz) + '</span><span class="l-lvtxt"><b>' + esc(inf.name === inf.kurz ? inf.stufe : inf.name) + '</b>' +
         '<small>' + esc(inf.was) + '</small><small class="l-lvn">' + n + ' Einheiten · ' + dn + ' fertig' + (id === cur ? ' · ✔ gewählt' : '') + '</small></span></button>';
-    }).join('') + '</div>';
+    }).join('') +
+      '<button type="button" class="l-lvcard lvc-pruef" id="lB1PruefCard"><span class="l-lvbig">B1 ✓</span><span class="l-lvtxt"><b>' + bi('B1-Prüfung', 'b1pruef') + '</b>' +
+      '<small>Nach B1: Musterprüfungen (Goethe, telc, DTZ) und Prüfungstraining für alle Prüfungsteile.</small><small class="l-lvn">Eigener Bereich · ändert dein Niveau nicht</small></span></button>' +
+      '</div>';
+  }
+  // Eigener Bereich für die B1-Prüfung (Musterprüfungen und Training), getrennt von den Lernniveaus
+  function showB1Pruefung() {
+    stopAll(); L.view = 'b1pruef'; topbar();
+    body('<div class="l-lhead"><span class="l-lvchip lvc-pruef">B1 ✓ · Prüfung</span><small>Eigenes Training, keine offizielle Prüfung</small></div>' +
+      '<h2 class="l-h">🎓 ' + bi('B1-Prüfung', 'b1pruef') + '</h2>' +
+      '<p class="l-note">Hier übst du für die B1-Prüfung. Am besten, wenn du die B1-Einheiten schon gelernt hast.</p>' +
+      '<div class="l-kacheln">' +
+      '<button type="button" class="l-kachel" id="lB1Muster"><span class="l-kachel-ic">📝</span><b>B1-Musterprüfungen</b><small>Goethe, telc und DTZ, je 5 Übungssätze</small></button>' +
+      '<a class="l-kachel" id="lB1Training" href="b1-pruefung.html"><span class="l-kachel-ic">🎯</span><b>B1-Prüfungstraining</b><small>Alle Prüfungsteile Schritt für Schritt üben</small></a>' +
+      '</div>');
+    $('lB1Muster').onclick = () => { if (window.SDB1Muster) window.SDB1Muster.open(); };
   }
   function showLevels() {
     stopAll(); L.view = 'levels'; topbar();
@@ -517,6 +532,7 @@
       '<button type="button" class="l-btn" id="lPlace2">🎯 ' + bi('Einstufungstest', 'place') + ' – ich weiß nicht, welches Niveau</button>');
     document.querySelectorAll('[data-setlv]').forEach(b => b.onclick = () => { setLevel(b.dataset.setlv); showHome(); });
     $('lPlace2').onclick = startPlacement;
+    $('lB1PruefCard').onclick = showB1Pruefung;
   }
 
   async function openLearn() {
@@ -645,7 +661,8 @@
       kachel('lChatBtn', '💬', 'Sprechen', 'chat', 'Gespräch mit dem KI-Lehrer') +
       kachel('lBookBtn', '📖', 'Meine Einheit', 'book', lv.units[p.unit] || '') +
       kachel('lDictBtn', '🔤', 'Wörterbuch', 'dict', 'Wörter suchen und hören') +
-      kachel('lPraxisBtn', '💬', 'Praxis: Alltag und Beruf', 'praxis', 'Gespräche, Termine, Briefe und Arbeit – Schritt für Schritt') + '</div>';
+      kachel('lPraxisBtn', '💬', 'Praxis: Alltag und Beruf', 'praxis', 'Gespräche, Termine, Briefe und Arbeit – Schritt für Schritt') +
+      (p.level === 'B1' ? kachel('lB1PruefBtn', '🎓', 'B1-Prüfung', 'b1pruef', 'Musterprüfungen und Prüfungstraining') : '') + '</div>';
     h += '<details class="l-level l-way lvc-' + p.level + '"><summary>🗺️ ' + bi('Dein Weg', 'way') + ' <small>' + esc(inf.kurz) + ' · ' + dn + '/' + nU + '</small></summary>';
     lv.units.forEach((u, i) => {
       const d5 = !!p.done[p.level + ':' + i + ':5'], cur = i === p.unit;
@@ -668,6 +685,7 @@
     $('lBookBtn').onclick = () => showUnit(p.level, p.unit);
     $('lDictBtn').onclick = showDict;
     $('lPraxisBtn').onclick = showPraxis;
+    if ($('lB1PruefBtn')) $('lB1PruefBtn').onclick = showB1Pruefung;
     $('lGramBtn').onclick = showGrammarAll;
     if ($('lWeakBtn')) $('lWeakBtn').onclick = startWeak;
     $('lPlaceBtn').onclick = startPlacement;
