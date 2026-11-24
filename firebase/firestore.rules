@@ -8,6 +8,11 @@ service cloud.firestore {
       allow create, update: if request.auth != null && request.auth.uid == userId
         && request.resource.data.size() <= 200;
     }
+    // Rückmeldungen (Feedback) schreibt und liest nur der Server mit dem Admin-SDK.
+    // Browser haben keinen Zugriff, auch nicht angemeldete Nutzer oder Admins.
+    match /feedbackPrivate/{id} {
+      allow read, write: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }
