@@ -366,8 +366,11 @@ function renderUniKatalog(){
   b.onclick=()=>{filter.dataset.wahl=w;[...filter.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert===w)));renderUniKatalog()}})}
  const wahl=filter.dataset.wahl||"";grid.replaceChildren();const uni=$("akUni");
  if(uni){const passend=akFilter.bereich&&K.some(k=>k.bereich===akFilter.bereich);uni.hidden=!passend;if(!passend)return}
- const erlaubt=["cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","www.elementsofai.com","open.hpi.de","ki-campus.org","www.coursera.org"];
- const farben={HU:"#a51c30",MIT:"#8a8b8c",UH:"#1d4f91",HPI:"#b1063a",KI:"#2b6cb0",UM:"#00274c",SU:"#8c1515",UI:"#e84a27",DU:"#012169",MSU:"#18453b"};
+ // Kosten-Filter nur zeigen, wenn es in dieser Fakultät auch Kurse mit kostenpflichtigem Teil gibt
+ const mitVorschau=K.some(k=>k.bereich===akFilter.bereich&&k.kosten==="vorschau");filter.hidden=!mitVorschau;
+ if(!mitVorschau&&wahl){filter.dataset.wahl="";[...filter.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert==="")));renderUniKatalog();return}
+ const erlaubt=["cs50.harvard.edu","ocw.mit.edu","programming-26.mooc.fi","www.elementsofai.com","open.hpi.de","ki-campus.org","www.coursera.org","www.vhs-lernportal.de"];
+ const farben={HU:"#a51c30",MIT:"#8a8b8c",UH:"#1d4f91",HPI:"#b1063a",KI:"#2b6cb0",UM:"#00274c",SU:"#8c1515",UI:"#e84a27",DU:"#012169",MSU:"#18453b",DVV:"#0b5f8a"};
  for(const k of K){
   if(wahl&&k.kosten!==wahl)continue;if(akFilter.bereich&&k.bereich!==akFilter.bereich&&k.bereich!=="Alle Stufen")continue;
   let url;try{url=new URL(k.url)}catch(e){continue}if(url.protocol!=="https:"||!erlaubt.includes(url.hostname))continue;

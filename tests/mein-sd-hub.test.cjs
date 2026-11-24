@@ -485,3 +485,11 @@ test("Python-, KI-, C++- und Rust-Lektionen: Muster ohne eval, Lösung besteht, 
   }
  }
 });
+test("Uni-Katalog: jede Fakultät hat passende Kurse, nur erlaubte https-Adressen",()=>{
+ const K=require(path.join(root,"mein-sd-hub/uni-katalog.js"));
+ const erlaubt=js.match(/const erlaubt=(\[[^\]]+\])/);assert.ok(erlaubt,"Liste erlaubter Adressen fehlt");const hosts=JSON.parse(erlaubt[1]);
+ const bereiche=JSON.parse(js.match(/const BEREICHE=(\[[^\]]+\])/)[1]);
+ for(const b of bereiche)assert.ok(K.some(k=>k.bereich===b),"keine Kurse für "+b);
+ for(const k of K){const u=new URL(k.url);assert.equal(u.protocol,"https:");assert.ok(hosts.includes(u.hostname),k.url);assert.ok(bereiche.includes(k.bereich),k.bereich);
+  assert.ok(["frei","vorschau"].includes(k.kosten));assert.doesNotMatch(k.titel,/ – /,"Titel ohne Gedankenstrich: "+k.titel)}
+});
