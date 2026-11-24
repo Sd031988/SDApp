@@ -24,7 +24,7 @@ function create({canvas,worldSize=512}={}){
   const point=project(p,worldSize,size,padding);if(!point)return;
   ctx.beginPath();ctx.arc(point.x,point.y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
  }
- function draw({player,goal=null,traffic=[],heading=0,objective=''}={}){
+ function draw({player,goal=null,traffic=[],loot=[],heading=0,objective='',zone=null}={}){
   if(disposed||!player)return false;
   ctx.clearRect(0,0,size,size);ctx.fillStyle='#153026';ctx.fillRect(0,0,size,size);
   ctx.fillStyle='#275044';ctx.fillRect(padding,padding,inner,inner);
@@ -37,7 +37,10 @@ function create({canvas,worldSize=512}={}){
   }
   ctx.strokeStyle='#aac4c9';ctx.lineWidth=1;
   ctx.strokeRect(padding,padding,inner,inner);
+  if(zone?.center&&Number.isFinite(zone.radius)){const center=project(zone.center,worldSize,size,padding),radius=Math.max(2,zone.radius/worldSize*inner);if(center){ctx.beginPath();ctx.arc(center.x,center.y,radius,0,Math.PI*2);ctx.fillStyle='rgba(238,73,64,.08)';ctx.fill();ctx.strokeStyle='#ff6258';ctx.lineWidth=2;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);}}
   for(const car of traffic.slice(0,24))dot(car,2.1,'#77d7ef');
+  const lootColors={ammo:'#f3c84b',medkit:'#4cde81',armor:'#57c9ed',pistol:'#e98b48',rifle:'#ef5b5b'};
+  for(const item of loot.slice(0,24))dot(item,2.3,lootColors[item.type]||'#ffffff');
   if(goal){dot(goal,6,'#fee27b');dot(goal,2.5,'#202a38');}
   const current=project(player,worldSize,size,padding);
   if(current){

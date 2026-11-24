@@ -74,7 +74,7 @@ test('Ops page: traffic and minimap run in real game loop, default Freie Stadt',
  const source=fs.readFileSync(path.join(__dirname,'nordhafen-ops.html'),'utf8');
  for(const marker of ['nordhafen-ops-traffic.js','nordhafen-ops-minimap.js',
    'id="mapPanel"','id="minimap"','id="mapToggle"',
-   'cityTraffic.update(dt,pos)','miniMap.draw(','trafficRules.create','minimapRules.create',
+   'cityTraffic.update(dt,pos','miniMap.draw(','trafficRules.create','minimapRules.create',
    '<option value="city" selected>'])assert.ok(source.includes(marker),marker);
  const js=source.slice(source.lastIndexOf('<script>')+8,source.lastIndexOf('</script>'));
  assert.doesNotThrow(()=>new vm.Script(js));
