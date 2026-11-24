@@ -19,16 +19,29 @@ async function raumZu(page){if(await page.evaluate(()=>document.body.classList.c
   page.on("dialog",d=>d.accept());
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
   await page.locator('[data-tab="akademie"]').click();
-  for(const g of ["Python & KI","C++ & Rust","Uni-Kurse & Videos"])assert.ok(await page.locator(".course-group h3",{hasText:g}).count()===1,g);
+  // Eingang: nur Lernplatz und Fakultäten, keine gemischte Kurs- oder Uni-Liste
+  assert.deepEqual(await page.locator("#akBereiche .ak-fak b").allInnerTexts(),["Deutsch","Computer & Internet","Programmieren","Python & KI","C++ & Rust","Cybersecurity"]);
+  assert.equal(await page.locator("#courses button.course").count(),0,"Eingang ohne Kursliste");
+  assert.equal(await page.locator("#akUni").isVisible(),false,"Eingang ohne Uni-Liste");
   // Profi-Katalog: Kennzahlen, Suche, Universitätskurse mit Kostenhinweis
   assert.equal(await page.locator("#akStats .ak-stat").count(),5);
   await page.locator("#akSuche").fill("Ownership");
   assert.equal(await page.locator("#courses button.course").count(),1);
   await page.locator("#akSuche").fill("");
-  assert.ok(await page.locator("#akUniGrid .ak-uni-karte").count()>=16);
-  assert.ok(await page.locator("#akUniGrid .ak-kosten").count()>=6,"Coursera-Kostenhinweis fehlt");
+  // Fakultät: eigene Seite mit Kursen, Videos und passenden Uni-Kursen; zurück zum Eingang
+  await page.locator('#akBereiche [data-wert="Python & KI"]').click();
+  assert.equal(await page.locator("#akFakKopf h3").innerText(),"Python & KI");
+  assert.equal(await page.locator("#courses button.course").count(),3);
+  assert.ok(await page.locator("#akFakVideos .kv-start").count()>=3,"Videos der Fakultät");
+  assert.equal(await page.locator("#akFakVideos iframe").count(),0,"kein YouTube vor dem Klick");
+  const uniPy=await page.evaluate(()=>window.SDUniKatalog.filter(k=>k.bereich==="Python & KI").length);
+  assert.equal(await page.locator("#akUniGrid .ak-uni-karte").count(),uniPy);
+  assert.ok(await page.locator("#akUniGrid .ak-kosten").count()>=1,"Coursera-Kostenhinweis fehlt");
   await page.locator("#akUniFilter button",{hasText:"Komplett kostenlos"}).click();
   assert.equal(await page.locator("#akUniGrid .ak-vorschau").count(),0);
+  await page.locator("#akFakKopf button",{hasText:"Alle Fakultäten"}).click();
+  assert.equal(await page.locator("#akBereiche").isVisible(),true,"zurück am Eingang");
+  await page.locator('#akBereiche [data-wert="Python & KI"]').click();
   await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^Python für Einsteiger$/})}).click();
   await page.locator(".code-lesson h4",{hasText:"Dein erstes Python-Programm"}).waitFor();
   // Kursraum: Kurs füllt den ganzen Bildschirm, Seitenleiste und Katalog sind verdeckt
@@ -66,6 +79,7 @@ async function raumZu(page){if(await page.evaluate(()=>document.body.classList.c
   assert.equal(await page.locator(".ak-lektion-nav").isVisible(),true,"Nächste Lektion erst am Ende");
   // C++-Lektion: Lösung zeigen, prüfen, ins Code-Studio übernehmen
   await page.locator("#kursZurueck").click();
+  await page.locator("#akFakKopf button",{hasText:"Alle Fakultäten"}).click();await page.locator('#akBereiche [data-wert="C++ & Rust"]').click();
   await raumZu(page);await page.locator(".course").filter({has:page.locator("b",{hasText:/^C\+\+ für Einsteiger$/})}).click();
   await page.locator(".code-lesson h4",{hasText:"Hallo Welt in C++"}).waitFor();
   await zuSeite(page,"Jetzt selbst schreiben");

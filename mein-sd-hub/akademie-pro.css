@@ -19,17 +19,8 @@ html[data-sd-theme="dark"] #akademie{--ak-card:var(--sd-surface,#203129);--ak-in
 #courses .course{position:relative;display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:16px;transition:transform .15s ease,box-shadow .15s ease}
 #courses .course:hover{transform:translateY(-2px);box-shadow:0 12px 30px #0f3a3014}
 @media (prefers-reduced-motion:reduce){#courses .course{transition:none}#courses .course:hover{transform:none}}
-#courses .course>*:not(.ak-banner){margin-left:18px;margin-right:18px}
+#courses .course>*{margin-left:18px;margin-right:18px}
 #courses .course>.emoji{display:none}
-.ak-banner{height:84px;display:flex;align-items:flex-end;justify-content:space-between;padding:12px 16px;color:#fff;margin-bottom:12px}
-.ak-banner .ak-icon{font-size:2.1rem;line-height:1;filter:drop-shadow(0 2px 4px #0004)}
-.ak-banner .ak-bereich{font:700 .7rem/1 inherit;letter-spacing:.08em;text-transform:uppercase;background:#ffffff2b;border:1px solid #ffffff55;border-radius:999px;padding:5px 9px}
-.ak-b-programmieren{background:linear-gradient(135deg,#1e3a8a,#3b82f6)}
-.ak-b-python-ki{background:linear-gradient(135deg,#065f46,#10b981)}
-.ak-b-cpp-rust{background:linear-gradient(135deg,#7c2d12,#ea580c)}
-.ak-b-uni{background:linear-gradient(135deg,#581c87,#a855f7)}
-.ak-b-computer{background:linear-gradient(135deg,#0f766e,#14b8a6)}
-.ak-b-deutsch{background:linear-gradient(135deg,#9f1239,#f43f5e)}
 
 #courses .course>b{font-size:1.05rem}
 .ak-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px!important;font-size:.8rem;color:var(--ak-muted);font-variant-numeric:tabular-nums}
@@ -189,10 +180,10 @@ html[data-sd-theme="dark"] .ak-wdh{--ak-card:#203129;--ak-ink:#edf5ef;--ak-muted
 #courses .course-group h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--ak-line),transparent)}
 .ak-stat b,.ak-lp-gross,.ak-lp-ring b{font-family:var(--ak-serif)!important;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
 @media (max-width:520px){.ak-lp-grid{grid-template-columns:1fr 1fr}.ak-lp-grid>.ak-lp-weiter{grid-column:1/-1}}
-.ak-fak-programmieren{--fak:#2f5d8a}.ak-fak-python-ki{--fak:#2e7d5b}.ak-fak-cpp-rust{--fak:#a4532a}.ak-fak-uni{--fak:#6b4c9a}
+.ak-fak-programmieren{--fak:#2f5d8a}.ak-fak-python-ki{--fak:#2e7d5b}.ak-fak-cpp-rust{--fak:#a4532a}
 .ak-fak-computer{--fak:#2c7a7b}.ak-fak-deutsch{--fak:#9b3546}.ak-fak-alle{--fak:#0f6b52}
 html[data-sd-theme="dark"] .ak-fak-programmieren{--fak:#8fb6e0}html[data-sd-theme="dark"] .ak-fak-python-ki{--fak:#8fe0b9}html[data-sd-theme="dark"] .ak-fak-cpp-rust{--fak:#f0a77d}
-html[data-sd-theme="dark"] .ak-fak-uni{--fak:#c4a8ec}html[data-sd-theme="dark"] .ak-fak-computer{--fak:#86d6d6}html[data-sd-theme="dark"] .ak-fak-deutsch{--fak:#f0a0ad}
+html[data-sd-theme="dark"] .ak-fak-computer{--fak:#86d6d6}html[data-sd-theme="dark"] .ak-fak-deutsch{--fak:#f0a0ad}
 html[data-sd-theme="dark"] .ak-fak-alle{--fak:#8fe0b9}
 .ak-fwappen{width:34px;height:39px;flex:none}
 .ak-fw-grund{fill:var(--fak);opacity:.1}
@@ -259,3 +250,28 @@ html[data-sd-theme="dark"] .ak-sec-hinweis{border-color:#f2a29a66;border-inline-
 .ak-term-zeile:focus-within{outline:3px solid var(--focus,#f9c94c);outline-offset:1px}
 .ak-term-hinweis{margin:0;font-size:.78rem;color:var(--ak-muted,#5a716b)}
 @media (max-width:520px){.ak-term-zeile .ak-term-prompt{max-width:45%;overflow:hidden;text-overflow:ellipsis}}
+
+/* Eingang und Fakultätsseiten */
+#akademie.ak-eingang #courses,#akademie.ak-eingang #akUni,#akademie.ak-eingang #akFakVideos,#akademie.ak-eingang #akTreffer{display:none}
+#akademie.ak-fak-offen>.ak-tor,#akademie.ak-fak-offen #akLernplatz,#akademie.ak-fak-offen .ak-fak-titel,#akademie.ak-fak-offen .ak-toolbar{display:none}
+.ak-fak-besch{display:none}
+#akademie.ak-eingang #akBereiche.ak-chips{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+#akademie.ak-eingang #akBereiche .ak-fak{align-items:flex-start;padding:18px 18px 16px;border-top:3px solid var(--fak);min-height:132px}
+#akademie.ak-eingang #akBereiche .ak-fwappen{width:42px;height:48px;flex:none}
+#akademie.ak-eingang .ak-fak-text b{font-size:1.2rem}
+#akademie.ak-eingang .ak-fak-besch{display:block;margin-top:6px;color:var(--ak-muted);font-size:.86rem;line-height:1.45}
+.ak-fak-kopf{display:grid;gap:14px;margin:0 0 18px;padding:18px 20px 20px;border-radius:18px;border:1px solid var(--ak-line);border-top:4px solid var(--fak);background:var(--ak-card)}
+.ak-fak-kopf>.btn{justify-self:start}
+.ak-fak-kopf-reihe{display:flex;gap:16px;align-items:flex-start}
+.ak-fak-kopf-reihe>div{min-width:0}
+.ak-fak-kopf-wappen{width:56px;height:64px;flex:none}
+.ak-fak-kopf h3{margin:2px 0 6px;font-family:var(--ak-serif);font-size:1.6rem;color:var(--ak-ink)}
+.ak-fak-kopf h3:focus{outline:none}
+.ak-fak-kopf p{margin:0;color:var(--ak-muted);line-height:1.55;max-width:70ch}
+.ak-fak-videos{margin:26px 0 8px}
+.ak-fak-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:12px;margin-bottom:12px}
+.ak-fak-video-grid .kv-karte{padding:10px;border:1px solid var(--ak-line);border-radius:14px;background:var(--ak-card);align-content:start}
+.ak-fak-video-kurs{color:var(--ak-muted);font-size:.78rem}
+@media (max-width:520px){#akademie.ak-eingang #akBereiche.ak-chips{grid-template-columns:1fr}.ak-fak-kopf-wappen{width:44px;height:50px}.ak-fak-kopf h3{font-size:1.35rem}}
+#akademie.ak-eingang .ak-toolbar{grid-template-areas:"fak fak" "suche stufe"}
+@media (max-width:520px){#akademie.ak-eingang .ak-toolbar{grid-template-areas:"fak" "suche" "stufe"}}

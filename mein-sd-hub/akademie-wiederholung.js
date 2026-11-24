@@ -431,20 +431,6 @@ W("c5-8",
  ["Was gehört zu einer guten Übergabe im Projekt?", ["Wer was bis wann macht und wo die Dateien liegen", "Nur ein „passt schon“", "Nichts Schriftliches"], 0, "Überprüfbare Absprachen vermeiden Missverständnisse."],
  ["Warum testet man die Wiederherstellung einer Sicherung?", ["Nur so weiß man, dass sie im Ernstfall funktioniert", "Weil es Spaß macht", "Das ist unnötig"], 0, "Eine ungetestete Sicherung kann unbrauchbar sein."]);
 
-/* ---------- Uni-Kurse ---------- */
-W("uk-1",
- ["Wofür steht CS50x?", ["Harvards Einführung in die Informatik", "Ein Spielekonsolen-Modell", "Ein Bankkonto"], 0, "CS50x vermittelt allgemeine Informatik-Grundlagen."],
- ["In welcher Sprache sind die CS50-Vorlesungen?", ["Englisch, mit Untertiteln", "Nur Deutsch", "Ohne Ton"], 0, "Untertitel und langsamere Wiedergabe helfen beim Verstehen."]);
-W("uk-2",
- ["Wer hat Elements of AI entwickelt?", ["Die Universität Helsinki", "Harvard", "Ein Supermarkt"], 0, "Der Kurs erklärt KI ohne Programmierkenntnisse."],
- ["Was ist bei vielen Kursen gleichzeitig ein Risiko?", ["Man beendet keinen", "Man lernt zu viel", "Sie werden teurer"], 0, "Besser einen Kurs abschließen."]);
-W("uk-3",
- ["Was bietet MIT OpenCourseWare kostenlos?", ["Unterlagen und Videos echter MIT-Kurse", "Bezahlte Abschlüsse", "Nur Werbung"], 0, "Ein Konto ist dafür nicht nötig."],
- ["Was hilft beim Helsinki-Python-Kurs besonders?", ["Automatisch geprüfte Programmieraufgaben", "Nur Videos ohne Übungen", "Ein Papierbuch"], 0, "Sofortige Rückmeldung zeigt, was noch fehlt."]);
-W("uk-4",
- ["Was ist das offizielle Lernbuch für Rust?", ["Das Rust-Buch auf doc.rust-lang.org", "Ein beliebiger Blog", "Eine App ohne Herkunft"], 0, "Es stammt vom Rust-Projekt selbst."],
- ["Was bringt dich beim Programmierenlernen am weitesten?", ["Regelmäßig üben und eigene kleine Projekte bauen", "Nur Videos ansehen", "Jede Woche eine neue Sprache"], 0, "Praxis festigt Wissen."]);
-
 /* ---------- Cybersecurity: Linux für Cybersicherheit ---------- */
 W("sec1-1",
  ["Was ist ein Snapshot einer virtuellen Maschine?", ["Ein gespeicherter Zustand, zu dem man zurückkehren kann", "Ein Foto vom Bildschirm", "Ein Virenscanner"], 0, "Nach einem Fehler stellst du den Snapshot wieder her."],

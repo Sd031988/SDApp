@@ -39,10 +39,18 @@ assert.equal(await page.locator("#statFavs").innerText(),"1");
 await page.locator("#nickname").fill("Tester");
 assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await raumZu(page);await page.locator('[data-tab="akademie"]').click();
-assert.equal(await page.locator("#courses .course").count(),await page.evaluate(()=>window.SDPersonalData.academy.filter(c=>c.bereich!=="Deutsch").length+1));
-// Deutsch ist ein einziger Bereich: in der Akademie genau eine Karte, die zu „Deutsch lernen“ führt
+// Eingang: Fakultäten statt gemischter Kursliste; jede Fakultät zeigt genau ihre Kurse
+assert.equal(await page.locator("#courses .course").count(),0);
+for(const [fak,anzahl] of await page.evaluate(()=>[...document.querySelectorAll("#akBereiche .ak-fak")].map(b=>[b.dataset.wert,b.dataset.wert==="Deutsch"?1:window.SDPersonalData.academy.filter(c=>c.bereich===b.dataset.wert).length]))){
+ await page.locator('#akBereiche [data-wert="'+fak+'"]').click();
+ assert.equal(await page.locator("#courses .course").count(),anzahl,fak);
+ await page.locator("#akFakKopf button").first().click();
+}
+// Deutsch ist ein einziger Bereich: genau eine Karte, die zu „Deutsch lernen“ führt
+await page.locator('#akBereiche [data-wert="Deutsch"]').click();
 assert.equal(await page.locator("#courses a.ak-deutsch-karte").count(),1);
 assert.match(await page.locator("#courses a.ak-deutsch-karte").getAttribute("href"),/\.\.\/deutsch\/$/);
+await page.locator("#akFakKopf button").first().click();
 await raumZu(page);await kursKlick(page,/^Programmieren anfangen$/);
 await page.locator(".lesson-btn").first().waitFor();
 const lessonChecks=await page.evaluate(()=>{
@@ -390,7 +398,7 @@ for(const width of [320,390,1300]){
  p5page.on("pageerror",e=>errors.push("P5 "+width+": "+e.message));
  await p5page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await raumZu(p5page);await p5page.locator('[data-tab="akademie"]').click();
- await raumZu(p5page);await p5page.locator(".course").filter({hasText:"Fortgeschritten: saubere Web-Apps"}).click();
+ await raumZu(p5page);await kursKlick(p5page,/^Fortgeschritten: saubere Web-Apps$/);
  await p5page.locator(".lesson-btn").first().waitFor();
  assert.equal(await p5page.locator(".lesson-btn").count(),8);
  for(let i=0;i<8;i++){

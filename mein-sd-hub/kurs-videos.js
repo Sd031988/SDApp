@@ -81,7 +81,6 @@
       "sec1-2": [V("jgXvAZ1Djms", "Linux Terminal Tutorial für Anfänger – Teil 1: Befehle ls und cd")],
       "sec1-3": [V("Oho8_foyW44", "Linux Terminal Tutorial für Einsteiger – Teil 2: mkdir, touch und echo")],
       "sec1-6": [V("hcXA2nePQ4M", "Linux-Rechte erklärt: chmod/chown für Linux, Unix & Raspberry Pi")]},
-    "uni-kurse": {"uk-1": [CS50P]},
     "buero-programme": {
       "c4-3": [V("hGe2e8cK7XM", "Geschäftsbrief-Vorlage nach DIN 5008 in Word erstellen")],
       "c4-4": [V("_4w00eWEEbg", "Excel lernen für Anfänger – Grundlagen, erste Formel erstellen")]},
@@ -105,6 +104,34 @@
   }
   const el = (tag, cls, text, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
 
+  // eine Videokarte: erst beim Tippen wird YouTube (nocookie) geladen
+  function karte(box, v, t) {
+    const k = el("div", "kv-karte", null, box);
+    const knopf = el("button", "kv-start", null, k); knopf.type = "button"; knopf.dataset.video = v.id;
+    el("span", "kv-play", "▶", knopf); el("span", "kv-name", v.t, knopf);
+    const link = el("a", "kv-link", t("Auf YouTube öffnen ↗"), k);
+    link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.id); link.target = "_blank"; link.rel = "noopener noreferrer";
+    knopf.addEventListener("click", () => {
+      const rahmen = el("div", "kv-rahmen");
+      const f2 = el("iframe", null, null, rahmen);
+      f2.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(v.id) + "?autoplay=1&rel=0";
+      f2.title = v.t; f2.loading = "lazy"; f2.allowFullscreen = true;
+      f2.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture; fullscreen");
+      f2.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+      knopf.replaceWith(rahmen);
+    });
+    return k;
+  }
+  // alle Videos mehrerer Kurse in Kursreihenfolge, jedes Video nur einmal
+  function liste(kurse) {
+    const gesehen = new Set(), out = [];
+    for (const kurs of kurse) {
+      const k = DATEN[kurs]; if (!k) continue;
+      for (const [schluessel, videos] of Object.entries(k).sort((x, y) => (x[0] === "_kurs") - (y[0] === "_kurs")))
+        for (const v of videos) if (!gesehen.has(v.id)) { gesehen.add(v.id); out.push(Object.assign({kurs, lektion: schluessel === "_kurs" ? "" : schluessel}, v)); }
+    }
+    return out;
+  }
   // baut den Videobereich; t = Übersetzungsfunktion für die Beschriftungen (optional)
   function bauen(parent, kurs, lektion, t) {
     const f = fuer(kurs, lektion); if (!f) return null;
@@ -112,23 +139,8 @@
     const box = el("section", "kv-box", null, parent);
     el("h5", "kv-titel", t(f.ganzerKurs ? "Video zum ganzen Kurs" : "Video zu dieser Lektion"), box);
     el("p", "kv-hinweis", t("Videos von anderen Anbietern auf YouTube. YouTube wird erst geladen, wenn du auf ein Video tippst."), box);
-    f.videos.forEach(v => {
-      const karte = el("div", "kv-karte", null, box);
-      const knopf = el("button", "kv-start", null, karte); knopf.type = "button"; knopf.dataset.video = v.id;
-      el("span", "kv-play", "▶", knopf); el("span", "kv-name", v.t, knopf);
-      const link = el("a", "kv-link", t("Auf YouTube öffnen ↗"), karte);
-      link.href = "https://www.youtube.com/watch?v=" + encodeURIComponent(v.id); link.target = "_blank"; link.rel = "noopener noreferrer";
-      knopf.addEventListener("click", () => {
-        const rahmen = el("div", "kv-rahmen");
-        const f2 = el("iframe", null, null, rahmen);
-        f2.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(v.id) + "?autoplay=1&rel=0";
-        f2.title = v.t; f2.loading = "lazy"; f2.allowFullscreen = true;
-        f2.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture; fullscreen");
-        f2.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-        knopf.replaceWith(rahmen);
-      });
-    });
+    f.videos.forEach(v => karte(box, v, t));
     return box;
   }
-  root.SDKursVideos = {daten: DATEN, fuer, bauen};
+  root.SDKursVideos = {daten: DATEN, fuer, bauen, karte, liste};
 })(typeof window !== "undefined" ? window : globalThis);

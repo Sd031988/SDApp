@@ -12,7 +12,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
 async function kursOeffnen(page,base){
  await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});
  await page.locator('[data-tab="akademie"]').click();
- await page.evaluate(()=>{document.querySelector("button.course[data-kurs=\"python-start\"]").click()});
+ await page.locator('#akBereiche [data-wert="Python & KI"]').click();await page.evaluate(()=>{document.querySelector("button.course[data-kurs=\"python-start\"]").click()});
  await page.locator(".code-lesson").waitFor();
 }
 async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n=>document.querySelector('.ak-step-balken button[aria-current="step"]')?.dataset.akTitle===n,name))return;await page.locator(".ak-step-nav .ak-weiter").click()}throw new Error("Seite nicht erreicht: "+name)}

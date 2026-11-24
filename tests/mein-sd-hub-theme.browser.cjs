@@ -20,6 +20,7 @@ try{
   assert.equal(await page.locator("#themeSwitch").inputValue(),"auto");
   if(route.includes("mein-sd-hub")){
    await page.locator('[data-tab="akademie"]').click();
+   await page.locator('#akBereiche [data-wert="Deutsch"]').click();
    await kursKlick(page,/^Deutsch im Alltag$/);
    await page.locator(".quiz").waitFor();
   }

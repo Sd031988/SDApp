@@ -52,6 +52,7 @@ async function zuSeite(page,name){for(let i=0;i<40;i++){if(await page.evaluate(n
   assert.match(await lp.locator(".ak-lp-wdh").innerText(),/Heute ist nichts fällig\.[\s\S]*Nächste Wiederholung/);
   const box=await page.evaluate(()=>JSON.parse(localStorage.getItem("sdhub.akademie.lernen.v1")).k["ps-1:0"].b);assert.equal(box,1,"Karte eine Box weiter");
   // Hilfe in drei Stufen in einer Web-Lektion (p-2)
+  await page.locator('#akBereiche [data-wert="Programmieren"]').click();
   await page.locator(".course").filter({has:page.locator("b",{hasText:/^Programmieren anfangen$/})}).click();
   await page.locator(".lesson-btn").nth(1).click();
   assert.match(await page.locator(".lesson-btn").first().innerText(),/✓ Geschafft/);
