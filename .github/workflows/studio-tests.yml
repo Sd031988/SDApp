@@ -96,6 +96,7 @@ jobs:
           node tests/studio/python-browser.browser.test.cjs
           node tests/studio/ki-vervollstaendigung.browser.test.cjs
           node tests/studio/browser.test.cjs
+          node tests/studio/fremd-vorschau.browser.test.cjs
           node tests/studio/ki-neues-projekt.browser.test.cjs
           node tests/studio/test-loop-browser.test.cjs
           node tests/studio/devtools-browser.test.cjs

@@ -482,7 +482,7 @@
                 showAlert('backupAlert', `Sicherung erfolgreich wiederhergestellt: ${new Date(result.timestamp).toLocaleString('de-DE')}`, 'success');
                 localStorage.setItem(`session_${sessionId}`, JSON.stringify(result.data));
                 setTimeout(() => {
-                    window.location.href = `Lebenslauf_app_v2.html?sessionId=${sessionId}`;
+                    window.location.href = `Lebenslauf_app.html`;
                 }, 2000);
             } else {
                 showAlert('backupAlert', 'Fehler beim Wiederherstellen: ' + result.error, 'danger');
@@ -496,7 +496,7 @@
             
             if (result.recovered && result.fromBackup) {
                 setTimeout(() => {
-                    window.location.href = `Lebenslauf_app_v2.html?sessionId=${sessionId}`;
+                    window.location.href = `Lebenslauf_app.html`;
                 }, 2000);
             }
         }

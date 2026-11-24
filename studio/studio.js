@@ -513,7 +513,7 @@ async function hochladen(dateien) {
     if (!confirm(vorschau)) { toast('ZIP-Import abgebrochen.'); return; }
     try {
       if (S.p && S.geaendert) await speichernJetzt();
-      await projSchreiben({ name, dateien: dateienNeu, haupt: analyse.start, versionen: [], erstellt: Date.now() });
+      await projSchreiben({ name, dateien: dateienNeu, haupt: analyse.start, versionen: [], erstellt: Date.now(), fremdQuelle: 'zip' });
       await projektOeffnen(name);
       ausgabe('⬆ ZIP importiert: ' + n + ' Dateien. Originalprojekt bleibt erhalten.\n\n' + projektImportBericht(analyse));
     } catch (err) { console.error(err); toast('ZIP-Import fehlgeschlagen.'); }
@@ -526,6 +526,7 @@ async function hochladen(dateien) {
     if (!pfad || f.size > 8e6) continue;
     if (S.p.dateien[pfad] != null && !confirm('Datei „' + pfad + '“ existiert bereits. Überschreiben?')) continue;
     S.p.dateien[pfad] = await dateiLesen(f); n++;
+    if (/\.(html?|m?js|svg)$/i.test(pfad)) S.p.fremdQuelle = S.p.fremdQuelle || 'hochgeladen';
   }
   await projSchreiben(S.p); baum(); ausgabe('⬆ ' + n + ' Datei(en) hinzugefügt.');
   if (istWebProjekt()) vorschau(true);
@@ -810,7 +811,7 @@ async function automatischerFehlerfinder() {
   while (await projLesen(name)) name=basis+'-'+nummer++;
   if (!confirm('Reparierte Projektkopie „'+name+'“ erstellen? Das Original bleibt unverändert.')) return;
   try {
-    await projSchreiben({name,dateien:kopie,haupt:projekt.haupt,versionen:[],erstellt:Date.now()});
+    await projSchreiben({name,dateien:kopie,haupt:projekt.haupt,versionen:[],erstellt:Date.now(),...(projekt.fremdQuelle?{fremdQuelle:projekt.fremdQuelle}:{})});
     await projektOeffnen(name);
     toast('Reparaturvorschlag als neues Projekt gespeichert.');
   } catch (e) { console.error(e); alert('Projektkopie konnte nicht gespeichert werden.'); }
@@ -966,6 +967,14 @@ function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung
   return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
 }
 function startSeite() { const d = Object.keys(S.p.dateien); if (S.aktiv && /\.html?$/i.test(S.aktiv)) return S.aktiv; return d.find(x => x === 'index.html') || d.find(x => /(^|\/)index\.html$/.test(x)) || d.find(x => /\.html?$/i.test(x)); }
+/* Fremder Code (KI, ZIP, GitHub, eingefügter Ordner/Text) läuft in einer abgeschotteten Vorschau ohne Zugriff
+   auf thesdhub.com (Anmeldung, gespeicherte Daten). Erst wenn die Person dem Projekt bewusst vertraut, wie eigener Code. */
+function istIsoliert(p) { return !!p && (Object.prototype.hasOwnProperty.call(p, 'kiQuelle') || !!p.fremdQuelle); }
+async function projektVertrauen() {
+  if (!S.p || !S.p.fremdQuelle) { toast('Dieses Projekt läuft schon wie dein eigener Code.'); return; }
+  if (!confirm('Diesem Projekt vertrauen?\n\nDann läuft sein Code mit Zugriff auf thesdhub.com – er könnte deine Anmeldung und gespeicherten Daten lesen. Nur machen, wenn du den Code kennst und ihm vertraust.')) return;
+  delete S.p.fremdQuelle; await projSchreiben(S.p); toast('Projekt wird jetzt wie eigener Code ausgeführt.'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(true);
+}
 async function vorschau(neu) {
   if (!S.p) return; const start = startSeite(); if (!start) { $('vorschau').hidden = true; return; }
   const vorschauProjekt = S.p;
@@ -976,18 +985,18 @@ async function vorschau(neu) {
   const f = $('frame');
   f.onload=()=>{try{f.contentWindow.postMessage({sdVisual:!!S.visuellerModus},'*')}catch(_){}};
   // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
-  f.setAttribute('sandbox', Object.prototype.hasOwnProperty.call(S.p,'kiQuelle') ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
+  f.setAttribute('sandbox', istIsoliert(S.p) ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
   // Sandboxed AI iframes have an opaque origin. Browsers can bypass the
   // Service Worker on their navigations and display GitHub Pages' real 404.
   // Load the project files directly as srcdoc instead; CSS/JS is bundled
   // by htmlZusammenbauen(). Keep allow-same-origin OFF for untrusted AI code.
-  const istKiProjekt = Object.prototype.hasOwnProperty.call(S.p, 'kiQuelle');
+  const istKiProjekt = istIsoliert(S.p);
   if (S.visuellerModus || istKiProjekt || !S.swBereit) {
     // srcdoc otherwise inherits the studio origin. Never give local preview its cookies/storage.
     f.setAttribute('sandbox', 'allow-scripts allow-forms');
     f.removeAttribute('src');
     f.srcdoc = htmlZusammenbauen(start);
-    $('url').value = '/' + start + ' (sichere lokale Vorschau)';
+    $('url').value = '/' + start + (S.p.fremdQuelle ? ' (isoliert: importiertes Projekt – „Projekt vertrauen“ im Befehlsmenü)' : ' (sichere lokale Vorschau)');
   } else {
     const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
     if (neu || !f.src.includes('/vorschau/') || !f.src.includes('/vorschau/' + encodeURIComponent(S.p.name) + '/')) { f.removeAttribute('srcdoc'); f.src = url; } else { try { f.contentWindow.location.reload(); } catch (e) { f.src = url; } }
@@ -1223,7 +1232,7 @@ function dateiSuchen() { if (!S.p) return; palette(Object.keys(S.p.dateien).filt
 function befehle() { const B = [
   ['▶ Ausführen', 'F5', ausfuehren], ['＋ Neue Datei', '', () => neueDatei('')], ['＋ Neues Projekt (Vorlage)', '', vorlagenWaehlen], ['🎓 Programmier-Lernmodus', '', programmierLernmodus], ['🎓 Lernaufgabe prüfen', '', lernaufgabePruefen], ['🎓 Lernfortschritt', '', lernfortschrittAnzeigen], ['🎓 Teilnahmezertifikat erstellen', '', lernZertifikat], ['📋 Anleitung/Code einfügen → Projekt aufbauen', '', () => einfuegenDialog('')],
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['🔎 JSON-Syntax prüfen', '', editorDiagnoseAnzeigen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
-  ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()],
+  ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()], ['🔓 Importiertem Projekt vertrauen', '', projektVertrauen],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['🖥 KI im Terminal (Gemini, Claude, Codex – PC)', '', () => window.SDPcTerminal && SDPcTerminal.kiImTerminal()], ['🖥 PC-Ordner öffnen (z. B. Unreal-Projekt)', '', () => window.SDPcOrdner && SDPcOrdner.oeffnen()], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen], ['🖼 JPEG XL Bild-Assets', '', () => window.open('./jpeg-xl.html', '_blank', 'noopener')],
   ['✎ Projekt umbenennen', '', projektUmbenennen], ['☁ Cloud-Backup als ZIP', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
@@ -1287,7 +1296,7 @@ async function githubProjektImport() {
     const basis=slug(adresse.repo).slice(0,65)||'github-projekt'; let name=basis,n=2;
     while(await projLesen(name)) name=basis+'-'+n++;
     if (S.p && S.geaendert) await speichernJetzt();
-    await projSchreiben({name,dateien,haupt:Object.keys(dateien).find(p=>/(^|\/)index\.html?$/i.test(p))||'',versionen:[],erstellt:Date.now()});
+    await projSchreiben({name,dateien,haupt:Object.keys(dateien).find(p=>/(^|\/)index\.html?$/i.test(p))||'',versionen:[],erstellt:Date.now(),fremdQuelle:'github'});
     await projektOeffnen(name);
     toast('GitHub-Projekt als lokale Kopie importiert.');
   } catch(e) { console.error(e); alert('GitHub-Import fehlgeschlagen: '+e.message+'\n\nEs wurden keine bestehenden Projekte verändert.'); }
@@ -1594,7 +1603,7 @@ async function visuellerWebsiteDesigner() {
     if (!confirm('Neue Projektkopie „'+name+'“ speichern? Das Original „'+projekt.name+'“ bleibt unverändert.')) return;
     const kopie = {...projekt.dateien,[start]:websiteDesignVorschlag(quelltext,settings())};
     try {
-      await projSchreiben({name,dateien:kopie,haupt:start,versionen:[],erstellt:Date.now()});
+      await projSchreiben({name,dateien:kopie,haupt:start,versionen:[],erstellt:Date.now(),...(projekt.fremdQuelle?{fremdQuelle:projekt.fremdQuelle}:{})});
       close(); await projektOeffnen(name); toast('Website-Design als neues Projekt gespeichert.');
     } catch (e) { console.error(e); alert('Speichern der Projektkopie fehlgeschlagen.'); }
   });
@@ -1757,7 +1766,7 @@ async function einfuegenDateienImportieren(dateien,istOrdner=false) {
  '\nStartdatei: '+(analyse.start||'Automatisch wählen')+
  '\n\nOK: Neues Projekt anlegen. Bestehende Projekte bleiben unverändert.'))return;
  if(S.p&&S.geaendert)await speichernJetzt();
- await projSchreiben({name,dateien:neu,haupt:analyse.start||analyse.pfade[0],versionen:[],erstellt:Date.now()});
+ await projSchreiben({name,dateien:neu,haupt:analyse.start||analyse.pfade[0],versionen:[],erstellt:Date.now(),fremdQuelle:'ordner'});
  await projektOeffnen(name);
  ausgabe('📦 Import abgeschlossen.\n\n'+projektImportBericht(analyse));
  if(typeof ansicht==='function')ansicht('code');
@@ -1837,6 +1846,7 @@ function einfuegenDialog(text) {
     if (p) { S.p = p; await versionNeu('Vor dem Einfügen', true); p = S.p; } else p = { name, dateien: {}, versionen: [], erstellt: Date.now() };
     erg.ordner.forEach(o => { if (!Object.keys({ ...p.dateien, ...erg.dateien }).some(d => d.startsWith(o + '/'))) p.dateien[o + '/.gitkeep'] = ''; });
     Object.entries(erg.dateien).forEach(([pfad, inhalt]) => { const sp = sicherPfad(pfad); if (sp && (inhalt.trim() || p.dateien[sp] == null)) p.dateien[sp] = inhalt; });
+    if (Object.keys(erg.dateien).some(d => /\.(html?|m?js|svg)$/i.test(d))) p.fremdQuelle = p.fremdQuelle || 'eingefuegt';
     await projSchreiben(p); box.hidden = true;
     const haupt = Object.keys(erg.dateien).find(d => /(^|\/)(main|app|server|index)\.(py|js|ts|html)$/.test(d)) || Object.keys(erg.dateien).find(d => erg.dateien[d].trim()) || Object.keys(erg.dateien)[0];
     await projektOeffnen(name, haupt);
@@ -2230,10 +2240,10 @@ function verdrahten() {
     const frame=$('frame');
     // Never write arbitrary srcdoc into a same-origin browser tab: it would expose Studio data.
     const src=frame.getAttribute('src');
-    if(src && S.swBereit && !Object.prototype.hasOwnProperty.call(S.p||{},'kiQuelle')){
+    if(src && S.swBereit && !istIsoliert(S.p)){
       window.open(src,'_blank','noopener,noreferrer');
     } else {
-      toast('Sicherheitsmodus: KI-Vorschau bleibt isoliert. Zum Weitergeben bitte das Projekt als ZIP exportieren.');
+      toast('Sicherheitsmodus: Diese Vorschau (KI-Code oder importiertes Projekt) bleibt isoliert. Zum Weitergeben bitte das Projekt als ZIP exportieren.');
     }
   };
   $('vZu').onclick = () => { $('vorschau').hidden = true; setTimeout(() => S.cm && S.cm.refresh(), 50); };
