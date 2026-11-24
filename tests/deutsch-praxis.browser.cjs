@@ -13,8 +13,9 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
  const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
  try{
   const page=await browser.newPage({locale:"de-DE",viewport:{width:390,height:844}});const errors=[];page.on("pageerror",e=>{if(!/localStorage/.test(e.message))errors.push(e.message)});
-  // Akademie: eine Karte führt zu Deutsch lernen
+  // Akademie: Fakultät Deutsch, eine Karte führt zu Deutsch lernen
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});await page.locator('[data-tab="akademie"]').click();
+  await page.locator('#akBereiche [data-wert="Deutsch"]').click();
   const karte=page.locator("#courses a.ak-deutsch-karte");assert.equal(await karte.count(),1);
   await Promise.all([page.waitForURL(/\/deutsch\/$/),karte.click()]);
   // Profil anlegen, Niveau A1 wählen, Praxis öffnen
