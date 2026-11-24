@@ -168,6 +168,50 @@ function renderAkStats(){
  const lektionen=D.academy.reduce((n,c)=>n+c.anzahl,0),stunden=Math.round(D.academy.reduce((n,c)=>n+(c.dauer||0),0)/60);
  [[D.academy.length,"Kurse"],[lektionen,"Lektionen"],[stunden+"+","Stunden Lernzeit"],[BEREICHE.length,"Fachbereiche"],["0 €","kostenlos, ohne Konto"]].forEach(([zahl,text])=>{const s=akNode("div","ak-stat",undefined,box);node("b","",String(zahl),s);akNode("span","",text,s)});
 }
+const EINSTIEG_TEXTE={
+ de:{overline:"Finde deinen Einstieg",title:"Womit möchtest du anfangen?",intro:"Wähle ein Ziel und erhalte eine passende Empfehlung für deinen ersten Kurs.",hint:"Du kannst jederzeit wechseln",group:"Lernziel auswählen",recommend:"Empfohlener Einstieg",path:"Dein möglicher Lernweg",start:"Diesen Kurs starten",germanStart:"Deutsch lernen öffnen",hours:"Stunden",minutes:"Minuten",lessons:"Lektionen",goals:["Programmieren lernen","Deutsch verbessern","Computer & Internet","Arbeit & Beruf"],reasons:{programmieren:"Ein guter Start, wenn du noch nie programmiert hast.",deutsch:"Der Deutschbereich führt vom Alphabet bis B1 und bündelt Alltag, Beruf und Prüfungstraining.",computer:"Starte mit den Grundlagen und baue Schritt für Schritt Sicherheit auf.",arbeit:"Beginne mit einem Suchprofil und gehe dann zur Bewerbung und zum Gespräch."}},
+ en:{overline:"Find your starting point",title:"What would you like to learn?",intro:"Choose a goal and get a recommendation for your first course.",hint:"You can change this any time",group:"Choose a learning goal",recommend:"Recommended first course",path:"A possible learning path",start:"Start this course",germanStart:"Open German learning",hours:"hours",minutes:"minutes",lessons:"lessons",goals:["Learn programming","Improve my German","Computer & internet","Work and career"],reasons:{programmieren:"A good first step if you have never programmed before.",deutsch:"The German learning area goes from the alphabet to B1, with everyday, work and exam practice.",computer:"Start with the basics and build confidence step by step.",arbeit:"Start with a job search profile, then work on applications and interviews."}},
+ fa:{overline:"نقطهٔ شروع خود را پیدا کنید",title:"دوست دارید از کجا شروع کنید؟",intro:"یک هدف انتخاب کنید تا دورهٔ مناسب برای شروع پیشنهاد شود.",hint:"هر زمان می‌توانید انتخاب را عوض کنید",group:"انتخاب هدف یادگیری",recommend:"پیشنهاد برای شروع",path:"یک مسیر یادگیری پیشنهادی",start:"شروع این دوره",germanStart:"باز کردن آموزش زبان آلمانی",hours:"ساعت",minutes:"دقیقه",lessons:"درس",goals:["یادگیری برنامه‌نویسی","تقویت زبان آلمانی","رایانه و اینترنت","کار و حرفه"],reasons:{programmieren:"اگر تا حالا برنامه‌نویسی نکرده‌اید، این دوره شروع خوبی است.",deutsch:"بخش آلمانی از الفبا تا سطح B1 را پوشش می‌دهد و زبان روزمره، کار و آمادگی آزمون را دربرمی‌گیرد.",computer:"از پایه شروع کنید و گام‌به‌گام مهارت خود را بیشتر کنید.",arbeit:"با ساختن یک پروفایل کاری شروع کنید و بعد سراغ درخواست کار و مصاحبه بروید."}},
+ ar:{overline:"اعثر على نقطة البداية",title:"بماذا تريد أن تبدأ؟",intro:"اختر هدفًا لنقترح عليك دورة مناسبة للبدء.",hint:"يمكنك تغيير اختيارك في أي وقت",group:"اختر هدف التعلم",recommend:"اقتراح للبدء",path:"مسار تعلم مقترح",start:"ابدأ هذه الدورة",germanStart:"افتح تعلم الألمانية",hours:"ساعات",minutes:"دقائق",lessons:"دروس",goals:["تعلم البرمجة","تحسين الألمانية","الحاسوب والإنترنت","العمل والمهنة"],reasons:{programmieren:"بداية مناسبة إذا لم تبرمج من قبل.",deutsch:"يبدأ قسم الألمانية من الأبجدية حتى B1 ويجمع بين الحياة اليومية والعمل والتدرب للامتحان.",computer:"ابدأ بالأساسيات وطوّر مهاراتك خطوةً خطوة.",arbeit:"ابدأ بملف للبحث عن عمل، ثم انتقل إلى التقديم والمقابلات."}},
+ ur:{overline:"اپنی شروعات تلاش کریں",title:"آپ کس چیز سے شروع کرنا چاہتے ہیں؟",intro:"ایک مقصد منتخب کریں اور ہم آپ کے لیے پہلا موزوں کورس تجویز کریں گے۔",hint:"آپ کسی بھی وقت انتخاب بدل سکتے ہیں",group:"سیکھنے کا مقصد منتخب کریں",recommend:"شروع کرنے کے لیے تجویز",path:"ممکنہ تعلیمی راستہ",start:"یہ کورس شروع کریں",germanStart:"جرمن سیکھنے کا صفحہ کھولیں",hours:"گھنٹے",minutes:"منٹ",lessons:"اسباق",goals:["پروگرامنگ سیکھیں","جرمن بہتر کریں","کمپیوٹر اور انٹرنیٹ","کام اور پیشہ"],reasons:{programmieren:"اگر آپ نے پہلے پروگرامنگ نہیں کی تو یہ اچھا آغاز ہے۔",deutsch:"جرمن کا حصہ حروفِ تہجی سے B1 تک ہے، جس میں روزمرہ، کام اور امتحان کی مشق شامل ہے۔",computer:"بنیادی باتوں سے شروع کریں اور قدم بہ قدم اعتماد بڑھائیں۔",arbeit:"ملازمت کی تلاش کا خاکہ بنائیں، پھر درخواست اور انٹرویو پر جائیں۔"}},
+ uk:{overline:"Знайдіть свій старт",title:"З чого ви хочете почати?",intro:"Оберіть мету — і ми запропонуємо відповідний перший курс.",hint:"Вибір можна змінити будь-коли",group:"Оберіть навчальну мету",recommend:"Рекомендований початок",path:"Можливий шлях навчання",start:"Почати цей курс",germanStart:"Відкрити вивчення німецької",hours:"годин",minutes:"хвилин",lessons:"уроків",goals:["Вивчати програмування","Покращити німецьку","Комп’ютер та інтернет","Робота і професія"],reasons:{programmieren:"Вдалий початок, якщо ви ще не програмували.",deutsch:"Розділ німецької веде від абетки до B1 та охоплює повсякденне життя, роботу й підготовку до іспиту.",computer:"Почніть з основ і крок за кроком розвивайте впевненість.",arbeit:"Почніть із профілю пошуку роботи, а потім перейдіть до заявок і співбесід."}},
+ ti:{overline:"ናይ መጀመርታ ነጥብኻ ርኸብ",title:"ካበይ ክትጅምር ትደሊ?",intro:"ሓደ ዕላማ ምረጽ፤ ንመጀመርታ ዝምችእ ኮርስ ክንምክረልካ ኢና።",hint:"ምርጫኻ ኣብ ዝኾነ ግዜ ክትቅይር ትኽእል",group:"ዕላማ ትምህርቲ ምረጽ",recommend:"ንመጀመርታ ዝምከር",path:"ዝከኣል መንገዲ ትምህርቲ",start:"ነዚ ኮርስ ጀምር",germanStart:"ትምህርቲ ጀርመን ክፈት",hours:"ሰዓታት",minutes:"ደቓይቕ",lessons:"ትምህርትታት",goals:["ፕሮግራሚንግ ተማሃር","ጀርመንኛ ኣመሓይሽ","ኮምፒዩተርን ኢንተርነትን","ስራሕን ሞያን"],reasons:{programmieren:"ቅድሚ ሕጂ ፕሮግራሚንግ እንተዘይገይርካ፡ ጽቡቕ መጀመርታ እዩ።",deutsch:"እቲ ናይ ጀርመንኛ ክፍሊ ካብ ፊደላት ክሳብ B1 ይሽፍን፤ ናይ መዓልታዊ ህይወት፣ ስራሕን ፈተናን ልምምድ የጠቓልል።",computer:"ብመሰረታት ጀምር እሞ ብደረጃ እምነትካ ኣዕብዮ።",arbeit:"ብመገዲ ስራሕ ዝደሊ ፕሮፋይል ጀምር፣ ድሕሪኡ ምልክታን ቃለ መሕትትን ርአ።"}}
+};
+const EINSTIEG_PFADE={programmieren:["code","webdesign","javascript"],computer:["digital","internet-email","sicher-im-netz"],arbeit:["arbeit-finden","career","gespraech-arbeitsstart"]};
+function renderAkEinstieg(){
+ const box=$("akEinstieg");if(!box)return;
+ const lang=(A&&A.lang&&A.lang())||"de",t=EINSTIEG_TEXTE[lang]||EINSTIEG_TEXTE.de;
+ const copy={overline:"akEinstiegOverline",title:"akEinstiegTitel",intro:"akEinstiegIntro",hint:"akEinstiegHinweis",label:"akEinstiegLabel",path:"akEinstiegPfadTitel"};
+ for(const [key,id] of Object.entries(copy))$(id).textContent=t[key];
+ $("akEinstiegZiele").setAttribute("aria-label",t.group);
+ [...box.querySelectorAll("[data-ak-ziel]")].forEach((b,i)=>{b.setAttribute("aria-pressed",String(b.dataset.akZiel===(box.dataset.ziel||"programmieren")));b.lastElementChild.textContent=t.goals[i]});
+ const ziel=box.dataset.ziel||"programmieren",deutsch=ziel==="deutsch";
+ const deutschItem=findItem("deutsch"),course=deutsch?null:findCourse((EINSTIEG_PFADE[ziel]||EINSTIEG_PFADE.programmieren)[0]);
+ const ids=course?(D.academyLessonIds[course.id]||[]):[];
+ const name=course?A.t(course.name):A.t(deutschItem?.title||"Deutsch lernen");
+ const summary=course?A.t(course.summary):A.t(deutschItem?.description||"Vom Alphabet bis B1 lernen.");
+ $("akEinstiegKurs").textContent=name;
+ $("akEinstiegKurz").textContent=summary;
+ $("akEinstiegGrund").textContent=t.reasons[ziel]||t.reasons.programmieren;
+ const meta=$("akEinstiegMeta");meta.replaceChildren();
+ const badges=deutsch?["A1–B1","Alltag & Beruf"]:[A.t(course.stufe),String(ids.length)+" "+t.lessons,(course.dauer>=60?Math.round(course.dauer/30)/2+" "+t.hours:course.dauer+" "+t.minutes)];
+ badges.forEach(value=>akNode("span","",value,meta));
+ const path=deutsch?["deutsch-a2","deutsch-b1"]:(EINSTIEG_PFADE[ziel]||EINSTIEG_PFADE.programmieren).slice(1);
+ const pathNames=deutsch?[name,...path.map(id=>{const c=findCourse(id);return c?A.t(c.name):id})]:[name,...path.map(id=>{const c=findCourse(id);return c?A.t(c.name):id})];
+ const list=$("akEinstiegPfad");list.replaceChildren();pathNames.forEach(text=>akNode("li","",text,list));
+ const start=$("akEinstiegStart");start.textContent=deutsch?t.germanStart:t.start;start.dataset.akZielAktiv=ziel;
+}
+$("akEinstiegZiele")?.addEventListener("click",e=>{const b=e.target.closest("[data-ak-ziel]");if(!b)return;$("akEinstieg").dataset.ziel=b.dataset.akZiel;renderAkEinstieg()});
+$("akEinstiegStart")?.addEventListener("click",()=>{
+ const ziel=$("akEinstieg").dataset.ziel||"programmieren";
+ if(ziel==="deutsch"){location.href="/deutsch/";return}
+ const course=findCourse((EINSTIEG_PFADE[ziel]||EINSTIEG_PFADE.programmieren)[0]);if(!course)return;
+ const chips=$("akBereiche");akFilter.text="";akFilter.bereich="";akFilter.stufe="";$("akSuche").value="";$("akStufe").value="";
+ if(chips)[...chips.children].forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.wert==="")));
+ setTab("akademie",false);const ids=D.academyLessonIds[course.id]||[];
+ courseId=course.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben();
+});
+document.addEventListener("sd-lang-changed",renderAkEinstieg);
 function renderAkToolbar(){
  const chips=$("akBereiche");if(!chips||chips.dataset.fertig)return;chips.dataset.fertig="1";
  const knopf=(wert,text)=>{const b=node("button","ak-fak",undefined,chips);b.type="button";b.dataset.wert=wert;b.setAttribute("aria-pressed",String(akFilter.bereich===wert));
@@ -827,5 +871,5 @@ $("speechSpeed").addEventListener("change",()=>stopSpeech());
 window.addEventListener("pagehide",()=>stopSpeech());
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopSpeech()});
 {const l=A.lang(),wahl=$("translateLang");if(wahl&&[...wahl.options].some(o=>o.value===l))wahl.value=l}
-renderDashboard();renderCourses();renderPaths();renderProjects();renderPhrases();if(!kursAusHash())setTab(location.hash.slice(1),false);
+renderDashboard();renderAkEinstieg();renderCourses();renderPaths();renderProjects();renderPhrases();if(!kursAusHash())setTab(location.hash.slice(1),false);
 })();
