@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test'), assert=require('node:assert/strict');
+const {createFeedback,approve,publicView,withdraw}=require('../feedback-server/domain.cjs');
+const config={enabled:true,consentVersion:'test-v1'};
+const input={adult:true,internalConsent:true,publicationConsent:true,consentVersion:'test-v1',language:'de',permission:'anonymous',answers:['A','B','','',''],approvedQuote:'B',firstName:'not retained'};
+test('default closed',()=>assert.throws(()=>createFeedback(input,{})));
+test('reject no consent, wrong version, unapproved quote',()=>{for(const patch of [{adult:false},{internalConsent:false},{publicationConsent:false},{consentVersion:'old'},{approvedQuote:'other'}])assert.throws(()=>createFeedback({...input,...patch},config));});
+test('private until verified admin approval',()=>{const {record}=createFeedback(input,config);assert.equal(record.firstName,'');assert.equal(publicView(record),null);assert.throws(()=>approve(record,{}));assert.deepEqual(publicView(approve(record,{verifiedAdmin:true})),{id:record.id,quote:'B'});});
+test('internal only never publishable',()=>{const {record}=createFeedback({...input,permission:'none'},config);assert.throws(()=>approve(record,{verifiedAdmin:true}));});
+test('withdraw removes all contents and prevents public view',()=>{const {record,token}=createFeedback(input,config);assert.notEqual(record.tokenHash,token);assert.throws(()=>withdraw(record,'0'.repeat(64)));const deleted=withdraw(approve(record,{verifiedAdmin:true}),token);assert.deepEqual(deleted,{id:record.id,status:'withdrawn'});assert.equal(publicView(deleted),null);});
+test('named publication only exposes approved fields',()=>{const {record}=createFeedback({...input,permission:'name',firstName:'Test'},config);assert.deepEqual(publicView(approve(record,{verifiedAdmin:true})),{id:record.id,quote:'B',firstName:'Test'});});
