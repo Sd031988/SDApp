@@ -39,6 +39,15 @@ function makeService(db,config){
    const snapshot=await collection.where('status','==','pending').limit(100).get();
    return snapshot.docs.map(doc=>{const {tokenHash,...safe}=doc.data();return safe;});
  },
+ // Für einen täglichen Server-Job: löscht abgelaufene, nicht veröffentlichte Rückmeldungen
+ async purgeExpired(now=new Date()){
+   const days=Number.isInteger(config?.retentionDays)&&config.retentionDays>0?config.retentionDays:domain.DEFAULT_RETENTION_DAYS;
+   const cutoff=new Date(now.getTime()-days*864e5).toISOString();
+   const snapshot=await collection.where('createdAt','<',cutoff).limit(500).get();
+   let deleted=0;
+   for(const doc of snapshot.docs){if(domain.isExpired(doc.data(),now,days)){await doc.ref.delete();deleted++;}}
+   return {deleted};
+ },
  async publicList(){
    if(config?.enabled!==true)return [];
    const snapshot=await collection.where('status','==','published').limit(100).get();

@@ -22,4 +22,12 @@ function createFeedback(input,config){
 function approve(record,actor){if(actor?.verifiedAdmin!==true||record.status!=='pending'||!['name','anonymous'].includes(record.permission)||!record.quote)throw Error('not allowed');return {...record,status:'published'};}
 function publicView(record){if(record.status!=='published'||!['name','anonymous'].includes(record.permission)||!record.quote)return null;return {id:record.id,quote:record.quote,...(record.permission==='name'?{firstName:record.firstName}:{})};}
 function withdraw(record,token){if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token)||!timingSafeEqual(Buffer.from(hash(token),'hex'),Buffer.from(record.tokenHash,'hex')))throw Error('invalid token');return {id:record.id,status:'withdrawn'};}
-module.exports={createFeedback,approve,publicView,withdraw};
+// Speicherfrist: nicht veröffentlichte Rückmeldungen (wartend oder nur intern) werden nach retentionDays gelöscht.
+// Veröffentlichte Stimmen bleiben, bis die Person sie widerruft oder ein Admin sie entfernt.
+const DEFAULT_RETENTION_DAYS=90;
+function isExpired(record,now=new Date(),retentionDays=DEFAULT_RETENTION_DAYS){
+ if(!record||record.status==='published')return false;
+ const created=Date.parse(record.createdAt);if(!Number.isFinite(created))return true;
+ return now.getTime()-created>retentionDays*864e5;
+}
+module.exports={createFeedback,approve,publicView,withdraw,isExpired,DEFAULT_RETENTION_DAYS};
