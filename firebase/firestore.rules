@@ -1,0 +1,15 @@
+rules_version = '2';
+// SD Suite – Firestore: jede Person sieht und ändert NUR ihre eigenen Daten unter users/{uid}/…
+// Alles andere ist gesperrt (auch für nicht angemeldete Besucher).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.size() <= 200;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

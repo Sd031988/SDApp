@@ -1,0 +1,16 @@
+rules_version = '2';
+// SD Suite – Storage: nur eigene Dateien unter users/{uid}/…, höchstens 10 MB pro Datei,
+// nur Bilder, PDFs und JSON. Alles andere ist gesperrt.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif)|application/pdf|application/json');
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -317,6 +317,11 @@ const SD_AUTH = {
     }
     const isDataUrl = typeof blobOrDataUrl === 'string' && blobOrDataUrl.startsWith('data:');
     const newBytes = isDataUrl ? estimateDataUrlBytes(blobOrDataUrl) : (blobOrDataUrl.size || 0);
+    // Gleiche Grenzen wie in firebase/storage.rules (dort prüft sie der Server noch einmal)
+    const typ = isDataUrl ? (blobOrDataUrl.slice(5, blobOrDataUrl.indexOf(';')) || '') : (blobOrDataUrl.type || '');
+    if (!/^(image\/(jpeg|png|webp|gif)|application\/pdf|application\/json)$/.test(typ)) throw new Error('Dieser Dateityp kann nicht gespeichert werden.');
+    if (newBytes >= MAX_USER_BYTES) throw new Error('Die Datei ist zu groß (höchstens 10 MB).');
+    if (!/^[\w\-./]+$/.test(path) || path.split('/').includes('..')) throw new Error('Ungültiger Dateiname.');
     const used = await getFirebaseUserUsageBytes();
     if (used + newBytes > MAX_USER_BYTES) {
       const usedMb = (used / (1024 * 1024)).toFixed(1);

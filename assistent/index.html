@@ -2746,7 +2746,7 @@
                 return await ocrBild('data:' + a.mime + ';base64,' + a.data, a.name, '');
             }
             const pdfjs = await ladePdfJs();
-            const pdf = await pdfjs.getDocument({ data: base64ZuBytes(a.data) }).promise;
+            const pdf = await pdfjs.getDocument({ data: base64ZuBytes(a.data), isEvalSupported: false }).promise;
             const seiten = [];
             for (let n = 1; n <= pdf.numPages; n++) {
                 const seite = await pdf.getPage(n);

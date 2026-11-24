@@ -81,8 +81,8 @@
 
         <section class="karte">
             <h2>GitHub-Zugang (zum Speichern)</h2>
-            <p class="info">Änderungen werden direkt in dein Repository <span class="mono">Sd031988/SDApp</span> geschrieben. Dafür braucht diese Seite einen GitHub-Token mit „repo“-Recht:
-                <a href="https://github.com/settings/tokens/new?scopes=repo&amp;description=SD%20Lotze%20Zugaenge" target="_blank" rel="noopener">Token erstellen</a>. Er bleibt nur in diesem Browser.</p>
+            <p class="info">Änderungen werden direkt in dein Repository <span class="mono">Sd031988/SDApp</span> geschrieben. Dafür braucht diese Seite einen <b>Fine-grained</b>-Token, der NUR für <span class="mono">Sd031988/SDApp</span> gilt (Repository permissions → Contents: Read and write, kurze Laufzeit):
+                <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Token erstellen</a>. Er bleibt nur in diesem Tab und ist weg, sobald du ihn schließt.</p>
             <form id="tokenForm" class="zeile" autocomplete="off">
                 <input type="password" id="token" class="mono" placeholder="ghp_…">
                 <button type="submit" class="zweit">Speichern</button><span class="info" id="tokenStatus"></span>
@@ -101,7 +101,9 @@
     let adminCode = '', kRaw = null, dRaw = null, zug = null, register = null;
 
     const log = (t, fehler) => { $('log').textContent = t; $('log').classList.toggle('fehler', !!fehler); };
-    const lies = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+    const lies = k => { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } };
+    // Früher lag der GitHub-Token dauerhaft im Browser – alten Eintrag entfernen
+    try { localStorage.removeItem('sdAdminGhToken'); } catch (e) { /* egal */ }
     const holeJson = async p => { const r = await fetch(p + '?t=' + Date.now(), { cache: 'no-store' }); if (!r.ok) throw new Error(p + ': HTTP ' + r.status); return r.json(); };
     const neueVersion = () => new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
     const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -250,7 +252,7 @@
     };
     $('tokenForm').onsubmit = (e) => {
         e.preventDefault(); const t = $('token').value.trim(); if (!t || /^•+$/.test(t)) return;
-        try { localStorage.setItem('sdAdminGhToken', t); } catch (x) { /* egal */ }
+        try { sessionStorage.setItem('sdAdminGhToken', t); } catch (x) { /* egal */ }
         $('token').value = '••••••••'; $('tokenStatus').textContent = '✓ gespeichert';
     };
 })();

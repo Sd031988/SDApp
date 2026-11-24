@@ -1092,7 +1092,7 @@
         async function parsePDF(file) {
             try {
                 const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsWorker.getDocument(arrayBuffer).promise;
+                const pdf = await pdfjsWorker.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
                 let text = '';
 
                 for (let i = 1; i <= pdf.numPages; i++) {

@@ -2051,7 +2051,7 @@
             try {
                 const lib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs');
                 lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-                const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+                const pdf = await lib.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
                 const breite = Math.min(2600, Math.max(1200, ($('pdfSeiten').clientWidth || 800) * (window.devicePixelRatio || 1) * 2.3));   // scharf auch beim Vergrößern
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const seite = await pdf.getPage(i);

@@ -20,7 +20,7 @@
 
   // Text jeder Seite (Wort + Position) lesen
   async function seitenText(bytes, pdfjs) {
-    const pdf = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+    const pdf = await pdfjs.getDocument({ data: bytes.slice(0), isEvalSupported: false }).promise;
     const seiten = [];
     for (let i = 1; i <= pdf.numPages; i++) {
       const s = await pdf.getPage(i);

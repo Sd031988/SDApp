@@ -1523,7 +1523,7 @@
     async function importPdfFile(file) {
       showToast(`${file.name} wird geladen...`, 4000);
       const buffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+      const pdf = await pdfjsLib.getDocument({ data: buffer, isEvalSupported: false }).promise;
 
       for (let n = 1; n <= pdf.numPages; n++) {
         const pdfPage = await pdf.getPage(n);

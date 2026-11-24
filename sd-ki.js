@@ -889,7 +889,7 @@
     if (/^image\//.test(typ)) return ocr(file, status);
     if (typ === 'application/pdf' || /\.pdf$/.test(name)) {
       const pdfjs = await ladePdfJs();
-      const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
       const seiten = [];
       for (let n = 1; n <= pdf.numPages; n++) {
         const inhalt = await (await pdf.getPage(n)).getTextContent();
