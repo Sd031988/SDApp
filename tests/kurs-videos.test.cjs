@@ -9,3 +9,7 @@ test("Videos gehören zu echten Kursen und Lektionen",()=>{
    assert.ok(vs.length>0);for(const v of vs){assert.match(v.id,/^[A-Za-z0-9_-]{11}$/,"ungültige Video-ID "+v.id);assert.ok(v.t&&v.t.length>5)}}}
 });
 test("jeder Kurs hat mindestens ein Video",()=>{for(const k of Object.keys(window.SDAkademieKurse))if(!/^(cpp-spiele)$/.test(k))assert.ok(window.SDKursVideos.daten[k],"keine Videos: "+k)});
+test("Deutsch-Weg: Videos für Alphabetisierung und B1-Prüfung haben gültige IDs",()=>{
+ const w=window.SDKursVideos.weg;assert.deepEqual(Object.keys(w),["alpha","pruefung"]);
+ for(const vs of Object.values(w)){assert.ok(vs.length>=1);for(const v of vs){assert.match(v.id,/^[A-Za-z0-9_-]{11}$/);assert.ok(v.t.length>5)}}
+});

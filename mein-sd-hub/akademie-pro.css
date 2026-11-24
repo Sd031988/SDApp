@@ -275,3 +275,10 @@ html[data-sd-theme="dark"] .ak-sec-hinweis{border-color:#f2a29a66;border-inline-
 @media (max-width:520px){#akademie.ak-eingang #akBereiche.ak-chips{grid-template-columns:1fr}.ak-fak-kopf-wappen{width:44px;height:50px}.ak-fak-kopf h3{font-size:1.35rem}}
 #akademie.ak-eingang .ak-toolbar{grid-template-areas:"fak fak" "suche stufe"}
 @media (max-width:520px){#akademie.ak-eingang .ak-toolbar{grid-template-areas:"fak" "suche" "stufe"}}
+/* Deutsch-Weg: Stufen der Reihe nach */
+.ak-weg-stufe{display:flex;flex-direction:column;gap:6px}
+.ak-weg-nr{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--fak);color:#fff;font-weight:700;font-size:.9rem;flex:none}
+.ak-weg-stufe .ak-cta{padding:8px 0 4px;text-decoration:none}
+.ak-weg-stufe .ak-cta:hover,.ak-weg-stufe .ak-cta:focus-visible{text-decoration:underline}
+.ak-weg-videos{margin:0 18px 14px;border-top:1px solid var(--ak-line);padding-top:10px;display:grid;gap:8px}
+.ak-weg-videos summary{cursor:pointer;font-weight:600;color:var(--ak-ink)}

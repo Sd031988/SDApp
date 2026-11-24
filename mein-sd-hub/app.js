@@ -172,7 +172,7 @@ function renderAkToolbar(){
  const chips=$("akBereiche");if(!chips||chips.dataset.fertig)return;chips.dataset.fertig="1";
  const knopf=(wert,text)=>{const b=node("button","ak-fak",undefined,chips);b.type="button";b.dataset.wert=wert;b.setAttribute("aria-pressed",String(akFilter.bereich===wert));
   const kl=wert?BEREICH_KLASSE[wert]:"alle";b.classList.add("ak-fak-"+kl);b.append(wappen(kl));const t=node("span","ak-fak-text",undefined,b);akNode("b","",text,t);
-  const n=wert?D.academy.filter(c=>c.bereich===wert).length:D.academy.length;akNode("small","",A.t(n===1?"{n} Kurs":"{n} Kurse").replace("{n}",n),t);if(FAK_TEXT[wert])akNode("span","ak-fak-besch",FAK_TEXT[wert],t);
+  const n=wert?D.academy.filter(c=>c.bereich===wert).length:D.academy.length;akNode("small","",wert==="Deutsch"?A.t("{n} Stufen").replace("{n}",DEUTSCH_WEG.length):A.t(n===1?"{n} Kurs":"{n} Kurse").replace("{n}",n),t);if(FAK_TEXT[wert])akNode("span","ak-fak-besch",FAK_TEXT[wert],t);
   b.onclick=()=>fakultaetOeffnen(wert)};
  BEREICHE.forEach(b=>knopf(b,b));
  $("akSuche").addEventListener("input",e=>{akFilter.text=e.target.value;renderCourses()});
@@ -181,12 +181,12 @@ function renderAkToolbar(){
 /* Fakultäten: Der Eingang zeigt nur Lernplatz und Fakultäten. Eine Fakultät öffnet ihre eigene Seite mit
    Kursen in Lernreihenfolge, ihren Videos und den passenden Kursen von Universitäten. */
 const FAK_TEXT={
- "Deutsch":"Vom Alphabet bis B1 und Deutsch für den Beruf – mit Hören, Sprechen, Erklärungen in mehreren Sprachen und Prüfungstraining.",
+ "Deutsch":"Vom Alphabet bis B1 und Deutsch für den Beruf. Mit Hören, Sprechen, Erklärungen in mehreren Sprachen und Prüfungstraining.",
  "Computer & Internet":"Vom ersten Einschalten über Internet, E-Mail und Sicherheit bis zu Büro-Programmen und Profi-Werkzeugen.",
- "Programmieren":"Webseiten mit HTML und CSS, danach JavaScript bis zu sauberen Web-Apps – mit Übungen direkt im Browser.",
+ "Programmieren":"Webseiten mit HTML und CSS, danach JavaScript bis zu sauberen Web-Apps. Mit Übungen direkt im Browser.",
  "Python & KI":"Python von Anfang an, dann Aufbau und erste Projekte mit Künstlicher Intelligenz.",
  "C++ & Rust":"C++ für Einsteiger, Spiele-Logik mit C++ und der Einstieg in Rust.",
- "Cybersecurity":"Verteidigen lernen: Linux, Rechte und sicheres Arbeiten – nur legal, auf eigenen Geräten und auf Übungsplattformen."};
+ "Cybersecurity":"Verteidigen lernen: Linux, Rechte und sicheres Arbeiten. Nur legal, auf eigenen Geräten und auf Übungsplattformen."};
 let fakPopIgnorieren=false;
 function fakultaetOeffnen(b){akFilter.bereich=b;akFilter.text="";akFilter.stufe="";const su=$("akSuche"),st=$("akStufe");if(su)su.value="";if(st)st.value="";
  kursOffen=false;renderCourses();zeigeKursOben();
@@ -205,7 +205,7 @@ function renderFakultaet(eingang){
  const reihe=node("div","ak-fak-kopf-reihe",undefined,kopf);reihe.append(wappen(kl,"ak-fak-kopf-wappen"));
  const t=node("div","",undefined,reihe);akNode("span","overline","Fakultät",t);const h=akNode("h3","",b,t);h.tabIndex=-1;h.id="akFakTitel";akNode("p","",FAK_TEXT[b]||"",t);
  // Videos aller Kurse dieser Fakultät (nur geprüfte, YouTube lädt erst beim Tippen)
- const KV=window.SDKursVideos;if(!KV||!KV.liste)return;
+ const KV=window.SDKursVideos;if(!KV||!KV.liste||b==="Deutsch")return;
  const kurse=D.academy.filter(c=>c.bereich===b).map(c=>c.id),alle=KV.liste(kurse);if(!alle.length)return;
  vid.hidden=false;const kv=node("div","ak-uni-head",undefined,vid);akNode("span","overline","Zum Anschauen",kv);akNode("h3","","Videos dieser Fakultät",kv);
  akNode("p","","Videos von anderen Anbietern auf YouTube. YouTube wird erst geladen, wenn du auf ein Video tippst.",kv);
@@ -304,13 +304,25 @@ function stufenText(id){const s=L?L.stufe(id,state.completedLessons.includes(id)
 function kursAusHash(){const m=location.hash.match(/^#kurs=([\w-]+)$/);if(!m)return false;const c=D.academy.find(x=>x.id===m[1]);if(!c)return false;
  history.replaceState(null,"","#akademie");setTab("akademie",false);const ids=D.academyLessonIds[c.id]||[];
  akFilter.bereich=BEREICHE.includes(c.bereich)?c.bereich:"";courseId=c.id;lessonId=ids.find(id=>!state.completedLessons.includes(id))||ids[0];answered=false;kursOffen=true;renderCourses();zeigeKursOben();return true}
-/* Deutsch lernen ist ein eigener, vollständiger Bereich (Alphabet bis B1, Praxis für Alltag und Beruf, B1-Training).
-   Die Akademie zeigt dafür eine einzige Karte, damit Deutsch nicht an zwei Stellen getrennt angeboten wird. */
-function deutschKarte(entries){
- const a=akNode("a","course ak-deutsch-karte",undefined,entries);a.href="../deutsch/";
- a.classList.add("ak-k","ak-fak-deutsch");const kopf=node("span","ak-k-kopf",undefined,a);kopf.append(wappen("deutsch"));node("span","ak-k-code","DE A1–B1",kopf);akNode("b","","Deutsch lernen – vom Alphabet bis B1",a);akNode("span","badge","Alphabet · A1 · A2 · B1",a);
- akNode("small","","Alle Deutschkurse an einem Ort: Einheiten mit Wörtern, Grammatik, Hören und Sprechen, Erklärungen auf Dari, Englisch, Urdu und Tigrinya, dazu Praxis für Alltag und Beruf und B1-Prüfungstraining.",a);
- akNode("span","ak-cta","Zu Deutsch lernen →",a);
+/* Deutsch lernen ist ein eigener, vollständiger Bereich (deutsch/). Die Fakultät Deutsch zeigt den ganzen Weg
+   der Reihe nach; jede Stufe öffnet die Deutsch-App direkt dort (…/deutsch/?stufe=…), mit passenden Videos. */
+const DEUTSCH_WEG=[
+ {stufe:"alpha",titel:"Alphabetisierung",text:"Buchstaben, Laute und Silben. Die ersten Wörter lesen und schreiben.",videos:()=>(window.SDKursVideos?.weg?.alpha)||[]},
+ {stufe:"A1",titel:"A1",text:"Sich vorstellen, einkaufen, wohnen, zum Arzt gehen. Einfache Sätze für den Alltag.",videos:()=>window.SDKursVideos?.liste(["german"])||[]},
+ {stufe:"A2",titel:"A2",text:"Ämter, Wohnungssuche, Arbeit, Gesundheit und Schule. Über Vergangenes sprechen.",videos:()=>window.SDKursVideos?.liste(["deutsch-a2"])||[]},
+ {stufe:"B1",titel:"B1",text:"Meinung sagen, Briefe schreiben, Rechte und Pflichten. Sicher im Alltag und im Beruf.",videos:()=>window.SDKursVideos?.liste(["deutsch-b1"])||[]},
+ {stufe:"pruefung",titel:"B1-Prüfung",text:"Training mit Musterprüfungen für Hören, Lesen, Schreiben und Sprechen. Keine offizielle Prüfung.",videos:()=>(window.SDKursVideos?.weg?.pruefung)||[]},
+ {stufe:"beruf",titel:"Deutsch für den Beruf",text:"Arbeitsaufträge klären, in Besprechungen berichten, berufliche E-Mails und Telefonate auf B1/B2.",videos:()=>window.SDKursVideos?.liste(["deutsch-beruf"])||[]}];
+function deutschWeg(entries){
+ entries.classList.add("ak-weg");
+ DEUTSCH_WEG.forEach((w,i)=>{
+  const k=node("article","course ak-k ak-fak-deutsch ak-weg-stufe",undefined,entries);k.dataset.stufe=w.stufe;
+  const kopf=node("span","ak-k-kopf",undefined,k);node("span","ak-weg-nr",String(i+1),kopf);node("span","ak-k-code",A.t("Stufe {n}").replace("{n}",i+1),kopf);
+  akNode("b","",w.titel,k);akNode("small","ak-k-text",w.text,k);
+  const a=akNode("a","ak-cta","Öffnen →",k);a.href="../deutsch/?stufe="+encodeURIComponent(w.stufe);
+  const vs=w.videos();if(vs.length&&window.SDKursVideos){const d=node("details","ak-weg-videos",undefined,k);akNode("summary","",A.t("Videos ({n})").replace("{n}",vs.length),d);
+   d.addEventListener("toggle",()=>{if(d.open&&!d.dataset.fertig){d.dataset.fertig="1";vs.forEach(v=>window.SDKursVideos.karte(d,v,x=>A.t(x)))}})}
+ });
 }
 function renderCourses(){
  renderAkStats();renderAkToolbar();renderUniKatalog();renderLernplatz();
@@ -322,7 +334,7 @@ function renderCourses(){
   const group=akNode("section","course-group",undefined,$("courses"));
   if(!akFilter.bereich)akNode("h3","",bereich,group);
   const entries=akNode("div","course-group-list",undefined,group);
-  if(bereich==="Deutsch"){treffer+=sichtbar.length;deutschKarte(entries);continue}
+  if(bereich==="Deutsch"){treffer+=sichtbar.length;deutschWeg(entries);continue}
   for(const course of sichtbar){
    treffer++;
    const ids=D.academyLessonIds[course.id]||[];

@@ -544,7 +544,19 @@
     const c = await curriculum();
     await Promise.race([syncNow(), new Promise(r => setTimeout(r, 4000))]);
     if (!c) { body('<div class="l-card">❌ Der Lehrplan konnte nicht geladen werden. Bitte Internet prüfen und neu öffnen.</div>'); return; }
+    if (prof() && direktZiel()) return;
     if (prof()) showHome(); else showProfiles();
+  }
+  // Direkte Adressen aus der SD Akademie: /deutsch/?stufe=alpha|A1|A2|B1|pruefung|beruf
+  // Gilt nur für ein vorhandenes Profil; neue Lernende legen erst ihr Profil an (mit Einstufung).
+  function direktZiel() {
+    let z = ''; try { z = new URLSearchParams(location.search).get('stufe') || ''; } catch (e) { return false; }
+    if (!z) return false;
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    if (LEVEL_IDS.includes(z)) { setLevel(z); showHome(); return true; }
+    if (z === 'pruefung') { showB1Pruefung(); return true; }
+    if (z === 'beruf') { showPraxis('deutsch-beruf'); return true; }
+    return false;
   }
   function closeLearn() { stopAll(); location.href = '../index.html#bereiche'; }
 
@@ -752,7 +764,7 @@
     };
     const beob = new MutationObserver(lauf); lauf();
   }
-  async function showPraxis() {
+  async function showPraxis(ziel) {
     if (!prof()) { showProfiles(); return; }
     stopAll(); L.view = 'praxis'; topbar();
     body('<div class="l-loading"><div class="l-spin"></div>Einen Moment …</div>');
@@ -767,13 +779,14 @@
       '<p class="l-note">Echte Situationen Schritt für Schritt: Gespräche, Termine, Briefe, Telefonate und Arbeit – mit Übungen zum Lesen, Hören und Schreiben.</p>';
     PRAXIS.forEach((k, i) => {
       const ls = kurse[i], dn = ls.filter(l => f[l.id]).length, passt = k.niveau.includes(p.level);
-      h += '<details class="l-level l-praxis"' + (passt ? ' open' : '') + '><summary>' + esc(k.name) + ' <small>' + dn + '/' + ls.length + (passt ? ' · passt zu deinem Niveau' : '') + '</small></summary>';
+      h += '<details class="l-level l-praxis" data-praxis="' + esc(k.id) + '"' + (passt || ziel === k.id ? ' open' : '') + '><summary>' + esc(k.name) + ' <small>' + dn + '/' + ls.length + (passt ? ' · passt zu deinem Niveau' : '') + '</small></summary>';
       ls.forEach(l => { const u = (ues[i] || {})[l.title]; h += '<button type="button" class="l-unit" data-pl="' + esc(k.id) + '|' + esc(l.id) + '"><span>' + (f[l.id] ? '✅' : '○') + ' ' + esc(l.title) +
         (u ? '<span class="l-l1 l-px-tr"' + l1Attr() + '>' + pxHtml(u) + '</span>' : '') + '</span><small>' + esc(l.minutes || '') + ' Min.</small></button>'; });
       h += '</details>';
     });
     body(h);
     document.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { const [k, l] = b.dataset.pl.split('|'); startPraxis(k, l); });
+    const z = ziel && document.querySelector('[data-praxis="' + ziel + '"]'); if (z) z.scrollIntoView({block: 'start'});
   }
   const KV_FA = {'Video zu dieser Lektion': 'ویدیو برای این درس', 'Video zum ganzen Kurs': 'ویدیو برای تمام کورس',
     'Videos von anderen Anbietern auf YouTube. YouTube wird erst geladen, wenn du auf ein Video tippst.': 'ویدیوها از ارائه‌دهندگان دیگر در یوتیوب هستند. یوتیوب فقط وقتی بار می‌شود که روی یک ویدیو بزنی.',

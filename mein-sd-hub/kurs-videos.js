@@ -18,6 +18,14 @@
   const PC = V("QkdNNLMIyR0", "Computer Basiswissen für Anfänger – Was ist ein Computer?");
   const GIT = V("1rjNmOr8Q-E", "Git + GitHub Tutorial Deutsch");
 
+  // Zusätzliche Videos für Stufen des Deutsch-Wegs, die kein Akademie-Kurs sind (Stand 2026-11-24)
+  const WEG = {
+    alpha: [V("b_Bm-UAqivw", "Deutsch lernen für Anfänger: Das Alphabet (ABC)"),
+      V("ZGB9P5dZ1TY", "Deutsch Alphabet lernen einfach erklärt")],
+    pruefung: [V("YrkoHmreDaU", "Tutorial: Goethe-/ÖSD-Zertifikat B1, Modul Sprechen"),
+      V("cPTr9ar4ztI", "Goethe-Zertifikat B1 Sprechen – Teil 1, 2, 3")]
+  };
+
   // je Kurs: _kurs = Video zum ganzen Kurs (wenn eine Lektion kein eigenes hat), sonst Lektions-ID → Videos
   const DATEN = {
     "german": {_kurs: [NICO_A1],
@@ -142,5 +150,5 @@
     f.videos.forEach(v => karte(box, v, t));
     return box;
   }
-  root.SDKursVideos = {daten: DATEN, fuer, bauen, karte, liste};
+  root.SDKursVideos = {daten: DATEN, weg: WEG, fuer, bauen, karte, liste};
 })(typeof window !== "undefined" ? window : globalThis);

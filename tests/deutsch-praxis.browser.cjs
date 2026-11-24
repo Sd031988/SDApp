@@ -16,8 +16,11 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   // Akademie: Fakultät Deutsch, eine Karte führt zu Deutsch lernen
   await page.goto(base+"/mein-sd-hub/#akademie",{waitUntil:"load"});await page.locator('[data-tab="akademie"]').click();
   await page.locator('#akBereiche [data-wert="Deutsch"]').click();
-  const karte=page.locator("#courses a.ak-deutsch-karte");assert.equal(await karte.count(),1);
-  await Promise.all([page.waitForURL(/\/deutsch\/$/),karte.click()]);
+  // Deutsch-Weg: sechs Stufen der Reihe nach, jede öffnet die Deutsch-App direkt dort
+  assert.deepEqual(await page.locator("#courses .ak-weg-stufe").evaluateAll(e=>e.map(x=>x.dataset.stufe)),["alpha","A1","A2","B1","pruefung","beruf"]);
+  assert.equal(await page.locator('#courses .ak-weg-stufe[data-stufe="alpha"] .ak-weg-videos').count(),1,"Videos zur Alphabetisierung");
+  const karte=page.locator('#courses .ak-weg-stufe[data-stufe="A1"] a.ak-cta');
+  await Promise.all([page.waitForURL(/\/deutsch\/\?stufe=A1$/),karte.click()]);
   // Profil anlegen, Niveau A1 wählen, Praxis öffnen
   await page.locator('input[placeholder="Name"]').fill("Test");await page.getByRole("button",{name:/Profil anlegen/}).click();
   // B1-Prüfung ist ein eigener Bereich nach B1 und erscheint nicht mehr oben in allen Niveaus
@@ -60,6 +63,11 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,"http://loc
   // eigener B1-Prüfungsbereich öffnet die Musterprüfungen
   await page.goto(base+"/deutsch/");await page.locator("#lLvBtn").click();await page.locator("#lB1PruefCard").click();
   await page.locator("#lB1Muster").click();await page.locator("#b1x").waitFor();
+  // Direkte Adressen aus der Akademie (vorhandenes Profil)
+  await page.goto(base+"/deutsch/?stufe=A2");await page.locator("#lPraxisBtn").waitFor();
+  assert.equal(await page.locator("#lLvBtn").textContent(),"A2 ▾");assert.equal(new URL(page.url()).search,"","Adresse wird bereinigt");
+  await page.goto(base+"/deutsch/?stufe=pruefung");await page.locator("#lB1Muster").waitFor();
+  await page.goto(base+"/deutsch/?stufe=beruf");await page.locator('details.l-praxis[data-praxis="deutsch-beruf"][open]').waitFor();
   console.log("Deutsch Praxis: OK");
  }finally{await browser.close();server.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -41,15 +41,14 @@ assert.match(await page.locator("#greeting").innerText(),/Tester/);
 await raumZu(page);await page.locator('[data-tab="akademie"]').click();
 // Eingang: Fakultäten statt gemischter Kursliste; jede Fakultät zeigt genau ihre Kurse
 assert.equal(await page.locator("#courses .course").count(),0);
-for(const [fak,anzahl] of await page.evaluate(()=>[...document.querySelectorAll("#akBereiche .ak-fak")].map(b=>[b.dataset.wert,b.dataset.wert==="Deutsch"?1:window.SDPersonalData.academy.filter(c=>c.bereich===b.dataset.wert).length]))){
+for(const [fak,anzahl] of await page.evaluate(()=>[...document.querySelectorAll("#akBereiche .ak-fak")].map(b=>[b.dataset.wert,b.dataset.wert==="Deutsch"?6:window.SDPersonalData.academy.filter(c=>c.bereich===b.dataset.wert).length]))){
  await page.locator('#akBereiche [data-wert="'+fak+'"]').click();
  assert.equal(await page.locator("#courses .course").count(),anzahl,fak);
  await page.locator("#akFakKopf button").first().click();
 }
-// Deutsch ist ein einziger Bereich: genau eine Karte, die zu „Deutsch lernen“ führt
+// Deutsch: ein Weg vom Alphabet bis zum Beruf, jede Stufe führt direkt in „Deutsch lernen“
 await page.locator('#akBereiche [data-wert="Deutsch"]').click();
-assert.equal(await page.locator("#courses a.ak-deutsch-karte").count(),1);
-assert.match(await page.locator("#courses a.ak-deutsch-karte").getAttribute("href"),/\.\.\/deutsch\/$/);
+assert.deepEqual(await page.locator("#courses .ak-weg-stufe a.ak-cta").evaluateAll(e=>e.map(a=>a.getAttribute("href"))),["alpha","A1","A2","B1","pruefung","beruf"].map(s=>"../deutsch/?stufe="+s));
 await page.locator("#akFakKopf button").first().click();
 await raumZu(page);await kursKlick(page,/^Programmieren anfangen$/);
 await page.locator(".lesson-btn").first().waitFor();
