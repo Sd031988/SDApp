@@ -154,7 +154,7 @@ for(const width of [320,390,1300]){
   ["Deutsch im Alltag",1,"zuordnen"],
   ["Computer-Start",1,"auswahl"],
   ["Computer-Start",2,"reihenfolge"],
-  ["Bewerbung",2,"schreiben"]
+  ["Deutsch für den Beruf B1/B2",2,"schreiben"]
  ];
  for(const [course,lesson,typ] of cases){
   await raumZu(exercisePage);await kursKlick(exercisePage,new RegExp("^"+course+"$"));
@@ -268,7 +268,7 @@ for(const width of [320,390,1300]){
  await c2.close();
 }
 /* D1/D2: die neuen Deutschlektionen sind mobil und am Desktop vollständig erreichbar. */
-for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8],["Arbeit finden",8],["Bewerbung",8],["Vorstellungsgespräch & erste Arbeitstage",8],["Arbeitsvertrag & Rechte verstehen",8],["Weiterkommen",8]]){
+for(const [courseName,count] of [["Deutsch im Alltag",4],["Deutsch A2 – Alltag und Beruf",8],["Deutsch B1 – sicher sprechen und schreiben",8],["Deutsch für den Beruf B1/B2",8]]){
  for(const width of [320,390,1300]){
   const germanPage=await browser.newPage({locale:"de-DE",reducedMotion:"reduce",viewport:{width,height:820}});
   germanPage.on("pageerror",e=>errors.push(courseName+" "+width+": "+e.message));

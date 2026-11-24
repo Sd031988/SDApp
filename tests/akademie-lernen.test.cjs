@@ -40,3 +40,8 @@ test("Zusätzliche Wiederholungsfragen: gültig, zu echten Lektionen, je zwei pr
  assert.deepEqual(keys,["ps-1:0","ps-1:1","ps-1:w0","ps-1:w1"]);
  T.setzen({l:{"ps-2":{h:0,g:1}}});L.abgleichen(["ps-2"],()=>"python-start");assert.ok(T.roh().k["ps-2:w1"],"Zusatzkarten für alte Lektion");
 });
+test("Entfernte Kurse: ihre Fragen sind nicht mehr fällig, andere bleiben",()=>{
+ T.setzen({k:{"c-1:0":{k:"career",b:1,d:heute},"g-1:0":{k:"german",b:1,d:heute}},p:{"c-2":"career","g-2":"german"}});
+ assert.equal(L.anzahlFaellig(),2);assert.equal(L.bereinigen(["german","code"]),true);
+ assert.deepEqual(Object.keys(T.roh().k),["g-1:0"]);assert.deepEqual(T.roh().p,{"g-2":"german"});assert.equal(L.anzahlFaellig(),1);
+ assert.equal(L.bereinigen(["german","code"]),false)});

@@ -16,9 +16,6 @@
   const PHISH = V("Qpk47M-sx6E", "Phishing erkennen und vermeiden");
   const ZWEIF = V("Dz90G0p6Vn8", "2FA Zwei-Faktor-Authentisierung leicht gemacht + Tipps für sichere Passwörter");
   const PC = V("QkdNNLMIyR0", "Computer Basiswissen für Anfänger – Was ist ein Computer?");
-  const STELLE = V("YhSWTrMi9sU", "Stellenanzeigen analysieren, richtig lesen und verstehen");
-  const PROBEZEIT = V("qpKwPR4B1ZA", "Kündigung und Kündigungsschutz in der Probezeit");
-  const ANERK = V("UEbBqV8ksOU", "Erklärvideo berufliche Anerkennung");
   const GIT = V("1rjNmOr8Q-E", "Git + GitHub Tutorial Deutsch");
 
   // je Kurs: _kurs = Video zum ganzen Kurs (wenn eine Lektion kein eigenes hat), sonst Lektions-ID → Videos
@@ -96,28 +93,14 @@
       "c3-3": [V("f69eAZfh_2I", "IT-Sicherheit verständlich erklärt: Zwei-Faktor-Authentisierung"), ZWEIF]},
     "digitale-profiwerkzeuge": {
       "c5-1": [V("3D2-DJqiJ30", "Die 3-2-1-Regel – so sicherst du deine Daten richtig")],
-      "c5-3": [KI]},
-    "career": {
-      "c-1": [STELLE],
-      "c-2": [V("S8fWkKT48ww", "Lebenslauf schreiben: Die wichtigsten Infos & Tipps")],
-      "c-3": [V("YvKSS4Eq4OY", "Anschreiben Aufbau – das gehört in dein Bewerbungsschreiben")]},
-    "arbeit-finden": {"b1-3": [STELLE, V("0EyGCpEL_a8", "Erfolgreicher bewerben: „Wie lese ich eine Stellenanzeige?“")]},
-    "gespraech-arbeitsstart": {_kurs: [V("T0MCNIPkihA", "Vorstellungsgespräch: 6 unverzichtbare Tipps")],
-      "b3-5": [V("QOjS5kWzTYU", "10 Fragen, die du im Vorstellungsgespräch stellen solltest")]},
-    "arbeitsvertrag-rechte": {
-      "b4-2": [V("zS1UIweo5O8", "Lohnabrechnung: Alle Abgaben erklärt (Brutto zu Netto)")],
-      "b4-6": [PROBEZEIT], "b4-7": [PROBEZEIT]},
-    "weiterkommen": {
-      "b5-2": [ANERK],
-      "b5-3": [V("3G1zEggZEeQ", "Wie ausländische Berufsabschlüsse anerkannt werden können"), ANERK]}
+      "c5-3": [KI]}
   };
 
-  const RECHT = /^(arbeitsvertrag-rechte|weiterkommen)$/;
   // liefert {videos, ganzerKurs} für eine Lektion oder null
   function fuer(kurs, lektion) {
     const k = DATEN[kurs]; if (!k) return null;
-    if (k[lektion] && k[lektion].length) return {videos: k[lektion], ganzerKurs: false, recht: RECHT.test(kurs)};
-    if (k._kurs && k._kurs.length) return {videos: k._kurs, ganzerKurs: true, recht: RECHT.test(kurs)};
+    if (k[lektion] && k[lektion].length) return {videos: k[lektion], ganzerKurs: false};
+    if (k._kurs && k._kurs.length) return {videos: k._kurs, ganzerKurs: true};
     return null;
   }
   const el = (tag, cls, text, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
@@ -129,7 +112,6 @@
     const box = el("section", "kv-box", null, parent);
     el("h5", "kv-titel", t(f.ganzerKurs ? "Video zum ganzen Kurs" : "Video zu dieser Lektion"), box);
     el("p", "kv-hinweis", t("Videos von anderen Anbietern auf YouTube. YouTube wird erst geladen, wenn du auf ein Video tippst."), box);
-    if (f.recht) el("p", "kv-hinweis", t("Rechtliche Regeln können sich ändern. Verbindlich ist eine Beratung, z. B. bei Gewerkschaft, Beratungsstelle oder Anwalt."), box);
     f.videos.forEach(v => {
       const karte = el("div", "kv-karte", null, box);
       const knopf = el("button", "kv-start", null, karte); knopf.type = "button"; knopf.dataset.video = v.id;

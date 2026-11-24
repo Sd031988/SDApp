@@ -136,8 +136,8 @@ function ladeKurs(id){
 }
 const A=window.SDAkademieI18n;
 function akNode(tag,cls,text,parent){const el=node(tag,cls,text,parent);if(["ak-practice-step","code-step"].includes(cls)){el.lang="de";el.dir="ltr"}if(text!==undefined)A.bind(el,text);return el}
-const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Cybersecurity","Uni-Kurse & Videos","Computer & Internet","Deutsch","Arbeit & Beruf"];
-const BEREICH_KLASSE={"Cybersecurity":"cyber","Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch","Arbeit & Beruf":"arbeit"};
+const BEREICHE=["Programmieren","Python & KI","C++ & Rust","Cybersecurity","Uni-Kurse & Videos","Computer & Internet","Deutsch"];
+const BEREICH_KLASSE={"Cybersecurity":"cyber","Programmieren":"programmieren","Python & KI":"python-ki","C++ & Rust":"cpp-rust","Uni-Kurse & Videos":"uni","Computer & Internet":"computer","Deutsch":"deutsch"};
 /* Wappen der Fakultäten: Schild mit Symbol als feine Linienzeichnung (statische SVG-Bausteine, keine Fremddaten) */
 const WAPPEN_SYMBOL={
  "programmieren":'<path d="M15 17l-5 5 5 5M25 17l5 5-5 5M22.5 14.5l-5 15"/>',
@@ -146,12 +146,11 @@ const WAPPEN_SYMBOL={
  "uni":'<path d="m9 19.5 11-5 11 5-11 5zM14 22v5c3 2.6 9 2.6 12 0v-5M31 19.5v6"/>',
  "computer":'<path d="M11 15h18v11H11zM16.5 30.5h7M20 26v4.5"/>',
  "deutsch":'<path d="M11 15h18v10.5h-9l-5 4v-4h-4z"/><path d="M16.5 23l2.5-6 2.5 6M17.4 21h3.2"/>',
- "arbeit":'<path d="M10.5 18.5h19v11h-19zM16 18.5v-3h8v3M10.5 23.5h19"/>',
  "cyber":'<path d="M14.5 21v-3.6a5.5 5.5 0 0 1 11 0V21"/><path d="M12 21h16v10.5H12z"/><path d="M20 25v3"/>',
  "alle":'<path d="M12 18c3-1.2 6-.8 8 1.2 2-2 5-2.4 8-1.2v10.5c-3-1.2-6-.8-8 1.2-2-2-5-2.4-8-1.2zM20 19.2v10.5"/>'};
 function wappen(klasse,cls){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 40 46");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-fwappen "+(cls||""));
  s.innerHTML='<path class="ak-fw-grund" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><path class="ak-fw-rand" d="M20 2 37 8v14c0 11-7 19-17 22C10 41 3 33 3 22V8z"/><g class="ak-fw-sym">'+(WAPPEN_SYMBOL[klasse]||WAPPEN_SYMBOL.alle)+'</g>';return s}
-const KURS_CODE={"cyber-linux":"SEC 101","code":"WEB 101","webdesign":"WEB 102","javascript":"JS 101","javascript-aufbau":"JS 201","saubere-webapps":"JS 301","python-start":"PY 101","python-aufbau":"PY 201","ki-python":"KI 101","cpp-start":"CPP 101","cpp-spiele":"CPP 201","rust-start":"RS 101","uni-kurse":"UNI 100","digital":"IT 101","internet-email":"IT 102","sicher-im-netz":"IT 201","buero-programme":"IT 202","digitale-profiwerkzeuge":"IT 301","arbeit-finden":"BER 101","career":"BER 102","gespraech-arbeitsstart":"BER 103","arbeitsvertrag-rechte":"BER 201","weiterkommen":"BER 202"};
+const KURS_CODE={"cyber-linux":"SEC 101","code":"WEB 101","webdesign":"WEB 102","javascript":"JS 101","javascript-aufbau":"JS 201","saubere-webapps":"JS 301","python-start":"PY 101","python-aufbau":"PY 201","ki-python":"KI 101","cpp-start":"CPP 101","cpp-spiele":"CPP 201","rust-start":"RS 101","uni-kurse":"UNI 100","digital":"IT 101","internet-email":"IT 102","sicher-im-netz":"IT 201","buero-programme":"IT 202","digitale-profiwerkzeuge":"IT 301"};
 const SVG_ICON={uhr:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',buch:'<path d="M4.5 6c2.5-1 5-.8 7.5 1 2.5-1.8 5-2 7.5-1v12c-2.5-1-5-.8-7.5 1-2.5-1.8-5-2-7.5-1zM12 7v12"/>'};
 function linienIcon(name){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 24 24");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-licon");s.innerHTML=SVG_ICON[name]||"";return s}
 function fortschrittsRing(anteil){const s=document.createElementNS("http://www.w3.org/2000/svg","svg");s.setAttribute("viewBox","0 0 36 36");s.setAttribute("aria-hidden","true");s.setAttribute("class","ak-ring");
@@ -187,6 +186,7 @@ function lektionKurs(id){for(const [k,ids] of Object.entries(D.academyLessonIds)
 function datumText(d){return d.toLocaleDateString(document.documentElement.lang||"de-DE",{weekday:"long",day:"numeric",month:"long"})}
 function renderLernplatz(){
  const box=$("akLernplatz");if(!box||!L)return;box.replaceChildren();
+ L.bereinigen(Object.keys(D.academyLessonIds));
  L.abgleichen(state.completedLessons,lektionKurs);
  // Lektionen von früher: Fragen erst aus den Kursdateien holen, dann neu zeichnen (keine geschätzte Zahl anzeigen)
  const offen=L.offeneKurse().filter(k=>L.wartet(k));

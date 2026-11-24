@@ -30,7 +30,7 @@ html[data-sd-theme="dark"] #akademie{--ak-card:var(--sd-surface,#203129);--ak-in
 .ak-b-uni{background:linear-gradient(135deg,#581c87,#a855f7)}
 .ak-b-computer{background:linear-gradient(135deg,#0f766e,#14b8a6)}
 .ak-b-deutsch{background:linear-gradient(135deg,#9f1239,#f43f5e)}
-.ak-b-arbeit{background:linear-gradient(135deg,#854d0e,#eab308)}
+
 #courses .course>b{font-size:1.05rem}
 .ak-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px!important;font-size:.8rem;color:var(--ak-muted);font-variant-numeric:tabular-nums}
 .ak-cta{margin-top:auto!important;padding:12px 0 16px;font-weight:700;color:var(--ak-accent);font-size:.9rem}
@@ -190,10 +190,10 @@ html[data-sd-theme="dark"] .ak-wdh{--ak-card:#203129;--ak-ink:#edf5ef;--ak-muted
 .ak-stat b,.ak-lp-gross,.ak-lp-ring b{font-family:var(--ak-serif)!important;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
 @media (max-width:520px){.ak-lp-grid{grid-template-columns:1fr 1fr}.ak-lp-grid>.ak-lp-weiter{grid-column:1/-1}}
 .ak-fak-programmieren{--fak:#2f5d8a}.ak-fak-python-ki{--fak:#2e7d5b}.ak-fak-cpp-rust{--fak:#a4532a}.ak-fak-uni{--fak:#6b4c9a}
-.ak-fak-computer{--fak:#2c7a7b}.ak-fak-deutsch{--fak:#9b3546}.ak-fak-arbeit{--fak:#9a7a22}.ak-fak-alle{--fak:#0f6b52}
+.ak-fak-computer{--fak:#2c7a7b}.ak-fak-deutsch{--fak:#9b3546}.ak-fak-alle{--fak:#0f6b52}
 html[data-sd-theme="dark"] .ak-fak-programmieren{--fak:#8fb6e0}html[data-sd-theme="dark"] .ak-fak-python-ki{--fak:#8fe0b9}html[data-sd-theme="dark"] .ak-fak-cpp-rust{--fak:#f0a77d}
 html[data-sd-theme="dark"] .ak-fak-uni{--fak:#c4a8ec}html[data-sd-theme="dark"] .ak-fak-computer{--fak:#86d6d6}html[data-sd-theme="dark"] .ak-fak-deutsch{--fak:#f0a0ad}
-html[data-sd-theme="dark"] .ak-fak-arbeit{--fak:#e9c46a}html[data-sd-theme="dark"] .ak-fak-alle{--fak:#8fe0b9}
+html[data-sd-theme="dark"] .ak-fak-alle{--fak:#8fe0b9}
 .ak-fwappen{width:34px;height:39px;flex:none}
 .ak-fw-grund{fill:var(--fak);opacity:.1}
 .ak-fw-rand{fill:none;stroke:var(--fak);stroke-width:1.6}

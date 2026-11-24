@@ -19,7 +19,7 @@ test("17 direct tools and guided goals have valid IDs and unique URLs",()=>{asse
 test("all referenced local tool URLs resolve to a real file",()=>{const links=new Set(data.items.map(x=>x.href));for(const p of data.paths)for(const step of p.steps)links.add(step[2]);for(const p of data.academy)assert.ok(p.anzahl>0);for(const href of links){const file=fileForHref(href);assert.ok(file,"unsafe URL "+href);assert.ok(fs.existsSync(file),"missing "+href)}});
 test("recommendation matches natural German B1 request",()=>{const found=data.recommend("Ich möchte B1 üben");assert.ok(found.some(x=>x.id==="b1"),JSON.stringify(found.map(x=>x.id)))});
 test("recommendations handle common needs and do not leak unbounded data",()=>{for(const [query,target] of [["Pibo spielen","pibo"],["Lebenslauf schreiben","jobs"],["PDF unterschreiben","pdf"],["Code programmieren","studio"],["Brief verstehen","post"]]){const found=data.recommend(query,8);assert.ok(found.some(x=>x.id===target),query+" -> "+found.map(x=>x.id))}assert.ok(data.recommend("ich",999).length<=8);assert.deepEqual(data.recommend(""),[])});
-test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,27);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,211);assert.equal(new Set(lessons.map(x=>x.id)).size,211);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
+test("course inventory and valid correct answers",()=>{assert.equal(data.academy.length,22);const lessons=data.academy.flatMap(x=>require(path.join(root,"mein-sd-hub/kurse",x.id+".js")));assert.equal(lessons.length,171);assert.equal(new Set(lessons.map(x=>x.id)).size,171);for(const l of lessons.filter(x=>!x.schritte)){assert.ok(l.quiz?.length===3||(l.choices?.length>=3&&l.answer>=0&&l.answer<l.choices.length&&l.question.length>12));assert.ok(l.explanation.length>20);assert.ok(l.tip.length>8)}});
 test("paths contain twenty distinct checkable steps",()=>{assert.equal(data.paths.length,4);assert.equal(data.paths.reduce((n,p)=>n+p.steps.length,0),20);for(const p of data.paths){assert.equal(p.steps.length,5);for(const step of p.steps)assert.equal(step.length,3)}});
 test("translation examples cover supported languages",()=>{assert.ok(data.phrases.length>=10);for(const p of data.phrases){for(const lang of ["de","en","fa","ur","ti"])assert.ok(typeof p[lang]==="string"&&p[lang].length>2,p.id+" "+lang)}});
 test("safe state sanitizer rejects unknown ids, duplicates and private fields",()=>{const s=data.sanitizeState({completedLessons:["g-1","g-1","not-a-lesson"],completedSteps:["job:2","job:2","bad:8"],favorites:["pibo","pibo","evil"],recent:["studio","evil"],nickname:"<script>alert(1)</script>",privateData:"must-drop",updatedAt:"s".repeat(400)});assert.deepEqual(s.completedLessons,["g-1"]);assert.deepEqual(s.completedSteps,["job:2"]);assert.deepEqual(s.favorites,["pibo"]);assert.deepEqual(s.recent,["studio"]);assert.ok(!s.nickname.includes("<"));assert.ok(!("privateData"in s));assert.ok(s.updatedAt.length<=32)});
@@ -92,7 +92,7 @@ test("Alle sechs Übungstypen prüfen Lösungen ohne eval",()=>{
 test("Jede tatsächlich eingebaute Übung hat eine prüfbare Musterlösung und einen falschen Versuch",()=>{
  const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
  const types=new Set();
- for(const id of ["german","digital","career","code"]){
+ for(const id of ["german","digital","code"]){
   const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
   for(const lesson of lessons)for(const u of lesson.uebungen||[]){
    types.add(u.typ);
@@ -435,8 +435,8 @@ test("D3: vollständiger B1-Kurs, stabile IDs und auswertbare Übungen",()=>{
  assert.match(js,/b1-pruefung\.html/);
 });
 
-test("Neue Sprach- und Berufskurse: vollständige Lehrverträge und Selbstkontrolle",()=>{
- const specs={"deutsch-beruf":"d4","arbeit-finden":"b1","career":"c","gespraech-arbeitsstart":"b3","arbeitsvertrag-rechte":"b4","weiterkommen":"b5"};
+test("Deutsch für den Beruf: vollständige Lehrverträge und Selbstkontrolle",()=>{
+ const specs={"deutsch-beruf":"d4"};
  const engine=require(path.join(root,"mein-sd-hub/akademie-uebungen.js"));
  for(const [id,prefix] of Object.entries(specs)){
   const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
@@ -460,60 +460,6 @@ test("Neue Sprach- und Berufskurse: vollständige Lehrverträge und Selbstkontro
    }
   }
  }
-});
-
-test("B4: nachvollziehbare Rechtsquellen pro Lektion und wichtige Fristunterscheidung",()=>{
- const lessons=require(path.join(root,"mein-sd-hub/kurse/arbeitsvertrag-rechte.js"));
- for(const l of lessons){assert.ok(l.quellen.length>=1,l.id);for(const source of l.quellen){const url=new URL(source.url);assert.equal(url.protocol,"https:");assert.ok(["www.gesetze-im-internet.de","www.bmas.de"].includes(url.hostname));assert.ok(source.titel.length>10);assert.match(source.stand,/^\d{4}-\d{2}-\d{2}$/)}}
- assert.match(lessons[6].schrittePraxis.map(s=>s.text).join(" "),/drei Wochen nach Zugang/);
- assert.match(lessons[4].schrittePraxis.map(s=>s.text).join(" "),/elektronischer Ablauf/);
- assert.match(js,/Quellen und weiterer Prüfweg/);
-});
-
-test("B5: Quellen, alle Stufen und gespeicherter Berufsfortschritt bleiben nachvollziehbar",()=>{
- const lessons=require(path.join(root,"mein-sd-hub/kurse/weiterkommen.js"));
- for(const l of lessons){assert.ok(l.quellen.length);for(const source of l.quellen){const url=new URL(source.url);assert.equal(url.protocol,"https:");assert.ok(["www.arbeitsagentur.de","www.anerkennung-in-deutschland.de","www.kfw.de"].includes(url.hostname));assert.equal(source.stand,"2026-11-11");assert.ok(source.titel.length>10)}}
- const courses=data.academy.filter(c=>c.bereich==="Arbeit & Beruf");
- assert.deepEqual(courses.map(c=>c.id),["arbeit-finden","career","gespraech-arbeitsstart","arbeitsvertrag-rechte","weiterkommen"]);
- assert.deepEqual(courses.map(c=>c.stufe[0]),["1","2","3","4","5"]);
- const ids=["c-1","c-2","c-3","c-4","d3-8","d4-8","b1-8","c-8","b3-8","b4-8","b5-8"];
- assert.deepEqual(data.sanitizeState({completedLessons:ids}).completedLessons,ids);
- assert.equal(engineResult(),null);
- function engineResult(){return require(path.join(root,"mein-sd-hub/akademie-uebungen.js")).pruefen(lessons[7].uebungen[3],"Ein beliebiger freier Text").ok}
-});
-
-
-// Der vorgeschriebene Stand-Hinweis ist bewusst ein separates Feld.
-// Die Anti-Wiederholungsprüfungen für eigenständige Lehrtexte bleiben unverändert.
-test("Rechtsstand: Paragrafen, Fristen und kuratierte Rechtsthemen haben sichtbaren Hinweis und echte Quellen",()=>{
- const hosts=new Set(["www.gesetze-im-internet.de","www.bmas.de","www.arbeitsagentur.de","www.verbraucherzentrale.de","www.anerkennung-in-deutschland.de","www.make-it-in-germany.com"]);
- const required={"arbeit-finden":["b1-2","b1-3","b1-5"],"arbeitsvertrag-rechte":Array.from({length:8},(_,i)=>"b4-"+(i+1)),"weiterkommen":Array.from({length:7},(_,i)=>"b5-"+(i+2))};
- for(const [id,curated] of Object.entries(required))for(const l of require(path.join(root,"mein-sd-hub/kurse",id+".js"))){
-  const {standHinweis,standQuelle,...content}=l;
-  if(!curated.includes(l.id)&&!/[§]|frist/iu.test(JSON.stringify(content)))continue;
-  assert.match(standHinweis||"",/^Stand: November 2026\. Allgemeine Information, keine Rechtsberatung\. Prüfe aktuelle Regeln bei /,l.id);
-  const url=new URL(standQuelle.url);assert.equal(url.protocol,"https:");assert.ok(hosts.has(url.hostname),l.id);
-  assert.ok(standHinweis.includes(url.hostname.replace(/^www\./,"")),l.id+" Quelle im Hinweis");
- }
-});
-
-test("Berufskurse: kurze Sätze und verständliche Fachbegriffe ohne Fülltext",()=>{
- const segmenter=new Intl.Segmenter("de",{granularity:"sentence"});
- for(const id of ["arbeit-finden","career","gespraech-arbeitsstart","arbeitsvertrag-rechte","weiterkommen"]){
-  const lessons=require(path.join(root,"mein-sd-hub/kurse",id+".js"));
-  for(const l of lessons)for(const step of l.schrittePraxis){
-   for(const {segment} of segmenter.segment(step.text)){
-    const words=segment.trim().split(/\s+/u).filter(w=>/[\p{L}\p{N}]/u.test(w));
-    assert.ok(words.length<=20,l.id+" "+words.length+" Wörter: "+segment);
-   }
-   assert.doesNotMatch(step.text,/werden hier ohne Plural verwendet|wird hier ohne Plural gebraucht/iu,l.id);
-  }
- }
- const contracts=require(path.join(root,"mein-sd-hub/kurse/arbeitsvertrag-rechte.js"));
- assert.match(contracts[0].explanation,/Entgelt ist die Bezahlung/);
- assert.match(contracts[4].explanation,/Arbeitsunfähigkeit heißt/);
- assert.match(contracts[5].explanation,/Befristung begrenzt/);
- assert.match(contracts[5].explanation,/Probezeit ist/);
 });
 
 test("DIN 5008: sichere Form-B-Maße, klare Empfehlung und verlinkte Vorlage",()=>{

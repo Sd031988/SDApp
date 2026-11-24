@@ -112,6 +112,13 @@
     sichern(); return richtig ? XP_FRAGE : 0;
   }
   const entfernen = s => { if (daten.k[s]) { delete daten.k[s]; sichern(); } };
+  // Karten von Kursen, die es nicht mehr gibt (z. B. entfernte Fakultät), nicht mehr fällig stellen
+  function bereinigen(kurse) {
+    const ok = new Set(kurse); let neu = false;
+    for (const [s, c] of Object.entries(daten.k)) if (!ok.has(c.k)) { delete daten.k[s]; neu = true; }
+    for (const [l, k] of Object.entries(daten.p)) if (!ok.has(k)) { delete daten.p[l]; neu = true; }
+    if (neu) sichern(); return neu;
+  }
 
   // Lernserie: Tage mit Lernen in Folge; ein verpasster Tag pro Woche wird verziehen; heute zählt noch nicht als verpasst
   function serie() {
@@ -132,7 +139,7 @@
   }
   const datumVon = t => new Date(t * 86400000 + new Date().getTimezoneOffset() * 60000);
 
-  root.SDAkLernen = {abgleichen, wartet, verwerfen, geschafft, hilfe, hilfeStufe, stufe, faellig, anzahlFaellig, naechste, ausklappen, offeneKurse, auswahl, antwort, entfernen,
+  root.SDAkLernen = {abgleichen, wartet, verwerfen, geschafft, hilfe, hilfeStufe, stufe, faellig, anzahlFaellig, naechste, ausklappen, offeneKurse, auswahl, antwort, entfernen, bereinigen,
     serie, heuteXp, zuletzt, datumVon, ZIEL, XP_LEKTION, XP_FRAGE, speicherOk: () => speicherOk,
     _test: {tag, setzen: x => { daten = pruefen(x); }, roh: () => daten}};
 })(typeof window !== "undefined" ? window : globalThis);
