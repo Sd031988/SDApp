@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sd-bewerbungsstudio-v239';
+const CACHE_NAME = 'sd-bewerbungsstudio-v240';
 const APP_FILES = [
   './Lebenslauf_app.html',
   './manifest.json',
@@ -57,14 +57,17 @@ const NICHT_CACHEN = /(^|\.)(huggingface\.co|hf\.co|xethub\.hf\.co|raw\.githubus
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   try {
-    if (NICHT_CACHEN.test(new URL(event.request.url).hostname)) return;
+    const url = new URL(event.request.url);
+    // Feedback responses can contain private data and must never be cached.
+    if (/(^|\/)feedback(?:-server|-api)?(\/|$)/.test(url.pathname) || event.request.headers.has('Authorization')) return;
+    if (NICHT_CACHEN.test(url.hostname)) return;
   } catch (e) { /* ungueltige URL: normal weiter */ }
   // Netzwerk zuerst, damit Änderungen sofort ankommen; nur erfolgreiche
   // Antworten werden zwischengespeichert (nie eine Fehlerseite/404), und nur
   // wenn das Netz nicht erreichbar ist, wird auf den Cache zurückgegriffen.
   event.respondWith(
     fetch(event.request).then(response => {
-      if (response && response.ok) {
+      if (response && response.ok && !/no-store|private/i.test(response.headers.get('Cache-Control') || '')) {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
       }
