@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>SD Hub – Rückmeldungen verwalten</title>
+<link rel="icon" href="../icon.svg">
+<style>
+:root{--bg:#f4f1ea;--karte:#fffdf8;--text:#1d2b25;--leise:#55635c;--linie:#d8d2c4;--akzent:#1f6b4f;--fehler:#a3261c}
+@media (prefers-color-scheme:dark){:root{--bg:#121a16;--karte:#1b2520;--text:#e9efe9;--leise:#a7b5ad;--linie:#33413a;--akzent:#7cd3a8;--fehler:#ff9b8f}}
+body{margin:0;background:var(--bg);color:var(--text);font:1rem/1.6 system-ui,sans-serif}
+main{max-width:46rem;margin:auto;padding:1.25rem 1rem 3rem}
+h1{font-size:1.5rem;margin:.2rem 0 1rem}
+h2{font-size:1.1rem;margin:0 0 .5rem}
+.karte{background:var(--karte);border:1px solid var(--linie);border-radius:12px;padding:1rem;margin:1rem 0}
+.leise{color:var(--leise);font-size:.9rem}
+label{display:block;margin:.6rem 0 .2rem}
+input{box-sizing:border-box;width:100%;font:inherit;padding:.55rem;border:1px solid var(--linie);border-radius:8px;background:var(--bg);color:var(--text)}
+button{font:inherit;padding:.55rem 1rem;border-radius:8px;border:1px solid var(--akzent);background:var(--akzent);color:var(--karte);cursor:pointer;transition:filter .15s}
+button:hover,button:focus-visible{filter:brightness(1.12)}
+button.zweit{background:transparent;color:var(--akzent)}
+button.gefahr{border-color:var(--fehler);background:transparent;color:var(--fehler)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.reihe{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
+.fehler{color:var(--fehler)}
+dl{margin:.5rem 0}dt{font-weight:600;margin-top:.4rem}dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main id="feedbackAdmin" data-api="">
+<h1>Rückmeldungen verwalten</h1>
+<p class="leise">Nur für Administratoren. Jede Stimme wird erst nach Prüfung von Hand veröffentlicht; Rückmeldungen ohne Veröffentlichungs-Einwilligung können nur gelesen oder gelöscht werden.</p>
+
+<section class="karte" id="faNichtVerbunden" hidden>
+<h2>Noch nicht verbunden</h2>
+<p>Der Feedback-Server ist noch nicht eingerichtet. Diese Seite zeigt erst Daten, wenn die Datenerhebung freigegeben und der Server verbunden ist.</p>
+</section>
+
+<section class="karte" id="faLogin" hidden>
+<h2>Anmelden</h2>
+<form id="faLoginForm">
+<label for="faEmail">E-Mail</label><input id="faEmail" type="email" autocomplete="username" required>
+<label for="faPasswort">Passwort</label><input id="faPasswort" type="password" autocomplete="current-password" required>
+<div class="reihe"><button type="submit">Anmelden</button></div>
+</form>
+<p class="fehler" id="faLoginFehler" role="alert"></p>
+</section>
+
+<section id="faBereich" hidden>
+<div class="reihe"><button type="button" class="zweit" id="faNeuLaden">Neu laden</button><button type="button" class="zweit" id="faAbmelden">Abmelden</button></div>
+<p class="leise" id="faStatus" role="status"></p>
+<div id="faListe"></div>
+</section>
+</main>
+<script type="module" src="../sd-auth.js"></script>
+<script src="feedback-admin.js"></script>
+</body>
+</html>

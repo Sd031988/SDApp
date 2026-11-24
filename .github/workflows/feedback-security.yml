@@ -1,0 +1,35 @@
+name: Feedback security tests
+on:
+  pull_request:
+    paths:
+      - 'feedback-server/**'
+      - 'docs/feedback-*'
+      - 'firebase/**'
+      - 'sw.js'
+      - 'tests/feedback-*'
+      - '.github/workflows/feedback-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'feedback-server/**'
+      - 'docs/feedback-*'
+      - 'firebase/**'
+      - 'sw.js'
+      - 'tests/feedback-*'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Server, Einwilligung, Speicherfrist, Cache und Regeln
+        run: node --test tests/feedback-*.test.cjs
+      - name: Browser (PC und iPhone-Größe)
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/feedback-pages.browser.cjs
