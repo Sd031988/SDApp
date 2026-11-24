@@ -1,6 +1,6 @@
 'use strict';
 // Framework-independent HTTP adapter. Host must enforce HTTPS, body size and rate limits.
-function makeHandler(service,{verifyIdToken,origin,enabled=false}={}){
+function makeHandler(service,{verifyIdToken,origin,enabled=false, rateLimit=null}={}){
  if(typeof verifyIdToken!=='function'||typeof origin!=='string'||!origin.startsWith('https://'))throw Error('invalid server configuration');
  const response=(status,body)=>({status,headers:{'Cache-Control':'no-store','Content-Type':'application/json; charset=utf-8','X-Content-Type-Options':'nosniff'},body});
  async function admin(req){
@@ -10,6 +10,9 @@ function makeHandler(service,{verifyIdToken,origin,enabled=false}={}){
  }
  return async req=>{
   const {method,path,body}=req;
+  if(method==='POST' && JSON.stringify(body ?? null).length>24000)return response(413,{error:'too large'});
+  if(method==='POST' && path==='/submit' && enabled && (!rateLimit || !(await rateLimit(req))))return response(429,{error:'try later'});
+  if(method==='POST' && path==='/submit' && body?.website)return response(400,{error:'invalid request'});
   if(method==='POST'&&req.headers?.origin!==origin)return response(403,{error:'forbidden'});
   if(method==='POST'&&(!body||typeof body!=='object'||Array.isArray(body)))return response(400,{error:'invalid request'});
   try{
