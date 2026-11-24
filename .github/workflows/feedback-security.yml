@@ -3,8 +3,19 @@ on:
   pull_request:
     paths:
       - 'feedback-server/**'
-      - 'tests/feedback-*.test.cjs'
+      - 'docs/feedback-*'
+      - 'firebase/**'
+      - 'sw.js'
+      - 'tests/feedback-*'
       - '.github/workflows/feedback-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'feedback-server/**'
+      - 'docs/feedback-*'
+      - 'firebase/**'
+      - 'sw.js'
+      - 'tests/feedback-*'
 permissions:
   contents: read
 jobs:
@@ -15,4 +26,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/feedback-*.test.cjs
+      - name: Server, Einwilligung, Speicherfrist, Cache und Regeln
+        run: node --test tests/feedback-*.test.cjs
+      - name: Browser (PC und iPhone-Größe)
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+          node tests/feedback-pages.browser.cjs
