@@ -10,11 +10,13 @@ function makeHandler(service,{verifyIdToken,origin,enabled=false, rateLimit=null
  }
  return async req=>{
   const {method,path,body}=req;
+  // Reihenfolge: fremde Seiten und kaputte Anfragen zuerst abweisen, damit sie das Anfragelimit nicht verbrauchen
   if(method==='POST' && JSON.stringify(body ?? null).length>24000)return response(413,{error:'too large'});
-  if(method==='POST' && path==='/submit' && enabled && (!rateLimit || !(await rateLimit(req))))return response(429,{error:'try later'});
-  if(method==='POST' && path==='/submit' && body?.website)return response(400,{error:'invalid request'});
   if(method==='POST'&&req.headers?.origin!==origin)return response(403,{error:'forbidden'});
   if(method==='POST'&&(!body||typeof body!=='object'||Array.isArray(body)))return response(400,{error:'invalid request'});
+  if(method==='POST' && path==='/submit' && body.website)return response(400,{error:'invalid request'});
+  // Ohne angebundenes Anfragelimit nimmt der Server keine Rückmeldungen an (fail closed)
+  if(method==='POST' && path==='/submit' && enabled && (typeof rateLimit!=='function' || !(await rateLimit(req))))return response(429,{error:'try later'});
   try{
    if(method==='POST'&&path==='/withdraw'){await service.withdraw(body.id,body.token);return response(200,{ok:true});}
    if(method==='GET'&&path==='/voices')return response(200,{voices:enabled?await service.publicList():[]});
