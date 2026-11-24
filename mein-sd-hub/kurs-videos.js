@@ -1,4 +1,4 @@
-/* Videos zu den Kursen: nur echte YouTube-Videos, deren Adresse per Websuche geprüft wurde (Stand 2026-11-23).
+/* Videos zu den Kursen: nur echte YouTube-Videos, deren Adresse per Websuche geprüft wurde (Stand 2026-11-23, Cybersecurity 2026-11-24).
    YouTube wird erst beim Klick geladen (youtube-nocookie.com); vorher geht keine Anfrage an YouTube. */
 (function (root) {
   "use strict";
@@ -88,7 +88,16 @@
     "cyber-linux": {_kurs: [V("jgXvAZ1Djms", "Linux Terminal Tutorial für Anfänger – Teil 1: Befehle ls und cd")],
       "sec1-2": [V("jgXvAZ1Djms", "Linux Terminal Tutorial für Anfänger – Teil 1: Befehle ls und cd")],
       "sec1-3": [V("Oho8_foyW44", "Linux Terminal Tutorial für Einsteiger – Teil 2: mkdir, touch und echo")],
-      "sec1-6": [V("hcXA2nePQ4M", "Linux-Rechte erklärt: chmod/chown für Linux, Unix & Raspberry Pi")]},
+      "sec1-1": [V("u6kPhlRN7dw", "Ubuntu Installation: Virtuelle Maschine mit VirtualBox (Deutsch)"),
+        V("n4g_Gmk0SJ4", "Tutorial: Ubuntu in VirtualBox installieren")],
+      "sec1-4": [V("WcYTl0uNH-8", "grep: Dateiinhalte suchen und finden in Linux (Ubuntu, Deutsch)"),
+        V("zlvohyCie6g", "Der Befehl grep für die Systemadministration (Linux)")],
+      "sec1-5": [V("BiCqIhl1ku8", "Der Befehl find für die Systemkontrolle (Linux)"),
+        V("MtpOZG_zlgk", "Linux Tutorial #9: Finden von Dateien")],
+      "sec1-6": [V("hcXA2nePQ4M", "Linux-Rechte erklärt: chmod/chown für Linux, Unix & Raspberry Pi")],
+      "sec1-7": [V("_IzRLuxzTc4", "Wie benutze ich sudo auf Linux? sudo-Befehl einfach erklärt"),
+        V("C5a7LS7PgU4", "Benutzerverwaltung: Prinzip sudo verstehen, Schritt für Schritt")],
+      "sec1-8": [V("raNCSsZowGM", "CS50's Introduction to Cybersecurity: ganzer Uni-Kurs (Harvard, Englisch)")]},
     "buero-programme": {
       "c4-3": [V("hGe2e8cK7XM", "Geschäftsbrief-Vorlage nach DIN 5008 in Word erstellen")],
       "c4-4": [V("_4w00eWEEbg", "Excel lernen für Anfänger – Grundlagen, erste Formel erstellen")]},
