@@ -24,7 +24,7 @@ jobs:
         run: cd kids && npx playwright install --with-deps chromium
       - name: Exercise real WebGL on desktop and mobile Chromium
         run: cd kids && npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: pibo-playwright-debug
