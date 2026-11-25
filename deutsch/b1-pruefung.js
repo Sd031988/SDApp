@@ -107,7 +107,7 @@
     let input='';
     if(part==='lesen'||part==='hoeren'){
       input=(part==='lesen'?'<div class="b1-passage">'+esc(t.text)+'</div>':'<button class="b1-audio" id="b1-play">🔊 Hörtext abspielen</button>')+
-        '<p><b>'+esc(t.q)+'</b></p><div class="b1-options">'+t.options.map((v,i)=>'<label class="b1-answer"><input type="radio" name="b1-answer" value="'+i+'"> '+esc(v)+'</label>').join('')+'</div>';
+        '<p><b>'+esc(t.q)+'</b></p><div class="b1-options">'+t.options.map((v,i)=>'<label class="b1-answer"><input type="radio" name="b1-answer" value="'+i+'"'+(answers[index]===i?' checked':'')+'> '+esc(v)+'</label>').join('')+'</div>';
     } else {
       input='<p class="b1-passage">'+esc(t.q)+'</p><p class="b1-muted">'+esc(t.hint)+'</p>'+
         '<textarea id="b1-response" rows="8" placeholder="'+(part==='sprechen'?'Notizen für deine mündliche Antwort …':'Schreibe hier deinen Text …')+'"></textarea>'+
@@ -115,10 +115,16 @@
     }
     layout('<p class="b1-muted">'+esc(EXAMS[exam].name)+' · '+labels[part]+'</p><div class="b1-progress">Aufgabe '+(index+1)+' von '+tasks.length+' <span id="b1-clock">00:00</span></div>'+input+
       ((part==='lesen'||part==='hoeren')?'<button class="b1-audio" id="b1-skip" type="button">Aufgabe überspringen</button>':'')+
+      ((part==='lesen'||part==='hoeren')&&index>0?'<button class="b1-audio" id="b1-prev" type="button">Vorherige Aufgabe</button>':'')+
       '<button class="b1-next" id="b1-next">'+(index===tasks.length-1?'Auswertung':'Nächste Aufgabe')+'</button>');
     $('b1-back').onclick=()=>{clearTimer();part=null;overview();};
     if($('b1-play')) $('b1-play').onclick=()=>speak(t.text||t.q);
-    if($('b1-skip')) $('b1-skip').onclick=()=>{answers.push(null);index++;question();};
+    if($('b1-prev')) $('b1-prev').onclick=()=>{
+      const checked=root.querySelector('input[name="b1-answer"]:checked');
+      answers[index]=checked?Number(checked.value):null;
+      index--;question();
+    };
+    if($('b1-skip')) $('b1-skip').onclick=()=>{answers[index]=null;index++;question();};
     $('b1-next').onclick=()=>{
       let response;
       if(part==='lesen'||part==='hoeren'){
@@ -126,7 +132,7 @@
         if(!checked){alert('Bitte wähle eine Antwort.');return;}
         response=Number(checked.value);
       } else response=($('b1-response').value||'').trim();
-      answers.push(response);index++;question();
+      answers[index]=response;index++;question();
     };
     timer=setInterval(()=>{
       const sec=Math.floor((Date.now()-started)/1000);
@@ -137,7 +143,7 @@
   function finish(){
     clearTimer();
     const tasks=activeTasks(), automatic=part==='lesen'||part==='hoeren';
-    const correct=automatic?answers.filter((a,i)=>a===tasks[i].answer).length:null;
+    const correct=automatic?tasks.filter((t,i)=>answers[i]===t.answer).length:null;
     const result={exam,setNumber,part,date:new Date().toISOString(),correct,total:tasks.length,answers,seconds:Math.round((Date.now()-started)/1000)};
     let saved=false;
     try{
@@ -149,7 +155,7 @@
       saved=localStorage.getItem('sdB1Pruefungen')===serialized;
     }catch(_){saved=false;}
     const saveNotice=saved?'':'<p role="alert" class="b1-save-warning">⚠ Ergebnis konnte nicht auf diesem Gerät gespeichert werden. Bitte kopiere deinen Text beziehungsweise notiere dein Ergebnis, bevor du die Übersicht öffnest.</p>';
-    const detail=automatic?'<h2>'+correct+' von '+tasks.length+' richtig</h2><p>'+Math.round(correct/tasks.length*100)+' % in diesem Übungsblock · '+answers.filter(a=>a==null).length+' übersprungen</p>'+
+    const detail=automatic?'<h2>'+correct+' von '+tasks.length+' richtig</h2><p>'+Math.round(correct/tasks.length*100)+' % in diesem Übungsblock · '+tasks.filter((_,i)=>answers[i]==null).length+' übersprungen</p>'+
       tasks.map((t,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(t.q)+'</p><small>Deine Antwort: '+esc(answers[i]==null?'Nicht beantwortet':t.options[answers[i]])+'<br>Richtig: '+esc(t.options[t.answer])+'</small></div>').join(''):
       '<h2>Übungsblock abgeschlossen</h2><p>'+(saved?'Deine Antwort wurde auf diesem Gerät gespeichert. ':'Deine Antwort ist nur in dieser Ansicht verfügbar. ')+'Für Schreiben und Sprechen gibt es hier noch keine automatische Sprach- oder Textbewertung.</p>'+
       answers.map((a,i)=>'<div class="b1-passage"><b>Aufgabe '+(i+1)+'</b><p>'+esc(a||'(Keine Antwort)')+'</p></div>').join('');
