@@ -2388,6 +2388,10 @@ function verdrahten() {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && S.geaendert) speichernJetzt().catch(() => {});
   });
+  // Mobile Safari kann eine Seite ohne beforeunload verlassen.
+  window.addEventListener('pagehide', () => {
+    if (S.geaendert) speichernJetzt().catch(() => {});
+  });
   // Handy: Seitenleiste zu Beginn zu
   handyEinrichten();
 }
