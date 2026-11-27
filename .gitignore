@@ -5,6 +5,12 @@ __pycache__/
 .env
 .env.*
 *.rar
+# Neue ZIP-Archive nicht committen. Die drei Download-Pakete im
+# Wurzelverzeichnis bleiben versioniert, weil die Startseite und
+# online-upload/index.html direkt darauf verlinken:
+#   SD-Bewerbungsstudio-Windows.zip
+#   SD-Bewerbungsstudio-macOS.zip
+#   SD-Bewerbungsstudio-Linux.zip
 *.zip
 build/
 dist/

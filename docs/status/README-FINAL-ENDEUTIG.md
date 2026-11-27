@@ -1,7 +1,21 @@
 # SD Suite – Bewerbungsstudio + PDF Studio
 
-**Version:** Final Release  
-**Plattformen:** Windows · macOS · Linux · USB-Stick
+**Hinweis (Stand 27.11.2026):** Dieses Dokument ist eine ältere Paketbeschreibung und liegt nur noch als Archiv unter `docs/status/`. Die Größenangabe „~51 KB“ war falsch. Im Repository liegen genau drei Download-Archive, jeweils etwa **4,8 MB**:
+
+| Datei | Im Repository | Größe |
+| --- | --- | --- |
+| `SD-Bewerbungsstudio-Windows.zip` | ja, verlinkt von `index.html` und `online-upload/index.html` | 4.821.765 Bytes (ca. 4,8 MB) |
+| `SD-Bewerbungsstudio-macOS.zip` | ja, ebenso verlinkt | 4.820.792 Bytes (ca. 4,8 MB) |
+| `SD-Bewerbungsstudio-Linux.zip` | ja, ebenso verlinkt | 4.820.865 Bytes (ca. 4,8 MB) |
+| `SD-Bewerbungsstudio-Final-Windows.zip` | nein | – |
+| `SD-Bewerbungsstudio-USB-portabel.zip` | nein | – |
+| `SD-Bewerbungsstudio-alle-Plattformen.zip` | nein | – |
+| `SD-Bewerbungsstudio-Setup.exe` | nein | – |
+
+Die drei vorhandenen Archive sind ein älterer Schnappschuss der Web-App plus ein Startskript. Einen großen Teil der Größe macht `app/android-assets/` aus (Play-Store-Grafiken und eine `.aab`-Datei), nicht ein 51-KB-Startskript. Die Schritte weiter unten zu EXE, Setup und USB-Stick beschreiben Pakete, die in diesem Repository nicht liegen.
+
+**Version:** ältere Paketnotiz, kein aktueller Release-Stand  
+**Plattformen der vorhandenen ZIPs:** Windows · macOS · Linux
 
 ---
 
@@ -18,18 +32,13 @@ Die SD Suite besteht aus zwei vollständigen Web-Apps:
 
 ## Pakete im Überblick
 
-| Datei | Für wen? | Größe |
-|-------|----------|-------|
-| `SD-Bewerbungsstudio-Final-Windows.zip` | Windows-Nutzer (mit EXE) | ~25 MB |
-| `SD-Bewerbungsstudio-Windows.zip` | Windows ohne Installation | ~51 KB |
-| `SD-Bewerbungsstudio-macOS.zip` | Mac-Nutzer | ~51 KB |
-| `SD-Bewerbungsstudio-Linux.zip` | Linux-Nutzer | ~51 KB |
-| `SD-Bewerbungsstudio-USB-portabel.zip` | USB-Stick (alle Plattformen) | ~51 KB |
-| `SD-Bewerbungsstudio-alle-Plattformen.zip` | Vollpaket aller Plattformen | ~53 KB |
+Die frühere Tabelle mit „~51 KB“ und zusätzlichen Final-/USB-/Vollpaketen gilt nicht mehr. Maßgeblich ist die korrigierte Tabelle am Anfang dieses Dokuments. Im Repository sind nur die drei ZIP-Dateien Windows, macOS und Linux, jeweils ca. 4,8 MB.
 
 ---
 
 ## Windows – So startest du die App
+
+Diese beiden Optionen gehören zu Paketen, die **nicht** im Repository liegen (`SD-Bewerbungsstudio-Final-Windows.zip`, `SD-Bewerbungsstudio.exe`, `SD-Bewerbungsstudio-Setup.exe`). Das vorhandene Windows-Archiv heißt `SD-Bewerbungsstudio-Windows.zip`, enthält `SD-Bewerbungsstudio-Starten.bat` und `start-windows.ps1` und startet die mitgelieferte Web-App lokal im Browser.
 
 ### Option A: Direkt starten (keine Installation)
 1. `SD-Bewerbungsstudio-Final-Windows.zip` entpacken
@@ -46,6 +55,8 @@ Die SD Suite besteht aus zwei vollständigen Web-Apps:
 ---
 
 ## USB-Stick – Alle Plattformen
+
+`SD-Bewerbungsstudio-USB-portabel.zip` liegt nicht in diesem Repository. Die folgenden Schritte sind eine alte Anleitung und lassen sich mit den Dateien hier nicht ausführen.
 
 1. `SD-Bewerbungsstudio-USB-portabel.zip` entpacken → auf USB-Stick kopieren
 2. Je nach Betriebssystem:
