@@ -26,7 +26,7 @@
   .typing-indicator span:nth-child(3) { animation-delay: .4s; }
   @keyframes typing { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-8px);opacity:1} }
   /* ==== DEUTSCH LERNEN ==== */
-  #learn { display: none; position: fixed; inset: 0; z-index: 280; flex-direction: column; background: var(--bg);
+  #learn { display: none; position: fixed; inset: 0; z-index: 280; flex-direction: column; overflow-y: auto; background: var(--bg);
     background-image: radial-gradient(ellipse at 50% 0%, var(--lvbg, rgba(139,92,246,.14)), transparent 60%); color: var(--text); }
   /* Jedes Niveau eine eigene Farbe: Alpha lila, A1 grün, A2 blau, B1 orange */
   #learn[data-lv="alpha"], .lvc-alpha { --accent: #7c3aed; --accent2: #c4b5fd; --accent3: #5b21b6; --accent-glow: rgba(124,58,237,.35); --lvbg: rgba(124,58,237,.16); }
@@ -70,7 +70,7 @@
   .l-tmix { grid-column: 1 / -1; border: 2px solid var(--accent); }
   .l-wu.lvc-alpha, .l-wu.lvc-A1, .l-wu.lvc-A2, .l-wu.lvc-B1 { color: var(--accent2); border-color: var(--accent); }
   body.learn-open #learn { display: flex; }
-  .l-top { display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .l-top { position: sticky; top: 0; z-index: 40; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .l-title { font-weight: 700; flex: 1; font-size: 17px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .l-btn-round { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font-size: 20px; cursor: pointer; flex-shrink: 0; }
   .l-prof { min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
