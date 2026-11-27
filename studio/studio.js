@@ -951,10 +951,16 @@ function sichereVorschauBruecke() {
 function vorschauPfad(basis, ref, dateien) {
   if (typeof ref !== 'string' || !ref || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) return null;
   try {
-    const url = new URL(ref, 'https://projekt.invalid/' + basis.split('/').map(encodeURIComponent).join('/'));
-    if (url.origin !== 'https://projekt.invalid') return null;
-    let p = decodeURIComponent(url.pathname.slice(1));
-    if (p.endsWith('/') || !p) p += 'index.html';
+    const path = ref.split(/[?#]/)[0];
+    const parts = path.startsWith('/') ? [] : basis.split('/').slice(0,-1);
+    for (const raw of path.split('/')) {
+      const segment = decodeURIComponent(raw);
+      if (!segment || segment === '.') continue;
+      if (segment === '..') { if (!parts.length) return null; parts.pop(); }
+      else { if (/[\\/]/.test(segment)) return null; parts.push(segment); }
+    }
+    if (!path || path.endsWith('/')) parts.push('index.html');
+    const p = parts.join('/');
     return Object.prototype.hasOwnProperty.call(dateien,p) ? p : null;
   } catch (_) { return null; }
 }
