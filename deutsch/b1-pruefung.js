@@ -32,6 +32,8 @@
   TASKS.hoeren.push(...[{"text":"Hier spricht die Werkstatt. Ihr Fahrrad ist fertig. Sie können es morgen ab neun Uhr abholen.","q":"Wann kann man das Fahrrad abholen?","options":["Heute Abend","Morgen ab neun","Erst nächste Woche"],"answer":1},{"text":"Liebe Fahrgäste, der Bus Richtung Innenstadt hält heute nicht am Rathaus. Nutzen Sie bitte die Haltestelle Theater.","q":"Wo soll man einsteigen?","options":["Am Rathaus","Am Bahnhof","Am Theater"],"answer":2},{"text":"Hallo Lea, hier ist Martin. Unser Treffen am Samstag findet nicht im Café statt. Wir treffen uns im Park am Brunnen.","q":"Wo ist das Treffen?","options":["Im Park","Im Café","Im Kino"],"answer":0},{"text":"Die Wettervorhersage: Am Vormittag bleibt es trocken, ab dem Nachmittag ist mit Regen zu rechnen.","q":"Wann soll es regnen?","options":["In der Nacht","Am Nachmittag","Am Vormittag"],"answer":1},{"text":"Guten Morgen. Der Elternabend beginnt heute um halb sieben und nicht wie angekündigt um sechs.","q":"Wann beginnt der Elternabend?","options":["Um sechs","Um sieben","Um halb sieben"],"answer":2},{"text":"Hallo, hier ist die Bibliothek. Das bestellte Buch ist angekommen. Bitte holen Sie es innerhalb einer Woche ab.","q":"Wie lange kann man das Buch abholen?","options":["Eine Woche","Einen Monat","Nur heute"],"answer":0},{"text":"Achtung, die Rolltreppe zum Gleis ist defekt. Bitte benutzen Sie den Aufzug neben dem Eingang.","q":"Was sollen Fahrgäste benutzen?","options":["Die Rolltreppe","Den Aufzug","Die Treppe am Ausgang"],"answer":1},{"text":"Guten Tag, Ihr Paket liegt in der Postfiliale. Bringen Sie zur Abholung bitte Ihren Ausweis mit.","q":"Was muss man mitbringen?","options":["Eine Rechnung","Ein Foto","Den Ausweis"],"answer":2},{"text":"Liebe Kursteilnehmer, morgen findet der Unterricht online statt. Sie bekommen den Link heute per E-Mail.","q":"Wo findet der Unterricht statt?","options":["Im Internet","Im Klassenzimmer","In der Bibliothek"],"answer":0},{"text":"Hier ist das Restaurant Sonnengarten. Ihre Reservierung für vier Personen am Freitag um 19 Uhr ist bestätigt.","q":"Für wie viele Personen ist reserviert?","options":["Zwei","Vier","Sechs"],"answer":1},{"text":"Die Ausstellung ist am Sonntag nur bis 15 Uhr geöffnet. An anderen Tagen schließen wir um 18 Uhr.","q":"Wann schließt die Ausstellung am Sonntag?","options":["Um 12 Uhr","Um 18 Uhr","Um 15 Uhr"],"answer":2},{"text":"Hallo, ich bin's. Ich komme etwa zwanzig Minuten später, weil mein Zug Verspätung hat.","q":"Warum kommt die Person später?","options":["Wegen des Zuges","Wegen der Arbeit","Wegen des Wetters"],"answer":0},{"text":"Der Sportkurs fällt heute wegen Krankheit der Trainerin aus. Nächste Woche findet er wieder statt.","q":"Warum fällt der Kurs aus?","options":["Wegen Ferien","Wegen Krankheit","Wegen Renovierung"],"answer":1},{"text":"Die Stadtverwaltung informiert: Neue Parkausweise können ab Montag im Internet beantragt werden.","q":"Ab wann kann man den Antrag stellen?","options":["Ab Freitag","Ab Sonntag","Ab Montag"],"answer":2},{"text":"Hallo Sara, hier ist Anna. Ich habe die Kinokarten gekauft. Der Film beginnt um 20 Uhr, aber wir sollten schon um 19:30 Uhr da sein.","q":"Wann sollen die Freunde da sein?","options":["Um 19:30 Uhr","Um 20:30 Uhr","Um 21 Uhr"],"answer":0},{"text":"Liebe Kunden, die Reparatur Ihres Computers dauert zwei Tage länger als geplant. Wir bitten um Verständnis.","q":"Was ist das Problem?","options":["Der Computer ist verloren.","Die Reparatur dauert länger.","Die Reparatur ist teurer."],"answer":1},{"text":"Im Radio hören Sie: Auf der Autobahn gibt es nach einem Unfall zehn Kilometer Stau. Fahren Sie bitte über die Landstraße.","q":"Was wird empfohlen?","options":["Schneller fahren","Auf der Autobahn bleiben","Die Landstraße nehmen"],"answer":2}]);
   // Each independent listening item has an explicit speaker voice.
   TASKS.hoeren.forEach((task,i)=>{task.voice=[1,2,3,5,7,9,11,14,16,19].includes(i)?'de-DE-ConradNeural':'de-DE-KatjaNeural';});
+  // Independent listening dialogues; each turn has its own voice.
+  [{"i":2,"turns":[{"text":"Hallo Thomas, kommst du heute mit zum Sport?","voice":"de-DE-KatjaNeural"},{"text":"Leider nicht, Julia. Ich muss heute länger arbeiten. Morgen um sechs hätte ich aber Zeit.","voice":"de-DE-ConradNeural"}]},{"i":3,"turns":[{"text":"Guten Tag, ich wollte fragen, ob mein Fahrrad schon fertig ist.","voice":"de-DE-ConradNeural"},{"text":"Ja, die Reparatur ist abgeschlossen. Sie können es morgen ab neun Uhr abholen. Heute schließen wir gleich.","voice":"de-DE-KatjaNeural"}]},{"i":5,"turns":[{"text":"Hallo Martin, treffen wir uns am Samstag wieder im Café?","voice":"de-DE-KatjaNeural"},{"text":"Nein, Lea, diesmal treffen wir uns im Park am Brunnen. Das Café wird gerade renoviert.","voice":"de-DE-ConradNeural"}]},{"i":8,"turns":[{"text":"Guten Tag, ich habe letzte Woche ein Buch bestellt. Ist es schon da?","voice":"de-DE-ConradNeural"},{"text":"Ja, es liegt für Sie bereit. Bitte holen Sie es innerhalb einer Woche ab.","voice":"de-DE-KatjaNeural"}]},{"i":10,"turns":[{"text":"Guten Tag, ich möchte mein Paket abholen. Reicht die Benachrichtigung?","voice":"de-DE-ConradNeural"},{"text":"Nein, bitte bringen Sie auch Ihren Ausweis mit. Eine Rechnung brauchen Sie nicht.","voice":"de-DE-KatjaNeural"}]},{"i":12,"turns":[{"text":"Guten Abend, ich möchte für Freitag einen Tisch reservieren, um 19 Uhr.","voice":"de-DE-ConradNeural"},{"text":"Gerne. Für wie viele Personen?","voice":"de-DE-KatjaNeural"},{"text":"Für vier Personen, bitte.","voice":"de-DE-ConradNeural"},{"text":"Gut, ich habe die Reservierung eingetragen.","voice":"de-DE-KatjaNeural"}]},{"i":14,"turns":[{"text":"Hallo, bist du schon unterwegs?","voice":"de-DE-KatjaNeural"},{"text":"Ja, aber mein Zug hat Verspätung. Ich komme etwa zwanzig Minuten später.","voice":"de-DE-ConradNeural"}]},{"i":17,"turns":[{"text":"Hallo Anna, wann beginnt der Film heute?","voice":"de-DE-ConradNeural"},{"text":"Um acht Uhr abends, Paul. Ich habe die Karten schon gekauft. Wir sollten aber bereits um halb acht da sein.","voice":"de-DE-KatjaNeural"}]}].forEach(({i,turns})=>{TASKS.hoeren[i].turns=turns;TASKS.hoeren[i].text=turns.map(t=>t.text).join(' ');});
   TASKS.schreiben.push(
     {q:'Schreibe eine E-Mail an deinen Vermieter. Die Heizung funktioniert nicht. Beschreibe das Problem, erkläre die Folgen und bitte um einen Reparaturtermin.',hint:'Achte auf eine höfliche Anrede und alle drei Inhaltspunkte.'},
     {q:'Du hast einen neuen Arbeitsplatz gefunden. Schreibe einem Freund, was du dort machst, wie die Kollegen sind und wann ihr euch wiedersehen könnt.',hint:'Schreibe einen zusammenhängenden persönlichen Text.'},
@@ -94,24 +96,36 @@
     if(activeAudio){activeAudio.pause();activeAudio=null;}
     if('speechSynthesis' in window) speechSynthesis.cancel();
   }
-  function speak(text,voice='de-DE-KatjaNeural'){
+  function speak(text,voice='de-DE-KatjaNeural',turns){
     stopSpeech();
-    if(!text)return;
-    const generation=speechGeneration;
+    const queue=turns||[{text,voice}], generation=speechGeneration;
     const base=window.SDLernAPI && window.SDLernAPI.SERVER;
-    if(base){
-      const audio=new Audio(base+'/hub/tts?text='+encodeURIComponent(text)+'&voice='+encodeURIComponent(voice)+'&rate=-15%');
-      activeAudio=audio;
-      audio.play().catch(()=>{if(generation===speechGeneration)fallback(text,voice);});
-    }else fallback(text,voice);
+    function next(i){
+      if(generation!==speechGeneration||i>=queue.length)return;
+      const turn=queue[i], advance=()=>next(i+1);
+      if(!turn.text)return advance();
+      if(base){
+        const audio=new Audio(base+'/hub/tts?text='+encodeURIComponent(turn.text)+'&voice='+encodeURIComponent(turn.voice)+'&rate=-15%');
+        activeAudio=audio;
+        let settled=false;
+        const fail=()=>{if(settled||generation!==speechGeneration)return;settled=true;audio.pause();fallback(turn.text,turn.voice,advance);};
+        audio.onended=()=>{if(!settled&&generation===speechGeneration){settled=true;advance();}};
+        audio.onerror=fail;
+        audio.play().catch(fail);
+      }else fallback(turn.text,turn.voice,advance);
+    }
+    next(0);
   }
-  function fallback(text,voice){
-    if(!('speechSynthesis' in window))return;
+  function fallback(text,voice,done){
+    if(!('speechSynthesis' in window)){alert('Audio ist auf diesem Gerät nicht verfügbar.');return;}
+    const generation=speechGeneration;
     const u=new SpeechSynthesisUtterance(text);u.lang='de-DE';u.rate=.85;
     const german=speechSynthesis.getVoices().filter(v=>/^de(?:-|_)/i.test(v.lang));
     const names=voice==='de-DE-ConradNeural'?/Conrad|Stefan|Hans|Markus|Martin|Daniel|Yannick/i:/Katja|Anna|Helena|Petra|Hedda|Amelie|Vicki/i;
     const match=german.find(v=>names.test(v.name));
     if(match)u.voice=match;
+    u.onend=()=>{if(generation===speechGeneration)done();};
+    u.onerror=()=>{if(generation===speechGeneration)alert('Der Hörtext konnte nicht vollständig abgespielt werden. Bitte erneut versuchen.');};
     speechSynthesis.speak(u);
   }
   function activeTasks(){return TASKS[part].slice(0,part==='lesen'?25:part==='hoeren'?20:part==='schreiben'?1:3);}
@@ -133,7 +147,7 @@
       ((part==='lesen'||part==='hoeren')&&index>0?'<button class="b1-audio" id="b1-prev" type="button">Vorherige Aufgabe</button>':'')+
       '<button class="b1-next" id="b1-next">'+(index===tasks.length-1?'Auswertung':'Nächste Aufgabe')+'</button>');
     $('b1-back').onclick=()=>{stopSpeech();clearTimer();part=null;overview();};
-    if($('b1-play')) $('b1-play').onclick=()=>speak(t.text||t.q,t.voice);
+    if($('b1-play')) $('b1-play').onclick=()=>speak(t.text||t.q,t.voice,t.turns);
     if($('b1-prev')) $('b1-prev').onclick=()=>{
       const checked=root.querySelector('input[name="b1-answer"]:checked');
       answers[index]=checked?Number(checked.value):null;
