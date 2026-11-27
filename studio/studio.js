@@ -1231,7 +1231,9 @@ function probleme() {
   $('problemAnz').textContent = alle.length || '';
   $('sbProbleme').textContent = '⨯ ' + alle.length;
   if ($('diagnoseKI')) $('diagnoseKI').disabled = !alle.length;
-  if ($('diagnoseStand')) $('diagnoseStand').textContent =
+  // Der explizite Fehlerfinder besitzt seine Statusanzeige, solange sein Panel im KI-Dialog liegt.
+  // Automatische Vorschau-/Lint-Meldungen aktualisieren weiterhin Liste und Zähler.
+  if ($('diagnoseStand') && !(!$('kiOverlay')?.hidden && $('kiDiagnoseSlot')?.contains($('diagnoseStand')) && $('diagnoseStand').textContent.startsWith('Fehlerfinder:'))) $('diagnoseStand').textContent =
     (S.problemeAnalyse || []).length + ' statische Hinweise · ' +
     (S.problemeVorschau.length + S.problemeProgramm.length) + ' Laufzeitmeldungen';
 }
