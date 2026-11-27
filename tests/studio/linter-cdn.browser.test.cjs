@@ -14,7 +14,7 @@ const {chromium}=require('playwright');
  try{
   const page=await browser.newPage({viewport:{width:1300,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')console.log('[console]',m.text().slice(0,300))});
-  await page.addInitScript(()=>{localStorage.setItem('sdStudioEinst',JSON.stringify({konfetti:false}))});
+  await page.addInitScript(()=>{if(window.top!==window)return;localStorage.setItem('sdStudioEinst',JSON.stringify({konfetti:false}))});
   await page.goto(url,{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit,null,{timeout:30000});
   await page.evaluate(async()=>{const st=document.getElementById('studioStart');if(st)st.hidden=true;

@@ -7,7 +7,7 @@ const {chromium}=require('playwright');
 const baseline=require('./commands-baseline.json'); // All 51 commands in main e60be4a; no synthetic entries.
 const projectGroups={
  'Projekt':['Neues Projekt','Projekt wechseln','Umbenennen','Duplizieren'],
- 'Hinein & heraus':['Dateien hochladen','Ordner hochladen','ZIP hochladen','Anleitung oder Code','GitHub importieren','Als ZIP','Als eine HTML-Datei','Cloud-Backup'],
+ 'Hinein & heraus':['Dateien hochladen','Ordner hochladen','ZIP hochladen','Anleitung oder Code','GitHub importieren','Als ZIP','Als eine HTML-Datei','Backup als ZIP herunterladen'],
  'Teilen':['Online stellen','Meine Seiten online','Offline nehmen','Auf meinem PC ausführen'],
  'Sicherheit':['Versionen','Projekt löschen']
 };
@@ -34,7 +34,7 @@ const moreGroups={
   for(const width of [1300,390]){
    const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
-   await page.addInitScript(()=>{if(!localStorage.getItem('sdStudioEinst'))localStorage.setItem('sdStudioEinst',JSON.stringify({konfetti:false}))});
+   await page.addInitScript(()=>{if(window.top!==window)return;if(!localStorage.getItem('sdStudioEinst'))localStorage.setItem('sdStudioEinst',JSON.stringify({konfetti:false}))});
    await page.goto(url,{waitUntil:'domcontentloaded'});
    await page.locator('#studioStart').waitFor({state:'visible'});
    fs.mkdirSync('studio-layout-artifacts',{recursive:true});
@@ -73,7 +73,7 @@ const moreGroups={
    assert.equal(await page.locator('#kiNeu').isVisible(),false,'Repair tab cannot create a new empty project');
    await page.locator('#kiPruefen [data-studio-action="fehlerfinder"]').click();
    await page.locator('#kiDiagnoseSlot [data-feld="probleme"]').waitFor({state:'visible'});
-   assert.match(await page.locator('#diagnoseStand').innerText(),/Fehlerfinder:/);
+   await page.waitForFunction(()=>/Fehlerfinder:/.test(document.getElementById('diagnoseStand').textContent));
    await page.locator('#kiCheckTab').focus();
    await page.keyboard.press('Home');assert.equal(await page.locator('#kiCodeBtn').getAttribute('aria-selected'),'true');
    assert.equal(await page.locator('#kiServicesBtn').isVisible(),true);

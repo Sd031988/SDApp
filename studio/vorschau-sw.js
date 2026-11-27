@@ -11,8 +11,7 @@ const TYPEN = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/
 const BRUECKE = '<script>(function(){var P=parent!==window?parent:null;if(!P)return;function s(t,a){try{P.postMessage({sdVorschau:1,typ:t,text:Array.prototype.map.call(a,function(x){try{return typeof x==="object"?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}}' +
   '["log","info","warn","error"].forEach(function(k){var o=console[k];console[k]=function(){s(k,arguments);o.apply(console,arguments)}});' +
   'addEventListener("error",function(e){var d=(e.filename||"").split("/vorschau/")[1]||"";d=d.split("/").slice(1).join("/");s("fehler",[e.message+(d?" ("+decodeURIComponent(d)+":"+e.lineno+")":"")])});' +
-  'addEventListener("unhandledrejection",function(e){s("fehler",["Promise: "+(e.reason&&e.reason.message||e.reason)])});' +
-  'addEventListener("message",function(e){if(e.data&&e.data.sdEval!=null){try{var r=(0,eval)(e.data.sdEval);s("ergebnis",[r])}catch(x){s("fehler",[x.message])}}});})();<\/script>';
+  'addEventListener("unhandledrejection",function(e){s("fehler",["Promise: "+(e.reason&&e.reason.message||e.reason)])});})();<\/script>';
 
 function dbOeffnen() {
   return new Promise((ok, nein) => { const r = indexedDB.open('sdCodeStudio', 1);
@@ -23,8 +22,12 @@ async function projektLesen(name) {
   const db = await dbOeffnen();
   return new Promise((ok, nein) => { const q = db.transaction('projekte').objectStore('projekte').get(name); q.onsuccess = () => ok(q.result || null); q.onerror = () => nein(q.error); });
 }
+// Auch direkt aufgerufene alte Vorschau-URLs dürfen nicht mit Studio-Origin laufen.
+function vorschauHeader(typ) {
+  return { 'Content-Type': typ, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': 'sandbox allow-scripts allow-forms' };
+}
 function antwort(inhalt, typ, status) {
-  return new Response(inhalt, { status: status || 200, headers: { 'Content-Type': typ + (/^text|json|javascript|svg|xml/.test(typ) ? '; charset=utf-8' : ''), 'Cache-Control': 'no-store' } });
+  return new Response(inhalt, { status: status || 200, headers: vorschauHeader(typ + (/^text|json|javascript|svg|xml/.test(typ) ? '; charset=utf-8' : '')) });
 }
 function dataUrlZuBlob(u) {
   const m = /^data:([^;,]*)(;base64)?,(.*)$/s.exec(u); if (!m) return null;
@@ -54,7 +57,7 @@ self.addEventListener('fetch', e => {
     }
     const typ = TYPEN[(pfad.split('.').pop() || '').toLowerCase()] || 'text/plain';
     let inhalt = d[pfad];
-    if (typeof inhalt === 'string' && inhalt.startsWith('data:') && !/^text\/(html|css|javascript)/.test(typ)) { const b = dataUrlZuBlob(inhalt); if (b) return new Response(b, { headers: { 'Content-Type': typ === 'image/jxl' ? typ : (b.type || typ), 'Cache-Control': 'no-store' } }); }
+    if (typeof inhalt === 'string' && inhalt.startsWith('data:') && !/^text\/(html|css|javascript)/.test(typ)) { const b = dataUrlZuBlob(inhalt); if (b) return new Response(b, { headers: vorschauHeader(typ === 'image/jxl' ? typ : (b.type || typ)) }); }
     if (typ === 'text/html') inhalt = /<head[^>]*>/i.test(inhalt) ? inhalt.replace(/<head[^>]*>/i, m => m + BRUECKE) : BRUECKE + inhalt;
     return antwort(inhalt, typ);
   })());
