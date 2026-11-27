@@ -1,8 +1,7 @@
 /* =====================================================================
    SD Code-Studio (online) – professioneller Code-Editor im Browser
-   Projekte liegen im Browser-Speicher (IndexedDB). Webseiten laufen über
-   einen Vorschau-Server im Browser (vorschau-sw.js). Programme in Python,
-   C, C++, C#, Java, Rust und Go laufen über den kostenlosen Dienst wandbox.org.
+   Projekte liegen im Browser-Speicher (IndexedDB). Webseiten laufen isoliert.
+   Python bevorzugt Pyodide; andere Programme laufen nach Zustimmung über wandbox.org.
    ===================================================================== */
 'use strict';
 const $ = id => document.getElementById(id);
@@ -925,6 +924,7 @@ function sichereVorschauBruecke() {
   const code = [
     '(function(){',
     'var P=window.parent;if(!P||P===window)return;',
+    'var studioOrigin='+JSON.stringify(location.origin)+';',
     'function fmt(x){try{if(x instanceof Error)return x.message;if(typeof x==="object")return JSON.stringify(x);return String(x)}catch(_){return String(x)}}',
     'function send(kind,args,file,line){try{P.postMessage({sdVorschau:1,typ:kind,text:Array.prototype.map.call(args,fmt).join(" "),datei:file||null,zeile:line||null},"*")}catch(_){}}',
     '["log","info","warn","error"].forEach(function(kind){var original=console[kind];console[kind]=function(){send(kind,arguments);return original.apply(console,arguments)}});',
@@ -935,7 +935,7 @@ function sichereVorschauBruecke() {
     '});',
     'window.addEventListener("unhandledrejection",function(e){var reason=e.reason;send("fehler",["Promise: "+(reason&&reason.message||fmt(reason))],null,null)});',
     'var visual=false;',
-    'window.addEventListener("message",function(e){if(e.source===P&&e.data&&typeof e.data.sdVisual==="boolean")visual=e.data.sdVisual});',
+    'window.addEventListener("message",function(e){if(e.source===P&&e.origin===studioOrigin&&e.data&&typeof e.data.sdVisual==="boolean")visual=e.data.sdVisual});',
     'window.addEventListener("dblclick",function(e){if(!visual||!e.target.closest)return;',
     'var n=e.target.closest("h1,h2,h3,h4,p,button,a,label,span,li");if(!n||n.children.length)return;',
     'var t=String(n.textContent||"").trim();if(!t||t.length>600)return;e.preventDefault();e.stopPropagation();',
@@ -945,7 +945,7 @@ function sichereVorschauBruecke() {
   ].join('');
   return '<script>' + code.replace(/<\/script/gi, '<\\/script') + '<\/script>';
 }
-function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung ohne Service Worker
+function htmlZusammenbauen(start) {   // für die Einzeldatei und die isolierte Vorschau
   const d = S.p.dateien; let h = d[start];
   h = h.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, href) => { if (!/stylesheet/i.test(m)) return m; const p = relAufloesen(start, href); return p && d[p] != null ? '<style>/* ' + p + ' */\n' + d[p] + '\n</style>' : m; });
   h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => {
@@ -967,13 +967,15 @@ function htmlZusammenbauen(start) {   // für die Einzeldatei und als Notlösung
   return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
 }
 function startSeite() { const d = Object.keys(S.p.dateien); if (S.aktiv && /\.html?$/i.test(S.aktiv)) return S.aktiv; return d.find(x => x === 'index.html') || d.find(x => /(^|\/)index\.html$/.test(x)) || d.find(x => /\.html?$/i.test(x)); }
-/* Fremder Code (KI, ZIP, GitHub, eingefügter Ordner/Text) läuft in einer abgeschotteten Vorschau ohne Zugriff
-   auf thesdhub.com (Anmeldung, gespeicherte Daten). Erst wenn die Person dem Projekt bewusst vertraut, wie eigener Code. */
+/* Alle Projekte bleiben origin-isoliert. Fremdcode hat zusätzlich weniger Sandbox-Berechtigungen. */
 function istIsoliert(p) { return !!p && (Object.prototype.hasOwnProperty.call(p, 'kiQuelle') || !!p.fremdQuelle); }
+function vorschauSandbox(p) {
+  return istIsoliert(p) ? 'allow-scripts allow-forms' : 'allow-scripts allow-forms allow-modals allow-popups allow-downloads';
+}
 async function projektVertrauen() {
-  if (!S.p || !S.p.fremdQuelle) { toast('Dieses Projekt läuft schon wie dein eigener Code.'); return; }
-  if (!confirm('Diesem Projekt vertrauen?\n\nDann läuft sein Code mit Zugriff auf thesdhub.com – er könnte deine Anmeldung und gespeicherten Daten lesen. Nur machen, wenn du den Code kennst und ihm vertraust.')) return;
-  delete S.p.fremdQuelle; await projSchreiben(S.p); toast('Projekt wird jetzt wie eigener Code ausgeführt.'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(true);
+  if (!S.p || !S.p.fremdQuelle) { toast('Die Vorschau bleibt isoliert.'); return; }
+  if (!confirm('Diesem Projekt vertrauen?\n\nDie Vorschau bleibt isoliert, ohne Zugriff auf Studio-Daten. Bei Nicht-KI-Projekten werden zusätzliche Funktionen wie Pop-ups und Downloads erlaubt.')) return;
+  delete S.p.fremdQuelle; await projSchreiben(S.p); toast('Vertrauensstatus aktualisiert; die Vorschau bleibt isoliert.'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(true);
 }
 async function vorschau(neu) {
   if (!S.p) return; const start = startSeite(); if (!start) { $('vorschau').hidden = true; return; }
@@ -984,27 +986,14 @@ async function vorschau(neu) {
   $('vorschau').hidden = false; S.problemeVorschau = []; diagnoseAktualisieren(); if (neu) S.konsole = [];
   const f = $('frame');
   f.onload=()=>{try{f.contentWindow.postMessage({sdVisual:!!S.visuellerModus},'*')}catch(_){}};
-  // AI-origin projects run in an opaque-origin sandbox: no same-origin cookies, DOM or IndexedDB access.
-  f.setAttribute('sandbox', istIsoliert(S.p) ? 'allow-scripts allow-forms' : 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads');
-  // Sandboxed AI iframes have an opaque origin. Browsers can bypass the
-  // Service Worker on their navigations and display GitHub Pages' real 404.
-  // Load the project files directly as srcdoc instead; CSS/JS is bundled
-  // by htmlZusammenbauen(). Keep allow-same-origin OFF for untrusted AI code.
-  const istKiProjekt = istIsoliert(S.p);
-  if (S.visuellerModus || istKiProjekt || !S.swBereit) {
-    // srcdoc otherwise inherits the studio origin. Never give local preview its cookies/storage.
-    f.setAttribute('sandbox', 'allow-scripts allow-forms');
-    f.removeAttribute('src');
-    f.srcdoc = htmlZusammenbauen(start);
-    $('url').value = '/' + start + (S.p.fremdQuelle ? ' (isoliert: importiertes Projekt – „Projekt vertrauen“ im Befehlsmenü)' : ' (sichere lokale Vorschau)');
-  } else {
-    const url = 'vorschau/' + encodeURIComponent(S.p.name) + '/' + start.split('/').map(encodeURIComponent).join('/');
-    if (neu || !f.src.includes('/vorschau/') || !f.src.includes('/vorschau/' + encodeURIComponent(S.p.name) + '/')) { f.removeAttribute('srcdoc'); f.src = url; } else { try { f.contentWindow.location.reload(); } catch (e) { f.src = url; } }
-    $('url').value = new URL(url, location.href).pathname.replace(/^.*\/vorschau\//, '/');
-  }
+  // srcdoc umgeht Service-Worker-Navigationsprobleme bei opaken Origins.
+  f.setAttribute('sandbox', vorschauSandbox(S.p));
+  f.removeAttribute('src');
+  f.srcdoc = htmlZusammenbauen(start);
+  $('url').value = '/' + start + ' (sichere lokale Vorschau)';
   if (neu) konfetti();
 }
-window.addEventListener('message', e => { const m = e.data; if (!m || !m.sdVorschau || e.source !== $('frame').contentWindow) return;
+window.addEventListener('message', e => { const m = e.data; if (e.origin !== 'null' || !m || m.sdVorschau !== 1 || e.source !== $('frame').contentWindow || typeof m.text !== 'string' || !['log','info','warn','error','fehler','visual-text'].includes(m.typ)) return;
   if(m.typ==='visual-text'){
     if(S.visuellerModus)visuellerTextAendern(m).catch(err=>toast('Visuelle Bearbeitung fehlgeschlagen: '+err.message));
     return;
@@ -1084,7 +1073,7 @@ async function programmStarten(spWahl) {
     let r; try { r = await SDPython.starten({ dateien: texte, haupt: h, stdin: stdinText }); } finally { $('starten').disabled = false; }
     if (r !== 'fallback') { if (r === 'ok' && !S.p.erfolg) { S.p.erfolg = 1; konfetti(); } return; }
   }
-  if (!store.get('sdStudioWbOk', false)) { if (!confirm('▶ Programme in ' + SPR[sp] + ' werden kostenlos über den Online-Dienst wandbox.org gebaut und ausgeführt.\nDafür wird dein Code dorthin geschickt.\n\nEinverstanden?')) return; store.set('sdStudioWbOk', true); }
+  if (!store.get('sdStudioWbDatenschutzOk', false)) { if (!confirm('Externer Dienst: wandbox.org\n\nFür ' + SPR[sp] + ' werden Programmcode, benötigte Quelldateien und Eingaben (stdin) an wandbox.org übertragen. Keine Passwörter, Zugangsschlüssel oder vertraulichen Daten mitsenden. Python wird bevorzugt lokal mit Pyodide ausgeführt.\n\nEinverstanden?')) return; store.set('sdStudioWbDatenschutzOk', true); }
   const d = S.p.dateien, alle = Object.keys(d).filter(x => programmSprache(x) === sp || (sp === 'cpp' && /\.(h|hpp)$/.test(x)) || (sp === 'c' && /\.h$/.test(x)) || (sp === 'node' && /\.(m?js|cjs|json)$/.test(x) && !/^package(-lock)?\.json$/.test(x)) || (sp === 'typescript' && /\.ts$/.test(x)));
   let haupt = S.aktiv; const t = d[haupt];
   const mainRe = { cpp: /\bint\s+main\s*\(/, c: /\bint\s+main\s*\(/, java: /static\s+void\s+main\s*\(/, csharp: /static\s+(async\s+)?\S+\s+Main\s*\(/, rust: /fn\s+main\s*\(/, go: /func\s+main\s*\(/, python: /./, node: /./, typescript: /./ }[sp] || /./;
@@ -1234,7 +1223,7 @@ function befehle() { const B = [
   ['📄 Datei öffnen …', 'Strg+P', dateiSuchen], ['🔎 JSON-Syntax prüfen', '', editorDiagnoseAnzeigen], ['✨ Code formatieren', 'Umschalt+Alt+F', formatieren], ['🧹 Ganze Datei leeren', '', dateiLeeren], ['📥 Ganze Datei durch Zwischenablage ersetzen', '', dateiErsetzen], ['🔍 In allen Dateien suchen', 'Strg+Umschalt+F', () => seite('suche')], ['🕘 Version speichern', '', () => { seite('versionen'); }],
   ['⬆ Dateien hochladen', '', () => $('hochDatei').click()], ['⬆ Ordner hochladen', '', () => $('hochOrdner').click()], ['⬆ ZIP öffnen', '', () => $('hochZip').click()], ['🔓 Importiertem Projekt vertrauen', '', projektVertrauen],
   ['🌐 Online stellen (eigener Link)', '', onlineDialog], ['🌐 Meine Seiten online', '', meineSeiten], ['🗑 Seite offline nehmen', '', seiteLoeschen], ['💻 Auf meinem PC ausführen (SD KI-Agent)', '', aufPcAusfuehren], ['🖥 KI im Terminal (Gemini, Claude, Codex – PC)', '', () => window.SDPcTerminal && SDPcTerminal.kiImTerminal()], ['🖥 PC-Ordner öffnen (z. B. Unreal-Projekt)', '', () => window.SDPcOrdner && SDPcOrdner.oeffnen()], ['⬇ Projekt als ZIP', '', zipExport], ['🚀 Ein-Klick-App-Builder', '', einKlickAppBuilder], ['📦 Desktop-App exportieren (Windows/macOS/Linux)', '', desktopExport], ['⚙ Framework-Projekt bauen (React/Vue/Angular)', '', frameworkProjektExport], ['🔎 Automatischer Fehlerfinder', '', automatischerFehlerfinder], ['🧪 Projekt prüfen und Export-Assistent', '', projektAssistent], ['✨ KI-Projekt-Assistent (Projektidee → Code)', '', kiProjektAssistent], ['⬇ Als eine HTML-Datei', '', einzelHtml], ['🖌 Visueller Website-Designer (sichere Kopie)', '', visuellerWebsiteDesigner], ['🎨 Im Design-Studio gestalten', '', designOeffnen], ['🖼 JPEG XL Bild-Assets', '', () => window.open('./jpeg-xl.html', '_blank', 'noopener')],
-  ['✎ Projekt umbenennen', '', projektUmbenennen], ['☁ Cloud-Backup als ZIP', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
+  ['✎ Projekt umbenennen', '', projektUmbenennen], ['💾 Backup als ZIP herunterladen', '', cloudProjektBackup], ['🐙 Öffentliches GitHub-Projekt importieren', '', githubProjektImport], ['⧉ Projekt duplizieren', '', projektDuplizieren], ['🗑 Projekt löschen', '', projektLoeschen],
   ['🧘 Fokus-Modus', '', fokus], ['🌈 Farbthema wechseln …', '', () => setTimeout(() => palette(Object.keys(THEMEN).map(n => ({ label: '🌈 ' + n, info: (einst().thema || 'Mitternacht') === n ? 'aktiv' : '', n })), 'Farbthema …', x => thema(x.n)), 30)],
   ['A+ Schrift größer', 'Strg+=', () => schrift(1)], ['A− Schrift kleiner', 'Strg+-', () => schrift(-1)], ['↵ Zeilenumbruch an/aus', 'Alt+Z', () => { einstSetzen('umbruch', !einst().umbruch); if (S.cm) S.cm.setOption('lineWrapping', !!einst().umbruch); }],
   ['⌨ Konsole', '', () => unten('konsole')], ['⨯ Probleme', '', () => unten('probleme')], ['🖥 Vorschau: PC', '', () => geraet('100%')], ['📱 Vorschau: Handy', '', () => geraet('390px')], ['⟳ Vorschau neu laden', '', () => vorschau(false)], ['↗ Vorschau in neuem Tab', '', () => $('neuTab').click()],
@@ -1312,8 +1301,9 @@ async function cloudProjektBackup() {
     '\nErstellt: '+new Date().toISOString()+
     '\n\nDieses ZIP kann im Studio über „ZIP öffnen“ auf einem anderen Gerät importiert werden.'+
     '\nDie Cloud-Synchronisierung erfolgt nicht automatisch. Das ZIP kann in einem eigenen Cloud-Speicher abgelegt werden.\n';
-  herunterladen(zipBauen(dateien),slug(p.name)+'-cloud-backup.zip');
-  toast('Portables Projektbackup erstellt. In deinem Cloud-Speicher ablegen.');
+  herunterladen(zipBauen(dateien),slug(p.name)+'-backup.zip');
+  toast('ZIP-Backup erstellt. Bitte in iCloud Drive oder auf deinem PC sichern. Kein automatisches Cloud-Backup.');
+  alert('Bitte sichere die heruntergeladene ZIP-Datei in iCloud Drive oder auf deinem PC. Es findet keine automatische Cloud-Synchronisierung statt.');
 }
 
 
@@ -2015,7 +2005,7 @@ function eingabeFragen(sp) { return new Promise(ok => { let o = $('einFrage'); i
   $('einPc').onclick = () => { fertig(null); aufPcAusfuehren(); }; setTimeout(() => $('einText').focus(), 30); }); }
 /* ---------------- 🌐 Online stellen (nur mit Zugangsschlüssel) ---------------- */
 const HUB = 'https://sd-maschinen-kenner.onrender.com';
-function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
+function gemerkterCode() { try { return sessionStorage.getItem('sdAgentZugang') || ''; } catch (e) { return ''; } }
 async function hubPost(pfad, daten, wartenText) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 100000); let wach = null;
   if (wartenText) wach = setTimeout(() => wartenText('⏳ Der Server wacht gerade auf (kann bis zu einer Minute dauern) …'), 6000);
@@ -2042,7 +2032,7 @@ function projektCheckAnzeigen() {
 }
 function onlineDialog() {
   if (!S.p) return; const code = gemerkterCode();
-  if (!S.frei || !code) { sperre(true); $('spTitel').textContent = '🔑 Online stellen braucht einen Zugangsschlüssel'; $('spText').innerHTML = 'Damit keine Betrugsseiten entstehen, können nur Menschen mit <b>Zugangsschlüssel vom KI-Agenten</b> Seiten veröffentlichen. Gib deinen Schlüssel ein – danach kannst du direkt online stellen.'; return; }
+  if (!S.frei || !code) { sperre(); $('spTitel').textContent = '🔑 Online stellen braucht einen Zugangsschlüssel'; $('spText').innerHTML = 'Damit keine Betrugsseiten entstehen, können nur Menschen mit <b>Zugangsschlüssel vom KI-Agenten</b> Seiten veröffentlichen. Gib deinen Schlüssel ein – danach kannst du direkt online stellen.'; return; }
   if (!startSeite()) { alert('Zum Online-Stellen braucht das Projekt eine HTML-Datei (z. B. index.html).'); return; }
   const box = $('online'); box.hidden = false; $('onErg').innerHTML = ''; $('onLos').disabled = false;
   const showReport=()=>{
@@ -2129,34 +2119,57 @@ function handyEinrichten() {
   $('baum').addEventListener('click', e => { if (istHandy() && e.target.closest('.bz.datei') && e.target.tagName !== 'BUTTON') ansicht('code'); });
   $('suchErg').addEventListener('click', e => { if (istHandy() && e.target.closest('.sz')) ansicht('code'); });
   $('problemListe').addEventListener('click', e => { if (istHandy() && e.target.closest('.pr')) ansicht('code'); });
+  const viewport = window.visualViewport, app = $('app');
+  let viewportFrame = 0;
+  const viewportAnpassen = () => {
+    cancelAnimationFrame(viewportFrame);
+    viewportFrame = requestAnimationFrame(() => {
+      if (istHandy() && viewport && Math.abs(viewport.scale - 1) < 0.02) {
+        app.style.top = viewport.offsetTop + 'px';
+        app.style.bottom = 'auto';
+        app.style.height = Math.floor(viewport.height) + 'px';
+      } else {
+        app.style.removeProperty('top');
+        app.style.removeProperty('bottom');
+        app.style.removeProperty('height');
+      }
+      if (S.cm) S.cm.refresh();
+    });
+  };
+  if (viewport) {
+    viewport.addEventListener('resize', viewportAnpassen);
+    viewport.addEventListener('scroll', viewportAnpassen);
+  }
+  window.addEventListener('resize', viewportAnpassen);
+  viewportAnpassen();
   const mq = matchMedia('(max-width:819px)'); const wechsel = () => { if (mq.matches) ansicht($('app').dataset.ansicht || 'code'); else { delete $('app').dataset.ansicht; } setTimeout(() => S.cm && S.cm.refresh(), 60); };
   mq.addEventListener ? mq.addEventListener('change', wechsel) : mq.addListener(wechsel); wechsel();
   // roter Punkt bei neuen Problemen
-  const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="ausgabe"]'); if (k) k.classList.toggle('punkt', n > 0 && $('app').dataset.ansicht !== 'ausgabe'); });
+  const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="werkzeuge"]'); if (k) k.classList.toggle('punkt', n > 0); });
   beob.observe($('problemAnz'), { childList: true, characterData: true, subtree: true }); beob.observe($('konsoleAnz'), { childList: true, characterData: true, subtree: true });
 }
 /* ---------------- Zugang: Code-Studio kostenlos; Schlüssel nur für „Online stellen“ ---------------- */
-const FREI = 10, ZAEHL = 'sdStudioOeffnungen';
-function oeffnungen() { const j = Date.now(); return (store.get(ZAEHL, []) || []).filter(t => j - t < 864e5); }
 async function schluesselOk(code) { try { const zug = await (await fetch('../agent/zugang.json?t=' + Date.now(), { cache: 'no-store' })).json(); return !!(await sdZugang.oeffnen(zug, code)); } catch (e) { return false; } }
 function zaehlerZeigen() { if (window.SD_PC && $('kont')) { $('kont').innerHTML = '💻<span class="lang"> PC-Version</span>'; $('kont').title = 'Läuft im SD KI-Agenten auf deinem PC – ohne Limit'; } const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (window.SD_PC) return; if (S.frei) { n.innerHTML = '🔓<span class="lang"> Unbegrenzt</span>'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } n.innerHTML = '✓<span class="lang"> Kostenlos</span>'; n.title = 'Das Code-Studio ist kostenlos und ohne Limit. Nur „Online stellen“ braucht einen Zugangsschlüssel (Schutz vor Betrugsseiten).'; }
 async function zugangPruefen() {
+  // Alte dauerhafte Speicherung entfernen; Schlüssel ggf. neu eingeben.
+  try { localStorage.removeItem('sdAgentZugang'); } catch (_) {}
   if (window.SD_PC) { S.frei = true; return true; }   // im SD KI-Agenten auf dem PC: ohne Limit (PC-Paket gibt es nur mit Schlüssel)
-  const gemerkt = (() => { try { return sessionStorage.getItem('sdAgentZugang') || localStorage.getItem('sdAgentZugang'); } catch (e) { return null; } })();
+  const gemerkt = gemerkterCode();
   if (gemerkt && await schluesselOk(gemerkt)) { S.frei = true; return true; }
   return true;                                     // Code-Studio ist kostenlos und ohne Limit
 }
-function sperre(nurSchluessel) {
-  const o = $('sperre'); o.hidden = false; const l = oeffnungen();
-  $('spText').innerHTML = nurSchluessel ? 'Gib deinen Zugangsschlüssel vom KI-Agenten ein, um das Code-Studio unbegrenzt zu nutzen.' :
-    'Ohne Schlüssel kannst du das Code-Studio <b>' + FREI + '× in 24 Stunden</b> öffnen. Wieder frei ab <b>' + new Date(Math.min(...l) + 864e5).toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + '</b>.<br><br>Für unbegrenzte Nutzung brauchst du den <b>Zugangsschlüssel vom KI-Agenten</b> (SD Lotze). Damit bekommst du auch den KI-Agenten und den PC-Agenten.';
-  $('spTitel').textContent = nurSchluessel ? '🔑 Zugangsschlüssel eingeben' : '🔒 Deine ' + FREI + ' kostenlosen Öffnungen für heute sind aufgebraucht';
-  $('spZu').hidden = !nurSchluessel; $('spZu').onclick = () => { o.hidden = true; };
+function sperre() {
+  const o = $('sperre'); o.hidden = false;
+  $('spCode').value = ''; $('spFehler').textContent = '';
+  $('spText').textContent = 'Das Code-Studio ist kostenlos und unbegrenzt. Nur für Online stellen wird ein Zugangsschlüssel benötigt.';
+  $('spTitel').textContent = '🔑 Zugangsschlüssel eingeben';
+  $('spZu').hidden = false; $('spZu').onclick = () => { $('spCode').value = ''; o.hidden = true; };
   $('spLos').onclick = async () => { const c = $('spCode').value.trim(); if (!c) { $('spFehler').textContent = 'Bitte den Schlüssel eingeben.'; return; }
     $('spLos').disabled = true; $('spLos').textContent = 'Prüfe …'; const ok = await schluesselOk(c); $('spLos').disabled = false; $('spLos').textContent = '🔓 Freischalten';
     if (!ok) { $('spFehler').textContent = 'Dieser Schlüssel ist nicht gültig.'; return; }
-    try { sessionStorage.setItem('sdAgentZugang', c); if ($('spMerken').checked) localStorage.setItem('sdAgentZugang', c); } catch (e) { /* egal */ }
-    S.frei = true; o.hidden = true; zaehlerZeigen(); if (!S.gestartet) starten(); else toast('🔓 Freigeschaltet – unbegrenzt'); };
+    try { sessionStorage.setItem('sdAgentZugang', c); } catch (e) { $('spFehler').textContent = 'Der Browser erlaubt keinen Sitzungsspeicher.'; return; }
+    $('spCode').value = ''; S.frei = true; o.hidden = true; zaehlerZeigen(); if (!S.gestartet) starten(); else toast('🔓 Online stellen freigeschaltet'); };
   setTimeout(() => $('spCode').focus(), 30);
 }
 
@@ -2187,7 +2200,7 @@ function studioLayoutEinrichten() {
  const panel=$('studioPanelInhalt');document.querySelectorAll('#seite [data-panel]:not([data-panel="explorer"])').forEach(p=>panel.append(p));
  $('neuDatei').onclick=dateiDialog;$('baumNeu').onclick=dateiDialog;
  const actions={vorlagen:vorlagenWaehlen,ki:()=>window.SDKICodingUI?.openDialog(),weiter:studioStartSchliessen,oeffnen:()=>einfuegenDialog(''),start:studioStartZeigen,
-  wechsel:async()=>{await projektListe();palette([...$('projektWahl').options].filter(o=>o.value!=='__neu').map(o=>({label:o.textContent,name:o.value})),'Projekt wechseln',x=>projektOeffnen(x.name))},umbenennen:projektUmbenennen,duplizieren:projektDuplizieren,ordner:()=>$('hochOrdner').click(),zip:()=>$('hochZip').click(),github:githubProjektImport,backup:cloudProjektBackup,seiten:meineSeiten,offline:seiteLoeschen,pc:aufPcAusfuehren,versionen:()=>seite('versionen'),loeschen:projektLoeschen,
+  wechsel:async()=>{await projektListe();palette([...$('projektWahl').options].filter(o=>o.value!=='__neu').map(o=>({label:o.textContent,name:o.value})),'Projekt wechseln',x=>projektOeffnen(x.name))},umbenennen:projektUmbenennen,duplizieren:projektDuplizieren,ordner:()=>$('hochOrdner').click(),zip:()=>$('hochZip').click(),github:githubProjektImport,backup:cloudProjektBackup,online:onlineDialog,zipdownload:zipExport,seiten:meineSeiten,offline:seiteLoeschen,pc:aufPcAusfuehren,versionen:()=>seite('versionen'),loeschen:projektLoeschen,
   builder:einKlickAppBuilder,desktop:desktopExport,framework:frameworkProjektExport,export:projektAssistent,visuell:visuellerWebsiteDesigner,jxl:()=>window.open('./jpeg-xl.html','_blank','noopener'),lernen:programmierLernmodus,lernpruefen:lernaufgabePruefen,fortschritt:lernfortschrittAnzeigen,zertifikat:lernZertifikat,thema:()=>seite('einst'),groesser:()=>schrift(1),kleiner:()=>schrift(-1),umbruch:()=>$('eUmbruch').click(),fokus,tasten:()=>{ausgabe(KUERZEL);unten('ausgabe');ansicht('ausgabe')},einstellungen:()=>seite('einst'),leeredatei:()=>{$('dateiDialog').hidden=true;neueDatei('')},review:()=>{window.SDKICodingUI?.openDialog('check');$('agentReviewBtn').click()},fehlerfinder:async()=>{await automatischerFehlerfinder();if(!$('kiOverlay').hidden){unten('probleme');$('kiDiagnoseSlot').append(document.querySelector('[data-feld=probleme]'));$('diagnoseStand').textContent='Fehlerfinder: '+S.problemeProgramm.length+' Befunde (statische Prüfung)';}else ansicht('ausgabe')},suche:()=>seite('suche'),formatieren,json:editorDiagnoseAnzeigen,pcvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('100%');ansicht('vorschau')},handyvorschau:()=>{if($('vorschau').hidden)vorschau(true);geraet('390px');ansicht('vorschau')},mehr:()=>$('kopfMehr').click()};
  document.querySelectorAll('[data-studio-action]').forEach(b=>b.onclick=()=>{if(b.closest('#studioStart')&&b.dataset.studioAction!=='weiter')studioStartSchliessen();actions[b.dataset.studioAction]?.()});
  document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);
@@ -2225,7 +2238,7 @@ function verdrahten() {
   $('baumHoch').onclick = () => $('hochDatei').click(); $('zipBtn').onclick = zipExport; $('htmlBtn').onclick = einzelHtml;
   $('projektCheckBtn').onclick = projektCheckAnzeigen;
   ['hochDatei', 'hochOrdner', 'hochZip'].forEach(id => $(id).onchange = () => { hochladen([...$(id).files]); $(id).value = ''; });
-  $('kont').onclick = () => { if (!S.frei) sperre(true); };
+  $('kont').onclick = () => { if (!S.frei) sperre(); };
   $('suchQ').oninput = sucheLaufen; $('suchGross').onchange = sucheLaufen; $('ersetzAlle').onclick = ersetzenAlle;
   $('versNeu').onclick = () => { versionNeu($('versText').value.trim() || 'Version vom ' + new Date().toLocaleString('de-DE')); $('versText').value = ''; };
   $('themaWahl').innerHTML = Object.keys(THEMEN).map(n => '<option>' + n + '</option>').join(''); $('themaWahl').value = einst().thema || 'Mitternacht'; $('themaWahl').onchange = () => thema($('themaWahl').value);
@@ -2237,17 +2250,19 @@ function verdrahten() {
   $('visTextBtn').onclick = visuellenModusSchalten;
   $('visTextBtn').setAttribute('aria-pressed','false');
   $('neuTab').onclick = () => {
-    const frame=$('frame');
-    // Never write arbitrary srcdoc into a same-origin browser tab: it would expose Studio data.
-    const src=frame.getAttribute('src');
-    if(src && S.swBereit && !istIsoliert(S.p)){
-      window.open(src,'_blank','noopener,noreferrer');
-    } else {
-      toast('Sicherheitsmodus: Diese Vorschau (KI-Code oder importiertes Projekt) bleibt isoliert. Zum Weitergeben bitte das Projekt als ZIP exportieren.');
+    const frame = $('frame');
+    if (!frame.srcdoc || istIsoliert(S.p)) {
+      toast('Sicherheitsmodus: Importierte oder KI-Projekte bleiben in der isolierten Vorschau. Zum Weitergeben bitte als ZIP exportieren.');
+      return;
     }
+    // Der neue Tab enthält nur eine Hülle mit isoliertem iframe, niemals direkt Projektcode.
+    const srcdoc = frame.srcdoc.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const html = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SD Studio – Vorschau</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style><iframe title="Isolierte Vorschau" sandbox="' + vorschauSandbox(S.p) + '" srcdoc="' + srcdoc + '"></iframe>';
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
   $('vZu').onclick = () => { $('vorschau').hidden = true; setTimeout(() => S.cm && S.cm.refresh(), 50); };
-  $('konsoleEin').onkeydown = e => { if (e.key === 'Enter' && $('konsoleEin').value.trim()) { const c = $('konsoleEin').value; S.konsole.push({ typ: 'befehl', text: '❯ ' + c }); konsoleZeigen(); try { $('frame').contentWindow.postMessage({ sdEval: c }, '*'); } catch (x) { /* egal */ } $('konsoleEin').value = ''; } };
   $('konsoleLeer').onclick = () => { S.konsole = []; konsoleZeigen(); };
   $('leerNeu').onclick = () => neueDatei(''); $('leerVorlage').onclick = vorlagenWaehlen; $('leerEinf').onclick = () => einfuegenDialog('');
   // Tastatur
@@ -2281,4 +2296,4 @@ function verdrahten() {
   // Handy: Seitenleiste zu Beginn zu
   handyEinrichten();
 }
-(async () => { if (await zugangPruefen()) starten(); else sperre(false); })();
+(async () => { await zugangPruefen(); starten(); })();
