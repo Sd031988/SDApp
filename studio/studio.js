@@ -336,7 +336,7 @@ function editorBauen(mitCM) {
     S.cm = CodeMirror(box, { value: '', lineNumbers: true, indentUnit: 2, tabSize: 2, theme: 'material-darker', autoCloseBrackets: true, matchBrackets: true, autoCloseTags: true, matchTags: { bothTags: true }, styleActiveLine: true, foldGutter: true,
       lineWrapping: !!einst().umbruch, gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'], placeholder: 'Hier Code schreiben oder einfügen …',
       extraKeys: { Tab: c => c.somethingSelected() ? c.indentSelection('add') : c.replaceSelection(' '.repeat(c.getOption('indentUnit'))), 'Shift-Tab': c => c.indentSelection('subtract'),
-        'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment', 'Ctrl-Space': 'autocomplete', 'Ctrl-H': 'replace', 'Cmd-Alt-F': 'replace', 'Ctrl-G': 'jumpToLine', 'Cmd-G': 'findNext', 'Cmd-Shift-G': 'findPrev', 'Ctrl-F': 'find', 'Cmd-F': 'find', 'Alt-Up': 'swapLineUp', 'Alt-Down': 'swapLineDown',
+        'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment', 'Ctrl-Space': 'autocomplete', 'Ctrl-H': 'replace', 'Cmd-Alt-F': 'replace', 'Ctrl-G': 'jumpToLine', 'Cmd-G': 'findNext', 'Cmd-Shift-G': 'findPrev', ...(/Mac|iPhone|iPad|iPod/.test(navigator.platform) ? {} : { 'Ctrl-F': 'find' }), 'Cmd-F': 'find', 'Alt-Up': 'swapLineUp', 'Alt-Down': 'swapLineDown',
         'Ctrl-D': c => { const s = c.getCursor(); c.replaceRange(c.getLine(s.line) + '\n', { line: s.line, ch: 0 }); }, 'Shift-Alt-F': () => formatieren() } });
     S.cm.on('change', (c, ch) => { if (ch.origin !== 'setValue' && S.aktiv) { S.p.dateien[S.aktiv] = c.getValue(); tabsZeigen(); speichernBald(); } farbChipsBald(); });
     S.cm.on('cursorActivity', status); S.cm.on('change', editorDiagnoseBald); S.cm.on('viewportChange', farbChipsBald);
