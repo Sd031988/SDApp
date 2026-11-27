@@ -968,9 +968,9 @@ function vorschauMime(p) {
   const ext = p.split('.').pop().toLowerCase();
   return ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',avif:'image/avif',jxl:'image/jxl',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',mp3:'audio/mpeg',mp4:'video/mp4',wasm:'application/wasm',xml:'application/xml',csv:'text/csv'})[ext] || 'text/plain';
 }
-function vorschauData(p, d) {
+function vorschauData(p, d, mime = vorschauMime) {
   const v = d[p];
-  return /^data:[^,]*;base64,/.test(v) ? v : 'data:' + vorschauMime(p) + ';charset=utf-8,' + encodeURIComponent(v);
+  return /^data:[^,]*;base64,/.test(v) ? v : 'data:' + mime(p) + ';charset=utf-8,' + encodeURIComponent(v);
 }
 function vorschauCss(css, basis, d, stack = []) {
   return css.replace(/@import\s+(?:url\(\s*(['"]?)([^'")]+)\1\s*\)|(['"])([^'"]+)\3)\s*([^;]*);/gi,(m,q,a,q2,b,media)=>{
@@ -993,7 +993,7 @@ function vorschauDateiBruecke(start, d) {
       if (!p) return nativeFetch(input, init);
       const method = String(init?.method || input?.method || 'GET').toUpperCase();
       if (method !== 'GET' && method !== 'HEAD') return new Response(null,{status:405});
-      const response = await nativeFetch(dataUrl(p,files), {signal:init?.signal || input?.signal});
+      const response = await nativeFetch(dataUrl(p,files,mime), {signal:init?.signal || input?.signal});
       return new Response(method === 'HEAD' ? null : response.body,{status:200,headers:{'Content-Type':mime(p)}});
     };
     document.addEventListener('click', function(e) {
@@ -2332,8 +2332,25 @@ function verdrahten() {
       return;
     }
     // Der neue Tab enthält nur eine Hülle mit isoliertem iframe, niemals direkt Projektcode.
-    const srcdoc = frame.srcdoc.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const html = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SD Studio – Vorschau</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style><iframe title="Isolierte Vorschau" sandbox="' + vorschauSandbox(S.p) + '" srcdoc="' + srcdoc + '"></iframe>';
+    const pages = Object.create(null);
+    for (const p of Object.keys(S.p.dateien)) {
+      if (/\.html?$/i.test(p)) pages[p] = htmlZusammenbauen(p,true);
+    }
+    const start = S.vorschauSeite || startSeite();
+    const wrapper = function(pages,start) {
+      const f = document.querySelector('iframe');
+      let fragment = '';
+      f.addEventListener('load',()=>f.contentWindow.postMessage({sdFragment:fragment},'*'));
+      window.addEventListener('message',e=>{
+        const m=e.data;
+        if(e.source!==f.contentWindow || e.origin!=='null' || !m || m.sdVorschau!==1 || m.typ!=='navigation' || typeof m.text!=='string' || !Object.prototype.hasOwnProperty.call(pages,m.text))return;
+        fragment=typeof m.fragment==='string'?m.fragment:'';
+        f.srcdoc=pages[m.text];
+      });
+      f.srcdoc=pages[start];
+    };
+    const code='('+wrapper.toString()+')('+JSON.stringify(pages).replace(/</g,'\\u003c')+','+JSON.stringify(start).replace(/</g,'\\u003c')+');';
+    const html = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SD Studio – Vorschau</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style><iframe title="Isolierte Vorschau" sandbox="' + vorschauSandbox(S.p) + '"></iframe><script>'+code+'<\/script>';
     const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     window.open(url, '_blank', 'noopener,noreferrer');
     setTimeout(() => URL.revokeObjectURL(url), 60000);
