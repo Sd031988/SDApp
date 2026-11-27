@@ -223,7 +223,28 @@ function speichernJetzt() {
   for (const [pfad, doc] of Object.entries(S.docs)) dateien[pfad] = doc.getValue ? doc.getValue() : doc.wert;
   const snapshot = { ...projekt, dateien };
   const auftrag = speicherKette.catch(() => {}).then(async () => {
-    await projSchreiben(snapshot);
+    // Compare and write in one IndexedDB transaction, so another tab cannot
+    // save between the conflict check and the actual write.
+    const d = await db();
+    const erwartet = projekt.t;
+    await new Promise((ok, nein) => {
+      const tx = d.transaction('projekte', 'readwrite');
+      const os = tx.objectStore('projekte');
+      let konflikt = false;
+      const q = os.get(snapshot.name);
+      q.onsuccess = () => {
+        if (!q.result || q.result.t !== erwartet) {
+          konflikt = true;
+          tx.abort();
+          return;
+        }
+        snapshot.t = Math.max(Date.now(), (erwartet || 0) + 1);
+        os.put(snapshot);
+      };
+      tx.oncomplete = () => { projekt.t = snapshot.t; ok(); };
+      tx.onabort = () => nein(konflikt ? new Error('SD_SAVE_CONFLICT') : tx.error);
+      tx.onerror = () => nein(tx.error);
+    });
     if (S.p === projekt && speicherRevision === revision) {
       S.geaendert = false;
       status();
@@ -233,7 +254,7 @@ function speichernJetzt() {
   return auftrag.catch(err => {
     if (S.p === projekt) { S.geaendert = true; status(); }
     console.error('Studio: Speichern fehlgeschlagen', err);
-    toast('Speichern fehlgeschlagen – bitte Speicherplatz und Browser prüfen.');
+    toast(err && err.message === 'SD_SAVE_CONFLICT' ? 'Speicherkonflikt: Projekt wurde in einem anderen Tab geändert. Bitte diesen Stand als ZIP sichern.' : 'Speichern fehlgeschlagen – bitte Speicherplatz und Browser prüfen.');
     throw err;
   });
 }
