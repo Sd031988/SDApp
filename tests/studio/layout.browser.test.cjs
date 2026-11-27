@@ -43,6 +43,13 @@ const moreGroups={
    assert(await page.locator('#letzteProjekte button').count()<=5);
    await page.getByRole('button',{name:'Zum geöffneten Projekt',exact:true}).click();
    await page.screenshot({path:'studio-layout-artifacts/editor-'+width+'.png'});
+   if(width<820){
+    const nav=await page.locator('#handyNav').evaluate(el=>({columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,buttons:[...el.querySelectorAll('button')].map(b=>({width:b.getBoundingClientRect().width,height:b.getBoundingClientRect().height}))}));
+    assert.equal(nav.columns,4,'Mobile navigation uses exactly four columns');
+    assert.equal(nav.buttons.length,4);
+    assert(nav.buttons.every(b=>b.height>=44),'Mobile touch targets are at least 44px high');
+    assert(Math.max(...nav.buttons.map(b=>b.width))-Math.min(...nav.buttons.map(b=>b.width))<=1,'Mobile tabs have equal widths');
+   }
    // Five desktop actions; the explicitly requested compact mobile layout has three.
    assert.equal(await page.locator('#kopf button:visible').count(),width<820?3:5);
    for(const [trigger,menu,groups] of [['projektMenuBtn','projektMenu',projectGroups],['kopfMehr','mehrMenu',moreGroups]]){
