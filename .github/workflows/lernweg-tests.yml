@@ -1,6 +1,14 @@
 name: Deutsch-Lernweg Browserchecks
 on:
   push:
+    branches:
+      - feature/b1-pruefung
+      - cursor/fix-lernweg-browserchecks-3f79
+    paths:
+      - 'deutsch/**'
+      - 'tests/**'
+      - '.github/workflows/lernweg-tests.yml'
+  pull_request:
     branches: [feature/b1-pruefung]
     paths:
       - 'deutsch/**'

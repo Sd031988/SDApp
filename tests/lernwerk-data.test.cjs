@@ -35,6 +35,23 @@ test('grammar help matches the topic without treating every article as a grammar
  const section=source.slice(source.indexOf('const topicGuides='),source.indexOf('function render()'));
  assert.ok(section.startsWith('const topicGuides='),'Topic guide catalog is available');
  const guideFor=new Function('item',section+'return guideFor(item)');
+ const containsSolution=(text,answer)=>{
+  if(typeof text!=='string'||typeof answer!=='string'||!answer)return false;
+  if(/^[.!?]+$/.test(answer))return text.trimEnd().replace(/[.!?]$/u,'').includes(answer);
+  return new RegExp('(?<![\\p{L}\\p{N}])'+answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}])','iu').test(text);
+ };
+ assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','.'),false);
+ assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','zu'),false);
+ assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','eine'),false);
+ assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','an'),false);
+ assert.equal(containsSolution('Ende.','.'),false);
+ assert.equal(containsSolution('Die Lösung ist ..','.'),true);
+ assert.equal(containsSolution('Die Lösung ist .!','.'),true);
+ assert.equal(containsSolution('Beispiel: die Mutter.','die'),true);
+ assert.equal(containsSolution('Ball liegt hier.','ball'),true);
+ assert.equal(containsSolution('Überlege zuerst.','überlege'),true);
+ assert.equal(containsSolution('Zeichen . stehen hier.','.'),true);
+ assert.equal(containsSolution('Richtige Lösung: Ball.','Ball'),true);
  const article=lessons.find(t=>t.lv==='a1'&&t.q==='Welcher Artikel passt zu Mutter?');
  const residence=lessons.find(t=>t.lv==='a1'&&t.q==='Welche Antwort passt zu Wo wohnst du?');
  const time=lessons.find(t=>t.lv==='a1'&&t.q==='Was bedeutet halb neun?');
@@ -50,7 +67,7 @@ test('grammar help matches the topic without treating every article as a grammar
   assert.equal(typeof guide.example,'string',key(item));
   if(guide.title==='Lernstrategie zur Aufgabe'){
    assert.ok(!guide.rule.includes(item.note),key(item)+': note must not leak before answering');
-   assert.ok(!guide.example.includes(item.opts[item.correct]),key(item)+': solution must not leak before answering');
+   assert.ok(!containsSolution(guide.example,item.opts[item.correct]),key(item)+': solution must not leak before answering');
   }
  }
 });
@@ -75,7 +92,7 @@ test('resuming a lesson uses stable task IDs and migrates legacy indices after t
 });
 
 test('writing drafts autosave before lesson navigation and retain explicit save',()=>{
- assert.match(source,/draft\.addEventListener\('input',\(\)=>\{updateCount\(\);const next=storage\(writingKey\);next\[level\]=draft\.value;save\(writingKey,next\)/);
+ assert.match(source,/draft\.addEventListener\('input',\(\)=>\{updateCount\(\);const next=storage\(writingKey\);next\[level\]=draft\.value;status\.textContent=save\(writingKey,next\)\?'Entwurf automatisch in diesem Browser gespeichert\. Keine automatische Bewertung\.':'Speichern fehlgeschlagen!/);
  assert.match(source,/draft\.value=typeof drafts\[level\]==='string'\?drafts\[level\]:''/);
  assert.match(source,/panel\.querySelector\('#sdun-writing-save'\)\.onclick=/);
  assert.match(source,/autocapitalize="off"/);
@@ -115,7 +132,15 @@ test('incorrect answer feedback supports another attempt without revealing the a
  assert.doesNotMatch(source,/Die richtige Antwort lautet/);
  assert.match(source,/hint\.id='sdun-retry'/);
  assert.match(source,/feedback\.appendChild\(hint\)/);
- assert.match(source,/item\.opts\[item\.correct\]/);
+ assert.match(source,/Number\(selected\.value\)===item\.correct/);
+ const wrongStart=source.indexOf("feedback.textContent='Noch nicht ganz");
+ const wrongEnd=source.indexOf('function close()',wrongStart);
+ assert.ok(wrongStart>0&&wrongEnd>wrongStart,'wrong-answer feedback is present');
+ const wrong=source.slice(wrongStart,wrongEnd);
+ assert.doesNotMatch(wrong,/item\.opts\[item\.correct\]/);
+ assert.doesNotMatch(wrong,/item\.note/);
+ assert.match(wrong,/hint\.id='sdun-retry'/);
+ assert.match(wrong,/feedback\.appendChild\(hint\)/);
 });
 
 test('writing guides offer level-specific scaffolding without complete model answers',()=>{

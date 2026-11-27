@@ -1105,7 +1105,7 @@ function history(){
  };
 }
 const css=document.createElement('style');css.textContent=`
-#b1x{height:100%;min-height:0;overflow-y:auto;background:#0b0c13;color:#f9fafb;flex:1}
+#b1x{flex:1 0 auto;min-height:calc(100dvh - 72px);overflow-y:auto;background:#0b0c13;color:#f9fafb}
 .b1x-wrap{max-width:780px;margin:auto;padding:12px 18px 80px;font-family:inherit}
 .b1x-nav,.b1x-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}
 .b1x-nav button{background:#242638;color:white;border:1px solid #45465a;border-radius:10px;padding:10px;cursor:pointer}
