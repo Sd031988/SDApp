@@ -196,6 +196,21 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pcB{color:var(--smut)}.pcGeladen{font-weight:600;color:var(--sacc)}#pcNeu.an{color:#f59e0b}.pcOffenKopf{font-size:11px}#pcInfo{padding:6px 10px;font-size:12px}
 .lintFehler{text-decoration:underline wavy #ef4444;text-underline-offset:3px}.lintWarnung{text-decoration:underline wavy #f59e0b;text-underline-offset:3px}
 .kiGeist{color:var(--smut);opacity:.6;font-style:italic;white-space:pre}#kvBox{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--sline)}#kvBox .hinweis{padding:0;font-size:12px}
+
+/* Excellence: konsistente Bedienung, sichtbarer Tastaturfokus und mobile Ergonomie */
+#app button:focus-visible,.dialog button:focus-visible,#studioStart button:focus-visible,#studioStart a:focus-visible,#app a:focus-visible{outline:2px solid var(--sacc);outline-offset:-2px}
+#app input:focus-visible,#app select:focus-visible,.dialog input:focus-visible,.dialog textarea:focus-visible{outline:2px solid var(--sacc);outline-offset:1px}
+@media (max-width:819px){
+  #handyNav{grid-template-columns:repeat(4,minmax(0,1fr));}
+  #handyNav button{min-width:0;min-height:44px;font-size:12px;white-space:normal}
+  #kopf button{min-height:40px}
+  .tab{min-height:44px}
+  #vleiste button{min-height:40px}
+}
+@media (prefers-reduced-motion:reduce){
+  #frame,#toast,.galKarte{transition:none!important}
+  .galKarte:hover{transform:none}
+}
 </style>
 <style>.sd-json-fehler{background:rgba(235,65,65,.24);border-bottom:2px wavy #f66}</style>
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
