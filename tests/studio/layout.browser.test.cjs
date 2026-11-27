@@ -7,7 +7,7 @@ const {chromium}=require('playwright');
 const baseline=require('./commands-baseline.json'); // All 51 commands in main e60be4a; no synthetic entries.
 const projectGroups={
  'Projekt':['Neues Projekt','Projekt wechseln','Umbenennen','Duplizieren'],
- 'Hinein & heraus':['Dateien hochladen','Ordner hochladen','ZIP hochladen','Anleitung oder Code','GitHub importieren','Als ZIP','Als eine HTML-Datei','Cloud-Backup'],
+ 'Hinein & heraus':['Dateien hochladen','Ordner hochladen','ZIP hochladen','Anleitung oder Code','GitHub importieren','Als ZIP','Als eine HTML-Datei','Backup als ZIP herunterladen'],
  'Teilen':['Online stellen','Meine Seiten online','Offline nehmen','Auf meinem PC ausführen'],
  'Sicherheit':['Versionen','Projekt löschen']
 };
