@@ -936,6 +936,7 @@ function sichereVorschauBruecke() {
     'window.addEventListener("unhandledrejection",function(e){var reason=e.reason;send("fehler",["Promise: "+(reason&&reason.message||fmt(reason))],null,null)});',
     'var visual=false;',
     'window.addEventListener("message",function(e){if(e.source===P&&e.origin===studioOrigin&&e.data&&typeof e.data.sdVisual==="boolean")visual=e.data.sdVisual});',
+    'window.addEventListener("message",function(e){if(e.source===P&&e.origin===studioOrigin&&typeof e.data?.sdFragment==="string"&&e.data.sdFragment){try{document.getElementById(decodeURIComponent(e.data.sdFragment))?.scrollIntoView()}catch(_){}}});',
     'window.addEventListener("dblclick",function(e){if(!visual||!e.target.closest)return;',
     'var n=e.target.closest("h1,h2,h3,h4,p,button,a,label,span,li");if(!n||n.children.length)return;',
     'var t=String(n.textContent||"").trim();if(!t||t.length>600)return;e.preventDefault();e.stopPropagation();',
@@ -945,9 +946,66 @@ function sichereVorschauBruecke() {
   ].join('');
   return '<script>' + code.replace(/<\/script/gi, '<\\/script') + '<\/script>';
 }
-function htmlZusammenbauen(start) {   // für die Einzeldatei und die isolierte Vorschau
+
+// Resolve only project-relative paths; never grant access to Studio storage.
+function vorschauPfad(basis, ref, dateien) {
+  if (typeof ref !== 'string' || !ref || /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) return null;
+  try {
+    const url = new URL(ref, 'https://projekt.invalid/' + basis.split('/').map(encodeURIComponent).join('/'));
+    if (url.origin !== 'https://projekt.invalid') return null;
+    let p = decodeURIComponent(url.pathname.slice(1));
+    if (p.endsWith('/') || !p) p += 'index.html';
+    return Object.prototype.hasOwnProperty.call(dateien,p) ? p : null;
+  } catch (_) { return null; }
+}
+function vorschauMime(p) {
+  const ext = p.split('.').pop().toLowerCase();
+  return ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',avif:'image/avif',jxl:'image/jxl',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',mp3:'audio/mpeg',mp4:'video/mp4',wasm:'application/wasm',xml:'application/xml',csv:'text/csv'})[ext] || 'text/plain';
+}
+function vorschauData(p, d) {
+  const v = d[p];
+  return /^data:[^,]*;base64,/.test(v) ? v : 'data:' + vorschauMime(p) + ';charset=utf-8,' + encodeURIComponent(v);
+}
+function vorschauCss(css, basis, d, stack = []) {
+  return css.replace(/@import\s+(?:url\(\s*(['"]?)([^'")]+)\1\s*\)|(['"])([^'"]+)\3)\s*([^;]*);/gi,(m,q,a,q2,b,media)=>{
+    const p=vorschauPfad(basis,(a||b).trim(),d);
+    if(!p || stack.includes(p)) return m;
+    const c=vorschauCss(d[p],p,d,stack.concat(p));
+    return media.trim() ? '@media '+media.trim()+'{'+c+'}' : c;
+  }).replace(/url\(\s*(?:(["'])(.*?)\1|([^)]*))\s*\)/gi,(m,q,a,b)=>{
+    const p=vorschauPfad(basis,(a||b||'').trim(),d);
+    return p ? 'url("'+vorschauData(p,d)+'")' : m;
+  });
+}
+function vorschauDateiBruecke(start, d) {
+  // This code runs inside the opaque iframe. Only project files are embedded.
+  const runtime = function(start, files, resolve, dataUrl, mime, studioOrigin) {
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = async function(input, init) {
+      const ref = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const p = resolve(start, ref, files);
+      if (!p) return nativeFetch(input, init);
+      const method = String(init?.method || input?.method || 'GET').toUpperCase();
+      if (method !== 'GET' && method !== 'HEAD') return new Response(null,{status:405});
+      const response = await nativeFetch(dataUrl(p,files), {signal:init?.signal || input?.signal});
+      return new Response(method === 'HEAD' ? null : response.body,{status:200,headers:{'Content-Type':mime(p)}});
+    };
+    document.addEventListener('click', function(e) {
+      const a = e.target.closest?.('a[href]');
+      if (!a || a.hasAttribute('download') || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      const ref = a.getAttribute('href'), p = resolve(start,ref,files);
+      if (!p || !/\.html?$/i.test(p)) return;
+      e.preventDefault();
+      parent.postMessage({sdVorschau:1,typ:'navigation',text:p,fragment:ref.includes('#')?ref.slice(ref.indexOf('#')+1):''},studioOrigin);
+    });
+  };
+  const code = '('+runtime.toString()+')('+[JSON.stringify(start).replace(/</g,'\\u003c'),JSON.stringify(d).replace(/</g,'\\u003c'),vorschauPfad.toString(),vorschauData.toString(),vorschauMime.toString(),JSON.stringify(location.origin)].join(',')+');';
+  return '<script>'+code.replace(/<\/script/gi,'<\\/script')+'</script>';
+}
+
+function htmlZusammenbauen(start, isoliert = false) {   // für die Einzeldatei und die isolierte Vorschau
   const d = S.p.dateien; let h = d[start];
-  h = h.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, href) => { if (!/stylesheet/i.test(m)) return m; const p = relAufloesen(start, href); return p && d[p] != null ? '<style>/* ' + p + ' */\n' + d[p] + '\n</style>' : m; });
+  h = h.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, (m, href) => { if (!/stylesheet/i.test(m)) return m; const p = isoliert ? vorschauPfad(start, href, d) : relAufloesen(start, href); return p && d[p] != null ? '<style>/* ' + p + ' */\n' + (isoliert ? vorschauCss(d[p],p,d,[p]) : d[p]) + '\n</style>' : m; });
   h = h.replace(/<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)><\/script>/gi, (m, a, src, b) => {
     const p = relAufloesen(start,src);
     if(!p||d[p]==null)return m;
@@ -963,7 +1021,15 @@ function htmlZusammenbauen(start) {   // für die Einzeldatei und die isolierte 
     return '<script'+a+b+'>/* '+p+' */\n'+d[p].replace(/<\/script/gi,'<\\/script')+'\n//# sourceURL=sd-studio-preview/'+encodeURIComponent(p)+'\n<\/script>';
   });
   h = h.replace(/(src|href)=["']([^"']+\.(?:png|jpe?g|gif|webp|svg|ico|avif|jxl))["']/gi, (m, attr, ref) => { const p = relAufloesen(start, ref); if (!p || d[p] == null) return m; const v = d[p]; return attr + '="' + (istBinaer(v) ? v : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(v)) + '"'; });
-  const bridge = sichereVorschauBruecke();
+  if (isoliert) {
+    h = h.replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi,(m,a,c)=>'<style'+a+'>'+vorschauCss(c,start,d)+'</style>');
+    h = h.replace(/\bstyle=(["'])(.*?)\1/gi,(m,q,c)=>'style='+q+vorschauCss(c,start,d).replaceAll(q,q==='"'?'&quot;':'&#39;')+q);
+    h = h.replace(/\b(src|poster|href)=(["'])(.*?)\2/gi,(m,a,q,ref)=>{
+      const p=vorschauPfad(start,ref,d);
+      return p && !/\.html?$/i.test(p) ? a+'='+q+vorschauData(p,d)+q : m;
+    });
+  }
+  const bridge = sichereVorschauBruecke() + (isoliert ? vorschauDateiBruecke(start,d) : '');
   return /<head\b[^>]*>/i.test(h) ? h.replace(/<head\b[^>]*>/i, head => head + bridge) : bridge + h;
 }
 function startSeite() { const d = Object.keys(S.p.dateien); if (S.aktiv && /\.html?$/i.test(S.aktiv)) return S.aktiv; return d.find(x => x === 'index.html') || d.find(x => /(^|\/)index\.html$/.test(x)) || d.find(x => /\.html?$/i.test(x)); }
@@ -977,23 +1043,28 @@ async function projektVertrauen() {
   if (!confirm('Diesem Projekt vertrauen?\n\nDie Vorschau bleibt isoliert, ohne Zugriff auf Studio-Daten. Bei Nicht-KI-Projekten werden zusätzliche Funktionen wie Pop-ups und Downloads erlaubt.')) return;
   delete S.p.fremdQuelle; await projSchreiben(S.p); toast('Vertrauensstatus aktualisiert; die Vorschau bleibt isoliert.'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(true);
 }
-async function vorschau(neu) {
-  if (!S.p) return; const start = startSeite(); if (!start) { $('vorschau').hidden = true; return; }
+async function vorschau(neu, ziel, fragment = '') {
+  if (!S.p) return; const start = ziel || startSeite(); if (!start) { $('vorschau').hidden = true; return; }
   const vorschauProjekt = S.p;
   try { await speichernJetzt(); }
   catch (err) { toast('Vorschau nicht aktualisiert: Speichern fehlgeschlagen.'); return; }
   if (S.p !== vorschauProjekt) return;
   $('vorschau').hidden = false; S.problemeVorschau = []; diagnoseAktualisieren(); if (neu) S.konsole = [];
   const f = $('frame');
-  f.onload=()=>{try{f.contentWindow.postMessage({sdVisual:!!S.visuellerModus},'*')}catch(_){}};
+  f.onload=()=>{try{f.contentWindow.postMessage({sdVisual:!!S.visuellerModus,sdFragment:fragment},'*')}catch(_){}};
   // srcdoc umgeht Service-Worker-Navigationsprobleme bei opaken Origins.
   f.setAttribute('sandbox', vorschauSandbox(S.p));
   f.removeAttribute('src');
-  f.srcdoc = htmlZusammenbauen(start);
+  S.vorschauSeite = start;
+  f.srcdoc = htmlZusammenbauen(start,true);
   $('url').value = '/' + start + ' (sichere lokale Vorschau)';
   if (neu) konfetti();
 }
-window.addEventListener('message', e => { const m = e.data; if (e.origin !== 'null' || !m || m.sdVorschau !== 1 || e.source !== $('frame').contentWindow || typeof m.text !== 'string' || !['log','info','warn','error','fehler','visual-text'].includes(m.typ)) return;
+window.addEventListener('message', e => { const m = e.data; if (e.origin !== 'null' || !m || m.sdVorschau !== 1 || e.source !== $('frame').contentWindow || typeof m.text !== 'string' || !['log','info','warn','error','fehler','visual-text','navigation'].includes(m.typ)) return;
+  if(m.typ==='navigation') {
+    if (S.p && Object.prototype.hasOwnProperty.call(S.p.dateien,m.text) && /\.html?$/i.test(m.text)) vorschau(false,m.text,typeof m.fragment==='string'?m.fragment:'');
+    return;
+  }
   if(m.typ==='visual-text'){
     if(S.visuellerModus)visuellerTextAendern(m).catch(err=>toast('Visuelle Bearbeitung fehlgeschlagen: '+err.message));
     return;
@@ -1009,7 +1080,7 @@ window.addEventListener('message', e => { const m = e.data; if (e.origin !== 'nu
   } });
 async function visuellerTextAendern(m){
  if(!S.visuellerModus||!S.p||!window.SDStudioVisualText)return;
- const original=S.p,oldStart=startSeite();if(!oldStart)return;
+ const original=S.p,oldStart=S.vorschauSeite||startSeite();if(!oldStart)return;
  const originalText=String(m.text||'');
  if(!originalText||originalText.length>600)return;
  const neu=prompt('✏️ Text in '+oldStart+' ändern:',originalText);
@@ -2145,15 +2216,14 @@ function handyEinrichten() {
   const mq = matchMedia('(max-width:819px)'); const wechsel = () => { if (mq.matches) ansicht($('app').dataset.ansicht || 'code'); else { delete $('app').dataset.ansicht; } setTimeout(() => S.cm && S.cm.refresh(), 60); };
   mq.addEventListener ? mq.addEventListener('change', wechsel) : mq.addListener(wechsel); wechsel();
   // roter Punkt bei neuen Problemen
-  const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="werkzeuge"]'); if (k) k.classList.toggle('punkt', n > 0); });
+  const beob = new MutationObserver(() => { const n = +($('problemAnz').textContent || 0) + +($('konsoleAnz').textContent || 0); const k = document.querySelector('#handyNav [data-a="werkzeuge"]'); if (k) k.classList.toggle('punkt', n > 0 && $('app').dataset.ansicht !== 'werkzeuge'); });
+  beob.observe($('app'), { attributes: true, attributeFilter: ['data-ansicht'] });
   beob.observe($('problemAnz'), { childList: true, characterData: true, subtree: true }); beob.observe($('konsoleAnz'), { childList: true, characterData: true, subtree: true });
 }
 /* ---------------- Zugang: Code-Studio kostenlos; Schlüssel nur für „Online stellen“ ---------------- */
 async function schluesselOk(code) { try { const zug = await (await fetch('../agent/zugang.json?t=' + Date.now(), { cache: 'no-store' })).json(); return !!(await sdZugang.oeffnen(zug, code)); } catch (e) { return false; } }
 function zaehlerZeigen() { if (window.SD_PC && $('kont')) { $('kont').innerHTML = '💻<span class="lang"> PC-Version</span>'; $('kont').title = 'Läuft im SD KI-Agenten auf deinem PC – ohne Limit'; } const ob = $('onlineBtn'); if (ob) { ob.firstChild.textContent = S.frei ? '🌐 ' : '🔒 '; ob.title = S.frei ? 'Online stellen – eigener Link für alle' : 'Online stellen geht nur mit Zugangsschlüssel – klicken zum Eingeben'; } const n = $('kont'); if (window.SD_PC) return; if (S.frei) { n.innerHTML = '🔓<span class="lang"> Unbegrenzt</span>'; n.title = 'Mit Zugangsschlüssel freigeschaltet'; return; } n.innerHTML = '✓<span class="lang"> Kostenlos</span>'; n.title = 'Das Code-Studio ist kostenlos und ohne Limit. Nur „Online stellen“ braucht einen Zugangsschlüssel (Schutz vor Betrugsseiten).'; }
 async function zugangPruefen() {
-  // Alte dauerhafte Speicherung entfernen; Schlüssel ggf. neu eingeben.
-  try { localStorage.removeItem('sdAgentZugang'); } catch (_) {}
   if (window.SD_PC) { S.frei = true; return true; }   // im SD KI-Agenten auf dem PC: ohne Limit (PC-Paket gibt es nur mit Schlüssel)
   const gemerkt = gemerkterCode();
   if (gemerkt && await schluesselOk(gemerkt)) { S.frei = true; return true; }
