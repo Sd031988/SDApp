@@ -37,14 +37,19 @@ test('grammar help matches the topic without treating every article as a grammar
  const guideFor=new Function('item',section+'return guideFor(item)');
  const containsSolution=(text,answer)=>{
   if(typeof text!=='string'||typeof answer!=='string'||!answer)return false;
-  if(/^[.!?]+$/.test(answer))return text.trimEnd().replace(/[.!?]+$/u,'').includes(answer);
-  return new RegExp('(?<![\\p{L}\\p{N}])'+answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}])','u').test(text);
+  if(/^[.!?]+$/.test(answer))return text.trimEnd().replace(/[.!?]$/u,'').includes(answer);
+  return new RegExp('(?<![\\p{L}\\p{N}])'+answer.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![\\p{L}\\p{N}])','iu').test(text);
  };
  assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','.'),false);
  assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','zu'),false);
  assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','eine'),false);
  assert.equal(containsSolution('Überlege zuerst selbst und prüfe dann deine Antwort.','an'),false);
+ assert.equal(containsSolution('Ende.','.'),false);
+ assert.equal(containsSolution('Die Lösung ist ..','.'),true);
+ assert.equal(containsSolution('Die Lösung ist .!','.'),true);
  assert.equal(containsSolution('Beispiel: die Mutter.','die'),true);
+ assert.equal(containsSolution('Ball liegt hier.','ball'),true);
+ assert.equal(containsSolution('Überlege zuerst.','überlege'),true);
  assert.equal(containsSolution('Zeichen . stehen hier.','.'),true);
  assert.equal(containsSolution('Richtige Lösung: Ball.','Ball'),true);
  const article=lessons.find(t=>t.lv==='a1'&&t.q==='Welcher Artikel passt zu Mutter?');
