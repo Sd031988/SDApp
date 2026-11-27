@@ -112,7 +112,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   #app:not([data-ansicht="code"]) #tasten{display:none}
   #tasten{grid-column:1;grid-row:3;display:flex;gap:4px;overflow-x:auto;padding:5px 6px;background:var(--sside);border-top:1px solid var(--sline);scrollbar-width:none}
   #tasten button{min-width:40px;height:36px;padding:0 8px!important;font:15px ui-monospace,Consolas,monospace;flex:none}
-  #handyNav{grid-column:1;grid-row:4;display:grid!important;grid-template-columns:repeat(5,1fr);background:var(--sakt);border-top:1px solid var(--sline);padding-bottom:env(safe-area-inset-bottom)}
+  #handyNav{grid-column:1;grid-row:4;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--sakt);border-top:1px solid var(--sline);padding-bottom:env(safe-area-inset-bottom)}
   #handyNav button{border:0!important;border-radius:0!important;display:grid;place-items:center;align-content:center;gap:1px;font-size:20px;color:var(--smut);padding:0!important}
   #handyNav button small{font-size:10.5px}#handyNav button.an{color:var(--stext);box-shadow:inset 0 2px 0 var(--sacc);background:var(--shov)!important}
   #handyNav .punkt{position:relative}#handyNav .punkt::after{content:"";position:absolute;top:8px;right:28%;width:8px;height:8px;border-radius:50%;background:#ef4444}
@@ -196,6 +196,23 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pcB{color:var(--smut)}.pcGeladen{font-weight:600;color:var(--sacc)}#pcNeu.an{color:#f59e0b}.pcOffenKopf{font-size:11px}#pcInfo{padding:6px 10px;font-size:12px}
 .lintFehler{text-decoration:underline wavy #ef4444;text-underline-offset:3px}.lintWarnung{text-decoration:underline wavy #f59e0b;text-underline-offset:3px}
 .kiGeist{color:var(--smut);opacity:.6;font-style:italic;white-space:pre}#kvBox{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--sline)}#kvBox .hinweis{padding:0;font-size:12px}
+
+/* Excellence: konsistente Bedienung, sichtbarer Tastaturfokus und mobile Ergonomie */
+#app button:focus-visible,.dialog button:focus-visible,#studioStart button:focus-visible,#studioStart a:focus-visible,#app a:focus-visible{outline:2px solid var(--sacc);outline-offset:-2px}
+#app input:focus-visible,#app select:focus-visible,#app textarea:focus-visible,.dialog input:focus-visible,.dialog textarea:focus-visible{outline:2px solid var(--sacc);outline-offset:1px}
+@media (max-width:819px){
+  #handyNav button{min-width:0;min-height:44px;font-size:12px;white-space:normal}
+  #kopf button{min-height:40px}
+  .tab{min-height:44px}
+  #vleiste button{min-height:40px}
+  #tasten button{min-height:44px;min-width:44px}
+  #untenTabs button{min-height:44px}
+  #haupt>#unten{grid-template-rows:44px 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  #frame,#toast,.galKarte{transition:none!important}
+  .galKarte:hover{transform:none}
+}
 </style>
 <style>.sd-json-fehler{background:rgba(235,65,65,.24);border-bottom:2px wavy #f66}</style>
 <link rel="stylesheet" href="../sd-workspace.css?v=20261109-stil-7">
