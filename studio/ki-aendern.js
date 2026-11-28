@@ -96,8 +96,8 @@
       d[f.path] = f.content;
       if (S.docs && S.docs[f.path] && S.docs[f.path].setValue && S.docs[f.path].getValue() !== f.content) S.docs[f.path].setValue(f.content);
     }
-    RUECK = RUECK && RUECK.projekt === p ? { projekt: p, vorher: Object.assign({}, vorher, RUECK.vorher) } : { projekt: p, vorher };
     await projSchreiben(p);
+    RUECK = { projekt: p, vorher, nachher: Object.fromEntries(echt.map(f => [f.path,f.content])) };
     nachher();
     return { geaendert, neu };
   }
@@ -162,19 +162,37 @@
   }
 
   async function rueckgaengig() {
+    if (LAEUFT) return;
     if (!RUECK || RUECK.projekt !== S.p) { RUECK = null; nachher(); return; }
-    const d = S.p.dateien, namen = [];
-    for (const [pfad, alt] of Object.entries(RUECK.vorher)) {
-      if (alt === undefined) delete d[pfad]; else d[pfad] = alt;
-      if (alt !== undefined && S.docs && S.docs[pfad] && S.docs[pfad].setValue) S.docs[pfad].setValue(alt);
-      namen.push(pfad);
-    }
-    if (S.aktiv && d[S.aktiv] == null) S.aktiv = Object.keys(d)[0] || null;
-    RUECK = null;
-    await projSchreiben(S.p);
-    nachher();
-    if (S.aktiv && typeof dateiOeffnen === 'function') dateiOeffnen(S.aktiv);
-    status('↶ Zurückgesetzt: ' + namen.join(', '), 'ok');
+    const undo = RUECK;
+    const basis = stand();
+    const konflikte = Object.keys(undo.nachher).filter(pfad => basis.files[pfad] !== undo.nachher[pfad]);
+    if (konflikte.length) { status('Rückgängig gesperrt: Dateien wurden inzwischen bearbeitet: ' + konflikte.join(', ') + '. Bitte Versionen prüfen.', 'fehler'); return; }
+    if (!window.confirm('Letzte KI-Änderung zurücksetzen? Vorher wird eine weitere Version gesichert.')) return;
+    LAEUFT = true;
+    try {
+      if (typeof versionNeu !== 'function') throw Error('Sicherung nicht verfügbar.');
+      await versionNeu('Vor Rückgängig der KI-Änderung', true);
+      if (!aktuell(basis)) throw Error('Projekt wurde inzwischen geändert.');
+      const p = undo.projekt, d = p.dateien, namen = Object.keys(undo.vorher);
+      for (const [pfad, alt] of Object.entries(undo.vorher)) {
+        if (alt === undefined) delete d[pfad]; else d[pfad] = alt;
+      }
+      try { await projSchreiben(p); }
+      catch(e) { for (const pfad of namen) d[pfad] = undo.nachher[pfad]; throw e; }
+      if (S.p === p) {
+        for (const pfad of namen) {
+          if (undo.vorher[pfad] === undefined) { delete S.docs[pfad]; S.tabs = S.tabs.filter(x => x !== pfad); }
+          else if (S.docs[pfad]?.setValue) S.docs[pfad].setValue(undo.vorher[pfad]);
+        }
+        if (S.aktiv && d[S.aktiv] == null) S.aktiv = Object.keys(d)[0] || null;
+        RUECK = null;
+        nachher();
+        if (S.aktiv && typeof dateiOeffnen === 'function') dateiOeffnen(S.aktiv);
+        status('↶ Zurückgesetzt: ' + namen.join(', '), 'ok');
+      }
+    } catch(e) { status('Rückgängig fehlgeschlagen: ' + e.message, 'fehler'); }
+    finally { LAEUFT = false; }
   }
 
   async function kopieren() {
