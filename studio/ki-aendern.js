@@ -172,7 +172,7 @@
     $('kaKopieren').onclick = kopieren;
     $('kaUebernehmen').onclick = () => einfuegen($('kaAntwort').value);
     $('kaRueck').onclick = rueckgaengig;
-    $('kaAntwort').addEventListener('paste', () => setTimeout(() => einfuegen($('kaAntwort').value), 0));
+    $('kaAntwort').addEventListener('paste', () => status('Antwort eingefügt. Bitte prüfen und bewusst auf Übernehmen klicken. Es wurde noch nichts geändert.', ''));
     $('kaWunsch').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); kopieren(); } });
   }
 
