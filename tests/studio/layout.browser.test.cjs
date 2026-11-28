@@ -111,9 +111,11 @@ const moreGroups={
    // Start both tabs from a freshly persisted, identical project revision.
    await page.reload({waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p);
+   const conflictName='__conflict_'+width;
+   await page.evaluate(async name=>{await projSchreiben({name,dateien:{'test.txt':'initial'},haupt:'test.txt',versionen:[],erstellt:Date.now()});await projektOeffnen(name)},conflictName);
    const second=await context.newPage();
-   await second.goto(url+'?projekt='+encodeURIComponent(name),{waitUntil:'domcontentloaded'});
-   await second.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p);
+   await second.goto(url+'?projekt='+encodeURIComponent(conflictName),{waitUntil:'domcontentloaded'});
+   await second.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p&&S.p.name.startsWith('__conflict_'));
    const file='__save_conflict_test__.txt';
    await page.evaluate(async file=>{S.p.dateien[file]='newer';await speichernJetzt()},file);
    const conflict=await second.evaluate(async file=>{
