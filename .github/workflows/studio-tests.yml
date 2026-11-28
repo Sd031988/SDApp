@@ -92,6 +92,7 @@ jobs:
       - name: Studio im Browser testen
         run: |
           node tests/studio/layout.browser.test.cjs
+          node tests/studio/save-lifecycle.browser.test.cjs
           node tests/studio/linter-cdn.browser.test.cjs
           node tests/studio/python-browser.browser.test.cjs
           node tests/studio/ki-vervollstaendigung.browser.test.cjs
