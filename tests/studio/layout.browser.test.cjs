@@ -108,6 +108,9 @@ const moreGroups={
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
    for(const id of ['projektMenuBtn','kiBtn','starten']){const r=await page.locator('#'+id).boundingBox();assert(r&&r.x>=0&&r.x+r.width<=321,id+' fits at 320px')}
    // A stale editor must not overwrite a newer save from another tab.
+   // Start both tabs from a freshly persisted, identical project revision.
+   await page.reload({waitUntil:'domcontentloaded'});
+   await page.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p);
    const second=await context.newPage();
    await second.goto(url+'?projekt='+encodeURIComponent(name),{waitUntil:'domcontentloaded'});
    await second.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p);
