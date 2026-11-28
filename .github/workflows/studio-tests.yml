@@ -17,7 +17,7 @@ jobs:
   studio-tests:
     runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -81,7 +81,7 @@ jobs:
   browser-smoke:
     runs-on: ubuntu-24.04  # Playwright 1.56 kennt ubuntu-latest (26.04) noch nicht
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
