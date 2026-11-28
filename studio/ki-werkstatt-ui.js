@@ -188,7 +188,7 @@ function promptText(){
 }
 async function copyPrompt(){
  const prompt=promptText();if(!prompt)return;
- try{await navigator.clipboard.writeText(prompt);status('Anfrage kopiert. Jetzt bei ChatGPT oder Gemini einfügen und Antwort zurückkopieren.');}
+ try{await navigator.clipboard.writeText(prompt);status('Anfrage kopiert. Jetzt bei ChatGPT, Gemini, Claude oder Grok einfügen und Antwort zurückkopieren.');}
  catch{
   $('kiClipboard').hidden=false;$('kiClipboard').value=prompt;$('kiClipboard').focus();$('kiClipboard').select();
   status('Kopieren blockiert. Text ist markiert: bitte manuell kopieren.',true);
@@ -716,6 +716,8 @@ function setup(){
  $('kiCopy').addEventListener('click',copyPrompt);
  $('kiChatGPT').addEventListener('click',()=>openAI('https://chatgpt.com/'));
  $('kiGemini').addEventListener('click',()=>openAI('https://gemini.google.com/'));
+ $('kiClaude').addEventListener('click',()=>openAI('https://claude.ai/'));
+ $('kiGrok').addEventListener('click',()=>openAI('https://grok.com/'));
  $('kiAnalyse').addEventListener('click',analyse);
  $('kiFiles').addEventListener('change',()=>{clearRepairDraft();updateActions()});
  $('kiRepairPrepare').addEventListener('click',createRepairDraft);
