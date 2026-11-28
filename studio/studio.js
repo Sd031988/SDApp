@@ -12,10 +12,12 @@ const S = { p: null, tabs: [], aktiv: null, docs: {}, cm: null, ta: null, offen:
 
 /* ---------------- Speicher ---------------- */
 let dbP = null;
+let dbVerbunden = null;
 function db() {
   if (!dbP) dbP = new Promise((ok, nein) => { const r = indexedDB.open('sdCodeStudio', 1);
     r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('projekte')) r.result.createObjectStore('projekte', { keyPath: 'name' }); };
-    r.onsuccess = () => ok(r.result); r.onerror = () => nein(r.error); });
+    r.onsuccess = () => { dbVerbunden = r.result; dbVerbunden.onclose = () => { if (dbVerbunden === r.result) dbVerbunden = null; }; ok(r.result); };
+    r.onerror = () => nein(r.error); });
   return dbP;
 }
 async function dbTx(modus, fn) { const d = await db(); return new Promise((ok, nein) => { const t = d.transaction('projekte', modus); const os = t.objectStore('projekte'); let erg; const q = fn(os); if (q) q.onsuccess = () => { erg = q.result; }; t.oncomplete = () => ok(erg); t.onerror = () => nein(t.error); t.onabort = () => nein(t.error); }); }
@@ -96,9 +98,19 @@ const VORLAGEN = [
 async function projektOeffnen(name, datei, optionen) {
   // Offene Editor-Änderungen müssen vor dem Projektwechsel dauerhaft
   // gespeichert sein; bei einem Fehler bleibt das aktuelle Projekt offen.
-  if (S.p && S.geaendert) {
-    try { await speichernJetzt(); }
-    catch (err) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
+  // Auch ein bereits angestoßener Speichervorgang muss fertig sein, sonst
+  // liest der Wechsel eine Revision, die gleich danach überschrieben wird.
+  if (S.p) {
+    try { await (S.geaendert ? speichernJetzt() : speicherKette); }
+    catch (err) {
+      if (S.geaendert && !speicherFehlerIstKonflikt(err)) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
+    }
+    if (S.geaendert) {
+      try { await speichernJetzt(); }
+      catch (err) {
+        if (!speicherFehlerIstKonflikt(err)) { toast('Projektwechsel abgebrochen: Änderungen konnten nicht gespeichert werden.'); return; }
+      }
+    }
   }
   const p = await projLesen(name); if (!p) { toast('Projekt nicht gefunden'); return; }
   S.p = p; S.visuellerModus=false; if($('visTextBtn')){$('visTextBtn').classList.remove('an');$('visTextBtn').setAttribute('aria-pressed','false');}
@@ -212,30 +224,197 @@ async function projektListe() { const l = (await projAlle()).sort((a, b) => b.t 
 let speicherT = null;
 let speicherRevision = 0;
 let speicherKette = Promise.resolve();
+const speicherTab = Math.random().toString(36).slice(2, 10);
+const letzteSpeicherFolge = new WeakMap();
+let letzterKonfliktSchluessel = '';
+function dateienFuerSpeicher(projekt) {
+  const dateien = { ...(projekt.dateien || {}) };
+  // Nur die Dokumente des Projekts übernehmen, das gerade offen ist.
+  // Nach einem Projektwechsel gehören S.docs schon zum neuen Projekt.
+  if (projekt === S.p) {
+    for (const [pfad, doc] of Object.entries(S.docs)) dateien[pfad] = doc && doc.getValue ? doc.getValue() : (doc ? doc.wert : dateien[pfad]);
+  }
+  return dateien;
+}
+function projektSnapshot(projekt, dateien) {
+  return { ...projekt, dateien: dateien || dateienFuerSpeicher(projekt) };
+}
+function sicherungsName(name) {
+  const basis = String(name || 'Projekt').replace(/ · Tab-Sicherung [a-z0-9]+$/i, '');
+  return basis.slice(0, 120) + ' · Tab-Sicherung ' + speicherTab;
+}
+function speicherFehlerIstKonflikt(err) { return !!(err && err.message === 'SD_SAVE_CONFLICT'); }
+function konfliktMelden(err) {
+  const name = (S.p && S.p.name) || 'Projekt';
+  const sicherung = err && err.sicherung;
+  S.speicherHinweis = '● Konflikt – Kopie gesichert';
+  const schluessel = name + '|' + (sicherung || '');
+  if (letzterKonfliktSchluessel === schluessel) return;
+  letzterKonfliktSchluessel = schluessel;
+  toast(sicherung
+    ? 'Speicherkonflikt: Ein anderer Tab hat „' + name + '“ geändert. Dieser Stand liegt unter „' + sicherung + '“.'
+    : 'Speicherkonflikt: Ein anderer Tab hat „' + name + '“ geändert. Bitte diesen Stand als ZIP sichern.');
+}
+function speicherAnfrageFehler(anfrage, tx, merken) {
+  anfrage.onerror = ev => {
+    merken(anfrage.error || (ev.target && ev.target.error));
+    ev.preventDefault();
+    try { tx.abort(); } catch (e) { /* schon beendet */ }
+  };
+}
+// Vergleich und Schreiben laufen in einer IndexedDB-Transaktion.
+// Ein anderer Tab kann dazwischen nicht unbemerkt committen.
+function speicherVergleichen(d, projekt, snapshot, basis, folge) {
+  return new Promise((ok, nein) => {
+    let tx;
+    try { tx = d.transaction('projekte', 'readwrite'); }
+    catch (e) { nein(e); return; }
+    let erledigt = false;
+    let fehler = null;
+    let uebersprungen = false;
+    let konflikt = false;
+    let sicherung = '';
+    let geschriebenT = null;
+    const fertig = (err, ergebnis) => { if (erledigt) return; erledigt = true; if (err) nein(err); else ok(ergebnis); };
+    const merken = err => { if (err) fehler = err; };
+    const os = tx.objectStore('projekte');
+    const q = os.get(snapshot.name);
+    speicherAnfrageFehler(q, tx, merken);
+    q.onsuccess = () => {
+      if (letzteSpeicherFolge.get(projekt) !== folge) { uebersprungen = true; return; }
+      const aktuell = q.result;
+      const frisch = S.p === projekt ? projektSnapshot(projekt) : snapshot;
+      const eigeneVorgaenger = !!(aktuell && aktuell.sdTab === speicherTab && typeof aktuell.sdFolge === 'number' && aktuell.sdFolge < folge && S.p === projekt);
+      // Kein Datensatz und keine geladene Revision: Projekt existierte nur im Speicher.
+      const erstesSpeichern = !aktuell && basis == null;
+      if (erstesSpeichern || (aktuell && (aktuell.t === basis || eigeneVorgaenger))) {
+        const t = Math.max(Date.now(), (Number(aktuell && aktuell.t) || 0) + 1);
+        const schreiben = os.put({ ...frisch, t, sdTab: speicherTab, sdFolge: folge });
+        speicherAnfrageFehler(schreiben, tx, merken);
+        geschriebenT = t;
+        return;
+      }
+      konflikt = true;
+      sicherung = sicherungsName(snapshot.name);
+      const rettung = os.put({ ...frisch, name: sicherung, t: Date.now(), sdTab: speicherTab, sdFolge: folge, sdSicherungVon: snapshot.name });
+      speicherAnfrageFehler(rettung, tx, merken);
+    };
+    tx.oncomplete = () => {
+      if (uebersprungen) fertig(null, { skipped: true });
+      else if (konflikt) { const err = new Error('SD_SAVE_CONFLICT'); err.sicherung = sicherung; fertig(err); }
+      else fertig(null, { t: geschriebenT });
+    };
+    tx.onabort = () => fertig(fehler || tx.error || new Error('Speichern abgebrochen'));
+    tx.onerror = ev => { merken(tx.error); ev.preventDefault(); };
+  });
+}
 function speichernJetzt() {
   if (!S.p) return Promise.resolve();
   clearTimeout(speicherT);
   const projekt = S.p;
   const revision = speicherRevision;
-  // Snapshot vor dem asynchronen Schreiben: ein späterer Projektwechsel darf
-  // nicht versehentlich die Dateien des vorherigen Projekts überschreiben.
-  const dateien = { ...projekt.dateien };
-  for (const [pfad, doc] of Object.entries(S.docs)) dateien[pfad] = doc.getValue ? doc.getValue() : doc.wert;
-  const snapshot = { ...projekt, dateien };
-  const auftrag = speicherKette.catch(() => {}).then(async () => {
-    await projSchreiben(snapshot);
+  const folge = (letzteSpeicherFolge.get(projekt) || 0) + 1;
+  letzteSpeicherFolge.set(projekt, folge);
+  // Snapshot sofort festhalten: ein späterer Projektwechsel darf die Dateien
+  // des vorherigen Projekts nicht mit dem neuen Projekt überschreiben.
+  // Die Revision gehört zum selben Zeitpunkt, nicht zum späteren Ausführungszeitpunkt.
+  const basis = projekt.t;
+  const snapshot = projektSnapshot(projekt);
+  const starten = d => speicherVergleichen(d, projekt, snapshot, basis, folge).then(ergebnis => {
+    if (ergebnis.skipped) return;
+    projekt.t = ergebnis.t;
+    if (ergebnis.t != null) { projekt.sdTab = speicherTab; projekt.sdFolge = folge; }
+    journalAbgedeckt(projekt.name, dateienFuerSpeicher(projekt));
     if (S.p === projekt && speicherRevision === revision) {
       S.geaendert = false;
+      S.speicherHinweis = '';
+      letzterKonfliktSchluessel = '';
       status();
     }
   });
+  // Transaktion noch im Aufrufer starten (pagehide/beforeunload), nicht erst
+  // nach einem await. Der Browser darf die Seite sonst vorher verwerfen.
+  const lauf = dbVerbunden ? starten(dbVerbunden) : db().then(starten);
+  const auftrag = speicherKette.catch(() => {}).then(() => lauf);
   speicherKette = auftrag;
   return auftrag.catch(err => {
-    if (S.p === projekt) { S.geaendert = true; status(); }
-    console.error('Studio: Speichern fehlgeschlagen', err);
-    toast('Speichern fehlgeschlagen – bitte Speicherplatz und Browser prüfen.');
+    if (S.p === projekt) {
+      S.geaendert = true;
+      if (speicherFehlerIstKonflikt(err)) konfliktMelden(err);
+      else S.speicherHinweis = '';
+      status();
+    }
+    if (speicherFehlerIstKonflikt(err)) { console.error('Studio: Speicherkonflikt', err.sicherung || err); journalLoeschen(projekt.name); }
+    else { console.error('Studio: Speichern fehlgeschlagen', err); toast('Speichern fehlgeschlagen – bitte Speicherplatz und Browser prüfen.'); }
     throw err;
   });
+}
+function speichernBeimVerlassen() {
+  if (!S.p || !S.geaendert) return;
+  // localStorage ist synchron. IndexedDB überlebt das Schließen eines Tabs
+  // nicht immer; das Journal wird beim nächsten Start eingespielt.
+  journalSichern(S.p);
+  speichernJetzt().catch(() => {});
+}
+const JOURNAL_KEY = 'sdStudioJournal';
+function journalLesen() {
+  try {
+    const raw = localStorage.getItem(JOURNAL_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || typeof data.name !== 'string' || !data.dateien || typeof data.dateien !== 'object' || Array.isArray(data.dateien)) return null;
+    const dateien = {};
+    for (const [pfad, inhalt] of Object.entries(data.dateien)) {
+      if (typeof inhalt !== 'string' || !sicherPfad(pfad)) continue;
+      dateien[pfad] = inhalt;
+    }
+    return { name: data.name.slice(0, 180), basis: data.basis, haupt: typeof data.haupt === 'string' ? data.haupt : null, versionen: Array.isArray(data.versionen) ? data.versionen.slice(0, 30) : [], dateien };
+  } catch (e) { return null; }
+}
+function journalSichern(projekt) {
+  const basis = { name: projekt.name, basis: projekt.t, haupt: projekt.haupt || null, dateien: dateienFuerSpeicher(projekt) };
+  try { localStorage.setItem(JOURNAL_KEY, JSON.stringify({ ...basis, versionen: projekt.versionen || [] })); }
+  catch (e) { try { localStorage.setItem(JOURNAL_KEY, JSON.stringify(basis)); } catch (e2) { /* Kontingent voll */ } }
+}
+function journalLoeschen(name) {
+  try {
+    if (name) { const aktuell = journalLesen(); if (aktuell && aktuell.name !== name) return; }
+    localStorage.removeItem(JOURNAL_KEY);
+  } catch (e) { /* privat oder voll */ }
+}
+function journalAbgedeckt(name, dateien) {
+  const journal = journalLesen();
+  if (!journal || journal.name !== name) return;
+  for (const [pfad, inhalt] of Object.entries(journal.dateien)) if (dateien[pfad] !== inhalt) return;
+  journalLoeschen();
+}
+async function journalEinspielen() {
+  const journal = journalLesen();
+  if (!journal) return;
+  const d = await db();
+  await new Promise((ok, nein) => {
+    let tx;
+    try { tx = d.transaction('projekte', 'readwrite'); }
+    catch (e) { nein(e); return; }
+    const os = tx.objectStore('projekte');
+    const q = os.get(journal.name);
+    q.onsuccess = () => {
+      const aktuell = q.result;
+      const gleich = aktuell && Object.keys(journal.dateien).every(pfad => aktuell.dateien && aktuell.dateien[pfad] === journal.dateien[pfad]) && Object.keys(aktuell.dateien || {}).every(pfad => journal.dateien[pfad] === aktuell.dateien[pfad]);
+      if (gleich) return;
+      if (!aktuell || aktuell.t === journal.basis) {
+        const grund = aktuell || { name: journal.name, erstellt: Date.now(), versionen: [] };
+        const t = Math.max(Date.now(), (Number(aktuell && aktuell.t) || 0) + 1);
+        os.put({ ...grund, name: journal.name, dateien: journal.dateien, haupt: journal.haupt || grund.haupt || null, versionen: journal.versionen.length ? journal.versionen : (grund.versionen || []), t, sdTab: speicherTab, sdFolge: 1 });
+        return;
+      }
+      os.put({ name: sicherungsName(journal.name), dateien: journal.dateien, haupt: journal.haupt, versionen: journal.versionen, erstellt: Date.now(), t: Date.now(), sdSicherungVon: journal.name, sdTab: speicherTab, sdFolge: 1 });
+    };
+    q.onerror = ev => { ev.preventDefault(); try { tx.abort(); } catch (e) {} };
+    tx.oncomplete = () => { journalLoeschen(journal.name); ok(); };
+    tx.onabort = () => nein(tx.error || new Error('Journal'));
+    tx.onerror = ev => { ev.preventDefault(); };
+  }).catch(err => { console.error('Studio: Exit-Journal', err); });
 }
 function speichernBald() {
   speicherRevision++;
@@ -589,10 +768,12 @@ async function zipEinlesen(f, ziel = S.p.dateien) {
 function mimeVon(p) { const e = (p.split('.').pop() || '').toLowerCase(); return { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', ico: 'image/x-icon', avif: 'image/avif', jxl: 'image/jxl', mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', mp4: 'video/mp4', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', pdf: 'application/pdf' }[e] || 'application/octet-stream'; }
 function herunterladen(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 // Herunterladen als Startpaket: vorher prüfen, dann mit Startdatei (Windows/Mac/Linux) und Anleitung (studio/startpaket.js)
-async function zipExport() { if (!S.p) return; await speichernJetzt();
+async function zipExport() { if (!S.p) return;
+  try { await speichernJetzt(); }
+  catch (err) { if (!speicherFehlerIstKonflikt(err)) throw err; }
   if (window.SDStartpaket) { try { await SDStartpaket.exportieren(S.p, S.aktiv, slug(S.p.name), herunterladen, toast); return; } catch (e) { console.error(e); toast('Startpaket ging nicht – lade den reinen Quellcode.'); } }
   zipSichern(); }
-function zipSichern() { if (!S.p) return; herunterladen(zipBauen(S.p.dateien), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
+function zipSichern() { if (!S.p) return; herunterladen(zipBauen(dateienFuerSpeicher(S.p)), slug(S.p.name) + '.zip'); toast('⬇ ' + slug(S.p.name) + '.zip gespeichert (Downloads)'); }
 
 /* Desktop-App als eigenständiges Electron-Projekt exportieren. */
 
@@ -649,13 +830,14 @@ function frameworkBuildExport(dateien, projektName, info) {
 async function frameworkProjektExport() {
   if (!S.p) return;
   const p = S.p;
-  try { await speichernJetzt(); } catch (e) { return; }
+  try { await speichernJetzt(); } catch (e) { if (!speicherFehlerIstKonflikt(e)) return; }
   if (S.p !== p) return;
-  const info = frameworkErkennen(p.dateien);
+  const dateien = dateienFuerSpeicher(p);
+  const info = frameworkErkennen(dateien);
   if (!info) { alert('Kein unterstütztes Framework in package.json erkannt. Für HTML/CSS/JS nutze den normalen Desktop-Export.'); return; }
   if (info.fehler) { alert(info.fehler); return; }
   if (!info.build) { alert(info.name + ' erkannt, aber in package.json fehlt ein build-Skript.'); return; }
-  frameworkBuildExport(p.dateien, p.name, info);
+  frameworkBuildExport(dateien, p.name, info);
 }
 
 
@@ -854,9 +1036,10 @@ function appBuilderPlan(dateien) {
 async function einKlickAppBuilder() {
   if (!S.p) { alert('Bitte zuerst ein Projekt öffnen oder ZIP importieren.'); return; }
   const projekt = S.p;
-  try { await speichernJetzt(); } catch (e) { alert('Export abgebrochen: Projekt konnte nicht gespeichert werden.'); return; }
+  try { await speichernJetzt(); } catch (e) { if (!speicherFehlerIstKonflikt(e)) { alert('Export abgebrochen: Projekt konnte nicht gespeichert werden.'); return; } }
   if (S.p !== projekt) return;
-  const plan = appBuilderPlan(projekt.dateien);
+  const exportDateien = dateienFuerSpeicher(projekt);
+  const plan = appBuilderPlan(exportDateien);
   if (!plan.optionen.length) {
     alert('Für dieses Projekt ist noch kein passender App-Export verfügbar.\n\n' + plan.pruefung.meldungen.join('\n'));
     return;
@@ -877,9 +1060,9 @@ async function einKlickAppBuilder() {
     if (!confirm('Desktop-Export vorbereiten?\n\nEs wird ein ZIP mit Electron und GitHub-Actions-Build für Windows, macOS und Linux heruntergeladen. Fertige Installer werden erst beim Build erstellt. Codesignierung ist nicht enthalten. Das Originalprojekt bleibt unverändert.')) return;
     await desktopExport();
   } else if (typ === 'framework') {
-    frameworkBuildExport(projekt.dateien, projekt.name, plan.framework);
+    frameworkBuildExport(exportDateien, projekt.name, plan.framework);
   } else {
-    herunterladen(zipBauen({...projekt.dateien}), slug(projekt.name) + (typ === 'source' ? '-quellcode' : '-web-app') + '.zip');
+    herunterladen(zipBauen({...exportDateien}), slug(projekt.name) + (typ === 'source' ? '-quellcode' : '-web-app') + '.zip');
     toast('Projektkopie als ZIP exportiert.');
   }
 }
@@ -887,9 +1070,9 @@ async function einKlickAppBuilder() {
 async function desktopExport() {
   if (!S.p) return;
   const projekt = S.p;
-  try { await speichernJetzt(); } catch (e) { return; }
+  try { await speichernJetzt(); } catch (e) { if (!speicherFehlerIstKonflikt(e)) return; }
   if (S.p !== projekt) return;
-  const quelle = { ...projekt.dateien };
+  const quelle = { ...dateienFuerSpeicher(projekt) };
   const start = Object.keys(quelle).find(p => p === 'index.html') || Object.keys(quelle).find(p => p.toLowerCase().endsWith('/index.html')) || Object.keys(quelle).find(p => p.toLowerCase().endsWith('.html') || p.toLowerCase().endsWith('.htm'));
   if (!start) { alert('Desktop-Export benötigt eine HTML-Datei.'); return; }
   const name = projekt.name.slice(0, 80) || 'SD Desktop App';
@@ -906,7 +1089,11 @@ async function desktopExport() {
 }
 
 async function einzelHtml() {
-  if (!S.p) return; await speichernJetzt(); const d = S.p.dateien; const start = Object.keys(d).find(x => /(^|\/)index\.html$/.test(x)) || Object.keys(d).find(x => /\.html?$/.test(x));
+  if (!S.p) return;
+  try { await speichernJetzt(); } catch (e) { if (!speicherFehlerIstKonflikt(e)) throw e; }
+  const d = dateienFuerSpeicher(S.p);
+  Object.assign(S.p.dateien, d);
+  const start = Object.keys(d).find(x => /(^|\/)index\.html$/.test(x)) || Object.keys(d).find(x => /\.html?$/.test(x));
   if (!start) { alert('In diesem Projekt gibt es keine HTML-Datei.'); return; }
   herunterladen(new Blob([htmlZusammenbauen(start)], { type: 'text/html' }), slug(S.p.name) + '.html'); toast('⬇ Eine einzige HTML-Datei mit allem drin gespeichert');
 }
@@ -1372,9 +1559,9 @@ async function githubProjektImport() {
 async function cloudProjektBackup() {
   if (!S.p) { alert('Bitte zuerst ein Projekt öffnen.'); return; }
   const p=S.p;
-  try { await speichernJetzt(); } catch(e) { toast('Backup abgebrochen: Speichern fehlgeschlagen.'); return; }
+  try { await speichernJetzt(); } catch(e) { if (!speicherFehlerIstKonflikt(e)) { toast('Backup abgebrochen: Speichern fehlgeschlagen.'); return; } }
   if (S.p!==p) return;
-  const dateien={...p.dateien};
+  const dateien={...dateienFuerSpeicher(p)};
   dateien['SD-CLOUD-BACKUP-INFO.txt'] =
     'SD Code-Studio – portables Projektbackup\nProjekt: '+p.name+
     '\nErstellt: '+new Date().toISOString()+
@@ -1715,7 +1902,7 @@ function konfetti() { if (einst().konfetti === false || matchMedia('(prefers-red
   let n = 0; (function lauf() { x.clearRect(0, 0, c.width, c.height); t.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .35; p.w += .2; x.save(); x.translate(p.x, p.y); x.rotate(p.w); x.fillStyle = p.f; x.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * .6); x.restore(); }); if (++n < 100) requestAnimationFrame(lauf); else c.remove(); })(); }
 function status() { const cm = S.cm, a = S.aktiv; $('sbDatei').textContent = a ? icon(a) + ' ' + a : '—'; $('sbSprache').textContent = a ? sprachName(a) : '';
   $('sbPos').textContent = cm && a && $('leer').hidden ? 'Zeile ' + (cm.getCursor().line + 1) + ', Spalte ' + (cm.getCursor().ch + 1) : '';
-  $('sbGesp').textContent = S.geaendert ? '● speichert …' : '✓ gespeichert'; $('starten').title = a && programmSprache(a) ? '▶ Programm bauen und starten (online über wandbox.org) – F5' : '▶ Vorschau starten – F5'; }
+  $('sbGesp').textContent = S.speicherHinweis ? S.speicherHinweis : (S.geaendert ? '● speichert …' : '✓ gespeichert'); $('starten').title = a && programmSprache(a) ? '▶ Programm bauen und starten (online über wandbox.org) – F5' : '▶ Vorschau starten – F5'; }
 
 /* ---------------- Anleitung einfügen → Projekt aufbauen ---------------- */
 function nameAusInhalt(code,lang){const t=code.slice(0,3000);let m;
@@ -2122,7 +2309,7 @@ function onlineDialog() {
     return report;
   };
   showReport();
-  $('onZip').onclick=()=>{speichernJetzt().then(zipSichern);};
+  $('onZip').onclick=()=>{speichernJetzt().then(zipSichern, err=>{ if(speicherFehlerIstKonflikt(err)) zipSichern(); });};
   $('onName').value = (S.p.online && S.p.online.name) || slug(S.p.name).replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   const vorschau = () => { $('onUrl').textContent = 'https://sd031988.github.io/sd-seiten/' + ($('onName').value.trim().toLowerCase() || '…') + '/'; }; $('onName').oninput = vorschau; vorschau();
   $('onRecht').checked = false; $('onZu').onclick = () => { box.hidden = true; }; box.onclick = e => { if (e.target === box) box.hidden = true; };
@@ -2295,6 +2482,7 @@ async function starten() {
   thema(einst().thema || 'Mitternacht');
   const [cm] = await Promise.all([editorLaden(), swStarten()]);
   editorBauen(cm); thema(einst().thema || 'Mitternacht');
+  await journalEinspielen();
   const studioProjektParameter=new URLSearchParams(location.search).has('projekt');
   const studioDesignImport=await designUebernehmen();
   if (!studioDesignImport) { const l = (await projAlle()).sort((a, b) => b.t - a.t); const letztes = store.get('sdStudioLetztes', '');
@@ -2367,7 +2555,7 @@ function verdrahten() {
     else if (st && e.shiftKey && k === 'p') { e.preventDefault(); befehle(); }
     else if (st && !e.shiftKey && k === 'p') { e.preventDefault(); dateiSuchen(); }
     else if (st && e.shiftKey && k === 'f') { e.preventDefault(); $('app').classList.remove('seiteZu'); seite('suche'); }
-    else if (st && k === 's') { e.preventDefault(); speichernJetzt().then(() => { toast('💾 Gespeichert'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(false); }); }
+    else if (st && k === 's') { e.preventDefault(); speichernJetzt().then(() => { toast('💾 Gespeichert'); if (istWebProjekt() && !$('vorschau').hidden) vorschau(false); }).catch(() => {}); }
     else if (st && k === 'w' && S.aktiv) { e.preventDefault(); tabZu(S.aktiv); }
     else if (st && k === 'b') { e.preventDefault(); $('app').classList.toggle('seiteZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); }
     else if (st && k === 'j') { e.preventDefault(); $('haupt').classList.toggle('untenZu'); setTimeout(() => S.cm && S.cm.refresh(), 50); }
@@ -2381,13 +2569,17 @@ function verdrahten() {
   $('app').addEventListener('drop', e => { $('app').classList.remove('ziehen'); if (e.dataTransfer.files.length) { e.preventDefault(); hochladen([...e.dataTransfer.files]); } });
   window.addEventListener('resize', () => { clearTimeout(S.rz); S.rz = setTimeout(() => S.cm && S.cm.refresh(), 120); });
   window.addEventListener('beforeunload', e => {
-    if (S.geaendert) { e.preventDefault(); e.returnValue = ''; }
+    if (S.geaendert) { speichernBeimVerlassen(); e.preventDefault(); e.returnValue = ''; }
   });
   // Beim Wechsel in einen anderen Tab sofort speichern, statt auf den
   // verzögerten Autosave-Timer zu warten. Fehler werden sichtbar gemeldet.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && S.geaendert) speichernJetzt().catch(() => {});
+    if (document.visibilityState === 'hidden') speichernBeimVerlassen();
   });
+  // Mobile Safari kann eine Seite ohne beforeunload verlassen.
+  // Der Schreibauftrag startet noch in diesem Ereignis, damit IndexedDB
+  // ihn vor dem Entladen abschließen kann.
+  window.addEventListener('pagehide', speichernBeimVerlassen);
   // Handy: Seitenleiste zu Beginn zu
   handyEinrichten();
 }
