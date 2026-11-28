@@ -209,6 +209,15 @@
       catch(e) { status(e.message, 'fehler'); }
       finally { LAEUFT = false; }
     };
+    $('kaPruefen').onclick = () => {
+      if (LAEUFT) return;
+      if (!aktuell(ANTWORT)) { status('Projekt oder Dateien geändert. Bitte neue KI-Anfrage erstellen und Antwort erneut einfügen.', 'fehler'); return; }
+      const text = $('kaAntwort').value;
+      if (!text.trim()) { status('Bitte zuerst die KI-Antwort einfügen.', 'fehler'); return; }
+      if (!window.SDKICodingUI?.openDialogWithCode(text)) { status('KI-Werkstatt konnte nicht geöffnet werden.', 'fehler'); return; }
+      ZURUECK = []; HALT = null; zurueckZeigen();
+      status('Antwort zur Prüfung in der KI-Werkstatt geöffnet. Noch keine Datei geändert.', '');
+    };
     $('kaRueck').onclick = rueckgaengig;
     $('kaAntwort').addEventListener('input', antwortGeaendert);
     $('kaWunsch').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); kopieren(); } });
