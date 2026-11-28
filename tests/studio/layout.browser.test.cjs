@@ -107,6 +107,20 @@ const moreGroups={
    await page.setViewportSize({width:320,height:800});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true);
    for(const id of ['projektMenuBtn','kiBtn','starten']){const r=await page.locator('#'+id).boundingBox();assert(r&&r.x>=0&&r.x+r.width<=321,id+' fits at 320px')}
+   // A stale editor must not overwrite a newer save from another tab.
+   const second=await context.newPage();
+   await second.goto(url+'?projekt='+encodeURIComponent(name),{waitUntil:'domcontentloaded'});
+   await second.waitForFunction(()=>typeof S!=='undefined'&&S.layoutBereit&&S.p);
+   const file='__save_conflict_test__.txt';
+   await page.evaluate(async file=>{S.p.dateien[file]='newer';await speichernJetzt()},file);
+   const conflict=await second.evaluate(async file=>{
+    S.p.dateien[file]='stale';
+    try{await speichernJetzt();return false}catch(e){return e.message==='SD_SAVE_CONFLICT'}
+   },file);
+   assert.equal(conflict,true,'Stale tab must reject its save');
+   assert.equal(await page.evaluate(async file=>(await projLesen(S.p.name)).dateien[file],file),'newer');
+   await second.evaluate(()=>{S.geaendert=false});
+   await second.close();
    assert.deepEqual(errors,[]);
    await context.close();
   }
