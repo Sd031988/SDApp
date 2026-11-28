@@ -81,25 +81,59 @@
     o.textContent = text; o.dataset.art = art || '';
   }
 
-  async function anwenden(liste, quelle) {
-    const p = S.p, d = p.dateien;
-    const basis = stand();
-    const echt = liste.filter(f => d[f.path] !== f.content);
-    if (!echt.length) return { geaendert: [], neu: [] };
-    if (typeof versionNeu === 'function') await versionNeu('Vor KI-Änderung (' + quelle + ')', true);
-    if (!aktuell(basis)) throw Error('Projekt wurde inzwischen geändert. Bitte neue KI-Anfrage erstellen.');
-    const vorher = {};
-    const geaendert = [], neu = [];
-    for (const f of echt) {
-      vorher[f.path] = Object.prototype.hasOwnProperty.call(d, f.path) ? d[f.path] : undefined;
-      (vorher[f.path] === undefined ? neu : geaendert).push(f.path);
-      d[f.path] = f.content;
-      if (S.docs && S.docs[f.path] && S.docs[f.path].setValue && S.docs[f.path].getValue() !== f.content) S.docs[f.path].setValue(f.content);
+  // Backup and replacement commit together, without mutating live documents first.
+  async function sicherSchreiben(p, basis, changes, titel) {
+    await speichernJetzt();
+    if (!aktuell(basis)) throw Error('Projekt wurde inzwischen geändert.');
+    const revision = p.t;
+    const vorher = {...basis.files};
+    const dateien = {...vorher};
+    for (const [pfad, wert] of Object.entries(changes)) {
+      if (wert === undefined) delete dateien[pfad]; else dateien[pfad] = wert;
     }
-    RUECK = RUECK && RUECK.projekt === p ? { projekt: p, vorher: Object.assign({}, vorher, RUECK.vorher) } : { projekt: p, vorher };
-    await projSchreiben(p);
-    nachher();
-    return { geaendert, neu };
+    const versionen = [{t:Date.now(),text:titel,dateien:vorher},...(p.versionen||[])].slice(0,30);
+    const d = await db();
+    if (!aktuell(basis) || p.t !== revision) throw Error('Projekt wurde inzwischen geändert.');
+    const t = Math.max(Date.now(), Number(revision||0)+1);
+    await new Promise((resolve,reject) => {
+      const tx = d.transaction('projekte','readwrite'), os = tx.objectStore('projekte');
+      let conflict = false;
+      const q = os.get(p.name);
+      q.onsuccess = () => {
+        if (!q.result || q.result.t !== revision || !aktuell(basis)) { conflict=true; tx.abort(); return; }
+        os.put({...p,dateien,versionen,t,sdTab:null,sdFolge:null});
+      };
+      tx.oncomplete = resolve;
+      tx.onabort = () => reject(conflict?Error('Speicherkonflikt: Projekt wurde geändert.'):tx.error||Error('Speichern abgebrochen.'));
+    });
+    p.t=t; p.sdTab=null; p.sdFolge=null; p.versionen=versionen;
+    if (S.p !== p) return false;
+    const live = stand().files;
+    for (const [pfad, wert] of Object.entries(changes)) {
+      if (live[pfad] !== vorher[pfad]) continue; // Preserve edits made during the transaction.
+      if (wert === undefined) {
+        delete p.dateien[pfad]; delete S.docs[pfad]; S.tabs=S.tabs.filter(x=>x!==pfad);
+      } else {
+        p.dateien[pfad]=wert;
+        if (S.docs[pfad]?.setValue) S.docs[pfad].setValue(wert);
+      }
+    }
+    if (S.aktiv && p.dateien[S.aktiv] == null) S.aktiv=Object.keys(p.dateien)[0]||null;
+    return true;
+  }
+  async function anwenden(liste, quelle) {
+    const p=S.p, basis=stand();
+    const echt=liste.filter(f=>basis.files[f.path]!==f.content);
+    if (!echt.length) return {geaendert:[],neu:[]};
+    const vorher=Object.fromEntries(echt.map(f=>[f.path,basis.files[f.path]]));
+    const changes=Object.fromEntries(echt.map(f=>[f.path,f.content]));
+    const geaendert=echt.filter(f=>vorher[f.path]!==undefined).map(f=>f.path);
+    const neu=echt.filter(f=>vorher[f.path]===undefined).map(f=>f.path);
+    if (await sicherSchreiben(p,basis,changes,'Vor KI-Änderung ('+quelle+')')) {
+      RUECK={projekt:p,vorher,nachher:changes};
+      nachher();
+    }
+    return {geaendert,neu};
   }
 
   function nachher() {
@@ -162,19 +196,24 @@
   }
 
   async function rueckgaengig() {
+    if (LAEUFT) return;
     if (!RUECK || RUECK.projekt !== S.p) { RUECK = null; nachher(); return; }
-    const d = S.p.dateien, namen = [];
-    for (const [pfad, alt] of Object.entries(RUECK.vorher)) {
-      if (alt === undefined) delete d[pfad]; else d[pfad] = alt;
-      if (alt !== undefined && S.docs && S.docs[pfad] && S.docs[pfad].setValue) S.docs[pfad].setValue(alt);
-      namen.push(pfad);
-    }
-    if (S.aktiv && d[S.aktiv] == null) S.aktiv = Object.keys(d)[0] || null;
-    RUECK = null;
-    await projSchreiben(S.p);
-    nachher();
-    if (S.aktiv && typeof dateiOeffnen === 'function') dateiOeffnen(S.aktiv);
-    status('↶ Zurückgesetzt: ' + namen.join(', '), 'ok');
+    const undo = RUECK;
+    const basis = stand();
+    const konflikte = Object.keys(undo.nachher).filter(pfad => basis.files[pfad] !== undo.nachher[pfad]);
+    if (konflikte.length) { status('Rückgängig gesperrt: Dateien wurden inzwischen bearbeitet: ' + konflikte.join(', ') + '. Bitte Versionen prüfen.', 'fehler'); return; }
+    if (!window.confirm('Letzte KI-Änderung zurücksetzen? Vorher wird eine weitere Version gesichert.')) return;
+    LAEUFT = true;
+    try {
+      const namen=Object.keys(undo.vorher);
+      if (await sicherSchreiben(undo.projekt,basis,undo.vorher,'Vor Rückgängig der KI-Änderung')) {
+        RUECK = null;
+        nachher();
+        if (S.aktiv && typeof dateiOeffnen === 'function') dateiOeffnen(S.aktiv);
+        status('↶ Zurückgesetzt: ' + namen.join(', '), 'ok');
+      }
+    } catch(e) { status('Rückgängig fehlgeschlagen: ' + e.message, 'fehler'); }
+    finally { LAEUFT = false; }
   }
 
   async function kopieren() {
