@@ -112,7 +112,7 @@ jobs:
           node studio/game-studio/demos/vanguard/browser-smoke.cjs
 
       - name: Studio Bildschirmprüfung
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sd-studio-layout
@@ -121,7 +121,7 @@ jobs:
           retention-days: 14
 
       - name: Level-Editor Bildschirmprüfung
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: sd-game-studio-workspace-screenshots
@@ -131,7 +131,7 @@ jobs:
 
       - name: Großwelt-Screenshots archivieren
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sd-game-studio-large-world
           path: game-studio-large-world-artifacts/*.png
