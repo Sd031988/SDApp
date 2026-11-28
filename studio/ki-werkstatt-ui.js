@@ -272,6 +272,15 @@ function renderCodeReview(){
   headline.dataset.state='blocked';return null;
  }
  const report=engine.review(selectedFiles(),stagedSnapshot||currentFiles());
+ const guard=window.SDKIAendern?._luecke;
+ const basis=stagedSnapshot||currentFiles();
+ const incomplete=typeof guard==='function'?selectedFiles().map(f=>({path:f.path,reason:guard(f.path,f.content,basis[f.path])})).filter(f=>f.reason):null;
+ if(!incomplete||incomplete.length){
+  headline.dataset.state='blocked';
+  headline.textContent='Übernahme gesperrt: '+(incomplete?'Unvollständiger KI-Code.':'Vollständigkeitsprüfung nicht verfügbar. Bitte neu laden.');
+  for(const f of incomplete||[])items.append(node('p','kiMessage',f.path+': '+f.reason));
+  return {...report,blocked:true};
+ }
  headline.dataset.state=report.blocked||report.skipped?'blocked':report.warnings?'warning':'ok';
  headline.textContent=report.blocked
   ?'⛔ '+report.critical+' mögliche Zugangsdaten-Funde: Übernahme gesperrt.'

@@ -10,7 +10,7 @@
   let RUECK = null;      // { projekt, vorher: {pfad: inhalt|undefined} }
   let ZURUECK = [];      // zurückgehaltene Dateien [{path, content, grund}]
 
-  let ANTWORT = null, HALT = null, LAEUFT = false;
+  let ANTWORT = null, HALT = null, LAEUFT = false, ANFRAGE = null;
   function stand() {
     if (!S.p) return null;
     const files = {...S.p.dateien};
@@ -184,6 +184,9 @@
     if (typeof speichernJetzt === 'function') await speichernJetzt();
     let a;
     try { a = anfrageBauen(wunsch); } catch (e) { status(e.message, 'fehler'); return; }
+    ANFRAGE = stand();
+    ANTWORT = null;
+    ZURUECK = []; HALT = null; zurueckZeigen();
     const info = 'Mitgeschickt: ' + a.gewaehlt.join(', ') + (a.hinweise.length ? ' · ' + a.hinweise.join(' · ') : '');
     const box = $('kaKopie');
     try {
@@ -203,11 +206,27 @@
     $('kaKopieren').onclick = kopieren;
     $('kaUebernehmen').onclick = async () => {
       if (LAEUFT) return;
-      if (!aktuell(ANTWORT)) { status('Projekt oder Dateien geändert. Bitte neue KI-Anfrage erstellen und Antwort erneut einfügen.', 'fehler'); return; }
+      if (!aktuell(ANTWORT) || (ANFRAGE && !aktuell(ANFRAGE))) { status('Projekt oder Dateien geändert. Bitte neue KI-Anfrage erstellen und Antwort erneut einfügen.', 'fehler'); return; }
       LAEUFT = true;
       try { await einfuegen($('kaAntwort').value); ANTWORT = null; }
       catch(e) { status(e.message, 'fehler'); }
       finally { LAEUFT = false; }
+    };
+    $('kaPruefen').onclick = () => {
+      if (LAEUFT) return;
+      if (!aktuell(ANTWORT) || (ANFRAGE && !aktuell(ANFRAGE))) { status('Projekt oder Dateien geändert. Bitte neue KI-Anfrage erstellen und Antwort erneut einfügen.', 'fehler'); return; }
+      const text = $('kaAntwort').value;
+      if (!text.trim()) { status('Bitte zuerst die KI-Antwort einfügen.', 'fehler'); return; }
+      const basis = stand();
+      const result = window.SDKICoding.parse(text, basis.aktiv, basis.files);
+      const unvollstaendig = result.files.filter(f => luecke(f.path, f.content, basis.files[f.path]));
+      if (unvollstaendig.length) {
+        status('Unvollständiger KI-Code: ' + unvollstaendig.map(f => f.path).join(', ') + '. Bitte vollständige Dateien anfordern.', 'fehler');
+        return;
+      }
+      if (!window.SDKICodingUI?.openDialogWithCode(text)) { status('KI-Werkstatt konnte nicht geöffnet werden.', 'fehler'); return; }
+      ZURUECK = []; HALT = null; zurueckZeigen();
+      status('Antwort zur Prüfung in der KI-Werkstatt geöffnet. Noch keine Datei geändert.', '');
     };
     $('kaRueck').onclick = rueckgaengig;
     $('kaAntwort').addEventListener('input', antwortGeaendert);

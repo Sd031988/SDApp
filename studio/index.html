@@ -286,7 +286,7 @@ button,input,select,textarea{font:inherit;color:inherit}
           <textarea id="kaKopie" readonly hidden aria-label="Anfrage zum manuellen Kopieren"></textarea>
         </div>
         <div class="kaSpalte">
-          <div class="kaKopf"><label for="kaAntwort">2. Antwort der KI hier einfügen</label><button type="button" id="kaUebernehmen">Übernehmen</button><button type="button" id="kaRueck" hidden>↶ Rückgängig</button></div>
+          <div class="kaKopf"><label for="kaAntwort">2. Antwort der KI hier einfügen</label><button type="button" id="kaPruefen">🔎 Vergleichen &amp; prüfen</button><button type="button" id="kaUebernehmen">Übernehmen</button><button type="button" id="kaRueck" hidden>↶ Rückgängig</button></div>
           <textarea id="kaAntwort" placeholder="Ganze KI-Antwort einfügen. Erst nach Klick auf Übernehmen werden zurückgegebene Dateien geändert."></textarea>
         </div>
         <p id="kaStatus" role="status" aria-live="polite">Die Anfrage enthält die Dateien dieses Projekts (ohne Zugangsdaten). Du kopierst und fügst sie selbst ein – das Studio sendet nichts.</p>
@@ -533,7 +533,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="studio.js?v=20261128-speichern-1"></script>
 <script src="startpaket.js?v=20261116-2"></script>
 <script src="pc-terminal.js?v=20261117-2"></script>
-<script src="ki-aendern.js?v=20261128-safe-paste-1"></script>
+<script src="ki-aendern.js?v=20261128-review-handoff-1"></script>
 <script src="linter.js?v=20261117-3"></script>
 <script src="python-browser.js?v=20261117-2"></script>
 <script src="ki-vervollstaendigung.js?v=20261117-1"></script>
@@ -543,7 +543,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 <script src="./ki-code-review.js?v=20261102-code-review-1"></script>
 <script src="./ki-repair-assistant.js?v=20261102-repair-v1"></script>
 <script src="./ki-test-loop.js?v=20261102-test-loop-1"></script>
-<script src="./ki-werkstatt-ui.js?v=20261128-provider-1"></script>
+<script src="./ki-werkstatt-ui.js?v=20261128-completeness-1"></script>
 <script src="./agent-review-ui.js?v=20261102-agent-safety-1"></script>
 <div id="sdInstallBanner" hidden style="position:fixed;right:18px;bottom:34px;z-index:100000;background:#221b3d;color:#fff;border:1px solid #8b5cf6;border-radius:12px;padding:14px 18px;box-shadow:0 8px 30px #0008;max-width:330px;font:14px system-ui,sans-serif"><strong>SD Studio installieren</strong><p style="margin:8px 0">Als eigene App auf diesem Computer verwenden.</p><button id="sdInstallStart" style="background:#8b5cf6;border:0;color:white;padding:9px 14px;border-radius:7px;cursor:pointer">Jetzt installieren</button> <button id="sdInstallDismiss" style="background:transparent;border:1px solid #aaa;color:white;padding:9px;border-radius:7px;cursor:pointer">Später</button></div>
 <script>
