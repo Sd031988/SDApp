@@ -10,6 +10,27 @@
   let RUECK = null;      // { projekt, vorher: {pfad: inhalt|undefined} }
   let ZURUECK = [];      // zurückgehaltene Dateien [{path, content, grund}]
 
+  let ANTWORT = null, HALT = null, LAEUFT = false;
+  function stand() {
+    if (!S.p) return null;
+    const files = {...S.p.dateien};
+    for (const [name, doc] of Object.entries(S.docs || {})) {
+      if (typeof doc?.getValue === 'function') files[name] = doc.getValue();
+      else if (typeof doc?.wert === 'string') files[name] = doc.wert;
+    }
+    return {projekt:S.p, aktiv:S.aktiv, files};
+  }
+  function aktuell(a) {
+    const b = stand();
+    return !!(a && b && a.projekt === b.projekt && a.aktiv === b.aktiv &&
+      Object.keys(a.files).length === Object.keys(b.files).length &&
+      Object.keys(a.files).every(k => Object.prototype.hasOwnProperty.call(b.files,k) && a.files[k] === b.files[k]));
+  }
+  function antwortGeaendert() {
+    ZURUECK = []; HALT = null; zurueckZeigen();
+    ANTWORT = stand();
+    status('Antwort bearbeitet. Bitte prüfen und bewusst auf Übernehmen klicken.', '');
+  }
   const istText = v => typeof v === 'string' && !v.startsWith('data:');
 
   function dateienWaehlen(p, aktiv) {
@@ -62,9 +83,11 @@
 
   async function anwenden(liste, quelle) {
     const p = S.p, d = p.dateien;
+    const basis = stand();
     const echt = liste.filter(f => d[f.path] !== f.content);
     if (!echt.length) return { geaendert: [], neu: [] };
     if (typeof versionNeu === 'function') await versionNeu('Vor KI-Änderung (' + quelle + ')', true);
+    if (!aktuell(basis)) throw Error('Projekt wurde inzwischen geändert. Bitte neue KI-Anfrage erstellen.');
     const vorher = {};
     const geaendert = [], neu = [];
     for (const f of echt) {
@@ -97,7 +120,14 @@
     t.textContent = '⚠ Nicht übernommen: ' + ZURUECK.map(f => f.path + ' – ' + f.grund).join(' · ') +
       '. Am besten bei der KI nachfragen: „Bitte ' + ZURUECK.map(f => f.path).join(', ') + ' vollständig ohne Auslassungen ausgeben.“';
     const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Trotzdem übernehmen';
-    b.onclick = async () => { const l = ZURUECK; ZURUECK = []; zurueckZeigen(); const r = await anwenden(l, 'trotzdem'); status('✓ Übernommen: ' + r.geaendert.concat(r.neu).join(', ') + '. „Rückgängig“ holt den alten Stand zurück.', 'ok'); };
+    b.onclick = async () => {
+      if (LAEUFT) return;
+      if (!aktuell(HALT)) { ZURUECK = []; HALT = null; zurueckZeigen(); status('Projekt geändert. Bitte neue KI-Anfrage erstellen.', 'fehler'); return; }
+      LAEUFT = true;
+      try { const l = ZURUECK; ZURUECK = []; HALT = null; zurueckZeigen(); const r = await anwenden(l, 'trotzdem'); status('✓ Übernommen: ' + r.geaendert.concat(r.neu).join(', ') + '. „Rückgängig“ holt den alten Stand zurück.', 'ok'); }
+      catch(e) { status(e.message, 'fehler'); }
+      finally { LAEUFT = false; }
+    };
     box.append(t, b);
   }
 
@@ -113,8 +143,9 @@
       const grund = luecke(f.path, f.content, S.p.dateien[f.path]);
       (grund ? halt : ok).push(grund ? Object.assign({ grund }, f) : f);
     }
-    ZURUECK = halt;
+    ZURUECK = []; HALT = null; zurueckZeigen();
     const erg = ok.length ? await anwenden(ok, 'eingefügt') : { geaendert: [], neu: [] };
+    ZURUECK = halt; HALT = stand();
     zurueckZeigen();
     const teile = [];
     if (erg.geaendert.length) teile.push('geändert: ' + erg.geaendert.join(', '));
@@ -170,9 +201,16 @@
     if (!feld || feld.dataset.bereit) return;
     feld.dataset.bereit = '1';
     $('kaKopieren').onclick = kopieren;
-    $('kaUebernehmen').onclick = () => einfuegen($('kaAntwort').value);
+    $('kaUebernehmen').onclick = async () => {
+      if (LAEUFT) return;
+      if (!aktuell(ANTWORT)) { status('Projekt oder Dateien geändert. Bitte neue KI-Anfrage erstellen und Antwort erneut einfügen.', 'fehler'); return; }
+      LAEUFT = true;
+      try { await einfuegen($('kaAntwort').value); ANTWORT = null; }
+      catch(e) { status(e.message, 'fehler'); }
+      finally { LAEUFT = false; }
+    };
     $('kaRueck').onclick = rueckgaengig;
-    $('kaAntwort').addEventListener('paste', () => status('Antwort eingefügt. Bitte prüfen und bewusst auf Übernehmen klicken. Es wurde noch nichts geändert.', ''));
+    $('kaAntwort').addEventListener('input', antwortGeaendert);
     $('kaWunsch').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); kopieren(); } });
   }
 
